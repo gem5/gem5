@@ -36,19 +36,21 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 #
 # gem5img.py
 # Script for managing a gem5 disk image.
 #
-
-from argparse import ArgumentParser
 import os
-from os import environ as env
-import string
-from subprocess import CalledProcessError, Popen, PIPE, STDOUT
-from sys import exit, argv
 import re
+import string
+from argparse import ArgumentParser
+from os import environ as env
+from subprocess import CalledProcessError
+from subprocess import PIPE
+from subprocess import Popen
+from subprocess import STDOUT
+from sys import argv
+from sys import exit
 
 # Some constants.
 MaxLBACylinders = 16383

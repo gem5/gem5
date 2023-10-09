@@ -35,9 +35,8 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-from m5.params import *
 from m5.objects.XBar import *
+from m5.params import *
 
 # References:
 # [1] http://www.open-silicon.com/open-silicon-ips/hmc/

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 # Copyright (c) 2020 ARM Limited
 # All rights reserved.
 #
@@ -37,15 +36,15 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
-from subprocess import call
-from platform import machine
-from distutils import spawn
-from glob import glob
-
-import sys
 import os
+import sys
+from argparse import ArgumentDefaultsHelpFormatter
+from argparse import ArgumentParser
+from glob import glob
+from platform import machine
+from subprocess import call
+
+from distutils import spawn
 
 
 def run_cmd(explanation, working_dir, cmd, stdout=None):

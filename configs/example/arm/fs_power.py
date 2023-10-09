@@ -32,17 +32,15 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 # This configuration file extends the example ARM big.LITTLE(tm)
 # with example power models.
-
 import argparse
 import os
 
-import m5
-from m5.objects import MathExprPowerModel, PowerModel
-
 import fs_bigLITTLE as bL
+import m5
+from m5.objects import MathExprPowerModel
+from m5.objects import PowerModel
 
 
 class CpuPowerOn(MathExprPowerModel):

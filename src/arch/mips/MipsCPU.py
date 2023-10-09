@@ -22,16 +22,15 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 from m5.objects.BaseAtomicSimpleCPU import BaseAtomicSimpleCPU
-from m5.objects.BaseNonCachingSimpleCPU import BaseNonCachingSimpleCPU
-from m5.objects.BaseTimingSimpleCPU import BaseTimingSimpleCPU
-from m5.objects.BaseO3CPU import BaseO3CPU
 from m5.objects.BaseMinorCPU import BaseMinorCPU
+from m5.objects.BaseNonCachingSimpleCPU import BaseNonCachingSimpleCPU
+from m5.objects.BaseO3CPU import BaseO3CPU
+from m5.objects.BaseTimingSimpleCPU import BaseTimingSimpleCPU
 from m5.objects.MipsDecoder import MipsDecoder
-from m5.objects.MipsMMU import MipsMMU
 from m5.objects.MipsInterrupts import MipsInterrupts
 from m5.objects.MipsISA import MipsISA
+from m5.objects.MipsMMU import MipsMMU
 
 
 class MipsCPU:

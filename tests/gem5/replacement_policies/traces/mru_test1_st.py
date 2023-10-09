@@ -23,18 +23,15 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 # This test is targeting stores
 # Access pattern: A, C, E, G, I, K, M, O, A, C,
 # Each letter represents a 64-byte address range.
-
 # The [] indicate two different sets, and each set has four ways.
 # [set0way0, set0way1, set0way2, set0way3],
 # [set1way0, set1way1, set1way2, set1way3],
 # If you have a 512B cache with 4-way associativity,
 # and each cache line is 64B. With MRU replacement policy, you will observe:
 # m, m, m, m, m, m, m, m, h, h, where 'h' means hit and 'm' means miss.
-
 # Explanation of this result:
 # A, C, E, G are misses, now the cache stores ([A, C, E, G*],[ , , ,]).
 # G is marked as the MRU address range.
@@ -43,7 +40,6 @@
 # M searches for a victim and selects K. Now the cache stores ([A, C, E, M*],[ , , ,]).
 # O searches for a victim and selects M. Now the cache stores ([A, C, E, O*],[ , , ,]).
 # A,C are hits.
-
 from m5.objects.ReplacementPolicies import MRURP as rp
 
 

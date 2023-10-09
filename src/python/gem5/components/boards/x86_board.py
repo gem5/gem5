@@ -23,42 +23,37 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from typing import List
+from typing import Sequence
 
-
-from .kernel_disk_workload import KernelDiskWorkload
-from ...resources.resource import AbstractResource
-from ...utils.override import overrides
-from .abstract_system_board import AbstractSystemBoard
-from ...isas import ISA
-
-from m5.objects import (
-    Pc,
-    AddrRange,
-    X86FsLinux,
-    Addr,
-    X86SMBiosBiosInformation,
-    X86IntelMPProcessor,
-    X86IntelMPIOAPIC,
-    X86IntelMPBus,
-    X86IntelMPBusHierarchy,
-    X86IntelMPIOIntAssignment,
-    X86E820Entry,
-    Bridge,
-    IOXBar,
-    IdeDisk,
-    CowDiskImage,
-    RawDiskImage,
-    BaseXBar,
-    Port,
-)
-
+from m5.objects import Addr
+from m5.objects import AddrRange
+from m5.objects import BaseXBar
+from m5.objects import Bridge
+from m5.objects import CowDiskImage
+from m5.objects import IdeDisk
+from m5.objects import IOXBar
+from m5.objects import Pc
+from m5.objects import Port
+from m5.objects import RawDiskImage
+from m5.objects import X86E820Entry
+from m5.objects import X86FsLinux
+from m5.objects import X86IntelMPBus
+from m5.objects import X86IntelMPBusHierarchy
+from m5.objects import X86IntelMPIOAPIC
+from m5.objects import X86IntelMPIOIntAssignment
+from m5.objects import X86IntelMPProcessor
+from m5.objects import X86SMBiosBiosInformation
 from m5.util.convert import toMemorySize
 
-from ..processors.abstract_processor import AbstractProcessor
-from ..memory.abstract_memory_system import AbstractMemorySystem
+from ...isas import ISA
+from ...resources.resource import AbstractResource
+from ...utils.override import overrides
 from ..cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
-
-from typing import List, Sequence
+from ..memory.abstract_memory_system import AbstractMemorySystem
+from ..processors.abstract_processor import AbstractProcessor
+from .abstract_system_board import AbstractSystemBoard
+from .kernel_disk_workload import KernelDiskWorkload
 
 
 class X86Board(AbstractSystemBoard, KernelDiskWorkload):

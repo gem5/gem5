@@ -36,15 +36,13 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 import sys
 from os import getcwd
 from os.path import join as joinpath
 
+import m5
 from common import CpuConfig
 from common import ObjectList
-
-import m5
 from m5.defines import buildEnv
 from m5.objects import *
 from m5.util import *

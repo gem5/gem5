@@ -23,16 +23,19 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """ Caches with options for a simple gem5 configuration script
 
 This file contains L1 I/D and L2 caches to be used in the simple
 gem5 configuration script.
 """
-
 import m5
-from m5.objects import Cache, L2XBar, StridePrefetcher, SubSystem
-from m5.params import AddrRange, AllMemory, MemorySize
+from m5.objects import Cache
+from m5.objects import L2XBar
+from m5.objects import StridePrefetcher
+from m5.objects import SubSystem
+from m5.params import AddrRange
+from m5.params import AllMemory
+from m5.params import MemorySize
 from m5.util.convert import toMemorySize
 
 # Some specific options for caches

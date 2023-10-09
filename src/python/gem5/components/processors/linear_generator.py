@@ -23,13 +23,12 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from typing import List
 
 from ...utils.override import overrides
-from .linear_generator_core import LinearGeneratorCore
 from .abstract_generator import AbstractGenerator
 from .abstract_generator import partition_range
-
-from typing import List
+from .linear_generator_core import LinearGeneratorCore
 
 
 class LinearGenerator(AbstractGenerator):

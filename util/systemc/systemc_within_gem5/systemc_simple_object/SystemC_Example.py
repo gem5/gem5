@@ -22,11 +22,9 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
+from m5.objects.SystemC import SystemC_ScModule
 from m5.params import *
 from m5.SimObject import SimObject
-
-from m5.objects.SystemC import SystemC_ScModule
 
 # This class is a subclass of sc_module, and all the special magic which makes
 # that work is handled in the base classes.

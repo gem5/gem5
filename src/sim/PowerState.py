@@ -33,10 +33,9 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-
-from m5.SimObject import SimObject
 from m5.params import *
 from m5.proxy import *
+from m5.SimObject import SimObject
 
 # Enumerate set of allowed power states that can be used by a clocked object.
 # The list is kept generic to express a base minimal set.

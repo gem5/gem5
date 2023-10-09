@@ -34,7 +34,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Author: Andrew Bardsley
-
 # This script allows .ini and .json system config file generated from a
 # previous gem5 run to be read in and instantiated.
 #
@@ -44,7 +43,6 @@
 # with better system-description capabilities.  Splitting scripts
 # between system construction and run control may allow better
 # debugging.
-
 import argparse
 import configparser
 import inspect

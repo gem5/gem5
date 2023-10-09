@@ -23,14 +23,14 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-import unittest
-import tempfile
 import os
 import shutil
+import tempfile
+import unittest
 from pathlib import Path
 
-from gem5.resources.md5_utils import md5_file, md5_dir
+from gem5.resources.md5_utils import md5_dir
+from gem5.resources.md5_utils import md5_file
 
 
 class MD5FileTestSuite(unittest.TestCase):

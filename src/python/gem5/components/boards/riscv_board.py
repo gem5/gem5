@@ -24,51 +24,42 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 import os
-
 from typing import List
 
-from ...utils.override import overrides
-from .abstract_system_board import AbstractSystemBoard
-from .kernel_disk_workload import KernelDiskWorkload
-from ..processors.abstract_processor import AbstractProcessor
-from ..memory.abstract_memory_system import AbstractMemorySystem
-from ..cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
-from ...resources.resource import AbstractResource
+import m5
+from m5.objects import AddrRange
+from m5.objects import BadAddr
+from m5.objects import Bridge
+from m5.objects import CowDiskImage
+from m5.objects import Frequency
+from m5.objects import GenericRiscvPciHost
+from m5.objects import HiFive
+from m5.objects import IGbE_e1000
+from m5.objects import IOXBar
+from m5.objects import PMAChecker
+from m5.objects import Port
+from m5.objects import RawDiskImage
+from m5.objects import RiscvLinux
+from m5.objects import RiscvMmioVirtIO
+from m5.objects import RiscvRTC
+from m5.objects import VirtIOBlock
+from m5.objects import VirtIORng
+from m5.util.fdthelper import Fdt
+from m5.util.fdthelper import FdtNode
+from m5.util.fdthelper import FdtProperty
+from m5.util.fdthelper import FdtPropertyStrings
+from m5.util.fdthelper import FdtPropertyWords
+from m5.util.fdthelper import FdtState
 
 from ...isas import ISA
-
-import m5
-
-from m5.objects import (
-    BadAddr,
-    Bridge,
-    PMAChecker,
-    RiscvLinux,
-    AddrRange,
-    IOXBar,
-    RiscvRTC,
-    HiFive,
-    GenericRiscvPciHost,
-    IGbE_e1000,
-    CowDiskImage,
-    RawDiskImage,
-    RiscvMmioVirtIO,
-    VirtIOBlock,
-    VirtIORng,
-    Frequency,
-    Port,
-)
-
-from m5.util.fdthelper import (
-    Fdt,
-    FdtNode,
-    FdtProperty,
-    FdtPropertyStrings,
-    FdtPropertyWords,
-    FdtState,
-)
+from ...resources.resource import AbstractResource
+from ...utils.override import overrides
+from ..cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
+from ..memory.abstract_memory_system import AbstractMemorySystem
+from ..processors.abstract_processor import AbstractProcessor
+from .abstract_system_board import AbstractSystemBoard
+from .kernel_disk_workload import KernelDiskWorkload
 
 
 class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):

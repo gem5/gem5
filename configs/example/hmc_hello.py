@@ -29,14 +29,13 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Author: Éder F. Zulian
-
-import sys
 import argparse
+import sys
 
 import m5
+from gem5.runtime import get_runtime_isa
 from m5.objects import *
 from m5.util import *
-from gem5.runtime import get_runtime_isa
 
 addToPath("../")
 

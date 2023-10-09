@@ -32,12 +32,11 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-from m5.params import *
-from m5.proxy import *
+from m5.objects.DRAMInterface import AddrMap
 from m5.objects.MemCtrl import MemCtrl
 from m5.objects.MemInterface import MemInterface
-from m5.objects.DRAMInterface import AddrMap
+from m5.params import *
+from m5.proxy import *
 
 # The following interface aims to model byte-addressable NVM
 # The most important system-level performance effects of a NVM

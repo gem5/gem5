@@ -23,7 +23,6 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """
 This gem5 configuation script creates a simple board to run the first
 10^6 ticks of "riscv-hello" binary simulation and saves a checkpoint.
@@ -42,17 +41,17 @@ scons build/RISCV/gem5.opt
     configs/example/gem5_library/checkpoint/riscv-hello-save-checkpoint.py
 ```
 """
-
 import argparse
-from gem5.isas import ISA
-from gem5.utils.requires import requires
-from gem5.resources.resource import obtain_resource
-from gem5.components.memory import SingleChannelDDR3_1600
-from gem5.components.processors.cpu_types import CPUTypes
+
 from gem5.components.boards.simple_board import SimpleBoard
 from gem5.components.cachehierarchies.classic.no_cache import NoCache
+from gem5.components.memory import SingleChannelDDR3_1600
+from gem5.components.processors.cpu_types import CPUTypes
 from gem5.components.processors.simple_processor import SimpleProcessor
+from gem5.isas import ISA
+from gem5.resources.resource import obtain_resource
 from gem5.simulate.simulator import Simulator
+from gem5.utils.requires import requires
 
 parser = argparse.ArgumentParser()
 

@@ -25,7 +25,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Sean Wilson
-
 """
 Handlers for the testlib Log.
 
@@ -37,14 +36,14 @@ import sys
 import threading
 import time
 import traceback
+from queue import Empty
+from queue import Queue
 
 import testlib.helper as helper
 import testlib.log as log
 import testlib.result as result
 import testlib.state as state
 import testlib.terminal as terminal
-
-from queue import Queue, Empty
 from testlib.configuration import constants
 
 

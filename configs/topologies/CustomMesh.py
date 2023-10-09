@@ -33,14 +33,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-
 import math
 
-from m5.util import fatal
-from m5.params import *
-from m5.objects import *
-
 from m5.defines import buildEnv
+from m5.objects import *
+from m5.params import *
+from m5.util import fatal
 
 if buildEnv["PROTOCOL"] == "CHI":
     import ruby.CHI_config as CHI

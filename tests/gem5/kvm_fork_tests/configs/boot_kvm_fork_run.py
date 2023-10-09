@@ -26,7 +26,6 @@
 #
 # Author: Austin Harris
 #
-
 """
 This script tests forking gem5 with the KVM cores and switching cores in the
 child process. First, the test boots linux with KVM and tests fast-forwarding
@@ -34,30 +33,26 @@ with instruction exit events. Then the test forks the simulation, waits for the
 child to simulate until completion, and then simulates to completion in the
 parent process.
 """
-
 import argparse
 import os
 import sys
 from textwrap import dedent
 
 import m5
-from m5.objects import Root
-
-from gem5.components.boards.x86_board import X86Board
 from gem5.coherence_protocol import CoherenceProtocol
-from gem5.isas import ISA
+from gem5.components.boards.x86_board import X86Board
 from gem5.components.memory import SingleChannelDDR3_1600
-from gem5.components.processors.cpu_types import (
-    CPUTypes,
-    get_cpu_types_str_set,
-    get_cpu_type_from_str,
-)
+from gem5.components.processors.cpu_types import CPUTypes
+from gem5.components.processors.cpu_types import get_cpu_type_from_str
+from gem5.components.processors.cpu_types import get_cpu_types_str_set
 from gem5.components.processors.simple_switchable_processor import (
     SimpleSwitchableProcessor,
 )
+from gem5.isas import ISA
 from gem5.resources.resource import obtain_resource
 from gem5.runtime import get_runtime_coherence_protocol
 from gem5.utils.requires import requires
+from m5.objects import Root
 
 parser = argparse.ArgumentParser(
     description="A script to test forking gem5 and switching cpus."

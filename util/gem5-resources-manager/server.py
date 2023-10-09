@@ -23,29 +23,28 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-from flask import (
-    render_template,
-    Flask,
-    request,
-    redirect,
-    url_for,
-    make_response,
-)
-from bson import json_util
-import json
-import jsonschema
-import requests
-import markdown
 import base64
+import json
 import secrets
 from pathlib import Path
-from werkzeug.utils import secure_filename
-from cryptography.fernet import Fernet, InvalidToken
-from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
-from cryptography.exceptions import InvalidSignature
+
+import jsonschema
+import markdown
+import requests
 from api.json_client import JSONClient
 from api.mongo_client import MongoDBClient
+from bson import json_util
+from cryptography.exceptions import InvalidSignature
+from cryptography.fernet import Fernet
+from cryptography.fernet import InvalidToken
+from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
+from flask import Flask
+from flask import make_response
+from flask import redirect
+from flask import render_template
+from flask import request
+from flask import url_for
+from werkzeug.utils import secure_filename
 
 databases = {}
 

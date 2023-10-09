@@ -23,12 +23,12 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+import argparse
+import sys
 
 import m5
-from m5.objects import *
 from caches import *
-import sys
-import argparse
+from m5.objects import *
 
 parser = argparse.ArgumentParser(description="m5threads atomic tester")
 parser.add_argument("--cpu-type", default="DerivO3CPU")

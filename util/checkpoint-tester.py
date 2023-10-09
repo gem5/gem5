@@ -1,5 +1,4 @@
 #! /usr/bin/env python3
-
 # Copyright (c) 2010 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
@@ -28,7 +27,6 @@
 #
 # Author: Steve Reinhardt
 #
-
 # Basic test script for checkpointing.
 #
 # Given an M5 command and an interval (in ticks), this script will:
@@ -62,11 +60,11 @@
 # util/checkpoint-tester.py -i 200000000000 -- build/<ISA>/gem5.opt \
 #      configs/example/fs.py --script configs/boot/halt.sh
 #
-
-
-import os, sys, re
-import subprocess
 import argparse
+import os
+import re
+import subprocess
+import sys
 
 parser = argparse.ArgumentParser()
 

@@ -35,12 +35,10 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """
 Test file containing simple workloads to run on CPU models.
 Each test takes ~10 seconds to run.
 """
-
 from testlib import *
 
 workloads = ("Bubblesort", "FloatMM")

@@ -24,7 +24,6 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """ This file creates a single CPU and a two-level cache system.
 This script takes a single parameter which specifies a binary to execute.
 If none is provided it executes 'hello' by default (mostly used for testing)
@@ -37,13 +36,12 @@ IMPORTANT: If you modify this file, it's likely that the Learning gem5 book
            also needs to be updated. For now, email Jason <power.jg@gmail.com>
 
 """
-
 # import the m5 (gem5) library created when gem5 is built
 import m5
+from gem5.runtime import get_runtime_isa
+from m5.objects import *
 
 # import all of the SimObjects
-from m5.objects import *
-from gem5.runtime import get_runtime_isa
 
 # Add the common scripts to our path
 m5.util.addToPath("../../")

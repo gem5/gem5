@@ -23,15 +23,14 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 from .abstract_stat import AbstractStat
-from .serializable_stat import SerializableStat
 from .group import Group
+from .jsonloader import JsonLoader
+from .serializable_stat import SerializableStat
 from .simstat import SimStat
 from .statistic import Statistic
 from .storagetype import StorageType
 from .timeconversion import TimeConversion
-from .jsonloader import JsonLoader
 
 __all__ = [
     "AbstractStat",

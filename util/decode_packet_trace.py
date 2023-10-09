@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 # Copyright (c) 2013-2014 ARM Limited
 # All rights reserved
 #
@@ -34,14 +33,13 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 # This script is used to dump protobuf packet traces to ASCII
 # format.
-
 import os
-import protolib
 import subprocess
 import sys
+
+import protolib
 
 util_dir = os.path.dirname(os.path.realpath(__file__))
 # Make sure the proto definitions are up to date.

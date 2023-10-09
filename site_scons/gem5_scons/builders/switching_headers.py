@@ -37,10 +37,10 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 import os.path
 
-from gem5_scons import Transform, MakeAction
+from gem5_scons import MakeAction
+from gem5_scons import Transform
 
 ###################################################
 #

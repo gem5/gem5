@@ -37,13 +37,12 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-import m5
 import _m5.event
-
+import m5
+from _m5.event import getEventQueue
 from _m5.event import GlobalSimLoopExitEvent as SimExit
 from _m5.event import PyEvent as Event
-from _m5.event import getEventQueue, setEventQueue
+from _m5.event import setEventQueue
 
 mainq = None
 

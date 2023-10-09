@@ -23,11 +23,10 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 import os
 
-from testlib.configuration import constants
 from gem5.suite import *
+from testlib.configuration import constants
 
 """
 As the filename begins with `test_`, it will be added to the TestLib testsuite

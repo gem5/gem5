@@ -37,7 +37,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Sean Wilson
-
 """
 Module contains wrappers for test items that have been
 loaded by the testlib :class:`testlib.loader.Loader`.
@@ -45,7 +44,8 @@ loaded by the testlib :class:`testlib.loader.Loader`.
 import itertools
 
 import testlib.uid as uid
-from testlib.state import Status, Result
+from testlib.state import Result
+from testlib.state import Status
 
 
 class TestCaseMetadata:

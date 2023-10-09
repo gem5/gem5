@@ -27,11 +27,10 @@
 # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 import m5
-
 from m5.objects import *
-from m5.util import addToPath, fatal
+from m5.util import addToPath
+from m5.util import fatal
 
 addToPath("../../../configs/common/")
 

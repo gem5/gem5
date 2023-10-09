@@ -32,7 +32,6 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 #####################################################################
 #
 # System visualization using DOT
@@ -52,10 +51,14 @@
 # pydot is required. When missing, no output will be generated.
 #
 #####################################################################
+import os
+import re
 
-import m5, os, re
-from m5.SimObject import isRoot, isSimObjectVector
-from m5.params import PortRef, isNullPointer
+import m5
+from m5.params import isNullPointer
+from m5.params import PortRef
+from m5.SimObject import isRoot
+from m5.SimObject import isSimObjectVector
 from m5.util import warn
 
 try:

@@ -23,19 +23,17 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
-from .simple_core import SimpleCore
-from .abstract_core import AbstractCore
-from .cpu_types import CPUTypes
+from typing import Dict
+from typing import List
 
 import m5
 
-from typing import Dict, List
-
-from .abstract_processor import AbstractProcessor
-from ..boards.abstract_board import AbstractBoard
 from ...utils.override import *
+from ..boards.abstract_board import AbstractBoard
+from .abstract_core import AbstractCore
+from .abstract_processor import AbstractProcessor
+from .cpu_types import CPUTypes
+from .simple_core import SimpleCore
 
 
 class SwitchableProcessor(AbstractProcessor):

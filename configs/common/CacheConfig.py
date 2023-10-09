@@ -36,17 +36,14 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 # Configure the M5 cache hierarchy config in one place
 #
-
 import m5
-from m5.objects import *
+from common import ObjectList
+from common.Caches import *
 from gem5.isas import ISA
 from gem5.runtime import get_runtime_isa
-
-from common.Caches import *
-from common import ObjectList
+from m5.objects import *
 
 
 def _get_hwp(hwp_option):

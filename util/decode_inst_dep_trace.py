@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 # Copyright (c) 2013 - 2015 ARM Limited
 # All rights reserved
 #
@@ -63,7 +62,6 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 # This script is used to dump protobuf traces of the instruction dependency
 # graph to ASCII format.
 #
@@ -85,9 +83,9 @@
 # 7,35666,1,COMP,3000::,4
 # 8,35670,1,STORE,1748748,4,74,0:,6,3:,7
 # 9,35670,1,COMP,500::,7
+import sys
 
 import protolib
-import sys
 
 # Import the packet proto definitions. If they are not found, attempt
 # to generate them automatically. This assumes that the script is

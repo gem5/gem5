@@ -23,27 +23,28 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from m5.objects import DMASequencer
+from m5.objects import RubyPortProxy
+from m5.objects import RubySystem
 
-from ...abstract_ruby_cache_hierarchy import AbstractRubyCacheHierarchy
-from ....abstract_three_level_cache_hierarchy import (
-    AbstractThreeLevelCacheHierarchy,
-)
 from ......coherence_protocol import CoherenceProtocol
 from ......components.boards.abstract_board import AbstractBoard
-from ......utils.requires import requires
-
 from ......components.cachehierarchies.ruby.caches.mesi_three_level.directory import (
     Directory,
 )
 from ......components.cachehierarchies.ruby.caches.mesi_three_level.dma_controller import (
     DMAController,
 )
-
-from m5.objects import RubySystem, DMASequencer, RubyPortProxy
-
+from ......utils.requires import requires
+from ....abstract_three_level_cache_hierarchy import (
+    AbstractThreeLevelCacheHierarchy,
+)
+from ...abstract_ruby_cache_hierarchy import AbstractRubyCacheHierarchy
 from .core_complex import CoreComplex
 from .octopi_network import OctopiNetwork
-from .ruby_network_components import RubyRouter, RubyExtLink, RubyIntLink
+from .ruby_network_components import RubyExtLink
+from .ruby_network_components import RubyIntLink
+from .ruby_network_components import RubyRouter
 
 # CoreComplex sub-systems own the L1, L2, L3 controllers
 # OctopiCache owns the directory controllers

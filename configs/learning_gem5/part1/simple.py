@@ -23,7 +23,6 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """ This file creates a barebones system and executes 'hello', a simple Hello
 World application.
 See Part 1, Chapter 2: Creating a simple configuration script in the
@@ -37,12 +36,11 @@ referenced as examples of scripts which utilize the ARM and RISC-V ISAs
 respectively.
 
 """
-
 # import the m5 (gem5) library created when gem5 is built
 import m5
+from m5.objects import *
 
 # import all of the SimObjects
-from m5.objects import *
 
 # create the system we are going to simulate
 system = System()

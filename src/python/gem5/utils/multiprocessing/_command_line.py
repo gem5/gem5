@@ -23,16 +23,15 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """
 This file contains extensions of the multiprocessing module to be used with gem5.
 Specifically, it contains the code to produce the command line for spawned processes.
 Some code inspired by the Python standard library implementation of the
 multiprocessing module (i.e., cpython/Lib/multiprocessing/).
 """
-
 import sys
-from multiprocessing import spawn, util
+from multiprocessing import spawn
+from multiprocessing import util
 
 
 def _gem5_args_for_multiprocessing(name):

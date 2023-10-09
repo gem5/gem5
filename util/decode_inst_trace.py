@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 # Copyright (c) 2013-2014 ARM Limited
 # All rights reserved
 #
@@ -34,16 +33,15 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 # This script is used to dump protobuf instruction traces to ASCII
 # format. It assumes that protoc has been executed and already
 # generated the Python package for the inst messages. This can
 # be done manually using:
 # protoc --python_out=. inst.proto
 # The ASCII trace format uses one line per request.
+import sys
 
 import protolib
-import sys
 
 # Import the packet proto definitions
 try:

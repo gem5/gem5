@@ -23,11 +23,9 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 # This test is targeting loads.
 # Access pattern: A, C, E, G, A, I, K, M, C, A
 # Each letter represents a 64-byte address range.
-
 # The [] indicate two different sets, and each set has four ways.
 # [set0way0, set0way1, set0way2, set0way3],
 # [set1way0, set1way1, set1way2, set1way3],
@@ -35,7 +33,6 @@
 # and each cache line is 64B. This test can be used to test the correctness of RRIP
 # replacement policy. you will observe: # m, m, m, m, h, m, m, m, m, m.
 # where 'm' means miss, and 'h' means hit.
-
 # Explanation of this result:
 # A, C, E, G are misses, now the cache stores ([A2, C2, E2, G2],[ , , ,]).
 # The number following each letter is the RRPV for that address range.
@@ -47,7 +44,6 @@
 # M searches for a victim and selects G. Now it stores ([A2, I2, K2, M2],[ , , ,]).
 # C searches for a victim and selects A. Now it stores ([C2, I3, K3, M3],[ , , ,]).
 # A searches for a victim and selects I. Now it stores ([C2, A2, K3, M3],[ , , ,]).
-
 from m5.objects.ReplacementPolicies import RRIPRP as rp
 
 

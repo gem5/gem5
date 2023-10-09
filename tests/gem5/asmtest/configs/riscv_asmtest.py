@@ -24,26 +24,22 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """
 A run script for a very simple Syscall-Execution running simple binaries.
 The system has no cache heirarchy and is as "bare-bones" as you can get in
 gem5 while still being functinal.
 """
+import argparse
 
-from gem5.resources.resource import obtain_resource
-from gem5.components.processors.cpu_types import (
-    get_cpu_types_str_set,
-    get_cpu_type_from_str,
-)
-from gem5.components.memory import SingleChannelDDR3_1600
 from gem5.components.boards.simple_board import SimpleBoard
 from gem5.components.cachehierarchies.classic.no_cache import NoCache
+from gem5.components.memory import SingleChannelDDR3_1600
+from gem5.components.processors.cpu_types import get_cpu_type_from_str
+from gem5.components.processors.cpu_types import get_cpu_types_str_set
 from gem5.components.processors.simple_processor import SimpleProcessor
-from gem5.simulate.simulator import Simulator
 from gem5.isas import ISA
-
-import argparse
+from gem5.resources.resource import obtain_resource
+from gem5.simulate.simulator import Simulator
 
 parser = argparse.ArgumentParser(
     description="A gem5 script for testing RISC-V instructions"

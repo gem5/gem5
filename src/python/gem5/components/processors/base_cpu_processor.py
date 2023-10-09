@@ -23,25 +23,20 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
-from .base_cpu_core import BaseCPUCore
-from ..boards.mem_mode import MemMode
-from ...utils.override import overrides
-from ..boards.mem_mode import MemMode
-from .abstract_processor import AbstractProcessor
-from ..boards.abstract_board import AbstractBoard
-
 from typing import List
 
+from m5.objects import BaseAtomicSimpleCPU
+from m5.objects import BaseMinorCPU
+from m5.objects import BaseNonCachingSimpleCPU
+from m5.objects import BaseO3CPU
+from m5.objects import BaseTimingSimpleCPU
 from m5.util import warn
-from m5.objects import (
-    BaseO3CPU,
-    BaseMinorCPU,
-    BaseAtomicSimpleCPU,
-    BaseNonCachingSimpleCPU,
-    BaseTimingSimpleCPU,
-)
+
+from ...utils.override import overrides
+from ..boards.abstract_board import AbstractBoard
+from ..boards.mem_mode import MemMode
+from .abstract_processor import AbstractProcessor
+from .base_cpu_core import BaseCPUCore
 
 
 class BaseCPUProcessor(AbstractProcessor):

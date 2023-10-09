@@ -1,5 +1,4 @@
 #! /usr/bin/env python3
-
 # Copyright (c) 2011 ARM Limited
 # All rights reserved
 #
@@ -34,13 +33,11 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 # Pipeline activity viewer for the O3 CPU model.
-
 import argparse
+import copy
 import os
 import sys
-import copy
 
 # Temporary storage for instructions. The queue is filled in out-of-order
 # until it reaches 'max_threshold' number of instructions. It is then

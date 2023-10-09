@@ -35,22 +35,22 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 # Simple test script
 #
 # "m5 test.py"
-
 import argparse
-import sys
 import os
+import sys
 
 import m5
+from gem5.isas import ISA
+from gem5.runtime import get_runtime_isa
 from m5.defines import buildEnv
 from m5.objects import *
 from m5.params import NULL
-from m5.util import addToPath, fatal, warn
-from gem5.isas import ISA
-from gem5.runtime import get_runtime_isa
+from m5.util import addToPath
+from m5.util import fatal
+from m5.util import warn
 
 addToPath("../../")
 

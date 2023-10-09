@@ -35,7 +35,6 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 # A Simplified model of a complete HMC device. Based on:
 #  [1] http://www.hybridmemorycube.org/specification-download/
 #  [2] High performance AXI-4.0 based interconnect for extensible smart memory
@@ -118,7 +117,6 @@
 #   mixed: This is a hybrid architecture. It has 4 crossbars inside the HMC.
 #   2 Crossbars are connected to only local vaults. From other 2 crossbar, a
 #   request can be forwarded to any other vault.
-
 import argparse
 
 import m5

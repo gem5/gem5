@@ -1,6 +1,6 @@
-import sys
 import argparse
 import subprocess
+import sys
 from pprint import pprint
 
 import m5

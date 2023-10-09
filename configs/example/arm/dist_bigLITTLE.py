@@ -32,17 +32,14 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 # This configuration file extends the example ARM big.LITTLE(tm)
 # configuration to enabe dist-gem5 siulations of big.LITTLE systems.
-
 import argparse
 import os
 
+import fs_bigLITTLE as bL
 import m5
 from m5.objects import *
-
-import fs_bigLITTLE as bL
 
 m5.util.addToPath("../../dist")
 import sw

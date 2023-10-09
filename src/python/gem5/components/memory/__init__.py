@@ -23,20 +23,19 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
+from .hbm import HBM2Stack
+from .multi_channel import DualChannelDDR3_1600
+from .multi_channel import DualChannelDDR3_2133
+from .multi_channel import DualChannelDDR4_2400
+from .multi_channel import DualChannelLPDDR3_1600
+from .single_channel import DIMM_DDR5_4400
+from .single_channel import DIMM_DDR5_6400
+from .single_channel import DIMM_DDR5_8400
 from .single_channel import SingleChannelDDR3_1600
 from .single_channel import SingleChannelDDR3_2133
 from .single_channel import SingleChannelDDR4_2400
 from .single_channel import SingleChannelHBM
 from .single_channel import SingleChannelLPDDR3_1600
-from .single_channel import DIMM_DDR5_4400
-from .single_channel import DIMM_DDR5_6400
-from .single_channel import DIMM_DDR5_8400
-from .multi_channel import DualChannelDDR3_1600
-from .multi_channel import DualChannelDDR3_2133
-from .multi_channel import DualChannelDDR4_2400
-from .multi_channel import DualChannelLPDDR3_1600
-from .hbm import HBM2Stack
 
 try:
     from .dramsys import DRAMSysMem

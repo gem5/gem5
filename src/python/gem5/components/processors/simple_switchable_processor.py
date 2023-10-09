@@ -23,18 +23,18 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from typing import Optional
 
-from ..boards.mem_mode import MemMode
-from ..boards.abstract_board import AbstractBoard
-from ..processors.simple_core import SimpleCore
-from ..processors.cpu_types import CPUTypes, get_mem_mode
-from .switchable_processor import SwitchableProcessor
-from ...isas import ISA
 from m5.util import warn
 
+from ...isas import ISA
 from ...utils.override import *
-
-from typing import Optional
+from ..boards.abstract_board import AbstractBoard
+from ..boards.mem_mode import MemMode
+from ..processors.cpu_types import CPUTypes
+from ..processors.cpu_types import get_mem_mode
+from ..processors.simple_core import SimpleCore
+from .switchable_processor import SwitchableProcessor
 
 
 class SimpleSwitchableProcessor(SwitchableProcessor):

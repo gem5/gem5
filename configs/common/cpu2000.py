@@ -23,11 +23,15 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 import os
 import sys
-from os.path import basename, exists, join as joinpath, normpath
-from os.path import isdir, isfile, islink
+from os.path import basename
+from os.path import exists
+from os.path import isdir
+from os.path import isfile
+from os.path import islink
+from os.path import join as joinpath
+from os.path import normpath
 
 spec_dist = os.environ.get("M5_CPU2000", "/dist/m5/cpu2000")
 

@@ -23,17 +23,15 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-from typing import (
-    Dict,
-    List,
-    Mapping,
-    Optional,
-    Union,
-)
+from typing import Dict
+from typing import List
+from typing import Mapping
+from typing import Optional
+from typing import Union
 
 from .abstract_stat import AbstractStat
-from .statistic import Scalar, Statistic
+from .statistic import Scalar
+from .statistic import Statistic
 from .timeconversion import TimeConversion
 
 

@@ -1,16 +1,20 @@
-import m5
-import os
 import configparser
+import os
+from typing import List
+from typing import Optional
+from typing import Sequence
+from typing import Tuple
 
-from m5.objects import DRAMsim3, AddrRange, Port, MemCtrl
+import m5
+from m5.objects import AddrRange
+from m5.objects import DRAMsim3
+from m5.objects import MemCtrl
+from m5.objects import Port
 from m5.util.convert import toMemorySize
 
 from ...utils.override import overrides
 from ..boards.abstract_board import AbstractBoard
 from .abstract_memory_system import AbstractMemorySystem
-
-
-from typing import Optional, Tuple, Sequence, List
 
 
 def config_ds3(mem_type: str, num_chnls: int) -> Tuple[str, str]:

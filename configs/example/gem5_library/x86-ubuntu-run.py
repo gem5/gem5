@@ -23,7 +23,6 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """
 This script utilizes the X86DemoBoard to run a simple Ubunutu boot. The script
 will boot the the OS to login before exiting the simulation.
@@ -43,7 +42,6 @@ scons build/X86/gem5.opt
 ./build/X86/gem5.opt configs/example/gem5_library/x86-ubuntu-run.py
 ```
 """
-
 from gem5.prebuilt.demo.x86_demo_board import X86DemoBoard
 from gem5.resources.resource import obtain_resource
 from gem5.simulate.simulator import Simulator

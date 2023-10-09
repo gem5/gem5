@@ -35,12 +35,13 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 from m5.defines import buildEnv
-from m5.SimObject import SimObject
+from m5.objects.PciDevice import PciDevice
+from m5.objects.PciDevice import PciIoBar
+from m5.objects.PciDevice import PciMemBar
 from m5.params import *
 from m5.proxy import *
-from m5.objects.PciDevice import PciDevice, PciIoBar, PciMemBar
+from m5.SimObject import SimObject
 
 ETHERNET_ROLE = "ETHERNET"
 Port.compat(ETHERNET_ROLE, ETHERNET_ROLE)

@@ -23,26 +23,30 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from typing import Type
 
+from gem5.components.boards.abstract_board import AbstractBoard
 from gem5.components.cachehierarchies.abstract_cache_hierarchy import (
     AbstractCacheHierarchy,
 )
-from gem5.components.cachehierarchies.classic.abstract_classic_cache_hierarchy import (
-    AbstractClassicCacheHierarchy,
-)
 from gem5.components.cachehierarchies.abstract_two_level_cache_hierarchy import (
     AbstractTwoLevelCacheHierarchy,
+)
+from gem5.components.cachehierarchies.classic.abstract_classic_cache_hierarchy import (
+    AbstractClassicCacheHierarchy,
 )
 from gem5.components.cachehierarchies.classic.caches.l1dcache import L1DCache
 from gem5.components.cachehierarchies.classic.caches.l1icache import L1ICache
 from gem5.components.cachehierarchies.classic.caches.l2cache import L2Cache
 from gem5.components.cachehierarchies.classic.caches.mmu_cache import MMUCache
-from gem5.components.boards.abstract_board import AbstractBoard
 from gem5.isas import ISA
-from m5.objects import Cache, L2XBar, BaseXBar, SystemXBar, BadAddr, Port
-
 from gem5.utils.override import *
-from typing import Type
+from m5.objects import BadAddr
+from m5.objects import BaseXBar
+from m5.objects import Cache
+from m5.objects import L2XBar
+from m5.objects import Port
+from m5.objects import SystemXBar
 
 
 class RISCVMatchedCacheHierarchy(

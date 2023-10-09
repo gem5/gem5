@@ -23,23 +23,21 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """
 This scripts is used for checking the correctness of statistics reported
 by the gem5 simulator. It can excercise certain components in the memory
 subsystem. The reported values could be used to compare against a validated
 set of statistics.
 """
-
-import m5
-
 import argparse
 import importlib
 from pathlib import Path
 
-from m5.objects import Root, MemorySize
-from m5.stats.gem5stats import get_simstat
+import m5
 from gem5.components.boards.test_board import TestBoard
+from m5.objects import MemorySize
+from m5.objects import Root
+from m5.stats.gem5stats import get_simstat
 
 
 def generator_factory(

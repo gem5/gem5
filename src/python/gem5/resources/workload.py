@@ -23,14 +23,17 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-from .resource import obtain_resource, WorkloadResource
-from .client import get_resource_json_obj
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
 
 from _m5 import core
 from m5.util import warn
 
-from typing import Dict, Any, List, Optional
+from .client import get_resource_json_obj
+from .resource import obtain_resource
+from .resource import WorkloadResource
 
 
 def CustomWorkload(function: str, parameters: Dict[str, Any]):

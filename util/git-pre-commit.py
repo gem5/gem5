@@ -34,18 +34,17 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
-from tempfile import TemporaryFile
+import argparse
 import os
 import subprocess
 import sys
+from tempfile import TemporaryFile
 
 from style.repo import GitRepo
-from style.verifiers import all_verifiers, all_regions
-from style.style import StdioUI, check_ignores
-
-import argparse
+from style.style import check_ignores
+from style.style import StdioUI
+from style.verifiers import all_regions
+from style.verifiers import all_verifiers
 
 parser = argparse.ArgumentParser(description="gem5 git style checker hook")
 

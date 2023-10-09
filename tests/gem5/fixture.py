@@ -35,25 +35,27 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-import os
-import tempfile
-import shutil
-import sys
-import socket
-import threading
 import gzip
-
+import os
+import shutil
+import socket
+import sys
+import tempfile
+import threading
 import urllib.error
 import urllib.request
+from typing import List
+from typing import Optional
 
-from testlib.fixture import Fixture
-from testlib.configuration import config, constants
-from testlib.helper import log_call, cacheresult, joinpath, absdirpath
 import testlib.log as log
+from testlib.configuration import config
+from testlib.configuration import constants
+from testlib.fixture import Fixture
+from testlib.helper import absdirpath
+from testlib.helper import cacheresult
+from testlib.helper import joinpath
+from testlib.helper import log_call
 from testlib.state import Result
-
-from typing import Optional, List
 
 
 class VariableFixture(Fixture):

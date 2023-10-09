@@ -23,54 +23,47 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 import os
 from typing import List
 
-from ....utils.override import overrides
-from ..abstract_system_board import AbstractSystemBoard
-from ...processors.abstract_processor import AbstractProcessor
-from ...memory.abstract_memory_system import AbstractMemorySystem
-from ...cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
-from ..kernel_disk_workload import KernelDiskWorkload
-from ....resources.resource import AbstractResource
-from ....isas import ISA
-
 import m5
-from m5.objects import (
-    Bridge,
-    PMAChecker,
-    RiscvLinux,
-    RiscvRTC,
-    AddrRange,
-    IOXBar,
-    Clint,
-    Plic,
-    Terminal,
-    LupioBLK,
-    LupioIPI,
-    LupioPIC,
-    LupioRNG,
-    LupioRTC,
-    LupioTMR,
-    LupioTTY,
-    LupioSYS,
-    LupV,
-    AddrRange,
-    CowDiskImage,
-    RawDiskImage,
-    Frequency,
-    Port,
-)
+from m5.objects import AddrRange
+from m5.objects import Bridge
+from m5.objects import Clint
+from m5.objects import CowDiskImage
+from m5.objects import Frequency
+from m5.objects import IOXBar
+from m5.objects import LupioBLK
+from m5.objects import LupioIPI
+from m5.objects import LupioPIC
+from m5.objects import LupioRNG
+from m5.objects import LupioRTC
+from m5.objects import LupioSYS
+from m5.objects import LupioTMR
+from m5.objects import LupioTTY
+from m5.objects import LupV
+from m5.objects import Plic
+from m5.objects import PMAChecker
+from m5.objects import Port
+from m5.objects import RawDiskImage
+from m5.objects import RiscvLinux
+from m5.objects import RiscvRTC
+from m5.objects import Terminal
+from m5.util.fdthelper import Fdt
+from m5.util.fdthelper import FdtNode
+from m5.util.fdthelper import FdtProperty
+from m5.util.fdthelper import FdtPropertyStrings
+from m5.util.fdthelper import FdtPropertyWords
+from m5.util.fdthelper import FdtState
 
-from m5.util.fdthelper import (
-    Fdt,
-    FdtNode,
-    FdtProperty,
-    FdtPropertyStrings,
-    FdtPropertyWords,
-    FdtState,
-)
+from ....isas import ISA
+from ....resources.resource import AbstractResource
+from ....utils.override import overrides
+from ...cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
+from ...memory.abstract_memory_system import AbstractMemorySystem
+from ...processors.abstract_processor import AbstractProcessor
+from ..abstract_system_board import AbstractSystemBoard
+from ..kernel_disk_workload import KernelDiskWorkload
 
 
 class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):

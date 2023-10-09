@@ -23,19 +23,16 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 import argparse
 from importlib.machinery import SourceFileLoader
 
-from cache_hierarchies import ModMIExampleCacheHierarchy
-
 import m5
-
-from m5.debug import flags
-from m5.objects import Root
+from cache_hierarchies import ModMIExampleCacheHierarchy
 from gem5.components.boards.test_board import TestBoard
 from gem5.components.memory.simple import SingleChannelSimpleMemory
 from gem5.components.processors.complex_generator import ComplexGenerator
+from m5.debug import flags
+from m5.objects import Root
 
 argparser = argparse.ArgumentParser()
 

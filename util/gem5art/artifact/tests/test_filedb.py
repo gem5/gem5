@@ -23,14 +23,11 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """Tests for ArtifactFileDB"""
-
-
 import json
 import os
-from pathlib import Path
 import unittest
+from pathlib import Path
 from uuid import UUID
 
 from gem5art.artifact import Artifact

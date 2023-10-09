@@ -37,7 +37,6 @@
 #   objects on the visualiser.  This file contains Blob definition and
 #   their rendering instructions in pygtk/cairo.
 #
-
 import pygtk
 
 pygtk.require("2.0")

@@ -26,12 +26,10 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
+from importlib import *
 
 from m5.objects import *
 from m5.util import fatal
-
-from importlib import *
-
 from network import Network
 
 

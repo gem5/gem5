@@ -26,17 +26,19 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-
-import argparse, os, re, getpass
-import math
+import argparse
+import getpass
 import glob
 import inspect
+import math
+import os
+import re
 
 import m5
-from m5.objects import *
-from m5.util import addToPath
 from gem5.isas import ISA
 from gem5.runtime import get_runtime_isa
+from m5.objects import *
+from m5.util import addToPath
 
 addToPath("../")
 

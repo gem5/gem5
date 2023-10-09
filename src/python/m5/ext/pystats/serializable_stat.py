@@ -23,10 +23,13 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-from datetime import datetime
 import json
-from typing import Dict, List, Union, Any, IO
+from datetime import datetime
+from typing import Any
+from typing import Dict
+from typing import IO
+from typing import List
+from typing import Union
 
 from .storagetype import StorageType
 

@@ -23,14 +23,18 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from abc import ABCMeta
+from abc import abstractmethod
+from typing import List
+from typing import Sequence
+from typing import Tuple
 
-from abc import ABCMeta, abstractmethod
-from typing import Tuple, Sequence, List
-
+from m5.objects import AddrRange
+from m5.objects import MemCtrl
+from m5.objects import Port
+from m5.objects import SubSystem
 
 from ..boards.abstract_board import AbstractBoard
-
-from m5.objects import AddrRange, Port, SubSystem, MemCtrl
 
 
 class AbstractMemorySystem(SubSystem):

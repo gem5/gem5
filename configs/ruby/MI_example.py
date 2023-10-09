@@ -24,12 +24,14 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 import math
+
 import m5
-from m5.objects import *
 from m5.defines import buildEnv
-from .Ruby import create_topology, create_directories
+from m5.objects import *
+
+from .Ruby import create_directories
+from .Ruby import create_topology
 from .Ruby import send_evicts
 
 #

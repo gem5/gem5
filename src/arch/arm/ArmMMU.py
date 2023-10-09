@@ -1,5 +1,4 @@
 # -*- mode:python -*-
-
 # Copyright (c) 2020-2021 Arm Limited
 # All rights reserved.
 #
@@ -34,9 +33,9 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 from m5.objects.ArmSystem import ArmRelease
-from m5.objects.ArmTLB import ArmTLB, ArmStage2TLB
+from m5.objects.ArmTLB import ArmStage2TLB
+from m5.objects.ArmTLB import ArmTLB
 from m5.objects.BaseMMU import BaseMMU
 from m5.objects.ClockedObject import ClockedObject
 from m5.params import *

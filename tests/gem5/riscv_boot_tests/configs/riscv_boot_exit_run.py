@@ -23,7 +23,6 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """
 This example runs a simple linux boot on the RiscvBoard.
 
@@ -32,18 +31,17 @@ Characteristics
 
 * Runs exclusively on the RISC-V ISA with the classic caches
 """
-
-from gem5.isas import ISA
-from gem5.utils.requires import requires
-from gem5.resources.resource import Resource
-from gem5.components.processors.cpu_types import CPUTypes
-from gem5.components.boards.riscv_board import RiscvBoard
-from gem5.components.processors.simple_processor import SimpleProcessor
-from gem5.simulate.simulator import Simulator
-from gem5.resources.resource import obtain_resource
-
 import argparse
 import importlib
+
+from gem5.components.boards.riscv_board import RiscvBoard
+from gem5.components.processors.cpu_types import CPUTypes
+from gem5.components.processors.simple_processor import SimpleProcessor
+from gem5.isas import ISA
+from gem5.resources.resource import obtain_resource
+from gem5.resources.resource import Resource
+from gem5.simulate.simulator import Simulator
+from gem5.utils.requires import requires
 
 parser = argparse.ArgumentParser(
     description="A script to run the RISCV boot exit tests."

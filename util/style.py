@@ -34,16 +34,14 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 import os
 import sys
 
-from style.file_types import lang_type
 import style.verifiers
-from style.region import all_regions
-
-from style.style import StdioUI
 from style import repo
+from style.file_types import lang_type
+from style.region import all_regions
+from style.style import StdioUI
 
 verifier_names = dict([(c.__name__, c) for c in style.verifiers.all_verifiers])
 

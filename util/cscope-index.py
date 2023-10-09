@@ -24,11 +24,8 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 # Generate list of files to index with cscope and then generate cscope index.
-
 # Should be run from root of m5 tree (i.e. as 'util/cscope-index.py').
-
 import os
 
 # absolute paths to skip

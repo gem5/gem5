@@ -22,12 +22,11 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 import _m5.systemc
-
 from _m5.systemc import sc_main
+from _m5.systemc import sc_main_result_code
+from _m5.systemc import sc_main_result_str
 from _m5.systemc import sc_time
-from _m5.systemc import sc_main_result_code, sc_main_result_str
 
 
 class ScMainResult(object):

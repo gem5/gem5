@@ -23,7 +23,6 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """
 This gem5 configuration script runs the RISCVMatchedBoard in FS mode with a
 an Ubuntu 20.04 image and calls m5 exit after the simulation has booted the OS.
@@ -37,14 +36,13 @@ scons build/RISCV/gem5.opt
 ./build/RISCV/gem5.opt configs/example/gem5_library/riscvmatched-fs.py
 ```
 """
-
-from gem5.prebuilt.riscvmatched.riscvmatched_board import RISCVMatchedBoard
-from gem5.utils.requires import requires
-from gem5.isas import ISA
-from gem5.simulate.simulator import Simulator
-from gem5.resources.resource import obtain_resource
-
 import argparse
+
+from gem5.isas import ISA
+from gem5.prebuilt.riscvmatched.riscvmatched_board import RISCVMatchedBoard
+from gem5.resources.resource import obtain_resource
+from gem5.simulate.simulator import Simulator
+from gem5.utils.requires import requires
 
 requires(isa_required=ISA.RISCV)
 

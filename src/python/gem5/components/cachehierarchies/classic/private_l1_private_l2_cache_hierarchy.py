@@ -23,19 +23,23 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from m5.objects import BadAddr
+from m5.objects import BaseXBar
+from m5.objects import Cache
+from m5.objects import L2XBar
+from m5.objects import Port
+from m5.objects import SystemXBar
 
+from ....isas import ISA
+from ....utils.override import *
+from ...boards.abstract_board import AbstractBoard
 from ..abstract_cache_hierarchy import AbstractCacheHierarchy
-from .abstract_classic_cache_hierarchy import AbstractClassicCacheHierarchy
 from ..abstract_two_level_cache_hierarchy import AbstractTwoLevelCacheHierarchy
+from .abstract_classic_cache_hierarchy import AbstractClassicCacheHierarchy
 from .caches.l1dcache import L1DCache
 from .caches.l1icache import L1ICache
 from .caches.l2cache import L2Cache
 from .caches.mmu_cache import MMUCache
-from ...boards.abstract_board import AbstractBoard
-from ....isas import ISA
-from m5.objects import Cache, L2XBar, BaseXBar, SystemXBar, BadAddr, Port
-
-from ....utils.override import *
 
 
 class PrivateL1PrivateL2CacheHierarchy(

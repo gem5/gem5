@@ -24,14 +24,12 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """ Caches with options for a simple gem5 configuration script
 
 This file contains L1 I/D and L2 caches to be used in the simple
 gem5 configuration script. It uses the SimpleOpts wrapper to set up command
 line options from each individual class.
 """
-
 import m5
 from m5.objects import Cache
 

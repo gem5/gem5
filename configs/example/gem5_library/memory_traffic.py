@@ -23,7 +23,6 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """
 This script is used for running a traffic generator connected to a memory
 device. It supports linear and random accesses with a configurable amount
@@ -32,19 +31,15 @@ of write traffic.
 By default, this scripts runs with one channel (two pseudo channels) of HBM2
 and this channel is driven with 32GiB/s of traffic for 1ms.
 """
-
 import argparse
 
-from m5.objects import MemorySize
 from gem5.components.boards.test_board import TestBoard
-
+from gem5.components.memory.dram_interfaces.hbm import HBM_2000_4H_1x64
+from gem5.components.memory.hbm import HighBandwidthMemory
 from gem5.components.processors.linear_generator import LinearGenerator
 from gem5.components.processors.random_generator import RandomGenerator
-
-from gem5.components.memory.hbm import HighBandwidthMemory
-from gem5.components.memory.dram_interfaces.hbm import HBM_2000_4H_1x64
-
 from gem5.simulate.simulator import Simulator
+from m5.objects import MemorySize
 
 
 def generator_factory(

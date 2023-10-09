@@ -36,16 +36,15 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 import os
 import re
 import sys
-
 from functools import wraps
 
 from . import convert
-
-from .attrdict import attrdict, multiattrdict, optiondict
+from .attrdict import attrdict
+from .attrdict import multiattrdict
+from .attrdict import optiondict
 from .multidict import multidict
 
 # panic() should be called when something happens that should never

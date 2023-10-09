@@ -23,19 +23,21 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """File contains the Artifact class and helper functions
 """
-
 import hashlib
-from inspect import cleandoc
 import json
-from pathlib import Path
 import subprocess
 import time
-from typing import Any, Dict, List, Union, Optional
-from uuid import UUID, uuid4
-import json
+from inspect import cleandoc
+from pathlib import Path
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Union
+from uuid import UUID
+from uuid import uuid4
 
 from ._artifactdb import getDBConnection
 

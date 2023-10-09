@@ -23,7 +23,6 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """
 This script boots Ubuntu 20.04 with 8 timing cores in 1 CCD.
 
@@ -36,22 +35,20 @@ scons build/ARM_MESI_Three_Level/gem5.opt -j `nproc`
     configs/example/gem5_library/caches/octopi-cache-example.py
 ```
 """
-
-
-from m5.objects import ArmDefaultRelease, VExpress_GEM5_Foundation
-
-from gem5.utils.requires import requires
+from gem5.coherence_protocol import CoherenceProtocol
 from gem5.components.boards.arm_board import ArmBoard
-from gem5.components.memory import DualChannelDDR4_2400
-from gem5.components.processors.simple_processor import SimpleProcessor
-from gem5.components.processors.cpu_types import CPUTypes
 from gem5.components.cachehierarchies.ruby.caches.mesi_three_level.octopi import (
     OctopiCache,
 )
+from gem5.components.memory import DualChannelDDR4_2400
+from gem5.components.processors.cpu_types import CPUTypes
+from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.isas import ISA
-from gem5.coherence_protocol import CoherenceProtocol
-from gem5.simulate.simulator import Simulator
 from gem5.resources.resource import obtain_resource
+from gem5.simulate.simulator import Simulator
+from gem5.utils.requires import requires
+from m5.objects import ArmDefaultRelease
+from m5.objects import VExpress_GEM5_Foundation
 
 num_ccds = 1  # CCDs
 num_cores_per_ccd = 8  # 8 cores/CCD

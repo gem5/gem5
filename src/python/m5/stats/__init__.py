@@ -36,18 +36,18 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-import m5
-
 import _m5.stats
+import m5
+from _m5.stats import periodicStatDump
+from _m5.stats import schedStatEvent as schedEvent
 from m5.objects import Root
 from m5.params import isNullPointer
+from m5.util import attrdict
+from m5.util import fatal
+
 from .gem5stats import JsonOutputVistor
-from m5.util import attrdict, fatal
 
 # Stat exports
-from _m5.stats import schedStatEvent as schedEvent
-from _m5.stats import periodicStatDump
 
 outputList = []
 

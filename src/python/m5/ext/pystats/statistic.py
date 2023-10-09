@@ -23,9 +23,12 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 from abc import ABC
-from typing import Any, Iterable, Optional, Union, List
+from typing import Any
+from typing import Iterable
+from typing import List
+from typing import Optional
+from typing import Union
 
 from .abstract_stat import AbstractStat
 from .storagetype import StorageType

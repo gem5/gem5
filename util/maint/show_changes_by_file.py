@@ -30,10 +30,9 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 # Author: Brandon Potter
-
-
 import subprocess
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
+from collections import OrderedDict
 
 
 class OrderedDefaultDict(OrderedDict, defaultdict):

@@ -36,16 +36,15 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 import os.path
 import re
 import sys
 
-from code_formatter import code_formatter
-from grammar import Grammar, ParseError
-
 import slicc.ast as ast
 import slicc.util as util
+from code_formatter import code_formatter
+from grammar import Grammar
+from grammar import ParseError
 from slicc.symbols import SymbolTable
 
 

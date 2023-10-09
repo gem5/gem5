@@ -23,20 +23,17 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+import math
 
-from .....processors.abstract_core import AbstractCore
+from m5.objects import ClockDomain
+from m5.objects import L1Cache_Controller
+from m5.objects import MessageBuffer
+from m5.objects import RubyCache
+from m5.objects import RubyPrefetcher
+
 from ......isas import ISA
 from ......utils.override import *
-
-from m5.objects import (
-    MessageBuffer,
-    RubyPrefetcher,
-    RubyCache,
-    ClockDomain,
-    L1Cache_Controller,
-)
-
-import math
+from .....processors.abstract_core import AbstractCore
 
 # L1Cache_Controller is ruby backend's terminology corresponding to
 # L2Cache in stdlib's terms

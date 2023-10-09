@@ -23,9 +23,9 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 from slicc.ast.TypeFieldAST import TypeFieldAST
-from slicc.symbols import Event, State
+from slicc.symbols import Event
+from slicc.symbols import State
 
 
 class TypeFieldStateAST(TypeFieldAST):

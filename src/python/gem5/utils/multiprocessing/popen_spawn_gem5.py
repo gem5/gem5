@@ -23,21 +23,19 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """
 This file contains extensions of the multiprocessing module to be used with gem5.
 Specifically, it contains the code to spawn a new gem5 process with Popen.
 Some code is from the Python standard library implementation of the
 multiprocessing module (i.e., cpython/Lib/multiprocessing/).
 """
-
 import io
 import os
-
-from multiprocessing.context import reduction, set_spawning_popen
 from multiprocessing import popen_spawn_posix
 from multiprocessing import spawn
 from multiprocessing import util
+from multiprocessing.context import reduction
+from multiprocessing.context import set_spawning_popen
 
 from ._command_line import get_command_line
 

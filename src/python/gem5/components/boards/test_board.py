@@ -23,18 +23,19 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from typing import List
+from typing import Optional
 
-from m5.objects import Port, IOXBar, AddrRange
+from m5.objects import AddrRange
+from m5.objects import IOXBar
+from m5.objects import Port
 
 from ...utils.override import overrides
+from ..cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
+from ..memory.abstract_memory_system import AbstractMemorySystem
+from ..processors.abstract_generator import AbstractGenerator
 from .abstract_board import AbstractBoard
 from .abstract_system_board import AbstractSystemBoard
-from ..processors.abstract_generator import AbstractGenerator
-from ..memory.abstract_memory_system import AbstractMemorySystem
-from ..cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
-
-
-from typing import List, Optional
 
 
 class TestBoard(AbstractSystemBoard):

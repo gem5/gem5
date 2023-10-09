@@ -23,13 +23,11 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
 from typing import Optional
 
 from m5.objects import Addr
-from ...utils.override import overrides
 
+from ...utils.override import overrides
 from .abstract_generator import AbstractGenerator
 from .gups_generator_core import GUPSGeneratorCore
 

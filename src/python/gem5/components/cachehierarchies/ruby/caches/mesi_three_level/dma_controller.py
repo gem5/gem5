@@ -23,10 +23,10 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from m5.objects import DMA_Controller
+from m5.objects import MessageBuffer
 
 from ......utils.override import overrides
-
-from m5.objects import MessageBuffer, DMA_Controller
 
 
 class DMAController(DMA_Controller):

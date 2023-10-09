@@ -23,21 +23,22 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from m5.objects import DMASequencer
+from m5.objects import RubyPortProxy
+from m5.objects import RubySequencer
+from m5.objects import RubySystem
 
-from .caches.mi_example.l1_cache import L1Cache
-from .caches.mi_example.dma_controller import DMAController
-from .caches.mi_example.directory import Directory
-from .topologies.simple_pt2pt import SimplePt2Pt
-from .abstract_ruby_cache_hierarchy import AbstractRubyCacheHierarchy
-from ..abstract_cache_hierarchy import AbstractCacheHierarchy
-from ...boards.abstract_board import AbstractBoard
 from ....coherence_protocol import CoherenceProtocol
 from ....isas import ISA
 from ....utils.override import overrides
 from ....utils.requires import requires
-
-
-from m5.objects import RubySystem, RubySequencer, DMASequencer, RubyPortProxy
+from ...boards.abstract_board import AbstractBoard
+from ..abstract_cache_hierarchy import AbstractCacheHierarchy
+from .abstract_ruby_cache_hierarchy import AbstractRubyCacheHierarchy
+from .caches.mi_example.directory import Directory
+from .caches.mi_example.dma_controller import DMAController
+from .caches.mi_example.l1_cache import L1Cache
+from .topologies.simple_pt2pt import SimplePt2Pt
 
 
 class MIExampleCacheHierarchy(AbstractRubyCacheHierarchy):

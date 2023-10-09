@@ -23,16 +23,21 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """Simple memory controllers
 """
+from typing import List
+from typing import Sequence
+from typing import Tuple
+
+from m5.objects import AddrRange
+from m5.objects import MemCtrl
+from m5.objects import Port
+from m5.objects import SimpleMemory
+from m5.util.convert import toMemorySize
 
 from ...utils.override import overrides
-from m5.util.convert import toMemorySize
-from typing import List, Sequence, Tuple
 from ..boards.abstract_board import AbstractBoard
 from .abstract_memory_system import AbstractMemorySystem
-from m5.objects import AddrRange, MemCtrl, Port, SimpleMemory
 
 
 class SingleChannelSimpleMemory(AbstractMemorySystem):

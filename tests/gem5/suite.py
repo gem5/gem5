@@ -35,19 +35,21 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-import os
 import copy
+import os
 import subprocess
 import sys
 
-from testlib.test_util import TestFunction
-from testlib.suite import TestSuite
+from testlib.configuration import config
+from testlib.configuration import constants
 from testlib.helper import log_call
-from testlib.configuration import constants, config
-from .fixture import TempdirFixture, Gem5Fixture, VariableFixture
+from testlib.suite import TestSuite
+from testlib.test_util import TestFunction
 
 from . import verifier
+from .fixture import Gem5Fixture
+from .fixture import TempdirFixture
+from .fixture import VariableFixture
 
 
 def gem5_verify_config(

@@ -24,17 +24,17 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-import json
-from pymongo import MongoClient
-from api.create_resources_json import ResourceJsonCreator
-import os
-from dotenv import load_dotenv
 import argparse
+import json
+import os
 from itertools import cycle
 from shutil import get_terminal_size
 from threading import Thread
 from time import sleep
+
+from api.create_resources_json import ResourceJsonCreator
+from dotenv import load_dotenv
+from pymongo import MongoClient
 
 load_dotenv()
 

@@ -23,10 +23,11 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-from m5.objects import MessageBuffer, RubyCache, L2Cache_Controller
-
 import math
+
+from m5.objects import L2Cache_Controller
+from m5.objects import MessageBuffer
+from m5.objects import RubyCache
 
 # L2Cache_Controller is ruby backend's terminology corresponding to
 # L3 cache in stdlib.

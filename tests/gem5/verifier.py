@@ -36,17 +36,17 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """
 Built in test cases that verify particular details about a gem5 run.
 """
-import re
-import os
 import json
+import os
+import re
 
 from testlib import test_util
 from testlib.configuration import constants
-from testlib.helper import joinpath, diff_out_file
+from testlib.helper import diff_out_file
+from testlib.helper import joinpath
 
 
 class Verifier(object):

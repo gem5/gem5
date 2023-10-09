@@ -37,14 +37,13 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Sean Wilson
-
 import os
 import pickle
 import xml.sax.saxutils
 
-from testlib.configuration import config
 import testlib.helper as helper
 import testlib.state as state
+from testlib.configuration import config
 
 
 def _create_uid_index(iterable):

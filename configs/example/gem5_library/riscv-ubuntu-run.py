@@ -23,7 +23,6 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """
 This script shows an example of running a full system RISCV Ubuntu boot
 simulation using the gem5 library. This simulation boots Ubuntu 20.04 using
@@ -39,18 +38,16 @@ scons build/RISCV/gem5.opt
     configs/example/gem5_library/riscv-ubuntu-run.py
 ```
 """
-
 import m5
-from m5.objects import Root
-
-from gem5.utils.requires import requires
 from gem5.components.boards.riscv_board import RiscvBoard
 from gem5.components.memory import DualChannelDDR4_2400
-from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.components.processors.cpu_types import CPUTypes
+from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.isas import ISA
-from gem5.simulate.simulator import Simulator
 from gem5.resources.resource import obtain_resource
+from gem5.simulate.simulator import Simulator
+from gem5.utils.requires import requires
+from m5.objects import Root
 
 # This runs a check to ensure the gem5 binary is compiled for RISCV.
 
