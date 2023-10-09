@@ -63,7 +63,7 @@ class SwitchableProcessor(AbstractProcessor):
 
         # In the stdlib we assume the system processor conforms to a single
         # ISA target.
-        assert len(set(core.get_isa() for core in self._current_cores)) == 1
+        assert len({core.get_isa() for core in self._current_cores}) == 1
         super().__init__(isa=self._current_cores[0].get_isa())
 
         for name, core_list in self._switchable_cores.items():
@@ -113,8 +113,7 @@ class SwitchableProcessor(AbstractProcessor):
 
     def _all_cores(self):
         for core_list in self._switchable_cores.values():
-            for core in core_list:
-                yield core
+            yield from core_list
 
     def switch_to_processor(self, switchable_core_key: str):
         # Run various checks.

@@ -5,7 +5,7 @@ def upgrader(cpt):
         for sec in cpt.sections():
             import re
 
-            re_cpu_match = re.match("^(.*sys.*\.cpu[^.]*)\.xc\.(.+)$", sec)
+            re_cpu_match = re.match(r"^(.*sys.*\.cpu[^.]*)\.xc\.(.+)$", sec)
             # Search for all the execution contexts
             if not re_cpu_match:
                 continue

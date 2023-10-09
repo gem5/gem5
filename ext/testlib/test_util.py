@@ -30,7 +30,7 @@ import testlib.helper as helper
 import testlib.runner as runner_mod
 
 
-class TestCase(object):
+class TestCase:
     """
     Base class for all tests.
 
@@ -47,7 +47,7 @@ class TestCase(object):
     collector = helper.InstanceCollector()
 
     def __new__(cls, *args, **kwargs):
-        obj = super(TestCase, cls).__new__(cls)
+        obj = super().__new__(cls)
         TestCase.collector.collect(obj)
         return obj
 

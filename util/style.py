@@ -45,7 +45,7 @@ from style.region import all_regions
 from style.style import StdioUI
 from style import repo
 
-verifier_names = dict([(c.__name__, c) for c in style.verifiers.all_verifiers])
+verifier_names = {c.__name__: c for c in style.verifiers.all_verifiers}
 
 
 def verify(

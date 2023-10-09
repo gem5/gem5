@@ -156,7 +156,7 @@ def backtrace(filename_stack):
 #
 
 
-class LineTracker(object):
+class LineTracker:
     def __init__(self, filename, lineno=1):
         self.filename = filename
         self.lineno = lineno

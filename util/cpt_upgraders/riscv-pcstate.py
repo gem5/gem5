@@ -32,7 +32,7 @@ def upgrader(cpt):
     for sec in cpt.sections():
         import re
 
-        if re.search(".*processor.*\.core.*\.xc.*", sec):
+        if re.search(r".*processor.*\.core.*\.xc.*", sec):
             if cpt.get(sec, "_rvType", fallback="") == "":
                 cpt.set(sec, "_rvType", "1")
 

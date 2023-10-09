@@ -88,7 +88,7 @@ def TempFileSpawn(scons_env):
 # Generate a string of the form:
 #   common/path/prefix/src1, src2 -> tgt1, tgt2
 # to print while building.
-class Transform(object):
+class Transform:
     # all specific color settings should be here and nowhere else
     tool_color = termcap.Normal
     pfx_color = termcap.Yellow

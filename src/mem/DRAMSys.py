@@ -47,7 +47,7 @@ class DRAMSys(AbstractMemory):
 
 add_citation(
     DRAMSys,
-    """@inproceedings{Steiner:2020:dramsys4,
+    r"""@inproceedings{Steiner:2020:dramsys4,
   author       = {Lukas Steiner and
                   Matthias Jung and
                   Felipe S. Prado and

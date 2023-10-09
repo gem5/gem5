@@ -77,7 +77,7 @@ class MemberMethodCallExprAST(MethodCallExprAST):
         self.obj_expr_ast = obj_expr_ast
 
     def __repr__(self):
-        return "[MethodCallExpr: %r%r %r]" % (
+        return "[MethodCallExpr: {!r}{!r} {!r}]".format(
             self.proc_name,
             self.obj_expr_ast,
             self.expr_ast_vec,

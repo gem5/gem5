@@ -513,7 +513,7 @@ def main():
             if os.name == "nt" and os.sep == "\\":
                 # If a Windows machine, we manually quote the string.
                 arg = arg.replace('"', '\\"')
-                if re.search("\s", args):
+                if re.search(r"\s", args):
                     # We quote args which have whitespace.
                     arg = '"' + arg + '"'
                 return arg
@@ -615,7 +615,7 @@ def main():
         if not options.P:
             sys.path = [os.path.dirname(sys.argv[0])] + sys.path
         filename = sys.argv[0]
-        filedata = open(filename, "r").read()
+        filedata = open(filename).read()
         filecode = compile(filedata, filename, "exec")
         scope = {"__file__": filename, "__name__": "__m5_main__"}
 

@@ -462,7 +462,7 @@ class SimpleSystem(BaseSimpleSystem):
     """
 
     def __init__(self, caches, mem_size, platform=None, **kwargs):
-        super(SimpleSystem, self).__init__(mem_size, platform, **kwargs)
+        super().__init__(mem_size, platform, **kwargs)
 
         self.membus = MemBus()
         # CPUs->PIO
@@ -501,7 +501,7 @@ class ArmRubySystem(BaseSimpleSystem):
     """
 
     def __init__(self, mem_size, platform=None, **kwargs):
-        super(ArmRubySystem, self).__init__(mem_size, platform, **kwargs)
+        super().__init__(mem_size, platform, **kwargs)
         self._dma_ports = []
         self._mem_ports = []
 

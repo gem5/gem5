@@ -521,7 +521,7 @@ def cxxMethod(*args, **kwargs):
 # This class holds information about each simobject parameter
 # that should be displayed on the command line for use in the
 # configuration system.
-class ParamInfo(object):
+class ParamInfo:
     def __init__(self, type, desc, type_str, example, default_val, access_str):
         self.type = type
         self.desc = desc
@@ -546,7 +546,7 @@ class SimObjectCliWrapperException(Exception):
         super().__init__(message)
 
 
-class SimObjectCliWrapper(object):
+class SimObjectCliWrapper:
     """
     Wrapper class to restrict operations that may be done
     from the command line on SimObjects.
@@ -609,7 +609,7 @@ class SimObjectCliWrapper(object):
 # The SimObject class is the root of the special hierarchy.  Most of
 # the code in this class deals with the configuration hierarchy itself
 # (parent/child node relationships).
-class SimObject(object, metaclass=MetaSimObject):
+class SimObject(metaclass=MetaSimObject):
     # Specify metaclass.  Any class inheriting from SimObject will
     # get this metaclass.
     type = "SimObject"
@@ -874,7 +874,7 @@ class SimObject(object, metaclass=MetaSimObject):
                 hr_value = value
                 value = param.convert(value)
             except Exception as e:
-                msg = "%s\nError setting param %s.%s to %s\n" % (
+                msg = "{}\nError setting param {}.{} to {}\n".format(
                     e,
                     self.__class__.__name__,
                     attr,
@@ -1253,8 +1253,7 @@ class SimObject(object, metaclass=MetaSimObject):
         # it based on the key (name) to ensure the order is the same
         # on all hosts
         for name, child in sorted(self._children.items()):
-            for obj in child.descendants():
-                yield obj
+            yield from child.descendants()
 
     # Call C++ to create C++ object corresponding to this object
     def createCCObject(self):
@@ -1287,8 +1286,7 @@ class SimObject(object, metaclass=MetaSimObject):
     def recurseDeviceTree(self, state):
         for child in self._children.values():
             for item in child:  # For looping over SimObjectVectors
-                for dt in item.generateDeviceTree(state):
-                    yield dt
+                yield from item.generateDeviceTree(state)
 
     # On a separate method otherwise certain buggy Python versions
     # would fail with: SyntaxError: unqualified exec is not allowed

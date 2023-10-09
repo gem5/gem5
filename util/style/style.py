@@ -52,7 +52,7 @@ trail = re.compile(r"([ \t]+)$")
 any_control = re.compile(r"\b(if|while|for)([ \t]*)\(")
 
 
-class UserInterface(object, metaclass=ABCMeta):
+class UserInterface(metaclass=ABCMeta):
     def __init__(self, verbose=False):
         self.verbose = verbose
 
@@ -118,8 +118,8 @@ style_ignores = [
     # Only include Scons files and those with extensions that suggest source
     # code
     _re_only(
-        "^((.*\/)?(SConscript|SConstruct)|"
-        ".*\.(c|h|cc|hh|cpp|hpp|isa|proto))$"
+        r"^((.*\/)?(SConscript|SConstruct)|"
+        r".*\.(c|h|cc|hh|cpp|hpp|isa|proto))$"
     ),
 ]
 

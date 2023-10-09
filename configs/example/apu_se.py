@@ -699,7 +699,7 @@ if os.path.isdir(executable):
     executable = find_file(benchmark_path, args.cmd)
 
 if args.env:
-    with open(args.env, "r") as f:
+    with open(args.env) as f:
         env = [line.rstrip() for line in f]
 else:
     env = [

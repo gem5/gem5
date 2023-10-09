@@ -86,7 +86,7 @@ except:
     cap_string = null_cap_string
 
 
-class ColorStrings(object):
+class ColorStrings:
     def __init__(self, cap_string):
         for i, c in enumerate(color_names):
             setattr(self, c, cap_string("setaf", i))
@@ -123,7 +123,7 @@ def terminal_size():
             ),
         )
         return w, h
-    except IOError:
+    except OSError:
         # It's possible that in sandboxed environments the above ioctl is not
         # allowed (e.g., some jenkins setups)
         return 80, 24

@@ -41,7 +41,7 @@ from .util import assignRE, commentRE, stringRE
 from .util import error
 
 
-class OperandList(object):
+class OperandList:
     """Find all the operands in the given code block.  Returns an operand
     descriptor list (instance of class OperandList)."""
 

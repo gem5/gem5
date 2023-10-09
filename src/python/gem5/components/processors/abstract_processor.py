@@ -54,7 +54,7 @@ class AbstractProcessor(SubSystem):
         if cores:
             # In the stdlib we assume the system processor conforms to a single
             # ISA target.
-            assert len(set(core.get_isa() for core in cores)) == 1
+            assert len({core.get_isa() for core in cores}) == 1
             self.cores = cores
             self._isa = cores[0].get_isa()
         else:

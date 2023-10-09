@@ -140,7 +140,7 @@ def findProg(program, cleanupDev=None):
     return out.strip()
 
 
-class LoopbackDevice(object):
+class LoopbackDevice:
     def __init__(self, devFile=None):
         self.devFile = devFile
 
@@ -228,7 +228,7 @@ commands = {}
 commandOrder = []
 
 
-class Command(object):
+class Command:
     def addArgument(self, *args, **kargs):
         self.parser.add_argument(*args, **kargs)
 

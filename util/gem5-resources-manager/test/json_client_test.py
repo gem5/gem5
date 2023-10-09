@@ -35,14 +35,14 @@ from api.json_client import JSONClient
 
 
 def get_json():
-    with open("test/refs/test_json.json", "r") as f:
+    with open("test/refs/test_json.json") as f:
         jsonFile = f.read()
         return json.loads(jsonFile)
 
 
 def mockinit(self, file_path):
     self.file_path = Path("test/refs/") / file_path
-    with open(self.file_path, "r") as f:
+    with open(self.file_path) as f:
         self.resources = json.load(f)
 
 

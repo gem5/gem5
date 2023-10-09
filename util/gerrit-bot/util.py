@@ -78,10 +78,8 @@ def add_maintainers_to_change(
                 maintainer_emails.add(email)
         except KeyError:
             print(
-                (
-                    f"warning: `change-{change_id}` has an unknown tag: "
-                    f"`{tag}`"
-                )
+                f"warning: `change-{change_id}` has an unknown tag: "
+                f"`{tag}`"
             )
     for email in maintainer_emails:
         if email in avoid_emails:

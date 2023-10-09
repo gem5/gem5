@@ -186,9 +186,9 @@ def parseStats(
     # Open the stats.txt file and parse it to for the required numbers
     # and the number of routers.
     try:
-        stats_handle = open(stats_file, "r")
+        stats_handle = open(stats_file)
         stats_handle.close()
-    except IOError:
+    except OSError:
         print("Failed to open ", stats_file, " for reading")
         exit(-1)
 

@@ -69,7 +69,7 @@ def upgrader(cpt):
     }
 
     for sec in cpt.sections():
-        if re.search(".*\.hdlcd$", sec):
+        if re.search(r".*\.hdlcd$", sec):
             options = {}
             for new, old in list(option_names.items()):
                 options[new] = cpt.get(sec, old)

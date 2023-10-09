@@ -150,7 +150,7 @@ class SuiteResourceTestSuite(unittest.TestCase):
         """
         Tests the `list_input_groups` function.
         """
-        expected_input_groups = set(["testtag1", "testtag2", "testtag3"])
+        expected_input_groups = {"testtag1", "testtag2", "testtag3"}
         self.assertEqual(self.suite.get_input_groups(), expected_input_groups)
 
     @patch(
