@@ -52,55 +52,40 @@ exclude: |
 default_stages: [commit]
 
 repos:
-    - repo: https://github.com/pre-commit/pre-commit-hooks
-      rev: v4.5.0
-      hooks:
-          - id: trailing-whitespace
-          - id: end-of-file-fixer
-          - id: check-json
-          - id: check-yaml
-          - id: check-added-large-files
-          - id: mixed-line-ending
-            args: [--fix=lf]
-          - id: check-ast
-          - id: check-case-conflict
-          - id: check-merge-conflict
-          - id: check-symlinks
-          - id: destroyed-symlinks
-          - id: requirements-txt-fixer
-    - repo: https://github.com/jumanjihouse/pre-commit-hook-yamlfmt
-      rev: 0.2.3
-      hooks:
-          - id: yamlfmt
-    - repo: https://github.com/psf/black
-      rev: 23.9.1
-      hooks:
-          - id: black
-    - repo: https://github.com/asottile/pyupgrade
-      rev: v3.14.0
-      hooks:
-          - id: pyupgrade
-            # Python 3.8 is the earliest version supported.
-            # We therefore conform to the standards compatible with 3.8+.
-            args: [--py38-plus]
-    - repo: local
-      hooks:
-          - id: gem5-style-checker
-            name: gem5 style checker
-            entry: util/git-pre-commit.py
-            always_run: true
-            exclude: .*
-            language: system
-            description: The gem5 style checker hook.
-          - id: gem5-commit-msg-checker
-            name: gem5 commit msg checker
-            entry: ext/git-commit-msg
-            language: system
-            stages: [commit-msg]
-            description: The gem5 commit message checker hook.
-          - id: gerrit-commit-msg-job
-            name: gerrit commit message job
-            entry: util/gerrit-commit-msg-hook
-            language: system
-            stages: [commit-msg]
-            description: Adds Change-ID to the commit message. Needed by Gerrit.
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.3.0
+  hooks:
+  - id: trailing-whitespace
+  - id: end-of-file-fixer
+  - id: check-json
+  - id: check-yaml
+  - id: check-added-large-files
+  - id: mixed-line-ending
+    args: [--fix=lf]
+  - id: requirements-txt-fixer
+  - id: check-case-conflict
+- repo: https://github.com/psf/black
+  rev: 22.6.0
+  hooks:
+    - id: black
+- repo: local
+  hooks:
+  - id: gem5-style-checker
+    name: gem5 style checker
+    entry: util/git-pre-commit.py
+    always_run: true
+    exclude: ".*"
+    language: system
+    description: 'The gem5 style checker hook.'
+  - id: gem5-commit-msg-checker
+    name: gem5 commit msg checker
+    entry: ext/git-commit-msg
+    language: system
+    stages: [commit-msg]
+    description: 'The gem5 commit message checker hook.'
+  - id: gerrit-commit-msg-job
+    name: gerrit commit message job
+    entry: util/gerrit-commit-msg-hook
+    language: system
+    stages: [commit-msg]
+    description: 'Adds Change-ID to the commit message. Needed by Gerrit.'
