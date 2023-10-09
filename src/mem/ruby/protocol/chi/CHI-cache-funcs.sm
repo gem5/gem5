@@ -304,7 +304,7 @@ bool fromSequencer(CHIRequestType reqType) {
          reqType == CHIRequestType:Store ||
          reqType == CHIRequestType:StoreLine ||
          reqType == CHIRequestType:AtomicLoad ||
-         tbe.reqType == CHIRequestType:AtomicStore;
+         reqType == CHIRequestType:AtomicStore;
 }
 
 bool inCache(Addr addr) {
