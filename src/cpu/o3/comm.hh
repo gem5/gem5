@@ -93,6 +93,7 @@ struct IEWStruct
     DynInstPtr mispredictInst[MaxThreads];
     Addr mispredPC[MaxThreads];
     InstSeqNum squashedSeqNum[MaxThreads];
+    InstSeqNum squashedBrSeqNum[MaxThreads];
     std::unique_ptr<PCStateBase> pc[MaxThreads];
 
     bool squash[MaxThreads];
@@ -117,6 +118,7 @@ struct TimeStruct
         DynInstPtr mispredictInst;
         DynInstPtr squashInst;
         InstSeqNum doneSeqNum;
+        InstSeqNum doneBrSeqNum;
         Addr mispredPC;
         uint64_t branchAddr;
         unsigned branchCount;
@@ -124,6 +126,8 @@ struct TimeStruct
         bool predIncorrect;
         bool branchMispredict;
         bool branchTaken;
+        uint64_t bblSize;
+        Addr bblAddr;
     };
 
     DecodeComm decodeInfo[MaxThreads];
@@ -170,6 +174,8 @@ struct TimeStruct
         /// order violation and the like
         std::unique_ptr<PCStateBase> pc; // *F
 
+        uint32_t bblSize;
+        Addr bblAddr;
         /// Provide fetch the instruction that mispredicted, if this
         /// pointer is not-null a misprediction occured
         DynInstPtr mispredictInst;  // *F
@@ -189,6 +195,7 @@ struct TimeStruct
         /// squashed.  Similar to having a single bus that broadcasts the
         /// retired or squashed sequence number.
         InstSeqNum doneSeqNum; // *F, I
+        InstSeqNum doneBrSeqNum;
 
         /// Tell Rename how many free entries it has in the ROB
         unsigned freeROBEntries; // *R

@@ -178,6 +178,7 @@ def addNoISAOptions(parser):
     )
     parser.add_argument("--caches", action="store_true")
     parser.add_argument("--l2cache", action="store_true")
+    parser.add_argument("--l3cache", action="store_true")
     parser.add_argument("--num-dirs", type=int, default=1)
     parser.add_argument("--num-l2caches", type=int, default=1)
     parser.add_argument("--num-l3caches", type=int, default=1)
@@ -187,9 +188,99 @@ def addNoISAOptions(parser):
     parser.add_argument("--l3_size", type=str, default="16MB")
     parser.add_argument("--l1d_assoc", type=int, default=2)
     parser.add_argument("--l1i_assoc", type=int, default=2)
-    parser.add_argument("--l2_assoc", type=int, default=8)
+    parser.add_argument("--l2_assoc", type=int, default=16)
     parser.add_argument("--l3_assoc", type=int, default=16)
     parser.add_argument("--cacheline_size", type=int, default=64)
+    parser.add_argument("--btb-entries", type=str, default="4096")
+    parser.add_argument("--starveRandomness", type=float, default=3.125)
+    parser.add_argument("--starveAtleast", type=int, default=0)
+    parser.add_argument("--randomStarve", action="store_true", default=False)
+    parser.add_argument(
+        "--randomStarvePDIP", action="store_true", default=False
+    )
+    parser.add_argument("--starveRandomnessPDIP", type=float, default=25)
+    parser.add_argument("--starveRandomnessPDIP1", type=float, default=0)
+    parser.add_argument("--starveRandomnessPDIP2", type=float, default=25)
+    parser.add_argument("--starveRandomnessPDIP3", type=float, default=25)
+    parser.add_argument("--cost1", type=float, default=10)
+    parser.add_argument("--cost2", type=float, default=20)
+    parser.add_argument("--cost3", type=float, default=50)
+    parser.add_argument("--perfectICache", action="store_true", default=False)
+    parser.add_argument("--fdip", action="store_true", default=False)
+    parser.add_argument("--pureRandom", action="store_true", default=False)
+    parser.add_argument("--dump-tms", action="store_true", default=False)
+    parser.add_argument("--dump-btbconf", action="store_true", default=False)
+    parser.add_argument("--btbConfThreshold", type=float, default=0.80)
+    parser.add_argument("--btbConfMinInst", type=int, default=100)
+    parser.add_argument("--histRandom", action="store_true", default=False)
+    parser.add_argument(
+        "--emissary-enable-iq-empty", action="store_true", default=False
+    )
+    parser.add_argument(
+        "--emissary-retirement", action="store_true", default=False
+    )
+    parser.add_argument("--oracleEMISSARY", action="store_true", default=False)
+    parser.add_argument("--oracleStarvationsFileName", type=str, default="")
+    parser.add_argument(
+        "--oracleStarvationCountThreshold", type=int, default=100
+    )
+    parser.add_argument("--l3_rrpv_bits", type=int, default=2)
+    parser.add_argument("--enable-pdip", action="store_true", default=False)
+    parser.add_argument(
+        "--pdip-mispred-br-trigger", action="store_true", default=False
+    )
+    parser.add_argument(
+        "--pdip-prefetch-all", action="store_true", default=False
+    )
+    parser.add_argument(
+        "--pdip-lookup-all-brs", action="store_true", default=False
+    )
+    parser.add_argument("--pdip-full-tag", action="store_true", default=False)
+    parser.add_argument("--pdip-reset-freq", type=int, default=0)
+    parser.add_argument("--pdip-sets", type=int, default=2048)
+    parser.add_argument("--pdip-assoc", type=int, default=2)
+    parser.add_argument("--pdip-lookup-conf-threshold", type=int, default=0)
+    parser.add_argument("--pdip-targets", type=int, default=6)
+    parser.add_argument("--pdip-tag-bits", type=int, default=6)
+    parser.add_argument("--pdip-zero-cost", action="store_true", default=False)
+    parser.add_argument(
+        "--pdip-out-of-page", action="store_true", default=False
+    )
+    parser.add_argument("--pdip-next-n-lines", type=int, default=0)
+    parser.add_argument(
+        "--pdip-indirect-br-trigger", action="store_true", default=False
+    )
+    parser.add_argument(
+        "--pdip-compress-targets", action="store_true", default=False
+    )
+    parser.add_argument("--pdip-compress-targets-range", type=int, default=4)
+    parser.add_argument("--inst-prefetch-queue-size", type=int, default=40)
+    parser.add_argument("--enable-eip", action="store_true", default=False)
+    parser.add_argument(
+        "--enable-eip-filt", action="store_true", default=False
+    )
+    parser.add_argument("--eip-sets", type=int, default=512)
+    parser.add_argument("--eip-assoc", type=int, default=16)
+    parser.add_argument("--eip-targets", type=int, default=6)
+    parser.add_argument("--eip-histbuf-len", type=int, default=40)
+    parser.add_argument(
+        "--btb-insert-all-brs", action="store_true", default=False
+    )
+    parser.add_argument("--fetchQSize", type=int, default=32)
+    parser.add_argument("--ftqSize", type=int, default=0)
+    parser.add_argument("--ftqInst", type=int, default=192)
+    parser.add_argument("--fThrottle", type=int, default=0)
+    parser.add_argument("--maxBranches", type=int, default=5)
+    parser.add_argument("--FDIPmaxBranches", type=int, default=5)
+    parser.add_argument("--maxConfidence", type=int, default=32)
+    parser.add_argument("--confLevel", type=int, default=20)
+    parser.add_argument("--FDIPconfLevel", type=int, default=20)
+    parser.add_argument("--PCdumpPeriod", type=int, default=0)
+    parser.add_argument("--l1i_rp", type=str, default="LRU")
+    parser.add_argument("--l2_rp", type=str, default="LRU")
+    parser.add_argument("--lru_ways", type=int, default=2)
+    parser.add_argument("--preserve_ways", type=int, default=6)
+    parser.add_argument("--totalSimInsts", type=int, default=105000000)
 
     # Enable Ruby
     parser.add_argument("--ruby", action="store_true")

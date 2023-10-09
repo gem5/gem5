@@ -53,8 +53,8 @@ class L1Cache(Cache):
     assoc = 2
     tag_latency = 2
     data_latency = 2
-    response_latency = 2
-    mshrs = 4
+    response_latency = 0
+    mshrs = 64
     tgts_per_mshr = 20
 
 
@@ -62,6 +62,7 @@ class L1_ICache(L1Cache):
     is_read_only = True
     # Writeback clean lines as well
     writeback_clean = True
+    # write_buffers = 32
 
 
 class L1_DCache(L1Cache):
@@ -69,13 +70,29 @@ class L1_DCache(L1Cache):
 
 
 class L2Cache(Cache):
-    assoc = 8
-    tag_latency = 20
-    data_latency = 20
-    response_latency = 20
+    assoc = 16
+    # tag_latency = 20
+    # data_latency = 20
+    # response_latency = 20
+    # Changing Latencies for EMISSARY
+    tag_latency = 10
+    data_latency = 10
+    response_latency = 0
     mshrs = 20
     tgts_per_mshr = 12
     write_buffers = 8
+    writeback_clean = True
+
+
+class L3Cache(Cache):
+    assoc = 16
+    tag_latency = 20
+    data_latency = 20
+    response_latency = 0
+    mshrs = 64
+    tgts_per_mshr = 20
+    write_buffers = 64
+    clusivity = "mostly_excl"
 
 
 class IOCache(Cache):
@@ -84,7 +101,7 @@ class IOCache(Cache):
     data_latency = 50
     response_latency = 50
     mshrs = 20
-    size = "1kB"
+    size = "1MB"
     tgts_per_mshr = 12
 
 
@@ -94,7 +111,7 @@ class PageTableWalkerCache(Cache):
     data_latency = 2
     response_latency = 2
     mshrs = 10
-    size = "1kB"
+    size = "128kB"
     tgts_per_mshr = 12
 
     # the x86 table walker actually writes to the table-walker cache

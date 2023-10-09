@@ -45,6 +45,7 @@ from common import CpuConfig
 from common import ObjectList
 
 import m5
+import math
 from m5.defines import buildEnv
 from m5.objects import *
 from m5.util import *
@@ -71,7 +72,7 @@ def setCPUClass(options):
     TmpClass, test_mem_mode = getCPUClass(options.cpu_type)
     CPUClass = None
     if TmpClass.require_caches() and not options.caches and not options.ruby:
-        fatal(f"{options.cpu_type} must be used with caches")
+        fatal("%s must be used with caches" % options.cpu_type)
 
     if options.checkpoint_restore != None:
         if options.restore_with_cpu != options.cpu_type:
@@ -136,7 +137,7 @@ def findCptDir(options, cptdir, testsys):
         fatal("checkpoint dir %s does not exist!", cptdir)
 
     cpt_starttick = 0
-    if options.at_instruction or options.simpoint:
+    if (options.at_instruction or options.simpoint) and False:
         inst = options.checkpoint_restore
         if options.simpoint:
             # assume workload 0 has the simpoint
@@ -144,7 +145,7 @@ def findCptDir(options, cptdir, testsys):
                 fatal("Unable to find simpoint")
             inst += int(testsys.cpu[0].workload[0].simpoint)
 
-        checkpoint_dir = joinpath(cptdir, f"cpt.{options.bench}.{inst}")
+        checkpoint_dir = joinpath(cptdir, "cpt.%s.%s" % (options.bench, inst))
         if not exists(checkpoint_dir):
             fatal("Unable to find checkpoint directory %s", checkpoint_dir)
 
@@ -204,7 +205,8 @@ def findCptDir(options, cptdir, testsys):
             fatal("Checkpoint %d not found", cpt_num)
 
         cpt_starttick = int(cpts[cpt_num - 1])
-        checkpoint_dir = joinpath(cptdir, f"cpt.{cpts[cpt_num - 1]}")
+        print("cpt dir is cpt.{}".format(cpts[cpt_num - 1]))
+        checkpoint_dir = joinpath(cptdir, "cpt.%s" % cpts[cpt_num - 1])
 
     return cpt_starttick, checkpoint_dir
 
@@ -220,7 +222,7 @@ def scriptCheckpoints(options, maxtick, cptdir):
         print("Creating checkpoint at inst:%d" % (checkpoint_inst))
         exit_event = m5.simulate()
         exit_cause = exit_event.getCause()
-        print(f"exit cause = {exit_cause}")
+        print("exit cause = %s" % exit_cause)
 
         # skip checkpoint instructions should they exist
         while exit_cause == "checkpoint":
@@ -495,17 +497,12 @@ def run(options, root, testsys, cpu_class):
     if options.prog_interval:
         for i in range(np):
             testsys.cpu[i].progress_interval = options.prog_interval
+    # for i in range(np):
+    #    testsys.cpu[i].timerWindow = 10000000
 
     if options.maxinsts:
         for i in range(np):
             testsys.cpu[i].max_insts_any_thread = options.maxinsts
-
-    if options.override_vendor_string is not None:
-        for i in range(len(testsys.cpu)):
-            for j in range(len(testsys.cpu[i].isa)):
-                testsys.cpu[i].isa[
-                    j
-                ].vendor_string = options.override_vendor_string
 
     if cpu_class:
         switch_cpus = [
@@ -520,15 +517,166 @@ def run(options, root, testsys, cpu_class):
             switch_cpus[i].clk_domain = testsys.cpu[i].clk_domain
             switch_cpus[i].progress_interval = testsys.cpu[i].progress_interval
             switch_cpus[i].isa = testsys.cpu[i].isa
+
+            switch_cpus[i].enableFDIP = options.fdip
+
+            # if options.perfectICache:
+            #    switch_cpus[i].enablePerfectICache = options.perfectICache
+
+            # if options.starveAtleast:
+            #    switch_cpus[i].starveAtleast = options.starveAtleast
+
+            # if options.randomStarve:
+            #    switch_cpus[i].randomStarve = options.randomStarve
+
+            # if options.randomStarvePDIP:
+            #    switch_cpus[i].randomStarvePDIP = options.randomStarvePDIP
+
+            # if options.starveRandomnessPDIP:
+            #    switch_cpus[i].starveRandomnessPDIP = options.starveRandomnessPDIP
+
+            #    if options.starveRandomnessPDIP1:
+            #        switch_cpus[i].starveRandomnessPDIP1 = options.starveRandomnessPDIP1
+            #    else :
+            #        switch_cpus[i].starveRandomnessPDIP1 = options.starveRandomnessPDIP
+
+            #    if options.starveRandomnessPDIP2:
+            #        switch_cpus[i].starveRandomnessPDIP2 = options.starveRandomnessPDIP2
+            #    else :
+            #        switch_cpus[i].starveRandomnessPDIP2 = options.starveRandomnessPDIP
+
+            #    if options.starveRandomnessPDIP3:
+            #        switch_cpus[i].starveRandomnessPDIP3 = options.starveRandomnessPDIP3
+            #    else :
+            #        switch_cpus[i].starveRandomnessPDIP3 = options.starveRandomnessPDIP
+
+            # if options.cost1:
+            #    switch_cpus[i].cost1 = options.cost1
+            # if options.cost2:
+            #    switch_cpus[i].cost2 = options.cost2
+            # if options.cost3:
+            #    switch_cpus[i].cost3 = options.cost3
+
+            # if options.starveRandomness:
+            #    switch_cpus[i].starveRandomness = options.starveRandomness
+
+            # if options.pureRandom:
+            #    switch_cpus[i].pureRandom = options.pureRandom
+
+            # if options.dump_tms:
+            #    switch_cpus[i].dumpTms = options.dump_tms
+
+            # if options.dump_btbconf:
+            #    switch_cpus[i].dumpBTBConf = options.dump_btbconf
+
+            # if options.btbConfThreshold:
+            #    switch_cpus[i].btbConfThreshold = options.btbConfThreshold
+
+            # if options.btbConfMinInst:
+            #    switch_cpus[i].btbConfMinInst = options.btbConfMinInst
+
+            # if options.histRandom:
+            #    switch_cpus[i].histRandom = options.histRandom
+
+            ##if options.fetchQSize:
+            ##    switch_cpus[i].fetchQueueSize = options.fetchQSize
+
+            if options.ftqSize >= 0:
+                switch_cpus[i].ftqSize = options.ftqSize
+
+            # if options.ftqInst >0:
+            #    switch_cpus[i].ftqInst = options.ftqInst
+
+            # if options.fThrottle >0:
+            #    switch_cpus[i].enableThrottle = options.fThrottle
+
+            # if options.maxBranches >0:
+            #    switch_cpus[i].maxBranches = options.maxBranches
+
+            # if options.FDIPmaxBranches >0:
+            #    switch_cpus[i].FDIPmaxBranches = options.FDIPmaxBranches
+
+            ##if options.maxConfidence:
+            ##    switch_cpus[i].branchPred.maxConfidence = options.maxConfidence
+
+            ##if options.confLevel:
+            ##    switch_cpus[i].branchPred.confLevel = options.confLevel
+
+            # if options.PCdumpPeriod >0:
+            #    switch_cpus[i].PCdumpPeriod = options.PCdumpPeriod
+
+            # if options.l1i_rp == "LRUEmissary" or options.l2_rp =="LRUEmissary":
+            #    switch_cpus[i].enableStarvationEMISSARY = True
+            ##switch_cpus[i].enableStarvationEMISSARY = True
+
+            # if options.disableApicTimerInterrupt:
+            #    switch_cpus[i].disableApicTimerInterrupt = True
+
+            # if options.emissary_retirement:
+            #    switch_cpus[i].enableEmissaryRetirement = True
+            # else:
+            #    switch_cpus[i].enableStarvationEMISSARY = True
+
+            # switch_cpus[i].emissaryEnableIQEmpty = True
+
             # simulation period
             if options.maxinsts:
                 switch_cpus[i].max_insts_any_thread = options.maxinsts
             # Add checker cpu if selected
             if options.checker:
                 switch_cpus[i].addCheckerCpu()
+
+            # if options.emissary_enable_iq_empty:
+            #    switch_cpus[i].emissaryEnableIQEmpty = options.emissary_enable_iq_empty
+
+            # if options.starveRandomness:
+            #    switch_cpus[i].starveRandomness = options.starveRandomness
+
+            # if options.starveRandomnessPDIP:
+            #    switch_cpus[i].starveRandomnessPDIP = options.starveRandomnessPDIP
+
+            #    if options.starveRandomnessPDIP1:
+            #        switch_cpus[i].starveRandomnessPDIP1 = options.starveRandomnessPDIP1
+            #    else :
+            #        switch_cpus[i].starveRandomnessPDIP1 = options.starveRandomnessPDIP
+
+            #    if options.starveRandomnessPDIP2:
+            #        switch_cpus[i].starveRandomnessPDIP2 = options.starveRandomnessPDIP2
+            #    else :
+            #        switch_cpus[i].starveRandomnessPDIP2 = options.starveRandomnessPDIP
+
+            #    if options.starveRandomnessPDIP3:
+            #        switch_cpus[i].starveRandomnessPDIP3 = options.starveRandomnessPDIP3
+            #    else :
+            #        switch_cpus[i].starveRandomnessPDIP3 = options.starveRandomnessPDIP
+
+            # if options.cost1:
+            #    switch_cpus[i].cost1 = options.cost1
+            # if options.cost2:
+            #    switch_cpus[i].cost2 = options.cost2
+            # if options.cost3:
+            #    switch_cpus[i].cost3 = options.cost3
+
+            # if options.starveAtleast:
+            #    switch_cpus[i].starveAtleast = options.starveAtleast
+
+            # if options.randomStarve:
+            #    switch_cpus[i].randomStarve = options.randomStarve
+
+            # if options.randomStarvePDIP:
+            #    switch_cpus[i].randomStarvePDIP = options.randomStarvePDIP
+
+            # if options.pureRandom:
+            #    switch_cpus[i].pureRandom = options.pureRandom
+
+            if options.ftqSize:
+                switch_cpus[i].ftqSize = options.ftqSize
+
             if options.bp_type:
                 bpClass = ObjectList.bp_list.get(options.bp_type)
                 switch_cpus[i].branchPred = bpClass()
+                # switch_cpus[i].branchPred.indirectBranchPred = NULL
+
             if options.indirect_bp_type:
                 IndirectBPClass = ObjectList.indirect_bp_list.get(
                     options.indirect_bp_type
@@ -536,6 +684,8 @@ def run(options, root, testsys, cpu_class):
                 switch_cpus[
                     i
                 ].branchPred.indirectBranchPred = IndirectBPClass()
+
+            # switch_cpus[i].timerWindow = 100000000
             switch_cpus[i].createThreads()
 
         # If elastic tracing is enabled attach the elastic trace probe
@@ -549,10 +699,10 @@ def run(options, root, testsys, cpu_class):
     if options.repeat_switch:
         switch_class = getCPUClass(options.cpu_type)[0]
         if switch_class.require_caches() and not options.caches:
-            print(f"{str(switch_class)}: Must be used with caches")
+            print("%s: Must be used with caches" % str(switch_class))
             sys.exit(1)
         if not switch_class.support_take_over():
-            print(f"{str(switch_class)}: CPU switching not supported")
+            print("%s: CPU switching not supported" % str(switch_class))
             sys.exit(1)
 
         repeat_switch_cpus = [
@@ -572,7 +722,6 @@ def run(options, root, testsys, cpu_class):
                 repeat_switch_cpus[i].addCheckerCpu()
 
             repeat_switch_cpus[i].createThreads()
-
         testsys.repeat_switch_cpus = repeat_switch_cpus
 
         if cpu_class:
@@ -585,11 +734,16 @@ def run(options, root, testsys, cpu_class):
             ]
 
     if options.standard_switch:
+        # Nayana changed
+        # switch_cpus = [AtomicSimpleCPU(switched_out=True, cpu_id=(i))
         switch_cpus = [
-            TimingSimpleCPU(switched_out=True, cpu_id=(i)) for i in range(np)
-        ]
-        switch_cpus_1 = [
             DerivO3CPU(switched_out=True, cpu_id=(i)) for i in range(np)
+        ]
+        # switch_cpus_1 = [TimingSimpleCPU(switched_out=True, cpu_id=(i))
+        #                for i in range(np)]
+        switch_cpu_class = getCPUClass(options.cpu_type)[0]
+        switch_cpus_1 = [
+            switch_cpu_class(switched_out=True, cpu_id=(i)) for i in range(np)
         ]
 
         for i in range(np):
@@ -601,6 +755,89 @@ def run(options, root, testsys, cpu_class):
             switch_cpus_1[i].clk_domain = testsys.cpu[i].clk_domain
             switch_cpus[i].isa = testsys.cpu[i].isa
             switch_cpus_1[i].isa = testsys.cpu[i].isa
+
+            switch_cpus_1[i].enableFDIP = options.fdip
+            # switch_cpus_1[i].fetchBufferSize = 16
+
+            # if options.perfectICache:
+            #    switch_cpus_1[i].enablePerfectICache = options.perfectICache
+
+            # if options.starveAtleast:
+            #    switch_cpus_1[i].starveAtleast = options.starveAtleast
+
+            # if options.randomStarve:
+            #    switch_cpus_1[i].randomStarve = options.randomStarve
+
+            # if options.randomStarvePDIP:
+            #    switch_cpus_1[i].randomStarvePDIP = options.randomStarvePDIP
+
+            # if options.starveRandomnessPDIP:
+            #    switch_cpus_1[i].starveRandomnessPDIP = options.starveRandomnessPDIP
+            #    switch_cpus_1[i].starveRandomnessPDIP1 = options.starveRandomnessPDIP1
+
+            #    switch_cpus_1[i].starveRandomnessPDIP2 = options.starveRandomnessPDIP2
+
+            #    switch_cpus_1[i].starveRandomnessPDIP3 = options.starveRandomnessPDIP3
+
+            #    switch_cpus_1[i].cost1 = options.cost1
+            #    switch_cpus_1[i].cost2 = options.cost2
+            #    switch_cpus_1[i].cost3 = options.cost3
+
+            # if options.starveRandomness:
+            #    switch_cpus_1[i].starveRandomness = options.starveRandomness
+
+            # if options.pureRandom:
+            #    switch_cpus_1[i].pureRandom = options.pureRandom
+
+            # if options.dump_tms:
+            #    switch_cpus_1[i].dumpTms = options.dump_tms
+
+            # if options.dump_btbconf:
+            #    switch_cpus_1[i].dumpBTBConf = options.dump_btbconf
+
+            # if options.btbConfThreshold:
+            #    switch_cpus_1[i].btbConfThreshold = options.btbConfThreshold
+
+            # if options.btbConfMinInst:
+            #    switch_cpus_1[i].btbConfMinInst = options.btbConfMinInst
+
+            # if options.histRandom:
+            #    switch_cpus_1[i].histRandom = options.histRandom
+
+            ##if options.fetchQSize:
+            ##    switch_cpus_1[i].fetchQueueSize = options.fetchQSize
+
+            if options.ftqSize >= 0:
+                switch_cpus_1[i].ftqSize = options.ftqSize
+
+            # if options.ftqInst >0:
+            #    switch_cpus_1[i].ftqInst = options.ftqInst
+
+            # if options.l1i_rp == "LRUEmissary" or options.l2_rp =="LRUEmissary":
+            #    switch_cpus_1[i].enableStarvationEMISSARY = True
+            # switch_cpus_1[i].enableStarvationEMISSARY = True
+            # if options.fThrottle >0:
+            #    switch_cpus_1[i].enableThrottle = options.fThrottle
+
+            # if options.maxBranches >0:
+            #    switch_cpus_1[i].maxBranches = options.maxBranches
+
+            # if options.FDIPmaxBranches >0:
+            #    switch_cpus_1[i].FDIPmaxBranches = options.FDIPmaxBranches
+
+            # if options.maxConfidence:
+            #    switch_cpus_1[i].branchPred.maxConfidence = options.maxConfidence
+
+            # if options.PCdumpPeriod >0:
+            #    switch_cpus_1[i].PCdumpPeriod = options.PCdumpPeriod
+
+            # if options.l1i_rp == "LRUEmissary" or options.l2_rp =="LRUEmissary":
+            #    switch_cpus_1[i].enableStarvationEMISSARY = True
+            #    switch_cpus_1[i].enableStarvationEMISSARY = True
+
+            # if options.disableApicTimerInterrupt:
+            #    switch_cpus[i].disableApicTimerInterrupt = True
+            #    switch_cpus_1[i].disableApicTimerInterrupt = True
 
             # if restoring, make atomic cpu simulate only a few instructions
             if options.checkpoint_restore != None:
@@ -627,13 +864,121 @@ def run(options, root, testsys, cpu_class):
             if options.maxinsts:
                 switch_cpus_1[i].max_insts_any_thread = options.maxinsts
 
-            # attach the checker cpu if selected
+            if options.bp_type:
+                switch_cpus_1[i].branchPred = testsys.cpu[i].branchPred
+                switch_cpus[i].branchPred = testsys.cpu[i].branchPred
+                # switch_cpus[i].branchPred.BTB = AssociativeBTB()
+                # switch_cpus[i].branchPred.BTB.numEntries = "8kB"
+                # switch_cpus[i].branchPred.BTB.assoc = 4
+
+                if options.btb_entries:
+                    switch_cpus_1[
+                        i
+                    ].branchPred.BTBEntries = options.btb_entries
+                    # cpu.branchPred.BTBEntries = 64*1024*1024
+                    switch_cpus_1[i].branchPred.BTBTagSize = 64 - (
+                        math.log(int(options.btb_entries), 2)
+                    )
+                # if options.confLevel:
+                #    switch_cpus_1[i].branchPred.confLevel = options.confLevel
+
+            # switch_cpus[i].btbInsertAllBrs = options.btb_insert_all_brs
+            # switch_cpus_1[i].btbInsertAllBrs = options.btb_insert_all_brs
+
+            ##switch_cpus[i].timerWindow = 100000000
+            ##switch_cpus_1[i].timerWindow = 100000000
+
+            ## attach the checker cpu if selected
             if options.checker:
                 switch_cpus[i].addCheckerCpu()
                 switch_cpus_1[i].addCheckerCpu()
 
             switch_cpus[i].createThreads()
             switch_cpus_1[i].createThreads()
+            # if options.enable_pdip:
+            #    switch_cpus[i].enablePDIP = False
+            #    switch_cpus_1[i].enablePDIP = True
+
+            # switch_cpus_1[i].pdipPrefetchAll = options.pdip_prefetch_all
+            # switch_cpus_1[i].pdipLookupAllBrs = options.pdip_lookup_all_brs
+
+            # switch_cpus_1[i].pdipMispredBrTrigger = options.pdip_mispred_br_trigger
+            # switch_cpus_1[i].pdipFullTag = options.pdip_full_tag
+            # switch_cpus_1[i].pdipTagBits = options.pdip_tag_bits
+            # switch_cpus_1[i].pdipTargets = options.pdip_targets
+            # switch_cpus_1[i].pdipOutOfPage = options.pdip_out_of_page
+            # switch_cpus_1[i].pdipNextNLines = options.pdip_next_n_lines
+            # switch_cpus_1[i].pdipIndirectBrTrigger = options.pdip_indirect_br_trigger
+            # switch_cpus_1[i].pdipLookupConfThreshold = options.pdip_lookup_conf_threshold
+            # switch_cpus_1[i].instPrefQueueSize = options.inst_prefetch_queue_size
+
+            # switch_cpus_1[i].pdipResetFreq = options.pdip_reset_freq
+            # switch_cpus_1[i].pdipSets = options.pdip_sets
+            # switch_cpus_1[i].pdipAssoc = options.pdip_assoc
+
+            ## Zero cost prefetching
+            # switch_cpus_1[i].pdipZeroCost = options.pdip_zero_cost
+            # switch_cpus_1[i].pdipCompressTargets = options.pdip_compress_targets
+            # switch_cpus_1[i].pdipCompressTargetsRange = options.pdip_compress_targets_range
+
+            # switch_cpus_1[i].enableEIP = options.enable_eip
+            # switch_cpus_1[i].enableEIPFilt = options.enable_eip_filt
+            # switch_cpus_1[i].eipTargets = options.eip_targets
+            # switch_cpus_1[i].eipSets = options.eip_sets
+            # switch_cpus_1[i].eipAssoc = options.eip_assoc
+            # switch_cpus_1[i].eipHistBufLen = options.eip_histbuf_len
+
+            # if options.emissary_retirement:
+            #    switch_cpus[i].enableEmissaryRetirement = False
+            #    switch_cpus_1[i].enableEmissaryRetirement = True
+            #    switch_cpus[i].enableStarvationEMISSARY = False
+            #    switch_cpus_1[i].enableStarvationEMISSARY = False
+            # else:
+            #    switch_cpus[i].enableEmissaryRetirement = False
+            #    switch_cpus_1[i].enableEmissaryRetirement = False
+            #    switch_cpus[i].enableStarvationEMISSARY = False
+            #    switch_cpus_1[i].enableStarvationEMISSARY = True
+
+            # switch_cpus[i].emissaryEnableIQEmpty = False
+            # switch_cpus_1[i].emissaryEnableIQEmpty = True
+
+            # switch_cpus[i].enableCondBTBSpecUpdates = False
+            # switch_cpus[i].enableUnCondBTBSpecUpdates = False
+
+            # switch_cpus_1[i].enableCondBTBSpecUpdates = False
+            # switch_cpus_1[i].enableUnCondBTBSpecUpdates = False
+
+            # if options.emissary_enable_iq_empty:
+            #    #switch_cpus[i].emissaryEnableIQEmpty = options.emissary_enable_iq_empty
+            #    switch_cpus_1[i].emissaryEnableIQEmpty = options.emissary_enable_iq_empty
+            #    print("switch cpus emissary flags is {}".format(switch_cpus[i]))
+
+            # if options.starveRandomness:
+            #    #switch_cpus[i].starveRandomness = options.starveRandomness
+            #    switch_cpus_1[i].starveRandomness = options.starveRandomness
+
+            # if options.starveAtleast:
+            #    #switch_cpus[i].starveAtleast = options.starveAtleast
+            #    switch_cpus_1[i].starveAtleast = options.starveAtleast
+
+            # if options.randomStarve:
+            #    #switch_cpus[i].randomStarve = options.randomStarve
+            #    switch_cpus_1[i].randomStarve = options.randomStarve
+
+            # if options.randomStarvePDIP:
+            #    #switch_cpus[i].randomStarvePDIP = options.randomStarvePDIP
+            #    switch_cpus_1[i].randomStarvePDIP = options.randomStarvePDIP
+
+            # if options.starveRandomnessPDIP:
+            #    switch_cpus_1[i].starveRandomnessPDIP = options.starveRandomnessPDIP
+
+            # if options.pureRandom:
+            #    #switch_cpus[i].pureRandom = options.pureRandom
+            #    switch_cpus_1[i].pureRandom = options.pureRandom
+
+            if options.ftqSize:
+                switch_cpus[i].ftqSize = options.ftqSize
+                switch_cpus_1[i].ftqSize = options.ftqSize
 
         testsys.switch_cpus = switch_cpus
         testsys.switch_cpus_1 = switch_cpus_1
@@ -740,9 +1085,9 @@ def run(options, root, testsys, cpu_class):
             )
             exit_event = m5.simulate()
         else:
-            print(f"Switch at curTick count:{str(10000)}")
+            print("Switch at curTick count:%s" % str(10000))
             exit_event = m5.simulate(10000)
-        print(f"Switched CPUS @ tick {m5.curTick()}")
+        print("Switched CPUS @ tick %s" % (m5.curTick()))
 
         m5.switchCpus(testsys, switch_cpu_list)
 
@@ -757,11 +1102,13 @@ def run(options, root, testsys, cpu_class):
                 exit_event = m5.simulate()
             else:
                 exit_event = m5.simulate(options.standard_switch)
-            print(f"Switching CPUS @ tick {m5.curTick()}")
+            print("Switching CPUS @ tick %s" % (m5.curTick()))
             print(
                 "Simulation ends instruction count:%d"
                 % (testsys.switch_cpus_1[0].max_insts_any_thread)
             )
+            m5.stats.dump()
+            m5.stats.reset()
             m5.switchCpus(testsys, switch_cpu_list1)
 
     # If we're taking and restoring checkpoints, use checkpoint_dir

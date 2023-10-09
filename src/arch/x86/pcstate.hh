@@ -84,7 +84,7 @@ class PCState : public GenericISA::UPCState<8>
         _size = 0;
     }
 
-    uint8_t size() const { return _size; }
+    uint8_t size() const override { return _size; }
     void size(uint8_t newSize) { _size = newSize; }
 
     bool

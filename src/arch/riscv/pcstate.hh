@@ -110,7 +110,7 @@ class PCState : public GenericISA::UPCState<4>
     void vl(uint32_t v) { _vl = v; }
     uint32_t vl() const { return _vl; }
 
-    uint64_t size() const { return _compressed ? 2 : 4; }
+    uint8_t size() const override { return _compressed ? 2 : 4; }
 
     bool
     branching() const override

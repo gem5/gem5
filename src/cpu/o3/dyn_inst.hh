@@ -123,6 +123,11 @@ class DynInst : public ExecContext, public RefCounted
     /** The sequence number of the instruction. */
     InstSeqNum seqNum = 0;
 
+    //FDIP related changes
+    InstSeqNum brSeqNum;
+    Addr bblAddr;
+    uint32_t bblSize;
+    //
     /** The StaticInst used by this BaseDynInst. */
     const StaticInstPtr staticInst;
 
@@ -509,6 +514,25 @@ class DynInst : public ExecContext, public RefCounted
      *  @todo: Actually use this instruction.
      */
     bool doneTargCalc() { return false; }
+
+    // FDIP realted
+    /** Set the branch seq number of current instruction. */
+    void setBrSeq(InstSeqNum _brseq)
+    {
+        brSeqNum = _brseq;
+    }
+
+    void setBblAddr(Addr _bblAddr)
+    {
+        bblAddr = _bblAddr;
+    }
+
+    void setBblSize(uint32_t _bblSize){
+        bblSize = _bblSize;
+    }
+
+    InstSeqNum readBrSeq() { return brSeqNum; }
+    //EMISSARY: END
 
     /** Set the predicted target of this current instruction. */
     void setPredTarg(const PCStateBase &pred_pc) { set(predPC, pred_pc); }
@@ -987,6 +1011,7 @@ class DynInst : public ExecContext, public RefCounted
     // Value -1 indicates that particular phase
     // hasn't happened (yet).
     /** Tick records used for the pipeline activity viewer. */
+    bool squashedFromThisInst = false;
     Tick fetchTick = -1;      // instruction fetch is completed.
     int32_t decodeTick = -1;  // instruction enters decode phase
     int32_t renameTick = -1;  // instruction enters rename phase

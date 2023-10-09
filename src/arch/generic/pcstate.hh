@@ -136,6 +136,9 @@ class PCStateBase : public Serializable
 
     virtual void advance() = 0;
     virtual bool branching() const = 0;
+    virtual uint8_t size() const { return 0; }
+
+    virtual void reset() { _pc = 0; _upc = 0;  }
 
     void
     serialize(CheckpointOut &cp) const override

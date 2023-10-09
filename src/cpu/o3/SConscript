@@ -69,10 +69,11 @@ if not env['CONF']['USE_NULL_ISA']:
     DebugFlag('Scoreboard')
     DebugFlag('StoreSet')
     DebugFlag('Writeback')
+    DebugFlag('FDIP')
 
     CompoundFlag('O3CPUAll', [ 'Fetch', 'Decode', 'Rename', 'IEW', 'Commit',
         'IQ', 'ROB', 'FreeList', 'LSQ', 'LSQUnit', 'StoreSet', 'MemDepUnit',
-        'DynInst', 'O3CPU', 'Activity', 'Scoreboard', 'Writeback' ])
+        'DynInst', 'O3CPU', 'Activity', 'Scoreboard', 'Writeback', 'FDIP' ])
 
     SimObject('BaseO3Checker.py', sim_objects=['BaseO3Checker'])
     Source('checker.cc')
