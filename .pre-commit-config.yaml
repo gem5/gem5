@@ -61,6 +61,7 @@ repos:
   - id: check-added-large-files
   - id: mixed-line-ending
     args: [--fix=lf]
+  - id: requirements-txt-fixer
   - id: check-case-conflict
 - repo: https://github.com/psf/black
   rev: 22.6.0
