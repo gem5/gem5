@@ -483,13 +483,35 @@ X86_64Process::initState()
         physProxy.writeBlob(idtPhysAddr + 0xE0, &PFGate, sizeof(PFGate));
 
         /* System call handler */
+        // First, we write to the MMIO m5ops range (0xffffc90000007000)
+        // to trap out of the VM back into gem5 to emulate the system
+        // call. Upon re-entering the VM, we need to flush the TLB in
+        // case the system call modified existing page mappings (e.g.,
+        // munmap, mremap, brk). To do this, we can simply read/write
+        // cr3; however, doing so requires saving the value to an
+        // intermediate GPR (%rax, in this case). We save/restore the
+        // value of %rax in the scratch region syscallDataBuf.
+        const Addr syscallDataBuf = syscallCodeVirtAddr + 0x100;
         uint8_t syscallBlob[] = {
             // mov    %rax, (0xffffc90000007000)
             0x48, 0xa3, 0x00, 0x70, 0x00,
             0x00, 0x00, 0xc9, 0xff, 0xff,
+            // mov    %rax, (syscallDataBuf)
+            0x48, 0xa3, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00,
+            // mov    %cr3, %rax
+            0x0f, 0x20, 0xd8,
+            // mov    %rax, %cr3
+            0x0f, 0x22, 0xd8,
+            // mov    (syscallDataBuf), %rax
+            0x48, 0xa1, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00,
             // sysret
             0x48, 0x0f, 0x07
         };
+        assert(syscallDataBuf >= syscallCodePhysAddr + sizeof syscallBlob);
+        std::memcpy(&syscallBlob[12], &syscallDataBuf, sizeof syscallDataBuf);
+        std::memcpy(&syscallBlob[28], &syscallDataBuf, sizeof syscallDataBuf);
 
         physProxy.writeBlob(syscallCodePhysAddr,
                             syscallBlob, sizeof(syscallBlob));
