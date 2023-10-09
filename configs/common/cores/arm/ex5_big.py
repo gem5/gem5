@@ -104,14 +104,18 @@ class ex5_big_FUP(FUPool):
     ]
 
 
+class ex5_big_BTB(SimpleBTB):
+    numEntries = 4096
+    tagBits = 18
+
+
 # Bi-Mode Branch Predictor
 class ex5_big_BP(BiModeBP):
+    btb = ex5_big_BTB()
     globalPredictorSize = 4096
     globalCtrBits = 2
     choicePredictorSize = 1024
     choiceCtrBits = 3
-    BTBEntries = 4096
-    BTBTagSize = 18
     RASSize = 48
     instShiftAmt = 2
 

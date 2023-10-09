@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2011-2012, 2014 ARM Limited
- * Copyright (c) 2010 The University of Edinburgh
+ * Copyright (c) 2010,2022-2023 The University of Edinburgh
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -46,6 +46,7 @@
 
 #include "base/statistics.hh"
 #include "base/types.hh"
+#include "cpu/pred/branch_type.hh"
 #include "cpu/pred/btb.hh"
 #include "cpu/pred/indirect.hh"
 #include "cpu/pred/ras.hh"
@@ -152,7 +153,14 @@ class BPredUnit : public SimObject
      * @param inst_PC The PC to look up.
      * @return Whether the BTB contains the given PC.
      */
-    bool BTBValid(Addr instPC) { return BTB.valid(instPC, 0); }
+    bool BTBValid(ThreadID tid, Addr instPC)
+    {
+        return btb->valid(tid, instPC);
+    }
+    bool BTBValid(ThreadID tid, PCStateBase &instPC)
+    {
+        return BTBValid(tid, instPC.instAddr());
+    }
 
     /**
      * Looks up a given PC in the BTB to get the predicted target. The PC may
@@ -162,9 +170,9 @@ class BPredUnit : public SimObject
      * @return The address of the target of the branch.
      */
     const PCStateBase *
-    BTBLookup(Addr inst_pc)
+    BTBLookup(ThreadID tid, PCStateBase &instPC)
     {
-        return BTB.lookup(inst_pc, 0);
+        return btb->lookup(tid, instPC.instAddr());
     }
 
     /**
@@ -189,10 +197,10 @@ class BPredUnit : public SimObject
      * @param target_PC The branch's target that will be added to the BTB.
      */
     void
-    BTBUpdate(Addr instPC, const PCStateBase &target)
+    BTBUpdate(ThreadID tid, Addr instPC, const PCStateBase &target)
     {
         ++stats.BTBUpdates;
-        BTB.update(instPC, target, 0);
+        return btb->update(tid, instPC, target);
     }
 
 
@@ -295,7 +303,7 @@ class BPredUnit : public SimObject
     std::vector<History> predHist;
 
     /** The BTB. */
-    DefaultBTB BTB;
+    BranchTargetBuffer* btb;
 
     /** The per-thread return address stack. */
     std::vector<ReturnAddrStack> RAS;

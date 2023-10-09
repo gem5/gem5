@@ -107,14 +107,18 @@ class O3_ARM_v7a_FUP(FUPool):
     ]
 
 
+class O3_ARM_v7a_BTB(SimpleBTB):
+    numEntries = 2048
+    tagBits = 18
+
+
 # Bi-Mode Branch Predictor
 class O3_ARM_v7a_BP(BiModeBP):
+    btb = O3_ARM_v7a_BTB()
     globalPredictorSize = 8192
     globalCtrBits = 2
     choicePredictorSize = 8192
     choiceCtrBits = 2
-    BTBEntries = 2048
-    BTBTagSize = 18
     RASSize = 16
     instShiftAmt = 2
 
