@@ -92,7 +92,7 @@ class PCState : public GenericISA::UPCState<4>
 
   public:
     void
-    set(Addr val)
+    set(Addr val) override
     {
         Base::set(val);
         npc(val + (thumb() ? 2 : 4));
