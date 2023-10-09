@@ -278,11 +278,6 @@ class MemState : public Serializable
     Addr _mmapEnd;
 
     /**
-     * Keeps record of the furthest mapped heap location.
-     */
-    Addr _endBrkPoint;
-
-    /**
      * The _vmaList member is a list of virtual memory areas in the target
      * application space that have been allocated by the target. In most
      * operating systems, lazy allocation is used and these structures (or
