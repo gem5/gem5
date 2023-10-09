@@ -37,9 +37,7 @@ jobs:
       - name: Build LULESH
         working-directory: ${{ github.workspace }}/lulesh
         # rename lulesh binary in this step so test can find it properly
-        run:  |
-          wget https://storage.googleapis.com/dist.gem5.org/dist/develop/test-progs/lulesh/lulesh-2023-09-27
-          mv lulesh-2023-09-27 lulesh
+        run:  build/GCN3_X86/gem5.opt util/obtain-resource.py lulesh -p lulesh
       - name: Run LULUESH tests
         working-directory: ${{ github.workspace }}
         run: build/GCN3_X86/gem5.opt configs/example/apu_se.py -n3 --mem-size=8GB --reg-alloc-policy=dynamic --benchmark-root="lulesh" -c lulesh
