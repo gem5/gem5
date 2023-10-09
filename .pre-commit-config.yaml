@@ -1,3 +1,4 @@
+---
 # Copyright (c) 2022 Arm Limited
 # All rights reserved.
 #
@@ -33,57 +34,61 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-minimum_pre_commit_version: "2.18"
+minimum_pre_commit_version: '2.18'
 
 default_language_version:
-  python: python3
+    python: python3
 
 exclude: |
-  (?x)^(
-    ext/(?!testlib/).*|
-    build/.*|
-    src/systemc/ext/.*|
-    src/systemc/tests/.*/.*|
-    src/python/m5/ext/pyfdt/.*|
-    tests/.*/ref/.*
-  )$
+    (?x)^(
+      ext/(?!testlib/).*|
+      build/.*|
+      src/systemc/ext/.*|
+      src/systemc/tests/.*/.*|
+      src/python/m5/ext/pyfdt/.*|
+      tests/.*/ref/.*
+    )$
 
 default_stages: [commit]
 
 repos:
-- repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.3.0
-  hooks:
-  - id: trailing-whitespace
-  - id: end-of-file-fixer
-  - id: check-json
-  - id: check-yaml
-  - id: check-added-large-files
-  - id: mixed-line-ending
-    args: [--fix=lf]
-  - id: check-case-conflict
-- repo: https://github.com/psf/black
-  rev: 22.6.0
-  hooks:
-    - id: black
-- repo: local
-  hooks:
-  - id: gem5-style-checker
-    name: gem5 style checker
-    entry: util/git-pre-commit.py
-    always_run: true
-    exclude: ".*"
-    language: system
-    description: 'The gem5 style checker hook.'
-  - id: gem5-commit-msg-checker
-    name: gem5 commit msg checker
-    entry: ext/git-commit-msg
-    language: system
-    stages: [commit-msg]
-    description: 'The gem5 commit message checker hook.'
-  - id: gerrit-commit-msg-job
-    name: gerrit commit message job
-    entry: util/gerrit-commit-msg-hook
-    language: system
-    stages: [commit-msg]
-    description: 'Adds Change-ID to the commit message. Needed by Gerrit.'
+    - repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: v4.3.0
+      hooks:
+          - id: trailing-whitespace
+          - id: end-of-file-fixer
+          - id: check-json
+          - id: check-yaml
+          - id: check-added-large-files
+          - id: mixed-line-ending
+            args: [--fix=lf]
+          - id: check-case-conflict
+    - repo: https://github.com/jumanjihouse/pre-commit-hook-yamlfmt
+      rev: 0.2.3
+      hooks:
+          - id: yamlfmt
+    - repo: https://github.com/psf/black
+      rev: 22.6.0
+      hooks:
+          - id: black
+    - repo: local
+      hooks:
+          - id: gem5-style-checker
+            name: gem5 style checker
+            entry: util/git-pre-commit.py
+            always_run: true
+            exclude: .*
+            language: system
+            description: The gem5 style checker hook.
+          - id: gem5-commit-msg-checker
+            name: gem5 commit msg checker
+            entry: ext/git-commit-msg
+            language: system
+            stages: [commit-msg]
+            description: The gem5 commit message checker hook.
+          - id: gerrit-commit-msg-job
+            name: gerrit commit message job
+            entry: util/gerrit-commit-msg-hook
+            language: system
+            stages: [commit-msg]
+            description: Adds Change-ID to the commit message. Needed by Gerrit.
