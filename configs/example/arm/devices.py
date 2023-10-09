@@ -338,55 +338,14 @@ class FastmodelCluster(CpuCluster):
         pass
 
 
-class BaseSimpleSystem(ArmSystem):
-    cache_line_size = 64
+class ClusterSystem:
+    """
+    Base class providing cpu clusters generation/handling methods to
+    SE/FS systems
+    """
 
-    def __init__(self, mem_size, platform, **kwargs):
-        super(BaseSimpleSystem, self).__init__(**kwargs)
-
-        self.voltage_domain = VoltageDomain(voltage="1.0V")
-        self.clk_domain = SrcClockDomain(
-            clock="1GHz", voltage_domain=Parent.voltage_domain
-        )
-
-        if platform is None:
-            self.realview = VExpress_GEM5_V1()
-        else:
-            self.realview = platform
-
-        if hasattr(self.realview.gic, "cpu_addr"):
-            self.gic_cpu_addr = self.realview.gic.cpu_addr
-
-        self.terminal = Terminal()
-        self.vncserver = VncServer()
-
-        self.iobus = IOXBar()
-        # Device DMA -> MEM
-        self.mem_ranges = self.getMemRanges(int(Addr(mem_size)))
-
+    def __init__(self, **kwargs):
         self._clusters = []
-
-    def getMemRanges(self, mem_size):
-        """
-        Define system memory ranges. This depends on the physical
-        memory map provided by the realview platform and by the memory
-        size provided by the user (mem_size argument).
-        The method is iterating over all platform ranges until they cover
-        the entire user's memory requirements.
-        """
-        mem_ranges = []
-        for mem_range in self.realview._mem_regions:
-            size_in_range = min(mem_size, mem_range.size())
-
-            mem_ranges.append(
-                AddrRange(start=mem_range.start, size=size_in_range)
-            )
-
-            mem_size -= size_in_range
-            if mem_size == 0:
-                return mem_ranges
-
-        raise ValueError("memory size too big for platform capabilities")
 
     def numCpuClusters(self):
         return len(self._clusters)
@@ -421,6 +380,80 @@ class BaseSimpleSystem(ArmSystem):
         # connect each cluster to the memory hierarchy
         for cluster in self._clusters:
             cluster.connectMemSide(cluster_mem_bus)
+
+
+class SimpleSeSystem(System, ClusterSystem):
+    """
+    Example system class for syscall emulation mode
+    """
+
+    # Use a fixed cache line size of 64 bytes
+    cache_line_size = 64
+
+    def __init__(self, **kwargs):
+        System.__init__(self, **kwargs)
+        ClusterSystem.__init__(self, **kwargs)
+        # Create a voltage and clock domain for system components
+        self.voltage_domain = VoltageDomain(voltage="3.3V")
+        self.clk_domain = SrcClockDomain(
+            clock="1GHz", voltage_domain=self.voltage_domain
+        )
+
+        # Create the off-chip memory bus.
+        self.membus = SystemXBar()
+
+    def connect(self):
+        self.system_port = self.membus.cpu_side_ports
+
+
+class BaseSimpleSystem(ArmSystem, ClusterSystem):
+    cache_line_size = 64
+
+    def __init__(self, mem_size, platform, **kwargs):
+        ArmSystem.__init__(self, **kwargs)
+        ClusterSystem.__init__(self, **kwargs)
+
+        self.voltage_domain = VoltageDomain(voltage="1.0V")
+        self.clk_domain = SrcClockDomain(
+            clock="1GHz", voltage_domain=Parent.voltage_domain
+        )
+
+        if platform is None:
+            self.realview = VExpress_GEM5_V1()
+        else:
+            self.realview = platform
+
+        if hasattr(self.realview.gic, "cpu_addr"):
+            self.gic_cpu_addr = self.realview.gic.cpu_addr
+
+        self.terminal = Terminal()
+        self.vncserver = VncServer()
+
+        self.iobus = IOXBar()
+        # Device DMA -> MEM
+        self.mem_ranges = self.getMemRanges(int(Addr(mem_size)))
+
+    def getMemRanges(self, mem_size):
+        """
+        Define system memory ranges. This depends on the physical
+        memory map provided by the realview platform and by the memory
+        size provided by the user (mem_size argument).
+        The method is iterating over all platform ranges until they cover
+        the entire user's memory requirements.
+        """
+        mem_ranges = []
+        for mem_range in self.realview._mem_regions:
+            size_in_range = min(mem_size, mem_range.size())
+
+            mem_ranges.append(
+                AddrRange(start=mem_range.start, size=size_in_range)
+            )
+
+            mem_size -= size_in_range
+            if mem_size == 0:
+                return mem_ranges
+
+        raise ValueError("memory size too big for platform capabilities")
 
 
 class SimpleSystem(BaseSimpleSystem):
