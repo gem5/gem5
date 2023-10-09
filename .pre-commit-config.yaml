@@ -53,7 +53,7 @@ default_stages: [commit]
 
 repos:
     - repo: https://github.com/pre-commit/pre-commit-hooks
-      rev: v4.3.0
+      rev: v4.5.0
       hooks:
           - id: trailing-whitespace
           - id: end-of-file-fixer
@@ -68,7 +68,7 @@ repos:
       hooks:
           - id: yamlfmt
     - repo: https://github.com/psf/black
-      rev: 22.6.0
+      rev: 23.9.1
       hooks:
           - id: black
     - repo: local
