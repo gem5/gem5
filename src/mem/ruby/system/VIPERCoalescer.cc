@@ -75,12 +75,14 @@ VIPERCoalescer::makeRequest(PacketPtr pkt)
     //    ReadReq             : cache read
     //    WriteReq            : cache write
     //    AtomicOp            : cache atomic
+    //    Flush               : flush and invalidate cache
     //
     // VIPER does not expect MemSyncReq & Release since in GCN3, compute unit
     // does not specify an equivalent type of memory request.
     assert((pkt->cmd == MemCmd::MemSyncReq && pkt->req->isInvL1()) ||
             pkt->cmd == MemCmd::ReadReq ||
             pkt->cmd == MemCmd::WriteReq ||
+            pkt->cmd == MemCmd::FlushReq ||
             pkt->isAtomicOp());
 
     if (pkt->req->isInvL1() && m_cache_inv_pkt) {

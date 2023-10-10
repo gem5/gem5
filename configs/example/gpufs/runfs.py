@@ -158,6 +158,16 @@ def addRunFSOptions(parser):
         help="Root partition of disk image",
     )
 
+    parser.add_argument(
+        "--disable-avx",
+        action="store_true",
+        default=False,
+        help="Disables AVX. AVX is used in some ROCm libraries but "
+        "does not have checkpointing support yet. If simulation either "
+        "creates a checkpoint or restores from one, then AVX needs to "
+        "be disabled for correct functionality ",
+    )
+
 
 def runGpuFSSystem(args):
     """
