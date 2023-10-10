@@ -63,6 +63,7 @@ repos:
           - id: mixed-line-ending
             args: [--fix=lf]
           - id: check-case-conflict
+          - id: requirements-txt-fixer
     - repo: https://github.com/jumanjihouse/pre-commit-hook-yamlfmt
       rev: 0.2.3
       hooks:
