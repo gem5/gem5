@@ -36,6 +36,7 @@
 
 #include "base/bitunion.hh"
 #include "dev/amdgpu/amdgpu_defines.hh"
+#include "dev/amdgpu/amdgpu_gfx.hh"
 #include "dev/amdgpu/amdgpu_nbio.hh"
 #include "dev/amdgpu/amdgpu_vm.hh"
 #include "dev/amdgpu/memory_manager.hh"
@@ -109,6 +110,7 @@ class AMDGPUDevice : public PciDevice
      * Blocks of the GPU
      */
     AMDGPUNbio nbio;
+    AMDGPUGfx gfx;
     AMDGPUMemoryManager *gpuMemMgr;
     AMDGPUInterruptHandler *deviceIH;
     AMDGPUVM gpuvm;

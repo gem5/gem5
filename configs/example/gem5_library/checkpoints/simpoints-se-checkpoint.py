@@ -128,7 +128,6 @@ board.set_se_simpoint_workload(
 )
 
 dir = Path(args.checkpoint_path)
-dir.mkdir(exist_ok=True)
 
 simulator = Simulator(
     board=board,
