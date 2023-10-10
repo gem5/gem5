@@ -1,4 +1,5 @@
 # Copyright (c) 2022-2023 The Regents of the University of California
+# Copyright (c) 2023 COSEDA Technologies GmbH
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,11 +26,13 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from pathlib import Path
+from typing import Type
 import hashlib
-from _hashlib import HASH as Hash
 
 
-def _md5_update_from_file(filename: Path, hash: Hash) -> Hash:
+def _md5_update_from_file(
+    filename: Path, hash: Type[hashlib.md5]
+) -> Type[hashlib.md5]:
     assert filename.is_file()
 
     if filename.stat().st_size < 1024 * 1024 * 100:
@@ -52,7 +55,9 @@ def _md5_update_from_file(filename: Path, hash: Hash) -> Hash:
     return hash
 
 
-def _md5_update_from_dir(directory: Path, hash: Hash) -> Hash:
+def _md5_update_from_dir(
+    directory: Path, hash: Type[hashlib.md5]
+) -> Type[hashlib.md5]:
     assert directory.is_dir()
     for path in sorted(directory.iterdir(), key=lambda p: str(p).lower()):
         hash.update(path.name.encode())
