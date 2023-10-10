@@ -30,7 +30,7 @@ import json
 import time
 import itertools
 from .abstract_client import AbstractClient
-
+from urllib.error import HTTPError
 from m5.util import warn
 
 
@@ -77,7 +77,7 @@ class AtlasClient(AbstractClient):
 
     def get_token(self):
         return self._atlas_http_json_req(
-            self.url,
+            self.authUrl,
             data_json={"key": self.apiKey},
             headers={"Content-Type": "application/json"},
             purpose_of_request="Get Access Token with API key",
@@ -122,7 +122,7 @@ class AtlasClient(AbstractClient):
             try:
                 response = request.urlopen(req)
                 break
-            except Exception as e:
+            except HTTPError as e:
                 if attempt >= max_failed_attempts:
                     raise AtlasClientHttpJsonRequestError(
                         client=self,
@@ -167,7 +167,10 @@ class AtlasClient(AbstractClient):
         }
 
         resources = self._atlas_http_json_req(
-            url, data=data, headers=headers, purpose_of_request="Get Resources"
+            url,
+            data_json=data,
+            headers=headers,
+            purpose_of_request="Get Resources",
         )["documents"]
 
         # I do this as a lazy post-processing step because I can't figure out
