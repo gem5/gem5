@@ -231,7 +231,10 @@ class MetaSimObject(type):
                     "SimObjects do not support multiple inheritance"
                 )
 
-        base = bases[0]
+        # If the base class is not set, we assume type `object`. This ensures
+        # `class Foo(object): pass` is considered equivalent to
+        # `class Foo: pass`.
+        base = bases[0] if len(bases) > 0 else object
 
         # Set up general inheritance via multidicts.  A subclass will
         # inherit all its settings from the base class.  The only time
