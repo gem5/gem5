@@ -579,7 +579,6 @@ class VMaskMergeMicroInst : public VectorArithMicroInst
                 memcpy(Vd + i * byte_offset, s + i * byte_offset, byte_offset);
             }
         }
-        xc->setRegOperand(this, 0, &tmp_d0);
         if (traceData)
             traceData->setData(vecRegClass, &tmp_d0);
         return NoFault;
