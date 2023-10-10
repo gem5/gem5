@@ -20,7 +20,7 @@ jobs:
                     clang-version-13, clang-version-12, clang-version-11, clang-version-10, clang-version-9, clang-version-8, clang-version-7, ubuntu-20.04_all-dependencies,
                     ubuntu-22.04_all-dependencies, ubuntu-22.04_min-dependencies]
                 opts: [.opt, .fast]
-        runs-on: [self-hosted, linux, x64, build]
+        runs-on: [self-hosted, linux, x64]
         timeout-minutes: 2880 # 48 hours
         container: gcr.io/gem5-test/${{ matrix.image }}:latest
         steps:
@@ -43,7 +43,7 @@ jobs:
                     GCN3_X86]
                 image: [gcc-version-12, clang-version-16]
                 opts: [.opt]
-        runs-on: [self-hosted, linux, x64, build]
+        runs-on: [self-hosted, linux, x64]
         timeout-minutes: 2880 # 48 hours
         container: gcr.io/gem5-test/${{ matrix.image }}:latest
         steps:

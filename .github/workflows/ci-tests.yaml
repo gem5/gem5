@@ -23,7 +23,7 @@ jobs:
 
   # ensures we have a change-id in every commit, needed for gerrit
     check-for-change-id:
-    # runs on github hosted runner
+        # runs on github hosted runner
         runs-on: ubuntu-22.04
         if: github.event.pull_request.draft == false
         steps:
@@ -48,7 +48,7 @@ jobs:
                   exit 1
 
     unittests-all-opt:
-        runs-on: [self-hosted, linux, x64, run]
+        runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
         container: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
         needs: [pre-commit, check-for-change-id] # only runs if pre-commit and change-id passes
@@ -61,7 +61,7 @@ jobs:
             - run: echo "This job's status is ${{ job.status }}."
 
     testlib-quick-matrix:
-        runs-on: [self-hosted, linux, x64, run]
+        runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
     # In order to make sure the environment is exactly the same, we run in
     # the same container we use to build gem5 and run the testlib tests. This
@@ -90,7 +90,7 @@ jobs:
             test-dirs-matrix: ${{ steps.dir-matrix.outputs.test-dirs-matrix }}
 
     testlib-quick-gem5-builds:
-        runs-on: [self-hosted, linux, x64, build]
+        runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
         container: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
         needs: [pre-commit, check-for-change-id, testlib-quick-matrix]
@@ -120,7 +120,7 @@ jobs:
                   retention-days: 7
 
     testlib-quick-execution:
-        runs-on: [self-hosted, linux, x64, run]
+        runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
         container: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
         needs: [pre-commit, check-for-change-id, testlib-quick-matrix, testlib-quick-gem5-builds]
@@ -150,7 +150,7 @@ jobs:
             - name: Run "tests/${{ matrix.test-dir }}" TestLib quick tests
               id: run-tests
               working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run --skip-build -vv ${{ matrix.test-dir }}
+              run: ./main.py run --skip-build -vv -j$(nproc) ${{ matrix.test-dir }}
 
         # Get the basename of the matrix.test-dir path (to name the artifact).
             - name: Sanatize test-dir for artifact name
@@ -173,7 +173,7 @@ jobs:
     # merged. The 'testlib-quick-execution' is a matrix job which runs all the
     # the testlib quick tests. This job is therefore a stub which will pass if
     # all the testlib-quick-execution jobs pass.
-        runs-on: [self-hosted, linux, x64, run]
+        runs-on: [self-hosted, linux, x64]
         needs: testlib-quick-execution
         steps:
             - run: echo "This job's status is ${{ job.status }}."

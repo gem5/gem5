@@ -59,7 +59,7 @@ Vagrant.configure("2") do |config|
       runner.vm.provision "file", source: "./action-run.sh", destination: "/tmp/action-run.sh"
       runner.vm.provision :shell, privileged: false,  inline: "cp /tmp/action-run.sh ."
       # Execute the actions-run.sh script on every boot. This configures the and starts the runner.
-      runner.vm.provision :shell, privileged: false, run: 'always', inline: "./action-run.sh #{PERSONAL_ACCESS_TOKEN} #{GITHUB_ORG} "run,build" >> action-run.log 2>&1 &"
+      runner.vm.provision :shell, privileged: false, run: 'always', inline: "./action-run.sh #{PERSONAL_ACCESS_TOKEN} #{GITHUB_ORG} >> action-run.log 2>&1 &"
     end
   end
 end
