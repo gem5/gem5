@@ -33,10 +33,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""This script is the syscall emulation example script from the ARM
-Research Starter Kit on System Modeling. More information can be found
-at: http://www.arm.com/ResearchEnablement/SystemModeling
-"""
 
 import os
 import m5
@@ -48,20 +44,8 @@ import shlex
 m5.util.addToPath("../..")
 
 from common import ObjectList
-from common import MemConfig
-from common.cores.arm import HPI
 
 import devices
-
-
-# Pre-defined CPU configurations. Each tuple must be ordered as : (cpu_class,
-# l1_icache_class, l1_dcache_class, walk_cache_class, l2_Cache_class). Any of
-# the cache class may be 'None' if the particular cache is not present.
-cpu_types = {
-    "atomic": (AtomicSimpleCPU, None, None, None),
-    "minor": (MinorCPU, devices.L1I, devices.L1D, devices.L2),
-    "hpi": (HPI.HPI, HPI.HPI_ICache, HPI.HPI_DCache, HPI.HPI_L2),
-}
 
 
 def get_processes(cmd):
@@ -84,13 +68,8 @@ def get_processes(cmd):
 def create(args):
     """Create and configure the system object."""
 
-    cpu_class = cpu_types[args.cpu][0]
-    mem_mode = cpu_class.memory_mode()
-    # Only simulate caches when using a timing CPU (e.g., the HPI model)
-    want_caches = True if mem_mode == "timing" else False
-
     system = devices.SimpleSeSystem(
-        mem_mode=mem_mode,
+        mem_mode="timing",
     )
 
     # Add CPUs to the system. A cluster of CPUs typically have
@@ -100,26 +79,28 @@ def create(args):
         args.num_cores,
         args.cpu_freq,
         "1.2V",
-        *cpu_types[args.cpu],
-        tarmac_gen=args.tarmac_gen,
-        tarmac_dest=args.tarmac_dest,
+        ObjectList.cpu_list.get("O3_ARM_v7a_3_Etrace"),
+        devices.L1I,
+        devices.L1D,
+        devices.L2,
     )
 
-    # Create a cache hierarchy for the cluster. We are assuming that
-    # clusters have core-private L1 caches and an L2 that's shared
-    # within the cluster.
-    system.addCaches(want_caches, last_cache_level=2)
+    # Attach the elastic trace probe listener to every CPU in the cluster
+    for cpu in system.cpu_cluster:
+        cpu.attach_probe_listener(args.inst_trace_file, args.data_trace_file)
 
-    # Tell components about the expected physical memory ranges. This
-    # is, for example, used by the MemConfig helper to determine where
-    # to map DRAMs in the physical address space.
-    system.mem_ranges = [AddrRange(start=0, size=args.mem_size)]
+    # As elastic trace generation is enabled, make sure the memory system is
+    # minimal so that compute delays do not include memory access latencies.
+    # Configure the compulsory L1 caches for the O3CPU, do not configure
+    # any more caches.
+    system.addCaches(True, last_cache_level=1)
 
-    # Configure the off-chip memory system.
-    MemConfig.config_mem(args, system)
-
-    # Wire up the system's memory system
-    system.connect()
+    # For elastic trace, over-riding Simple Memory latency to 1ns."
+    system.memory = SimpleMemory(
+        range=AddrRange(start=0, size=args.mem_size),
+        latency="1ns",
+        port=system.membus.mem_side_ports,
+    )
 
     # Parse the command line and get a list of Processes instances
     # that we can pass to gem5.
@@ -146,34 +127,30 @@ def main():
     parser.add_argument(
         "commands_to_run",
         metavar="command(s)",
-        nargs="*",
+        nargs="+",
         help="Command(s) to run",
     )
     parser.add_argument(
-        "--cpu",
+        "--inst-trace-file",
+        action="store",
         type=str,
-        choices=list(cpu_types.keys()),
-        default="atomic",
-        help="CPU model to use",
+        help="""Instruction fetch trace file input to
+                Elastic Trace probe in a capture simulation and
+                Trace CPU in a replay simulation""",
+        default="fetchtrace.proto.gz",
+    )
+    parser.add_argument(
+        "--data-trace-file",
+        action="store",
+        type=str,
+        help="""Data dependency trace file input to
+                Elastic Trace probe in a capture simulation and
+                Trace CPU in a replay simulation""",
+        default="deptrace.proto.gz",
     )
     parser.add_argument("--cpu-freq", type=str, default="4GHz")
     parser.add_argument(
         "--num-cores", type=int, default=1, help="Number of CPU cores"
-    )
-    parser.add_argument(
-        "--mem-type",
-        default="DDR3_1600_8x8",
-        choices=ObjectList.mem_list.get_names(),
-        help="type of memory to use",
-    )
-    parser.add_argument(
-        "--mem-channels", type=int, default=2, help="number of memory channels"
-    )
-    parser.add_argument(
-        "--mem-ranks",
-        type=int,
-        default=None,
-        help="number of memory ranks per channel",
     )
     parser.add_argument(
         "--mem-size",
@@ -181,17 +158,6 @@ def main():
         type=str,
         default="2GB",
         help="Specify the physical memory size",
-    )
-    parser.add_argument(
-        "--tarmac-gen",
-        action="store_true",
-        help="Write a Tarmac trace.",
-    )
-    parser.add_argument(
-        "--tarmac-dest",
-        choices=TarmacDump.vals,
-        default="stdoutput",
-        help="Destination for the Tarmac trace output. [Default: stdoutput]",
     )
 
     args = parser.parse_args()

@@ -1,5 +1,4 @@
----
-# Copyright (c) 2022 Arm Limited
+# Copyright (c) 2012, 2017-2018, 2023 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -34,61 +33,26 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-minimum_pre_commit_version: '2.18'
+from m5.objects import *
+from .O3_ARM_v7a import O3_ARM_v7a_3
 
-default_language_version:
-    python: python3
+# O3_ARM_v7a_3 adapted to generate elastic traces
+class O3_ARM_v7a_3_Etrace(O3_ARM_v7a_3):
+    # Make the number of entries in the ROB, LQ and SQ very
+    # large so that there are no stalls due to resource
+    # limitation as such stalls will get captured in the trace
+    # as compute delay. For replay, ROB, LQ and SQ sizes are
+    # modelled in the Trace CPU.
+    numROBEntries = 512
+    LQEntries = 128
+    SQEntries = 128
 
-exclude: |
-    (?x)^(
-      ext/(?!testlib/).*|
-      build/.*|
-      src/systemc/ext/.*|
-      src/systemc/tests/.*/.*|
-      src/python/m5/ext/pyfdt/.*|
-      tests/.*/ref/.*
-    )$
-
-default_stages: [commit]
-
-repos:
-    - repo: https://github.com/pre-commit/pre-commit-hooks
-      rev: v4.3.0
-      hooks:
-          - id: trailing-whitespace
-          - id: end-of-file-fixer
-          - id: check-json
-          - id: check-yaml
-          - id: check-added-large-files
-          - id: mixed-line-ending
-            args: [--fix=lf]
-          - id: check-case-conflict
-    - repo: https://github.com/jumanjihouse/pre-commit-hook-yamlfmt
-      rev: 0.2.3
-      hooks:
-          - id: yamlfmt
-    - repo: https://github.com/psf/black
-      rev: 22.6.0
-      hooks:
-          - id: black
-    - repo: local
-      hooks:
-          - id: gem5-style-checker
-            name: gem5 style checker
-            entry: util/git-pre-commit.py
-            always_run: true
-            exclude: .*
-            language: system
-            description: The gem5 style checker hook.
-          - id: gem5-commit-msg-checker
-            name: gem5 commit msg checker
-            entry: ext/git-commit-msg
-            language: system
-            stages: [commit-msg]
-            description: The gem5 commit message checker hook.
-          - id: gerrit-commit-msg-job
-            name: gerrit commit message job
-            entry: util/gerrit-commit-msg-hook
-            language: system
-            stages: [commit-msg]
-            description: Adds Change-ID to the commit message. Needed by Gerrit.
+    def attach_probe_listener(self, inst_trace_file, data_trace_file):
+        # Attach the elastic trace probe listener. Set the protobuf trace
+        # file names. Set the dependency window size equal to the cpu it
+        # is attached to.
+        self.traceListener = m5.objects.ElasticTrace(
+            instFetchTraceFile=inst_trace_file,
+            dataDepTraceFile=data_trace_file,
+            depWindowSize=3 * self.numROBEntries,
+        )

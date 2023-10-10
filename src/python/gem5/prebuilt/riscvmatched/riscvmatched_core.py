@@ -95,7 +95,7 @@ class U74FUPool(MinorFUPool):
 
 
 class U74BP(TournamentBP):
-    BTBEntries = 32
+    btb = SimpleBTB(numEntries=32)
     RASSize = 12
     localHistoryTableSize = 4096  # is 3.6 KiB but gem5 requires power of 2
     localPredictorSize = 16384

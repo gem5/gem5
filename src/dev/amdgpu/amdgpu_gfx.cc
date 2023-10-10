@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2019 Advanced Micro Devices, Inc.
+ * Copyright (c) 2023 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,53 +28,46 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef DEV_HSA_HSA_SIGNAL_H
-#define DEV_HSA_HSA_SIGNAL_H
 
-#include <cstdint>
+#include "dev/amdgpu/amdgpu_gfx.hh"
+
+#include "mem/packet_access.hh"
+#include "sim/core.hh"
 
 namespace gem5
 {
 
-// AMD Signal Kind Enumeration Values.
-typedef int64_t amd_signal_kind64_t;
-enum amd_signal_kind_t
+void
+AMDGPUGfx::readMMIO(PacketPtr pkt, Addr offset)
 {
-  AMD_SIGNAL_KIND_INVALID = 0,
-  AMD_SIGNAL_KIND_USER = 1,
-  AMD_SIGNAL_KIND_DOORBELL = -1,
-  AMD_SIGNAL_KIND_LEGACY_DOORBELL = -2
-};
+    switch (offset) {
+      case AMDGPU_MM_RLC_GPU_CLOCK_COUNT_LSB:
+        pkt->setLE<uint32_t>(captured_clock_count);
+        break;
+      case AMDGPU_MM_RLC_GPU_CLOCK_COUNT_MSB:
+        pkt->setLE<uint32_t>(captured_clock_count >> 32);
+        break;
+      default:
+        break;
+    }
+}
 
-// AMD Signal.
-typedef struct amd_signal_s
+void
+AMDGPUGfx::writeMMIO(PacketPtr pkt, Addr offset)
 {
-  amd_signal_kind64_t kind;
-  union
-  {
-    volatile int64_t value;
-    volatile uint32_t* legacy_hardware_doorbell_ptr;
-    volatile uint64_t* hardware_doorbell_ptr;
-  };
-  uint64_t event_mailbox_ptr;
-  uint32_t event_id;
-  uint32_t reserved1;
-  uint64_t start_ts;
-  uint64_t end_ts;
-  union
-  {
-    uint64_t queue_ptr;
-    uint64_t reserved2;
-  };
-  uint32_t reserved3[2];
-} amd_signal_t;
-
-typedef struct
-{
-  uint64_t start_ts;
-  uint64_t end_ts;
-} amd_event_t;
+    switch (offset) {
+      case AMDGPU_MM_RLC_CAPTURE_GPU_CLOCK_COUNT:
+        // Use gem5 Ticks in nanoseconds are the counter. The first capture
+        // is expected to return zero.
+        if (captured_clock_count == 1) {
+          captured_clock_count = 0;
+        } else {
+          captured_clock_count = curTick() / sim_clock::as_int::ns;
+        }
+        break;
+      default:
+        break;
+    }
+}
 
 } // namespace gem5
-
-#endif // DEV_HSA_HSA_SIGNAL_H
