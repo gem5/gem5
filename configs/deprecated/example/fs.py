@@ -164,7 +164,7 @@ def build_test_system(np):
         # assuming that there is just one such port.
         test_sys.iobus.mem_side_ports = test_sys.ruby._io_port.in_ports
 
-        for (i, cpu) in enumerate(test_sys.cpu):
+        for i, cpu in enumerate(test_sys.cpu):
             #
             # Tie the cpu ports to the correct ruby system ports
             #

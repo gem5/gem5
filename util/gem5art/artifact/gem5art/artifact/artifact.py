@@ -166,7 +166,6 @@ class Artifact:
         version: str = "",
         **kwargs: str,
     ) -> "Artifact":
-
         """Constructs a new artifact without using the database.
 
         Different from registerArtifact(), this method won't use database.

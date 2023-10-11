@@ -53,7 +53,7 @@ class Sequential:
 
     def __init__(self, cpus):
         self.first_cpu = None
-        for (cpuno, cpu) in enumerate(cpus):
+        for cpuno, cpu in enumerate(cpus):
             if not cpu.switched_out:
                 if self.first_cpu != None:
                     fatal("More than one CPU is switched in")
@@ -141,7 +141,6 @@ def run_test(root, switcher=None, freq=1000, verbose=False):
             exit_cause == "target called exit()"
             or exit_cause == "m5_exit instruction encountered"
         ):
-
             sys.exit(0)
         else:
             print(f"Test failed: Unknown exit cause: {exit_cause}")

@@ -65,6 +65,7 @@ env["PATH"] += ":/sbin:/usr/sbin"
 # Whether to print debug output.
 debug = False
 
+
 # Figure out cylinders, heads and sectors from a size in blocks.
 def chsFromSize(sizeInBlocks):
     if sizeInBlocks >= MaxLBABlocks:

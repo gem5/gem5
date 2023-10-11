@@ -38,6 +38,7 @@ from m5.proxy import *
 
 from m5.objects.AbstractNVM import *
 
+
 # Distribution of the data.
 # sequential: sequential (address n+1 is likely to be on the same plane as n)
 # Random: @TODO Not yet implemented

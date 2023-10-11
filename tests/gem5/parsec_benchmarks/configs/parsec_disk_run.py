@@ -147,7 +147,6 @@ args = parser.parse_args()
 # Setup the cachie hierarchy.
 
 if args.mem_system == "classic":
-
     from gem5.components.cachehierarchies.classic.private_l1_private_l2_cache_hierarchy import (
         PrivateL1PrivateL2CacheHierarchy,
     )
@@ -213,6 +212,7 @@ board.set_kernel_disk_workload(
     ),
     readfile_contents=command,
 )
+
 
 # Here we define some custom workbegin/workend exit event generators. Here we
 # want to switch to detailed CPUs at the beginning of the ROI, then continue to

@@ -36,6 +36,7 @@
 from m5.SimObject import *
 from m5.params import *
 
+
 # Represents a power model for a simobj
 class PowerModelState(SimObject):
     type = "PowerModelState"

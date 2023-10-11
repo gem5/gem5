@@ -12,7 +12,6 @@ def upgrader(cpt):
             systems[sec] = ptrs, limits
 
     for sec, (ptrs, limits) in systems.items():
-
         ptrs = list(map(int, ptrs.split()))
         limits = list(map(int, limits.split()))
 

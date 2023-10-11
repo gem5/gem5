@@ -37,6 +37,7 @@ from m5.params import *
 from m5.proxy import *
 from m5.objects.ClockedObject import ClockedObject
 
+
 # Types of Stream Generators.
 # Those are orthogonal to the other generators in the TrafficGen
 # and are meant to initialize the stream and substream IDs for

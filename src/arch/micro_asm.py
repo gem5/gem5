@@ -187,6 +187,7 @@ def handle_statement(parser, container, statement):
 #
 ##########################################################################
 
+
 # Error handler.  Just call exit.  Output formatted to work under
 # Emacs compile-mode.  Optional 'print_traceback' arg, if set to True,
 # prints a Python stack backtrace too (can be handy when trying to
@@ -230,6 +231,7 @@ states = (
 reserved_map = {}
 for r in reserved:
     reserved_map[r.lower()] = r
+
 
 # Ignore comments
 def t_ANY_COMMENT(t):
@@ -359,6 +361,7 @@ def t_ANY_error(t):
 # Parser specification
 #
 ##########################################################################
+
 
 # Start symbol for a file which may have more than one macroop or rom
 # specification.

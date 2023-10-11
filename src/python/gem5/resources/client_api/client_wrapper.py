@@ -64,7 +64,6 @@ class ClientWrapper:
         clients: Optional[List[str]] = None,
         gem5_version: Optional[str] = core.gem5Version,
     ) -> Dict[str, List[str]]:
-
         clients_to_search = (
             list(self.clients.keys()) if clients is None else clients
         )

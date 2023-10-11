@@ -43,6 +43,7 @@ from m5.proxy import *
 from m5.objects.QoSMemCtrl import *
 from m5.citations import add_citation
 
+
 # Enum for memory scheduling algorithms, currently First-Come
 # First-Served and a First-Row Hit then First-Come First-Served
 class MemSched(Enum):

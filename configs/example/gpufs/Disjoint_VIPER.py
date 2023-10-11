@@ -38,7 +38,6 @@ from ruby import Ruby
 
 class DummySystem:
     def __init__(self, mem_ranges):
-
         self.mem_ctrls = []
         self.mem_ranges = mem_ranges
 
@@ -51,7 +50,6 @@ class Disjoint_VIPER(RubySystem):
         super(Disjoint_VIPER, self).__init__()
 
     def create(self, options, system, piobus, dma_devices):
-
         # Disjoint network topology
         if "garnet" in options.network:
             self.network_cpu = DisjointGarnet(self)

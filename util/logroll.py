@@ -214,7 +214,6 @@ class TestLogroll(unittest.TestCase):
         ) as mock_signal, unittest.mock.patch(
             __name__ + ".dump_lines", new_callable=CopyingMock
         ) as mock_dump_lines:
-
             signal_dict = self.mock_signal_dict(mock_signal)
 
             main(
@@ -237,7 +236,6 @@ class TestLogroll(unittest.TestCase):
         ) as mock_signal, unittest.mock.patch(
             __name__ + ".dump_lines", new_callable=CopyingMock
         ) as mock_dump_lines:
-
             signal_dict = self.mock_signal_dict(mock_signal)
 
             with self.assertRaises(SystemExit):
@@ -258,7 +256,6 @@ class TestLogroll(unittest.TestCase):
         ) as mock_signal, unittest.mock.patch(
             __name__ + ".dump_lines", new_callable=CopyingMock
         ) as mock_dump_lines:
-
             signal_dict = self.mock_signal_dict(mock_signal)
 
             main(
@@ -283,7 +280,6 @@ class TestLogroll(unittest.TestCase):
         ) as mock_signal, unittest.mock.patch(
             __name__ + ".dump_lines", new_callable=CopyingMock
         ) as mock_dump_lines:
-
             signal_dict = self.mock_signal_dict(mock_signal)
 
             with self.assertRaises(SystemExit):

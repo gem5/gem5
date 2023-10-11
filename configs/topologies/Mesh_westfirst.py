@@ -90,7 +90,7 @@ class Mesh_westfirst(SimpleTopology):
 
         # Connect each node to the appropriate router
         ext_links = []
-        for (i, n) in enumerate(network_nodes):
+        for i, n in enumerate(network_nodes):
             cntrl_level, router_id = divmod(i, num_routers)
             assert cntrl_level < cntrls_per_router
             ext_links.append(
@@ -105,7 +105,7 @@ class Mesh_westfirst(SimpleTopology):
 
         # Connect the remainding nodes to router 0.  These should only be
         # DMA nodes.
-        for (i, node) in enumerate(remainder_nodes):
+        for i, node in enumerate(remainder_nodes):
             assert node.type == "DMA_Controller"
             assert i < remainder
             ext_links.append(

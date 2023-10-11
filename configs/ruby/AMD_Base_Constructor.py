@@ -38,6 +38,7 @@ addToPath("../")
 
 from topologies.Cluster import Cluster
 
+
 #
 # Note: the L1 Cache latency is only used by the sequencer on fast path hits
 #
@@ -115,7 +116,6 @@ def construct(options, system, ruby_system):
     cpuCluster = None
     cpuCluster = Cluster(name="CPU Cluster", extBW=8, intBW=8)  # 16 GB/s
     for i in range((options.num_cpus + 1) // 2):
-
         cp_cntrl = CPCntrl()
         cp_cntrl.create(options, ruby_system, system)
 

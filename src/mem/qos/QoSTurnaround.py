@@ -35,6 +35,7 @@
 
 from m5.SimObject import SimObject
 
+
 # QoS Turnaround policy used to select bus state - READ or WRITE
 class QoSTurnaroundPolicy(SimObject):
     type = "QoSTurnaroundPolicy"

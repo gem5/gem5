@@ -161,6 +161,7 @@ test_progs = os.environ.get("M5_TEST_PROGS", "/dist/m5/regression/test-progs")
 if not os.path.isdir(test_progs):
     test_progs = joinpath(tests_root, "test-progs")
 
+
 # generate path to binary file
 def binpath(app, file=None):
     # executable has same name as app unless specified otherwise
@@ -233,6 +234,7 @@ exec(
         "exec",
     )
 )
+
 
 # Initialize all CPUs in a system
 def initCPUs(sys):

@@ -164,7 +164,7 @@ class EnumList(ObjectList):
     def _add_objects(self):
         """Add all enum values to the ObjectList"""
         self._sub_classes = {}
-        for (key, value) in list(self.base_cls.__members__.items()):
+        for key, value in list(self.base_cls.__members__.items()):
             # All Enums have a value Num_NAME at the end which we
             # do not want to include
             if not key.startswith("Num_"):

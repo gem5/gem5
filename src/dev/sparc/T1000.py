@@ -151,6 +151,7 @@ class T1000(Platform):
     puart0 = Uart8250(pio_addr=0x1F10000000)
 
     iob = Iob()
+
     # Attach I/O devices that are on chip
     def attachOnChipIO(self, bus):
         self.iob.pio = bus.mem_side_ports

@@ -118,7 +118,6 @@ class Maintainers(object):
     def from_file(
         cls, path_or_file: Optional[PathOrFile] = None
     ) -> "Maintainers":
-
         return cls(Maintainers._load_maintainers_file(path_or_file))
 
     @classmethod

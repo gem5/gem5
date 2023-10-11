@@ -45,6 +45,7 @@ from .core_complex import CoreComplex
 from .octopi_network import OctopiNetwork
 from .ruby_network_components import RubyRouter, RubyExtLink, RubyIntLink
 
+
 # CoreComplex sub-systems own the L1, L2, L3 controllers
 # OctopiCache owns the directory controllers
 # RubySystem owns the DMA Controllers
@@ -85,7 +86,6 @@ class OctopiCache(
         self._is_fullsystem = is_fullsystem
 
     def incorporate_cache(self, board: AbstractBoard) -> None:
-
         requires(
             coherence_protocol_required=CoherenceProtocol.MESI_THREE_LEVEL
         )

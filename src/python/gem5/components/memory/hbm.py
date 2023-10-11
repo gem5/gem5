@@ -137,7 +137,6 @@ class HighBandwidthMemory(ChanneledMemory):
 
     @overrides(ChanneledMemory)
     def get_mem_ports(self) -> Sequence[Tuple[AddrRange, Port]]:
-
         intlv_bits = log(self._num_channels, 2)
         mask_list = []
 

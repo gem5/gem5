@@ -46,11 +46,11 @@ except ImportError:
 import sys
 import re
 
+
 # This script is intended to post process and plot the output from
 # running configs/dram/lat_mem_rd.py, as such it parses the simout.txt and
 # stats.txt to get the relevant data points.
 def main():
-
     if len(sys.argv) != 2:
         print("Usage: ", sys.argv[0], "<simout directory>")
         exit(-1)
@@ -122,7 +122,7 @@ def main():
         )
         exit(-1)
 
-    for (r, l) in zip(ranges, final_rd_lat):
+    for r, l in zip(ranges, final_rd_lat):
         print(r, round(l, 2))
 
     # lazy version to check if an integer is a power of two

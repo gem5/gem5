@@ -28,6 +28,7 @@ from m5.SimObject import SimObject
 
 from m5.objects.SystemC import SystemC_ScModule
 
+
 # This class is a subclass of sc_module, and all the special magic which makes
 # that work is handled in the base classes.
 class SystemC_Printer(SystemC_ScModule):

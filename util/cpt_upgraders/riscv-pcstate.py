@@ -26,7 +26,6 @@
 
 
 def upgrader(cpt):
-
     # Update the RISC-V pcstate to match the new version of
     # PCState
 
@@ -34,7 +33,6 @@ def upgrader(cpt):
         import re
 
         if re.search(".*processor.*\.core.*\.xc.*", sec):
-
             if cpt.get(sec, "_rvType", fallback="") == "":
                 cpt.set(sec, "_rvType", "1")
 

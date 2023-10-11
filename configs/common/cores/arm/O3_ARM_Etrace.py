@@ -36,6 +36,7 @@
 from m5.objects import *
 from .O3_ARM_v7a import O3_ARM_v7a_3
 
+
 # O3_ARM_v7a_3 adapted to generate elastic traces
 class O3_ARM_v7a_3_Etrace(O3_ARM_v7a_3):
     # Make the number of entries in the ROB, LQ and SQ very

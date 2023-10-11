@@ -75,7 +75,6 @@ class MD5DirTestSuite(unittest.TestCase):
     """Test cases for gem5.resources.md5_utils.md5_dir()"""
 
     def _create_temp_directory(self) -> Path:
-
         dir = tempfile.mkdtemp()
 
         with open(os.path.join(dir, "file1"), "w") as f:

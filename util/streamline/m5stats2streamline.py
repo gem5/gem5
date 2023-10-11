@@ -143,6 +143,7 @@ num_events = args.num_events
 start_tick = -1
 end_tick = -1
 
+
 # Parse gem5 config.ini file to determine some system configurations.
 # Number of CPUs, L2s, etc.
 def parseConfig(config_file):
@@ -814,7 +815,6 @@ def writeXmlFile(xml, filename):
 # StatsEntry that contains individual statistics
 class StatsEntry(object):
     def __init__(self, name, group, group_index, per_cpu, key):
-
         # Full name of statistics
         self.name = name
 
