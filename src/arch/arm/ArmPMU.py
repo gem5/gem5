@@ -43,7 +43,7 @@ from m5.objects.Gic import ArmInterruptPin, ArmPPI
 from m5.util.fdthelper import *
 
 
-class ProbeEvent(object):
+class ProbeEvent:
     def __init__(self, pmu, _eventId, obj, *listOfNames):
         self.obj = obj
         self.names = listOfNames
@@ -58,7 +58,7 @@ class ProbeEvent(object):
                 )
 
 
-class SoftwareIncrement(object):
+class SoftwareIncrement:
     def __init__(self, pmu, _eventId):
         self.eventId = _eventId
         self.pmu = pmu

@@ -88,18 +88,18 @@ class Rom(MicroContainer):
 ##########################################################################
 
 
-class Label(object):
+class Label:
     def __init__(self):
         self.extern = False
         self.name = ""
 
 
-class Block(object):
+class Block:
     def __init__(self):
         self.statements = []
 
 
-class Statement(object):
+class Statement:
     def __init__(self):
         self.is_microop = False
         self.is_directive = False
@@ -570,7 +570,7 @@ def p_error(t):
         error(0, "unknown syntax error", True)
 
 
-class MicroAssembler(object):
+class MicroAssembler:
     def __init__(self, macro_type, microops, rom=None, rom_macroop_type=None):
         self.lexer = lex.lex()
         self.parser = yacc.yacc(write_tables=False)

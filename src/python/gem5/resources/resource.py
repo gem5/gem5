@@ -686,8 +686,7 @@ class SuiteResource(AbstractResource):
 
         :yields: A generator that iterates over the workloads in the suite.
         """
-        for workload in self._workloads.keys():
-            yield workload
+        yield from self._workloads.keys()
 
     def __len__(self):
         """

@@ -37,7 +37,7 @@ from network import Network
 
 class DisjointSimple(SimpleNetwork):
     def __init__(self, ruby_system):
-        super(DisjointSimple, self).__init__()
+        super().__init__()
 
         self.netifs = []
         self.routers = []
@@ -73,7 +73,7 @@ class DisjointSimple(SimpleNetwork):
 
 class DisjointGarnet(GarnetNetwork):
     def __init__(self, ruby_system):
-        super(DisjointGarnet, self).__init__()
+        super().__init__()
 
         self.netifs = []
         self.ruby_system = ruby_system

@@ -40,11 +40,13 @@ class PeekStatementAST(StatementAST):
         self.method = method
 
     def __repr__(self):
-        return "[PeekStatementAST: %r queue_name: %r type: %r %r]" % (
-            self.method,
-            self.queue_name,
-            self.type_ast,
-            self.statements,
+        return (
+            "[PeekStatementAST: {!r} queue_name: {!r} type: {!r} {!r}]".format(
+                self.method,
+                self.queue_name,
+                self.type_ast,
+                self.statements,
+            )
         )
 
     def generate(self, code, return_type, **kwargs):

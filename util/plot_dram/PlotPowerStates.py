@@ -127,7 +127,7 @@ def plotLowPStates(
     @param delay_list: list of itt max multipliers (e.g. [1, 20, 200])
 
     """
-    stats_file = open(stats_fname, "r")
+    stats_file = open(stats_fname)
 
     global bankUtilValues
     bankUtilValues = bank_util_list

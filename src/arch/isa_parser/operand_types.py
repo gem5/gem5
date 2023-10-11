@@ -46,7 +46,7 @@ def overrideInOperand(func):
 overrideInOperand.overrides = dict()
 
 
-class OperandDesc(object):
+class OperandDesc:
     def __init__(
         self, base_cls, dflt_ext, reg_spec, flags=None, sort_pri=None
     ):
@@ -111,7 +111,7 @@ class OperandDesc(object):
         self.attrs["base_name"] = name
 
 
-class Operand(object):
+class Operand:
     """Base class for operand descriptors.  An instance of this class
     (or actually a class derived from this one) represents a specific
     operand for a code block (e.g, "Rc.sq" as a dest). Intermediate

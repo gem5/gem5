@@ -34,7 +34,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-class Point(object):
+class Point:
     """2D point coordinates/size type"""
 
     def __init__(self, x, y):

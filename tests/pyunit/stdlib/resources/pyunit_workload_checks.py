@@ -84,16 +84,16 @@ class CustomWorkloadTestSuite(unittest.TestCase):
 
         parameters = self.custom_workload.get_parameters()
         self.assertTrue(isinstance(parameters, Dict))
-        self.assertEquals(2, len(parameters))
+        self.assertEqual(2, len(parameters))
 
         self.assertTrue("binary" in parameters)
         self.assertTrue(isinstance(parameters["binary"], BinaryResource))
 
         self.assertTrue("arguments" in parameters)
         self.assertTrue(isinstance(parameters["arguments"], list))
-        self.assertEquals(2, len(parameters["arguments"]))
-        self.assertEquals("hello", parameters["arguments"][0])
-        self.assertEquals(6, parameters["arguments"][1])
+        self.assertEqual(2, len(parameters["arguments"]))
+        self.assertEqual("hello", parameters["arguments"][0])
+        self.assertEqual(6, parameters["arguments"][1])
 
     def test_add_parameters(self) -> None:
         # Tests `CustomWorkload.set_parameter` for the case where we add a new
@@ -102,7 +102,7 @@ class CustomWorkloadTestSuite(unittest.TestCase):
         self.custom_workload.set_parameter("test_param", 10)
 
         self.assertTrue("test_param" in self.custom_workload.get_parameters())
-        self.assertEquals(
+        self.assertEqual(
             10, self.custom_workload.get_parameters()["test_param"]
         )
 
@@ -117,7 +117,7 @@ class CustomWorkloadTestSuite(unittest.TestCase):
 
         self.custom_workload.set_parameter("binary", "test")
         self.assertTrue("binary" in self.custom_workload.get_parameters())
-        self.assertEquals(
+        self.assertEqual(
             "test", self.custom_workload.get_parameters()["binary"]
         )
 
@@ -141,7 +141,7 @@ class WorkloadTestSuite(unittest.TestCase):
     def test_get_function_str(self) -> None:
         # Tests `Resource.get_function_str`
 
-        self.assertEquals(
+        self.assertEqual(
             "set_kernel_disk_workload", self.workload.get_function_str()
         )
 
@@ -173,7 +173,7 @@ class WorkloadTestSuite(unittest.TestCase):
         self.workload.set_parameter("test_param", 10)
 
         self.assertTrue("test_param" in self.workload.get_parameters())
-        self.assertEquals(10, self.workload.get_parameters()["test_param"])
+        self.assertEqual(10, self.workload.get_parameters()["test_param"])
 
         # Cleanup
         del self.workload.get_parameters()["test_param"]
@@ -186,7 +186,7 @@ class WorkloadTestSuite(unittest.TestCase):
 
         self.workload.set_parameter("readfile_contents", "test")
         self.assertTrue("readfile_contents" in self.workload.get_parameters())
-        self.assertEquals(
+        self.assertEqual(
             "test", self.workload.get_parameters()["readfile_contents"]
         )
 

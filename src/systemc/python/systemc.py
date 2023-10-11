@@ -30,7 +30,7 @@ from _m5.systemc import sc_time
 from _m5.systemc import sc_main_result_code, sc_main_result_str
 
 
-class ScMainResult(object):
+class ScMainResult:
     def __init__(self, code, message):
         self.code = code
         self.message = message

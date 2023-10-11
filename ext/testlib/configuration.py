@@ -105,7 +105,7 @@ class UninitializedConfigException(Exception):
     pass
 
 
-class TagRegex(object):
+class TagRegex:
     def __init__(self, include, regex):
         self.include = include
         self.regex = re.compile(regex)
@@ -115,7 +115,7 @@ class TagRegex(object):
         return "%10s: %s" % (type_, self.regex.pattern)
 
 
-class _Config(object):
+class _Config:
     _initialized = False
 
     __shared_dict = {}
@@ -185,8 +185,8 @@ class _Config(object):
             return (getattr(self._defaults, attr),)
 
     def __getattr__(self, attr):
-        if attr in dir(super(_Config, self)):
-            return getattr(super(_Config, self), attr)
+        if attr in dir(super()):
+            return getattr(super(), attr)
         elif not self._initialized:
             raise UninitializedConfigException(
                 "Cannot directly access elements from the config before it is"
@@ -434,7 +434,7 @@ def define_post_processors(config):
     )
 
 
-class Argument(object):
+class Argument:
     """
     Class represents a cli argument/flag for a argparse parser.
 
@@ -651,7 +651,7 @@ def define_common_args(config):
     common_args = AttrDict({arg.name: arg for arg in common_args})
 
 
-class ArgParser(object, metaclass=abc.ABCMeta):
+class ArgParser(metaclass=abc.ABCMeta):
     class ExtendAction(argparse.Action):
         def __call__(self, parser, namespace, values, option_string=None):
             items = getattr(namespace, self.dest, [])
@@ -679,7 +679,7 @@ class CommandParser(ArgParser):
 
     def __init__(self):
         parser = argparse.ArgumentParser()
-        super(CommandParser, self).__init__(parser)
+        super().__init__(parser)
         self.subparser = self.add_subparsers(dest="command")
 
 
@@ -691,7 +691,7 @@ class RunParser(ArgParser):
     def __init__(self, subparser):
         parser = subparser.add_parser("run", help="""Run Tests.""")
 
-        super(RunParser, self).__init__(parser)
+        super().__init__(parser)
 
         common_args.uid.add_to(parser)
         common_args.skip_build.add_to(parser)
@@ -718,7 +718,7 @@ class ListParser(ArgParser):
         parser = subparser.add_parser(
             "list", help="""List and query test metadata."""
         )
-        super(ListParser, self).__init__(parser)
+        super().__init__(parser)
 
         Argument(
             "--suites",
@@ -777,7 +777,7 @@ class ListParser(ArgParser):
 class RerunParser(ArgParser):
     def __init__(self, subparser):
         parser = subparser.add_parser("rerun", help="""Rerun failed tests.""")
-        super(RerunParser, self).__init__(parser)
+        super().__init__(parser)
 
         common_args.skip_build.add_to(parser)
         common_args.directories.add_to(parser)

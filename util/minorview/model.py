@@ -45,10 +45,10 @@ import os
 id_parts = "TSPLFE"
 
 all_ids = set(id_parts)
-no_ids = set([])
+no_ids = set()
 
 
-class BlobDataSelect(object):
+class BlobDataSelect:
     """Represents which data is displayed for Ided object"""
 
     def __init__(self):
@@ -62,7 +62,7 @@ class BlobDataSelect(object):
         return ret
 
 
-class BlobVisualData(object):
+class BlobVisualData:
     """Super class for block data colouring"""
 
     def to_striped_block(self, select):
@@ -113,7 +113,7 @@ class Id(BlobVisualData):
 
     def from_string(self, string):
         m = re.match(
-            "^(F;)?(\d+)/(\d+)\.(\d+)/(\d+)(/(\d+)(\.(\d+))?)?", string
+            r"^(F;)?(\d+)/(\d+)\.(\d+)/(\d+)(/(\d+)(\.(\d+))?)?", string
         )
 
         def seqnum_from_string(string):
@@ -205,7 +205,7 @@ class Branch(BlobVisualData):
         self.id = Id()
 
     def from_string(self, string):
-        m = re.match("^(\w+);(\d+)\.(\d+);([0-9a-fA-Fx]+);(.*)$", string)
+        m = re.match(r"^(\w+);(\d+)\.(\d+);([0-9a-fA-Fx]+);(.*)$", string)
 
         if m is not None:
             (
@@ -283,7 +283,7 @@ class DcacheAccess(BlobVisualData):
         return [direc_colour] + self.id.to_striped_block(select)
 
 
-class ColourPattern(object):
+class ColourPattern:
     """Super class for decoders that make 2D grids rather than just single
     striped blocks"""
 
@@ -493,7 +493,7 @@ def find_colour_decoder(stripSpace, decoderName, dataName, picPairs):
         return None
 
 
-class IdedObj(object):
+class IdedObj:
     """An object identified by an Id carrying paired data.
     The super class for Inst and Line"""
 
@@ -518,7 +518,7 @@ class Inst(IdedObj):
     """A non-fault instruction"""
 
     def __init__(self, id, disassembly, addr, pairs={}):
-        super(Inst, self).__init__(id, pairs)
+        super().__init__(id, pairs)
         if "nextAddr" in pairs:
             self.nextAddr = int(pairs["nextAddr"], 0)
             del pairs["nextAddr"]
@@ -542,7 +542,7 @@ class InstFault(IdedObj):
     """A fault instruction"""
 
     def __init__(self, id, fault, addr, pairs={}):
-        super(InstFault, self).__init__(id, pairs)
+        super().__init__(id, pairs)
         self.fault = fault
         self.addr = addr
 
@@ -557,7 +557,7 @@ class Line(IdedObj):
     """A fetched line"""
 
     def __init__(self, id, vaddr, paddr, size, pairs={}):
-        super(Line, self).__init__(id, pairs)
+        super().__init__(id, pairs)
         self.vaddr = vaddr
         self.paddr = paddr
         self.size = size
@@ -573,7 +573,7 @@ class LineFault(IdedObj):
     """A faulting line"""
 
     def __init__(self, id, fault, vaddr, pairs={}):
-        super(LineFault, self).__init__(id, pairs)
+        super().__init__(id, pairs)
         self.vaddr = vaddr
         self.fault = fault
 
@@ -584,7 +584,7 @@ class LineFault(IdedObj):
         return ret
 
 
-class BlobEvent(object):
+class BlobEvent:
     """Time event for a single blob"""
 
     def __init__(self, unit, time, pairs={}):
@@ -624,7 +624,7 @@ class BlobEvent(object):
         return sorted(ret)
 
 
-class BlobModel(object):
+class BlobModel:
     """Model bringing together blob definitions and parsed events"""
 
     def __init__(self, unitNamePrefix=""):
@@ -856,7 +856,7 @@ class BlobModel(object):
         still_skipping = True
         l = f.readline()
         while l and still_skipping:
-            match = re.match("^\s*(\d+):", l)
+            match = re.match(r"^\s*(\d+):", l)
             if match is not None:
                 event_time = match.groups()
                 if int(event_time[0]) >= startTime:
@@ -867,7 +867,7 @@ class BlobModel(object):
                 l = f.readline()
 
         match_line_re = re.compile(
-            "^\s*(\d+):\s*([\w\.]+):\s*(Minor\w+:)?\s*(.*)$"
+            r"^\s*(\d+):\s*([\w\.]+):\s*(Minor\w+:)?\s*(.*)$"
         )
 
         # Parse each line of the events file, accumulating comments to be
@@ -880,13 +880,13 @@ class BlobModel(object):
                 event_time = int(event_time)
 
                 unit = re.sub(
-                    "^" + self.unitNamePrefix + "\.?(.*)$", "\\1", unit
+                    "^" + self.unitNamePrefix + r"\.?(.*)$", "\\1", unit
                 )
 
                 # When the time changes, resolve comments
                 if event_time != time:
                     if self.numEvents > next_progress_print_event_count:
-                        print(("Parsed to time: %d" % event_time))
+                        print("Parsed to time: %d" % event_time)
                         next_progress_print_event_count = self.numEvents + 1000
                     update_comments(comments, time)
                     comments = []
@@ -1137,7 +1137,7 @@ class BlobModel(object):
         def line_is_comment(line):
             """Returns true if a line starts with #, returns False
             for lines which are None"""
-            return line is not None and re.match("^\s*#", line) is not None
+            return line is not None and re.match(r"^\s*#", line) is not None
 
         def get_line(f):
             """Get a line from file f extending that line if it ends in
@@ -1186,19 +1186,19 @@ class BlobModel(object):
             l = parse.remove_trailing_ws(l)
             l = re.sub("#.*", "", l)
 
-            if re.match("^\s*$", l) is not None:
+            if re.match(r"^\s*$", l) is not None:
                 pass
             elif l == "<<<":
                 in_picture = True
             elif l == ">>>":
                 in_picture = False
             elif in_picture:
-                picture.append(re.sub("\s*$", "", l))
+                picture.append(re.sub(r"\s*$", "", l))
             else:
                 line_match = re.match(
-                    "^([a-zA-Z0-9][a-zA-Z0-9]):\s+([\w.]+)\s*(.*)", l
+                    r"^([a-zA-Z0-9][a-zA-Z0-9]):\s+([\w.]+)\s*(.*)", l
                 )
-                macro_match = re.match("macro\s+(\w+):(.*)", l)
+                macro_match = re.match(r"macro\s+(\w+):(.*)", l)
 
                 if macro_match is not None:
                     name, defn = macro_match.groups()

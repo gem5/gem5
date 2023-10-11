@@ -27,17 +27,17 @@
 from micro_asm import MicroAssembler, CombinationalMacroop, RomMacroop, Rom
 
 
-class Bah(object):
+class Bah:
     def __init__(self):
         self.mnemonic = "bah"
 
 
-class Bah_Tweaked(object):
+class Bah_Tweaked:
     def __init__(self):
         self.mnemonic = "bah_tweaked"
 
 
-class Hoop(object):
+class Hoop:
     def __init__(self, first_param, second_param):
         self.mnemonic = f"hoop_{first_param}_{second_param}"
 
@@ -45,7 +45,7 @@ class Hoop(object):
         return f"{self.mnemonic}"
 
 
-class Dah(object):
+class Dah:
     def __init__(self):
         self.mnemonic = "dah"
 

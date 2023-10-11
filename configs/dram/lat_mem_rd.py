@@ -185,7 +185,7 @@ itt = 150 * 1000
 def create_trace(filename, max_addr, burst_size, itt):
     try:
         proto_out = gzip.open(filename, "wb")
-    except IOError:
+    except OSError:
         print("Failed to open ", filename, " for writing")
         exit(-1)
 

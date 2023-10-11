@@ -105,7 +105,7 @@ class CopyingMock(unittest.mock.MagicMock):
     def __call__(self, *args, **kwargs):
         args = copy.deepcopy(args)
         kwargs = copy.deepcopy(kwargs)
-        return super(CopyingMock, self).__call__(*args, **kwargs)
+        return super().__call__(*args, **kwargs)
 
 
 class TestLogroll(unittest.TestCase):
@@ -125,14 +125,12 @@ class TestLogroll(unittest.TestCase):
 
     # Generator which returns lines like a file object would.
     def line_gen(self, lines):
-        for line in lines:
-            yield line
+        yield from lines
 
     # Generator like above, but which simulates a signal midway through.
     def signal_line_gen(self, lines, pos, sig_dict, signal):
         # Return the first few lines.
-        for line in lines[:pos]:
-            yield line
+        yield from lines[:pos]
 
         # Simulate receiving the signal.
         self.assertIn(signal, sig_dict)
@@ -141,8 +139,7 @@ class TestLogroll(unittest.TestCase):
             sig_dict[signal](None, None)
 
         # Return the remaining lines.
-        for line in lines[pos:]:
-            yield line
+        yield from lines[pos:]
 
     # Set up a mock of signal.signal to record handlers in a dict.
     def mock_signal_dict(self, mock):

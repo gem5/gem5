@@ -91,7 +91,7 @@ if len(ids) == 0:
 
 # We log all the errors as they occur then dump them at the end. This means we
 # can be aware of all download errors in a single failure.
-errors = str()
+errors = ""
 
 for id in ids:
     if args.skip and id in args.skip:

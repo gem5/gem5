@@ -49,7 +49,7 @@ class ArmBaremetal(ArmFsWorkload):
     dtb_addr = 0
 
     def __init__(self, obj, system, **kwargs):
-        super(ArmBaremetal, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         self.object_file = obj
 
@@ -76,7 +76,7 @@ class ArmTrustedFirmware(ArmFsWorkload):
     dtb_addr = 0
 
     def __init__(self, obj, system, **kwargs):
-        super(ArmTrustedFirmware, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         self.extras = [binary("bl1.bin"), binary("fip.bin")]
         self.extras_addrs = [
