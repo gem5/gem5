@@ -168,6 +168,13 @@ def addRunFSOptions(parser):
         "be disabled for correct functionality ",
     )
 
+    parser.add_argument(
+        "--no-kvm-perf",
+        default=False,
+        action="store_true",
+        help="Disable KVM perf counters (use this with LSF / ETX)",
+    )
+
 
 def runGpuFSSystem(args):
     """
