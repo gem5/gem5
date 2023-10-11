@@ -365,6 +365,7 @@ void syncVecRegsToElems(ThreadContext *tc);
 void syncVecElemsToRegs(ThreadContext *tc);
 
 bool fgtEnabled(ThreadContext *tc);
+bool isHcrxEL2Enabled(ThreadContext *tc);
 
 static inline bool
 useVMID(ExceptionLevel el, bool in_host)

@@ -981,7 +981,7 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 0, 0, 7, 0), MISCREG_ID_AA64MMFR0_EL1 },
     { MiscRegNum64(3, 0, 0, 7, 1), MISCREG_ID_AA64MMFR1_EL1 },
     { MiscRegNum64(3, 0, 0, 7, 2), MISCREG_ID_AA64MMFR2_EL1 },
-    { MiscRegNum64(3, 0, 0, 7, 3), MISCREG_RAZ },
+    { MiscRegNum64(3, 0, 0, 7, 3), MISCREG_ID_AA64MMFR3_EL1 },
     { MiscRegNum64(3, 0, 0, 7, 4), MISCREG_RAZ },
     { MiscRegNum64(3, 0, 0, 7, 5), MISCREG_RAZ },
     { MiscRegNum64(3, 0, 0, 7, 6), MISCREG_RAZ },
@@ -989,12 +989,14 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 0, 1, 0, 0), MISCREG_SCTLR_EL1 },
     { MiscRegNum64(3, 0, 1, 0, 1), MISCREG_ACTLR_EL1 },
     { MiscRegNum64(3, 0, 1, 0, 2), MISCREG_CPACR_EL1 },
+    { MiscRegNum64(3, 0, 1, 0, 3), MISCREG_SCTLR2_EL1 },
     { MiscRegNum64(3, 0, 1, 2, 0), MISCREG_ZCR_EL1 },
     { MiscRegNum64(3, 0, 1, 2, 4), MISCREG_SMPRI_EL1 },
     { MiscRegNum64(3, 0, 1, 2, 6), MISCREG_SMCR_EL1 },
     { MiscRegNum64(3, 0, 2, 0, 0), MISCREG_TTBR0_EL1 },
     { MiscRegNum64(3, 0, 2, 0, 1), MISCREG_TTBR1_EL1 },
     { MiscRegNum64(3, 0, 2, 0, 2), MISCREG_TCR_EL1 },
+    { MiscRegNum64(3, 0, 2, 0, 3), MISCREG_TCR2_EL1 },
     { MiscRegNum64(3, 0, 2, 1, 0), MISCREG_APIAKeyLo_EL1 },
     { MiscRegNum64(3, 0, 2, 1, 1), MISCREG_APIAKeyHi_EL1 },
     { MiscRegNum64(3, 0, 2, 1, 2), MISCREG_APIBKeyLo_EL1 },
@@ -1138,6 +1140,7 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 4, 0, 0, 5), MISCREG_VMPIDR_EL2 },
     { MiscRegNum64(3, 4, 1, 0, 0), MISCREG_SCTLR_EL2 },
     { MiscRegNum64(3, 4, 1, 0, 1), MISCREG_ACTLR_EL2 },
+    { MiscRegNum64(3, 4, 1, 0, 3), MISCREG_SCTLR2_EL2 },
     { MiscRegNum64(3, 4, 1, 1, 0), MISCREG_HCR_EL2 },
     { MiscRegNum64(3, 4, 1, 1, 1), MISCREG_MDCR_EL2 },
     { MiscRegNum64(3, 4, 1, 1, 2), MISCREG_CPTR_EL2 },
@@ -1153,6 +1156,7 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 4, 2, 0, 0), MISCREG_TTBR0_EL2 },
     { MiscRegNum64(3, 4, 2, 0, 1), MISCREG_TTBR1_EL2 },
     { MiscRegNum64(3, 4, 2, 0, 2), MISCREG_TCR_EL2 },
+    { MiscRegNum64(3, 4, 2, 0, 3), MISCREG_TCR2_EL2 },
     { MiscRegNum64(3, 4, 2, 1, 0), MISCREG_VTTBR_EL2 },
     { MiscRegNum64(3, 4, 2, 1, 2), MISCREG_VTCR_EL2 },
     { MiscRegNum64(3, 4, 2, 6, 0), MISCREG_VSTTBR_EL2 },
@@ -1227,11 +1231,13 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 4, 14, 5, 2), MISCREG_CNTHPS_CVAL_EL2 },
     { MiscRegNum64(3, 5, 1, 0, 0), MISCREG_SCTLR_EL12 },
     { MiscRegNum64(3, 5, 1, 0, 2), MISCREG_CPACR_EL12 },
+    { MiscRegNum64(3, 5, 1, 0, 3), MISCREG_SCTLR2_EL12 },
     { MiscRegNum64(3, 5, 1, 2, 0), MISCREG_ZCR_EL12 },
     { MiscRegNum64(3, 5, 1, 2, 6), MISCREG_SMCR_EL12 },
     { MiscRegNum64(3, 5, 2, 0, 0), MISCREG_TTBR0_EL12 },
     { MiscRegNum64(3, 5, 2, 0, 1), MISCREG_TTBR1_EL12 },
     { MiscRegNum64(3, 5, 2, 0, 2), MISCREG_TCR_EL12 },
+    { MiscRegNum64(3, 5, 2, 0, 3), MISCREG_TCR2_EL12 },
     { MiscRegNum64(3, 5, 4, 0, 0), MISCREG_SPSR_EL12 },
     { MiscRegNum64(3, 5, 4, 0, 1), MISCREG_ELR_EL12 },
     { MiscRegNum64(3, 5, 5, 1, 0), MISCREG_AFSR0_EL12 },
@@ -1251,6 +1257,7 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 5, 14, 3, 2), MISCREG_CNTV_CVAL_EL02 },
     { MiscRegNum64(3, 6, 1, 0, 0), MISCREG_SCTLR_EL3 },
     { MiscRegNum64(3, 6, 1, 0, 1), MISCREG_ACTLR_EL3 },
+    { MiscRegNum64(3, 6, 1, 0, 3), MISCREG_SCTLR2_EL3 },
     { MiscRegNum64(3, 6, 1, 1, 0), MISCREG_SCR_EL3 },
     { MiscRegNum64(3, 6, 1, 1, 1), MISCREG_SDER32_EL3 },
     { MiscRegNum64(3, 6, 1, 1, 2), MISCREG_CPTR_EL3 },
@@ -1910,6 +1917,143 @@ faultIccSgiEL2(const MiscRegLUTEntry &entry,
         return inst.generateTrap(EL3);
     } else {
         return NoFault;
+    }
+}
+
+template<bool read, auto g_bitfield>
+Fault
+faultSctlr2EL1(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    if (HaveExt(tc, ArmExtension::FEAT_SCTLR2)) {
+        const SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        const HCRX hcrx = tc->readMiscReg(MISCREG_HCRX_EL2);
+        if (auto fault = faultHcrFgtEL1<read, g_bitfield, &HFGTR::sctlrEL1>(entry, tc, inst);
+            fault != NoFault) {
+            return fault;
+        } else if (EL2Enabled(tc) && (!isHcrxEL2Enabled(tc) || !hcrx.sctlr2En)) {
+            return inst.generateTrap(EL2);
+        } else if (ArmSystem::haveEL(tc, EL3) && !scr.sctlr2En) {
+            return inst.generateTrap(EL3);
+        } else {
+            return NoFault;
+        }
+    } else {
+        return inst.undefined();
+    }
+}
+
+Fault
+faultSctlr2EL2(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    if (HaveExt(tc, ArmExtension::FEAT_SCTLR2)) {
+        const SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        if (ArmSystem::haveEL(tc, EL3) && !scr.sctlr2En) {
+            return inst.generateTrap(EL3);
+        } else {
+            return NoFault;
+        }
+    } else {
+        return inst.undefined();
+    }
+}
+
+Fault
+faultSctlr2VheEL2(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    if (HaveExt(tc, ArmExtension::FEAT_SCTLR2)) {
+        const HCR hcr = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
+        const SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        if (hcr.e2h) {
+            if (ArmSystem::haveEL(tc, EL3) && !scr.sctlr2En) {
+                return inst.generateTrap(EL3);
+            } else {
+                return NoFault;
+            }
+        } else {
+            return inst.undefined();
+        }
+    } else {
+        return inst.undefined();
+    }
+}
+
+template<bool read, auto g_bitfield>
+Fault
+faultTcr2EL1(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    if (HaveExt(tc, ArmExtension::FEAT_TCR2)) {
+        const SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        const HCRX hcrx = tc->readMiscReg(MISCREG_HCRX_EL2);
+        if (auto fault = faultHcrFgtEL1<read, g_bitfield, &HFGTR::tcrEL1>(entry, tc, inst);
+            fault != NoFault) {
+            return fault;
+        } else if (EL2Enabled(tc) && (!isHcrxEL2Enabled(tc) || !hcrx.tcr2En)) {
+            return inst.generateTrap(EL2);
+        } else if (ArmSystem::haveEL(tc, EL3) && !scr.tcr2En) {
+            return inst.generateTrap(EL3);
+        } else {
+            return NoFault;
+        }
+    } else {
+        return inst.undefined();
+    }
+}
+
+Fault
+faultTcr2EL2(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    if (HaveExt(tc, ArmExtension::FEAT_TCR2)) {
+        const SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        if (ArmSystem::haveEL(tc, EL3) && !scr.tcr2En) {
+            return inst.generateTrap(EL3);
+        } else {
+            return NoFault;
+        }
+    } else {
+        return inst.undefined();
+    }
+}
+
+Fault
+faultTcr2VheEL2(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    if (HaveExt(tc, ArmExtension::FEAT_TCR2)) {
+        const HCR hcr = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
+        const SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        if (hcr.e2h) {
+            if (ArmSystem::haveEL(tc, EL3) && !scr.tcr2En) {
+                return inst.generateTrap(EL3);
+            } else {
+                return NoFault;
+            }
+        } else {
+            return inst.undefined();
+        }
+    } else {
+        return inst.undefined();
+    }
+}
+
+Fault
+faultTcr2VheEL3(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    if (HaveExt(tc, ArmExtension::FEAT_TCR2)) {
+        const HCR hcr = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
+        const bool el2_host = EL2Enabled(tc) && hcr.e2h;
+        if (el2_host) {
+            return NoFault;
+        } else {
+            return inst.undefined();
+        }
+    } else {
+        return inst.undefined();
     }
 }
 
@@ -4366,6 +4510,16 @@ ISA::initializeMiscRegMetadata()
       .faultRead(EL0, faultIdst)
       .faultRead(EL1, faultHcrEL1<&HCR::tid3>)
       .allPrivileges().writes(0);
+    InitReg(MISCREG_ID_AA64MMFR3_EL1)
+      .reset([p,release=release](){
+          AA64MMFR3 mmfr3_el1 = 0;
+          mmfr3_el1.sctlrx = release->has(ArmExtension::FEAT_SCTLR2) ? 0x1 : 0x0;
+          mmfr3_el1.tcrx = release->has(ArmExtension::FEAT_TCR2) ? 0x1 : 0x0;
+          return mmfr3_el1;
+      }())
+      .faultRead(EL0, faultIdst)
+      .faultRead(EL1, faultHcrEL1<&HCR::tid3>)
+      .allPrivileges().writes(0);
 
     InitReg(MISCREG_APDAKeyHi_EL1)
       .faultRead(EL1, faultPauthEL1<true, &HFGTR::apdaKey>)
@@ -4478,6 +4632,15 @@ ISA::initializeMiscRegMetadata()
                      | (nTLSMD ? 0 :  0x8000000)
                      | (LSMAOE ? 0 : 0x10000000))
       .mapsTo(MISCREG_SCTLR_EL1);
+    InitReg(MISCREG_SCTLR2_EL1)
+      .allPrivileges().exceptUserMode()
+      .faultRead(EL1, faultSctlr2EL1<true, &HCR::trvm>)
+      .faultWrite(EL1, faultSctlr2EL1<false, &HCR::tvm>)
+      .fault(EL2,faultSctlr2EL2);
+    InitReg(MISCREG_SCTLR2_EL12)
+      .fault(EL2, faultSctlr2VheEL2)
+      .fault(EL3, defaultFaultE2H_EL3)
+      .mapsTo(MISCREG_SCTLR2_EL1);
     InitReg(MISCREG_ACTLR_EL1)
       .allPrivileges().exceptUserMode()
       .fault(EL1, faultHcrEL1<&HCR::tacr>)
@@ -4501,6 +4664,9 @@ ISA::initializeMiscRegMetadata()
                        | (EnIA   ? 0 : 0x80000000))
       .res1(0x30c50830)
       .mapsTo(MISCREG_HSCTLR);
+    InitReg(MISCREG_SCTLR2_EL2)
+      .hyp().mon()
+      .fault(EL2, faultSctlr2EL2);
     InitReg(MISCREG_ACTLR_EL2)
       .hyp().mon()
       .mapsTo(MISCREG_HACTLR);
@@ -4533,6 +4699,8 @@ ISA::initializeMiscRegMetadata()
                        | (EnIB   ? 0 : 0x40000000)
                        | (EnIA   ? 0 : 0x80000000))
       .res1(0x30c50830);
+    InitReg(MISCREG_SCTLR2_EL3)
+      .mon();
     InitReg(MISCREG_ACTLR_EL3)
       .mon();
     InitReg(MISCREG_SCR_EL3)
@@ -4573,6 +4741,15 @@ ISA::initializeMiscRegMetadata()
       .fault(EL2, defaultFaultE2H_EL2)
       .fault(EL3, defaultFaultE2H_EL3)
       .mapsTo(MISCREG_TTBCR_NS);
+    InitReg(MISCREG_TCR2_EL1)
+      .allPrivileges().exceptUserMode()
+      .faultRead(EL1, faultTcr2EL1<true, &HCR::trvm>)
+      .faultWrite(EL1, faultTcr2EL1<false, &HCR::tvm>)
+      .fault(EL2, faultTcr2EL2);
+    InitReg(MISCREG_TCR2_EL12)
+      .fault(EL2, faultTcr2VheEL2)
+      .fault(EL3, faultTcr2VheEL3)
+      .mapsTo(MISCREG_TCR2_EL1);
     InitReg(MISCREG_TTBR0_EL2)
       .hyp().mon()
       .mapsTo(MISCREG_HTTBR);
@@ -4581,6 +4758,9 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_TCR_EL2)
       .hyp().mon()
       .mapsTo(MISCREG_HTCR);
+    InitReg(MISCREG_TCR2_EL2)
+      .hyp().mon()
+      .fault(EL2, faultTcr2EL2);
     InitReg(MISCREG_VTTBR_EL2)
       .hyp().mon()
       .mapsTo(MISCREG_VTTBR);

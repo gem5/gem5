@@ -101,6 +101,9 @@ class ArmExtension(ScopedEnum):
         "FEAT_FGT",
         # Armv8.7
         "FEAT_HCX",
+        # Armv8.9
+        "FEAT_SCTLR2",
+        "FEAT_TCR2",
         # Armv9.2
         "FEAT_SME",  # Optional in Armv9.2
         # Others
@@ -258,8 +261,12 @@ class Armv87(Armv86):
     ]
 
 
-class Armv92(Armv87):
-    extensions = Armv87.extensions + ["FEAT_SME"]
+class Armv89(Armv87):
+    extensions = Armv87.extensions + ["FEAT_SCTLR2", "FEAT_TCR2"]
+
+
+class Armv92(Armv89):
+    extensions = Armv89.extensions + ["FEAT_SME"]
 
 
 class ArmAllRelease(ArmRelease):
