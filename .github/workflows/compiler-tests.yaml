@@ -55,3 +55,16 @@ jobs:
             - name: Compile build/${{ matrix.gem5-compilation }}/gem5${{ matrix.opts }} with ${{ matrix.image }}
               run: /usr/bin/env python3 /usr/bin/scons --ignore-style build/${{ matrix.gem5-compilation }}/gem5${{ matrix.opts }} -j$(nproc)
               timeout-minutes: 600 # 10 hours
+
+    compiler-tests:
+        # The dummy job is used to indicate whether the compiler tests have
+        # passed or not. This can be used as status check for pull requests.
+        # I.e., if we want to stop pull requests from being merged if the
+        # compiler tests are failing, we can add this job as a required status
+        # check.
+        runs-on: ubuntu-22.04
+        needs:
+            - latest-compilers-all-gem5-builds
+            - all-compilers
+        steps:
+            - run: echo "This compiler tests have passed."

@@ -106,3 +106,15 @@ jobs:
                   ./build/ALL/gem5.opt configs/example/gem5_library/dramsys/arm-hello-dramsys.py
                   ./build/ALL/gem5.opt configs/example/gem5_library/dramsys/dramsys-traffic.py
                   ./build/ALL/gem5.opt configs/example/dramsys.py
+    weekly-tests:
+        # The dummy job is used to indicate whether the weekly tests have
+        # passed or not. This can be used as status check for pull requests.
+        # I.e., if we want to stop pull requests from being merged if the
+        # weekly tests are failing we can add this job as a required status
+        # check.
+        runs-on: ubuntu-22.04
+        needs:
+            - testlib-very-long-tests
+            - dramsys-tests
+        steps:
+            - run: echo "This weekly tests have passed."
