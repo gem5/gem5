@@ -40585,8 +40585,87 @@ namespace VegaISA
     void
     Inst_MUBUF__BUFFER_ATOMIC_CMPSWAP::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        if (gpuDynInst->exec_mask.none()) {
+            wf->decVMemInstsIssued();
+            return;
+        }
+
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
+
+        ConstVecOperandU32 addr0(gpuDynInst, extData.VADDR);
+        ConstVecOperandU32 addr1(gpuDynInst, extData.VADDR + 1);
+        ConstScalarOperandU128 rsrcDesc(gpuDynInst, extData.SRSRC * 4);
+        ConstScalarOperandU32 offset(gpuDynInst, extData.SOFFSET);
+        ConstVecOperandU32 src(gpuDynInst, extData.VDATA);
+        ConstVecOperandU32 cmp(gpuDynInst, extData.VDATA + 1);
+
+        rsrcDesc.read();
+        offset.read();
+        src.read();
+        cmp.read();
+
+        int inst_offset = instData.OFFSET;
+
+        if (!instData.IDXEN && !instData.OFFEN) {
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr0, addr1, rsrcDesc, offset, inst_offset);
+        } else if (!instData.IDXEN && instData.OFFEN) {
+            addr0.read();
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr0, addr1, rsrcDesc, offset, inst_offset);
+        } else if (instData.IDXEN && !instData.OFFEN) {
+            addr0.read();
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr1, addr0, rsrcDesc, offset, inst_offset);
+        } else {
+            addr0.read();
+            addr1.read();
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr1, addr0, rsrcDesc, offset, inst_offset);
+        }
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                (reinterpret_cast<VecElemU32*>(gpuDynInst->x_data))[lane]
+                    = src[lane];
+                (reinterpret_cast<VecElemU32*>(gpuDynInst->a_data))[lane]
+                    = cmp[lane];
+            }
+        }
+
+        gpuDynInst->computeUnit()->globalMemoryPipe.issueRequest(gpuDynInst);
     } // execute
+
+    void
+    Inst_MUBUF__BUFFER_ATOMIC_CMPSWAP::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU32>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_MUBUF__BUFFER_ATOMIC_CMPSWAP::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        if (isAtomicRet()) {
+            VecOperandU32 vdst(gpuDynInst, extData.VDATA);
+
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (gpuDynInst->exec_mask[lane]) {
+                    vdst[lane] = (reinterpret_cast<VecElemU32*>(
+                        gpuDynInst->d_data))[lane];
+                }
+            }
+
+            vdst.write();
+        }
+    } // completeAcc
     // --- Inst_MUBUF__BUFFER_ATOMIC_ADD class methods ---
 
     Inst_MUBUF__BUFFER_ATOMIC_ADD
