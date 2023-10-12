@@ -562,7 +562,7 @@ Fault
     }
 
     Fault fault = writeMemAtomicLE(xc, traceData, *(vreg_t::Container*)(&Mem),
-                                   EA, memAccessFlags, nullptr);
+                                   vlenb, EA, memAccessFlags, nullptr);
     return fault;
 }
 
@@ -592,7 +592,7 @@ Fault
     }
 
     Fault fault = writeMemTimingLE(xc, traceData, *(vreg_t::Container*)(&Mem),
-                                   EA, memAccessFlags, nullptr);
+                                   EA, vlenb, memAccessFlags, nullptr);
     return fault;
 }
 
@@ -689,7 +689,8 @@ Fault
     %(ea_code)s;
 
     Fault fault = readMemAtomicLE(xc, traceData, EA,
-                                  *(vreg_t::Container*)(&Mem), memAccessFlags);
+                            *(vreg_t::Container*)(&Mem), vlenb,
+                            memAccessFlags);
     if (fault != NoFault)
         return fault;
 
@@ -722,7 +723,8 @@ Fault
     %(set_vlenb)s;
     %(ea_code)s;
 
-    Fault fault = initiateMemRead(xc, traceData, EA, Mem, memAccessFlags);
+    const std::vector<bool> byte_enable(vlenb, true);
+    Fault fault = initiateMemRead(xc, EA, vlenb, memAccessFlags, byte_enable);
     return fault;
 }
 
