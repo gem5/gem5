@@ -38,7 +38,6 @@
 #include <vector>
 
 #include "base/types.hh"
-#include "config/build_gpu.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/DataBlock.hh"
 #include "mem/ruby/common/TypeDefines.hh"
@@ -51,10 +50,7 @@ namespace ruby
 {
 
 class Sequencer;
-#if BUILD_GPU
-class GPUCoalescer;
-#endif
-
+class RubyPort;
 /*!
  * Class for recording cache contents. Note that the last element of the
  * class is an array of length zero. It is used for creating variable
@@ -80,18 +76,10 @@ class CacheRecorder
     CacheRecorder();
     ~CacheRecorder();
 
-#if BUILD_GPU
     CacheRecorder(uint8_t* uncompressed_trace,
                   uint64_t uncompressed_trace_size,
-                  std::vector<Sequencer*>& SequencerMap,
-                  std::vector<GPUCoalescer*>& CoalescerMap,
+                  std::vector<RubyPort*>& ruby_port_map,
                   uint64_t block_size_bytes);
-#else
-    CacheRecorder(uint8_t* uncompressed_trace,
-                  uint64_t uncompressed_trace_size,
-                  std::vector<Sequencer*>& SequencerMap,
-                  uint64_t block_size_bytes);
-#endif
     void addRecord(int cntrl, Addr data_addr, Addr pc_addr,
                    RubyRequestType type, Tick time, DataBlock& data);
 
@@ -126,10 +114,7 @@ class CacheRecorder
     std::vector<TraceRecord*> m_records;
     uint8_t* m_uncompressed_trace;
     uint64_t m_uncompressed_trace_size;
-    std::vector<Sequencer*> m_seq_map;
-#if BUILD_GPU
-    std::vector<GPUCoalescer*> m_coalescer_map;
-#endif
+    std::vector<RubyPort*> m_ruby_port_map;
     uint64_t m_bytes_read;
     uint64_t m_records_read;
     uint64_t m_records_flushed;
