@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (c) 2021 The Regents of the University of California
+# Copyright (c) 2021-2023 The Regents of the University of California
 # All Rights Reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -161,6 +161,7 @@ build_and_run_SST () {
 scons build/${isa}/libgem5_${variant}.so -j${compile_threads} \
 --without-tcmalloc --duplicate-sources --ignore-style && \
 cd ext/sst && \
+mv Makefile.linux Makefile && \
 make clean; make -j ${compile_threads} && \
 sst --add-lib-path=./ sst/example.py && \
 cd -;
