@@ -48,11 +48,11 @@ group "ubuntu-releases" {
 }
 
 group "clang-compilers" {
-  targets = ["clang-compilers-a", "clang-compilers-b", "clang-compilers-16"]
+  targets = ["clang-compilers-base-20-04", "clang-compilers-base-22-04", "clang-compilers-16"]
 }
 
 group "gcc-compilers" {
-  targets = ["gcc-compilers-a", "gcc-compilers-b"]
+  targets = ["gcc-compilers-base-20-04", "gcc-compilers-base-22-04"]
 }
 
 # Common attributes across all targets. Note: these can be overwritten.
@@ -111,7 +111,7 @@ target "ubuntu-22-04_min-dependencies" {
   tags = ["${IMAGE_URI}/ubuntu-22.04_min-dependencies:${TAG}"]
 }
 
-target "gcc-compilers-a" {
+target "gcc-compilers-base-20-04" {
   name = "gcc-compilers-${replace(ver, ".", "-")}"
   inherits = ["common"]
   context = "ubuntu-20.04_gcc-version"
@@ -125,7 +125,7 @@ target "gcc-compilers-a" {
   tags = ["${IMAGE_URI}/gcc-version-${ver}:${TAG}"]
 }
 
-target "gcc-compilers-b" {
+target "gcc-compilers-base-22-04" {
   name = "gcc-compilers-${replace(ver, ".", "-")}"
   inherits = ["common"]
   context = "ubuntu-22.04_gcc-version"
@@ -139,7 +139,7 @@ target "gcc-compilers-b" {
   tags = ["${IMAGE_URI}/gcc-version-${ver}:${TAG}"]
 }
 
-target "clang-compilers-a" {
+target "clang-compilers-base-20-04" {
   name = "clang-compilers-${replace(ver, ".", "-")}"
   inherits = ["common"]
   context = "ubuntu-20.04_clang-version"
@@ -153,7 +153,7 @@ target "clang-compilers-a" {
   tags = ["${IMAGE_URI}/clang-version-${ver}:${TAG}"]
 }
 
-target "clang-compilers-b" {
+target "clang-compilers-base-22-04" {
   name = "clang-compilers-${replace(ver, ".", "-")}"
   inherits = ["common"]
   context = "ubuntu-22.04_clang-version"
