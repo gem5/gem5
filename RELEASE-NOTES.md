@@ -1,3 +1,20 @@
+# Version 23.1
+## Significant API and user-facing changes
+### `WorkloadResource` added to resource specialization
+- The `Workload` and `CustomWorkload` classes are now deprecated. They have been transformed into wrappers for the `obtain_resource` and `WorkloadResource` classes in `resource.py`, respectively.
+- Code utilizing the older API will continue to function as expected but will trigger a warning message. To update code using the `Workload` class, change the call from `Workload(id='resource_id', resource_version='1.0.0')` to `obtain_resource(id='resource_id', resource_version='1.0.0')`. Similarly, to update code using the `CustomWorkload` class, change the call from `CustomWorkload(function=func, parameters=params)` to `WorkloadResource(function=func, parameters=params)`.
+- Workload resources in gem5 can now be directly acquired using the `obtain_resource` function, just like other resources.
+
+### Introducing Suites
+
+Suites is a new category of resource being introduced in gem5. Documentation of suites can be found here: {link placeholder (waiting on PR approval)}.
+
+### Other API changes
+
+- All resource object now have their own `id` and `category`. Each resource class has its own `__str__()` function which return its information in the form of **category(id, version)** like **BinaryResource(id='riscv-hello', resource_version='1.0.0')**.
+
+- Users can use GEM5_RESOURCE_JSON  and GEM5_RESOURCE_JSON_APPEND env variables to overwrite all the data sources with the provided JSON and append a JSON file to all the data source respectively. More information can be found here: {link placeholder waiting on PR approval}.
+
 # Version 23.0.0.1
 
 **[HOTFIX]** Fixes compilation of `GCN3_X86` and `VEGA_X85`.
