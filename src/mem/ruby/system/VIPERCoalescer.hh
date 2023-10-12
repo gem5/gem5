@@ -32,10 +32,6 @@
 #ifndef __MEM_RUBY_SYSTEM_VIPERCOALESCER_HH__
 #define __MEM_RUBY_SYSTEM_VIPERCOALESCER_HH__
 
-#include "config/build_gpu.hh"
-
-#if BUILD_GPU
-
 #include <iostream>
 
 #include "mem/ruby/common/Address.hh"
@@ -96,5 +92,4 @@ class VIPERCoalescer : public GPUCoalescer
 } // namespace ruby
 } // namespace gem5
 
-#endif // BUILD_GPU
 #endif //__MEM_RUBY_SYSTEM_VIPERCOALESCER_HH__
