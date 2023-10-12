@@ -284,3 +284,19 @@ jobs:
             - name: Run allSyncPrims-1kernel lfTreeBarrUsing test with GCN3_X86/gem5.opt (SE mode)
               run: ./build/GCN3_X86/gem5.opt configs/example/apu_se.py --reg-alloc-policy=dynamic -n3 -c allSyncPrims-1kernel --options="lfTreeBarrUniq
                   10 16 4"
+    daily-tests:
+        # The dummy job is used to indicate whether the daily tests have
+        # passed or not. This can be used as status check for pull requests.
+        # I.e., if we want to stop pull requests from being merged if the
+        # daily tests are failing we can add this job as a required status
+        # check.
+        runs-on: ubuntu-22.04
+        needs:
+            - unittests-fast-debug
+            - testlib-long-tests
+            - testlib-long-gem5_library_example_tests
+            - sst-test
+            - systemc-test
+            - gpu-tests
+        steps:
+            - run: echo "This daily tests have passed."

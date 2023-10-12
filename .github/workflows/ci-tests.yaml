@@ -173,7 +173,7 @@ jobs:
     # merged. The 'testlib-quick-execution' is a matrix job which runs all the
     # the testlib quick tests. This job is therefore a stub which will pass if
     # all the testlib-quick-execution jobs pass.
-        runs-on: [self-hosted, linux, x64]
+        runs-on: ubuntu-22.04
         needs: testlib-quick-execution
         steps:
             - run: echo "This job's status is ${{ job.status }}."
