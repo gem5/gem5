@@ -4728,6 +4728,7 @@ namespace VegaISA
     Inst_SOPP__S_SETPRIO::Inst_SOPP__S_SETPRIO(InFmt_SOPP *iFmt)
         : Inst_SOPP(iFmt, "s_setprio")
     {
+        setFlag(ALU);
     } // Inst_SOPP__S_SETPRIO
 
     Inst_SOPP__S_SETPRIO::~Inst_SOPP__S_SETPRIO()
@@ -4742,7 +4743,10 @@ namespace VegaISA
     void
     Inst_SOPP__S_SETPRIO::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        ScalarRegU16 simm16 = instData.SIMM16;
+        ScalarRegU32 userPrio = simm16 & 0x3;
+
+        warn_once("S_SETPRIO ignored -- Requested priority %d\n", userPrio);
     } // execute
     // --- Inst_SOPP__S_SENDMSG class methods ---
 
