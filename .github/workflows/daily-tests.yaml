@@ -220,6 +220,9 @@ jobs:
                   ref: develop
             - name: Build RISCV/libgem5_opt.so with SST
               run: scons build/RISCV/libgem5_opt.so --without-tcmalloc --duplicate-sources --ignore-style -j $(nproc)
+            - name: Makefile ext/sst
+              working-directory: ${{ github.workspace }}/ext/sst
+              run: mv Makefile.linux Makefile
             - name: Compile ext/sst
               working-directory: ${{ github.workspace }}/ext/sst
               run: make -j $(nproc)
