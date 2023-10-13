@@ -39,6 +39,7 @@ from m5.objects.MemCtrl import MemCtrl
 from m5.objects.MemInterface import MemInterface
 from m5.objects.DRAMInterface import AddrMap
 
+
 # The following interface aims to model byte-addressable NVM
 # The most important system-level performance effects of a NVM
 # are modeled without getting into too much detail of the media itself.

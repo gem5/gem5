@@ -5,7 +5,7 @@ def upgrader(cpt):
     for sec in cpt.sections():
         import re
 
-        re_cpu_match = re.match("^(.*sys.*\.cpu[^._]*)$", sec)
+        re_cpu_match = re.match(r"^(.*sys.*\.cpu[^._]*)$", sec)
         if re_cpu_match != None:
             interrupts = cpt.get(sec, "interrupts")
             intStatus = cpt.get(sec, "intStatus")

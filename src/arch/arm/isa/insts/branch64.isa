@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2011-2013, 2016, 2018, 2020 ARM Limited
+// Copyright (c) 2011-2013, 2016, 2018, 2020, 2023 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -200,11 +200,19 @@ let {{
                         HtmFailureFaultCause::EXCEPTION);
                     return fault;
                 }
+
                 Addr newPc;
                 CPSR cpsr = Cpsr;
                 CPSR spsr = Spsr;
 
                 ExceptionLevel curr_el = currEL(cpsr);
+
+                if (fgtEnabled(xc->tcBase()) && curr_el == EL1 &&
+                    static_cast<HFGITR>(xc->tcBase()->readMiscReg(MISCREG_HFGITR_EL2)).eret) {
+                    return std::make_shared<HypervisorTrap>(
+                        machInst, %(trap_iss)d, ExceptionClass::TRAPPED_ERET);
+                }
+
                 switch (curr_el) {
                   case EL3:
                     newPc = xc->tcBase()->readMiscReg(MISCREG_ELR_EL3);
@@ -268,7 +276,7 @@ let {{
     '''
     instFlags = ['IsSerializeAfter', 'IsNonSpeculative', 'IsSquashAfter']
     bIop = ArmInstObjParams('eret', 'Eret64', "BranchEret64",
-                            bCode%{'op': ''}, instFlags)
+                            bCode%{'op': '', 'trap_iss' : 0b00}, instFlags)
     header_output += BasicDeclare.subst(bIop)
     decoder_output += BasicConstructor64.subst(bIop)
     exec_output += BasicExecute.subst(bIop)
@@ -278,7 +286,8 @@ let {{
                 fault = authIA(xc->tcBase(), newPc, XOp1, &newPc);
                 '''
     bIop = ArmInstObjParams('eretaa', 'Eretaa', "BranchEretA64",
-                            bCode % {'op': pac_code} , instFlags)
+                            bCode % {'op': pac_code, 'trap_iss' : 0b10},
+                            instFlags)
     header_output  += BasicDeclare.subst(bIop)
     decoder_output += BasicConstructor64.subst(bIop)
     exec_output    += BasicExecute.subst(bIop)
@@ -288,7 +297,8 @@ let {{
                 fault = authIB(xc->tcBase(), newPc, XOp1, &newPc);
                 '''
     bIop = ArmInstObjParams('eretab', 'Eretab', "BranchEretA64",
-                            bCode % {'op': pac_code} , instFlags)
+                            bCode % {'op': pac_code, 'trap_iss' : 0b11},
+                            instFlags)
     header_output += BasicDeclare.subst(bIop)
     decoder_output += BasicConstructor64.subst(bIop)
     exec_output += BasicExecute.subst(bIop)

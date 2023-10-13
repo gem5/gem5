@@ -83,7 +83,7 @@ class Status(enum.Enum):
         ]
 
 
-class Subsystem(object):
+class Subsystem:
     tag: str
     status: Status
     maintainers: List[Tuple[str, str]]  # Name, email
@@ -102,7 +102,7 @@ class Subsystem(object):
         self.description = description if description is not None else ""
 
 
-class Maintainers(object):
+class Maintainers:
     DEFAULT_MAINTAINERS = os.path.join(
         os.path.dirname(__file__), "../../../MAINTAINERS.yaml"
     )
@@ -118,7 +118,6 @@ class Maintainers(object):
     def from_file(
         cls, path_or_file: Optional[PathOrFile] = None
     ) -> "Maintainers":
-
         return cls(Maintainers._load_maintainers_file(path_or_file))
 
     @classmethod
@@ -133,7 +132,7 @@ class Maintainers(object):
             path_or_file = cls.DEFAULT_MAINTAINERS
 
         if isinstance(path_or_file, str):
-            with open(path_or_file, "r") as fin:
+            with open(path_or_file) as fin:
                 return yaml.load(fin, Loader=yaml.SafeLoader)
         else:
             return yaml.load(path_or_file, Loader=yaml.SafeLoader)

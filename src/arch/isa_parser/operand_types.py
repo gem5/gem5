@@ -46,11 +46,10 @@ def overrideInOperand(func):
 overrideInOperand.overrides = dict()
 
 
-class OperandDesc(object):
+class OperandDesc:
     def __init__(
         self, base_cls, dflt_ext, reg_spec, flags=None, sort_pri=None
     ):
-
         from .isa_parser import makeList
 
         # Canonical flag structure is a triple of lists, where each list
@@ -112,7 +111,7 @@ class OperandDesc(object):
         self.attrs["base_name"] = name
 
 
-class Operand(object):
+class Operand:
     """Base class for operand descriptors.  An instance of this class
     (or actually a class derived from this one) represents a specific
     operand for a code block (e.g, "Rc.sq" as a dest). Intermediate
@@ -372,7 +371,6 @@ class VecRegOperand(RegOperand):
 
     def makeWrite(self):
         return f"""
-        xc->setRegOperand(this, {self.dest_reg_idx}, &tmp_d{self.dest_reg_idx});
         if (traceData) {{
             traceData->setData({self.reg_class}, &tmp_d{self.dest_reg_idx});
         }}

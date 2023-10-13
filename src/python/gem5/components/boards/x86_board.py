@@ -202,7 +202,6 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload):
         base_entries.append(pci_dev4_inta)
 
         def assignISAInt(irq, apicPin):
-
             assign_8259_to_apic = X86IntelMPIOIntAssignment(
                 interrupt_type="ExtInt",
                 polarity="ConformPolarity",
@@ -318,4 +317,5 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload):
             "console=ttyS0",
             "lpj=7999923",
             "root={root_value}",
+            "disk_device={disk_device}",
         ]

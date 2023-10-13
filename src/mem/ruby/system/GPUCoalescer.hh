@@ -32,6 +32,10 @@
 #ifndef __MEM_RUBY_SYSTEM_GPU_COALESCER_HH__
 #define __MEM_RUBY_SYSTEM_GPU_COALESCER_HH__
 
+#include "config/build_gpu.hh"
+
+#if BUILD_GPU
+
 #include <iostream>
 #include <unordered_map>
 
@@ -71,6 +75,7 @@ class UncoalescedTable
     ~UncoalescedTable() {}
 
     void insertPacket(PacketPtr pkt);
+    void insertReqType(PacketPtr pkt, RubyRequestType type);
     bool packetAvailable();
     void printRequestTable(std::stringstream& ss);
 
@@ -101,6 +106,8 @@ class UncoalescedTable
     std::map<InstSeqNum, PerInstPackets> instMap;
 
     std::map<InstSeqNum, int> instPktsRemaining;
+
+    std::map<InstSeqNum, RubyRequestType> reqTypeMap;
 };
 
 class CoalescedRequest
@@ -543,4 +550,5 @@ operator<<(std::ostream& out, const GPUCoalescer& obj)
 } // namespace ruby
 } // namespace gem5
 
+#endif // BUILD_GPU
 #endif // __MEM_RUBY_SYSTEM_GPU_COALESCER_HH__

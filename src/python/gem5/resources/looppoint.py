@@ -491,7 +491,6 @@ class LooppointJsonLoader(Looppoint):
         with open(_path) as file:
             json_contents = json.load(file)
             for rid in json_contents:
-
                 start_pc = int(json_contents[rid]["simulation"]["start"]["pc"])
                 start_globl = int(
                     json_contents[rid]["simulation"]["start"]["global"]

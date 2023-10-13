@@ -43,7 +43,7 @@ def makeDir(path):
         os.makedirs(path, exist_ok=True)
 
 
-class SymbolTable(object):
+class SymbolTable:
     def __init__(self, slicc):
         self.slicc = slicc
 

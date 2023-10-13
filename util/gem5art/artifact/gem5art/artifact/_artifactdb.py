@@ -185,22 +185,21 @@ class ArtifactMongoDB(ArtifactDB):
     def searchByName(self, name: str, limit: int) -> Iterable[Dict[str, Any]]:
         """Returns an iterable of all artifacts in the database that match
         some name."""
-        for d in self.artifacts.find({"name": name}, limit=limit):
-            yield d
+        yield from self.artifacts.find({"name": name}, limit=limit)
 
     def searchByType(self, typ: str, limit: int) -> Iterable[Dict[str, Any]]:
         """Returns an iterable of all artifacts in the database that match
         some type."""
-        for d in self.artifacts.find({"type": typ}, limit=limit):
-            yield d
+        yield from self.artifacts.find({"type": typ}, limit=limit)
 
     def searchByNameType(
         self, name: str, typ: str, limit: int
     ) -> Iterable[Dict[str, Any]]:
         """Returns an iterable of all artifacts in the database that match
         some name and type."""
-        for d in self.artifacts.find({"type": typ, "name": name}, limit=limit):
-            yield d
+        yield from self.artifacts.find(
+            {"type": typ, "name": name}, limit=limit
+        )
 
     def searchByLikeNameType(
         self, name: str, typ: str, limit: int
@@ -211,8 +210,7 @@ class ArtifactMongoDB(ArtifactDB):
         data = self.artifacts.find(
             {"type": typ, "name": {"$regex": f"{name}"}}, limit=limit
         )
-        for d in data:
-            yield d
+        yield from data
 
 
 class ArtifactFileDB(ArtifactDB):
@@ -318,7 +316,7 @@ class ArtifactFileDB(ArtifactDB):
         uuid_mapping: Dict[str, Dict[str, str]] = {}
         hash_mapping: Dict[str, List[str]] = {}
         if json_file.exists():
-            with open(json_file, "r") as f:
+            with open(json_file) as f:
                 j = json.load(f)
                 for an_artifact in j:
                     the_uuid = an_artifact["_id"]

@@ -87,7 +87,7 @@ class KernelDiskWorkload:
     @abstractmethod
     def get_disk_device(self) -> str:
         """
-        Get the disk device, e.g., "/dev/sda", where the disk image is placed.
+        Set a default disk device, in case user does not specify a disk device.
 
         :returns: The disk device.
         """
@@ -139,6 +139,7 @@ class KernelDiskWorkload:
         kernel: KernelResource,
         disk_image: DiskImageResource,
         bootloader: Optional[BootloaderResource] = None,
+        disk_device: Optional[str] = None,
         readfile: Optional[str] = None,
         readfile_contents: Optional[str] = None,
         kernel_args: Optional[List[str]] = None,
@@ -171,6 +172,9 @@ class KernelDiskWorkload:
         # Abstract board. This function will not work otherwise.
         assert isinstance(self, AbstractBoard)
 
+        # Set the disk device
+        self._disk_device = disk_device
+
         # If we are setting a workload of this type, we need to run as a
         # full-system simulation.
         self._set_fullsystem(True)
@@ -182,7 +186,12 @@ class KernelDiskWorkload:
         self.workload.command_line = (
             " ".join(kernel_args or self.get_default_kernel_args())
         ).format(
-            root_value=self.get_default_kernel_root_val(disk_image=disk_image)
+            root_value=self.get_default_kernel_root_val(disk_image=disk_image),
+            disk_device=(
+                self._disk_device
+                if self._disk_device
+                else self.get_disk_device()
+            ),
         )
 
         # Setting the bootloader information for ARM board. The current

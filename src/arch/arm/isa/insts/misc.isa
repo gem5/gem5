@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010-2013,2017-2021 Arm Limited
+// Copyright (c) 2010-2013,2017-2021,2023 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -39,6 +39,13 @@ let {{
 
     svcCode = '''
     ThreadContext *tc = xc->tcBase();
+
+    if (fgtEnabled(tc) && currEL(tc) == EL0 && !ELIsInHost(tc, EL0) &&
+        ELIs64(tc, EL1) && static_cast<HFGITR>(
+            tc->readMiscReg(MISCREG_HFGITR_EL2)).svcEL0) {
+        return std::make_shared<HypervisorTrap>(
+            machInst, imm, ExceptionClass::SVC);
+    }
 
     bool have_semi = ArmSystem::haveSemihosting(tc);
     if (have_semi && Thumb && imm == ArmSemihosting::T32Imm) {

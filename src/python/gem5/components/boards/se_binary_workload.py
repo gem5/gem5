@@ -75,7 +75,6 @@ class SEBinaryWorkload:
         """Set up the system to run a specific binary.
 
         **Limitations**
-        * Only supports single threaded applications.
         * Dynamically linked executables are partially supported when the host
           ISA and the simulated ISA are the same.
 

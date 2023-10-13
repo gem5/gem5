@@ -46,7 +46,7 @@ from ruby import Ruby
 _have_kvm_support = "BaseKvmCPU" in globals()
 
 
-class BaseSystem(object, metaclass=ABCMeta):
+class BaseSystem(metaclass=ABCMeta):
     """Base system builder.
 
     This class provides some basic functionality for creating an ARM
@@ -254,10 +254,10 @@ class BaseSESystem(BaseSystem):
     """Basic syscall-emulation builder."""
 
     def __init__(self, **kwargs):
-        super(BaseSESystem, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def init_system(self, system):
-        super(BaseSESystem, self).init_system(system)
+        super().init_system(system)
 
     def create_system(self):
         if issubclass(self.mem_class, m5.objects.DRAMInterface):
@@ -291,7 +291,7 @@ class BaseSESystemUniprocessor(BaseSESystem):
     """
 
     def __init__(self, **kwargs):
-        super(BaseSESystemUniprocessor, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def create_caches_private(self, cpu):
         # The atomic SE configurations do not use caches
@@ -311,10 +311,10 @@ class BaseFSSystem(BaseSystem):
     """Basic full system builder."""
 
     def __init__(self, **kwargs):
-        super(BaseFSSystem, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def init_system(self, system):
-        super(BaseFSSystem, self).init_system(system)
+        super().init_system(system)
 
         if self.use_ruby:
             # Connect the ruby io port to the PIO bus,
@@ -356,7 +356,7 @@ class BaseFSSystemUniprocessor(BaseFSSystem):
     """
 
     def __init__(self, **kwargs):
-        super(BaseFSSystemUniprocessor, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def create_caches_private(self, cpu):
         cpu.addTwoLevelCacheHierarchy(
@@ -373,7 +373,7 @@ class BaseFSSwitcheroo(BaseFSSystem):
     """Uniprocessor system prepared for CPU switching"""
 
     def __init__(self, cpu_classes, **kwargs):
-        super(BaseFSSwitcheroo, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.cpu_classes = tuple(cpu_classes)
 
     def create_cpus(self, cpu_clk_domain):

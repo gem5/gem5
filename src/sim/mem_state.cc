@@ -49,7 +49,7 @@ MemState::MemState(Process *owner, Addr brk_point, Addr stack_base,
       _stackBase(stack_base), _stackSize(max_stack_size),
       _maxStackSize(max_stack_size), _stackMin(stack_base - max_stack_size),
       _nextThreadStackBase(next_thread_stack_base),
-      _mmapEnd(mmap_end), _endBrkPoint(brk_point)
+      _mmapEnd(mmap_end)
 {
 }
 
@@ -67,7 +67,6 @@ MemState::operator=(const MemState &in)
     _stackMin = in._stackMin;
     _nextThreadStackBase = in._nextThreadStackBase;
     _mmapEnd = in._mmapEnd;
-    _endBrkPoint = in._endBrkPoint;
     _vmaList = in._vmaList; /* This assignment does a deep copy. */
 
     return *this;
@@ -108,25 +107,33 @@ void
 MemState::updateBrkRegion(Addr old_brk, Addr new_brk)
 {
     /**
-     * To make this simple, avoid reducing the heap memory area if the
-     * new_brk point is less than the old_brk; this occurs when the heap is
-     * receding because the application has given back memory. The brk point
-     * is still tracked in the MemState class as an independent field so that
-     * it can be returned to the application; we just do not update the
-     * region unless we expand it out.
-     */
-    if (new_brk < old_brk) {
-        _brkPoint = new_brk;
-        return;
-    }
-
-    /**
      * The regions must be page aligned but the break point can be set on
      * byte boundaries. Ensure that the restriction is maintained here by
      * extending the request out to the end of the page. (The roundUp
      * function will not round up an already aligned page.)
      */
-    auto page_aligned_brk = roundUp(new_brk, _pageBytes);
+    auto page_aligned_new_brk = roundUp(new_brk, _pageBytes);
+    auto page_aligned_old_brk = roundUp(old_brk, _pageBytes);
+
+    /**
+     * Reduce the heap memory area if the new_brk point is less than
+     * the old_brk; this occurs when the heap is receding because the
+     * application has given back memory. This may involve unmapping
+     * heap pages, if new_brk rounds to a lower-address page. The
+     * previous behavior was to leave such pages mapped for simplicity;
+     * however, that was not what Linux does in practice and may
+     * violate the assumptions of applications like glibc malloc,
+     * whose default configuration for Linux requires all pages
+     * allocated via brk(2) to be zero-filled (specifically,
+     * by setting MORECORE_CLEARS to 2).
+     */
+    if (new_brk < old_brk) {
+        const auto length = page_aligned_old_brk - page_aligned_new_brk;
+        if (length > 0)
+            unmapRegion(page_aligned_new_brk, length);
+        _brkPoint = new_brk;
+        return;
+    }
 
     /**
      * Create a new mapping for the heap region. We only create a mapping
@@ -135,17 +142,16 @@ MemState::updateBrkRegion(Addr old_brk, Addr new_brk)
      *
      * Since we do not track the type of the region and we also do not
      * coalesce the regions together, we can create a fragmented set of
-     * heap regions. To resolve this, we keep the furthest point ever mapped
-     * by the _endBrkPoint field.
+     * heap regions.
      */
-    if (page_aligned_brk > _endBrkPoint) {
-        auto length = page_aligned_brk - _endBrkPoint;
+    if (page_aligned_new_brk > page_aligned_old_brk) {
+        auto length = page_aligned_new_brk - page_aligned_old_brk;
         /**
          * Check if existing mappings impede the expansion of brk expansion.
          * If brk cannot expand, it must return the original, unmodified brk
          * address and should not modify the mappings here.
          */
-        if (!isUnmapped(_endBrkPoint, length)) {
+        if (!isUnmapped(page_aligned_old_brk, length)) {
             return;
         }
 
@@ -156,8 +162,7 @@ MemState::updateBrkRegion(Addr old_brk, Addr new_brk)
          * implemented if it actually becomes necessary; probably only
          * necessary if the list becomes too long to walk.
          */
-        mapRegion(_endBrkPoint, length, "heap");
-        _endBrkPoint = page_aligned_brk;
+        mapRegion(page_aligned_old_brk, length, "heap");
     }
 
     _brkPoint = new_brk;

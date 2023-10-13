@@ -48,7 +48,7 @@ from common import SysPaths
 
 class ArmSstSystem(ArmSystem):
     def __init__(self, cpu_clock_rate, **kwargs):
-        super(ArmSstSystem, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         self.voltage_domain = VoltageDomain(voltage="1.0V")
         self.clk_domain = SrcClockDomain(

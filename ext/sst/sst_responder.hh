@@ -1,4 +1,4 @@
-// Copyright (c) 2021 The Regents of the University of California
+// Copyright (c) 2021-2023 The Regents of the University of California
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -35,9 +35,8 @@
 #include <sst/core/sst_config.h>
 #include <sst/core/component.h>
 
-#include <sst/core/simulation.h>
 #include <sst/core/interfaces/stringEvent.h>
-#include <sst/core/interfaces/simpleMem.h>
+#include <sst/core/interfaces/stdMem.h>
 
 #include <sst/core/eli/elementinfo.h>
 #include <sst/core/link.h>

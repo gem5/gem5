@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2022 Arm Limited
+ * Copyright (c) 2010-2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -187,6 +187,21 @@ namespace ArmISA
         Bitfield<3, 0> cnp;
     EndBitUnion(AA64MMFR2)
 
+    BitUnion64(AA64MMFR3)
+        Bitfield<47, 44> anerr;
+        Bitfield<43, 40> snerr;
+        Bitfield<39, 36> d128_2;
+        Bitfield<35, 32> d128;
+        Bitfield<31, 28> mec;
+        Bitfield<27, 24> aie;
+        Bitfield<23, 20> s2poe;
+        Bitfield<19, 16> s1poe;
+        Bitfield<15, 12> s2pie;
+        Bitfield<11, 8> s1pie;
+        Bitfield<7, 4> sctlrx;
+        Bitfield<3, 0> tcrx;
+    EndBitUnion(AA64MMFR3)
+
     BitUnion64(AA64PFR0)
         Bitfield<63, 60> csv3;
         Bitfield<59, 56> csv2;
@@ -361,8 +376,11 @@ namespace ArmISA
     EndBitUnion(NSACR)
 
     BitUnion64(SCR)
+        Bitfield<44> sctlr2En;
+        Bitfield<43> tcr2En;
         Bitfield<40> trndr;
         Bitfield<38> hxen;
+        Bitfield<27> fgten;
         Bitfield<21> fien;
         Bitfield<20> nmea;
         Bitfield<19> ease;
@@ -930,6 +948,122 @@ namespace ArmISA
         Bitfield<7,4>   wpaddrmask;
         Bitfield<3,0>   pcsample;
    EndBitUnion(DEVID)
+
+    BitUnion64(HFGITR)
+        Bitfield<54> dccvac;
+        Bitfield<53> svcEL1;
+        Bitfield<52> svcEL0;
+        Bitfield<51> eret;
+        Bitfield<47> tlbivaale1;
+        Bitfield<46> tlbivale1;
+        Bitfield<45> tlbivaae1;
+        Bitfield<44> tlbiaside1;
+        Bitfield<43> tlbivae1;
+        Bitfield<42> tlbivmalle1;
+        Bitfield<41> tlbirvaale1;
+        Bitfield<40> tlbirvale1;
+        Bitfield<39> tlbirvaae1;
+        Bitfield<38> tlbirvae1;
+        Bitfield<37> tlbirvaale1is;
+        Bitfield<36> tlbirvale1is;
+        Bitfield<35> tlbirvaae1is;
+        Bitfield<34> tlbirvae1is;
+        Bitfield<33> tlbivaale1is;
+        Bitfield<32> tlbivale1is;
+        Bitfield<31> tlbivaae1is;
+        Bitfield<30> tlbiaside1is;
+        Bitfield<29> tlbivae1is;
+        Bitfield<28> tlbivmalle1is;
+        Bitfield<27> tlbirvaale1os;
+        Bitfield<26> tlbirvale1os;
+        Bitfield<25> tlbirvaae1os;
+        Bitfield<24> tlbirvae1os;
+        Bitfield<23> tlbivaale1os;
+        Bitfield<22> tlbivale1os;
+        Bitfield<21> tlbivaae1os;
+        Bitfield<20> tlbiaside1os;
+        Bitfield<19> tlbivae1os;
+        Bitfield<18> tlbivmalle1os;
+        Bitfield<17> ats1e1wp;
+        Bitfield<16> ats1e1rp;
+        Bitfield<15> ats1e0w;
+        Bitfield<14> ats1e0r;
+        Bitfield<13> ats1e1w;
+        Bitfield<12> ats1e1r;
+        Bitfield<11> dczva;
+        Bitfield<10> dccivac;
+        Bitfield<9> dccvapd;
+        Bitfield<8> dccvap;
+        Bitfield<7> dccvau;
+        Bitfield<6> dccisw;
+        Bitfield<5> dccsw;
+        Bitfield<4> dcisw;
+        Bitfield<3> dcivac;
+        Bitfield<2> icivau;
+        Bitfield<1> iciallu;
+        Bitfield<0> icialluis;
+    EndBitUnion(HFGITR)
+
+    // HFGRTR and HFGWTR. Some fields are
+    // for HFGRTR only (RO registers)
+    BitUnion64(HFGTR)
+        Bitfield<50> nAccdataEL1;
+        Bitfield<49> erxaddrEL1;
+        Bitfield<48> erxpfgcdnEL1;
+        Bitfield<47> erxpfgctlEL1;
+        Bitfield<46> erxpfgfEL1; // RES0 for HFGWTR
+        Bitfield<45> erxmiscNEL1;
+        Bitfield<44> erxstatusEL1;
+        Bitfield<43> erxctlrEL1;
+        Bitfield<42> erxfrEL1;
+        Bitfield<41> errselrEL1;
+        Bitfield<40> erridrEL1; // RES0 for HFGWTR
+        Bitfield<39> iccIgrpEnEL1;
+        Bitfield<38> vbarEL1;
+        Bitfield<37> ttbr1EL1;
+        Bitfield<36> ttbr0EL1;
+        Bitfield<35> tpidrEL0;
+        Bitfield<34> tpidrroEL0;
+        Bitfield<33> tpidrEL1;
+        Bitfield<32> tcrEL1;
+        Bitfield<31> scxtnumEL0;
+        Bitfield<30> scxtnumEL1;
+        Bitfield<29> sctlrEL1;
+        Bitfield<28> revidrEL1; // RES0 for HFGWTR
+        Bitfield<27> parEL1;
+        Bitfield<26> mpidrEL1; // RES0 for HFGWTR
+        Bitfield<25> midrEL1; // RES0 for HFGWTR
+        Bitfield<24> mairEL1;
+        Bitfield<23> lorsaEL1;
+        Bitfield<22> lornEL1;
+        Bitfield<21> loridEL1; // RES0 for HFGWTR
+        Bitfield<20> loreaEL1;
+        Bitfield<19> lorcEL1;
+        Bitfield<18> isrEL1; // RES0 for HFGWTR
+        Bitfield<17> farEL1;
+        Bitfield<16> esrEL1;
+        Bitfield<15> dczidEL0; // RES0 for HFGWTR
+        Bitfield<14> ctrEL0; // RES0 for HFGWTR
+        Bitfield<13> csselrEL1;
+        Bitfield<12> cpacrEL1;
+        Bitfield<11> contextidrEL1;
+        Bitfield<10> clidrEL1; // RES0 for HFGWTR
+        Bitfield<9> ccsidrEL1; // RES0 for HFGWTR
+        Bitfield<8> apibKey;
+        Bitfield<7> apiaKey;
+        Bitfield<6> apgaKey;
+        Bitfield<5> apdbKey;
+        Bitfield<4> apdaKey;
+        Bitfield<3> amairEL1;
+        Bitfield<2> aidrEL1; // RES0 for HFGWTR
+        Bitfield<1> afsr1EL1;
+        Bitfield<0> afsr0EL1;
+    EndBitUnion(HFGTR)
+
+    BitUnion64(HCRX)
+        Bitfield<15> sctlr2En;
+        Bitfield<14> tcr2En;
+    EndBitUnion(HCRX)
 
 } // namespace ArmISA
 } // namespace gem5

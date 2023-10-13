@@ -43,6 +43,7 @@ from m5.proxy import *
 
 from m5.objects.AbstractMemory import AbstractMemory
 
+
 # Enum for the address mapping. With Ch, Ra, Ba, Ro and Co denoting
 # channel, rank, bank, row and column, respectively, and going from
 # MSB to LSB.  Available are RoRaBaChCo and RoRaBaCoCh, that are

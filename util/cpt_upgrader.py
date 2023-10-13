@@ -193,7 +193,7 @@ def process_file(path, **kwargs):
     if not osp.isfile(path):
         import errno
 
-        raise IOError(errno.ENOENT, "No such file", path)
+        raise OSError(errno.ENOENT, "No such file", path)
 
     verboseprint(f"Processing file {path}....")
 
@@ -208,7 +208,7 @@ def process_file(path, **kwargs):
     cpt.optionxform = str
 
     # Read the current data
-    cpt_file = open(path, "r")
+    cpt_file = open(path)
     cpt.read_file(cpt_file)
     cpt_file.close()
 
@@ -220,7 +220,7 @@ def process_file(path, **kwargs):
 
         # Legacy linear checkpoint version
         # convert to list of tags before proceeding
-        tags = set([])
+        tags = set()
         for i in range(2, cpt_ver + 1):
             tags.add(Upgrader.legacy[i].tag)
         verboseprint("performed legacy version -> tags conversion")
@@ -253,7 +253,7 @@ def process_file(path, **kwargs):
     # downgraders are present, respecting dependences
     to_apply = (Upgrader.tag_set - tags) | (Upgrader.untag_set & tags)
     while to_apply:
-        ready = set([t for t in to_apply if Upgrader.get(t).ready(tags)])
+        ready = {t for t in to_apply if Upgrader.get(t).ready(tags)}
         if not ready:
             print("could not apply these upgrades:", " ".join(to_apply))
             print("update dependences impossible to resolve; aborting")

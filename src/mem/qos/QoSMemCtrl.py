@@ -38,6 +38,7 @@ from m5.proxy import *
 from m5.objects.ClockedObject import ClockedObject
 from m5.objects.QoSTurnaround import *
 
+
 # QoS Queue Selection policy used to select packets among same-QoS queues
 class QoSQPolicy(Enum):
     vals = ["fifo", "lifo", "lrg"]

@@ -221,7 +221,6 @@ def create_system(
     bootmem=None,
     cpus=None,
 ):
-
     system.ruby = RubySystem()
     ruby = system.ruby
 

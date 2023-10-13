@@ -175,7 +175,7 @@ board = X86Board(
 
 
 command = (
-    "cd /home/gem5/parsec-benchmark;".format(args.benchmark)
+    f"cd /home/gem5/parsec-benchmark;"
     + "source env.sh;"
     + f"parsecmgmt -a run -p {args.benchmark} -c gcc-hooks -i {args.size}         -n 2;"
     + "sleep 5;"
@@ -191,6 +191,7 @@ board.set_kernel_disk_workload(
     disk_image=obtain_resource("x86-parsec"),
     readfile_contents=command,
 )
+
 
 # functions to handle different exit events during the simuation
 def handle_workbegin():
@@ -235,7 +236,7 @@ print("Done with the simulation")
 print()
 print("Performance statistics:")
 
-print("Simulated time in ROI: " + ((str(simulator.get_roi_ticks()[0]))))
+print("Simulated time in ROI: " + (str(simulator.get_roi_ticks()[0])))
 print(
     "Ran a total of", simulator.get_current_tick() / 1e12, "simulated seconds"
 )

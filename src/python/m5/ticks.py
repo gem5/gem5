@@ -29,6 +29,7 @@ import decimal
 import sys
 from m5.util import warn
 
+
 # fix the global frequency
 def fixGlobalFrequency():
     import _m5.core

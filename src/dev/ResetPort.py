@@ -29,6 +29,7 @@ RESET_REQUEST_ROLE = "Reset Request"
 RESET_RESPONSE_ROLE = "Reset Response"
 Port.compat(RESET_REQUEST_ROLE, RESET_RESPONSE_ROLE)
 
+
 # ResetRequestPort is an artifact request port for reset purpose.
 class ResetRequestPort(Port):
     def __init__(self, desc):

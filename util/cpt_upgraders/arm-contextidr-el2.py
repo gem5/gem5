@@ -5,7 +5,7 @@ def upgrader(cpt):
             import re
 
             # Search for all ISA sections
-            if re.search(".*sys.*\.cpu.*\.isa$", sec):
+            if re.search(r".*sys.*\.cpu.*\.isa$", sec):
                 miscRegs = cpt.get(sec, "miscRegs").split()
                 # CONTEXTIDR_EL2 defaults to 0b11111100000000000001
                 miscRegs[599:599] = [0xFC001]

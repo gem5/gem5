@@ -248,6 +248,10 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
 
     initABI(task);
     ++dynamic_task_id;
+
+    // The driver expects the start time to be in ns
+    Tick start_ts = curTick() / sim_clock::as_int::ns;
+    dispatchStartTime.insert({disp_pkt->completion_signal, start_ts});
 }
 
 void
@@ -280,16 +284,6 @@ GPUCommandProcessor::sendCompletionSignal(Addr signal_handle)
 void
 GPUCommandProcessor::updateHsaSignalAsync(Addr signal_handle, int64_t diff)
 {
-    Addr value_addr = getHsaSignalValueAddr(signal_handle);
-
-    uint64_t *signalValue = new uint64_t;
-    auto cb = new DmaVirtCallback<uint64_t>(
-        [ = ] (const uint64_t &)
-            { updateHsaSignalData(value_addr, diff, signalValue); });
-    dmaReadVirt(value_addr, sizeof(uint64_t), cb, (void *)signalValue);
-    DPRINTF(GPUCommandProc, "updateHsaSignalAsync reading value addr %lx\n",
-            value_addr);
-
     Addr mailbox_addr = getHsaSignalMailboxAddr(signal_handle);
     uint64_t *mailboxValue = new uint64_t;
     auto cb2 = new DmaVirtCallback<uint64_t>(
@@ -298,20 +292,6 @@ GPUCommandProcessor::updateHsaSignalAsync(Addr signal_handle, int64_t diff)
     dmaReadVirt(mailbox_addr, sizeof(uint64_t), cb2, (void *)mailboxValue);
     DPRINTF(GPUCommandProc, "updateHsaSignalAsync reading mailbox addr %lx\n",
             mailbox_addr);
-}
-
-void
-GPUCommandProcessor::updateHsaSignalData(Addr value_addr, int64_t diff,
-                                         uint64_t *prev_value)
-{
-    // Reuse the value allocated for the read
-    DPRINTF(GPUCommandProc, "updateHsaSignalData read %ld, writing %ld\n",
-            *prev_value, *prev_value + diff);
-    *prev_value += diff;
-    auto cb = new DmaVirtCallback<uint64_t>(
-        [ = ] (const uint64_t &)
-            { updateHsaSignalDone(prev_value); });
-    dmaWriteVirt(value_addr, sizeof(uint64_t), cb, (void *)prev_value);
 }
 
 void
@@ -331,6 +311,20 @@ GPUCommandProcessor::updateHsaMailboxData(Addr signal_handle,
         dmaReadVirt(event_addr, sizeof(uint64_t), cb, (void *)mailbox_value);
     } else {
         delete mailbox_value;
+
+        Addr ts_addr = signal_handle + offsetof(amd_signal_t, start_ts);
+
+        amd_event_t *event_ts = new amd_event_t;
+        event_ts->start_ts = dispatchStartTime[signal_handle];
+        event_ts->end_ts = curTick() / sim_clock::as_int::ns;
+        auto cb = new DmaVirtCallback<uint64_t>(
+            [ = ] (const uint64_t &)
+                { updateHsaEventTs(signal_handle, event_ts); });
+        dmaWriteVirt(ts_addr, sizeof(amd_event_t), cb, (void *)event_ts);
+        DPRINTF(GPUCommandProc, "updateHsaMailboxData reading timestamp addr "
+                "%lx\n", ts_addr);
+
+        dispatchStartTime.erase(signal_handle);
     }
 }
 
@@ -346,6 +340,52 @@ GPUCommandProcessor::updateHsaEventData(Addr signal_handle,
         [ = ] (const uint64_t &)
             { updateHsaSignalDone(event_value); }, *event_value);
     dmaWriteVirt(mailbox_addr, sizeof(uint64_t), cb, &cb->dmaBuffer, 0);
+
+    Addr ts_addr = signal_handle + offsetof(amd_signal_t, start_ts);
+
+    amd_event_t *event_ts = new amd_event_t;
+    event_ts->start_ts = dispatchStartTime[signal_handle];
+    event_ts->end_ts = curTick() / sim_clock::as_int::ns;
+    auto cb2 = new DmaVirtCallback<uint64_t>(
+        [ = ] (const uint64_t &)
+            { updateHsaEventTs(signal_handle, event_ts); });
+    dmaWriteVirt(ts_addr, sizeof(amd_event_t), cb2, (void *)event_ts);
+    DPRINTF(GPUCommandProc, "updateHsaEventData reading timestamp addr %lx\n",
+            ts_addr);
+
+    dispatchStartTime.erase(signal_handle);
+}
+
+void
+GPUCommandProcessor::updateHsaEventTs(Addr signal_handle,
+                                      amd_event_t *ts)
+{
+    delete ts;
+
+    Addr value_addr = getHsaSignalValueAddr(signal_handle);
+    int64_t diff = -1;
+
+    uint64_t *signalValue = new uint64_t;
+    auto cb = new DmaVirtCallback<uint64_t>(
+        [ = ] (const uint64_t &)
+            { updateHsaSignalData(value_addr, diff, signalValue); });
+    dmaReadVirt(value_addr, sizeof(uint64_t), cb, (void *)signalValue);
+    DPRINTF(GPUCommandProc, "updateHsaSignalAsync reading value addr %lx\n",
+            value_addr);
+}
+
+void
+GPUCommandProcessor::updateHsaSignalData(Addr value_addr, int64_t diff,
+                                         uint64_t *prev_value)
+{
+    // Reuse the value allocated for the read
+    DPRINTF(GPUCommandProc, "updateHsaSignalData read %ld, writing %ld\n",
+            *prev_value, *prev_value + diff);
+    *prev_value += diff;
+    auto cb = new DmaVirtCallback<uint64_t>(
+        [ = ] (const uint64_t &)
+            { updateHsaSignalDone(prev_value); });
+    dmaWriteVirt(value_addr, sizeof(uint64_t), cb, (void *)prev_value);
 }
 
 void

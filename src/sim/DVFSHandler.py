@@ -37,6 +37,7 @@ from m5.params import *
 from m5.SimObject import SimObject
 from m5.proxy import *
 
+
 # The handler in its current form is design to be centeralized, one per system
 # and manages all the source clock domains (SrcClockDomain) it is configured to
 # handle.  The specific voltage and frequency points are configured per clock

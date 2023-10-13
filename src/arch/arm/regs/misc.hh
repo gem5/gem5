@@ -583,10 +583,13 @@ namespace ArmISA
         MISCREG_VMPIDR_EL2,
         MISCREG_SCTLR_EL1,
         MISCREG_SCTLR_EL12,
+        MISCREG_SCTLR2_EL1,
+        MISCREG_SCTLR2_EL12,
         MISCREG_ACTLR_EL1,
         MISCREG_CPACR_EL1,
         MISCREG_CPACR_EL12,
         MISCREG_SCTLR_EL2,
+        MISCREG_SCTLR2_EL2,
         MISCREG_ACTLR_EL2,
         MISCREG_HCR_EL2,
         MISCREG_HCRX_EL2,
@@ -595,6 +598,7 @@ namespace ArmISA
         MISCREG_HSTR_EL2,
         MISCREG_HACR_EL2,
         MISCREG_SCTLR_EL3,
+        MISCREG_SCTLR2_EL3,
         MISCREG_ACTLR_EL3,
         MISCREG_SCR_EL3,
         MISCREG_SDER32_EL3,
@@ -606,8 +610,11 @@ namespace ArmISA
         MISCREG_TTBR1_EL12,
         MISCREG_TCR_EL1,
         MISCREG_TCR_EL12,
+        MISCREG_TCR2_EL1,
+        MISCREG_TCR2_EL12,
         MISCREG_TTBR0_EL2,
         MISCREG_TCR_EL2,
+        MISCREG_TCR2_EL2,
         MISCREG_VTTBR_EL2,
         MISCREG_VTCR_EL2,
         MISCREG_VSTTBR_EL2,
@@ -729,6 +736,36 @@ namespace ArmISA
         MISCREG_TLBI_ALLE3,
         MISCREG_TLBI_VAE3_Xt,
         MISCREG_TLBI_VALE3_Xt,
+        MISCREG_TLBI_RVAE1_Xt,
+        MISCREG_TLBI_RVAAE1_Xt,
+        MISCREG_TLBI_RVALE1_Xt,
+        MISCREG_TLBI_RVAALE1_Xt,
+        MISCREG_TLBI_RIPAS2E1_Xt,
+        MISCREG_TLBI_RIPAS2LE1_Xt,
+        MISCREG_TLBI_RVAE2_Xt,
+        MISCREG_TLBI_RVALE2_Xt,
+        MISCREG_TLBI_RVAE3_Xt,
+        MISCREG_TLBI_RVALE3_Xt,
+        MISCREG_TLBI_RVAE1IS_Xt,
+        MISCREG_TLBI_RVAAE1IS_Xt,
+        MISCREG_TLBI_RVALE1IS_Xt,
+        MISCREG_TLBI_RVAALE1IS_Xt,
+        MISCREG_TLBI_RIPAS2E1IS_Xt,
+        MISCREG_TLBI_RIPAS2LE1IS_Xt,
+        MISCREG_TLBI_RVAE2IS_Xt,
+        MISCREG_TLBI_RVALE2IS_Xt,
+        MISCREG_TLBI_RVAE3IS_Xt,
+        MISCREG_TLBI_RVALE3IS_Xt,
+        MISCREG_TLBI_RVAE1OS_Xt,
+        MISCREG_TLBI_RVAAE1OS_Xt,
+        MISCREG_TLBI_RVALE1OS_Xt,
+        MISCREG_TLBI_RVAALE1OS_Xt,
+        MISCREG_TLBI_RIPAS2E1OS_Xt,
+        MISCREG_TLBI_RIPAS2LE1OS_Xt,
+        MISCREG_TLBI_RVAE2OS_Xt,
+        MISCREG_TLBI_RVALE2OS_Xt,
+        MISCREG_TLBI_RVAE3OS_Xt,
+        MISCREG_TLBI_RVALE3OS_Xt,
         MISCREG_PMINTENSET_EL1,
         MISCREG_PMINTENCLR_EL1,
         MISCREG_PMCR_EL0,
@@ -842,6 +879,7 @@ namespace ArmISA
         MISCREG_TTBR1_EL2,
 
         MISCREG_ID_AA64MMFR2_EL1,
+        MISCREG_ID_AA64MMFR3_EL1,
 
         //PAuth Key Regsiters
         MISCREG_APDAKeyHi_EL1,
@@ -1096,6 +1134,11 @@ namespace ArmISA
         MISCREG_RNDR,
         MISCREG_RNDRRS,
 
+        // FEAT_FGT
+        MISCREG_HFGITR_EL2,
+        MISCREG_HFGRTR_EL2,
+        MISCREG_HFGWTR_EL2,
+
         // NUM_PHYS_MISCREGS specifies the number of actual physical
         // registers, not considering the following pseudo-registers
         // (dummy registers), like MISCREG_UNKNOWN, MISCREG_IMPDEF_UNIMPL.
@@ -1125,10 +1168,6 @@ namespace ArmISA
         MISCREG_DISR_EL1,
         MISCREG_VSESR_EL2,
         MISCREG_VDISR_EL2,
-
-        // FGT extension (unimplemented)
-        MISCREG_HFGRTR_EL2,
-        MISCREG_HFGWTR_EL2,
 
         // PSTATE
         MISCREG_PAN,
@@ -1498,6 +1537,13 @@ namespace ArmISA
             monSecureRead(v);
             monSecureWrite(v);
             monNonSecureRead(v);
+            monNonSecureWrite(v);
+            return *this;
+        }
+        chain
+        monWrite(bool v = true) const
+        {
+            monSecureWrite(v);
             monNonSecureWrite(v);
             return *this;
         }
@@ -2264,10 +2310,13 @@ namespace ArmISA
         "vmpidr_el2",
         "sctlr_el1",
         "sctlr_el12",
+        "sctlr2_el1",
+        "sctlr2_el12",
         "actlr_el1",
         "cpacr_el1",
         "cpacr_el12",
         "sctlr_el2",
+        "sctlr2_el2",
         "actlr_el2",
         "hcr_el2",
         "hcrx_el2",
@@ -2276,6 +2325,7 @@ namespace ArmISA
         "hstr_el2",
         "hacr_el2",
         "sctlr_el3",
+        "sctlr2_el3",
         "actlr_el3",
         "scr_el3",
         "sder32_el3",
@@ -2287,8 +2337,11 @@ namespace ArmISA
         "ttbr1_el12",
         "tcr_el1",
         "tcr_el12",
+        "tcr2_el1",
+        "tcr2_el12",
         "ttbr0_el2",
         "tcr_el2",
+        "tcr2_el2",
         "vttbr_el2",
         "vtcr_el2",
         "vsttbr_el2",
@@ -2410,6 +2463,36 @@ namespace ArmISA
         "tlbi_alle3",
         "tlbi_vae3_xt",
         "tlbi_vale3_xt",
+        "tlbi_rvae1_xt",
+        "tlbi_rvaae1_xt",
+        "tlbi_rvale1_xt",
+        "tlbi_rvaale1_xt",
+        "tlbi_ripas2e1_xt",
+        "tlbi_ripas2le1_xt",
+        "tlbi_rvae2_xt",
+        "tlbi_rvale2_xt",
+        "tlbi_rvae3_xt",
+        "tlbi_rvale3_xt",
+        "tlbi_rvae1is_xt",
+        "tlbi_rvaae1is_xt",
+        "tlbi_rvale1is_xt",
+        "tlbi_rvaale1is_xt",
+        "tlbi_ripas2e1is_xt",
+        "tlbi_ripas2le1is_xt",
+        "tlbi_rvae2is_xt",
+        "tlbi_rvale2is_xt",
+        "tlbi_rvae3is_xt",
+        "tlbi_rvale3is_xt",
+        "tlbi_rvae1os_xt",
+        "tlbi_rvaae1os_xt",
+        "tlbi_rvale1os_xt",
+        "tlbi_rvaale1os_xt",
+        "tlbi_ripas2e1os_xt",
+        "tlbi_ripas2le1os_xt",
+        "tlbi_rvae2os_xt",
+        "tlbi_rvale2os_xt",
+        "tlbi_rvae3os_xt",
+        "tlbi_rvale3os_xt",
         "pmintenset_el1",
         "pmintenclr_el1",
         "pmcr_el0",
@@ -2517,6 +2600,7 @@ namespace ArmISA
 
         "ttbr1_el2",
         "id_aa64mmfr2_el1",
+        "id_aa64mmfr3_el1",
 
         "apdakeyhi_el1",
         "apdakeylo_el1",
@@ -2766,6 +2850,10 @@ namespace ArmISA
         "rndr",
         "rndrrs",
 
+        "hfgitr_el2",
+        "hfgrtr_el2",
+        "hfgwtr_el2",
+
         "num_phys_regs",
 
         // Dummy registers
@@ -2784,8 +2872,6 @@ namespace ArmISA
         "disr_el1",
         "vsesr_el2",
         "vdisr_el2",
-        "hfgrtr_el2",
-        "hfgwtr_el2",
 
         // PSTATE
         "pan",

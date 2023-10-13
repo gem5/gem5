@@ -42,6 +42,7 @@ import re
 ###################
 # Utility functions
 
+
 #
 # Indent every line in string 's' by two spaces
 # (except preprocessor directives).
@@ -155,7 +156,7 @@ def backtrace(filename_stack):
 #
 
 
-class LineTracker(object):
+class LineTracker:
     def __init__(self, filename, lineno=1):
         self.filename = filename
         self.lineno = lineno

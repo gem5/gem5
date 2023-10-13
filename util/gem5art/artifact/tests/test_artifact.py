@@ -85,7 +85,7 @@ class TestGit(unittest.TestCase):
     def test_keys(self):
         git = artifact.artifact.getGit(Path("."))
         self.assertSetEqual(
-            set(git.keys()), set(["origin", "hash", "name"]), "git keys wrong"
+            set(git.keys()), {"origin", "hash", "name"}, "git keys wrong"
         )
 
     def test_origin(self):
@@ -205,7 +205,6 @@ class TestArtifactSimilarity(unittest.TestCase):
 
 class TestRegisterArtifact(unittest.TestCase):
     def setUp(self):
-
         # Create and register an artifact
         self.testArtifactA = artifact.Artifact.registerArtifact(
             name="artifact-A",

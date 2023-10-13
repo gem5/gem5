@@ -66,6 +66,7 @@ if not args.numcpus:
     print("Specify the number of cpus with -n")
     sys.exit(1)
 
+
 # --------------------
 # Define Splash2 Benchmarks
 # ====================

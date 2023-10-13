@@ -35,7 +35,6 @@ import math
 
 
 class AbstractL1Cache(L1Cache_Controller):
-
     _version = 0
 
     @classmethod

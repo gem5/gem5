@@ -39,10 +39,10 @@ from m5.objects import (
 
 import math
 
+
 # L0Cache_Controller is the ruby backend's terminology corresponding to
 # L1 cache in stdlib terms.
 class L1Cache(L0Cache_Controller):
-
     _version = 0
 
     @classmethod

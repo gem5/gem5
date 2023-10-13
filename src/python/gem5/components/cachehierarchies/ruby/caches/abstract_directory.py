@@ -30,7 +30,6 @@ from m5.objects import Directory_Controller
 
 
 class AbstractDirectory(Directory_Controller):
-
     _version = 0
 
     @classmethod

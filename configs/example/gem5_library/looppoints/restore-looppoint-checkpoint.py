@@ -117,6 +117,7 @@ board.set_workload(
     )
 )
 
+
 # This generator will dump the stats and exit the simulation loop when the
 # simulation region reaches its end. In the case there is a warmup interval,
 # the simulation stats are reset after the warmup is complete.

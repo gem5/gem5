@@ -76,7 +76,6 @@ class MESITwoLevelCacheHierarchy(
         self._num_l2_banks = num_l2_banks
 
     def incorporate_cache(self, board: AbstractBoard) -> None:
-
         requires(coherence_protocol_required=CoherenceProtocol.MESI_TWO_LEVEL)
 
         cache_line_size = board.get_cache_line_size()

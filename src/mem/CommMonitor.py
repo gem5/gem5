@@ -38,6 +38,7 @@ from m5.proxy import *
 from m5.objects.System import System
 from m5.SimObject import SimObject
 
+
 # The communication monitor will most typically be used in combination
 # with periodic dumping and resetting of stats using schedStatEvent
 class CommMonitor(SimObject):

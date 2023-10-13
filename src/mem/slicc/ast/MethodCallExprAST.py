@@ -77,7 +77,7 @@ class MemberMethodCallExprAST(MethodCallExprAST):
         self.obj_expr_ast = obj_expr_ast
 
     def __repr__(self):
-        return "[MethodCallExpr: %r%r %r]" % (
+        return "[MethodCallExpr: {!r}{!r} {!r}]".format(
             self.proc_name,
             self.obj_expr_ast,
             self.expr_ast_vec,
@@ -189,7 +189,6 @@ class ClassMethodCallExprAST(MethodCallExprAST):
         return f"[MethodCallExpr: {self.proc_name!r} {self.expr_ast_vec!r}]"
 
     def generate_prefix(self, paramTypes):
-
         # class method call
         prefix = f"({self.type_ast}::"
         obj_type = self.type_ast.type

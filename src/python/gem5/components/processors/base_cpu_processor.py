@@ -71,7 +71,6 @@ class BaseCPUProcessor(AbstractProcessor):
 
     @overrides(AbstractProcessor)
     def incorporate_processor(self, board: AbstractBoard) -> None:
-
         if any(core.is_kvm_core() for core in self.get_cores()):
             board.kvm_vm = self.kvm_vm
             # To get the KVM CPUs to run on different host CPUs

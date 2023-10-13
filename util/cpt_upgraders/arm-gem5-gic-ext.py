@@ -61,7 +61,7 @@ def upgrader(cpt):
     new_per_cpu_regs = (("cpuSgiPendingExt", "0"), ("cpuSgiActiveExt", "0"))
 
     for sec in cpt.sections():
-        if re.search(".*\.gic$", sec):
+        if re.search(r".*\.gic$", sec):
             for reg, default in per_cpu_regs:
                 value = cpt.get(sec, reg).split(" ")
                 assert (

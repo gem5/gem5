@@ -48,6 +48,7 @@ from . import convert
 from .attrdict import attrdict, multiattrdict, optiondict
 from .multidict import multidict
 
+
 # panic() should be called when something happens that should never
 # ever happen regardless of what the user does (i.e., an acutal m5
 # bug).

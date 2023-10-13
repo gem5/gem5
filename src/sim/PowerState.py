@@ -38,6 +38,7 @@ from m5.SimObject import SimObject
 from m5.params import *
 from m5.proxy import *
 
+
 # Enumerate set of allowed power states that can be used by a clocked object.
 # The list is kept generic to express a base minimal set.
 # State definition :-

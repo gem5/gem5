@@ -90,9 +90,8 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
         memory: AbstractMemorySystem,
         cache_hierarchy: AbstractCacheHierarchy,
     ) -> None:
-
         if cache_hierarchy.is_ruby():
-            raise EnvironmentError("RiscvBoard is not compatible with Ruby")
+            raise OSError("RiscvBoard is not compatible with Ruby")
 
         if processor.get_isa() != ISA.RISCV:
             raise Exception(
@@ -105,7 +104,6 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
 
     @overrides(AbstractSystemBoard)
     def _setup_board(self) -> None:
-
         self.workload = RiscvLinux()
 
         # Initialize all the devices that we want to use on this board
@@ -535,12 +533,17 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
         fdt.writeDtbFile(os.path.join(outdir, "device.dtb"))
 
     @overrides(KernelDiskWorkload)
-    def get_default_kernel_args(self) -> List[str]:
-        return ["console=ttyLIO0", "root={root_value}", "rw"]
-
-    @overrides(KernelDiskWorkload)
     def get_disk_device(self) -> str:
         return "/dev/lda"
+
+    @overrides(KernelDiskWorkload)
+    def get_default_kernel_args(self) -> List[str]:
+        return [
+            "console=ttyLIO0",
+            "root={root_value}",
+            "disk_device={disk_device}",
+            "rw",
+        ]
 
     @overrides(KernelDiskWorkload)
     def _add_disk_to_board(self, disk_image: AbstractResource) -> None:

@@ -44,7 +44,6 @@ def test_memory(
     memory: str,
     *args,
 ) -> None:
-
     name = (
         "test-memory-"
         + f"{generator}-{generator_cores}-{cache}-{module}-{memory}"

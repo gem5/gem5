@@ -155,6 +155,12 @@ transition({BUSY_INTR,BUSY_BLKD}, FillPipe) {
   ProcessNextState_ClearPending;
 }
 
+transition({BUSY_INTR,BUSY_BLKD}, DelayAtomic) {
+  Pop_TriggerQueue;
+  DelayAtomic;
+  ProcessNextState_ClearPending;
+}
+
 transition({BUSY_INTR,BUSY_BLKD}, SnpSharedPipe) {
   Pop_TriggerQueue;
   SnpSharedPipe;
@@ -418,8 +424,82 @@ transition({RSC,RSD,RUSD,RUSC,RU,I}, WriteUnique, BUSY_BLKD) {
   ProcessNextState;
 }
 
+// AtomicReturn and AtomicNoReturn
 
-// Load / Store from sequencer & Prefetch from prefetcher
+transition({I,SC,SC_RSC,SD,SD_RSD,SD_RSC,RSD,RUSD,
+            UD,UD_RSC,UD_RSD,UD_RU,UC,UC_RSC,UC_RU,RSC,RU}, AtomicReturn, BUSY_BLKD) {
+  Initiate_Request;
+  Initiate_AtomicReturn_Forward;
+  Profile_Miss;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
+transition({I,SC,SC_RSC,SD,SD_RSD,SD_RSC,RSD,RUSD,
+            UD,UD_RSC,UD_RSD,UD_RU,UC,UC_RSC,UC_RU,RSC,RU}, AtomicNoReturn, BUSY_BLKD) {
+  Initiate_Request;
+  Initiate_AtomicNoReturn_Forward;
+  Profile_Miss;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
+transition({UD,UD_RU,UD_RSD,UD_RSC,UC,UC_RU,UC_RSC},
+           AtomicReturn_PoC, BUSY_BLKD) {
+  Initiate_Request;
+  Initiate_AtomicReturn_LocalWrite;
+  Profile_Hit;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
+transition({UD,UD_RU,UD_RSD,UD_RSC,UC,UC_RU,UC_RSC},
+           AtomicNoReturn_PoC, BUSY_BLKD) {
+  Initiate_Request;
+  Initiate_AtomicNoReturn_LocalWrite;
+  Profile_Hit;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
+transition({SD, SD_RSD, SD_RSC, SC, SC_RSC, RSC, RSD, RUSC, RUSD, RU},
+           AtomicReturn_PoC, BUSY_BLKD) {
+  Initiate_Request;
+  Initiate_AtomicReturn_LocalWrite;
+  Profile_Miss;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
+transition({SD, SD_RSD, SD_RSC, SC, SC_RSC, RSC, RSD, RUSC, RUSD, RU},
+           AtomicNoReturn_PoC, BUSY_BLKD) {
+  Initiate_Request;
+  Initiate_AtomicNoReturn_LocalWrite;
+  Profile_Miss;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
+transition(I, AtomicReturn_PoC, BUSY_BLKD) {
+  Initiate_Request;
+  Initiate_AtomicReturn_Miss;
+  Allocate_DirEntry;
+  Profile_Miss;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
+transition(I, AtomicNoReturn_PoC, BUSY_BLKD) {
+  Initiate_Request;
+  Initiate_AtomicNoReturn_Miss;
+  Allocate_DirEntry;
+  Profile_Miss;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
+
+// Load / Store / Atomic from sequencer & Prefetch from prefetcher
 
 transition({UD,UD_T,SD,UC,SC}, Load, BUSY_BLKD) {
   Initiate_Request;
@@ -460,6 +540,28 @@ transition(BUSY_BLKD, StoreHit) {
   ProcessNextState_ClearPending;
 }
 
+transition(UC, {AtomicLoad,AtomicStore}, BUSY_BLKD) {
+  Initiate_Request;
+  Initiate_Atomic_UC;
+  Profile_Hit;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
+transition({UD,UD_T}, {AtomicLoad,AtomicStore}, BUSY_BLKD) {
+  Initiate_Request;
+  Initiate_Atomic_UD;
+  Profile_Hit;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
+transition(BUSY_BLKD, AtomicHit) {
+  Pop_TriggerQueue;
+  Callback_AtomicHit;
+  ProcessNextState_ClearPending;
+}
+
 transition(I, {Load,Prefetch}, BUSY_BLKD) {
   Initiate_Request;
   Initiate_LoadMiss;
@@ -493,6 +595,55 @@ transition(UD_T, UseTimeout, UD) {
 transition({BUSY_BLKD,BUSY_INTR}, UseTimeout) {
   Unset_Timeout_TBE;
 }
+
+transition(I, AtomicLoad, BUSY_BLKD){
+  Initiate_Request;
+  Initiate_AtomicReturn_I;
+  Profile_Miss;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
+transition(I, AtomicStore, BUSY_BLKD){
+  Initiate_Request;
+  Initiate_AtomicNoReturn_I;
+  Profile_Miss;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
+transition(SD, AtomicLoad, BUSY_BLKD) {
+  Initiate_Request;
+  Initiate_AtomicReturn_SD;
+  Profile_Miss;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
+transition(SC, AtomicLoad, BUSY_BLKD) {
+  Initiate_Request;
+  Initiate_AtomicReturn_SC;
+  Profile_Miss;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
+transition(SD, AtomicStore, BUSY_BLKD) {
+  Initiate_Request;
+  Initiate_AtomicNoReturn_SD;
+  Profile_Miss;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
+transition(SC, AtomicStore, BUSY_BLKD) {
+  Initiate_Request;
+  Initiate_AtomicNoReturn_SC;
+  Profile_Miss;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
 
 // Evict from Upstream
 
@@ -691,13 +842,15 @@ transition(BUSY_INTR, {SnpOnce,SnpOnceFwd}, BUSY_BLKD) {
 transition({BUSY_BLKD,BUSY_INTR},
             {ReadShared, ReadNotSharedDirty, ReadUnique, ReadUnique_PoC,
             ReadOnce, CleanUnique, CleanUnique_Stale,
-            Load, Store, Prefetch,
+            Load, Store, AtomicLoad, AtomicStore, Prefetch,
             WriteBackFull, WriteBackFull_Stale,
             WriteEvictFull, WriteEvictFull_Stale,
             WriteCleanFull, WriteCleanFull_Stale,
             Evict, Evict_Stale,
             WriteUnique,WriteUniquePtl_PoC,
-            WriteUniqueFull_PoC,WriteUniqueFull_PoC_Alloc}) {
+            WriteUniqueFull_PoC,WriteUniqueFull_PoC_Alloc
+            AtomicReturn,AtomicReturn_PoC,
+            AtomicNoReturn,AtomicNoReturn_PoC}) {
   StallRequest;
 }
 
@@ -754,6 +907,30 @@ transition(BUSY_BLKD, SendWriteUnique, BUSY_INTR) {DestinationAvailable} {
   ProcessNextState_ClearPending;
 }
 
+transition(BUSY_BLKD, SendAtomicReturn, BUSY_INTR) {DestinationAvailable} {
+  Pop_TriggerQueue;
+  Send_AtomicReturn;
+  CheckARComp;
+  Profile_OutgoingStart;
+  ProcessNextState_ClearPending;
+}
+
+transition(BUSY_BLKD, SendAtomicReturn_NoWait, BUSY_INTR) {
+  Pop_TriggerQueue;
+  Send_AtomicReturn_NoWait;
+  CheckARComp;
+  Profile_OutgoingStart;
+  ProcessNextState_ClearPending;
+}
+
+transition(BUSY_BLKD, SendAtomicNoReturn, BUSY_INTR) {DestinationAvailable} {
+  Pop_TriggerQueue;
+  Send_AtomicNoReturn;
+  Profile_OutgoingStart;
+  ProcessNextState_ClearPending;
+}
+
+
 transition(BUSY_BLKD, SendWriteNoSnp, BUSY_INTR) {DestinationAvailable} {
   Pop_TriggerQueue;
   Send_WriteNoSnp;
@@ -801,6 +978,20 @@ transition(BUSY_BLKD, SendWUDataCB) {
   Callback_WriteUnique;
   Send_WUData;
   CheckWUComp;
+  ProcessNextState_ClearPending;
+}
+
+transition({BUSY_BLKD,BUSY_INTR}, SendARData) {
+  Pop_TriggerQueue;
+  Send_ARData;
+  ProcessNextState_ClearPending;
+}
+
+transition({BUSY_BLKD,BUSY_INTR}, SendANRData) {
+  Pop_TriggerQueue;
+  Callback_AtomicNoReturn;
+  Send_ANRData;
+  CheckANRComp;
   ProcessNextState_ClearPending;
 }
 
@@ -1025,6 +1216,26 @@ transition({BUSY_BLKD,BUSY_INTR}, SendComp_WU) {
   ProcessNextState_ClearPending;
 }
 
+transition(BUSY_BLKD, SendCompDBIDResp_ANR) {
+  Pop_TriggerQueue;
+  ExpectNCBWrData_A;
+  Send_CompDBIDResp;
+  ProcessNextState_ClearPending;
+}
+
+transition(BUSY_BLKD, SendDBIDResp_AR) {
+  Pop_TriggerQueue;
+  ExpectNCBWrData_A;
+  Send_DBIDResp;
+  ProcessNextState_ClearPending;
+}
+
+transition({BUSY_BLKD,BUSY_INTR}, SendCompData_AR) {
+  Pop_TriggerQueue;
+  Send_CompData_AR;
+  ProcessNextState_ClearPending;
+}
+
 transition(BUSY_BLKD, SendCompDBIDRespStale) {
   Pop_TriggerQueue;
   Send_CompDBIDResp_Stale;
@@ -1085,6 +1296,7 @@ transition(BUSY_BLKD,
 transition({BUSY_BLKD,BUSY_INTR}, NCBWrData) {
   Receive_ReqDataResp;
   UpdateDataState_FromWUDataResp;
+  UpdateDataState_FromADataResp;
   Pop_DataInQueue;
   ProcessNextState;
 }
@@ -1238,10 +1450,11 @@ transition(BUSY_INTR, CompDBIDResp, BUSY_BLKD) {
 }
 
 // alternative flow for WU with separate Comp
-transition(BUSY_INTR, DBIDResp, BUSY_BLKD) {
+transition({BUSY_INTR,BUSY_BLKD}, DBIDResp, BUSY_BLKD) {
   Receive_ReqResp;
   Receive_ReqResp_CopyDBID;
   Receive_ReqResp_WUNeedComp;
+  Receive_ReqResp_AR;
   Pop_RespInQueue;
   ProcessNextState;
 }

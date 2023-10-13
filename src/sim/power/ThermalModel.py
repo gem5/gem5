@@ -74,7 +74,7 @@ class ThermalCapacitor(SimObject):
 
 
 # Represents a fixed temperature node (ie. air)
-class ThermalReference(SimObject, object):
+class ThermalReference(SimObject):
     type = "ThermalReference"
     cxx_header = "sim/power/thermal_model.hh"
     cxx_class = "gem5::ThermalReference"

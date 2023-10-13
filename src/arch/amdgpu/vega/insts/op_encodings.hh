@@ -713,6 +713,19 @@ namespace VegaISA
             gpuDynInst->exec_mask = old_exec_mask;
         }
 
+        template<typename T>
+        void
+        initAtomicAccess(GPUDynInstPtr gpuDynInst)
+        {
+            // temporarily modify exec_mask to supress memory accesses to oob
+            // regions.  Only issue memory requests for lanes that have their
+            // exec_mask set and are not out of bounds.
+            VectorMask old_exec_mask = gpuDynInst->exec_mask;
+            gpuDynInst->exec_mask &= ~oobMask;
+            initMemReqHelper<T, 1>(gpuDynInst, MemCmd::SwapReq, true);
+            gpuDynInst->exec_mask = old_exec_mask;
+        }
+
         void
         injectGlobalMemFence(GPUDynInstPtr gpuDynInst)
         {

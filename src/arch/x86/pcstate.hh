@@ -66,7 +66,7 @@ class PCState : public GenericISA::UPCState<8>
     }
 
     void
-    set(Addr val)
+    set(Addr val) override
     {
         Base::set(val);
         _size = 0;

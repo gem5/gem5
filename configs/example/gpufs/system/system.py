@@ -234,7 +234,7 @@ def makeGpuFSSystem(args):
     # If we are using KVM cpu, enable AVX. AVX is used in some ROCm libraries
     # such as rocBLAS which is used in higher level libraries like PyTorch.
     use_avx = False
-    if ObjectList.is_kvm_cpu(TestCPUClass):
+    if ObjectList.is_kvm_cpu(TestCPUClass) and not args.disable_avx:
         # AVX also requires CR4.osxsave to be 1. These must be set together
         # of KVM will error out.
         system.workload.enable_osxsave = 1
@@ -267,7 +267,7 @@ def makeGpuFSSystem(args):
     # and FMA.
     avx_cpu_features = [0x00020F51, 0x00000805, 0xEFDBFBFF, 0x1C983209]
 
-    for (i, cpu) in enumerate(system.cpu):
+    for i, cpu in enumerate(system.cpu):
         # Break once we reach the shader "CPU"
         if i == args.num_cpus:
             break
@@ -295,6 +295,12 @@ def makeGpuFSSystem(args):
             for obj in cpu.descendants():
                 obj.eventq_index = 0
             cpu.eventq_index = i + 1
+
+    # Disable KVM Perf counters if specified. This is useful for machines
+    # with more restrictive KVM paranoid levels.
+    if args.no_kvm_perf and ObjectList.is_kvm_cpu(TestCPUClass):
+        for i, cpu in enumerate(system.cpu[:-1]):
+            cpu.usePerf = False
 
     gpu_port_idx = (
         len(system.ruby._cpu_ports)
