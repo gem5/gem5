@@ -555,7 +555,7 @@ class VMaskMergeMicroInst : public VectorArithMicroInst
     Fault
     execute(ExecContext* xc, trace::InstRecord* traceData) const override
     {
-        vreg_t tmp_d0 = *(vreg_t *)xc->getWritableRegOperand(this, 0);
+        vreg_t& tmp_d0 = *(vreg_t *)xc->getWritableRegOperand(this, 0);
         auto Vd = tmp_d0.as<uint8_t>();
         constexpr uint8_t elems_per_vreg = VLENB / sizeof(ElemType);
         size_t bit_cnt = elems_per_vreg;
