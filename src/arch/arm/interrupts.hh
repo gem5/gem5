@@ -203,7 +203,7 @@ class Interrupts : public BaseInterrupts
     getISR(HCR hcr, CPSR cpsr, SCR scr)
     {
         bool useHcrMux;
-        CPSR isr = 0; // ARM ARM states ISR reg uses same bit possitions as CPSR
+        ISR isr = 0;
 
         useHcrMux = (cpsr.mode != MODE_HYP) && !isSecure(tc);
         isr.i = (useHcrMux & hcr.imo) ? (interrupts[INT_VIRT_IRQ] || hcr.vi)
