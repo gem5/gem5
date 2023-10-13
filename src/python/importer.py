@@ -38,6 +38,9 @@ class ByteCodeLoader(importlib.abc.Loader):
     def exec_module(self, module):
         exec(self.code, module.__dict__)
 
+    def get_code(self, _):
+        return self.code
+
 
 # Simple importer that allows python to import data from a dict of
 # code objects.  The keys are the module path, and the items are the
