@@ -100,6 +100,13 @@ class SimpleIndirectPredictor(IndirectPredictor):
     indirectPathLength = Param.Unsigned(
         3, "Previous indirect targets to use for path history"
     )
+    speculativePathLength = Param.Unsigned(
+        256,
+        "Additional buffer space to store speculative path history. "
+        "If there are more speculative branches in flight the history cannot "
+        "be recovered. Set this to an appropriate value respective the CPU"
+        "pipeline depth or a high value e.g. 256 to make it 'unlimited'.",
+    )
     indirectGHRBits = Param.Unsigned(13, "Indirect GHR number of bits")
     instShiftAmt = Param.Unsigned(2, "Number of bits to shift instructions by")
 
@@ -119,7 +126,8 @@ class BranchPredictor(SimObject):
 
     indirectBranchPred = Param.IndirectPredictor(
         SimpleIndirectPredictor(),
-        "Indirect branch predictor, set to NULL to disable indirect predictions",
+        "Indirect branch predictor, set to NULL to disable "
+        "indirect predictions",
     )
 
 
