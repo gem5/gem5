@@ -14,7 +14,7 @@ services:
         image: gcr.io/gem5-test/gpu-fs:latest
     sst:
         build:
-            context: sst-11.1.0
+            context: sst
             dockerfile: Dockerfile
         image: gcr.io/gem5-test/sst-env:latest
     systemc:
