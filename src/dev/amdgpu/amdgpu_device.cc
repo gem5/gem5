@@ -466,7 +466,17 @@ AMDGPUDevice::writeDoorbell(PacketPtr pkt, Addr offset)
             panic("Write to unkown queue type!");
         }
     } else {
-        warn("Unknown doorbell offset: %lx\n", offset);
+        warn("Unknown doorbell offset: %lx. Saving to pending doorbells.\n",
+             offset);
+
+        // We have to ACK the PCI packet immediately, so create a copy of the
+        // packet here to send again.
+        RequestPtr pending_req(pkt->req);
+        PacketPtr pending_pkt = Packet::createWrite(pending_req);
+        uint8_t *pending_data = new uint8_t[pkt->getSize()];
+        pending_pkt->dataDynamic(pending_data);
+
+        pendingDoorbellPkts.emplace(offset, pending_pkt);
     }
 }
 
@@ -587,6 +597,17 @@ AMDGPUDevice::write(PacketPtr pkt)
     dispatchAccess(pkt, false);
 
     return pioDelay;
+}
+
+void
+AMDGPUDevice::processPendingDoorbells(uint32_t offset)
+{
+    if (pendingDoorbellPkts.count(offset)) {
+        DPRINTF(AMDGPUDevice, "Sending pending doorbell %x\n", offset);
+        writeDoorbell(pendingDoorbellPkts[offset], offset);
+        delete pendingDoorbellPkts[offset];
+        pendingDoorbellPkts.erase(offset);
+    }
 }
 
 bool
@@ -811,6 +832,14 @@ AMDGPUDevice::deallocateAllQueues()
 
     for (auto& it : sdmaEngs) {
         it.second->deallocateRLCQueues();
+    }
+
+    // "All" queues implicitly refers to all user queues. User queues begin at
+    // doorbell address 0x4000, so unmap any queue at or above that address.
+    for (auto [offset, vmid] : doorbellVMIDMap) {
+        if (offset >= 0x4000) {
+            doorbells.erase(offset);
+        }
     }
 }
 

@@ -384,7 +384,10 @@ PM4PacketProcessor::mapQueues(PM4Queue *q, PM4MapQueues *pkt)
                 "Mapping mqd from %p %p (vmid %d - last vmid %d).\n",
                 addr, pkt->mqdAddr, pkt->vmid, gpuDevice->lastVMID());
 
-        gpuDevice->mapDoorbellToVMID(pkt->doorbellOffset,
+        // The doorbellOffset is a dword address. We shift by two / multiply
+        // by four to get the byte address to match doorbell addresses in
+        // the GPU device.
+        gpuDevice->mapDoorbellToVMID(pkt->doorbellOffset << 2,
                                      gpuDevice->lastVMID());
 
         QueueDesc *mqd = new QueueDesc();
@@ -444,6 +447,8 @@ PM4PacketProcessor::processMQD(PM4MapQueues *pkt, PM4Queue *q, Addr addr,
 
     DPRINTF(PM4PacketProcessor, "PM4 mqd read completed, base %p, mqd %p, "
             "hqdAQL %d.\n", mqd->base, mqd->mqdBase, mqd->aql);
+
+    gpuDevice->processPendingDoorbells(offset);
 }
 
 void
@@ -472,6 +477,8 @@ PM4PacketProcessor::processSDMAMQD(PM4MapQueues *pkt, PM4Queue *q, Addr addr,
     // Register doorbell with GPU device
     gpuDevice->setSDMAEngine(pkt->doorbellOffset << 2, sdma_eng);
     gpuDevice->setDoorbellType(pkt->doorbellOffset << 2, RLC);
+
+    gpuDevice->processPendingDoorbells(pkt->doorbellOffset << 2);
 }
 
 void
@@ -576,6 +583,7 @@ PM4PacketProcessor::unmapQueues(PM4Queue *q, PM4UnmapQueues *pkt)
         gpuDevice->deallocatePasid(pkt->pasid);
         break;
       case 2:
+        panic("Unmapping queue selection 2 unimplemented\n");
         break;
       case 3: {
         auto &hsa_pp = gpuDevice->CP()->hsaPacketProc();
