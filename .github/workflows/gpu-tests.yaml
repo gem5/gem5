@@ -32,7 +32,7 @@ jobs:
             - run: echo "This job's status is ${{ job.status }}."
 
     LULESH-tests:
-        runs-on: [self-hosted, linux, x64, build]
+        runs-on: [self-hosted, linux, x64]
         container: gcr.io/gem5-test/gcn-gpu:latest
         needs: build-gem5
         timeout-minutes: 1440 # 24 hours
