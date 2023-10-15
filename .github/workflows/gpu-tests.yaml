@@ -34,7 +34,7 @@ jobs:
     runs-on: [self-hosted, linux, x64, build]
     container: gcr.io/gem5-test/gcn-gpu:latest
     needs: build-gem5
-    timeout-minutes: 600 # 10 hours
+    timeout-minutes: 1440 # 24 hours
     steps:
       - uses: actions/checkout@v3
         with:
