@@ -41,6 +41,7 @@ jobs:
             # Scheduled workflows run on the default branch by default. We
             # therefore need to explicitly checkout the develop branch.
             ref: develop
+
       - name: Download build/GCN3_X86/gem5.opt
         uses: actions/download-artifact@v3
         with:
@@ -49,11 +50,13 @@ jobs:
         # `download-artifact` does not preserve permissions so we need to set
         # them again.
       - run: chmod u+x build/GCN3_X86/gem5.opt
+
       - name: Obtain LULESH
         working-directory: ${{ github.workspace }}/lulesh
         # Obtains the latest LULESH compatible with this version of gem5 via
         # gem5 Resources.
         run:  build/GCN3_X86/gem5.opt util/obtain-resource.py lulesh -p lulesh
+
       - name: Run LULUESH tests
         working-directory: ${{ github.workspace }}
         run: build/GCN3_X86/gem5.opt configs/example/apu_se.py -n3 --mem-size=8GB --reg-alloc-policy=dynamic --benchmark-root="lulesh" -c lulesh
