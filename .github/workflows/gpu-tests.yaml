@@ -35,7 +35,7 @@ jobs:
         runs-on: [self-hosted, linux, x64]
         container: gcr.io/gem5-test/gcn-gpu:latest
         needs: build-gem5
-        timeout-minutes: 1440 # 24 hours
+        timeout-minutes: 480 # 8 hours
         steps:
             - uses: actions/checkout@v3
               with:
@@ -60,7 +60,9 @@ jobs:
 
             - name: Run LULUESH tests
               working-directory: ${{ github.workspace }}
-              run: build/GCN3_X86/gem5.opt configs/example/apu_se.py -n3 --mem-size=8GB --reg-alloc-policy=dynamic --benchmark-root="lulesh" -c lulesh
+              run: |
+                  build/GCN3_X86/gem5.opt configs/example/apu_se.py -n3 --mem-size=8GB --reg-alloc-policy=dynamic --benchmark-root="lulesh" -c \
+                  lulesh 0.01 2
 
     HACC-tests:
         runs-on: [self-hosted, linux, x64]
