@@ -1,54 +1,70 @@
+---
 # This workflow runs all of the compiler tests
 
 name: Compiler Tests
-run-name: ${{ github.actor }} is running compiler tests
-
 
 on:
   # Runs every Friday from 7AM UTC
-  schedule:
-    - cron:  '00 7 * * 5'
+    schedule:
+        - cron: 00 7 * * 5
   # Allows us to manually start workflow for testing
-  workflow_dispatch:
+    workflow_dispatch:
 
 jobs:
   # replication of compiler-tests.sh
-  all-compilers:
-    strategy:
-      fail-fast: false
-      matrix:
-        image: [gcc-version-12, gcc-version-11, gcc-version-10, gcc-version-9, gcc-version-8, clang-version-14, clang-version-13, clang-version-12, clang-version-11, clang-version-10, clang-version-9, clang-version-8, clang-version-7, ubuntu-20.04_all-dependencies, ubuntu-22.04_all-dependencies, ubuntu-22.04_min-dependencies]
-        opts: [.opt, .fast]
-    runs-on: [self-hosted, linux, x64, build]
-    timeout-minutes: 2880     # 48 hours
-    container: gcr.io/gem5-test/${{ matrix.image }}:latest
-    steps:
-    - uses: actions/checkout@v3
-      with:
+    all-compilers:
+        strategy:
+            fail-fast: false
+            matrix:
+                image: [gcc-version-12, gcc-version-11, gcc-version-10, gcc-version-9, gcc-version-8, clang-version-16, clang-version-15, clang-version-14,
+                    clang-version-13, clang-version-12, clang-version-11, clang-version-10, clang-version-9, clang-version-8, clang-version-7, ubuntu-20.04_all-dependencies,
+                    ubuntu-22.04_all-dependencies, ubuntu-22.04_min-dependencies]
+                opts: [.opt, .fast]
+        runs-on: [self-hosted, linux, x64]
+        timeout-minutes: 2880 # 48 hours
+        container: gcr.io/gem5-test/${{ matrix.image }}:latest
+        steps:
+            - uses: actions/checkout@v3
+              with:
         # Scheduled workflows run on the default branch by default. We
         # therefore need to explicitly checkout the develop branch.
-        ref: develop
-    - name: Compile build/ALL/gem5${{ matrix.opts }} with ${{ matrix.image }}
-      run: /usr/bin/env python3 /usr/bin/scons --ignore-style build/ALL/gem5${{ matrix.opts }} -j$(nproc)
-      timeout-minutes: 600  # 10 hours
+                  ref: develop
+            - name: Compile build/ALL/gem5${{ matrix.opts }} with ${{ matrix.image }}
+              run: /usr/bin/env python3 /usr/bin/scons --ignore-style build/ALL/gem5${{ matrix.opts }} -j$(nproc)
+              timeout-minutes: 600 # 10 hours
 
   # Tests the two latest gcc and clang supported compilers against all gem5 compilations.
-  latest-compilers-all-gem5-builds:
-    strategy:
-      fail-fast: false
-      matrix:
-        gem5-compilation: [ARM, ARM_MESI_Three_Level, ARM_MESI_Three_Level_HTM, ARM_MOESI_hammer, Garnet_standalone, GCN3_X86, MIPS, 'NULL', NULL_MESI_Two_Level, NULL_MOESI_CMP_directory, NULL_MOESI_CMP_token, NULL_MOESI_hammer, POWER, RISCV, SPARC, X86, X86_MI_example, X86_MOESI_AMD_Base, VEGA_X86, GCN3_X86]
-        image: [gcc-version-12, clang-version-14]
-        opts: [.opt]
-    runs-on: [self-hosted, linux, x64, build]
-    timeout-minutes: 2880     # 48 hours
-    container: gcr.io/gem5-test/${{ matrix.image }}:latest
-    steps:
-    - uses: actions/checkout@v3
-      with:
+    latest-compilers-all-gem5-builds:
+        strategy:
+            fail-fast: false
+            matrix:
+                gem5-compilation: [ARM, ARM_MESI_Three_Level, ARM_MESI_Three_Level_HTM, ARM_MOESI_hammer, Garnet_standalone, GCN3_X86, MIPS, 'NULL', NULL_MESI_Two_Level,
+                    NULL_MOESI_CMP_directory, NULL_MOESI_CMP_token, NULL_MOESI_hammer, POWER, RISCV, SPARC, X86, X86_MI_example, X86_MOESI_AMD_Base, VEGA_X86,
+                    GCN3_X86]
+                image: [gcc-version-12, clang-version-16]
+                opts: [.opt]
+        runs-on: [self-hosted, linux, x64]
+        timeout-minutes: 2880 # 48 hours
+        container: gcr.io/gem5-test/${{ matrix.image }}:latest
+        steps:
+            - uses: actions/checkout@v3
+              with:
         # Scheduled workflows run on the default branch by default. We
         # therefore need to explicitly checkout the develop branch.
-        ref: develop
-    - name: Compile build/${{ matrix.gem5-compilation }}/gem5${{ matrix.opts }} with ${{ matrix.image }}
-      run: /usr/bin/env python3 /usr/bin/scons --ignore-style build/${{ matrix.gem5-compilation }}/gem5${{ matrix.opts }} -j$(nproc)
-      timeout-minutes: 600 # 10 hours
+                  ref: develop
+            - name: Compile build/${{ matrix.gem5-compilation }}/gem5${{ matrix.opts }} with ${{ matrix.image }}
+              run: /usr/bin/env python3 /usr/bin/scons --ignore-style build/${{ matrix.gem5-compilation }}/gem5${{ matrix.opts }} -j$(nproc)
+              timeout-minutes: 600 # 10 hours
+
+    compiler-tests:
+        # The dummy job is used to indicate whether the compiler tests have
+        # passed or not. This can be used as status check for pull requests.
+        # I.e., if we want to stop pull requests from being merged if the
+        # compiler tests are failing, we can add this job as a required status
+        # check.
+        runs-on: ubuntu-22.04
+        needs:
+            - latest-compilers-all-gem5-builds
+            - all-compilers
+        steps:
+            - run: echo "This compiler tests have passed."
