@@ -39,6 +39,7 @@
 import code
 import datetime
 import os
+import runpy
 import socket
 import sys
 
@@ -182,6 +183,16 @@ def parse_options():
         extra_args = parser.rargs[:]
         del parser.rargs[:]
         setattr(parser.values, option.dest, (value, extra_args))
+
+    option(
+        "-m",
+        type=str,
+        help="run library module as a script (terminates option list)",
+        default="",
+        metavar="mod",
+        action="callback",
+        callback=collect_args,
+    )
 
     option(
         "-c",
@@ -525,7 +536,9 @@ def main():
         print()
 
     # check to make sure we can find the listed script
-    if not options.c and (not arguments or not os.path.isfile(arguments[0])):
+    if not (options.c or options.m) and (
+        not arguments or not os.path.isfile(arguments[0])
+    ):
         if arguments and not os.path.isfile(arguments[0]):
             print(f"Script {arguments[0]} not found")
 
@@ -603,43 +616,49 @@ def main():
 
     sys.argv = arguments
 
-    if options.c:
-        filedata = options.c[0]
-        filecode = compile(filedata, "<string>", "exec")
-        sys.argv = ["-c"] + options.c[1]
-        scope = {"__name__": "__m5_main__"}
+    if options.m:
+        sys.argv = [options.m[0]] + options.m[1]
+        runpy.run_module(options.m[0], run_name="__m5_main__")
     else:
-        # If `-P` was used (`options.P == true`), don't prepend the script
-        # directory to the `sys.path`. This mimics Python 3's `-P` option
-        # (https://docs.python.org/3/using/cmdline.html#cmdoption-P).
-        if not options.P:
-            sys.path = [os.path.dirname(sys.argv[0])] + sys.path
-        filename = sys.argv[0]
-        filedata = open(filename).read()
-        filecode = compile(filedata, filename, "exec")
-        scope = {"__file__": filename, "__name__": "__m5_main__"}
+        if options.c:
+            filedata = options.c[0]
+            filecode = compile(filedata, "<string>", "exec")
+            sys.argv = ["-c"] + options.c[1]
+            scope = {"__name__": "__m5_main__"}
+        else:
+            # If `-P` was used (`options.P == true`), don't prepend the script
+            # directory to the `sys.path`. This mimics Python 3's `-P` option
+            # (https://docs.python.org/3/using/cmdline.html#cmdoption-P).
+            if not options.P:
+                sys.path = [os.path.dirname(sys.argv[0])] + sys.path
+            filename = sys.argv[0]
+            filedata = open(filename).read()
+            filecode = compile(filedata, filename, "exec")
+            scope = {"__file__": filename, "__name__": "__m5_main__"}
 
-    # if pdb was requested, execfile the thing under pdb, otherwise,
-    # just do the execfile normally
-    if options.pdb:
-        import pdb
-        import traceback
+        # if pdb was requested, execfile the thing under pdb, otherwise,
+        # just do the execfile normally
+        if options.pdb:
+            import pdb
+            import traceback
 
-        pdb = pdb.Pdb()
-        try:
-            pdb.run(filecode, scope)
-        except SystemExit:
-            print("The program exited via sys.exit(). Exit status: ", end=" ")
-            print(sys.exc_info()[1])
-        except:
-            traceback.print_exc()
-            print("Uncaught exception. Entering post mortem debugging")
-            t = sys.exc_info()[2]
-            while t.tb_next is not None:
-                t = t.tb_next
-                pdb.interaction(t.tb_frame, t)
-    else:
-        exec(filecode, scope)
+            pdb = pdb.Pdb()
+            try:
+                pdb.run(filecode, scope)
+            except SystemExit:
+                print(
+                    "The program exited via sys.exit(). Exit status: ", end=" "
+                )
+                print(sys.exc_info()[1])
+            except:
+                traceback.print_exc()
+                print("Uncaught exception. Entering post mortem debugging")
+                t = sys.exc_info()[2]
+                while t.tb_next is not None:
+                    t = t.tb_next
+                    pdb.interaction(t.tb_frame, t)
+        else:
+            exec(filecode, scope)
 
     # once the script is done
     if options.interactive:
