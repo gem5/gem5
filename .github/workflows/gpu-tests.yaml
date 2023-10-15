@@ -1,4 +1,6 @@
-# This workflow runs all of the very-long tests within main.py
+# This workflow runs all the Weekly GPU Tests.
+# For now this file is kept separate as we are still developing and testing
+# this workflow. It will eventually be merged with "weekly-tests.yaml"
 
 name: Weekly Tests (GPU)
 
