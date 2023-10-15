@@ -46,7 +46,7 @@ class MD5FileTestSuite(unittest.TestCase):
         md5 = md5_file(Path(file.name))
         os.remove(file.name)
 
-        self.assertEquals("b113b29fce251f2023066c3fda2ec9dd", md5)
+        self.assertEqual("b113b29fce251f2023066c3fda2ec9dd", md5)
 
     def test_identicalFilesIdenticalMd5(self) -> None:
         # This test ensures that two files with exactly the same contents have
@@ -68,14 +68,13 @@ class MD5FileTestSuite(unittest.TestCase):
 
         os.remove(file.name)
 
-        self.assertEquals(first_file_md5, second_file_md5)
+        self.assertEqual(first_file_md5, second_file_md5)
 
 
 class MD5DirTestSuite(unittest.TestCase):
     """Test cases for gem5.resources.md5_utils.md5_dir()"""
 
     def _create_temp_directory(self) -> Path:
-
         dir = tempfile.mkdtemp()
 
         with open(os.path.join(dir, "file1"), "w") as f:
@@ -99,7 +98,7 @@ class MD5DirTestSuite(unittest.TestCase):
         md5 = md5_dir(dir)
         shutil.rmtree(dir)
 
-        self.assertEquals("ad5ac785de44c9fc2fe2798cab2d7b1a", md5)
+        self.assertEqual("ad5ac785de44c9fc2fe2798cab2d7b1a", md5)
 
     def test_identicalDirsIdenticalMd5(self) -> None:
         # This test ensures that two directories with exactly the same contents
@@ -113,4 +112,4 @@ class MD5DirTestSuite(unittest.TestCase):
         second_md5 = md5_dir(dir2)
         shutil.rmtree(dir2)
 
-        self.assertEquals(first_md5, second_md5)
+        self.assertEqual(first_md5, second_md5)

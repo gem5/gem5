@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2012-2013, 2016, 2019 ARM Limited
+ * Copyright (c) 2009, 2012-2013, 2016, 2019, 2023 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -43,12 +43,9 @@ namespace gem5
 {
 
 bool
-ArmISA::Interrupts::takeInt(InterruptTypes int_type) const
+ArmISA::Interrupts::takeInt32(InterruptTypes int_type) const
 {
-    // Table G1-17~19 of ARM V8 ARM
     InterruptMask mask;
-    bool highest_el_is_64 = ArmSystem::highestELIs64(tc);
-
     CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
     SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);;
     HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
@@ -82,74 +79,210 @@ ArmISA::Interrupts::takeInt(InterruptTypes int_type) const
     if (hcr.tge)
         hcr_mask_override_bit = 1;
 
-    if (!highest_el_is_64) {
-        // AArch32
-        if (!scr_routing_bit) {
-            // SCR IRQ == 0
-            if (!hcr_mask_override_bit)
-                mask = INT_MASK_M;
-            else {
-                if (!is_secure && (el == EL0 || el == EL1))
-                    mask = INT_MASK_T;
-                else
-                    mask = INT_MASK_M;
-            }
-        } else {
-            // SCR IRQ == 1
-            if ((!is_secure) &&
-                (hcr_mask_override_bit ||
-                    (!scr_fwaw_bit && !hcr_mask_override_bit)))
+    if (!scr_routing_bit) {
+        // SCR IRQ == 0
+        if (!hcr_mask_override_bit)
+            mask = INT_MASK_M;
+        else {
+            if (!is_secure && (el == EL0 || el == EL1))
                 mask = INT_MASK_T;
             else
                 mask = INT_MASK_M;
         }
     } else {
-        // AArch64
-        if (!scr_routing_bit) {
-            // SCR IRQ == 0
-            if (!scr.rw) {
-                // SCR RW == 0
-                if (!hcr_mask_override_bit) {
-                    if (el == EL3)
-                        mask = INT_MASK_P;
-                    else
-                        mask = INT_MASK_M;
+        // SCR IRQ == 1
+        if ((!is_secure) &&
+            (hcr_mask_override_bit ||
+                (!scr_fwaw_bit && !hcr_mask_override_bit)))
+            mask = INT_MASK_T;
+        else
+            mask = INT_MASK_M;
+    }
+    return ((mask == INT_MASK_T) ||
+            ((mask == INT_MASK_M) && !cpsr_mask_bit)) &&
+            (mask != INT_MASK_P);
+}
+
+
+bool
+ArmISA::Interrupts::takeInt64(InterruptTypes int_type) const
+{
+    InterruptMask mask;
+    CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
+    SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);;
+    HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+    ExceptionLevel el = currEL(tc);
+    bool cpsr_mask_bit, scr_routing_bit, hcr_mask_override_bit;
+    bool is_secure = isSecureBelowEL3(tc);
+
+    switch(int_type) {
+      case INT_FIQ:
+        cpsr_mask_bit = cpsr.f;
+        scr_routing_bit = scr.fiq;
+        hcr_mask_override_bit = hcr.fmo;
+        break;
+      case INT_IRQ:
+        cpsr_mask_bit = cpsr.i;
+        scr_routing_bit = scr.irq;
+        hcr_mask_override_bit = hcr.imo;
+        break;
+      case INT_ABT:
+        cpsr_mask_bit = cpsr.a;
+        scr_routing_bit = scr.ea;
+        hcr_mask_override_bit = hcr.amo;
+        break;
+      default:
+        panic("Unhandled interrupt type!");
+    }
+
+    if (is_secure) {
+        if (!scr.eel2) {
+            if (!scr_routing_bit) {
+                // NS=0,EEL2=0,EAI/IRQ/FIQ=0
+                if (el == EL3)
+                    mask = INT_MASK_P;
+                else
+                    mask = INT_MASK_M;
+            } else {
+                // NS=0,EEL2=0,EAI/IRQ/FIQ=1
+                if (el == EL3)
+                    mask = INT_MASK_M;
+                else
+                    mask = INT_MASK_T;
+            }
+        } else {
+            if (!scr_routing_bit) {
+                if (!hcr.tge) {
+                    if (!hcr_mask_override_bit) {
+                        // NS=0,EEL2=1,EAI/IRQ/FIQ=0,TGE=0,AMO/IMO/FMO=0
+                        if (el == EL3 || el == EL2)
+                            mask = INT_MASK_P;
+                        else
+                            mask = INT_MASK_M;
+                    } else {
+                        // NS=0,EEL2=1,EAI/IRQ/FIQ=0,TGE=0,AMO/IMO/FMO=1
+                        if (el == EL3)
+                            mask = INT_MASK_P;
+                        else if (el == EL2)
+                            mask = INT_MASK_M;
+                        else
+                            mask = INT_MASK_T;
+                    }
                 } else {
-                    if (el == EL3)
-                        mask = INT_MASK_T;
-                    else if (is_secure || el == EL2)
-                        mask = INT_MASK_M;
-                    else
-                        mask = INT_MASK_T;
+                    if (!hcr.e2h) {
+                        // NS=0,EEL2=1,EAI/IRQ/FIQ=0,TGE=1,E2H=0
+                        if (el == EL3)
+                            mask = INT_MASK_P;
+                        else if (el == EL2)
+                            mask = INT_MASK_M;
+                        else
+                            mask = INT_MASK_T;
+                    } else {
+                        // NS=0,EEL2=1,EAI/IRQ/FIQ=0,TGE=1,E2H=1
+                        if (el == EL3)
+                            mask = INT_MASK_P;
+                        else
+                            mask = INT_MASK_M;
+                    }
                 }
             } else {
-                // SCR RW == 1
-                if (!hcr_mask_override_bit) {
-                    if (el == EL3 || el == EL2)
-                        mask = INT_MASK_P;
-                    else
-                        mask = INT_MASK_M;
-                } else {
+                if (!hcr.tge) {
+                    // NS=0,EEL2=1,EAI/IRQ/FIQ=1,TGE=0
                     if (el == EL3)
-                        mask = INT_MASK_P;
-                    else if (is_secure || el == EL2)
+                        mask = INT_MASK_M;
+                    else
+                        mask = INT_MASK_T;
+                } else {
+                    // NS=0,EEL2=1,EAI/IRQ/FIQ=1,TGE=1
+                    if (el == EL3)
                         mask = INT_MASK_M;
                     else
                         mask = INT_MASK_T;
                 }
             }
+        }
+    } else {
+        if (!scr_routing_bit) {
+            if (!scr.rw) {
+                if (!hcr.tge) {
+                    if (!hcr_mask_override_bit) {
+                        // NS=1,EAI/IRQ/FIQ=0,RW=0,TGE=0,AMO/IMO?/FMO=0
+                        if (el == EL3)
+                            mask = INT_MASK_P;
+                        else
+                            mask = INT_MASK_M;
+                    } else {
+                        // NS=1,EAI/IRQ/FIQ=0,RW=0,TGE=0,AMO/IMO?/FMO=1
+                        if (el == EL3)
+                            mask = INT_MASK_P;
+                        else if (el == EL2)
+                            mask = INT_MASK_M;
+                        else
+                            mask = INT_MASK_T;
+                    }
+                } else {
+                    // NS=1,EAI/IRQ/FIQ=0,RW=0,TGE=1
+                    if (el == EL3)
+                        mask = INT_MASK_P;
+                    else if (el == EL2)
+                        mask = INT_MASK_M;
+                    else
+                        mask = INT_MASK_T;
+                }
+            } else {
+                if (!hcr.tge) {
+                    if (!hcr_mask_override_bit) {
+                        // NS=1,EAI/IRQ/FIQ=0,RW=1,TGE=0,AMO/IMO/FMO=0
+                        if (el == EL3 || el == EL2)
+                            mask = INT_MASK_P;
+                        else
+                            mask = INT_MASK_M;
+                    } else {
+                        // NS=1,EAI/IRQ/FIQ=0,RW=1,TGE=0,AMO/IMO/FMO=1
+                        if (el == EL3)
+                            mask = INT_MASK_P;
+                        else if (el == EL2)
+                            mask = INT_MASK_M;
+                        else
+                            mask = INT_MASK_T;
+                    }
+                } else {
+                    if (!hcr.e2h) {
+                        // NS=1,EAI/IRQ/FIQ=0,RW=1,TGE=1,E2H=0
+                        if (el == EL3)
+                            mask = INT_MASK_P;
+                        else if (el == EL2)
+                            mask = INT_MASK_M;
+                        else
+                            mask = INT_MASK_T;
+                    } else {
+                        // NS=1,EAI/IRQ/FIQ=0,RW=1,TGE=1,E2H=1
+                        if (el == EL3)
+                            mask = INT_MASK_P;
+                        else
+                            mask = INT_MASK_M;
+                    }
+                }
+            }
         } else {
-            // SCR IRQ == 1
             if (el == EL3)
                 mask = INT_MASK_M;
             else
                 mask = INT_MASK_T;
         }
     }
-
     return ((mask == INT_MASK_T) ||
             ((mask == INT_MASK_M) && !cpsr_mask_bit)) &&
             (mask != INT_MASK_P);
+}
+
+bool
+ArmISA::Interrupts::takeInt(InterruptTypes int_type) const
+{
+    // Table G1-17~19 of ARM V8 ARM
+    return ArmSystem::highestELIs64(tc) ? takeInt64(int_type) :
+                                          takeInt32(int_type);
+
 }
 
 } // namespace gem5

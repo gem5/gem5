@@ -69,6 +69,12 @@ typedef struct amd_signal_s
   uint32_t reserved3[2];
 } amd_signal_t;
 
+typedef struct
+{
+  uint64_t start_ts;
+  uint64_t end_ts;
+} amd_event_t;
+
 } // namespace gem5
 
 #endif // DEV_HSA_HSA_SIGNAL_H

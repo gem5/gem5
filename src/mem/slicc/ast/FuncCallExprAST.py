@@ -282,7 +282,7 @@ if (!(${{cvec[0]}})) {
             params = ""
             first_param = True
 
-            for (param_code, type) in zip(cvec, type_vec):
+            for param_code, type in zip(cvec, type_vec):
                 if first_param:
                     params = str(param_code)
                     first_param = False

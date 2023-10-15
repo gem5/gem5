@@ -49,7 +49,7 @@ from testlib.configuration import constants
 from testlib.helper import joinpath, diff_out_file
 
 
-class Verifier(object):
+class Verifier:
     def __init__(self, fixtures=tuple()):
         self.fixtures = fixtures
 
@@ -67,7 +67,7 @@ class Verifier(object):
 
 class CheckH5StatsExist(Verifier):
     def __init__(self, stats_file="stats.h5"):
-        super(CheckH5StatsExist, self).__init__()
+        super().__init__()
         self.stats_file = stats_file
 
     def test(self, params):
@@ -94,7 +94,7 @@ class MatchGoldStandard(Verifier):
         either which will be ignored in 'standard' and test output files when
         diffing.
         """
-        super(MatchGoldStandard, self).__init__()
+        super().__init__()
         self.standard_filename = standard_filename
         self.test_filename = test_filename
 
@@ -139,13 +139,12 @@ class DerivedGoldStandard(MatchGoldStandard):
     def __init__(
         self, standard_filename, ignore_regex=__ignore_regex_sentinel, **kwargs
     ):
-
         if ignore_regex == self.__ignore_regex_sentinel:
             ignore_regex = self._default_ignore_regex
 
         self._generic_instance_warning(kwargs)
 
-        super(DerivedGoldStandard, self).__init__(
+        super().__init__(
             standard_filename,
             test_filename=self._file,
             ignore_regex=ignore_regex,
@@ -156,7 +155,7 @@ class DerivedGoldStandard(MatchGoldStandard):
 class MatchStdout(DerivedGoldStandard):
     _file = constants.gem5_simulation_stdout
     _default_ignore_regex = [
-        re.compile("^\s+$"),  # Remove blank lines.
+        re.compile(r"^\s+$"),  # Remove blank lines.
         re.compile("^gem5 Simulator System"),
         re.compile("^gem5 is copyrighted software"),
         re.compile("^Redirecting (stdout|stderr) to"),
@@ -169,8 +168,8 @@ class MatchStdout(DerivedGoldStandard):
         re.compile("^info: kernel located at:"),
         re.compile("^info: Standard input is not a terminal"),
         re.compile("^Couldn't unlink "),
-        re.compile("^Using GPU kernel code file\(s\) "),
-        re.compile("^.* not found locally\. Downloading"),
+        re.compile(r"^Using GPU kernel code file\(s\) "),
+        re.compile(r"^.* not found locally\. Downloading"),
         re.compile("^Finished downloading"),
         re.compile("^info: Using default config"),
     ]
@@ -219,12 +218,12 @@ class MatchFileRegex(Verifier):
     """
 
     def __init__(self, regex, filenames):
-        super(MatchFileRegex, self).__init__()
+        super().__init__()
         self.regex = _iterable_regex(regex)
         self.filenames = filenames
 
     def parse_file(self, fname):
-        with open(fname, "r") as file_:
+        with open(fname) as file_:
             for line in file_:
                 for regex in self.regex:
                     if re.match(regex, line):
@@ -253,7 +252,7 @@ class MatchRegex(MatchFileRegex):
             filenames.append(constants.gem5_simulation_stdout)
         if match_stderr:
             filenames.append(constants.gem5_simulation_stderr)
-        super(MatchRegex, self).__init__(regex, filenames)
+        super().__init__(regex, filenames)
 
 
 class NoMatchRegex(MatchRegex):
@@ -262,7 +261,7 @@ class NoMatchRegex(MatchRegex):
     """
 
     def __init__(self, regex, match_stderr=True, match_stdout=True):
-        super(NoMatchRegex, self).__init__(regex, match_stderr, match_stdout)
+        super().__init__(regex, match_stderr, match_stdout)
 
     def test(self, params):
         fixtures = params.fixtures
@@ -291,7 +290,7 @@ class MatchJSONStats(Verifier):
         :param test_name_in_m5out: True if the 'test_name' dir is to found in
         the `m5.options.outdir`.
         """
-        super(MatchJSONStats, self).__init__()
+        super().__init__()
         self.truth_name = truth_name
         self.test_name = test_name
         self.test_name_in_outdir = test_name_in_outdir
@@ -319,13 +318,13 @@ class MatchJSONStats(Verifier):
             test_util.fail(err)
 
     def test(self, params):
-        trusted_file = open(self.truth_name, "r")
+        trusted_file = open(self.truth_name)
         if self.test_name_in_outdir:
             fixtures = params.fixtures
             tempdir = fixtures[constants.tempdir_fixture_name].path
-            test_file = open(joinpath(tempdir, self.test_name), "r")
+            test_file = open(joinpath(tempdir, self.test_name))
         else:
-            test_file = open(self.test_name, "r")
+            test_file = open(self.test_name)
 
         return self._compare_stats(trusted_file, test_file)
 

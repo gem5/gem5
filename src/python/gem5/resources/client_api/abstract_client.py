@@ -30,26 +30,6 @@ import urllib.parse
 
 
 class AbstractClient(ABC):
-    def verify_status_code(self, status_code: int) -> None:
-        """
-        Verifies that the status code is 200.
-        :param status_code: The status code to verify.
-        """
-        if status_code == 200:
-            return
-        if status_code == 429:
-            raise Exception("Panic: Too many requests")
-        if status_code == 401:
-            raise Exception("Panic: Unauthorized")
-        if status_code == 404:
-            raise Exception("Panic: Not found")
-        if status_code == 400:
-            raise Exception("Panic: Bad request")
-        if status_code == 500:
-            raise Exception("Panic: Internal server error")
-
-        raise Exception(f"Panic: Unknown status code {status_code}")
-
     def _url_validator(self, url: str) -> bool:
         """
         Validates the provided URL.

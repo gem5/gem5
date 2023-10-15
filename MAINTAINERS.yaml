@@ -1,3 +1,4 @@
+---
 # See CONTRIBUTING.md for details of gem5's contribution process.
 #
 # This file contains a list of gem5's subsystems and their
@@ -40,246 +41,246 @@
 # targeting that subsystem.
 
 arch:
-  desc: >-
-    General architecture-specific components
-  status: orphaned
+    desc: >-
+        General architecture-specific components
+    status: orphaned
 
 arch-arm:
-  status: maintained
-  maintainers:
-    - Giacomo Travaglini <giacomo.travaglini@arm.com>
-    - Andreas Sandberg <andreas.sandberg@arm.com>
+    status: maintained
+    maintainers:
+        - Giacomo Travaglini <giacomo.travaglini@arm.com>
+        - Andreas Sandberg <andreas.sandberg@arm.com>
 
 arch-gcn3:
-  status: maintained
-  maintainers:
-    - Matt Sinclair <sinclair@cs.wisc.edu>
-    - Matt Porema <matthew.porema@amd.com>
+    status: maintained
+    maintainers:
+        - Matt Sinclair <sinclair@cs.wisc.edu>
+        - Matt Porema <matthew.porema@amd.com>
 
 arch-vega:
-  status: maintained
-  maintainers:
-    - Matt Sinclair <sinclair@cs.wisc.edu>
-    - Matt Porema <matthew.porema@amd.com>
+    status: maintained
+    maintainers:
+        - Matt Sinclair <sinclair@cs.wisc.edu>
+        - Matt Porema <matthew.porema@amd.com>
 
 arch-mips:
-  status: orphaned
+    status: orphaned
 
 arch-power:
-  status: orphaned
+    status: orphaned
 
 arch-riscv:
-  status: orphaned
+    status: orphaned
 
 arch-sparc:
-  status: orphaned
+    status: orphaned
 
 arch-x86:
-  status: orphaned
+    status: orphaned
 
 base:
-  status: orphaned
+    status: orphaned
 
 base-stats:
-  status: orphaned
+    status: orphaned
 
 configs:
-  status: orphaned
-  experts:
-    - Jason Lowe-Power <jason@lowepower.com>
+    status: orphaned
+    experts:
+        - Jason Lowe-Power <jason@lowepower.com>
 
 cpu:
-  desc: >-
-    General changes to all CPU models (e.g., BaseCPU)
-  status: orphaned
-  experts:
-    - Jason Lowe-Power <jason@lowepower.com>
+    desc: >-
+        General changes to all CPU models (e.g., BaseCPU)
+    status: orphaned
+    experts:
+        - Jason Lowe-Power <jason@lowepower.com>
 
 cpu-kvm:
-  status: maintained
-  maintainers:
-    - Andreas Sandberg <andreas.sandberg@arm.com>
+    status: maintained
+    maintainers:
+        - Andreas Sandberg <andreas.sandberg@arm.com>
 
 cpu-minor:
-  status: orphaned
+    status: orphaned
 
 cpu-o3:
-  status: orphaned
+    status: orphaned
 
 cpu-simple:
-  status: orphaned
-  experts:
-    - Jason Lowe-Power <jason@lowepower.com>
+    status: orphaned
+    experts:
+        - Jason Lowe-Power <jason@lowepower.com>
 
 dev:
-  status: orphaned
+    status: orphaned
 
 dev-hsa:
-  status: maintained
-  maintainers:
-    - Matt Poremba <matthew.poremba@amd.com>
+    status: maintained
+    maintainers:
+        - Matt Poremba <matthew.poremba@amd.com>
 
 dev-amdgpu:
-  status: maintained
-  maintainers:
-    - Matt Poremba <matthew.poremba@amd.com>
+    status: maintained
+    maintainers:
+        - Matt Poremba <matthew.poremba@amd.com>
 
 dev-virtio:
-  status: maintained
-  maintainers:
-    - Andreas Sandberg <andreas.sandberg@arm.com>
+    status: maintained
+    maintainers:
+        - Andreas Sandberg <andreas.sandberg@arm.com>
 
 dev-arm:
-  status: maintained
-  maintainers:
-    - Giacomo Travaglini <giacomo.travaglini@arm.com>
-    - Andreas Sandberg <andreas.sandberg@arm.com>
+    status: maintained
+    maintainers:
+        - Giacomo Travaglini <giacomo.travaglini@arm.com>
+        - Andreas Sandberg <andreas.sandberg@arm.com>
 
 doc:
-  status: orphaned
+    status: orphaned
 
 ext:
-  desc: >-
-    Components external to gem5
-  status: orphaned
-  experts:
-    - Jason Lowe-Power <jason@lowepower.com>
+    desc: >-
+        Components external to gem5
+    status: orphaned
+    experts:
+        - Jason Lowe-Power <jason@lowepower.com>
 
 ext-testlib:
-  status: orphaned
-  experts:
-    - Bobby R. Bruce <bbruce@ucdavis.edu>
+    status: orphaned
+    experts:
+        - Bobby R. Bruce <bbruce@ucdavis.edu>
 
 fastmodel:
-  desc: >-
-    Changes relating to ARM Fast Models
-  status: orphaned
+    desc: >-
+        Changes relating to ARM Fast Models
+    status: orphaned
 
 gpu-compute:
-  status: maintained
-  maintainers:
-    - Matt Poremba <matthew.poremba@amd.com>
+    status: maintained
+    maintainers:
+        - Matt Poremba <matthew.poremba@amd.com>
 
 learning-gem5:
-  desc: >-
-    The code and configs for the Learning gem5 book
-  status: orphaned
-  experts:
-    - Jason Lowe-Power <jason@lowepower.com>
-    - Bobby R. Bruce <bbruce@ucdavis.edu>
+    desc: >-
+        The code and configs for the Learning gem5 book
+    status: orphaned
+    experts:
+        - Jason Lowe-Power <jason@lowepower.com>
+        - Bobby R. Bruce <bbruce@ucdavis.edu>
 
 stdlib:
-  desc: >-
-    The gem5 standard library found under `src/python/gem5`
-  status: maintained
-  maintainers:
-    - Bobby R. Bruce <bbruce@ucdavis.edu>
+    desc: >-
+        The gem5 standard library found under `src/python/gem5`
+    status: maintained
+    maintainers:
+        - Bobby R. Bruce <bbruce@ucdavis.edu>
 
 mem:
-  desc: >-
-    General memory system (e.g., XBar, Packet)
-  status: orphaned
+    desc: >-
+        General memory system (e.g., XBar, Packet)
+    status: orphaned
 
 mem-cache:
-  desc: >-
-    Classic caches and coherence
-  status: orphaned
+    desc: >-
+        Classic caches and coherence
+    status: orphaned
 
 mem-dram:
-  status: orphaned
+    status: orphaned
 
 mem-garnet:
-  desc: >-
-    Garnet subcomponent of Ruby
-  status: orphaned
+    desc: >-
+        Garnet subcomponent of Ruby
+    status: orphaned
 
 mem-ruby:
-  desc: >-
-    Ruby structures and protocols
-  status: maintained
-  maintainers:
-    - Matt Sinclair <sinclair@cs.wisc.edu>
-  experts:
-    - Jason Lowe-Power <jason@lowepower.com>
+    desc: >-
+        Ruby structures and protocols
+    status: maintained
+    maintainers:
+        - Matt Sinclair <sinclair@cs.wisc.edu>
+    experts:
+        - Jason Lowe-Power <jason@lowepower.com>
 
 misc:
-  desc: >-
-    Anything outside of the other categories
-  status: orphaned
-  experts:
-    - Jason Lowe-Power <jason@lowepower.com>
+    desc: >-
+        Anything outside of the other categories
+    status: orphaned
+    experts:
+        - Jason Lowe-Power <jason@lowepower.com>
 
 python:
-  desc: >-
-    Python SimObject wrapping and infrastructure
-  status: orphaned
-  experts:
-    - Jason Lowe-Power <jason@lowepower.com>
-    - Andreas Sandberg <andreas.sandberg@arm.com>
+    desc: >-
+        Python SimObject wrapping and infrastructure
+    status: orphaned
+    experts:
+        - Jason Lowe-Power <jason@lowepower.com>
+        - Andreas Sandberg <andreas.sandberg@arm.com>
 
 resources:
-  desc: >-
-    The gem5-resources repo with auxiliary resources for simulation
-  status: maintained
-  maintainers:
-    - Bobby R. Bruce <bbruce@ucdavis.edu>
-  experts:
-    - Jason Lowe-Power <jason@lowepower.com>
+    desc: >-
+        The gem5-resources repo with auxiliary resources for simulation
+    status: maintained
+    maintainers:
+        - Bobby R. Bruce <bbruce@ucdavis.edu>
+    experts:
+        - Jason Lowe-Power <jason@lowepower.com>
 
 scons:
-  desc: >-
-    Build system
-  status: orphaned
+    desc: >-
+        Build system
+    status: orphaned
 
 sim:
-  desc: >-
-    General simulation components
-  status: orphaned
-  experts:
-    - Jason Lowe-Power <jason@lowepower.com>
+    desc: >-
+        General simulation components
+    status: orphaned
+    experts:
+        - Jason Lowe-Power <jason@lowepower.com>
 
 sim-se:
-  desc: >-
-    Syscall emulation
-  status: orphaned
+    desc: >-
+        Syscall emulation
+    status: orphaned
 
 system-arm:
-  status: maintained
-  maintainers:
-    - Giacomo Travaglini <giacomo.travaglini@arm.com>
-    - Andreas Sandberg <andreas.sandberg@arm.com>
+    status: maintained
+    maintainers:
+        - Giacomo Travaglini <giacomo.travaglini@arm.com>
+        - Andreas Sandberg <andreas.sandberg@arm.com>
 
 systemc:
-  desc: >-
-    Code for the gem5 SystemC implementation and interface
-  status: orphaned
+    desc: >-
+        Code for the gem5 SystemC implementation and interface
+    status: orphaned
 
 tests:
-  desc: >-
-    testing changes
-  status: maintained
-  maintainers:
-    - Bobby R. Bruce <bbruce@ucdavis.edu>
+    desc: >-
+        testing changes
+    status: maintained
+    maintainers:
+        - Bobby R. Bruce <bbruce@ucdavis.edu>
 
 util:
-  status: orphaned
+    status: orphaned
 
 util-docker:
-  status: maintained
-  maintainers:
-    - Bobby R. Bruce <bbruce@ucdavis.edu>
+    status: maintained
+    maintainers:
+        - Bobby R. Bruce <bbruce@ucdavis.edu>
 
 util-m5:
-  status: orphaned
+    status: orphaned
 
 util-gem5art:
-  status: orphaned
+    status: orphaned
 
 website:
-  desc: >-
-    The gem5-website repo which contains the gem5.org site
-  status: maintained
-  maintainers:
-    - Bobby R. Bruce <bbruce@ucdavis.edu>
-  experts:
-    - Jason Lowe-Power <jason@lowepower.com>
+    desc: >-
+        The gem5-website repo which contains the gem5.org site
+    status: maintained
+    maintainers:
+        - Bobby R. Bruce <bbruce@ucdavis.edu>
+    experts:
+        - Jason Lowe-Power <jason@lowepower.com>

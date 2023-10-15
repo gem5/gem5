@@ -686,8 +686,7 @@ class SuiteResource(AbstractResource):
 
         :yields: A generator that iterates over the workloads in the suite.
         """
-        for workload in self._workloads.keys():
-            yield workload
+        yield from self._workloads.keys()
 
     def __len__(self):
         """
@@ -863,7 +862,6 @@ def obtain_resource(
 
     # If the "url" field is specified, the resoruce must be downloaded.
     if "url" in resource_json and resource_json["url"]:
-
         # If the `to_path` parameter is set, we use that as the path to which
         # the resource is to be downloaded. Otherwise, default to the
         # `resource_directory` parameter plus the resource ID.

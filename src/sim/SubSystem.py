@@ -36,6 +36,7 @@
 from m5.SimObject import SimObject
 from m5.params import *
 
+
 # An empty simobject. Used for organizing simobjects
 # into logical groups as subsystems of a larger
 # system. For example, if we wanted to build a cpu cluster

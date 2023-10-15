@@ -118,7 +118,6 @@ code("} // namespace gem5")
 
 
 if use_python:
-
     name = enum.__name__
     enum_name = enum.__name__ if enum.enum_name is None else enum.enum_name
     wrapper_name = enum_name if enum.is_class else enum.wrapper_name

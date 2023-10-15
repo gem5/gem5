@@ -93,7 +93,6 @@ class BaseCPUCore(AbstractCore):
 
     @overrides(AbstractCore)
     def is_kvm_core(self) -> bool:
-
         try:
             from m5.objects import BaseKvmCPU
 
@@ -118,7 +117,6 @@ class BaseCPUCore(AbstractCore):
     @overrides(AbstractCore)
     def connect_walker_ports(self, port1: Port, port2: Port) -> None:
         if self.get_isa() == ISA.ARM:
-
             # Unlike X86 and RISCV MMU, the ARM MMU has two L1 TLB walker ports
             # named `walker` and `stage2_walker` for both data and instruction.
             # The gem5 standard library currently supports one TLB walker port
@@ -144,7 +142,6 @@ class BaseCPUCore(AbstractCore):
         interrupt_requestor: Optional[Port] = None,
         interrupt_responce: Optional[Port] = None,
     ) -> None:
-
         # TODO: This model assumes that we will only create an interrupt
         # controller as we require it. Not sure how true this is in all cases.
         self.core.createInterruptController()

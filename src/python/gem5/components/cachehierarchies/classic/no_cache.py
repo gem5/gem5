@@ -97,12 +97,10 @@ class NoCache(AbstractClassicCacheHierarchy):
 
     @overrides(AbstractCacheHierarchy)
     def incorporate_cache(self, board: AbstractBoard) -> None:
-
         if board.has_coherent_io():
             self._setup_coherent_io_bridge(board)
 
         for core in board.get_processor().get_cores():
-
             core.connect_icache(self.membus.cpu_side_ports)
             core.connect_dcache(self.membus.cpu_side_ports)
             core.connect_walker_ports(

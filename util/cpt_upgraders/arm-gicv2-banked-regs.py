@@ -33,13 +33,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+
 # duplicate banked registers into new per-cpu arrays.
 def upgrader(cpt):
     if cpt.get("root", "isa", fallback="") == "arm":
         for sec in cpt.sections():
             import re
 
-            if not re.search("\.gic$", sec):
+            if not re.search(r"\.gic$", sec):
                 continue
             cpuEnabled = cpt.get(sec, "cpuEnabled").split()
 

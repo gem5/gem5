@@ -37,6 +37,7 @@ from m5.SimObject import *
 from m5.params import *
 from m5.proxy import Parent
 
+
 # Enum for a type of  power model
 class PMType(Enum):
     vals = ["All", "Static", "Dynamic"]

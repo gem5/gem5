@@ -34,6 +34,10 @@ import io
 import contextlib
 from pathlib import Path
 
+from gem5.resources.client_api.atlasclient import (
+    AtlasClientHttpJsonRequestError,
+)
+
 mock_json_path = Path(__file__).parent / "refs/resources.json"
 mock_config_json = {
     "sources": {
@@ -63,12 +67,12 @@ mock_config_combined["sources"]["baba"] = mock_config_json["sources"]["baba"]
 
 mock_json = {}
 
-with open(Path(__file__).parent / "refs/mongo-mock.json", "r") as f:
+with open(Path(__file__).parent / "refs/mongo-mock.json") as f:
     mock_json = json.load(f)
 
 duplicate_mock_json = {}
 
-with open(Path(__file__).parent / "refs/mongo-dup-mock.json", "r") as f:
+with open(Path(__file__).parent / "refs/mongo-dup-mock.json") as f:
     duplicate_mock_json = json.load(f)
 
 
@@ -419,21 +423,11 @@ class ClientWrapperTestSuite(unittest.TestCase):
     @patch("urllib.request.urlopen", side_effect=mocked_requests_post)
     def test_invalid_auth_url(self, mock_get):
         resource_id = "test-resource"
-        f = io.StringIO()
-        with self.assertRaises(Exception) as context:
-            with contextlib.redirect_stderr(f):
-                get_resource_json_obj(
-                    resource_id,
-                    gem5_version="develop",
-                )
-        self.assertTrue(
-            "Error getting resources from client gem5-resources:"
-            " Panic: Not found" in str(f.getvalue())
-        )
-        self.assertTrue(
-            "Resource with ID 'test-resource' not found."
-            in str(context.exception)
-        )
+        with self.assertRaises(AtlasClientHttpJsonRequestError) as context:
+            get_resource_json_obj(
+                resource_id,
+                gem5_version="develop",
+            )
 
     @patch(
         "gem5.resources.client.clientwrapper",
@@ -442,21 +436,11 @@ class ClientWrapperTestSuite(unittest.TestCase):
     @patch("urllib.request.urlopen", side_effect=mocked_requests_post)
     def test_invalid_url(self, mock_get):
         resource_id = "test-resource"
-        f = io.StringIO()
-        with self.assertRaises(Exception) as context:
-            with contextlib.redirect_stderr(f):
-                get_resource_json_obj(
-                    resource_id,
-                    gem5_version="develop",
-                )
-        self.assertTrue(
-            "Error getting resources from client gem5-resources:"
-            " Panic: Not found" in str(f.getvalue())
-        )
-        self.assertTrue(
-            "Resource with ID 'test-resource' not found."
-            in str(context.exception)
-        )
+        with self.assertRaises(AtlasClientHttpJsonRequestError) as context:
+            get_resource_json_obj(
+                resource_id,
+                gem5_version="develop",
+            )
 
     @patch(
         "gem5.resources.client.clientwrapper",
@@ -465,18 +449,8 @@ class ClientWrapperTestSuite(unittest.TestCase):
     @patch("urllib.request.urlopen", side_effect=mocked_requests_post)
     def test_invalid_url(self, mock_get):
         resource_id = "test-too-many"
-        f = io.StringIO()
-        with self.assertRaises(Exception) as context:
-            with contextlib.redirect_stderr(f):
-                get_resource_json_obj(
-                    resource_id,
-                    gem5_version="develop",
-                )
-        self.assertTrue(
-            "Error getting resources from client gem5-resources:"
-            " Panic: Too many requests" in str(f.getvalue())
-        )
-        self.assertTrue(
-            "Resource with ID 'test-too-many' not found."
-            in str(context.exception)
-        )
+        with self.assertRaises(AtlasClientHttpJsonRequestError) as context:
+            get_resource_json_obj(
+                resource_id,
+                gem5_version="develop",
+            )

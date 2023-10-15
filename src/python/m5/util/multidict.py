@@ -27,7 +27,7 @@
 __all__ = ["multidict"]
 
 
-class multidict(object):
+class multidict:
     def __init__(self, parent={}, **kwargs):
         self.local = dict(**kwargs)
         self.parent = parent
@@ -80,8 +80,7 @@ class multidict(object):
         return key in self
 
     def items(self):
-        for item in self.next():
-            yield item
+        yield from self.next()
 
     def keys(self):
         for key, value in self.next():

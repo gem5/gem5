@@ -33,6 +33,7 @@ multiprocessing module (i.e., cpython/Lib/multiprocessing/).
 from multiprocessing import context, process
 from multiprocessing.context import DefaultContext
 
+
 # The `_start_method` must be `None` for the `Spawn_gem5Process` class.
 # Otherwise, in `_bootstrap` in the `BaseProcess` it will try to force the
 # `_start_method` to be gem5-specific, which the `multiprocessing` module

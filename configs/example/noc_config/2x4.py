@@ -35,6 +35,7 @@
 
 from ruby import CHI_config
 
+
 # CustomMesh parameters for a 2x4 mesh. Routers will have the following layout:
 #
 # 0 --- 1 --- 2 --- 3

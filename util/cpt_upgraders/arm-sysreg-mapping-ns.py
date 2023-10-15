@@ -33,6 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+
 # reflect updated register mappings for ARM ISA
 def upgrader(cpt):
     if cpt.get("root", "isa", fallback="") == "arm":
@@ -40,7 +41,7 @@ def upgrader(cpt):
             import re
 
             # Search for all ISA sections
-            if re.search(".*sys.*\.cpu.*\.isa\d*$", sec):
+            if re.search(r".*sys.*\.cpu.*\.isa\d*$", sec):
                 mr = cpt.get(sec, "miscRegs").split()
                 if int(mr[0]) & 16 == 0:  # CPSR reg width; 0 for AArch64
                     mr[112] = mr[111]  # ACTLR_NS = ACTLR

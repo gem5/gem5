@@ -201,7 +201,6 @@ class HBM_1000_4H_1x64(HBM_1000_4H_1x128):
 # on HBM gen2 specifications. 4H stack, 8Gb per die and total capacity
 # of 4GiB.
 class HBM_2000_4H_1x64(DRAMInterface):
-
     # 64-bit interface for a single pseudo channel
     device_bus_width = 64
 

@@ -6,7 +6,7 @@ def upgrader(cpt):
         import re
 
         # Search for a physical memory
-        if re.search(".*sys.*\.physmem$", sec):
+        if re.search(r".*sys.*\.physmem$", sec):
             # Add the number of stores attribute to the global physmem
             cpt.set(sec, "nbr_of_stores", "1")
 
@@ -24,7 +24,7 @@ def upgrader(cpt):
             cpt.set(section_name, "store_id", "0")
             cpt.set(section_name, "range_size", mem_size)
             cpt.set(section_name, "filename", mem_filename)
-        elif re.search(".*sys.*\.\w*mem$", sec):
+        elif re.search(r".*sys.*\.\w*mem$", sec):
             # Due to the lack of information about a start address,
             # this migration only works if there is a single memory in
             # the system, thus starting at 0

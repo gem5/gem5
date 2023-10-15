@@ -76,7 +76,6 @@ class GenericPciHost(PciHost):
         relocatable=0,
         addr=0,
     ):
-
         busf = bus & 0xFF
         devicef = device & 0x1F
         functionf = function & 0x7

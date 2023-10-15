@@ -88,7 +88,6 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
         platform: VExpress_GEM5_Base = VExpress_GEM5_Foundation(),
         release: ArmRelease = ArmDefaultRelease(),
     ) -> None:
-
         # The platform and the clk has to be set before calling the super class
         self._platform = platform
         self._clk_freq = clk_freq
@@ -117,7 +116,6 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
 
     @overrides(AbstractBoard)
     def _setup_board(self) -> None:
-
         # This board is expected to run full-system simulation.
         # Loading ArmFsLinux() from `src/arch/arm/ArmFsWorkload.py`
         self.workload = ArmFsLinux()
@@ -213,7 +211,6 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
         # created. The IO device has to be attached first. This is done in the
         # realview class.
         if self.get_cache_hierarchy().is_ruby():
-
             # All the on-chip devices are attached in this method.
             self.realview.attachOnChipIO(
                 self.iobus,
@@ -359,7 +356,6 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
 
     @overrides(KernelDiskWorkload)
     def _add_disk_to_board(self, disk_image: AbstractResource):
-
         self._image = CowDiskImage(
             child=RawDiskImage(
                 read_only=True, image_file=disk_image.get_local_path()
@@ -379,13 +375,13 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
 
     @overrides(KernelDiskWorkload)
     def get_default_kernel_args(self) -> List[str]:
-
         # The default kernel string is taken from the devices.py file.
         return [
             "console=ttyAMA0",
             "lpj=19988480",
             "norandmaps",
             "root={root_value}",
+            "disk_device={disk_device}",
             "rw",
             f"mem={self.get_memory().get_size()}",
         ]

@@ -42,15 +42,13 @@ class MachineAST(DeclAST):
         return f"[Machine: {self.ident!r}]"
 
     def files(self, parent=None):
-        s = set(
-            (
-                f"{self.ident}_Controller.cc",
-                f"{self.ident}_Controller.hh",
-                f"{self.ident}_Controller.py",
-                f"{self.ident}_Transitions.cc",
-                f"{self.ident}_Wakeup.cc",
-            )
-        )
+        s = {
+            f"{self.ident}_Controller.cc",
+            f"{self.ident}_Controller.hh",
+            f"{self.ident}_Controller.py",
+            f"{self.ident}_Transitions.cc",
+            f"{self.ident}_Wakeup.cc",
+        }
 
         s |= self.decls.files(self.ident)
         return s

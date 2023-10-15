@@ -41,7 +41,6 @@ else:
 
 
 def test_kvm_switch(cpu: str, num_cpus: int, mem_system: str, length: str):
-
     if not os.access("/dev/kvm", mode=os.R_OK | os.W_OK):
         # Don't run the tests if KVM is unavailable.
         return

@@ -86,7 +86,7 @@ class SLICC(Grammar):
         self.symtab.writeHTMLFiles(html_path)
 
     def files(self):
-        f = set(["Types.hh"])
+        f = {"Types.hh"}
 
         f |= self.decl_list.files()
 
@@ -284,7 +284,7 @@ class SLICC(Grammar):
     def p_decl__protocol(self, p):
         "decl : PROTOCOL STRING SEMI"
         if self.protocol:
-            msg = "Protocol can only be set once! Error at %s:%s\n" % (
+            msg = "Protocol can only be set once! Error at {}:{}\n".format(
                 self.current_source,
                 self.current_line,
             )

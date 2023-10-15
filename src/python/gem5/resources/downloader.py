@@ -369,7 +369,6 @@ def get_resource(
             with tarfile.open(download_dest) as f:
 
                 def is_within_directory(directory, target):
-
                     abs_directory = os.path.abspath(directory)
                     abs_target = os.path.abspath(target)
 
@@ -380,7 +379,6 @@ def get_resource(
                 def safe_extract(
                     tar, path=".", members=None, *, numeric_owner=False
                 ):
-
                     for member in tar.getmembers():
                         member_path = os.path.join(path, member.name)
                         if not is_within_directory(path, member_path):

@@ -75,7 +75,6 @@ class PrivateL1CacheHierarchy(AbstractRubyCacheHierarchy):
 
     @overrides(AbstractCacheHierarchy)
     def incorporate_cache(self, board: AbstractBoard) -> None:
-
         requires(coherence_protocol_required=CoherenceProtocol.CHI)
 
         self.ruby_system = RubySystem()

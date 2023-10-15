@@ -1082,7 +1082,7 @@ Wavefront::exec()
      * we return here to avoid spurious errors related to flat insts
      * and their address segment resolution.
      */
-    if (execMask().none() && ii->isFlat()) {
+    if (execMask().none() && ii->needsToken()) {
         computeUnit->getTokenManager()->recvTokens(1);
         return;
     }

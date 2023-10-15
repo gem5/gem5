@@ -30,6 +30,7 @@ from _m5 import core
 from typing import Optional, Dict, List, Tuple
 import itertools
 from m5.util import warn
+import sys
 
 
 class ClientWrapper:
@@ -63,7 +64,6 @@ class ClientWrapper:
         clients: Optional[List[str]] = None,
         gem5_version: Optional[str] = core.gem5Version,
     ) -> Dict[str, List[str]]:
-
         clients_to_search = (
             list(self.clients.keys()) if clients is None else clients
         )
@@ -114,7 +114,12 @@ class ClientWrapper:
                     self.clients[client].get_resources_by_id(resource_id)
                 )
             except Exception as e:
-                warn(f"Error getting resources from client {client}: {str(e)}")
+                print(
+                    f"Exception thrown while getting resource '{resource_id}' "
+                    f"from client '{client}'\n",
+                    file=sys.stderr,
+                )
+                raise e
         # check if no 2 resources have the same id and version
         for res1, res2 in itertools.combinations(resources, 2):
             if res1["resource_version"] == res2["resource_version"]:

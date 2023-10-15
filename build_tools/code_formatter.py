@@ -46,7 +46,7 @@ import os
 import re
 
 
-class lookup(object):
+class lookup:
     def __init__(self, formatter, frame, *args, **kwargs):
         self.frame = frame
         self.formatter = formatter
@@ -106,7 +106,7 @@ class code_formatter_meta(type):
     """
 
     def __init__(cls, name, bases, dct):
-        super(code_formatter_meta, cls).__init__(name, bases, dct)
+        super().__init__(name, bases, dct)
         if "pattern" in dct:
             pat = cls.pattern
         else:
@@ -125,7 +125,7 @@ class code_formatter_meta(type):
         cls.pattern = re.compile(pat, re.VERBOSE | re.DOTALL | re.MULTILINE)
 
 
-class code_formatter(object, metaclass=code_formatter_meta):
+class code_formatter(metaclass=code_formatter_meta):
     delim = r"$"
     ident = r"[_A-z]\w*"
     pos = r"[0-9]+"
@@ -272,7 +272,7 @@ class code_formatter(object, metaclass=code_formatter_meta):
             # check for a lone identifier
             if ident:
                 indent = match.group("indent")  # must be spaces
-                lone = "%s" % (l[ident],)
+                lone = f"{l[ident]}"
 
                 def indent_lines(gen):
                     for line in gen:
@@ -284,7 +284,7 @@ class code_formatter(object, metaclass=code_formatter_meta):
             # check for an identifier, braced or not
             ident = match.group("ident") or match.group("b_ident")
             if ident is not None:
-                return "%s" % (l[ident],)
+                return f"{l[ident]}"
 
             # check for a positional parameter, braced or not
             pos = match.group("pos") or match.group("b_pos")
@@ -295,13 +295,13 @@ class code_formatter(object, metaclass=code_formatter_meta):
                         "Positional parameter #%d not found in pattern" % pos,
                         code_formatter.pattern,
                     )
-                return "%s" % (args[int(pos)],)
+                return f"{args[int(pos)]}"
 
             # check for a double braced expression
             eval_expr = match.group("eval")
             if eval_expr is not None:
                 result = eval(eval_expr, {}, l)
-                return "%s" % (result,)
+                return f"{result}"
 
             # check for an escaped delimiter
             if match.group("escaped") is not None:

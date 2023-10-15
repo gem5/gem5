@@ -89,9 +89,9 @@ def openFileRd(in_file):
             # reading the first message.
             proto_in.seek(1)
             proto_in.seek(0)
-        except IOError:
+        except OSError:
             proto_in = open(in_file, "rb")
-    except IOError:
+    except OSError:
         print("Failed to open ", in_file, " for reading")
         exit(-1)
     return proto_in
@@ -125,7 +125,7 @@ def _DecodeVarint32(in_file):
             return (result, pos)
         shift += 7
         if shift >= 64:
-            raise IOError("Too many bytes when decoding varint.")
+            raise OSError("Too many bytes when decoding varint.")
 
 
 def decodeMessage(in_file, message):
@@ -140,7 +140,7 @@ def decodeMessage(in_file, message):
         buf = in_file.read(size)
         message.ParseFromString(buf)
         return True
-    except IOError:
+    except OSError:
         return False
 
 

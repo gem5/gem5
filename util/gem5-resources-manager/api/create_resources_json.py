@@ -63,7 +63,7 @@ class ResourceJsonCreator:
 
     def __init__(self):
         self.schema = {}
-        with open("schema/schema.json", "r") as f:
+        with open("schema/schema.json") as f:
             self.schema = json.load(f)
 
     def _get_file_data(self, url):
@@ -104,9 +104,7 @@ class ResourceJsonCreator:
         for filename in os.listdir(folder_path):
             file_path = os.path.join(folder_path, filename)
             if os.path.isfile(file_path):
-                with open(
-                    file_path, "r", encoding="utf-8", errors="ignore"
-                ) as f:
+                with open(file_path, encoding="utf-8", errors="ignore") as f:
                     contents = f.read()
                     if id in contents:
                         file_path = file_path.replace("\\", "/")

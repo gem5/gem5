@@ -36,7 +36,7 @@
 from abc import *
 
 
-class PyBindExport(object, metaclass=ABCMeta):
+class PyBindExport(metaclass=ABCMeta):
     @abstractmethod
     def export(self, code, cname):
         pass

@@ -30,7 +30,6 @@ from m5.objects import DMA_Controller
 
 
 class AbstractDMAController(DMA_Controller):
-
     _version = 0
 
     @classmethod

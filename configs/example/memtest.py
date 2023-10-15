@@ -145,6 +145,7 @@ parser.add_argument(
 
 args = parser.parse_args()
 
+
 # Get the total number of testers
 def numtesters(cachespec, testerspec):
     # Determine the tester multiplier for each level as the
@@ -277,6 +278,7 @@ system.clk_domain = SrcClockDomain(
 
 # For each level, track the next subsys index to use
 next_subsys_index = [0] * (len(cachespec) + 1)
+
 
 # Recursive function to create a sub-tree of the cache and tester
 # hierarchy
