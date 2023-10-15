@@ -34,9 +34,10 @@ jobs:
     needs: build-gem5
     timeout-minutes: 600 # 10 hours
     steps:
-      - name: Build LULESH
+      - name: Obtain LULESH
         working-directory: ${{ github.workspace }}/lulesh
-        # rename lulesh binary in this step so test can find it properly
+        # Obtains the latest LULESH compatible with this version of gem5 via
+        # gem5 Resources.
         run:  build/GCN3_X86/gem5.opt util/obtain-resource.py lulesh -p lulesh
       - name: Run LULUESH tests
         working-directory: ${{ github.workspace }}
