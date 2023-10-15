@@ -759,12 +759,24 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(1, 0, 8, 1, 3), MISCREG_TLBI_VAAE1OS_Xt },
     { MiscRegNum64(1, 0, 8, 1, 5), MISCREG_TLBI_VALE1OS_Xt },
     { MiscRegNum64(1, 0, 8, 1, 7), MISCREG_TLBI_VAALE1OS_Xt },
+    { MiscRegNum64(1, 0, 8, 2, 1), MISCREG_TLBI_RVAE1IS_Xt },
+    { MiscRegNum64(1, 0, 8, 2, 3), MISCREG_TLBI_RVAAE1IS_Xt },
+    { MiscRegNum64(1, 0, 8, 2, 5), MISCREG_TLBI_RVALE1IS_Xt },
+    { MiscRegNum64(1, 0, 8, 2, 7), MISCREG_TLBI_RVAALE1IS_Xt },
     { MiscRegNum64(1, 0, 8, 3, 0), MISCREG_TLBI_VMALLE1IS },
     { MiscRegNum64(1, 0, 8, 3, 1), MISCREG_TLBI_VAE1IS_Xt },
     { MiscRegNum64(1, 0, 8, 3, 2), MISCREG_TLBI_ASIDE1IS_Xt },
     { MiscRegNum64(1, 0, 8, 3, 3), MISCREG_TLBI_VAAE1IS_Xt },
     { MiscRegNum64(1, 0, 8, 3, 5), MISCREG_TLBI_VALE1IS_Xt },
     { MiscRegNum64(1, 0, 8, 3, 7), MISCREG_TLBI_VAALE1IS_Xt },
+    { MiscRegNum64(1, 0, 8, 5, 1), MISCREG_TLBI_RVAE1OS_Xt },
+    { MiscRegNum64(1, 0, 8, 5, 3), MISCREG_TLBI_RVAAE1OS_Xt },
+    { MiscRegNum64(1, 0, 8, 5, 5), MISCREG_TLBI_RVALE1OS_Xt },
+    { MiscRegNum64(1, 0, 8, 5, 7), MISCREG_TLBI_RVAALE1OS_Xt },
+    { MiscRegNum64(1, 0, 8, 6, 1), MISCREG_TLBI_RVAE1_Xt },
+    { MiscRegNum64(1, 0, 8, 6, 3), MISCREG_TLBI_RVAAE1_Xt },
+    { MiscRegNum64(1, 0, 8, 6, 5), MISCREG_TLBI_RVALE1_Xt },
+    { MiscRegNum64(1, 0, 8, 6, 7), MISCREG_TLBI_RVAALE1_Xt },
     { MiscRegNum64(1, 0, 8, 7, 0), MISCREG_TLBI_VMALLE1 },
     { MiscRegNum64(1, 0, 8, 7, 1), MISCREG_TLBI_VAE1_Xt },
     { MiscRegNum64(1, 0, 8, 7, 2), MISCREG_TLBI_ASIDE1_Xt },
@@ -783,12 +795,16 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(1, 4, 7, 8, 6), MISCREG_AT_S12E0R_Xt },
     { MiscRegNum64(1, 4, 7, 8, 7), MISCREG_AT_S12E0W_Xt },
     { MiscRegNum64(1, 4, 8, 0, 1), MISCREG_TLBI_IPAS2E1IS_Xt },
+    { MiscRegNum64(1, 4, 8, 0, 2), MISCREG_TLBI_RIPAS2E1IS_Xt },
     { MiscRegNum64(1, 4, 8, 0, 5), MISCREG_TLBI_IPAS2LE1IS_Xt },
     { MiscRegNum64(1, 4, 8, 1, 0), MISCREG_TLBI_ALLE2OS },
     { MiscRegNum64(1, 4, 8, 1, 1), MISCREG_TLBI_VAE2OS_Xt },
     { MiscRegNum64(1, 4, 8, 1, 4), MISCREG_TLBI_ALLE1OS },
     { MiscRegNum64(1, 4, 8, 1, 5), MISCREG_TLBI_VALE2OS_Xt },
     { MiscRegNum64(1, 4, 8, 1, 6), MISCREG_TLBI_VMALLS12E1OS },
+    { MiscRegNum64(1, 4, 8, 0, 6), MISCREG_TLBI_RIPAS2LE1IS_Xt },
+    { MiscRegNum64(1, 4, 8, 2, 1), MISCREG_TLBI_RVAE2IS_Xt },
+    { MiscRegNum64(1, 4, 8, 2, 5), MISCREG_TLBI_RVALE2IS_Xt },
     { MiscRegNum64(1, 4, 8, 3, 0), MISCREG_TLBI_ALLE2IS },
     { MiscRegNum64(1, 4, 8, 3, 1), MISCREG_TLBI_VAE2IS_Xt },
     { MiscRegNum64(1, 4, 8, 3, 4), MISCREG_TLBI_ALLE1IS },
@@ -796,8 +812,16 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(1, 4, 8, 3, 6), MISCREG_TLBI_VMALLS12E1IS },
     { MiscRegNum64(1, 4, 8, 4, 0), MISCREG_TLBI_IPAS2E1OS_Xt },
     { MiscRegNum64(1, 4, 8, 4, 1), MISCREG_TLBI_IPAS2E1_Xt },
+    { MiscRegNum64(1, 4, 8, 4, 2), MISCREG_TLBI_RIPAS2E1_Xt },
+    { MiscRegNum64(1, 4, 8, 4, 3), MISCREG_TLBI_RIPAS2E1OS_Xt },
     { MiscRegNum64(1, 4, 8, 4, 4), MISCREG_TLBI_IPAS2LE1OS_Xt },
     { MiscRegNum64(1, 4, 8, 4, 5), MISCREG_TLBI_IPAS2LE1_Xt },
+    { MiscRegNum64(1, 4, 8, 4, 6), MISCREG_TLBI_RIPAS2LE1_Xt },
+    { MiscRegNum64(1, 4, 8, 4, 7), MISCREG_TLBI_RIPAS2LE1OS_Xt },
+    { MiscRegNum64(1, 4, 8, 5, 1), MISCREG_TLBI_RVAE2OS_Xt },
+    { MiscRegNum64(1, 4, 8, 5, 5), MISCREG_TLBI_RVALE2OS_Xt },
+    { MiscRegNum64(1, 4, 8, 6, 1), MISCREG_TLBI_RVAE2_Xt },
+    { MiscRegNum64(1, 4, 8, 6, 5), MISCREG_TLBI_RVALE2_Xt },
     { MiscRegNum64(1, 4, 8, 7, 0), MISCREG_TLBI_ALLE2 },
     { MiscRegNum64(1, 4, 8, 7, 1), MISCREG_TLBI_VAE2_Xt },
     { MiscRegNum64(1, 4, 8, 7, 4), MISCREG_TLBI_ALLE1 },
@@ -808,9 +832,15 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(1, 6, 8, 1, 0), MISCREG_TLBI_ALLE3OS },
     { MiscRegNum64(1, 6, 8, 1, 1), MISCREG_TLBI_VAE3OS_Xt },
     { MiscRegNum64(1, 6, 8, 1, 5), MISCREG_TLBI_VALE3OS_Xt },
+    { MiscRegNum64(1, 6, 8, 2, 1), MISCREG_TLBI_RVAE3IS_Xt },
+    { MiscRegNum64(1, 6, 8, 2, 5), MISCREG_TLBI_RVALE3IS_Xt },
     { MiscRegNum64(1, 6, 8, 3, 0), MISCREG_TLBI_ALLE3IS },
     { MiscRegNum64(1, 6, 8, 3, 1), MISCREG_TLBI_VAE3IS_Xt },
     { MiscRegNum64(1, 6, 8, 3, 5), MISCREG_TLBI_VALE3IS_Xt },
+    { MiscRegNum64(1, 6, 8, 5, 1), MISCREG_TLBI_RVAE3OS_Xt },
+    { MiscRegNum64(1, 6, 8, 5, 5), MISCREG_TLBI_RVALE3OS_Xt },
+    { MiscRegNum64(1, 6, 8, 6, 1), MISCREG_TLBI_RVAE3_Xt },
+    { MiscRegNum64(1, 6, 8, 6, 5), MISCREG_TLBI_RVALE3_Xt },
     { MiscRegNum64(1, 6, 8, 7, 0), MISCREG_TLBI_ALLE3 },
     { MiscRegNum64(1, 6, 8, 7, 1), MISCREG_TLBI_VAE3_Xt },
     { MiscRegNum64(1, 6, 8, 7, 5), MISCREG_TLBI_VALE3_Xt },
@@ -951,7 +981,7 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 0, 0, 7, 0), MISCREG_ID_AA64MMFR0_EL1 },
     { MiscRegNum64(3, 0, 0, 7, 1), MISCREG_ID_AA64MMFR1_EL1 },
     { MiscRegNum64(3, 0, 0, 7, 2), MISCREG_ID_AA64MMFR2_EL1 },
-    { MiscRegNum64(3, 0, 0, 7, 3), MISCREG_RAZ },
+    { MiscRegNum64(3, 0, 0, 7, 3), MISCREG_ID_AA64MMFR3_EL1 },
     { MiscRegNum64(3, 0, 0, 7, 4), MISCREG_RAZ },
     { MiscRegNum64(3, 0, 0, 7, 5), MISCREG_RAZ },
     { MiscRegNum64(3, 0, 0, 7, 6), MISCREG_RAZ },
@@ -959,12 +989,14 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 0, 1, 0, 0), MISCREG_SCTLR_EL1 },
     { MiscRegNum64(3, 0, 1, 0, 1), MISCREG_ACTLR_EL1 },
     { MiscRegNum64(3, 0, 1, 0, 2), MISCREG_CPACR_EL1 },
+    { MiscRegNum64(3, 0, 1, 0, 3), MISCREG_SCTLR2_EL1 },
     { MiscRegNum64(3, 0, 1, 2, 0), MISCREG_ZCR_EL1 },
     { MiscRegNum64(3, 0, 1, 2, 4), MISCREG_SMPRI_EL1 },
     { MiscRegNum64(3, 0, 1, 2, 6), MISCREG_SMCR_EL1 },
     { MiscRegNum64(3, 0, 2, 0, 0), MISCREG_TTBR0_EL1 },
     { MiscRegNum64(3, 0, 2, 0, 1), MISCREG_TTBR1_EL1 },
     { MiscRegNum64(3, 0, 2, 0, 2), MISCREG_TCR_EL1 },
+    { MiscRegNum64(3, 0, 2, 0, 3), MISCREG_TCR2_EL1 },
     { MiscRegNum64(3, 0, 2, 1, 0), MISCREG_APIAKeyLo_EL1 },
     { MiscRegNum64(3, 0, 2, 1, 1), MISCREG_APIAKeyHi_EL1 },
     { MiscRegNum64(3, 0, 2, 1, 2), MISCREG_APIBKeyLo_EL1 },
@@ -1108,6 +1140,7 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 4, 0, 0, 5), MISCREG_VMPIDR_EL2 },
     { MiscRegNum64(3, 4, 1, 0, 0), MISCREG_SCTLR_EL2 },
     { MiscRegNum64(3, 4, 1, 0, 1), MISCREG_ACTLR_EL2 },
+    { MiscRegNum64(3, 4, 1, 0, 3), MISCREG_SCTLR2_EL2 },
     { MiscRegNum64(3, 4, 1, 1, 0), MISCREG_HCR_EL2 },
     { MiscRegNum64(3, 4, 1, 1, 1), MISCREG_MDCR_EL2 },
     { MiscRegNum64(3, 4, 1, 1, 2), MISCREG_CPTR_EL2 },
@@ -1123,6 +1156,7 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 4, 2, 0, 0), MISCREG_TTBR0_EL2 },
     { MiscRegNum64(3, 4, 2, 0, 1), MISCREG_TTBR1_EL2 },
     { MiscRegNum64(3, 4, 2, 0, 2), MISCREG_TCR_EL2 },
+    { MiscRegNum64(3, 4, 2, 0, 3), MISCREG_TCR2_EL2 },
     { MiscRegNum64(3, 4, 2, 1, 0), MISCREG_VTTBR_EL2 },
     { MiscRegNum64(3, 4, 2, 1, 2), MISCREG_VTCR_EL2 },
     { MiscRegNum64(3, 4, 2, 6, 0), MISCREG_VSTTBR_EL2 },
@@ -1197,11 +1231,13 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 4, 14, 5, 2), MISCREG_CNTHPS_CVAL_EL2 },
     { MiscRegNum64(3, 5, 1, 0, 0), MISCREG_SCTLR_EL12 },
     { MiscRegNum64(3, 5, 1, 0, 2), MISCREG_CPACR_EL12 },
+    { MiscRegNum64(3, 5, 1, 0, 3), MISCREG_SCTLR2_EL12 },
     { MiscRegNum64(3, 5, 1, 2, 0), MISCREG_ZCR_EL12 },
     { MiscRegNum64(3, 5, 1, 2, 6), MISCREG_SMCR_EL12 },
     { MiscRegNum64(3, 5, 2, 0, 0), MISCREG_TTBR0_EL12 },
     { MiscRegNum64(3, 5, 2, 0, 1), MISCREG_TTBR1_EL12 },
     { MiscRegNum64(3, 5, 2, 0, 2), MISCREG_TCR_EL12 },
+    { MiscRegNum64(3, 5, 2, 0, 3), MISCREG_TCR2_EL12 },
     { MiscRegNum64(3, 5, 4, 0, 0), MISCREG_SPSR_EL12 },
     { MiscRegNum64(3, 5, 4, 0, 1), MISCREG_ELR_EL12 },
     { MiscRegNum64(3, 5, 5, 1, 0), MISCREG_AFSR0_EL12 },
@@ -1221,6 +1257,7 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 5, 14, 3, 2), MISCREG_CNTV_CVAL_EL02 },
     { MiscRegNum64(3, 6, 1, 0, 0), MISCREG_SCTLR_EL3 },
     { MiscRegNum64(3, 6, 1, 0, 1), MISCREG_ACTLR_EL3 },
+    { MiscRegNum64(3, 6, 1, 0, 3), MISCREG_SCTLR2_EL3 },
     { MiscRegNum64(3, 6, 1, 1, 0), MISCREG_SCR_EL3 },
     { MiscRegNum64(3, 6, 1, 1, 1), MISCREG_SDER32_EL3 },
     { MiscRegNum64(3, 6, 1, 1, 2), MISCREG_CPTR_EL3 },
@@ -1880,6 +1917,156 @@ faultIccSgiEL2(const MiscRegLUTEntry &entry,
         return inst.generateTrap(EL3);
     } else {
         return NoFault;
+    }
+}
+
+template<bool read, auto g_bitfield>
+Fault
+faultSctlr2EL1(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    if (HaveExt(tc, ArmExtension::FEAT_SCTLR2)) {
+        const SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        const HCRX hcrx = tc->readMiscReg(MISCREG_HCRX_EL2);
+        if (
+            auto fault = faultHcrFgtEL1<read, g_bitfield, &HFGTR::sctlrEL1>(
+                entry,
+                tc
+                inst
+            );
+            fault != NoFault
+           ) {
+            return fault;
+        } else if (
+                    EL2Enabled(tc) &&(!isHcrxEL2Enabled(tc) || !hcrx.sctlr2En)
+                  ) {
+            return inst.generateTrap(EL2);
+        } else if (ArmSystem::haveEL(tc, EL3) && !scr.sctlr2En) {
+            return inst.generateTrap(EL3);
+        } else {
+            return NoFault;
+        }
+    } else {
+        return inst.undefined();
+    }
+}
+
+Fault
+faultSctlr2EL2(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    if (HaveExt(tc, ArmExtension::FEAT_SCTLR2)) {
+        const SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        if (ArmSystem::haveEL(tc, EL3) && !scr.sctlr2En) {
+            return inst.generateTrap(EL3);
+        } else {
+            return NoFault;
+        }
+    } else {
+        return inst.undefined();
+    }
+}
+
+Fault
+faultSctlr2VheEL2(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    if (HaveExt(tc, ArmExtension::FEAT_SCTLR2)) {
+        const HCR hcr = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
+        const SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        if (hcr.e2h) {
+            if (ArmSystem::haveEL(tc, EL3) && !scr.sctlr2En) {
+                return inst.generateTrap(EL3);
+            } else {
+                return NoFault;
+            }
+        } else {
+            return inst.undefined();
+        }
+    } else {
+        return inst.undefined();
+    }
+}
+
+template<bool read, auto g_bitfield>
+Fault
+faultTcr2EL1(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    if (HaveExt(tc, ArmExtension::FEAT_TCR2)) {
+        const SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        const HCRX hcrx = tc->readMiscReg(MISCREG_HCRX_EL2);
+        if (
+            auto fault = faultHcrFgtEL1<read, g_bitfield, &HFGTR::tcrEL1>(
+                entry,
+                tc,inst
+            );
+            fault != NoFault
+           ) {
+            return fault;
+        } else if (EL2Enabled(tc) && (!isHcrxEL2Enabled(tc) || !hcrx.tcr2En)) {
+            return inst.generateTrap(EL2);
+        } else if (ArmSystem::haveEL(tc, EL3) && !scr.tcr2En) {
+            return inst.generateTrap(EL3);
+        } else {
+            return NoFault;
+        }
+    } else {
+        return inst.undefined();
+    }
+}
+
+Fault
+faultTcr2EL2(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    if (HaveExt(tc, ArmExtension::FEAT_TCR2)) {
+        const SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        if (ArmSystem::haveEL(tc, EL3) && !scr.tcr2En) {
+            return inst.generateTrap(EL3);
+        } else {
+            return NoFault;
+        }
+    } else {
+        return inst.undefined();
+    }
+}
+
+Fault
+faultTcr2VheEL2(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    if (HaveExt(tc, ArmExtension::FEAT_TCR2)) {
+        const HCR hcr = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
+        const SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        if (hcr.e2h) {
+            if (ArmSystem::haveEL(tc, EL3) && !scr.tcr2En) {
+                return inst.generateTrap(EL3);
+            } else {
+                return NoFault;
+            }
+        } else {
+            return inst.undefined();
+        }
+    } else {
+        return inst.undefined();
+    }
+}
+
+Fault
+faultTcr2VheEL3(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    if (HaveExt(tc, ArmExtension::FEAT_TCR2)) {
+        const HCR hcr = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
+        const bool el2_host = EL2Enabled(tc) && hcr.e2h;
+        if (el2_host) {
+            return NoFault;
+        } else {
+            return inst.undefined();
+        }
+    } else {
+        return inst.undefined();
     }
 }
 
@@ -4276,7 +4463,9 @@ ISA::initializeMiscRegMetadata()
           isar0_el1.atomic = release->has(ArmExtension::FEAT_LSE) ? 0x2 : 0x0;
           isar0_el1.rdm = release->has(ArmExtension::FEAT_RDM) ? 0x1 : 0x0;
           isar0_el1.tme = release->has(ArmExtension::TME) ? 0x1 : 0x0;
-          isar0_el1.tlb = release->has(ArmExtension::FEAT_TLBIOS) ? 0x1 : 0x0;
+          isar0_el1.tlb = release->has(ArmExtension::FEAT_TLBIRANGE) ?
+              0x2 : release->has(ArmExtension::FEAT_TLBIOS) ?
+                  0x1 : 0x0;
           isar0_el1.ts = release->has(ArmExtension::FEAT_FLAGM2) ?
               0x2 : release->has(ArmExtension::FEAT_FLAGM) ?
                   0x1 : 0x0;
@@ -4330,6 +4519,17 @@ ISA::initializeMiscRegMetadata()
           mmfr2_el1.ids = release->has(ArmExtension::FEAT_IDST) ? 0x1 : 0x0;
           mmfr2_el1.evt = release->has(ArmExtension::FEAT_EVT) ? 0x2 : 0x0;
           return mmfr2_el1;
+      }())
+      .faultRead(EL0, faultIdst)
+      .faultRead(EL1, faultHcrEL1<&HCR::tid3>)
+      .allPrivileges().writes(0);
+    InitReg(MISCREG_ID_AA64MMFR3_EL1)
+      .reset([p,release=release](){
+          AA64MMFR3 mmfr3_el1 = 0;
+          mmfr3_el1.sctlrx =
+            release->has(ArmExtension::FEAT_SCTLR2) ? 0x1 : 0x0;
+          mmfr3_el1.tcrx = release->has(ArmExtension::FEAT_TCR2) ? 0x1 : 0x0;
+          return mmfr3_el1;
       }())
       .faultRead(EL0, faultIdst)
       .faultRead(EL1, faultHcrEL1<&HCR::tid3>)
@@ -4446,6 +4646,15 @@ ISA::initializeMiscRegMetadata()
                      | (nTLSMD ? 0 :  0x8000000)
                      | (LSMAOE ? 0 : 0x10000000))
       .mapsTo(MISCREG_SCTLR_EL1);
+    InitReg(MISCREG_SCTLR2_EL1)
+      .allPrivileges().exceptUserMode()
+      .faultRead(EL1, faultSctlr2EL1<true, &HCR::trvm>)
+      .faultWrite(EL1, faultSctlr2EL1<false, &HCR::tvm>)
+      .fault(EL2,faultSctlr2EL2);
+    InitReg(MISCREG_SCTLR2_EL12)
+      .fault(EL2, faultSctlr2VheEL2)
+      .fault(EL3, defaultFaultE2H_EL3)
+      .mapsTo(MISCREG_SCTLR2_EL1);
     InitReg(MISCREG_ACTLR_EL1)
       .allPrivileges().exceptUserMode()
       .fault(EL1, faultHcrEL1<&HCR::tacr>)
@@ -4469,6 +4678,9 @@ ISA::initializeMiscRegMetadata()
                        | (EnIA   ? 0 : 0x80000000))
       .res1(0x30c50830)
       .mapsTo(MISCREG_HSCTLR);
+    InitReg(MISCREG_SCTLR2_EL2)
+      .hyp().mon()
+      .fault(EL2, faultSctlr2EL2);
     InitReg(MISCREG_ACTLR_EL2)
       .hyp().mon()
       .mapsTo(MISCREG_HACTLR);
@@ -4501,6 +4713,8 @@ ISA::initializeMiscRegMetadata()
                        | (EnIB   ? 0 : 0x40000000)
                        | (EnIA   ? 0 : 0x80000000))
       .res1(0x30c50830);
+    InitReg(MISCREG_SCTLR2_EL3)
+      .mon();
     InitReg(MISCREG_ACTLR_EL3)
       .mon();
     InitReg(MISCREG_SCR_EL3)
@@ -4541,6 +4755,15 @@ ISA::initializeMiscRegMetadata()
       .fault(EL2, defaultFaultE2H_EL2)
       .fault(EL3, defaultFaultE2H_EL3)
       .mapsTo(MISCREG_TTBCR_NS);
+    InitReg(MISCREG_TCR2_EL1)
+      .allPrivileges().exceptUserMode()
+      .faultRead(EL1, faultTcr2EL1<true, &HCR::trvm>)
+      .faultWrite(EL1, faultTcr2EL1<false, &HCR::tvm>)
+      .fault(EL2, faultTcr2EL2);
+    InitReg(MISCREG_TCR2_EL12)
+      .fault(EL2, faultTcr2VheEL2)
+      .fault(EL3, faultTcr2VheEL3)
+      .mapsTo(MISCREG_TCR2_EL1);
     InitReg(MISCREG_TTBR0_EL2)
       .hyp().mon()
       .mapsTo(MISCREG_HTTBR);
@@ -4549,6 +4772,9 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_TCR_EL2)
       .hyp().mon()
       .mapsTo(MISCREG_HTCR);
+    InitReg(MISCREG_TCR2_EL2)
+      .hyp().mon()
+      .fault(EL2, faultTcr2EL2);
     InitReg(MISCREG_VTTBR_EL2)
       .hyp().mon()
       .mapsTo(MISCREG_VTTBR);
@@ -4889,6 +5115,79 @@ ISA::initializeMiscRegMetadata()
       .monSecureWrite().monNonSecureWrite();
     InitReg(MISCREG_TLBI_VALE3_Xt)
       .monSecureWrite().monNonSecureWrite();
+
+    InitReg(MISCREG_TLBI_RVAE1_Xt)
+      .faultWrite(EL1, faultHcrFgtInstEL1<&HCR::ttlb, &HFGITR::tlbirvae1>)
+      .writes(1).exceptUserMode();
+    InitReg(MISCREG_TLBI_RVAAE1_Xt)
+      .faultWrite(EL1, faultHcrFgtInstEL1<&HCR::ttlb, &HFGITR::tlbirvaae1>)
+      .writes(1).exceptUserMode();
+    InitReg(MISCREG_TLBI_RVALE1_Xt)
+      .faultWrite(EL1, faultHcrFgtInstEL1<&HCR::ttlb, &HFGITR::tlbirvale1>)
+      .writes(1).exceptUserMode();
+    InitReg(MISCREG_TLBI_RVAALE1_Xt)
+      .faultWrite(EL1, faultHcrFgtInstEL1<&HCR::ttlb, &HFGITR::tlbirvaale1>)
+      .writes(1).exceptUserMode();
+    InitReg(MISCREG_TLBI_RIPAS2E1_Xt)
+      .hypWrite().monWrite();
+    InitReg(MISCREG_TLBI_RIPAS2LE1_Xt)
+      .hypWrite().monWrite();
+    InitReg(MISCREG_TLBI_RVAE2_Xt)
+      .hypWrite().monWrite();
+    InitReg(MISCREG_TLBI_RVALE2_Xt)
+      .hypWrite().monWrite();
+    InitReg(MISCREG_TLBI_RVAE3_Xt)
+      .monWrite();
+    InitReg(MISCREG_TLBI_RVALE3_Xt)
+      .monWrite();
+    InitReg(MISCREG_TLBI_RVAE1IS_Xt)
+      .faultWrite(EL1, faultTlbiIsEL1<&HFGITR::tlbirvae1is>)
+      .writes(1).exceptUserMode();
+    InitReg(MISCREG_TLBI_RVAAE1IS_Xt)
+      .faultWrite(EL1, faultTlbiIsEL1<&HFGITR::tlbirvaae1is>)
+      .writes(1).exceptUserMode();
+    InitReg(MISCREG_TLBI_RVALE1IS_Xt)
+      .faultWrite(EL1, faultTlbiIsEL1<&HFGITR::tlbirvale1is>)
+      .writes(1).exceptUserMode();
+    InitReg(MISCREG_TLBI_RVAALE1IS_Xt)
+      .faultWrite(EL1, faultTlbiIsEL1<&HFGITR::tlbirvaale1is>)
+      .writes(1).exceptUserMode();
+    InitReg(MISCREG_TLBI_RIPAS2E1IS_Xt)
+      .hypWrite().monWrite();
+    InitReg(MISCREG_TLBI_RIPAS2LE1IS_Xt)
+      .hypWrite().monWrite();
+    InitReg(MISCREG_TLBI_RVAE2IS_Xt)
+      .hypWrite().monWrite();
+    InitReg(MISCREG_TLBI_RVALE2IS_Xt)
+      .hypWrite().monWrite();
+    InitReg(MISCREG_TLBI_RVAE3IS_Xt)
+      .monWrite();
+    InitReg(MISCREG_TLBI_RVALE3IS_Xt)
+      .monWrite();
+    InitReg(MISCREG_TLBI_RVAE1OS_Xt)
+      .faultWrite(EL1, faultTlbiOsEL1<&HFGITR::tlbirvae1os>)
+      .writes(1).exceptUserMode();
+    InitReg(MISCREG_TLBI_RVAAE1OS_Xt)
+      .faultWrite(EL1, faultTlbiOsEL1<&HFGITR::tlbirvaae1os>)
+      .writes(1).exceptUserMode();
+    InitReg(MISCREG_TLBI_RVALE1OS_Xt)
+      .faultWrite(EL1, faultTlbiOsEL1<&HFGITR::tlbirvale1os>)
+      .writes(1).exceptUserMode();
+    InitReg(MISCREG_TLBI_RVAALE1OS_Xt)
+      .faultWrite(EL1, faultTlbiOsEL1<&HFGITR::tlbirvaale1os>)
+      .writes(1).exceptUserMode();
+    InitReg(MISCREG_TLBI_RIPAS2E1OS_Xt)
+      .hypWrite().monWrite();
+    InitReg(MISCREG_TLBI_RIPAS2LE1OS_Xt)
+      .hypWrite().monWrite();
+    InitReg(MISCREG_TLBI_RVAE2OS_Xt)
+      .hypWrite().monWrite();
+    InitReg(MISCREG_TLBI_RVALE2OS_Xt)
+      .hypWrite().monWrite();
+    InitReg(MISCREG_TLBI_RVAE3OS_Xt)
+      .monWrite();
+    InitReg(MISCREG_TLBI_RVALE3OS_Xt)
+      .monWrite();
     InitReg(MISCREG_PMINTENSET_EL1)
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_PMINTENSET);
