@@ -619,6 +619,7 @@ def construct_gpudirs(options, system, ruby_system, network):
         dir_cntrl.create(options, [addr_range], ruby_system, system)
         dir_cntrl.number_of_TBEs = options.num_tbes
         dir_cntrl.useL3OnWT = False
+        dir_cntrl.L2isWB = options.WB_L2
 
         # Connect the Directory controller to the ruby network
         dir_cntrl.requestFromCores = MessageBuffer(ordered=True)
