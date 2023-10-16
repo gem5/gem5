@@ -38,8 +38,8 @@ Once you have all dependencies resolved, execute
 `scons build/ALL/gem5.opt` to build an optimized version of the gem5 binary
 (`gem5.opt`) containing all gem5 ISAs. If you only wish to compile gem5 to
 include a single ISA, you can replace `ALL` with the name of the ISA. Valid
-options include `ARM`, `NULL`, `MIPS`, `POWER`, `SPARC`, and `X86` The complete
-list of options can be found in the build_opts directory.
+options include `ARM`, `NULL`, `MIPS`, `POWER`, `RISCV`, `SPARC`, and `X86`
+The complete list of options can be found in the build_opts directory.
 
 See https://www.gem5.org/documentation/general_docs/building for more
 information on building gem5.
