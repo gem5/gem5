@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010, 2012-2013 ARM Limited
+// Copyright (c) 2010, 2012-2013, 2023 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -47,7 +47,8 @@ let {{
                                  { "code": gem5OpCode % "RegABI64" +
                                    'X0 = ret;',
                                    "predicate_test": predicateTest },
-                                 [ "IsNonSpeculative", "IsUnverifiable" ]);
+                                 [ "IsNonSpeculative", "IsUnverifiable",
+                                   "IsPseudo" ]);
     header_output += BasicDeclare.subst(gem5OpIop)
     decoder_output += BasicConstructor.subst(gem5OpIop)
     exec_output += PredOpExecute.subst(gem5OpIop)
@@ -57,7 +58,8 @@ let {{
                                    'R0 = bits(ret, 31, 0);\n' + \
                                    'R1 = bits(ret, 63, 32);',
                                    "predicate_test": predicateTest },
-                                 [ "IsNonSpeculative", "IsUnverifiable" ]);
+                                 [ "IsNonSpeculative", "IsUnverifiable",
+                                   "IsPseudo" ]);
     header_output += BasicDeclare.subst(gem5OpIop)
     decoder_output += BasicConstructor.subst(gem5OpIop)
     exec_output += PredOpExecute.subst(gem5OpIop)
