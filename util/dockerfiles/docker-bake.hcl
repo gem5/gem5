@@ -187,4 +187,3 @@ target "gem5-all-min-dependencies" {
   context = "gem5-all-min-dependencies"
   tags = ["${IMAGE_URI}/gem5-all-min-dependencies:${TAG}"]
 }
-
