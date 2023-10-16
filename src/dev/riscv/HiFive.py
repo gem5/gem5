@@ -251,7 +251,7 @@ class HiFive(HiFiveBase):
     def annotateCpuDeviceNode(self, cpu, state):
         cpu.append(FdtPropertyStrings("mmu-type", "riscv,sv48"))
         cpu.append(FdtPropertyStrings("status", "okay"))
-        cpu.append(FdtPropertyStrings("riscv,isa", "rv64imafdcsu"))
+        cpu.append(FdtPropertyStrings("riscv,isa", "rv64imafdc"))
         cpu.appendCompatible(["riscv"])
 
         int_node = FdtNode("interrupt-controller")

@@ -316,7 +316,7 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
             node.append(FdtPropertyWords("reg", state.CPUAddrCells(i)))
             node.append(FdtPropertyStrings("mmu-type", "riscv,sv48"))
             node.append(FdtPropertyStrings("status", "okay"))
-            node.append(FdtPropertyStrings("riscv,isa", "rv64imafdcsu"))
+            node.append(FdtPropertyStrings("riscv,isa", "rv64imafdc"))
             # TODO: Should probably get this from the core.
             freq = self.clk_domain.clock[0].frequency
             node.appendCompatible(["riscv"])
