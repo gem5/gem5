@@ -565,7 +565,6 @@ ArmFault::invoke32(ThreadContext *tc, const StaticInstPtr &inst)
         cpsr.i = 1;
     }
     cpsr.it1 = cpsr.it2 = 0;
-    cpsr.j = 0;
     cpsr.pan = span ? 1 : saved_cpsr.pan;
     tc->setMiscReg(MISCREG_CPSR, cpsr);
 
@@ -622,8 +621,6 @@ ArmFault::invoke32(ThreadContext *tc, const StaticInstPtr &inst)
     PCState pc(new_pc);
     pc.thumb(cpsr.t);
     pc.nextThumb(pc.thumb());
-    pc.jazelle(cpsr.j);
-    pc.nextJazelle(pc.jazelle());
     pc.aarch64(!cpsr.width);
     pc.nextAArch64(!cpsr.width);
     pc.illegalExec(false);
@@ -666,7 +663,6 @@ ArmFault::invoke64(ThreadContext *tc, const StaticInstPtr &inst)
         // Force some bitfields to 0
         spsr.q = 0;
         spsr.it1 = 0;
-        spsr.j = 0;
         spsr.ge = 0;
         spsr.it2 = 0;
         spsr.t = 0;

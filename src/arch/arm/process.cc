@@ -169,7 +169,7 @@ ArmProcess32::armHwcapImpl() const
     };
 
     return Arm_Swp | Arm_Half | Arm_Thumb | Arm_FastMult |
-           Arm_Vfp | Arm_Edsp | Arm_ThumbEE | Arm_Neon |
+           Arm_Vfp | Arm_Edsp | Arm_Neon |
            Arm_Vfpv3 | Arm_Vfpv3d16;
 }
 

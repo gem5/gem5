@@ -212,10 +212,6 @@ def format Thumb32BranchesAndMiscCtrl() {{
                     {
                         const uint32_t op = bits(machInst, 7, 4);
                         switch (op) {
-                          case 0x0:
-                            return new Leavex(machInst);
-                          case 0x1:
-                            return new Enterx(machInst);
                           case 0x2:
                             return new Clrex(machInst);
                           case 0x4:

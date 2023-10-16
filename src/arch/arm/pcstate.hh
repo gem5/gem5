@@ -75,7 +75,6 @@ class PCState : public GenericISA::UPCState<4>
     enum FlagBits
     {
         ThumbBit = (1 << 0),
-        JazelleBit = (1 << 1),
         AArch64Bit = (1 << 2)
     };
 
@@ -203,36 +202,6 @@ class PCState : public GenericISA::UPCState<4>
 
 
     bool
-    jazelle() const
-    {
-        return flags & JazelleBit;
-    }
-
-    void
-    jazelle(bool val)
-    {
-        if (val)
-            flags |= JazelleBit;
-        else
-            flags &= ~JazelleBit;
-    }
-
-    bool
-    nextJazelle() const
-    {
-        return nextFlags & JazelleBit;
-    }
-
-    void
-    nextJazelle(bool val)
-    {
-        if (val)
-            nextFlags |= JazelleBit;
-        else
-            nextFlags &= ~JazelleBit;
-    }
-
-    bool
     aarch64() const
     {
         return flags & AArch64Bit;
@@ -354,29 +323,18 @@ class PCState : public GenericISA::UPCState<4>
     void
     instIWNPC(Addr val)
     {
-        bool thumbEE = (thumb() && jazelle());
-
-        Addr newPC = val;
-        if (thumbEE) {
-            if (bits(newPC, 0)) {
-                newPC = newPC & ~mask(1);
-            }  // else we have a bad interworking address; do not call
-               // panic() since the instruction could be executed
-               // speculatively
+        if (bits(val, 0)) {
+            nextThumb(true);
+            val = val & ~mask(1);
+        } else if (!bits(val, 1)) {
+            nextThumb(false);
         } else {
-            if (bits(newPC, 0)) {
-                nextThumb(true);
-                newPC = newPC & ~mask(1);
-            } else if (!bits(newPC, 1)) {
-                nextThumb(false);
-            } else {
-                // This state is UNPREDICTABLE in the ARM architecture
-                // The easy thing to do is just mask off the bit and
-                // stay in the current mode, so we'll do that.
-                newPC &= ~mask(2);
-            }
+            // This state is UNPREDICTABLE in the ARM architecture
+            // The easy thing to do is just mask off the bit and
+            // stay in the current mode, so we'll do that.
+            val &= ~mask(2);
         }
-        npc(newPC);
+        npc(val);
     }
 
     // Perform an interworking branch in ARM mode, a regular branch
@@ -384,7 +342,7 @@ class PCState : public GenericISA::UPCState<4>
     void
     instAIWNPC(Addr val)
     {
-        if (!thumb() && !jazelle())
+        if (!thumb())
             instIWNPC(val);
         else
             instNPC(val);
