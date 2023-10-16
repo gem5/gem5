@@ -286,7 +286,7 @@ class TraceCPU : public ClockedObject
     };
 
     /** Cache the cache line size that we get from the system */
-    const unsigned int cacheLineSize;
+    const Addr cacheLineSize;
 
     /** Port to connect to L1 instruction cache. */
     IcachePort icachePort;

@@ -268,7 +268,6 @@ let {{
             CondCodesGE = new_cpsr.ge;
 
             NextThumb = (new_cpsr).t;
-            NextJazelle = (new_cpsr).j;
             NextItState = (((new_cpsr).it2 << 2) & 0xFC)
                 | ((new_cpsr).it1 & 0x3);
             SevMailbox = 1;

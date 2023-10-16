@@ -187,7 +187,7 @@ class DmaPort : public RequestPort, public Drainable
     /** Default substreamId */
     const uint32_t defaultSSid;
 
-    const int cacheLineSize;
+    const Addr cacheLineSize;
 
   protected:
 
@@ -257,7 +257,7 @@ class DmaDevice : public PioDevice
 
     void init() override;
 
-    unsigned int cacheBlockSize() const { return sys->cacheLineSize(); }
+    Addr cacheBlockSize() const { return sys->cacheLineSize(); }
 
     Port &getPort(const std::string &if_name,
                   PortID idx=InvalidPortID) override;
@@ -526,7 +526,7 @@ class DmaReadFifo : public Drainable, public Serializable
 
     DmaPort &port;
 
-    const int cacheLineSize;
+    const Addr cacheLineSize;
 
   private:
     class DmaDoneEvent : public Event

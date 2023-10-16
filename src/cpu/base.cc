@@ -257,8 +257,8 @@ BaseCPU::mwait(ThreadID tid, PacketPtr pkt)
     AddressMonitor &monitor = addressMonitor[tid];
 
     if (!monitor.gotWakeup) {
-        int block_size = cacheLineSize();
-        uint64_t mask = ~((uint64_t)(block_size - 1));
+        Addr block_size = cacheLineSize();
+        Addr mask = ~(block_size - 1);
 
         assert(pkt->req->hasPaddr());
         monitor.pAddr = pkt->getAddr() & mask;
@@ -282,8 +282,8 @@ BaseCPU::mwaitAtomic(ThreadID tid, ThreadContext *tc, BaseMMU *mmu)
     RequestPtr req = std::make_shared<Request>();
 
     Addr addr = monitor.vAddr;
-    int block_size = cacheLineSize();
-    uint64_t mask = ~((uint64_t)(block_size - 1));
+    Addr block_size = cacheLineSize();
+    Addr mask = ~(block_size - 1);
     int size = block_size;
 
     //The address of the next line if it crosses a cache line boundary.

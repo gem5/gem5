@@ -1929,13 +1929,14 @@ faultSctlr2EL1(const MiscRegLUTEntry &entry,
         const SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
         const HCRX hcrx = tc->readMiscReg(MISCREG_HCRX_EL2);
         if (
-            auto fault = faultHcrFgtEL1<read, g_bitfield, &HFGTR::sctlrEL1>(
-                entry,
-                tc
-                inst
-            );
-            fault != NoFault
-           ) {
+                auto fault = faultHcrFgtEL1<read, g_bitfield, &HFGTR::sctlrEL1>
+                (
+                    entry,
+                    tc,
+                    inst
+                );
+                fault != NoFault
+        ) {
             return fault;
         } else if (
                     EL2Enabled(tc) &&(!isHcrxEL2Enabled(tc) || !hcrx.sctlr2En)
@@ -1997,12 +1998,14 @@ faultTcr2EL1(const MiscRegLUTEntry &entry,
         const SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
         const HCRX hcrx = tc->readMiscReg(MISCREG_HCRX_EL2);
         if (
-            auto fault = faultHcrFgtEL1<read, g_bitfield, &HFGTR::tcrEL1>(
-                entry,
-                tc,inst
-            );
-            fault != NoFault
-           ) {
+                auto fault = faultHcrFgtEL1<read, g_bitfield, &HFGTR::sctlrEL1>
+                (
+                    entry,
+                    tc,
+                    inst
+                );
+                fault != NoFault
+        ) {
             return fault;
         } else if (EL2Enabled(tc) && (!isHcrxEL2Enabled(tc) || !hcrx.tcr2En)) {
             return inst.generateTrap(EL2);
@@ -4501,7 +4504,8 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_ID_AA64MMFR1_EL1)
       .reset([p,release=release](){
           AA64MMFR1 mmfr1_el1 = p.id_aa64mmfr1_el1;
-          mmfr1_el1.vmidbits = release->has(ArmExtension::FEAT_VMID16) ? 0x2 : 0x0;
+          mmfr1_el1.vmidbits =
+            release->has(ArmExtension::FEAT_VMID16) ? 0x2 : 0x0;
           mmfr1_el1.vh = release->has(ArmExtension::FEAT_VHE) ? 0x1 : 0x0;
           mmfr1_el1.hpds = release->has(ArmExtension::FEAT_HPDS) ? 0x1 : 0x0;
           mmfr1_el1.pan = release->has(ArmExtension::FEAT_PAN) ? 0x1 : 0x0;

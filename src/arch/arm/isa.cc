@@ -407,7 +407,6 @@ ISA::readMiscReg(RegIndex idx)
     if (idx == MISCREG_CPSR) {
         cpsr = miscRegs[idx];
         auto pc = tc->pcState().as<PCState>();
-        cpsr.j = pc.jazelle() ? 1 : 0;
         cpsr.t = pc.thumb() ? 1 : 0;
         return cpsr;
     }
@@ -678,7 +677,6 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                 miscRegs[idx], cpsr, cpsr.f, cpsr.i, cpsr.a, cpsr.mode);
         PCState pc = tc->pcState().as<PCState>();
         pc.nextThumb(cpsr.t);
-        pc.nextJazelle(cpsr.j);
         pc.illegalExec(cpsr.il == 1);
         selfDebug->setDebugMask(cpsr.d == 1);
 

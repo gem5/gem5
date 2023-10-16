@@ -54,7 +54,7 @@ namespace ArmISA
         Bitfield<28> v;
         Bitfield<27> q;
         Bitfield<26, 25> it1;
-        Bitfield<24> j;
+        Bitfield<24> dit;       // AArch64
         Bitfield<23> uao;       // AArch64
         Bitfield<22> pan;
         Bitfield<21> ss;        // AArch64
@@ -457,8 +457,6 @@ namespace ArmISA
         Bitfield<7>    itd;     // IT disable
                                 // (ARMv8 AArch32 and AArch64 SCTLR_EL1 only)
         Bitfield<6, 3> rao4;    // Read as one
-        Bitfield<6>    thee;    // ThumbEE enable
-                                // (ARMv8 AArch32 and AArch64 SCTLR_EL1 only)
         Bitfield<5>    cp15ben; // CP15 barrier enable
                                 // (AArch32 and AArch64 SCTLR_EL1 only)
         Bitfield<4>    sa0;     // Stack Alignment Check Enable for EL0

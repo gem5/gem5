@@ -302,7 +302,7 @@ class SnoopFilter : public SimObject
     /** Track the mapping from port ids to the local mask ids. */
     std::vector<PortID> localResponsePortIds;
     /** Cache line size. */
-    const unsigned linesize;
+    const Addr linesize;
     /** Latency for doing a lookup in the filter */
     const Cycles lookupLatency;
     /** Max capacity in terms of cache blocks tracked, for sanity checking */

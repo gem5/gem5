@@ -96,7 +96,7 @@ namespace ArmISA
         MISCREG_SEV_MAILBOX,
         MISCREG_TLBINEEDSYNC,
 
-        // AArch32 CP14 registers (debug/trace/ThumbEE/Jazelle control)
+        // AArch32 CP14 registers (debug/trace control)
         MISCREG_DBGDIDR,
         MISCREG_DBGDSCRint,
         MISCREG_DBGDCCINT,

@@ -114,10 +114,6 @@ class sc_port_base : public sc_object
     virtual sc_port_policy _portPolicy() const = 0;
 };
 
-// The overloaded virtual is intended in SystemC, so we'll disable the warning.
-// Please check section 9.3 of SystemC 2.3.1 release note for more details.
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Woverloaded-virtual"
 template <class IF>
 class sc_port_b : public sc_port_base
 {
@@ -248,7 +244,6 @@ class sc_port_b : public sc_port_base
     sc_port_b(const sc_port_b<IF> &) {}
     sc_port_b<IF> &operator = (const sc_port_b<IF> &) { return *this; }
 };
-#pragma GCC diagnostic pop
 
 template <class IF, int N=1, sc_port_policy P=SC_ONE_OR_MORE_BOUND>
 class sc_port : public sc_port_b<IF>
