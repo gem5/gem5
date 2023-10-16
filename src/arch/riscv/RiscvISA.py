@@ -13,6 +13,7 @@
 #
 # Copyright (c) 2016 RISC-V Foundation
 # Copyright (c) 2016 The University of Virginia
+# Copyright (c) 2023 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -94,3 +95,18 @@ class RiscvISA(BaseISA):
         "Length of each vector element in bits. \
         ELEN in Ch. 2 of RISC-V vector spec",
     )
+
+    def get_isa_string(self):
+        isa_extensions = []
+        # check for the base ISA type
+        if self.riscv_type.value == "RV32":
+            isa_extensions.append("rv32")
+        elif self.riscv_type.value == "RV64":
+            isa_extensions.append("rv64")
+        # use imafdc by default
+        isa_extensions.extend(["i", "m", "a", "f", "d", "c"])
+        # check for the vector extension
+        if self.enable_rvv.value == True:
+            isa_extensions.append("v")
+        isa_string = "".join(isa_extensions)
+        return isa_string
