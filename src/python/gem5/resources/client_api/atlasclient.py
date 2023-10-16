@@ -30,7 +30,6 @@ import json
 import time
 import itertools
 from .abstract_client import AbstractClient
-from urllib.error import HTTPError
 from m5.util import warn
 
 
@@ -122,7 +121,7 @@ class AtlasClient(AbstractClient):
             try:
                 response = request.urlopen(req)
                 break
-            except HTTPError as e:
+            except Exception as e:
                 if attempt >= max_failed_attempts:
                     raise AtlasClientHttpJsonRequestError(
                         client=self,
