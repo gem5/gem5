@@ -144,7 +144,7 @@ class MemTest : public ClockedObject
     // store the expected value for the addresses we have touched
     std::unordered_map<Addr, uint8_t> referenceData;
 
-    const unsigned blockSize;
+    const Addr blockSize;
 
     const Addr blockAddrMask;
 

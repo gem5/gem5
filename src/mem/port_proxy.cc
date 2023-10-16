@@ -44,12 +44,12 @@
 namespace gem5
 {
 
-PortProxy::PortProxy(ThreadContext *tc, unsigned int cache_line_size) :
+PortProxy::PortProxy(ThreadContext *tc, Addr cache_line_size) :
     PortProxy([tc](PacketPtr pkt)->void { tc->sendFunctional(pkt); },
         cache_line_size)
 {}
 
-PortProxy::PortProxy(const RequestPort &port, unsigned int cache_line_size) :
+PortProxy::PortProxy(const RequestPort &port, Addr cache_line_size) :
     PortProxy([&port](PacketPtr pkt)->void { port.sendFunctional(pkt); },
         cache_line_size)
 {}
