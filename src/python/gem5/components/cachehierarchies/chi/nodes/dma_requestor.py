@@ -58,8 +58,8 @@ class DMARequestor(AbstractNode):
         self.alloc_on_writeback = False
         self.dealloc_on_unique = False
         self.dealloc_on_shared = False
-        self.dealloc_backinv_unique = True
-        self.dealloc_backinv_shared = True
+        self.dealloc_backinv_unique = False
+        self.dealloc_backinv_shared = False
 
         self.send_evictions = False
         self.use_prefetcher = False
