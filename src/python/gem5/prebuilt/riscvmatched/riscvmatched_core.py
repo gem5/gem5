@@ -214,3 +214,4 @@ class U74Core(BaseCPUCore):
         core_id,
     ):
         super().__init__(core=U74CPU(cpu_id=core_id), isa=ISA.RISCV)
+        self.core.isa[0].enable_rvv = False
