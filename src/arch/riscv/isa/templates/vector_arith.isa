@@ -168,6 +168,9 @@ Fault
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
 
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
+
     %(op_decl)s;
     %(op_rd)s;
     %(vm_decl_rd)s;
@@ -246,6 +249,9 @@ Fault
 
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
 
     auto SEW = vtype_SEW(vtype);
     auto offset = (VLEN / SEW) * (microIdx % %(ext_div)d);
@@ -412,6 +418,10 @@ Fault
 
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
+
     const int64_t vlmul = vtype_vlmul(machInst.vtype8);
     const int32_t t_micro_vlmax = vtype_VLMAX(machInst.vtype8, true);
     const int32_t micro_vlmax = vlmul < 0 ? t_micro_vlmax : t_micro_vlmax / 2;
@@ -451,6 +461,10 @@ Fault
 
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
+
     const int64_t vlmul = vtype_vlmul(machInst.vtype8);
     const int32_t t_micro_vlmax = vtype_VLMAX(machInst.vtype8, true);
     const int32_t micro_vlmax = vlmul < 0 ? t_micro_vlmax : t_micro_vlmax / 2;
@@ -577,6 +591,9 @@ Fault
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
 
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
+
     VRM_REQUIRED;
 
     %(op_decl)s;
@@ -671,6 +688,9 @@ Fault
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
 
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
+
     VRM_REQUIRED;
 
     const int64_t vlmul = vtype_vlmul(machInst.vtype8);
@@ -711,6 +731,9 @@ Fault
 
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
 
     VRM_REQUIRED;
 
@@ -842,6 +865,10 @@ Fault
     }
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
+
     %(op_decl)s;
     %(op_rd)s;
     %(vm_decl_rd)s;
@@ -883,8 +910,13 @@ Fault
         return std::make_shared<IllegalInstFault>(
             "RVV is disabled or VPU is off", machInst);
     }
+
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
+
     %(op_decl)s;
     %(op_rd)s;
     %(vm_decl_rd)s;
@@ -941,8 +973,13 @@ Fault
         return std::make_shared<IllegalInstFault>(
             "RVV is disabled or VPU is off", machInst);
     }
+
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
+
     %(op_rd)s;
     uint64_t Rd = 0;
     %(vm_decl_rd)s;
@@ -1053,8 +1090,12 @@ Fault
         return std::make_shared<IllegalInstFault>(
             "RVV is disabled or VPU is off", machInst);
     }
+
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
 
     %(op_decl)s;
     %(op_rd)s;
@@ -1170,8 +1211,12 @@ Fault
         return std::make_shared<IllegalInstFault>(
             "RVV is disabled or VPU is off", machInst);
     }
+
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
 
     %(op_decl)s;
     %(op_rd)s;
@@ -1265,10 +1310,14 @@ Fault
     // TODO: If vd is equal to vs2 the instruction is an architectural NOP.
     MISA misa = xc->readMiscReg(MISCREG_ISA);
     STATUS status = xc->readMiscReg(MISCREG_STATUS);
+
     if (!misa.rvv || status.vs == VPUStatus::OFF) {
         return std::make_shared<IllegalInstFault>(
             "RVV is disabled or VPU is off", machInst);
     }
+
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
 
     %(op_decl)s;
     %(op_rd)s;
@@ -1326,6 +1375,9 @@ Fault
 
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
 
     %(op_decl)s;
     %(op_rd)s;
@@ -1388,8 +1440,13 @@ Fault
         return std::make_shared<IllegalInstFault>(
             "RVV is disabled or VPU is off", machInst);
     }
+
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
+
     %(op_decl)s;
     %(op_rd)s;
     %(vm_decl_rd)s;
@@ -1415,8 +1472,13 @@ Fault
         return std::make_shared<IllegalInstFault>(
             "RVV is disabled or VPU is off", machInst);
     }
+
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
+
     %(op_decl)s;
     %(op_rd)s;
     %(vm_decl_rd)s;
@@ -1521,8 +1583,13 @@ Fault
         return std::make_shared<IllegalInstFault>(
             "RVV is disabled or VPU is off", machInst);
     }
+
+
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
 
     %(op_decl)s;
     %(op_rd)s;
@@ -1562,8 +1629,12 @@ Fault
         return std::make_shared<IllegalInstFault>(
             "RVV is disabled or VPU is off", machInst);
     }
+
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
 
     %(op_decl)s;
     %(op_rd)s;
@@ -1605,8 +1676,12 @@ Fault
         return std::make_shared<IllegalInstFault>(
             "RVV is disabled or VPU is off", machInst);
     }
+
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
 
     %(op_decl)s;
     %(op_rd)s;
@@ -1755,8 +1830,12 @@ Fault
         return std::make_shared<IllegalInstFault>(
             "RVV is disabled or VPU is off", machInst);
     }
+
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
 
     %(op_decl)s;
     %(op_rd)s;
@@ -1919,8 +1998,12 @@ Fault
         return std::make_shared<IllegalInstFault>(
             "RVV is disabled or VPU is off", machInst);
     }
+
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
 
     %(op_decl)s;
     %(op_rd)s;
@@ -2084,8 +2167,13 @@ Fault
         return std::make_shared<IllegalInstFault>(
             "RVV is disabled or VPU is off", machInst);
     }
+
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
+
     [[maybe_unused]]const uint32_t vlmax = vtype_VLMAX(vtype);
 
     %(op_decl)s;
@@ -2115,8 +2203,13 @@ Fault
         return std::make_shared<IllegalInstFault>(
             "RVV is disabled or VPU is off", machInst);
     }
+
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
+
     [[maybe_unused]]const uint32_t vlmax = vtype_VLMAX(vtype);
 
     %(op_decl)s;
