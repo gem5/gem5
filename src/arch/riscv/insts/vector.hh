@@ -74,7 +74,9 @@ class VConfOp : public RiscvStaticInst
           zimm10(_extMachInst.zimm_vsetivli),
           zimm11(_extMachInst.zimm_vsetvli),
           uimm(_extMachInst.uimm_vsetivli)
-    {}
+    {
+        this->flags[IsVector] = true;
+    }
 
     std::string generateDisassembly(
         Addr pc, const loader::SymbolTable *symtab) const override;
