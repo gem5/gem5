@@ -11,6 +11,9 @@ from helper import (
     get_database,
     save_file,
     get_fields,
+    get_latest_resource,
+    get_updated_rsource_version,
+    update_resource,
 )
 import helper
 
@@ -81,23 +84,24 @@ def cli():
     )
     resource_validator_parser.set_defaults(func=validate_resources)
 
-    resource_creator_parser = subparsers.add_parser("updateResources")
-    resource_creator_parser.add_argument(
+    resource_updater_parser = subparsers.add_parser("updateResources")
+    resource_updater_parser.add_argument(
         "id", type=str, help="id of resource to that was just updated"
     )
-    resource_creator_parser.add_argument(
-        "resource_version",
-        type=str,
-        help="resource_version of resource to that was just updated",
+    resource_updater_parser.add_argument(
+        "--update-non-existing-fields",
+        "-u",
+        action="store_true",
+        help="update fields that are not defined in the JSON object",
     )
-
-    resource_creator_parser.add_argument(
+    resource_updater_parser.add_argument(
         "--output",
         "-o",
         type=str,
         help="output file",
         default="resources.json",
     )
+    resource_updater_parser.set_defaults(func=update_resources)
     args = parser.parse_args()
     args.func(args)
 
@@ -136,6 +140,17 @@ def create_resources(args):
     if not args.ignore_schema_validation:
         validate_resources([resource])
     save_file(resource, args.output)
+
+
+def update_resources(args):
+    resource = get_latest_resource(args.id)[0]
+    new_resource_version = get_updated_rsource_version(
+        resource["resource_version"]
+    )
+    updated_resource = update_resource(
+        resource, new_resource_version, args.update_non_existing_fields
+    )
+    save_file(updated_resource, args.output)
 
 
 if __name__ == "__main__":

@@ -15,8 +15,6 @@ import ast
 load_dotenv()
 MONGO_URI = os.getenv("MONGO_URI")
 
-collection = None
-
 
 def get_database(collection="versions_test", uri=MONGO_URI, db="gem5-vision"):
     """
@@ -30,6 +28,9 @@ def get_database(collection="versions_test", uri=MONGO_URI, db="gem5-vision"):
         print("\nCould not connect to MongoDB")
         exit(1)
     return client[db][collection]
+
+
+collection = get_database()
 
 
 def validate_resources(resources: List) -> bool:
@@ -187,3 +188,83 @@ def get_fields(category, schema):
         optional["architecture"] = schema["definitions"]["architecture"]
 
     return required, optional
+
+
+def get_latest_resource(id):
+    resource = (
+        collection.find(
+            {
+                "id": id,
+            },
+            {"_id": 0},
+        )
+        .sort("resource_version", -1)
+        .limit(1)
+    )
+
+    json_resource = json_util.dumps(resource)
+    res = json.loads(json_resource)
+    return res
+
+
+def get_updated_rsource_version(current_resource_version):
+    is_update = input("Is the resource version being updated? (Y/N): ")
+    if is_update.lower() == "y":
+        version_subparts = current_resource_version.split(".")
+        version_subparts[0] = str(int(version_subparts[0]) + 1)
+        new_version = (
+            version_subparts[0]
+            + "."
+            + version_subparts[1]
+            + "."
+            + version_subparts[2]
+        )
+        return new_version
+    return current_resource_version
+
+
+def update_resource(
+    resource, new_resource_version, update_non_existing_fields
+):
+    updated_resource = {}
+    print(resource)
+    for field_key, field_value in resource.items():
+        if field_key == "resource_version":
+            updated_resource[field_key] = new_resource_version
+            print(f"{field_key}: {updated_resource[field_key]}")
+            continue
+        print(f"\n\nCurrent value of {field_key}")
+        print(f"{field_key}: {field_value}")
+        is_updated = input("Do you want to update this field? (Y/N): ")
+        if is_updated.lower() == "y":
+            updated_resource[field_key] = input(
+                f"Enter new value for {field_key}: "
+            )
+        else:
+            updated_resource[field_key] = field_value
+
+    if update_non_existing_fields:
+        print("\n\nUpdating non-existing fields\n\n")
+        _, optional_fields = get_fields(
+            resource["category"],
+            json.loads(
+                requests.get(
+                    "https://resources.gem5.org/gem5-resources-schema.json"
+                ).content
+            ),
+        )
+        for optional_field in optional_fields.keys():
+            if optional_field not in resource.keys():
+                print(
+                    f"Update the following optional field: {optional_field}? (Y/N):"
+                )
+                if input().lower() != "y":
+                    continue
+                print(
+                    f"The {optional_field} takes the following input: {json.dumps(optional_fields[optional_field], indent=4)}"
+                )
+                updated_resource[optional_field] = input(
+                    f"Enter value for {optional_field}: "
+                )
+
+    return updated_resource
