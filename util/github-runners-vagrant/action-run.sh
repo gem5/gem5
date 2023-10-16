@@ -77,5 +77,5 @@ while true; do
 
     # 4. Cleanup the machine
     rm -rf "${WORK_DIR}"
-    docker system prune --force --volumes
+    docker system prune --force --volumes --all
 done
