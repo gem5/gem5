@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2016 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2016, 2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -202,15 +202,14 @@ class Interrupts : public BaseInterrupts
     uint32_t
     getISR(HCR hcr, CPSR cpsr, SCR scr)
     {
-        bool useHcrMux;
+        bool use_hcr_mux = currEL(cpsr) < EL2 && EL2Enabled(tc);
         ISR isr = 0;
 
-        useHcrMux = (cpsr.mode != MODE_HYP) && !isSecure(tc);
-        isr.i = (useHcrMux & hcr.imo) ? (interrupts[INT_VIRT_IRQ] || hcr.vi)
-                                      :  interrupts[INT_IRQ];
-        isr.f = (useHcrMux & hcr.fmo) ? (interrupts[INT_VIRT_FIQ] || hcr.vf)
-                                      :  interrupts[INT_FIQ];
-        isr.a = (useHcrMux & hcr.amo) ?  hcr.va : interrupts[INT_ABT];
+        isr.i = (use_hcr_mux & hcr.imo) ? (interrupts[INT_VIRT_IRQ] || hcr.vi)
+                                        :  interrupts[INT_IRQ];
+        isr.f = (use_hcr_mux & hcr.fmo) ? (interrupts[INT_VIRT_FIQ] || hcr.vf)
+                                        :  interrupts[INT_FIQ];
+        isr.a = (use_hcr_mux & hcr.amo) ?  hcr.va : interrupts[INT_ABT];
         return isr;
     }
 
