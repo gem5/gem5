@@ -96,6 +96,7 @@ if args.riscv_32bits:
     for simple_core in processor.cores:
         for i in range(len(simple_core.core.isa)):
             simple_core.core.isa[i].riscv_type = "RV32"
+            simple_core.core.isa[i].enable_rvv = False
 
 motherboard = SimpleBoard(
     clk_freq="3GHz",
