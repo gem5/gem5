@@ -293,22 +293,30 @@ doSimLoop(EventQueue *eventq)
         assert(curTick() <= eventq->nextTick() &&
                "event scheduled in the past");
 
-        if (mainQueue && async_event) {
+        if (async_event) {
             async_event = false;
-            // Take the event queue lock in case any of the service
-            // routines want to schedule new events.
-            std::lock_guard<EventQueue> lock(*eventq);
-            if (async_statdump || async_statreset) {
-                statistics::schedStatEvent(async_statdump, async_statreset);
-                async_statdump = false;
-                async_statreset = false;
+
+            if (mainQueue) {
+                // Take the event queue lock in case any of the service
+                // routines want to schedule new events.
+                std::lock_guard<EventQueue> lock(*eventq);
+                if (async_statdump || async_statreset) {
+                    statistics::schedStatEvent(async_statdump,
+                                               async_statreset);
+                    async_statdump = false;
+                    async_statreset = false;
+                }
+
+                if (async_io) {
+                    async_io = false;
+                    pollQueue.service();
+                }
             }
 
-            if (async_io) {
-                async_io = false;
-                pollQueue.service();
-            }
-
+            // Whether or not we're executing events on the main queue, we
+            // should exit on ctrl-c or an exception. For instance, it is
+            // required to have the check separate when restoring from a
+            // checkpoint in Ruby.
             if (async_exit) {
                 async_exit = false;
                 exitSimLoop("user interrupt received");
