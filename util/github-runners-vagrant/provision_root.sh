@@ -56,7 +56,8 @@ apt-get install -y \
   apt-transport-https ca-certificates \
   curl \
   gnupg \
-  lsb-release
+  lsb-release \
+  cpu-checker
 
 # Install docker
 apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
@@ -69,6 +70,22 @@ apt-get install -y docker-ce docker-ce-cli containerd.io
 # Note: The VM needs rebooted for this to take effect. `newgrp docker` doesn't
 # work.
 usermod -aG docker vagrant
+
+kvm-ok
+kvm_ok_status=$?
+
+# `kvm-ok` will return a exit zero if the machine supports KVM, and non-zero
+# otherwise. If the machine support KVM, let's enable it.
+if [[ ${kvm_ok_status} == 0 ]]; then
+    apt install -y qemu-kvm \
+                   virt-manager \
+                  libvirt-daemon-system virtinst \
+                  libvirt-clients bridge-utils && \
+    sudo systemctl enable --now libvirtd && \
+    sudo systemctl start libvirtd && \
+    usermod -aG kvm vagrant && \
+    usermod -aG libvirt vagrant
+fi
 
 # Cleanup
 apt-get autoremove -y
