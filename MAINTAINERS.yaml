@@ -55,13 +55,13 @@ arch-gcn3:
     status: maintained
     maintainers:
         - Matt Sinclair <sinclair@cs.wisc.edu>
-        - Matt Porema <matthew.porema@amd.com>
+        - Matt Poremba <matthew.poremba@amd.com>
 
 arch-vega:
     status: maintained
     maintainers:
         - Matt Sinclair <sinclair@cs.wisc.edu>
-        - Matt Porema <matthew.porema@amd.com>
+        - Matt Poremba <matthew.poremba@amd.com>
 
 arch-mips:
     status: orphaned
