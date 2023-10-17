@@ -548,7 +548,7 @@ class LSQ : public Named
     const unsigned int inMemorySystemLimit;
 
     /** Memory system access width (and snap) in bytes */
-    const unsigned int lineWidth;
+    const Addr lineWidth;
 
   public:
     /** The LSQ consists of three queues: requests, transfers and the

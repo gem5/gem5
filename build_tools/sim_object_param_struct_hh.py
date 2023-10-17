@@ -81,7 +81,7 @@ except:
 warned_about_nested_templates = False
 
 
-class CxxClass(object):
+class CxxClass:
     def __init__(self, sig, template_params=[]):
         # Split the signature into its constituent parts. This could
         # potentially be done with regular expressions, but

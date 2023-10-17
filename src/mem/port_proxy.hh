@@ -92,7 +92,7 @@ class PortProxy : FunctionalRequestProtocol
     SendFunctionalFunc sendFunctional;
 
     /** Granularity of any transactions issued through this proxy. */
-    const unsigned int _cacheLineSize;
+    const Addr _cacheLineSize;
 
     void
     recvFunctionalSnoop(PacketPtr pkt) override
@@ -103,13 +103,13 @@ class PortProxy : FunctionalRequestProtocol
     }
 
   public:
-    PortProxy(SendFunctionalFunc func, unsigned int cache_line_size) :
+    PortProxy(SendFunctionalFunc func, Addr cache_line_size) :
         sendFunctional(func), _cacheLineSize(cache_line_size)
     {}
 
     // Helpers which create typical SendFunctionalFunc-s from other objects.
-    PortProxy(ThreadContext *tc, unsigned int cache_line_size);
-    PortProxy(const RequestPort &port, unsigned int cache_line_size);
+    PortProxy(ThreadContext *tc, Addr cache_line_size);
+    PortProxy(const RequestPort &port, Addr cache_line_size);
 
     virtual ~PortProxy() {}
 

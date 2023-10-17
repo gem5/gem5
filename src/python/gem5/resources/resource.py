@@ -25,6 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from abc import ABCMeta
+import json
 import os
 from pathlib import Path
 from m5.util import warn, fatal
@@ -35,7 +36,17 @@ from .downloader import get_resource
 from .looppoint import LooppointCsvLoader, LooppointJsonLoader
 from ..isas import ISA, get_isa_from_str
 
-from typing import Optional, Dict, Union, Type, Tuple, List, Any
+from typing import (
+    Optional,
+    Dict,
+    Union,
+    Type,
+    Tuple,
+    List,
+    Any,
+    Set,
+    Generator,
+)
 
 from .client import get_resource_json_obj
 
@@ -70,6 +81,7 @@ class AbstractResource:
 
     def __init__(
         self,
+        id: Optional[str] = None,
         resource_version: Optional[str] = None,
         local_path: Optional[str] = None,
         description: Optional[str] = None,
@@ -91,11 +103,23 @@ class AbstractResource:
                 f"Local path specified for resource, '{local_path}', does not "
                 "exist."
             )
-
+        self._id = id
         self._local_path = local_path
         self._description = description
         self._source = source
         self._version = resource_version
+
+    def get_category_name(cls) -> str:
+        raise NotImplementedError
+
+    def __str__(self):
+        message = (
+            f"{self.get_category_name()}({self._id}, {self._version})\n"
+            "For more information, please visit "
+            f"https://resources.gem5.org/resources/{self._id}?"
+            f"version={self._version}"
+        )
+        return message
 
     def get_resource_version(self) -> str:
         """Returns the version of the resource."""
@@ -122,6 +146,7 @@ class FileResource(AbstractResource):
     def __init__(
         self,
         local_path: str,
+        id: Optional[str] = None,
         resource_version: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
@@ -134,10 +159,14 @@ class FileResource(AbstractResource):
 
         super().__init__(
             local_path=local_path,
+            id=id,
             description=description,
             source=source,
             resource_version=resource_version,
         )
+
+    def get_category_name(cls) -> str:
+        return "FileResource"
 
 
 class DirectoryResource(AbstractResource):
@@ -146,6 +175,7 @@ class DirectoryResource(AbstractResource):
     def __init__(
         self,
         local_path: str,
+        id: Optional[str] = None,
         resource_version: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
@@ -159,10 +189,14 @@ class DirectoryResource(AbstractResource):
 
         super().__init__(
             local_path=local_path,
+            id=id,
             description=description,
             source=source,
             resource_version=resource_version,
         )
+
+    def get_category_name(cls) -> str:
+        return "DirectoryResource"
 
 
 class DiskImageResource(FileResource):
@@ -171,6 +205,7 @@ class DiskImageResource(FileResource):
     def __init__(
         self,
         local_path: str,
+        id: Optional[str] = None,
         resource_version: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
@@ -179,6 +214,7 @@ class DiskImageResource(FileResource):
     ):
         super().__init__(
             local_path=local_path,
+            id=id,
             description=description,
             source=source,
             resource_version=resource_version,
@@ -189,6 +225,9 @@ class DiskImageResource(FileResource):
         """Returns, if applicable, the Root Partition of the disk image."""
         return self._root_partition
 
+    def get_category_name(cls) -> str:
+        return "DiskImageResource"
+
 
 class BinaryResource(FileResource):
     """A binary resource."""
@@ -196,6 +235,7 @@ class BinaryResource(FileResource):
     def __init__(
         self,
         local_path: str,
+        id: Optional[str] = None,
         resource_version: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
@@ -204,6 +244,7 @@ class BinaryResource(FileResource):
     ):
         super().__init__(
             local_path=local_path,
+            id=id,
             description=description,
             source=source,
             resource_version=resource_version,
@@ -216,6 +257,9 @@ class BinaryResource(FileResource):
             elif isinstance(architecture, ISA):
                 self._architecture = architecture
 
+    def get_category_name(cls) -> str:
+        return "BinaryResource"
+
     def get_architecture(self) -> Optional[ISA]:
         """Returns the ISA this binary is compiled to."""
         return self._architecture
@@ -227,6 +271,7 @@ class BootloaderResource(BinaryResource):
     def __init__(
         self,
         local_path: str,
+        id: Optional[str] = None,
         resource_version: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
@@ -235,11 +280,15 @@ class BootloaderResource(BinaryResource):
     ):
         super().__init__(
             local_path=local_path,
+            id=id,
             description=description,
             architecture=architecture,
             source=source,
             resource_version=resource_version,
         )
+
+    def get_category_name(cls) -> str:
+        return "BootloaderResource"
 
 
 class GitResource(DirectoryResource):
@@ -248,6 +297,7 @@ class GitResource(DirectoryResource):
     def __init__(
         self,
         local_path: str,
+        id: Optional[str] = None,
         resource_version: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
@@ -255,10 +305,14 @@ class GitResource(DirectoryResource):
     ):
         super().__init__(
             local_path=local_path,
+            id=id,
             description=description,
             source=source,
             resource_version=resource_version,
         )
+
+    def get_category_name(cls) -> str:
+        return "GitResource"
 
 
 class KernelResource(BinaryResource):
@@ -267,6 +321,7 @@ class KernelResource(BinaryResource):
     def __init__(
         self,
         local_path: str,
+        id: Optional[str] = None,
         resource_version: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
@@ -275,11 +330,15 @@ class KernelResource(BinaryResource):
     ):
         super().__init__(
             local_path=local_path,
+            id=id,
             description=description,
             source=source,
             architecture=architecture,
             resource_version=resource_version,
         )
+
+    def get_category_name(cls) -> str:
+        return "KernelResource"
 
 
 class CheckpointResource(DirectoryResource):
@@ -293,6 +352,7 @@ class CheckpointResource(DirectoryResource):
     def __init__(
         self,
         local_path: str,
+        id: Optional[str] = None,
         resource_version: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
@@ -300,10 +360,14 @@ class CheckpointResource(DirectoryResource):
     ):
         super().__init__(
             local_path=local_path,
+            id=id,
             description=description,
             source=source,
             resource_version=resource_version,
         )
+
+    def get_category_name(cls) -> str:
+        return "CheckpointResource"
 
 
 class SimpointResource(AbstractResource):
@@ -320,6 +384,7 @@ class SimpointResource(AbstractResource):
         simpoint_list: List[int] = None,
         weight_list: List[float] = None,
         warmup_interval: int = 0,
+        id: Optional[str] = None,
         workload_name: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
@@ -340,6 +405,7 @@ class SimpointResource(AbstractResource):
 
         super().__init__(
             local_path=local_path,
+            id=id,
             description=description,
             source=source,
             resource_version=resource_version,
@@ -421,6 +487,9 @@ class SimpointResource(AbstractResource):
             self._simpoint_start_insts[index] = start_inst - warmup_inst
         return warmup_list
 
+    def get_category_name(cls) -> str:
+        return "SimpointResource"
+
 
 class LooppointCsvResource(FileResource, LooppointCsvLoader):
     """This Looppoint resource used to create a Looppoint resource from a
@@ -429,6 +498,7 @@ class LooppointCsvResource(FileResource, LooppointCsvLoader):
     def __init__(
         self,
         local_path: str,
+        id: Optional[str] = None,
         resource_version: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
@@ -437,17 +507,22 @@ class LooppointCsvResource(FileResource, LooppointCsvLoader):
         FileResource.__init__(
             self,
             local_path=local_path,
+            id=id,
             description=description,
             source=source,
             resource_version=resource_version,
         )
         LooppointCsvLoader.__init__(self, pinpoints_file=Path(local_path))
 
+    def get_category_name(cls) -> str:
+        return "LooppointCsvResource"
+
 
 class LooppointJsonResource(FileResource, LooppointJsonLoader):
     def __init__(
         self,
         local_path: str,
+        id: Optional[str] = None,
         resource_version: Optional[str] = None,
         region_id: Optional[Union[str, int]] = None,
         description: Optional[str] = None,
@@ -457,6 +532,7 @@ class LooppointJsonResource(FileResource, LooppointJsonLoader):
         FileResource.__init__(
             self,
             local_path=local_path,
+            id=id,
             description=description,
             source=source,
             resource_version=resource_version,
@@ -464,6 +540,9 @@ class LooppointJsonResource(FileResource, LooppointJsonLoader):
         LooppointJsonLoader.__init__(
             self, looppoint_file=local_path, region_id=region_id
         )
+
+    def get_category_name(cls) -> str:
+        return "LooppointJsonResource"
 
 
 class SimpointDirectoryResource(SimpointResource):
@@ -477,6 +556,7 @@ class SimpointDirectoryResource(SimpointResource):
         weight_file: str,
         simpoint_interval: int,
         warmup_interval: int,
+        id: Optional[str] = None,
         resource_version: Optional[str] = None,
         workload_name: Optional[str] = None,
         description: Optional[str] = None,
@@ -510,6 +590,7 @@ class SimpointDirectoryResource(SimpointResource):
             warmup_interval=warmup_interval,
             workload_name=workload_name,
             local_path=local_path,
+            id=id,
             description=description,
             source=source,
             resource_version=resource_version,
@@ -553,6 +634,113 @@ class SimpointDirectoryResource(SimpointResource):
             weight_list.append(weight)
         return simpoint_list, weight_list
 
+    def get_category_name(cls) -> str:
+        return "SimpointDirectoryResource"
+
+
+class SuiteResource(AbstractResource):
+    """
+    A suite resource. This resource is used to specify a suite of workloads to
+    run on a board. It contains a list of workloads to run, along with their
+    IDs and versions.
+
+    Each workload in a suite is used to create a `WorkloadResource` object.
+    These objects are stored in a list and can be iterated over.
+    """
+
+    def __init__(
+        self,
+        workloads: Dict["WorkloadResource", Set[str]] = {},
+        resource_version: Optional[str] = None,
+        description: Optional[str] = None,
+        source: Optional[str] = None,
+        id: Optional[str] = None,
+        **kwargs,
+    ) -> None:
+        """
+        :param workloads: A list of `WorkloadResource` objects
+        created from the `_workloads` parameter.
+        :param local_path: The path on the host system where this resource is
+        located.
+        :param description: Description describing this resource. Not a
+        required parameter. By default is None.
+        :param source: The source (as in "source code") for this resource
+        on gem5-resources. Not a required parameter. By default is None.
+        :param resource_version: Version of the resource itself.
+        """
+        self._workloads = workloads
+        self._description = description
+        self._source = source
+        self._resource_version = resource_version
+
+        super().__init__(
+            id=id,
+            description=description,
+            source=source,
+            resource_version=resource_version,
+        )
+
+    def __iter__(self) -> Generator["WorkloadResource", None, None]:
+        """
+        Returns a generator that iterates over the workloads in the suite.
+
+        :yields: A generator that iterates over the workloads in the suite.
+        """
+        yield from self._workloads.keys()
+
+    def __len__(self):
+        """
+        Returns the number of workloads in the suite.
+
+        :returns: The number of workloads in the suite.
+        """
+        return len(self._workloads)
+
+    def get_category_name(cls) -> str:
+        return "SuiteResource"
+
+    def with_input_group(self, input_group: str) -> "SuiteResource":
+        """
+        Returns a new SuiteResource object with only the workloads that use the
+        specified input group.
+
+        :param input_group: The input group to filter the workloads by.
+        :returns: A new SuiteResource object with only the workloads that use
+        the specified input group.
+        """
+
+        if input_group not in self.get_input_groups():
+            raise Exception(
+                f"Input group {input_group} not found in Suite.\n"
+                f"Available input groups are {self.get_input_groups()}"
+            )
+
+        filtered_workloads = {}
+
+        for workload, input_groups in self._workloads.items():
+            if input_group in input_groups:
+                filtered_workloads[workload] = input_groups
+
+        return SuiteResource(
+            local_path=self._local_path,
+            resource_version=self._resource_version,
+            description=self._description,
+            source=self._source,
+            workloads=filtered_workloads,
+        )
+
+    def get_input_groups(self) -> Set[str]:
+        """
+        Returns a set of all input groups used by the workloads in a suite.
+
+        :returns: A set of all input groups used by the workloads in a suite.
+        """
+        return {
+            input_group
+            for input_groups in self._workloads.values()
+            for input_group in input_groups
+        }
+
 
 class WorkloadResource(AbstractResource):
     """A workload resource. This resource is used to specify a workload to run
@@ -563,6 +751,7 @@ class WorkloadResource(AbstractResource):
     def __init__(
         self,
         function: str = None,
+        id: Optional[str] = None,
         resource_version: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
@@ -577,13 +766,19 @@ class WorkloadResource(AbstractResource):
 
         super().__init__(
             local_path=local_path,
+            id=id,
             description=description,
             source=source,
             resource_version=resource_version,
         )
 
+        self._id = id
         self._func = function
         self._params = parameters
+
+    def get_id(self) -> str:
+        """Returns the ID of the workload."""
+        return self._id
 
     def get_function_str(self) -> str:
         """
@@ -613,6 +808,9 @@ class WorkloadResource(AbstractResource):
         """
         self._params[parameter] = value
 
+    def get_category_name(cls) -> str:
+        return "WorkloadResource"
+
 
 def obtain_resource(
     resource_id: str,
@@ -621,6 +819,8 @@ def obtain_resource(
     resource_version: Optional[str] = None,
     clients: Optional[List] = None,
     gem5_version=core.gem5Version,
+    to_path: Optional[str] = None,
+    quiet: bool = False,
 ) -> AbstractResource:
     """
     This function primarily serves as a factory for resources. It will return
@@ -633,6 +833,7 @@ def obtain_resource(
     resource is to be stored. If this parameter is not set, it will set to
     the environment variable `GEM5_RESOURCE_DIR`. If the environment is not
     set it will default to `~/.cache/gem5` if available, otherwise the CWD.
+    **Note**: This argument is ignored if the `to_path` parameter is specified.
     :param download_md5_mismatch: If the resource is present, but does not
     have the correct md5 value, the resoruce will be deleted and
     re-downloaded if this value is True. Otherwise an exception will be
@@ -644,6 +845,11 @@ def obtain_resource(
     :param gem5_version: The gem5 version to use to filter incompatible
     resource versions. By default set to the current gem5 version. If None,
     this filtering is not performed.
+    :param to_path: The path to which the resource is to be downloaded. If
+    None, the resource will be downloaded to the resource directory with
+    the file/directory name equal to the ID of the resource. **Note**: Usage
+    of this parameter will override the `resource_directory` parameter.
+    :param quiet: If True, suppress output. False by default.
     """
 
     # Obtain the resource object entry for this resource
@@ -654,47 +860,63 @@ def obtain_resource(
         gem5_version=gem5_version,
     )
 
-    to_path = None
     # If the "url" field is specified, the resoruce must be downloaded.
     if "url" in resource_json and resource_json["url"]:
-
-        # If the `resource_directory` parameter is not set via this function, we
-        # check the "GEM5_RESOURCE_DIR" environment variable. If this too is not
-        # set we call `_get_default_resource_dir()` to determine where the
-        # resource directory is, or should be, located.
-        if resource_directory == None:
-            resource_directory = os.getenv(
-                "GEM5_RESOURCE_DIR", _get_default_resource_dir()
-            )
-
-        # Small checks here to ensure the resource directory is valid.
-        if os.path.exists(resource_directory):
-            if not os.path.isdir(resource_directory):
-                raise Exception(
-                    "gem5 resource directory, "
-                    "'{}', exists but is not a directory".format(
-                        resource_directory
-                    )
+        # If the `to_path` parameter is set, we use that as the path to which
+        # the resource is to be downloaded. Otherwise, default to the
+        # `resource_directory` parameter plus the resource ID.
+        if not to_path:
+            # If the `resource_directory` parameter is not set via this
+            # function, we heck the "GEM5_RESOURCE_DIR" environment variable.
+            # If this too is not set we call `_get_default_resource_dir()` to
+            # determine where the resource directory is, or should be, located.
+            if resource_directory == None:
+                resource_directory = os.getenv(
+                    "GEM5_RESOURCE_DIR", _get_default_resource_dir()
                 )
-        else:
-            # `exist_ok=True` here as, occasionally, if multiple instance of
-            # gem5 are started simultaneously, a race condition can exist to
-            # create the resource directory. Without `exit_ok=True`, threads
-            # which lose this race will thrown a `FileExistsError` exception.
-            # `exit_ok=True` ensures no exception is thrown.
-            os.makedirs(resource_directory, exist_ok=True)
 
-        # This is the path to which the resource is to be stored.
-        to_path = os.path.join(resource_directory, resource_id)
+            # Small checks here to ensure the resource directory is valid.
+            if os.path.exists(resource_directory):
+                if not os.path.isdir(resource_directory):
+                    raise Exception(
+                        "gem5 resource directory, "
+                        "'{}', exists but is not a directory".format(
+                            resource_directory
+                        )
+                    )
+
+            # This is the path to which the resource is to be stored.
+            to_path = os.path.join(resource_directory, resource_id)
+
+        assert to_path
+
+        # Here we ensure the directory in which the resource is to be stored
+        # is created.
+        #
+        # `exist_ok=True` here as, occasionally, if multiple instance of gem5
+        # are started simultaneously, a race condition can exist to create the
+        # resource directory. Without `exit_ok=True`, threads which lose this
+        # race will thrown a `FileExistsError` exception. `exit_ok=True`
+        # ensures no exception is thrown.
+        try:
+            Path(to_path).parent.mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            fatal(
+                f"Recursive creation of the directory "
+                f"'{Path(to_path).parent.absolute}' failed. \n"
+                f"Perhaps the path specified, '{to_path}', is incorrect?\n"
+                f"Failed with Exception:\n{e}"
+            )
 
         # Download the resource if it does not already exist.
         get_resource(
             resource_name=resource_id,
-            to_path=os.path.join(resource_directory, resource_id),
+            to_path=to_path,
             download_md5_mismatch=download_md5_mismatch,
             resource_version=resource_version,
             clients=clients,
             gem5_version=gem5_version,
+            quiet=quiet,
         )
 
     # Obtain the type from the JSON. From this we will determine what subclass
@@ -717,6 +939,21 @@ def obtain_resource(
 
     assert resources_category in _get_resource_json_type_map
     resource_class = _get_resource_json_type_map[resources_category]
+
+    if resources_category == "suite":
+        workloads = resource_json["workloads"]
+        workloads_obj = {}
+        for workload in workloads:
+            workloads_obj[
+                obtain_resource(
+                    workload["id"],
+                    resource_version=workload["resource_version"],
+                    resource_directory=resource_directory,
+                    clients=clients,
+                    gem5_version=gem5_version,
+                )
+            ] = set(workload["input_group"])
+        resource_json["workloads"] = workloads_obj
 
     if resources_category == "workload":
         # This parses the "resources" and "additional_params" fields of the
@@ -892,5 +1129,6 @@ _get_resource_json_type_map = {
     "resource": Resource,
     "looppoint-pinpoint-csv": LooppointCsvResource,
     "looppoint-json": LooppointJsonResource,
+    "suite": SuiteResource,
     "workload": WorkloadResource,
 }

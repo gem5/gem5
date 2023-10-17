@@ -65,6 +65,7 @@ _drain_manager = _m5.drain.DrainManager.instance()
 
 _instantiated = False  # Has m5.instantiate() been called?
 
+
 # The final call to instantiate the SimObject graph and initialize the
 # system.
 def instantiate(ckpt_dir=None):
@@ -318,6 +319,10 @@ def checkpoint(dir):
 
     drain()
     memWriteback(root)
+
+    # Recursively create the checkpoint directory if it does not exist.
+    os.makedirs(dir, exist_ok=True)
+
     print("Writing checkpoint")
     _m5.core.serializeAll(dir)
 

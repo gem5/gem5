@@ -39,6 +39,7 @@ SimObject('AMDGPU.py', sim_objects=['AMDGPUDevice', 'AMDGPUInterruptHandler',
                                     tags='x86 isa')
 
 Source('amdgpu_device.cc', tags='x86 isa')
+Source('amdgpu_gfx.cc', tags='x86 isa')
 Source('amdgpu_nbio.cc', tags='x86 isa')
 Source('amdgpu_vm.cc', tags='x86 isa')
 Source('interrupt_handler.cc', tags='x86 isa')
@@ -50,6 +51,7 @@ Source('system_hub.cc', tags='x86 isa')
 
 DebugFlag('AMDGPUDevice', tags='x86 isa')
 DebugFlag('AMDGPUMem', tags='x86 isa')
+DebugFlag('AMDGPUSystemHub', tags='x86 isa')
 DebugFlag('PM4PacketProcessor', tags='x86 isa')
 DebugFlag('SDMAEngine', tags='x86 isa')
 DebugFlag('SDMAData', tags='x86 isa')

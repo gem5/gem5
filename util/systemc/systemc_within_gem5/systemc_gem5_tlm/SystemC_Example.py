@@ -31,6 +31,7 @@ from m5.proxy import *
 from m5.objects.SystemC import SystemC_ScModule
 from m5.objects.Tlm import TlmTargetSocket
 
+
 # This class is a subclass of sc_module, and all the special magic which makes
 # that work is handled in the base classes.
 class TLM_Target(SystemC_ScModule):

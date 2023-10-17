@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2011-2012, 2014 ARM Limited
- * Copyright (c) 2010 The University of Edinburgh
+ * Copyright (c) 2010,2022-2023 The University of Edinburgh
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -46,6 +46,7 @@
 
 #include "base/statistics.hh"
 #include "base/types.hh"
+#include "cpu/pred/branch_type.hh"
 #include "cpu/pred/btb.hh"
 #include "cpu/pred/indirect.hh"
 #include "cpu/pred/ras.hh"
@@ -152,7 +153,14 @@ class BPredUnit : public SimObject
      * @param inst_PC The PC to look up.
      * @return Whether the BTB contains the given PC.
      */
-    bool BTBValid(Addr instPC) { return BTB.valid(instPC, 0); }
+    bool BTBValid(ThreadID tid, Addr instPC)
+    {
+        return btb->valid(tid, instPC);
+    }
+    bool BTBValid(ThreadID tid, PCStateBase &instPC)
+    {
+        return BTBValid(tid, instPC.instAddr());
+    }
 
     /**
      * Looks up a given PC in the BTB to get the predicted target. The PC may
@@ -162,9 +170,9 @@ class BPredUnit : public SimObject
      * @return The address of the target of the branch.
      */
     const PCStateBase *
-    BTBLookup(Addr inst_pc)
+    BTBLookup(ThreadID tid, PCStateBase &instPC)
     {
-        return BTB.lookup(inst_pc, 0);
+        return btb->lookup(tid, instPC.instAddr());
     }
 
     /**
@@ -189,10 +197,10 @@ class BPredUnit : public SimObject
      * @param target_PC The branch's target that will be added to the BTB.
      */
     void
-    BTBUpdate(Addr instPC, const PCStateBase &target)
+    BTBUpdate(ThreadID tid, Addr instPC, const PCStateBase &target)
     {
         ++stats.BTBUpdates;
-        BTB.update(instPC, target, 0);
+        return btb->update(tid, instPC, target);
     }
 
 
@@ -210,17 +218,19 @@ class BPredUnit : public SimObject
                          void *indirect_history, ThreadID _tid,
                          const StaticInstPtr & inst)
             : seqNum(seq_num), pc(instPC), bpHistory(bp_history),
-              indirectHistory(indirect_history), tid(_tid),
+              indirectHistory(indirect_history), rasHistory(nullptr),
+              tid(_tid),
               predTaken(pred_taken), inst(inst)
         {}
 
         PredictorHistory(const PredictorHistory &other) :
             seqNum(other.seqNum), pc(other.pc), bpHistory(other.bpHistory),
-            indirectHistory(other.indirectHistory), RASIndex(other.RASIndex),
+            indirectHistory(other.indirectHistory),
+            rasHistory(other.rasHistory), RASIndex(other.RASIndex),
             tid(other.tid), predTaken(other.predTaken), usedRAS(other.usedRAS),
-            pushedRAS(other.pushedRAS), wasCall(other.wasCall),
-            wasReturn(other.wasReturn), wasIndirect(other.wasIndirect),
-            target(other.target), inst(other.inst)
+            pushedRAS(other.pushedRAS), wasIndirect(other.wasIndirect),
+            target(other.target), inst(other.inst),
+            mispredict(other.mispredict)
         {
             set(RASTarget, other.RASTarget);
         }
@@ -245,6 +255,8 @@ class BPredUnit : public SimObject
 
         void *indirectHistory = nullptr;
 
+        void *rasHistory = nullptr;
+
         /** The RAS target (only valid if a return). */
         std::unique_ptr<PCStateBase> RASTarget;
 
@@ -263,12 +275,6 @@ class BPredUnit : public SimObject
         /* Whether or not the RAS was pushed */
         bool pushedRAS = false;
 
-        /** Whether or not the instruction was a call. */
-        bool wasCall = false;
-
-        /** Whether or not the instruction was a return. */
-        bool wasReturn = false;
-
         /** Wether this instruction was an indirect branch */
         bool wasIndirect = false;
 
@@ -279,6 +285,9 @@ class BPredUnit : public SimObject
 
         /** The branch instrction */
         const StaticInstPtr inst;
+
+        /** Whether this branch was mispredicted */
+        bool mispredict = false;
     };
 
     typedef std::deque<PredictorHistory> History;
@@ -295,10 +304,10 @@ class BPredUnit : public SimObject
     std::vector<History> predHist;
 
     /** The BTB. */
-    DefaultBTB BTB;
+    BranchTargetBuffer * btb;
 
-    /** The per-thread return address stack. */
-    std::vector<ReturnAddrStack> RAS;
+    /** The return address stack. */
+    ReturnAddrStack * ras;
 
     /** The indirect target predictor. */
     IndirectPredictor * iPred;

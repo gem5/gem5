@@ -74,7 +74,9 @@ class VConfOp : public RiscvStaticInst
           zimm10(_extMachInst.zimm_vsetivli),
           zimm11(_extMachInst.zimm_vsetvli),
           uimm(_extMachInst.uimm_vsetivli)
-    {}
+    {
+        this->flags[IsVector] = true;
+    }
 
     std::string generateDisassembly(
         Addr pc, const loader::SymbolTable *symtab) const override;
@@ -555,7 +557,7 @@ class VMaskMergeMicroInst : public VectorArithMicroInst
     Fault
     execute(ExecContext* xc, trace::InstRecord* traceData) const override
     {
-        vreg_t tmp_d0 = *(vreg_t *)xc->getWritableRegOperand(this, 0);
+        vreg_t& tmp_d0 = *(vreg_t *)xc->getWritableRegOperand(this, 0);
         auto Vd = tmp_d0.as<uint8_t>();
         constexpr uint8_t elems_per_vreg = VLENB / sizeof(ElemType);
         size_t bit_cnt = elems_per_vreg;
@@ -579,7 +581,6 @@ class VMaskMergeMicroInst : public VectorArithMicroInst
                 memcpy(Vd + i * byte_offset, s + i * byte_offset, byte_offset);
             }
         }
-        xc->setRegOperand(this, 0, &tmp_d0);
         if (traceData)
             traceData->setData(vecRegClass, &tmp_d0);
         return NoFault;

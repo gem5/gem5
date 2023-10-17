@@ -65,7 +65,6 @@ def read_config_file(file):
 def create_system(
     options, full_system, system, dma_ports, bootmem, ruby_system, cpus
 ):
-
     if buildEnv["PROTOCOL"] != "CHI":
         m5.panic("This script requires the CHI build")
 

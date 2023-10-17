@@ -1,4 +1,4 @@
-# Copyright (c) 2021 The Regents of the University of California
+# Copyright (c) 2021-2023 The Regents of the University of California
 # All Rights Reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -41,9 +41,9 @@ RUN mkdir /sst
 
 # Download and build SST-Core without MPI support
 WORKDIR /sst/
-RUN wget https://github.com/sstsimulator/sst-core/releases/download/v11.1.0_Final/sstcore-11.1.0.tar.gz; \
-    tar xf sstcore-11.1.0.tar.gz;
-WORKDIR /sst/sstcore-11.1.0/
+RUN wget https://github.com/sstsimulator/sst-core/releases/download/v13.0.0_Final/sstcore-13.0.0.tar.gz; \
+    tar xf sstcore-13.0.0.tar.gz;
+WORKDIR /sst/sstcore-13.0.0/
 RUN ./configure --prefix=$SST_CORE_HOME --with-python=/usr/bin/python3-config \
                                         --disable-mpi; \
     make all -j $(nproc); \
@@ -51,9 +51,9 @@ RUN ./configure --prefix=$SST_CORE_HOME --with-python=/usr/bin/python3-config \
 
 # Download and build SST-Elements
 WORKDIR /sst
-RUN wget https://github.com/sstsimulator/sst-elements/releases/download/v11.1.0_Final/sstelements-11.1.0.tar.gz; \
-    tar xf sstelements-11.1.0.tar.gz;
-WORKDIR /sst/sst-elements-library-11.1.0/
+RUN wget https://github.com/sstsimulator/sst-elements/releases/download/v13.0.0_Final/sstelements-13.0.0.tar.gz; \
+    tar xf sstelements-13.0.0.tar.gz;
+WORKDIR /sst/sst-elements-library-13.0.0/
 RUN ./configure --prefix=$SST_CORE_HOME --with-python=/usr/bin/python3-config \
                                         --with-sst-core=$SST_CORE_HOME; \
     make all -j $(nproc); \

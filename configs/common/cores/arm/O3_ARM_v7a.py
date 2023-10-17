@@ -26,6 +26,7 @@
 
 from m5.objects import *
 
+
 # Simple ALU Instructions have a latency of 1
 class O3_ARM_v7a_Simple_Int(FUDesc):
     opList = [OpDesc(opClass="IntAlu", opLat=1)]
@@ -107,15 +108,19 @@ class O3_ARM_v7a_FUP(FUPool):
     ]
 
 
+class O3_ARM_v7a_BTB(SimpleBTB):
+    numEntries = 2048
+    tagBits = 18
+
+
 # Bi-Mode Branch Predictor
 class O3_ARM_v7a_BP(BiModeBP):
+    btb = O3_ARM_v7a_BTB()
+    ras = ReturnAddrStack(numEntries=16)
     globalPredictorSize = 8192
     globalCtrBits = 2
     choicePredictorSize = 8192
     choiceCtrBits = 2
-    BTBEntries = 2048
-    BTBTagSize = 18
-    RASSize = 16
     instShiftAmt = 2
 
 

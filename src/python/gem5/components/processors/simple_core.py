@@ -44,7 +44,6 @@ class SimpleCore(BaseCPUCore):
     def __init__(
         self, cpu_type: CPUTypes, core_id: int, isa: Optional[ISA] = None
     ):
-
         # If the ISA is not specified, we infer it via the `get_runtime_isa`
         # function.
         if isa:

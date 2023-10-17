@@ -45,7 +45,7 @@ from m5.objects.IndexingPolicies import *
 from m5.objects.ReplacementPolicies import *
 
 
-class HWPProbeEvent(object):
+class HWPProbeEvent:
     def __init__(self, prefetcher, obj, *listOfNames):
         self.obj = obj
         self.prefetcher = prefetcher

@@ -88,18 +88,18 @@ class Rom(MicroContainer):
 ##########################################################################
 
 
-class Label(object):
+class Label:
     def __init__(self):
         self.extern = False
         self.name = ""
 
 
-class Block(object):
+class Block:
     def __init__(self):
         self.statements = []
 
 
-class Statement(object):
+class Statement:
     def __init__(self):
         self.is_microop = False
         self.is_directive = False
@@ -187,6 +187,7 @@ def handle_statement(parser, container, statement):
 #
 ##########################################################################
 
+
 # Error handler.  Just call exit.  Output formatted to work under
 # Emacs compile-mode.  Optional 'print_traceback' arg, if set to True,
 # prints a Python stack backtrace too (can be handy when trying to
@@ -230,6 +231,7 @@ states = (
 reserved_map = {}
 for r in reserved:
     reserved_map[r.lower()] = r
+
 
 # Ignore comments
 def t_ANY_COMMENT(t):
@@ -359,6 +361,7 @@ def t_ANY_error(t):
 # Parser specification
 #
 ##########################################################################
+
 
 # Start symbol for a file which may have more than one macroop or rom
 # specification.
@@ -567,7 +570,7 @@ def p_error(t):
         error(0, "unknown syntax error", True)
 
 
-class MicroAssembler(object):
+class MicroAssembler:
     def __init__(self, macro_type, microops, rom=None, rom_macroop_type=None):
         self.lexer = lex.lex()
         self.parser = yacc.yacc(write_tables=False)

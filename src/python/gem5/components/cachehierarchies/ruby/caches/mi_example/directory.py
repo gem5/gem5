@@ -37,7 +37,6 @@ class Directory(AbstractDirectory):
     """
 
     def __init__(self, network, cache_line_size, mem_range, port):
-
         super().__init__(network, cache_line_size)
         self.addr_ranges = [mem_range]
         self.directory = RubyDirectoryMemory()

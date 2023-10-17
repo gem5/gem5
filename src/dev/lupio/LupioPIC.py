@@ -29,7 +29,6 @@ from m5.params import Param
 
 
 class LupioPIC(BasicPioDevice):
-
     type = "LupioPIC"
     cxx_class = "gem5::LupioPIC"
     cxx_header = "dev/lupio/lupio_pic.hh"

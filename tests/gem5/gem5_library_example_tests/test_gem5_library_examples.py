@@ -29,6 +29,7 @@ This runs simple tests to ensure the examples in `configs/example/gem5_library`
 still function. They simply check the simulation completed.
 """
 from testlib import *
+from testlib.log import *
 import re
 import os
 
@@ -171,14 +172,14 @@ gem5_verify_config(
     length=constants.long_tag,
 )
 
-print(
-    "WARNING: PARSEC tests are disabled. This is due to our GitHub "
+log.test_log.message(
+    "PARSEC tests are disabled. This is due to our GitHub "
     "Actions self-hosted runners only having 60GB of disk space. The "
-    "PARSEC Disk image is too big to use."
+    "PARSEC Disk image is too big to use.",
+    level=LogLevel.Warn,
 )
 # 'False' is used to disable the tests.
 if False:  # os.access("/dev/kvm", mode=os.R_OK | os.W_OK):
-
     # The x86-parsec-benchmarks uses KVM cores, this test will therefore only
     # be run on systems that support KVM.
     gem5_verify_config(
@@ -330,6 +331,23 @@ gem5_verify_config(
     valid_isas=(constants.all_compiled_tag,),
     valid_hosts=constants.supported_hosts,
     length=constants.very_long_tag,
+)
+
+gem5_verify_config(
+    name="test-gem5-library-example-riscvmatched-microbenchmark-suite",
+    fixtures=(),
+    verifiers=(),
+    config=joinpath(
+        config.base_dir,
+        "configs",
+        "example",
+        "gem5_library",
+        "riscvmatched-microbenchmark-suite.py",
+    ),
+    config_args=[],
+    valid_isas=(constants.all_compiled_tag,),
+    valid_hosts=constants.supported_hosts,
+    length=constants.long_tag,
 )
 
 # The LoopPoint-Checkpointing feature is still under development, therefore

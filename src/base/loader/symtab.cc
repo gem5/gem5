@@ -79,8 +79,11 @@ SymbolTable::insert(const SymbolTable &other)
                           nameMap.begin(), nameMap.end(),
                           std::inserter(intersection, intersection.begin()),
                           nameMap.value_comp());
-    if (!intersection.empty())
+    if (!intersection.empty()) {
+        warn("Cannot insert a new symbol table due to name collisions. "
+             "Adding prefix to each symbol's name can resolve this issue.");
         return false;
+    }
 
     for (const Symbol &symbol: other)
         insert(symbol);

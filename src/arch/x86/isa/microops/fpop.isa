@@ -430,4 +430,6 @@ let {{
     class Pop87(Fp0Op):
         code = ''
         op_class = 'IntAluOp'
+        def __init__(self):
+            super().__init__(spm=1)
 }};

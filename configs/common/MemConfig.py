@@ -40,7 +40,7 @@ from common import HMC
 
 def create_mem_intf(intf, r, i, intlv_bits, intlv_size, xor_low_bit):
     """
-    Helper function for creating a single memoy controller from the given
+    Helper function for creating a single memory controller from the given
     options.  This function is invoked multiple times in config_mem function
     to create an array of controllers.
     """

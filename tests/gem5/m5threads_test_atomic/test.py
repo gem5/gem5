@@ -45,7 +45,7 @@ url = config.resource_url + "/test-progs/pthreads/sparc64/" + binary
 test_atomic = DownloadedProgram(url, base_path, binary)
 
 verifiers = (
-    verifier.MatchStdoutNoPerf(joinpath(getcwd(), "ref/sparc64/simout")),
+    verifier.MatchStdoutNoPerf(joinpath(getcwd(), "ref/sparc64/simout.txt")),
 )
 
 for cpu in cpu_types:

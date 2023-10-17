@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010-2013,2017-2021 Arm Limited
+// Copyright (c) 2010-2013,2017-2021,2023 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -39,6 +39,13 @@ let {{
 
     svcCode = '''
     ThreadContext *tc = xc->tcBase();
+
+    if (fgtEnabled(tc) && currEL(tc) == EL0 && !ELIsInHost(tc, EL0) &&
+        ELIs64(tc, EL1) && static_cast<HFGITR>(
+            tc->readMiscReg(MISCREG_HFGITR_EL2)).svcEL0) {
+        return std::make_shared<HypervisorTrap>(
+            machInst, imm, ExceptionClass::SVC);
+    }
 
     bool have_semi = ArmSystem::haveSemihosting(tc);
     if (have_semi && Thumb && imm == ArmSemihosting::T32Imm) {
@@ -166,9 +173,8 @@ let {{
         CondCodesGE = new_cpsr.ge;
 
         NextThumb = (new_cpsr).t;
-                    NextJazelle = (new_cpsr).j;
-                    NextItState = (((new_cpsr).it2 << 2) & 0xFC)
-                        | ((new_cpsr).it1 & 0x3);
+        NextItState = (((new_cpsr).it2 << 2) & 0xFC)
+            | ((new_cpsr).it1 & 0x3);
 
         NPC = (old_cpsr.mode == MODE_HYP) ? ElrHyp : LR;
     '''
@@ -1075,28 +1081,6 @@ let {{
     decoder_output += McrrOpConstructor.subst(mcrr15Iop)
     exec_output += PredOpExecute.subst(mcrr15Iop)
 
-
-    enterxCode = '''
-        NextThumb = true;
-        NextJazelle = true;
-    '''
-    enterxIop = ArmInstObjParams("enterx", "Enterx", "PredOp",
-                                 { "code": enterxCode,
-                                   "predicate_test": predicateTest }, [])
-    header_output += BasicDeclare.subst(enterxIop)
-    decoder_output += BasicConstructor.subst(enterxIop)
-    exec_output += PredOpExecute.subst(enterxIop)
-
-    leavexCode = '''
-        NextThumb = true;
-        NextJazelle = false;
-    '''
-    leavexIop = ArmInstObjParams("leavex", "Leavex", "PredOp",
-                                 { "code": leavexCode,
-                                   "predicate_test": predicateTest }, [])
-    header_output += BasicDeclare.subst(leavexIop)
-    decoder_output += BasicConstructor.subst(leavexIop)
-    exec_output += PredOpExecute.subst(leavexIop)
 
     setendCode = '''
         CPSR cpsr = Cpsr;

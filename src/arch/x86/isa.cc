@@ -262,7 +262,7 @@ ISA::setMiscRegNoEffect(RegIndex idx, RegVal val)
         reg_width = 3;
         break;
       case misc_reg::Ftw:
-        reg_width = 8;
+        reg_width = 16;
         break;
       case misc_reg::Fsw:
       case misc_reg::Fcw:

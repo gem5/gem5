@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 ARM Limited
+ * Copyright (c) 2021-2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -299,6 +299,14 @@ Cycles dataLatency() {
   return cache.getDataLatency();
 }
 
+bool fromSequencer(CHIRequestType reqType) {
+  return reqType == CHIRequestType:Load ||
+         reqType == CHIRequestType:Store ||
+         reqType == CHIRequestType:StoreLine ||
+         reqType == CHIRequestType:AtomicLoad ||
+         reqType == CHIRequestType:AtomicStore;
+}
+
 bool inCache(Addr addr) {
   CacheEntry entry := getCacheEntry(makeLineAddress(addr));
   // NOTE: we consider data for the addr to be in cache if it exists in local,
@@ -405,6 +413,12 @@ TBE allocateRequestTBE(Addr addr, CHIRequestMsg in_msg), return_by_pointer="yes"
   TBE tbe := TBEs[addr];
 
   initializeTBE(tbe, addr, storTBEs.addEntryToNewSlot());
+  if (fromSequencer(in_msg.type)) {
+    assert(in_msg.txnId == max_outstanding_transactions);
+    tbe.txnId := static_cast(Addr, "value", tbe.storSlot);
+  } else {
+    tbe.txnId := in_msg.txnId;
+  }
 
   assert(tbe.is_snp_tbe == false);
   assert(tbe.is_repl_tbe == false);
@@ -421,6 +435,9 @@ TBE allocateRequestTBE(Addr addr, CHIRequestMsg in_msg), return_by_pointer="yes"
   tbe.seqReq := in_msg.seqReq;
   tbe.is_local_pf := in_msg.is_local_pf;
   tbe.is_remote_pf := in_msg.is_remote_pf;
+
+  tbe.atomic_op.clear();
+  tbe.atomic_op.orMask(in_msg.atomic_op);
 
   tbe.use_DMT := false;
   tbe.use_DCT := false;
@@ -486,6 +503,7 @@ TBE allocateSnoopTBE(Addr addr, CHIRequestMsg in_msg), return_by_pointer="yes" {
   tbe.requestor := in_msg.requestor;
   tbe.fwdRequestor := in_msg.fwdRequestor;
   tbe.reqType := in_msg.type;
+  tbe.txnId := in_msg.txnId;
 
   tbe.snpNeedsData := in_msg.retToSrc;
 
@@ -538,6 +556,8 @@ TBE _allocateReplacementTBE(Addr addr, int storSlot), return_by_pointer="yes" {
   tbe.accSize := blockSize;
   tbe.requestor := machineID;
   tbe.reqType := CHIRequestType:null;
+  // This is an internal event and should generate a new TxnId
+  tbe.txnId := static_cast(Addr, "value", storSlot);
 
   tbe.use_DMT := false;
   tbe.use_DCT := false;
@@ -607,6 +627,13 @@ void setupPendingPartialSend(TBE tbe) {
   scheduleSendData(tbe, 0);
 }
 
+void setupPendingAtomicSend(TBE tbe) {
+  assert(blockSize >= data_channel_size);
+  assert((blockSize % data_channel_size) == 0);
+  tbe.snd_pendBytes.setMask(0,tbe.accSize,true);
+  scheduleSendData(tbe, 0);
+}
+
 // common code for downstream requests
 void prepareRequest(TBE tbe, CHIRequestType type, CHIRequestMsg & out_msg) {
   out_msg.addr := tbe.addr;
@@ -624,6 +651,20 @@ void prepareRequest(TBE tbe, CHIRequestType type, CHIRequestMsg & out_msg) {
   out_msg.seqReq := tbe.seqReq;
   out_msg.is_local_pf := false;
   out_msg.is_remote_pf := tbe.is_local_pf || tbe.is_remote_pf;
+  out_msg.txnId := tbe.txnId;
+
+  assert(tbe.txnId != static_cast(Addr, "value", -1));
+}
+
+void prepareRequestAtomic(TBE tbe, CHIRequestType type,
+                          CHIRequestMsg & out_msg) {
+  assert((type == CHIRequestType:AtomicReturn) ||
+         (type == CHIRequestType:AtomicNoReturn));
+  prepareRequest(tbe, type, out_msg);
+  out_msg.accAddr := tbe.accAddr;
+  out_msg.accSize := tbe.accSize;
+  out_msg.atomic_op.clear();
+  out_msg.atomic_op.orMask(tbe.atomic_op);
 }
 
 void allowRequestRetry(TBE tbe, CHIRequestMsg & out_msg) {
@@ -654,6 +695,8 @@ void prepareRequestRetry(TBE tbe, CHIRequestMsg & out_msg) {
   out_msg.seqReq := tbe.seqReq;
   out_msg.is_local_pf := false;
   out_msg.is_remote_pf := tbe.is_local_pf || tbe.is_remote_pf;
+  out_msg.atomic_op.clear();
+  out_msg.atomic_op.orMask(tbe.atomic_op);
 }
 
 void prepareRequestRetryDVM(TBE tbe, CHIRequestMsg & out_msg) {
@@ -755,8 +798,12 @@ bool needCacheEntry(CHIRequestType req_type,
                                    (req_type == CHIRequestType:WriteEvictFull) ||
                                    (is_HN && (req_type == CHIRequestType:WriteUniqueFull)))) ||
            (alloc_on_seq_acc && ((req_type == CHIRequestType:Load) ||
-                                 (req_type == CHIRequestType:Store))) ||
-           (alloc_on_seq_line_write && (req_type == CHIRequestType:StoreLine));
+                                 (req_type == CHIRequestType:Store) ||
+                                 (req_type == CHIRequestType:AtomicLoad) ||
+                                 (req_type == CHIRequestType:AtomicStore))) ||
+           (alloc_on_seq_line_write && (req_type == CHIRequestType:StoreLine)) ||
+           (alloc_on_atomic && ((req_type == CHIRequestType:AtomicReturn) ||
+                               (req_type == CHIRequestType:AtomicNoReturn)));
   }
 }
 
@@ -780,12 +827,12 @@ bool upstreamHasShared(State state) {
 }
 
 void printTBEState(TBE tbe) {
-  DPRINTF(RubySlicc, "STATE: addr: %#x data present=%d valid=%d unique=%d dirty=%d mu_dirty=%d dir ownerV=%d ownerE=%d sharers=%d tobe_I=%d tobe_SC=%d doFill=%d pendAction=%s\n",
+  DPRINTF(RubySlicc, "STATE: addr: %#x data present=%d valid=%d unique=%d dirty=%d mu_dirty=%d dir ownerV=%d ownerE=%d sharers=%d tobe_I=%d tobe_SC=%d doFill=%d pendAction=%s txnId=%d\n",
                       tbe.addr, tbe.dataBlkValid.isFull(), tbe.dataValid, tbe.dataUnique,
                       tbe.dataDirty, tbe.dataMaybeDirtyUpstream, tbe.dir_ownerExists,
                       tbe.dir_ownerIsExcl,tbe.dir_sharers.count(),
                       tbe.dataToBeInvalid, tbe.dataToBeSharedClean,
-                      tbe.doCacheFill, tbe.pendAction);
+                      tbe.doCacheFill, tbe.pendAction, tbe.txnId);
   DPRINTF(RubySlicc, "dataBlkValid = %s\n", tbe.dataBlkValid);
 }
 
@@ -1156,6 +1203,10 @@ Event reqToEvent(CHIRequestType type, bool is_prefetch) {
     return Event:Store;
   } else if (type == CHIRequestType:StoreLine) {
     return Event:Store;
+  } else if (type == CHIRequestType:AtomicLoad) {
+    return Event:AtomicLoad;
+  } else if (type == CHIRequestType:AtomicStore){
+    return Event:AtomicStore;
   } else if (type == CHIRequestType:ReadShared) {
     return Event:ReadShared;
   } else if (type == CHIRequestType:ReadNotSharedDirty) {
@@ -1196,6 +1247,18 @@ Event reqToEvent(CHIRequestType type, bool is_prefetch) {
     return Event:DvmTlbi_Initiate;
   } else if (type == CHIRequestType:DvmSync_Initiate) {
     return Event:DvmSync_Initiate;
+  } else if (type == CHIRequestType:AtomicReturn){
+    if (is_HN) {
+      return Event:AtomicReturn_PoC;
+    } else {
+      return Event:AtomicReturn;
+    }
+  } else if (type == CHIRequestType:AtomicNoReturn){
+    if (is_HN) {
+      return Event:AtomicNoReturn_PoC;
+    } else {
+      return Event:AtomicNoReturn;
+    }
   } else {
     error("Invalid CHIRequestType");
   }

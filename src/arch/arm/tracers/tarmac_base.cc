@@ -107,12 +107,12 @@ TarmacBaseRecord::pcToISetState(const PCStateBase &pc)
 
     if (apc.aarch64())
         isetstate = TarmacBaseRecord::ISET_A64;
-    else if (!apc.thumb() && !apc.jazelle())
+    else if (!apc.thumb())
         isetstate = TarmacBaseRecord::ISET_ARM;
-    else if (apc.thumb() && !apc.jazelle())
+    else if (apc.thumb())
         isetstate = TarmacBaseRecord::ISET_THUMB;
     else
-        // No Jazelle state in TARMAC
+        // Unsupported state in TARMAC
         isetstate = TarmacBaseRecord::ISET_UNSUPPORTED;
 
     return isetstate;

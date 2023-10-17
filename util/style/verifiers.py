@@ -103,7 +103,7 @@ def _modified_regions(old, new):
     return regions
 
 
-class Verifier(object, metaclass=ABCMeta):
+class Verifier(metaclass=ABCMeta):
     """Base class for style verifiers
 
     Verifiers check for style violations and optionally fix such
@@ -292,10 +292,18 @@ class Whitespace(LineVerifier):
     - No trailing whitespace
     """
 
-    languages = set(
-        ("C", "C++", "swig", "python", "asm", "isa", "scons", "make", "dts")
-    )
-    trail_only = set(("make", "dts"))
+    languages = {
+        "C",
+        "C++",
+        "swig",
+        "python",
+        "asm",
+        "isa",
+        "scons",
+        "make",
+        "dts",
+    }
+    trail_only = {"make", "dts"}
 
     test_name = "whitespace"
     opt_name = "white"
@@ -345,7 +353,7 @@ class SortedIncludes(Verifier):
     opt_name = "include"
 
     def __init__(self, *args, **kwargs):
-        super(SortedIncludes, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.sort_includes = sort_includes.SortIncludes()
 
     def check(self, filename, regions=all_regions, fobj=None, silent=False):
@@ -404,7 +412,7 @@ class SortedIncludes(Verifier):
 class ControlSpace(LineVerifier):
     """Check for exactly one space after if/while/for"""
 
-    languages = set(("C", "C++"))
+    languages = {"C", "C++"}
     test_name = "spacing after if/while/for"
     opt_name = "control"
 
@@ -420,7 +428,7 @@ class ControlSpace(LineVerifier):
 
 
 class LineLength(LineVerifier):
-    languages = set(("C", "C++", "swig", "python", "asm", "isa", "scons"))
+    languages = {"C", "C++", "swig", "python", "asm", "isa", "scons"}
     test_name = "line length"
     opt_name = "length"
 
@@ -439,7 +447,7 @@ class LineLength(LineVerifier):
 
 
 class ControlCharacters(LineVerifier):
-    languages = set(("C", "C++", "swig", "python", "asm", "isa", "scons"))
+    languages = {"C", "C++", "swig", "python", "asm", "isa", "scons"}
     test_name = "control character"
     opt_name = "ascii"
 
@@ -455,7 +463,7 @@ class ControlCharacters(LineVerifier):
 
 
 class BoolCompare(LineVerifier):
-    languages = set(("C", "C++", "python"))
+    languages = {"C", "C++", "python"}
     test_name = "boolean comparison"
     opt_name = "boolcomp"
 
@@ -503,22 +511,22 @@ class StructureBraces(LineVerifier):
           : public BaseClass {
     """
 
-    languages = set(("C", "C++"))
+    languages = {"C", "C++"}
     test_name = "structure opening brace position"
     opt_name = "structurebrace"
 
     # Matches the indentation of the line
-    regex_indentation = "(?P<indentation>\s*)"
+    regex_indentation = r"(?P<indentation>\s*)"
     # Matches an optional "typedef" before the keyword
-    regex_typedef = "(?P<typedef>(typedef\s+)?)"
+    regex_typedef = r"(?P<typedef>(typedef\s+)?)"
     # Matches the structure's keyword
     regex_keyword = "(?P<keyword>class|struct|enum|union)"
     # A negative lookahead to avoid incorrect matches with variable's names
     # e.g., "classifications = {" should not be fixed here.
-    regex_avoid = "(?![^\{\s])"
+    regex_avoid = r"(?![^\{\s])"
     # Matches anything after the keyword and before the opening brace.
     # e.g., structure name, base type, type of inheritance, etc
-    regex_name = "(?P<name>[^\{]*)"
+    regex_name = r"(?P<name>[^\{]*)"
     # Matches anything after the opening brace, which should be
     # parsed recursively
     regex_extra = "(?P<extra>.*)$"
@@ -529,7 +537,7 @@ class StructureBraces(LineVerifier):
         + regex_keyword
         + regex_avoid
         + regex_name
-        + "\{"
+        + r"\{"
         + regex_extra
     )
 

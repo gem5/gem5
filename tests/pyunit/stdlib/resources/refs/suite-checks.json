@@ -1,0 +1,97 @@
+[
+    {
+        "id": "suite-example",
+        "category": "suite",
+        "resource_version": "1.0.0",
+        "gem5_versions": ["develop","23.1"],
+        "workloads": [
+            {
+                "id": "simple-workload-1",
+                "resource_version": "1.0.0",
+                "input_group": ["testtag1", "testtag2"]
+            },
+            {
+                "id": "simple-workload-2",
+                "resource_version": "1.0.0",
+                "input_group": ["testtag1", "testtag3"]
+            }
+        ]
+    },
+    {
+        "category": "workload",
+        "id": "simple-workload-1",
+        "description": "Description of workload here",
+        "function": "set_kernel_disk_workload",
+        "resources": {
+            "kernel": "x86-linux-kernel-5.2.3-example",
+            "disk-image": "x86-ubuntu-18.04-img-example"
+        },
+        "additional_params": {
+            "readfile_contents": "echo 'Boot successful'; m5 exit"
+        },
+        "resource_version": "1.0.0",
+        "gem5_versions": [
+            "develop"
+        ]
+    },
+    {
+        "category": "workload",
+        "id": "simple-workload-2",
+        "description": "Description of workload here",
+        "function": "set_kernel_disk_workload",
+        "resources": {
+            "kernel": "x86-linux-kernel-5.2.3-example",
+            "disk-image": "x86-ubuntu-18.04-img-example"
+        },
+        "additional_params": {
+            "readfile_contents": "echo 'Boot successful'; m5 exit"
+        },
+        "resource_version": "1.0.0",
+        "gem5_versions": [
+            "develop"
+        ]
+    },
+    {
+        "category": "kernel",
+        "id": "x86-linux-kernel-5.2.3-example",
+        "description": "The linux kernel (v5.2.3), compiled to X86.",
+        "architecture": "X86",
+        "is_zipped": false,
+        "md5sum": "4838c99b77d33c8307b939c16624e4ac",
+        "url": "http://dist.gem5.org/dist/develop/kernels/x86/static/vmlinux-5.2.3",
+        "source": "src/linux-kernel",
+        "resource_version": "1.0.0",
+        "gem5_versions": [
+            "develop"
+        ]
+    },
+    {
+        "category": "disk-image",
+        "id": "x86-ubuntu-18.04-img-example",
+        "description": "A disk image containing Ubuntu 18.04 for x86..",
+        "architecture": "X86",
+        "is_zipped": false,
+        "md5sum": "dbf120338b37153e3334603970cebd8c",
+        "url": "http://dist.gem5.org/dist/develop/test-progs/hello/bin/x86/linux/hello64-static",
+        "source": "src/x86-ubuntu",
+        "root_partition": "1",
+        "resource_version": "1.0.0",
+        "gem5_versions": [
+            "develop"
+        ]
+    },
+    {
+        "category": "binary",
+        "id": "x86-hello64-static-example",
+        "description": "A 'Hello World!' binary.",
+        "architecture": "X86",
+        "is_zipped": false,
+        "md5sum": "dbf120338b37153e3334603970cebd8c",
+        "url": "http://dist.gem5.org/dist/develop/test-progs/hello/bin/x86/linux/hello64-static",
+        "source": "src/simple",
+        "resource_version": "1.0.0",
+        "gem5_versions": [
+            "develop"
+        ]
+    }
+]

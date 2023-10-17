@@ -65,7 +65,8 @@ machine(MachineType:TCC, "TCC Cache")
     AtomicPassOn,           desc="Atomic Op Passed on to Directory";
     AtomicDone,             desc="AtomicOps Complete";
     AtomicNotDone,          desc="AtomicOps not Complete";
-    Data,                   desc="data messgae";
+    Data,                   desc="Data message";
+    Flush,                  desc="Flush cache entry";
     // Coming from this TCC
     L2_Repl,                desc="L2 Replacement";
     // Probes
@@ -299,16 +300,22 @@ machine(MachineType:TCC, "TCC Cache")
         // checked when the read response is received.
         if (in_msg.Type == CoherenceResponseType:NBSysWBAck) {
           trigger(Event:WBAck, in_msg.addr, cache_entry, tbe);
-        } else if (is_slc_set) {
-            // If the SLC bit is set, the response needs to bypass the cache
-            // and should not be allocated an entry.
+        } else if(in_msg.Type == CoherenceResponseType:NBSysResp) {
+          // If the SLC bit is set or the cache is write-through and
+          // we're receiving modified data (such as from an atomic),
+          // the response needs to bypass the cache and should not be
+          // allocated an entry.
+          if(is_slc_set || (!WB && in_msg.State == CoherenceState:Modified)) {
             trigger(Event:Bypass, in_msg.addr, cache_entry, tbe);
-        } else if (in_msg.Type == CoherenceResponseType:NBSysResp) {
-          if(presentOrAvail(in_msg.addr)) {
-            trigger(Event:Data, in_msg.addr, cache_entry, tbe);
           } else {
-            Addr victim :=  L2cache.cacheProbe(in_msg.addr);
-            trigger(Event:L2_Repl, victim, getCacheEntry(victim), TBEs.lookup(victim));
+            if(presentOrAvail(in_msg.addr)) {
+              // Responses with atomic data will only reach here if the
+              // SLC bit isn't set and the cache is WB
+              trigger(Event:Data, in_msg.addr, cache_entry, tbe);
+            } else {
+              Addr victim :=  L2cache.cacheProbe(in_msg.addr);
+              trigger(Event:L2_Repl, victim, getCacheEntry(victim), TBEs.lookup(victim));
+            }
           }
         } else {
           error("Unexpected Response Message to Core");
@@ -357,13 +364,13 @@ machine(MachineType:TCC, "TCC Cache")
                 trigger(Event:WrVicBlk, in_msg.addr, cache_entry, tbe);
             }
         } else if (in_msg.Type == CoherenceRequestType:Atomic) {
-          // If the request is system-level, or if the address isn't in the cache,
-          // then send the request to the directory. Since non-SLC atomics won't be
-          // performed by the directory, TCC will perform the atomic on the return path
-          // on Event:Data.
+          // If the request is system-level, if the address isn't in the cache,
+          // or if this cache is write-through, then send the request to the
+          // directory. Since non-SLC atomics won't be performed by the directory,
+          // TCC will perform the atomic on the return path on Event:Data.
           // The action will invalidate the cache line if SLC is set and the address is
           // in the cache.
-          if(in_msg.isSLCSet || !presentOrAvail(in_msg.addr)) {
+          if(in_msg.isSLCSet || !WB || !presentOrAvail(in_msg.addr)) {
             trigger(Event:AtomicPassOn, in_msg.addr, cache_entry, tbe);
           } else {
             trigger(Event:Atomic, in_msg.addr, cache_entry, tbe);
@@ -376,6 +383,8 @@ machine(MachineType:TCC, "TCC Cache")
           } else {
             trigger(Event:RdBlk, in_msg.addr, cache_entry, tbe);
           }
+        } else if (in_msg.Type == CoherenceRequestType:WriteFlush) {
+            trigger(Event:Flush, in_msg.addr, cache_entry, tbe);
         } else {
           DPRINTF(RubySlicc, "%s\n", in_msg);
           error("Unexpected Response Message to Core");
@@ -509,6 +518,20 @@ machine(MachineType:TCC, "TCC Cache")
     }
   }
 
+  action(fw_sendFlushResponse, "fw", desc="send Flush Response") {
+    peek(coreRequestNetwork_in, CPURequestMsg) {
+      enqueue(responseToCore_out, ResponseMsg, l2_response_latency) {
+        out_msg.addr := address;
+        out_msg.Type := CoherenceResponseType:TDSysWBAck;
+        out_msg.Destination.clear();
+        out_msg.Destination.add(in_msg.Requestor);
+        out_msg.Sender := machineID;
+        out_msg.MessageSize := MessageSizeType:Writeback_Control;
+        out_msg.instSeqNum := in_msg.instSeqNum;
+      }
+    }
+  }
+
   action(ar_sendAtomicResponse, "ar", desc="send Atomic Ack") {
     peek(coreRequestNetwork_in, CPURequestMsg) {
         enqueue(responseToCore_out, ResponseMsg, l2_response_latency + glc_atomic_latency, true) {
@@ -625,6 +648,22 @@ machine(MachineType:TCC, "TCC Cache")
       out_msg.Dirty := true;
       out_msg.DataBlk := cache_entry.DataBlk;
       out_msg.writeMask.orMask(cache_entry.writeMask);
+    }
+  }
+
+  action(f_flush, "f", desc="write back data") {
+    peek(coreRequestNetwork_in, CPURequestMsg) {
+      enqueue(requestToNB_out, CPURequestMsg, l2_request_latency) {
+        out_msg.addr := address;
+        out_msg.Requestor := machineID;
+        out_msg.WTRequestor := in_msg.Requestor;
+        out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
+        out_msg.MessageSize := MessageSizeType:Data;
+        out_msg.Type := CoherenceRequestType:WriteFlush;
+        out_msg.Dirty := true;
+        out_msg.DataBlk := cache_entry.DataBlk;
+        out_msg.writeMask.orMask(cache_entry.writeMask);
+      }
     }
   }
 
@@ -1075,4 +1114,21 @@ machine(MachineType:TCC, "TCC Cache")
   transition(WIB, WBAck,I) {
     pr_popResponseQueue;
   }
+
+  transition({A, IV, WI, WIB}, Flush) {
+    st_stallAndWaitRequest;
+  }
+
+  transition(I, Flush) {
+    fw_sendFlushResponse;
+    p_popRequestQueue;
+  }
+
+  transition({V, W}, Flush, I) {TagArrayRead, TagArrayWrite} {
+    t_allocateTBE;
+    ut_updateTag;
+    f_flush;
+    i_invL2;
+    p_popRequestQueue;
+   }
 }

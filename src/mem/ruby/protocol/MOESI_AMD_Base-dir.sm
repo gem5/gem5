@@ -39,6 +39,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
   bool GPUonly := "False";
   int TCC_select_num_bits;
   bool useL3OnWT := "False";
+  bool L2isWB;
   Cycles to_memory_controller_latency := 1;
 
   // DMA
@@ -83,6 +84,8 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     BM_Pm, AccessPermission:Backing_Store,      desc="blocked waiting for probes, already got memory";
     B_Pm, AccessPermission:Backing_Store,       desc="blocked waiting for probes, already got memory";
     B, AccessPermission:Backing_Store,          desc="sent response, Blocked til ack";
+
+    F, AccessPermission:Busy, desc="sent Flus, blocked till ack";
   }
 
   // Events
@@ -120,6 +123,9 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     // DMA
     DmaRead,            desc="DMA read";
     DmaWrite,           desc="DMA write";
+
+    // Flush
+    Flush,              desc="Flush entry";
   }
 
   enumeration(RequestType, desc="To communicate stats from transitions to recordStats") {
@@ -411,6 +417,9 @@ machine(MachineType:Directory, "AMD Baseline protocol")
             DPRINTF(RubySlicc, "Got VicClean from %s on %s\n", in_msg.Requestor, in_msg.addr);
             trigger(Event:VicClean, in_msg.addr, entry, tbe);
           }
+        } else if (in_msg.Type == CoherenceRequestType:WriteFlush) {
+            DPRINTF(RubySlicc, "Got Flush from %s on %s\n", in_msg.Requestor, in_msg.addr);
+            trigger(Event:Flush, in_msg.addr, entry, tbe);
         } else {
           error("Bad request message type");
         }
@@ -558,6 +567,23 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         out_msg.ForwardRequestTime := curCycle();
         out_msg.ProbeRequestStartTime := curCycle();
         out_msg.instSeqNum := in_msg.instSeqNum;
+      }
+    }
+  }
+
+  action(rf_sendResponseFlush, "rf", desc="send Flush Ack") {
+    peek(memQueue_in, MemoryMsg) {
+      enqueue(responseNetwork_out, ResponseMsg, 1) {
+        out_msg.addr := address;
+        out_msg.Type := CoherenceResponseType:NBSysWBAck;
+        out_msg.Destination.add(tbe.OriginalRequestor);
+        out_msg.WTRequestor := tbe.WTRequestor;
+        out_msg.Sender := machineID;
+        out_msg.MessageSize := MessageSizeType:Writeback_Control;
+        out_msg.InitialRequestTime := tbe.InitialRequestTime;
+        out_msg.ForwardRequestTime := curCycle();
+        out_msg.ProbeRequestStartTime := curCycle();
+        //out_msg.instSeqNum := in_msg.instSeqNum;
       }
     }
   }
@@ -933,6 +959,23 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     }
   }
 
+  action(f_writeFlushDataToMemory, "f", desc="Write flush data to memory") {
+    peek(requestNetwork_in, CPURequestMsg) {
+      enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
+        out_msg.addr := address;
+        out_msg.Type := MemoryRequestType:MEMORY_WB;
+        out_msg.Sender := machineID;
+        out_msg.MessageSize := MessageSizeType:Writeback_Data;
+        out_msg.DataBlk := in_msg.DataBlk;
+      }
+      if (tbe.Dirty == false) {
+          // have to update the TBE, too, because of how this
+          // directory deals with functional writes
+        tbe.DataBlk := in_msg.DataBlk;
+      }
+    }
+  }
+
   action(atd_allocateTBEforDMA, "atd", desc="allocate TBE Entry for DMA") {
     check_allocate(TBEs);
     peek(dmaRequestQueue_in, DMARequestMsg) {
@@ -997,11 +1040,9 @@ machine(MachineType:Directory, "AMD Baseline protocol")
 
   action(wd_writeBackData, "wd", desc="Write back data if needed") {
     if (tbe.wtData || tbe.atomicData || tbe.Dirty == false) {
-    // If SLC is not set, the atomic is handled in the L2
-    // Atomic needs to be done at the L3 only if this is
-    // not the case
-
-      if (tbe.atomicData && tbe.isSLCSet) {
+      // Only perform atomics in the directory if the SLC bit is set, or
+      // if the L2 is WT
+      if (tbe.atomicData && (tbe.isSLCSet || !L2isWB)) {
         tbe.DataBlk.atomicPartial(tbe.DataBlk, tbe.writeMask);
       }
       enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
@@ -1553,4 +1594,17 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     dt_deallocateTBE;
     pt_popTriggerQueue;
   }
+
+ transition(U, Flush, F) {L3TagArrayRead, L3TagArrayWrite} {
+    t_allocateTBE;
+    f_writeFlushDataToMemory;
+    w_sendResponseWBAck;
+    p_popRequestQueue;
+ }
+
+ transition(F, WBAck, U) {
+    pm_popMemQueue;
+    dt_deallocateTBE;
+ }
+
 }

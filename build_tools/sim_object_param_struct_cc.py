@@ -88,7 +88,6 @@ ports = sim_object._ports.local
 
 # only include pybind if python is enabled in the build
 if use_python:
-
     code(
         """#include "pybind11/pybind11.h"
 #include "pybind11/stl.h"

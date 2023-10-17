@@ -36,6 +36,7 @@
 from m5.SimObject import SimObject
 from m5.params import *
 
+
 # Image Formats:
 # Auto option will let gem5 to choose the image format it prefers.
 class ImageFormat(Enum):

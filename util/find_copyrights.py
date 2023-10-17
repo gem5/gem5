@@ -6,7 +6,7 @@ import sys
 
 from file_types import lang_type, find_files
 
-mode_line = re.compile("(-\*- *mode:.* *-\*-)")
+mode_line = re.compile(r"(-\*- *mode:.* *-\*-)")
 shell_comment = re.compile(r"^\s*#")
 lisp_comment = re.compile(r";")
 cpp_comment = re.compile(r"//")
@@ -116,7 +116,7 @@ def process_dates(dates):
     for date in dates:
         match = date_range_re.match(date)
         if match:
-            f, l = [int(d) for d in match.groups()]
+            f, l = (int(d) for d in match.groups())
             for i in range(f, l + 1):
                 output.add(i)
         else:

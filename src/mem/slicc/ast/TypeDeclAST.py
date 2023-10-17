@@ -47,7 +47,7 @@ class TypeDeclAST(DeclAST):
             ident = f"{parent}_{self.type_ast.ident}"
         else:
             ident = self.type_ast.ident
-        return set((f"{ident}.hh", f"{ident}.cc"))
+        return {f"{ident}.hh", f"{ident}.cc"}
 
     def generate(self):
         ident = str(self.type_ast)

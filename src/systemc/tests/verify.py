@@ -508,7 +508,7 @@ class VerifyPhase(TestPhaseBase):
             missing = []
             log_file = ".".join([test.name, "log"])
             log_path = gd.entry(log_file)
-            simout_path = os.path.join(out_dir, "simout")
+            simout_path = os.path.join(out_dir, "simout.txt")
             if not os.path.exists(simout_path):
                 missing.append("log output")
             elif log_path:

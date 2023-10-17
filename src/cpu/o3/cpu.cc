@@ -989,10 +989,10 @@ CPU::getWritableReg(PhysRegIdPtr phys_reg, ThreadID tid)
 {
     switch (phys_reg->classValue()) {
       case VecRegClass:
-        executeStats[tid]->numVecRegReads++;
+        executeStats[tid]->numVecRegWrites++;
         break;
       case VecPredRegClass:
-        executeStats[tid]->numVecPredRegReads++;
+        executeStats[tid]->numVecPredRegWrites++;
         break;
       default:
         break;

@@ -47,21 +47,21 @@ class LooppointRegionPCTestSuite(unittest.TestCase):
     def test_construction_with_relative(self) -> None:
         region_pc = LooppointRegionPC(pc=444, globl=65, relative=454)
 
-        self.assertEquals(444, region_pc.get_pc())
-        self.assertEquals(65, region_pc.get_global())
-        self.assertEquals(454, region_pc.get_relative())
+        self.assertEqual(444, region_pc.get_pc())
+        self.assertEqual(65, region_pc.get_global())
+        self.assertEqual(454, region_pc.get_relative())
 
     def test_construction_without_relative(self) -> None:
         region_pc = LooppointRegionPC(pc=43454, globl=653434)
 
-        self.assertEquals(43454, region_pc.get_pc())
-        self.assertEquals(653434, region_pc.get_global())
+        self.assertEqual(43454, region_pc.get_pc())
+        self.assertEqual(653434, region_pc.get_global())
         self.assertIsNone(region_pc.get_relative())
 
     def test_get_pc_count_pair(self) -> None:
         region_pc = LooppointRegionPC(pc=1, globl=2)
         expected = PcCountPair(1, 2)
-        self.assertEquals(expected, region_pc.get_pc_count_pair())
+        self.assertEqual(expected, region_pc.get_pc_count_pair())
 
     def update_relative_count(self) -> None:
         pass  # Not really sure what to do here...
@@ -70,23 +70,23 @@ class LooppointRegionPCTestSuite(unittest.TestCase):
         region_pc = LooppointRegionPC(pc=100, globl=200, relative=300)
         json_contents = region_pc.to_json()
 
-        self.assertEquals(3, len(json_contents))
+        self.assertEqual(3, len(json_contents))
         self.assertTrue("pc" in json_contents)
-        self.assertEquals(100, json_contents["pc"])
+        self.assertEqual(100, json_contents["pc"])
         self.assertTrue("global" in json_contents)
-        self.assertEquals(200, json_contents["global"])
+        self.assertEqual(200, json_contents["global"])
         self.assertTrue("relative" in json_contents)
-        self.assertEquals(300, json_contents["relative"])
+        self.assertEqual(300, json_contents["relative"])
 
     def test_to_json_without_relative(self) -> None:
         region_pc = LooppointRegionPC(pc=1111, globl=2222)
         json_contents = region_pc.to_json()
 
-        self.assertEquals(2, len(json_contents))
+        self.assertEqual(2, len(json_contents))
         self.assertTrue("pc" in json_contents)
-        self.assertEquals(1111, json_contents["pc"])
+        self.assertEqual(1111, json_contents["pc"])
         self.assertTrue("global" in json_contents)
-        self.assertEquals(2222, json_contents["global"])
+        self.assertEqual(2222, json_contents["global"])
         self.assertFalse("relative" in json_contents)
 
 
@@ -98,8 +98,8 @@ class LooppointRegionWarmupTestSuite(unittest.TestCase):
             start=PcCountPair(123, 456), end=PcCountPair(789, 1011)
         )
 
-        self.assertEquals(PcCountPair(123, 456), region_warmup.get_start())
-        self.assertEquals(PcCountPair(789, 1011), region_warmup.get_end())
+        self.assertEqual(PcCountPair(123, 456), region_warmup.get_start())
+        self.assertEqual(PcCountPair(789, 1011), region_warmup.get_end())
 
     def test_get_pc_count_pairs(self) -> None:
         region_warmup = LooppointRegionWarmup(
@@ -107,9 +107,9 @@ class LooppointRegionWarmupTestSuite(unittest.TestCase):
         )
 
         output = region_warmup.get_pc_count_pairs()
-        self.assertEquals(2, len(output))
-        self.assertEquals(PcCountPair(1, 1), output[0])
-        self.assertEquals(PcCountPair(2, 2), output[1])
+        self.assertEqual(2, len(output))
+        self.assertEqual(PcCountPair(1, 1), output[0])
+        self.assertEqual(PcCountPair(2, 2), output[1])
 
     def test_to_json(self) -> None:
         region_warmup = LooppointRegionWarmup(
@@ -135,14 +135,14 @@ class LooppointSimulationTestSuite(unittest.TestCase):
 
         sim_start = sim.get_start()
 
-        self.assertEquals(444, sim_start.get_pc())
-        self.assertEquals(65, sim_start.get_global())
-        self.assertEquals(454, sim_start.get_relative())
+        self.assertEqual(444, sim_start.get_pc())
+        self.assertEqual(65, sim_start.get_global())
+        self.assertEqual(454, sim_start.get_relative())
 
         sim_end = sim.get_end()
 
-        self.assertEquals(555, sim_end.get_pc())
-        self.assertEquals(699, sim_end.get_global())
+        self.assertEqual(555, sim_end.get_pc())
+        self.assertEqual(699, sim_end.get_global())
         self.assertIsNone(sim_end.get_relative())
 
     def test_get_pc_count_pairs(self) -> None:
@@ -152,9 +152,9 @@ class LooppointSimulationTestSuite(unittest.TestCase):
         )
 
         sim_pc_count_pairs = sim.get_pc_count_pairs()
-        self.assertEquals(2, len(sim_pc_count_pairs))
-        self.assertEquals(PcCountPair(56, 45), sim_pc_count_pairs[0])
-        self.assertEquals(PcCountPair(23, 12), sim_pc_count_pairs[1])
+        self.assertEqual(2, len(sim_pc_count_pairs))
+        self.assertEqual(PcCountPair(56, 45), sim_pc_count_pairs[0])
+        self.assertEqual(PcCountPair(23, 12), sim_pc_count_pairs[1])
 
     def test_get_json(self) -> None:
         sim = LooppointSimulation(
@@ -193,7 +193,7 @@ class LooppointRegionTestSuite(unittest.TestCase):
         self.assertTrue(
             isinstance(region.get_simulation(), LooppointSimulation)
         )
-        self.assertEquals(5.6, region.get_multiplier())
+        self.assertEqual(5.6, region.get_multiplier())
         self.assertIsNotNone(region.get_warmup())
         self.assertTrue(isinstance(region.get_warmup(), LooppointRegionWarmup))
 
@@ -209,7 +209,7 @@ class LooppointRegionTestSuite(unittest.TestCase):
         self.assertTrue(
             isinstance(region.get_simulation(), LooppointSimulation)
         )
-        self.assertEquals(5444.4, region.get_multiplier())
+        self.assertEqual(5444.4, region.get_multiplier())
         self.assertIsNone(region.get_warmup())
 
     def test_get_pc_count_pairs_with_warmup(self):
@@ -225,11 +225,11 @@ class LooppointRegionTestSuite(unittest.TestCase):
         )
         pc_count_pairs = region.get_pc_count_pairs()
 
-        self.assertEquals(4, len(pc_count_pairs))
-        self.assertEquals(PcCountPair(1, 2), pc_count_pairs[0])
-        self.assertEquals(PcCountPair(6, 7), pc_count_pairs[1])
-        self.assertEquals(PcCountPair(100, 200), pc_count_pairs[2])
-        self.assertEquals(PcCountPair(101, 202), pc_count_pairs[3])
+        self.assertEqual(4, len(pc_count_pairs))
+        self.assertEqual(PcCountPair(1, 2), pc_count_pairs[0])
+        self.assertEqual(PcCountPair(6, 7), pc_count_pairs[1])
+        self.assertEqual(PcCountPair(100, 200), pc_count_pairs[2])
+        self.assertEqual(PcCountPair(101, 202), pc_count_pairs[3])
 
     def test_get_pc_count_pairs_without_warmup(self):
         region = LooppointRegion(
@@ -242,9 +242,9 @@ class LooppointRegionTestSuite(unittest.TestCase):
 
         pc_count_pairs = region.get_pc_count_pairs()
 
-        self.assertEquals(2, len(pc_count_pairs))
-        self.assertEquals(PcCountPair(56, 2345), pc_count_pairs[0])
-        self.assertEquals(PcCountPair(645, 457), pc_count_pairs[1])
+        self.assertEqual(2, len(pc_count_pairs))
+        self.assertEqual(PcCountPair(56, 2345), pc_count_pairs[0])
+        self.assertEqual(PcCountPair(645, 457), pc_count_pairs[1])
 
 
 class LooppointTestSuite(unittest.TestCase):
@@ -276,11 +276,11 @@ class LooppointTestSuite(unittest.TestCase):
             }
         )
 
-        self.assertEquals(2, len(looppoint.get_regions()))
+        self.assertEqual(2, len(looppoint.get_regions()))
         self.assertTrue(1 in looppoint.get_regions())
-        self.assertEquals(region1, looppoint.get_regions()[1])
+        self.assertEqual(region1, looppoint.get_regions()[1])
         self.assertTrue(3 in looppoint.get_regions())
-        self.assertEquals(region2, looppoint.get_regions()[3])
+        self.assertEqual(region2, looppoint.get_regions()[3])
 
     def test_get_targets(self):
         region1 = LooppointRegion(
@@ -309,16 +309,15 @@ class LooppointTestSuite(unittest.TestCase):
         )
 
         targets = looppoint.get_targets()
-        self.assertEquals(6, len(targets))
-        self.assertEquals(PcCountPair(56, 2345), targets[0])
-        self.assertEquals(PcCountPair(645, 457), targets[1])
-        self.assertEquals(PcCountPair(67, 254), targets[2])
-        self.assertEquals(PcCountPair(64554, 7454), targets[3])
-        self.assertEquals(PcCountPair(100, 200), targets[4])
-        self.assertEquals(PcCountPair(101, 202), targets[5])
+        self.assertEqual(6, len(targets))
+        self.assertEqual(PcCountPair(56, 2345), targets[0])
+        self.assertEqual(PcCountPair(645, 457), targets[1])
+        self.assertEqual(PcCountPair(67, 254), targets[2])
+        self.assertEqual(PcCountPair(64554, 7454), targets[3])
+        self.assertEqual(PcCountPair(100, 200), targets[4])
+        self.assertEqual(PcCountPair(101, 202), targets[5])
 
     def test_get_region_start_id_map(self):
-
         region1 = LooppointRegion(
             simulation=LooppointSimulation(
                 start=LooppointRegionPC(pc=56, globl=2345, relative=344),
@@ -346,15 +345,15 @@ class LooppointTestSuite(unittest.TestCase):
 
         region_start_id_map = looppoint.get_region_start_id_map()
 
-        self.assertEquals(2, len(region_start_id_map))
+        self.assertEqual(2, len(region_start_id_map))
 
         # The start of region1.
         self.assertTrue(PcCountPair(56, 2345) in region_start_id_map)
-        self.assertEquals(1, region_start_id_map[PcCountPair(56, 2345)])
+        self.assertEqual(1, region_start_id_map[PcCountPair(56, 2345)])
 
         # The start of region2.  Since this has a warmup, it's the warmup.
         self.assertTrue(PcCountPair(100, 200) in region_start_id_map)
-        self.assertEquals(3, region_start_id_map[PcCountPair(100, 200)])
+        self.assertEqual(3, region_start_id_map[PcCountPair(100, 200)])
 
     def test_to_json(self) -> None:
         region1 = LooppointRegion(
@@ -441,60 +440,60 @@ class LooppointCSVLoaderTestSuite(unittest.TestCase):
         )
 
         regions = looppoint.get_regions()
-        self.assertEquals(3, len(regions))
+        self.assertEqual(3, len(regions))
 
         region1 = regions[1]
-        self.assertEquals(4.0, region1.get_multiplier())
+        self.assertEqual(4.0, region1.get_multiplier())
 
         region1start = region1.get_simulation().get_start()
-        self.assertEquals(0x4069D0, region1start.get_pc())
-        self.assertEquals(211076617, region1start.get_global())
+        self.assertEqual(0x4069D0, region1start.get_pc())
+        self.assertEqual(211076617, region1start.get_global())
         self.assertIsNone(region1start.get_relative())
 
         region1end = region1.get_simulation().get_end()
-        self.assertEquals(0x4069D0, region1end.get_pc())
-        self.assertEquals(219060252, region1end.get_global())
+        self.assertEqual(0x4069D0, region1end.get_pc())
+        self.assertEqual(219060252, region1end.get_global())
         self.assertIsNotNone(region1end.get_relative())
-        self.assertEquals(1060676, region1end.get_relative())
+        self.assertEqual(1060676, region1end.get_relative())
 
         self.assertIsNone(region1.get_warmup())
 
         region2 = regions[2]
-        self.assertEquals(5.001, region2.get_multiplier())
+        self.assertEqual(5.001, region2.get_multiplier())
 
         region2start = region2.get_simulation().get_start()
-        self.assertEquals(0x4069D0, region2start.get_pc())
-        self.assertEquals(407294228, region2start.get_global())
+        self.assertEqual(0x4069D0, region2start.get_pc())
+        self.assertEqual(407294228, region2start.get_global())
         self.assertIsNone(region2start.get_relative())
 
         region2end = region2.get_simulation().get_end()
-        self.assertEquals(0x4069D0, region2end.get_pc())
-        self.assertEquals(415282447, region2end.get_global())
+        self.assertEqual(0x4069D0, region2end.get_pc())
+        self.assertEqual(415282447, region2end.get_global())
         self.assertIsNotNone(region2end.get_relative())
-        self.assertEquals(1035231, region2end.get_relative())
+        self.assertEqual(1035231, region2end.get_relative())
 
         region2warmup = region2.get_warmup()
         self.assertIsNotNone(region2warmup)
-        self.assertEquals(
+        self.assertEqual(
             PcCountPair(0x406880, 48111518), region2warmup.get_start()
         )
-        self.assertEquals(
+        self.assertEqual(
             PcCountPair(0x4069D0, 407294228), region2warmup.get_end()
         )
 
         region3 = regions[3]
-        self.assertEquals(4.0, region3.get_multiplier())
+        self.assertEqual(4.0, region3.get_multiplier())
 
         region3start = region3.get_simulation().get_start()
-        self.assertEquals(0x4069D0, region3start.get_pc())
-        self.assertEquals(187978221, region3start.get_global())
+        self.assertEqual(0x4069D0, region3start.get_pc())
+        self.assertEqual(187978221, region3start.get_global())
         self.assertIsNone(region3start.get_relative())
 
         region3end = region3.get_simulation().get_end()
-        self.assertEquals(0x406880, region3end.get_pc())
-        self.assertEquals(23520614, region3end.get_global())
+        self.assertEqual(0x406880, region3end.get_pc())
+        self.assertEqual(23520614, region3end.get_global())
         self.assertIsNotNone(region3end.get_relative())
-        self.assertEquals(144352, region3end.get_relative())
+        self.assertEqual(144352, region3end.get_relative())
 
         self.assertIsNone(region3.get_warmup())
 
@@ -509,22 +508,22 @@ class LooppointCSVLoaderTestSuite(unittest.TestCase):
         )
 
         regions = looppoint.get_regions()
-        self.assertEquals(1, len(regions))
+        self.assertEqual(1, len(regions))
 
         self.assertTrue(1 in regions)
         region1 = regions[1]
-        self.assertEquals(4.0, region1.get_multiplier())
+        self.assertEqual(4.0, region1.get_multiplier())
 
         region1start = region1.get_simulation().get_start()
-        self.assertEquals(0x4069D0, region1start.get_pc())
-        self.assertEquals(211076617, region1start.get_global())
+        self.assertEqual(0x4069D0, region1start.get_pc())
+        self.assertEqual(211076617, region1start.get_global())
         self.assertIsNone(region1start.get_relative())
 
         region1end = region1.get_simulation().get_end()
-        self.assertEquals(0x4069D0, region1end.get_pc())
-        self.assertEquals(219060252, region1end.get_global())
+        self.assertEqual(0x4069D0, region1end.get_pc())
+        self.assertEqual(219060252, region1end.get_global())
         self.assertIsNotNone(region1end.get_relative())
-        self.assertEquals(1060676, region1end.get_relative())
+        self.assertEqual(1060676, region1end.get_relative())
 
         self.assertIsNone(region1.get_warmup())
 
@@ -542,31 +541,31 @@ class LooppointJsonLoaderTestSuite(unittest.TestCase):
             region_id="1",
         )
 
-        self.assertEquals(1, len(looppoint.get_regions()))
+        self.assertEqual(1, len(looppoint.get_regions()))
         self.assertTrue("1" in looppoint.get_regions())
         region = looppoint.get_regions()["1"]
 
-        self.assertEquals(4.0, region.get_multiplier())
+        self.assertEqual(4.0, region.get_multiplier())
 
         region_start = region.get_simulation().get_start()
-        self.assertEquals(4221392, region_start.get_pc())
-        self.assertEquals(211076617, region_start.get_global())
+        self.assertEqual(4221392, region_start.get_pc())
+        self.assertEqual(211076617, region_start.get_global())
         self.assertIsNotNone(region_start.get_relative())
-        self.assertEquals(15326617, region_start.get_relative())
+        self.assertEqual(15326617, region_start.get_relative())
 
         region_end = region.get_simulation().get_end()
-        self.assertEquals(4221392, region_end.get_pc())
-        self.assertEquals(219060252, region_end.get_global())
+        self.assertEqual(4221392, region_end.get_pc())
+        self.assertEqual(219060252, region_end.get_global())
         self.assertIsNotNone(region_end.get_relative())
-        self.assertEquals(23310252, region_end.get_relative())
+        self.assertEqual(23310252, region_end.get_relative())
 
         region_warmup = region.get_warmup()
         self.assertIsNotNone(region_warmup)
 
-        self.assertEquals(
+        self.assertEqual(
             PcCountPair(4221056, 23520614), region_warmup.get_start()
         )
-        self.assertEquals(
+        self.assertEqual(
             PcCountPair(4221392, 211076617), region_warmup.get_end()
         )
 
@@ -580,20 +579,20 @@ class LooppointJsonLoaderTestSuite(unittest.TestCase):
             region_id="2",
         )
 
-        self.assertEquals(1, len(looppoint.get_regions()))
+        self.assertEqual(1, len(looppoint.get_regions()))
         self.assertTrue("2" in looppoint.get_regions())
         region = looppoint.get_regions()["2"]
 
-        self.assertEquals(5.001, region.get_multiplier())
+        self.assertEqual(5.001, region.get_multiplier())
 
         region_start = region.get_simulation().get_start()
-        self.assertEquals(4221392, region_start.get_pc())
-        self.assertEquals(407294228, region_start.get_global())
+        self.assertEqual(4221392, region_start.get_pc())
+        self.assertEqual(407294228, region_start.get_global())
         self.assertIsNone(region_start.get_relative())
 
         region_end = region.get_simulation().get_end()
-        self.assertEquals(4221392, region_end.get_pc())
-        self.assertEquals(415282447, region_end.get_global())
+        self.assertEqual(4221392, region_end.get_pc())
+        self.assertEqual(415282447, region_end.get_global())
         self.assertIsNone(region_end.get_relative())
 
         region_warmup = region.get_warmup()

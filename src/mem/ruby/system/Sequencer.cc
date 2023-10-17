@@ -466,8 +466,12 @@ Sequencer::writeCallback(Addr address, DataBlock& data,
     bool ruby_request = true;
     while (!seq_req_list.empty()) {
         SequencerRequest &seq_req = seq_req_list.front();
+        // Atomic Request may be executed remotly in the cache hierarchy
+        bool atomic_req =
+           ((seq_req.m_type == RubyRequestType_ATOMIC_RETURN) ||
+            (seq_req.m_type == RubyRequestType_ATOMIC_NO_RETURN));
 
-        if (noCoales && !ruby_request) {
+        if ((noCoales || atomic_req) && !ruby_request) {
             // Do not process follow-up requests
             // (e.g. if full line no present)
             // Reissue to the cache hierarchy
@@ -479,6 +483,8 @@ Sequencer::writeCallback(Addr address, DataBlock& data,
             assert(seq_req.m_type != RubyRequestType_LD);
             assert(seq_req.m_type != RubyRequestType_Load_Linked);
             assert(seq_req.m_type != RubyRequestType_IFETCH);
+            assert(seq_req.m_type != RubyRequestType_ATOMIC_RETURN);
+            assert(seq_req.m_type != RubyRequestType_ATOMIC_NO_RETURN);
         }
 
         // handle write request
@@ -595,6 +601,62 @@ Sequencer::readCallback(Addr address, DataBlock& data,
 }
 
 void
+Sequencer::atomicCallback(Addr address, DataBlock& data,
+                         const bool externalHit, const MachineType mach,
+                         const Cycles initialRequestTime,
+                         const Cycles forwardRequestTime,
+                         const Cycles firstResponseTime)
+{
+    //
+    // Free the first request (an atomic operation) from the list.
+    // Then issue the next request to ruby system as we cannot
+    // assume the cache line is present in the cache
+    // (the opperation could be performed remotly)
+    //
+    assert(address == makeLineAddress(address));
+    assert(m_RequestTable.find(address) != m_RequestTable.end());
+    auto &seq_req_list = m_RequestTable[address];
+
+    // Perform hitCallback only on the first cpu request that
+    // issued the ruby request
+    bool ruby_request = true;
+    while (!seq_req_list.empty()) {
+        SequencerRequest &seq_req = seq_req_list.front();
+
+        if (ruby_request) {
+            // Check that the request was an atomic memory operation
+            // and record the latency
+            assert((seq_req.m_type == RubyRequestType_ATOMIC_RETURN) ||
+                   (seq_req.m_type == RubyRequestType_ATOMIC_NO_RETURN));
+            recordMissLatency(&seq_req, true, mach, externalHit,
+                              initialRequestTime, forwardRequestTime,
+                              firstResponseTime);
+        } else {
+            // Read, Write or Atomic request:
+            // reissue request to the cache hierarchy
+            // (we don't know if op was performed remotly)
+            issueRequest(seq_req.pkt, seq_req.m_second_type);
+            break;
+        }
+
+        // Atomics clean the monitor entry
+        llscClearMonitor(address);
+
+        markRemoved();
+        ruby_request = false;
+        hitCallback(&seq_req, data, true, mach, externalHit,
+                    initialRequestTime, forwardRequestTime,
+                    firstResponseTime, false);
+        seq_req_list.pop_front();
+    }
+
+    // free all outstanding requests corresponding to this address
+    if (seq_req_list.empty()) {
+        m_RequestTable.erase(address);
+    }
+}
+
+void
 Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
                        bool llscSuccess,
                        const MachineType mach, const bool externalHit,
@@ -637,10 +699,16 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
             (type == RubyRequestType_IFETCH) ||
             (type == RubyRequestType_RMW_Read) ||
             (type == RubyRequestType_Locked_RMW_Read) ||
-            (type == RubyRequestType_Load_Linked)) {
+            (type == RubyRequestType_Load_Linked) ||
+            (type == RubyRequestType_ATOMIC_RETURN)) {
             pkt->setData(
                 data.getData(getOffset(request_address), pkt->getSize()));
-            DPRINTF(RubySequencer, "read data %s\n", data);
+
+           if (type == RubyRequestType_ATOMIC_RETURN) {
+               DPRINTF(RubySequencer, "ATOMIC RETURN data %s\n", data);
+           } else {
+               DPRINTF(RubySequencer, "read data %s\n", data);
+           }
         } else if (pkt->req->isSwap()) {
             assert(!pkt->isMaskedWrite());
             std::vector<uint8_t> overwrite_val(pkt->getSize());
@@ -807,6 +875,19 @@ Sequencer::makeRequest(PacketPtr pkt)
     } else if (pkt->req->isTlbiCmd()) {
         primary_type = secondary_type = tlbiCmdToRubyRequestType(pkt);
         DPRINTF(RubySequencer, "Issuing TLBI\n");
+#if defined (PROTOCOL_CHI)
+    } else if (pkt->isAtomicOp()) {
+        if (pkt->req->isAtomicReturn()){
+            DPRINTF(RubySequencer, "Issuing ATOMIC RETURN \n");
+            primary_type = secondary_type =
+                           RubyRequestType_ATOMIC_RETURN;
+        } else {
+            DPRINTF(RubySequencer, "Issuing ATOMIC NO RETURN\n");
+            primary_type = secondary_type =
+                           RubyRequestType_ATOMIC_NO_RETURN;
+
+        }
+#endif
     } else {
         //
         // To support SwapReq, we need to check isWrite() first: a SwapReq
@@ -913,6 +994,18 @@ Sequencer::issueRequest(PacketPtr pkt, RubyRequestType secondary_type)
                                             pkt->getSize(), pc, secondary_type,
                                             RubyAccessMode_Supervisor, pkt,
                                             PrefetchBit_No, proc_id, core_id);
+
+        if (pkt->isAtomicOp() &&
+            ((secondary_type == RubyRequestType_ATOMIC_RETURN) ||
+             (secondary_type == RubyRequestType_ATOMIC_NO_RETURN))){
+            // Create the blocksize, access mask and atomicops
+            uint32_t offset = getOffset(pkt->getAddr());
+            std::vector<std::pair<int,AtomicOpFunctor*>> atomicOps;
+            atomicOps.push_back(std::make_pair<int,AtomicOpFunctor*>
+                                (offset, pkt->getAtomicOp()));
+
+            msg->setWriteMask(offset, pkt->getSize(), atomicOps);
+        }
 
         DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %#x %s\n",
                 curTick(), m_version, "Seq", "Begin", "", "",

@@ -204,6 +204,7 @@ def get_resource(
     resource_version: Optional[str] = None,
     clients: Optional[List] = None,
     gem5_version: Optional[str] = core.gem5Version,
+    quiet: bool = False,
 ) -> None:
     """
     Obtains a gem5 resource and stored it to a specified location. If the
@@ -235,6 +236,9 @@ def get_resource(
     :param gem5_version: The gem5 version to use when obtaining the resource.
     By default, the version of gem5 being used is used. This is used primarily
     for testing purposes.
+
+    :param quiet: If true, no output will be printed to the console (baring
+    exceptions). False by default.
 
     :raises Exception: An exception is thrown if a file is already present at
     `to_path` but it does not have the correct md5 sum. An exception will also
@@ -326,42 +330,45 @@ def get_resource(
             )
             shutil.copy(file_uri_path, download_dest)
         else:
-            # TODO: Might be nice to have some kind of download status bar here.
-            # TODO: There might be a case where this should be silenced.
-            print(
-                "Resource '{}' was not found locally. Downloading to '{}'...".format(
-                    resource_name, download_dest
+            # TODO: Might be nice to have some kind of download status bar here..
+            if not quiet:
+                print(
+                    f"Resource '{resource_name}' was not found locally. "
+                    f"Downloading to '{download_dest}'..."
                 )
-            )
 
             # Get the URL.
             url = resource_json["url"]
 
             _download(url=url, download_to=download_dest)
-            print(f"Finished downloading resource '{resource_name}'.")
+            if not quiet:
+                print(f"Finished downloading resource '{resource_name}'.")
 
         if run_unzip:
-            print(
-                f"Decompressing resource '{resource_name}' ('{download_dest}')..."
-            )
+            if not quiet:
+                print(
+                    f"Decompressing resource '{resource_name}' "
+                    f"('{download_dest}')..."
+                )
             unzip_to = download_dest[: -len(zip_extension)]
             with gzip.open(download_dest, "rb") as f:
                 with open(unzip_to, "wb") as o:
                     shutil.copyfileobj(f, o)
             os.remove(download_dest)
             download_dest = unzip_to
-            print(f"Finished decompressing resource '{resource_name}'.")
+            if not quiet:
+                print(f"Finished decompressing resource '{resource_name}'.")
 
         if run_tar_extract:
-            print(
-                f"Unpacking the the resource '{resource_name}' "
-                f"('{download_dest}')"
-            )
+            if not quiet:
+                print(
+                    f"Unpacking the the resource '{resource_name}' "
+                    f"('{download_dest}')"
+                )
             unpack_to = download_dest[: -len(tar_extension)]
             with tarfile.open(download_dest) as f:
 
                 def is_within_directory(directory, target):
-
                     abs_directory = os.path.abspath(directory)
                     abs_target = os.path.abspath(target)
 
@@ -372,7 +379,6 @@ def get_resource(
                 def safe_extract(
                     tar, path=".", members=None, *, numeric_owner=False
                 ):
-
                     for member in tar.getmembers():
                         member_path = os.path.join(path, member.name)
                         if not is_within_directory(path, member_path):

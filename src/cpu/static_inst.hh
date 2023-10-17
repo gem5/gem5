@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2017, 2020 ARM Limited
+ * Copyright (c) 2017, 2020, 2023 Arm Limited
+ * Copyright (c) 2022-2023 The University of Edinburgh
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -181,6 +182,7 @@ class StaticInst : public RefCounted, public StaticInstFlags
     bool isNonSpeculative() const { return flags[IsNonSpeculative]; }
     bool isQuiesce() const { return flags[IsQuiesce]; }
     bool isUnverifiable() const { return flags[IsUnverifiable]; }
+    bool isPseudo() const { return flags[IsPseudo]; }
     bool isSyscall() const { return flags[IsSyscall]; }
     bool isMacroop() const { return flags[IsMacroop]; }
     bool isMicroop() const { return flags[IsMicroop]; }
@@ -251,6 +253,11 @@ class StaticInst : public RefCounted, public StaticInstFlags
     }
 
     /**
+     * Instruction size in bytes. Necessary for dynamic instruction sizes
+     */
+    size_t _size = 0;
+
+    /**
      * Base mnemonic (e.g., "add").  Used by generateDisassembly()
      * methods.  Also useful to readily identify instructions from
      * within the debugger when #cachedDisassembly has not been
@@ -306,6 +313,17 @@ class StaticInst : public RefCounted, public StaticInstFlags
     {
         panic("buildRetPC not defined!");
     }
+
+    size_t size() const
+    {
+        if (_size == 0) fatal(
+            "Instruction size for this instruction not set! It's size is "
+            "required for the decoupled front-end. Either use the standard "
+            "front-end or this ISA needs to be extended with the instruction "
+            "size. Refer to the X86, Arm or RiscV decoders for an example.");
+        return _size;
+    }
+    virtual void size(size_t newSize) { _size = newSize; }
 
     /**
      * Return the microop that goes with a particular micropc. This should

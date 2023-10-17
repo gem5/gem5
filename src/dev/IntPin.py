@@ -29,6 +29,7 @@ INT_SOURCE_ROLE = "Int Source Pin"
 INT_SINK_ROLE = "Int Sink Pin"
 Port.compat(INT_SOURCE_ROLE, INT_SINK_ROLE)
 
+
 # A source pin generally represents a single pin which might connect to
 # multiple sinks.
 class IntSourcePin(VectorPort):

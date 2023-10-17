@@ -27,6 +27,7 @@ FROM ubuntu:22.04
 
 # Valid version values:
 # 13
+# 15
 ARG version
 
 ENV DEBIAN_FRONTEND=noninteractive

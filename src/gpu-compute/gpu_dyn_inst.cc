@@ -583,6 +583,12 @@ GPUDynInst::readsFlatScratch() const
 }
 
 bool
+GPUDynInst::needsToken() const
+{
+    return isGlobalMem() || isFlat() || isFlatGlobal() || isFlatScratch();
+}
+
+bool
 GPUDynInst::isAtomicAnd() const
 {
     return _staticInst->isAtomicAnd();

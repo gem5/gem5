@@ -94,7 +94,7 @@ def _include_matcher(keyword="#include", delim="<>"):
     """Match an include statement and return a (keyword, file, extra)
     duple, or a touple of None values if there isn't a match."""
 
-    rex = re.compile(r"^(%s)\s*%s(.*)%s(.*)$" % (keyword, delim[0], delim[1]))
+    rex = re.compile(rf"^({keyword})\s*{delim[0]}(.*){delim[1]}(.*)$")
 
     def matcher(context, line):
         m = rex.match(line)
@@ -146,7 +146,7 @@ def _include_matcher_main():
     return matcher
 
 
-class SortIncludes(object):
+class SortIncludes:
     # different types of includes for different sorting of headers
     # <Python.h>         - Python header needs to be first if it exists
     # <*.h>              - system headers (directories before files)
@@ -155,17 +155,21 @@ class SortIncludes(object):
     # "*"                - M5 headers (directories before files)
     includes_re = (
         ("main", '""', _include_matcher_main()),
-        ("python", "<>", _include_matcher_fname("^Python\.h$")),
+        ("python", "<>", _include_matcher_fname(r"^Python\.h$")),
         (
             "pybind",
             '""',
-            _include_matcher_fname("^pybind11/.*\.h$", delim='""'),
+            _include_matcher_fname(r"^pybind11/.*\.h$", delim='""'),
         ),
         ("m5shared", "<>", _include_matcher_fname("^gem5/")),
-        ("c", "<>", _include_matcher_fname("^.*\.h$")),
-        ("stl", "<>", _include_matcher_fname("^\w+$")),
-        ("cc", "<>", _include_matcher_fname("^.*\.(hh|hxx|hpp|H)$")),
-        ("m5header", '""', _include_matcher_fname("^.*\.h{1,2}$", delim='""')),
+        ("c", "<>", _include_matcher_fname(r"^.*\.h$")),
+        ("stl", "<>", _include_matcher_fname(r"^\w+$")),
+        ("cc", "<>", _include_matcher_fname(r"^.*\.(hh|hxx|hpp|H)$")),
+        (
+            "m5header",
+            '""',
+            _include_matcher_fname(r"^.*\.h{1,2}$", delim='""'),
+        ),
         ("swig0", "<>", _include_matcher(keyword="%import")),
         ("swig1", "<>", _include_matcher(keyword="%include")),
         ("swig2", '""', _include_matcher(keyword="%import", delim='""')),
@@ -266,8 +270,7 @@ class SortIncludes(object):
 
                 # Output pending includes, a new line between, and the
                 # current l.
-                for include in self.dump_includes():
-                    yield include
+                yield from self.dump_includes()
                 yield ""
                 yield line
             else:
@@ -276,8 +279,7 @@ class SortIncludes(object):
 
         # We've reached EOF, so dump any pending includes
         if processing_includes:
-            for include in self.dump_includes():
-                yield include
+            yield from self.dump_includes()
 
 
 # default language types to try to apply our sorting rules to

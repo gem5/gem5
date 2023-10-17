@@ -41,7 +41,7 @@ import re
 from functools import wraps
 
 
-class Commit(object):
+class Commit:
     _re_tag = re.compile(r"^((?:\w|-)+): (.*)$")
 
     def __init__(self, rev):
@@ -137,12 +137,12 @@ def list_changes(upstream, feature, paths=[]):
     feature_revs = tuple(list_revs(upstream, feature, paths=paths))
     upstream_revs = tuple(list_revs(feature, upstream, paths=paths))
 
-    feature_cids = dict(
-        [(c.change_id, c) for c in feature_revs if c.change_id is not None]
-    )
-    upstream_cids = dict(
-        [(c.change_id, c) for c in upstream_revs if c.change_id is not None]
-    )
+    feature_cids = {
+        c.change_id: c for c in feature_revs if c.change_id is not None
+    }
+    upstream_cids = {
+        c.change_id: c for c in upstream_revs if c.change_id is not None
+    }
 
     incoming = [
         r
@@ -251,13 +251,11 @@ def _main():
     if args.deep_search:
         print("Incorrectly rebased changes:")
         all_upstream_revs = list_revs(args.upstream, paths=args.paths)
-        all_upstream_cids = dict(
-            [
-                (c.change_id, c)
-                for c in all_upstream_revs
-                if c.change_id is not None
-            ]
-        )
+        all_upstream_cids = {
+            c.change_id: c
+            for c in all_upstream_revs
+            if c.change_id is not None
+        }
         incorrect_outgoing = [
             r for r in outgoing if r.change_id in all_upstream_cids
         ]

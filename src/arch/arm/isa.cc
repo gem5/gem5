@@ -320,6 +320,8 @@ ISA::redirectRegVHE(int misc_reg)
         return ELIsInHost(tc, currEL()) ? MISCREG_CNTPCT_EL0 : misc_reg;
       case MISCREG_SCTLR_EL12:
         return MISCREG_SCTLR_EL1;
+      case MISCREG_SCTLR2_EL12:
+        return MISCREG_SCTLR2_EL1;
       case MISCREG_CPACR_EL12:
         return MISCREG_CPACR_EL1;
       case MISCREG_ZCR_EL12:
@@ -330,6 +332,8 @@ ISA::redirectRegVHE(int misc_reg)
         return MISCREG_TTBR1_EL1;
       case MISCREG_TCR_EL12:
         return MISCREG_TCR_EL1;
+      case MISCREG_TCR2_EL12:
+        return MISCREG_TCR2_EL1;
       case MISCREG_SPSR_EL12:
         return MISCREG_SPSR_EL1;
       case MISCREG_ELR_EL12:
@@ -403,7 +407,6 @@ ISA::readMiscReg(RegIndex idx)
     if (idx == MISCREG_CPSR) {
         cpsr = miscRegs[idx];
         auto pc = tc->pcState().as<PCState>();
-        cpsr.j = pc.jazelle() ? 1 : 0;
         cpsr.t = pc.thumb() ? 1 : 0;
         return cpsr;
     }
@@ -674,7 +677,6 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                 miscRegs[idx], cpsr, cpsr.f, cpsr.i, cpsr.a, cpsr.mode);
         PCState pc = tc->pcState().as<PCState>();
         pc.nextThumb(cpsr.t);
-        pc.nextJazelle(cpsr.j);
         pc.illegalExec(cpsr.il == 1);
         selfDebug->setDebugMask(cpsr.d == 1);
 

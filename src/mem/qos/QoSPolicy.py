@@ -36,6 +36,7 @@
 from m5.SimObject import *
 from m5.params import *
 
+
 # QoS scheduler policy used to serve incoming transaction
 class QoSPolicy(SimObject):
     type = "QoSPolicy"
