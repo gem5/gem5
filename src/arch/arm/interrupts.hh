@@ -137,6 +137,8 @@ class Interrupts : public BaseInterrupts
     bool takeInt64(InterruptTypes int_type) const;
 
     bool takeVirtualInt(InterruptTypes int_type) const;
+    bool takeVirtualInt32(InterruptTypes int_type) const;
+    bool takeVirtualInt64(InterruptTypes int_type) const;
 
     bool
     checkInterrupts() const override
