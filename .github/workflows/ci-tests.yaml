@@ -12,9 +12,35 @@ concurrency:
     cancel-in-progress: true
 
 jobs:
+
+    # NOT TO BE MERGED: A test to see if our KVM GitHub Self-Hosted runner
+    # setup allows us to run KVM workloads.
+    kvm-check:
+        runs-on: [self-hosted, linux, x64, kvm] # Note the 'kvm' tag
+        container:
+            image: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
+            options: --device /dev/kvm # Required to run KVM in a container.
+        steps:
+            - name: KVM Sanity Check
+              run: |
+                  apt install -y cpu-checker
+                  kvm-ok
+
+            - uses: actions/checkout@v3
+
+            - name: Build gem5
+              run: scons build/ALL/gem5.opt -j $(nproc)
+
+            - name: Run KVM workload (no perf)
+              run: ./build/ALL/gem5.opt configs/example/gem5_library/x86-ubuntu-run-with-kvm-no-perf.py
+
+            - name: Run KVM workload
+              run: ./build/ALL/gem5.opt configs/example/gem5_library/x86-ubuntu-run-with-kvm.py
+
     pre-commit:
     # runs on github hosted runner
         runs-on: ubuntu-22.04
+        needs: kvm-check
         if: github.event.pull_request.draft == false
         steps:
             - uses: actions/checkout@v3
@@ -25,6 +51,7 @@ jobs:
     check-for-change-id:
         # runs on github hosted runner
         runs-on: ubuntu-22.04
+        needs: kvm-check
         if: github.event.pull_request.draft == false
         steps:
             - uses: actions/checkout@v3
