@@ -146,20 +146,15 @@ class Interrupts : public BaseInterrupts
         if (!(intStatus || hcr.va || hcr.vi || hcr.vf))
             return false;
 
-        bool take_irq = takeInt(INT_IRQ);
-        bool take_fiq = takeInt(INT_FIQ);
-        bool take_ea =  takeInt(INT_ABT);
-        bool take_virq = takeVirtualInt(INT_VIRT_IRQ);
-        bool take_vfiq = takeVirtualInt(INT_VIRT_FIQ);
-        bool take_vabt = takeVirtualInt(INT_VIRT_ABT);
-
-        return ((interrupts[INT_IRQ] && take_irq)                   ||
-                (interrupts[INT_FIQ] && take_fiq)                   ||
-                (interrupts[INT_ABT] && take_ea)                    ||
-                ((interrupts[INT_VIRT_IRQ] || hcr.vi) && take_virq) ||
-                ((interrupts[INT_VIRT_FIQ] || hcr.vf) && take_vfiq) ||
-                (hcr.va && take_vabt)                               ||
-                (interrupts[INT_RST])                               ||
+        return ((interrupts[INT_IRQ] && takeInt(INT_IRQ)) ||
+                (interrupts[INT_FIQ] && takeInt(INT_FIQ)) ||
+                (interrupts[INT_ABT] && takeInt(INT_ABT)) ||
+                ((interrupts[INT_VIRT_IRQ] || hcr.vi) &&
+                    takeVirtualInt(INT_VIRT_IRQ)) ||
+                ((interrupts[INT_VIRT_FIQ] || hcr.vf) &&
+                    takeVirtualInt(INT_VIRT_FIQ)) ||
+                (hcr.va && takeVirtualInt(INT_VIRT_ABT)) ||
+                (interrupts[INT_RST]) ||
                 (interrupts[INT_SEV])
                );
     }
@@ -224,24 +219,19 @@ class Interrupts : public BaseInterrupts
 
         HCR  hcr  = tc->readMiscReg(MISCREG_HCR_EL2);
 
-        bool take_irq = takeInt(INT_IRQ);
-        bool take_fiq = takeInt(INT_FIQ);
-        bool take_ea =  takeInt(INT_ABT);
-        bool take_virq = takeVirtualInt(INT_VIRT_IRQ);
-        bool take_vfiq = takeVirtualInt(INT_VIRT_FIQ);
-        bool take_vabt = takeVirtualInt(INT_VIRT_ABT);
-
-        if (interrupts[INT_IRQ] && take_irq)
+        if (interrupts[INT_IRQ] && takeInt(INT_IRQ))
             return std::make_shared<Interrupt>();
-        if ((interrupts[INT_VIRT_IRQ] || hcr.vi) && take_virq)
+        if ((interrupts[INT_VIRT_IRQ] || hcr.vi) &&
+            takeVirtualInt(INT_VIRT_IRQ))
             return std::make_shared<VirtualInterrupt>();
-        if (interrupts[INT_FIQ] && take_fiq)
+        if (interrupts[INT_FIQ] && takeInt(INT_FIQ))
             return std::make_shared<FastInterrupt>();
-        if ((interrupts[INT_VIRT_FIQ] || hcr.vf) && take_vfiq)
+        if ((interrupts[INT_VIRT_FIQ] || hcr.vf) &&
+            takeVirtualInt(INT_VIRT_FIQ))
             return std::make_shared<VirtualFastInterrupt>();
-        if (interrupts[INT_ABT] && take_ea)
+        if (interrupts[INT_ABT] && takeInt(INT_ABT))
             return std::make_shared<SystemError>();
-        if (hcr.va && take_vabt)
+        if (hcr.va && takeVirtualInt(INT_VIRT_ABT))
             return std::make_shared<VirtualDataAbort>(
                 0, TlbEntry::DomainType::NoAccess, false,
                 ArmFault::AsynchronousExternalAbort);
