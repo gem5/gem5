@@ -60,13 +60,11 @@ BPredUnit::BPredUnit(const Params &params)
       numThreads(params.numThreads),
       predHist(numThreads),
       btb(params.btb),
-      RAS(numThreads),
+      ras(params.ras),
       iPred(params.indirectBranchPred),
       stats(this),
       instShiftAmt(params.instShiftAmt)
 {
-    for (auto& r : RAS)
-        r.init(params.RASSize);
 }
 
 BPredUnit::BPredUnitStats::BPredUnitStats(statistics::Group *parent)
@@ -172,19 +170,12 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
         //       support coroutines.
         if (inst->isReturn()) {
             ++stats.RASUsed;
-            predict_record.wasReturn = true;
-            // If it's a function return call, then look up the address
-            // in the RAS.
-            const PCStateBase *ras_top = RAS[tid].top();
-            if (ras_top)
-                set(target, inst->buildRetPC(pc, *ras_top));
-
-            // Record the top entry of the RAS, and its index.
-            predict_record.usedRAS = true;
-            predict_record.RASIndex = RAS[tid].topIdx();
-            set(predict_record.RASTarget, ras_top);
-
-            RAS[tid].pop();
+            // If it's a return from a function call, then look up the
+            // RETURN address in the RAS.
+            const PCStateBase *return_addr = ras->pop(tid,
+                                                predict_record.rasHistory);
+            if (return_addr)
+                set(target, return_addr);
 
             DPRINTF(Branch, "[tid:%i] [sn:%llu] Instruction %s is a return, "
                     "RAS predicted target: %s, RAS index: %i\n",
@@ -192,17 +183,17 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
         }
 
         if (inst->isCall()) {
-            RAS[tid].push(pc);
-            predict_record.pushedRAS = true;
+            // In case of a call build the return address and
+            // push it to the RAS.
+            auto return_addr = inst->buildRetPC(pc, pc);
+            ras->push(tid, *return_addr, predict_record.rasHistory);
 
             // Record that it was a call so that the top RAS entry can
             // be popped off if the speculation is incorrect.
-            predict_record.wasCall = true;
+            DPRINTF(Branch, "[tid:%i] [sn:%llu] Instr. %s was "
+                    "a call, push return address %s onto the RAS\n",
+                    tid, seqNum, pc, *return_addr);
 
-            DPRINTF(Branch,
-                    "[tid:%i] [sn:%llu] Instruction %s was a call, adding "
-                    "%s to the RAS index: %i\n",
-                    tid, seqNum, pc, pc, RAS[tid].topIdx());
         }
 
         // The target address is not predicted by RAS.
@@ -237,7 +228,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
                                 "called for %s\n",
                                 tid, seqNum, pc);
                     } else if (inst->isCall() && !inst->isUncondCtrl()) {
-                        RAS[tid].pop();
+                        ras->squash(tid, predict_record.rasHistory);
                         predict_record.pushedRAS = false;
                     }
                     inst->advancePC(*target);
@@ -269,17 +260,13 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
                     if (!inst->isCall() && !inst->isReturn()) {
 
                     } else if (inst->isCall() && !inst->isUncondCtrl()) {
-                        RAS[tid].pop();
-                        predict_record.pushedRAS = false;
+                        ras->squash(tid, predict_record.rasHistory);
                     }
                     inst->advancePC(*target);
                 }
             }
         }
     } else {
-        if (inst->isReturn()) {
-           predict_record.wasReturn = true;
-        }
         inst->advancePC(*target);
     }
     predict_record.target = target->instAddr();
@@ -325,6 +312,12 @@ BPredUnit::update(const InstSeqNum &done_sn, ThreadID tid)
                             predHist[tid].back().indirectHistory);
         }
 
+        if (ras) {
+            ras->commit(tid, predHist[tid].back().mispredict,
+                            getBranchType(predHist[tid].back().inst),
+                            predHist[tid].back().rasHistory);
+        }
+
         predHist[tid].pop_back();
     }
 }
@@ -336,30 +329,15 @@ BPredUnit::squash(const InstSeqNum &squashed_sn, ThreadID tid)
 
     while (!pred_hist.empty() &&
            pred_hist.front().seqNum > squashed_sn) {
-        if (pred_hist.front().wasCall && pred_hist.front().pushedRAS) {
-             // Was a call but predicated false. Pop RAS here
-             DPRINTF(Branch, "[tid:%i] [squash sn:%llu] Squashing"
-                     "  Call [sn:%llu] PC: %s Popping RAS\n", tid, squashed_sn,
-                     pred_hist.front().seqNum, pred_hist.front().pc);
-             RAS[tid].pop();
-        }
-        if (pred_hist.front().usedRAS) {
-            if (pred_hist.front().RASTarget != nullptr) {
-                DPRINTF(Branch, "[tid:%i] [squash sn:%llu]"
-                        " Restoring top of RAS to: %i,"
-                        " target: %s\n", tid, squashed_sn,
-                        pred_hist.front().RASIndex,
-                        *pred_hist.front().RASTarget);
-            }
-            else {
-                DPRINTF(Branch, "[tid:%i] [squash sn:%llu]"
-                        " Restoring top of RAS to: %i,"
-                        " target: INVALID_TARGET\n", tid, squashed_sn,
-                        pred_hist.front().RASIndex);
-            }
 
-            RAS[tid].restore(pred_hist.front().RASIndex,
-                             pred_hist.front().RASTarget.get());
+        if (pred_hist.front().rasHistory) {
+            assert(ras);
+
+            DPRINTF(Branch, "[tid:%i] [squash sn:%llu] Incorrect call/return "
+                    "PC %#x. Fix RAS.\n", tid, pred_hist.front().seqNum,
+                    pred_hist.front().pc);
+
+            ras->squash(tid, pred_hist.front().rasHistory);
         }
 
         // This call should delete the bpHistory.
@@ -425,8 +403,7 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
             assert(pred_hist.front().seqNum == squashed_sn);
         }
 
-
-        if ((*hist_it).usedRAS) {
+        if ((*hist_it).rasHistory) {
             ++stats.RASIncorrect;
             DPRINTF(Branch,
                     "[tid:%i] [squash sn:%llu] Incorrect RAS [sn:%llu]\n",
@@ -445,6 +422,7 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
         // Remember the correct direction for the update at commit.
         pred_hist.front().predTaken = actually_taken;
         pred_hist.front().target = corr_target.instAddr();
+        pred_hist.front().mispredict = true;
 
         update(tid, (*hist_it).pc, actually_taken,
                pred_hist.front().bpHistory, true, pred_hist.front().inst,
@@ -459,16 +437,45 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
 
         }
 
-        if (actually_taken) {
-            if (hist_it->wasReturn && !hist_it->usedRAS) {
-                 DPRINTF(Branch, "[tid:%i] [squash sn:%llu] "
-                        "Incorrectly predicted "
-                        "return [sn:%llu] PC: %#x\n", tid, squashed_sn,
-                        hist_it->seqNum,
-                        hist_it->pc);
-                 RAS[tid].pop();
-                 hist_it->usedRAS = true;
+        // Correct RAS ---------------------------------
+        if (ras) {
+            // The branch was taken and the RAS was not updated.
+            // In case of call or return that needs to be fixed.
+            if (actually_taken && (hist_it->rasHistory == nullptr)) {
+
+                // A return has not poped the RAS.
+                if (hist_it->inst->isReturn()) {
+                    DPRINTF(Branch, "[tid:%i] [squash sn:%llu] "
+                        "Incorrectly predicted return [sn:%llu] PC: %#x\n",
+                        tid, squashed_sn, hist_it->seqNum, hist_it->pc);
+
+                    ras->pop(tid, hist_it->rasHistory);
+                }
+
+                // A call has not pushed a return address to the RAS.
+                if (hist_it->inst->isCall()) {
+                    // In case of a call build the return address and
+                    // push it to the RAS.
+                    auto return_addr = hist_it->inst->buildRetPC(
+                                                    corr_target, corr_target);
+
+                    DPRINTF(Branch, "[tid:%i] [squash sn:%llu] "
+                            "Incorrectly predicted call: [sn:%llu,PC:%#x] "
+                            " Push return address %s onto RAS\n", tid,
+                            squashed_sn, hist_it->seqNum, hist_it->pc,
+                            *return_addr);
+                    ras->push(tid, *return_addr, hist_it->rasHistory);
+                }
+
+            // The branch was not taken but the RAS modified.
+            } else if (!actually_taken && (hist_it->rasHistory != nullptr)) {
+                // The branch was not taken but the RAS was modified.
+                // Needs to be fixed.
+                ras->squash(tid, hist_it->rasHistory);
             }
+        }
+
+        if (actually_taken) {
             if (hist_it->wasIndirect) {
                 ++stats.indirectMispredicted;
             } else {
@@ -481,42 +488,6 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
                 btb->update(tid, hist_it->pc, corr_target,
                             getBranchType(hist_it->inst));
             }
-        } else {
-           //Actually not Taken
-           if (hist_it->wasCall && hist_it->pushedRAS) {
-                 //Was a Call but predicated false. Pop RAS here
-                 DPRINTF(Branch,
-                        "[tid:%i] [squash sn:%llu] "
-                        "Incorrectly predicted "
-                        "Call [sn:%llu] PC: %s Popping RAS\n",
-                        tid, squashed_sn,
-                        hist_it->seqNum, hist_it->pc);
-                 RAS[tid].pop();
-                 hist_it->pushedRAS = false;
-           }
-           if (hist_it->usedRAS) {
-
-                std::string RASTarget;
-
-                DPRINTF(Branch,
-                        "[tid:%i] [squash sn:%llu] Incorrectly predicted "
-                        "return [sn:%llu] PC: %#x Restoring RAS\n", tid,
-                        squashed_sn,
-                        hist_it->seqNum, hist_it->pc);
-                if (hist_it->RASTarget) {
-                    std::ostringstream os;
-                    os << *hist_it->RASTarget.get();
-                    RASTarget = os.str();
-                } else {
-                    RASTarget = "no RAS";
-                }
-                DPRINTF(Branch,
-                        "[tid:%i] [squash sn:%llu] Restoring top of RAS "
-                        "to: %i, target: %s\n", tid, squashed_sn,
-                        hist_it->RASIndex, RASTarget.c_str());
-                RAS[tid].restore(hist_it->RASIndex, hist_it->RASTarget.get());
-                hist_it->usedRAS = false;
-           }
         }
     } else {
         DPRINTF(Branch, "[tid:%i] [sn:%llu] pred_hist empty, can't "

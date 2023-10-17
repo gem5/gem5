@@ -113,11 +113,11 @@ class ex5_big_BTB(SimpleBTB):
 # Bi-Mode Branch Predictor
 class ex5_big_BP(BiModeBP):
     btb = ex5_big_BTB()
+    ras = ReturnAddrStack(numEntries=48)
     globalPredictorSize = 4096
     globalCtrBits = 2
     choicePredictorSize = 1024
     choiceCtrBits = 3
-    RASSize = 48
     instShiftAmt = 2
 
 

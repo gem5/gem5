@@ -57,6 +57,15 @@ class BranchType(Enum):
     ]
 
 
+class ReturnAddrStack(SimObject):
+    type = "ReturnAddrStack"
+    cxx_class = "gem5::branch_prediction::ReturnAddrStack"
+    cxx_header = "cpu/pred/ras.hh"
+
+    numThreads = Param.Unsigned(Parent.numThreads, "Number of threads")
+    numEntries = Param.Unsigned(16, "Number of RAS entries")
+
+
 class BranchTargetBuffer(ClockedObject):
     type = "BranchTargetBuffer"
     cxx_class = "gem5::branch_prediction::BranchTargetBuffer"
@@ -120,10 +129,10 @@ class BranchPredictor(SimObject):
     numThreads = Param.Unsigned(Parent.numThreads, "Number of threads")
     instShiftAmt = Param.Unsigned(2, "Number of bits to shift instructions by")
 
-    RASSize = Param.Unsigned(16, "RAS size")
-
     btb = Param.BranchTargetBuffer(SimpleBTB(), "Branch target buffer (BTB)")
-
+    ras = Param.ReturnAddrStack(
+        ReturnAddrStack(), "Return address stack, set to NULL to disable RAS."
+    )
     indirectBranchPred = Param.IndirectPredictor(
         SimpleIndirectPredictor(),
         "Indirect branch predictor, set to NULL to disable "

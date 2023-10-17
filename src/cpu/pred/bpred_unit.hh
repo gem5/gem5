@@ -218,17 +218,19 @@ class BPredUnit : public SimObject
                          void *indirect_history, ThreadID _tid,
                          const StaticInstPtr & inst)
             : seqNum(seq_num), pc(instPC), bpHistory(bp_history),
-              indirectHistory(indirect_history), tid(_tid),
+              indirectHistory(indirect_history), rasHistory(nullptr),
+              tid(_tid),
               predTaken(pred_taken), inst(inst)
         {}
 
         PredictorHistory(const PredictorHistory &other) :
             seqNum(other.seqNum), pc(other.pc), bpHistory(other.bpHistory),
-            indirectHistory(other.indirectHistory), RASIndex(other.RASIndex),
+            indirectHistory(other.indirectHistory),
+            rasHistory(other.rasHistory), RASIndex(other.RASIndex),
             tid(other.tid), predTaken(other.predTaken), usedRAS(other.usedRAS),
-            pushedRAS(other.pushedRAS), wasCall(other.wasCall),
-            wasReturn(other.wasReturn), wasIndirect(other.wasIndirect),
-            target(other.target), inst(other.inst)
+            pushedRAS(other.pushedRAS), wasIndirect(other.wasIndirect),
+            target(other.target), inst(other.inst),
+            mispredict(other.mispredict)
         {
             set(RASTarget, other.RASTarget);
         }
@@ -253,6 +255,8 @@ class BPredUnit : public SimObject
 
         void *indirectHistory = nullptr;
 
+        void *rasHistory = nullptr;
+
         /** The RAS target (only valid if a return). */
         std::unique_ptr<PCStateBase> RASTarget;
 
@@ -271,12 +275,6 @@ class BPredUnit : public SimObject
         /* Whether or not the RAS was pushed */
         bool pushedRAS = false;
 
-        /** Whether or not the instruction was a call. */
-        bool wasCall = false;
-
-        /** Whether or not the instruction was a return. */
-        bool wasReturn = false;
-
         /** Wether this instruction was an indirect branch */
         bool wasIndirect = false;
 
@@ -287,6 +285,9 @@ class BPredUnit : public SimObject
 
         /** The branch instrction */
         const StaticInstPtr inst;
+
+        /** Whether this branch was mispredicted */
+        bool mispredict = false;
     };
 
     typedef std::deque<PredictorHistory> History;
@@ -303,10 +304,10 @@ class BPredUnit : public SimObject
     std::vector<History> predHist;
 
     /** The BTB. */
-    BranchTargetBuffer* btb;
+    BranchTargetBuffer * btb;
 
-    /** The per-thread return address stack. */
-    std::vector<ReturnAddrStack> RAS;
+    /** The return address stack. */
+    ReturnAddrStack * ras;
 
     /** The indirect target predictor. */
     IndirectPredictor * iPred;
