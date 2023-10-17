@@ -208,7 +208,9 @@ let {{
                 ExceptionLevel curr_el = currEL(cpsr);
 
                 if (fgtEnabled(xc->tcBase()) && curr_el == EL1 &&
-                    static_cast<HFGITR>(xc->tcBase()->readMiscReg(MISCREG_HFGITR_EL2)).eret) {
+                    static_cast<HFGITR>(
+                        xc->tcBase()->readMiscReg(MISCREG_HFGITR_EL2)).eret)
+                {
                     return std::make_shared<HypervisorTrap>(
                         machInst, %(trap_iss)d, ExceptionClass::TRAPPED_ERET);
                 }
