@@ -25,9 +25,7 @@ def cli():
     )
     global collection
     # add subparsers
-    subparsers = parser.add_subparsers(
-        help="sub-command help", dest="subparser_name"
-    )
+    subparsers = parser.add_subparsers(help="sub-command help", dest="subparser_name")
     resource_creator_parser = subparsers.add_parser("createResources")
     resource_creator_parser.add_argument(
         "category", type=str, help="category of resource to create"
@@ -117,9 +115,7 @@ def create_resources(args):
     with Loader("Connecting to MongoDB...", end="Connected to MongoDB"):
         helper.collection = get_database()
     schema = json.loads(
-        requests.get(
-            "https://resources.gem5.org/gem5-resources-schema.json"
-        ).content
+        requests.get("https://resources.gem5.org/gem5-resources-schema.json").content
     )
     resource = {}
     required, optional = get_fields(args.category, schema)
@@ -131,9 +127,7 @@ def create_resources(args):
     del required["category"]
     enter_fields(required, resource, populated_fields, args)
     if args.required_fields_only:
-        enter_fields(
-            optional, resource, populated_fields, args, is_optional=True
-        )
+        enter_fields(optional, resource, populated_fields, args, is_optional=True)
     if not args.ignore_db_check and check_resource_exists(resource):
         # throw runtime exception
         raise Exception("Resource already exists in database")
@@ -144,14 +138,8 @@ def create_resources(args):
 
 def update_resources(args):
     resource = get_latest_resource(args.id)[0]
-    new_resource_version = get_updated_rsource_version(
-        resource["resource_version"]
-    )
+    new_resource_version = get_updated_rsource_version(resource["resource_version"])
     updated_resource = update_resource(
         resource, new_resource_version, args.update_non_existing_fields
     )
     save_file(updated_resource, args.output)
-
-
-if __name__ == "__main__":
-    cli()

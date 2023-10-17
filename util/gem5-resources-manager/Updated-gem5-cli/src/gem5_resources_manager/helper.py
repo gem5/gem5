@@ -35,9 +35,7 @@ collection = get_database()
 
 def validate_resources(resources: List) -> bool:
     schema = json.loads(
-        requests.get(
-            "https://resources.gem5.org/gem5-resources-schema.json"
-        ).content
+        requests.get("https://resources.gem5.org/gem5-resources-schema.json").content
     )
     for resource in resources:
         validator = jsonschema.Draft7Validator(schema)
@@ -213,19 +211,13 @@ def get_updated_rsource_version(current_resource_version):
         version_subparts = current_resource_version.split(".")
         version_subparts[0] = str(int(version_subparts[0]) + 1)
         new_version = (
-            version_subparts[0]
-            + "."
-            + version_subparts[1]
-            + "."
-            + version_subparts[2]
+            version_subparts[0] + "." + version_subparts[1] + "." + version_subparts[2]
         )
         return new_version
     return current_resource_version
 
 
-def update_resource(
-    resource, new_resource_version, update_non_existing_fields
-):
+def update_resource(resource, new_resource_version, update_non_existing_fields):
     updated_resource = {}
     print(resource)
     for field_key, field_value in resource.items():
@@ -237,9 +229,7 @@ def update_resource(
         print(f"{field_key}: {field_value}")
         is_updated = input("Do you want to update this field? (Y/N): ")
         if is_updated.lower() == "y":
-            updated_resource[field_key] = input(
-                f"Enter new value for {field_key}: "
-            )
+            updated_resource[field_key] = input(f"Enter new value for {field_key}: ")
         else:
             updated_resource[field_key] = field_value
 
@@ -255,9 +245,7 @@ def update_resource(
         )
         for optional_field in optional_fields.keys():
             if optional_field not in resource.keys():
-                print(
-                    f"Update the following optional field: {optional_field}? (Y/N):"
-                )
+                print(f"Update the following optional field: {optional_field}? (Y/N):")
                 if input().lower() != "y":
                     continue
                 print(

@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools==68.2.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gem5-resources-manager"
+description = ""
+version="0.0.0"
+authors = [
+    {name = "Harshil Patel", email = "hpppatel@ucdavis.edu"}
+]
+
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+]
+dependencies = [
+    "pymongo == 4.5.0",
+]
+
+[project.scripts]
+gem5-resources-manager = "gem5_resources_manager.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
