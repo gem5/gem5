@@ -288,6 +288,14 @@ ArmISA::Interrupts::takeInt(InterruptTypes int_type) const
 bool
 ArmISA::Interrupts::takeVirtualInt(InterruptTypes int_type) const
 {
+    return ArmSystem::highestELIs64(tc) ? takeVirtualInt64(int_type) :
+                                          takeVirtualInt32(int_type);
+
+}
+
+bool
+ArmISA::Interrupts::takeVirtualInt32(InterruptTypes int_type) const
+{
     CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
     HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
 
@@ -326,6 +334,79 @@ ArmISA::Interrupts::takeVirtualInt(InterruptTypes int_type) const
     }
     return !cpsr_mask_bit && hcr_mask_override_bit &&
         !is_secure && !is_hyp_mode;
+}
+
+bool
+ArmISA::Interrupts::takeVirtualInt64(InterruptTypes int_type) const
+{
+    InterruptMask mask;
+    CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
+    HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+    SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+
+    ExceptionLevel el = currEL(tc);
+    bool cpsr_mask_bit, hcr_mask_override_bit;
+    bool is_secure = ArmISA::isSecureBelowEL3(tc);
+
+    switch(int_type) {
+      case INT_VIRT_FIQ:
+        cpsr_mask_bit = cpsr.f;
+        hcr_mask_override_bit = hcr.fmo;
+        break;
+      case INT_VIRT_IRQ:
+        cpsr_mask_bit = cpsr.i;
+        hcr_mask_override_bit = hcr.imo;
+        break;
+      case INT_VIRT_ABT:
+        cpsr_mask_bit = cpsr.a;
+        hcr_mask_override_bit = hcr.amo;
+        break;
+      default:
+        panic("Unhandled interrupt type!");
+    }
+
+    if (is_secure) {
+        if (!scr.eel2) {
+            // NS=0,EEL2=0
+            mask = INT_MASK_P;
+        } else {
+            if (!hcr.tge) {
+                if (!hcr_mask_override_bit) {
+                    // NS=0,EEL2=1,TGE=0,AMO/IMO/FMO=0
+                    mask = INT_MASK_P;
+                } else {
+                    // NS=0,EEL2=1,TGE=0,AMO/IMO/FMO=1
+                    if (el == EL2 || el == EL3)
+                        mask = INT_MASK_P;
+                    else
+                        mask = INT_MASK_M;
+                }
+            } else {
+                // NS=0,EEL2=1,TGE=1
+                mask = INT_MASK_P;
+            }
+        }
+    } else {
+        if (!hcr.tge) {
+            if (!hcr_mask_override_bit) {
+                // NS=1,TGE=0,AMO/IMO/FMO=0
+                mask = INT_MASK_P;
+            } else {
+                // NS=1,TGE=0,AMO/IMO/FMO=1
+                if (el == EL2 || el == EL3)
+                    mask = INT_MASK_P;
+                else
+                    mask = INT_MASK_M;
+            }
+        } else {
+            // NS=1,TGE=1
+            mask = INT_MASK_P;
+        }
+    }
+
+    return ((mask == INT_MASK_T) ||
+            ((mask == INT_MASK_M) && !cpsr_mask_bit)) &&
+            (mask != INT_MASK_P);
 }
 
 } // namespace gem5
