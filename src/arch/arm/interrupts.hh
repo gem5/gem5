@@ -169,16 +169,16 @@ class Interrupts : public BaseInterrupts
     bool
     checkWfiWake(HCR hcr, CPSR cpsr, SCR scr) const
     {
-        uint64_t maskedIntStatus;
-        bool     virtWake;
+        uint64_t masked_int_status;
+        bool     virt_wake;
 
-        maskedIntStatus = intStatus & ~((1 << INT_VIRT_IRQ) |
-                                        (1 << INT_VIRT_FIQ));
-        virtWake  = (hcr.vi || interrupts[INT_VIRT_IRQ]) && hcr.imo;
-        virtWake |= (hcr.vf || interrupts[INT_VIRT_FIQ]) && hcr.fmo;
-        virtWake |=  hcr.va                              && hcr.amo;
-        virtWake &= (cpsr.mode != MODE_HYP) && !isSecure(tc);
-        return maskedIntStatus || virtWake;
+        masked_int_status = intStatus & ~((1 << INT_VIRT_IRQ) |
+                                          (1 << INT_VIRT_FIQ));
+        virt_wake  = (hcr.vi || interrupts[INT_VIRT_IRQ]) && hcr.imo;
+        virt_wake |= (hcr.vf || interrupts[INT_VIRT_FIQ]) && hcr.fmo;
+        virt_wake |=  hcr.va                              && hcr.amo;
+        virt_wake &= currEL(cpsr) < EL2 && EL2Enabled(tc);
+        return masked_int_status || virt_wake;
     }
 
     uint32_t
