@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2022-2023 The University of Edinburgh
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2018 Metempsy Technology Consulting
  * All rights reserved.
  *
@@ -362,16 +374,16 @@ TAGE_SC_L_TAGE::extraAltCalc(TAGEBase::BranchInfo* bi)
 }
 
 bool
-TAGE_SC_L::predict(ThreadID tid, Addr branch_pc, bool cond_branch, void* &b)
+TAGE_SC_L::predict(ThreadID tid, Addr pc, bool cond_branch, void* &b)
 {
     TageSCLBranchInfo *bi = new TageSCLBranchInfo(*tage,
                                                   *statisticalCorrector,
                                                   *loopPredictor);
     b = (void*)(bi);
 
-    bool pred_taken = tage->tagePredict(tid, branch_pc, cond_branch,
+    bool pred_taken = tage->tagePredict(tid, pc, cond_branch,
                                         bi->tageBranchInfo);
-    pred_taken = loopPredictor->loopPredict(tid, branch_pc, cond_branch,
+    pred_taken = loopPredictor->loopPredict(tid, pc, cond_branch,
                                             bi->lpBranchInfo, pred_taken,
                                             instShiftAmt);
 
@@ -394,7 +406,7 @@ TAGE_SC_L::predict(ThreadID tid, Addr branch_pc, bool cond_branch, void* &b)
     bool bias = (bi->tageBranchInfo->longestMatchPred !=
                  bi->tageBranchInfo->altTaken);
 
-    pred_taken = statisticalCorrector->scPredict(tid, branch_pc, cond_branch,
+    pred_taken = statisticalCorrector->scPredict(tid, pc, cond_branch,
             bi->scBranchInfo, pred_taken, bias, use_tage_ctr, tage_ctr,
             tage->getTageCtrBits(), bi->tageBranchInfo->hitBank,
             bi->tageBranchInfo->altBank, tage->getPathHist(tid));
@@ -410,8 +422,8 @@ TAGE_SC_L::predict(ThreadID tid, Addr branch_pc, bool cond_branch, void* &b)
 }
 
 void
-TAGE_SC_L::update(ThreadID tid, Addr branch_pc, bool taken, void *bp_history,
-        bool squashed, const StaticInstPtr & inst, Addr corrTarget)
+TAGE_SC_L::update(ThreadID tid, Addr pc, bool taken, void *&bp_history,
+        bool squashed, const StaticInstPtr & inst, Addr target)
 {
     assert(bp_history);
 
@@ -423,7 +435,7 @@ TAGE_SC_L::update(ThreadID tid, Addr branch_pc, bool taken, void *bp_history,
         if (tage->isSpeculativeUpdateEnabled()) {
             // This restores the global history, then update it
             // and recomputes the folded histories.
-            tage->squash(tid, taken, tage_bi, corrTarget);
+            tage->squash(tid, taken, tage_bi, target);
             if (bi->tageBranchInfo->condBranch) {
                 loopPredictor->squashLoop(bi->lpBranchInfo);
             }
@@ -434,7 +446,7 @@ TAGE_SC_L::update(ThreadID tid, Addr branch_pc, bool taken, void *bp_history,
     int nrand = random_mt.random<int>() & 3;
     if (tage_bi->condBranch) {
         DPRINTF(TageSCL, "Updating tables for branch:%lx; taken?:%d\n",
-                branch_pc, taken);
+                pc, taken);
         tage->updateStats(taken, bi->tageBranchInfo);
 
         loopPredictor->updateStats(taken, bi->lpBranchInfo);
@@ -443,26 +455,27 @@ TAGE_SC_L::update(ThreadID tid, Addr branch_pc, bool taken, void *bp_history,
 
         bool bias = (bi->tageBranchInfo->longestMatchPred !=
                      bi->tageBranchInfo->altTaken);
-        statisticalCorrector->condBranchUpdate(tid, branch_pc, taken,
-            bi->scBranchInfo, corrTarget, bias, bi->tageBranchInfo->hitBank,
+        statisticalCorrector->condBranchUpdate(tid, pc, taken,
+            bi->scBranchInfo, target, bias, bi->tageBranchInfo->hitBank,
             bi->tageBranchInfo->altBank, tage->getPathHist(tid));
 
-        loopPredictor->condBranchUpdate(tid, branch_pc, taken,
+        loopPredictor->condBranchUpdate(tid, pc, taken,
                 bi->tageBranchInfo->tagePred, bi->lpBranchInfo, instShiftAmt);
 
-        tage->condBranchUpdate(tid, branch_pc, taken, bi->tageBranchInfo,
-                               nrand, corrTarget, bi->lpBranchInfo->predTaken);
+        tage->condBranchUpdate(tid, pc, taken, bi->tageBranchInfo,
+                               nrand, target, bi->lpBranchInfo->predTaken);
     }
 
     if (!tage->isSpeculativeUpdateEnabled()) {
-        statisticalCorrector->scHistoryUpdate(branch_pc, inst, taken,
-                                              bi->scBranchInfo, corrTarget);
+        statisticalCorrector->scHistoryUpdate(pc, inst, taken,
+                                              bi->scBranchInfo, target);
 
-        tage->updateHistories(tid, branch_pc, taken, bi->tageBranchInfo, false,
-                              inst, corrTarget);
+        tage->updateHistories(tid, pc, taken, bi->tageBranchInfo, false,
+                              inst, target);
     }
 
     delete bi;
+    bp_history = nullptr;
 }
 
 } // namespace branch_prediction

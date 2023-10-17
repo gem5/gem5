@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2022-2023 The University of Edinburgh
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2014 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -73,7 +85,7 @@ BiModeBP::BiModeBP(const BiModeBPParams &params)
  * chooses the taken array and the taken array predicts taken.
  */
 void
-BiModeBP::uncondBranch(ThreadID tid, Addr pc, void * &bpHistory)
+BiModeBP::uncondBranch(ThreadID tid, Addr pc, void * &bp_history)
 {
     BPHistory *history = new BPHistory;
     history->globalHistoryReg = globalHistoryReg[tid];
@@ -81,17 +93,29 @@ BiModeBP::uncondBranch(ThreadID tid, Addr pc, void * &bpHistory)
     history->takenPred = true;
     history->notTakenPred = true;
     history->finalPred = true;
-    bpHistory = static_cast<void*>(history);
-    updateGlobalHistReg(tid, true);
+    bp_history = static_cast<void*>(history);
 }
 
 void
-BiModeBP::squash(ThreadID tid, void *bpHistory)
+BiModeBP::updateHistories(ThreadID tid, Addr pc, bool uncond,
+                         bool taken, Addr target, void * &bp_history)
 {
-    BPHistory *history = static_cast<BPHistory*>(bpHistory);
+    assert(uncond || bp_history);
+    if (uncond) {
+        uncondBranch(tid, pc, bp_history);
+    }
+    updateGlobalHistReg(tid, taken);
+}
+
+
+void
+BiModeBP::squash(ThreadID tid, void * &bp_history)
+{
+    BPHistory *history = static_cast<BPHistory*>(bp_history);
     globalHistoryReg[tid] = history->globalHistoryReg;
 
     delete history;
+    bp_history = nullptr;
 }
 
 /*
@@ -104,7 +128,7 @@ BiModeBP::squash(ThreadID tid, void *bpHistory)
  * direction predictors for the final branch prediction.
  */
 bool
-BiModeBP::lookup(ThreadID tid, Addr branchAddr, void * &bpHistory)
+BiModeBP::lookup(ThreadID tid, Addr branchAddr, void * &bp_history)
 {
     unsigned choiceHistoryIdx = ((branchAddr >> instShiftAmt)
                                 & choiceHistoryMask);
@@ -136,17 +160,11 @@ BiModeBP::lookup(ThreadID tid, Addr branchAddr, void * &bpHistory)
     }
 
     history->finalPred = finalPrediction;
-    bpHistory = static_cast<void*>(history);
-    updateGlobalHistReg(tid, finalPrediction);
+    bp_history = static_cast<void*>(history);
 
     return finalPrediction;
 }
 
-void
-BiModeBP::btbUpdate(ThreadID tid, Addr branchAddr, void * &bpHistory)
-{
-    globalHistoryReg[tid] &= (historyRegisterMask & ~1ULL);
-}
 
 /* Only the selected direction predictor will be updated with the final
  * outcome; the status of the unselected one will not be altered. The choice
@@ -155,12 +173,12 @@ BiModeBP::btbUpdate(ThreadID tid, Addr branchAddr, void * &bpHistory)
  * the direction predictors makes a correct final prediction.
  */
 void
-BiModeBP::update(ThreadID tid, Addr branchAddr, bool taken, void *bpHistory,
-                 bool squashed, const StaticInstPtr & inst, Addr corrTarget)
+BiModeBP::update(ThreadID tid, Addr branchAddr, bool taken,void * &bp_history,
+                 bool squashed, const StaticInstPtr & inst, Addr target)
 {
-    assert(bpHistory);
+    assert(bp_history);
 
-    BPHistory *history = static_cast<BPHistory*>(bpHistory);
+    BPHistory *history = static_cast<BPHistory*>(bp_history);
 
     // We do not update the counters speculatively on a squash.
     // We just restore the global history register.
@@ -222,6 +240,7 @@ BiModeBP::update(ThreadID tid, Addr branchAddr, bool taken, void *bpHistory,
     }
 
     delete history;
+    bp_history = nullptr;
 }
 
 void
