@@ -285,4 +285,47 @@ ArmISA::Interrupts::takeInt(InterruptTypes int_type) const
 
 }
 
+bool
+ArmISA::Interrupts::takeVirtualInt(InterruptTypes int_type) const
+{
+    CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
+    HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+
+    bool no_vhe = !HaveExt(tc, ArmExtension::FEAT_VHE);
+    bool amo, fmo, imo;
+    bool cpsr_mask_bit, hcr_mask_override_bit;
+
+    if (hcr.tge == 1){
+        amo =  (no_vhe || hcr.e2h == 0);
+        fmo =  (no_vhe || hcr.e2h == 0);
+        imo =  (no_vhe || hcr.e2h == 0);
+    } else {
+        amo = hcr.amo;
+        fmo = hcr.fmo;
+        imo = hcr.imo;
+    }
+
+    bool is_hyp_mode   = currEL(tc) == EL2;
+    bool is_secure     = ArmISA::isSecure(tc);
+
+    switch(int_type) {
+      case INT_VIRT_FIQ:
+        cpsr_mask_bit = cpsr.f;
+        hcr_mask_override_bit = fmo;
+        break;
+      case INT_VIRT_IRQ:
+        cpsr_mask_bit = cpsr.i;
+        hcr_mask_override_bit = imo;
+        break;
+      case INT_VIRT_ABT:
+        cpsr_mask_bit = cpsr.a;
+        hcr_mask_override_bit = amo;
+        break;
+      default:
+        panic("Unhandled interrupt type!");
+    }
+    return !cpsr_mask_bit && hcr_mask_override_bit &&
+        !is_secure && !is_hyp_mode;
+}
+
 } // namespace gem5
