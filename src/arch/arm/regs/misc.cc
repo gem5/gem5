@@ -3916,18 +3916,18 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_MDCCINT_EL1)
       .fault(EL1, faultMdccsrEL1)
       .fault(EL2, faultMdccsrEL2)
-      .allPrivileges();
+      .allPrivileges().exceptUserMode();
     InitReg(MISCREG_OSDTRRX_EL1)
-      .allPrivileges()
+      .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_DBGDTRRXext);
     InitReg(MISCREG_MDSCR_EL1)
-      .allPrivileges()
+      .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_DBGDSCRext);
     InitReg(MISCREG_OSDTRTX_EL1)
-      .allPrivileges()
+      .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_DBGDTRTXext);
     InitReg(MISCREG_OSECCR_EL1)
-      .allPrivileges()
+      .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_DBGOSECCR);
     InitReg(MISCREG_DBGBVR0_EL1)
       .allPrivileges().exceptUserMode()
@@ -4266,28 +4266,28 @@ ISA::initializeMiscRegMetadata()
       .fault(EL2, faultDebugEL2)
       .mapsTo(MISCREG_DBGVCR);
     InitReg(MISCREG_MDRAR_EL1)
-      .allPrivileges().monSecureWrite(0).monNonSecureWrite(0)
+      .allPrivileges().exceptUserMode().writes(0)
       .mapsTo(MISCREG_DBGDRAR);
     InitReg(MISCREG_OSLAR_EL1)
-      .allPrivileges().monSecureRead(0).monNonSecureRead(0)
+      .allPrivileges().exceptUserMode().reads(0)
       .mapsTo(MISCREG_DBGOSLAR);
     InitReg(MISCREG_OSLSR_EL1)
-      .allPrivileges().monSecureWrite(0).monNonSecureWrite(0)
+      .allPrivileges().exceptUserMode().writes(0)
       .mapsTo(MISCREG_DBGOSLSR);
     InitReg(MISCREG_OSDLR_EL1)
-      .allPrivileges()
+      .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_DBGOSDLR);
     InitReg(MISCREG_DBGPRCR_EL1)
-      .allPrivileges()
+      .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_DBGPRCR);
     InitReg(MISCREG_DBGCLAIMSET_EL1)
-      .allPrivileges()
+      .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_DBGCLAIMSET);
     InitReg(MISCREG_DBGCLAIMCLR_EL1)
-      .allPrivileges()
+      .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_DBGCLAIMCLR);
     InitReg(MISCREG_DBGAUTHSTATUS_EL1)
-      .allPrivileges().monSecureWrite(0).monNonSecureWrite(0)
+      .allPrivileges().exceptUserMode().writes(0)
       .mapsTo(MISCREG_DBGAUTHSTATUS);
     InitReg(MISCREG_TEECR32_EL1);
     InitReg(MISCREG_TEEHBR32_EL1);
