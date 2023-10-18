@@ -1939,7 +1939,7 @@ faultSctlr2EL1(const MiscRegLUTEntry &entry,
         ) {
             return fault;
         } else if (
-                    EL2Enabled(tc) &&(!isHcrxEL2Enabled(tc) || !hcrx.sctlr2En)
+                    EL2Enabled(tc) && (!isHcrxEL2Enabled(tc) || !hcrx.sctlr2En)
                   ) {
             return inst.generateTrap(EL2);
         } else if (ArmSystem::haveEL(tc, EL3) && !scr.sctlr2En) {
