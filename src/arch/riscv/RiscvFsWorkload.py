@@ -52,3 +52,37 @@ class RiscvLinux(KernelWorkload):
         "", "File that contains the Device Tree Blob. Don't use DTB if empty."
     )
     dtb_addr = Param.Addr(0x87E00000, "DTB address")
+
+
+class RiscvBootloaderKernelWorkload(Workload):
+    type = "RiscvBootloaderKernelWorkload"
+    cxx_class = "gem5::RiscvISA::BootloaderKernelWorkload"
+    cxx_header = "arch/riscv/linux/fs_workload.hh"
+
+    bootloader_filename = Param.String(
+        "", "File that contains the bootloader. Don't use bootloader if empty."
+    )
+    bootloader_addr = Param.Addr(
+        0x0, "Where to place the bootloader in memory."
+    )
+    kernel_filename = Param.String(
+        "", "vmlinux file. Don't use kernel if empty."
+    )
+    kernel_addr = Param.Addr(
+        0x80200000,
+        "Where to place the kernel in memory. Typically, after the first "
+        "stage of booting is done, the bootloader will jump to where the "
+        "`start` symbol of the kernel is.",
+    )
+    entry_point = Param.Addr(
+        0x80000000, "Where to find the first instruction to execute."
+    )
+    dtb_filename = Param.String(
+        "", "File that contains the Device Tree Blob. Don't use DTB if empty."
+    )
+    dtb_addr = Param.Addr(0x87E00000, "Where to place the DTB in memory.")
+
+    # booting parameters
+    boot_args = Param.String(
+        "", "Booting arguments, to be passed to the kernel"
+    )
