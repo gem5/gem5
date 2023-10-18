@@ -2,6 +2,8 @@ import argparse
 
 from .creator import Creator
 
+from .data_source import DummyDatabase
+
 subtools = [Creator()]
 
 
@@ -22,4 +24,5 @@ def cli():
 
     subtool = args.subtool
 
-    subtool.execute(args)
+    with DummyDatabase() as data_source:
+        subtool.execute(args, data_source)
