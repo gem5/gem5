@@ -65,6 +65,9 @@ class Creator(AbstractSubtool):
     def execute(args: Namespace, data_source: AbstractDataSource):
         data_source.create_new_entry("bla", "bla", "bla")
 
+    def create_resource_json():
+        pass
+
 
 if __name__ == "__main__":
     Creator.execute(Creator.get_arg_parser().parse_args())
