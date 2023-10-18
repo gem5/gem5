@@ -23,6 +23,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+config HAVE_SYSTEMC
+    bool
+    default "$(HAVE_SYSTEMC)"
+
 config USE_SYSTEMC
+    depends on HAVE_SYSTEMC
     bool "Enable SystemC API support"
-    default $(USE_SYSTEMC)
+    default n
