@@ -66,6 +66,7 @@ class PrivateL1MOESICache(AbstractNode):
         self.alloc_on_readunique = True
         self.alloc_on_readonce = True
         self.alloc_on_writeback = False  # Should never happen in an L1
+        self.alloc_on_atomic = False
         self.dealloc_on_unique = False
         self.dealloc_on_shared = False
         self.dealloc_backinv_unique = True
