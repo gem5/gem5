@@ -1162,6 +1162,8 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 4, 2, 6, 0), MISCREG_VSTTBR_EL2 },
     { MiscRegNum64(3, 4, 2, 6, 2), MISCREG_VSTCR_EL2 },
     { MiscRegNum64(3, 4, 3, 0, 0), MISCREG_DACR32_EL2 },
+    { MiscRegNum64(3, 4, 3, 1, 4), MISCREG_HDFGRTR_EL2 },
+    { MiscRegNum64(3, 4, 3, 1, 5), MISCREG_HDFGWTR_EL2 },
     { MiscRegNum64(3, 4, 4, 0, 0), MISCREG_SPSR_EL2 },
     { MiscRegNum64(3, 4, 4, 0, 1), MISCREG_ELR_EL2 },
     { MiscRegNum64(3, 4, 4, 1, 0), MISCREG_SP_EL1 },
@@ -6174,6 +6176,12 @@ ISA::initializeMiscRegMetadata()
       .fault(EL2, faultFgtCtrlRegs)
       .hyp().mon(release->has(ArmExtension::FEAT_FGT));
     InitReg(MISCREG_HFGITR_EL2)
+      .fault(EL2, faultFgtCtrlRegs)
+      .hyp().mon(release->has(ArmExtension::FEAT_FGT));
+    InitReg(MISCREG_HDFGRTR_EL2)
+      .fault(EL2, faultFgtCtrlRegs)
+      .hyp().mon(release->has(ArmExtension::FEAT_FGT));
+    InitReg(MISCREG_HDFGWTR_EL2)
       .fault(EL2, faultFgtCtrlRegs)
       .hyp().mon(release->has(ArmExtension::FEAT_FGT));
 
