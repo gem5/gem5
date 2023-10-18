@@ -4,9 +4,12 @@
 name: Daily Tests
 
 on:
-  # Runs every day from 7AM UTC
-    schedule:
-        - cron: 0 7 * * *
+    pull_request:
+        types: [opened, edited, synchronize, ready_for_review]
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+    cancel-in-progress: true
 
 jobs:
     name-artifacts:
@@ -47,10 +50,6 @@ jobs:
         container: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
         steps:
             - uses: actions/checkout@v3
-              with:
-          # Scheduled workflows run on the default branch by default. We
-          # therefore need to explicitly checkout the develop branch.
-                  ref: develop
             - name: defconfig gem5
               if: ${{ matrix.setconfig-option  != '' }}
               run: scons defconfig build/${{ matrix.image }} build_opts/${{ matrix.isa-option }}
@@ -76,10 +75,6 @@ jobs:
         timeout-minutes: 60
         steps:
             - uses: actions/checkout@v3
-              with:
-          # Scheduled workflows run on the default branch by default. We
-          # therefore need to explicitly checkout the develop branch.
-                  ref: develop
             - name: ALL/unittests.${{ matrix.type }} UnitTests
               run: scons build/ALL/unittests.${{ matrix.type }} -j $(nproc)
 
@@ -98,10 +93,6 @@ jobs:
             - name: Clean runner
               run: rm -rf ./* || true rm -rf ./.??* || true rm -rf ~/.cache || true
             - uses: actions/checkout@v3
-              with:
-        # Scheduled workflows run on the default branch by default. We
-        # therefore need to explicitly checkout the develop branch.
-                  ref: develop
     # download all artifacts for each test
     # since long tests can't start until the build matrix completes,
     # we download all artifacts from the build for each test
@@ -187,10 +178,6 @@ jobs:
             - name: Clean runner
               run: rm -rf ./* || true rm -rf ./.??* || true rm -rf ~/.cache || true
             - uses: actions/checkout@v3
-              with:
-        # Scheduled workflows run on the default branch by default. We
-        # therefore need to explicitly checkout the develop branch.
-                  ref: develop
             - uses: actions/download-artifact@v3
               with:
                   name: ${{needs.name-artifacts.outputs.build-name}}ALL
@@ -225,10 +212,6 @@ jobs:
 
         steps:
             - uses: actions/checkout@v3
-              with:
-        # Scheduled workflows run on the default branch by default. We
-        # therefore need to explicitly checkout the develop branch.
-                  ref: develop
             - name: Build RISCV/libgem5_opt.so with SST
               run: scons build/RISCV/libgem5_opt.so --without-tcmalloc --duplicate-sources --ignore-style -j $(nproc)
             - name: Makefile ext/sst
@@ -250,10 +233,6 @@ jobs:
 
         steps:
             - uses: actions/checkout@v3
-              with:
-        # Scheduled workflows run on the default branch by default. We
-        # therefore need to explicitly checkout the develop branch.
-                  ref: develop
             - name: defconfig build/ARM
               run: scons --ignore-style --duplicate-sources defconfig build/ARM build_opts/ARM
             - name: enable systemc
@@ -280,10 +259,6 @@ jobs:
 
         steps:
             - uses: actions/checkout@v3
-              with:
-        # Scheduled workflows run on the default branch by default. We
-        # therefore need to explicitly checkout the develop branch.
-                  ref: develop
             - name: Compile build/GCN3_X86/gem5.opt
               run: scons build/GCN3_X86/gem5.opt -j $(nproc)
             - name: Get Square test-prog from gem5-resources
