@@ -44,4 +44,4 @@ def use_systemc_check(env, warn=False):
 
 main.AddMethod(use_systemc_check, 'UseSystemcCheck')
 
-main['CONF']['USE_SYSTEMC'] = main.UseSystemcCheck()
+main['CONF']['HAVE_SYSTEMC'] = main.UseSystemcCheck()
