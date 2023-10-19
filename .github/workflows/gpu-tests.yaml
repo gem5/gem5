@@ -15,7 +15,7 @@ on:
 jobs:
     build-gem5:
         runs-on: [self-hosted, linux, x64]
-        container: gcr.io/gem5-test/gcn-gpu:latest
+        container: ghcr.io/gem5/gcn-gpu:latest
         steps:
             - uses: actions/checkout@v3
               with:
@@ -66,7 +66,7 @@ jobs:
 
     HACC-tests:
         runs-on: [self-hosted, linux, x64]
-        container: gcr.io/gem5-test/gcn-gpu:latest
+        container: ghcr.io/gem5/gcn-gpu:latest
         needs: build-gem5
         timeout-minutes: 120 # 2 hours
         steps:

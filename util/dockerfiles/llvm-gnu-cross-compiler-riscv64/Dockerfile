@@ -26,7 +26,7 @@
 
 
 # stage 1: download the dependencies
-FROM ubuntu:20.04 AS stage1
+FROM --platform=${BUILDPLATFORM} ubuntu:20.04 AS stage1
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt -y update && apt -y upgrade && apt -y install \

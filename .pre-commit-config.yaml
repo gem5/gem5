@@ -62,7 +62,11 @@ repos:
           - id: check-added-large-files
           - id: mixed-line-ending
             args: [--fix=lf]
+          - id: check-ast
           - id: check-case-conflict
+          - id: check-merge-conflict
+          - id: check-symlinks
+          - id: destroyed-symlinks
           - id: requirements-txt-fixer
     - repo: https://github.com/jumanjihouse/pre-commit-hook-yamlfmt
       rev: 0.2.3

@@ -40,11 +40,19 @@ variable "TAG" {
 # `docker buildx bake --push ubuntu-20-04_all-dependencies` or
 # `docker buildx bake --push ubuntu-releases`.
 group "default" {
-  targets=["clang-compilers", "ubuntu-releases"]
+  targets=["clang-compilers", "ubuntu-releases", "gcc-compilers", "gcn-gpu", "gpu-fs", "sst", "systemc", "llvm-gnu-cross-compiler-riscv64", "gem5-all-min-dependencies"]
 }
 
 group "ubuntu-releases" {
-    targets=["ubuntu-22-04_all-dependencies", "ubuntu-20-04_all-dependencies"]
+  targets=["ubuntu-22-04_all-dependencies", "ubuntu-20-04_all-dependencies", "ubuntu-22-04_min-dependencies"]
+}
+
+group "clang-compilers" {
+  targets = ["clang-compilers-base-20-04", "clang-compilers-base-22-04", "clang-compilers-16"]
+}
+
+group "gcc-compilers" {
+  targets = ["gcc-compilers-base-20-04", "gcc-compilers-base-22-04"]
 }
 
 # Common attributes across all targets. Note: these can be overwritten.
@@ -54,18 +62,32 @@ target "common" {
   platforms = ["linux/amd64", "linux/arm64"]
 }
 
-target "clang-compilers" {
-    name="clang-compilers-${replace(ver, ".", "-")}"
-    inherits = ["common"]
-    context = "ubuntu-20.04_clang-version"
-    dockerfile = "Dockerfile"
-    matrix = {
-        ver = ["6.0","7","8","9","10","11"]
-    }
-    args = {
-        version=ver
-    }
-    tags = ["${IMAGE_URI}/clang-version-${ver}:${TAG}"]
+target "gcn-gpu" {
+  inherits = ["common"]
+  dockerfile = "Dockerfile"
+  context = "gcn-gpu"
+  tags = ["${IMAGE_URI}/gcn-gpu:${TAG}"]
+}
+
+target "gpu-fs" {
+  inherits = ["common"]
+  dockerfile = "Dockerfile"
+  context = "gpu-fs"
+  tags = ["${IMAGE_URI}/gpu-fs:${TAG}"]
+}
+
+target "sst" {
+  inherits = ["common"]
+  dockerfile = "Dockerfile"
+  context = "sst-11.1.0"
+  tags = ["${IMAGE_URI}/sst-env:${TAG}"]
+}
+
+target "systemc" {
+  inherits = ["common"]
+  dockerfile = "Dockerfile"
+  context = "systemc-2.3.3"
+  tags = ["${IMAGE_URI}/systemc-env:${TAG}"]
 }
 
 target "ubuntu-22-04_all-dependencies" {
@@ -80,4 +102,88 @@ target "ubuntu-20-04_all-dependencies" {
   dockerfile = "Dockerfile"
   context = "ubuntu-20.04_all-dependencies"
   tags = ["${IMAGE_URI}/ubuntu-20.04_all-dependencies:${TAG}"]
+}
+
+target "ubuntu-22-04_min-dependencies" {
+  inherits = ["common"]
+  dockerfile = "Dockerfile"
+  context = "ubuntu-22.04_min-dependencies"
+  tags = ["${IMAGE_URI}/ubuntu-22.04_min-dependencies:${TAG}"]
+}
+
+target "gcc-compilers-base-20-04" {
+  name = "gcc-compilers-${replace(ver, ".", "-")}"
+  inherits = ["common"]
+  context = "ubuntu-20.04_gcc-version"
+  dockerfile = "Dockerfile"
+  matrix = {
+    ver = ["8", "9", "10"]
+  }
+  args = {
+    version = ver
+  }
+  tags = ["${IMAGE_URI}/gcc-version-${ver}:${TAG}"]
+}
+
+target "gcc-compilers-base-22-04" {
+  name = "gcc-compilers-${replace(ver, ".", "-")}"
+  inherits = ["common"]
+  context = "ubuntu-22.04_gcc-version"
+  dockerfile = "Dockerfile"
+  matrix = {
+    ver = ["11", "12"]
+  }
+  args = {
+    version = ver
+  }
+  tags = ["${IMAGE_URI}/gcc-version-${ver}:${TAG}"]
+}
+
+target "clang-compilers-base-20-04" {
+  name = "clang-compilers-${replace(ver, ".", "-")}"
+  inherits = ["common"]
+  context = "ubuntu-20.04_clang-version"
+  dockerfile = "Dockerfile"
+  matrix = {
+    ver = ["7", "8", "9", "10", "11", "12"]
+  }
+  args = {
+    version = ver
+  }
+  tags = ["${IMAGE_URI}/clang-version-${ver}:${TAG}"]
+}
+
+target "clang-compilers-base-22-04" {
+  name = "clang-compilers-${replace(ver, ".", "-")}"
+  inherits = ["common"]
+  context = "ubuntu-22.04_clang-version"
+  dockerfile = "Dockerfile"
+  matrix = {
+    ver = ["13", "14", "15"]
+  }
+  args = {
+    version = ver
+  }
+  tags =  ["${IMAGE_URI}/clang-version-${ver}:${TAG}"]
+}
+
+target "clang-compilers-16" {
+  inherits = ["common"]
+  dockerfile = "Dockerfile"
+  context = "ubuntu-22.04_clang_16"
+  tags = ["${IMAGE_URI}/clang-version-16:${TAG}"]
+}
+
+target "llvm-gnu-cross-compiler-riscv64" {
+  inherits = ["common"]
+  dockerfile = "Dockerfile"
+  context = "llvm-gnu-cross-compiler-riscv64"
+  tags = ["${IMAGE_URI}/llvm-gnu-cross-compiler-riscv64:${TAG}"]
+}
+
+target "gem5-all-min-dependencies" {
+  inherits = ["common"]
+  dockerfile = "Dockerfile"
+  context = "gem5-all-min-dependencies"
+  tags = ["${IMAGE_URI}/gem5-all-min-dependencies:${TAG}"]
 }

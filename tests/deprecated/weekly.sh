@@ -72,7 +72,7 @@ fi
 # Run the gem5 very-long tests.
 docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}"/tests --memory="${docker_mem_limit}" --rm \
-    gcr.io/gem5-test/ubuntu-22.04_all-dependencies:${tag} \
+    ghcr.io/gem5/ubuntu-22.04_all-dependencies:${tag} \
         ./main.py run --length very-long -j${threads} -t${run_threads} -vv
 
 mkdir -p tests/testing-results
@@ -81,7 +81,7 @@ mkdir -p tests/testing-results
 # before pulling gem5 resources, make sure it doesn't exist already
 docker run -u $UID:$GID --rm --volume "${gem5_root}":"${gem5_root}" -w \
        "${gem5_root}" --memory="${docker_mem_limit}" \
-       gcr.io/gem5-test/gcn-gpu:${tag} bash -c \
+       ghcr.io/gem5/gcn-gpu:${tag} bash -c \
        "rm -rf ${gem5_root}/gem5-resources"
 
 # delete m5out, Pannotia datasets, and output files in case a failed regression
@@ -127,7 +127,7 @@ cd "${gem5_root}"
 # avoid needing to set all of these, we instead build a docker for it, which
 # has all these variables pre-set in its Dockerfile
 # To avoid compiling gem5 multiple times, all GPU benchmarks will use this
-docker pull gcr.io/gem5-test/gcn-gpu:${tag}
+docker pull ghcr.io/gem5/gcn-gpu:${tag}
 docker build -t hacc-test-weekly ${gem5_root}/gem5-resources/src/gpu/halo-finder
 
 docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
@@ -419,23 +419,23 @@ rm -rf "${gem5_root}/build/ALL"
 
 docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}" --memory="${docker_mem_limit}" --rm \
-    gcr.io/gem5-test/ubuntu-22.04_all-dependencies:${tag} \
+    ghcr.io/gem5/ubuntu-22.04_all-dependencies:${tag} \
        scons build/ALL/gem5.opt -j${threads}
 
 docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}" --memory="${docker_mem_limit}" --rm \
-    gcr.io/gem5-test/ubuntu-22.04_all-dependencies:${tag} \
+    ghcr.io/gem5/ubuntu-22.04_all-dependencies:${tag} \
        ./build/ALL/gem5.opt \
        configs/example/gem5_library/dramsys/arm-hello-dramsys.py
 
 docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}" --memory="${docker_mem_limit}" --rm \
-    gcr.io/gem5-test/ubuntu-22.04_all-dependencies:${tag} \
+    ghcr.io/gem5/ubuntu-22.04_all-dependencies:${tag} \
        ./build/ALL/gem5.opt \
        configs/example/gem5_library/dramsys/dramsys-traffic.py
 
 docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}" --memory="${docker_mem_limit}" --rm \
-    gcr.io/gem5-test/ubuntu-22.04_all-dependencies:${tag} \
+    ghcr.io/gem5/ubuntu-22.04_all-dependencies:${tag} \
        ./build/ALL/gem5.opt \
        configs/example/dramsys.py
