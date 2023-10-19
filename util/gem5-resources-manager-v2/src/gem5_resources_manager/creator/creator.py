@@ -6,7 +6,7 @@ from ..abstract_subtool import AbstractSubtool
 
 from argparse import ArgumentParser
 
-from ..loader import Loader
+# from ..loader import Loader
 from ..data_source.abstract_data_source import AbstractDataSource
 
 
