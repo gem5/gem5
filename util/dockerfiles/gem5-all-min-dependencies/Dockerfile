@@ -24,13 +24,13 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-FROM gcr.io/gem5-test/ubuntu-22.04_min-dependencies:latest as source
+FROM --platform=${BUILDPLATFORM} ghcr.io/gem5/ubuntu-22.04_min-dependencies:latest as source
 RUN apt -y update && apt -y install git
 RUN git clone -b develop https://github.com/gem5/gem5/ /gem5
 WORKDIR /gem5
 RUN scons -j`nproc` build/ALL/gem5.fast
 
-FROM gcr.io/gem5-test/ubuntu-22.04_min-dependencies:latest
+FROM ghcr.io/gem5/ubuntu-22.04_min-dependencies:latest
 COPY --from=source /gem5/build/ALL/gem5.fast /usr/local/bin/gem5
 
 ENTRYPOINT [ "/usr/local/bin/gem5" ]
