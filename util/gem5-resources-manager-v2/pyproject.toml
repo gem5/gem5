@@ -21,8 +21,8 @@ dependencies = [
 ]
 
 [project.scripts]
-gem5-resources-manager = "gem5_resources_manager.__main__:main"
-gem5-resources-creator = "gem5_resources_manager.creator"
+gem5-resources-manager = "gem5_resources_manager:main"
+gem5-resources-creator = "gem5_resources_manager.creator:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
