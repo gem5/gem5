@@ -215,6 +215,87 @@ class Gem5Fixture(SConsFixture):
         return build_target
 
 
+class Gem5KconfigFixture(UniqueFixture):
+    def __new__(cls, isa, variant, protocol=None):
+        target_dir = joinpath(config.build_dir, isa.upper())
+        if protocol:
+            target_dir += "_" + protocol
+        target = joinpath(target_dir, f"gem5.{variant}")
+        obj = super().__new__(cls, target)
+        obj.target_dir = target_dir
+        return obj
+
+    def _setup(self, testitem):
+        if config.skip_build:
+            return
+
+        if not self.targets:
+            log.test_log.error("No SCons targets specified.")
+        else:
+            log.test_log.message(
+                "Building the following targets. This may take a while."
+            )
+            log.test_log.message(f"{', '.join(self.targets)}")
+            log.test_log.message(
+                "You may want to use --skip-build, or use 'rerun'."
+            )
+
+        if self.protocol:
+            defconfig_command = [
+                "scons",
+                "-C",
+                self.directory,
+                "--ignore-style",
+                "--no-compress-debug",
+                "defconfig",
+                self.target_dir,
+                joinpath(self.directory, "build_opts", self.isa.upper()),
+            ]
+            setconfig_command = [
+                "scons",
+                "-C",
+                self.directory,
+                "--ignore-style",
+                "--no-compress-debug",
+                "setconfig",
+                self.target_dir,
+                f"RUBY_PROTOCOL_{self.protocol.upper()}=y",
+            ]
+            log_call(
+                log.test_log, defconfig_command, time=None, stderr=sys.stderr
+            )
+            log_call(
+                log.test_log, setconfig_command, time=None, stderr=sys.stderr
+            )
+
+        command = [
+            "scons",
+            "-C",
+            self.directory,
+            "-j",
+            str(config.threads),
+            "--ignore-style",
+            "--no-compress-debug",
+        ]
+        command.extend(self.targets)
+        log_call(log.test_log, command, time=None, stderr=sys.stderr)
+
+    def _init(self, isa, variant, protocol=None):
+        self.name = constants.gem5_binary_fixture_name
+
+        self.targets = [self.target]
+        self.path = self.target
+        self.directory = config.base_dir
+
+        self.isa = isa
+        self.protocol = protocol
+        self.set_global()
+
+    def get_get_build_info(self) -> Optional[str]:
+        build_target = self.target
+        return build_target
+
+
 class MakeFixture(Fixture):
     def __init__(self, directory, *args, **kwargs):
         name = f"make -C {directory}"

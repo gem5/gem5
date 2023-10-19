@@ -45,7 +45,7 @@ from testlib.test_util import TestFunction
 from testlib.suite import TestSuite
 from testlib.helper import log_call
 from testlib.configuration import constants, config
-from .fixture import TempdirFixture, Gem5Fixture, VariableFixture
+from .fixture import TempdirFixture, Gem5KconfigFixture, VariableFixture
 
 from . import verifier
 
@@ -133,7 +133,7 @@ def gem5_verify_config(
                 # Create the gem5 target for the specific architecture and
                 # variant.
                 _fixtures = copy.copy(fixtures)
-                _fixtures.append(Gem5Fixture(isa, opt, protocol))
+                _fixtures.append(Gem5KconfigFixture(isa, opt, protocol))
                 _fixtures.append(tempdir)
                 _fixtures.append(gem5_returncode)
 
