@@ -1,8 +1,9 @@
 from .abstract_data_source import AbstractDataSource
 from .resource_category import ResourceCategory
 from .exception import Gem5DataSourceSchemaViolation, Gem5DataSourceEntryNotFound
+from ..schemas.json_validator import JSONValidator
 
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 import json
 import os
 
@@ -10,8 +11,12 @@ import os
 class JSONDatabase(AbstractDataSource):
     def __init__(self, filename) -> None:
         super().__init__()
-        self.filename = filename
+        print("tests")
+        self.filename = "/home/harshilp/forks/gem5/util/gem5-resources-manager-v2/resource_demo.json"
         self._data = {}
+        self.validator = JSONValidator(
+            "https://resources.gem5.org/gem5-resources-schema.json"
+        )
 
     def open(self):
         with open(self.filename) as f:
@@ -20,7 +25,9 @@ class JSONDatabase(AbstractDataSource):
     def close(self):
         pass
 
-    def resource_exists(self, resource_id: str, resource_version: str) -> bool:
+    def resource_exists(
+        self, resource_id: str, resource_version: Optional[str] = "1.0.0"
+    ) -> bool:
         for resource in self._data:
             if (
                 resource["id"] == resource_id
@@ -51,6 +58,12 @@ class JSONDatabase(AbstractDataSource):
             with open(file) as infile:
                 resources = json.load(infile)
         return resources
+
+    def validate_resource(self, resource: Dict[str, Any]):
+        return self.validator.validate([resource])
+
+    def get_fields(self, category):
+        return self.validator.get_fields(category)
 
     def save_file(self, resource, output):
         # check if output path is a directory

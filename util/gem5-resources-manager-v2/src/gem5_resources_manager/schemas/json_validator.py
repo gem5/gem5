@@ -1,5 +1,5 @@
 from .abstract_validator import AbstractValidator
-from .exception import Gem5DataSourceSchemaViolation
+from ..data_source.exception import Gem5DataSourceSchemaViolation
 
 from typing import Any, Dict
 import jsonschema
