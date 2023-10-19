@@ -36,6 +36,7 @@
 
 #include "arch/generic/vec_pred_reg.hh"
 #include "arch/generic/vec_reg.hh"
+#include "arch/riscv/types.hh"
 #include "base/bitunion.hh"
 #include "cpu/reg_class.hh"
 #include "debug/VecRegs.hh"
@@ -46,12 +47,9 @@ namespace gem5
 namespace RiscvISA
 {
 
-constexpr unsigned ELEN = 64;
-constexpr unsigned VLEN = 256;
-constexpr unsigned VLENB = VLEN / 8;
-
-using VecRegContainer = gem5::VecRegContainer<VLENB>;
+using VecRegContainer = gem5::VecRegContainer<MaxVecLenInBytes>;
 using vreg_t = VecRegContainer;
+
 
 const int NumVecStandardRegs = 32;
 const int NumVecInternalRegs = 8; // Used by vector uop

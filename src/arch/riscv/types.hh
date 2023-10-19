@@ -42,7 +42,6 @@
 #ifndef __ARCH_RISCV_TYPES_HH__
 #define __ARCH_RISCV_TYPES_HH__
 
-#include "arch/riscv/pcstate.hh"
 #include "base/bitunion.hh"
 
 namespace gem5
@@ -177,6 +176,10 @@ BitUnion64(ExtMachInst)
     Bitfield<31, 25>    bit31_25;
 
 EndBitUnion(ExtMachInst)
+
+constexpr unsigned MaxVecLenInBits = 65536;
+constexpr unsigned MaxVecLenInBytes  = MaxVecLenInBits >> 3;
+
 
 } // namespace RiscvISA
 } // namespace gem5

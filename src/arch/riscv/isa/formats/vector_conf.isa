@@ -42,8 +42,8 @@ def format VConfOp(code, write_code, declare_class, branch_class, *flags) {{
     branchTargetTemplate = eval(branch_class)
 
     header_output = declareTemplate.subst(iop)
-    decoder_output = BasicConstructor.subst(iop)
-    decode_block = BasicDecode.subst(iop)
+    decoder_output = VConfConstructor.subst(iop)
+    decode_block = VConfDecodeBlock.subst(iop)
     exec_output = VConfExecute.subst(iop) + branchTargetTemplate.subst(iop)
 }};
 
@@ -61,7 +61,7 @@ def template VSetVlDeclare {{
 
       public:
         /// Constructor.
-        %(class_name)s(ExtMachInst machInst);
+        %(class_name)s(ExtMachInst machInst, uint32_t elen);
         Fault execute(ExecContext *, trace::InstRecord *) const override;
         std::unique_ptr<PCStateBase> branchTarget(
                 ThreadContext *tc) const override;
@@ -86,7 +86,7 @@ def template VSetiVliDeclare {{
 
       public:
         /// Constructor.
-        %(class_name)s(ExtMachInst machInst);
+        %(class_name)s(ExtMachInst machInst, uint32_t elen);
         Fault execute(ExecContext *, trace::InstRecord *) const override;
         std::unique_ptr<PCStateBase> branchTarget(
                 const PCStateBase &branch_pc) const override;
@@ -95,6 +95,19 @@ def template VSetiVliDeclare {{
         using %(base_class)s::generateDisassembly;
 
     };
+}};
+
+def template VConfConstructor {{
+%(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _elen)
+    : %(base_class)s("%(mnemonic)s", _machInst, _elen, %(op_class)s)
+    {
+        %(set_reg_idx_arr)s;
+        %(constructor)s;
+    }
+}};
+
+def template VConfDecodeBlock {{
+    return new %(class_name)s(machInst,elen);
 }};
 
 def template VConfExecute {{
@@ -112,7 +125,7 @@ def template VConfExecute {{
 
             uint32_t newVill =
                 !(vflmul >= 0.125 && vflmul <= 8) ||
-                    sew > std::min(vflmul, 1.0f) * ELEN ||
+                    sew > std::min(vflmul, 1.0f) * elen ||
                     bits(reqVtype, 62, 8) != 0;
             if (newVill) {
                 newVtype = 0;
@@ -157,7 +170,8 @@ def template VConfExecute {{
 
         tc->setMiscReg(MISCREG_VSTART, 0);
 
-        VTYPE new_vtype = getNewVtype(Vtype, requested_vtype, vlen);
+        VTYPE new_vtype = getNewVtype(Vtype, requested_vtype,
+            vlen);
         vlmax = new_vtype.vill ? 0 : getVlmax(new_vtype, vlen);
         uint32_t new_vl = getNewVL(
             current_vl, requested_vl, vlmax, rd_bits, rs1_bits);

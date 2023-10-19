@@ -84,6 +84,16 @@ class ISA : public BaseISA
     const Addr INVALID_RESERVATION_ADDR = (Addr)-1;
     std::unordered_map<int, Addr> load_reservation_addrs;
 
+    /** Length of each vector register in bits.
+     *  VLEN in Ch. 2 of RISC-V vector spec
+     */
+    unsigned vlen;
+
+    /** Length of each vector element in bits.
+     *  ELEN in Ch. 2 of RISC-V vector spec
+    */
+    unsigned elen;
+
   public:
     using Params = RiscvISAParams;
 
@@ -92,7 +102,8 @@ class ISA : public BaseISA
     PCStateBase*
     newPCState(Addr new_inst_addr=0) const override
     {
-        return new PCState(new_inst_addr, _rvType, VLENB);
+        unsigned vlenb = vlen >> 3;
+        return new PCState(new_inst_addr, _rvType, vlenb);
     }
 
   public:
@@ -147,6 +158,10 @@ class ISA : public BaseISA
         Addr& load_reservation_addr = load_reservation_addrs[cid];
         load_reservation_addr = INVALID_RESERVATION_ADDR;
     }
+    /** Methods for getting VLEN, VLENB and ELEN values */
+    unsigned getVecLenInBits() { return vlen; }
+    unsigned getVecLenInBytes() { return vlen >> 3; }
+    unsigned getVecElemLenInBits() { return elen; }
 };
 
 } // namespace RiscvISA

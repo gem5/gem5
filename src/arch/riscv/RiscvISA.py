@@ -38,9 +38,35 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.params import Enum
+from m5.params import Enum, UInt32
 from m5.params import Param
 from m5.objects.BaseISA import BaseISA
+
+
+class RiscvVectorLength(UInt32):
+    min = 8
+    max = 65536
+
+    def _check(self):
+        super()._check()
+
+        # VLEN needs to be a whole power of 2. We already know value is
+        # not zero. Hence:
+        if self.value & (self.value - 1) != 0:
+            raise TypeError("VLEN is not a power of 2: %d" % self.value)
+
+
+class RiscvVectorElementLength(UInt32):
+    min = 8
+    max = 64
+
+    def _check(self):
+        super()._check()
+
+        # ELEN needs to be a whole power of 2. We already know value is
+        # not zero. Hence:
+        if self.value & (self.value - 1) != 0:
+            raise TypeError("ELEN is not a power of 2: %d" % self.value)
 
 
 class RiscvType(Enum):
@@ -58,3 +84,13 @@ class RiscvISA(BaseISA):
     riscv_type = Param.RiscvType("RV64", "RV32 or RV64")
 
     enable_rvv = Param.Bool(True, "Enable vector extension")
+    vlen = Param.RiscvVectorLength(
+        256,
+        "Length of each vector register in bits. \
+        VLEN in Ch. 2 of RISC-V vector spec",
+    )
+    elen = Param.RiscvVectorElementLength(
+        64,
+        "Length of each vector element in bits. \
+        ELEN in Ch. 2 of RISC-V vector spec",
+    )

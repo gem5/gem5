@@ -36,6 +36,7 @@
 #include <sstream>
 
 #include "arch/riscv/faults.hh"
+#include "arch/riscv/insts/static_inst.hh"
 #include "arch/riscv/interrupts.hh"
 #include "arch/riscv/mmu.hh"
 #include "arch/riscv/pagetable.hh"
@@ -253,10 +254,9 @@ RegClass ccRegClass(CCRegClass, CCRegClassName, 0, debug::IntRegs);
 
 } // anonymous namespace
 
-ISA::ISA(const Params &p) :
-    BaseISA(p), _rvType(p.riscv_type), checkAlignment(p.check_alignment),
-    enableRvv(p.enable_rvv)
-
+ISA::ISA(const Params &p) :BaseISA(p),
+    _rvType(p.riscv_type), checkAlignment(p.check_alignment),
+    enableRvv(p.enable_rvv),vlen(p.vlen),elen(p.elen)
 {
     _regClasses.push_back(&intRegClass);
     _regClasses.push_back(&floatRegClass);
@@ -266,6 +266,14 @@ ISA::ISA(const Params &p) :
     _regClasses.push_back(&matRegClass);
     _regClasses.push_back(&ccRegClass);
     _regClasses.push_back(&miscRegClass);
+
+    fatal_if( p.vlen < p.elen,
+    "VLEN should be greater or equal",
+        "than ELEN. Ch. 2RISC-V vector spec.");
+
+    inform("RVV enabled, VLEN = %d bits, ELEN = %d bits",
+            p.vlen, p.elen);
+
 
     miscRegFile.resize(NUM_MISCREGS);
     clear();
