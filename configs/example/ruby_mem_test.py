@@ -65,7 +65,7 @@ parser.add_argument(
 parser.add_argument(
     "--atomic",
     type=int,
-    default=30,
+    default=0,
     help="percentage of accesses that should be atomic",
 )
 parser.add_argument(
