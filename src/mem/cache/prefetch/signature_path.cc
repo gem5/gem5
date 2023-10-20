@@ -227,7 +227,8 @@ SignaturePath::calculateLookaheadConfidence(PatternEntry const &sig,
 
 void
 SignaturePath::calculatePrefetch(const PrefetchInfo &pfi,
-                                 std::vector<AddrPriority> &addresses)
+                                 std::vector<AddrPriority> &addresses,
+                                 const CacheAccessor &cache)
 {
     Addr request_addr = pfi.getAddr();
     Addr ppn = request_addr / pageBytes;

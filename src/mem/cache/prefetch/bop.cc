@@ -227,7 +227,8 @@ BOP::bestOffsetLearning(Addr x)
 
 void
 BOP::calculatePrefetch(const PrefetchInfo &pfi,
-        std::vector<AddrPriority> &addresses)
+        std::vector<AddrPriority> &addresses,
+        const CacheAccessor &cache)
 {
     Addr addr = pfi.getAddr();
     Addr tag_x = tag(addr);
@@ -252,8 +253,10 @@ BOP::calculatePrefetch(const PrefetchInfo &pfi,
 }
 
 void
-BOP::notifyFill(const PacketPtr& pkt)
+BOP::notifyFill(const CacheAccessProbeArg &arg)
 {
+    const PacketPtr& pkt = arg.pkt;
+
     // Only insert into the RR right way if it's the pkt is a HWP
     if (!pkt->cmd.isHWPrefetch()) return;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 ARM Limited
+ * Copyright (c) 2014-2015, 2023 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -75,6 +75,7 @@ class Queued : public Base
         RequestPtr translationRequest;
         ThreadContext *tc;
         bool ongoingTranslation;
+        const CacheAccessor *cache;
 
         /**
          * Constructor
@@ -85,9 +86,10 @@ class Queued : public Base
          * @param prio This prefetch priority
          */
         DeferredPacket(Queued *o, PrefetchInfo const &pfi, Tick t,
-            int32_t prio) : owner(o), pfInfo(pfi), tick(t), pkt(nullptr),
+            int32_t prio, const CacheAccessor &_cache)
+            : owner(o), pfInfo(pfi), tick(t), pkt(nullptr),
             priority(prio), translationRequest(), tc(nullptr),
-            ongoingTranslation(false) {
+            ongoingTranslation(false), cache(&_cache) {
         }
 
         bool operator>(const DeferredPacket& that) const
@@ -192,12 +194,15 @@ class Queued : public Base
     Queued(const QueuedPrefetcherParams &p);
     virtual ~Queued();
 
-    void notify(const PacketPtr &pkt, const PrefetchInfo &pfi) override;
+    void
+    notify(const CacheAccessProbeArg &acc, const PrefetchInfo &pfi) override;
 
-    void insert(const PacketPtr &pkt, PrefetchInfo &new_pfi, int32_t priority);
+    void insert(const PacketPtr &pkt, PrefetchInfo &new_pfi, int32_t priority,
+                const CacheAccessor &cache);
 
     virtual void calculatePrefetch(const PrefetchInfo &pfi,
-                                   std::vector<AddrPriority> &addresses) = 0;
+                                   std::vector<AddrPriority> &addresses,
+                                   const CacheAccessor &cache) = 0;
     PacketPtr getPacket() override;
 
     Tick nextPrefetchReadyTime() const override
@@ -231,8 +236,10 @@ class Queued : public Base
      * new prefetch request.
      * @param dp the deferred packet that has completed the translation request
      * @param failed whether the translation was successful
+     * @param cache accessor for lookups on the cache that originated this pkt
      */
-    void translationComplete(DeferredPacket *dp, bool failed);
+    void translationComplete(DeferredPacket *dp, bool failed,
+                             const CacheAccessor &cache);
 
     /**
      * Checks whether the specified prefetch request is already in the
