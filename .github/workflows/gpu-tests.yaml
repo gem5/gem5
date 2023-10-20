@@ -33,7 +33,7 @@ jobs:
 
     LULESH-tests:
         runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5-test/gcn-gpu:latest
+        container: ghcr.io/gem5/gcn-gpu:latest
         needs: build-gem5
         timeout-minutes: 480 # 8 hours
         steps:
