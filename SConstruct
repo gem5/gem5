@@ -636,7 +636,7 @@ for variant_path in variant_paths:
                 LINKFLAGS=['-Wl,--no-as-needed', '-lprofiler',
                     '-Wl,--as-needed'])
 
-    env['HAVE_PKG_CONFIG'] = env.Detect('pkg-config')
+    env['HAVE_PKG_CONFIG'] = env.Detect('pkg-config') == 'pkg-config'
 
     with gem5_scons.Configure(env) as conf:
         # On Solaris you need to use libsocket for socket ops

@@ -57,11 +57,13 @@ with gem5_scons.Configure(main) as conf:
     # automatically added to the LIBS environment variable. After
     # this, we can use the HAVE_PROTOBUF flag to determine if we have
     # got both protoc and libprotobuf available.
-    conf.env['CONF']['HAVE_PROTOBUF'] = conf.env['HAVE_PROTOC'] and (
-        (conf.env['HAVE_PKG_CONFIG'] and
-         conf.CheckPkgConfig('protobuf', '--cflags', '--libs')) or
-        conf.CheckLibWithHeader('protobuf', 'google/protobuf/message.h',
-                                'C++', 'GOOGLE_PROTOBUF_VERIFY_VERSION;'))
+    conf.env['CONF']['HAVE_PROTOBUF'] = bool(
+        conf.env['HAVE_PROTOC'] and (
+            (conf.env['HAVE_PKG_CONFIG'] and
+            conf.CheckPkgConfig('protobuf', '--cflags', '--libs')) or
+            conf.CheckLibWithHeader('protobuf', 'google/protobuf/message.h',
+                                    'C++', 'GOOGLE_PROTOBUF_VERIFY_VERSION;'))
+    )
 
 # If we have the compiler but not the library, print another warning.
 if main['HAVE_PROTOC'] and not main['CONF']['HAVE_PROTOBUF']:
