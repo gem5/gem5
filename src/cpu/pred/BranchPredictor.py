@@ -137,6 +137,15 @@ class BranchPredictor(SimObject):
 
     numThreads = Param.Unsigned(Parent.numThreads, "Number of threads")
     instShiftAmt = Param.Unsigned(2, "Number of bits to shift instructions by")
+    requiresBTBHit = Param.Bool(
+        False,
+        "Requires the BTB to hit for returns and indirect branches. For an"
+        "advanced front-end there is no other way than a BTB hit to know "
+        "that the branch exists in the first place. Furthermore, the BPU "
+        "needs to know the branch type to make the correct RAS operations. "
+        "This info is only available from the BTB. "
+        "Low-end CPUs predecoding might be used to identify branches. ",
+    )
 
     btb = Param.BranchTargetBuffer(SimpleBTB(), "Branch target buffer (BTB)")
     ras = Param.ReturnAddrStack(
