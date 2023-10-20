@@ -10,9 +10,6 @@
 # unmodified and in its entirety in all distributions of the software,
 # modified or unmodified, in source code or in binary form.
 #
-# Copyright (c) 2007 The Regents of The University of Michigan
-# All rights reserved.
-#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
 # met: redistributions of source code must retain the above copyright
@@ -38,20 +35,11 @@
 
 from m5.SimObject import SimObject
 from m5.params import *
+from m5.objects.InstTracer import InstDisassembler
 
 
-class InstDisassembler(SimObject):
-    type = "InstDisassembler"
-    cxx_header = "sim/insttracer.hh"
-    cxx_class = "gem5::trace::InstDisassembler"
-
-
-class InstTracer(SimObject):
-    type = "InstTracer"
-    cxx_header = "sim/insttracer.hh"
-    cxx_class = "gem5::trace::InstTracer"
+class CapstoneDisassembler(InstDisassembler):
+    type = "CapstoneDisassembler"
+    cxx_class = "gem5::trace::CapstoneDisassembler"
+    cxx_header = "cpu/capstone.hh"
     abstract = True
-
-    disassembler = Param.InstDisassembler(
-        InstDisassembler(), "Instruction Disassembler"
-    )

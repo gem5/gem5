@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019 ARM Limited
+ * Copyright (c) 2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -35,82 +35,35 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/arm/tracers/tarmac_base.hh"
+#ifndef __ARCH_ARM_TRACERS_CAPSTONE_HH__
+#define __ARCH_ARM_TRACERS_CAPSTONE_HH__
 
-#include <algorithm>
-#include <string>
-
-#include "arch/arm/regs/misc.hh"
-#include "cpu/reg_class.hh"
-#include "cpu/static_inst.hh"
-#include "cpu/thread_context.hh"
+#include "cpu/capstone.hh"
+#include "params/ArmCapstoneDisassembler.hh"
 
 namespace gem5
 {
 
-using namespace ArmISA;
+class ThreadContext;
 
-namespace trace {
-
-TarmacBaseRecord::TarmacBaseRecord(Tick _when, ThreadContext *_thread,
-                                   const StaticInstPtr _staticInst,
-                                   const PCStateBase &_pc,
-                                   const StaticInstPtr _macroStaticInst)
-    : InstRecord(_when, _thread, _staticInst, _pc, _macroStaticInst)
-{
-}
-
-TarmacBaseRecord::InstEntry::InstEntry(
-    ThreadContext* thread,
-    const PCStateBase &pc,
-    const StaticInstPtr staticInst,
-    bool predicate)
-        : taken(predicate) ,
-          addr(pc.instAddr()) ,
-          opcode(staticInst->getEMI() & 0xffffffff),
-          isetstate(pcToISetState(pc)),
-          mode(MODE_USER)
+namespace trace
 {
 
-    // Operating mode gained by reading the architectural register (CPSR)
-    const CPSR cpsr = thread->readMiscRegNoEffect(MISCREG_CPSR);
-    mode = (OperatingMode) (uint8_t)cpsr.mode;
-}
-
-TarmacBaseRecord::RegEntry::RegEntry(const PCStateBase &pc)
-  : isetstate(pcToISetState(pc)),
-    values(2, 0)
+class ArmCapstoneDisassembler : public CapstoneDisassembler
 {
-    // values vector is constructed with size = 2, for
-    // holding Lo and Hi values.
-}
+  public:
+    PARAMS(ArmCapstoneDisassembler);
+    ArmCapstoneDisassembler(const Params &p);
 
-TarmacBaseRecord::MemEntry::MemEntry (
-    uint8_t _size,
-    Addr _addr,
-    uint64_t _data)
-      : size(_size), addr(_addr), data(_data)
-{
-}
+  protected:
+    const csh* currHandle(const PCStateBase &pc) const override;
 
-TarmacBaseRecord::ISetState
-TarmacBaseRecord::pcToISetState(const PCStateBase &pc)
-{
-    auto &apc = pc.as<ArmISA::PCState>();
-    TarmacBaseRecord::ISetState isetstate;
-
-    if (apc.aarch64())
-        isetstate = TarmacBaseRecord::ISET_A64;
-    else if (!apc.thumb())
-        isetstate = TarmacBaseRecord::ISET_ARM;
-    else if (apc.thumb())
-        isetstate = TarmacBaseRecord::ISET_THUMB;
-    else
-        // Unsupported state in TARMAC
-        isetstate = TarmacBaseRecord::ISET_UNSUPPORTED;
-
-    return isetstate;
-}
+  protected:
+    csh arm64Handle;
+    csh armHandle;
+};
 
 } // namespace trace
 } // namespace gem5
+
+#endif // __ARCH_ARM_TRACERS_CAPSTONE_HH__

@@ -1,6 +1,6 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2020 ARM Limited
+# Copyright (c) 2020, 2023 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -115,6 +115,9 @@ Source('simple_thread.cc')
 Source('thread_context.cc')
 Source('thread_state.cc')
 Source('timing_expr.cc')
+SourceLib('capstone', tags='capstone')
+Source('capstone.cc', tags='capstone')
+SimObject('Capstone.py', sim_objects=['CapstoneDisassembler'], tags='capstone')
 
 SimObject('DummyChecker.py', sim_objects=['DummyChecker'])
 Source('checker/cpu.cc')

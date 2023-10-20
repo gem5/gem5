@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019 ARM Limited
+ * Copyright (c) 2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -35,81 +35,40 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/arm/tracers/tarmac_base.hh"
+#include "arch/arm/tracers/capstone.hh"
 
-#include <algorithm>
-#include <string>
-
-#include "arch/arm/regs/misc.hh"
-#include "cpu/reg_class.hh"
-#include "cpu/static_inst.hh"
-#include "cpu/thread_context.hh"
+#include "arch/arm/insts/static_inst.hh"
+#include "base/output.hh"
 
 namespace gem5
 {
 
+namespace trace
+{
+
 using namespace ArmISA;
 
-namespace trace {
-
-TarmacBaseRecord::TarmacBaseRecord(Tick _when, ThreadContext *_thread,
-                                   const StaticInstPtr _staticInst,
-                                   const PCStateBase &_pc,
-                                   const StaticInstPtr _macroStaticInst)
-    : InstRecord(_when, _thread, _staticInst, _pc, _macroStaticInst)
+ArmCapstoneDisassembler::ArmCapstoneDisassembler(const Params &p)
+  : CapstoneDisassembler(p)
 {
+    if (cs_open(CS_ARCH_ARM64, CS_MODE_ARM, &arm64Handle) != CS_ERR_OK)
+        panic("Unable to open capstone for arm64 disassembly");
+
+    if (cs_open(CS_ARCH_ARM, CS_MODE_ARM, &armHandle) != CS_ERR_OK)
+        panic("Unable to open capstone for arm disassembly");
 }
 
-TarmacBaseRecord::InstEntry::InstEntry(
-    ThreadContext* thread,
-    const PCStateBase &pc,
-    const StaticInstPtr staticInst,
-    bool predicate)
-        : taken(predicate) ,
-          addr(pc.instAddr()) ,
-          opcode(staticInst->getEMI() & 0xffffffff),
-          isetstate(pcToISetState(pc)),
-          mode(MODE_USER)
+const csh*
+ArmCapstoneDisassembler::currHandle(const PCStateBase &_pc) const
 {
-
-    // Operating mode gained by reading the architectural register (CPSR)
-    const CPSR cpsr = thread->readMiscRegNoEffect(MISCREG_CPSR);
-    mode = (OperatingMode) (uint8_t)cpsr.mode;
-}
-
-TarmacBaseRecord::RegEntry::RegEntry(const PCStateBase &pc)
-  : isetstate(pcToISetState(pc)),
-    values(2, 0)
-{
-    // values vector is constructed with size = 2, for
-    // holding Lo and Hi values.
-}
-
-TarmacBaseRecord::MemEntry::MemEntry (
-    uint8_t _size,
-    Addr _addr,
-    uint64_t _data)
-      : size(_size), addr(_addr), data(_data)
-{
-}
-
-TarmacBaseRecord::ISetState
-TarmacBaseRecord::pcToISetState(const PCStateBase &pc)
-{
-    auto &apc = pc.as<ArmISA::PCState>();
-    TarmacBaseRecord::ISetState isetstate;
-
-    if (apc.aarch64())
-        isetstate = TarmacBaseRecord::ISET_A64;
-    else if (!apc.thumb())
-        isetstate = TarmacBaseRecord::ISET_ARM;
-    else if (apc.thumb())
-        isetstate = TarmacBaseRecord::ISET_THUMB;
-    else
-        // Unsupported state in TARMAC
-        isetstate = TarmacBaseRecord::ISET_UNSUPPORTED;
-
-    return isetstate;
+    auto pc = _pc.as<ArmISA::PCState>();
+    if (pc.aarch64()) {
+        return &arm64Handle;
+    } else {
+        auto mode = pc.thumb() ? CS_MODE_THUMB : CS_MODE_ARM;
+        cs_option(armHandle, CS_OPT_MODE, mode);
+        return &armHandle;
+    }
 }
 
 } // namespace trace

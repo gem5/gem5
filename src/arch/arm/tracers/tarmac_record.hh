@@ -115,6 +115,9 @@ class TarmacTracerRecord : public TarmacBaseRecord
          * 32 otherwise (ARM and BigThumb)
          */
         uint8_t instSize;
+
+        /** Instruction disassembly */
+        std::string disassemble;
     };
 
     /** Register Entry */

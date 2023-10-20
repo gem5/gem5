@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019 ARM Limited
+ * Copyright (c) 2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -35,82 +35,68 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/arm/tracers/tarmac_base.hh"
+#ifndef __CPU_CAPSTONE_HH__
+#define __CPU_CAPSTONE_HH__
 
-#include <algorithm>
-#include <string>
+#include <capstone/capstone.h>
 
-#include "arch/arm/regs/misc.hh"
-#include "cpu/reg_class.hh"
-#include "cpu/static_inst.hh"
-#include "cpu/thread_context.hh"
+#include "params/CapstoneDisassembler.hh"
+#include "sim/insttracer.hh"
 
 namespace gem5
 {
 
-using namespace ArmISA;
+class ThreadContext;
 
 namespace trace {
 
-TarmacBaseRecord::TarmacBaseRecord(Tick _when, ThreadContext *_thread,
-                                   const StaticInstPtr _staticInst,
-                                   const PCStateBase &_pc,
-                                   const StaticInstPtr _macroStaticInst)
-    : InstRecord(_when, _thread, _staticInst, _pc, _macroStaticInst)
+/**
+ * Capstone Disassembler:
+ * The disassembler relies on the capstone library to convert
+ * the StaticInst encoding into the disassembled string.
+ *
+ * One thing to keep in mind is that the disassembled
+ * instruction might not coincide with the instruction being
+ * decoded + executed in gem5. This could be the case if
+ * there was a bug in either gem5 or in capstone itself.
+ * This scenatio is not possible with the native gem5 disassembler
+ * as the instruction mnemonic is tightly coupled with the
+ * decoded(=generated) instruction (you print what you decode)
+ *
+ * The Capstone dispatches to the native disassembler in
+ * two cases:
+ *
+ * a) m5 pseudo ops
+ * b) micro-ops
+ */
+class CapstoneDisassembler : public InstDisassembler
 {
-}
+  public:
+    PARAMS(CapstoneDisassembler);
+    CapstoneDisassembler(const Params &p);
 
-TarmacBaseRecord::InstEntry::InstEntry(
-    ThreadContext* thread,
-    const PCStateBase &pc,
-    const StaticInstPtr staticInst,
-    bool predicate)
-        : taken(predicate) ,
-          addr(pc.instAddr()) ,
-          opcode(staticInst->getEMI() & 0xffffffff),
-          isetstate(pcToISetState(pc)),
-          mode(MODE_USER)
-{
+    std::string
+    disassemble(StaticInstPtr inst,
+                const PCStateBase &pc,
+                const loader::SymbolTable *symtab) const override;
 
-    // Operating mode gained by reading the architectural register (CPSR)
-    const CPSR cpsr = thread->readMiscRegNoEffect(MISCREG_CPSR);
-    mode = (OperatingMode) (uint8_t)cpsr.mode;
-}
+  protected:
 
-TarmacBaseRecord::RegEntry::RegEntry(const PCStateBase &pc)
-  : isetstate(pcToISetState(pc)),
-    values(2, 0)
-{
-    // values vector is constructed with size = 2, for
-    // holding Lo and Hi values.
-}
-
-TarmacBaseRecord::MemEntry::MemEntry (
-    uint8_t _size,
-    Addr _addr,
-    uint64_t _data)
-      : size(_size), addr(_addr), data(_data)
-{
-}
-
-TarmacBaseRecord::ISetState
-TarmacBaseRecord::pcToISetState(const PCStateBase &pc)
-{
-    auto &apc = pc.as<ArmISA::PCState>();
-    TarmacBaseRecord::ISetState isetstate;
-
-    if (apc.aarch64())
-        isetstate = TarmacBaseRecord::ISET_A64;
-    else if (!apc.thumb())
-        isetstate = TarmacBaseRecord::ISET_ARM;
-    else if (apc.thumb())
-        isetstate = TarmacBaseRecord::ISET_THUMB;
-    else
-        // Unsupported state in TARMAC
-        isetstate = TarmacBaseRecord::ISET_UNSUPPORTED;
-
-    return isetstate;
-}
+    /**
+     * Return a pointer to the current capstone handle (csh).
+     *
+     * Any ISA extension of the Capstone disassembler should
+     * initialize (with cs_open) one or more capstone handles
+     * at construcion time.
+     * (You might need more than one handle in case the ISA
+     * has more than one mode of operation, e.g. arm and arm64)
+     * The current handle in use should be returned every time
+     * the currHandle is called.
+     */
+    virtual const csh* currHandle(const PCStateBase &pc) const = 0;
+};
 
 } // namespace trace
 } // namespace gem5
+
+#endif // __CPU_CAPSTONE_HH__
