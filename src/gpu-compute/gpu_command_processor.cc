@@ -116,28 +116,52 @@ void
 GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
                                        Addr host_pkt_addr)
 {
-    static int dynamic_task_id = 0;
     _hsa_dispatch_packet_t *disp_pkt = (_hsa_dispatch_packet_t*)raw_pkt;
     assert(!(disp_pkt->kernel_object & (system()->cacheLineSize() - 1)));
 
     /**
-     * we need to read a pointer in the application's address
-     * space to pull out the kernel code descriptor.
+     * Need to use a raw pointer for DmaVirtDevice API. This is deleted
+     * in the dispatchKernelObject method.
      */
-    auto *tc = sys->threads[0];
-
-    TranslatingPortProxy fs_proxy(tc);
-    SETranslatingPortProxy se_proxy(tc);
-    PortProxy &virt_proxy = FullSystem ? fs_proxy : se_proxy;
+    AMDKernelCode *akc = new AMDKernelCode;
 
     /**
-     * In full system mode, the page table entry may point to a system page
-     * or a device page. System pages use the proxy as normal, but a device
-     * page needs to be read from device memory. Check what type it is here.
+     * The kernel_object is a pointer to the machine code, whose entry
+     * point is an 'amd_kernel_code_t' type, which is included in the
+     * kernel binary, and describes various aspects of the kernel. The
+     * desired entry is the 'kernel_code_entry_byte_offset' field,
+     * which provides the byte offset (positive or negative) from the
+     * address of the amd_kernel_code_t to the start of the machine
+     * instructions.
+     *
+     * For SE mode we can read from the port proxy. In FS mode, we may need
+     * to wait for the guest OS to setup translations, especially when using
+     * the KVM CPU, so it is preferred to read the code object using a timing
+     * DMA request.
      */
-    bool is_system_page = true;
-    Addr phys_addr = disp_pkt->kernel_object;
-    if (FullSystem) {
+    if (!FullSystem) {
+        /**
+         * we need to read a pointer in the application's address
+         * space to pull out the kernel code descriptor.
+         */
+        auto *tc = sys->threads[0];
+        SETranslatingPortProxy virt_proxy(tc);
+
+        DPRINTF(GPUCommandProc, "reading kernel_object using proxy\n");
+        virt_proxy.readBlob(disp_pkt->kernel_object, (uint8_t*)akc,
+            sizeof(AMDKernelCode));
+
+        dispatchKernelObject(akc, raw_pkt, queue_id, host_pkt_addr);
+    } else {
+        /**
+         * In full system mode, the page table entry may point to a system
+         * page or a device page. System pages use the proxy as normal, but
+         * a device page needs to be read from device memory. Check what type
+         * it is here.
+         */
+        bool is_system_page = true;
+        Addr phys_addr = disp_pkt->kernel_object;
+
         /**
          * Full system currently only supports running on single VMID (one
          * virtual memory space), i.e., one application running on GPU at a
@@ -149,61 +173,68 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
         walker->startFunctional(gpuDevice->getVM().getPageTableBase(vmid),
                                 phys_addr, tmp_bytes, BaseMMU::Mode::Read,
                                 is_system_page);
-    }
 
-    DPRINTF(GPUCommandProc, "kernobj vaddr %#lx paddr %#lx size %d s:%d\n",
-            disp_pkt->kernel_object, phys_addr, sizeof(AMDKernelCode),
-            is_system_page);
+        DPRINTF(GPUCommandProc, "kernel_object vaddr %#lx paddr %#lx size %d"
+                " s:%d\n", disp_pkt->kernel_object, phys_addr,
+                sizeof(AMDKernelCode), is_system_page);
 
-    /**
-     * The kernel_object is a pointer to the machine code, whose entry
-     * point is an 'amd_kernel_code_t' type, which is included in the
-     * kernel binary, and describes various aspects of the kernel. The
-     * desired entry is the 'kernel_code_entry_byte_offset' field,
-     * which provides the byte offset (positive or negative) from the
-     * address of the amd_kernel_code_t to the start of the machine
-     * instructions.
-     */
-    AMDKernelCode akc;
-    if (is_system_page) {
-        DPRINTF(GPUCommandProc, "kernel_object in system, using proxy\n");
-        virt_proxy.readBlob(disp_pkt->kernel_object, (uint8_t*)&akc,
-            sizeof(AMDKernelCode));
-    } else {
-        assert(FullSystem);
-        DPRINTF(GPUCommandProc, "kernel_object in device, using device mem\n");
+        /**
+         * System objects use DMA device. Device objects need to use device
+         * memory.
+         */
+        if (is_system_page) {
+            DPRINTF(GPUCommandProc,
+                    "sending system DMA read for kernel_object\n");
 
-        // Read from GPU memory manager one cache line at a time to prevent
-        // rare cases where the AKC spans two memory pages.
-        ChunkGenerator gen(disp_pkt->kernel_object, sizeof(AMDKernelCode),
-                           system()->cacheLineSize());
-        for (; !gen.done(); gen.next()) {
-            Addr chunk_addr = gen.addr();
-            int vmid = 1;
-            unsigned dummy;
-            walker->startFunctional(gpuDevice->getVM().getPageTableBase(vmid),
-                                    chunk_addr, dummy, BaseMMU::Mode::Read,
-                                    is_system_page);
+            auto dma_callback = new DmaVirtCallback<uint32_t>(
+              [=](const uint32_t&) {
+                dispatchKernelObject(akc, raw_pkt, queue_id, host_pkt_addr);
+              });
 
-            Request::Flags flags = Request::PHYSICAL;
-            RequestPtr request = std::make_shared<Request>(chunk_addr,
-                system()->cacheLineSize(), flags, walker->getDevRequestor());
-            Packet *readPkt = new Packet(request, MemCmd::ReadReq);
-            readPkt->dataStatic((uint8_t *)&akc + gen.complete());
-            system()->getDeviceMemory(readPkt)->access(readPkt);
-            delete readPkt;
+            dmaReadVirt(disp_pkt->kernel_object, sizeof(AMDKernelCode),
+                    dma_callback, (void *)akc);
+        } else {
+            DPRINTF(GPUCommandProc,
+                    "kernel_object in device, using device mem\n");
+
+            // Read from GPU memory manager one cache line at a time to prevent
+            // rare cases where the AKC spans two memory pages.
+            ChunkGenerator gen(disp_pkt->kernel_object, sizeof(AMDKernelCode),
+                               system()->cacheLineSize());
+            for (; !gen.done(); gen.next()) {
+                Addr chunk_addr = gen.addr();
+                int vmid = 1;
+                unsigned dummy;
+                walker->startFunctional(
+                    gpuDevice->getVM().getPageTableBase(vmid), chunk_addr,
+                    dummy, BaseMMU::Mode::Read, is_system_page);
+
+                Request::Flags flags = Request::PHYSICAL;
+                RequestPtr request = std::make_shared<Request>(chunk_addr,
+                    system()->cacheLineSize(), flags,
+                    walker->getDevRequestor());
+                Packet *readPkt = new Packet(request, MemCmd::ReadReq);
+                readPkt->dataStatic((uint8_t *)akc + gen.complete());
+                system()->getDeviceMemory(readPkt)->access(readPkt);
+                delete readPkt;
+            }
+
+            dispatchKernelObject(akc, raw_pkt, queue_id, host_pkt_addr);
         }
     }
+}
+
+void
+GPUCommandProcessor::dispatchKernelObject(AMDKernelCode *akc, void *raw_pkt,
+                                        uint32_t queue_id, Addr host_pkt_addr)
+{
+    _hsa_dispatch_packet_t *disp_pkt = (_hsa_dispatch_packet_t*)raw_pkt;
 
     DPRINTF(GPUCommandProc, "GPU machine code is %lli bytes from start of the "
-        "kernel object\n", akc.kernel_code_entry_byte_offset);
-
-    DPRINTF(GPUCommandProc,"GPUCommandProc: Sending dispatch pkt to %lu\n",
-        (uint64_t)tc->cpuId());
-
+        "kernel object\n", akc->kernel_code_entry_byte_offset);
 
     Addr machine_code_addr = (Addr)disp_pkt->kernel_object
-        + akc.kernel_code_entry_byte_offset;
+        + akc->kernel_code_entry_byte_offset;
 
     DPRINTF(GPUCommandProc, "Machine code starts at addr: %#x\n",
         machine_code_addr);
@@ -219,7 +250,7 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
      * APUs to implement asynchronous memcopy operations from 2 pointers in
      * host memory.  I have no idea what BLIT stands for.
      * */
-    if (akc.runtime_loader_kernel_symbol) {
+    if (akc->runtime_loader_kernel_symbol) {
         kernel_name = "Some kernel";
     } else {
         kernel_name = "Blit kernel";
@@ -230,7 +261,7 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
     GfxVersion gfxVersion = FullSystem ? gpuDevice->getGfxVersion()
                           : driver()->getGfxVersion();
     HSAQueueEntry *task = new HSAQueueEntry(kernel_name, queue_id,
-        dynamic_task_id, raw_pkt, &akc, host_pkt_addr, machine_code_addr,
+        dynamic_task_id, raw_pkt, akc, host_pkt_addr, machine_code_addr,
         gfxVersion);
 
     DPRINTF(GPUCommandProc, "Task ID: %i Got AQL: wg size (%dx%dx%d), "
@@ -252,6 +283,8 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
     // The driver expects the start time to be in ns
     Tick start_ts = curTick() / sim_clock::as_int::ns;
     dispatchStartTime.insert({disp_pkt->completion_signal, start_ts});
+
+    delete akc;
 }
 
 void
