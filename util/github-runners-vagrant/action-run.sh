@@ -76,6 +76,6 @@ while true; do
     ./run.sh # This will complete with the runner being destroyed
 
     # 4. Cleanup the machine
-    rm -rf "${WORK_DIR}"
+    sudo rm -rf "${WORK_DIR}"
     docker system prune --force --volumes --all
 done
