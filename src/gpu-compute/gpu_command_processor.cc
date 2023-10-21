@@ -473,18 +473,27 @@ GPUCommandProcessor::driver()
  */
 
 /**
- * TODO: For now we simply tell the HSAPP to finish the packet,
- *       however a future patch will update this method to provide
- *       the proper handling of any required vendor-specific packets.
- *       In the version of ROCm that is currently supported (1.6)
- *       the runtime will send packets that direct the CP to
- *       invalidate the GPUs caches. We do this automatically on
- *       each kernel launch in the CU, so this is safe for now.
+ * TODO: For now we simply tell the HSAPP to finish the packet and write a
+ * completion signal, if any. However, in the future proper handing may be
+ * required for vendor specific packets.
+ *
+ * In the version of ROCm that is currently supported the runtime will send
+ * packets that direct the CP to invalidate the GPU caches. We do this
+ * automatically on each kernel launch in the CU, so that situation is safe
+ * for now.
  */
 void
 GPUCommandProcessor::submitVendorPkt(void *raw_pkt, uint32_t queue_id,
     Addr host_pkt_addr)
 {
+    auto vendor_pkt = (_hsa_generic_vendor_pkt *)raw_pkt;
+
+    if (vendor_pkt->completion_signal) {
+        sendCompletionSignal(vendor_pkt->completion_signal);
+    }
+
+    warn("Ignoring vendor packet\n");
+
     hsaPP->finishPkt(raw_pkt, queue_id);
 }
 
