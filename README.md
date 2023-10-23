@@ -9,7 +9,7 @@ server CPU's including CPU's from
 [IBM](https://doi.org/10.1109/ISCA45697.2020.00014),
 [AMD](https://www.amd.com/en/support/tech-docs/software-optimization-guide-for-the-amd-zen4-microarchitecture), and [ARM](https://doi.org/10.1109/MM.2020.2972222).
 
-This implementation is based on industrial [report](https://ieeexplore.ieee.org/document/9408197)
+This implementation is based on an industrial [report](https://ieeexplore.ieee.org/document/9408197)
 and aims to establish a state-of-the-art front-end design comparable to modern servers in gem5.
 
 ## How to use
@@ -28,12 +28,11 @@ scons build/ALL/gem5.opt
 ```
 
 ## Notes
-The implementation was develped for the X86 architecture in full-system mode.
-Other architectures where not extensively tested. If you encounter any issues,
+The implementation was developed for the X86 architecture in full-system mode.
+Other architectures were not extensively tested. If you encounter any issues,
 please let us know via issues, pull requests or PM to David Schall
 [GitHub](https://github.com/dhschall),[web page](https://dhschall.github.io/).
 Furthermore, we welcome any feedback and ideas for improvements.
-
 
 ## Reference our work
 This work was done for our recent [paper](https://ease-lab.github.io/ease_website/pubs/IGNITE_MICRO23.pdf)
@@ -52,6 +51,25 @@ accepted to MICRO'23. If you use our work, please cite our paper:
   series    = {MICRO'23}
 }
 ```
+
+## gem5 integration status
+We are currently in the process of integrating the changes to the main gem5. It is a time-consuming process
+as the changes are extensive and require a lot of testing. This might cause conflicts if you try to merge
+the changes into the main gem5. We try to keep the list of the integration status up-to-date.
+Furthermore, it might be possible that some bugs are fixed while integrating the changes.
+
+- [ ] cpu: Update BPU to support decoupled front-end
+- [ ] cpu: Implement decoupled front-end
+- [ ] cpu: Implement fetch target queue
+- [ ] cpu: Implement taken-only history (#499)
+- [ ] cpu: Implement fetch directed prefetcher
+- [x] arch: Add instruction size and PC set methods (#357)
+- [x] sim: Probe listener template with lambda (#356)
+- [ ] cpu: Branch Predictor Refactoring (#455)
+- [x] cpu: Refactor indirect predictor (#429)
+- [x] cpu: Restructure RAS (#428)
+- [x] cpu: Restructure BTB (#412)
+
 
 ---
 ---
