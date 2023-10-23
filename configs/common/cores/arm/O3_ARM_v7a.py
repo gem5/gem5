@@ -207,9 +207,8 @@ class O3_ARM_v7aL2(Cache):
     size = "1MB"
     assoc = 16
     write_buffers = 8
-    prefetch_on_access = True
     clusivity = "mostly_excl"
     # Simple stride prefetcher
-    prefetcher = StridePrefetcher(degree=8, latency=1)
+    prefetcher = StridePrefetcher(degree=8, latency=1, prefetch_on_access=True)
     tags = BaseSetAssoc()
     replacement_policy = RandomRP()
