@@ -1097,11 +1097,7 @@ template<typename ElemType>
     int32_t micro_vl = std::min(tmp_vl, micro_vlmax);
     StaticInstPtr microop;
 
-    if (micro_vl == 0) {
-        microop = new VectorNopMicroInst(_machInst);
-        this->microops.push_back(microop);
-    }
-    for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
+    for (int i = 0; i < num_microops && micro_vl >= 0; ++i) {
         microop = new %(class_name)sMicro<ElemType>(_machInst, micro_vl, i);
         microop->setDelayedCommit();
         this->microops.push_back(microop);
