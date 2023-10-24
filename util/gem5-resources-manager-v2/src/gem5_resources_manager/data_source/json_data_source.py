@@ -45,6 +45,20 @@ class JSONDatabase(AbstractDataSource):
                 return resource
         raise Gem5DataSourceEntryNotFound(resource_id, resource_version)
 
+    def find_latest_resource(self, resource_id: str):
+        resources_with_id = []
+        for resource in self._data:
+            if resource["id"] == resource_id:
+                resources_with_id.append(resource)
+        if len(resources_with_id) == 0:
+            raise Gem5DataSourceEntryNotFound(resource_id)
+        return max(
+            resources_with_id,
+            key=lambda resource: tuple(
+                map(int, resource["resource_version"].split("."))
+            ),
+        )
+
     def get_resource_category(
         self, resource_id: str, resource_version: str
     ) -> ResourceCategory:

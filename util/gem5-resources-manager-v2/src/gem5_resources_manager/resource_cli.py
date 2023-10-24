@@ -1,10 +1,11 @@
 import argparse
 
 from .creator import Creator
+from .updater import Updater
 
 from .data_source import JSONDatabase
 
-subtools = [Creator()]
+subtools = [Creator(), Updater()]
 
 
 def cli():
