@@ -1107,8 +1107,8 @@ template<typename ElemType>
         this->microops.push_back(microop);
         micro_vl = std::min(tmp_vl -= micro_vlmax, micro_vlmax);
     }
-    microop = new VMaskMergeMicroInst<ElemType>(_machInst, _machInst.vd,
-        this->microops.size(), _vlen);
+    microop = new VMaskMergeMicroInst(_machInst, _machInst.vd,
+        this->microops.size(), _vlen, sizeof(ElemType));
     this->microops.push_back(microop);
 
     this->microops.front()->setFirstMicroop();
@@ -1236,8 +1236,8 @@ template<typename ElemType>
         this->microops.push_back(microop);
         micro_vl = std::min(tmp_vl -= micro_vlmax, micro_vlmax);
     }
-    microop = new VMaskMergeMicroInst<ElemType>(_machInst, _machInst.vd,
-        this->microops.size(), _vlen);
+    microop = new VMaskMergeMicroInst(_machInst, _machInst.vd,
+        this->microops.size(), _vlen, sizeof(ElemType));
     this->microops.push_back(microop);
 
     this->microops.front()->setFirstMicroop();
