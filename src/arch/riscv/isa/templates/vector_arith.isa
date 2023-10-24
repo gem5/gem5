@@ -107,6 +107,9 @@ template<typename ElemType>
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
 }
+
+%(declare_varith_template)s;
+
 }};
 
 def template VectorIntMicroDeclare {{
@@ -145,6 +148,8 @@ template<typename ElemType>
     %(set_src_reg_idx)s;
 }
 
+%(declare_varith_template)s;
+
 }};
 
 def template VectorIntMicroExecute {{
@@ -182,6 +187,8 @@ Fault
     return NoFault;
 }
 
+%(declare_varith_template)s;
+
 }};
 
 def template VectorIntExtMacroDeclare {{
@@ -193,14 +200,7 @@ private:
 public:
     %(class_name)s(ExtMachInst _machInst, uint32_t _vlen);
     std::string generateDisassembly(Addr pc,
-        const loader::SymbolTable *symtab) const override
-    {
-        std::stringstream ss;
-        ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", "
-            << registerName(srcRegIdx(0));
-        if (machInst.vm == 0) ss << ", v0.t";
-        return ss.str();
-    }
+        const loader::SymbolTable *symtab) const override;
 };
 
 }};
@@ -219,14 +219,7 @@ public:
                    uint8_t _microIdx);
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
     std::string generateDisassembly(Addr pc,
-        const loader::SymbolTable *symtab) const override
-    {
-        std::stringstream ss;
-        ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", "
-            << registerName(srcRegIdx(0));
-        if (machInst.vm == 0) ss << ", v0.t";
-        return ss.str();
-    }
+        const loader::SymbolTable *symtab) const override;
 };
 
 }};
@@ -303,6 +296,38 @@ Fault
     return NoFault;
 }
 
+template <typename ElemType>
+std::string
+%(class_name)s<ElemType>::generateDisassembly(Addr pc,
+    const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", "
+        << registerName(srcRegIdx(0));
+    if (machInst.vm == 0) ss << ", v0.t";
+    return ss.str();
+}
+
+%(declare_varith_template)s;
+
+}};
+
+def template VectorIntExtMacroExecute {{
+
+template <typename ElemType>
+std::string
+%(class_name)s<ElemType>::generateDisassembly(Addr pc,
+    const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", "
+        << registerName(srcRegIdx(0));
+    if (machInst.vm == 0) ss << ", v0.t";
+    return ss.str();
+}
+
+%(declare_varith_template)s;
+
 }};
 
 def template VectorIntDecodeBlock {{
@@ -365,6 +390,8 @@ template<typename ElemType>
     this->microops.back()->setLastMicroop();
 }
 
+%(declare_varith_template)s;
+
 }};
 
 def template VectorIntWideningMicroDeclare {{
@@ -401,6 +428,8 @@ template<typename ElemType>
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -447,6 +476,8 @@ Fault
     return NoFault;
 }
 
+%(declare_varith_template)s;
+
 }};
 
 def template VectorIntNarrowingMicroExecute {{
@@ -492,6 +523,8 @@ Fault
     %(op_wb)s;
     return NoFault;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -546,6 +579,9 @@ template<typename ElemType>
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
 }
+
+%(declare_varith_template)s;
+
 }};
 
 def template VectorFloatMicroDeclare {{
@@ -581,6 +617,8 @@ template<typename ElemType>
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -619,6 +657,8 @@ Fault
 
     return NoFault;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -725,6 +765,8 @@ Fault
     return NoFault;
 }
 
+%(declare_varith_template)s;
+
 }};
 
 def template VectorFloatNarrowingMicroExecute {{
@@ -771,6 +813,8 @@ Fault
     %(op_wb)s;
     return NoFault;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -826,6 +870,8 @@ template<typename ElemType>
     this->microops.back()->setLastMicroop();
 }
 
+%(declare_varith_template)s;
+
 }};
 
 def template ViotaMicroDeclare {{
@@ -865,6 +911,8 @@ template<typename ElemType>
     setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs2]);
 }
 
+%(declare_varith_template)s;
+
 }};
 
 def template ViotaMicroExecute {{
@@ -899,6 +947,8 @@ Fault
     return NoFault;
 }
 
+%(declare_varith_template)s;
+
 }};
 
 
@@ -914,6 +964,8 @@ template<typename ElemType>
     %(set_src_reg_idx)s;
     %(set_vm_idx)s;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -948,6 +1000,8 @@ Fault
     return NoFault;
 };
 
+%(declare_varith_template)s;
+
 }};
 
 def template Vector1Vs1RdMaskDeclare {{
@@ -977,6 +1031,8 @@ template<typename ElemType>
     %(constructor)s;
     %(set_vm_idx)s;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -1009,6 +1065,8 @@ Fault
     %(op_wb)s;
     return NoFault;
 };
+
+%(declare_varith_template)s;
 
 }};
 
@@ -1057,6 +1115,8 @@ template<typename ElemType>
     this->microops.back()->setLastMicroop();
 }
 
+%(declare_varith_template)s;
+
 }};
 
 def template VectorIntMaskMicroDeclare {{
@@ -1095,6 +1155,8 @@ template<typename ElemType>
     %(set_src_reg_idx)s;
 }
 
+%(declare_varith_template)s;
+
 }};
 
 def template VectorIntMaskMicroExecute {{
@@ -1132,6 +1194,8 @@ Fault
     %(op_wb)s;
     return NoFault;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -1180,6 +1244,8 @@ template<typename ElemType>
     this->microops.back()->setLastMicroop();
 }
 
+%(declare_varith_template)s;
+
 }};
 
 def template VectorFloatMaskMicroDeclare {{
@@ -1216,6 +1282,8 @@ template<typename ElemType>
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -1254,6 +1322,8 @@ Fault
     %(op_wb)s;
     return NoFault;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -1381,6 +1451,8 @@ template<typename ElemType>
     %(set_src_reg_idx)s;
 }
 
+%(declare_varith_template)s;
+
 }};
 
 def template VectorMaskExecute {{
@@ -1414,6 +1486,8 @@ Fault
 
     return NoFault;
 };
+
+%(declare_varith_template)s;
 
 }};
 
@@ -1449,6 +1523,8 @@ template<typename ElemType>
     %(set_vm_idx)s;
 }
 
+%(declare_varith_template)s;
+
 }};
 
 def template VectorIntNonSplitExecute {{
@@ -1481,6 +1557,8 @@ Fault
     return NoFault;
 }
 
+%(declare_varith_template)s;
+
 }};
 
 def template VectorFloatNonSplitExecute {{
@@ -1512,6 +1590,8 @@ Fault
     %(op_wb)s;
     return NoFault;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -1578,6 +1658,8 @@ template<typename ElemType>
     this->microops.back()->setLastMicroop();
 }
 
+%(declare_varith_template)s;
+
 }};
 
 def template VectorReduceMicroDeclare {{
@@ -1614,6 +1696,8 @@ template<typename ElemType>
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -1663,6 +1747,8 @@ Fault
     %(op_wb)s;
     return NoFault;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -1715,6 +1801,8 @@ Fault
     return NoFault;
 }
 
+%(declare_varith_template)s;
+
 }};
 
 def template VectorReduceFloatWideningMicroExecute {{
@@ -1764,6 +1852,8 @@ Fault
     %(op_wb)s;
     return NoFault;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -1824,6 +1914,8 @@ template<typename ElemType, typename IndexType>
     this->microops.back()->setLastMicroop();
 }
 
+%(declare_varith_template)s;
+
 }};
 
 def template VectorGatherMicroDeclare {{
@@ -1872,6 +1964,8 @@ template<typename ElemType, typename IndexType>
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -1929,6 +2023,8 @@ Fault
 
     return NoFault;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -2003,6 +2099,9 @@ template<typename ElemType>
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
 }
+
+%(declare_varith_template)s;
+
 }};
 
 def template VectorIntVxsatMicroDeclare {{
@@ -2040,6 +2139,8 @@ template<typename ElemType>
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -2094,6 +2195,8 @@ Fault
     return NoFault;
 }
 
+%(declare_varith_template)s;
+
 }};
 
 def template VectorSlideMacroDeclare {{
@@ -2142,6 +2245,8 @@ template<typename ElemType>
     this->microops.back()->setLastMicroop();
 }
 
+%(declare_varith_template)s;
+
 }};
 
 def template VectorSlideDownMacroConstructor {{
@@ -2176,6 +2281,8 @@ template<typename ElemType>
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -2214,6 +2321,8 @@ template<typename ElemType>
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -2254,6 +2363,8 @@ Fault
     return NoFault;
 };
 
+%(declare_varith_template)s;
+
 }};
 
 def template VectorFloatSlideMicroExecute {{
@@ -2292,5 +2403,7 @@ Fault
 
     return NoFault;
 };
+
+%(declare_varith_template)s;
 
 }};
