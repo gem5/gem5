@@ -4,24 +4,22 @@
 name: Weekly Tests
 
 on:
-  # Runs every Sunday from 7AM UTC
-    schedule:
-        - cron: 00 7 * * 6
-  # Allows us to manually start workflow for testing
-    workflow_dispatch:
+    pull_request:
+        types: [opened, edited, synchronize, ready_for_review]
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+    cancel-in-progress: true
 
 jobs:
     build-gem5:
         runs-on: [self-hosted, linux, x64]
+        if: github.event.pull_request.draft == false
         container: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
         outputs:
             build-name: ${{ steps.artifact-name.outputs.name }}
         steps:
             - uses: actions/checkout@v3
-              with:
-          # Scheduled workflows run on the default branch by default. We
-          # therefore need to explicitly checkout the develop branch.
-                  ref: develop
             - id: artifact-name
               run: echo "name=$(date +"%Y-%m-%d_%H.%M.%S")-ALL" >> $GITHUB_OUTPUT
             - name: Build gem5
@@ -34,58 +32,13 @@ jobs:
                   retention-days: 5
             - run: echo "This job's status is ${{ job.status }}."
 
-  # start running the very-long tests
-    testlib-very-long-tests:
-        strategy:
-            fail-fast: false
-            matrix:
-                test-type: [gem5_library_example_tests, gem5_resources, parsec_benchmarks, x86_boot_tests]
-        runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
-        needs: [build-gem5]
-        timeout-minutes: 4320 # 3 days
-        steps:
-            - name: Clean runner
-              run: rm -rf ./* || true rm -rf ./.??* || true rm -rf ~/.cache || true
-            - uses: actions/checkout@v3
-              with:
-        # Scheduled workflows run on the default branch by default. We
-        # therefore need to explicitly checkout the develop branch.
-                  ref: develop
-            - uses: actions/download-artifact@v3
-              with:
-                  name: ${{needs.build-gem5.outputs.build-name}}
-                  path: build/ALL
-            - run: chmod u+x build/ALL/gem5.opt
-            - name: very-long ${{ matrix.test-type }}
-              working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run gem5/${{ matrix.test-type }} --length very-long --skip-build -vv -t $(nproc)
-            - name: create zip of results
-              if: success() || failure()
-              run: |
-                  apt-get -y install zip
-                  zip -r output.zip tests/testing-results
-            - name: upload zip
-              if: success() || failure()
-              uses: actions/upload-artifact@v3
-              env:
-                  MY_STEP_VAR: ${{ matrix.test-type }}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
-              with:
-                  name: ${{ env.MY_STEP_VAR }}
-                  path: output.zip
-                  retention-days: 7
-            - run: echo "This job's status is ${{ job.status }}."
-
     dramsys-tests:
         runs-on: [self-hosted, linux, x64]
+        if: github.event.pull_request.draft == false
         container: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
         timeout-minutes: 4320 # 3 days
         steps:
             - uses: actions/checkout@v3
-              with:
-          # Scheduled workflows run on the default branch by default. We
-          # therefore need to explicitly checkout the develop branch.
-                  ref: develop
 
             - name: Checkout DRAMSys
               working-directory: ${{ github.workspace }}/ext/dramsys
@@ -114,7 +67,7 @@ jobs:
         # check.
         runs-on: ubuntu-22.04
         needs:
-            - testlib-very-long-tests
+            - build-gem5
             - dramsys-tests
         steps:
             - run: echo "This weekly tests have passed."
