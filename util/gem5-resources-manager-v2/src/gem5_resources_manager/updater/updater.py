@@ -46,6 +46,41 @@ class Updater(AbstractSubtool):
         )
         self.data_source.create_new_entry(updated_resource)
 
+    def is_dependent_resource(self, resource, resource_to_check):
+        if resource["category"] == "workload":
+            if resource_to_check["category"] in resource["resources"].keys():
+                if (
+                    resource["resources"][resource_to_check["category"]]["id"]
+                    == resource_to_check["id"]
+                ):
+                    return True
+        return False
+
+    def updated_dependent_resources(self, resource):
+        updated_resources = []
+        if resource["category"] != "workload" and resource["category"] != "suite":
+            all_workloads = self.data_source.get_all_resources_by_category("workload")
+            for workload in all_workloads:
+                if self.is_dependent_resource(workload, resource):
+                    workload["resources"][resource["category"]][
+                        "resource_version"
+                    ] = resource["resource_version"]
+                    updated_resources.append(workload)
+
+        if resource["category"] != "suite":
+            all_suites = self.data_source.get_all_resources_by_category("suite")
+            if resource["category"] != "workload":
+                resources_to_update_suites = updated_resources
+            else:
+                resources_to_update_suites = [resource]
+            for suite in all_suites:
+                for resource in resources_to_update_suites:
+                    for workload in suite["workloads"]:
+                        if workload["id"] == resource["id"]:
+                            workload["resource_version"] = resource["resource_version"]
+                            updated_resources.append(suite)
+        return updated_resources
+
     def update_resource_json_obj(
         self, resource, new_resource_version, update_non_existing_fields
     ):
