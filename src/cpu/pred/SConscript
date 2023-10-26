@@ -59,7 +59,7 @@ SimObject('BranchPredictor.py',
     'MultiperspectivePerceptronTAGE64KB', 'MPP_TAGE_8KB',
     'MPP_LoopPredictor_8KB', 'MPP_StatisticalCorrector_8KB',
     'MultiperspectivePerceptronTAGE8KB'],
-    enums=['BranchType'])
+    enums=['BranchType', 'TargetProvider'])
 
 Source('bpred_unit.cc')
 Source('2bit_local.cc')

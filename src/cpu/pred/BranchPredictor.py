@@ -57,6 +57,15 @@ class BranchType(Enum):
     ]
 
 
+class TargetProvider(Enum):
+    vals = [
+        "NoTarget",
+        "BTB",
+        "RAS",
+        "Indirect",
+    ]
+
+
 class ReturnAddrStack(SimObject):
     type = "ReturnAddrStack"
     cxx_class = "gem5::branch_prediction::ReturnAddrStack"

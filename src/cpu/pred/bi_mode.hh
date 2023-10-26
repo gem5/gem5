@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2022-2023 The University of Edinburgh
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2014 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -61,15 +73,17 @@ class BiModeBP : public BPredUnit
 {
   public:
     BiModeBP(const BiModeBPParams &params);
-    void uncondBranch(ThreadID tid, Addr pc, void * &bp_history);
-    void squash(ThreadID tid, void *bp_history);
-    bool lookup(ThreadID tid, Addr branch_addr, void * &bp_history);
-    void btbUpdate(ThreadID tid, Addr branch_addr, void * &bp_history);
-    void update(ThreadID tid, Addr branch_addr, bool taken, void *bp_history,
-                bool squashed, const StaticInstPtr & inst, Addr corrTarget);
+    bool lookup(ThreadID tid, Addr pc, void * &bp_history) override;
+    void updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
+                         Addr target,  void * &bp_history) override;
+    void squash(ThreadID tid, void * &bp_history) override;
+    void update(ThreadID tid, Addr pc, bool taken,
+                void * &bp_history, bool squashed,
+                const StaticInstPtr & inst, Addr target) override;
 
   private:
     void updateGlobalHistReg(ThreadID tid, bool taken);
+    void uncondBranch(ThreadID tid, Addr pc, void * &bp_history);
 
     struct BPHistory
     {
