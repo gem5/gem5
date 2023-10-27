@@ -121,6 +121,28 @@ let {{
         softfloat_exceptionFlags = 0;
         xc->setMiscReg(MISCREG_FFLAGS, FFLAGS);
         '''
+
+    def declareVArithTemplate(
+        class_name, type_name='uint', min_size=8, max_size=64):
+        sizes = [8, 16, 32, 64]
+        code = ''
+        for size in sizes:
+            if size < min_size or size > max_size:
+                continue
+            code += f'template class {class_name}<{type_name}{size}_t>;\n'
+        return code
+
+    def declareGatherTemplate(class_name, index_type):
+        sizes = [8, 16, 32, 64]
+        code = ''
+        for size in sizes:
+            if index_type == 'elem_type':
+                idx_type = f'uint{size}_t'
+            else:
+                idx_type = index_type
+            code += ('template class'
+                     f' {class_name}<uint{size}_t, {idx_type}>;\n')
+        return code
 }};
 
 
@@ -132,8 +154,14 @@ def format VectorIntFormat(code, category, *flags) {{
         macroop_class_name = 'VectorVMUNARY0MacroInst'
         microp_class_name = 'VectorVMUNARY0MicroInst'
 
-    iop = InstObjParams(name, Name, macroop_class_name, {'code': code},
-                        flags)
+    iop = InstObjParams(
+        name,
+        Name,
+        macroop_class_name,
+        {'code': code,
+         'declare_varith_template': declareVArithTemplate(Name)},
+        flags
+    )
     inst_name, inst_suffix = name.split("_", maxsplit=1)
     v0_required = inst_name not in ["vmv"]
     mask_cond = v0_required and (inst_suffix not in ['vvm', 'vxm', 'vim'])
@@ -192,25 +220,30 @@ def format VectorIntFormat(code, category, *flags) {{
          'set_src_reg_idx': set_src_reg_idx,
          'set_vlenb' : set_vlenb,
          'vm_decl_rd': vm_decl_rd,
-         'copy_old_vd': copyOldVd(old_vd_idx)},
+         'copy_old_vd': copyOldVd(old_vd_idx),
+         'declare_varith_template': declareVArithTemplate(Name + "Micro")},
         flags)
 
-    # Because of the use of templates, we had to put all parts in header to
-    # keep the compiler happy.
     header_output = \
         VectorIntMicroDeclare.subst(microiop) + \
+        VectorIntMacroDeclare.subst(iop)
+    decoder_output = \
         VectorIntMicroConstructor.subst(microiop) + \
-        VectorIntMicroExecute.subst(microiop) + \
-        VectorIntMacroDeclare.subst(iop) + \
         VectorIntMacroConstructor.subst(iop)
-
+    exec_output = VectorIntMicroExecute.subst(microiop)
     decode_block = VectorIntDecodeBlock.subst(iop)
 }};
 
 
 def format VectorIntExtFormat(code, category, *flags) {{
-    iop = InstObjParams(name, Name, 'VectorArithMacroInst', {'code': code},
-                        flags)
+    iop = InstObjParams(
+        name,
+        Name,
+        'VectorArithMacroInst',
+        {'code': code,
+         'declare_varith_template': declareVArithTemplate(Name)},
+        flags
+    )
     inst_name, inst_suffix = name.split("_", maxsplit=1)
     ext_div = int(inst_suffix[-1])
 
@@ -245,24 +278,31 @@ def format VectorIntExtFormat(code, category, *flags) {{
          'set_vlen': set_vlen,
          'vm_decl_rd': vm_decl_rd,
          'copy_old_vd': copyOldVd(old_vd_idx),
-         'ext_div': ext_div},
+         'ext_div': ext_div,
+         'declare_varith_template': declareVArithTemplate(Name + "Micro")},
         flags)
 
-    # Because of the use of templates, we had to put all parts in header to
-    # keep the compiler happy.
     header_output = \
         VectorIntExtMicroDeclare.subst(microiop) + \
+        VectorIntExtMacroDeclare.subst(iop)
+    decoder_output = \
         VectorIntMicroConstructor.subst(microiop) + \
-        VectorIntExtMicroExecute.subst(microiop) + \
-        VectorIntExtMacroDeclare.subst(iop) + \
         VectorIntMacroConstructor.subst(iop)
-
+    exec_output = \
+        VectorIntExtMicroExecute.subst(microiop) + \
+        VectorIntExtMacroExecute.subst(iop)
     decode_block = VectorIntDecodeBlock.subst(iop)
 }};
 
 def format VectorIntWideningFormat(code, category, *flags) {{
-    iop = InstObjParams(name, Name, 'VectorArithMacroInst', {'code': code},
-                        flags)
+    iop = InstObjParams(
+        name,
+        Name,
+        'VectorArithMacroInst',
+        {'code': code,
+         'declare_varith_template': declareVArithTemplate(Name, max_size=32)},
+        flags
+    )
     inst_name, inst_suffix = name.split("_", maxsplit=1)
     v0_required = True
     mask_cond = v0_required
@@ -308,6 +348,7 @@ def format VectorIntWideningFormat(code, category, *flags) {{
     set_vlenb = setVlenb();
     set_vlen = setVlen();
 
+    varith_micro_declare = declareVArithTemplate(Name + "Micro", max_size=32)
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
         'VectorArithMicroInst',
@@ -317,24 +358,29 @@ def format VectorIntWideningFormat(code, category, *flags) {{
          'set_vlenb': set_vlenb,
          'set_vlen': set_vlen,
          'vm_decl_rd': vm_decl_rd,
-         'copy_old_vd': copyOldVd(old_vd_idx)},
+         'copy_old_vd': copyOldVd(old_vd_idx),
+         'declare_varith_template': varith_micro_declare},
         flags)
 
-    # Because of the use of templates, we had to put all parts in header to
-    # keep the compiler happy.
     header_output = \
         VectorIntWideningMicroDeclare.subst(microiop) + \
+        VectorIntWideningMacroDeclare.subst(iop)
+    decoder_output = \
         VectorIntWideningMicroConstructor.subst(microiop) + \
-        VectorIntWideningMicroExecute.subst(microiop) + \
-        VectorIntWideningMacroDeclare.subst(iop) + \
         VectorIntWideningMacroConstructor.subst(iop)
-
+    exec_output = VectorIntWideningMicroExecute.subst(microiop)
     decode_block = VectorIntWideningDecodeBlock.subst(iop)
 }};
 
 def format VectorIntNarrowingFormat(code, category, *flags) {{
-    iop = InstObjParams(name, Name, 'VectorArithMacroInst', {'code': code},
-                        flags)
+    iop = InstObjParams(
+        name,
+        Name,
+        'VectorArithMacroInst',
+        {'code': code,
+         'declare_varith_template': declareVArithTemplate(Name, max_size=32)},
+        flags
+    )
     mask_cond = True
     need_elem_idx = True
 
@@ -368,6 +414,7 @@ def format VectorIntNarrowingFormat(code, category, *flags) {{
     set_vlenb = setVlenb();
     set_vlen = setVlen();
 
+    varith_micro_declare = declareVArithTemplate(Name + "Micro", max_size=32)
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
         'VectorArithMicroInst',
@@ -378,18 +425,17 @@ def format VectorIntNarrowingFormat(code, category, *flags) {{
          'set_vlen': set_vlen,
          'vm_decl_rd': vm_decl_rd,
          'copy_old_vd': copyOldVd(old_vd_idx),
-         },
+         'declare_varith_template': varith_micro_declare
+        },
         flags)
 
-    # Because of the use of templates, we had to put all parts in header to
-    # keep the compiler happy.
     header_output = \
         VectorIntWideningMicroDeclare.subst(microiop) + \
+        VectorIntWideningMacroDeclare.subst(iop)
+    decoder_output = \
         VectorIntWideningMicroConstructor.subst(microiop) + \
-        VectorIntNarrowingMicroExecute.subst(microiop) + \
-        VectorIntWideningMacroDeclare.subst(iop) + \
         VectorIntWideningMacroConstructor.subst(iop)
-
+    exec_output = VectorIntNarrowingMicroExecute.subst(microiop)
     decode_block = VectorIntWideningDecodeBlock.subst(iop)
 }};
 
@@ -397,7 +443,8 @@ def format VectorIntMaskFormat(code, category, *flags) {{
     iop = InstObjParams(name,
         Name,
         'VectorArithMacroInst',
-        {'code': code},
+        {'code': code,
+         'declare_varith_template': declareVArithTemplate(Name)},
         flags)
     inst_name, inst_suffix = name.split("_", maxsplit=1)
     v0_required = not (inst_name in ["vmadc", "vmsbc"] \
@@ -448,17 +495,17 @@ def format VectorIntMaskFormat(code, category, *flags) {{
          'set_src_reg_idx': set_src_reg_idx,
          'set_vlenb': set_vlenb,
          'vm_decl_rd': vm_decl_rd,
-         'copy_old_vd': copyOldVd(old_vd_idx)},
+         'copy_old_vd': copyOldVd(old_vd_idx),
+         'declare_varith_template': declareVArithTemplate(Name + "Micro")},
         flags)
 
-    # Because of the use of templates, we had to put all parts in header to
-    # keep the compiler happy.
     header_output = \
         VectorIntMaskMicroDeclare.subst(microiop) + \
+        VectorIntMaskMacroDeclare.subst(iop)
+    decoder_output = \
         VectorIntMaskMicroConstructor.subst(microiop) + \
-        VectorIntMaskMicroExecute.subst(microiop) + \
-        VectorIntMaskMacroDeclare.subst(iop) + \
         VectorIntMaskMacroConstructor.subst(iop)
+    exec_output = VectorIntMaskMicroExecute.subst(microiop)
     decode_block = VectorIntDecodeBlock.subst(iop)
 }};
 
@@ -470,7 +517,8 @@ def format VectorGatherFormat(code, category, *flags) {{
         idx_type = "elem_type"
     iop = InstObjParams(name, Name, 'VectorArithMacroInst',
         {'idx_type': idx_type,
-         'code': code},
+         'code': code,
+         'declare_varith_template': declareGatherTemplate(Name, idx_type)},
         flags)
     old_vd_idx = 2
     dest_reg_id = "vecRegClass[_machInst.vd + vd_idx]"
@@ -502,6 +550,7 @@ def format VectorGatherFormat(code, category, *flags) {{
     set_vlenb = setVlenb();
     set_vlen = setVlen();
 
+    varith_micro_declare = declareGatherTemplate(Name + "Micro", idx_type)
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
         'VectorArithMicroInst',
@@ -512,25 +561,30 @@ def format VectorGatherFormat(code, category, *flags) {{
          'set_vlen': set_vlen,
          'vm_decl_rd': vm_decl_rd,
          'copy_old_vd': copyOldVd(old_vd_idx),
-         'idx_type': idx_type},
+         'idx_type': idx_type,
+         'declare_varith_template': varith_micro_declare},
         flags)
 
-    # Because of the use of templates, we had to put all parts in header to
-    # keep the compiler happy.
     header_output = \
         VectorGatherMicroDeclare.subst(microiop) + \
+        VectorGatherMacroDeclare.subst(iop)
+    decoder_output = \
         VectorGatherMicroConstructor.subst(microiop) + \
-        VectorGatherMicroExecute.subst(microiop) + \
-        VectorGatherMacroDeclare.subst(iop) + \
         VectorGatherMacroConstructor.subst(iop)
-
+    exec_output = VectorGatherMicroExecute.subst(microiop)
     decode_block = VectorGatherDecodeBlock.subst(iop)
 
 }};
 
 def format VectorFloatFormat(code, category, *flags) {{
-    iop = InstObjParams(name, Name, 'VectorArithMacroInst', {'code': code},
-                        flags)
+    iop = InstObjParams(
+        name,
+        Name,
+        'VectorArithMacroInst',
+        {'code': code,
+         'declare_varith_template': declareVArithTemplate(Name, 'float', 32)},
+        flags
+    )
     inst_name, inst_suffix = name.split("_", maxsplit=1)
     v0_required = inst_name not in ["vfmv"]
     mask_cond = v0_required and (inst_suffix not in ['vvm', 'vfm'])
@@ -569,6 +623,7 @@ def format VectorFloatFormat(code, category, *flags) {{
 
     set_vlenb = setVlenb();
 
+    varith_micro_declare = declareVArithTemplate(Name + "Micro", 'float', 32)
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
         'VectorArithMicroInst',
@@ -577,24 +632,29 @@ def format VectorFloatFormat(code, category, *flags) {{
          'set_src_reg_idx': set_src_reg_idx,
          'set_vlenb': set_vlenb,
          'vm_decl_rd': vm_decl_rd,
-         'copy_old_vd': copyOldVd(2)},
+         'copy_old_vd': copyOldVd(2),
+         'declare_varith_template': varith_micro_declare},
         flags)
 
-    # Because of the use of templates, we had to put all parts in header to
-    # keep the compiler happy.
     header_output = \
         VectorFloatMicroDeclare.subst(microiop) + \
+        VectorFloatMacroDeclare.subst(iop)
+    decoder_output = \
         VectorFloatMicroConstructor.subst(microiop) + \
-        VectorFloatMicroExecute.subst(microiop) + \
-        VectorFloatMacroDeclare.subst(iop) + \
         VectorFloatMacroConstructor.subst(iop)
-
+    exec_output = VectorFloatMicroExecute.subst(microiop)
     decode_block = VectorFloatDecodeBlock.subst(iop)
 }};
 
 def format VectorFloatCvtFormat(code, category, *flags) {{
-    iop = InstObjParams(name, Name, 'VectorArithMacroInst', {'code': code},
-                        flags)
+    iop = InstObjParams(
+        name,
+        Name,
+        'VectorArithMacroInst',
+        {'code': code,
+         'declare_varith_template': declareVArithTemplate(Name, 'float', 32)},
+        flags
+    )
 
     old_vd_idx = 1
     dest_reg_id = "vecRegClass[_machInst.vd + _microIdx]"
@@ -616,6 +676,7 @@ def format VectorFloatCvtFormat(code, category, *flags) {{
 
     set_vlenb = setVlenb();
 
+    varith_micro_declare = declareVArithTemplate(Name + "Micro", 'float', 32)
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
         'VectorArithMicroInst',
@@ -624,24 +685,30 @@ def format VectorFloatCvtFormat(code, category, *flags) {{
          'set_src_reg_idx': set_src_reg_idx,
          'set_vlenb': set_vlenb,
          'vm_decl_rd': vm_decl_rd,
-         'copy_old_vd': copyOldVd(old_vd_idx)},
+         'copy_old_vd': copyOldVd(old_vd_idx),
+         'declare_varith_template': varith_micro_declare},
         flags)
 
-    # Because of the use of templates, we had to put all parts in header to
-    # keep the compiler happy.
     header_output = \
         VectorFloatCvtMicroDeclare.subst(microiop) + \
+        VectorFloatCvtMacroDeclare.subst(iop)
+    decoder_output = \
         VectorFloatMicroConstructor.subst(microiop) + \
-        VectorFloatMicroExecute.subst(microiop) + \
-        VectorFloatCvtMacroDeclare.subst(iop) + \
         VectorFloatMacroConstructor.subst(iop)
-
+    exec_output = VectorFloatMicroExecute.subst(microiop)
     decode_block = VectorFloatDecodeBlock.subst(iop)
 }};
 
 def format VectorFloatWideningFormat(code, category, *flags) {{
-    iop = InstObjParams(name, Name, 'VectorArithMacroInst', {'code': code},
-                        flags)
+    varith_macro_declare = declareVArithTemplate(Name, 'float', 32, 32)
+    iop = InstObjParams(
+        name,
+        Name,
+        'VectorArithMacroInst',
+        {'code': code,
+         'declare_varith_template': varith_macro_declare},
+        flags
+    )
     inst_name, inst_suffix = name.split("_", maxsplit=1)
     v0_required = True
     mask_cond = v0_required
@@ -688,6 +755,8 @@ def format VectorFloatWideningFormat(code, category, *flags) {{
     set_vlenb = setVlenb();
     set_vlen = setVlen();
 
+    varith_micro_declare = declareVArithTemplate(
+        Name + "Micro", 'float', 32, 32)
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
         'VectorArithMicroInst',
@@ -697,24 +766,30 @@ def format VectorFloatWideningFormat(code, category, *flags) {{
          'set_vlenb': set_vlenb,
          'set_vlen': set_vlen,
          'vm_decl_rd': vm_decl_rd,
-         'copy_old_vd': copyOldVd(2)},
+         'copy_old_vd': copyOldVd(2),
+         'declare_varith_template': varith_micro_declare},
         flags)
 
-    # Because of the use of templates, we had to put all parts in header to
-    # keep the compiler happy.
     header_output = \
         VectorIntWideningMicroDeclare.subst(microiop) + \
+        VectorIntWideningMacroDeclare.subst(iop)
+    decoder_output = \
         VectorIntWideningMicroConstructor.subst(microiop) + \
-        VectorFloatWideningMicroExecute.subst(microiop) + \
-        VectorIntWideningMacroDeclare.subst(iop) + \
         VectorIntWideningMacroConstructor.subst(iop)
-
+    exec_output = VectorFloatWideningMicroExecute.subst(microiop)
     decode_block = VectorFloatWideningDecodeBlock.subst(iop)
 }};
 
 def format VectorFloatWideningCvtFormat(code, category, *flags) {{
-    iop = InstObjParams(name, Name, 'VectorArithMacroInst', {'code': code},
-                        flags)
+    varith_macro_declare = declareVArithTemplate(Name, 'float', 32, 32)
+    iop = InstObjParams(
+        name,
+        Name,
+        'VectorArithMacroInst',
+        {'code': code,
+         'declare_varith_template': varith_macro_declare},
+        flags
+    )
 
     old_vd_idx = 1
     dest_reg_id = "vecRegClass[_machInst.vd + _microIdx]"
@@ -737,6 +812,8 @@ def format VectorFloatWideningCvtFormat(code, category, *flags) {{
     set_vlenb = setVlenb();
     set_vlen = setVlen();
 
+    varith_micro_declare = declareVArithTemplate(
+        Name + "Micro", 'float', 32, 32)
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
         'VectorArithMicroInst',
@@ -746,24 +823,30 @@ def format VectorFloatWideningCvtFormat(code, category, *flags) {{
          'set_vlenb': set_vlenb,
          'set_vlen': set_vlen,
          'vm_decl_rd': vm_decl_rd,
-         'copy_old_vd': copyOldVd(old_vd_idx)},
+         'copy_old_vd': copyOldVd(old_vd_idx),
+         'declare_varith_template': varith_micro_declare},
         flags)
 
-    # Because of the use of templates, we had to put all parts in header to
-    # keep the compiler happy.
     header_output = \
         VectorFloatCvtMicroDeclare.subst(microiop) + \
+        VectorFloatCvtMacroDeclare.subst(iop)
+    decoder_output = \
         VectorFloatMicroConstructor.subst(microiop) + \
-        VectorFloatWideningMicroExecute.subst(microiop) + \
-        VectorFloatCvtMacroDeclare.subst(iop) + \
         VectorIntWideningMacroConstructor.subst(iop)
-
+    exec_output = VectorFloatWideningMicroExecute.subst(microiop)
     decode_block = VectorFloatWideningDecodeBlock.subst(iop)
 }};
 
 def format VectorFloatNarrowingCvtFormat(code, category, *flags) {{
-    iop = InstObjParams(name, Name, 'VectorArithMacroInst', {'code': code},
-                        flags)
+    varith_macro_declare = declareVArithTemplate(Name, 'float', 32, 32)
+    iop = InstObjParams(
+        name,
+        Name,
+        'VectorArithMacroInst',
+        {'code': code,
+         'declare_varith_template': varith_macro_declare},
+        flags
+    )
 
     old_vd_idx = 1
     dest_reg_id = "vecRegClass[_machInst.vd + _microIdx / 2]"
@@ -787,6 +870,8 @@ def format VectorFloatNarrowingCvtFormat(code, category, *flags) {{
     set_vlenb = setVlenb();
     set_vlen = setVlen();
 
+    varith_micro_declare = declareVArithTemplate(
+        Name + "Micro", 'float', 32, 32)
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
         'VectorArithMicroInst',
@@ -796,18 +881,17 @@ def format VectorFloatNarrowingCvtFormat(code, category, *flags) {{
          'set_vlenb': set_vlenb,
          'set_vlen': set_vlen,
          'vm_decl_rd': vm_decl_rd,
-         'copy_old_vd': copyOldVd(old_vd_idx)},
+         'copy_old_vd': copyOldVd(old_vd_idx),
+         'declare_varith_template': varith_micro_declare},
         flags)
 
-    # Because of the use of templates, we had to put all parts in header to
-    # keep the compiler happy.
     header_output = \
         VectorFloatCvtMicroDeclare.subst(microiop) + \
+        VectorFloatCvtMacroDeclare.subst(iop)
+    decoder_output = \
         VectorFloatMicroConstructor.subst(microiop) + \
-        VectorFloatNarrowingMicroExecute.subst(microiop) + \
-        VectorFloatCvtMacroDeclare.subst(iop) + \
         VectorIntWideningMacroConstructor.subst(iop)
-
+    exec_output = VectorFloatNarrowingMicroExecute.subst(microiop)
     decode_block = VectorFloatWideningDecodeBlock.subst(iop)
 }};
 
@@ -815,8 +899,10 @@ def format VectorFloatMaskFormat(code, category, *flags) {{
     iop = InstObjParams(name,
         Name,
         'VectorArithMacroInst',
-        {'code': code},
-        flags)
+        {'code': code,
+         'declare_varith_template': declareVArithTemplate(Name, 'float', 32)},
+        flags
+    )
     dest_reg_id = "vecRegClass[VecMemInternalReg0 + _microIdx]"
     src1_reg_id = ""
     if category == "OPFVV":
@@ -841,6 +927,7 @@ def format VectorFloatMaskFormat(code, category, *flags) {{
     code = loopWrapper(code)
     code = fflags_wrapper(code)
 
+    varith_micro_declare = declareVArithTemplate(Name + "Micro", 'float', 32)
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
         'VectorArithMicroInst',
@@ -849,17 +936,17 @@ def format VectorFloatMaskFormat(code, category, *flags) {{
          'set_src_reg_idx': set_src_reg_idx,
          'set_vlenb': set_vlenb,
          'vm_decl_rd': vm_decl_rd,
-         'copy_old_vd': copyOldVd(2)},
+         'copy_old_vd': copyOldVd(2),
+         'declare_varith_template': varith_micro_declare},
         flags)
 
-    # Because of the use of templates, we had to put all parts in header to
-    # keep the compiler happy.
     header_output = \
         VectorFloatMaskMicroDeclare.subst(microiop) + \
+        VectorFloatMaskMacroDeclare.subst(iop)
+    decoder_output = \
         VectorFloatMaskMicroConstructor.subst(microiop) + \
-        VectorFloatMaskMicroExecute.subst(microiop) + \
-        VectorFloatMaskMacroDeclare.subst(iop) + \
         VectorFloatMaskMacroConstructor.subst(iop)
+    exec_output = VectorFloatMaskMicroExecute.subst(microiop)
     decode_block = VectorFloatDecodeBlock.subst(iop)
 }};
 
@@ -884,8 +971,14 @@ def format VMvWholeFormat(code, category, *flags) {{
 }};
 
 def format ViotaFormat(code, category, *flags){{
-    iop = InstObjParams(name, Name, 'VectorArithMacroInst', {'code': code},
-                        flags)
+    iop = InstObjParams(
+        name,
+        Name,
+        'VectorArithMacroInst',
+        {'code': code,
+         'declare_varith_template': declareVArithTemplate(Name)},
+        flags
+    )
 
     inst_name, inst_suffix = name.split("_", maxsplit=1)
     dest_reg_id = "vecRegClass[_machInst.vd + _microIdx]"
@@ -912,17 +1005,17 @@ def format ViotaFormat(code, category, *flags){{
          'set_vlenb': set_vlenb,
          'vm_decl_rd': vm_decl_rd,
          'set_vm_idx': set_vm_idx,
-         'copy_old_vd': copyOldVd(1)},
+         'copy_old_vd': copyOldVd(1),
+         'declare_varith_template': declareVArithTemplate(Name + "Micro")},
         flags)
-    # Because of the use of templates, we had to put all parts in header to
-    # keep the compiler happy.
+
     header_output = \
         ViotaMicroDeclare.subst(microiop) + \
+        ViotaMacroDeclare.subst(iop)
+    decoder_output = \
         ViotaMicroConstructor.subst(microiop) + \
-        ViotaMicroExecute.subst(microiop)+\
-        ViotaMacroDeclare.subst(iop) + \
         ViotaMacroConstructor.subst(iop)
-
+    exec_output = ViotaMicroExecute.subst(microiop)
     decode_block = VectorIntDecodeBlock.subst(iop)
 
 }};
@@ -951,15 +1044,14 @@ def format Vector1Vs1VdMaskFormat(code, category, *flags){{
          'set_vlenb': set_vlenb,
          'vm_decl_rd': vm_decl_rd,
          'set_vm_idx': set_vm_idx,
-         'copy_old_vd': copyOldVd(1)},
+         'copy_old_vd': copyOldVd(1),
+         'declare_varith_template': declareVArithTemplate(Name, 'uint', 8, 8),
+         },
         flags)
-    # Because of the use of templates, we had to put all parts in header to
-    # keep the compiler happy.
-    header_output = \
-        Vector1Vs1RdMaskDeclare.subst(iop) + \
-        Vector1Vs1VdMaskConstructor.subst(iop) + \
-        Vector1Vs1VdMaskExecute.subst(iop)
 
+    header_output = Vector1Vs1RdMaskDeclare.subst(iop)
+    decoder_output = Vector1Vs1VdMaskConstructor.subst(iop)
+    exec_output = Vector1Vs1VdMaskExecute.subst(iop)
     decode_block = VectorMaskDecodeBlock.subst(iop)
 }};
 
@@ -972,15 +1064,14 @@ def format Vector1Vs1RdMaskFormat(code, category, *flags){{
         'VectorNonSplitInst',
         {'code': code,
          'vm_decl_rd': vm_decl_rd,
-         'set_vm_idx': set_vm_idx},
+         'set_vm_idx': set_vm_idx,
+         'declare_varith_template': declareVArithTemplate(Name, 'uint', 8, 8)
+        },
         flags)
-    # Because of the use of templates, we had to put all parts in header to
-    # keep the compiler happy.
-    header_output = \
-        Vector1Vs1RdMaskDeclare.subst(iop) + \
-        Vector1Vs1RdMaskConstructor.subst(iop) + \
-        Vector1Vs1RdMaskExecute.subst(iop)
 
+    header_output = Vector1Vs1RdMaskDeclare.subst(iop)
+    decoder_output = Vector1Vs1RdMaskConstructor.subst(iop)
+    exec_output = Vector1Vs1RdMaskExecute.subst(iop)
     decode_block = VectorMaskDecodeBlock.subst(iop)
 }};
 
@@ -993,30 +1084,35 @@ def format VectorNonSplitFormat(code, category, *flags) {{
     if inst_name == "vfmv" :
         code = fflags_wrapper(code)
 
-    iop = InstObjParams(name,
-        Name,
-        'VectorNonSplitInst',
-        {'code': code,
-         'vm_decl_rd': vm_decl_rd,
-         'set_vm_idx': set_vm_idx},
-        flags)
-
-
     if inst_name == "vfmv" :
-        execute_block = VectorFloatNonSplitExecute.subst(iop)
+        varith_template = declareVArithTemplate(Name, 'float', 32)
+        iop = InstObjParams(name,
+            Name,
+            'VectorNonSplitInst',
+            {'code': code,
+             'vm_decl_rd': vm_decl_rd,
+             'set_vm_idx': set_vm_idx,
+             'declare_varith_template': varith_template},
+            flags)
+        header_output = VectorNonSplitDeclare.subst(iop)
+        decoder_output = VectorNonSplitConstructor.subst(iop)
+        exec_output = VectorFloatNonSplitExecute.subst(iop)
         decode_block = VectorFloatNonSplitDecodeBlock.subst(iop)
     elif inst_name == "vmv" :
-        execute_block = VectorIntNonSplitExecute.subst(iop)
+        iop = InstObjParams(name,
+            Name,
+            'VectorNonSplitInst',
+            {'code': code,
+             'vm_decl_rd': vm_decl_rd,
+             'set_vm_idx': set_vm_idx,
+             'declare_varith_template': declareVArithTemplate(Name)},
+            flags)
+        header_output = VectorNonSplitDeclare.subst(iop)
+        decoder_output = VectorNonSplitConstructor.subst(iop)
+        exec_output = VectorIntNonSplitExecute.subst(iop)
         decode_block = VectorIntNonSplitDecodeBlock.subst(iop)
     else :
         error("Unsupported inst for VectorNonSplitFormat: %s" % inst_name)
-
-    # Because of the use of templates, we had to put all parts in header to
-    # keep the compiler happy.
-    header_output = \
-        VectorNonSplitDeclare.subst(iop) + \
-        VectorNonSplitConstructor.subst(iop) + \
-        execute_block
 
 }};
 
@@ -1053,21 +1149,26 @@ def format VectorMaskFormat(code, category, *flags) {{
          'set_dest_reg_idx': set_dest_reg_idx,
          'set_src_reg_idx': set_src_reg_idx,
          'set_vlenb': set_vlenb,
-         'copy_old_vd': copyOldVd(old_vd_idx)},
+         'copy_old_vd': copyOldVd(old_vd_idx),
+         'declare_varith_template': declareVArithTemplate(Name, 'uint', 8, 8)
+        },
         flags)
-    # Because of the use of templates, we had to put all parts in header to
-    # keep the compiler happy.
-    header_output = \
-        VectorMaskDeclare.subst(iop) + \
-        VectorMaskConstructor.subst(iop) + \
-        VectorMaskExecute.subst(iop)
 
+    header_output = VectorMaskDeclare.subst(iop)
+    decoder_output = VectorMaskConstructor.subst(iop)
+    exec_output = VectorMaskExecute.subst(iop)
     decode_block = VectorMaskDecodeBlock.subst(iop)
 }};
 
 def format VectorReduceIntFormat(code, category, *flags) {{
-    iop = InstObjParams(name, Name, 'VectorArithMacroInst', {'code': code},
-                        flags)
+    iop = InstObjParams(
+        name,
+        Name,
+        'VectorArithMacroInst',
+        {'code': code,
+         'declare_varith_template': declareVArithTemplate(Name)},
+        flags
+    )
     inst_name, inst_suffix = name.split("_", maxsplit=1)
     dest_reg_id = "vecRegClass[_machInst.vd]"
     src1_reg_id = "vecRegClass[_machInst.vs1]"
@@ -1098,23 +1199,29 @@ def format VectorReduceIntFormat(code, category, *flags) {{
          'set_vlen' : set_vlen,
          'vm_decl_rd': vm_decl_rd,
          'type_def': type_def,
-         'copy_old_vd': copyOldVd(2)},
+         'copy_old_vd': copyOldVd(2),
+         'declare_varith_template': declareVArithTemplate(Name + "Micro")},
         flags)
 
-    # Because of the use of templates, we had to put all parts in header to
-    # keep the compiler happy.
     header_output = \
         VectorReduceMicroDeclare.subst(microiop) + \
+        VectorReduceMacroDeclare.subst(iop)
+    decoder_output = \
         VectorReduceMicroConstructor.subst(microiop) + \
-        VectorReduceIntMicroExecute.subst(microiop) + \
-        VectorReduceMacroDeclare.subst(iop) + \
         VectorReduceMacroConstructor.subst(iop)
+    exec_output = VectorReduceIntMicroExecute.subst(microiop)
     decode_block = VectorIntDecodeBlock.subst(iop)
 }};
 
 def format VectorReduceFloatFormat(code, category, *flags) {{
-    iop = InstObjParams(name, Name, 'VectorArithMacroInst', {'code': code},
-                        flags)
+    iop = InstObjParams(
+        name,
+        Name,
+        'VectorArithMacroInst',
+        {'code': code,
+         'declare_varith_template': declareVArithTemplate(Name, 'float', 32)},
+        flags
+    )
     inst_name, inst_suffix = name.split("_", maxsplit=1)
     dest_reg_id = "vecRegClass[_machInst.vd]"
     src1_reg_id = "vecRegClass[_machInst.vs1]"
@@ -1138,6 +1245,7 @@ def format VectorReduceFloatFormat(code, category, *flags) {{
 
     code = fflags_wrapper(code)
 
+    varith_micro_declare = declareVArithTemplate(Name + "Micro", 'float', 32)
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
         'VectorArithMicroInst',
@@ -1148,23 +1256,30 @@ def format VectorReduceFloatFormat(code, category, *flags) {{
          'set_vlen': set_vlen,
          'vm_decl_rd': vm_decl_rd,
          'type_def': type_def,
-         'copy_old_vd': copyOldVd(2)},
+         'copy_old_vd': copyOldVd(2),
+         'declare_varith_template': varith_micro_declare},
         flags)
 
-    # Because of the use of templates, we had to put all parts in header to
-    # keep the compiler happy.
     header_output = \
         VectorReduceMicroDeclare.subst(microiop) + \
+        VectorReduceMacroDeclare.subst(iop)
+    decoder_output = \
         VectorReduceMicroConstructor.subst(microiop) + \
-        VectorReduceFloatMicroExecute.subst(microiop) + \
-        VectorReduceMacroDeclare.subst(iop) + \
         VectorReduceMacroConstructor.subst(iop)
+    exec_output = VectorReduceFloatMicroExecute.subst(microiop)
     decode_block = VectorFloatDecodeBlock.subst(iop)
 }};
 
 def format VectorReduceFloatWideningFormat(code, category, *flags) {{
-    iop = InstObjParams(name, Name, 'VectorArithMacroInst', {'code': code},
-                        flags)
+    varith_macro_declare = declareVArithTemplate(Name, 'float', 32, 32)
+    iop = InstObjParams(
+        name,
+        Name,
+        'VectorArithMacroInst',
+        {'code': code,
+         'declare_varith_template': varith_macro_declare},
+        flags
+    )
     inst_name, inst_suffix = name.split("_", maxsplit=1)
     dest_reg_id = "vecRegClass[_machInst.vd]"
     src1_reg_id = "vecRegClass[_machInst.vs1]"
@@ -1186,6 +1301,9 @@ def format VectorReduceFloatWideningFormat(code, category, *flags) {{
         using ewt = typename double_width<et>::type;
         using vwu = decltype(ewt::v);
     '''
+
+    varith_micro_declare = declareVArithTemplate(
+        Name + "Micro", 'float', 32, 32)
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
         'VectorArithMicroInst',
@@ -1196,23 +1314,29 @@ def format VectorReduceFloatWideningFormat(code, category, *flags) {{
          'set_vlen': set_vlen,
          'vm_decl_rd': vm_decl_rd,
          'type_def': type_def,
-         'copy_old_vd': copyOldVd(2)},
+         'copy_old_vd': copyOldVd(2),
+         'declare_varith_template': varith_micro_declare},
         flags)
 
-    # Because of the use of templates, we had to put all parts in header to
-    # keep the compiler happy.
     header_output = \
         VectorReduceMicroDeclare.subst(microiop) + \
+        VectorReduceMacroDeclare.subst(iop)
+    decoder_output = \
         VectorReduceMicroConstructor.subst(microiop) + \
-        VectorReduceFloatWideningMicroExecute.subst(microiop) + \
-        VectorReduceMacroDeclare.subst(iop) + \
         VectorReduceMacroConstructor.subst(iop)
+    exec_output = VectorReduceFloatWideningMicroExecute.subst(microiop)
     decode_block = VectorFloatWideningDecodeBlock.subst(iop)
 }};
 
 def format VectorIntVxsatFormat(code, category, *flags) {{
-    iop = InstObjParams(name, Name, 'VectorArithMacroInst', {'code': code},
-                        flags)
+    iop = InstObjParams(
+        name,
+        Name,
+        'VectorArithMacroInst',
+        {'code': code,
+         'declare_varith_template': declareVArithTemplate(Name)},
+        flags
+    )
     inst_name, inst_suffix = name.split("_", maxsplit=1)
     old_vd_idx = 2
     dest_reg_id = "vecRegClass[_machInst.vd + _microIdx]"
@@ -1251,24 +1375,29 @@ def format VectorIntVxsatFormat(code, category, *flags) {{
          'set_src_reg_idx': set_src_reg_idx,
          'set_vlenb': set_vlenb,
          'vm_decl_rd': vm_decl_rd,
-         'copy_old_vd': copyOldVd(old_vd_idx)},
+         'copy_old_vd': copyOldVd(old_vd_idx),
+         'declare_varith_template': declareVArithTemplate(Name + "Micro")},
         flags)
 
-    # Because of the use of templates, we had to put all parts in header to
-    # keep the compiler happy.
     header_output = \
         VectorIntVxsatMicroDeclare.subst(microiop) + \
+        VectorIntVxsatMacroDeclare.subst(iop)
+    decoder_output = \
         VectorIntVxsatMicroConstructor.subst(microiop) + \
-        VectorIntMicroExecute.subst(microiop) + \
-        VectorIntVxsatMacroDeclare.subst(iop) + \
         VectorIntVxsatMacroConstructor.subst(iop)
-
+    exec_output = VectorIntMicroExecute.subst(microiop)
     decode_block = VectorIntDecodeBlock.subst(iop)
 }};
 
 def format VectorReduceIntWideningFormat(code, category, *flags) {{
-    iop = InstObjParams(name, Name, 'VectorArithMacroInst', {'code': code},
-                        flags)
+    iop = InstObjParams(
+        name,
+        Name,
+        'VectorArithMacroInst',
+        {'code': code,
+         'declare_varith_template': declareVArithTemplate(Name, max_size=32)},
+        flags
+    )
     inst_name, inst_suffix = name.split("_", maxsplit=1)
     dest_reg_id = "vecRegClass[_machInst.vd]"
     src1_reg_id = "vecRegClass[_machInst.vs1]"
@@ -1284,6 +1413,8 @@ def format VectorReduceIntWideningFormat(code, category, *flags) {{
     vm_decl_rd = vmDeclAndReadData()
     set_vlenb = setVlenb()
     set_vlen = setVlen()
+
+    varith_micro_declare = declareVArithTemplate(Name + "Micro", max_size=32)
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
         'VectorArithMicroInst',
@@ -1293,17 +1424,17 @@ def format VectorReduceIntWideningFormat(code, category, *flags) {{
          'set_vlenb': set_vlenb,
          'set_vlen': set_vlen,
          'vm_decl_rd': vm_decl_rd,
-         'copy_old_vd': copyOldVd(2)},
+         'copy_old_vd': copyOldVd(2),
+         'declare_varith_template': varith_micro_declare},
         flags)
 
-    # Because of the use of templates, we had to put all parts in header to
-    # keep the compiler happy.
     header_output = \
         VectorReduceMicroDeclare.subst(microiop) + \
+        VectorReduceMacroDeclare.subst(iop)
+    decoder_output = \
         VectorReduceMicroConstructor.subst(microiop) + \
-        VectorReduceIntWideningMicroExecute.subst(microiop) + \
-        VectorReduceMacroDeclare.subst(iop) + \
         VectorReduceMacroConstructor.subst(iop)
+    exec_output = VectorReduceIntWideningMicroExecute.subst(microiop)
     decode_block = VectorIntWideningDecodeBlock.subst(iop)
 }};
 
@@ -1315,8 +1446,20 @@ def VectorSlideBase(name, Name, category, code, flags, macro_construtor,
     microop_class_name = 'VectorSlideMicroInst'
     # Make sure flags are in lists (convert to lists if not).
     flags = makeList(flags)
-    iop = InstObjParams(name, Name, macroop_class_name, {'code': code},
-                        flags)
+
+    if decode_template is VectorIntDecodeBlock:
+        varith_macro_declare = declareVArithTemplate(Name)
+    elif decode_template is VectorFloatDecodeBlock:
+        varith_macro_declare = declareVArithTemplate(Name, 'float', 32)
+
+    iop = InstObjParams(
+        name,
+        Name,
+        macroop_class_name,
+       {'code': code,
+        'declare_varith_template': varith_macro_declare},
+        flags
+    )
     inst_name, inst_suffix = name.split("_", maxsplit=1)
     dest_reg_id = "vecRegClass[_machInst.vd + vdIdx]"
     src2_reg_id = "vecRegClass[_machInst.vs2 + vs2Idx]"
@@ -1345,6 +1488,13 @@ def VectorSlideBase(name, Name, category, code, flags, macro_construtor,
     set_src_reg_idx += setSrcVm()
     set_vlenb = setVlenb()
     set_vlen = setVlen()
+
+    if decode_template is VectorIntDecodeBlock:
+        varith_micro_declare = declareVArithTemplate(Name + "Micro")
+    elif decode_template is VectorFloatDecodeBlock:
+        varith_micro_declare = declareVArithTemplate(
+            Name + "Micro", 'float', 32)
+
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
         microop_class_name,
@@ -1354,52 +1504,54 @@ def VectorSlideBase(name, Name, category, code, flags, macro_construtor,
          'set_vlenb': set_vlenb,
          'set_vlen': set_vlen,
          'vm_decl_rd': vm_decl_rd,
-         'copy_old_vd': copyOldVd(old_vd_idx)},
+         'copy_old_vd': copyOldVd(old_vd_idx),
+         'declare_varith_template': varith_micro_declare},
         flags)
-    # Because of the use of templates, we had to put all parts in header to
-    # keep the compiler happy.
-    # Because of the use of templates, we had to put all parts in header to
-    # keep the compiler happy.
+
     header_output = \
         VectorSlideMicroDeclare.subst(microiop) + \
+        VectorSlideMacroDeclare.subst(iop)
+    decoder_output = \
         VectorSlideMicroConstructor.subst(microiop) + \
-        micro_execute_template.subst(microiop) + \
-        VectorSlideMacroDeclare.subst(iop) + \
         macro_construtor.subst(iop)
-
+    exec_output = micro_execute_template.subst(microiop)
     decode_block = decode_template.subst(iop)
-    return (header_output, decode_block)
+    return (header_output, decoder_output, decode_block, exec_output)
 
 }};
 
 def format VectorSlideUpFormat(code, category, *flags) {{
-    (header_output, decode_block) = VectorSlideBase(name, Name, category, code,
-        flags,
-        macro_construtor = VectorSlideUpMacroConstructor,
-        decode_template = VectorIntDecodeBlock,
-        micro_execute_template = VectorSlideMicroExecute)
+    (header_output, decoder_output, decode_block, exec_output) = \
+        VectorSlideBase(name, Name, category, code,
+            flags,
+            macro_construtor = VectorSlideUpMacroConstructor,
+            decode_template = VectorIntDecodeBlock,
+            micro_execute_template = VectorSlideMicroExecute)
 }};
 
 def format VectorSlideDownFormat(code, category, *flags) {{
-    (header_output, decode_block) = VectorSlideBase(name, Name, category, code,
-        flags,
-        macro_construtor = VectorSlideDownMacroConstructor,
-        decode_template = VectorIntDecodeBlock,
-        micro_execute_template = VectorSlideMicroExecute)
+    (header_output, decoder_output, decode_block, exec_output) = \
+        VectorSlideBase(name, Name, category, code,
+            flags,
+            macro_construtor = VectorSlideDownMacroConstructor,
+            decode_template = VectorIntDecodeBlock,
+            micro_execute_template = VectorSlideMicroExecute)
 }};
 
 def format VectorFloatSlideUpFormat(code, category, *flags) {{
-    (header_output, decode_block) = VectorSlideBase(name, Name, category, code,
-        flags,
-        macro_construtor = VectorSlideUpMacroConstructor,
-        decode_template = VectorFloatDecodeBlock,
-        micro_execute_template = VectorFloatSlideMicroExecute)
+    (header_output, decoder_output, decode_block, exec_output) = \
+        VectorSlideBase(name, Name, category, code,
+            flags,
+            macro_construtor = VectorSlideUpMacroConstructor,
+            decode_template = VectorFloatDecodeBlock,
+            micro_execute_template = VectorFloatSlideMicroExecute)
 }};
 
 def format VectorFloatSlideDownFormat(code, category, *flags) {{
-    (header_output, decode_block) = VectorSlideBase(name, Name, category, code,
-        flags,
-        macro_construtor = VectorSlideDownMacroConstructor,
-        decode_template = VectorFloatDecodeBlock,
-        micro_execute_template = VectorFloatSlideMicroExecute)
+    (header_output, decoder_output, decode_block, exec_output) = \
+        VectorSlideBase(name, Name, category, code,
+            flags,
+            macro_construtor = VectorSlideDownMacroConstructor,
+            decode_template = VectorFloatDecodeBlock,
+            micro_execute_template = VectorFloatSlideMicroExecute)
 }};

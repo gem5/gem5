@@ -96,22 +96,8 @@ private:
     RegId srcRegIdxArr[3];
     RegId destRegIdxArr[1];
 public:
-    %(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
-        uint8_t _microIdx, uint32_t _vlen)
-    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s,
-                     _microVl, _microIdx, _vlen)
-    {
-        %(set_reg_idx_arr)s;
-        _numSrcRegs = 0;
-        _numDestRegs = 0;
-        setDestRegIdx(_numDestRegs++, vecRegClass[_machInst.vd + _microIdx]);
-        _numTypedDestRegs[VecRegClass]++;
-        setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs1]);
-        setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vd + _microIdx]);
-        if (!_machInst.vm) {
-            setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);
-        }
-    }
+    %(class_name)s(ExtMachInst _machInst, uint8_t _microVl,
+        uint8_t _microIdx, uint32_t _vlen);
 
     Fault execute(ExecContext *, trace::InstRecord *) const override;
     Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
@@ -120,6 +106,27 @@ public:
     using %(base_class)s::generateDisassembly;
 
 };
+
+}};
+
+def template VleMicroConstructor {{
+
+%(class_name)s::%(class_name)s(ExtMachInst _machInst, uint8_t _microVl,
+    uint8_t _microIdx, uint32_t _vlen)
+  : %(base_class)s(
+        "%(mnemonic)s", _machInst, %(op_class)s, _microVl, _microIdx, _vlen)
+{
+    %(set_reg_idx_arr)s;
+    _numSrcRegs = 0;
+    _numDestRegs = 0;
+    setDestRegIdx(_numDestRegs++, vecRegClass[_machInst.vd + _microIdx]);
+    _numTypedDestRegs[VecRegClass]++;
+    setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs1]);
+    setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vd + _microIdx]);
+    if (!_machInst.vm) {
+        setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);
+    }
+}
 
 }};
 
@@ -293,21 +300,7 @@ private:
     RegId destRegIdxArr[0];
 public:
     %(class_name)s(ExtMachInst _machInst,
-        uint32_t _microVl, uint8_t _microIdx, uint32_t _vlen)
-    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s,
-                        _microVl, _microIdx, _vlen)
-    {
-        %(set_reg_idx_arr)s;
-        _numSrcRegs = 0;
-        _numDestRegs = 0;
-        setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs1]);
-        setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs3 + _microIdx]);
-        if (!_machInst.vm) {
-            setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);
-        }
-        this->flags[IsVector] = true;
-        this->flags[IsStore] = true;
-    }
+        uint8_t _microVl, uint8_t _microIdx, uint32_t _vlen);
 
     Fault execute(ExecContext *, trace::InstRecord *) const override;
     Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
@@ -315,6 +308,27 @@ public:
                       trace::InstRecord *) const override;
     using %(base_class)s::generateDisassembly;
 };
+
+}};
+
+def template VseMicroConstructor {{
+
+%(class_name)s::%(class_name)s(ExtMachInst _machInst,
+    uint8_t _microVl, uint8_t _microIdx, uint32_t _vlen)
+  : %(base_class)s(
+        "%(mnemonic)s", _machInst, %(op_class)s, _microVl, _microIdx, _vlen)
+{
+    %(set_reg_idx_arr)s;
+    _numSrcRegs = 0;
+    _numDestRegs = 0;
+    setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs1]);
+    setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs3 + _microIdx]);
+    if (!_machInst.vm) {
+        setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);
+    }
+    this->flags[IsVector] = true;
+    this->flags[IsStore] = true;
+}
 
 }};
 
@@ -518,24 +532,32 @@ private:
     RegId srcRegIdxArr[2];
 public:
     %(class_name)s(ExtMachInst _machInst,
-        uint32_t _microVl, uint8_t _microIdx, uint32_t _vlen)
-        : %(base_class)s("%(mnemonic)s", _machInst,
-                         %(op_class)s, _microVl, _microIdx, _vlen)
-    {
-        %(set_reg_idx_arr)s;
-        _numSrcRegs = 0;
-        _numDestRegs = 0;
-        setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs1]);
-        setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs3 + _microIdx]);
-        this->flags[IsVector] = true;
-        this->flags[IsStore] = true;
-    }
+        uint8_t _microVl, uint8_t _microIdx, uint32_t _vlen);
+
     Fault execute(ExecContext *, trace::InstRecord *) const override;
     Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
     Fault completeAcc(PacketPtr, ExecContext *,
                         trace::InstRecord *) const override;
     using %(base_class)s::generateDisassembly;
 };
+
+}};
+
+def template VsWholeMicroConstructor {{
+
+%(class_name)s::%(class_name)s(ExtMachInst _machInst,
+    uint8_t _microVl, uint8_t _microIdx, uint32_t _vlen)
+  : %(base_class)s(
+        "%(mnemonic)s", _machInst, %(op_class)s, _microVl, _microIdx, _vlen)
+{
+    %(set_reg_idx_arr)s;
+    _numSrcRegs = 0;
+    _numDestRegs = 0;
+    setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs1]);
+    setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs3 + _microIdx]);
+    this->flags[IsVector] = true;
+    this->flags[IsStore] = true;
+}
 
 }};
 
@@ -644,25 +666,33 @@ private:
     RegId srcRegIdxArr[1];
 public:
     %(class_name)s(ExtMachInst _machInst,
-        uint32_t _microVl, uint8_t _microIdx, uint32_t _vlen)
-        : %(base_class)s("%(mnemonic)s_micro", _machInst,
-                         %(op_class)s, _microVl, _microIdx, _vlen)
-    {
-        %(set_reg_idx_arr)s;
-        _numSrcRegs = 0;
-        _numDestRegs = 0;
-        setDestRegIdx(_numDestRegs++, vecRegClass[_machInst.vd + _microIdx]);
-        _numTypedDestRegs[VecRegClass]++;
-        setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs1]);
-        this->flags[IsVector] = true;
-        this->flags[IsLoad] = true;
-    }
+        uint8_t _microVl, uint8_t _microIdx, uint32_t _vlen);
+
     Fault execute(ExecContext *, trace::InstRecord *) const override;
     Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
     Fault completeAcc(PacketPtr, ExecContext *,
                         trace::InstRecord *) const override;
     using %(base_class)s::generateDisassembly;
 };
+
+}};
+
+def template VlWholeMicroConstructor {{
+
+%(class_name)s::%(class_name)s(ExtMachInst _machInst,
+    uint8_t _microVl, uint8_t _microIdx, uint32_t _vlen)
+  : %(base_class)s("%(mnemonic)s_micro", _machInst, %(op_class)s, _microVl,
+      _microIdx, _vlen)
+{
+    %(set_reg_idx_arr)s;
+    _numSrcRegs = 0;
+    _numDestRegs = 0;
+    setDestRegIdx(_numDestRegs++, vecRegClass[_machInst.vd + _microIdx]);
+    _numTypedDestRegs[VecRegClass]++;
+    setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs1]);
+    this->flags[IsVector] = true;
+    this->flags[IsLoad] = true;
+}
 
 }};
 
@@ -803,24 +833,7 @@ private:
     RegId destRegIdxArr[1];
 public:
     %(class_name)s(ExtMachInst _machInst, uint8_t _regIdx, uint8_t _microIdx,
-        uint32_t _microVl)
-    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s,
-        _regIdx, _microIdx, _microVl)
-    {
-        %(set_reg_idx_arr)s;
-        _numSrcRegs = 0;
-        _numDestRegs = 0;
-        setDestRegIdx(_numDestRegs++, vecRegClass[_machInst.vd + _regIdx]);
-        _numTypedDestRegs[VecRegClass]++;
-        setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs1]);
-        setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs2]);
-        // We treat agnostic as undistrubed
-        setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vd + _regIdx]);
-        if (!_machInst.vm) {
-            setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);
-        }
-        this->flags[IsLoad] = true;
-    }
+        uint32_t _microVl);
 
     Fault execute(ExecContext *, trace::InstRecord *) const override;
     Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
@@ -828,6 +841,31 @@ public:
                       trace::InstRecord *) const override;
     using %(base_class)s::generateDisassembly;
 };
+
+}};
+
+def template VlStrideMicroConstructor {{
+
+%(class_name)s::%(class_name)s(
+    ExtMachInst _machInst, uint8_t _regIdx, uint8_t _microIdx,
+    uint32_t _microVl)
+  : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s,
+        _regIdx, _microIdx, _microVl)
+{
+    %(set_reg_idx_arr)s;
+    _numSrcRegs = 0;
+    _numDestRegs = 0;
+    setDestRegIdx(_numDestRegs++, vecRegClass[_machInst.vd + _regIdx]);
+    _numTypedDestRegs[VecRegClass]++;
+    setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs1]);
+    setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs2]);
+    // We treat agnostic as undistrubed
+    setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vd + _regIdx]);
+    if (!_machInst.vm) {
+        setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);
+    }
+    this->flags[IsLoad] = true;
+}
 
 }};
 
@@ -1019,21 +1057,7 @@ private:
     RegId destRegIdxArr[0];
 public:
     %(class_name)s(ExtMachInst _machInst, uint8_t _regIdx, uint8_t _microIdx,
-            uint32_t _microVl)
-        : %(base_class)s("%(mnemonic)s""_micro", _machInst, %(op_class)s,
-            _regIdx, _microIdx, _microVl)
-    {
-        %(set_reg_idx_arr)s;
-        _numSrcRegs = 0;
-        _numDestRegs = 0;
-        setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs1]);
-        setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs2]);
-        setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs3 + _regIdx]);
-        if (!_machInst.vm) {
-            setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);
-        }
-        this->flags[IsStore] = true;
-    }
+            uint32_t _microVl);
 
     Fault execute(ExecContext *, trace::InstRecord *) const override;
     Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
@@ -1041,6 +1065,28 @@ public:
                       trace::InstRecord *) const override;
     using %(base_class)s::generateDisassembly;
 };
+
+}};
+
+def template VsStrideMicroConstructor {{
+
+%(class_name)s::%(class_name)s(
+    ExtMachInst _machInst, uint8_t _regIdx, uint8_t _microIdx,
+    uint32_t _microVl)
+  : %(base_class)s("%(mnemonic)s""_micro", _machInst, %(op_class)s,
+      _regIdx, _microIdx, _microVl)
+{
+    %(set_reg_idx_arr)s;
+    _numSrcRegs = 0;
+    _numDestRegs = 0;
+    setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs1]);
+    setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs2]);
+    setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs3 + _regIdx]);
+    if (!_machInst.vm) {
+        setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);
+    }
+    this->flags[IsStore] = true;
+}
 
 }};
 
@@ -1185,6 +1231,8 @@ template<typename ElemType>
     this->flags[IsVector] = true;
 }
 
+%(declare_vmem_template)s;
+
 }};
 
 def template VlIndexMicroDeclare {{
@@ -1199,24 +1247,7 @@ private:
 public:
     %(class_name)s(ExtMachInst _machInst,
         uint8_t _vdRegIdx, uint8_t _vdElemIdx,
-        uint8_t _vs2RegIdx, uint8_t _vs2ElemIdx)
-    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s,
-        _vdRegIdx, _vdElemIdx, _vs2RegIdx, _vs2ElemIdx)
-    {
-        %(set_reg_idx_arr)s;
-        _numSrcRegs = 0;
-        _numDestRegs = 0;
-        setDestRegIdx(_numDestRegs++, vecRegClass[_machInst.vd + _vdRegIdx]);
-        _numTypedDestRegs[VecRegClass]++;
-        setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs1]);
-        setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs2 + _vs2RegIdx]);
-        // We treat agnostic as undistrubed
-        setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vd + _vdRegIdx]);
-        if (!_machInst.vm) {
-            setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);
-        }
-        this->flags[IsLoad] = true;
-    }
+        uint8_t _vs2RegIdx, uint8_t _vs2ElemIdx);
 
     Fault execute(ExecContext *, trace::InstRecord *) const override;
     Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
@@ -1224,6 +1255,34 @@ public:
                       trace::InstRecord *) const override;
     using %(base_class)s::generateDisassembly;
 };
+
+}};
+
+def template VlIndexMicroConstructor {{
+
+template<typename ElemType>
+%(class_name)s<ElemType>::%(class_name)s(
+    ExtMachInst _machInst,uint8_t _vdRegIdx, uint8_t _vdElemIdx,
+    uint8_t _vs2RegIdx, uint8_t _vs2ElemIdx)
+  : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s,
+      _vdRegIdx, _vdElemIdx, _vs2RegIdx, _vs2ElemIdx)
+{
+    %(set_reg_idx_arr)s;
+    _numSrcRegs = 0;
+    _numDestRegs = 0;
+    setDestRegIdx(_numDestRegs++, vecRegClass[_machInst.vd + _vdRegIdx]);
+    _numTypedDestRegs[VecRegClass]++;
+    setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs1]);
+    setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs2 + _vs2RegIdx]);
+    // We treat agnostic as undistrubed
+    setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vd + _vdRegIdx]);
+    if (!_machInst.vm) {
+        setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);
+    }
+    this->flags[IsLoad] = true;
+}
+
+%(declare_vmem_template)s;
 
 }};
 
@@ -1364,6 +1423,8 @@ Fault
     return NoFault;
 }
 
+%(declare_vmem_template)s;
+
 }};
 
 def template VsIndexConstructor {{
@@ -1410,6 +1471,8 @@ template<typename ElemType>
     this->flags[IsVector] = true;
 }
 
+%(declare_vmem_template)s;
+
 }};
 
 def template VsIndexMicroDeclare {{
@@ -1424,22 +1487,7 @@ private:
 public:
     %(class_name)s(ExtMachInst _machInst,
         uint8_t _vs3RegIdx, uint8_t _vs3ElemIdx,
-        uint8_t _vs2RegIdx, uint8_t _vs2ElemIdx)
-    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s,
-        _vs3RegIdx, _vs3ElemIdx, _vs2RegIdx, _vs2ElemIdx)
-    {
-        %(set_reg_idx_arr)s;
-        _numSrcRegs = 0;
-        _numDestRegs = 0;
-        setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs1]);
-        setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs2 + _vs2RegIdx]);
-        // We treat agnostic as undistrubed
-        setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs3 + _vs3RegIdx]);
-        if (!_machInst.vm) {
-            setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);
-        }
-        this->flags[IsStore] = true;
-    }
+        uint8_t _vs2RegIdx, uint8_t _vs2ElemIdx);
 
     Fault execute(ExecContext *, trace::InstRecord *) const override;
     Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
@@ -1447,6 +1495,32 @@ public:
                       trace::InstRecord *) const override;
     using %(base_class)s::generateDisassembly;
 };
+
+}};
+
+def template VsIndexMicroConstructor {{
+
+template<typename ElemType>
+%(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst,
+    uint8_t _vs3RegIdx, uint8_t _vs3ElemIdx,
+    uint8_t _vs2RegIdx, uint8_t _vs2ElemIdx)
+  : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s,
+      _vs3RegIdx, _vs3ElemIdx, _vs2RegIdx, _vs2ElemIdx)
+{
+    %(set_reg_idx_arr)s;
+    _numSrcRegs = 0;
+    _numDestRegs = 0;
+    setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs1]);
+    setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs2 + _vs2RegIdx]);
+    // We treat agnostic as undistrubed
+    setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs3 + _vs3RegIdx]);
+    if (!_machInst.vm) {
+        setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);
+    }
+    this->flags[IsStore] = true;
+}
+
+%(declare_vmem_template)s;
 
 }};
 
@@ -1547,6 +1621,8 @@ Fault
 {
     return NoFault;
 }
+
+%(declare_vmem_template)s;
 
 }};
 

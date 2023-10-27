@@ -34,7 +34,6 @@
 #include "arch/riscv/insts/static_inst.hh"
 #include "arch/riscv/isa.hh"
 #include "arch/riscv/regs/misc.hh"
-#include "arch/riscv/regs/vector.hh"
 #include "arch/riscv/utility.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/static_inst.hh"
@@ -539,7 +538,7 @@ class VMvWholeMicroInst : public VectorArithMicroInst
             Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
-template<typename ElemType>
+
 class VMaskMergeMicroInst : public VectorArithMicroInst
 {
   private:
@@ -548,75 +547,12 @@ class VMaskMergeMicroInst : public VectorArithMicroInst
 
   public:
     uint32_t vlen;
+    size_t elemSize;
     VMaskMergeMicroInst(ExtMachInst extMachInst,
-        uint8_t _dstReg, uint8_t _numSrcs, uint32_t _vlen)
-        : VectorArithMicroInst("vmask_mv_micro", extMachInst,
-                               VectorIntegerArithOp, 0, 0),
-          vlen(_vlen)
-    {
-        setRegIdxArrays(
-            reinterpret_cast<RegIdArrayPtr>(
-                &std::remove_pointer_t<decltype(this)>::srcRegIdxArr),
-            reinterpret_cast<RegIdArrayPtr>(
-                &std::remove_pointer_t<decltype(this)>::destRegIdxArr));
-
-        _numSrcRegs = 0;
-        _numDestRegs = 0;
-
-        setDestRegIdx(_numDestRegs++, vecRegClass[_dstReg]);
-        _numTypedDestRegs[VecRegClass]++;
-        for (uint8_t i=0; i<_numSrcs; i++) {
-            setSrcRegIdx(_numSrcRegs++, vecRegClass[VecMemInternalReg0 + i]);
-        }
-    }
-
-    Fault
-    execute(ExecContext* xc, trace::InstRecord* traceData) const override
-    {
-        vreg_t& tmp_d0 = *(vreg_t *)xc->getWritableRegOperand(this, 0);
-        PCStateBase *pc_ptr = xc->tcBase()->pcState().clone();
-        auto Vd = tmp_d0.as<uint8_t>();
-        uint32_t vlenb = pc_ptr->as<PCState>().vlenb();
-        const uint32_t elems_per_vreg = vlenb / sizeof(ElemType);
-        size_t bit_cnt = elems_per_vreg;
-        vreg_t tmp_s;
-        xc->getRegOperand(this, 0, &tmp_s);
-        auto s = tmp_s.as<uint8_t>();
-        // cp the first result and tail
-        memcpy(Vd, s, vlenb);
-        for (uint8_t i = 1; i < this->_numSrcRegs; i++) {
-            xc->getRegOperand(this, i, &tmp_s);
-            s = tmp_s.as<uint8_t>();
-            if (elems_per_vreg < 8) {
-                const uint32_t m = (1 << elems_per_vreg) - 1;
-                const uint32_t mask = m << (i * elems_per_vreg % 8);
-                // clr & ext bits
-                Vd[bit_cnt/8] ^= Vd[bit_cnt/8] & mask;
-                Vd[bit_cnt/8] |= s[bit_cnt/8] & mask;
-                bit_cnt += elems_per_vreg;
-            } else {
-                const uint32_t byte_offset = elems_per_vreg / 8;
-                memcpy(Vd + i * byte_offset, s + i * byte_offset, byte_offset);
-            }
-        }
-        if (traceData)
-            traceData->setData(vecRegClass, &tmp_d0);
-        return NoFault;
-    }
-
-    std::string
-    generateDisassembly(Addr pc, const loader::SymbolTable *symtab)
-        const override
-    {
-        std::stringstream ss;
-        ss << mnemonic << ' ' << registerName(destRegIdx(0));
-        for (uint8_t i = 0; i < this->_numSrcRegs; i++) {
-            ss << ", " << registerName(srcRegIdx(i));
-        }
-        unsigned vlenb = vlen >> 3;
-        ss << ", offset:" << vlenb / sizeof(ElemType);
-        return ss.str();
-    }
+        uint8_t _dstReg, uint8_t _numSrcs, uint32_t _vlen, size_t _elemSize);
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
+    std::string generateDisassembly(Addr,
+        const loader::SymbolTable *) const override;
 };
 
 class VxsatMicroInst : public VectorArithMicroInst
@@ -630,21 +566,9 @@ class VxsatMicroInst : public VectorArithMicroInst
     {
         vxsat = Vxsat;
     }
-    Fault
-    execute(ExecContext* xc, trace::InstRecord* traceData) const override
-    {
-        xc->setMiscReg(MISCREG_VXSAT,*vxsat);
-        auto vcsr = xc->readMiscReg(MISCREG_VCSR);
-        xc->setMiscReg(MISCREG_VCSR, ((vcsr&~1)|*vxsat));
-        return NoFault;
-    }
-    std::string generateDisassembly(Addr pc, const loader::SymbolTable *symtab)
-        const override
-    {
-        std::stringstream ss;
-        ss << mnemonic << ' ' << "VXSAT" << ", " << (*vxsat ? "0x1" : "0x0");
-        return ss.str();
-    }
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
+    std::string generateDisassembly(Addr, const loader::SymbolTable *)
+        const override;
 };
 
 } // namespace RiscvISA

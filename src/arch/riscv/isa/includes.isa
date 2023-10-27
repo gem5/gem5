@@ -46,8 +46,6 @@ output header {{
 #include <softfloat.h>
 #include <specialize.h>
 
-#include "arch/generic/memhelpers.hh"
-#include "arch/riscv/decoder.hh"
 #include "arch/riscv/insts/amo.hh"
 #include "arch/riscv/insts/bs.hh"
 #include "arch/riscv/insts/compressed.hh"

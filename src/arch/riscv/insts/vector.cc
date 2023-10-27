@@ -32,6 +32,9 @@
 #include <string>
 
 #include "arch/riscv/insts/static_inst.hh"
+#include "arch/riscv/isa.hh"
+#include "arch/riscv/regs/misc.hh"
+#include "arch/riscv/regs/vector.hh"
 #include "arch/riscv/utility.hh"
 #include "cpu/static_inst.hh"
 
@@ -405,6 +408,96 @@ VMvWholeMicroInst::generateDisassembly(Addr pc,
     std::stringstream ss;
     ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", " <<
         registerName(srcRegIdx(1));
+    return ss.str();
+}
+
+VMaskMergeMicroInst::VMaskMergeMicroInst(ExtMachInst extMachInst,
+    uint8_t _dstReg, uint8_t _numSrcs, uint32_t _vlen, size_t _elemSize)
+    : VectorArithMicroInst("vmask_mv_micro", extMachInst,
+                            VectorIntegerArithOp, 0, 0),
+      vlen(_vlen),
+      elemSize(_elemSize)
+{
+    setRegIdxArrays(
+        reinterpret_cast<RegIdArrayPtr>(
+            &std::remove_pointer_t<decltype(this)>::srcRegIdxArr),
+        reinterpret_cast<RegIdArrayPtr>(
+            &std::remove_pointer_t<decltype(this)>::destRegIdxArr));
+
+    _numSrcRegs = 0;
+    _numDestRegs = 0;
+
+    setDestRegIdx(_numDestRegs++, vecRegClass[_dstReg]);
+    _numTypedDestRegs[VecRegClass]++;
+    for (uint8_t i=0; i<_numSrcs; i++) {
+        setSrcRegIdx(_numSrcRegs++, vecRegClass[VecMemInternalReg0 + i]);
+    }
+}
+
+Fault
+VMaskMergeMicroInst::execute(ExecContext* xc,
+    trace::InstRecord* traceData) const
+{
+    vreg_t& tmp_d0 = *(vreg_t *)xc->getWritableRegOperand(this, 0);
+    PCStateBase *pc_ptr = xc->tcBase()->pcState().clone();
+    auto Vd = tmp_d0.as<uint8_t>();
+    uint32_t vlenb = pc_ptr->as<PCState>().vlenb();
+    const uint32_t elems_per_vreg = vlenb / elemSize;
+    size_t bit_cnt = elems_per_vreg;
+    vreg_t tmp_s;
+    xc->getRegOperand(this, 0, &tmp_s);
+    auto s = tmp_s.as<uint8_t>();
+    // cp the first result and tail
+    memcpy(Vd, s, vlenb);
+    for (uint8_t i = 1; i < this->_numSrcRegs; i++) {
+        xc->getRegOperand(this, i, &tmp_s);
+        s = tmp_s.as<uint8_t>();
+        if (elems_per_vreg < 8) {
+            const uint32_t m = (1 << elems_per_vreg) - 1;
+            const uint32_t mask = m << (i * elems_per_vreg % 8);
+            // clr & ext bits
+            Vd[bit_cnt/8] ^= Vd[bit_cnt/8] & mask;
+            Vd[bit_cnt/8] |= s[bit_cnt/8] & mask;
+            bit_cnt += elems_per_vreg;
+        } else {
+            const uint32_t byte_offset = elems_per_vreg / 8;
+            memcpy(Vd + i * byte_offset, s + i * byte_offset, byte_offset);
+        }
+    }
+    if (traceData)
+        traceData->setData(vecRegClass, &tmp_d0);
+    return NoFault;
+}
+
+std::string
+VMaskMergeMicroInst::generateDisassembly(Addr pc,
+    const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << ' ' << registerName(destRegIdx(0));
+    for (uint8_t i = 0; i < this->_numSrcRegs; i++) {
+        ss << ", " << registerName(srcRegIdx(i));
+    }
+    unsigned vlenb = vlen >> 3;
+    ss << ", offset:" << vlenb / elemSize;
+    return ss.str();
+}
+
+Fault
+VxsatMicroInst::execute(ExecContext* xc, trace::InstRecord* traceData) const
+{
+    xc->setMiscReg(MISCREG_VXSAT, *vxsat);
+    auto vcsr = xc->readMiscReg(MISCREG_VCSR);
+    xc->setMiscReg(MISCREG_VCSR, ((vcsr&~1)|*vxsat));
+    return NoFault;
+}
+
+std::string
+VxsatMicroInst::generateDisassembly(Addr pc,
+    const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << ' ' << "VXSAT" << ", " << (*vxsat ? "0x1" : "0x0");
     return ss.str();
 }
 
