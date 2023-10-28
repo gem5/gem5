@@ -2299,6 +2299,7 @@ action(UpdateDataState_FromADataResp, desc="") {
 
     tbe.oldDataBlk := tbe.dataBlk;
     tbe.dataBlk.atomicPartial(tbe.dataBlk, tbe.atomic_op);
+    tbe.dataBlk.clearAtomicLogEntries();
     tbe.dataDirty := true;
 
     DPRINTF(RubySlicc, "Atomic after %s\n", tbe.dataBlk);
@@ -3424,6 +3425,7 @@ action(Callback_AtomicHit, desc="") {
   DataBlock oldDataBlk;
   oldDataBlk := tbe.dataBlk;
   tbe.dataBlk.atomicPartial(tbe.dataBlk, tbe.atomic_op);
+  tbe.dataBlk.clearAtomicLogEntries();
 
   sequencer.atomicCallback(tbe.addr, oldDataBlk, false);
   DPRINTF(RubySlicc, "Atomic after %s\n", tbe.dataBlk);
@@ -3490,6 +3492,7 @@ action(Callback_Miss, desc="") {
     DataBlock oldDataBlk;
     oldDataBlk := tbe.dataBlk;
     tbe.dataBlk.atomicPartial(tbe.dataBlk, tbe.atomic_op);
+    tbe.dataBlk.clearAtomicLogEntries();
 
     sequencer.atomicCallback(tbe.addr, oldDataBlk, false);
     DPRINTF(RubySlicc, "Atomic after %s\n", tbe.dataBlk);
