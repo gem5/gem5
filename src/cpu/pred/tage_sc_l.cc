@@ -82,9 +82,9 @@ TAGE_SC_L::TAGE_SC_L(const TAGE_SC_LParams &p)
 }
 
 TAGEBase::BranchInfo*
-TAGE_SC_L_TAGE::makeBranchInfo()
+TAGE_SC_L_TAGE::makeBranchInfo(Addr pc, bool cond)
 {
-    return new BranchInfo(*this);
+    return new BranchInfo(*this, pc, cond);
 }
 void
 TAGE_SC_L_TAGE::calculateParameters()
@@ -240,8 +240,9 @@ TAGE_SC_L_TAGE::bindex(Addr pc) const
 
 void
 TAGE_SC_L_TAGE::updatePathAndGlobalHistory(
-    ThreadHistory& tHist, int brtype, bool taken, Addr branch_pc, Addr target)
+    ThreadID tid, int brtype, bool taken, Addr branch_pc, Addr target)
 {
+    ThreadHistory& tHist = threadHistory[tid];
     // TAGE update
     int tmp = ((branch_pc ^ (branch_pc >> instShiftAmt))) ^ taken;
     int path = branch_pc ^ (branch_pc >> instShiftAmt)
@@ -255,28 +256,23 @@ TAGE_SC_L_TAGE::updatePathAndGlobalHistory(
     int maxt = (brtype == 2) ? 3 : 2;
 
     for (int t = 0; t < maxt; t++) {
-        bool dir = (tmp & 1);
-        tmp >>= 1;
         int pathbit = (path & 127);
         path >>= 1;
-        updateGHist(tHist.gHist, dir, tHist.globalHistory, tHist.ptGhist);
         tHist.pathHist = (tHist.pathHist << 1) ^ pathbit;
         if (truncatePathHist) {
             // The 8KB implementation does not do this truncation
             tHist.pathHist = (tHist.pathHist & ((1ULL << pathHistBits) - 1));
         }
-        for (int i = 1; i <= nHistoryTables; i++) {
-            tHist.computeIndices[i].update(tHist.gHist);
-            tHist.computeTags[0][i].update(tHist.gHist);
-            tHist.computeTags[1][i].update(tHist.gHist);
-        }
     }
+
+    updateGHist(tid, tmp, maxt);
 }
 
 void
-TAGE_SC_L_TAGE::updateHistories(
-    ThreadID tid, Addr branch_pc, bool taken, TAGEBase::BranchInfo* b,
-    bool speculative, const StaticInstPtr &inst, Addr target)
+TAGE_SC_L_TAGE::updateHistories(ThreadID tid, Addr branch_pc,
+                            bool speculative, bool taken,
+                            Addr target, const StaticInstPtr &inst,
+                            TAGEBase::BranchInfo* bi)
 {
     if (speculative != speculativeHistUpdate) {
         return;
@@ -290,7 +286,7 @@ TAGE_SC_L_TAGE::updateHistories(
     if (! inst->isUncondCtrl()) {
         ++brtype;
     }
-    updatePathAndGlobalHistory(tHist, brtype, taken, branch_pc, target);
+    updatePathAndGlobalHistory(tid, brtype, taken, branch_pc, target);
 
     DPRINTF(TageSCL, "Updating global histories with branch:%lx; taken?:%d, "
             "path Hist: %x; pointer:%d\n", branch_pc, taken, tHist.pathHist,
@@ -298,8 +294,8 @@ TAGE_SC_L_TAGE::updateHistories(
 }
 
 void
-TAGE_SC_L_TAGE::squash(ThreadID tid, bool taken, TAGEBase::BranchInfo *bi,
-                       Addr target)
+TAGE_SC_L_TAGE::squash(ThreadID tid, bool taken, Addr target,
+                        const StaticInstPtr &inst, TAGEBase::BranchInfo *bi)
 {
     fatal("Speculation is not implemented");
 }
@@ -378,7 +374,8 @@ TAGE_SC_L::predict(ThreadID tid, Addr pc, bool cond_branch, void* &b)
 {
     TageSCLBranchInfo *bi = new TageSCLBranchInfo(*tage,
                                                   *statisticalCorrector,
-                                                  *loopPredictor);
+                                                  *loopPredictor,
+                                                  pc, cond_branch);
     b = (void*)(bi);
 
     bool pred_taken = tage->tagePredict(tid, pc, cond_branch,
@@ -435,7 +432,7 @@ TAGE_SC_L::update(ThreadID tid, Addr pc, bool taken, void *&bp_history,
         if (tage->isSpeculativeUpdateEnabled()) {
             // This restores the global history, then update it
             // and recomputes the folded histories.
-            tage->squash(tid, taken, tage_bi, target);
+            tage->squash(tid, taken, target, inst, tage_bi);
             if (bi->tageBranchInfo->condBranch) {
                 loopPredictor->squashLoop(bi->lpBranchInfo);
             }
@@ -470,8 +467,8 @@ TAGE_SC_L::update(ThreadID tid, Addr pc, bool taken, void *&bp_history,
         statisticalCorrector->scHistoryUpdate(pc, inst, taken,
                                               bi->scBranchInfo, target);
 
-        tage->updateHistories(tid, pc, taken, bi->tageBranchInfo, false,
-                              inst, target);
+        tage->updateHistories(tid, pc, false, taken, target,
+                              inst, bi->tageBranchInfo);
     }
 
     delete bi;

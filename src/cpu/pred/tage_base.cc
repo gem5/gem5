@@ -79,8 +79,8 @@ TAGEBase::TAGEBase(const TAGEBaseParams &p)
 }
 
 TAGEBase::BranchInfo*
-TAGEBase::makeBranchInfo() {
-    return new BranchInfo(*this);
+TAGEBase::makeBranchInfo(Addr pc, bool conditional) {
+    return new BranchInfo(*this, pc, conditional);
 }
 
 void
@@ -181,25 +181,6 @@ TAGEBase::calculateParameters()
                        pow ((double) (maxHist) / (double) minHist,
                            (double) (i - 1) / (double) ((nHistoryTables- 1))))
                        + 0.5);
-    }
-}
-
-void
-TAGEBase::btbUpdate(ThreadID tid, Addr branch_pc, BranchInfo* &bi)
-{
-    if (speculativeHistUpdate) {
-        ThreadHistory& tHist = threadHistory[tid];
-        DPRINTF(Tage, "BTB miss resets prediction: %lx\n", branch_pc);
-        assert(tHist.gHist == &tHist.globalHistory[tHist.ptGhist]);
-        tHist.gHist[0] = 0;
-        for (int i = 1; i <= nHistoryTables; i++) {
-            tHist.computeIndices[i].comp = bi->ci[i];
-            tHist.computeTags[0][i].comp = bi->ct0[i];
-            tHist.computeTags[1][i].comp = bi->ct1[i];
-            tHist.computeIndices[i].update(tHist.gHist);
-            tHist.computeTags[0][i].update(tHist.gHist);
-            tHist.computeTags[1][i].update(tHist.gHist);
-        }
     }
 }
 
@@ -319,21 +300,42 @@ TAGEBase::baseUpdate(Addr pc, bool taken, BranchInfo* bi)
 // shifting the global history:  we manage the history in a big table in order
 // to reduce simulation time
 void
-TAGEBase::updateGHist(uint8_t * &h, bool dir, uint8_t * tab, int &pt)
+TAGEBase::updateGHist(ThreadID tid, uint64_t bv, uint8_t n)
 {
-    if (pt == 0) {
+    if (n == 0) return;
+
+    // Handle rollovers first.
+    ThreadHistory& tHist = threadHistory[tid];
+    if (tHist.ptGhist < n) {
         DPRINTF(Tage, "Rolling over the histories\n");
          // Copy beginning of globalHistoryBuffer to end, such that
          // the last maxHist outcomes are still reachable
-         // through pt[0 .. maxHist - 1].
-         for (int i = 0; i < maxHist; i++)
-             tab[histBufferSize - maxHist + i] = tab[i];
-         pt =  histBufferSize - maxHist;
-         h = &tab[pt];
+         // through globalHistory[0 .. maxHist - 1].
+        for (int i = 0; i < maxHist; i++) {
+            tHist.globalHistory[histBufferSize - maxHist + i]
+                = tHist.globalHistory[i];
+        }
+
+        tHist.ptGhist = histBufferSize - maxHist;
+        tHist.gHist = &tHist.globalHistory[tHist.ptGhist];
     }
-    pt--;
-    h--;
-    h[0] = (dir) ? 1 : 0;
+
+    // Update the global history
+    for (int i = 0; i < n; i++) {
+
+        // Shift the next bit of the bit vector into the history
+        tHist.ptGhist--;
+        tHist.gHist--;
+        tHist.gHist[0] = (bv & 1) ? 1 : 0;
+        bv >>= 1;
+
+        // Update the folded histories with the new bit.
+        for (int i = 1; i <= nHistoryTables; i++) {
+            tHist.computeIndices[i].update(tHist.gHist);
+            tHist.computeTags[0][i].update(tHist.gHist);
+            tHist.computeTags[1][i].update(tHist.gHist);
+        }
+    }
 }
 
 void
@@ -347,6 +349,7 @@ TAGEBase::calculateIndicesAndTags(ThreadID tid, Addr branch_pc,
         tableTags[i] = gtag(tid, branch_pc, i);
         bi->tableTags[i] = tableTags[i];
     }
+    bi->valid = true;
 }
 
 unsigned
@@ -360,78 +363,75 @@ bool
 TAGEBase::tagePredict(ThreadID tid, Addr branch_pc,
               bool cond_branch, BranchInfo* bi)
 {
-    Addr pc = branch_pc;
-    bool pred_taken = true;
+    if (!cond_branch) {
+        // Unconditional branch, predict taken
+        assert(bi->branchPC == branch_pc);
+        return true;
+    }
 
-    if (cond_branch) {
         // TAGE prediction
 
-        calculateIndicesAndTags(tid, pc, bi);
+    calculateIndicesAndTags(tid, branch_pc, bi);
+    bi->bimodalIndex = bindex(branch_pc);
 
-        bi->bimodalIndex = bindex(pc);
-
-        bi->hitBank = 0;
-        bi->altBank = 0;
-        //Look for the bank with longest matching history
-        for (int i = nHistoryTables; i > 0; i--) {
-            if (noSkip[i] &&
-                gtable[i][tableIndices[i]].tag == tableTags[i]) {
-                bi->hitBank = i;
-                bi->hitBankIndex = tableIndices[bi->hitBank];
-                break;
-            }
+    bi->hitBank = 0;
+    bi->altBank = 0;
+    //Look for the bank with longest matching history
+    for (int i = nHistoryTables; i > 0; i--) {
+        if (noSkip[i] &&
+            gtable[i][tableIndices[i]].tag == tableTags[i]) {
+            bi->hitBank = i;
+            bi->hitBankIndex = tableIndices[bi->hitBank];
+            break;
         }
-        //Look for the alternate bank
-        for (int i = bi->hitBank - 1; i > 0; i--) {
-            if (noSkip[i] &&
-                gtable[i][tableIndices[i]].tag == tableTags[i]) {
-                bi->altBank = i;
-                bi->altBankIndex = tableIndices[bi->altBank];
-                break;
-            }
-        }
-        //computes the prediction and the alternate prediction
-        if (bi->hitBank > 0) {
-            if (bi->altBank > 0) {
-                bi->altTaken =
-                    gtable[bi->altBank][tableIndices[bi->altBank]].ctr >= 0;
-                extraAltCalc(bi);
-            }else {
-                bi->altTaken = getBimodePred(pc, bi);
-            }
-
-            bi->longestMatchPred =
-                gtable[bi->hitBank][tableIndices[bi->hitBank]].ctr >= 0;
-            bi->pseudoNewAlloc =
-                abs(2 * gtable[bi->hitBank][bi->hitBankIndex].ctr + 1) <= 1;
-
-            //if the entry is recognized as a newly allocated entry and
-            //useAltPredForNewlyAllocated is positive use the alternate
-            //prediction
-            if ((useAltPredForNewlyAllocated[getUseAltIdx(bi, branch_pc)] < 0)
-                || ! bi->pseudoNewAlloc) {
-                bi->tagePred = bi->longestMatchPred;
-                bi->provider = TAGE_LONGEST_MATCH;
-            } else {
-                bi->tagePred = bi->altTaken;
-                bi->provider = bi->altBank ? TAGE_ALT_MATCH
-                                           : BIMODAL_ALT_MATCH;
-            }
-        } else {
-            bi->altTaken = getBimodePred(pc, bi);
-            bi->tagePred = bi->altTaken;
-            bi->longestMatchPred = bi->altTaken;
-            bi->provider = BIMODAL_ONLY;
-        }
-        //end TAGE prediction
-
-        pred_taken = (bi->tagePred);
-        DPRINTF(Tage, "Predict for %lx: taken?:%d, tagePred:%d, altPred:%d\n",
-                branch_pc, pred_taken, bi->tagePred, bi->altTaken);
     }
-    bi->branchPC = branch_pc;
-    bi->condBranch = cond_branch;
-    return pred_taken;
+    //Look for the alternate bank
+    for (int i = bi->hitBank - 1; i > 0; i--) {
+        if (noSkip[i] &&
+            gtable[i][tableIndices[i]].tag == tableTags[i]) {
+            bi->altBank = i;
+            bi->altBankIndex = tableIndices[bi->altBank];
+            break;
+        }
+    }
+    //computes the prediction and the alternate prediction
+    if (bi->hitBank > 0) {
+        if (bi->altBank > 0) {
+            bi->altTaken =
+                gtable[bi->altBank][tableIndices[bi->altBank]].ctr >= 0;
+            extraAltCalc(bi);
+        }else {
+        bi->altTaken = getBimodePred(branch_pc, bi);
+        }
+
+        bi->longestMatchPred =
+            gtable[bi->hitBank][tableIndices[bi->hitBank]].ctr >= 0;
+        bi->pseudoNewAlloc =
+            abs(2 * gtable[bi->hitBank][bi->hitBankIndex].ctr + 1) <= 1;
+
+        //if the entry is recognized as a newly allocated entry and
+        //useAltPredForNewlyAllocated is positive use the alternate
+        //prediction
+        if ((useAltPredForNewlyAllocated[getUseAltIdx(bi, branch_pc)] < 0)
+            || ! bi->pseudoNewAlloc) {
+            bi->tagePred = bi->longestMatchPred;
+            bi->provider = TAGE_LONGEST_MATCH;
+        } else {
+            bi->tagePred = bi->altTaken;
+            bi->provider = bi->altBank ? TAGE_ALT_MATCH
+                                        : BIMODAL_ALT_MATCH;
+        }
+    } else {
+    bi->altTaken = getBimodePred(branch_pc, bi);
+        bi->tagePred = bi->altTaken;
+        bi->longestMatchPred = bi->altTaken;
+        bi->provider = BIMODAL_ONLY;
+    }
+
+    DPRINTF(Tage, "Predict for %lx: tagePred:%d, altPred:%d\n",
+            branch_pc, bi->tagePred, bi->altTaken);
+
+    return bi->tagePred;
 }
 
 void
@@ -585,70 +585,119 @@ TAGEBase::handleTAGEUpdate(Addr branch_pc, bool taken, BranchInfo* bi)
 }
 
 void
-TAGEBase::updateHistories(ThreadID tid, Addr branch_pc, bool taken,
-                          BranchInfo* bi, bool speculative,
-                          const StaticInstPtr &inst, Addr target)
+TAGEBase::updatePathAndGlobalHistory(ThreadID tid, int brtype, bool taken,
+                                Addr branch_pc, Addr target, BranchInfo* bi)
+{
+    ThreadHistory& tHist = threadHistory[tid];
+
+    // Update path history
+    bool pathbit = ((branch_pc >> instShiftAmt) & 1);
+    tHist.pathHist = (tHist.pathHist << 1) + pathbit;
+    tHist.pathHist = (tHist.pathHist & ((1ULL << pathHistBits) - 1));
+
+    // For normal direction history update the history by
+    // whether the branch was taken or not.
+    bi->ghist = taken ? 1 : 0;
+    bi->nGhist = 1;
+    // Update the global history
+    updateGHist(tid, bi->ghist, bi->nGhist);
+}
+
+
+void
+TAGEBase::updateHistories(ThreadID tid, Addr branch_pc, bool speculative,
+                          bool taken, Addr target,
+                          const StaticInstPtr & inst, BranchInfo* bi)
 {
     if (speculative != speculativeHistUpdate) {
         return;
     }
-    ThreadHistory& tHist = threadHistory[tid];
-    //  UPDATE HISTORIES
-    bool pathbit = ((branch_pc >> instShiftAmt) & 1);
-    //on a squash, return pointers to this and recompute indices.
-    //update user history
-    updateGHist(tHist.gHist, taken, tHist.globalHistory, tHist.ptGhist);
-    tHist.pathHist = (tHist.pathHist << 1) + pathbit;
-    tHist.pathHist = (tHist.pathHist & ((1ULL << pathHistBits) - 1));
 
-    if (speculative) {
-        bi->ptGhist = tHist.ptGhist;
-        bi->pathHist = tHist.pathHist;
+    // If this is the first time we see this branch record the current
+    // state of the history to be able to recover.
+    if (speculativeHistUpdate && (bi->nGhist == 0)) {
+        recordHistState(tid, bi);
     }
 
-    //prepare next index and tag computations for user branchs
-    for (int i = 1; i <= nHistoryTables; i++)
-    {
-        if (speculative) {
-            bi->ci[i]  = tHist.computeIndices[i].comp;
-            bi->ct0[i] = tHist.computeTags[0][i].comp;
-            bi->ct1[i] = tHist.computeTags[1][i].comp;
-        }
-        tHist.computeIndices[i].update(tHist.gHist);
-        tHist.computeTags[0][i].update(tHist.gHist);
-        tHist.computeTags[1][i].update(tHist.gHist);
+    // In case the branch already updated the history
+    // we need to revert the previous update first.
+    if (bi->nGhist > 0) {
+        restoreHistState(tid, bi);
     }
+
+    // Recalculate the tags and indices if needed. This can be the case
+    // as in the decoupled frontend branches can be inserted out of order
+    // (surprise branches). We can not compute the tags and indices
+    // at that point since the BPU might already speculated on other branches
+    // which updated the history. We can recalculate the tags and indices
+    // now since either the branch was correctly not taken and the history
+    // will not be updated or the branch was incorrect in which case the
+    // branches afterwards where squashed and the history was restored.
+    if (!bi->valid && bi->condBranch) {
+        calculateIndicesAndTags(tid, branch_pc, bi);
+    }
+
+    // We should have not already modified the history
+    // for this branch
+    assert(bi->nGhist == 0);
+
+    // Do the actual history update. Might be different for different
+    // TAGE implementations.
+    updatePathAndGlobalHistory(tid, branchTypeExtra(inst), taken,
+                               branch_pc, target, bi);
+
     DPRINTF(Tage, "Updating global histories with branch:%lx; taken?:%d, "
-            "path Hist: %x; pointer:%d\n", branch_pc, taken, tHist.pathHist,
-            tHist.ptGhist);
+            "path Hist: %x; pointer:%d\n", branch_pc, taken,
+            threadHistory[tid].pathHist, threadHistory[tid].ptGhist);
     assert(threadHistory[tid].gHist ==
             &threadHistory[tid].globalHistory[threadHistory[tid].ptGhist]);
 }
 
 void
-TAGEBase::squash(ThreadID tid, bool taken, TAGEBase::BranchInfo *bi,
-                 Addr target)
+TAGEBase::recordHistState(ThreadID tid, BranchInfo* bi)
 {
-    if (!speculativeHistUpdate) {
-        /* If there are no speculative updates, no actions are needed */
-        return;
+    ThreadHistory& tHist = threadHistory[tid];
+    bi->ptGhist = tHist.ptGhist;
+    bi->pathHist = tHist.pathHist;
+
+    for (int i = 1; i <= nHistoryTables; i++) {
+        bi->ci[i]  = tHist.computeIndices[i].comp;
+        bi->ct0[i] = tHist.computeTags[0][i].comp;
+        bi->ct1[i] = tHist.computeTags[1][i].comp;
+    }
     }
 
+void
+TAGEBase::restoreHistState(ThreadID tid, BranchInfo* bi)
+{
     ThreadHistory& tHist = threadHistory[tid];
-    DPRINTF(Tage, "Restoring branch info: %lx; taken? %d; PathHistory:%x, "
-            "pointer:%d\n", bi->branchPC,taken, bi->pathHist, bi->ptGhist);
     tHist.pathHist = bi->pathHist;
-    tHist.ptGhist = bi->ptGhist;
-    tHist.gHist = &(tHist.globalHistory[tHist.ptGhist]);
-    tHist.gHist[0] = (taken ? 1 : 0);
+
+    if (bi->nGhist == 0)
+        return;
+
+    //  RESTORE HISTORIES
+    // Shift out the inserted bits
+    // from the folded history and the global history vector
+    for (int n = 0; n < bi->nGhist; n++) {
+
+        // First revert the folded history
     for (int i = 1; i <= nHistoryTables; i++) {
-        tHist.computeIndices[i].comp = bi->ci[i];
-        tHist.computeTags[0][i].comp = bi->ct0[i];
-        tHist.computeTags[1][i].comp = bi->ct1[i];
-        tHist.computeIndices[i].update(tHist.gHist);
-        tHist.computeTags[0][i].update(tHist.gHist);
-        tHist.computeTags[1][i].update(tHist.gHist);
+            tHist.computeIndices[i].restore(tHist.gHist);
+            tHist.computeTags[0][i].restore(tHist.gHist);
+            tHist.computeTags[1][i].restore(tHist.gHist);
     }
+        tHist.ptGhist++;
+        tHist.gHist++;
+    }
+    bi->nGhist = 0;
+}
+
+void
+TAGEBase::squash(ThreadID tid, bool taken, Addr target,
+                 const StaticInstPtr &inst, TAGEBase::BranchInfo *bi)
+{
+    updateHistories(tid, bi->branchPC, true, taken, target, inst, bi);
 }
 
 void
@@ -708,19 +757,19 @@ TAGEBase::updateStats(bool taken, BranchInfo* bi)
 }
 
 unsigned
-TAGEBase::getGHR(ThreadID tid, BranchInfo *bi) const
+TAGEBase::getGHR(ThreadID tid) const
 {
     unsigned val = 0;
-    for (unsigned i = 0; i < 32; i++) {
+    int gh_ptr = threadHistory[tid].ptGhist;
+    for (unsigned i = 0; i < 16; i++) {
         // Make sure we don't go out of bounds
-        int gh_offset = bi->ptGhist + i;
-        assert(&(threadHistory[tid].globalHistory[gh_offset]) <
+        assert(&(threadHistory[tid].globalHistory[gh_ptr + i]) <
                threadHistory[tid].globalHistory + histBufferSize);
-        val |= ((threadHistory[tid].globalHistory[gh_offset] & 0x1) << i);
+        val |= ((threadHistory[tid].globalHistory[gh_ptr + i] & 0x1) << i);
     }
-
     return val;
 }
+
 
 TAGEBase::TAGEBaseStats::TAGEBaseStats(
     statistics::Group *parent, unsigned nHistoryTables)
