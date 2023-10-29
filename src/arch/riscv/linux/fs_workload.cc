@@ -96,11 +96,10 @@ void
 BootloaderKernelWorkload::loadKernelSymbolTable()
 {
     if (params().kernel_filename != "") {
-        Addr kernel_paddr_offset = params().kernel_addr;
         kernel = loader::createObjectFile(params().kernel_filename);
         kernelSymbolTable = kernel->symtab();
         auto renamedKernelSymbolTable = \
-            kernelSymbolTable.offset(kernel_paddr_offset)->rename(
+            kernelSymbolTable.rename(
                 [](std::string &name) {
                     name = "kernel." + name;
                 }
