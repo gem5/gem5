@@ -83,7 +83,9 @@ BootloaderKernelWorkload::loadBootloaderSymbolTable()
         bootloader = loader::createObjectFile(params().bootloader_filename);
         bootloaderSymbolTable = bootloader->symtab();
         auto renamedBootloaderSymbolTable = \
-            bootloaderSymbolTable.offset(bootloader_paddr_offset)->rename(
+            bootloaderSymbolTable.offset(
+                bootloader_paddr_offset
+            )->functionSymbols()->rename(
                 [](std::string &name) {
                     name = "bootloader." + name;
                 }
@@ -99,7 +101,7 @@ BootloaderKernelWorkload::loadKernelSymbolTable()
         kernel = loader::createObjectFile(params().kernel_filename);
         kernelSymbolTable = kernel->symtab();
         auto renamedKernelSymbolTable = \
-            kernelSymbolTable.rename(
+            kernelSymbolTable.functionSymbols()->rename(
                 [](std::string &name) {
                     name = "kernel." + name;
                 }
