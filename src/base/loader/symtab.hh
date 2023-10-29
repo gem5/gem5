@@ -56,7 +56,19 @@ struct Symbol
         Weak
     };
 
+    // The ELF64_ST_TYPE field of gelf's st_info
+    enum class SymbolType
+    {
+        NoType,
+        Object,
+        Function,
+        Section,
+        File,
+        Other
+    };
+
     Binding binding;
+    SymbolType type;
     std::string name;
     Addr address;
 };
