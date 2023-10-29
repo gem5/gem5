@@ -530,6 +530,8 @@ class TAGEBase : public SimObject
     unsigned numUseAltOnNa;
     unsigned useAltOnNaBits;
     unsigned maxNumAlloc;
+    /** Use taken only history. */
+    const bool takenOnlyHistory;
 
     // Tells which tables are active
     // (for the base TAGE implementation all are active)

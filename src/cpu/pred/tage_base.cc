@@ -66,6 +66,7 @@ TAGEBase::TAGEBase(const TAGEBaseParams &p)
      numUseAltOnNa(p.numUseAltOnNa),
      useAltOnNaBits(p.useAltOnNaBits),
      maxNumAlloc(p.maxNumAlloc),
+     takenOnlyHistory(p.takenOnlyHistory),
      noSkip(p.noSkip),
      speculativeHistUpdate(p.speculativeHistUpdate),
      instShiftAmt(p.instShiftAmt),
@@ -595,10 +596,26 @@ TAGEBase::updatePathAndGlobalHistory(ThreadID tid, int brtype, bool taken,
     tHist.pathHist = (tHist.pathHist << 1) + pathbit;
     tHist.pathHist = (tHist.pathHist & ((1ULL << pathHistBits) - 1));
 
-    // For normal direction history update the history by
-    // whether the branch was taken or not.
-    bi->ghist = taken ? 1 : 0;
-    bi->nGhist = 1;
+
+    if (takenOnlyHistory) {
+        // Taken-only history is implemented after the paper:
+        // https://ieeexplore.ieee.org/document/9246215
+        //
+        // For taken-only history two bits of a hash of pc and its target
+        // is shifted into the global history in case the branch was taken.
+        // For not-taken branches no history update will happen.
+        if (taken) {
+            bi->ghist = (((branch_pc >> instShiftAmt) >> 2)
+                      ^  ((target >> instShiftAmt) >> 3)) & 0x3;
+            bi->nGhist = 2;
+        }
+
+    } else {
+        // For normal direction history update the history by
+        // whether the branch was taken or not.
+        bi->ghist = taken ? 1 : 0;
+        bi->nGhist = 1;
+    }
     // Update the global history
     updateGHist(tid, bi->ghist, bi->nGhist);
 }
@@ -665,7 +682,7 @@ TAGEBase::recordHistState(ThreadID tid, BranchInfo* bi)
         bi->ct0[i] = tHist.computeTags[0][i].comp;
         bi->ct1[i] = tHist.computeTags[1][i].comp;
     }
-    }
+}
 
 void
 TAGEBase::restoreHistState(ThreadID tid, BranchInfo* bi)
