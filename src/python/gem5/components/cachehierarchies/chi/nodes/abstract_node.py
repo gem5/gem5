@@ -85,6 +85,9 @@ class AbstractNode(Cache_Controller):
         # Use 32-byte channels (two flits per message)
         self.data_channel_size = 32
 
+        # Use near atomics (see: https://github.com/gem5/gem5/issues/449)
+        self.policy_type = 0
+
         self.connectQueues(network)
 
     def getBlockSizeBits(self):
