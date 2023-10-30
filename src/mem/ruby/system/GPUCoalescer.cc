@@ -600,6 +600,7 @@ GPUCoalescer::hitCallback(CoalescedRequest* crequest,
                 case RubyRequestType_ATOMIC_NO_RETURN:
                     assert(pkt->isAtomicOp());
                     data.popAtomicLogEntryFront();
+                    data.setData(pkt->getPtr<uint8_t>(), offset, pkt_size);
                     break;
                 case RubyRequestType_ST:
                     data.setData(pkt->getPtr<uint8_t>(), offset, pkt_size);
