@@ -73,7 +73,7 @@ SimObject('RiscvFsWorkload.py',
 SimObject('RiscvInterrupts.py', sim_objects=['RiscvInterrupts'],
     tags='riscv isa')
 SimObject('RiscvISA.py', sim_objects=['RiscvISA'],
-    enums=['RiscvType'], tags='riscv isa')
+    enums=['RiscvType', 'PrivilegeModeSet'], tags='riscv isa')
 SimObject('RiscvMMU.py', sim_objects=['RiscvMMU'], tags='riscv isa')
 SimObject('RiscvSeWorkload.py', sim_objects=[
     'RiscvSEWorkload', 'RiscvEmuLinux'], tags='riscv isa')

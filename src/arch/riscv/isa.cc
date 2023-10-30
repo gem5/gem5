@@ -254,9 +254,10 @@ RegClass ccRegClass(CCRegClass, CCRegClassName, 0, debug::IntRegs);
 
 } // anonymous namespace
 
-ISA::ISA(const Params &p) :BaseISA(p),
+ISA::ISA(const Params &p) : BaseISA(p),
     _rvType(p.riscv_type), checkAlignment(p.check_alignment),
-    enableRvv(p.enable_rvv),vlen(p.vlen),elen(p.elen)
+    enableRvv(p.enable_rvv), vlen(p.vlen), elen(p.elen),
+    _privilegeModeSet(p.privilege_mode_set)
 {
     _regClasses.push_back(&intRegClass);
     _regClasses.push_back(&floatRegClass);
@@ -324,8 +325,25 @@ void ISA::clear()
 
     // default config arch isa string is rv64(32)imafdc
     misa.rvi = misa.rvm = misa.rva = misa.rvf = misa.rvd = misa.rvc = 1;
-    // default privlege modes if MSU
-    misa.rvs = misa.rvu = 1;
+
+    switch (getPrivilegeModeSet()) {
+        case enums::M:
+          break;
+        case enums::MU:
+          misa.rvu = 1;
+          break;
+        case enums::MNU:
+          misa.rvu = misa.rvn = 1;
+          break;
+        case enums::MSU:
+          misa.rvs = misa.rvu = 1;
+          break;
+        case enums::MNSU:
+          misa.rvs = misa.rvu = misa.rvn = 1;
+          break;
+        default:
+          panic("Privilege mode set config should not reach here");
+    }
 
     // mark FS is initial
     status.fs = INITIAL;
@@ -697,6 +715,9 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                 if (!getEnableRvv()) {
                     new_misa.rvv = 0;
                 }
+                new_misa.rvn = cur_misa.rvn;
+                new_misa.rvs = cur_misa.rvs;
+                new_misa.rvu = cur_misa.rvu;
                 setMiscRegNoEffect(idx, new_misa);
             }
             break;
