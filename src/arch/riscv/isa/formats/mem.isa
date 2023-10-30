@@ -228,6 +228,69 @@ def template StoreCompleteAcc {{
     }
 }};
 
+def template CacheBlockBasedStoreExecute {{
+    Fault
+    %(class_name)s::execute(ExecContext *xc,
+        trace::InstRecord *traceData) const
+    {
+        Addr EA;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        Addr cacheBlockSize = xc->tcBase()->getCpuPtr()->cacheLineSize();
+        uint64_t numOffsetBits = floorLog2(cacheBlockSize);
+        EA = (EA >> numOffsetBits) << numOffsetBits;
+
+        {
+            Fault fault =
+                writeMemAtomic(xc, nullptr, EA, cacheBlockSize, memAccessFlags,
+                    nullptr, std::vector<bool>(cacheBlockSize, true));
+            if (fault != NoFault)
+                return fault;
+        }
+
+        return NoFault;
+    }
+}};
+
+def template CacheBlockBasedStoreInitiateAcc {{
+    Fault
+    %(class_name)s::initiateAcc(ExecContext *xc,
+        trace::InstRecord *traceData) const
+    {
+        Addr EA;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        Addr cacheBlockSize = xc->tcBase()->getCpuPtr()->cacheLineSize();
+        uint64_t numOffsetBits = floorLog2(cacheBlockSize);
+        EA = (EA >> numOffsetBits) << numOffsetBits;
+
+        {
+            Fault fault =
+                writeMemTiming(xc, nullptr, EA, cacheBlockSize, memAccessFlags,
+                    nullptr, std::vector<bool>(cacheBlockSize, true));
+            if (fault != NoFault)
+                return fault;
+        }
+
+        return NoFault;
+    }
+}};
+
+def template CacheBlockBasedStoreCompleteAcc {{
+    Fault
+    %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
+        trace::InstRecord *traceData) const
+    {
+        return NoFault;
+    }
+}};
+
 def format Load(memacc_code, ea_code = {{EA = rvZext(Rs1 + offset);}},
         offset_code={{offset = sext<12>(IMM12);}},
         mem_flags=[], inst_flags=[]) {{
@@ -244,9 +307,9 @@ def format Store(memacc_code, ea_code={{EA = rvZext(Rs1 + offset);}},
         inst_flags, 'Store', exec_template_base='Store')
 }};
 
-def format CBMOp(memacc_code, ea_code={{EA = rvZext(Rs1 + offset);}},
-        offset_code={{offset = 0;}}, mem_flags=[], inst_flags=[]) {{
+def format CBMOp(memacc_code, ea_code={{EA = rvZext(Rs1);}},
+        offset_code={{;}}, mem_flags=[], inst_flags=[]) {{
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name, offset_code, ea_code, memacc_code, mem_flags,
-        inst_flags, 'Store', exec_template_base='Store')
+        inst_flags, 'Store', exec_template_base='CacheBlockBasedStore')
 }};
