@@ -129,7 +129,7 @@ class ISA : public BaseISA
     virtual const std::unordered_map<int, RegVal>&
     getCSRMaskMap() const
     {
-        return CSRMasks[_rvType];
+        return CSRMasks[_rvType][_privilegeModeSet];
     }
 
     bool alignmentCheckEnabled() const { return checkAlignment; }
