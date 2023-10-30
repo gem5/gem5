@@ -109,4 +109,15 @@ class RiscvISA(BaseISA):
         if self.enable_rvv.value == True:
             isa_extensions.append("v")
         isa_string = "".join(isa_extensions)
+
+        isa_string += "_Zicbom"  # Cache-block Management Instructions
+        isa_string += "_Zicboz"  # Cache-block Zero Instruction
+        isa_string += "_Zicntr"  # Performance Couter Spec
+        isa_string += "_Zicsr"  # RMW CSR Instructions (Privileged Spec)
+        isa_string += "_Zifencei"  # FENCE.I Instruction (Unprivileged Spec)
+        isa_string += "_Zihpm"  # Performance Couter Spec
+        isa_string += "_Zba"  # Address Generation
+        isa_string += "_Zbb"  # Basic Bit Manipulation
+        isa_string += "_Zbs"  # Single-bit Instructions
+
         return isa_string
