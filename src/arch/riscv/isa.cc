@@ -528,6 +528,24 @@ ISA::readMiscReg(RegIndex idx)
                 default:
                     panic("%s: Unknown _rvType: %d", name(), (int)_rvType);
             }
+            // Check status.mpp
+            MISA misa = readMiscRegNoEffect(MISCREG_ISA);
+            switch(status.mpp) {
+                case PRV_U:
+                    status.mpp = (misa.rvu) ? PRV_U : PRV_M;
+                    break;
+                case PRV_S:
+                    if (misa.rvs)
+                        status.mpp = PRV_S;
+                    else
+                        status.mpp = (misa.rvu) ? PRV_U : PRV_M;
+                    break;
+                case PRV_M:
+                    break;
+                default:
+                    status.mpp = (misa.rvu) ? PRV_U : PRV_M;
+            }
+
             setMiscRegNoEffect(idx, status);
 
             return readMiscRegNoEffect(idx);
