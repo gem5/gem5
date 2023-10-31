@@ -115,17 +115,17 @@ def save_resources_to_file(resources: List, output: pathlib.Path):
         json.dump(resources, f, indent=4)
 
 
-# def progress_hook(t):
-#     last_b = [0]
+def progress_hook(t):
+    last_b = [0]
 
-#     def update_to(b=1, bsize=1, tsize=None):
-#         if tsize not in (None, -1):
-#             t.total = tsize
-#         displayed = t.update((b - last_b[0]) * bsize)
-#         last_b[0] = b
-#         return displayed
+    def update_to(b=1, bsize=1, tsize=None):
+        if tsize not in (None, -1):
+            t.total = tsize
+        displayed = t.update((b - last_b[0]) * bsize)
+        last_b[0] = b
+        return displayed
 
-#     return update_to
+    return update_to
 
 
 def download_resources(output: pathlib.Path):
@@ -153,15 +153,14 @@ def download_resources(output: pathlib.Path):
                 or hashlib.md5(filepath.read_bytes()).hexdigest()
                 != resource["md5sum"]
             ):
-                # with tqdm(
-                #     unit="B",
-                #     unit_scale=True,
-                #     unit_divisor=1024,
-                #     miniters=1,
-                #     desc=f"Downloading {url}",
-                # ) as t:
-                #     request.urlretrieve(url, filepath, progress_hook(t))
-                request.urlretrieve(url, filepath)
+                with tqdm(
+                    unit="B",
+                    unit_scale=True,
+                    unit_divisor=1024,
+                    miniters=1,
+                    desc=f"Downloading {url}\n",
+                ) as t:
+                    request.urlretrieve(url, filepath, progress_hook(t))
                 resource["url"] = filepath.as_uri()
 
     with open(output.joinpath("resources.json"), "w") as f:
