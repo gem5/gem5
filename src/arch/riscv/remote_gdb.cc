@@ -218,7 +218,8 @@ RemoteGDB::acc(Addr va, size_t len)
 
         PrivilegeMode pmode = mmu->getMemPriv(context(), BaseMMU::Read);
         SATP satp = context()->readMiscReg(MISCREG_SATP);
-        if (pmode != PrivilegeMode::PRV_M &&
+        MISA misa = tc->readMiscRegNoEffect(MISCREG_ISA);
+        if (misa.rvs && pmode != PrivilegeMode::PRV_M &&
             satp.mode != AddrXlateMode::BARE) {
             Walker *walker = mmu->getDataWalker();
             Fault fault = walker->startFunctional(
