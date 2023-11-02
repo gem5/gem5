@@ -1,4 +1,4 @@
-# Copyright (c) 2022 Fraunhofer IESE
+# Copyright (c) 2023 Fraunhofer IESE
 # All rights reserved
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,55 +24,15 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import os
-import subprocess
+cmake_minimum_required(VERSION 3.22.0)
+project(DRAMSys)
 
-Import("env")
+set(BUILD_SHARED_LIBS OFF)
 
-build_root = Dir("../..").abspath
-build_current = Dir(".").abspath
-src_root = Dir(".").srcnode().abspath
-scons_root = Dir("#").abspath
+add_library(systemc INTERFACE)
 
-# See if we got a cloned DRAMSys repo as a subdirectory and set the
-# HAVE_DRAMSys flag accordingly
-if not os.path.exists(Dir(".").srcnode().abspath + "/DRAMSys"):
-    env["HAVE_DRAMSYS"] = False
-    Return()
+target_include_directories(systemc INTERFACE "${SCONS_SOURCE_DIR}/src/systemc/ext/systemc_home/include")
 
-env["HAVE_DRAMSYS"] = True
+add_library(SystemC::systemc ALIAS systemc)
 
-subprocess.run(
-    [
-        "cmake",
-        f"-S{src_root}",
-        f"-B{build_current}",
-        "-DCMAKE_BUILD_TYPE=Release",
-        f"-DSCONS_SOURCE_DIR:STRING={scons_root}",
-        "-DDRAMSYS_BUILD_CLI=OFF"
-    ],
-    check=True
-)
-
-subprocess.run(
-    ["cmake", "--build", build_current],
-    check=True
-)
-
-env.Append(LIBS="DRAMSys_libdramsys")
-env.Append(LIBPATH=Dir("./DRAMSys/src/libdramsys").abspath)
-
-env.Append(LIBS="DRAMSys_Configuration")
-env.Append(LIBPATH=Dir("./DRAMSys/src/configuration").abspath)
-
-env.Append(LIBS="sqlite3")
-env.Append(LIBPATH=Dir("./DRAMSys/lib/sqlite3").abspath)
-
-env.Append(CPPPATH=src_root + "/DRAMSys/src/libdramsys")
-env.Append(CPPPATH=src_root + "/DRAMSys/src/configuration")
-env.Append(CPPPATH=src_root + "/DRAMSys/src/util")
-env.Append(CPPPATH=src_root + "/DRAMSys/lib/nlohmann_json/include")
-
-env.Prepend(CPPDEFINES=[("SYSTEMC_VERSION", 20191203)])
-env.Prepend(CPPDEFINES=[("DRAMSYS_RESOURCE_DIR",
-                         '\\"' + os.getcwd() + '/DRAMSys/configs' + '\\"')])
+add_subdirectory(DRAMSys)

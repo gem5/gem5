@@ -37,9 +37,8 @@ system.mem_mode = "timing"
 system.cpu = traffic_gen
 
 dramsys = DRAMSys(
-    configuration="ext/dramsys/DRAMSys/DRAMSys/"
-    "library/resources/simulations/ddr4-example.json",
-    resource_directory="ext/dramsys/DRAMSys/DRAMSys/library/resources",
+    configuration="ext/dramsys/DRAMSys/configs/ddr4-example.json",
+    resource_directory="ext/dramsys/DRAMSys/configs",
 )
 
 system.target = dramsys
