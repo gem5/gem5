@@ -125,7 +125,7 @@ private:
     bool vm;
 public:
     %(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
-                   uint8_t _microIdx);
+                   uint32_t _microIdx);
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
     using %(base_class)s::generateDisassembly;
 };
@@ -136,7 +136,7 @@ def template VectorIntMicroConstructor {{
 
 template<typename ElemType>
 %(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst,
-                                         uint32_t _microVl, uint8_t _microIdx)
+                                         uint32_t _microVl, uint32_t _microIdx)
     : %(base_class)s("%(mnemonic)s", _machInst,
                      %(op_class)s, _microVl, _microIdx)
 {
@@ -216,7 +216,7 @@ private:
     bool vm;
 public:
     %(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
-                   uint8_t _microIdx);
+                   uint32_t _microIdx);
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
     std::string generateDisassembly(Addr pc,
         const loader::SymbolTable *symtab) const override;
@@ -406,7 +406,7 @@ private:
     bool vm;
 public:
     %(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
-                   uint8_t _microIdx);
+                   uint32_t _microIdx);
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
     using %(base_class)s::generateDisassembly;
 };
@@ -417,7 +417,7 @@ def template VectorIntWideningMicroConstructor {{
 
 template<typename ElemType>
 %(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst,
-        uint32_t _microVl, uint8_t _microIdx)
+        uint32_t _microVl, uint32_t _microIdx)
     : %(base_class)s("%(mnemonic)s", _machInst,
                      %(op_class)s, _microVl, _microIdx)
 {
@@ -596,7 +596,7 @@ private:
     bool vm;
 public:
     %(class_name)s(ExtMachInst _machInst,
-        uint32_t _microVl, uint8_t _microIdx);
+        uint32_t _microVl, uint32_t _microIdx);
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
     using %(base_class)s::generateDisassembly;
 };
@@ -606,7 +606,7 @@ public:
 def template VectorFloatMicroConstructor {{
 template<typename ElemType>
 %(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst,
-                                         uint32_t _microVl, uint8_t _microIdx)
+                                         uint32_t _microVl, uint32_t _microIdx)
     : %(base_class)s("%(mnemonic)s", _machInst,
                      %(op_class)s, _microVl, _microIdx)
 {
@@ -704,7 +704,7 @@ private:
     bool vm;
 public:
     %(class_name)s(ExtMachInst _machInst,
-        uint32_t _microVl, uint8_t _microIdx);
+        uint32_t _microVl, uint32_t _microIdx);
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
     std::string generateDisassembly(Addr pc,
         const loader::SymbolTable *symtab) const override
@@ -886,7 +886,7 @@ private:
     int* cnt;
 public:
     %(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
-                   uint8_t _microIdx, int* cnt);
+                   uint32_t _microIdx, int* cnt);
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
     using %(base_class)s::generateDisassembly;
 };
@@ -897,7 +897,7 @@ def template ViotaMicroConstructor {{
 
 template<typename ElemType>
 %(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst,
-    uint32_t _microVl, uint8_t _microIdx, int* cnt)
+    uint32_t _microVl, uint32_t _microIdx, int* cnt)
     : %(base_class)s("%(mnemonic)s", _machInst,
                      %(op_class)s, _microVl, _microIdx)
 {
@@ -1132,7 +1132,7 @@ private:
     bool vm;
 public:
     %(class_name)s(ExtMachInst _machInst,
-                   uint32_t _microVl, uint8_t _microIdx);
+                   uint32_t _microVl, uint32_t _microIdx);
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
     using %(base_class)s::generateDisassembly;
 };
@@ -1143,7 +1143,7 @@ def template VectorIntMaskMicroConstructor {{
 
 template<typename ElemType>
 %(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst,
-                                         uint32_t _microVl, uint8_t _microIdx)
+                                         uint32_t _microVl, uint32_t _microIdx)
 : %(base_class)s("%(mnemonic)s", _machInst,
                  %(op_class)s, _microVl, _microIdx)
 {
@@ -1187,8 +1187,8 @@ Fault
     %(vm_decl_rd)s;
     %(copy_old_vd)s;
 
-    const uint16_t bit_offset = vlenb / sizeof(ElemType);
-    const uint16_t offset = bit_offset * microIdx;
+    const uint32_t bit_offset = vlenb / sizeof(ElemType);
+    const uint32_t offset = bit_offset * microIdx;
 
     %(code)s;
     %(op_wb)s;
@@ -1260,7 +1260,7 @@ private:
     bool vm;
 public:
     %(class_name)s(ExtMachInst _machInst,
-                   uint32_t _microVl, uint8_t _microIdx);
+                   uint32_t _microVl, uint32_t _microIdx);
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
     using %(base_class)s::generateDisassembly;
 };
@@ -1271,7 +1271,7 @@ def template VectorFloatMaskMicroConstructor {{
 
 template<typename ElemType>
 %(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst,
-                                         uint32_t _microVl, uint8_t _microIdx)
+                                         uint32_t _microVl, uint32_t _microIdx)
 : %(base_class)s("%(mnemonic)s", _machInst,
                  %(op_class)s, _microVl, _microIdx)
 {
@@ -1315,8 +1315,8 @@ Fault
     %(vm_decl_rd)s;
     %(copy_old_vd)s;
 
-    const uint16_t bit_offset = vlenb / sizeof(ElemType);
-    const uint16_t offset = bit_offset * microIdx;
+    const uint32_t bit_offset = vlenb / sizeof(ElemType);
+    const uint32_t offset = bit_offset * microIdx;
 
     %(code)s;
     %(op_wb)s;
@@ -1371,7 +1371,7 @@ private:
     bool vm;
 public:
     %(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
-                   uint8_t _microIdx);
+                   uint32_t _microIdx);
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
     using %(base_class)s::generateDisassembly;
 };
@@ -1381,7 +1381,7 @@ public:
 def template VMvWholeMicroConstructor {{
 
 %(class_name)s::%(class_name)s(ExtMachInst _machInst,
-                               uint32_t _microVl, uint8_t _microIdx)
+                               uint32_t _microVl, uint32_t _microIdx)
     : %(base_class)s("%(mnemonic)s", _machInst,
                      %(op_class)s, _microVl, _microIdx)
 {
@@ -1674,7 +1674,7 @@ private:
     bool vm;
 public:
     %(class_name)s(ExtMachInst _machInst,
-                   uint32_t _microVl, uint8_t _microIdx);
+                   uint32_t _microVl, uint32_t _microIdx);
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
     using %(base_class)s::generateDisassembly;
 };
@@ -1685,7 +1685,7 @@ def template VectorReduceMicroConstructor {{
 
 template<typename ElemType>
 %(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst,
-                                         uint32_t _microVl, uint8_t _microIdx)
+                                         uint32_t _microVl, uint32_t _microIdx)
 : %(base_class)s("%(mnemonic)s", _machInst,
                  %(op_class)s, _microVl, _microIdx)
 {
@@ -1899,7 +1899,7 @@ template<typename ElemType, typename IndexType>
         microop = new VectorNopMicroInst(_machInst);
         this->microops.push_back(microop);
     }
-    for (uint8_t i = 0; i < std::max(vs1_vregs, vd_vregs) && micro_vl > 0;
+    for (uint32_t i = 0; i < std::max(vs1_vregs, vd_vregs) && micro_vl > 0;
             i++) {
         for (uint8_t j = 0; j < vs2_vregs; j++) {
             microop = new %(class_name)sMicro<ElemType, IndexType>(
@@ -1930,7 +1930,7 @@ private:
     bool vm;
 public:
     %(class_name)s(ExtMachInst _machInst,
-                   uint32_t _microVl, uint8_t _microIdx);
+                   uint32_t _microVl, uint32_t _microIdx);
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
     using %(base_class)s::generateDisassembly;
 };
@@ -1941,7 +1941,7 @@ def template VectorGatherMicroConstructor {{
 
 template<typename ElemType, typename IndexType>
 %(class_name)s<ElemType, IndexType>::%(class_name)s(ExtMachInst _machInst,
-    uint32_t _microVl, uint8_t _microIdx)
+    uint32_t _microVl, uint32_t _microIdx)
 : %(base_class)s("%(mnemonic)s", _machInst,
                  %(op_class)s, _microVl, _microIdx)
 {
@@ -1952,14 +1952,14 @@ template<typename ElemType, typename IndexType>
     [[maybe_unused]] constexpr uint32_t vd_eewb = sizeof(ElemType);
     [[maybe_unused]] constexpr uint32_t vs2_eewb = sizeof(ElemType);
     [[maybe_unused]] constexpr uint32_t vs1_eewb = sizeof(IndexType);
-    constexpr uint8_t vs1_split_num = (vd_eewb + vs1_eewb - 1) / vs1_eewb;
-    constexpr uint8_t vd_split_num = (vs1_eewb + vd_eewb - 1) / vd_eewb;
+    constexpr uint32_t vs1_split_num = (vd_eewb + vs1_eewb - 1) / vs1_eewb;
+    constexpr uint32_t vd_split_num = (vs1_eewb + vd_eewb - 1) / vd_eewb;
     const int8_t lmul = vtype_vlmul(vtype);
     const uint8_t vs2_vregs = lmul < 0 ? 1 : 1 << lmul;
-    [[maybe_unused]] const uint8_t vs2_idx = _microIdx % vs2_vregs;
-    [[maybe_unused]] const uint8_t vs1_idx =
+    [[maybe_unused]] const uint32_t vs2_idx = _microIdx % vs2_vregs;
+    [[maybe_unused]] const uint32_t vs1_idx =
         _microIdx / vs2_vregs / vs1_split_num;
-    [[maybe_unused]] const uint8_t vd_idx =
+    [[maybe_unused]] const uint32_t vd_idx =
         _microIdx / vs2_vregs / vd_split_num;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
@@ -1998,24 +1998,24 @@ Fault
     %(vm_decl_rd)s;
     %(copy_old_vd)s;
     const uint32_t vlmax = vtype_VLMAX(vtype,vlen);
-    constexpr uint8_t vd_eewb = sizeof(ElemType);
-    constexpr uint8_t vs1_eewb = sizeof(IndexType);
-    constexpr uint8_t vs2_eewb = sizeof(ElemType);
-    constexpr uint8_t vs1_split_num = (vd_eewb + vs1_eewb - 1) / vs1_eewb;
-    constexpr uint8_t vd_split_num = (vs1_eewb + vd_eewb - 1) / vd_eewb;
-    [[maybe_unused]] const uint16_t vd_elems = vlenb / vd_eewb;
-    [[maybe_unused]] const uint16_t vs1_elems = vlenb / vs1_eewb;
-    [[maybe_unused]] const uint16_t vs2_elems = vlenb / vs2_eewb;
+    constexpr uint32_t vd_eewb = sizeof(ElemType);
+    constexpr uint32_t vs1_eewb = sizeof(IndexType);
+    constexpr uint32_t vs2_eewb = sizeof(ElemType);
+    constexpr uint32_t vs1_split_num = (vd_eewb + vs1_eewb - 1) / vs1_eewb;
+    constexpr uint32_t vd_split_num = (vs1_eewb + vd_eewb - 1) / vd_eewb;
+    [[maybe_unused]] const uint32_t vd_elems = vlenb / vd_eewb;
+    [[maybe_unused]] const uint32_t vs1_elems = vlenb / vs1_eewb;
+    [[maybe_unused]] const uint32_t vs2_elems = vlenb / vs2_eewb;
     [[maybe_unused]] const int8_t lmul = vtype_vlmul(vtype);
     [[maybe_unused]] const uint8_t vs2_vregs = lmul < 0 ? 1 : 1 << lmul;
-    [[maybe_unused]] const uint8_t vs2_idx = microIdx % vs2_vregs;
-    [[maybe_unused]] const uint8_t vs1_idx =
+    [[maybe_unused]] const uint32_t vs2_idx = microIdx % vs2_vregs;
+    [[maybe_unused]] const uint32_t vs1_idx =
         microIdx / vs2_vregs / vs1_split_num;
-    [[maybe_unused]] const uint8_t vd_idx =
+    [[maybe_unused]] const uint32_t vd_idx =
         microIdx / vs2_vregs / vd_split_num;
-    [[maybe_unused]] const uint16_t vs1_bias =
+    [[maybe_unused]] const uint32_t vs1_bias =
         vs1_elems * (vd_idx % vs1_split_num) / vs1_split_num;
-    [[maybe_unused]] const uint16_t vd_bias =
+    [[maybe_unused]] const uint32_t vd_bias =
         vd_elems * (vs1_idx % vd_split_num) / vd_split_num;
 
     %(code)s;
@@ -2116,7 +2116,7 @@ private:
     bool* vxsatptr;
 public:
     %(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
-                   uint8_t _microIdx, bool* vxsatptr);
+                   uint32_t _microIdx, bool* vxsatptr);
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
     using %(base_class)s::generateDisassembly;
 };
@@ -2127,7 +2127,7 @@ def template VectorIntVxsatMicroConstructor {{
 
 template<typename ElemType>
 %(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst,
-    uint32_t _microVl, uint8_t _microIdx, bool* vxsatptr)
+    uint32_t _microVl, uint32_t _microIdx, bool* vxsatptr)
     : %(base_class)s("%(mnemonic)s", _machInst,
                      %(op_class)s, _microVl, _microIdx)
 {
@@ -2299,7 +2299,7 @@ private:
     bool vm;
 public:
     %(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
-        uint8_t _microIdx, uint8_t _vdIdx, uint8_t _vs2Idx);
+        uint32_t _microIdx, uint32_t _vdIdx, uint32_t _vs2Idx);
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
     using %(base_class)s::generateDisassembly;
 };
@@ -2310,7 +2310,8 @@ def template VectorSlideMicroConstructor {{
 
 template<typename ElemType>
 %(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst,
-        uint32_t _microVl, uint8_t _microIdx, uint8_t _vdIdx, uint8_t _vs2Idx)
+        uint32_t _microVl, uint32_t _microIdx, uint32_t _vdIdx,
+        uint32_t _vs2Idx)
     : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _microVl,
         _microIdx, _vdIdx, _vs2Idx)
 {

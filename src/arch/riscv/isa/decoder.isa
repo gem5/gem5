@@ -2446,7 +2446,7 @@ decode QUADRANT default Unknown::unknown() {
                     for (uint32_t i = 0; i < microVl; i++) {
                         uint32_t ei = i + vs1_idx * vs1_elems + vs1_bias;
                         if (this->vm || elem_mask(v0, ei)) {
-                            const uint16_t idx = Vs1_uh[i + vs1_bias]
+                            const uint32_t idx = Vs1_uh[i + vs1_bias]
                                 - vs2_elems * vs2_idx;
                             auto res = (Vs1_uh[i + vs1_bias] >= vlmax) ? 0
                                 : (idx < vs2_elems) ? Vs2_vu[idx]
