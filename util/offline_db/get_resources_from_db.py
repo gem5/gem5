@@ -37,9 +37,9 @@ import argparse
 import json
 from urllib import request, parse
 import pathlib
-from tqdm import tqdm
 from typing import List
 import hashlib
+from tqdm import tqdm
 
 
 def get_token(auth_url: str, api_key: str) -> str:
@@ -145,8 +145,11 @@ def download_resources(output: pathlib.Path):
     for resource in resources:
         if "url" in resource.keys():
             url = resource["url"]
-            filename = pathlib.Path(parse.urlsplit(url).path).name
+            filename = pathlib.Path(
+                *pathlib.Path(parse.urlsplit(url).path).parts[3:]
+            )
             filepath = pathlib.Path(path).joinpath(filename)
+            filepath.parent.mkdir(parents=True, exist_ok=True)
 
             if (
                 not filepath.exists()
@@ -158,10 +161,10 @@ def download_resources(output: pathlib.Path):
                     unit_scale=True,
                     unit_divisor=1024,
                     miniters=1,
-                    desc=f"Downloading {url}\n",
+                    desc=f"Downloading {url}",
                 ) as t:
                     request.urlretrieve(url, filepath, progress_hook(t))
-                resource["url"] = filepath.as_uri()
+            resource["url"] = filepath.absolute().as_uri()
 
     with open(output.joinpath("resources.json"), "w") as f:
         json.dump(resources, f, indent=4)
@@ -172,62 +175,43 @@ if __name__ == "__main__" or __name__ == "__m5_main__":
         description="Get resources from the database"
     )
     parser.add_argument(
-        "--api_key",
-        type=str,
-        default="OIi5bAP7xxIGK782t8ZoiD2BkBGEzMdX3upChf9zdCxHSnMoiTnjI22Yw5kOSgy9",
-        help="API key to access the database",
-    )
-    parser.add_argument(
-        "--db_name",
-        type=str,
-        default="gem5-vision",
-        help="Name of the database",
-    )
-    parser.add_argument(
-        "--collection_name",
-        type=str,
-        default="resources",
-        help="Name of the collection",
-    )
-    parser.add_argument(
-        "--auth_url",
-        default="https://realm.mongodb.com/api/client/v2.0/app/"
-        "data-ejhjf/auth/providers/api-key/login",
-        type=str,
-        help="Authentication URL",
-    )
-    parser.add_argument(
-        "--db_url",
-        type=str,
-        default="https://data.mongodb-api.com/app/data-ejhjf/endpoint/data/v1",
-        help="Database URL",
-    )
-    parser.add_argument(
-        "--data_source",
-        type=str,
-        default="gem5-vision",
-        help="Data source name",
-    )
-    parser.add_argument(
         "--output_dir",
         type=str,
+        default=pathlib.Path.cwd(),
         help="Output directory absolute path, default is the cwd."
         "The resources.json and all resources will be saved in this directory",
     )
     args = parser.parse_args()
 
-    if args.output_dir == None:
-        output_path = pathlib.Path.cwd()
-    else:
-        output_path = pathlib.Path(args.output_dir)
+    output_path = pathlib.Path(args.output_dir)
 
-    token = get_token(args.auth_url, args.api_key)
+    # Get the gem5 config from the stable branch of gem5
+    gem5_config = request.urlopen(
+        "https://raw.githubusercontent.com/gem5/gem5/"
+        "stable/src/python/gem5_default_config.py"
+    )
+    gem5_config = gem5_config.read().decode("utf-8").split("=")[-1]
+    gem5_config = eval(gem5_config)
+    gem5_config = gem5_config["sources"]["gem5-resources"]
+
+    # Parse the gem5 config
+    db_url = gem5_config["url"]
+    data_source = gem5_config["dataSource"]
+    collection_name = gem5_config["collection"]
+    db_name = gem5_config["database"]
+    auth_url = gem5_config["authUrl"]
+    api_key = gem5_config["apiKey"]
+
+    if not output_path.exists():
+        output_path = output_path.mkdir()
+
+    token = get_token(auth_url, api_key)
 
     resources = get_all_resources(
-        args.db_url,
-        args.data_source,
-        args.collection_name,
-        args.db_name,
+        db_url,
+        data_source,
+        collection_name,
+        db_name,
         token,
     )
 
