@@ -964,10 +964,22 @@ def obtain_resource(
             for key in resource_json["resources"].keys():
                 assert isinstance(key, str)
                 value = resource_json["resources"][key]
-                assert isinstance(value, str)
-                params[key] = obtain_resource(
-                    value,
-                )
+
+                if isinstance(value, str):
+                    warn(
+                        "Deprecation warning: resources field in workloads has changed"
+                        "from { category: id } to"
+                        "{ category: { id: id, resource_version: resource_version } }"
+                        "Please update your resource.json file to reflect this change."
+                    )
+                    params[key] = obtain_resource(
+                        value,
+                    )
+                elif isinstance(value, dict):
+                    params[key] = obtain_resource(
+                        value["id"],
+                        resource_version=value["resource_version"],
+                    )
         if "additional_params" in resource_json:
             for key in resource_json["additional_params"].keys():
                 assert isinstance(key, str)
