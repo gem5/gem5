@@ -292,10 +292,13 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
         TBE tbe := TBEs.lookup(in_msg.LineAddress);
         DPRINTF(RubySlicc, "%s\n", in_msg);
         if (in_msg.Type == RubyRequestType:LD) {
-          if ((in_msg.isGLCSet || in_msg.isSLCSet) && is_valid(cache_entry)) {
-            // Read requests with GLC or SLC bit set should not cache in the L1.
-            // They need to bypass the L1 and go to the L2. If an entry exists
-            // in the L1, it needs to be evicted
+          // Read requests with GLC or SLC bit set should not cache in the L1.
+          // They need to bypass the L1 and go to the L2.  If an entry exists in
+          // the L1, it needs to be evicted, and if no entry or invalid entry in
+          // the L1, still need to bypass.  The LoadBypassEvict Event handles
+          // both cases in its transitions below, so call LoadBypassEvict for
+          // both.
+          if ((in_msg.isGLCSet || in_msg.isSLCSet)) {
             trigger(Event:LoadBypassEvict, in_msg.LineAddress, cache_entry, tbe);
           }
           else {
