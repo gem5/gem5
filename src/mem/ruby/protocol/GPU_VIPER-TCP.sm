@@ -54,6 +54,10 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
 {
   state_declaration(State, desc="TCP Cache States", default="TCP_State_I") {
     I, AccessPermission:Invalid, desc="Invalid";
+    // Note: currently IV in the TCP is only for pending loads to a given cache
+    // line. Since the TCP is write through, stores should be allowed to pass
+    // through without requiring them to wait.
+    IV, AccessPermission:Invalid,  desc="Going from I to V, waiting on TCC data";
     V, AccessPermission:Read_Only, desc="Valid";
     A, AccessPermission:Invalid, desc="Waiting on Atomic";
 
