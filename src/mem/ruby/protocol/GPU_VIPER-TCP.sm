@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2011-2015 Advanced Micro Devices, Inc.
+ * Copyright (c) 2023 Matthew D. Sinclair
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -102,6 +103,8 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
     bool Dirty,        desc="Is the data dirty (different than memory)?";
     int NumPendingMsgs,desc="Number of acks/data messages that this processor is waiting for";
     bool Shared,       desc="Victim hit by shared probe";
+    bool isGLCSet,     desc="Bypass L1 Cache";
+    bool isSLCSet,     desc="Bypass L1 and L2 Cache";
    }
 
   structure(TBETable, external="yes") {
@@ -123,6 +126,7 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
   void unset_tbe();
   void wakeUpAllBuffers();
   void wakeUpBuffers(Addr a);
+  void wakeUpAllBuffers(Addr a);
   Cycles curCycle();
 
   // Internal functions
@@ -467,6 +471,15 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
     check_allocate(TBEs);
     TBEs.allocate(address);
     set_tbe(TBEs.lookup(address));
+
+    // pass GLC/SLC information along
+    if (mandatoryQueue_in.isReady(clockEdge())) {
+      peek(mandatoryQueue_in, RubyRequest) {
+        DPRINTF(RubySlicc, "Address: %p, isGLCSet: %d, isSLCSet: %d\n", address, in_msg.isGLCSet, in_msg.isSLCSet);
+        tbe.isGLCSet := in_msg.isGLCSet;
+        tbe.isSLCSet := in_msg.isSLCSet;
+      }
+    }
   }
 
   action(d_deallocateTBE, "d", desc="Deallocate TBE") {
@@ -503,6 +516,10 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
 
   action(pr_popResponseQueue, "pr", desc="Pop Response Queue") {
     responseToTCP_in.dequeue(clockEdge());
+  }
+
+  action(st_stallAndWaitRequest, "st", desc="Stall and wait on the address") {
+    stall_and_wait(mandatoryQueue_in, address);
   }
 
   action(l_loadDoneHit, "ldh", desc="local load done (hits in TCP)") {
@@ -599,6 +616,10 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
     L1cache.setMRU(address);
   }
 
+  action(wada_wakeUpAllDependentsAddr, "wada", desc="Wake up any requests waiting for this address") {
+    wakeUpAllBuffers(address);
+  }
+
 //  action(zz_recycleMandatoryQueue, "\z", desc="recycle mandatory queue") {
 //    mandatoryQueue_in.recycle(clockEdge(), cyclesToTicks(recycle_latency));
 //  }
@@ -628,11 +649,19 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
   // Stalling transitions do NOT check the tag array...and if they do,
   // they can cause a resource stall deadlock!
 
-  transition({A}, {Load, Atomic, StoreThrough}) { //TagArrayRead} {
-      z_stall;
+  // if another request arrives for the same cache line that has a pending
+  // atomic or load, put it on the wakeup buffer instead of z_stall'ing it.  By
+  // doing so we reduce resource contention since they won't try again every cycle
+  // and will instead only try again once woken up
+  transition({A, IV}, {Load, LoadBypassEvict, Atomic, Store, StoreThrough, Flush}) {
+      st_stallAndWaitRequest;
   }
 
-  transition(I, Load) {TagArrayRead} {
+  // if we have a load that misses, allocate TBE entry and transition to IV
+  // to prevent subsequent requests to same cache line from also going to TCC
+  // while this request is pending
+  transition(I, Load, IV) {TagArrayRead} {
+    t_allocateTBE;
     n_issueRdBlk;
     uu_profileDataMiss;
     p_popMandatoryQueue;
@@ -690,14 +719,34 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
     p_popMandatoryQueue;
   }
 
-  transition(I, TCC_Ack, V) {TagArrayRead, TagArrayWrite, DataArrayRead, DataArrayWrite} {
-    a_allocate;
-    w_writeCache;
+  // if we got a response for a load where the line is in I, then
+  // another request must have come in that replaced the line in question in
+  // the cache.  Thus, complete this request without allocating the line, but
+  // still deallocate TBE and wakeup any dependent addresses.
+  // (Note: this assumes TCC_AckWB is what stores use)
+  transition(I, TCC_Ack) {TagArrayRead, TagArrayWrite} {
+    d_deallocateTBE;
     l_loadDoneMiss;
+    wada_wakeUpAllDependentsAddr;
     pr_popResponseQueue;
   }
 
-  transition(I, Bypass, I) {
+  // if line is currently in IV, then TCC_Ack is returning the data for a
+  // pending load, so transition to V, deallocate TBE, and wakeup any dependent
+  // requests so they will be replayed now that this request has returned.
+  transition(IV, TCC_Ack, V) {TagArrayRead, TagArrayWrite, DataArrayRead, DataArrayWrite} {
+    d_deallocateTBE;
+    a_allocate;
+    w_writeCache;
+    l_loadDoneMiss;
+    wada_wakeUpAllDependentsAddr;
+    pr_popResponseQueue;
+  }
+
+  // if a bypass request arrives back at the TCP, regardless of whether the line
+  // is in I (from the bypass request) or IV (from a subsequent non-bypassing
+  // load), retain the current state and complete the bypassing request.
+  transition({I, IV}, Bypass) {
     rb_bypassDone;
     pr_popResponseQueue;
   }
@@ -713,8 +762,9 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
     a_allocate;
     w_writeCache;
     ad_atomicDone;
-    pr_popResponseQueue;
     ic_invCache;
+    wada_wakeUpAllDependentsAddr;
+    pr_popResponseQueue;
   }
 
   transition(V, TCC_Ack, V) {TagArrayRead, DataArrayRead, DataArrayWrite} {
@@ -731,20 +781,22 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
     ic_invCache;
   }
 
+  // if a line with a pending load gets evicted, transition the line to I and
+  // invalidate it.
+  transition(IV, Repl, I) {TagArrayRead, TagArrayWrite} {
+    ic_invCache;
+  }
+
   transition({V,I}, Flush, F) {TagArrayFlash} {
     a_allocate;
     sf_setFlush;
     p_popMandatoryQueue;
   }
 
-  transition(A, Flush) {
-    z_stall;
-  }
-
   transition({I, V}, Evict, I) {TagArrayFlash} {
     inv_invDone;
-    p_popMandatoryQueue;
     ic_invCache;
+    p_popMandatoryQueue;
   }
 
   transition(A, Evict) {TagArrayFlash} {
@@ -752,8 +804,11 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
     p_popMandatoryQueue;
   }
 
+  // if a line is in IV and a TCC_AckWB comes back, we must have had a WT
+  // store followed by a load. Thus, complete the store without affecting
+  // TBE or line state.
   // TCC_AckWB only snoops TBE
-  transition({V, I, A}, TCC_AckWB) {
+  transition({V, I, IV, A}, TCC_AckWB) {
     wd_wtDone;
     pr_popResponseQueue;
   }
