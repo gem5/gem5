@@ -70,8 +70,6 @@ class HSAQueueEntry
           _gridSize{{(int)((_hsa_dispatch_packet_t*)disp_pkt)->grid_size_x,
                     (int)((_hsa_dispatch_packet_t*)disp_pkt)->grid_size_y,
                     (int)((_hsa_dispatch_packet_t*)disp_pkt)->grid_size_z}},
-          numVgprs(akc->workitem_vgpr_count),
-          numSgprs(akc->wavefront_sgpr_count),
           _queueId(queue_id), _dispatchId(dispatch_id), dispPkt(disp_pkt),
           _hostDispPktAddr(host_pkt_addr),
           _completionSignal(((_hsa_dispatch_packet_t*)disp_pkt)
@@ -88,40 +86,36 @@ class HSAQueueEntry
           _globalWgId(0), dispatchComplete(false)
 
     {
-        // Precompiled BLIT kernels actually violate the spec a bit
-        // and don't set many of the required akc fields.  For these kernels,
-        // we need to rip register usage from the resource registers.
-        //
-        // We can't get an exact number of registers from the resource
-        // registers because they round, but we can get an upper bound on it.
-        // We determine the number of registers by solving for "vgprs_used"
-        // in the LLVM docs: https://www.llvm.org/docs/AMDGPUUsage.html
+        // Use the resource descriptors to determine number of GPRs. This will
+        // round up in some cases, however the exact number field in the AMD
+        // kernel code struct is not backwards compatible and that field is
+        // not populated in newer compiles. The resource descriptor dword must
+        // be backwards compatible, so use that always.
+        // LLVM docs: https://www.llvm.org/docs/AMDGPUUsage.html
         //     #code-object-v3-kernel-descriptor
+        //
         // Currently, the only supported gfx version in gem5 that computes
-        // this differently is gfx90a.
-        if (!numVgprs) {
-            if (gfx_version == GfxVersion::gfx90a) {
-                numVgprs = (akc->granulated_workitem_vgpr_count + 1) * 8;
-            } else {
-                numVgprs = (akc->granulated_workitem_vgpr_count + 1) * 4;
-            }
+        // VGPR count differently is gfx90a.
+        if (gfx_version == GfxVersion::gfx90a) {
+            numVgprs = (akc->granulated_workitem_vgpr_count + 1) * 8;
+        } else {
+            numVgprs = (akc->granulated_workitem_vgpr_count + 1) * 4;
         }
 
-        if (!numSgprs || numSgprs ==
-            std::numeric_limits<decltype(akc->wavefront_sgpr_count)>::max()) {
-            // Supported major generation numbers: 0 (BLIT kernels), 8, and 9
-            uint16_t version = akc->amd_machine_version_major;
-            assert((version == 0) || (version == 8) || (version == 9));
-            // SGPR allocation granularies:
-            // - GFX8: 8
-            // - GFX9: 16
-            // Source: https://llvm.org/docs/AMDGPUUsage.html
-            if ((version == 0) || (version == 8)) {
-                // We assume that BLIT kernels use the same granularity as GFX8
-                numSgprs = (akc->granulated_wavefront_sgpr_count + 1) * 8;
-            } else if (version == 9) {
-                numSgprs = ((akc->granulated_wavefront_sgpr_count + 1) * 16)/2;
-            }
+        // SGPR allocation granularies:
+        // - GFX8: 8
+        // - GFX9: 16
+        // Source: https://llvm.org/docs/.html
+        if (gfx_version == GfxVersion::gfx801 ||
+                gfx_version == GfxVersion::gfx803) {
+            numSgprs = (akc->granulated_wavefront_sgpr_count + 1) * 8;
+        } else if (gfx_version == GfxVersion::gfx900 ||
+                gfx_version == GfxVersion::gfx902 ||
+                gfx_version == GfxVersion::gfx908 ||
+                gfx_version == GfxVersion::gfx90a) {
+            numSgprs = ((akc->granulated_wavefront_sgpr_count + 1) * 16)/2;
+        } else {
+            panic("Saw unknown gfx version setting up GPR counts\n");
         }
 
         initialVgprState.reset();
