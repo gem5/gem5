@@ -632,7 +632,9 @@ def main():
             if not options.P:
                 sys.path = [os.path.dirname(sys.argv[0])] + sys.path
             filename = sys.argv[0]
-            filedata = open(filename).read()
+            with open(filename, "rb") as fd:
+                # Handle config files with unicode characters
+                filedata = fd.read().decode("utf-8")
             filecode = compile(filedata, filename, "exec")
             scope = {"__file__": filename, "__name__": "__m5_main__"}
 
