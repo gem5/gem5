@@ -175,3 +175,4 @@ for cpu in system.cpu:
     cpu.createInterruptController()
 
 root = Root(full_system=True, system=system)
+m5.instantiate()
