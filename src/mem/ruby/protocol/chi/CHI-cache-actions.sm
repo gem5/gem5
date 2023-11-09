@@ -1039,7 +1039,7 @@ action(Initiate_AtomicNoReturn_LocalWrite, desc="") {
     // no one will send us data unless we explicitly ask
     tbe.actions.push(Event:SendSnpUniqueRetToSrc);
   }
-  if (comp_wu) {
+  if (comp_anr) {
     tbe.actions.push(Event:SendDBIDResp_ANR);
     tbe.actions.pushNB(Event:WriteFEPipe);
     tbe.actions.pushNB(Event:SendComp_ANR);
@@ -1072,7 +1072,7 @@ action(Initiate_AtomicNoReturn_Forward, desc="") {
      (tbe.dir_sharers.isElement(tbe.requestor))){
     tbe.dir_sharers.remove(tbe.requestor);
   }
-  if (comp_wu) {
+  if (comp_anr) {
     tbe.actions.push(Event:SendAtomicNoReturn);
     tbe.actions.push(Event:SendDBIDResp_ANR);
     tbe.actions.pushNB(Event:SendComp_ANR);
@@ -1103,7 +1103,7 @@ action(Initiate_AtomicReturn_Miss, desc="") {
 action(Initiate_AtomicNoReturn_Miss, desc="") {
   assert(is_HN);
   tbe.actions.push(Event:SendReadNoSnp);
-  if (comp_wu) {
+  if (comp_anr) {
     tbe.actions.push(Event:SendDBIDResp_ANR);
     tbe.actions.pushNB(Event:WriteFEPipe);
     tbe.actions.pushNB(Event:SendComp_ANR);
