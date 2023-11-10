@@ -158,10 +158,14 @@ class ISA : public BaseISA
         Addr& load_reservation_addr = load_reservation_addrs[cid];
         load_reservation_addr = INVALID_RESERVATION_ADDR;
     }
+
     /** Methods for getting VLEN, VLENB and ELEN values */
     unsigned getVecLenInBits() { return vlen; }
     unsigned getVecLenInBytes() { return vlen >> 3; }
     unsigned getVecElemLenInBits() { return elen; }
+
+    virtual Addr getFaultHandlerAddr(
+        RegIndex idx, uint64_t cause, bool intr) const;
 };
 
 } // namespace RiscvISA

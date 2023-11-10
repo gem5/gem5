@@ -837,6 +837,16 @@ ISA::resetThread()
     Reset().invoke(tc);
 }
 
+Addr
+ISA::getFaultHandlerAddr(RegIndex idx, uint64_t cause, bool intr) const
+{
+    auto vec = tc->readMiscRegNoEffect(idx);
+    Addr addr = mbits(vec, 63, 2);
+    if (intr && bits(vec, 1, 0) == 1)
+        addr += 4 * cause;
+    return addr;
+}
+
 } // namespace RiscvISA
 } // namespace gem5
 
