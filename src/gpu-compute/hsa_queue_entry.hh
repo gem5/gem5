@@ -63,7 +63,7 @@ class HSAQueueEntry
     HSAQueueEntry(std::string kernel_name, uint32_t queue_id,
                   int dispatch_id, void *disp_pkt, AMDKernelCode *akc,
                   Addr host_pkt_addr, Addr code_addr, GfxVersion gfx_version)
-        : kernName(kernel_name),
+        : _gfxVersion(gfx_version), kernName(kernel_name),
           _wgSize{{(int)((_hsa_dispatch_packet_t*)disp_pkt)->workgroup_size_x,
                   (int)((_hsa_dispatch_packet_t*)disp_pkt)->workgroup_size_y,
                   (int)((_hsa_dispatch_packet_t*)disp_pkt)->workgroup_size_z}},
@@ -127,6 +127,12 @@ class HSAQueueEntry
         }
 
         parseKernelCode(akc);
+    }
+
+    const GfxVersion&
+    gfxVersion() const
+    {
+        return _gfxVersion;
     }
 
     const std::string&
@@ -438,6 +444,8 @@ class HSAQueueEntry
         initialVgprState.set(WorkitemIdZ, akc->enable_vgpr_workitem_id > 1);
     }
 
+    // store gfx version for version specific task handling
+    GfxVersion _gfxVersion;
     // name of the kernel associated with the AQL entry
     std::string kernName;
     // workgroup Size (3 dimensions)
