@@ -39,6 +39,7 @@ from ..processors.switchable_processor import SwitchableProcessor
 
 from gem5.resources.elfie import ELFieInfo
 from gem5.resources.looppoint import Looppoint
+from gem5.resources.resource import FileResource
 
 from m5.objects import SEWorkload, Process
 
@@ -65,9 +66,9 @@ class SEBinaryWorkload:
         self,
         binary: BinaryResource,
         exit_on_work_items: bool = True,
-        stdin_file: Optional[FileResource] = None,
-        stdout_file: Optional[Path] = None,
-        stderr_file: Optional[Path] = None,
+        stdin_file: Optional[Union[FileResource, str]] = None,
+        stdout_file: Optional[Union[Path, str]] = None,
+        stderr_file: Optional[Union[Path, str]] = None,
         env_list: Optional[List[str]] = None,
         arguments: List[str] = [],
         checkpoint: Optional[Union[Path, CheckpointResource]] = None,
@@ -105,13 +106,20 @@ class SEBinaryWorkload:
         process.executable = binary_path
         process.cmd = [binary_path] + arguments
         if stdin_file is not None:
-            process.input = stdin_file.get_local_path()
+            if isinstance(stdin_file, Path):
+                process.input = FileResource(stdin_file).get_local_path()
+            else:  # stdin_file is a string
+                process.input = FileResource(Path(stdin_file)).get_local_path()
         if stdout_file is not None:
-            process.output = stdout_file.as_posix()
+            if isinstance(stdout_file, Path):
+                process.output = stdout_file.as_posix()
+            else:  # stdout_file is a string
+                process.output = Path(stdout_file).as_posix()
         if stderr_file is not None:
-            process.errout = stderr_file.as_posix()
-        if env_list is not None:
-            process.env = env_list
+            if isinstance(stderr_file, Path):
+                process.errout = stderr_file.as_posix()
+            else:  # stderr_file is a string
+                process.errout = Path(stderr_file).as_posix()
 
         if isinstance(self.get_processor(), SwitchableProcessor):
             # This is a hack to get switchable processors working correctly in
