@@ -43,7 +43,7 @@ Source('tarmac_tracer.cc', tags='arm isa')
 Source('tarmac_record.cc', tags='arm isa')
 Source('tarmac_record_v8.cc', tags='arm isa')
 
-if env['CONF']['HAVE_CAPSTONE']:
+if env['CONF']['USE_CAPSTONE']:
     SimObject('ArmCapstone.py', sim_objects=['ArmCapstoneDisassembler'],
-              tags=['capstone', 'arm isa'])
-    Source('capstone.cc', tags=['capstone', 'arm isa'])
+              tags=['arm isa'])
+    Source('capstone.cc', tags=['arm isa'])
