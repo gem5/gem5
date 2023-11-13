@@ -482,7 +482,7 @@ TLBCoalescer::processProbeTLBEvent()
                     stats.localqueuingCycles += (curTick() * pkt_cnt);
                 }
 
-                DPRINTF(GPUTLB, "Successfully sent TLB request for page %#x",
+                DPRINTF(GPUTLB, "Successfully sent TLB request for page %#x\n",
                        virt_page_addr);
 
                 //copy coalescedReq to issuedTranslationsTable
