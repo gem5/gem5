@@ -970,7 +970,8 @@ def obtain_resource(
                         "Deprecation warning: resources field in workloads has changed"
                         "from { category: id } to"
                         "{ category: { id: id, resource_version: resource_version } }"
-                        "Please update your resource.json file to reflect this change."
+                        "The current develop branch of gem5 supports both formats"
+                        "but this will be removed in the 23.1 release."
                     )
                     params[key] = obtain_resource(
                         value,
