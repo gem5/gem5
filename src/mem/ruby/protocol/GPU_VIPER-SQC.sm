@@ -75,7 +75,7 @@ machine(MachineType:SQC, "GPU SQC (L1 I Cache)")
   }
 
   structure(TBE, desc="...") {
-    State TBEState,             desc="Transient state";
+    State TBEState,          desc="Transient state";
     DataBlock DataBlk,       desc="data for the block, required for concurrent writebacks";
     bool Dirty,              desc="Is the data dirty (different than memory)?";
     int NumPendingMsgs,      desc="Number of acks/data messages that this processor is waiting for";

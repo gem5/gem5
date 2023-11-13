@@ -52,30 +52,30 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
 
 {
   state_declaration(State, desc="TCP Cache States", default="TCP_State_I") {
-    I, AccessPermission:Invalid, desc="Invalid";
+    I, AccessPermission:Invalid,   desc="Invalid";
     V, AccessPermission:Read_Only, desc="Valid";
-    A, AccessPermission:Invalid, desc="Waiting on Atomic";
+    A, AccessPermission:Invalid,   desc="Waiting on Atomic";
 
     F, AccessPermission:Invalid, desc="Flushing; Waiting for Ack";
   }
 
   enumeration(Event, desc="TCP Events") {
     // Core initiated
-    Load,           desc="Load";
+    Load,            desc="Load";
     LoadBypassEvict, desc="Bypass L1 on a load. Evict if cache block already allocated";
-    Store,          desc="Store to L1 (L1 is dirty)";
-    StoreThrough,   desc="Store directly to L2(L1 is clean)";
-    Atomic,         desc="Atomic";
-    Flush,          desc="Flush if dirty(wbL1 for Store Release)";
-    Evict,          desc="Evict if clean(invL1 for Load Acquire)";
+    Store,           desc="Store to L1 (L1 is dirty)";
+    StoreThrough,    desc="Store directly to L2(L1 is clean)";
+    Atomic,          desc="Atomic";
+    Flush,           desc="Flush if dirty(wbL1 for Store Release)";
+    Evict,           desc="Evict if clean(invL1 for Load Acquire)";
     // Mem sys initiated
-    Repl,           desc="Replacing block from cache";
+    Repl,            desc="Replacing block from cache";
 
     // TCC initiated
-    TCC_Ack,        desc="TCC Ack to Core Request";
-    TCC_AckWB,      desc="TCC Ack for WB";
+    TCC_Ack,         desc="TCC Ack to Core Request";
+    TCC_AckWB,       desc="TCC Ack for WB";
     // Disable L1 cache
-    Bypass,         desc="Bypass the entire L1 cache";
+    Bypass,          desc="Bypass the entire L1 cache";
  }
 
   enumeration(RequestType,
@@ -612,7 +612,6 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
   action(uu_profileDataHit, "\udh", desc="Profile the demand hit"){
     L1cache.profileDemandHit();
   }
-
 
   // Transitions
   // ArrayRead/Write assumptions:
