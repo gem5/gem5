@@ -60,3 +60,10 @@ class JSONValidator(AbstractValidator):
 
                 return False
         return True
+
+    def get_changed_fields(self, resource: Dict[str, Any]):
+        changed_fields = []
+        validator = jsonschema.Draft7Validator(self.schema)
+        for error in validator.iter_errors(resource):
+            changed_fields.append(error.path[0])
+        return changed_fields

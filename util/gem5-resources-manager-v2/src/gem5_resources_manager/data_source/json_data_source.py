@@ -79,6 +79,16 @@ class JSONDatabase(AbstractDataSource):
     def get_fields(self, category):
         return self.validator.get_fields(category)
 
+    def get_changed_fields(self, resource: Dict[str, Any]):
+        return self.validator.get_changed_fields(resource)
+
+    def get_all_resources_by_category(self, category):
+        resources = []
+        for resource in self._data:
+            if resource["category"] == category:
+                resources.append(resource)
+        return resources
+
     def save_file(self, resource, output):
         # check if output path is a directory
         if os.path.isdir(output):
