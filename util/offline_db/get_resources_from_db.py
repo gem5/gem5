@@ -174,6 +174,15 @@ if __name__ == "__main__" or __name__ == "__m5_main__":
     parser = argparse.ArgumentParser(
         description="Get resources from the database"
     )
+
+    parser.add_argument(
+        "--config-file-url",
+        type=str,
+        default="https://raw.githubusercontent.com/gem5/gem5/stable/"
+        "src/python/gem5_default_config.py",
+        help="URL to the gem5 config file",
+    )
+
     parser.add_argument(
         "--output_dir",
         type=str,
@@ -185,14 +194,20 @@ if __name__ == "__main__" or __name__ == "__m5_main__":
 
     output_path = pathlib.Path(args.output_dir)
 
-    # Get the gem5 config from the stable branch of gem5
-    gem5_config = request.urlopen(
-        "https://raw.githubusercontent.com/gem5/gem5/"
-        "stable/src/python/gem5_default_config.py"
-    )
-    gem5_config = gem5_config.read().decode("utf-8").split("=")[-1]
-    gem5_config = eval(gem5_config)
-    gem5_config = gem5_config["sources"]["gem5-resources"]
+    config_file_suffix = pathlib.Path(
+        parse.urlsplit(args.config_file_url).path
+    ).suffix
+
+    # Get the gem5 config file from the url
+    if config_file_suffix == ".py":
+        gem5_config = request.urlopen(args.config_file_url)
+        gem5_config = gem5_config.read().decode("utf-8").split("=")[-1]
+        gem5_config = eval(gem5_config)
+        gem5_config = gem5_config["sources"]["gem5-resources"]
+    elif config_file_suffix == ".json":
+        gem5_config = request.urlopen(args.config_file_url)
+        gem5_config = json.loads(gem5_config.read().decode("utf-8"))
+        gem5_config = gem5_config["sources"]["gem5-resources"]
 
     # Parse the gem5 config
     db_url = gem5_config["url"]
