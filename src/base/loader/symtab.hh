@@ -56,7 +56,19 @@ struct Symbol
         Weak
     };
 
+    // The ELF64_ST_TYPE field of gelf's st_info
+    enum class SymbolType
+    {
+        NoType,
+        Object,
+        Function,
+        Section,
+        File,
+        Other
+    };
+
     Binding binding;
+    SymbolType type;
     std::string name;
     Addr address;
 };
@@ -160,6 +172,22 @@ class SymbolTable
     {
         auto filt = [binding](const Symbol &symbol) {
             return symbol.binding == binding;
+        };
+        return filter(filt);
+    }
+
+    /**
+     * Generate a new table by applying a filter that only accepts the symbols
+     * whose type matches the given symbol type.
+     *
+     * @param The type that must be matched.
+     * @return A new table, filtered by type.
+     */
+    SymbolTablePtr
+    filterBySymbolType(const Symbol::SymbolType& symbol_type) const
+    {
+        auto filt = [symbol_type](const Symbol &symbol) {
+            return symbol.type == symbol_type;
         };
         return filter(filt);
     }
@@ -288,6 +316,17 @@ class SymbolTable
     weaks() const
     {
         return filterByBinding(Symbol::Binding::Weak);
+    }
+
+    /**
+     * Generates a new symbol table containing only function symbols.
+     *
+     * @return The new table.
+     */
+    SymbolTablePtr
+    functionSymbols() const
+    {
+        return filterBySymbolType(Symbol::SymbolType::Function);
     }
 
     /**

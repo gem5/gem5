@@ -101,6 +101,7 @@ SymbolTable::serialize(const std::string &base, CheckpointOut &cp) const
         paramOut(cp, csprintf("%s.addr_%d", base, i), symbol.address);
         paramOut(cp, csprintf("%s.symbol_%d", base, i), symbol.name);
         paramOut(cp, csprintf("%s.binding_%d", base, i), (int)symbol.binding);
+        paramOut(cp, csprintf("%s.type_%d", base, i), (int)symbol.type);
         i++;
     }
 }
@@ -116,12 +117,15 @@ SymbolTable::unserialize(const std::string &base, CheckpointIn &cp,
         Addr address;
         std::string name;
         Symbol::Binding binding = default_binding;
+        Symbol::SymbolType type = Symbol::SymbolType::Other;
 
         paramIn(cp, csprintf("%s.addr_%d", base, i), address);
         paramIn(cp, csprintf("%s.symbol_%d", base, i), name);
         if (!optParamIn(cp, csprintf("%s.binding_%d", base, i), binding))
             binding = default_binding;
-        insert({binding, name, address});
+        if (!optParamIn(cp, csprintf("%s.type_%d", base, i), type))
+            type = Symbol::SymbolType::Other;
+        insert({binding, type, name, address});
     }
 }
 

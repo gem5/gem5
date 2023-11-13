@@ -196,6 +196,27 @@ ElfObject::ElfObject(ImageFileDataPtr ifd) : ObjectFile(ifd)
                     continue;
                 }
 
+                switch (GELF_ST_TYPE(sym.st_info)) {
+                  case STT_NOTYPE:
+                    symbol.type = loader::Symbol::SymbolType::NoType;
+                    break;
+                  case STT_OBJECT:
+                    symbol.type = loader::Symbol::SymbolType::Object;
+                    break;
+                  case STT_FUNC:
+                    symbol.type = loader::Symbol::SymbolType::Function;
+                    break;
+                  case STT_SECTION:
+                    symbol.type = loader::Symbol::SymbolType::Section;
+                    break;
+                  case STT_FILE:
+                    symbol.type = loader::Symbol::SymbolType::File;
+                    break;
+                  default:
+                    symbol.type = loader::Symbol::SymbolType::Other;
+                    break;
+                }
+
                 if (_symtab.insert(symbol)) {
                     DPRINTF(Loader, "Symbol: %-40s value %#x.\n",
                             symbol.name, symbol.address);
