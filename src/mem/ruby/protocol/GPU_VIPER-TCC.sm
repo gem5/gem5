@@ -106,16 +106,17 @@ machine(MachineType:TCC, "TCC Cache")
   }
 
   structure(TBE, desc="...") {
-    State TBEState,     desc="Transient state";
-    DataBlock DataBlk,  desc="data for the block";
-    bool Dirty,         desc="Is the data dirty?";
-    bool Shared,        desc="Victim hit by shared probe";
-    MachineID From,     desc="Waiting for writeback from...";
-    NetDest Destination, desc="Data destination";
-    int numAtomics,     desc="number remaining atomics";
-    int atomicDoneCnt,  desc="number AtomicDones triggered";
-    bool isGLCSet,      desc="Bypass L1 Cache";
-    bool isSLCSet,      desc="Bypass L1 and L2 Cache";
+    State TBEState,                  desc="Transient state";
+    DataBlock DataBlk,               desc="data for the block";
+    bool Dirty,                      desc="Is the data dirty?";
+    bool Shared,                     desc="Victim hit by shared probe";
+    MachineID From,                  desc="Waiting for writeback from...";
+    NetDest Destination,             desc="Data destination";
+    int numPendingDirectoryAtomics,  desc="number of pending atomics to be performed in directory";
+    int atomicDoneCnt,               desc="number AtomicDones triggered";
+    bool isGLCSet,                   desc="Bypass L1 Cache";
+    bool isSLCSet,                   desc="Bypass L1 and L2 Cache";
+    WriteMask atomicWriteMask,       desc="Atomic write mask";
   }
 
   structure(TBETable, external="yes") {
@@ -265,13 +266,15 @@ machine(MachineType:TCC, "TCC Cache")
         TBE tbe := TBEs.lookup(in_msg.addr);
         Entry cache_entry := getCacheEntry(in_msg.addr);
 
+        // The trigger queue applies only to atomics performed in the directory.
+
         // There is a possible race where multiple AtomicDone triggers can be
         // sent if another Atomic to the same address is issued after the
         // AtomicDone is triggered but before the message arrives here. For
         // that case we count the number of AtomicDones in flight for this
         // address and only call AtomicDone to deallocate the TBE when it is
         // the last in flight message.
-        if (tbe.numAtomics == 0 && tbe.atomicDoneCnt == 1) {
+        if (tbe.numPendingDirectoryAtomics == 0 && tbe.atomicDoneCnt == 1) {
             trigger(Event:AtomicDone, in_msg.addr, cache_entry, tbe);
         } else {
             trigger(Event:AtomicNotDone, in_msg.addr, cache_entry, tbe);
@@ -370,7 +373,7 @@ machine(MachineType:TCC, "TCC Cache")
           // TCC will perform the atomic on the return path on Event:Data.
           // The action will invalidate the cache line if SLC is set and the address is
           // in the cache.
-          if(in_msg.isSLCSet || !WB || !presentOrAvail(in_msg.addr)) {
+          if(in_msg.isSLCSet || !WB) {
             trigger(Event:AtomicPassOn, in_msg.addr, cache_entry, tbe);
           } else {
             trigger(Event:Atomic, in_msg.addr, cache_entry, tbe);
@@ -549,7 +552,23 @@ machine(MachineType:TCC, "TCC Cache")
     cache_entry.DataBlk.clearAtomicLogEntries();
   }
 
-  action(bar_sendBypassedAtomicResponse, "bar", desc="send bypassed Atomic Ack") {
+  action(baplr_sendBypassedAtomicPerformedLocallyResponse, "barplr", desc="send locally-performed bypassed Atomic Ack") {
+    peek(responseFromNB_in, ResponseMsg) {
+        enqueue(responseToCore_out, ResponseMsg, l2_response_latency) {
+          out_msg.addr := address;
+          out_msg.Type := CoherenceResponseType:TDSysResp;
+          out_msg.Destination.add(in_msg.WTRequestor);
+          out_msg.Sender := machineID;
+          out_msg.MessageSize := in_msg.MessageSize;
+          out_msg.DataBlk := cache_entry.DataBlk;
+          out_msg.isGLCSet := tbe.isGLCSet;
+          out_msg.isSLCSet := tbe.isSLCSet;
+        }
+    }
+    cache_entry.DataBlk.clearAtomicLogEntries();
+  }
+
+  action(bapdr_sendBypassedAtomicPerformedInDirectoryResponse, "bapdr", desc="send bypassed Atomic Ack") {
     peek(responseFromNB_in, ResponseMsg) {
         enqueue(responseToCore_out, ResponseMsg, l2_response_latency) {
           out_msg.addr := address;
@@ -585,7 +604,7 @@ machine(MachineType:TCC, "TCC Cache")
       TBEs.allocate(address);
       set_tbe(TBEs.lookup(address));
       tbe.Destination.clear();
-      tbe.numAtomics := 0;
+      tbe.numPendingDirectoryAtomics := 0;
       tbe.atomicDoneCnt := 0;
     }
     if (coreRequestNetwork_in.isReady(clockEdge())) {
@@ -595,6 +614,10 @@ machine(MachineType:TCC, "TCC Cache")
         }
         tbe.isGLCSet := in_msg.isGLCSet;
         tbe.isSLCSet := in_msg.isSLCSet;
+        if(in_msg.Type == CoherenceRequestType:Atomic){
+          tbe.atomicWriteMask.clear();
+          tbe.atomicWriteMask.orMask(in_msg.writeMask);
+        }
       }
     }
   }
@@ -617,6 +640,20 @@ machine(MachineType:TCC, "TCC Cache")
       cache_entry.DataBlk.copyPartial(in_msg.DataBlk,in_msg.writeMask);
       cache_entry.writeMask.orMask(in_msg.writeMask);
       DPRINTF(RubySlicc, "Writing to TCC: %s\n", in_msg);
+    }
+  }
+
+  action(wardb_writeAtomicResponseDirtyBytes, "wardb", desc="write data to TCC") {
+    peek(responseFromNB_in, ResponseMsg) {
+      cache_entry.DataBlk := in_msg.DataBlk;
+      cache_entry.writeMask.orMask(tbe.atomicWriteMask);
+      DPRINTF(RubySlicc, "Writing to TCC: %s\n", in_msg);
+    }
+  }
+
+  action(owm_orWriteMask, "owm", desc="or TCCs write mask") {
+    peek(coreRequestNetwork_in, CPURequestMsg) {
+      cache_entry.writeMask.orMask(in_msg.writeMask);
     }
   }
 
@@ -726,14 +763,20 @@ machine(MachineType:TCC, "TCC Cache")
   }
 
 
-  action(ina_incrementNumAtomics, "ina", desc="inc num atomics") {
-    tbe.numAtomics := tbe.numAtomics + 1;
+  action(inpa_incrementNumPendingDirectoryAtomics, "inpa", desc="inc num atomics") {
+    // Only increment number of atomics if they will actually be performed in directory
+    // That is, if the SLC bit is set or if the cache is write through
+    peek(coreRequestNetwork_in, CPURequestMsg) {
+      if (in_msg.isSLCSet || !WB) {
+        tbe.numPendingDirectoryAtomics := tbe.numPendingDirectoryAtomics + 1;
+      }
+    }
   }
 
 
-  action(dna_decrementNumAtomics, "dna", desc="inc num atomics") {
-    tbe.numAtomics := tbe.numAtomics - 1;
-    if (tbe.numAtomics==0) {
+  action(dnpa_decrementNumPendingDirectoryAtomics, "dnpa", desc="dec num atomics") {
+    tbe.numPendingDirectoryAtomics := tbe.numPendingDirectoryAtomics - 1;
+    if (tbe.numPendingDirectoryAtomics==0) {
       enqueue(triggerQueue_out, TriggerMsg, 1) {
         tbe.atomicDoneCnt := tbe.atomicDoneCnt + 1;
         out_msg.addr := address;
@@ -876,17 +919,8 @@ machine(MachineType:TCC, "TCC Cache")
 
   transition(V, Atomic, M) {TagArrayRead, DataArrayWrite} {
     p_profileHit;
-    wdb_writeDirtyBytes;
-    pa_performAtomic;
-    ar_sendAtomicResponse;
-    p_popRequestQueue;
-  }
-
-  transition(I, Atomic, M) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
-    p_profileMiss;
-    a_allocateBlock;
     ut_updateTag;
-    wdb_writeDirtyBytes;
+    owm_orWriteMask;
     pa_performAtomic;
     ar_sendAtomicResponse;
     p_popRequestQueue;
@@ -900,9 +934,19 @@ machine(MachineType:TCC, "TCC Cache")
     st_stallAndWaitRequest;
   }
 
-  transition({M, W}, Atomic) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
+  transition(W, Atomic, WI) {
+    t_allocateTBE;
+    wb_writeBack;
+    // need to try this request again after writing back the current entry -- to
+    // do so, put it with other stalled requests in a buffer to reduce resource
+    // contention since they won't try again every cycle and will instead only
+    // try again once woken up
+    st_stallAndWaitRequest;
+  }
+
+  transition(M, Atomic) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
     p_profileHit;
-    wdb_writeDirtyBytes;
+    owm_orWriteMask;
     pa_performAtomic;
     ar_sendAtomicResponse;
     p_popRequestQueue;
@@ -917,16 +961,16 @@ machine(MachineType:TCC, "TCC Cache")
     i_invL2;
     t_allocateTBE;
     at_atomicThrough;
-    ina_incrementNumAtomics;
+    inpa_incrementNumPendingDirectoryAtomics;
     p_popRequestQueue;
   }
 
-  transition(I, AtomicPassOn, A) {TagArrayRead} {
+  transition(I, {Atomic, AtomicPassOn}, A) {TagArrayRead} {
     p_profileMiss;
     i_invL2;
     t_allocateTBE;
     at_atomicThrough;
-    ina_incrementNumAtomics;
+    inpa_incrementNumPendingDirectoryAtomics;
     p_popRequestQueue;
   }
 
@@ -1058,8 +1102,8 @@ machine(MachineType:TCC, "TCC Cache")
   }
 
   transition(A, Bypass) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
-    bar_sendBypassedAtomicResponse;
-    dna_decrementNumAtomics;
+    bapdr_sendBypassedAtomicPerformedInDirectoryResponse;
+    dnpa_decrementNumPendingDirectoryAtomics;
     pr_popResponseQueue;
   }
 
@@ -1081,9 +1125,9 @@ machine(MachineType:TCC, "TCC Cache")
 
   transition(A, Data, M) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
     a_allocateBlock;
+    wardb_writeAtomicResponseDirtyBytes;
     pa_performAtomic;
-    bar_sendBypassedAtomicResponse;
-    dna_decrementNumAtomics;
+    baplr_sendBypassedAtomicPerformedLocallyResponse;
     pr_popResponseQueue;
   }
 
