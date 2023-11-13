@@ -288,7 +288,7 @@ CacheMemory::allocate(Addr address, AbstractCacheEntry *entry)
             set[i] = entry;  // Init entry
             set[i]->m_Address = address;
             set[i]->m_Permission = AccessPermission_Invalid;
-            DPRINTF(RubyCache, "Allocate clearing lock for addr: %x\n",
+            DPRINTF(RubyCache, "Allocate clearing lock for addr: 0x%x\n",
                     address);
             set[i]->m_locked = -1;
             m_tag_index[address] = i;
