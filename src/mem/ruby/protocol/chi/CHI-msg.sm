@@ -89,6 +89,9 @@ enumeration(CHIRequestType, desc="") {
   ReadNoSnp;
   ReadNoSnpSep;
 
+  StashOnceShared;
+  StashOnceUnique;
+
   DvmOpNonSync;
   DvmOpSync;
 
