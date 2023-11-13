@@ -32,6 +32,15 @@ RUN apt -y update && apt -y upgrade && \
     libprotobuf-dev protobuf-compiler libprotoc-dev libgoogle-perftools-dev \
     python3-dev python-is-python3 doxygen libboost-all-dev \
     libhdf5-serial-dev python3-pydot libpng-dev libelf-dev pkg-config pip \
-    python3-venv black
+    python3-venv black gcc-10 g++-10
 
 RUN pip install mypy pre-commit
+
+RUN update-alternatives --install \
+    /usr/bin/g++ g++ /usr/bin/g++-10 100
+RUN update-alternatives --install \
+    /usr/bin/gcc gcc /usr/bin/gcc-10 100
+RUN update-alternatives --install \
+    /usr/bin/c++ c++ /usr/bin/g++-10 100
+RUN update-alternatives --install \
+    /usr/bin/cc cc /usr/bin/gcc-10 100
