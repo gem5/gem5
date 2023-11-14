@@ -57,7 +57,7 @@ WriteMask::print(std::ostream& out) const
 
 void
 WriteMask::performAtomic(uint8_t * p,
-        std::deque<uint8_t*>& log) const
+        std::deque<uint8_t*>& log, bool isAtomicNoReturn) const
 {
     int offset;
     uint8_t *block_update;
@@ -65,11 +65,13 @@ WriteMask::performAtomic(uint8_t * p,
     // vector. This is done to match the ordering of packets
     // that was seen when the initial coalesced request was created.
     for (int i = 0; i < mAtomicOp.size(); i++) {
-        // Save the old value of the data block in case a
-        // return value is needed
-        block_update = new uint8_t[mSize];
-        std::memcpy(block_update, p, mSize);
-        log.push_back(block_update);
+        if (!isAtomicNoReturn) {
+            // Save the old value of the data block in case a
+            // return value is needed
+            block_update = new uint8_t[mSize];
+            std::memcpy(block_update, p, mSize);
+            log.push_back(block_update);
+        }
         // Perform the atomic operation
         offset = mAtomicOp[i].first;
         AtomicOpFunctor *fnctr = mAtomicOp[i].second;

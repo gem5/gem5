@@ -180,6 +180,9 @@ machine(MachineType:Directory, "AMD_Base-like protocol")
     bool MemData,       desc="Got MemData?",default="false";
     bool wtData,       desc="Got write through data?",default="false";
     bool atomicData,   desc="Got Atomic op?",default="false";
+    // Note, protocol invariant: atomicData = atomicDataReturn || atomicDataNoReturn;
+    bool atomicDataReturn, desc="Got Atomic op and need return value?",default="false";
+    bool atomicDataNoReturn, desc="Got Atomic op and don't need return value?",default="false";
     Cycles InitialRequestTime, desc="...";
     Cycles ForwardRequestTime, desc="...";
     Cycles ProbeRequestStartTime, desc="...";
@@ -436,7 +439,9 @@ machine(MachineType:Directory, "AMD_Base-like protocol")
           trigger(Event:RdBlkS, in_msg.addr, entry, tbe);
         } else if (in_msg.Type == CoherenceRequestType:RdBlkM) {
           trigger(Event:RdBlkM, in_msg.addr, entry, tbe);
-        } else if (in_msg.Type == CoherenceRequestType:Atomic) {
+        } else if (in_msg.Type == CoherenceRequestType:Atomic ||
+                   in_msg.Type == CoherenceRequestType:AtomicReturn ||
+                   in_msg.Type == CoherenceRequestType:AtomicNoReturn) {
           trigger(Event:Atomic, in_msg.addr, entry, tbe);
         } else if (in_msg.Type == CoherenceRequestType:WriteThrough) {
           trigger(Event:WriteThrough, in_msg.addr, entry, tbe);
@@ -474,7 +479,9 @@ machine(MachineType:Directory, "AMD_Base-like protocol")
             trigger(Event:RdBlkSP, in_msg.addr, entry, tbe);
           } else if (in_msg.Type == CoherenceRequestType:RdBlkM) {
             trigger(Event:RdBlkMP, in_msg.addr, entry, tbe);
-          } else if (in_msg.Type == CoherenceRequestType:Atomic) {
+          } else if (in_msg.Type == CoherenceRequestType:Atomic ||
+                     in_msg.Type == CoherenceRequestType:AtomicReturn ||
+                     in_msg.Type == CoherenceRequestType:AtomicNoReturn) {
             trigger(Event:AtomicP, in_msg.addr, entry, tbe);
           } else if (in_msg.Type == CoherenceRequestType:WriteThrough) {
             trigger(Event:WriteThroughP, in_msg.addr, entry, tbe);
@@ -670,7 +677,9 @@ machine(MachineType:Directory, "AMD_Base-like protocol")
           out_msg.DemandRequest := false;
         }
       } else {
-        assert(in_msg.Type == CoherenceRequestType:Atomic);
+        assert(in_msg.Type == CoherenceRequestType:Atomic ||
+               in_msg.Type == CoherenceRequestType:AtomicReturn ||
+               in_msg.Type == CoherenceRequestType:AtomicNoReturn);
         enqueue(responseNetwork_out, ResponseMsg, response_latency) {
           out_msg.addr := address;
           out_msg.Type := CoherenceResponseType:NBSysResp;
@@ -977,10 +986,18 @@ machine(MachineType:Directory, "AMD_Base-like protocol")
         tbe.WTRequestor := in_msg.WTRequestor;
         tbe.LastSender := in_msg.Requestor;
       }
-      if (in_msg.Type == CoherenceRequestType:Atomic) {
+      if (in_msg.Type == CoherenceRequestType:Atomic ||
+          in_msg.Type == CoherenceRequestType:AtomicReturn ||
+          in_msg.Type == CoherenceRequestType:AtomicNoReturn) {
         tbe.writeMask.clear();
         tbe.writeMask.orMask(in_msg.writeMask);
         tbe.atomicData := true;
+        if (in_msg.Type == CoherenceRequestType:AtomicReturn) {
+          tbe.atomicDataReturn := true;
+        } else {
+          assert(in_msg.Type == CoherenceRequestType:AtomicNoReturn);
+          tbe.atomicDataNoReturn := true;
+        }
         tbe.WTRequestor := in_msg.WTRequestor;
         tbe.LastSender := in_msg.Requestor;
       }
@@ -1012,10 +1029,18 @@ machine(MachineType:Directory, "AMD_Base-like protocol")
         tbe.WTRequestor := in_msg.WTRequestor;
         tbe.LastSender := in_msg.Requestor;
       }
-      if (in_msg.Type == CoherenceRequestType:Atomic) {
+      if (in_msg.Type == CoherenceRequestType:Atomic ||
+          in_msg.Type == CoherenceRequestType:AtomicReturn ||
+          in_msg.Type == CoherenceRequestType:AtomicNoReturn) {
         tbe.writeMask.clear();
         tbe.writeMask.orMask(in_msg.writeMask);
         tbe.atomicData := true;
+        if (in_msg.Type == CoherenceRequestType:AtomicReturn) {
+          tbe.atomicDataReturn := true;
+        } else {
+          assert(in_msg.Type == CoherenceRequestType:AtomicNoReturn);
+          tbe.atomicDataNoReturn := true;
+        }
         tbe.WTRequestor := in_msg.WTRequestor;
         tbe.LastSender := in_msg.Requestor;
       }
@@ -1062,8 +1087,15 @@ machine(MachineType:Directory, "AMD_Base-like protocol")
         tbe.DataBlkAux.copyPartial(in_msg.DataBlk,in_msg.writeMask);
         getDirectoryEntry(address).DataBlk := tbe.DataBlkAux;
       } else{
-        assert(in_msg.Type == CoherenceRequestType:Atomic);
-        tbe.DataBlkAux.atomicPartial(getDirectoryEntry(address).DataBlk,in_msg.writeMask);
+        assert(in_msg.Type == CoherenceRequestType:Atomic ||
+               in_msg.Type == CoherenceRequestType:AtomicReturn ||
+               in_msg.Type == CoherenceRequestType:AtomicNoReturn) {
+        if (in_msg.Type == CoherenceRequestType:AtomicReturn) {
+          tbe.DataBlkAux.atomicPartial(getDirectoryEntry(address).DataBlk,in_msg.writeMask, false);
+        } else {
+          assert(in_msg.Type == CoherenceRequestType:AtomicNoReturn);
+          tbe.DataBlkAux.atomicPartial(getDirectoryEntry(address).DataBlk,in_msg.writeMask, true);
+        }
         getDirectoryEntry(address).DataBlk := tbe.DataBlkAux;
       }
     }
@@ -1076,7 +1108,12 @@ machine(MachineType:Directory, "AMD_Base-like protocol")
       tbe.DataBlk := tmp;
       getDirectoryEntry(address).DataBlk := tbe.DataBlk;
     } else if (tbe.atomicData) {
-      tbe.DataBlk.atomicPartial(getDirectoryEntry(address).DataBlk,tbe.writeMask);
+      if (tbe.atomicDataReturn) {
+        tbe.DataBlk.atomicPartial(getDirectoryEntry(address).DataBlk,tbe.writeMask, false);
+      } else {
+        assert(tbe.atomicDataNoReturn);
+        tbe.DataBlk.atomicPartial(getDirectoryEntry(address).DataBlk,tbe.writeMask, true);
+      }
       getDirectoryEntry(address).DataBlk := tbe.DataBlk;
     } else if (tbe.Dirty == true) {
       APPEND_TRANSITION_COMMENT(" Wrote data back ");
@@ -1137,6 +1174,7 @@ machine(MachineType:Directory, "AMD_Base-like protocol")
           tbe.DataBlk := tmp;
         } else if (tbe.Dirty) {
           if(tbe.atomicData == false && tbe.wtData == false) {
+            assert(tbe.atomicDataReturn == false && tbe.atomicDataNoReturn);
             DPRINTF(RubySlicc, "Got double data for %s from %s\n", address, in_msg.Sender);
             assert(tbe.DataBlk == in_msg.DataBlk);  // in case of double data
           }

@@ -159,6 +159,9 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     bool MemData,       desc="Got MemData?",default="false";
     bool wtData,       desc="Got write through data?",default="false";
     bool atomicData,   desc="Got Atomic op?",default="false";
+    // Note, protocol invariant: atomicData = atomicDataReturn || atomicDataNoReturn;
+    bool atomicDataReturn, desc="Got Atomic op and need return value?",default="false";
+    bool atomicDataNoReturn, desc="Got Atomic op and don't need return value?",default="false";
     Cycles InitialRequestTime, desc="...";
     Cycles ForwardRequestTime, desc="...";
     Cycles ProbeRequestStartTime, desc="...";
@@ -399,7 +402,9 @@ machine(MachineType:Directory, "AMD Baseline protocol")
           trigger(Event:RdBlkM, in_msg.addr, entry, tbe);
         } else if (in_msg.Type == CoherenceRequestType:WriteThrough) {
           trigger(Event:WriteThrough, in_msg.addr, entry, tbe);
-        } else if (in_msg.Type == CoherenceRequestType:Atomic) {
+        } else if (in_msg.Type == CoherenceRequestType:Atomic  ||
+                   in_msg.Type == CoherenceRequestType:AtomicReturn ||
+                   in_msg.Type == CoherenceRequestType:AtomicNoReturn) {
           trigger(Event:Atomic, in_msg.addr, entry, tbe);
         } else if (in_msg.Type == CoherenceRequestType:VicDirty) {
           if (getDirectoryEntry(in_msg.addr).VicDirtyIgnore.isElement(in_msg.Requestor)) {
@@ -743,7 +748,9 @@ machine(MachineType:Directory, "AMD Baseline protocol")
 
         // CPU + GPU or GPU only system
         if ((in_msg.Type != CoherenceRequestType:WriteThrough &&
-             in_msg.Type != CoherenceRequestType:Atomic) ||
+             in_msg.Type != CoherenceRequestType:Atomic &&
+             in_msg.Type != CoherenceRequestType:AtomicReturn &&
+             in_msg.Type != CoherenceRequestType:AtomicNoReturn) ||
              !in_msg.NoWriteConflict) {
           if (noTCCdir) {
             probe_dests.add(mapAddressToRange(address, MachineType:TCC,
@@ -1013,10 +1020,18 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         tbe.WTRequestor := in_msg.WTRequestor;
         tbe.LastSender := in_msg.Requestor;
       }
-      if (in_msg.Type == CoherenceRequestType:Atomic) {
+      if (in_msg.Type == CoherenceRequestType:Atomic ||
+          in_msg.Type == CoherenceRequestType:AtomicReturn ||
+          in_msg.Type == CoherenceRequestType:AtomicNoReturn) {
         tbe.writeMask.clear();
         tbe.writeMask.orMask(in_msg.writeMask);
         tbe.atomicData := true;
+        if (in_msg.Type == CoherenceRequestType:AtomicReturn) {
+          tbe.atomicDataReturn := true;
+        } else {
+          assert(in_msg.Type == CoherenceRequestType:AtomicNoReturn);
+          tbe.atomicDataNoReturn := true;
+        }
         tbe.WTRequestor := in_msg.WTRequestor;
         tbe.LastSender := in_msg.Requestor;
         tbe.isSLCSet := in_msg.isSLCSet;
@@ -1043,7 +1058,12 @@ machine(MachineType:Directory, "AMD Baseline protocol")
       // Only perform atomics in the directory if the SLC bit is set, or
       // if the L2 is WT
       if (tbe.atomicData && (tbe.isSLCSet || !L2isWB)) {
-        tbe.DataBlk.atomicPartial(tbe.DataBlk, tbe.writeMask);
+        if (tbe.atomicDataReturn) {
+          tbe.DataBlk.atomicPartial(tbe.DataBlk, tbe.writeMask, false);
+        } else {
+          assert(tbe.atomicDataNoReturn);
+          tbe.DataBlk.atomicPartial(tbe.DataBlk, tbe.writeMask, true);
+        }
       }
       enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
         out_msg.addr := address;
@@ -1083,6 +1103,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
           tbe.writeMask.fillMask();
         } else if (tbe.Dirty) {
           if(tbe.atomicData == false && tbe.wtData == false) {
+            assert(tbe.atomicDataReturn == false && tbe.atomicDataNoReturn == false);
             DPRINTF(RubySlicc, "Got double data for %s from %s\n", address, in_msg.Sender);
             assert(tbe.DataBlk == in_msg.DataBlk);  // in case of double data
           }

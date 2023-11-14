@@ -369,7 +369,9 @@ machine(MachineType:TCC, "TCC Cache")
             } else {
                 trigger(Event:WrVicBlk, in_msg.addr, cache_entry, tbe);
             }
-        } else if (in_msg.Type == CoherenceRequestType:Atomic) {
+        } else if (in_msg.Type == CoherenceRequestType:Atomic ||
+                   in_msg.Type == CoherenceRequestType:AtomicReturn ||
+                   in_msg.Type == CoherenceRequestType:AtomicNoReturn) {
           // If the request is system-level, if the address isn't in the cache,
           // or if this cache is write-through, then send the request to the
           // directory. Since non-SLC atomics won't be performed by the directory,
@@ -612,12 +614,17 @@ machine(MachineType:TCC, "TCC Cache")
     }
     if (coreRequestNetwork_in.isReady(clockEdge())) {
       peek(coreRequestNetwork_in, CPURequestMsg) {
-        if(in_msg.Type == CoherenceRequestType:RdBlk || in_msg.Type == CoherenceRequestType:Atomic){
+        if(in_msg.Type == CoherenceRequestType:RdBlk ||
+           in_msg.Type == CoherenceRequestType:Atomic ||
+           in_msg.Type == CoherenceRequestType:AtomicReturn ||
+           in_msg.Type == CoherenceRequestType:AtomicNoReturn){
           tbe.Destination.add(in_msg.Requestor);
         }
         tbe.isGLCSet := in_msg.isGLCSet;
         tbe.isSLCSet := in_msg.isSLCSet;
-        if(in_msg.Type == CoherenceRequestType:Atomic){
+        if(in_msg.Type == CoherenceRequestType:Atomic ||
+           in_msg.Type == CoherenceRequestType:AtomicReturn ||
+           in_msg.Type == CoherenceRequestType:AtomicNoReturn){
           tbe.atomicWriteMask.clear();
           tbe.atomicWriteMask.orMask(in_msg.writeMask);
         }
@@ -715,7 +722,7 @@ machine(MachineType:TCC, "TCC Cache")
         out_msg.WTRequestor := in_msg.Requestor;
         out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
         out_msg.MessageSize := MessageSizeType:Data;
-        out_msg.Type := CoherenceRequestType:Atomic;
+        out_msg.Type := in_msg.Type;
         out_msg.Dirty := true;
         out_msg.writeMask.orMask(in_msg.writeMask);
         out_msg.isGLCSet := in_msg.isGLCSet;
@@ -801,7 +808,16 @@ machine(MachineType:TCC, "TCC Cache")
   }
 
   action(pa_performAtomic, "pa", desc="Perform atomic") {
-    cache_entry.DataBlk.atomicPartial(cache_entry.DataBlk, cache_entry.writeMask);
+    peek(coreRequestNetwork_in, CPURequestMsg) {
+      if (in_msg.Type == CoherenceRequestType:AtomicReturn) {
+        cache_entry.DataBlk.atomicPartial(cache_entry.DataBlk, cache_entry.writeMask, false);
+      } else {
+        // Set the isAtomicNoReturn flag to ensure that logs are not
+        // generated erroneously
+        assert(in_msg.Type == CoherenceRequestType:AtomicNoReturn);
+        cache_entry.DataBlk.atomicPartial(cache_entry.DataBlk, cache_entry.writeMask, true);
+      }
+    }
   }
 
   // END ACTIONS

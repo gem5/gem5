@@ -441,10 +441,15 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
         out_msg.Destination.add(mapAddressToRange(address,MachineType:TCC,
                                 TCC_select_low_bit, TCC_select_num_bits));
         out_msg.MessageSize := MessageSizeType:Data;
-        out_msg.Type := CoherenceRequestType:Atomic;
         out_msg.InitialRequestTime := curCycle();
         out_msg.Shared := false;
         peek(mandatoryQueue_in, RubyRequest) {
+          if (in_msg.Type == RubyRequestType:ATOMIC_RETURN) {
+            out_msg.Type := CoherenceRequestType:AtomicReturn;
+          } else {
+            assert(in_msg.Type == RubyRequestType:ATOMIC_NO_RETURN);
+            out_msg.Type := CoherenceRequestType:AtomicNoReturn;
+          }
           out_msg.instSeqNum := in_msg.instSeqNum;
           out_msg.isGLCSet := in_msg.isGLCSet;
           out_msg.isSLCSet := in_msg.isSLCSet;
