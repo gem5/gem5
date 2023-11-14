@@ -152,6 +152,7 @@ packet2payload(PacketPtr packet)
     trans->acquire();
 
     trans->set_address(packet->getAddr());
+    trans->set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
 
     /* Check if this transaction was allocated by mm */
     sc_assert(trans->has_mm());
@@ -480,7 +481,8 @@ Gem5ToTlmBridge<BITWIDTH>::recvRespRetry()
 
     tlm::tlm_generic_payload *trans = blockingResponse;
     blockingResponse = nullptr;
-    PacketPtr packet = packetMap[blockingResponse];
+
+    PacketPtr packet = packetMap[trans];
     sc_assert(packet);
 
     bool need_retry = !bridgeResponsePort.sendTimingResp(packet);
