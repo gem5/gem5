@@ -55,6 +55,7 @@ Source('PersistentTable.cc')
 Source('RubyPrefetcher.cc')
 Source('TimerTable.cc')
 Source('BankedArray.cc')
+Source('ALUFreeListArray.cc')
 Source('TBEStorage.cc')
 if env['PROTOCOL'] == 'CHI':
     Source('MN_TBETable.cc')
