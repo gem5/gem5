@@ -44,13 +44,6 @@ services:
             args:
                 - version=8
         image: gcr.io/gem5-test/gcc-version-8:latest
-    gcc-9:
-        build:
-            context: ubuntu-20.04_gcc-version
-            dockerfile: Dockerfile
-            args:
-                - version=9
-        image: gcr.io/gem5-test/gcc-version-9:latest
     gcc-10:
         build:
             context: ubuntu-20.04_gcc-version

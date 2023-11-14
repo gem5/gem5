@@ -28,7 +28,7 @@ FROM --platform=${BUILDPLATFORM} ubuntu:20.04
 # Valid version values:
 # 7
 # 8
-# 9
+# 9 # Not supported. See: https://github.com/gem5/gem5/issues/555.
 # 10
 ARG version
 
