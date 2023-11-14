@@ -59,7 +59,7 @@ jobs:
             - run: chmod u+x build/ALL/gem5.opt
             - name: very-long ${{ matrix.test-type }}
               working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run gem5/${{ matrix.test-type }} --length very-long --skip-build -vv -t $(nproc)
+              run: ./main.py run gem5/${{ matrix.test-type }} --length very-long --skip-build -vv
             - name: create zip of results
               if: success() || failure()
               run: |
