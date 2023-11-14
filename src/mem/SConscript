@@ -127,6 +127,7 @@ if env['HAVE_DRAMSIM3']:
 if env['HAVE_DRAMSYS']:
     SimObject('DRAMSys.py', sim_objects=['DRAMSys'])
     Source('dramsys_wrapper.cc')
+    Source('dramsys.cc')
 
 SimObject('MemChecker.py', sim_objects=['MemChecker', 'MemCheckerMonitor'])
 Source('mem_checker.cc')

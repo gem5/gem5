@@ -1,11 +1,13 @@
-Follow these steps to get DRAMSys as part of gem5
+Follow these steps to build DRAMSys as part of gem5
 
 1. Go to ext/dramsys (this directory)
-2. Clone DRAMSys: 'git clone https://github.com/tukl-msd/DRAMSys DRAMSys'
-3. Change directory to DRAMSys: 'cd DRAMSys'
-4. Checkout the correct commit: 'git checkout -b gem5 09f6dcbb91351e6ee7cadfc7bc8b29d97625db8f'
-5. Recursively obtain the submodules: 'git submodule update --init --recursive'
+2. Clone DRAMSys: 'git clone https://github.com/tukl-msd/DRAMSys --branch v5.0 --depth 1 DRAMSys'
+
+The latest verified working version is v5.0, but later versions might work too.
+gem5 will automatically pick up DRAMSys as an external module when it is rebuilt.
 
 If you wish to run a simulation using the gem5 processor cores, make sure to enable the storage mode in DRAMSys.
 This is done by setting the value of the "StoreMode" key to "Store" in the base configuration file.
 Those configuration file can be found in 'DRAMSys/library/resources/configs/simulator'.
+
+Currently, DRAMSys is only supported in conjunction with a cache. Running DRAMSys in Release mode without caches will silently fail!

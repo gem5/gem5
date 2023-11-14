@@ -29,7 +29,7 @@
 #ifndef __MEM_DRAMSYS_H__
 #define __MEM_DRAMSYS_H__
 
-#include "DRAMSysConfiguration.h"
+#include "DRAMSys/config/DRAMSysConfiguration.h"
 #include "mem/abstract_mem.hh"
 #include "mem/dramsys_wrapper.hh"
 #include "params/DRAMSys.hh"
@@ -43,36 +43,20 @@ namespace memory
 class DRAMSys : public AbstractMemory
 {
     PARAMS(DRAMSys);
-    sc_gem5::TlmTargetWrapper<32> tlmWrapper;
+    sc_gem5::TlmTargetWrapper<> tlmWrapper;
 
   public:
-    DRAMSys(Params const &params)
-        : AbstractMemory(params),
-          tlmWrapper(dramSysWrapper.tSocket,
-              params.name + ".tlm",
-              InvalidPortID),
-          config(DRAMSysConfiguration::from_path(
-              params.configuration,
-              params.resource_directory)),
-          dramSysWrapper(params.name.c_str(),
-            config,
-            params.recordable,
-            params.range)
-    {
-    }
+    DRAMSys(Params const& params);
 
-    gem5::Port &getPort(const std::string &if_name, PortID idx) override
-    {
-        if (if_name != "tlm")
-        {
-            return AbstractMemory::getPort(if_name, idx);
-        }
+    gem5::Port& getPort(const std::string& if_name, PortID idx) override;
 
-        return tlmWrapper;
-    }
+    DrainState drain() override;
+
+    void serialize(CheckpointOut& cp) const override;
+    void unserialize(CheckpointIn& cp) override;
 
   private:
-    DRAMSysConfiguration::Configuration config;
+    ::DRAMSys::Config::Configuration config;
     DRAMSysWrapper dramSysWrapper;
 };
 
