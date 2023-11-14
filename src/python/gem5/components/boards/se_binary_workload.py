@@ -111,10 +111,8 @@ class SEBinaryWorkload:
             else:  # stdin_file is a string
                 process.input = FileResource(Path(stdin_file)).get_local_path()
         if stdout_file is not None:
-            if isinstance(stdout_file, Path):
-                process.output = stdout_file.as_posix()
-            else:  # stdout_file is a string
-                process.output = Path(stdout_file).as_posix()
+            assert isinstance(stdout_file, Path) or isinstance(stdout_file, str)
+            process.output = str(stdout_file)
         if stderr_file is not None:
             if isinstance(stderr_file, Path):
                 process.errout = stderr_file.as_posix()
