@@ -89,6 +89,22 @@ jobs:
             build-matrix: ${{ steps.build-matrix.outputs.build-matrix }}
             test-dirs-matrix: ${{ steps.dir-matrix.outputs.test-dirs-matrix }}
 
+    clang-fast-compilation:
+        # gem5 binaries built in `quick-gem5-builds` always use GCC.
+        # Clang is more strict than GCC. This job checks that gem5 compiles
+        # with Clang. It compiles build/ALL/gem5.fast to maximize the change
+        # for compilation error to be exposed.
+        runs-on: [self-hosted, linux, x64]
+        if: github.event.pull_request.draft == false
+        container: ghcr.io/gem5/clang-version-16:latest
+        needs: [pre-commit, check-for-change-id]
+        timeout-minutes: 90
+        steps:
+            - uses: actions/checkout@v3
+            - name: Clang Compilation
+              working-directory: ${{ github.workspace }}
+              run: scons build/ALL/gem5.fast -j $(nproc)
+
     testlib-quick-gem5-builds:
         runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
