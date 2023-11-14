@@ -130,7 +130,7 @@ def main():
         exit(-1)
 
     # Read the magic number in 4-byte Little Endian
-    magic_number = proto_in.read(4)
+    magic_number = proto_in.read(4).decode()
 
     if magic_number != "gem5":
         print("Unrecognized file")
