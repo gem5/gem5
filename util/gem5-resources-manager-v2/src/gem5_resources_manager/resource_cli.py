@@ -3,9 +3,9 @@ import argparse
 from .creator import Creator
 from .updater import Updater
 
-from .data_source import JSONDatabase
+from .data_source import JSONDatabase, AtlasDataSource
 
-subtools = [Creator(), Updater()]
+subtools = [Creator()]
 
 
 def cli():
@@ -21,7 +21,10 @@ def cli():
 
     args = parser.parse_args()
 
-    datasource = JSONDatabase("resources.json")
+    datasource = AtlasDataSource(
+        mongo_uri="", database_name="gem5-vision", collection_name="versions_test"
+    )
+
     datasource.open()
     subtool.execute(args=args, data_source=datasource)
     datasource.close()
