@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2011-2015 Advanced Micro Devices, Inc.
+ * Copyright (c) 2023 Matthew D. Sinclair
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -53,10 +54,14 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
 {
   state_declaration(State, desc="TCP Cache States", default="TCP_State_I") {
     I, AccessPermission:Invalid,   desc="Invalid";
+    // Note: currently IV in the TCP is only for pending loads to a given cache
+    // line. Since the TCP is write through, stores should be allowed to pass
+    // through without requiring them to wait.
+    IV, AccessPermission:Invalid,  desc="Going from I to V, waiting on TCC data";
     V, AccessPermission:Read_Only, desc="Valid";
     A, AccessPermission:Invalid,   desc="Waiting on Atomic";
 
-    F, AccessPermission:Invalid, desc="Flushing; Waiting for Ack";
+    F, AccessPermission:Invalid,   desc="Flushing; Waiting for Ack";
   }
 
   enumeration(Event, desc="TCP Events") {
@@ -102,6 +107,8 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
     bool Dirty,        desc="Is the data dirty (different than memory)?";
     int NumPendingMsgs,desc="Number of acks/data messages that this processor is waiting for";
     bool Shared,       desc="Victim hit by shared probe";
+    bool isGLCSet,     desc="Bypass L1 Cache";
+    bool isSLCSet,     desc="Bypass L1 and L2 Cache";
    }
 
   structure(TBETable, external="yes") {
@@ -123,6 +130,7 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
   void unset_tbe();
   void wakeUpAllBuffers();
   void wakeUpBuffers(Addr a);
+  void wakeUpAllBuffers(Addr a);
   Cycles curCycle();
 
   // Internal functions
@@ -292,10 +300,13 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
         TBE tbe := TBEs.lookup(in_msg.LineAddress);
         DPRINTF(RubySlicc, "%s\n", in_msg);
         if (in_msg.Type == RubyRequestType:LD) {
-          if ((in_msg.isGLCSet || in_msg.isSLCSet) && is_valid(cache_entry)) {
-            // Read requests with GLC or SLC bit set should not cache in the L1.
-            // They need to bypass the L1 and go to the L2. If an entry exists
-            // in the L1, it needs to be evicted
+          // Read requests with GLC or SLC bit set should not cache in the L1.
+          // They need to bypass the L1 and go to the L2.  If an entry exists in
+          // the L1, it needs to be evicted, and if no entry or invalid entry in
+          // the L1, still need to bypass.  The LoadBypassEvict Event handles
+          // both cases in its transitions below, so call LoadBypassEvict for
+          // both.
+          if ((in_msg.isGLCSet || in_msg.isSLCSet)) {
             trigger(Event:LoadBypassEvict, in_msg.LineAddress, cache_entry, tbe);
           }
           else {
@@ -469,6 +480,15 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
     check_allocate(TBEs);
     TBEs.allocate(address);
     set_tbe(TBEs.lookup(address));
+
+    // pass GLC/SLC information along
+    if (mandatoryQueue_in.isReady(clockEdge())) {
+      peek(mandatoryQueue_in, RubyRequest) {
+        DPRINTF(RubySlicc, "Address: %p\n", address);
+        tbe.isGLCSet := in_msg.isGLCSet;
+        tbe.isSLCSet := in_msg.isSLCSet;
+      }
+    }
   }
 
   action(d_deallocateTBE, "d", desc="Deallocate TBE") {
@@ -507,6 +527,10 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
     responseToTCP_in.dequeue(clockEdge());
   }
 
+  action(st_stallAndWaitRequest, "st", desc="Stall and wait on the address") {
+    stall_and_wait(mandatoryQueue_in, address);
+  }
+
   action(l_loadDoneHit, "ldh", desc="local load done (hits in TCP)") {
     assert(is_valid(cache_entry));
     if (use_seq_not_coal) {
@@ -522,6 +546,20 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
       sequencer.readCallback(address, cache_entry.DataBlk, false, MachineType:L1Cache);
     } else {
       coalescer.readCallback(address, MachineType:L1Cache, cache_entry.DataBlk);
+    }
+  }
+
+  action(ldmi_loadDoneMissInv, "ldmi",
+         desc="local load done (misses in TCP and line was evicted)") {
+    // since line was evicted, can't rely on data from cache entry, so use from
+    // the response message
+    peek(responseToTCP_in, ResponseMsg) {
+      DataBlock tmp:= in_msg.DataBlk;
+      if (use_seq_not_coal) {
+        sequencer.readCallback(address, tmp, false, MachineType:L1Cache);
+      } else {
+        coalescer.readCallback(address, MachineType:L1Cache, tmp);
+      }
     }
   }
 
@@ -601,6 +639,10 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
     L1cache.setMRU(address);
   }
 
+  action(wada_wakeUpAllDependentsAddr, "wada", desc="Wake up any requests waiting for this address") {
+    wakeUpAllBuffers(address);
+  }
+
 //  action(zz_recycleMandatoryQueue, "\z", desc="recycle mandatory queue") {
 //    mandatoryQueue_in.recycle(clockEdge(), cyclesToTicks(recycle_latency));
 //  }
@@ -629,11 +671,19 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
   // Stalling transitions do NOT check the tag array...and if they do,
   // they can cause a resource stall deadlock!
 
-  transition({A}, {Load, Atomic, StoreThrough}) { //TagArrayRead} {
-      z_stall;
+  // if another request arrives for the same cache line that has a pending
+  // atomic or load, put it on the wakeup buffer instead of z_stall'ing it.  By
+  // doing so we reduce resource contention since they won't try again every cycle
+  // and will instead only try again once woken up
+  transition({A, IV}, {Load, LoadBypassEvict, Atomic, Store, StoreThrough, Flush}) {
+      st_stallAndWaitRequest;
   }
 
-  transition(I, Load) {TagArrayRead} {
+  // if we have a load that misses, allocate TBE entry and transition to IV
+  // to prevent subsequent requests to same cache line from also going to TCC
+  // while this request is pending
+  transition(I, Load, IV) {TagArrayRead} {
+    t_allocateTBE;
     n_issueRdBlk;
     uu_profileDataMiss;
     p_popMandatoryQueue;
@@ -691,14 +741,38 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
     p_popMandatoryQueue;
   }
 
-  transition(I, TCC_Ack, V) {TagArrayRead, TagArrayWrite, DataArrayRead, DataArrayWrite} {
-    a_allocate;
-    w_writeCache;
-    l_loadDoneMiss;
+  // if we got a response for a load where the line is in I, then
+  // another request must have come in that replaced the line in question in
+  // the cache.  Thus, complete this request without allocating the line, but
+  // still deallocate TBE and wakeup any dependent addresses.
+  // (Note: this assumes TCC_AckWB is what stores use)
+  transition(I, TCC_Ack) {TagArrayRead, TagArrayWrite} {
+    wada_wakeUpAllDependentsAddr;
+    // NOTE: Because we invalidated the cache line, the assert in l_loadDoneMiss
+    // will fail -- unlike atomics that automatically go to I when the line returns
+    // loads do not automatically go to I.  Resolve this by passing data from
+    // message.
+    ldmi_loadDoneMissInv;
+    d_deallocateTBE;
     pr_popResponseQueue;
   }
 
-  transition(I, Bypass, I) {
+  // if line is currently in IV, then TCC_Ack is returning the data for a
+  // pending load, so transition to V, deallocate TBE, and wakeup any dependent
+  // requests so they will be replayed now that this request has returned.
+  transition(IV, TCC_Ack, V) {TagArrayRead, TagArrayWrite, DataArrayRead, DataArrayWrite} {
+    a_allocate;
+    w_writeCache;
+    wada_wakeUpAllDependentsAddr;
+    l_loadDoneMiss;
+    d_deallocateTBE;
+    pr_popResponseQueue;
+  }
+
+  // if a bypass request arrives back at the TCP, regardless of whether the line
+  // is in I (from the bypass request) or IV (from a subsequent non-bypassing
+  // load), retain the current state and complete the bypassing request.
+  transition({I, IV}, Bypass) {
     rb_bypassDone;
     pr_popResponseQueue;
   }
@@ -710,12 +784,13 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
   }
 
   transition(A, TCC_Ack, I) {TagArrayRead, DataArrayRead, DataArrayWrite} {
-    d_deallocateTBE;
     a_allocate;
     w_writeCache;
     ad_atomicDone;
-    pr_popResponseQueue;
     ic_invCache;
+    wada_wakeUpAllDependentsAddr;
+    d_deallocateTBE;
+    pr_popResponseQueue;
   }
 
   transition(V, TCC_Ack, V) {TagArrayRead, DataArrayRead, DataArrayWrite} {
@@ -732,20 +807,22 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
     ic_invCache;
   }
 
+  // if a line with a pending load gets evicted, transition the line to I and
+  // invalidate it.
+  transition(IV, Repl, I) {TagArrayRead, TagArrayWrite} {
+    ic_invCache;
+  }
+
   transition({V,I}, Flush, F) {TagArrayFlash} {
     a_allocate;
     sf_setFlush;
     p_popMandatoryQueue;
   }
 
-  transition(A, Flush) {
-    z_stall;
-  }
-
   transition({I, V}, Evict, I) {TagArrayFlash} {
     inv_invDone;
-    p_popMandatoryQueue;
     ic_invCache;
+    p_popMandatoryQueue;
   }
 
   transition(A, Evict) {TagArrayFlash} {
@@ -753,8 +830,11 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
     p_popMandatoryQueue;
   }
 
+  // if a line is in IV and a TCC_AckWB comes back, we must have had a WT
+  // store followed by a load. Thus, complete the store without affecting
+  // TBE or line state.
   // TCC_AckWB only snoops TBE
-  transition({V, I, A}, TCC_AckWB) {
+  transition({V, I, IV, A}, TCC_AckWB) {
     wd_wtDone;
     pr_popResponseQueue;
   }

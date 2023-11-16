@@ -154,7 +154,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     bool Dirty,         desc="Is the data dirty?";
     int NumPendingAcks,        desc="num acks expected";
     MachineID OriginalRequestor,        desc="Original Requestor";
-    MachineID WTRequestor,        desc="WT Requestor";
+    MachineID CURequestor,        desc="CU that initiated the request";
     bool Cached,        desc="data hit in Cache";
     bool MemData,       desc="Got MemData?",default="false";
     bool wtData,       desc="Got write through data?",default="false";
@@ -170,7 +170,9 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     uint64_t probe_id,        desc="probe id for lifetime profiling";
     WriteMask writeMask,    desc="outstanding write through mask";
     int Len,            desc="Length of memory request for DMA";
-    bool isSLCSet,      desc="Bypass L1 and L2 Cache";
+    // GLC is passed along because it is needed in the return path
+    bool isGLCSet,      desc="Bypass GPU L1 Cache";
+    bool isSLCSet,      desc="Bypass GPU L1 and L2 Cache";
   }
 
   structure(TBETable, external="yes") {
@@ -470,6 +472,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
       out_msg.ForwardRequestTime := tbe.ForwardRequestTime;
       out_msg.ProbeRequestStartTime := tbe.ProbeRequestStartTime;
       out_msg.OriginalResponder := tbe.LastSender;
+      out_msg.CURequestor := tbe.CURequestor;
       out_msg.L3Hit := tbe.L3Hit;
       DPRINTF(RubySlicc, "%s\n", out_msg);
     }
@@ -498,6 +501,9 @@ machine(MachineType:Directory, "AMD Baseline protocol")
       out_msg.ProbeRequestStartTime := tbe.ProbeRequestStartTime;
       out_msg.OriginalResponder := tbe.LastSender;
       out_msg.L3Hit := tbe.L3Hit;
+      out_msg.isGLCSet := tbe.isGLCSet;
+      out_msg.isSLCSet := tbe.isSLCSet;
+      out_msg.CURequestor := tbe.CURequestor;
       DPRINTF(RubySlicc, "%s\n", out_msg);
     }
   }
@@ -527,9 +533,11 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         out_msg.ForwardRequestTime := tbe.ForwardRequestTime;
         out_msg.ProbeRequestStartTime := tbe.ProbeRequestStartTime;
         out_msg.OriginalResponder := tbe.LastSender;
-        if(tbe.atomicData){
-          out_msg.WTRequestor := tbe.WTRequestor;
-        }
+        out_msg.isGLCSet := tbe.isGLCSet;
+        out_msg.isSLCSet := tbe.isSLCSet;
+	if(tbe.atomicData){
+          out_msg.CURequestor := tbe.CURequestor;
+	}
         out_msg.L3Hit := tbe.L3Hit;
         DPRINTF(RubySlicc, "%s\n", out_msg);
       }
@@ -555,6 +563,8 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         out_msg.InitialRequestTime := tbe.InitialRequestTime;
         out_msg.ForwardRequestTime := curCycle();
         out_msg.ProbeRequestStartTime := tbe.ProbeRequestStartTime;
+        out_msg.isGLCSet := tbe.isGLCSet;
+        out_msg.isSLCSet := tbe.isSLCSet;
         DPRINTF(RubySlicc, "%s\n", out_msg);
       }
   }
@@ -565,13 +575,15 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         out_msg.addr := address;
         out_msg.Type := CoherenceResponseType:NBSysWBAck;
         out_msg.Destination.add(in_msg.Requestor);
-        out_msg.WTRequestor := in_msg.WTRequestor;
+        out_msg.CURequestor := in_msg.CURequestor;
         out_msg.Sender := machineID;
         out_msg.MessageSize := MessageSizeType:Writeback_Control;
         out_msg.InitialRequestTime := in_msg.InitialRequestTime;
         out_msg.ForwardRequestTime := curCycle();
         out_msg.ProbeRequestStartTime := curCycle();
         out_msg.instSeqNum := in_msg.instSeqNum;
+        out_msg.isGLCSet := in_msg.isGLCSet;
+        out_msg.isSLCSet := in_msg.isSLCSet;
       }
     }
   }
@@ -582,7 +594,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         out_msg.addr := address;
         out_msg.Type := CoherenceResponseType:NBSysWBAck;
         out_msg.Destination.add(tbe.OriginalRequestor);
-        out_msg.WTRequestor := tbe.WTRequestor;
+        out_msg.CURequestor := tbe.CURequestor;
         out_msg.Sender := machineID;
         out_msg.MessageSize := MessageSizeType:Writeback_Control;
         out_msg.InitialRequestTime := tbe.InitialRequestTime;
@@ -773,6 +785,8 @@ machine(MachineType:Directory, "AMD Baseline protocol")
           out_msg.MessageSize := MessageSizeType:Control;
           out_msg.Destination := probe_dests;
           tbe.NumPendingAcks := out_msg.Destination.count();
+          out_msg.isGLCSet := in_msg.isGLCSet;
+          out_msg.isSLCSet := in_msg.isSLCSet;
           DPRINTF(RubySlicc, "%s\n", out_msg);
           APPEND_TRANSITION_COMMENT(" dc: Acks remaining: ");
           APPEND_TRANSITION_COMMENT(tbe.NumPendingAcks);
@@ -877,6 +891,8 @@ machine(MachineType:Directory, "AMD Baseline protocol")
           out_msg.MessageSize := MessageSizeType:Control;
           out_msg.Destination := probe_dests;
           tbe.NumPendingAcks := out_msg.Destination.count();
+          out_msg.isGLCSet := in_msg.isGLCSet;
+          out_msg.isSLCSet := in_msg.isSLCSet;
           DPRINTF(RubySlicc, "%s\n", (out_msg));
           APPEND_TRANSITION_COMMENT(" sc: Acks remaining: ");
           APPEND_TRANSITION_COMMENT(tbe.NumPendingAcks);
@@ -931,6 +947,8 @@ machine(MachineType:Directory, "AMD Baseline protocol")
           out_msg.ReturnData := false;
           out_msg.MessageSize := MessageSizeType:Control;
           out_msg.Destination := probe_dests;
+          out_msg.isGLCSet := in_msg.isGLCSet;
+          out_msg.isSLCSet := in_msg.isSLCSet;
           tbe.NumPendingAcks := out_msg.Destination.count();
           APPEND_TRANSITION_COMMENT(" ic: Acks remaining: ");
           APPEND_TRANSITION_COMMENT(tbe.NumPendingAcks);
@@ -1017,7 +1035,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         tbe.writeMask.clear();
         tbe.writeMask.orMask(in_msg.writeMask);
         tbe.wtData := true;
-        tbe.WTRequestor := in_msg.WTRequestor;
+        tbe.CURequestor := in_msg.CURequestor;
         tbe.LastSender := in_msg.Requestor;
       }
       if (in_msg.Type == CoherenceRequestType:Atomic ||
@@ -1032,9 +1050,13 @@ machine(MachineType:Directory, "AMD Baseline protocol")
           assert(in_msg.Type == CoherenceRequestType:AtomicNoReturn);
           tbe.atomicDataNoReturn := true;
         }
-        tbe.WTRequestor := in_msg.WTRequestor;
+        tbe.CURequestor := in_msg.CURequestor;
         tbe.LastSender := in_msg.Requestor;
         tbe.isSLCSet := in_msg.isSLCSet;
+      }
+      // GPU read requests also need to track where the requestor came from
+      if (in_msg.Type == CoherenceRequestType:RdBlk) {
+        tbe.CURequestor := in_msg.CURequestor;
       }
       tbe.Dirty := false;
       if (in_msg.Type == CoherenceRequestType:WriteThrough) {
@@ -1045,6 +1067,9 @@ machine(MachineType:Directory, "AMD Baseline protocol")
       tbe.NumPendingAcks := 0;
       tbe.Cached := in_msg.ForceShared;
       tbe.InitialRequestTime := in_msg.InitialRequestTime;
+      tbe.isGLCSet := in_msg.isGLCSet;
+      tbe.isSLCSet := in_msg.isSLCSet;
+      DPRINTF(RubySlicc, "t_allocateTBE in_msg: %s, tbe: %s\n", in_msg, tbe.CURequestor);
     }
   }
 
@@ -1277,11 +1302,20 @@ machine(MachineType:Directory, "AMD Baseline protocol")
   }
 
   action(wada_wakeUpAllDependentsAddr, "wada", desc="Wake up any requests waiting for this address") {
+    DPRINTF(RubySlicc, "wada wakeup: 0x%x\n", address);
     wakeUpAllBuffers(address);
   }
 
+  /*
+    Currently z_stall is unused because it can lead to Protocol Stalls that
+    eventually lead to deadlock.  Instead, it is recommended to use
+    st_stallAndWaitRequest in combination with a wakeupBuffer call (e.g.,
+    wada_wakeUpAllDependentsAddr) to put the pending requests to sleep instead of
+    them causing head of line blocking -- wada_wakeUpAllDependentsAddr should wake
+    the request up once the request preventing it from completing is done.
   action(z_stall, "z", desc="...") {
   }
+  */
 
   // TRANSITIONS
   transition({BL, BDR_M, BDW_M, BS_M, BM_M, B_M, BP, BDR_PM, BDW_PM, BS_PM, BM_PM, B_PM, BDR_Pm, BDW_Pm, BS_Pm, BM_Pm, B_Pm, B}, {RdBlkS, RdBlkM, RdBlk, CtoD}) {
@@ -1383,19 +1417,19 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     d_writeDataToMemory;
     al_allocateL3Block;
     pr_profileL3HitMiss; //Must come after al_allocateL3Block and before dt_deallocateTBE
-    wad_wakeUpDependents;
+    wada_wakeUpAllDependentsAddr;
     dt_deallocateTBE;
     pr_popResponseQueue;
   }
 
   transition(BL, StaleWB, U) {L3TagArrayWrite} {
     dt_deallocateTBE;
-    wa_wakeUpAllDependents;
+    wada_wakeUpAllDependentsAddr;
     pr_popResponseQueue;
   }
 
   transition({B, BDR_M, BDW_M, BS_M, BM_M, B_M, BP, BDR_PM, BDW_PM, BS_PM, BM_PM, B_PM, BDR_Pm, BDW_Pm, BS_Pm, BM_Pm, B_Pm}, {VicDirty, VicClean}) {
-    z_stall;
+    st_stallAndWaitRequest;
   }
 
   transition({U, BL, BDR_M, BDW_M, BS_M, BM_M, B_M, BP, BDR_PM, BDW_PM, BS_PM, BM_PM, B_PM, BDR_Pm, BDW_Pm, BS_Pm, BM_Pm, B_Pm, B}, WBAck) {
