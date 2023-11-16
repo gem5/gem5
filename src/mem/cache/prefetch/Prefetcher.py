@@ -1,4 +1,4 @@
-# Copyright (c) 2012, 2014, 2019 ARM Limited
+# Copyright (c) 2012, 2014, 2019, 2022 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -192,6 +192,13 @@ class StridePrefetcher(QueuedPrefetcher):
     use_requestor_id = Param.Bool(True, "Use requestor id based history")
 
     degree = Param.Int(4, "Number of prefetches to generate")
+    distance = Param.Unsigned(
+        0,
+        "How far ahead of the demand stream to start prefetching. "
+        "Skip this number of strides ahead of the first identified prefetch, "
+        "then generate `degree` prefetches at `stride` intervals. "
+        "A value of zero indicates no skip.",
+    )
 
     table_assoc = Param.Int(4, "Associativity of the PC table")
     table_entries = Param.MemorySize("64", "Number of entries of the PC table")

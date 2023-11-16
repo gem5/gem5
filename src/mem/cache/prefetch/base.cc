@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014 ARM Limited
+ * Copyright (c) 2013-2014, 2022 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -245,6 +245,7 @@ Base::probeNotify(const PacketPtr &pkt, bool miss)
     // operations or for writes that we are coaslescing.
     if (pkt->cmd.isSWPrefetch()) return;
     if (pkt->req->isCacheMaintenance()) return;
+    if (pkt->isCleanEviction()) return;
     if (pkt->isWrite() && cache != nullptr && cache->coalesce()) return;
     if (!pkt->req->hasPaddr()) {
         panic("Request must have a physical address");
