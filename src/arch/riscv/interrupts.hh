@@ -112,13 +112,13 @@ class Interrupts : public BaseInterrupts
     }
 
     bool checkInterrupt(int num) const { return ip[num] && ie[num]; }
-    bool checkInterrupts() const
+    bool checkInterrupts() const override
     {
         return checkNonMaskableInterrupt() || (ip & ie & globalMask()).any();
     }
 
     Fault
-    getInterrupt()
+    getInterrupt() override
     {
         assert(checkInterrupts());
         if (checkNonMaskableInterrupt())
@@ -135,10 +135,10 @@ class Interrupts : public BaseInterrupts
         return NoFault;
     }
 
-    void updateIntrInfo() {}
+    void updateIntrInfo() override {}
 
     void
-    post(int int_num, int index)
+    post(int int_num, int index) override
     {
         DPRINTF(Interrupt, "Interrupt %d:%d posted\n", int_num, index);
         if (int_num != INT_NMI) {
@@ -149,7 +149,7 @@ class Interrupts : public BaseInterrupts
     }
 
     void
-    clear(int int_num, int index)
+    clear(int int_num, int index) override
     {
         DPRINTF(Interrupt, "Interrupt %d:%d cleared\n", int_num, index);
         if (int_num != INT_NMI) {
@@ -163,7 +163,7 @@ class Interrupts : public BaseInterrupts
     void clearNMI() { tc->setMiscReg(MISCREG_NMIP, 0); }
 
     void
-    clearAll()
+    clearAll() override
     {
         DPRINTF(Interrupt, "All interrupts cleared\n");
         ip = 0;
@@ -176,7 +176,7 @@ class Interrupts : public BaseInterrupts
     void setIE(const uint64_t& val) { ie = val; }
 
     void
-    serialize(CheckpointOut &cp) const
+    serialize(CheckpointOut &cp) const override
     {
         unsigned long ip_ulong = ip.to_ulong();
         unsigned long ie_ulong = ie.to_ulong();
@@ -185,7 +185,7 @@ class Interrupts : public BaseInterrupts
     }
 
     void
-    unserialize(CheckpointIn &cp)
+    unserialize(CheckpointIn &cp) override
     {
         unsigned long ip_ulong;
         unsigned long ie_ulong;
