@@ -1197,8 +1197,6 @@ PM4PacketProcessor::unserialize(CheckpointIn &cp)
         PM4MapQueues* pkt = new PM4MapQueues;
         memset(pkt, 0, sizeof(PM4MapQueues));
         newQueue(mqd, offset[i], pkt, id[i]);
-        PM4Queue *new_q = queuesMap[offset[i]];
-        gpuDevice->insertQId(gpuDevice->lastVMID(), new_q->id());
 
         if (ib[i]) {
             queues[id[i]]->wptr(ib_wptr[i]);
