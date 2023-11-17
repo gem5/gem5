@@ -44,12 +44,12 @@ RUN apt -y install wget gnupg2 rpm
 # Get the radeon gpg key for apt repository
 RUN wget -q -O - https://repo.radeon.com/rocm/rocm.gpg.key | apt-key add -
 
-# Modify apt sources to pull from ROCm 4.2 repository only
-RUN echo 'deb [arch=amd64] https://repo.radeon.com/rocm/apt/4.2/ ubuntu main' | tee /etc/apt/sources.list.d/rocm.list
+# Modify apt sources to pull from ROCm 5.4.2 repository only
+RUN echo 'deb [arch=amd64] https://repo.radeon.com/rocm/apt/5.4.2/ ubuntu main' | tee /etc/apt/sources.list.d/rocm.list
 
 RUN apt-get update
 RUN apt -y install libnuma-dev
 
 # Install the ROCm-dkms source
 RUN apt -y install initramfs-tools
-RUN apt -y install rocm-dkms
+RUN apt -y install rocm-dev
