@@ -27,6 +27,10 @@
 import os
 import subprocess
 
+from shutil import which
+
+from gem5_scons import warning
+
 Import("env")
 
 build_root = Dir("../..").abspath
@@ -37,6 +41,16 @@ scons_root = Dir("#").abspath
 # See if we got a cloned DRAMSys repo as a subdirectory and set the
 # HAVE_DRAMSys flag accordingly
 if not os.path.exists(Dir(".").srcnode().abspath + "/DRAMSys"):
+    env["HAVE_DRAMSYS"] = False
+    Return()
+
+# DRAMSys requires CMake to build but this is is not a dependency for
+# gem5 outside of this DRAMSys integration. Therefore, we do not fail the
+# entire gem5 build if CMake is not found. Instead we just skip the building of
+# DRAMSys and print a warning.
+if which("cmake") is None:
+    warning("The DRAMSys repo is present but CMake cannot be found. "
+            "DRAMSys will not be built.")
     env["HAVE_DRAMSYS"] = False
     Return()
 
