@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013, 2015, 2018, 2022 Arm Limited
+# Copyright (c) 2012-2013, 2015, 2018 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -112,7 +112,7 @@ class BaseCache(ClockedObject):
         "Notify the hardware prefetcher on every access (not just misses)",
     )
     prefetch_on_pf_hit = Param.Bool(
-        True, "Notify the hardware prefetcher on hit on prefetched lines"
+        False, "Notify the hardware prefetcher on hit on prefetched lines"
     )
 
     tags = Param.BaseTags(BaseSetAssoc(), "Tag store")
