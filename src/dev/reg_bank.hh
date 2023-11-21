@@ -979,9 +979,9 @@ class RegisterBank : public RegisterBankBase
         std::ostringstream ss;
         while (done != bytes) {
           RegisterBase &reg = it->second.get();
-          const size_t reg_off = addr - it->first;
-          const size_t reg_size = reg.size() - reg_off;
-          const size_t reg_bytes = std::min(reg_size, bytes - done);
+          const Addr reg_off = addr - it->first;
+          const Addr reg_size = reg.size() - reg_off;
+          const Addr reg_bytes = std::min(reg_size, bytes - done);
 
           if (reg_bytes != reg.size()) {
               if (_debug_flag) {
@@ -1025,9 +1025,9 @@ class RegisterBank : public RegisterBankBase
         std::ostringstream ss;
         while (done != bytes) {
             RegisterBase &reg = it->second.get();
-            const size_t reg_off = addr - it->first;
-            const size_t reg_size = reg.size() - reg_off;
-            const size_t reg_bytes = std::min(reg_size, bytes - done);
+            const Addr reg_off = addr - it->first;
+            const Addr reg_size = reg.size() - reg_off;
+            const Addr reg_bytes = std::min(reg_size, bytes - done);
 
             if (reg_bytes != reg.size()) {
                 if (_debug_flag) {
