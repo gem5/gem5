@@ -44782,34 +44782,7 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_SWAP::execute(GPUDynInstPtr gpuDynInst)
     {
-        Wavefront *wf = gpuDynInst->wavefront();
-
-        if (gpuDynInst->exec_mask.none()) {
-            wf->decVMemInstsIssued();
-            if (isFlat()) {
-                wf->decLGKMInstsIssued();
-            }
-            return;
-        }
-
-        gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->latency.init(gpuDynInst->computeUnit());
-        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
-
-        ConstVecOperandU32 data(gpuDynInst, extData.DATA);
-
-        data.read();
-
-        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (gpuDynInst->exec_mask[lane]) {
-                (reinterpret_cast<VecElemU32*>(gpuDynInst->a_data))[lane]
-                    = data[lane];
-            }
-        }
-
-        issueRequestHelper(gpuDynInst);
+        atomicExecute<ConstVecOperandU32, VecElemU32>(gpuDynInst);
     } // execute
 
     void
@@ -44821,18 +44794,7 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_SWAP::completeAcc(GPUDynInstPtr gpuDynInst)
     {
-        if (isAtomicRet()) {
-            VecOperandU32 vdst(gpuDynInst, extData.VDST);
-
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (gpuDynInst->exec_mask[lane]) {
-                    vdst[lane] = (reinterpret_cast<VecElemU32*>(
-                        gpuDynInst->d_data))[lane];
-                }
-            }
-
-            vdst.write();
-        }
+        atomicComplete<VecOperandU32, VecElemU32>(gpuDynInst);
     } // completeAcc
 
     // --- Inst_FLAT__FLAT_ATOMIC_CMPSWAP class methods ---
@@ -44864,38 +44826,7 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_CMPSWAP::execute(GPUDynInstPtr gpuDynInst)
     {
-        Wavefront *wf = gpuDynInst->wavefront();
-
-        if (gpuDynInst->exec_mask.none()) {
-            wf->decVMemInstsIssued();
-            if (isFlat()) {
-                wf->decLGKMInstsIssued();
-            }
-            return;
-        }
-
-        gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->latency.init(gpuDynInst->computeUnit());
-        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
-
-        ConstVecOperandU32 data(gpuDynInst, extData.DATA);
-        ConstVecOperandU32 cmp(gpuDynInst, extData.DATA + 1);
-
-        data.read();
-        cmp.read();
-
-        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (gpuDynInst->exec_mask[lane]) {
-                (reinterpret_cast<VecElemU32*>(gpuDynInst->x_data))[lane]
-                    = data[lane];
-                (reinterpret_cast<VecElemU32*>(gpuDynInst->a_data))[lane]
-                    = cmp[lane];
-            }
-        }
-
-        issueRequestHelper(gpuDynInst);
+        atomicExecute<ConstVecOperandU32, VecElemU32, 1>(gpuDynInst);
     } // execute
 
     void
@@ -44907,18 +44838,7 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_CMPSWAP::completeAcc(GPUDynInstPtr gpuDynInst)
     {
-        if (isAtomicRet()) {
-            VecOperandU32 vdst(gpuDynInst, extData.VDST);
-
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (gpuDynInst->exec_mask[lane]) {
-                    vdst[lane] = (reinterpret_cast<VecElemU32*>(
-                        gpuDynInst->d_data))[lane];
-                }
-            }
-
-            vdst.write();
-        }
+        atomicComplete<VecOperandU32, VecElemU32>(gpuDynInst);
     } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_ADD class methods ---
 
@@ -44946,34 +44866,7 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_ADD::execute(GPUDynInstPtr gpuDynInst)
     {
-        Wavefront *wf = gpuDynInst->wavefront();
-
-        if (gpuDynInst->exec_mask.none()) {
-            wf->decVMemInstsIssued();
-            if (isFlat()) {
-                wf->decLGKMInstsIssued();
-            }
-            return;
-        }
-
-        gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->latency.init(gpuDynInst->computeUnit());
-        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
-
-        ConstVecOperandU32 data(gpuDynInst, extData.DATA);
-
-        data.read();
-
-        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (gpuDynInst->exec_mask[lane]) {
-                (reinterpret_cast<VecElemU32*>(gpuDynInst->a_data))[lane]
-                    = data[lane];
-            }
-        }
-
-        issueRequestHelper(gpuDynInst);
+        atomicExecute<ConstVecOperandU32, VecElemU32>(gpuDynInst);
     } // execute
 
     void
@@ -44985,18 +44878,7 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_ADD::completeAcc(GPUDynInstPtr gpuDynInst)
     {
-        if (isAtomicRet()) {
-            VecOperandU32 vdst(gpuDynInst, extData.VDST);
-
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (gpuDynInst->exec_mask[lane]) {
-                    vdst[lane] = (reinterpret_cast<VecElemU32*>(
-                        gpuDynInst->d_data))[lane];
-                }
-            }
-
-            vdst.write();
-        }
+        atomicComplete<VecOperandU32, VecElemU32>(gpuDynInst);
     } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_SUB class methods ---
 
@@ -45024,8 +44906,20 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_SUB::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        atomicExecute<ConstVecOperandU32, VecElemU32>(gpuDynInst);
     } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_SUB::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU32>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_SUB::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandU32, VecElemU32>(gpuDynInst);
+    } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_SMIN class methods ---
 
     Inst_FLAT__FLAT_ATOMIC_SMIN::Inst_FLAT__FLAT_ATOMIC_SMIN(InFmt_FLAT *iFmt)
@@ -45052,55 +44946,19 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_SMIN::execute(GPUDynInstPtr gpuDynInst)
     {
-        Wavefront *wf = gpuDynInst->wavefront();
-
-        if (gpuDynInst->exec_mask.none()) {
-            wf->decVMemInstsIssued();
-            wf->decLGKMInstsIssued();
-            return;
-        }
-
-        gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->latency.init(gpuDynInst->computeUnit());
-        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
-
-        ConstVecOperandU32 data(gpuDynInst, extData.DATA);
-
-        data.read();
-
-        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (gpuDynInst->exec_mask[lane]) {
-                (reinterpret_cast<VecElemU32*>(gpuDynInst->a_data))[lane]
-                    = data[lane];
-            }
-        }
-
-        issueRequestHelper(gpuDynInst);
+        atomicExecute<ConstVecOperandI32, VecElemI32>(gpuDynInst);
     } // execute
 
     void
     Inst_FLAT__FLAT_ATOMIC_SMIN::initiateAcc(GPUDynInstPtr gpuDynInst)
     {
-        initAtomicAccess<VecElemU32>(gpuDynInst);
+        initAtomicAccess<VecElemI32>(gpuDynInst);
     } // initiateAcc
 
     void
     Inst_FLAT__FLAT_ATOMIC_SMIN::completeAcc(GPUDynInstPtr gpuDynInst)
     {
-        if (isAtomicRet()) {
-            VecOperandU32 vdst(gpuDynInst, extData.VDST);
-
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (gpuDynInst->exec_mask[lane]) {
-                    vdst[lane] = (reinterpret_cast<VecElemU32*>(
-                        gpuDynInst->d_data))[lane];
-                }
-            }
-
-            vdst.write();
-        }
+        atomicComplete<VecOperandI32, VecElemI32>(gpuDynInst);
     } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_UMIN class methods ---
 
@@ -45128,8 +44986,20 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_UMIN::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        atomicExecute<ConstVecOperandU32, VecElemU32>(gpuDynInst);
     } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_UMIN::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU32>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_UMIN::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandU32, VecElemU32>(gpuDynInst);
+    } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_SMAX class methods ---
 
     Inst_FLAT__FLAT_ATOMIC_SMAX::Inst_FLAT__FLAT_ATOMIC_SMAX(InFmt_FLAT *iFmt)
@@ -45156,55 +45026,19 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_SMAX::execute(GPUDynInstPtr gpuDynInst)
     {
-        Wavefront *wf = gpuDynInst->wavefront();
-
-        if (gpuDynInst->exec_mask.none()) {
-            wf->decVMemInstsIssued();
-            wf->decLGKMInstsIssued();
-            return;
-        }
-
-        gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->latency.init(gpuDynInst->computeUnit());
-        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
-
-        ConstVecOperandU32 data(gpuDynInst, extData.DATA);
-
-        data.read();
-
-        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (gpuDynInst->exec_mask[lane]) {
-                (reinterpret_cast<VecElemU32*>(gpuDynInst->a_data))[lane]
-                    = data[lane];
-            }
-        }
-
-        issueRequestHelper(gpuDynInst);
+        atomicExecute<ConstVecOperandI32, VecElemI32>(gpuDynInst);
     } // execute
 
     void
     Inst_FLAT__FLAT_ATOMIC_SMAX::initiateAcc(GPUDynInstPtr gpuDynInst)
     {
-        initAtomicAccess<VecElemU32>(gpuDynInst);
+        initAtomicAccess<VecElemI32>(gpuDynInst);
     } // initiateAcc
 
     void
     Inst_FLAT__FLAT_ATOMIC_SMAX::completeAcc(GPUDynInstPtr gpuDynInst)
     {
-        if (isAtomicRet()) {
-            VecOperandU32 vdst(gpuDynInst, extData.VDST);
-
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (gpuDynInst->exec_mask[lane]) {
-                    vdst[lane] = (reinterpret_cast<VecElemU32*>(
-                        gpuDynInst->d_data))[lane];
-                }
-            }
-
-            vdst.write();
-        }
+        atomicComplete<VecOperandI32, VecElemI32>(gpuDynInst);
     } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_UMAX class methods ---
 
@@ -45232,8 +45066,20 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_UMAX::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        atomicExecute<ConstVecOperandU32, VecElemU32>(gpuDynInst);
     } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_UMAX::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU32>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_UMAX::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandU32, VecElemU32>(gpuDynInst);
+    } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_AND class methods ---
 
     Inst_FLAT__FLAT_ATOMIC_AND::Inst_FLAT__FLAT_ATOMIC_AND(InFmt_FLAT *iFmt)
@@ -45260,8 +45106,20 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_AND::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        atomicExecute<ConstVecOperandU32, VecElemU32>(gpuDynInst);
     } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_AND::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU32>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_AND::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandU32, VecElemU32>(gpuDynInst);
+    } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_OR class methods ---
 
     Inst_FLAT__FLAT_ATOMIC_OR::Inst_FLAT__FLAT_ATOMIC_OR(InFmt_FLAT *iFmt)
@@ -45288,32 +45146,7 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_OR::execute(GPUDynInstPtr gpuDynInst)
     {
-        Wavefront *wf = gpuDynInst->wavefront();
-
-        if (gpuDynInst->exec_mask.none()) {
-            wf->decVMemInstsIssued();
-            wf->decLGKMInstsIssued();
-            return;
-        }
-
-        gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->latency.init(gpuDynInst->computeUnit());
-        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
-
-        ConstVecOperandU32 data(gpuDynInst, extData.DATA);
-
-        data.read();
-
-        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (gpuDynInst->exec_mask[lane]) {
-                (reinterpret_cast<VecElemU32*>(gpuDynInst->a_data))[lane]
-                    = data[lane];
-            }
-        }
-
-        issueRequestHelper(gpuDynInst);
+        atomicExecute<ConstVecOperandU32, VecElemU32>(gpuDynInst);
     } // execute
 
     void
@@ -45325,18 +45158,7 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_OR::completeAcc(GPUDynInstPtr gpuDynInst)
     {
-        if (isAtomicRet()) {
-            VecOperandU32 vdst(gpuDynInst, extData.VDST);
-
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (gpuDynInst->exec_mask[lane]) {
-                    vdst[lane] = (reinterpret_cast<VecElemU32*>(
-                        gpuDynInst->d_data))[lane];
-                }
-            }
-
-            vdst.write();
-        }
+        atomicComplete<VecOperandU32, VecElemU32>(gpuDynInst);
     } // completeAcc
 
     // --- Inst_FLAT__FLAT_ATOMIC_XOR class methods ---
@@ -45365,8 +45187,20 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_XOR::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        atomicExecute<ConstVecOperandU32, VecElemU32>(gpuDynInst);
     } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_XOR::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU32>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_XOR::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandU32, VecElemU32>(gpuDynInst);
+    } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_INC class methods ---
 
     Inst_FLAT__FLAT_ATOMIC_INC::Inst_FLAT__FLAT_ATOMIC_INC(InFmt_FLAT *iFmt)
@@ -45393,8 +45227,20 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_INC::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        atomicExecute<ConstVecOperandU32, VecElemU32>(gpuDynInst);
     } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_INC::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU32>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_INC::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandU32, VecElemU32>(gpuDynInst);
+    } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_DEC class methods ---
 
     Inst_FLAT__FLAT_ATOMIC_DEC::Inst_FLAT__FLAT_ATOMIC_DEC(InFmt_FLAT *iFmt)
@@ -45421,8 +45267,20 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_DEC::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        atomicExecute<ConstVecOperandU32, VecElemU32>(gpuDynInst);
     } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_DEC::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU32>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_DEC::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandU32, VecElemU32>(gpuDynInst);
+    } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_SWAP_X2 class methods ---
 
     Inst_FLAT__FLAT_ATOMIC_SWAP_X2::Inst_FLAT__FLAT_ATOMIC_SWAP_X2(
@@ -45450,8 +45308,20 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_SWAP_X2::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        atomicExecute<ConstVecOperandU64, VecElemU64>(gpuDynInst);
     } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_SWAP_X2::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU64>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_SWAP_X2::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandU64, VecElemU64>(gpuDynInst);
+    } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_CMPSWAP_X2 class methods ---
 
     Inst_FLAT__FLAT_ATOMIC_CMPSWAP_X2::Inst_FLAT__FLAT_ATOMIC_CMPSWAP_X2(
@@ -45481,38 +45351,7 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_CMPSWAP_X2::execute(GPUDynInstPtr gpuDynInst)
     {
-        Wavefront *wf = gpuDynInst->wavefront();
-
-        if (gpuDynInst->exec_mask.none()) {
-            wf->decVMemInstsIssued();
-            if (isFlat()) {
-                wf->decLGKMInstsIssued();
-            }
-            return;
-        }
-
-        gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->latency.init(gpuDynInst->computeUnit());
-        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
-
-        ConstVecOperandU64 data(gpuDynInst, extData.DATA);
-        ConstVecOperandU64 cmp(gpuDynInst, extData.DATA + 2);
-
-        data.read();
-        cmp.read();
-
-        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (gpuDynInst->exec_mask[lane]) {
-                (reinterpret_cast<VecElemU64*>(gpuDynInst->x_data))[lane]
-                    = data[lane];
-                (reinterpret_cast<VecElemU64*>(gpuDynInst->a_data))[lane]
-                    = cmp[lane];
-            }
-        }
-
-        issueRequestHelper(gpuDynInst);
+        atomicExecute<ConstVecOperandU64, VecElemU64, 2>(gpuDynInst);
     } // execute
 
     void
@@ -45524,18 +45363,7 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_CMPSWAP_X2::completeAcc(GPUDynInstPtr gpuDynInst)
     {
-        if (isAtomicRet()) {
-            VecOperandU64 vdst(gpuDynInst, extData.VDST);
-
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (gpuDynInst->exec_mask[lane]) {
-                    vdst[lane] = (reinterpret_cast<VecElemU64*>(
-                        gpuDynInst->d_data))[lane];
-                }
-            }
-
-            vdst.write();
-        }
+        atomicComplete<VecOperandU64, VecElemU64>(gpuDynInst);
     } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_ADD_X2 class methods ---
 
@@ -45564,34 +45392,7 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_ADD_X2::execute(GPUDynInstPtr gpuDynInst)
     {
-        Wavefront *wf = gpuDynInst->wavefront();
-
-        if (gpuDynInst->exec_mask.none()) {
-            wf->decVMemInstsIssued();
-            if (isFlat()) {
-                wf->decLGKMInstsIssued();
-            }
-            return;
-        }
-
-        gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->latency.init(gpuDynInst->computeUnit());
-        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
-
-        ConstVecOperandU64 data(gpuDynInst, extData.DATA);
-
-        data.read();
-
-        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (gpuDynInst->exec_mask[lane]) {
-                (reinterpret_cast<VecElemU64*>(gpuDynInst->a_data))[lane]
-                    = data[lane];
-            }
-        }
-
-        issueRequestHelper(gpuDynInst);
+        atomicExecute<ConstVecOperandU64, VecElemU64>(gpuDynInst);
     } // execute
 
     void
@@ -45603,19 +45404,7 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_ADD_X2::completeAcc(GPUDynInstPtr gpuDynInst)
     {
-        if (isAtomicRet()) {
-            VecOperandU64 vdst(gpuDynInst, extData.VDST);
-
-
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (gpuDynInst->exec_mask[lane]) {
-                    vdst[lane] = (reinterpret_cast<VecElemU64*>(
-                        gpuDynInst->d_data))[lane];
-                }
-            }
-
-            vdst.write();
-        }
+        atomicComplete<VecOperandU64, VecElemU64>(gpuDynInst);
     } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_SUB_X2 class methods ---
 
@@ -45644,8 +45433,20 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_SUB_X2::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        atomicExecute<ConstVecOperandU64, VecElemU64>(gpuDynInst);
     } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_SUB_X2::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU64>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_SUB_X2::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandU64, VecElemU64>(gpuDynInst);
+    } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_SMIN_X2 class methods ---
 
     Inst_FLAT__FLAT_ATOMIC_SMIN_X2::Inst_FLAT__FLAT_ATOMIC_SMIN_X2(
@@ -45673,8 +45474,20 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_SMIN_X2::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        atomicExecute<ConstVecOperandI64, VecElemI64>(gpuDynInst);
     } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_SMIN_X2::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemI64>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_SMIN_X2::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandI64, VecElemI64>(gpuDynInst);
+    } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_UMIN_X2 class methods ---
 
     Inst_FLAT__FLAT_ATOMIC_UMIN_X2::Inst_FLAT__FLAT_ATOMIC_UMIN_X2(
@@ -45702,8 +45515,20 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_UMIN_X2::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        atomicExecute<ConstVecOperandU64, VecElemU64>(gpuDynInst);
     } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_UMIN_X2::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU64>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_UMIN_X2::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandU64, VecElemU64>(gpuDynInst);
+    } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_SMAX_X2 class methods ---
 
     Inst_FLAT__FLAT_ATOMIC_SMAX_X2::Inst_FLAT__FLAT_ATOMIC_SMAX_X2(
@@ -45731,8 +45556,20 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_SMAX_X2::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        atomicExecute<ConstVecOperandI64, VecElemI64>(gpuDynInst);
     } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_SMAX_X2::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemI64>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_SMAX_X2::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandI64, VecElemI64>(gpuDynInst);
+    } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_UMAX_X2 class methods ---
 
     Inst_FLAT__FLAT_ATOMIC_UMAX_X2::Inst_FLAT__FLAT_ATOMIC_UMAX_X2(
@@ -45760,8 +45597,20 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_UMAX_X2::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        atomicExecute<ConstVecOperandU64, VecElemU64>(gpuDynInst);
     } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_UMAX_X2::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU64>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_UMAX_X2::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandU64, VecElemU64>(gpuDynInst);
+    } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_AND_X2 class methods ---
 
     Inst_FLAT__FLAT_ATOMIC_AND_X2::Inst_FLAT__FLAT_ATOMIC_AND_X2(
@@ -45789,8 +45638,20 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_AND_X2::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        atomicExecute<ConstVecOperandU64, VecElemU64>(gpuDynInst);
     } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_AND_X2::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU64>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_AND_X2::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandU64, VecElemU64>(gpuDynInst);
+    } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_OR_X2 class methods ---
 
     Inst_FLAT__FLAT_ATOMIC_OR_X2::Inst_FLAT__FLAT_ATOMIC_OR_X2(
@@ -45818,8 +45679,20 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_OR_X2::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        atomicExecute<ConstVecOperandU64, VecElemU64>(gpuDynInst);
     } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_OR_X2::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU64>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_OR_X2::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandU64, VecElemU64>(gpuDynInst);
+    } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_XOR_X2 class methods ---
 
     Inst_FLAT__FLAT_ATOMIC_XOR_X2::Inst_FLAT__FLAT_ATOMIC_XOR_X2(
@@ -45847,8 +45720,20 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_XOR_X2::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        atomicExecute<ConstVecOperandU64, VecElemU64>(gpuDynInst);
     } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_XOR_X2::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU64>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_XOR_X2::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandU64, VecElemU64>(gpuDynInst);
+    } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_INC_X2 class methods ---
 
     Inst_FLAT__FLAT_ATOMIC_INC_X2::Inst_FLAT__FLAT_ATOMIC_INC_X2(
@@ -45876,8 +45761,20 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_INC_X2::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        atomicExecute<ConstVecOperandU64, VecElemU64>(gpuDynInst);
     } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_INC_X2::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU64>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_INC_X2::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandU64, VecElemU64>(gpuDynInst);
+    } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_DEC_X2 class methods ---
 
     Inst_FLAT__FLAT_ATOMIC_DEC_X2::Inst_FLAT__FLAT_ATOMIC_DEC_X2(
@@ -45906,8 +45803,198 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_DEC_X2::execute(GPUDynInstPtr gpuDynInst)
     {
+        atomicExecute<ConstVecOperandU64, VecElemU64>(gpuDynInst);
+    } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_DEC_X2::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU64>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_DEC_X2::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandU64, VecElemU64>(gpuDynInst);
+    } // completeAcc
+    // --- Inst_FLAT__FLAT_ATOMIC_ADD_F32 class methods ---
+
+    Inst_FLAT__FLAT_ATOMIC_ADD_F32::Inst_FLAT__FLAT_ATOMIC_ADD_F32(
+        InFmt_FLAT *iFmt)
+        : Inst_FLAT(iFmt, "flat_atomic_add_f32")
+    {
+        setFlag(AtomicAdd);
+        if (instData.GLC) {
+            setFlag(AtomicReturn);
+        } else {
+            setFlag(AtomicNoReturn);
+        }
+        setFlag(MemoryRef);
+    } // Inst_FLAT__FLAT_ATOMIC_ADD_F32
+
+    Inst_FLAT__FLAT_ATOMIC_ADD_F32::~Inst_FLAT__FLAT_ATOMIC_ADD_F32()
+    {
+    } // ~Inst_FLAT__FLAT_ATOMIC_ADD_F32
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_ADD_F32::execute(GPUDynInstPtr gpuDynInst)
+    {
+        atomicExecute<ConstVecOperandF32, VecElemF32>(gpuDynInst);
+    } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_ADD_F32::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemF32>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_ADD_F32::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandF32, VecElemF32>(gpuDynInst);
+    } // completeAcc
+    // --- Inst_FLAT__FLAT_ATOMIC_PK_ADD_F16 class methods ---
+
+    Inst_FLAT__FLAT_ATOMIC_PK_ADD_F16::Inst_FLAT__FLAT_ATOMIC_PK_ADD_F16(
+        InFmt_FLAT *iFmt)
+        : Inst_FLAT(iFmt, "flat_atomic_pk_add_f16")
+    {
+        setFlag(AtomicAdd);
+        if (instData.GLC) {
+            setFlag(AtomicReturn);
+        } else {
+            setFlag(AtomicNoReturn);
+        }
+        setFlag(MemoryRef);
+    } // Inst_FLAT__FLAT_ATOMIC_PK_ADD_F16
+
+    Inst_FLAT__FLAT_ATOMIC_PK_ADD_F16::~Inst_FLAT__FLAT_ATOMIC_PK_ADD_F16()
+    {
+    } // ~Inst_FLAT__FLAT_ATOMIC_PK_ADD_F16
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_PK_ADD_F16::execute(GPUDynInstPtr gpuDynInst)
+    {
         panicUnimplemented();
     } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_PK_ADD_F16::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_PK_ADD_F16::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+    } // completeAcc
+    // --- Inst_FLAT__FLAT_ATOMIC_ADD_F64 class methods ---
+
+    Inst_FLAT__FLAT_ATOMIC_ADD_F64::Inst_FLAT__FLAT_ATOMIC_ADD_F64(
+        InFmt_FLAT *iFmt)
+        : Inst_FLAT(iFmt, "flat_atomic_add_f64")
+    {
+        setFlag(AtomicAdd);
+        if (instData.GLC) {
+            setFlag(AtomicReturn);
+        } else {
+            setFlag(AtomicNoReturn);
+        }
+        setFlag(MemoryRef);
+    } // Inst_FLAT__FLAT_ATOMIC_ADD_F64
+
+    Inst_FLAT__FLAT_ATOMIC_ADD_F64::~Inst_FLAT__FLAT_ATOMIC_ADD_F64()
+    {
+    } // ~Inst_FLAT__FLAT_ATOMIC_ADD_F64
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_ADD_F64::execute(GPUDynInstPtr gpuDynInst)
+    {
+        atomicExecute<ConstVecOperandF64, VecElemF64>(gpuDynInst);
+    } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_ADD_F64::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemF64>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_ADD_F64::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandF64, VecElemF64>(gpuDynInst);
+    } // completeAcc
+    // --- Inst_FLAT__FLAT_ATOMIC_MIN_F64 class methods ---
+
+    Inst_FLAT__FLAT_ATOMIC_MIN_F64::Inst_FLAT__FLAT_ATOMIC_MIN_F64(
+        InFmt_FLAT *iFmt)
+        : Inst_FLAT(iFmt, "flat_atomic_min_f64")
+    {
+        setFlag(AtomicMin);
+        if (instData.GLC) {
+            setFlag(AtomicReturn);
+        } else {
+            setFlag(AtomicNoReturn);
+        }
+        setFlag(MemoryRef);
+    } // Inst_FLAT__FLAT_ATOMIC_MIN_F64
+
+    Inst_FLAT__FLAT_ATOMIC_MIN_F64::~Inst_FLAT__FLAT_ATOMIC_MIN_F64()
+    {
+    } // ~Inst_FLAT__FLAT_ATOMIC_MIN_F64
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_MIN_F64::execute(GPUDynInstPtr gpuDynInst)
+    {
+        atomicExecute<ConstVecOperandF64, VecElemF64>(gpuDynInst);
+    } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_MIN_F64::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemF64>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_MIN_F64::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandF64, VecElemF64>(gpuDynInst);
+    } // completeAcc
+    // --- Inst_FLAT__FLAT_ATOMIC_MAX_F64 class methods ---
+
+    Inst_FLAT__FLAT_ATOMIC_MAX_F64::Inst_FLAT__FLAT_ATOMIC_MAX_F64(
+        InFmt_FLAT *iFmt)
+        : Inst_FLAT(iFmt, "flat_atomic_max_f64")
+    {
+        setFlag(AtomicMax);
+        if (instData.GLC) {
+            setFlag(AtomicReturn);
+        } else {
+            setFlag(AtomicNoReturn);
+        }
+        setFlag(MemoryRef);
+    } // Inst_FLAT__FLAT_ATOMIC_MAX_F64
+
+    Inst_FLAT__FLAT_ATOMIC_MAX_F64::~Inst_FLAT__FLAT_ATOMIC_MAX_F64()
+    {
+    } // ~Inst_FLAT__FLAT_ATOMIC_MAX_F64
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_MAX_F64::execute(GPUDynInstPtr gpuDynInst)
+    {
+        atomicExecute<ConstVecOperandF64, VecElemF64>(gpuDynInst);
+    } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_MAX_F64::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemF64>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_MAX_F64::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandF64, VecElemF64>(gpuDynInst);
+    } // completeAcc
     // --- Inst_VOP3P__V_PK_MOV_B32 class methods ---
 
     Inst_VOP3P__V_PK_MOV_B32::Inst_VOP3P__V_PK_MOV_B32(InFmt_VOP3P *iFmt)

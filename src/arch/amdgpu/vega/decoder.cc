@@ -1679,9 +1679,9 @@ namespace VegaISA
         &Decoder::decode_OP_FLAT__FLAT_ATOMIC_DEC,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
+        &Decoder::decode_OP_FLAT__FLAT_ATOMIC_ADD_F64,
+        &Decoder::decode_OP_FLAT__FLAT_ATOMIC_MIN_F64,
+        &Decoder::decode_OP_FLAT__FLAT_ATOMIC_MAX_F64,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
@@ -1808,11 +1808,11 @@ namespace VegaISA
         &Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_XOR,
         &Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_INC,
         &Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_DEC,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_ADD_F32,
         &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_ADD_F64,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_MIN_F64,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_MAX_F64,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
@@ -8442,6 +8442,24 @@ namespace VegaISA
     } // decode_OP_FLAT__FLAT_ATOMIC_DEC
 
     GPUStaticInst*
+    Decoder::decode_OP_FLAT__FLAT_ATOMIC_ADD_F64(MachInst iFmt)
+    {
+        return new Inst_FLAT__FLAT_ATOMIC_ADD_F64(&iFmt->iFmt_FLAT);
+    } // decode_OP_FLAT__FLAT_ATOMIC_ADD_F64
+
+    GPUStaticInst*
+    Decoder::decode_OP_FLAT__FLAT_ATOMIC_MIN_F64(MachInst iFmt)
+    {
+        return new Inst_FLAT__FLAT_ATOMIC_MIN_F64(&iFmt->iFmt_FLAT);
+    } // decode_OP_FLAT__FLAT_ATOMIC_MIN_F64
+
+    GPUStaticInst*
+    Decoder::decode_OP_FLAT__FLAT_ATOMIC_MAX_F64(MachInst iFmt)
+    {
+        return new Inst_FLAT__FLAT_ATOMIC_MAX_F64(&iFmt->iFmt_FLAT);
+    } // decode_OP_FLAT__FLAT_ATOMIC_MAX_F64
+
+    GPUStaticInst*
     Decoder::decode_OP_FLAT__FLAT_ATOMIC_SWAP_X2(MachInst iFmt)
     {
         return new Inst_FLAT__FLAT_ATOMIC_SWAP_X2(&iFmt->iFmt_FLAT);
@@ -8736,6 +8754,40 @@ namespace VegaISA
     Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_DEC(MachInst iFmt)
     {
         return new Inst_FLAT__FLAT_ATOMIC_DEC(&iFmt->iFmt_FLAT);
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_ADD_F32(MachInst iFmt)
+    {
+        // Note: There is no flat_atomic_add_f32 as of MI200. However, gem5
+        // impelements all global and scratch instructions as Inst_FLAT.
+        return new Inst_FLAT__FLAT_ATOMIC_ADD_F32(&iFmt->iFmt_FLAT);
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_PK_ADD_F16(MachInst iFmt)
+    {
+        // Note: There is no flat_atomic_pk_add_f16 as of MI200. However, gem5
+        // impelements all global and scratch instructions as Inst_FLAT.
+        return new Inst_FLAT__FLAT_ATOMIC_PK_ADD_F16(&iFmt->iFmt_FLAT);
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_ADD_F64(MachInst iFmt)
+    {
+        return new Inst_FLAT__FLAT_ATOMIC_ADD_F64(&iFmt->iFmt_FLAT);
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_MIN_F64(MachInst iFmt)
+    {
+        return new Inst_FLAT__FLAT_ATOMIC_MIN_F64(&iFmt->iFmt_FLAT);
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_MAX_F64(MachInst iFmt)
+    {
+        return new Inst_FLAT__FLAT_ATOMIC_MAX_F64(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*

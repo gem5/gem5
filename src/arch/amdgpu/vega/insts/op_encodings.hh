@@ -1256,6 +1256,77 @@ namespace VegaISA
             }
         }
 
+        // Execute for atomics is identical besides the flag set in the
+        // constructor, except cmpswap. For cmpswap, the offset to the "cmp"
+        // register is needed. For all other operations this offset is zero
+        // and implies the atomic is not a cmpswap.
+        // RegT defines the type of GPU register (e.g., ConstVecOperandU32)
+        // LaneT defines the type of the register elements (e.g., VecElemU32)
+        template<typename RegT, typename LaneT, int CmpRegOffset = 0>
+        void
+        atomicExecute(GPUDynInstPtr gpuDynInst)
+        {
+            Wavefront *wf = gpuDynInst->wavefront();
+
+            if (gpuDynInst->exec_mask.none()) {
+                wf->decVMemInstsIssued();
+                if (isFlat()) {
+                    wf->decLGKMInstsIssued();
+                }
+                return;
+            }
+
+            gpuDynInst->execUnitId = wf->execUnitId;
+            gpuDynInst->latency.init(gpuDynInst->computeUnit());
+            gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
+
+            RegT data(gpuDynInst, extData.DATA);
+            RegT cmp(gpuDynInst, extData.DATA + CmpRegOffset);
+
+            data.read();
+            if constexpr (CmpRegOffset) {
+                cmp.read();
+            }
+
+            calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
+
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (gpuDynInst->exec_mask[lane]) {
+                    if constexpr (CmpRegOffset) {
+                        (reinterpret_cast<VecElemU32*>(
+                            gpuDynInst->x_data))[lane] = data[lane];
+                        (reinterpret_cast<VecElemU32*>(
+                            gpuDynInst->a_data))[lane] = cmp[lane];
+                    } else {
+                        (reinterpret_cast<LaneT*>(gpuDynInst->a_data))[lane]
+                            = data[lane];
+                    }
+                }
+            }
+
+            issueRequestHelper(gpuDynInst);
+        }
+
+        // RegT defines the type of GPU register (e.g., ConstVecOperandU32)
+        // LaneT defines the type of the register elements (e.g., VecElemU32)
+        template<typename RegT, typename LaneT>
+        void
+        atomicComplete(GPUDynInstPtr gpuDynInst)
+        {
+            if (isAtomicRet()) {
+                RegT vdst(gpuDynInst, extData.VDST);
+
+                for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                    if (gpuDynInst->exec_mask[lane]) {
+                        vdst[lane] = (reinterpret_cast<LaneT*>(
+                            gpuDynInst->d_data))[lane];
+                    }
+                }
+
+                vdst.write();
+            }
+        }
+
         bool
         vgprIsOffset()
         {
