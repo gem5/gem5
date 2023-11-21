@@ -75,8 +75,6 @@ requires(
 
 # Following are the list of benchmark programs for npb.
 
-benchmark_choices = ["bt", "cg", "ep", "ft", "is", "lu", "mg", "sp"]
-
 # We are restricting classes of NPB to A, B and C as the other classes (D and
 # F) require main memory size of more than 3 GB. The X86Board is currently
 # limited to 3 GB of memory. This limitation is explained later in line 136.
@@ -85,12 +83,11 @@ benchmark_choices = ["bt", "cg", "ep", "ft", "is", "lu", "mg", "sp"]
 # works with class D in the current configuration. More information on the
 # memory footprint for NPB is available at https://arxiv.org/abs/2010.13216
 
-size_choices = ["A", "B", "C"]
-
 parser = argparse.ArgumentParser(
     description="An example configuration script to run the npb benchmarks."
 )
 
+npb_suite = obtain_resource("npb-benchmark-suite")
 # The only positional argument accepted is the benchmark name in this script.
 
 parser.add_argument(
@@ -98,15 +95,7 @@ parser.add_argument(
     type=str,
     required=True,
     help="Input the benchmark program to execute.",
-    choices=benchmark_choices,
-)
-
-parser.add_argument(
-    "--size",
-    type=str,
-    required=True,
-    help="Input the class of the program to simulate.",
-    choices=size_choices,
+    choices=[workload.get_id() for workload in npb_suite],
 )
 
 parser.add_argument(
@@ -118,11 +107,12 @@ parser.add_argument(
 
 args = parser.parse_args()
 
+
 # The simulation may fail in the case of `mg` with class C as it uses 3.3 GB
-# of memory (more information is availabe at https://arxiv.org/abs/2010.13216).
+# of memory (more information is available at https://arxiv.org/abs/2010.13216).
 # We warn the user here.
 
-if args.benchmark == "mg" and args.size == "C":
+if args.benchmark == "npb-mg-c":
     warn(
         "mg.C uses 3.3 GB of memory. Currently we are simulating 3 GB\
     of main memory in the system."
@@ -130,7 +120,7 @@ if args.benchmark == "mg" and args.size == "C":
 
 # The simulation will fail in the case of `ft` with class C. We warn the user
 # here.
-elif args.benchmark == "ft" and args.size == "C":
+elif args.benchmark == "npb-ft-c":
     warn(
         "There is not enough memory for ft.C. Currently we are\
     simulating 3 GB of main memory in the system."
@@ -193,23 +183,7 @@ board = X86Board(
 
 # Also, we sleep the system for some time so that the output is printed
 # properly.
-
-command = (
-    f"/home/gem5/NPB3.3-OMP/bin/{args.benchmark}.{args.size}.x;"
-    + "sleep 5;"
-    + "m5 exit;"
-)
-
-board.set_kernel_disk_workload(
-    # The x86 linux kernel will be automatically downloaded to the
-    # `~/.cache/gem5` directory if not already present.
-    # npb benchamarks was tested with kernel version 4.19.83
-    kernel=obtain_resource("x86-linux-kernel-4.19.83"),
-    # The x86-npb image will be automatically downloaded to the
-    # `~/.cache/gem5` directory if not already present.
-    disk_image=obtain_resource("x86-npb"),
-    readfile_contents=command,
-)
+board.set_workload(obtain_resource(args.benchmark))
 
 
 # The first exit_event ends with a `workbegin` cause. This means that the
