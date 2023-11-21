@@ -938,7 +938,7 @@ machine(MachineType:TCC, "TCC Cache")
       st_stallAndWaitRequest;
   }
 
-  transition({I, IV, V}, AtomicWait) {
+  transition({I, IV, V, WI}, AtomicWait) {
     // don't profile as hit or miss since it will be tried again
     /*
       By putting the stalled requests in a buffer, we reduce resource contention
@@ -1273,6 +1273,7 @@ machine(MachineType:TCC, "TCC Cache")
     wardb_writeAtomicResponseDirtyBytes;
     pa_performAtomic;
     baplr_sendBypassedAtomicPerformedLocallyResponse;
+    dt_deallocateTBE;
     pr_popResponseQueue;
   }
 
