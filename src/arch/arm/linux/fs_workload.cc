@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2016, 2020 ARM Limited
+ * Copyright (c) 2010-2013, 2016, 2020, 2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -228,21 +228,22 @@ FsLinux::startup()
         }
     }
 
-    const std::string dmesg_output = name() + ".dmesg";
-    if (params().panic_on_panic) {
-        kernelPanic = addKernelFuncEventOrPanic<linux::KernelPanic>(
-            "panic", "Kernel panic in simulated kernel", dmesg_output);
-    } else {
-        kernelPanic = addKernelFuncEventOrPanic<linux::DmesgDump>(
-            "panic", "Kernel panic in simulated kernel", dmesg_output);
+    const std::string dmesg_output_fname = name() + ".dmesg";
+
+    kernelPanic = addKernelFuncEvent<linux::PanicOrOopsEvent>(
+        "panic", "Kernel panic in simulated kernel",
+        dmesg_output_fname, params().on_panic);
+    if (kernelPanic == nullptr) {
+        warn("Could not add Kernel Panic event handler. "
+             "`panic` symbol not found.");
     }
 
-    if (params().panic_on_oops) {
-        kernelOops = addKernelFuncEventOrPanic<linux::KernelPanic>(
-            "oops_exit", "Kernel oops in guest", dmesg_output);
-    } else {
-        kernelOops = addKernelFuncEventOrPanic<linux::DmesgDump>(
-            "oops_exit", "Kernel oops in guest", dmesg_output);
+    kernelOops = addKernelFuncEvent<linux::PanicOrOopsEvent>(
+        "oops_exit", "Kernel oops in guest",
+        dmesg_output_fname, params().on_oops);
+    if (kernelOops == nullptr) {
+        warn("Could not add Kernel Oops event handler. "
+             "`oops_exit` symbol not found.");
     }
 
     // With ARM udelay() is #defined to __udelay
