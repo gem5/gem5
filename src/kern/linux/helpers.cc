@@ -37,7 +37,10 @@
 
 #include "kern/linux/helpers.hh"
 
+#include <regex>
+#include <string>
 #include <type_traits>
+#include <vector>
 
 #include "base/compiler.hh"
 #include "base/loader/object_file.hh"
@@ -583,6 +586,103 @@ dumpDmesgImpl(ThreadContext *tc, std::ostream &os)
                 os, proxy, rb, tail_offset, invalid_metadata_offset, bo);
         ++count;
     }
+}
+
+/** Extract all null-terminated printable strings from a buffer and
+ * return them as a vector.
+ *
+ */
+std::vector<std::string>
+extract_printable_strings(const std::vector<uint8_t> buffer)
+{
+    std::vector<std::string> results;
+    std::string result;
+    bool reading_printable = false;
+    for (const uint8_t byte: buffer) {
+        if (std::isprint(byte)) {
+            result += static_cast<char>(byte);
+            reading_printable = true;
+        } else if (reading_printable) {
+            if (byte == '\0') {
+                results.push_back(result);
+            }
+            result.clear();
+            reading_printable = false;
+        }
+    }
+    return results;
+}
+
+/** Try to extract the Linux Kernel Version.
+ *
+ * This function attempts to find the Kernel version by searching the
+ * `uts_namespace` struct at the exported symbol `init_uts_ns`. This
+ * structure contains the Kernel version as a string, and is
+ * referenced by `procfs` to return the Kernel version in a running
+ * system.
+ *
+ * Different versions of the Kernel use different layouts for this
+ * structure, and the top level structure is marked as
+ * `__randomize_layout`, so the exact layout in memory cannot be
+ * relied on. Because of this, `extract_kernel_version` takes the
+ * approach of searching the memory holding the structure for
+ * printable strings, and parsing the version from those strings.
+ *
+ * If a likely match is found, the version is packed into a uint32_t
+ * in the standard format used by the Linux kernel (which allows
+ * numerical comparison of version numbers) and returned.
+ *
+ * If no likely match is found, 0x0 is returned to indicate an error.
+ *
+ */
+[[maybe_unused]]
+uint32_t
+extract_kernel_version(ThreadContext* tc) {
+    System *system = tc->getSystemPtr();
+    const auto &symtab = system->workload->symtab(tc);
+    auto symtab_end_it = symtab.end();
+
+    auto symbol = symtab.find("init_uts_ns");
+    if (symbol == symtab_end_it) {
+        return 0x0;
+    }
+
+    // Use size of `init_uts_ns` in Linux v5.18.0 as a default.
+    // (e.g. for upgraded checkpoints.)
+    const size_t INIT_UTS_NS_SIZE_DEFAULT = 432;
+    const size_t BUFFER_SIZE =
+        symbol->sizeOrDefault(INIT_UTS_NS_SIZE_DEFAULT);
+
+    TranslatingPortProxy proxy(tc);
+    std::vector<uint8_t> buffer(BUFFER_SIZE);
+    proxy.readBlob(
+        symbol->address(), buffer.data(), buffer.size() * sizeof(uint8_t));
+    auto strings = extract_printable_strings(buffer);
+
+    const std::regex version_re {"^(\\d+)\\.(\\d+)\\.(\\d)+$"};
+    std::smatch match;
+    for (const auto& string: strings) {
+        if (std::regex_search(string, match, version_re)) {
+            try {
+                int major = std::stoi(match[1]);
+                int minor = std::stoi(match[2]);
+                int point = std::stoi(match[3]);
+                return (
+                    (major & 0xFF) << 16
+                    | (minor & 0xFF) << 8
+                    | std::min(point, 255));
+            }
+            catch (const std::invalid_argument &) {
+                // This shouldn't be possible if the regex matched.
+                continue;
+            }
+            catch (const std::out_of_range &) {
+                continue;
+            }
+        }
+    }
+
+    return 0x0;
 }
 
 /** Dump the kernel Dmesg ringbuffer for Linux versions post-v5.10.
