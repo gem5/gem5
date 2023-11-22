@@ -266,6 +266,41 @@ struct GEM5_PACKED DmesgInfoRecord
     }
 };
 
+/** Metadata struct for Linux pre-v5.18.0
+ *
+ */
+template<typename AtomicVarType>
+struct Metadata_Pre_v5_18_0
+{
+    using atomic_var_t = AtomicVarType;
+    using guest_ptr_t =
+        typename std::make_unsigned_t<atomic_var_t>;
+    unsigned int mask_bits;
+    guest_ptr_t metadata_ring_ptr;
+    guest_ptr_t info_ring_ptr;
+    atomic_var_t unused1;
+    atomic_var_t unused2;
+};
+
+
+/** Metadata struct for Linux post-v5.18.0
+ *
+ */
+template<typename AtomicVarType>
+struct Metadata_Post_v5_18_0
+{
+    using atomic_var_t = AtomicVarType;
+    using guest_ptr_t =
+        typename std::make_unsigned_t<atomic_var_t>;
+    unsigned int mask_bits;
+    guest_ptr_t metadata_ring_ptr;
+    guest_ptr_t info_ring_ptr;
+    atomic_var_t unused1;
+    atomic_var_t unused2;
+    atomic_var_t unused3;
+};
+
+
 /** Top-level ringbuffer record for the Linux dmesg ringbuffer, post-v5.10.
  *
  *  Struct data members are compatible with the equivalent Linux data
@@ -276,7 +311,7 @@ struct GEM5_PACKED DmesgInfoRecord
  *  the gem5 world, and reading/generating appropriate masks.
  *
  */
-template<typename AtomicVarType>
+template<typename AtomicVarType, typename MetadataStructType>
 struct GEM5_PACKED DmesgRingbuffer
 {
     static_assert(
@@ -291,14 +326,9 @@ struct GEM5_PACKED DmesgRingbuffer
     using metadata_record_t = DmesgMetadataRecord<atomic_var_t>;
 
     // Struct data members
-    struct
-    {
-        unsigned int mask_bits;
-        guest_ptr_t metadata_ring_ptr;
-        guest_ptr_t info_ring_ptr;
-        atomic_var_t unused1;
-        atomic_var_t unused2;
-    } metadata;
+
+    // Metadata struct size depends on the Linux Kernel Version
+    MetadataStructType metadata;
     struct
     {
         unsigned int mask_bits;
@@ -391,9 +421,16 @@ struct GEM5_PACKED DmesgRingbuffer
     }
 };
 
-// Aliases for the two types of Ringbuffer that could be used.
-using Linux64_Ringbuffer = DmesgRingbuffer<int64_t>;
-using Linux32_Ringbuffer = DmesgRingbuffer<int32_t>;
+// Aliases for the types of Ringbuffer that could be used.
+using Linux64_Ringbuffer_Pre_v5_18_0 =
+    DmesgRingbuffer<int64_t, Metadata_Pre_v5_18_0<int64_t>>;
+using Linux32_Ringbuffer_Pre_v5_18_0 =
+    DmesgRingbuffer<int32_t, Metadata_Pre_v5_18_0<int32_t>>;
+
+using Linux64_Ringbuffer_Post_v5_18_0 =
+    DmesgRingbuffer<int64_t, Metadata_Post_v5_18_0<int64_t>>;
+using Linux32_Ringbuffer_Post_v5_18_0 =
+    DmesgRingbuffer<int32_t, Metadata_Post_v5_18_0<int32_t>>;
 
 /** Print the record at the specified offset into the data ringbuffer,
  *  and return the offset of the next entry in the data ringbuffer,
@@ -635,7 +672,6 @@ extract_printable_strings(const std::vector<uint8_t> buffer)
  * If no likely match is found, 0x0 is returned to indicate an error.
  *
  */
-[[maybe_unused]]
 uint32_t
 extract_kernel_version(ThreadContext* tc) {
     System *system = tc->getSystemPtr();
@@ -695,11 +731,26 @@ dumpDmesg(ThreadContext *tc, std::ostream &os)
 {
     System *system = tc->getSystemPtr();
     const bool os_is_64_bit = loader::archIs64Bit(system->workload->getArch());
+    const uint32_t kernel_version = extract_kernel_version(tc);
+    const uint32_t KERNEL_5_18_0 = 0x00051200;
 
-    if (os_is_64_bit) {
-        dumpDmesgImpl<Linux64_Ringbuffer>(tc, os);
+    if (kernel_version == 0x0) {
+        warn("Could not determine Linux Kernel version. "
+             "Assuming post-v5.18.0\n");
+    }
+
+    if (kernel_version == 0x0 || kernel_version >= KERNEL_5_18_0) {
+        if (os_is_64_bit) {
+            dumpDmesgImpl<Linux64_Ringbuffer_Post_v5_18_0>(tc, os);
+        } else {
+            dumpDmesgImpl<Linux32_Ringbuffer_Post_v5_18_0>(tc, os);
+        }
     } else {
-        dumpDmesgImpl<Linux32_Ringbuffer>(tc, os);
+        if (os_is_64_bit) {
+            dumpDmesgImpl<Linux64_Ringbuffer_Pre_v5_18_0>(tc, os);
+        } else {
+            dumpDmesgImpl<Linux32_Ringbuffer_Pre_v5_18_0>(tc, os);
+        }
     }
 }
 
