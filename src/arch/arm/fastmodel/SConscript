@@ -48,11 +48,7 @@ from gem5_scons import Transform, warning, error
 import os.path
 
 if env['CONF']['USE_ARM_FASTMODEL']:
-    if env['CONF']['USE_SYSTEMC']:
-        env.TagImplies('arm fastmodel', 'arm isa')
-    else:
-        warning('ARM Fast Models require systemc support')
-        env['CONF']['USE_ARM_FASTMODEL'] = False
+    env.TagImplies('arm fastmodel', 'arm isa')
 
 
 systemc_home = Dir('#/src/systemc/ext/systemc_home')
