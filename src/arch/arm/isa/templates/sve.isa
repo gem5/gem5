@@ -515,6 +515,44 @@ class %(class_name)s : public %(base_class)s
 };
 }};
 
+
+
+def template SveTerIndexedOpDeclare {{
+  /*
+  For mla indexed version as it is not included in gem5 right now.
+  Using ternary ops but all ops are vector regs.
+  index is the imm here. (name can be changed)
+*/
+template <class _Element>
+class %(class_name)s : public %(base_class)s
+{
+  //static_assert(sizeof(_SElementA) == sizeof(_SElementB),
+  //             "Source elements must have the same size.");
+
+  private:
+    %(reg_idx_arr_decl)s;
+
+  protected:
+    typedef _Element Element;
+    typedef _Element TPElem;
+
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst, RegIndex _dest,
+                   RegIndex _op1, RegIndex _op2, uint16_t _imm) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _op2,_imm)
+    {
+        %(set_reg_idx_arr)s;
+        %(constructor)s;
+        esize = sizeof(Element);
+    }
+
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
+};
+}};
+
+
 def template SveMatMulOpDeclare {{
 template <typename DestElement,
           typename SrcElementA,
@@ -567,6 +605,8 @@ class %(class_name)s : public %(base_class)s
     Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
+
+
 
 def template SveReducOpDeclare {{
 template <class _Element>

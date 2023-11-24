@@ -435,6 +435,26 @@ SveTerPredOp::generateDisassembly(
     return ss.str();
 }
 
+
+std::string
+SveTerIndexedOp::generateDisassembly(
+        Addr pc, const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss, "", false);
+    printVecReg(ss, dest, true);
+    ccprintf(ss, ", ");
+    printVecReg(ss, op1, true);
+    ccprintf(ss, ", ");
+    printVecReg(ss, op2, true);
+    ccprintf(ss, "[");
+    ccprintf(ss, "%lu", imm);
+    ccprintf(ss, "]");
+    return ss.str();
+}
+
+
+
 std::string
 SveTerUnpredOp::generateDisassembly(
         Addr pc, const loader::SymbolTable *symtab) const
