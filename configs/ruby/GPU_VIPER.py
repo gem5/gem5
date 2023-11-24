@@ -338,6 +338,7 @@ class L3Cache(RubyCache):
         self.replacement_policy = TreePLRURP()
 
 
+# unused in GPU_VIPER; see git blame for discussion
 class L3Cntrl(L3Cache_Controller, CntrlBase):
     def create(self, options, ruby_system, system):
         self.version = self.versionCount()
