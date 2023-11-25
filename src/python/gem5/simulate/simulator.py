@@ -308,6 +308,8 @@ class Simulator:
                 "max instructions",
                 "exiting the simulation",
             )(),
+            ExitEvent.KERNEL_PANIC: exit_generator(),
+            ExitEvent.KERNEL_OOPS: exit_generator(),
         }
 
         if on_exit_event:
