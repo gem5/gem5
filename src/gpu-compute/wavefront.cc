@@ -126,7 +126,6 @@ Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
 
         if (task->sgprBitEnabled(en_bit)) {
             int physSgprIdx = 0;
-            uint32_t wiCount = 0;
             uint32_t firstWave = 0;
             int orderedAppendTerm = 0;
             int numWfsInWg = 0;
@@ -340,48 +339,6 @@ Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
                         computeUnit->cu_id, simdId,
                         wfSlotId, wfDynId, physSgprIdx,
                         task->privMemPerItem());
-                break;
-              case GridWorkgroupCountX:
-                physSgprIdx =
-                    computeUnit->registerManager->mapSgpr(this, regInitIdx);
-                wiCount = ((task->gridSize(0) +
-                           task->wgSize(0) - 1) /
-                           task->wgSize(0));
-                computeUnit->srf[simdId]->write(physSgprIdx, wiCount);
-
-                ++regInitIdx;
-                DPRINTF(GPUInitAbi, "CU%d: WF[%d][%d]: wave[%d] "
-                        "Setting num WG X: s[%d] = %x\n",
-                        computeUnit->cu_id, simdId,
-                        wfSlotId, wfDynId, physSgprIdx, wiCount);
-                break;
-              case GridWorkgroupCountY:
-                physSgprIdx =
-                    computeUnit->registerManager->mapSgpr(this, regInitIdx);
-                wiCount = ((task->gridSize(1) +
-                           task->wgSize(1) - 1) /
-                           task->wgSize(1));
-                computeUnit->srf[simdId]->write(physSgprIdx, wiCount);
-
-                ++regInitIdx;
-                DPRINTF(GPUInitAbi, "CU%d: WF[%d][%d]: wave[%d] "
-                        "Setting num WG Y: s[%d] = %x\n",
-                        computeUnit->cu_id, simdId,
-                        wfSlotId, wfDynId, physSgprIdx, wiCount);
-                break;
-              case GridWorkgroupCountZ:
-                physSgprIdx =
-                    computeUnit->registerManager->mapSgpr(this, regInitIdx);
-                wiCount = ((task->gridSize(2) +
-                           task->wgSize(2) - 1) /
-                           task->wgSize(2));
-                computeUnit->srf[simdId]->write(physSgprIdx, wiCount);
-
-                ++regInitIdx;
-                DPRINTF(GPUInitAbi, "CU%d: WF[%d][%d]: wave[%d] "
-                        "Setting num WG Z: s[%d] = %x\n",
-                        computeUnit->cu_id, simdId,
-                        wfSlotId, wfDynId, physSgprIdx, wiCount);
                 break;
               case WorkgroupIdX:
                 physSgprIdx =

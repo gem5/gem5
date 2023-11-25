@@ -418,12 +418,6 @@ class HSAQueueEntry
             akc->enable_sgpr_flat_scratch_init);
         initialSgprState.set(PrivateSegSize,
             akc->enable_sgpr_private_segment_size);
-        initialSgprState.set(GridWorkgroupCountX,
-            akc->enable_sgpr_grid_workgroup_count_x);
-        initialSgprState.set(GridWorkgroupCountY,
-            akc->enable_sgpr_grid_workgroup_count_y);
-        initialSgprState.set(GridWorkgroupCountZ,
-            akc->enable_sgpr_grid_workgroup_count_z);
         initialSgprState.set(WorkgroupIdX,
             akc->enable_sgpr_workgroup_id_x);
         initialSgprState.set(WorkgroupIdY,
@@ -433,7 +427,7 @@ class HSAQueueEntry
         initialSgprState.set(WorkgroupInfo,
             akc->enable_sgpr_workgroup_info);
         initialSgprState.set(PrivSegWaveByteOffset,
-            akc->enable_sgpr_private_segment_wave_byte_offset);
+            akc->enable_private_segment);
 
         /**
          * set the enable bits for the initial VGPR state. the
