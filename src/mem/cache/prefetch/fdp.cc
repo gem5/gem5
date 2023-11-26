@@ -96,6 +96,7 @@ FetchDirectedPrefetcher::notifyPfAddr(Addr addr, bool virtual_addr)
 
     if (!pkt) {
         DPRINTF(HWPrefetch, "Fail to create packet\n");
+        delete pkt;
         return;
     }
 
