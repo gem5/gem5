@@ -96,6 +96,7 @@ FetchDirectedPrefetcher::notifyPfAddr(Addr addr, bool virtual_addr)
 
     if (!pkt) {
         DPRINTF(HWPrefetch, "Fail to create packet\n");
+        delete pkt;
         return;
     }
 
@@ -154,6 +155,10 @@ FetchDirectedPrefetcher::createPrefetchPacket(Addr addr, bool virtual_addr)
         // The adddress is physical -> no translation needed.
         req = std::make_shared<Request>(
                 addr, blkSize, flags, requestorId);
+    }
+
+    if (req->isUncacheable()) {
+        return nullptr;
     }
 
     req->taskId(context_switch_task_id::Prefetcher);
