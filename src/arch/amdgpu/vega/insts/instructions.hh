@@ -43440,6 +43440,42 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3P__V_PK_MOV_B32
 
+    class Inst_VOP3P_MAI__V_MFMA_I32_16X16X16I8 : public Inst_VOP3P_MAI
+    {
+      public:
+        Inst_VOP3P_MAI__V_MFMA_I32_16X16X16I8(InFmt_VOP3P_MAI*);
+        ~Inst_VOP3P_MAI__V_MFMA_I32_16X16X16I8();
+
+        int
+        getNumOperands() override
+        {
+            return numDstRegOperands() + numSrcRegOperands();
+        } // getNumOperands
+
+        int numDstRegOperands() override { return 1; }
+        int numSrcRegOperands() override { return 3; }
+
+        int
+        getOperandSize(int opIdx) override
+        {
+            switch (opIdx) {
+              case 0: // src0 "A"
+                return 4;
+              case 1: // src1 "B"
+                return 4;
+              case 2: // src2 "C"
+                return 16;
+              case 3: // dst
+                return 16;
+              default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+            }
+        } // getOperandSize
+
+        void execute(GPUDynInstPtr) override;
+    };
+
     class Inst_VOP3P_MAI__V_MFMA_F64_16X16X4F64 : public Inst_VOP3P_MAI
     {
       public:
