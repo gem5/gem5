@@ -650,11 +650,15 @@ class SuiteResource(AbstractResource):
 
     def __init__(
         self,
-        workloads: Dict["WorkloadResource", Set[str]] = {},
+        workloads: Dict[Tuple[str, str], "WorkloadResource"] = {},
+        workloads_id_map: Dict[Tuple[str, str], Set[str]] = {},
         resource_version: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
         id: Optional[str] = None,
+        resource_directory: Optional[str] = None,
+        clients: Optional[List] = None,
+        gem5_version: Optional[str] = core.gem5Version,
         **kwargs,
     ) -> None:
         """
@@ -672,6 +676,10 @@ class SuiteResource(AbstractResource):
         self._description = description
         self._source = source
         self._resource_version = resource_version
+        self._workloads_id_map = workloads_id_map
+        self._resource_directory = resource_directory
+        self._clients = clients
+        self._gem5_version = gem5_version
 
         super().__init__(
             id=id,
@@ -680,13 +688,28 @@ class SuiteResource(AbstractResource):
             resource_version=resource_version,
         )
 
+    def _download_workloads(self) -> None:
+        """
+        Download all the workloads in the suite.
+        """
+        for workload_id_ver in self._workloads_id_map.keys():
+            if self._workloads[workload_id_ver] is None:
+                self._workloads[workload_id_ver] = obtain_resource(
+                    workload_id_ver[0],
+                    resource_version=workload_id_ver[1],
+                    resource_directory=self._resource_directory,
+                    clients=self._clients,
+                    gem5_version=self._gem5_version,
+                )
+
     def __iter__(self) -> Generator["WorkloadResource", None, None]:
         """
         Returns a generator that iterates over the workloads in the suite.
 
         :yields: A generator that iterates over the workloads in the suite.
         """
-        yield from self._workloads.keys()
+        self._download_workloads()
+        yield from self._workloads.values()
 
     def __len__(self):
         """
@@ -694,7 +717,7 @@ class SuiteResource(AbstractResource):
 
         :returns: The number of workloads in the suite.
         """
-        return len(self._workloads)
+        return len(self._workloads_id_map)
 
     def get_category_name(cls) -> str:
         return "SuiteResource"
@@ -715,11 +738,12 @@ class SuiteResource(AbstractResource):
                 f"Available input groups are {self.get_input_groups()}"
             )
 
+        filtered_workloads_id_map = {}
         filtered_workloads = {}
-
-        for workload, input_groups in self._workloads.items():
+        for workload, input_groups in self._workloads_id_map.items():
             if input_group in input_groups:
-                filtered_workloads[workload] = input_groups
+                filtered_workloads_id_map[workload] = input_groups
+                filtered_workloads[workload] = self._workloads[workload]
 
         return SuiteResource(
             local_path=self._local_path,
@@ -727,6 +751,10 @@ class SuiteResource(AbstractResource):
             description=self._description,
             source=self._source,
             workloads=filtered_workloads,
+            workloads_id_map=filtered_workloads_id_map,
+            resource_directory=self._resource_directory,
+            clients=self._clients,
+            gem5_version=self._gem5_version,
         )
 
     def get_input_groups(self) -> Set[str]:
@@ -737,7 +765,7 @@ class SuiteResource(AbstractResource):
         """
         return {
             input_group
-            for input_groups in self._workloads.values()
+            for input_groups in self._workloads_id_map.values()
             for input_group in input_groups
         }
 
@@ -943,17 +971,16 @@ def obtain_resource(
     if resources_category == "suite":
         workloads = resource_json["workloads"]
         workloads_obj = {}
+        workloads_id_map = {}
         for workload in workloads:
-            workloads_obj[
-                obtain_resource(
-                    workload["id"],
-                    resource_version=workload["resource_version"],
-                    resource_directory=resource_directory,
-                    clients=clients,
-                    gem5_version=gem5_version,
-                )
-            ] = set(workload["input_group"])
+            key = (workload["id"], workload["resource_version"])
+            workloads_obj[key] = None
+            workloads_id_map[key] = set(workload["input_group"])
         resource_json["workloads"] = workloads_obj
+        resource_json["workloads_id_map"] = workloads_id_map
+        resource_json["resource_directory"] = resource_directory
+        resource_json["clients"] = clients
+        resource_json["gem5_version"] = gem5_version
 
     if resources_category == "workload":
         # This parses the "resources" and "additional_params" fields of the
@@ -975,11 +1002,17 @@ def obtain_resource(
                     )
                     params[key] = obtain_resource(
                         value,
+                        resource_directory=resource_directory,
+                        clients=clients,
+                        gem5_version=gem5_version,
                     )
                 elif isinstance(value, dict):
                     params[key] = obtain_resource(
                         value["id"],
                         resource_version=value["resource_version"],
+                        resource_directory=resource_directory,
+                        clients=clients,
+                        gem5_version=gem5_version,
                     )
         if "additional_params" in resource_json:
             for key in resource_json["additional_params"].keys():
