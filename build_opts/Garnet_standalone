@@ -1,2 +1,2 @@
-USE_NULL_ISA = True
-PROTOCOL = 'Garnet_standalone'
+RUBY=y
+RUBY_PROTOCOL_GARNET_STANDALONE=y

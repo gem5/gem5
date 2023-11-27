@@ -1,4 +1,4 @@
-# Copyright 2020 Google, Inc.
+# Copyright 2023 Google LLC
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -23,11 +23,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
+config HAVE_CAPSTONE
+    def_bool $(HAVE_CAPSTONE)
 
-def add_isa_lists():
-    sticky_vars.AddVariables(
-        EnumVariable('TARGET_GPU_ISA', 'Target GPU ISA', 'gcn3',
-            sorted(set(main.Split('${ALL_GPU_ISAS}')))),
-        )
-AfterSConsopts(add_isa_lists)
+rsource "kvm/Kconfig"
