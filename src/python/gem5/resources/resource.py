@@ -662,8 +662,10 @@ class SuiteResource(AbstractResource):
         **kwargs,
     ) -> None:
         """
-        :param workloads: A list of `WorkloadResource` objects
-        created from the `_workloads` parameter.
+        :param workloads: A dictionary mapping the IDs and versions of the
+        workloads in the suite to the `WorkloadResource` objects.
+        :param workloads_id_map: A dictionary mapping the IDs and versions of
+        the workloads in the suite to the input groups they use.
         :param local_path: The path on the host system where this resource is
         located.
         :param description: Description describing this resource. Not a
@@ -721,6 +723,16 @@ class SuiteResource(AbstractResource):
 
     def get_category_name(cls) -> str:
         return "SuiteResource"
+
+    def get_workload_ids(self) -> List[Tuple[str, str]]:
+        """
+        Returns a list of tuples containing the IDs and versions of the
+        workloads in the suite.
+
+        :returns: A list of tuples containing the IDs and versions of the
+        workloads in the suite.
+        """
+        return list(self._workloads_id_map.keys())
 
     def with_input_group(self, input_group: str) -> "SuiteResource":
         """
