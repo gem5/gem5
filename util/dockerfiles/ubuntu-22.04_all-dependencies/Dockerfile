@@ -31,6 +31,6 @@ RUN apt -y update && apt -y upgrade && \
     apt -y install build-essential git m4 scons zlib1g zlib1g-dev \
     libprotobuf-dev protobuf-compiler libprotoc-dev libgoogle-perftools-dev \
     python3-dev doxygen libboost-all-dev libhdf5-serial-dev python3-pydot \
-    libpng-dev libelf-dev pkg-config pip python3-venv black python3-tk
+    libpng-dev libelf-dev pkg-config pip python3-venv black cmake python3-tk
 
 RUN pip install mypy pre-commit

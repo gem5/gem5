@@ -7020,7 +7020,7 @@ namespace VegaISA
     GPUStaticInst*
     Decoder::decode_OPU_VOP3__V_OR3_B32(MachInst iFmt)
     {
-        return new Inst_VOP3__V_OR_B32(&iFmt->iFmt_VOP3A);
+        return new Inst_VOP3__V_OR3_B32(&iFmt->iFmt_VOP3A);
     }
 
     GPUStaticInst*

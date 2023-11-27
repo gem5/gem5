@@ -32671,7 +32671,7 @@ namespace VegaISA
                 for (int i = 0; i < 4 ; ++i) {
                     VecElemU32 permuted_val = permute(selector, 0xFF
                         & ((VecElemU32)src2[lane] >> (8 * i)));
-                    vdst[lane] |= (permuted_val << i);
+                    vdst[lane] |= (permuted_val << (8 * i));
                 }
 
                 DPRINTF(VEGA, "v_perm result: 0x%08x\n", vdst[lane]);
