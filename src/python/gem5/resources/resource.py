@@ -965,22 +965,14 @@ def obtain_resource(
                 assert isinstance(key, str)
                 value = resource_json["resources"][key]
 
-                if isinstance(value, str):
-                    warn(
-                        "Deprecation warning: resources field in workloads has changed"
-                        "from { category: id } to"
-                        "{ category: { id: id, resource_version: resource_version } }"
-                        "The current develop branch of gem5 supports both formats"
-                        "but this will be removed in the 23.1 release."
-                    )
-                    params[key] = obtain_resource(
-                        value,
-                    )
-                elif isinstance(value, dict):
-                    params[key] = obtain_resource(
-                        value["id"],
-                        resource_version=value["resource_version"],
-                    )
+                assert isinstance(value, dict)
+                params[key] = obtain_resource(
+                    value["id"],
+                    resource_version=value["resource_version"],
+                    resource_directory=resource_directory,
+                    clients=clients,
+                    gem5_version=gem5_version,
+                )
         if "additional_params" in resource_json:
             for key in resource_json["additional_params"].keys():
                 assert isinstance(key, str)
