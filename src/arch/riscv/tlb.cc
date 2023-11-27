@@ -292,7 +292,7 @@ TLB::doTranslate(const RequestPtr &req, ThreadContext *tc,
             delayed = true;
             return fault;
         }
-        e = lookup(vaddr, satp.asid, mode, false);
+        e = lookup(vaddr, satp.asid, mode, true);
         assert(e != nullptr);
     }
 
