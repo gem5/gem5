@@ -58,6 +58,7 @@ namespace branch_prediction
 BPredUnit::BPredUnit(const Params &params)
     : SimObject(params),
       numThreads(params.numThreads),
+      requiresBTBHit(params.requiresBTBHit),
       instShiftAmt(params.instShiftAmt),
       predHist(numThreads),
       btb(params.btb),
@@ -169,7 +170,11 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
     /* -----------------------------------------------
      * Branch Target Buffer (BTB)
      * -----------------------------------------------
-     * The BTB will be checked for all branches.
+     * First check for a BTB hit. This will be done
+     * regardless of whether the RAS or the indirect
+     * predictor provide the final target. That is
+     * necessary as modern front-end does not have a
+     * chance to detect a branch without a BTB hit.
      */
     stats.BTBLookups++;
     const PCStateBase * btb_target = btb->lookup(tid, pc.instAddr(), brType);
@@ -187,6 +192,13 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
             tid, seqNum, hist->pc,  (hist->btbHit) ? "hit" : "miss");
 
 
+    // In a high performance CPU there is no other way than a BTB hit
+    // to know about a branch instruction. In that case consolidate
+    // indirect and RAS predictor only if there was a BTB it.
+    // For low end CPUs predecoding might be used to identify branches.
+    const bool branch_detected = (hist->btbHit || !requiresBTBHit);
+
+
     /* -----------------------------------------------
      * Return Address Stack (RAS)
      * -----------------------------------------------
@@ -196,7 +208,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
      * Return: pop the the return address from the
      *    top of the RAS.
      */
-    if (ras) {
+    if (ras && branch_detected) {
         if (inst->isCall()) {
             // In case of a call build the return address and
             // push it to the RAS.
@@ -239,7 +251,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
      * using the target from the BTB is the optimal
      * to save space in the indirect predictor itself.
      */
-    if (iPred && hist->predTaken &&
+    if (iPred && hist->predTaken && branch_detected &&
         inst->isIndirectCtrl() && !inst->isReturn()) {
 
         ++stats.indirectLookups;
@@ -362,7 +374,7 @@ BPredUnit::commitBranch(ThreadID tid, PredictorHistory* &hist)
                 hist->inst,
                 hist->target->instAddr());
 
-    // Commite also Indirect predictor and RAS
+    // Commit also Indirect predictor and RAS
     if (iPred) {
         iPred->commit(tid, hist->seqNum,
                            hist->indirectHistory);
@@ -561,27 +573,29 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
         }
 
         // Correct BTB ---------------------------------------------------
-        // Check if the misprediction happened was because of a BTB miss
-        // or incorrect indirect predictor
-        if (actually_taken) {
-            if (hist->inst->isIndirectCtrl() && !hist->inst->isReturn()) {
-                ++stats.indirectMispredicted;
-            } else {
+        // Update the BTB for all mispredicted taken branches.
+        // Always if `requiresBTBHit` is true otherwise only if the
+        // branch was direct or no indirect predictor is available.
+        if (actually_taken &&
+            (requiresBTBHit || hist->inst->isDirectCtrl() ||
+            (!iPred && !hist->inst->isReturn()))) {
 
-                ++stats.BTBUpdates;
-                btb->update(tid, hist->pc, corr_target,
-                            getBranchType(hist->inst));
-
+            if (!hist->btbHit) {
                 ++stats.BTBMispredicted;
                 if (hist->condPred)
                     ++stats.predTakenBTBMiss;
-
-                btb->incorrectTarget(hist->pc, hist->type);
-
-                DPRINTF(Branch,"[tid:%i] [squash sn:%llu] "
-                    "BTB miss PC %#x %s \n", tid, squashed_sn,
-                    hist->pc, toString(hist->type));
             }
+
+            DPRINTF(Branch,"[tid:%i] BTB Update called for [sn:%llu] "
+                        "PC %#x -> T: %#x\n", tid,
+                        hist->seqNum, hist->pc, hist->target->instAddr());
+
+            stats.BTBUpdates++;
+            btb->update(tid, hist->pc,
+                            *hist->target,
+                            hist->type,
+                            hist->inst);
+            btb->incorrectTarget(hist->pc, hist->type);
         }
 
     } else {

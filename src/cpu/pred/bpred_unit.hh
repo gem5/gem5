@@ -368,6 +368,14 @@ class BPredUnit : public SimObject
     /** Number of the threads for which the branch history is maintained. */
     const unsigned numThreads;
 
+    /** Requires the BTB to hit for returns and indirect branches. For an
+     * advanced front-end there is no other way than a BTB hit to know
+     * that the branch exists in the first place. Furthermore, the BPU needs
+     * to know the branch type to make the correct RAS operations.
+     * This info is only available from the BTB.
+     * Low-end CPUs predecoding might be used to identify branches. */
+    const bool requiresBTBHit;
+
     /** Number of bits to shift instructions by for predictor addresses. */
     const unsigned instShiftAmt;
 
