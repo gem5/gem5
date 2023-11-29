@@ -31,10 +31,28 @@ jobs:
                   retention-days: 5
             - run: echo "This job's status is ${{ job.status }}."
 
+    build-gem5-vega:
+        runs-on: [self-hosted, linux, x64]
+        container: ghcr.io/gem5/gcn-gpu:latest
+        steps:
+            - uses: actions/checkout@v3
+              with:
+        # Scheduled workflows run on the default branch by default. We
+        # therefore need to explicitly checkout the develop branch.
+                  ref: develop
+            - name: Build gem5 vega
+              run: scons build/VEGA_X86/gem5.opt -j $(nproc) --ignore-style
+            - uses: actions/upload-artifact@v3
+              with:
+                  name: weekly-test-${{ github.run_number }}-attempt-${{ github.run_attempt }}-gem5-build-vega
+                  path: build/VEGA_X86/gem5.opt
+                  retention-days: 5
+            - run: echo "This job's status is ${{ job.status }}."
+
     LULESH-tests:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/gcn-gpu:latest
-        needs: build-gem5
+        needs: build-gem5-vega
         timeout-minutes: 480 # 8 hours
         steps:
             - uses: actions/checkout@v3
@@ -43,24 +61,24 @@ jobs:
                 # therefore need to explicitly checkout the develop branch.
                   ref: develop
 
-            - name: Download build/GCN3_X86/gem5.opt
+            - name: Download build/VEGA_X86/gem5.opt
               uses: actions/download-artifact@v3
               with:
-                  name: weekly-test-${{ github.run_number }}-attempt-${{ github.run_attempt }}-gem5-build-gcn3
-                  path: build/GCN3_X86
+                  name: weekly-test-${{ github.run_number }}-attempt-${{ github.run_attempt }}-gem5-build-vega
+                  path: build/VEGA_X86
                 # `download-artifact` does not preserve permissions so we need to set
                 # them again.
-            - run: chmod u+x build/GCN3_X86/gem5.opt
+            - run: chmod u+x build/VEGA_X86/gem5.opt
 
             - name: Obtain LULESH
               # Obtains the latest LULESH compatible with this version of gem5 via
               # gem5 Resources.
-              run: build/GCN3_X86/gem5.opt util/obtain-resource.py lulesh -p lulesh
+              run: build/VEGA_X86/gem5.opt util/obtain-resource.py lulesh -p lulesh
 
             - name: Run LULUESH tests
               working-directory: ${{ github.workspace }}
               run: |
-                  build/GCN3_X86/gem5.opt configs/example/apu_se.py -n3 --mem-size=8GB --reg-alloc-policy=dynamic --benchmark-root="lulesh" -c \
+                  build/VEGA_X86/gem5.opt configs/example/apu_se.py -n3 --mem-size=8GB --reg-alloc-policy=dynamic --dgpu --gfx-version=gfx900 -c \
                   lulesh --options="0.01 2"
 
     HACC-tests:
