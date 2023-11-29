@@ -69,21 +69,41 @@ class Interrupts : public BaseInterrupts
     {
         INTERRUPT mask = 0;
         STATUS status = tc->readMiscReg(MISCREG_STATUS);
-        INTERRUPT mideleg = tc->readMiscReg(MISCREG_MIDELEG);
-        INTERRUPT sideleg = tc->readMiscReg(MISCREG_SIDELEG);
+        MISA misa = tc->readMiscRegNoEffect(MISCREG_ISA);
+        INTERRUPT mideleg = 0;
+        if (misa.rvs || misa.rvn) {
+            mideleg = tc->readMiscReg(MISCREG_MIDELEG);
+        }
+        INTERRUPT sideleg = 0;
+        if (misa.rvs && misa.rvn) {
+            sideleg = tc->readMiscReg(MISCREG_SIDELEG);
+        }
         PrivilegeMode prv = (PrivilegeMode)tc->readMiscReg(MISCREG_PRV);
         switch (prv) {
             case PRV_U:
-                mask.mei = (!sideleg.mei) | (sideleg.mei & status.uie);
-                mask.mti = (!sideleg.mti) | (sideleg.mti & status.uie);
-                mask.msi = (!sideleg.msi) | (sideleg.msi & status.uie);
-                mask.sei = (!sideleg.sei) | (sideleg.sei & status.uie);
-                mask.sti = (!sideleg.sti) | (sideleg.sti & status.uie);
-                mask.ssi = (!sideleg.ssi) | (sideleg.ssi & status.uie);
+                // status.uie is always 0 if misa.rvn is disabled
+                if (misa.rvs) {
+                    mask.mei = (!sideleg.mei) | (sideleg.mei & status.uie);
+                    mask.mti = (!sideleg.mti) | (sideleg.mti & status.uie);
+                    mask.msi = (!sideleg.msi) | (sideleg.msi & status.uie);
+                    mask.sei = (!sideleg.sei) | (sideleg.sei & status.uie);
+                    mask.sti = (!sideleg.sti) | (sideleg.sti & status.uie);
+                    mask.ssi = (!sideleg.ssi) | (sideleg.ssi & status.uie);
+                } else {
+                    // According to the RISC-V privilege spec v1.10, if the
+                    // S privilege mode is not implemented and user-trap
+                    // support, setting mideleg/medeleg bits will delegate the
+                    // trap to U-mode trap handler
+                    mask.mei = (!mideleg.mei) | (mideleg.mei & status.uie);
+                    mask.mti = (!mideleg.mti) | (mideleg.mti & status.uie);
+                    mask.msi = (!mideleg.msi) | (mideleg.msi & status.uie);
+                    mask.sei = mask.sti = mask.ssi = 0;
+                }
                 if (status.uie)
                     mask.uei = mask.uti = mask.usi = 1;
                 break;
             case PRV_S:
+                // status.sie is always 0 if misa.rvn is disabled
                 mask.mei = (!mideleg.mei) | (mideleg.mei & status.sie);
                 mask.mti = (!mideleg.mti) | (mideleg.mti & status.sie);
                 mask.msi = (!mideleg.msi) | (mideleg.msi & status.sie);

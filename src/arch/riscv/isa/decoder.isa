@@ -4595,6 +4595,12 @@ decode QUADRANT default Unknown::unknown() {
                                 xc->pcState());
                         }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
                         0x2: uret({{
+                           MISA misa = xc->readMiscReg(MISCREG_ISA);
+                            if (!misa.rvn) {
+                                return std::make_shared<IllegalInstFault>(
+                                    "sret can't execute without N systems",
+                                    machInst);
+                            }
                             STATUS status = xc->readMiscReg(MISCREG_STATUS);
                             status.uie = status.upie;
                             status.upie = 1;
@@ -4604,6 +4610,12 @@ decode QUADRANT default Unknown::unknown() {
                     }
                     0x8: decode RS2 {
                         0x2: sret({{
+                            MISA misa = xc->readMiscReg(MISCREG_ISA);
+                            if (!misa.rvs) {
+                                return std::make_shared<IllegalInstFault>(
+                                            "sret can't execute without RVS",
+                                            machInst);
+                            }
                             STATUS status = xc->readMiscReg(MISCREG_STATUS);
                             auto pm = (PrivilegeMode)xc->readMiscReg(
                                 MISCREG_PRV);
@@ -4623,11 +4635,12 @@ decode QUADRANT default Unknown::unknown() {
                             }
                         }}, IsSerializeAfter, IsNonSpeculative, IsReturn);
                         0x5: wfi({{
+                            MISA misa = xc->readMiscReg(MISCREG_ISA);
                             STATUS status = xc->readMiscReg(MISCREG_STATUS);
                             auto pm = (PrivilegeMode)xc->readMiscReg(
                                 MISCREG_PRV);
-                            if (pm == PRV_U ||
-                                (pm == PRV_S && status.tw == 1)) {
+                            if (misa.rvs && (pm == PRV_U ||
+                                (pm == PRV_S && status.tw == 1))) {
                                 return std::make_shared<IllegalInstFault>(
                                             "wfi in user mode or TW enabled",
                                             machInst);
@@ -4647,6 +4660,12 @@ decode QUADRANT default Unknown::unknown() {
                             IsSerializeAfter, No_OpClass);
                     }
                     0x9: sfence_vma({{
+                        MISA misa = xc->readMiscReg(MISCREG_ISA);
+                        if (!misa.rvs) {
+                            return std::make_shared<IllegalInstFault>(
+                                "sfence_vma can't execute without RVS",
+                                machInst);
+                        }
                         STATUS status = xc->readMiscReg(MISCREG_STATUS);
                         auto pm = (PrivilegeMode)xc->readMiscReg(MISCREG_PRV);
                         if (pm == PRV_U || (pm == PRV_S && status.tvm == 1)) {
