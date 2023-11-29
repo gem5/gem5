@@ -673,6 +673,11 @@ class SuiteResource(AbstractResource):
         :param source: The source (as in "source code") for this resource
         on gem5-resources. Not a required parameter. By default is None.
         :param resource_version: Version of the resource itself.
+        :param resource_directory: The location of the directory in which the
+        resource is to be downloaded and stored.
+        :param clients: A list of clients to search for the resource.
+        :param gem5_version: The gem5 version to use to filter incompatible
+        resource versions. By default set to the current gem5 version.
         """
         self._workloads = workloads
         self._description = description
@@ -752,7 +757,9 @@ class SuiteResource(AbstractResource):
 
         filtered_workloads_id_map = {}
         filtered_workloads = {}
+
         for workload, input_groups in self._workloads_id_map.items():
+            # get the information of the workloads that use the input group
             if input_group in input_groups:
                 filtered_workloads_id_map[workload] = input_groups
                 filtered_workloads[workload] = self._workloads[workload]
@@ -984,10 +991,17 @@ def obtain_resource(
         workloads = resource_json["workloads"]
         workloads_obj = {}
         workloads_id_map = {}
+
         for workload in workloads:
+            # We create a mapping of the workload ID and version to the
+            # input groups related to the workload. Workloads_obj is a
+            # mapping of the workload ID and version to the WorkloadResource
+            # object that is created when we will download the dependent
+            # resources for the workload.
             key = (workload["id"], workload["resource_version"])
             workloads_obj[key] = None
             workloads_id_map[key] = set(workload["input_group"])
+
         resource_json["workloads"] = workloads_obj
         resource_json["workloads_id_map"] = workloads_id_map
         resource_json["resource_directory"] = resource_directory
