@@ -218,7 +218,7 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
         ]
 
     def _setup_io_devices(self) -> None:
-        """Connect the I/O devices to the I/O bus"""
+        """Connect the I/O devices to the I/O bus."""
         for device in self._off_chip_devices:
             device.pio = self.iobus.mem_side_ports
         self.lupio_blk.dma = self.iobus.cpu_side_ports
@@ -236,7 +236,7 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
         ]
 
     def _setup_pma(self) -> None:
-        """Set the PMA devices on each core"""
+        """Set the PMA devices on each core."""
         uncacheable_range = [
             AddrRange(dev.pio_addr, size=dev.pio_size)
             for dev in self._on_chip_devices + self._off_chip_devices
@@ -280,9 +280,11 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
         memory.set_memory_range(self.mem_ranges)
 
     def _generate_device_tree(self, outdir: str) -> None:
-        """Creates the dtb and dts files.
-        Creates two files in the outdir: 'device.dtb' and 'device.dts'
-        :param outdir: Directory to output the files
+        """Creates the ``dtb`` and ``dts`` files.
+
+        Creates two files in the outdir: ``device.dtb`` and ``device.dts``.
+
+        :param outdir: Directory to output the files.
         """
         state = FdtState(addr_cells=2, size_cells=2, cpu_cells=1)
         root = FdtNode("/")

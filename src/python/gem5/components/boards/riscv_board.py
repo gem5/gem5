@@ -73,7 +73,7 @@ from m5.util.fdthelper import (
 
 class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
     """
-    A board capable of full system simulation for RISC-V
+    A board capable of full system simulation for RISC-V.
 
     At a high-level, this is based on the HiFive Unmatched board from SiFive.
 
@@ -142,7 +142,7 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
         self._off_chip_devices = [self.platform.uart, self.disk, self.rng]
 
     def _setup_io_devices(self) -> None:
-        """Connect the I/O devices to the I/O bus"""
+        """Connect the I/O devices to the I/O bus."""
         # Add PCI
         self.platform.pci_host.pio = self.iobus.mem_side_ports
 
@@ -181,7 +181,7 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
             self.bridge.ranges.append(AddrRange(0x40000000, size="512MB"))
 
     def _setup_pma(self) -> None:
-        """Set the PMA devices on each core"""
+        """Set the PMA devices on each core."""
 
         uncacheable_range = [
             AddrRange(dev.pio_addr, size=dev.pio_size)
@@ -234,11 +234,11 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
         memory.set_memory_range(self.mem_ranges)
 
     def generate_device_tree(self, outdir: str) -> None:
-        """Creates the dtb and dts files.
+        """Creates the ``dtb`` and ``dts`` files.
 
-        Creates two files in the outdir: 'device.dtb' and 'device.dts'
+        Creates two files in the outdir: ``device.dtb`` and ``device.dts``.
 
-        :param outdir: Directory to output the files
+        :param outdir: Directory to output the files.
         """
 
         state = FdtState(addr_cells=2, size_cells=2, cpu_cells=1)

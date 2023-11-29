@@ -54,9 +54,7 @@ class AbstractCacheHierarchy(SubSystem):
         unique for each setup.
 
         :param board: The board in which the cache heirarchy is to be
-        incorporated.
-
-        :type board: AbstractBoard
+                      incorporated.
         """
 
         raise NotImplementedError
@@ -67,10 +65,10 @@ class AbstractCacheHierarchy(SubSystem):
         Specifies whether this cache hierarchy is using the Ruby memory system
         or not.
 
-        :returns: True if the cache hierarchy is ruby. Otherwise False.
+        :returns: ``True`` if the cache hierarchy is ruby. Otherwise ``False``.
         """
         raise NotImplementedError
 
     def _post_instantiate(self):
-        """Called to set up anything needed after m5.instantiate"""
+        """Called to set up anything needed after ``m5.instantiate``."""
         pass

@@ -64,18 +64,19 @@ class ComplexGenerator(AbstractGenerator):
         generator with the params specified.
 
         :param duration: The number of ticks for the generator core to generate
-        traffic.
+                         traffic.
         :param rate: The rate at which the synthetic data is read/written.
         :param block_size: The number of bytes to be read/written with each
-        request.
+                           request.
         :param min_addr: The lower bound of the address range the generator
-        will read/write from/to.
+                         will read/write from/to.
         :param max_addr: The upper bound of the address range the generator
-        will read/write from/to.
+                         will read/write from/to.
         :param rd_perc: The percentage of read requests among all the generated
-        requests. The write percentage would be equal to 100 - rd_perc.
+                        requests. The write percentage would be equal to
+                        ``100 - rd_perc``.
         :param data_limit: The amount of data in bytes to read/write by the
-        generator before stopping generation.
+                           generator before stopping generation.
         """
         ranges = partition_range(min_addr, max_addr, len(self.cores))
         for i, core in enumerate(self.cores):
@@ -104,18 +105,19 @@ class ComplexGenerator(AbstractGenerator):
         generator with the params specified.
 
         :param duration: The number of ticks for the generator core to generate
-        traffic.
+                         traffic.
         :param rate: The rate at which the synthetic data is read/written.
         :param block_size: The number of bytes to be read/written with each
-        request.
+                           request.
         :param min_addr: The lower bound of the address range the generator
-        will read/write from/to.
+                         will read/write from/to.
         :param max_addr: The upper bound of the address range the generator
-        will read/write from/to.
+                         will read/write from/to.
         :param rd_perc: The percentage of read requests among all the generated
-        requests. The write percentage would be equal to 100 - rd_perc.
+                        requests. The write percentage would be equal to
+                        ``100 - rd_perc``.
         :param data_limit: The amount of data in bytes to read/write by the
-        generator before stopping generation.
+                           generator before stopping generation.
         """
         for core in self.cores:
             core.add_random(
@@ -135,7 +137,7 @@ class ComplexGenerator(AbstractGenerator):
         Sets the traffic pattern defined by generator argument.
 
         :param generator: A python generator object that creates traffic
-        patterns through calls to methods of PyTrafficGen.
+                          patterns through calls to methods of PyTrafficGen.
         """
         for core in self.cores:
             core.set_traffic_from_python_generator(generator)

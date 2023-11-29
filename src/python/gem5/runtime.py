@@ -64,9 +64,10 @@ def get_runtime_isa() -> ISA:
     one ISA. If neither the "TARGET_ISA" parameter is set and there are
     multiple ISA targets, an exception is thrown.
 
-    **WARNING**: This function is deprecated and may be removed in future
-    versions of gem5. This function should not be relied upon to run gem5
-    simulations.
+    .. warning::
+
+       This function is deprecated and may be removed in future versions of
+       gem5. This function should not be relied upon to run gem5 simulations.
 
     :returns: The target ISA.
     """
@@ -93,6 +94,7 @@ def get_runtime_isa() -> ISA:
 
 def get_runtime_coherence_protocol() -> CoherenceProtocol:
     """Gets the cache coherence protocol.
+
     This can be inferred at runtime.
 
     :returns: The cache coherence protocol.

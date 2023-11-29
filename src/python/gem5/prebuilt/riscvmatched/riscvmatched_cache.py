@@ -52,7 +52,9 @@ class RISCVMatchedCacheHierarchy(
 
     A cache setup where each core has a private L1 Data and Instruction Cache,
     and a shared L2 cache.
+
     The HiFive board has a partially inclusive cache hierarchy, hence this hierarchy is chosen.
+
     The details of the cache hierarchy are in Table 7, page 36 of the datasheet.
 
     - L1 Instruction Cache:
@@ -70,7 +72,6 @@ class RISCVMatchedCacheHierarchy(
     ) -> None:
         """
         :param l2_size: The size of the L2 Cache (e.g., "256kB").
-        :type l2_size: str
         """
         AbstractClassicCacheHierarchy.__init__(self=self)
         AbstractTwoLevelCacheHierarchy.__init__(
@@ -157,7 +158,7 @@ class RISCVMatchedCacheHierarchy(
         self.membus.cpu_side_ports = self.l2cache.mem_side
 
     def _setup_io_cache(self, board: AbstractBoard) -> None:
-        """Create a cache for coherent I/O connections"""
+        """Create a cache for coherent I/O connections."""
         self.iocache = Cache(
             assoc=8,
             tag_latency=50,

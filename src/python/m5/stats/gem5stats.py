@@ -43,7 +43,7 @@ from m5.ext.pystats.storagetype import *
 class JsonOutputVistor:
     """
     This is a helper vistor class used to include a JSON output via the stats
-    API (`src/python/m5/stats/__init__.py`).
+    API (``src/python/m5/stats/__init__.py``).
     """
 
     file: str
@@ -51,14 +51,9 @@ class JsonOutputVistor:
 
     def __init__(self, file: str, **kwargs):
         """
-        Parameters
-        ----------
+        :param file: The output file location in which the JSON will be dumped.
 
-        file: str
-            The output file location in which the JSON will be dumped.
-
-        kwargs: Dict[str, Any]
-            Additional parameters to be passed to the `json.dumps` method.
+        :param kwargs: Additional parameters to be passed to the ``json.dumps`` method.
         """
 
         self.file = file
@@ -69,14 +64,13 @@ class JsonOutputVistor:
         Dumps the stats of a simulation root (or list of roots) to the output
         JSON file specified in the JsonOutput constructor.
 
-        WARNING: This dump assumes the statistics have already been prepared
-        for the target root.
+        .. warning::
 
-        Parameters
-        ----------
+            This dump assumes the statistics have already been prepared
+            for the target root.
 
-        roots: Union[List[Root], Root]]
-            The Root, or List of roots, whose stats are are to be dumped JSON.
+
+        :param roots: The Root, or List of roots, whose stats are are to be dumped JSON.
         """
 
         with open(self.file, "w") as fp:
@@ -88,20 +82,14 @@ def get_stats_group(group: _m5.stats.Group) -> Group:
     """
     Translates a gem5 Group object into a Python stats Group object. A Python
     statistic Group object is a dictionary of labeled Statistic objects. Any
-    gem5 object passed to this will have its `getStats()` and `getStatGroups`
+    gem5 object passed to this will have its ``getStats()`` and ``getStatGroups``
     function called, and all the stats translated (inclusive of the stats
     further down the hierarchy).
 
-    Parameters
-    ----------
-    group: _m5.stats.Group
-        The gem5 _m5.stats.Group object to be translated to be a Python stats
-        Group object. Typically this will be a gem5 SimObject.
+    :param group: The gem5 _m5.stats.Group object to be translated to be a Python
+                  stats Group object. Typically this will be a gem5 SimObject.
 
-    Returns
-    -------
-    Group
-        The stats group object translated from the input gem5 object.
+    :returns: The stats group object translated from the input gem5 object.
     """
 
     stats_dict = {}
@@ -122,16 +110,10 @@ def __get_statistic(statistic: _m5.stats.Info) -> Optional[Statistic]:
     Translates a _m5.stats.Info object into a Statistic object, to process
     statistics at the Python level.
 
-    Parameters
-    ----------
-    statistic: Info
-        The Info object to be translated to a Statistic object.
+    :param statistic: The Info object to be translated to a Statistic object.
 
-    Returns
-    -------
-    Optional[Statistic]
-        The Statistic object of the Info object. Returns None if Info object
-        cannot be translated.
+    :returns: The Statistic object of the Info object. Returns ``None`` if
+              Info object cannot be translated.
     """
 
     assert isinstance(statistic, _m5.stats.Info)
@@ -245,22 +227,16 @@ def get_simstat(
     SimStat object will contain all the stats for all the SimObjects contained
     within the "root", inclusive of the "root" SimObject/SimObjects.
 
-    Parameters
-    ----------
-    root: Union[SimObject, List[SimObject]]
-        A SimObject, or list of SimObjects, of the simulation for translation
-        into a SimStat object. Typically this is the simulation's Root
-        SimObject as this will obtain the entirety of a run's statistics in a
-        single SimStat object.
+    :param root: A SimObject, or list of SimObjects, of the simulation for
+                 translation into a SimStat object. Typically this is the
+                 simulation's Root SimObject as this will obtain the entirety
+                 of a run's statistics in a single SimStat object.
 
-    prepare_stats: bool
-        Dictates whether the stats are to be prepared prior to creating the
-        SimStat object. By default this is 'True'.
+    :param prepare_stats: Dictates whether the stats are to be prepared prior
+                          to creating the SimStat object. By default this is
+                          ``True``.
 
-    Returns
-    -------
-    SimStat
-        The SimStat Object of the current simulation.
+    :Returns: The SimStat Object of the current simulation.
 
     """
     stats_map = {}

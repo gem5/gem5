@@ -36,7 +36,7 @@ class L1ICache(Cache):
     A simple L1 instruction cache with default values.
 
     If the cache does not have a downstream cache or the downstream cache
-    is mostly inclusive as usual, writeback_clean should be set to False.
+    is mostly inclusive as usual, ``writeback_clean`` should be set to ``False``.
     """
 
     def __init__(

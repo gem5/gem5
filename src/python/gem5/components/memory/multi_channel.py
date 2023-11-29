@@ -38,7 +38,7 @@ def DualChannelDDR3_1600(
     size: Optional[str] = None,
 ) -> AbstractMemorySystem:
     """
-    A dual channel memory system using DDR3_1600_8x8 based DIMM
+    A dual channel memory system using DDR3_1600_8x8 based DIMM.
     """
     return ChanneledMemory(DDR3_1600_8x8, 2, 64, size=size)
 
@@ -47,7 +47,7 @@ def DualChannelDDR3_2133(
     size: Optional[str] = None,
 ) -> AbstractMemorySystem:
     """
-    A dual channel memory system using DDR3_2133_8x8 based DIMM
+    A dual channel memory system using DDR3_2133_8x8 based DIMM.
     """
     return ChanneledMemory(DDR3_2133_8x8, 2, 64, size=size)
 
@@ -56,7 +56,7 @@ def DualChannelDDR4_2400(
     size: Optional[str] = None,
 ) -> AbstractMemorySystem:
     """
-    A dual channel memory system using DDR4_2400_8x8 based DIMM
+    A dual channel memory system using DDR4_2400_8x8 based DIMM.
     """
     return ChanneledMemory(DDR4_2400_8x8, 2, 64, size=size)
 

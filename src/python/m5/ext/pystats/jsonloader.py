@@ -34,17 +34,19 @@ from typing import IO, Union
 
 class JsonLoader(json.JSONDecoder):
     """
-    Subclass of JSONDecoder that overrides 'object_hook'. Converts JSON object
+    Subclass of JSONDecoder that overrides ``object_hook``. Converts JSON object
     into a SimStat object.
 
     Usage
     -----
-    ```
-    from m5.ext.pystats.jsonloader import JsonLoader
 
-    with open(path) as f:
-        simstat_object = json.load(f, cls=JsonLoader)
-    ```
+    .. code-block::
+
+             from m5.ext.pystats.jsonloader import JsonLoader
+
+             with open(path) as f:
+                     simstat_object = json.load(f, cls=JsonLoader)
+
     """
 
     def __init__(self):
@@ -87,12 +89,14 @@ def load(json_file: IO) -> SimStat:
 
     Usage
     -----
-    ```
-    import m5.ext.pystats as pystats
 
-    with open(path) as f:
-        pystats.jsonloader.load(f)
-    ```
+    .. code-block::
+
+            import m5.ext.pystats as pystats
+
+            with open(path) as f:
+                pystats.jsonloader.load(f)
+
     """
 
     simstat_object = json.load(json_file, cls=JsonLoader)

@@ -46,13 +46,14 @@ class SimpleProcessor(BaseCPUProcessor):
     ) -> None:
         """
         :param cpu_type: The CPU type for each type in the processor.
+
         :param num_cores: The number of CPU cores in the processor.
 
         :param isa: The ISA of the processor. This argument is optional. If not
-        set the `runtime.get_runtime_isa` is used to determine the ISA at
-        runtime. **WARNING**: This functionality is deprecated. It is
-        recommended you explicitly set your ISA via SimpleProcessor
-        construction.
+                    set the ``runtime.get_runtime_isa`` is used to determine the
+                    ISA at runtime. **WARNING**: This functionality is deprecated.
+                    It is recommended you explicitly set your ISA via SimpleProcessor
+                    construction.
         """
         if not isa:
             warn(

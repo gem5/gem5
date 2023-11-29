@@ -189,7 +189,7 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
 
     def _setup_io_devices(self) -> None:
         """
-        This method first sets up the platform. ARM uses `realview` platform.
+        This method first sets up the platform. ARM uses ``realview`` platform.
         Most of the on-chip and off-chip devices are setup by the realview
         platform. Once realview is setup, we connect the I/O devices to the
         I/O bus.
@@ -329,16 +329,19 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
         self.generateDtb(self._get_dtb_filename())
 
     def _get_dtb_filename(self) -> str:
-        """Returns the dtb file location.
+        """Returns the ``dtb`` file location.
 
-        **Note**: This may be the _expected_ file location when generated. A
-        file may not exist at this location when this function is called."""
+        .. note::
+
+            This may be the ``_expected_`` file location when generated. A
+            file may not exist at this location when this function is called.
+        """
 
         return os.path.join(m5.options.outdir, "device.dtb")
 
     def _add_pci_device(self, pci_device: PciVirtIO) -> None:
         """Attaches the PCI Device to the board. All devices will be added to
-        `self.pci_device` as a pre-instantiation setup.
+        ``self.pci_device`` as a pre-instantiation setup.
 
         :param pci_device: The PCI Device to add.
         """
@@ -369,7 +372,7 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
     def _setup_memory_ranges(self) -> None:
         """
         The ArmBoard's memory can only be setup after realview is setup. We set
-        this up in the `_setup_board` function.
+        this up in the ``_setup_board`` function.
         """
         pass
 
@@ -388,8 +391,8 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
 
     @overrides(SimObject)
     def createCCObject(self):
-        """We override this function as it is called in `m5.instantiate`. This
-        means we can insert a check to ensure the `_connect_things` function
+        """We override this function as it is called in ``m5.instantiate``. This
+        means we can insert a check to ensure the ``_connect_things`` function
         has been run.
         """
         super()._connect_things_check()

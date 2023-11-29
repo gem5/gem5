@@ -35,8 +35,8 @@ class L1DCache(Cache):
     """
     A simple L1 data cache with default values.
 
-    If the cache has a mostly exclusive downstream cache, writeback_clean
-    should be set to True.
+    If the cache has a mostly exclusive downstream cache, ``writeback_clean``
+    should be set to ``True``.
     """
 
     def __init__(

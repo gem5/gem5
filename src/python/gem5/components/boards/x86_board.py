@@ -66,8 +66,8 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload):
     A board capable of full system simulation for X86.
 
     **Limitations**
-    * Currently, this board's memory is hardcoded to 3GB
-    * Much of the I/O subsystem is hard coded
+    * Currently, this board's memory is hardcoded to 3GB.
+    * Much of the I/O subsystem is hard coded.
     """
 
     def __init__(
@@ -107,8 +107,10 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload):
     def _setup_io_devices(self):
         """Sets up the x86 IO devices.
 
-        Note: This is mostly copy-paste from prior X86 FS setups. Some of it
-        may not be documented and there may be bugs.
+        .. note::
+
+            This is mostly copy-paste from prior X86 FS setups. Some of it
+            may not be documented and there may be bugs.
         """
 
         # Constants similar to x86_traits.hh

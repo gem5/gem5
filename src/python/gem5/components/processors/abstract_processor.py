@@ -46,8 +46,9 @@ class AbstractProcessor(SubSystem):
         isa: ISA = ISA.NULL,
     ) -> None:
         """Set the cores on the processor
+
         Cores are optional for some processor types. If a processor does not
-        set the cores here, it must override `get_num_cores` and `get_cores`
+        set the cores here, it must override ``get_num_cores`` and ``get_cores``.
         """
         super().__init__()
 
@@ -76,5 +77,5 @@ class AbstractProcessor(SubSystem):
         raise NotImplementedError
 
     def _post_instantiate(self) -> None:
-        """Called to set up anything needed after m5.instantiate"""
+        """Called to set up anything needed after ``m5.instantiate``."""
         pass

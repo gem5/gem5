@@ -70,8 +70,8 @@ def _md5_update_from_dir(
 
 def md5(path: Path) -> str:
     """
-    Gets the md5 value of a file or directory. `md5_file` is used if the path
-    is a file and `md5_dir` is used if the path is a directory. An exception
+    Gets the md5 value of a file or directory. ``md5_file`` is used if the path
+    is a file and ``md5_dir`` is used if the path is a directory. An exception
     is returned if the path is not a valid file or directory.
 
     :param path: The path to get the md5 of.
@@ -86,7 +86,7 @@ def md5(path: Path) -> str:
 
 def md5_file(filename: Path) -> str:
     """
-    Gives the md5 hash of a file
+    Gives the md5 hash of a file.
 
     :filename: The file in which the md5 is to be calculated.
     """
@@ -99,7 +99,9 @@ def md5_dir(directory: Path) -> str:
 
     This is achieved by getting the md5 hash of all files in the directory.
 
-    Note: The path of files are also hashed so the md5 of the directory changes
-    if empty files are included or filenames are changed.
+    .. note::
+
+        The path of files are also hashed so the md5 of the directory changes
+        if empty files are included or filenames are changed.
     """
     return str(_md5_update_from_dir(directory, hashlib.md5()).hexdigest())

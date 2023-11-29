@@ -37,8 +37,8 @@ import platform
 
 class SimpleCore(BaseCPUCore):
     """
-    A SimpleCore instantiates a core based on the CPUType enum pass. The
-    SimpleCore creates a single SimObject of that type.
+    A `SimpleCore` instantiates a core based on the CPUType enum pass. The
+    `SimpleCore` creates a single `SimObject` of that type.
     """
 
     def __init__(

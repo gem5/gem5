@@ -37,6 +37,7 @@ class JSONClient(AbstractClient):
     def __init__(self, path: str):
         """
         Initializes a JSON client.
+
         :param path: The path to the Resource, either URL or local.
         """
         self.path = path

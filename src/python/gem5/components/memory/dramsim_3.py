@@ -16,10 +16,12 @@ from typing import Optional, Tuple, Sequence, List
 def config_ds3(mem_type: str, num_chnls: int) -> Tuple[str, str]:
     """
     This function creates a config file that will be used to create a memory
-    controller of type DRAMSim3. It stores the config file in /tmp/ directory.
+    controller of type DRAMSim3. It stores the config file in ``/tmp/`` directory.
 
     :param mem_type: The name for the type of the memory to be configured.
+
     :param num_chnls: The number of channels to configure for the memory
+
     :returns: A tuple containing the output file and the output directory.
     """
     config = configparser.ConfigParser()

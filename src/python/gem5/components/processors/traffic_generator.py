@@ -46,8 +46,8 @@ class TrafficGenerator(AbstractGenerator):
         generator cores that could replace the processing cores in a board.
 
         :param config_file_list: A list containing the path to configuration
-        file each describing the traffic pattern that should be created by
-        each core of the generator.
+                                 file each describing the traffic pattern that
+                                 should be created by each core of the generator.
         """
 
     def _create_cores(

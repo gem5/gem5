@@ -61,11 +61,11 @@ def requires(
 
     :param isa_required: The ISA(s) gem5 must be compiled to.
     :param coherence_protocol_required: The coherence protocol gem5 must be
-        compiled to.
+                                        compiled to.
     :param kvm_required: The host system must have the Kernel-based Virtual
-        Machine available.
+                         Machine available.
     :raises Exception: Raises an exception if the required ISA or coherence
-        protocol do not match that of the current gem5 binary.
+                       protocol do not match that of the current gem5 binary.
     """
 
     supported_isas = get_supported_isas()

@@ -54,14 +54,14 @@ class X86DemoBoard(X86Board):
     -------
 
     An example of using the X86DemoBoard can be found in
-    `configs/example/gem5_library/x86-ubuntu-run.py`.
+    ``configs/example/gem5_library/x86-ubuntu-run.py``.
 
     To run:
 
-    ```
-    scons build/X86/gem5.opt -j`nproc`
-    ./build/X86/gem5.opt configs/example/gem5_library/x86-ubuntu-run.py
-    ```
+    .. code-block::
+
+        scons build/X86/gem5.opt -j`nproc`
+        ./build/X86/gem5.opt configs/example/gem5_library/x86-ubuntu-run.py
 
     """
 

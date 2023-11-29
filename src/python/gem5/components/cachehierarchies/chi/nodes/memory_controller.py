@@ -40,6 +40,7 @@ from .abstract_node import TriggerMessageBuffer
 class MemCtrlMessageBuffer(MessageBuffer):
     """
     MessageBuffer exchanging messages with the memory
+
     These buffers should also not be affected by the Ruby tester randomization.
     """
 
@@ -48,7 +49,7 @@ class MemCtrlMessageBuffer(MessageBuffer):
 
 
 class MemoryController(Memory_Controller):
-    """A controller that connects to memory"""
+    """A controller that connects to memory."""
 
     _version = 0
 

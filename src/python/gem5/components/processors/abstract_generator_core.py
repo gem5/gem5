@@ -65,7 +65,7 @@ class AbstractGeneratorCore(AbstractCore):
     def connect_icache(self, port: Port) -> None:
         """
         Generator cores only have one request port which we will connect to
-        the data cache not the icache. Just connect the icache to the
+        the data cache not the ``icache``. Just connect the ``icache`` to the
         PortTerminator here.
         """
         self.port_end.req_ports = port
@@ -106,6 +106,7 @@ class AbstractGeneratorCore(AbstractCore):
     def start_traffic(self):
         """
         External interface to start generating the trace of addresses.
+
         Depending on what SimObject is wrapped by this component this method
         might need be implemented.
         """

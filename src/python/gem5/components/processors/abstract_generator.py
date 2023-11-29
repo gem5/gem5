@@ -61,11 +61,12 @@ class AbstractGenerator(AbstractProcessor):
         Create a list of AbstractGeneratorCore (which is an AbstractCore),
         to pass to the constructor of the AbstractProcessor. Due to the
         different prototypes for the constructor of different generator types
-        inputs are noted as *args. This way the abstract method _create_cores
+        inputs are noted as *args. This way the abstract ``method _create_cores``
         could be called without AbstractGenerator having to know what the
         prototype for the constructor of the inheriting class is. It also
-        limits the _create_cores function to only using positional arguments.
-        keyword (optional arguments) are still allowable in the constructor of
+        limits the ``_create_cores`` function to only using positional arguments.
+
+        Keyword (optional arguments) are still allowable in the constructor of
         the inheriting classes.
         """
         super().__init__(cores=cores)
