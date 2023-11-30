@@ -1,4 +1,4 @@
-# Copyright (c) 2016, 2020 ARM Limited
+# Copyright (c) 2018, 2019 Riscv Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -9,9 +9,6 @@
 # terms below provided that you ensure that this notice is replicated
 # unmodified and in its entirety in all distributions of the software,
 # modified or unmodified, in source code or in binary form.
-#
-# Copyright (c) 2012 Google
-# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -36,26 +33,35 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
+from m5.params import *
+from m5.SimObject import *
 
-Source('htm.cc')
-Source('mmu.cc')
-if env['CONF']['USE_ARM_ISA'] or env['CONF']['USE_RISCV_ISA']:
-     Source('semihosting.cc')
-     SimObject('BaseSemihosting.py', sim_objects=['BaseSemihosting'])
-     DebugFlag('Semihosting')
 
-SimObject('BaseInterrupts.py', sim_objects=['BaseInterrupts'])
-SimObject('BaseISA.py', sim_objects=['BaseISA'])
-SimObject('BaseMMU.py', sim_objects=['BaseMMU'])
-SimObject('BaseTLB.py', sim_objects=['BaseTLB'], enums=['TypeTLB'])
-SimObject('InstDecoder.py', sim_objects=['InstDecoder'])
+class BaseSemihosting(SimObject):
+    type = "BaseSemihosting"
+    abstract = True
+    cxx_header = "arch/generic/semihosting.hh"
+    cxx_class = "gem5::BaseSemihosting"
 
-DebugFlag('PageTableWalker',
-          "Page table walker state machine debugging")
-DebugFlag('TLB')
+    cmd_line = Param.String("", "Command line to report to guest")
+    stdin = Param.String("stdin", "Standard input (stdin for gem5's terminal)")
+    stdout = Param.String(
+        "stdout", "Standard output (stdout for gem5's terminal)"
+    )
+    stderr = Param.String(
+        "stderr", "Standard error (stderr for gem5's terminal)"
+    )
+    files_root_dir = Param.String(
+        "", "Host root directory for files handled by Semihosting"
+    )
 
-GTest('vec_reg.test', 'vec_reg.test.cc')
-GTest('vec_pred_reg.test', 'vec_pred_reg.test.cc')
+    mem_reserve = Param.MemorySize(
+        "32MiB",
+        "Amount of memory to reserve at the start of the address map. This "
+        "memory won't be used by the heap reported to an application.",
+    )
+    stack_size = Param.MemorySize("32MiB", "Application stack size")
 
-Source('decoder.cc')
+    time = Param.Time(
+        "01/01/2009", "System time to use ('Now' for actual time)"
+    )
