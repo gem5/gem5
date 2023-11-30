@@ -25,6 +25,9 @@
 
 Import('*')
 
+if not env['CONF']['USE_ARM_FASTMODEL']:
+    Return()
+
 protocol_dir = Dir('..').Dir('protocol')
 
 ArmFastModelComponent(File('PL330.sgproj'), File('PL330.lisa'),

@@ -49,6 +49,8 @@ import os.path
 
 if env['CONF']['USE_ARM_FASTMODEL']:
     env.TagImplies('arm fastmodel', 'arm isa')
+else:
+    Return()
 
 def extract_var(name):
     val = env['CONF'].get(name, None)

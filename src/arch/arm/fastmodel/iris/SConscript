@@ -25,6 +25,9 @@
 
 Import('*')
 
+if not env['CONF']['USE_ARM_FASTMODEL']:
+    Return()
+
 SimObject('Iris.py', sim_objects=[
     'IrisTLB', 'IrisMMU', 'IrisInterrupts', 'IrisISA', 'IrisBaseCPU'],
     tags='arm fastmodel')
