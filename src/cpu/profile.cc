@@ -63,7 +63,7 @@ BaseStackTrace::tryGetSymbol(std::string &symbol, Addr addr,
     const auto it = symtab->find(addr);
     if (it == symtab->end())
         return false;
-    symbol = it->name;
+    symbol = it->name();
     return true;
 }
 
@@ -151,7 +151,7 @@ FunctionProfile::sample(ProfileNode *node, Addr pc)
 
     auto it = symtab.findNearest(pc);
     if (it != symtab.end()) {
-        pc_count[it->address]++;
+        pc_count[it->address()]++;
     } else {
         // record PC even if we don't have a symbol to avoid
         // silently biasing the histogram

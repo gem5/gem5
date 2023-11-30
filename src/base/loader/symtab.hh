@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2023 Arm Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2021 Daniel R. Carvalho
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
@@ -47,8 +59,9 @@ namespace gem5
 namespace loader
 {
 
-struct Symbol
+class Symbol
 {
+  public:
     enum class Binding
     {
         Global,
@@ -67,11 +80,45 @@ struct Symbol
         Other
     };
 
-    Binding binding;
-    SymbolType type;
-    std::string name;
-    Addr address;
+    Symbol(const Binding binding, const SymbolType type,
+           const std::string & name, const Addr addr)
+        : _binding(binding), _type(type), _name(name), _address(addr)
+    {}
+
+    Symbol(const Symbol & other) = default;
+    Symbol & operator=(const Symbol & other) = default;
+
+    Binding binding() const {
+        return _binding;
+    }
+
+    SymbolType type() const {
+        return _type;
+    }
+
+    std::string name() const {
+        return _name;
+    }
+
+    void rename(const std::string & new_name) {
+        _name = new_name;
+    }
+
+    Addr address() const {
+        return _address;
+    }
+
+    void relocate(const Addr new_addr) {
+        _address = new_addr;
+    }
+
+  private:
+    Binding _binding;
+    SymbolType _type;
+    std::string _name;
+    Addr _address;
 };
+
 
 class SymbolTable
 {
@@ -171,7 +218,7 @@ class SymbolTable
     filterByBinding(Symbol::Binding binding) const
     {
         auto filt = [binding](const Symbol &symbol) {
-            return symbol.binding == binding;
+            return symbol.binding() == binding;
         };
         return filter(filt);
     }
@@ -187,7 +234,7 @@ class SymbolTable
     filterBySymbolType(const Symbol::SymbolType& symbol_type) const
     {
         auto filt = [symbol_type](const Symbol &symbol) {
-            return symbol.type == symbol_type;
+            return symbol.type() == symbol_type;
         };
         return filter(filt);
     }
@@ -242,9 +289,9 @@ class SymbolTable
     {
         SymTabOp op =
             [addr_offset](SymbolTable &symtab, const Symbol &symbol) {
-                Symbol sym = symbol;
-                sym.address += addr_offset;
-                symtab.insert(sym);
+                symtab.insert(
+                    Symbol(symbol.binding(), symbol.type(), symbol.name(),
+                           symbol.address() + addr_offset));
             };
         return operate(op);
     }
@@ -260,9 +307,9 @@ class SymbolTable
     mask(Addr m) const
     {
         SymTabOp op = [m](SymbolTable &symtab, const Symbol &symbol) {
-            Symbol sym = symbol;
-            sym.address &= m;
-            symtab.insert(sym);
+            symtab.insert(
+                Symbol(symbol.binding(), symbol.type(), symbol.name(),
+                       symbol.address() & m));
         };
         return operate(op);
     }
@@ -275,11 +322,11 @@ class SymbolTable
      * @retval SymbolTablePtr A pointer to the modified SymbolTable copy.
      */
     SymbolTablePtr
-    rename(std::function<void(std::string&)> func) const
+    rename(std::function<std::string (const std::string&)> func) const
     {
         SymTabOp op = [func](SymbolTable &symtab, const Symbol &symbol) {
             Symbol sym = symbol;
-            func(sym.name);
+            sym.rename(func(sym.name()));
             symtab.insert(sym);
         };
         return operate(op);

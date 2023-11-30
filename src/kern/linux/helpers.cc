@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, 2022 Arm Limited
+ * Copyright (c) 2016, 2022-2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -125,9 +125,9 @@ dumpDmesg(ThreadContext *tc, std::ostream &os)
         return;
     }
 
-    uint32_t log_buf_len = proxy.read<uint32_t>(lb_len->address, bo);
-    uint32_t log_first_idx = proxy.read<uint32_t>(first->address, bo);
-    uint32_t log_next_idx = proxy.read<uint32_t>(next->address, bo);
+    uint32_t log_buf_len = proxy.read<uint32_t>(lb_len->address(), bo);
+    uint32_t log_first_idx = proxy.read<uint32_t>(first->address(), bo);
+    uint32_t log_next_idx = proxy.read<uint32_t>(next->address(), bo);
 
     if (log_first_idx >= log_buf_len || log_next_idx >= log_buf_len) {
         warn("dmesg pointers/length corrupted\n");
@@ -143,7 +143,7 @@ dumpDmesg(ThreadContext *tc, std::ostream &os)
             warn("Unexpected dmesg buffer length\n");
             return;
         }
-        proxy.readBlob(lb->address + log_first_idx, log_buf.data(), length);
+        proxy.readBlob(lb->address() + log_first_idx, log_buf.data(), length);
     } else {
         const int length_2 = log_buf_len - log_first_idx;
         if (length_2 < 0 || length_2 + log_next_idx > log_buf.size()) {
@@ -151,8 +151,10 @@ dumpDmesg(ThreadContext *tc, std::ostream &os)
             return;
         }
         length = log_buf_len;
-        proxy.readBlob(lb->address + log_first_idx, log_buf.data(), length_2);
-        proxy.readBlob(lb->address, log_buf.data() + length_2, log_next_idx);
+        proxy.readBlob(
+            lb->address() + log_first_idx, log_buf.data(), length_2);
+        proxy.readBlob(
+            lb->address(), log_buf.data() + length_2, log_next_idx);
     }
 
     // Print dmesg buffer content
@@ -498,7 +500,8 @@ dumpDmesgImpl(ThreadContext *tc, std::ostream &os)
     ringbuffer_t dynamic_rb;
     auto dynamic_rb_symbol = symtab.find("printk_rb_dynamic");
     if (dynamic_rb_symbol != symtab_end_it) {
-        dynamic_rb = ringbuffer_t::read(proxy, dynamic_rb_symbol->address, bo);
+        dynamic_rb =
+            ringbuffer_t::read(proxy, dynamic_rb_symbol->address(), bo);
     } else {
         warn("Failed to find required dmesg symbols.\n");
         return;
@@ -508,7 +511,7 @@ dumpDmesgImpl(ThreadContext *tc, std::ostream &os)
     ringbuffer_t static_rb;
     auto static_rb_symbol = symtab.find("printk_rb_static");
     if (static_rb_symbol != symtab_end_it) {
-        static_rb = ringbuffer_t::read(proxy, static_rb_symbol->address, bo);
+        static_rb = ringbuffer_t::read(proxy, static_rb_symbol->address(), bo);
     } else {
         warn("Failed to find required dmesg symbols.\n");
         return;
@@ -521,21 +524,22 @@ dumpDmesgImpl(ThreadContext *tc, std::ostream &os)
     auto active_ringbuffer_ptr_symbol = symtab.find("prb");
     if (active_ringbuffer_ptr_symbol != symtab_end_it) {
         active_ringbuffer_ptr =
-            proxy.read<guest_ptr_t>(active_ringbuffer_ptr_symbol->address, bo);
+            proxy.read<guest_ptr_t>(active_ringbuffer_ptr_symbol->address(),
+                                    bo);
     } else {
         warn("Failed to find required dmesg symbols.\n");
         return;
     }
 
     if (active_ringbuffer_ptr == 0 ||
-        (active_ringbuffer_ptr != dynamic_rb_symbol->address &&
-         active_ringbuffer_ptr != static_rb_symbol->address)) {
+        (active_ringbuffer_ptr != dynamic_rb_symbol->address() &&
+         active_ringbuffer_ptr != static_rb_symbol->address())) {
         warn("Kernel Dmesg ringbuffer appears to be invalid.\n");
         return;
     }
 
     ringbuffer_t & rb =
-        (active_ringbuffer_ptr == dynamic_rb_symbol->address)
+        (active_ringbuffer_ptr == dynamic_rb_symbol->address())
         ? dynamic_rb : static_rb;
 
     atomic_var_t head_offset = rb.data.head_offset;

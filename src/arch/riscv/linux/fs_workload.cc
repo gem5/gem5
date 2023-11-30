@@ -86,8 +86,8 @@ BootloaderKernelWorkload::loadBootloaderSymbolTable()
             bootloaderSymbolTable.offset(
                 bootloader_paddr_offset
             )->functionSymbols()->rename(
-                [](std::string &name) {
-                    name = "bootloader." + name;
+                [](const std::string &name) {
+                    return "bootloader." + name;
                 }
             );
         loader::debugSymbolTable.insert(*renamedBootloaderSymbolTable);
@@ -102,8 +102,8 @@ BootloaderKernelWorkload::loadKernelSymbolTable()
         kernelSymbolTable = kernel->symtab();
         auto renamedKernelSymbolTable = \
             kernelSymbolTable.functionSymbols()->rename(
-                [](std::string &name) {
-                    name = "kernel." + name;
+                [](const std::string &name) {
+                    return "kernel." + name;
                 }
             );
         loader::debugSymbolTable.insert(*renamedKernelSymbolTable);

@@ -52,26 +52,26 @@ getSymbolError(const loader::Symbol& symbol, const loader::Symbol& expected)
 {
     std::stringstream ss;
 
-    if (symbol.binding != expected.binding) {
+    if (symbol.binding() != expected.binding()) {
         ss << "    symbols' bindings do not match: seen `" <<
-            (int)symbol.binding << "`, expected `" <<
-            (int)expected.binding << "`.\n";
+            (int)symbol.binding() << "`, expected `" <<
+            (int)expected.binding() << "`.\n";
     }
 
-    if (symbol.type != expected.type) {
+    if (symbol.type() != expected.type()) {
         ss << "    symbols' types do not match: seen `" <<
-            (int)symbol.type << "`, expected `" <<
-            (int)expected.type << "`.\n";
+            (int)symbol.type() << "`, expected `" <<
+            (int)expected.type() << "`.\n";
     }
 
-    if (symbol.name != expected.name) {
-        ss << "    symbols' names do not match: seen `" << symbol.name <<
-            "`, expected `" << expected.name << "`.\n";
+    if (symbol.name() != expected.name()) {
+        ss << "    symbols' names do not match: seen `" << symbol.name() <<
+            "`, expected `" << expected.name() << "`.\n";
     }
 
-    if (symbol.address != expected.address) {
+    if (symbol.address() != expected.address()) {
         ss << "    symbols' addresses do not match: seen `" <<
-            symbol.address << "`, expected `" << expected.address << "`.\n";
+            symbol.address() << "`, expected `" << expected.address() << "`.\n";
     }
 
     // No error, symbols match
@@ -273,12 +273,12 @@ TEST(LoaderSymtabTest, Offset)
 
     // Check that the new table is offset
     loader::Symbol expected_symbols[] = {
-        {symbols[0].binding, symbols[0].type, symbols[0].name,
-            symbols[0].address + offset},
-        {symbols[1].binding, symbols[1].type, symbols[1].name,
-            symbols[1].address + offset},
-        {symbols[2].binding, symbols[2].type, symbols[2].name,
-            symbols[2].address + offset},
+        {symbols[0].binding(), symbols[0].type(), symbols[0].name(),
+            symbols[0].address() + offset},
+        {symbols[1].binding(), symbols[1].type(), symbols[1].name(),
+            symbols[1].address() + offset},
+        {symbols[2].binding(), symbols[2].type(), symbols[2].name(),
+            symbols[2].address() + offset},
     };
     ASSERT_TRUE(checkTable(*symtab_new, {expected_symbols[0],
         expected_symbols[1], expected_symbols[2]}));
@@ -316,14 +316,14 @@ TEST(LoaderSymtabTest, Mask)
 
     // Check that the new table is masked
     loader::Symbol expected_symbols[] = {
-        {symbols[0].binding, symbols[0].type, symbols[0].name,
-            symbols[0].address & mask},
-        {symbols[1].binding, symbols[1].type, symbols[1].name,
-            symbols[1].address & mask},
-        {symbols[2].binding, symbols[2].type, symbols[2].name,
-            symbols[2].address & mask},
-        {symbols[3].binding, symbols[3].type, symbols[3].name,
-            symbols[3].address & mask},
+        {symbols[0].binding(), symbols[0].type(), symbols[0].name(),
+            symbols[0].address() & mask},
+        {symbols[1].binding(), symbols[1].type(), symbols[1].name(),
+            symbols[1].address() & mask},
+        {symbols[2].binding(), symbols[2].type(), symbols[2].name(),
+            symbols[2].address() & mask},
+        {symbols[3].binding(), symbols[3].type(), symbols[3].name(),
+            symbols[3].address() & mask},
     };
     ASSERT_TRUE(checkTable(*symtab_new, {expected_symbols[0],
         expected_symbols[1], expected_symbols[2], expected_symbols[3]}));
@@ -353,7 +353,7 @@ TEST(LoaderSymtabTest, Rename)
     EXPECT_TRUE(symtab.insert(symbols[3]));
 
     const auto symtab_new =
-        symtab.rename([](std::string &name) { name = name + "_suffix"; });
+        symtab.rename([](const std::string &name) { return name + "_suffix"; });
 
     // Check that the original table is not modified
     ASSERT_TRUE(checkTable(symtab, {symbols[0], symbols[1], symbols[2],
@@ -361,14 +361,14 @@ TEST(LoaderSymtabTest, Rename)
 
     // Check that the new table's symbols have been renamed
     loader::Symbol expected_symbols[] = {
-        {symbols[0].binding, symbols[0].type, symbols[0].name + "_suffix",
-            symbols[0].address},
-        {symbols[1].binding, symbols[1].type, symbols[1].name + "_suffix",
-            symbols[1].address},
-        {symbols[2].binding, symbols[2].type, symbols[2].name + "_suffix",
-            symbols[2].address},
-        {symbols[3].binding, symbols[3].type, symbols[3].name + "_suffix",
-            symbols[3].address},
+        {symbols[0].binding(), symbols[0].type(), symbols[0].name() + "_suffix",
+            symbols[0].address()},
+        {symbols[1].binding(), symbols[1].type(), symbols[1].name() + "_suffix",
+            symbols[1].address()},
+        {symbols[2].binding(), symbols[2].type(), symbols[2].name() + "_suffix",
+            symbols[2].address()},
+        {symbols[3].binding(), symbols[3].type(), symbols[3].name() + "_suffix",
+            symbols[3].address()},
     };
     ASSERT_TRUE(checkTable(*symtab_new, {expected_symbols[0],
         expected_symbols[1], expected_symbols[2], expected_symbols[3]}));
@@ -398,10 +398,12 @@ TEST(LoaderSymtabTest, RenameNonUnique)
     EXPECT_TRUE(symtab.insert(symbols[3]));
 
     int i = 0;
-    const auto symtab_new = symtab.rename([&i](std::string &name)
+    const auto symtab_new = symtab.rename([&i](const std::string &name)
         {
             if ((i++ % 2) == 0) {
-                name = "NonUniqueName";
+                return std::string("NonUniqueName");
+            } else {
+                return name;
             }
         });
 
@@ -412,12 +414,12 @@ TEST(LoaderSymtabTest, RenameNonUnique)
     // Check that the new table's symbols have been renamed, yet it does not
     // contain the symbols with duplicated names
     loader::Symbol expected_symbols[] = {
-        {symbols[0].binding, symbols[0].type, "NonUniqueName",
-            symbols[0].address},
-        {symbols[1].binding, symbols[1].type, symbols[1].name,
-            symbols[1].address},
-        {symbols[3].binding, symbols[3].type, symbols[3].name,
-            symbols[3].address},
+        {symbols[0].binding(), symbols[0].type(), "NonUniqueName",
+            symbols[0].address()},
+        {symbols[1].binding(), symbols[1].type(), symbols[1].name(),
+            symbols[1].address()},
+        {symbols[3].binding(), symbols[3].type(), symbols[3].name(),
+            symbols[3].address()},
     };
     ASSERT_TRUE(checkTable(*symtab_new, {expected_symbols[0],
         expected_symbols[1], expected_symbols[2]}));
@@ -597,7 +599,7 @@ TEST(LoaderSymtabTest, FindUniqueAddress)
     EXPECT_TRUE(symtab.insert(symbols[1]));
     EXPECT_TRUE(symtab.insert(symbols[2]));
 
-    const auto it = symtab.find(symbols[2].address);
+    const auto it = symtab.find(symbols[2].address());
     ASSERT_NE(it, symtab.end());
     ASSERT_PRED_FORMAT2(checkSymbol, *it, symbols[2]);
 }
@@ -622,7 +624,7 @@ TEST(LoaderSymtabTest, FindNonUniqueAddress)
     EXPECT_TRUE(symtab.insert(symbols[1]));
     EXPECT_TRUE(symtab.insert(symbols[2]));
 
-    const auto it = symtab.find(symbols[1].address);
+    const auto it = symtab.find(symbols[1].address());
     ASSERT_NE(it, symtab.end());
     ASSERT_PRED_FORMAT2(checkSymbol, *it, symbols[1]);
 }
@@ -658,7 +660,7 @@ TEST(LoaderSymtabTest, FindExistingName)
     EXPECT_TRUE(symtab.insert(symbols[1]));
     EXPECT_TRUE(symtab.insert(symbols[2]));
 
-    const auto it = symtab.find(symbols[1].name);
+    const auto it = symtab.find(symbols[1].name());
     ASSERT_NE(it, symtab.end());
     ASSERT_PRED_FORMAT2(checkSymbol, *it, symbols[1]);
 }
@@ -677,7 +679,7 @@ TEST(LoaderSymtabTest, FindNearestExact)
     EXPECT_TRUE(symtab.insert(symbols[0]));
     EXPECT_TRUE(symtab.insert(symbols[1]));
 
-    const auto it = symtab.findNearest(symbols[1].address);
+    const auto it = symtab.findNearest(symbols[1].address());
     ASSERT_NE(it, symtab.end());
     ASSERT_PRED_FORMAT2(checkSymbol, *it, symbols[1]);
 }
@@ -695,7 +697,7 @@ TEST(LoaderSymtabTest, FindNearestRound)
             "symbol", 0x10};
     EXPECT_TRUE(symtab.insert(symbol));
 
-    const auto it = symtab.findNearest(symbol.address + 0x1);
+    const auto it = symtab.findNearest(symbol.address() + 0x1);
     ASSERT_NE(it, symtab.end());
     ASSERT_PRED_FORMAT2(checkSymbol, *it, symbol);
 }
@@ -719,10 +721,10 @@ TEST(LoaderSymtabTest, FindNearestRoundWithNext)
     EXPECT_TRUE(symtab.insert(symbols[1]));
 
     Addr next_addr;
-    const auto it = symtab.findNearest(symbols[0].address + 0x1, next_addr);
+    const auto it = symtab.findNearest(symbols[0].address() + 0x1, next_addr);
     ASSERT_NE(it, symtab.end());
     ASSERT_PRED_FORMAT2(checkSymbol, *it, symbols[0]);
-    ASSERT_EQ(next_addr, symbols[1].address);
+    ASSERT_EQ(next_addr, symbols[1].address());
 }
 
 /**
@@ -740,7 +742,7 @@ TEST(LoaderSymtabTest, FindNearestRoundWithNextNonExistent)
     EXPECT_TRUE(symtab.insert(symbol));
 
     Addr next_addr;
-    const auto it = symtab.findNearest(symbol.address + 0x1, next_addr);
+    const auto it = symtab.findNearest(symbol.address() + 0x1, next_addr);
     ASSERT_NE(it, symtab.end());
     ASSERT_PRED_FORMAT2(checkSymbol, *it, symbol);
     ASSERT_EQ(next_addr, 0);
@@ -759,7 +761,7 @@ TEST(LoaderSymtabTest, FindNearestNonExistent)
             "symbol", 0x10};
     EXPECT_TRUE(symtab.insert(symbol));
 
-    const auto it = symtab.findNearest(symbol.address - 0x1);
+    const auto it = symtab.findNearest(symbol.address() - 0x1);
     ASSERT_EQ(it, symtab.end());
 }
 
