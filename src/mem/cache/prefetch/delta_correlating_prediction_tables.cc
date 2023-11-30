@@ -125,7 +125,8 @@ DeltaCorrelatingPredictionTables::DCPTEntry::getCandidates(
 void
 DeltaCorrelatingPredictionTables::calculatePrefetch(
     const Base::PrefetchInfo &pfi,
-    std::vector<Queued::AddrPriority> &addresses)
+    std::vector<Queued::AddrPriority> &addresses,
+    const CacheAccessor &cache)
 {
     if (!pfi.hasPC()) {
         DPRINTF(HWPrefetch, "Ignoring request with no PC.\n");
@@ -156,9 +157,10 @@ DCPT::DCPT(const DCPTPrefetcherParams &p)
 
 void
 DCPT::calculatePrefetch(const PrefetchInfo &pfi,
-    std::vector<AddrPriority> &addresses)
+    std::vector<AddrPriority> &addresses,
+    const CacheAccessor &cache)
 {
-    dcpt.calculatePrefetch(pfi, addresses);
+    dcpt.calculatePrefetch(pfi, addresses, cache);
 }
 
 } // namespace prefetch

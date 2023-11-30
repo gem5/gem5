@@ -515,7 +515,7 @@ transition({UD,UD_T,SD,UC,SC}, Load, BUSY_BLKD) {
 // the local cache entry at the end since our data is stale. If the cache is
 // inclusive for unique data we need to keep the block, so just bypass the
 // normal path.
-transition({UD,UD_T,SD,UC,SC,RU,RSC,RSD,RUSD,SC_RSC,SD_RSC,SD_RSD,UC_RSC,UC_RU,UD_RU,UD_RSD,UD_RSC}, Prefetch) {
+transition({UD,UD_T,SD,UC,SC,RU,RSC,RSD,RUSC,RUSD,SC_RSC,SD_RSC,SD_RSD,UC_RSC,UC_RU,UD_RU,UD_RSD,UD_RSC}, Prefetch) {
   Callback_ExpressPrefetchHit;
   Pop_ReqRdyQueue;
 }

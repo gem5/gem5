@@ -62,7 +62,8 @@ class SlimAMPM : public Queued
    ~SlimAMPM() = default;
 
    void calculatePrefetch(const PrefetchInfo &pfi,
-                          std::vector<AddrPriority> &addresses) override;
+                          std::vector<AddrPriority> &addresses,
+                          const CacheAccessor &cache) override;
 };
 
 } // namespace prefetch

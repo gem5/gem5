@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2019 ARM Limited
+ * Copyright (c) 2014, 2019, 2023 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -56,7 +56,8 @@ class Multi : public Base
     Multi(const MultiPrefetcherParams &p);
 
   public:
-    void setCache(BaseCache *_cache) override;
+    void
+    setParentInfo(System *sys, ProbeManager *pm, unsigned blk_size) override;
     PacketPtr getPacket() override;
     Tick nextPrefetchReadyTime() const override;
 
@@ -65,8 +66,11 @@ class Multi : public Base
      * Ignore notifications since each sub-prefetcher already gets a
      * notification through their probes-based interface.
      */
-    void notify(const PacketPtr &pkt, const PrefetchInfo &pfi) override {};
-    void notifyFill(const PacketPtr &pkt) override {};
+    void
+    notify(const CacheAccessProbeArg &arg, const PrefetchInfo &pfi) override
+    {};
+
+    void notifyFill(const CacheAccessProbeArg &arg) override {};
     /** @} */
 
   protected:

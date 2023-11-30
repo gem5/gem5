@@ -3441,7 +3441,7 @@ action(Callback_ExpressPrefetchHit, desc="") {
   cache.profilePrefetchHit();
   peek(reqRdyPort, CHIRequestMsg) {
     assert(in_msg.is_local_pf);
-    notifyPfComplete(in_msg.addr);
+    pfProxy.completePrefetch(in_msg.addr);
   }
 }
 
@@ -3452,7 +3452,7 @@ action(Callback_Miss, desc="") {
   assert(is_valid(tbe));
   if (tbe.dataValid && tbe.is_local_pf) {
     assert(use_prefetcher);
-    notifyPfComplete(tbe.addr);
+    pfProxy.completePrefetch(tbe.addr);
 
   } else if (tbe.dataValid && (tbe.reqType == CHIRequestType:Load)) {
     DPRINTF(RubySlicc, "Read data %s\n", tbe.dataBlk);
@@ -3564,7 +3564,7 @@ action(Profile_Miss, desc="") {
 
     // FIXME: this dataBlk is likely to have stale data. This should be fixed
     // if our prefetcher uses cached data to make prefetch decisions.
-    notifyPfMiss(tbe.seqReq, is_read, tbe.dataBlk);
+    pfProxy.notifyPfMiss(tbe.seqReq, is_read, tbe.dataBlk);
   }
 }
 
@@ -3588,7 +3588,7 @@ action(Profile_Hit, desc="") {
     } else {
       assert(isWriteReqType(tbe.reqType));
     }
-    notifyPfHit(tbe.seqReq, is_read, tbe.dataBlk);
+    pfProxy.notifyPfHit(tbe.seqReq, is_read, tbe.dataBlk);
 
     cache_entry.HWPrefetched := false;
   }
@@ -3602,10 +3602,11 @@ action(Profile_Fill, desc="") {
     cache_entry.HWPrefetched := tbe.is_local_pf ||
                           (tbe.is_remote_pf &&
                             (upstream_prefetch_trains_prefetcher == false));
+    cache_entry.requestor := getRequestorID(tbe.seqReq);
 
     // Prefetchers that use this info require notifications from both
     // demand and pf fills (unlike notifyPfHit/notifyPfMiss)
-    notifyPfFill(tbe.seqReq, tbe.dataBlk, tbe.is_local_pf);
+    pfProxy.notifyPfFill(tbe.seqReq, tbe.dataBlk, tbe.is_local_pf);
   }
 }
 
@@ -3619,7 +3620,7 @@ action(Profile_Eviction, desc="") {
     sequencer.evictionCallback(address);
   }
   if (use_prefetcher && is_valid(cache_entry)) {
-    notifyPfEvict(address, cache_entry.HWPrefetched);
+    pfProxy.notifyPfEvict(address, cache_entry.HWPrefetched, cache_entry.requestor);
   }
 }
 
