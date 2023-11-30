@@ -23,24 +23,6 @@ jobs:
           # therefore need to explicitly checkout the develop branch.
                   ref: develop
             - name: Build gem5
-              run: scons build/GCN3_X86/gem5.opt -j $(nproc) --ignore-style
-            - uses: actions/upload-artifact@v3
-              with:
-                  name: weekly-test-${{ github.run_number }}-attempt-${{ github.run_attempt }}-gem5-build-gcn3
-                  path: build/GCN3_X86/gem5.opt
-                  retention-days: 5
-            - run: echo "This job's status is ${{ job.status }}."
-
-    build-gem5-vega:
-        runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/gcn-gpu:latest
-        steps:
-            - uses: actions/checkout@v3
-              with:
-        # Scheduled workflows run on the default branch by default. We
-        # therefore need to explicitly checkout the develop branch.
-                  ref: develop
-            - name: Build gem5 vega
               run: scons build/VEGA_X86/gem5.opt -j $(nproc) --ignore-style
             - uses: actions/upload-artifact@v3
               with:
@@ -52,7 +34,7 @@ jobs:
     LULESH-tests:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/gcn-gpu:latest
-        needs: build-gem5-vega
+        needs: build-gem5
         timeout-minutes: 480 # 8 hours
         steps:
             - uses: actions/checkout@v3
@@ -95,8 +77,8 @@ jobs:
             - uses: actions/download-artifact@v3
               with:
                   name: weekly-test-${{ github.run_number }}-attempt-${{ github.run_attempt }}-gem5-build-gcn3
-                  path: build/GCN3_X86
-            - run: chmod u+x build/GCN3_X86/gem5.opt
+                  path: build/VEGA_X86
+            - run: chmod u+x build/VEGA_X86/gem5.opt
             - name: make hip directory
               run: mkdir hip
             - name: Compile m5ops and x86
@@ -110,4 +92,4 @@ jobs:
             - name: Run HACC tests
               working-directory: ${{ github.workspace }}
               run: |
-                  build/GCN3_X86/gem5.opt configs/example/apu_se.py -n3 --reg-alloc-policy=dynamic --benchmark-root=hip -c ForceTreeTest --options="0.5 0.1 64 0.1 1 N 12 rcb"
+                  build/VEGA_X86/gem5.opt configs/example/apu_se.py -n3 --reg-alloc-policy=dynamic --benchmark-root=hip -c ForceTreeTest --options="0.5 0.1 64 0.1 1 N 12 rcb"
