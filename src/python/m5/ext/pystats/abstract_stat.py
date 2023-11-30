@@ -24,8 +24,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from .serializable_stat import SerializableStat
-
 import re
 from typing import (
     Callable,
@@ -34,6 +32,8 @@ from typing import (
     Pattern,
     Union,
 )
+
+from .serializable_stat import SerializableStat
 
 
 class AbstractStat(SerializableStat):

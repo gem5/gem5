@@ -31,14 +31,17 @@ subsystem. The reported values could be used to compare against a validated
 set of statistics.
 """
 
-import m5
-
 import argparse
 import importlib
 from pathlib import Path
 
-from m5.objects import Root, MemorySize
+import m5
+from m5.objects import (
+    MemorySize,
+    Root,
+)
 from m5.stats.gem5stats import get_simstat
+
 from gem5.components.boards.test_board import TestBoard
 
 

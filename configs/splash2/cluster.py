@@ -28,8 +28,8 @@
 #
 # "m5 test.py"
 
-import os
 import argparse
+import os
 import sys
 
 import m5

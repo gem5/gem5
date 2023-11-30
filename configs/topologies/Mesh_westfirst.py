@@ -25,10 +25,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.params import *
-from m5.objects import *
-
 from topologies.BaseTopology import SimpleTopology
+
+from m5.objects import *
+from m5.params import *
 
 # Creates a generic Mesh assuming an equal number of cache
 # and directory controllers.

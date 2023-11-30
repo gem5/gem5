@@ -24,13 +24,22 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from .resource import obtain_resource, WorkloadResource
-from .client import get_resource_json_obj
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional,
+)
 
-from _m5 import core
 from m5.util import warn
 
-from typing import Dict, Any, List, Optional
+from _m5 import core
+
+from .client import get_resource_json_obj
+from .resource import (
+    WorkloadResource,
+    obtain_resource,
+)
 
 
 def CustomWorkload(function: str, parameters: Dict[str, Any]):

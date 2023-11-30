@@ -25,40 +25,41 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from .kernel_disk_workload import KernelDiskWorkload
-from ...resources.resource import AbstractResource
-from ...utils.override import overrides
-from .abstract_system_board import AbstractSystemBoard
-from ...isas import ISA
-
-from m5.objects import (
-    Pc,
-    AddrRange,
-    X86FsLinux,
-    Addr,
-    X86SMBiosBiosInformation,
-    X86IntelMPProcessor,
-    X86IntelMPIOAPIC,
-    X86IntelMPBus,
-    X86IntelMPBusHierarchy,
-    X86IntelMPIOIntAssignment,
-    X86E820Entry,
-    Bridge,
-    IOXBar,
-    IdeDisk,
-    CowDiskImage,
-    RawDiskImage,
-    BaseXBar,
-    Port,
+from typing import (
+    List,
+    Sequence,
 )
 
+from m5.objects import (
+    Addr,
+    AddrRange,
+    BaseXBar,
+    Bridge,
+    CowDiskImage,
+    IdeDisk,
+    IOXBar,
+    Pc,
+    Port,
+    RawDiskImage,
+    X86E820Entry,
+    X86FsLinux,
+    X86IntelMPBus,
+    X86IntelMPBusHierarchy,
+    X86IntelMPIOAPIC,
+    X86IntelMPIOIntAssignment,
+    X86IntelMPProcessor,
+    X86SMBiosBiosInformation,
+)
 from m5.util.convert import toMemorySize
 
-from ..processors.abstract_processor import AbstractProcessor
-from ..memory.abstract_memory_system import AbstractMemorySystem
+from ...isas import ISA
+from ...resources.resource import AbstractResource
+from ...utils.override import overrides
 from ..cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
-
-from typing import List, Sequence
+from ..memory.abstract_memory_system import AbstractMemorySystem
+from ..processors.abstract_processor import AbstractProcessor
+from .abstract_system_board import AbstractSystemBoard
+from .kernel_disk_workload import KernelDiskWorkload
 
 
 class X86Board(AbstractSystemBoard, KernelDiskWorkload):

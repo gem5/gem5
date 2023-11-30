@@ -43,7 +43,6 @@ import os.path
 import sys
 
 import importer
-
 from code_formatter import code_formatter
 
 parser = argparse.ArgumentParser()
@@ -59,8 +58,8 @@ importer.install()
 module = importlib.import_module(args.modpath)
 sim_object = getattr(module, sim_object_name)
 
-from m5.params import isSimObjectClass
 import m5.params
+from m5.params import isSimObjectClass
 
 code = code_formatter()
 

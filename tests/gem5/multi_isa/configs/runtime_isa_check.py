@@ -29,10 +29,14 @@ This is a very simple script to test the output given by
 `gem5.runtime.get_runtime_isa`
 """
 
-from gem5.runtime import get_runtime_isa
-from gem5.isas import ISA, get_isas_str_set, get_isa_from_str
-
 import argparse
+
+from gem5.isas import (
+    ISA,
+    get_isa_from_str,
+    get_isas_str_set,
+)
+from gem5.runtime import get_runtime_isa
 
 parser = argparse.ArgumentParser(
     description="A simple script used to check the output of "

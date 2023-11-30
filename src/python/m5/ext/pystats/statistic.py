@@ -25,7 +25,13 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from abc import ABC
-from typing import Any, Iterable, Optional, Union, List
+from typing import (
+    Any,
+    Iterable,
+    List,
+    Optional,
+    Union,
+)
 
 from .abstract_stat import AbstractStat
 from .storagetype import StorageType

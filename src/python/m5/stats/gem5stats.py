@@ -30,14 +30,19 @@ the Python Stats model.
 """
 
 from datetime import datetime
-from typing import IO, List, Union
+from typing import (
+    IO,
+    List,
+    Union,
+)
 
-import _m5.stats
-from m5.objects import *
 from m5.ext.pystats.group import *
 from m5.ext.pystats.simstat import *
 from m5.ext.pystats.statistic import *
 from m5.ext.pystats.storagetype import *
+from m5.objects import *
+
+import _m5.stats
 
 
 class JsonOutputVistor:

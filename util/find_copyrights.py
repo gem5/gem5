@@ -4,7 +4,10 @@ import os
 import re
 import sys
 
-from file_types import lang_type, find_files
+from file_types import (
+    find_files,
+    lang_type,
+)
 
 mode_line = re.compile(r"(-\*- *mode:.* *-\*-)")
 shell_comment = re.compile(r"^\s*#")

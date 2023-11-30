@@ -24,11 +24,13 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from ..abstract_directory import AbstractDirectory
+from m5.objects import (
+    MessageBuffer,
+    RubyDirectoryMemory,
+)
+
 from ......utils.override import overrides
-
-
-from m5.objects import MessageBuffer, RubyDirectoryMemory
+from ..abstract_directory import AbstractDirectory
 
 
 class Directory(AbstractDirectory):

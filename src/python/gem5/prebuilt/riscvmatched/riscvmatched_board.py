@@ -27,42 +27,30 @@
 
 import os
 import re
-
-from typing import List, Optional
-
-from gem5.utils.override import overrides
-from gem5.components.boards.abstract_system_board import AbstractSystemBoard
-from gem5.components.boards.kernel_disk_workload import KernelDiskWorkload
-from gem5.components.boards.se_binary_workload import SEBinaryWorkload
-from gem5.resources.resource import AbstractResource
-from gem5.components.memory import SingleChannelDDR4_2400
-from gem5.utils.requires import requires
-from gem5.isas import ISA
-from .riscvmatched_cache import RISCVMatchedCacheHierarchy
-from .riscvmatched_processor import U74Processor
-from gem5.isas import ISA
-
-import m5
-
-from m5.objects import (
-    BadAddr,
-    Bridge,
-    PMAChecker,
-    RiscvLinux,
-    AddrRange,
-    IOXBar,
-    RiscvRTC,
-    HiFive,
-    IGbE_e1000,
-    CowDiskImage,
-    RawDiskImage,
-    RiscvMmioVirtIO,
-    VirtIOBlock,
-    VirtIORng,
-    Frequency,
-    Port,
+from typing import (
+    List,
+    Optional,
 )
 
+import m5
+from m5.objects import (
+    AddrRange,
+    BadAddr,
+    Bridge,
+    CowDiskImage,
+    Frequency,
+    HiFive,
+    IGbE_e1000,
+    IOXBar,
+    PMAChecker,
+    Port,
+    RawDiskImage,
+    RiscvLinux,
+    RiscvMmioVirtIO,
+    RiscvRTC,
+    VirtIOBlock,
+    VirtIORng,
+)
 from m5.util.fdthelper import (
     Fdt,
     FdtNode,
@@ -71,6 +59,18 @@ from m5.util.fdthelper import (
     FdtPropertyWords,
     FdtState,
 )
+
+from gem5.components.boards.abstract_system_board import AbstractSystemBoard
+from gem5.components.boards.kernel_disk_workload import KernelDiskWorkload
+from gem5.components.boards.se_binary_workload import SEBinaryWorkload
+from gem5.components.memory import SingleChannelDDR4_2400
+from gem5.isas import ISA
+from gem5.resources.resource import AbstractResource
+from gem5.utils.override import overrides
+from gem5.utils.requires import requires
+
+from .riscvmatched_cache import RISCVMatchedCacheHierarchy
+from .riscvmatched_processor import U74Processor
 
 
 def U74Memory():

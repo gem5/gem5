@@ -35,11 +35,14 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.defines import buildEnv
-from m5.SimObject import *
+from m5.objects.Gic import (
+    ArmInterruptPin,
+    ArmPPI,
+)
 from m5.params import *
 from m5.params import isNullPointer
 from m5.proxy import *
-from m5.objects.Gic import ArmInterruptPin, ArmPPI
+from m5.SimObject import *
 from m5.util.fdthelper import *
 
 

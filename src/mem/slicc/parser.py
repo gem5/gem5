@@ -42,7 +42,10 @@ import re
 import sys
 
 from code_formatter import code_formatter
-from grammar import Grammar, ParseError
+from grammar import (
+    Grammar,
+    ParseError,
+)
 
 import slicc.ast as ast
 import slicc.util as util

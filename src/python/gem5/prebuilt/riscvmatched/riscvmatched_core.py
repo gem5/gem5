@@ -25,20 +25,21 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from typing import Optional
-from gem5.utils.requires import requires
+
+from m5.objects import (
+    BaseCPU,
+    BaseMMU,
+    Port,
+    Process,
+)
+from m5.objects.BaseMinorCPU import *
+from m5.objects.RiscvCPU import RiscvMinorCPU
+
 from gem5.components.processors.base_cpu_core import BaseCPUCore
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
 from gem5.utils.override import overrides
-from m5.objects.RiscvCPU import RiscvMinorCPU
-from m5.objects import (
-    BaseMMU,
-    Port,
-    BaseCPU,
-    Process,
-)
-from m5.objects.BaseMinorCPU import *
-from gem5.isas import ISA
+from gem5.utils.requires import requires
 
 
 class U74IntFU(MinorDefaultIntFU):

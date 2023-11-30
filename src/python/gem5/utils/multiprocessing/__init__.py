@@ -24,9 +24,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from .context import Process
-
-from .context import gem5Context
+from .context import (
+    Process,
+    gem5Context,
+)
 
 Pool = gem5Context().Pool
 

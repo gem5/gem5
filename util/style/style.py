@@ -39,10 +39,13 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from abc import ABCMeta, abstractmethod
 import difflib
 import re
 import sys
+from abc import (
+    ABCMeta,
+    abstractmethod,
+)
 
 from .region import *
 

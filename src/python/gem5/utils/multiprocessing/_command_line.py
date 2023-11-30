@@ -32,7 +32,10 @@ multiprocessing module (i.e., cpython/Lib/multiprocessing/).
 """
 
 import sys
-from multiprocessing import spawn, util
+from multiprocessing import (
+    spawn,
+    util,
+)
 
 
 def _gem5_args_for_multiprocessing(name):

@@ -36,15 +36,15 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 try:
-    import matplotlib.pyplot as plt
     import matplotlib as mpl
+    import matplotlib.pyplot as plt
     import numpy as np
 except ImportError:
     print("Failed to import matplotlib and numpy")
     exit(-1)
 
-import sys
 import re
+import sys
 
 
 # This script is intended to post process and plot the output from

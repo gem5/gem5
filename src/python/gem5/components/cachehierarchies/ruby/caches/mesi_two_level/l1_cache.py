@@ -24,14 +24,19 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from .....processors.abstract_core import AbstractCore
-from ......isas import ISA
-from ..abstract_l1_cache import AbstractL1Cache
-from ......utils.override import *
-
-from m5.objects import MessageBuffer, RubyPrefetcher, RubyCache, ClockDomain
-
 import math
+
+from m5.objects import (
+    ClockDomain,
+    MessageBuffer,
+    RubyCache,
+    RubyPrefetcher,
+)
+
+from ......isas import ISA
+from ......utils.override import *
+from .....processors.abstract_core import AbstractCore
+from ..abstract_l1_cache import AbstractL1Cache
 
 
 class L1Cache(AbstractL1Cache):

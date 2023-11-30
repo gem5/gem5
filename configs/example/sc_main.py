@@ -26,7 +26,10 @@
 import sys
 
 import m5
-from m5.objects import SystemC_Kernel, Root
+from m5.objects import (
+    Root,
+    SystemC_Kernel,
+)
 
 # pylint:disable=unused-variable
 

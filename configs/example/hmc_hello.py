@@ -30,19 +30,21 @@
 #
 # Author: Éder F. Zulian
 
-import sys
 import argparse
+import sys
 
 import m5
 from m5.objects import *
 from m5.util import *
+
 from gem5.runtime import get_runtime_isa
 
 addToPath("../")
 
-from common import MemConfig
-from common import HMC
-
+from common import (
+    HMC,
+    MemConfig,
+)
 
 pd = "Simple 'hello world' example using HMC as main memory"
 parser = argparse.ArgumentParser(description=pd)

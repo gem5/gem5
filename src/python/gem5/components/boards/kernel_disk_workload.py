@@ -24,21 +24,24 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import os
 from abc import abstractmethod
-
-from .abstract_board import AbstractBoard
-from ...resources.resource import (
-    DiskImageResource,
-    BootloaderResource,
-    CheckpointResource,
-    KernelResource,
+from pathlib import Path
+from typing import (
+    List,
+    Optional,
+    Union,
 )
 
-from typing import List, Optional, Union
-import os
-from pathlib import Path
-
 import m5
+
+from ...resources.resource import (
+    BootloaderResource,
+    CheckpointResource,
+    DiskImageResource,
+    KernelResource,
+)
+from .abstract_board import AbstractBoard
 
 
 class KernelDiskWorkload:

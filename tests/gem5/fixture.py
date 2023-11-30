@@ -36,24 +36,33 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import os
-import tempfile
-import shutil
-import sys
-import socket
-import threading
 import gzip
-
+import os
+import shutil
+import socket
+import sys
+import tempfile
+import threading
 import urllib.error
 import urllib.request
+from typing import (
+    List,
+    Optional,
+)
 
-from testlib.fixture import Fixture
-from testlib.configuration import config, constants
-from testlib.helper import log_call, cacheresult, joinpath, absdirpath
 import testlib.log as log
+from testlib.configuration import (
+    config,
+    constants,
+)
+from testlib.fixture import Fixture
+from testlib.helper import (
+    absdirpath,
+    cacheresult,
+    joinpath,
+    log_call,
+)
 from testlib.state import Result
-
-from typing import Optional, List
 
 
 class VariableFixture(Fixture):
@@ -342,7 +351,9 @@ class DownloadedProgram(UniqueFixture):
             urllib.request.urlretrieve(self.url, self.filename)
 
     def _getremotetime(self):
-        import datetime, time
+        import datetime
+        import time
+
         import _strptime  # Needed for python threading bug
 
         u = urllib.request.urlopen(self.url, timeout=10)

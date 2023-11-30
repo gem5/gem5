@@ -38,18 +38,23 @@
 # minorview.py: Minorview visuliser for MinorCPU model MinorTrace output
 #
 
-import gtk
+import argparse
 import os
 import sys
-import argparse
+
+import gtk
 
 # Find MinorView modules even if not called from minorview directory
 minorviewDir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(minorviewDir)
 
 from minorview.model import BlobModel
-from minorview.view import BlobView, BlobController, BlobWindow
 from minorview.point import Point
+from minorview.view import (
+    BlobController,
+    BlobView,
+    BlobWindow,
+)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Minor visualiser")

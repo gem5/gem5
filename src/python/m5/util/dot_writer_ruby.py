@@ -36,6 +36,7 @@
 # Creates a visual representation of a Ruby network topology
 
 import os
+
 import m5
 from m5.util import warn
 

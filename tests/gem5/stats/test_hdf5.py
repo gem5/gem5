@@ -46,8 +46,9 @@ It will not run if the build/ARM/gem5.opt has not been built. As this is not
 built prior to this test being processed during the Weekly run, this test is
 not run.
 """
-import re
 import os
+import re
+
 from testlib import *
 
 if config.bin_path:

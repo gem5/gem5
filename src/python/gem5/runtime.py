@@ -28,12 +28,17 @@
 This file contains functions to extract gem5 runtime information.
 """
 
+from typing import Set
+
 from m5.defines import buildEnv
 from m5.util import warn
 
-from .isas import ISA, get_isa_from_str, get_isas_str_set
 from .coherence_protocol import CoherenceProtocol
-from typing import Set
+from .isas import (
+    ISA,
+    get_isa_from_str,
+    get_isas_str_set,
+)
 
 
 def get_supported_isas() -> Set[ISA]:

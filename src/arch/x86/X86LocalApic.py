@@ -37,12 +37,11 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.defines import buildEnv
-from m5.params import *
-from m5.proxy import *
-
 from m5.objects.BaseInterrupts import BaseInterrupts
 from m5.objects.ClockDomain import DerivedClockDomain
 from m5.objects.IntPin import IntSinkPin
+from m5.params import *
+from m5.proxy import *
 
 
 class X86LocalApic(BaseInterrupts):

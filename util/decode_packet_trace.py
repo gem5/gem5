@@ -39,9 +39,10 @@
 # format.
 
 import os
-import protolib
 import subprocess
 import sys
+
+import protolib
 
 util_dir = os.path.dirname(os.path.realpath(__file__))
 # Make sure the proto definitions are up to date.

@@ -33,10 +33,10 @@ The print statements in the script are for illustrative purposes only,
 and are not required to run the script.
 """
 
+from gem5.isas import ISA
+from gem5.prebuilt.riscvmatched.riscvmatched_board import RISCVMatchedBoard
 from gem5.resources.resource import obtain_resource
 from gem5.simulate.simulator import Simulator
-from gem5.prebuilt.riscvmatched.riscvmatched_board import RISCVMatchedBoard
-from gem5.isas import ISA
 from gem5.utils.requires import requires
 
 requires(isa_required=ISA.RISCV)

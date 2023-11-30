@@ -34,18 +34,18 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-import os
-import m5
-from m5.util import addToPath
-from m5.objects import *
 import argparse
+import os
 import shlex
+
+import m5
+from m5.objects import *
+from m5.util import addToPath
 
 m5.util.addToPath("../..")
 
-from common import ObjectList
-
 import devices
+from common import ObjectList
 
 
 def get_processes(cmd):

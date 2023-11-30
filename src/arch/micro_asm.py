@@ -25,15 +25,17 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
-import sys
 import re
+import sys
 import traceback
 
 # get type names
 from types import *
 
-from ply import lex
-from ply import yacc
+from ply import (
+    lex,
+    yacc,
+)
 
 ##########################################################################
 #

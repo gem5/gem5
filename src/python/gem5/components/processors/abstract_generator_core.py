@@ -26,13 +26,16 @@
 
 
 from abc import abstractmethod
-from m5.objects import Port, PortTerminator
-from ...utils.override import overrides
-
-from .abstract_core import AbstractCore
-from ...isas import ISA
-
 from typing import Optional
+
+from m5.objects import (
+    Port,
+    PortTerminator,
+)
+
+from ...isas import ISA
+from ...utils.override import overrides
+from .abstract_core import AbstractCore
 
 
 class AbstractGeneratorCore(AbstractCore):

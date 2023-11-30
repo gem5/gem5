@@ -24,9 +24,15 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from datetime import datetime
 import json
-from typing import Dict, List, Union, Any, IO
+from datetime import datetime
+from typing import (
+    IO,
+    Any,
+    Dict,
+    List,
+    Union,
+)
 
 from .storagetype import StorageType
 

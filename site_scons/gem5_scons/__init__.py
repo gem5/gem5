@@ -45,11 +45,11 @@ import sys
 import tempfile
 import textwrap
 
-from gem5_scons.util import get_termcap
-from gem5_scons.configure import Configure
-from gem5_scons.defaults import EnvDefaults
 import SCons.Node.Python
 import SCons.Script
+from gem5_scons.configure import Configure
+from gem5_scons.defaults import EnvDefaults
+from gem5_scons.util import get_termcap
 
 termcap = get_termcap()
 

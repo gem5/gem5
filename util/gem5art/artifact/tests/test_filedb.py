@@ -29,8 +29,8 @@
 
 import json
 import os
-from pathlib import Path
 import unittest
+from pathlib import Path
 from uuid import UUID
 
 from gem5art.artifact import Artifact

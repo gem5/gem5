@@ -27,9 +27,9 @@
 from m5.objects import SimpleNetwork
 
 from .ruby_network_components import (
+    RubyIntLink,
     RubyNetworkComponent,
     RubyRouter,
-    RubyIntLink,
 )
 
 

@@ -24,13 +24,21 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from .jsonclient import JSONClient
-from .atlasclient import AtlasClient
-from _m5 import core
-from typing import Optional, Dict, List, Tuple
 import itertools
-from m5.util import warn
 import sys
+from typing import (
+    Dict,
+    List,
+    Optional,
+    Tuple,
+)
+
+from m5.util import warn
+
+from _m5 import core
+
+from .atlasclient import AtlasClient
+from .jsonclient import JSONClient
 
 
 class ClientWrapper:

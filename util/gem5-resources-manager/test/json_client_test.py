@@ -24,14 +24,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import unittest
-from api.json_client import JSONClient
-from server import app
 import json
-from bson import json_util
-from unittest.mock import patch
+import unittest
 from pathlib import Path
+from unittest.mock import patch
+
 from api.json_client import JSONClient
+from bson import json_util
+from server import app
 
 
 def get_json():

@@ -24,29 +24,36 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import urllib.request
-import urllib.parse
-import os
-import shutil
 import gzip
-import time
+import os
 import random
-from pathlib import Path
+import shutil
 import tarfile
+import time
+import urllib.parse
+import urllib.request
+from pathlib import Path
+from typing import (
+    Dict,
+    List,
+    Optional,
+)
 from urllib.error import HTTPError
 from urllib.parse import urlparse
-from typing import List, Optional, Dict
 
 from _m5 import core
 
-from .client import (
-    get_resource_json_obj,
-    list_resources as client_list_resources,
-)
-from .md5_utils import md5_file, md5_dir
-from ..utils.progress_bar import tqdm, progress_hook
-
 from ..utils.filelock import FileLock
+from ..utils.progress_bar import (
+    progress_hook,
+    tqdm,
+)
+from .client import get_resource_json_obj
+from .client import list_resources as client_list_resources
+from .md5_utils import (
+    md5_dir,
+    md5_file,
+)
 
 """
 This Python module contains functions used to download, list, and obtain
@@ -86,9 +93,10 @@ def _download(url: str, download_to: str, max_attempts: int = 6) -> None:
                 # If the "use_proxy" variable is specified we setup a socks5
                 # connection.
 
-                import socks
                 import socket
                 import ssl
+
+                import socks
 
                 IP_ADDR, host_port = use_proxy.split(":")
                 PORT = int(host_port)

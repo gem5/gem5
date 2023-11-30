@@ -26,14 +26,14 @@
 
 from m5.util import warn
 
-from ...components.processors.cpu_types import CPUTypes
+from ...coherence_protocol import CoherenceProtocol
 from ...components.boards.x86_board import X86Board
-from ...components.memory.single_channel import SingleChannelDDR3_1600
-from ...components.processors.simple_processor import SimpleProcessor
 from ...components.cachehierarchies.ruby.mesi_two_level_cache_hierarchy import (
     MESITwoLevelCacheHierarchy,
 )
-from ...coherence_protocol import CoherenceProtocol
+from ...components.memory.single_channel import SingleChannelDDR3_1600
+from ...components.processors.cpu_types import CPUTypes
+from ...components.processors.simple_processor import SimpleProcessor
 from ...isas import ISA
 from ...utils.requires import requires
 

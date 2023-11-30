@@ -26,7 +26,11 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from slicc.ast.TypeFieldAST import TypeFieldAST
-from slicc.symbols import Event, State, RequestType
+from slicc.symbols import (
+    Event,
+    RequestType,
+    State,
+)
 
 
 class TypeFieldEnumAST(TypeFieldAST):

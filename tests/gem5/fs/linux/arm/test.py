@@ -37,11 +37,10 @@
 Arm FS simulation tests
 """
 
+import re
 from os.path import join as joinpath
 
 from testlib import *
-
-import re
 
 arm_fs_kvm_tests = ["realview64-kvm", "realview64-kvm-dual"]
 

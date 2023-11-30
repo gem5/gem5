@@ -66,7 +66,11 @@ def readCommand(cmd, **kwargs):
     :returns: command stdout
     :rtype: string
     """
-    from subprocess import Popen, PIPE, STDOUT
+    from subprocess import (
+        PIPE,
+        STDOUT,
+        Popen,
+    )
 
     if isinstance(cmd, str):
         cmd = cmd.split()

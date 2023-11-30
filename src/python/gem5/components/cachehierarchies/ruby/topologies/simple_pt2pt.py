@@ -24,7 +24,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects import SimpleNetwork, Switch, SimpleExtLink, SimpleIntLink
+from m5.objects import (
+    SimpleExtLink,
+    SimpleIntLink,
+    SimpleNetwork,
+    Switch,
+)
 
 
 class SimplePt2Pt(SimpleNetwork):

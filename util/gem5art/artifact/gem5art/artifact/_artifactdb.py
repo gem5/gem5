@@ -34,14 +34,24 @@ artifacts stored in the database.
 Some common queries can be found in common_queries.py
 """
 
-from abc import ABC, abstractmethod
-
 import copy
 import json
 import os
-from pathlib import Path
 import shutil
-from typing import Any, Dict, Iterable, Union, Type, List, Tuple
+from abc import (
+    ABC,
+    abstractmethod,
+)
+from pathlib import Path
+from typing import (
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Tuple,
+    Type,
+    Union,
+)
 from urllib.parse import urlparse
 from uuid import UUID
 

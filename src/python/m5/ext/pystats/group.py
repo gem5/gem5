@@ -33,7 +33,10 @@ from typing import (
 )
 
 from .abstract_stat import AbstractStat
-from .statistic import Scalar, Statistic
+from .statistic import (
+    Scalar,
+    Statistic,
+)
 from .timeconversion import TimeConversion
 
 

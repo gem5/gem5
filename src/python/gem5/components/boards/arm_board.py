@@ -24,43 +24,48 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects import (
-    Port,
-    IOXBar,
-    Bridge,
-    BadAddr,
-    Terminal,
-    PciVirtIO,
-    VncServer,
-    AddrRange,
-    ArmSystem,
-    ArmRelease,
-    ArmFsLinux,
-    VirtIOBlock,
-    CowDiskImage,
-    RawDiskImage,
-    VoltageDomain,
-    SrcClockDomain,
-    ArmDefaultRelease,
-    VExpress_GEM5_Base,
-    VExpress_GEM5_Foundation,
-    SimObject,
+import os
+from abc import ABCMeta
+from typing import (
+    List,
+    Sequence,
+    Tuple,
 )
 
-import os
 import m5
-from abc import ABCMeta
+from m5.objects import (
+    AddrRange,
+    ArmDefaultRelease,
+    ArmFsLinux,
+    ArmRelease,
+    ArmSystem,
+    BadAddr,
+    Bridge,
+    CowDiskImage,
+    IOXBar,
+    PciVirtIO,
+    Port,
+    RawDiskImage,
+    SimObject,
+    SrcClockDomain,
+    Terminal,
+    VExpress_GEM5_Base,
+    VExpress_GEM5_Foundation,
+    VirtIOBlock,
+    VncServer,
+    VoltageDomain,
+)
+
 from ...isas import ISA
-from ...utils.requires import requires
-from ...utils.override import overrides
-from typing import List, Sequence, Tuple
-from .abstract_board import AbstractBoard
 from ...resources.resource import AbstractResource
-from .kernel_disk_workload import KernelDiskWorkload
-from ..cachehierarchies.classic.no_cache import NoCache
-from ..processors.abstract_processor import AbstractProcessor
-from ..memory.abstract_memory_system import AbstractMemorySystem
+from ...utils.override import overrides
+from ...utils.requires import requires
 from ..cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
+from ..cachehierarchies.classic.no_cache import NoCache
+from ..memory.abstract_memory_system import AbstractMemorySystem
+from ..processors.abstract_processor import AbstractProcessor
+from .abstract_board import AbstractBoard
+from .kernel_disk_workload import KernelDiskWorkload
 
 
 class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):

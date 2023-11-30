@@ -38,16 +38,20 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import m5
-
-import _m5.stats
 from m5.objects import Root
 from m5.params import isNullPointer
-from .gem5stats import JsonOutputVistor
-from m5.util import attrdict, fatal
+from m5.util import (
+    attrdict,
+    fatal,
+)
+
+import _m5.stats
 
 # Stat exports
-from _m5.stats import schedStatEvent as schedEvent
 from _m5.stats import periodicStatDump
+from _m5.stats import schedStatEvent as schedEvent
+
+from .gem5stats import JsonOutputVistor
 
 outputList = []
 

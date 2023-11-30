@@ -41,8 +41,9 @@ build/ALL/gem5.opt util/obtain-resource.py <resource_id> [-p <path>] [-q]
 """
 
 if __name__ == "__m5_main__":
-    from gem5.resources.resource import obtain_resource
     import argparse
+
+    from gem5.resources.resource import obtain_resource
 
     parser = argparse.ArgumentParser()
 

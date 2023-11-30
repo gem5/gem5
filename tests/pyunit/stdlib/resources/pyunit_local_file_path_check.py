@@ -24,9 +24,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from gem5.resources.downloader import _file_uri_to_path
-from pathlib import Path
 import unittest
+from pathlib import Path
+
+from gem5.resources.downloader import _file_uri_to_path
 
 
 class LocalPathTestSuite(unittest.TestCase):

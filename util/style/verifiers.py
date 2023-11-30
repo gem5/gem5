@@ -40,17 +40,22 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from abc import ABCMeta, abstractmethod
-from difflib import SequenceMatcher
 import inspect
 import os
 import re
 import sys
+from abc import (
+    ABCMeta,
+    abstractmethod,
+)
+from difflib import SequenceMatcher
 
-from . import style
-from . import sort_includes
-from .region import *
+from . import (
+    sort_includes,
+    style,
+)
 from .file_types import lang_type
+from .region import *
 
 
 def safefix(fix_func):

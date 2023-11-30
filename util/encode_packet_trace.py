@@ -51,8 +51,9 @@
 # This script can of course also be used as a template to convert
 # other trace formats into the gem5 protobuf format
 
-import protolib
 import sys
+
+import protolib
 
 # Import the packet proto definitions. If they are not found, attempt
 # to generate them automatically. This assumes that the script is

@@ -24,17 +24,25 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from typing import Iterator, Any
-from m5.ticks import fromSeconds
-from m5.util.convert import toLatency, toMemoryBandwidth
-from m5.objects import PyTrafficGen, Port
+from enum import Enum
+from typing import (
+    Any,
+    Iterator,
+)
 
-from .abstract_core import AbstractCore
-from .abstract_generator_core import AbstractGeneratorCore
+from m5.objects import (
+    Port,
+    PyTrafficGen,
+)
+from m5.ticks import fromSeconds
+from m5.util.convert import (
+    toLatency,
+    toMemoryBandwidth,
+)
 
 from ...utils.override import overrides
-
-from enum import Enum
+from .abstract_core import AbstractCore
+from .abstract_generator_core import AbstractGeneratorCore
 
 
 class TrafficModes(Enum):

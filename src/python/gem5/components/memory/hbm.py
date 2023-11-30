@@ -27,14 +27,29 @@
 """ HBM2 memory system using HBMCtrl
 """
 
-from .memory import ChanneledMemory
-from .abstract_memory_system import AbstractMemorySystem
 from math import log
+from typing import (
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    Union,
+)
+
+from m5.objects import (
+    AddrRange,
+    DRAMInterface,
+    HBMCtrl,
+    Port,
+)
+
 from ...utils.override import overrides
-from m5.objects import AddrRange, DRAMInterface, HBMCtrl, Port
-from typing import Type, Optional, Union, Sequence, Tuple
-from .memory import _try_convert
+from .abstract_memory_system import AbstractMemorySystem
 from .dram_interfaces.hbm import HBM_2000_4H_1x64
+from .memory import (
+    ChanneledMemory,
+    _try_convert,
+)
 
 
 class HighBandwidthMemory(ChanneledMemory):

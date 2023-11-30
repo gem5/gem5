@@ -36,16 +36,16 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 try:
-    from mpl_toolkits.mplot3d import Axes3D
-    from matplotlib import cm
     import matplotlib.pyplot as plt
     import numpy as np
+    from matplotlib import cm
+    from mpl_toolkits.mplot3d import Axes3D
 except ImportError:
     print("Failed to import matplotlib and numpy")
     exit(-1)
 
-import sys
 import re
+import sys
 
 
 # Determine the parameters of the sweep from the simout output, and

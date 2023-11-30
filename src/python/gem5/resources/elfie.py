@@ -24,10 +24,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.params import PcCountPair
-from m5.objects import PcCountTrackerManager
-
 from typing import List
+
+from m5.objects import PcCountTrackerManager
+from m5.params import PcCountPair
 
 
 class ELFieInfo:

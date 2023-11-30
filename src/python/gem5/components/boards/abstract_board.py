@@ -24,23 +24,33 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from abc import ABCMeta, abstractmethod
 import inspect
-
-from .mem_mode import MemMode, mem_mode_to_string
-from ...resources.resource import WorkloadResource
+from abc import (
+    ABCMeta,
+    abstractmethod,
+)
+from typing import (
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+)
 
 from m5.objects import (
     AddrRange,
-    System,
-    Port,
-    IOXBar,
     ClockDomain,
+    IOXBar,
+    Port,
     SrcClockDomain,
+    System,
     VoltageDomain,
 )
 
-from typing import List, Optional, Sequence, Tuple
+from ...resources.resource import WorkloadResource
+from .mem_mode import (
+    MemMode,
+    mem_mode_to_string,
+)
 
 
 class AbstractBoard:

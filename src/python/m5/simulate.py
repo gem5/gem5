@@ -41,22 +41,31 @@ import atexit
 import os
 import sys
 
-# import the wrapped C++ functions
-import _m5.drain
-import _m5.core
-from _m5.stats import updateEvents as updateStatEvents
-
-from . import stats
-from . import SimObject
-from . import ticks
-from . import objects
-from . import params
-from .citations import gather_citations
-from m5.util.dot_writer import do_dot, do_dvfs_dot
+from m5.util.dot_writer import (
+    do_dot,
+    do_dvfs_dot,
+)
 from m5.util.dot_writer_ruby import do_ruby_dot
 
-from .util import fatal, warn
-from .util import attrdict
+import _m5.core
+
+# import the wrapped C++ functions
+import _m5.drain
+from _m5.stats import updateEvents as updateStatEvents
+
+from . import (
+    SimObject,
+    objects,
+    params,
+    stats,
+    ticks,
+)
+from .citations import gather_citations
+from .util import (
+    attrdict,
+    fatal,
+    warn,
+)
 
 # define a MaxTick parameter, unsigned 64 bit
 MaxTick = 2**64 - 1
@@ -482,6 +491,9 @@ def fork(simout="%(parent)s.f%(fork_seq)i"):
     return pid
 
 
-from _m5.core import disableAllListeners, listenersDisabled
-from _m5.core import listenersLoopbackOnly
-from _m5.core import curTick
+from _m5.core import (
+    curTick,
+    disableAllListeners,
+    listenersDisabled,
+    listenersLoopbackOnly,
+)

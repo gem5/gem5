@@ -40,7 +40,10 @@
 
 import os.path
 
-from gem5_scons import Transform, MakeAction
+from gem5_scons import (
+    MakeAction,
+    Transform,
+)
 
 ###################################################
 #

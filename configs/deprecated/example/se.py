@@ -41,30 +41,36 @@
 # "m5 test.py"
 
 import argparse
-import sys
 import os
+import sys
 
 import m5
 from m5.defines import buildEnv
 from m5.objects import *
 from m5.params import NULL
-from m5.util import addToPath, fatal, warn
+from m5.util import (
+    addToPath,
+    fatal,
+    warn,
+)
+
 from gem5.isas import ISA
 from gem5.runtime import get_runtime_isa
 
 addToPath("../../")
 
-from ruby import Ruby
-
-from common import Options
-from common import Simulation
-from common import CacheConfig
-from common import CpuConfig
-from common import ObjectList
-from common import MemConfig
-from common.FileSystemConfig import config_filesystem
+from common import (
+    CacheConfig,
+    CpuConfig,
+    MemConfig,
+    ObjectList,
+    Options,
+    Simulation,
+)
 from common.Caches import *
 from common.cpu2000 import *
+from common.FileSystemConfig import config_filesystem
+from ruby import Ruby
 
 
 def get_processes(args):

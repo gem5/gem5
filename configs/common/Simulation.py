@@ -41,8 +41,10 @@ import sys
 from os import getcwd
 from os.path import join as joinpath
 
-from common import CpuConfig
-from common import ObjectList
+from common import (
+    CpuConfig,
+    ObjectList,
+)
 
 import m5
 from m5.defines import buildEnv
@@ -128,9 +130,12 @@ def findCptDir(options, cptdir, testsys):
     the appropriate directory.
     """
 
-    from os.path import isdir, exists
-    from os import listdir
     import re
+    from os import listdir
+    from os.path import (
+        exists,
+        isdir,
+    )
 
     if not isdir(cptdir):
         fatal("checkpoint dir %s does not exist!", cptdir)

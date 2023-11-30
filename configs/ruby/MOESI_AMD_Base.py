@@ -28,13 +28,18 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import math
-import m5
-from m5.objects import *
-from m5.defines import buildEnv
-from m5.util import addToPath
-from .Ruby import create_topology
-from .Ruby import send_evicts
+
 from common import FileSystemConfig
+
+import m5
+from m5.defines import buildEnv
+from m5.objects import *
+from m5.util import addToPath
+
+from .Ruby import (
+    create_topology,
+    send_evicts,
+)
 
 addToPath("../")
 

@@ -24,10 +24,10 @@
 #
 # Author: Steve Reinhardt
 
-import sys
 import fcntl
-import termios
 import struct
+import sys
+import termios
 
 # Intended usage example:
 #

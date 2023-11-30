@@ -24,17 +24,22 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from m5.objects import (
+    BadAddr,
+    BaseXBar,
+    Cache,
+    Port,
+    SystemXBar,
+)
+
+from ....isas import ISA
+from ....utils.override import *
+from ...boards.abstract_board import AbstractBoard
 from ..abstract_cache_hierarchy import AbstractCacheHierarchy
 from .abstract_classic_cache_hierarchy import AbstractClassicCacheHierarchy
 from .caches.l1dcache import L1DCache
 from .caches.l1icache import L1ICache
 from .caches.mmu_cache import MMUCache
-from ...boards.abstract_board import AbstractBoard
-from ....isas import ISA
-
-from m5.objects import Cache, BaseXBar, SystemXBar, BadAddr, Port
-
-from ....utils.override import *
 
 
 class PrivateL1CacheHierarchy(AbstractClassicCacheHierarchy):

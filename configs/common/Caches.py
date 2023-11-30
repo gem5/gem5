@@ -39,6 +39,7 @@
 
 from m5.defines import buildEnv
 from m5.objects import *
+
 from gem5.isas import ISA
 from gem5.runtime import get_runtime_isa
 
