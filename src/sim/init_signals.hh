@@ -38,6 +38,10 @@ void exitNowHandler(int sigtype);
 void abortHandler(int sigtype);
 void initSignals();
 
+// separate out sigint handler so that we can restore the python one
+void initSigInt();
+void restoreSigInt();
+
 } // namespace gem5
 
 #endif // __SIM_INIT_SIGNALS_HH__
