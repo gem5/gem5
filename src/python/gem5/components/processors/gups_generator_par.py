@@ -26,12 +26,13 @@
 
 
 from typing import Optional
-from m5.objects import Addr
-from ...utils.override import overrides
 
+from m5.objects import Addr
+
+from ...utils.override import overrides
+from ..boards.abstract_board import AbstractBoard
 from ..boards.mem_mode import MemMode
 from .abstract_generator import AbstractGenerator
-from ..boards.abstract_board import AbstractBoard
 from .gups_generator_core import GUPSGeneratorCore
 
 

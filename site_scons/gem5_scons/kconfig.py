@@ -25,8 +25,9 @@
 
 import os
 
-from . import error
 import kconfiglib
+
+from . import error
 
 _kconfig_helpers = {
     "DEFCONFIG_PY": "defconfig.py",

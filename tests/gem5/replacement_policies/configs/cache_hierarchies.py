@@ -27,12 +27,13 @@
 
 from typing import Type
 
-from gem5.utils.override import overrides
+from m5.objects.ReplacementPolicies import BaseReplacementPolicy
+
+from gem5.components.boards.abstract_board import AbstractBoard
 from gem5.components.cachehierarchies.ruby.mi_example_cache_hierarchy import (
     MIExampleCacheHierarchy,
 )
-from gem5.components.boards.abstract_board import AbstractBoard
-from m5.objects.ReplacementPolicies import BaseReplacementPolicy
+from gem5.utils.override import overrides
 
 
 class ModMIExampleCacheHierarchy(MIExampleCacheHierarchy):

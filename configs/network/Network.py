@@ -25,10 +25,15 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import math
+
 import m5
-from m5.objects import *
 from m5.defines import buildEnv
-from m5.util import addToPath, fatal, warn
+from m5.objects import *
+from m5.util import (
+    addToPath,
+    fatal,
+    warn,
+)
 
 
 def define_options(parser):

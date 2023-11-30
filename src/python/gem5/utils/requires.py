@@ -24,12 +24,16 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from ..runtime import get_runtime_coherence_protocol, get_supported_isas
-from ..isas import ISA
-from ..coherence_protocol import CoherenceProtocol
-from typing import Optional
-import os
 import inspect
+import os
+from typing import Optional
+
+from ..coherence_protocol import CoherenceProtocol
+from ..isas import ISA
+from ..runtime import (
+    get_runtime_coherence_protocol,
+    get_supported_isas,
+)
 
 
 def _get_exception_str(msg: str):

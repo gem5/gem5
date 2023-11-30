@@ -27,42 +27,31 @@
 import os
 from typing import List
 
-from ....utils.override import overrides
-from ..abstract_system_board import AbstractSystemBoard
-from ...processors.abstract_processor import AbstractProcessor
-from ...memory.abstract_memory_system import AbstractMemorySystem
-from ...cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
-from ..kernel_disk_workload import KernelDiskWorkload
-from ....resources.resource import AbstractResource
-from ....isas import ISA
-
 import m5
 from m5.objects import (
-    Bridge,
-    PMAChecker,
-    RiscvLinux,
-    RiscvRTC,
     AddrRange,
-    IOXBar,
+    Bridge,
     Clint,
-    Plic,
-    Terminal,
+    CowDiskImage,
+    Frequency,
+    IOXBar,
     LupioBLK,
     LupioIPI,
     LupioPIC,
     LupioRNG,
     LupioRTC,
+    LupioSYS,
     LupioTMR,
     LupioTTY,
-    LupioSYS,
     LupV,
-    AddrRange,
-    CowDiskImage,
-    RawDiskImage,
-    Frequency,
+    Plic,
+    PMAChecker,
     Port,
+    RawDiskImage,
+    RiscvLinux,
+    RiscvRTC,
+    Terminal,
 )
-
 from m5.util.fdthelper import (
     Fdt,
     FdtNode,
@@ -71,6 +60,15 @@ from m5.util.fdthelper import (
     FdtPropertyWords,
     FdtState,
 )
+
+from ....isas import ISA
+from ....resources.resource import AbstractResource
+from ....utils.override import overrides
+from ...cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
+from ...memory.abstract_memory_system import AbstractMemorySystem
+from ...processors.abstract_processor import AbstractProcessor
+from ..abstract_system_board import AbstractSystemBoard
+from ..kernel_disk_workload import KernelDiskWorkload
 
 
 class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):

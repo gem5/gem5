@@ -24,13 +24,24 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from abc import ABCMeta, abstractmethod
-from typing import Optional, List
+from abc import (
+    ABCMeta,
+    abstractmethod,
+)
+from typing import (
+    List,
+    Optional,
+)
+
+from m5.objects import (
+    BaseMMU,
+    PcCountTrackerManager,
+    Port,
+    SubSystem,
+)
+from m5.params import PcCountPair
 
 from ...isas import ISA
-
-from m5.objects import BaseMMU, Port, SubSystem, PcCountTrackerManager
-from m5.params import PcCountPair
 
 
 class AbstractCore(SubSystem):

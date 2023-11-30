@@ -33,12 +33,22 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.SimObject import SimObject
 from m5.objects.Device import PioDevice
-from m5.params import Param, MaxAddr, NULL, VectorParam
+from m5.params import (
+    NULL,
+    MaxAddr,
+    Param,
+    VectorParam,
+)
 from m5.proxy import Parent
+from m5.SimObject import SimObject
 from m5.util import fatal
-from m5.util.fdthelper import FdtNode, FdtProperty, FdtPropertyWords, FdtState
+from m5.util.fdthelper import (
+    FdtNode,
+    FdtProperty,
+    FdtPropertyWords,
+    FdtState,
+)
 
 
 class SystemCounter(SimObject):

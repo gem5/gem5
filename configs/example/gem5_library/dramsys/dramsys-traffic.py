@@ -32,8 +32,8 @@ DRRAMSys simulator. Please consult 'ext/dramsys/README' on how to compile
 correctly. If this is not done correctly this script will run with error.
 """
 
-from gem5.components.memory.dramsys import DRAMSysMem
 from gem5.components.boards.test_board import TestBoard
+from gem5.components.memory.dramsys import DRAMSysMem
 from gem5.components.processors.linear_generator import LinearGenerator
 from gem5.simulate.simulator import Simulator
 

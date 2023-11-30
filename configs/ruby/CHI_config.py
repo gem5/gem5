@@ -46,6 +46,7 @@ node to router binding. See configs/example/noc_config/2x4.py for an example.
 """
 
 import math
+
 import m5
 from m5.objects import *
 

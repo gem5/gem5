@@ -24,11 +24,13 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.SimObject import SimObject
+from m5.objects.PciDevice import (
+    PciDevice,
+    PciMemBar,
+)
 from m5.params import *
 from m5.proxy import *
-
-from m5.objects.PciDevice import PciDevice, PciMemBar
+from m5.SimObject import SimObject
 
 
 class CopyEngine(PciDevice):

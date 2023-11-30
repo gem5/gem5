@@ -26,14 +26,17 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from gerrit import GerritResponseParser as Parser
-from gerrit import GerritRestAPI
-from util import add_maintainers_to_change, convert_time_in_seconds
-
 import json
+import sys
 import time
 
-import sys
+from gerrit import GerritResponseParser as Parser
+from gerrit import GerritRestAPI
+
+from util import (
+    add_maintainers_to_change,
+    convert_time_in_seconds,
+)
 
 sys.path.append("..")
 import maint.lib.maintainers

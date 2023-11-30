@@ -24,12 +24,24 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from json.decoder import JSONDecodeError
-from .simstat import SimStat
-from .statistic import Scalar, Distribution, Accumulator, Statistic
-from .group import Group, Vector
 import json
-from typing import IO, Union
+from json.decoder import JSONDecodeError
+from typing import (
+    IO,
+    Union,
+)
+
+from .group import (
+    Group,
+    Vector,
+)
+from .simstat import SimStat
+from .statistic import (
+    Accumulator,
+    Distribution,
+    Scalar,
+    Statistic,
+)
 
 
 class JsonLoader(json.JSONDecoder):

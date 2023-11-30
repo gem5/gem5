@@ -35,9 +35,10 @@
 
 import functools
 
-from m5.objects import *
-from arm_generic import *
 import checkpoint
+from arm_generic import *
+
+from m5.objects import *
 
 root = LinuxArmFSSystemUniprocessor(
     aarch64_kernel=False,

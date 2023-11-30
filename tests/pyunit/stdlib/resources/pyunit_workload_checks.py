@@ -24,22 +24,23 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import unittest
 import os
+import unittest
+from pathlib import Path
+from typing import Dict
+from unittest.mock import patch
 
-from gem5.resources.workload import Workload, CustomWorkload
+from gem5.resources.client_api.client_wrapper import ClientWrapper
 from gem5.resources.resource import (
     BinaryResource,
     DiskImageResource,
-    obtain_resource,
     WorkloadResource,
+    obtain_resource,
 )
-
-from typing import Dict
-
-from gem5.resources.client_api.client_wrapper import ClientWrapper
-from unittest.mock import patch
-from pathlib import Path
+from gem5.resources.workload import (
+    CustomWorkload,
+    Workload,
+)
 
 mock_config_json = {
     "sources": {

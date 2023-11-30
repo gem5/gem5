@@ -24,14 +24,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import argparse
+from os import path
+
 import m5
 from m5.objects import *
-from os import path
 
 # For downloading the disk image
 from gem5.resources.resource import obtain_resource
-
-import argparse
 
 
 def generateMemNode(state, mem_range):

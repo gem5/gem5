@@ -34,7 +34,9 @@ class TerminalFormatter:
         self.__text_width = min(max_width, self.__terminal_size()[0])
 
     def __terminal_size(self):
-        import fcntl, termios, struct
+        import fcntl
+        import struct
+        import termios
 
         h, w, hp, wp = struct.unpack(
             "HHHH",

@@ -38,21 +38,22 @@ Research Starter Kit on System Modeling. More information can be found
 at: http://www.arm.com/ResearchEnablement/SystemModeling
 """
 
-import os
-import m5
-from m5.util import addToPath
-from m5.objects import *
 import argparse
+import os
 import shlex
+
+import m5
+from m5.objects import *
+from m5.util import addToPath
 
 m5.util.addToPath("../..")
 
-from common import ObjectList
-from common import MemConfig
-from common.cores.arm import HPI
-
 import devices
-
+from common import (
+    MemConfig,
+    ObjectList,
+)
+from common.cores.arm import HPI
 
 # Pre-defined CPU configurations. Each tuple must be ordered as : (cpu_class,
 # l1_icache_class, l1_dcache_class, walk_cache_class, l2_Cache_class). Any of

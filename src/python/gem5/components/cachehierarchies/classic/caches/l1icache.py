@@ -26,7 +26,11 @@
 
 from typing import Type
 
-from m5.objects import Cache, BasePrefetcher, StridePrefetcher
+from m5.objects import (
+    BasePrefetcher,
+    Cache,
+    StridePrefetcher,
+)
 
 from .....utils.override import *
 

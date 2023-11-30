@@ -31,8 +31,17 @@ gem5 configuration script.
 """
 
 import m5
-from m5.objects import Cache, L2XBar, StridePrefetcher, SubSystem
-from m5.params import AddrRange, AllMemory, MemorySize
+from m5.objects import (
+    Cache,
+    L2XBar,
+    StridePrefetcher,
+    SubSystem,
+)
+from m5.params import (
+    AddrRange,
+    AllMemory,
+    MemorySize,
+)
 from m5.util.convert import toMemorySize
 
 # Some specific options for caches

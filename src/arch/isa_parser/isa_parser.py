@@ -46,6 +46,7 @@ import traceback
 from types import *
 
 from grammar import Grammar
+
 from .operand_list import *
 from .operand_types import *
 from .util import *

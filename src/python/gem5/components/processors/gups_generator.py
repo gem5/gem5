@@ -28,8 +28,8 @@
 from typing import Optional
 
 from m5.objects import Addr
-from ...utils.override import overrides
 
+from ...utils.override import overrides
 from .abstract_generator import AbstractGenerator
 from .gups_generator_core import GUPSGeneratorCore
 

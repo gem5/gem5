@@ -33,8 +33,9 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects import *
 from arm_generic import *
+
+from m5.objects import *
 
 root = LinuxArmFSSystem(
     mem_mode="timing",

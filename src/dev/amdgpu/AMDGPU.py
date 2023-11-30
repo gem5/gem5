@@ -27,12 +27,19 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from m5.objects.ClockedObject import ClockedObject
+from m5.objects.Device import (
+    DmaDevice,
+    DmaVirtDevice,
+)
+from m5.objects.PciDevice import (
+    PciDevice,
+    PciLegacyIoBar,
+    PciMemBar,
+    PciMemUpperBar,
+)
 from m5.params import *
 from m5.proxy import *
-from m5.objects.PciDevice import PciDevice
-from m5.objects.PciDevice import PciMemBar, PciMemUpperBar, PciLegacyIoBar
-from m5.objects.Device import DmaDevice, DmaVirtDevice
-from m5.objects.ClockedObject import ClockedObject
 
 
 # PCI device model for an AMD Vega 10 based GPU. The PCI codes and BARs

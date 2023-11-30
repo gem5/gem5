@@ -56,13 +56,15 @@
 
 import copy
 import datetime
+import math
 import re
 import sys
 import time
-import math
 
-from . import proxy
-from . import ticks
+from . import (
+    proxy,
+    ticks,
+)
 from .util import *
 
 
@@ -1099,10 +1101,12 @@ class HostSocket(ParamValue):
             self.value = value
 
     def getValue(self):
-        from _m5.socket import listenSocketEmptyConfig
-        from _m5.socket import listenSocketInetConfig
-        from _m5.socket import listenSocketUnixFileConfig
-        from _m5.socket import listenSocketUnixAbstractConfig
+        from _m5.socket import (
+            listenSocketEmptyConfig,
+            listenSocketInetConfig,
+            listenSocketUnixAbstractConfig,
+            listenSocketUnixFileConfig,
+        )
 
         if isinstance(self.value, str):
             if self.value[0] == "@":
@@ -1443,8 +1447,16 @@ time_formats = [
 
 
 def parse_time(value):
-    from time import gmtime, strptime, struct_time, time
-    from datetime import datetime, date
+    from datetime import (
+        date,
+        datetime,
+    )
+    from time import (
+        gmtime,
+        strptime,
+        struct_time,
+        time,
+    )
 
     if isinstance(value, struct_time):
         return value
@@ -1483,8 +1495,9 @@ class Time(ParamValue):
         return value
 
     def getValue(self):
-        from _m5.core import tm
         import calendar
+
+        from _m5.core import tm
 
         return tm.gmtime(calendar.timegm(self.value))
 

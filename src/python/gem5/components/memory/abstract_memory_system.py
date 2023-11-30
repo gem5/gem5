@@ -24,13 +24,24 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from abc import ABCMeta, abstractmethod
-from typing import Tuple, Sequence, List
+from abc import (
+    ABCMeta,
+    abstractmethod,
+)
+from typing import (
+    List,
+    Sequence,
+    Tuple,
+)
 
+from m5.objects import (
+    AddrRange,
+    MemCtrl,
+    Port,
+    SubSystem,
+)
 
 from ..boards.abstract_board import AbstractBoard
-
-from m5.objects import AddrRange, Port, SubSystem, MemCtrl
 
 
 class AbstractMemorySystem(SubSystem):

@@ -70,12 +70,12 @@ import re
 import sys
 import traceback
 
+import testlib.fixture as fixture_mod
 import testlib.log as log
 import testlib.suite as suite_mod
 import testlib.test_util as test_mod
-import testlib.fixture as fixture_mod
-import testlib.wrappers as wrappers
 import testlib.uid as uid
+import testlib.wrappers as wrappers
 
 
 class DuplicateTestItemException(Exception):

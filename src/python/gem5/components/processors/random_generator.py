@@ -24,14 +24,13 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from ...utils.override import overrides
-from ..boards.mem_mode import MemMode
-from .random_generator_core import RandomGeneratorCore
-
-from .abstract_generator import AbstractGenerator
-from ..boards.abstract_board import AbstractBoard
-
 from typing import List
+
+from ...utils.override import overrides
+from ..boards.abstract_board import AbstractBoard
+from ..boards.mem_mode import MemMode
+from .abstract_generator import AbstractGenerator
+from .random_generator_core import RandomGeneratorCore
 
 
 class RandomGenerator(AbstractGenerator):

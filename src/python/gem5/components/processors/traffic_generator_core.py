@@ -25,11 +25,14 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from m5.objects import Port, TrafficGen
+from m5.objects import (
+    Port,
+    TrafficGen,
+)
 
+from ...utils.override import overrides
 from .abstract_core import AbstractCore
 from .abstract_generator_core import AbstractGeneratorCore
-from ...utils.override import overrides
 
 
 class TrafficGeneratorCore(AbstractGeneratorCore):

@@ -37,13 +37,18 @@
 
 import argparse
 
-from m5.util import addToPath, fatal
+from m5.util import (
+    addToPath,
+    fatal,
+)
 
 addToPath("../")
 
-from common import Options
-from common import Simulation
-from common import MemConfig
+from common import (
+    MemConfig,
+    Options,
+    Simulation,
+)
 from common.Caches import *
 
 

@@ -24,27 +24,32 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from .abstract_board import AbstractBoard
-
-from ...resources.resource import (
-    FileResource,
-    AbstractResource,
-    BinaryResource,
-    CheckpointResource,
-    SimpointResource,
-    SimpointDirectoryResource,
+from pathlib import Path
+from typing import (
+    List,
+    Optional,
+    Union,
 )
 
-from ..processors.switchable_processor import SwitchableProcessor
+from m5.objects import (
+    Process,
+    SEWorkload,
+)
+from m5.util import warn
 
 from gem5.resources.elfie import ELFieInfo
 from gem5.resources.looppoint import Looppoint
 
-from m5.objects import SEWorkload, Process
-
-from typing import Optional, List, Union
-from m5.util import warn
-from pathlib import Path
+from ...resources.resource import (
+    AbstractResource,
+    BinaryResource,
+    CheckpointResource,
+    FileResource,
+    SimpointDirectoryResource,
+    SimpointResource,
+)
+from ..processors.switchable_processor import SwitchableProcessor
+from .abstract_board import AbstractBoard
 
 
 class SEBinaryWorkload:

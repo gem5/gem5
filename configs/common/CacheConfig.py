@@ -40,13 +40,14 @@
 # Configure the M5 cache hierarchy config in one place
 #
 
+from common import ObjectList
+from common.Caches import *
+
 import m5
 from m5.objects import *
+
 from gem5.isas import ISA
 from gem5.runtime import get_runtime_isa
-
-from common.Caches import *
-from common import ObjectList
 
 
 def _get_hwp(hwp_option):

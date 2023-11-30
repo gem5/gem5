@@ -33,23 +33,26 @@ Characteristics
 * Runs exclusively on the ARM ISA with the classic caches
 """
 
-from gem5.isas import ISA
-from m5.objects import ArmDefaultRelease
-from gem5.utils.requires import requires
-from gem5.resources.resource import obtain_resource
-from gem5.simulate.simulator import Simulator
-from m5.objects import VExpress_GEM5_Foundation
-from gem5.coherence_protocol import CoherenceProtocol
-from gem5.components.boards.arm_board import ArmBoard
-from gem5.components.processors.simple_processor import SimpleProcessor
-from gem5.components.processors.cpu_types import (
-    get_cpu_types_str_set,
-    get_cpu_type_from_str,
-    CPUTypes,
-)
-
 import argparse
 import importlib
+
+from m5.objects import (
+    ArmDefaultRelease,
+    VExpress_GEM5_Foundation,
+)
+
+from gem5.coherence_protocol import CoherenceProtocol
+from gem5.components.boards.arm_board import ArmBoard
+from gem5.components.processors.cpu_types import (
+    CPUTypes,
+    get_cpu_type_from_str,
+    get_cpu_types_str_set,
+)
+from gem5.components.processors.simple_processor import SimpleProcessor
+from gem5.isas import ISA
+from gem5.resources.resource import obtain_resource
+from gem5.simulate.simulator import Simulator
+from gem5.utils.requires import requires
 
 parser = argparse.ArgumentParser(
     description="A script to run the ARM boot exit tests."

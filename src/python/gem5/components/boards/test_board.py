@@ -24,17 +24,23 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects import Port, IOXBar, AddrRange
+from typing import (
+    List,
+    Optional,
+)
+
+from m5.objects import (
+    AddrRange,
+    IOXBar,
+    Port,
+)
 
 from ...utils.override import overrides
+from ..cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
+from ..memory.abstract_memory_system import AbstractMemorySystem
+from ..processors.abstract_generator import AbstractGenerator
 from .abstract_board import AbstractBoard
 from .abstract_system_board import AbstractSystemBoard
-from ..processors.abstract_generator import AbstractGenerator
-from ..memory.abstract_memory_system import AbstractMemorySystem
-from ..cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
-
-
-from typing import List, Optional
 
 
 class TestBoard(AbstractSystemBoard):

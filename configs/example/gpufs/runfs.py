@@ -29,8 +29,8 @@
 
 # System includes
 import argparse
-import math
 import hashlib
+import math
 
 # gem5 related
 import m5
@@ -39,13 +39,15 @@ from m5.util import addToPath
 
 # gem5 options and objects
 addToPath("../../")
-from ruby import Ruby
-from common import Simulation
-from common import ObjectList
-from common import Options
-from common import GPUTLBOptions
-from common import GPUTLBConfig
 from amd import AmdGPUOptions
+from common import (
+    GPUTLBConfig,
+    GPUTLBOptions,
+    ObjectList,
+    Options,
+    Simulation,
+)
+from ruby import Ruby
 
 # GPU FS related
 from system.system import makeGpuFSSystem

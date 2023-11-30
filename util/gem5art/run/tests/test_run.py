@@ -27,9 +27,9 @@
 """Tests for gem5Run object"""
 
 import hashlib
-from pathlib import Path
 import os
 import unittest
+from pathlib import Path
 from uuid import uuid4
 
 from gem5art.artifact import artifact

@@ -41,7 +41,6 @@ import subprocess
 import sys
 
 import git_filter_repo
-
 import update_copyright
 
 parser = argparse.ArgumentParser(

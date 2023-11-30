@@ -23,10 +23,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.params import *
-from m5.SimObject import SimObject, cxxMethod
-
 from m5.objects.SimpleMemory import *
+from m5.params import *
+from m5.SimObject import (
+    SimObject,
+    cxxMethod,
+)
 
 
 class Workload(SimObject):

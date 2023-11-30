@@ -24,7 +24,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import _m5.systemc
-
 from _m5.systemc import tlm_global_quantum
 
 

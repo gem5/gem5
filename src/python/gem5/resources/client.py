@@ -25,13 +25,24 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import json
-from pathlib import Path
 import os
-from typing import Optional, Dict, List
-from .client_api.client_wrapper import ClientWrapper
-from gem5.gem5_default_config import config
-from m5.util import inform, warn
+from pathlib import Path
+from typing import (
+    Dict,
+    List,
+    Optional,
+)
+
+from m5.util import (
+    inform,
+    warn,
+)
+
 from _m5 import core
+
+from gem5.gem5_default_config import config
+
+from .client_api.client_wrapper import ClientWrapper
 
 
 def getFileContent(file_path: Path) -> Dict:

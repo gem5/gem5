@@ -28,12 +28,26 @@
 """
 
 from math import log
-from ...utils.override import overrides
+from typing import (
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    Union,
+)
+
+from m5.objects import (
+    AddrRange,
+    DRAMInterface,
+    MemCtrl,
+    Port,
+)
 from m5.util.convert import toMemorySize
+
+from ...utils.override import overrides
 from ..boards.abstract_board import AbstractBoard
 from .abstract_memory_system import AbstractMemorySystem
-from m5.objects import AddrRange, DRAMInterface, MemCtrl, Port
-from typing import Type, Sequence, Tuple, List, Optional, Union
 
 
 def _try_convert(val, cls):

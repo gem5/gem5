@@ -24,12 +24,15 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from ..abstract_l2_cache import AbstractL2Cache
-from ......utils.override import *
-
-from m5.objects import MessageBuffer, RubyCache
-
 import math
+
+from m5.objects import (
+    MessageBuffer,
+    RubyCache,
+)
+
+from ......utils.override import *
+from ..abstract_l2_cache import AbstractL2Cache
 
 
 class L2Cache(AbstractL2Cache):

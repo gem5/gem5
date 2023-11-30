@@ -35,8 +35,8 @@
 
 from citations import add_citation
 
-from m5.params import *
 from m5.objects.AbstractMemory import *
+from m5.params import *
 
 
 # A wrapper for DRAMSim2 multi-channel memory controller

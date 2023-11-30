@@ -28,10 +28,11 @@
 This runs simple tests to ensure the examples in `configs/example/gem5_library`
 still function. They simply check the simulation completed.
 """
+import os
+import re
+
 from testlib import *
 from testlib.log import *
-import re
-import os
 
 if config.bin_path:
     resource_path = config.bin_path

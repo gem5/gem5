@@ -82,10 +82,13 @@ import argparse
 import copy
 import os
 import re
-
 from pickle import HIGHEST_PROTOCOL as highest_pickle_protocol
 
-from testlib.helper import absdirpath, AttrDict, FrozenAttrDict
+from testlib.helper import (
+    AttrDict,
+    FrozenAttrDict,
+    absdirpath,
+)
 
 
 class UninitialzedAttributeException(Exception):

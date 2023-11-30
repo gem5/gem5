@@ -26,10 +26,13 @@
 
 from abc import ABCMeta
 
-from .abstract_board import AbstractBoard
-from ...utils.override import overrides
+from m5.objects import (
+    SimObject,
+    System,
+)
 
-from m5.objects import System, SimObject
+from ...utils.override import overrides
+from .abstract_board import AbstractBoard
 
 
 class AbstractSystemBoard(System, AbstractBoard):

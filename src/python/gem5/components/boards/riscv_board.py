@@ -26,41 +26,28 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
-
 from typing import List
 
-from ...utils.override import overrides
-from .abstract_system_board import AbstractSystemBoard
-from .kernel_disk_workload import KernelDiskWorkload
-from ..processors.abstract_processor import AbstractProcessor
-from ..memory.abstract_memory_system import AbstractMemorySystem
-from ..cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
-from ...resources.resource import AbstractResource
-
-from ...isas import ISA
-
 import m5
-
 from m5.objects import (
+    AddrRange,
     BadAddr,
     Bridge,
-    PMAChecker,
-    RiscvLinux,
-    AddrRange,
-    IOXBar,
-    RiscvRTC,
-    HiFive,
-    GenericRiscvPciHost,
-    IGbE_e1000,
     CowDiskImage,
+    Frequency,
+    GenericRiscvPciHost,
+    HiFive,
+    IGbE_e1000,
+    IOXBar,
+    PMAChecker,
+    Port,
     RawDiskImage,
+    RiscvLinux,
     RiscvMmioVirtIO,
+    RiscvRTC,
     VirtIOBlock,
     VirtIORng,
-    Frequency,
-    Port,
 )
-
 from m5.util.fdthelper import (
     Fdt,
     FdtNode,
@@ -69,6 +56,15 @@ from m5.util.fdthelper import (
     FdtPropertyWords,
     FdtState,
 )
+
+from ...isas import ISA
+from ...resources.resource import AbstractResource
+from ...utils.override import overrides
+from ..cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
+from ..memory.abstract_memory_system import AbstractMemorySystem
+from ..processors.abstract_processor import AbstractProcessor
+from .abstract_system_board import AbstractSystemBoard
+from .kernel_disk_workload import KernelDiskWorkload
 
 
 class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):

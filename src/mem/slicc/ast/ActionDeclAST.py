@@ -26,7 +26,11 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from slicc.ast.DeclAST import DeclAST
-from slicc.symbols import Action, Type, Var
+from slicc.symbols import (
+    Action,
+    Type,
+    Var,
+)
 
 
 class ActionDeclAST(DeclAST):

@@ -33,7 +33,10 @@
 
 
 import subprocess
-from collections import OrderedDict, defaultdict
+from collections import (
+    OrderedDict,
+    defaultdict,
+)
 
 
 class OrderedDefaultDict(OrderedDict, defaultdict):

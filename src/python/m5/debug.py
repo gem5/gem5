@@ -26,10 +26,14 @@
 
 from collections.abc import Mapping
 
-import _m5.debug
-from _m5.debug import SimpleFlag, CompoundFlag
-from _m5.debug import schedBreak
 from m5.util import printList
+
+import _m5.debug
+from _m5.debug import (
+    CompoundFlag,
+    SimpleFlag,
+    schedBreak,
+)
 
 
 def help():

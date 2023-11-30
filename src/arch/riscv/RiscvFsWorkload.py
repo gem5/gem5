@@ -27,10 +27,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.params import *
-
 from m5.objects.System import System
-from m5.objects.Workload import Workload, KernelWorkload
+from m5.objects.Workload import (
+    KernelWorkload,
+    Workload,
+)
+from m5.params import *
 
 
 class RiscvBareMetal(Workload):

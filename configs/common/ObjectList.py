@@ -34,12 +34,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from gem5.runtime import get_supported_isas
-import m5.objects
-import m5.internal.params
 import inspect
 import sys
 from textwrap import TextWrapper
+
+import m5.internal.params
+import m5.objects
+
+from gem5.runtime import get_supported_isas
 
 
 class ObjectList:

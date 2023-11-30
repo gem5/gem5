@@ -42,8 +42,9 @@
 # protoc --python_out=. inst.proto
 # The ASCII trace format uses one line per request.
 
-import protolib
 import sys
+
+import protolib
 
 # Import the packet proto definitions
 try:

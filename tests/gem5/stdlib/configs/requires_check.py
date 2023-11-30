@@ -28,11 +28,14 @@
 This is a very simple script to test the behavior of 'gem5.utils.requires'`
 """
 
-from gem5.utils.requires import requires
-from gem5.isas import ISA, get_isas_str_set, get_isa_from_str
-
-
 import argparse
+
+from gem5.isas import (
+    ISA,
+    get_isa_from_str,
+    get_isas_str_set,
+)
+from gem5.utils.requires import requires
 
 parser = argparse.ArgumentParser(
     description="A simple script used to check the behavior of "

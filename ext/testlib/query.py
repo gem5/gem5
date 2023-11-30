@@ -26,8 +26,8 @@
 #
 # Authors: Sean Wilson
 
-import testlib.terminal as terminal
 import testlib.log as log
+import testlib.terminal as terminal
 
 
 # TODO Refactor print logic out of this so the objects

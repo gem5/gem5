@@ -35,13 +35,25 @@ experiment is reproducible and the output is saved to the database.
 import hashlib
 import json
 import os
-from pathlib import Path
 import signal
 import subprocess
 import time
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
-from uuid import UUID, uuid4
 import zipfile
+from pathlib import Path
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    Union,
+)
+from uuid import (
+    UUID,
+    uuid4,
+)
 
 from gem5art import artifact
 from gem5art.artifact import Artifact
