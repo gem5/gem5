@@ -111,6 +111,10 @@ SymbolTable::serialize(const std::string &base, CheckpointOut &cp) const
     int i = 0;
     for (auto &symbol: symbols) {
         paramOut(cp, csprintf("%s.addr_%d", base, i), symbol.address());
+        if (symbol.sizeIsValid()) {
+            paramOut(cp, csprintf("%s.size_%d", base, i),
+                     symbol.sizeOrDefault(0x0));
+        }
         paramOut(cp, csprintf("%s.symbol_%d", base, i), symbol.name());
         paramOut(cp, csprintf("%s.binding_%d", base, i),
                  (int)symbol.binding());
@@ -128,17 +132,26 @@ SymbolTable::unserialize(const std::string &base, CheckpointIn &cp,
     paramIn(cp, base + ".size", size);
     for (int i = 0; i < size; ++i) {
         Addr address;
+        size_t size;
         std::string name;
         Symbol::Binding binding = default_binding;
         Symbol::SymbolType type = Symbol::SymbolType::Other;
 
         paramIn(cp, csprintf("%s.addr_%d", base, i), address);
+        bool size_present = optParamIn(
+            cp, csprintf("%s.size_%d", base, i), size, false);
         paramIn(cp, csprintf("%s.symbol_%d", base, i), name);
         if (!optParamIn(cp, csprintf("%s.binding_%d", base, i), binding))
             binding = default_binding;
         if (!optParamIn(cp, csprintf("%s.type_%d", base, i), type))
             type = Symbol::SymbolType::Other;
-        insert(Symbol(binding, type, name, address));
+        if (size_present) {
+            insert(Symbol(binding, type, name, address, size));
+        } else {
+            warn_once(
+                "warning: one or more Symbols does not have a valid size.");
+            insert(Symbol(binding, type, name, address));
+        }
     }
 }
 

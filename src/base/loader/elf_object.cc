@@ -218,7 +218,8 @@ ElfObject::ElfObject(ImageFileDataPtr ifd) : ObjectFile(ifd)
                 }
 
                 loader::Symbol symbol(
-                    binding, symbol_type, sym_name, sym.st_value);
+                    binding, symbol_type, sym_name, sym.st_value,
+                    sym.st_size);
 
                 if (_symtab.insert(symbol)) {
                     DPRINTF(Loader, "Symbol: %-40s value %#x.\n",

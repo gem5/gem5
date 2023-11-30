@@ -81,8 +81,15 @@ class Symbol
     };
 
     Symbol(const Binding binding, const SymbolType type,
+           const std::string & name, const Addr addr, const size_t size)
+        : _binding(binding), _type(type), _name(name), _address(addr),
+          _size(size), _sizeIsValid(true)
+    {}
+
+    Symbol(const Binding binding, const SymbolType type,
            const std::string & name, const Addr addr)
-        : _binding(binding), _type(type), _name(name), _address(addr)
+        : _binding(binding), _type(type), _name(name), _address(addr),
+          _size(0x0), _sizeIsValid(false)
     {}
 
     Symbol(const Symbol & other) = default;
@@ -112,11 +119,32 @@ class Symbol
         _address = new_addr;
     }
 
+    /**
+     * Return the Symbol size if it is valid, otherwise return the
+     * default value supplied.
+     *
+     * This method forces the client code to consider the possibility
+     * that the `SymbolTable` may contain `Symbol`s that do not have
+     * valid sizes.
+     */
+    size_t sizeOrDefault(const size_t default_size) const {
+        return _sizeIsValid ? _size : default_size;
+    }
+
+    /**
+     * Return whether the Symbol size is valid or not.
+     */
+    bool sizeIsValid() const {
+        return _sizeIsValid;
+    }
+
   private:
     Binding _binding;
     SymbolType _type;
     std::string _name;
     Addr _address;
+    size_t _size;
+    bool _sizeIsValid;
 };
 
 
