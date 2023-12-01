@@ -41,7 +41,6 @@
 import os
 import subprocess
 import sys
-from asyncio import subprocess
 
 import gem5_scons.util
 import SCons.Script
