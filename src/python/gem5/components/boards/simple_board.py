@@ -48,7 +48,7 @@ class SimpleBoard(AbstractSystemBoard, SEBinaryWorkload):
     **Limitations**
     * Only supports SE mode
 
-    You can run a binary executable via the `set_se_binary_workload` function.
+    You can run a binary executable via the ``set_se_binary_workload`` function.
     """
 
     def __init__(
@@ -98,7 +98,7 @@ class SimpleBoard(AbstractSystemBoard, SEBinaryWorkload):
     @overrides(AbstractSystemBoard)
     def get_mem_side_coherent_io_port(self) -> Port:
         raise NotImplementedError(
-            "SimpleBoard does not have any I/O ports. Use has_coherent_io to "
+            "SimpleBoard does not have any I/O ports. Use `has_coherent_io` to "
             "check this."
         )
 

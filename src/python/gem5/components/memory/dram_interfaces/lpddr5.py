@@ -43,7 +43,7 @@
 These memory "interfaces" contain the timing,energy,etc parameters for each
 memory type and are usually based on datasheets for the memory devices.
 
-You can use these interfaces in the MemCtrl object as the `dram` timing
+You can use these interfaces in the MemCtrl object as the ``dram`` timing
 interface.
 """
 
@@ -54,10 +54,12 @@ class LPDDR5_5500_1x16_BG_BL32(DRAMInterface):
     """
     A single LPDDR5 x16 interface (one command/address bus)
     for a single x16 channel with default timings based on
-    initial JEDEC specification
-    Starting with 5.5Gbps data rates and 8Gbit die
+    initial JEDEC specification.
+
+    Starting with 5.5Gbps data rates and 8Gbit die.
+
     Configuring for 16-bank mode with bank-group architecture
-    burst of 32, which means bursts can be interleaved
+    burst of 32, which means bursts can be interleaved.
     """
 
     # Increase buffer size to account for more bank resources
@@ -208,9 +210,11 @@ class LPDDR5_5500_1x16_8B_BL32(LPDDR5_5500_1x16_BG_BL32):
     """
     A single LPDDR5 x16 interface (one command/address bus)
     for a single x16 channel with default timings based on
-    initial JEDEC specification
-    Starting with 5.5Gbps data rates and 8Gbit die
-    Configuring for 8-bank mode, burst of 32
+    initial JEDEC specification.
+
+    Starting with 5.5Gbps data rates and 8Gbit die.
+
+    Configuring for 8-bank mode, burst of 32.
     """
 
     # 4KiB page with 8B mode
@@ -249,10 +253,12 @@ class LPDDR5_6400_1x16_BG_BL32(LPDDR5_5500_1x16_BG_BL32):
     """
     A single LPDDR5 x16 interface (one command/address bus)
     for a single x16 channel with default timings based on
-    initial JEDEC specification
-    6.4Gbps data rates and 8Gbit die
+    initial JEDEC specification.
+
+    6.4Gbps data rates and 8Gbit die.
+
     Configuring for 16-bank mode with bank-group architecture
-    burst of 32, which means bursts can be interleaved
+    burst of 32, which means bursts can be interleaved.
     """
 
     # 5.5Gb/s DDR with 4:1 WCK:CK ratio for 687.5 MHz CK
@@ -297,9 +303,11 @@ class LPDDR5_6400_1x16_BG_BL16(LPDDR5_6400_1x16_BG_BL32):
     """
     A single LPDDR5 x16 interface (one command/address bus)
     for a single x16 channel with default timings based on initial
-    JEDEC specifcation
-    6.4Gbps data rates and 8Gbit die
-    Configuring for 16-bank mode with bank-group architecture, burst of 16
+    JEDEC specifcation.
+
+    6.4Gbps data rates and 8Gbit die.
+
+    Configuring for 16-bank mode with bank-group architecture, burst of 16.
     """
 
     # LPDDR5 is a BL16 or BL32 device
@@ -321,9 +329,11 @@ class LPDDR5_6400_1x16_8B_BL32(LPDDR5_6400_1x16_BG_BL32):
     """
     A single LPDDR5 x16 interface (one command/address bus)
     for a single x16 channel with default timings based on
-    initial JEDEC specification
-    6.4Gbps data rates and 8Gbit die
-    Configuring for 8-bank mode, burst of 32
+    initial JEDEC specification.
+
+    6.4Gbps data rates and 8Gbit die.
+
+    Configuring for 8-bank mode, burst of 32.
     """
 
     # 4KiB page with 8B mode

@@ -46,7 +46,7 @@ class SwitchableProcessor(AbstractProcessor):
     system using SimpleCores.
 
     Though this class can be used directly, it is best inherited from. See
-    "SimpleSwitchableCPU" for an example of this.
+    SimpleSwitchableCPU for an example of this.
     """
 
     def __init__(

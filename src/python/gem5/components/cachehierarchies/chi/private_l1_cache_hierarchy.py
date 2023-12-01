@@ -143,7 +143,7 @@ class PrivateL1CacheHierarchy(AbstractRubyCacheHierarchy):
         self, core: AbstractCore, core_num: int, board: AbstractBoard
     ) -> SubSystem:
         """Given the core and the core number this function creates a cluster
-        for the core with a split I/D cache
+        for the core with a split I/D cache.
         """
         cluster = SubSystem()
         cluster.dcache = PrivateL1MOESICache(

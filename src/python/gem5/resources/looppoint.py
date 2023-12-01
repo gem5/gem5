@@ -43,9 +43,11 @@ from m5.params import PcCountPair
 class LooppointRegionPC:
     """A data structure for storing the Looppoint region's PC information.
 
-    **Note**: This is not intended to be a user-facing class. The classes
-    `LooppointJsonLoader` and `LooppointCSVLoader` can be used to load
-    and restore Simpoint data.
+    .. note::
+
+        This is not intended to be a user-facing class. The classes
+        LooppointJsonLoader and LooppointCSVLoader can be used to load
+        and restore Simpoint data.
     """
 
     def __init__(self, pc: int, globl: int, relative: Optional[int] = None):
@@ -97,9 +99,11 @@ class LooppointRegionPC:
 class LooppointRegionWarmup:
     """A data structure for storing a Looppoint region's warmup data.
 
-    **Note**: This is not intended to be a user-facing class. The classes
-    `LooppointJsonLoader` and `LooppointCSVLoader` can be used to load
-    and restore Simpoint data.
+    .. note::
+
+        This is not intended to be a user-facing class. The classes
+        LooppointJsonLoader and LooppointCSVLoader can be used to load
+        and restore SimPoint data.
     """
 
     def __init__(self, start: PcCountPair, end: PcCountPair):
@@ -140,9 +144,11 @@ class LooppointRegionWarmup:
 class LooppointSimulation:
     """A data structure to store the simulation region start and end region.
 
-    **Note**: This is not intended to be a user-facing class. The classes
-    `LooppointJsonLoader` and `LooppointCSVLoader` can be used to load
-    and restore Simpoint data.
+    .. note::
+
+        This is not intended to be a user-facing class. The classes
+        LooppointJsonLoader and LooppointCSVLoader can be used to load
+        and restore Simpoint data.
     """
 
     def __init__(self, start: LooppointRegionPC, end: LooppointRegionPC):
@@ -193,9 +199,11 @@ class LooppointSimulation:
 class LooppointRegion:
     """A data structure to store Looppoint region information.
 
-    **Note**: This is not intended to be a user-facing class. The classes
-    `LooppointJsonLoader` and `LooppointCSVLoader` can be used to load
-    and restore Simpoint data.
+    .. note::
+
+        This is not intended to be a user-facing class. The classes
+        LooppointJsonLoader and LooppointCSVLoader can be used to load
+        and restore SimPoint data.
     """
 
     def __init__(
@@ -205,11 +213,11 @@ class LooppointRegion:
         warmup: Optional[LooppointRegionWarmup] = None,
     ):
         """
-        :param simulation: The simulation information for this Looppoint
-        region.
-        :param multiplier: The multiplier for this Looppoint region.
-        :param warmup: The warmup information for this Looppoint region.
-        Optional.
+        :param simulation: The simulation information for this LoopPoint
+                           region.
+        :param multiplier: The multiplier for this LoopPoint region.
+        :param warmup: The warmup information for this LoopPoint region.
+                       Optional.
         """
         self._simulation = simulation
         self._multiplier = multiplier
@@ -224,24 +232,24 @@ class LooppointRegion:
         return self._multiplier
 
     def get_warmup(self) -> Optional[LooppointRegionWarmup]:
-        """If set, returns the warmup region information. Otherwise None."""
+        """If set, returns the warmup region information. Otherwise ``None``."""
         return self._warmup
 
     def get_pc_count_pairs(self) -> List[PcCountPair]:
-        """Returns the PC count pairs for this Looppoint region."""
+        """Returns the PC count pairs for this LoopPoint region."""
         pc_count_pairs = self.get_simulation().get_pc_count_pairs()
         if self.get_warmup():
             pc_count_pairs.extend(self.get_warmup().get_pc_count_pairs())
         return pc_count_pairs
 
     def update_relatives_counts(self, manager: PcCountTrackerManager) -> None:
-        """Updates the relative counds of this Looppoint region."""
+        """Updates the relative counds of this LoopPoint region."""
         self.get_simulation().update_relatives_counts(
             manager=manager, include_start=bool(self.get_warmup())
         )
 
     def get_start(self) -> PcCountPair:
-        """Returns the correct starting PcCountPair for this Looppoint
+        """Returns the correct starting PcCountPair for this LoopPoint
         region."""
         if self.get_warmup():
             return self.get_warmup().get_start()
@@ -260,19 +268,19 @@ class LooppointRegion:
 
 
 class Looppoint:
-    """Stores all the Looppoint information for a gem5 workload."""
+    """Stores all the LoopPoint information for a gem5 workload."""
 
     def __init__(self, regions: Dict[Union[str, int], LooppointRegion]):
         """
-        :param regions: A dictionary mapping the region_ids with the
-        LooppointRegions.
+        :param regions: A dictionary mapping the ``region_ids`` with the
+                        LoopPointRegions.
         """
         self._regions = regions
         self._manager = PcCountTrackerManager()
         self._manager.targets = self.get_targets()
 
     def set_target_region_id(self, region_id: Union[str, int]) -> None:
-        """There are use-cases where we want to obtain a looppoint data
+        """There are use-cases where we want to obtain a LoopPoint data
         structure containing a single target region via its ID. This function
         will remove all irrelevant regions."""
 
@@ -286,7 +294,7 @@ class Looppoint:
         self._manager.targets = self.get_targets()
 
     def get_manager(self) -> PcCountTrackerManager:
-        """Returns the PcCountTrackerManager for this Looppoint data
+        """Returns the PcCountTrackerManager for this LoopPoint data
         structure."""
         return self._manager
 
@@ -323,7 +331,7 @@ class Looppoint:
 
     def get_current_region(self) -> Optional[Union[str, int]]:
         """Returns the region id if the current PC Count pair if significant
-        (e.g. beginning of the checkpoint), otherwise, it returns None to
+        (e.g. beginning of the checkpoint), otherwise, it returns ``None`` to
         indicate the current PC Count pair is not significant.
         """
         current_pair = self.get_current_pair()
@@ -359,7 +367,7 @@ class Looppoint:
 
     def to_json(self) -> Dict[Union[int, str], Dict]:
         """Returns this data-structure as a dictionary for serialization via
-        the `output_json_file` function."""
+        the ``output_json_file`` function."""
         to_return = {}
         for region_id in self.get_regions():
             to_return[region_id] = self.get_regions()[region_id].to_json()
@@ -371,18 +379,18 @@ class Looppoint:
         filepath: str = os.path.join(m5.options.outdir, "looppoint.json"),
     ) -> Dict[int, Dict]:
         """
-        This function is used to output the _json_file into a json file
+        This function is used to output the ``_json_file`` into a json file.
 
-        :param input_indent: the indent value of the json file
-        :param filepath: the path of the output json file
+        :param input_indent: The indent value of the json file.
+        :param filepath: The path of the output json file.
         """
         with open(filepath, "w") as file:
             json.dump(self.to_json(), file, indent=input_indent)
 
 
 class LooppointCsvLoader(Looppoint):
-    """This class will create a Looppoint data structure from data extracted
-    from a Looppoint pinpoints file."""
+    """This class will create a LoopPoint data structure from data extracted
+    from a LoopPoint pinpoints file."""
 
     def __init__(
         self,
@@ -391,10 +399,10 @@ class LooppointCsvLoader(Looppoint):
     ):
         """
         :params pinpoints_file: The pinpoints file in which the data is to be
-        expected.
+                                expected.
         :params region_id: If set, will only load the specified region data.
-        Otherwise, all region info is loaded. Is used when restoring to a
-        particular region.
+                           Otherwise, all region info is loaded. Is used when
+                           restoring to a particular region.
         """
 
         regions = {}
@@ -470,8 +478,8 @@ class LooppointCsvLoader(Looppoint):
 
 
 class LooppointJsonLoader(Looppoint):
-    """This class will create a generate a Looppoint data structure from data
-    extracted from a Looppoint json file."""
+    """This class will create a generate a LoopPoint data structure from data
+    extracted from a LoopPoint json file."""
 
     def __init__(
         self,
@@ -479,11 +487,11 @@ class LooppointJsonLoader(Looppoint):
         region_id: Optional[Union[str, int]] = None,
     ) -> None:
         """
-        :param looppoint_file: a json file generated by gem5 that has all the
-        LoopPoint data information
+        :param looppoint_file: A json file generated by gem5 that has all the
+                               LoopPoint data information.
         :params region_id: If set, will only load the specified region data.
-        Otherwise, all region info is loaded. Is used when restoring to a
-        particular region.
+                           Otherwise, all region info is loaded. Is used when
+                           restoring to a particular region.
         """
 
         _path = (

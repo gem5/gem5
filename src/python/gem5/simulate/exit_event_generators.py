@@ -61,7 +61,7 @@ def warn_default_decorator(gen: Generator, type: str, effect: str):
 
 def exit_generator():
     """
-    A default generator for an exit event. It will return True, indicating that
+    A default generator for an exit event. It will return ``True``, indicating that
     the Simulator run loop should exit.
     """
     while True:
@@ -86,6 +86,7 @@ def dump_reset_generator():
     """
     A generator for doing statstic dump and reset. It will reset the simulation
     statistics and then dump simulation statistics.
+
     The Simulation run loop will continue after executing the behavior of the
     generator.
     """
@@ -98,7 +99,8 @@ def dump_reset_generator():
 def save_checkpoint_generator(checkpoint_dir: Optional[Path] = None):
     """
     A generator for taking a checkpoint. It will take a checkpoint with the
-    input path and the current simulation Ticks.
+    input path and the current simulation ``Ticks``.
+
     The Simulation run loop will continue after executing the behavior of the
     generator.
     """
@@ -133,6 +135,7 @@ def dump_stats_generator():
 def skip_generator():
     """
     This generator does nothing when on the exit event.
+
     The simulation will continue after this generator.
     """
     while True:
@@ -144,9 +147,9 @@ def simpoints_save_checkpoint_generator(
 ):
     """
     A generator for taking multiple checkpoints for SimPoints. It will save the
-    checkpoints in the checkpoint_dir path with the SimPoints' index.
+    checkpoints in the ``checkpoint_dir`` path with the SimPoints' index.
     The Simulation run loop will continue after executing the behavior of the
-    generator until all the SimPoints in the simpoint_list has taken a
+    generator until all the SimPoints in the ``simpoint_list`` has taken a
     checkpoint.
     """
     simpoint_list = simpoint.get_simpoint_start_insts()
@@ -184,17 +187,19 @@ def looppoint_save_checkpoint_generator(
     """
     A generator for taking a checkpoint for LoopPoint. It will save the
     checkpoints in the checkpoint_dir path with the Region id.
+
     (i.e. "cpt.Region10) It only takes a checkpoint if the current PC Count
     pair is a significant PC Count Pair. This is determined in the LoopPoint
     module. The simulation loop continues after exiting this generator.
-    :param checkpoint_dir: where to save the checkpoints
-    :param loopoint: the looppoint object used in the configuration script
-    :param update_relative: if the generator should update the relative count
-    information in the output json file, then it should be True. It is default
-    as True.
-    :param exit_when_empty: if the generator should exit the simulation loop if
-    all PC paris have been discovered, then it should be True. It is default as
-    True.
+
+    :param checkpoint_dir: Where to save the checkpoints.
+    :param loopoint: The LoopPoint object used in the configuration script
+    :param update_relative: If the generator should update the relative count
+                            information in the output json file, then it should
+                            be ``True``. It is default as ``True``.
+    :param exit_when_empty: If the generator should exit the simulation loop if
+                            all PC paris have been discovered, then it should be
+                            ``True``. It is default as ``True``.
     """
     if exit_when_empty:
         total_pairs = len(looppoint.get_targets())

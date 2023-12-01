@@ -76,6 +76,7 @@ class AtlasClient(AbstractClient):
     def __init__(self, config: Dict[str, str]):
         """
         Initializes a connection to a MongoDB Atlas database.
+
         :param uri: The URI for connecting to the MongoDB server.
         :param db: The name of the database to connect to.
         :param collection: The name of the collection within the database.

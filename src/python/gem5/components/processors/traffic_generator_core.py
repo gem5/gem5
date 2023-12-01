@@ -42,8 +42,8 @@ class TrafficGeneratorCore(AbstractGeneratorCore):
     a compound traffic specified by the parameters below. It uses
     TrafficGen to create the traffic.
 
-    :param config_file: path to the configuration file specifying the
-    pattern of traffic.
+    :param config_file: Path to the configuration file specifying the
+                        pattern of traffic.
     """
 
     def __init__(self, config_file: str):

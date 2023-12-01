@@ -44,22 +44,21 @@ class SerializableStat:
 
     Usage
     -----
-    ```
-    import m5.pystats.gem5stats as gem5stats
 
-    simstat = gem5stats.get_simstat(root)
-    print(simstat.dumps())
-    ```
+    .. code-block::
+
+            import m5.pystats.gem5stats as gem5stats
+
+            simstat = gem5stats.get_simstat(root)
+            print(simstat.dumps())
+
     """
 
     def to_json(self) -> Dict:
         """
         Translates the current object into a JSON dictionary.
 
-        Returns
-        -------
-        Dict
-            The JSON dictionary.
+        :returns: The JSON dictionary.
         """
 
         model_dct = {}
@@ -75,15 +74,9 @@ class SerializableStat:
         Translate values into a value which can be handled by the Python stdlib
         JSON package.
 
-        Parameters
-        ----------
-        value: Any
-            The value to be translated.
+        :param value: The value to be translated.
 
-        Returns
-        -------
-        Union[str,int,float,Dict,List]
-            A value which can be handled by the Python stdlib JSON package.
+        :returns: A value which can be handled by the Python stdlib JSON package.
         """
 
         if isinstance(value, SerializableStat):
@@ -102,31 +95,26 @@ class SerializableStat:
     def dumps(self, **kwargs) -> str:
         """
         This function mirrors the Python stdlib JSON module method
-        `json.dumps`. It is used to obtain the gem5 statistics output to a
+        ``json.dumps``. It is used to obtain the gem5 statistics output to a
         JSON string.
 
-        Parameters
-        ----------
-        root: Root
-            The root of the simulation.
+        :param root: The root of the simulation.
 
-        kwargs: Dict[str, Any]
-            Additional parameters to be passed to the `json.dumps` method.
+        :param kwargs: Additional parameters to be passed to the ``json.dumps`` method.
 
-        Returns
-        -------
-        str
-            A string of the gem5 Statistics in a JSON format.
+        :returns: A string of the gem5 Statistics in a JSON format.
 
 
         Usage Example
         -------------
-        ```
-        import m5.pystats.gem5stats as gem5stats
 
-        simstat = gem5stats.get_simstat(root)
-        print(simstat.dumps(indent=6))
-        ```
+        .. code-block::
+
+            import m5.pystats.gem5stats as gem5stats
+
+            simstat = gem5stats.get_simstat(root)
+            print(simstat.dumps(indent=6))
+
 
         The above will print the simulation statistic JSON string. The
         indentation will be 6 (by default the indentation is 4).
@@ -141,27 +129,24 @@ class SerializableStat:
     def dump(self, fp: IO[str], **kwargs) -> None:
         """
         This function mirrors the Python stdlib JSON module method
-        `json.dump`. The root of the simulation is passed, and the JSON is
+        ``json.dump``. The root of the simulation is passed, and the JSON is
         output to the specified.
 
+        :param fp: The Text IO stream to output the JSON to.
 
-        Parameters
-        ----------
-        fp: IO[str]
-            The Text IO stream to output the JSON to.
-
-        **kwargs:
-            Additional parameters to be passed to the ``json.dump`` method.
+        :param kwargs: Additional parameters to be passed to the ``json.dump`` method.
 
         Usage
         -----
-        ```
-        import m5.pystats.gem5stats as gem5stats
 
-        simstat = gem5stats.get_simstat(root)
-        with open("test.json") as f:
-            simstat.dump(fp=f, indent=6)
-        ```
+        .. code-block::
+
+            import m5.pystats.gem5stats as gem5stats
+
+            simstat = gem5stats.get_simstat(root)
+            with open("test.json") as f:
+                simstat.dump(fp=f, indent=6)
+
 
         The above will dump the json output to the 'test.json' file. The
         indentation will be of 6 (by default the indentation is 4).

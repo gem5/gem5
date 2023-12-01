@@ -61,22 +61,24 @@ from .looppoint import (
 """
 Resources are items needed to run a simulation, such as a disk image, kernel,
 or binary. The gem5 project provides pre-built resources, with sources, at
-<resources.gem5.org>. Here we provide the `AbstractResource` class and its
+<resources.gem5.org>. Here we provide the AbstractResource class and its
 various implementations which are designed to encapsulate a resource for use
 in the gem5 Standard Library.
 
 These classes may be contructed directly. E.g.:
 
-```python
-binary = BinaryResource(local_path="/path/to/binary")
-```
+.. code-block:: python
 
-or obtained via the gem5-resources infrastructure with the `obtain_resource`
+	binary = BinaryResource(local_path="/path/to/binary")
+
+
+or obtained via the gem5-resources infrastructure with the ``obtain_resource``
 function:
 
-```python
-binary = obtain_resource("resource name here")
-```
+.. code-block:: python
+
+	binary = obtain_resource("resource name here")
+
 """
 
 
@@ -97,12 +99,13 @@ class AbstractResource:
     ):
         """
         :param local_path: The path on the host system where this resource is
-        located.
+                           located.
         :param description: Description describing this resource. Not a
-        required parameter. By default is None.
+                            required parameter. By default is ``None``.
         :param source: The source (as in "source code") for this resource. This
-        string should navigate users to where the source for this resource
-        may be found. Not a required parameter. By default is None.
+                       string should navigate users to where the source for this
+                       resource may be found. Not a required parameter. By default
+                       is ``None``.
         :param resource_version: Version of the resource itself.
         """
 
@@ -379,10 +382,10 @@ class CheckpointResource(DirectoryResource):
 
 
 class SimpointResource(AbstractResource):
-    """A simpoint resource. This resource stores all information required to
-    perform a Simpoint creation and restore. It contains the Simpoint, the
-    Simpoint interval, the weight for each Simpoint, the full warmup length,
-    and the warmup length for each Simpoint.
+    """A SimPoint resource. This resource stores all information required to
+    perform a SimPoint creation and restore. It contains the SimPoint, the
+    SimPoint interval, the weight for each SimPoint, the full warmup length,
+    and the warmup length for each SimPoint.
     """
 
     def __init__(
@@ -400,15 +403,17 @@ class SimpointResource(AbstractResource):
         **kwargs,
     ):
         """
-        :param simpoint_interval: The simpoint interval.
-        :param simpoint_list: The simpoint list.
+        :param simpoint_interval: The SimPoint interval.
+        :param simpoint_list: The SimPoint list.
         :param weight_list: The weight list.
         :param warmup_interval: The warmup interval. Default to zero (a value
-        of zero means effectively not set).
-        :param workload_name: Simpoints are typically associated with a
-        particular workload due to their dependency on chosen input parameters.
-        This field helps backtrack to that resource if required. This should
-        relate to a workload "name" field in the resource.json file.
+                                of zero means effectively not set).
+        :param workload_name: SimPoints are typically associated with a
+                              particular workload due to their dependency on
+                              chosen input parameters.
+                              This field helps backtrack to that resource if
+                              required. This should relate to a workload "name"
+                              field in the ``resource.json`` file.
         """
 
         super().__init__(
@@ -435,13 +440,13 @@ class SimpointResource(AbstractResource):
             self._warmup_list = [0] * len(self.get_simpoint_start_insts)
 
     def get_simpoint_list(self) -> List[int]:
-        """Returns the a list containing all the Simpoints for the workload."""
+        """Returns the a list containing all the SimPoints for the workload."""
         return self._simpoint_list
 
     def get_simpoint_start_insts(self) -> List[int]:
-        """Returns a lst containing all the Simpoint starting instrunction
+        """Returns a lst containing all the SimPoint starting instrunction
         points for the workload. This was calculated by multiplying the
-        Simpoint with the Simpoint interval when it was generated."""
+        SimPoint with the SimPoint interval when it was generated."""
         return self._simpoint_start_insts
 
     def get_warmup_interval(self) -> int:
@@ -449,35 +454,35 @@ class SimpointResource(AbstractResource):
         return self._warmup_interval
 
     def get_weight_list(self) -> List[float]:
-        """Returns the list that contains the weight for each Simpoint. The
+        """Returns the list that contains the weight for each SimPoint. The
         order of the weights matches that of the list returned by
-        `get_simpoint_list(). I.e. `get_weight_list()[3]` is the weight for
-        simpoint `get_simpoint_list()[3]`."""
+        ``get_simpoint_list()``. I.e. ``get_weight_list()[3]`` is the weight for
+        SimPoint ``get_simpoint_list()[3]``."""
         return self._weight_list
 
     def get_simpoint_interval(self) -> int:
-        """Returns the Simpoint interval value."""
+        """Returns the SimPoint interval value."""
         return self._simpoint_interval
 
     def get_warmup_list(self) -> List[int]:
-        """Returns the a list containing the warmup length for each Simpoint.
-        Each warmup length in this list corresponds to the Simpoint at the same
-        index in `get_simpoint_list()`. I.e., `get_warmup_list()[4]` is the
-        warmup length for Simpoint `get_simpoint_list()[4]`."""
+        """Returns the a list containing the warmup length for each SimPoint.
+        Each warmup length in this list corresponds to the SimPoint at the same
+        index in ``get_simpoint_list()``. I.e., ``get_warmup_list()[4]`` is the
+        warmup length for SimPoint ``get_simpoint_list()[4]``."""
         return self._warmup_list
 
     def get_workload_name(self) -> Optional[str]:
-        """Return the workload name this Simpoint is associated with."""
+        """Return the workload name this SimPoint is associated with."""
         return self._workload_name
 
     def _set_warmup_list(self) -> List[int]:
         """
-        This function uses the warmup_interval, fits it into the
-        simpoint_start_insts, and outputs a list of warmup instruction lengths
+        This function uses the ``warmup_interval``, fits it into the
+        ``simpoint_start_insts``, and outputs a list of warmup instruction lengths
         for each SimPoint.
 
         The warmup instruction length is calculated using the starting
-        instruction of a SimPoint to minus the warmup_interval and the ending
+        instruction of a SimPoint to minus the ``warmup_interval`` and the ending
         instruction of the last SimPoint. If it is less than 0, then the warmup
         instruction length is the gap between the starting instruction of a
         SimPoint and the ending instruction of the last SimPoint.
@@ -500,8 +505,8 @@ class SimpointResource(AbstractResource):
 
 
 class LooppointCsvResource(FileResource, LooppointCsvLoader):
-    """This Looppoint resource used to create a Looppoint resource from a
-    pinpoints CSV file"""
+    """This LoopPoint resource used to create a LoopPoint resource from a
+    pinpoints CSV file."""
 
     def __init__(
         self,
@@ -554,8 +559,8 @@ class LooppointJsonResource(FileResource, LooppointJsonLoader):
 
 
 class SimpointDirectoryResource(SimpointResource):
-    """A Simpoint diretory resource. This Simpoint Resource assumes the
-    existance of a directory containing a simpoint file and a weight file."""
+    """A SimPoint diretory resource. This SimPoint Resource assumes the
+    existance of a directory containing a SimPoint file and a weight file."""
 
     def __init__(
         self,
@@ -572,11 +577,11 @@ class SimpointDirectoryResource(SimpointResource):
         **kwargs,
     ):
         """
-        :param simpoint_file: The Simpoint file. This file is a list of
-        Simpoints, each on its own line. It should map 1-to-1 to the weights
-        file.
-        :param weight_file: The Simpoint weights file. This file is a list of
-        weights, each on its own line.
+        :param simpoint_file: The SimPoint file. This file is a list of
+                             SimPoints, each on its own line. It should map
+                             1-to-1 to the weights file.
+        :param weight_file: The SimPoint weights file. This file is a list of
+                            weights, each on its own line.
         """
         self._simpoint_file = simpoint_file
         self._weight_file = weight_file
@@ -605,7 +610,7 @@ class SimpointDirectoryResource(SimpointResource):
         )
 
     def get_simpoint_file(self) -> Path:
-        """Return the Simpoint File path."""
+        """Return the SimPoint File path."""
         return Path(Path(self._local_path) / self._simpoint_file)
 
     def get_weight_file(self) -> Path:
@@ -615,7 +620,7 @@ class SimpointDirectoryResource(SimpointResource):
     def _get_weights_and_simpoints_from_file(
         self,
     ) -> Tuple[List[int], List[int]]:
-        """This is a helper function to extract the weights and simpoints from
+        """This is a helper function to extract the weights and SimPoints from
         the files.
         """
         simpoint_weight_pair = []
@@ -666,14 +671,15 @@ class SuiteResource(AbstractResource):
         **kwargs,
     ) -> None:
         """
-        :param workloads: A list of `WorkloadResource` objects
-        created from the `_workloads` parameter.
+        :param workloads: A list of ``WorkloadResource`` objects
+                          created from the ``_workloads`` parameter.
         :param local_path: The path on the host system where this resource is
-        located.
+                           located.
         :param description: Description describing this resource. Not a
-        required parameter. By default is None.
+                            required parameter. By default is ``None``.
         :param source: The source (as in "source code") for this resource
-        on gem5-resources. Not a required parameter. By default is None.
+                       on gem5-resources. Not a required parameter. By default
+                       is ``None``.
         :param resource_version: Version of the resource itself.
         """
         self._workloads = workloads
@@ -709,12 +715,9 @@ class SuiteResource(AbstractResource):
 
     def with_input_group(self, input_group: str) -> "SuiteResource":
         """
-        Returns a new SuiteResource object with only the workloads that use the
-        specified input group.
-
         :param input_group: The input group to filter the workloads by.
         :returns: A new SuiteResource object with only the workloads that use
-        the specified input group.
+                  the specified input group.
         """
 
         if input_group not in self.get_input_groups():
@@ -739,8 +742,6 @@ class SuiteResource(AbstractResource):
 
     def get_input_groups(self) -> Set[str]:
         """
-        Returns a set of all input groups used by the workloads in a suite.
-
         :returns: A set of all input groups used by the workloads in a suite.
         """
         return {
@@ -792,8 +793,8 @@ class WorkloadResource(AbstractResource):
         """
         Returns the name of the workload function to be run.
 
-        This function is called via the AbstractBoard's `set_workload`
-        function. The parameters from the `get_parameters` function are passed
+        This function is called via the AbstractBoard's ``set_workload``
+        function. The parameters from the ``get_parameters`` function are passed
         to this function.
         """
         return self._func
@@ -803,7 +804,7 @@ class WorkloadResource(AbstractResource):
         Returns a dictionary mapping the workload parameters to their values.
 
         These parameters are passed to the function specified by
-        `get_function_str` via the AbstractBoard's `set_workload` function.
+        ``get_function_str`` via the AbstractBoard's ``set_workload`` function.
         """
         return self._params
 
@@ -832,32 +833,36 @@ def obtain_resource(
 ) -> AbstractResource:
     """
     This function primarily serves as a factory for resources. It will return
-    the correct `AbstractResource` implementation based on the resource
+    the correct AbstractResource implementation based on the resource
     requested.
 
     :param resource_name: The name of the gem5 resource as it appears under the
-    "id" field in the `resource.json` file.
+                          "id" field in the ``resource.json`` file.
     :param resource_directory: The location of the directory in which the
-    resource is to be stored. If this parameter is not set, it will set to
-    the environment variable `GEM5_RESOURCE_DIR`. If the environment is not
-    set it will default to `~/.cache/gem5` if available, otherwise the CWD.
-    **Note**: This argument is ignored if the `to_path` parameter is specified.
-    :param download_md5_mismatch: If the resource is present, but does not
-    have the correct md5 value, the resoruce will be deleted and
-    re-downloaded if this value is True. Otherwise an exception will be
-    thrown. True by default.
+                               resource is to be stored. If this parameter is not
+                               set, it will set to the environment variable
+                               ``GEM5_RESOURCE_DIR``. If the environment is not set
+                               it will default to ``~/.cache/gem5`` if available,
+                               otherwise the CWD. *Note*: This argument is ignored
+                               if the ``to_path`` parameter is specified.
+    :param download_md5_mismatch: If the resource is present, but does not have
+                                  the correct md5 value, the resource will be
+                                  deleted and re-downloaded if this value is ``True``.
+                                  Otherwise an exception will be thrown. ``True`` by
+                                  default.
     :param resource_version: Version of the resource itself.
-    Not a required parameter. None by default.
+                             Not a required parameter. ``None`` by default.
     :param clients: A list of clients to search for the resource. If this
-    parameter is not set, it will default search all clients.
+                    parameter is not set, it will default search all clients.
     :param gem5_version: The gem5 version to use to filter incompatible
-    resource versions. By default set to the current gem5 version. If None,
-    this filtering is not performed.
+                         resource versions. By default set to the current gem5
+                         version. If `None`, this filtering is not performed.
     :param to_path: The path to which the resource is to be downloaded. If
-    None, the resource will be downloaded to the resource directory with
-    the file/directory name equal to the ID of the resource. **Note**: Usage
-    of this parameter will override the `resource_directory` parameter.
-    :param quiet: If True, suppress output. False by default.
+                    ``None``, the resource will be downloaded to the resource directory
+                    with the file/directory name equal to the ID of the resource.
+                    **Note**: Usage of this parameter will override the
+                    ``resource_directory`` parameter.
+    :param quiet: If ``True``, suppress output. ``False`` by default.
     """
 
     # Obtain the resource object entry for this resource
@@ -1033,16 +1038,17 @@ class CustomResource(AbstractResource):
     by a gem5 user as opposed to one available within the gem5 resources
     repository.
 
-    **Warning**: This class is deprecated and will be removed in future
-    releases of gem5. Please use the correct `AbstractResource` subclass
-    instead.
+    .. warning::
+
+        This class is deprecated and will be removed in future releases of gem5.
+        Please use the correct AbstractResource subclass instead.
     """
 
     def __init__(self, local_path: str, metadata: Dict = {}):
         """
         :param local_path: The path of the resource on the host system.
         :param metadata: Add metadata for the custom resource. **Warning:**
-        As of v22.1.1, this parameter is not used.
+                         As of v22.1.1, this parameter is not used.
         """
         warn(
             "The `CustomResource` class is deprecated. Please use an "
@@ -1061,9 +1067,11 @@ class CustomDiskImageResource(DiskImageResource):
     A custom disk image gem5 resource. It can be used to specify a custom,
     local disk image.
 
-    **Warning**: This class is deprecated and will be removed in future
-    releases of gem5. Please use the `DiskImageResource` class instead. This
-    class is merely a wrapper for it.
+    .. warning::
+
+        This class is deprecated and will be removed in future releases of gem5.
+        Please use the DiskImageResource class instead. This class is merely
+        a wrapper for it.
     """
 
     def __init__(
@@ -1077,7 +1085,7 @@ class CustomDiskImageResource(DiskImageResource):
         :param local_path: The path of the disk image on the host system.
         :param root_partition: The root disk partition to use.
         :param metadata: Metadata for the resource. **Warning:** As of "
-        "v22.1.1, this parameter is not used.
+                         "v22.1.1, this parameter is not used.
         :param resource_version: Version of the resource itself.
         """
         warn(
@@ -1105,12 +1113,12 @@ def Resource(
     clients: Optional[List[str]] = None,
 ) -> AbstractResource:
     """
-    This function was created to maintain backwards compability for v21.1.0
+    This function was created to maintain backwards compatibility for v21.1.0
     and prior releases of gem5 where `Resource` was a class.
 
-    In the interests of gem5-resource specialization, the `Resource` class
-    has been dropped. Instead users are advized to use the `obtain_resource`
-    function which will return the correct `AbstractResource` implementation.
+    In the interests of gem5-resource specialization, the ``Resource`` class
+    has been dropped. Instead users are advised to use the ``obtain_resource``
+    function which will return the correct AbstractResource implementation.
     This function (disguised as a class) wraps this function.
     """
 

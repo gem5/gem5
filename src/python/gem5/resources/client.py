@@ -47,9 +47,11 @@ from .client_api.client_wrapper import ClientWrapper
 
 def getFileContent(file_path: Path) -> Dict:
     """
-    Get the content of the file at the given path
-    :param file_path: The path of the file
-    :return: The content of the file
+    Get the content of the file at the given path.
+
+    :param file_path: The path of the file.
+
+    :return: The content of the file.
     """
     if file_path.exists():
         with open(file_path) as file:
@@ -136,10 +138,10 @@ def list_resources(
 
     :param clients: The list of clients to query
     :param gem5_version: The gem5 version of the resource to get. By default,
-    it is the gem5 version of the current build. If set to none, it will return
-    all gem5 versions of the resource.
+                         it is the gem5 version of the current build. If set to
+                         ``None``, it will return all gem5 versions of the resource.
     :return: A Python Dict where the key is the resource id and the value is
-    a list of all the supported resource versions.
+             a list of all the supported resource versions.
     """
     return _get_clientwrapper().list_resources(clients, gem5_version)
 
@@ -151,13 +153,15 @@ def get_resource_json_obj(
     gem5_version: Optional[str] = core.gem5Version,
 ) -> Dict:
     """
-    Get the resource json object from the clients wrapper
-    :param resource_id: The resource id
-    :param resource_version: The resource version
-    :param clients: The list of clients to query
+    Get the resource json object from the clients wrapper.
+
+    :param resource_id: The resource id.
+    :param resource_version: The resource version.
+    :param clients: The list of clients to query.
     :param gem5_version: The gem5 versions to filter the resources based on
-    compatibility. By default, it is the gem5 version of the current build.
-    If None, filtering based on compatibility is not performed.
+                         compatibility. By default, it is the gem5 version of the
+                         current build. If ``None``, filtering based on compatibility
+                         is not performed.
     """
 
     return _get_clientwrapper().get_resource_json_obj_from_client(

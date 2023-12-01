@@ -31,9 +31,9 @@ from m5.params import PcCountPair
 
 
 class ELFieInfo:
-    """Stores information to load/run ELFies
+    """Stores information to load/run ELFies.
 
-    See https://github.com/intel/pinball2elf for more information
+    See https://github.com/intel/pinball2elf for more information.
     """
 
     def __init__(self, start: PcCountPair, end: PcCountPair):
@@ -50,6 +50,7 @@ class ELFieInfo:
         A function is used to setup a PC tracker in all the cores and
         connect all the tracker to the PC tracker manager to perform
         multithread PC tracking.
+
         :param processor: The processor used in the simulation configuration.
         """
         for core in processor.get_cores():

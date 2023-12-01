@@ -55,7 +55,6 @@ class BaseCPUProcessor(AbstractProcessor):
 
     Disclaimer
     ----------
-
     Multiple cores comprising of different BaseCPU types has not been tested
     and is not officially supported.
     """

@@ -58,9 +58,9 @@ class AbstractCore(SubSystem):
     def requires_send_evicts(self) -> bool:
         """True if the CPU model or ISA requires sending evictions from caches
         to the CPU. Scenarios warrant forwarding evictions to the CPU:
-        1. The O3 model must keep the LSQ coherent with the caches
-        2. The x86 mwait instruction is built on top of coherence
-        3. The local exclusive monitor in ARM systems
+        1. The O3 model must keep the LSQ coherent with the caches.
+        2. The x86 mwait instruction is built on top of coherence.
+        3. The local exclusive monitor in ARM systems.
         """
         return False
 
@@ -96,11 +96,11 @@ class AbstractCore(SubSystem):
     @abstractmethod
     def connect_walker_ports(self, port1: Port, port2: Port) -> None:
         """
-        Connect the response port from itb and dtb to their respective request
+        Connect the response port from ``itb`` and ``dtb`` to their respective request
         ports in the core.
 
-        :param port1: The response port from itb walker to connect to.
-        :param port2: The response port from dtb walker to connect to.
+        :param port1: The response port from ``itb`` walker to connect to.
+        :param port2: The response port from ``dtb`` walker to connect to.
         """
         raise NotImplementedError
 
@@ -139,15 +139,16 @@ class AbstractCore(SubSystem):
     ) -> None:
         """Schedule simpoint exit events for the core.
 
-        This is used to raise SIMPOINT_BEGIN exit events in the gem5 standard
-        library. This is called through the set_workload functions and should
-        not be called directly. Duplicate instruction counts in the inst_starts list will not
-        be scheduled.
+        This is used to raise ``SIMPOINT_BEGIN`` exit events in the gem5 standard
+        library. This is called through the ``set_workload`` functions and should
+        not be called directly. Duplicate instruction counts in the ``inst_starts``
+        list will not be scheduled.
 
-        :param inst_starts: a list of SimPoints starting instructions
-        :param board_initialized: True if the board has already been
-        initialized, otherwise False. This parameter is necessary as simpoints
-        are setup differently dependent on this.
+        :param inst_starts: A list of SimPoints starting instructions.
+        :param board_initialized: ``True`` if the board has already been
+                                  initialized, otherwise ``False``. This parameter is
+                                  necessary as SimPoints are setup differently
+                                  dependent on this.
         """
         raise NotImplementedError("This core type does not support simpoints")
 
@@ -159,12 +160,13 @@ class AbstractCore(SubSystem):
         given number of instructions. This is called through the simulator
         module and should not be called directly.
 
-        This is used to raise MAX_INSTS exit event in the gem5 standard library
+        This is used to raise ``MAX_INSTS`` exit event in the gem5 standard library.
 
         :param inst: a number of instructions
-        :param board_initialized: True if the board has already been
-        initialized, otherwise False. This parameter is necessary as the
-        instruction stop is setup differently dependent on this.
+        :param board_initialized: ``True`` if the board has already been
+                                  initialized, otherwise ``False``. This parameter is
+                                  necessary as the instruction stop is setup
+                                  differently dependent on this.
         """
         raise NotImplementedError("This core type does not support MAX_INSTS")
 

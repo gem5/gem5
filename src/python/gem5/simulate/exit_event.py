@@ -60,10 +60,11 @@ class ExitEvent(Enum):
         This function will translate common exit strings to their correct
         ExitEvent categorization.
 
+        .. note::
 
-        **Note:** At present, we do not guarantee this list is complete, as
-        there are no bounds on what string may be returned by the simulator
-        given an exit event.
+            At present, we do not guarantee this list is complete, as
+            there are no bounds on what string may be returned by the simulator
+            given an exit event.
         """
 
         if exit_string == "m5_workbegin instruction encountered":

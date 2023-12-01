@@ -53,25 +53,25 @@ class KernelDiskWorkload:
     added as a superclass to a board and the abstract methods implemented.
     E.g.:
 
-    ```
-    class X86Board(AbstractBoard, KernelDiskWorkload):
-        ...
-        @overrides(KernelDiskWorkload)
-        def get_default_kernel_args(self) -> List[str]:
-            return [
-                "earlyprintk=ttyS0",
-                "console=ttyS0",
-                "lpj=7999923",
-                "root={root_value}",
-            ]
-        ...
-    ```
+    .. code-block:: python
 
-    Notes
-    -----
+        class X86Board(AbstractBoard, KernelDiskWorkload):
+            ...
+            @overrides(KernelDiskWorkload)
+            def get_default_kernel_args(self) -> List[str]:
+                return [
+                    "earlyprintk=ttyS0",
+                    "console=ttyS0",
+                    "lpj=7999923",
+                    "root={root_value}",
+                ]
+            ...
 
-    * This assumes only one disk is set.
-    * This assumes the Linux kernel is used.
+
+    .. note::
+
+        * This assumes only one disk is set.
+        * This assumes the Linux kernel is used.
     """
 
     @abstractmethod
@@ -79,9 +79,9 @@ class KernelDiskWorkload:
         """
         Returns a default list of arguments for the workload kernel. We assume
         the following strings may be used as placeholders, to be replaced when
-        `set_kernel_disk_workload` is executed:
+        ``set_kernel_disk_workload`` is executed:
 
-        * `{root_value}` : set to `get_default_kernel_root_val()`.
+        * `{root_value}` : set to ``get_default_kernel_root_val()``.
 
         :returns: A default list of arguments for the workload kernel.
         """
@@ -101,8 +101,10 @@ class KernelDiskWorkload:
         """
         Sets the configuration needed to add the disk image to the board.
 
-        **Note:** This will be executed at the end of the
-        `set_kernel_disk_workload` function.
+        .. note::
+
+            This will be executed at the end of the
+            ``set_kernel_disk_workload`` function.
 
         :param disk_image: The disk image to add to the system.
         """
@@ -124,14 +126,14 @@ class KernelDiskWorkload:
     ) -> str:
         """
         Get the default kernel root value to be passed to the kernel. This is
-        determined by the value implemented in the `get_disk_device()`
+        determined by the value implemented in the ``get_disk_device()``
         function, and the disk image partition, obtained from
-        `get_disk_root_partition()`
-
+        ``get_disk_root_partition()``
 
         :param disk_image: The disk image to be added to the system.
-        :returns: The default value for the 'root' argument to be passed to the
-        kernel.
+
+        :returns: The default value for the ``root`` argument to be passed to the
+                  kernel.
         """
         return self.get_disk_device() + (
             self.get_disk_root_partition(disk_image) or ""
@@ -156,19 +158,23 @@ class KernelDiskWorkload:
         :param kernel: The kernel to boot.
         :param disk_image: The disk image to mount.
         :param bootloader: The current implementation of the ARM board requires
-        three resources to operate -- kernel, disk image, and, a bootloader.
+                           three resources to operate -- kernel, disk image,
+                           and, a bootloader.
         :param readfile: An optional parameter stating the file to be read by
-        by `m5 readfile`.
+                         by ``m5 readfile``.
         :param readfile_contents: An optional parameter stating the contents of
-        the readfile file. If set with `readfile`, the contents of `readfile`
-        will be overwritten with `readfile_contents`, otherwise a new file will
-        be created with the value of `readfile_contents`.
+                                  the readfile file. If set with ``readfile``,
+                                  the contents of `readfile` will be overwritten
+                                  with ``readfile_contents``, otherwise a new file
+                                  will be created with the value of
+                                  ``readfile_contents``.
         :param kernel_args: An optional parameter for setting arguments to be
-        passed to the kernel. By default set to `get_default_kernel_args()`.
+                            passed to the kernel. By default set to
+                            ``get_default_kernel_args()``.
         :param exit_on_work_items: Whether the simulation should exit on work
-        items. True by default.
+                                   items. ``True`` by default.
         :param checkpoint: The checkpoint directory. Used to restore the
-        simulation to that checkpoint.
+                           simulation to that checkpoint.
         """
 
         # We assume this this is in a multiple-inheritance setup with an

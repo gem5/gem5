@@ -1322,7 +1322,6 @@ class SimObject(metaclass=MetaSimObject):
         The format is the same as that supported by SimObjectCliWrapper.
 
         :param simobj_path: Current state to be in.
-        :type simobj_path: str
         """
         d = self._apply_config_get_dict()
         return eval(simobj_path, d)

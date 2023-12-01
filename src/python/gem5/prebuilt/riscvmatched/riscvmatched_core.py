@@ -113,7 +113,7 @@ class U74CPU(RiscvMinorCPU):
     """
     The fetch, decode, and execute stage parameters from the ARM HPI CPU
     This information about the CPU can be found on page 15 of
-    gem5_rsk_gem5-21.2.pdf at https://github.com/arm-university/arm-gem5-rsk
+    `gem5_rsk_gem5-21.2.pdf` at https://github.com/arm-university/arm-gem5-rsk
 
     The parameters that are changed are:
     - threadPolicy:
@@ -206,8 +206,11 @@ class U74Core(BaseCPUCore):
       - globalCtrBits: 4
       - choiceCtrBits: 4
       - localHistoryTableSize: 4096 B
-    NOTE: The TournamentBP deviates from the actual BP.
-    This configuration performs the best in relation to the hardware.
+
+    .. note::
+
+        The TournamentBP deviates from the actual BP.
+        This configuration performs the best in relation to the hardware.
     """
 
     def __init__(

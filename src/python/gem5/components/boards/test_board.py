@@ -50,7 +50,7 @@ class TestBoard(AbstractSystemBoard):
 
     To work as a traffic generator board, pass a generator as a processor.
 
-    This board does not require a cache hierarchy (it can be none) in which
+    This board does not require a cache hierarchy (it can be ``none``) in which
     case the processor (generator) will be directly connected to the memory.
     The clock frequency is only used if there is a cache hierarchy or when
     using the GUPS generators.

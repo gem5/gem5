@@ -46,20 +46,22 @@ class NoCache(AbstractClassicCacheHierarchy):
     By default a SystemXBar of width 64bit is used, though this can be
     configured via the constructor.
 
-    NOTE: At present this does not work with FS. The following error is
-    received:
+    .. note::
 
-    ```
-    ...
-    build/X86/mem/snoop_filter.cc:277: panic: panic condition
-    (sf_item.requested & req_mask).none() occurred: SF value
-    0000000000000000000000000000000000000000000000000000000000000000 ...
-    missing the original request
-    Memory Usage: 3554472 KBytes
-    Program aborted at tick 1668400099164
-    --- BEGIN LIBC BACKTRACE ---
-    ...
-    ```
+        At present this does not work with FS. The following error is
+        received:
+
+        .. code-block::
+            ...
+            build/X86/mem/snoop_filter.cc:277: panic: panic condition
+            (sf_item.requested & req_mask).none() occurred: SF value
+            0000000000000000000000000000000000000000000000000000000000000000 ...
+            missing the original request
+            Memory Usage: 3554472 KBytes
+            Program aborted at tick 1668400099164
+            --- BEGIN LIBC BACKTRACE ---
+            ...
+
     """
 
     @staticmethod
@@ -85,7 +87,8 @@ class NoCache(AbstractClassicCacheHierarchy):
     ) -> None:
         """
         :param membus: The memory bus for this setup. This parameter is
-        optional and will default toa 64 bit width SystemXBar is not specified.
+                       optional and will default toa 64 bit width SystemXBar
+                       is not specified.
 
         :type membus: BaseXBar
         """

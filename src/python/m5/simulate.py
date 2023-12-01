@@ -244,15 +244,15 @@ def scheduleTickExitFromCurrent(
     ticks: int, exit_string: str = "Tick exit reached"
 ) -> None:
     """Schedules a tick exit event from the current tick. I.e., if ticks == 100
-    then an exit event will be scheduled at tick `curTick() + 100`.
+    then an exit event will be scheduled at tick ``curTick() + 100``.
 
-    The default `exit_string` value is used by the stdlib Simulator module to
-    declare this exit event as `ExitEvent.SCHEDULED_TICK`.
+    The default ``exit_string`` value is used by the stdlib Simulator module to
+    declare this exit event as ``ExitEvent.SCHEDULED_TICK``.
 
-    :param ticks: The simulation ticks, from `curTick()` to schedule the exit
-    event.
+    :param ticks: The simulation ticks, from ``curTick()`` to schedule the exit
+                  event.
     :param exit_string: The exit string to return when the exit event is
-    triggered.
+                        triggered.
     """
     scheduleTickExitAbsolute(tick=ticks + curTick(), exit_string=exit_string)
 
@@ -263,12 +263,12 @@ def scheduleTickExitAbsolute(
     """Schedules a tick exit event using absolute ticks. I.e., if tick == 100
     then an exit event will be scheduled at tick 100.
 
-    The default `exit_string` value is used by the stdlib Simulator module to
-    declare this exit event as `ExitEvent.SCHEDULED_TICK`.
+    The default ``exit_string`` value is used by the stdlib Simulator module to
+    declare this exit event as ``ExitEvent.SCHEDULED_TICK``.
 
     :param tick: The absolute simulation tick to schedule the exit event.
     :param exit_string: The exit string to return when the exit event is
-    triggered.
+                        triggered.
     """
     if tick <= curTick():
         warn("Tick exit scheduled for the past. This will not be triggered.")
@@ -351,9 +351,11 @@ def _changeMemoryMode(system, mode):
 def switchCpus(system, cpuList, verbose=True):
     """Switch CPUs in a system.
 
-    Note: This method may switch the memory mode of the system if that
-    is required by the CPUs. It may also flush all caches in the
-    system.
+    .. note::
+
+        This method may switch the memory mode of the system if that
+        is required by the CPUs. It may also flush all caches in the
+        system.
 
     Arguments:
       system -- Simulated system.

@@ -58,22 +58,22 @@ class AbstractMemorySystem(SubSystem):
 
     @abstractmethod
     def get_mem_ports(self) -> Sequence[Tuple[AddrRange, Port]]:
-        """Get the ports to connect this memory system to the cache"""
+        """Get the ports to connect this memory system to the cache."""
         raise NotImplementedError
 
     @abstractmethod
     def get_memory_controllers(self) -> List[MemCtrl]:
-        """Get all of the memory controllers in this memory system"""
+        """Get all of the memory controllers in this memory system."""
         raise NotImplementedError
 
     @abstractmethod
     def get_size(self) -> int:
-        """Returns the total size of the memory system"""
+        """Returns the total size of the memory system."""
         raise NotImplementedError
 
     @abstractmethod
     def set_memory_range(self, ranges: List[AddrRange]) -> None:
-        """Set the total range for this memory system
+        """Set the total range for this memory system.
 
         May pass multiple non-overlapping ranges. The total size of the ranges
         should match the size of the memory.
@@ -84,5 +84,5 @@ class AbstractMemorySystem(SubSystem):
         raise NotImplementedError
 
     def _post_instantiate(self) -> None:
-        """Called to set up anything needed after m5.instantiate"""
+        """Called to set up anything needed after ``m5.instantiate``."""
         pass

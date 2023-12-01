@@ -60,9 +60,8 @@ class PrivateL1PrivateL2CacheHierarchy(
         the PrivateL1PrivateL2 CacheHierarchy.
 
         :returns: The default memory bus for the PrivateL1PrivateL2
-        CacheHierarchy.
+                  CacheHierarchy.
 
-        :rtype: SystemXBar
         """
         membus = SystemXBar(width=64)
         membus.badaddr_responder = BadAddr()
@@ -79,20 +78,12 @@ class PrivateL1PrivateL2CacheHierarchy(
         """
         :param l1d_size: The size of the L1 Data Cache (e.g., "32kB").
 
-        :type l1d_size: str
-
         :param  l1i_size: The size of the L1 Instruction Cache (e.g., "32kB").
-
-        :type l1i_size: str
 
         :param l2_size: The size of the L2 Cache (e.g., "256kB").
 
-        :type l2_size: str
-
         :param membus: The memory bus. This parameter is optional parameter and
-        will default to a 64 bit width SystemXBar is not specified.
-
-        :type membus: BaseXBar
+                       will default to a 64 bit width SystemXBar is not specified.
         """
 
         AbstractClassicCacheHierarchy.__init__(self=self)

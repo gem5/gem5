@@ -41,8 +41,10 @@ class AbstractClient(ABC):
     def _url_validator(self, url: str) -> bool:
         """
         Validates the provided URL.
+
         :param url: The URL to be validated.
-        :return: True if the URL is valid, False otherwise.
+
+        :return: ``True`` if the URL is valid, ``False`` otherwise.
         """
         try:
             result = urllib.parse.urlparse(url)
@@ -59,12 +61,13 @@ class AbstractClient(ABC):
     ) -> List[Dict[str, Any]]:
         """
         :param resource_id: The ID of the Resource. Optional, if not set, all
-        resources will be returned.
-        :param resource_version: The version of the Resource. Optional, if
-        not set, all resource versions will be returned. Note: If `resource_id`
-        is not set, this parameter will be ignored.
+                            resources will be returned.
+        :param resource_version: The version of the `Resource`. Optional, if
+                                 not set, all resource versions will be returned.
+                                 Note: If ``resource_id`` is not set, this
+                                 parameter will be ignored.
         :param gem5_version: The version of gem5. Optional, if not set, all
-        versions will be returned.
+                             versions will be returned.
         :return: A list of all the Resources with the given ID.
         """
         raise NotImplementedError
@@ -74,15 +77,19 @@ class AbstractClient(ABC):
         resources_to_filter: List[Dict[str, Any]],
         gem5_version: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
-        """Returns a filtered list resources based on gem5 version
+        """
+        Returns a filtered list resources based on gem5 version
         compatibility.
 
-        Note: This function assumes if the minor component of
-        a resource's gem5_version is not specified, the resource is compatible
-        with all minor versions of the same major version.
-        Likewise, if no hot-fix component is specified, it is assumed that
-        the resource is compatible with all hot-fix versions of the same
-        minor version.
+            .. note::
+
+            This function assumes if the minor component of a resource's
+            gem5_version is not specified, the resource is compatible with all
+            minor versions of the same major version.
+
+            Likewise, if no hot-fix component is specified, it is assumed that
+            the resource is compatible with all hot-fix versions of the same
+            minor version.
 
         * '20.1' would be compatible with gem5 '20.1.1.0' and '20.1.2.0'.
         * '21.5.2' would be compatible with gem5 '21.5.2.0' and '21.5.2.0'.
@@ -90,8 +97,9 @@ class AbstractClient(ABC):
 
         :param resources_to_filter: The list of resources to filter.
         :param gem5_version: The gem5 version in which the filtered resources
-        should be compatible. If None, no filtering will be done.
-        :
+                             should be compatible. If ``None``, no filtering will
+                             be done.
+
         """
         if not gem5_version:
             return resources_to_filter
@@ -106,6 +114,7 @@ class AbstractClient(ABC):
     def get_resources_by_id(self, resource_id: str) -> List[Dict[str, Any]]:
         """
         :param resource_id: The ID of the Resource.
+
         :return: A list of all the Resources with the given ID.
         """
         return self.get_resources(resource_id=resource_id)

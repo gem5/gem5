@@ -26,7 +26,7 @@
 
 
 class FakeTQDM:
-    """This is a fake wrapper so that the tqdm calls work whether or not it
+    """This is a fake wrapper so that the ``tqdm`` calls work whether or not it
     has been installed.
     """
 

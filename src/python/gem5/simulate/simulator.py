@@ -63,15 +63,17 @@ class Simulator:
 
     Example
     -------
+
     Examples using the Simulator class can be found under
-    `configs/example/gem5_library`.
+    ``configs/example/gem5_library``.
 
     The most basic run would be as follows:
 
-    ```
-    simulator = Simulator(board=board)
-    simulator.run()
-    ```
+    .. code-block::
+
+            simulator = Simulator(board=board)
+             simulator.run()
+
 
     This will run a simulation and execute default behavior for exit events.
     """
@@ -106,64 +108,72 @@ class Simulator:
         """
         :param board: The board to be simulated.
         :param full_system: Whether to run as a full-system simulation or not.
-        This is optional and used to override default behavior. If not set,
-        whether or not to run in FS mode will be determined via the board's
-        `is_fullsystem()` function.
+                            This is optional and used to override default
+                            behavior. If not set, whether or not to run in FS
+                            mode will be determined via the board's
+                            ``is_fullsystem()`` function.
         :param on_exit_event: An optional map to specify what to execute on
-        each exit event. There are three possibilities here: a generator, a
-        list of functions, or a single function.:
-        1. Generator: The generator may yield a boolean each time the
-        associated exit event is encountered. If True the simulator will exit
-        the simulation loop.
-        2. List of functions: Each function must be callable with no mandatory
-        arguments and return a boolean specifying if the Simulation should exit
-        the simulation loop. Upon each exit event the list will pop the start
-        of the list and execute it. If the list is empty the default behavior
-        for that exit event will be executed.
-        3. Single function: The function must be callable with no mandatory
-        arguments and return a boolean specifying if the Simulation should exit
-        or not. This function is executed each time the associated exit event
-        is encountered.
-        :param checkpoint_path: An optional parameter specifying the directory
-        of the checkpoint to instantiate from. When the path is None, no
-        checkpoint will be loaded. By default, the path is None. **This
-        parameter is deprecated. Please set the checkpoint when setting the
-        board's workload**.
+                              each exit event. There are three possibilities here:
+                              a generator, a list of functions, or a single function.
 
-        `on_exit_event` usage notes
+                                       1. Generator: The generator may yield a boolean each
+                                         time the associated exit event is encountered. If
+                                         ``True`` the simulator will exit the simulation loop.
+
+                              2. List of functions: Each function must be callable
+                                with no mandatory arguments and return a boolean
+                                specifying if the Simulation should exit the
+                                simulation loop. Upon each exit event the list will
+                                pop the start of the list and execute it. If the list
+                                is empty the default behavior for that exit event will
+                                be executed.
+
+                              3. Single function: The function must be callable with
+                                no mandatory arguments and return a boolean specifying
+                                if the Simulation should exit or not. This function is
+                                executed each time the associated exit event is encountered.
+        :param checkpoint_path: An optional parameter specifying the directory of
+                                the checkpoint to instantiate from. When the path
+                                is ``None``, no checkpoint will be loaded. By default,
+                                the path is ``None``. **This parameter is deprecated.
+                                Please set the checkpoint when setting the board's
+                                workload**.
+
+        ``on_exit_event`` usage notes
         ---------------------------
 
         With Generators
         ===============
 
-        The `on_exit_event` parameter specifies a Python generator for each
+        The ``on_exit_event`` parameter specifies a Python generator for each
         exit event. `next(<generator>)` is run each time an exit event. The
-        generator may yield a boolean. If this value of this boolean is True
+        generator may yield a boolean. If this value of this boolean is ``True``
         the Simulator run loop will exit, otherwise
         the Simulator run loop will continue execution. If the generator has
-        finished (i.e. a `StopIteration` exception is thrown when
-        `next(<generator>)` is executed), then the default behavior for that
+        finished (i.e. a ``StopIteration`` exception is thrown when
+        ``next(<generator>)`` is executed), then the default behavior for that
         exit event is run.
 
         As an example, a user may specify their own exit event setup like so:
 
-        ```
-        def unique_exit_event():
-            processor.switch()
-            yield False
-            m5.stats.dump()
-            yield False
-            yield True
+        .. code-block::
 
-        simulator = Simulator(
-            board=board
-            on_exit_event = {
-                ExitEvent.Exit : unique_exit_event(),
-            },
-        )
-        ```
+            def unique_exit_event():
+                processor.switch()
+                yield False
+                m5.stats.dump()
+                yield False
+                yield True
 
-        This will execute `processor.switch()` the first time an exit event is
+            simulator = Simulator(
+                board=board
+                on_exit_event = {
+                    ExitEvent.Exit : unique_exit_event(),
+                },
+            )
+
+
+        This will execute ``processor.switch()`` the first time an exit event is
         encountered, will dump gem5 statistics the second time an exit event is
         encountered, and will terminate the Simulator run loop the third time.
 
@@ -176,41 +186,42 @@ class Simulator:
 
         An example:
 
-        ```
-        def stop_simulation() -> bool:
-            return True
+        .. code-block::
 
-        def switch_cpus() -> bool:
-            processor.switch()
-            return False
+            def stop_simulation() -> bool:
+                return True
 
-        def print_hello() -> None:
-            # Here we don't explicitly return a boolean, but the simulator
-            # treats a None return as False. Ergo the Simulation loop is not
-            # terminated.
-            print("Hello")
+            def switch_cpus() -> bool:
+                processor.switch()
+                return False
+
+            def print_hello() -> None:
+                # Here we don't explicitly return a boolean, but the simulator
+                # treats a None return as False. Ergo the Simulation loop is not
+                # terminated.
+                print("Hello")
 
 
-        simulator = Simulator(
-            board=board,
-            on_exit_event = {
-                ExitEvent.Exit : [
-                    print_hello,
-                    switch_cpus,
-                    print_hello,
-                    stop_simulation
-                ],
-            },
-        )
-        ```
+            simulator = Simulator(
+                board=board,
+                on_exit_event = {
+                    ExitEvent.Exit : [
+                        print_hello,
+                        switch_cpus,
+                        print_hello,
+                        stop_simulation
+                    ],
+                },
+            )
 
-        Upon each `EXIT` type exit event the list will function as a queue,
+
+        Upon each ``EXIT`` type exit event the list will function as a queue,
         with the top function of the list popped and executed. Therefore, in
-        this example, the first `EXIT` type exit event will cause `print_hello`
-        to be executed, and the second `EXIT` type exit event will cause the
-        `switch_cpus` function to run. The third will execute `print_hello`
+        this example, the first ``EXIT`` type exit event will cause ``print_hello``
+        to be executed, and the second ``EXIT`` type exit event will cause the
+        ``switch_cpus`` function to run. The third will execute ``print_hello``
         again before finally, on the forth exit event will call
-        `stop_simulation` which will stop the simulation as it returns False.
+        ``stop_simulation`` which will stop the simulation as it returns ``False``.
 
         With a function
         ===============
@@ -219,18 +230,20 @@ class Simulator:
         accept any mandatory parameters and return a boolean specifying if the
         simulation loop should end after it is executed.
         An example:
-        ```
-        def print_hello() -> bool:
-            print("Hello")
-            return False
-        simulator = Simulator(
-            board=board,
-            on_exit_event = {
-                ExitEvent.Exit : print_hello
-            },
-        )
-        ```
-        The above will print "Hello" on every `Exit` type Exit Event. As the
+
+        .. code-block::
+
+            def print_hello() -> bool:
+                print("Hello")
+                return False
+            simulator = Simulator(
+                board=board,
+                on_exit_event = {
+                    ExitEvent.Exit : print_hello
+                },
+            )
+
+        The above will print "Hello" on every ``Exit`` type Exit Event. As the
         function returns False, the simulation loop will not end on these
         events.
 
@@ -244,7 +257,7 @@ class Simulator:
             * ExitEvent.EXIT:  exit simulation
             * ExitEvent.CHECKPOINT: take a checkpoint
             * ExitEvent.FAIL : exit simulation
-            * ExitEvent.SWITCHCPU: call `switch` on the processor
+            * ExitEvent.SWITCHCPU: call ``switch`` on the processor
             * ExitEvent.WORKBEGIN: reset stats
             * ExitEvent.WORKEND: exit simulation
             * ExitEvent.USER_INTERRUPT: exit simulation
@@ -253,7 +266,7 @@ class Simulator:
             * ExitEvent.SIMPOINT_BEGIN: reset stats
             * ExitEvent.MAX_INSTS: exit simulation
 
-        These generators can be found in the `exit_event_generator.py` module.
+        These generators can be found in the ``exit_event_generator.py`` module.
 
         """
 
@@ -346,12 +359,15 @@ class Simulator:
 
     def schedule_simpoint(self, simpoint_start_insts: List[int]) -> None:
         """
-        Schedule SIMPOINT_BEGIN exit events
+        Schedule ``SIMPOINT_BEGIN`` exit events
 
-        **Warning:** SimPoints only work with one core
+        .. warning::
 
-        :param simpoint_start_insts: a list of number of instructions
-        indicating the starting point of the simpoints
+            SimPoints only work with one core.
+
+        :param simpoint_start_insts: A list of number of instructions
+                                    indicating the starting point of
+                                    the SimPoints.
         """
         if self._board.get_processor().get_num_cores() > 1:
             warn("SimPoints only work with one core")
@@ -361,10 +377,10 @@ class Simulator:
 
     def schedule_max_insts(self, inst: int) -> None:
         """
-        Schedule a MAX_INSTS exit event when any thread in any core reaches the
-        given number of instructions.
+        Schedule a ``MAX_INSTS`` exit event when any thread in any core
+        reaches the given number of instructions.
 
-        :param insts: a number of instructions to run to.
+        :param insts: A number of instructions to run to.
         """
         for core in self._board.get_processor().get_cores():
             core._set_inst_stop_any_thread(inst, self._instantiated)
@@ -375,19 +391,19 @@ class Simulator:
         to a JSON-style schema.
 
         :raises Exception: An exception is raised if this function is called
-        before `run()`. The board must be initialized before obtaining
-        statistics.
+                           before ``run()``. The board must be initialized
+                           before obtaining statistics.
         """
 
         return self.get_simstats().to_json()
 
     def get_simstats(self) -> SimStat:
         """
-        Obtains the SimStat of the current simulation.
+        Obtains the `SimStat` of the current simulation.
 
         :raises Exception: An exception is raised if this function is called
-        before `run()`. The board must be initialized before obtaining
-        statistics.
+                           before ``run()``. The board must be initialized
+                           before obtaining statistics.
         """
 
         if not self._instantiated:
@@ -545,9 +561,10 @@ class Simulator:
         events accordingly.
 
         :param max_ticks: The maximum number of ticks to execute per simulation
-        run. If this max_ticks value is met, a MAX_TICK exit event is
-        received, if another simulation exit event is met the tick count is
-        reset. This is the **maximum number of ticks per simulation run**.
+                          run. If this ``max_ticks`` value is met, a ``MAX_TICK``
+                          exit event is received, if another simulation exit
+                          event is met the tick count is reset. This is the
+                          **maximum number of ticks per simulation run**.
         """
 
         # Check to ensure no banned module has been imported.
@@ -620,6 +637,6 @@ class Simulator:
         This function will save the checkpoint to the specified directory.
 
         :param checkpoint_dir: The path to the directory where the checkpoint
-        will be saved.
+                               will be saved.
         """
         m5.checkpoint(str(checkpoint_dir))

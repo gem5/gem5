@@ -61,7 +61,7 @@ class PrivateL1SharedL2CacheHierarchy(
         the PrivateL1SharedL2 CacheHierarchy.
 
         :returns: The default memory bus for the PrivateL1SharedL2
-        CacheHierarchy.
+                  CacheHierarchy.
 
         :rtype: SystemXBar
         """
@@ -88,7 +88,7 @@ class PrivateL1SharedL2CacheHierarchy(
         :param l1i_assoc: The associativity of the L1 Instruction Cache.
         :param l2_assoc: The associativity of the L2 Cache.
         :param membus: The memory bus. This parameter is optional parameter and
-        will default to a 64 bit width SystemXBar is not specified.
+                       will default to a 64 bit width SystemXBar is not specified.
         """
 
         AbstractClassicCacheHierarchy.__init__(self=self)

@@ -76,11 +76,14 @@ from .riscvmatched_processor import U74Processor
 def U74Memory():
     """
     Memory for the U74 board.
+
     DDR4 Subsystem with 16GB of memory.
+
     Starts at 0x80000000.
+
     Details at: Section 23, page 195 of the datasheet.
 
-    return: ChanneledMemory
+    :return: ChanneledMemory
     """
     memory = SingleChannelDDR4_2400("16GB")
     memory.set_memory_range(
@@ -96,14 +99,15 @@ class RISCVMatchedBoard(
     A board capable of full system simulation for RISC-V
 
     At a high-level, this is based on the HiFive Unmatched board from SiFive.
-    Based on : src/python/gem5/components/boards/riscv_board.py
+    Based on : ``src/python/gem5/components/boards/riscv_board.py``
 
     This board assumes that you will be booting Linux for fullsystem emulation.
 
     The frequency of the RTC for the system is set to 1MHz.
     Details can be found on page 77, section 7.1 of the datasheet.
 
-    Datasheet for inbuilt params can be found here: https://sifive.cdn.prismic.io/sifive/1a82e600-1f93-4f41-b2d8-86ed8b16acba_fu740-c000-manual-v1p6.pdf
+    Datasheet for inbuilt params can be found here:
+    https://sifive.cdn.prismic.io/sifive/1a82e600-1f93-4f41-b2d8-86ed8b16acba_fu740-c000-manual-v1p6.pdf
     """
 
     def __init__(
@@ -307,9 +311,9 @@ class RISCVMatchedBoard(
             memory.set_memory_range(self.mem_ranges)
 
     def generate_device_tree(self, outdir: str) -> None:
-        """Creates the dtb and dts files.
+        """Creates the ``dtb`` and ``dts`` files.
 
-        Creates two files in the outdir: 'device.dtb' and 'device.dts'
+        Creates two files in the outdir: ``device.dtb`` and ``device.dts``
 
         :param outdir: Directory to output the files
         """

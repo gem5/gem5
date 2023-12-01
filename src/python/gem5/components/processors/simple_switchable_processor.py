@@ -57,16 +57,16 @@ class SimpleSwitchableProcessor(SwitchableProcessor):
     ) -> None:
         """
         :param starting_core_type: The CPU type for each type in the processor
-        to start with (i.e., when the simulation has just started).
+                                   to start with (i.e., when the simulation has
+                                   just started).
 
-        :param switch_core_types: The CPU type for each core, to be switched
-        to..
+        :param switch_core_types: The CPU type for each core, to be switched to.
 
         :param isa: The ISA of the processor. This argument is optional. If not
-        set the `runtime.get_runtime_isa` is used to determine the ISA at
-        runtime. **WARNING**: This functionality is deprecated. It is
-        recommended you explicitly set your ISA via SimpleSwitchableProcessor
-        construction.
+                    set the ``runtime.get_runtime_isa`` is used to determine the
+                    ISA at runtime. **WARNING**: This functionality is deprecated.
+                    It is recommended you explicitly set your ISA via
+                    SimpleSwitchableProcessor construction.
         """
 
         if not isa:

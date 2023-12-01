@@ -47,12 +47,14 @@ def CustomWorkload(function: str, parameters: Dict[str, Any]):
     A custom workload gem5 resource. It can be used to specify a custom,
     local workload.
 
-    **Warning**: This `CustomWorkload` class is deprecated. It will be removed in a
-    future release of gem5. Please use the `gem5.resources.resource.WorkloadResource`
-    class instead.
+    .. warning::
+
+        This ``CustomWorkload`` class is deprecated. It will be removed in a
+        future release of gem5. Please use the
+        ``gem5.resources.resource.WorkloadResource`` class instead.
 
     The class has been stealthily converted to a function which wraps the
-    `WorkloadResource` class.
+    ``WorkloadResource`` class.
     """
     warn(
         "The `CustomWorkload` class is deprecated. Please use "
@@ -69,12 +71,14 @@ def Workload(
     gem5_version: Optional[str] = core.gem5Version,
 ):
     """
-    **Warning**: The `Workload` class is deprecated. It will be removed in a
-        future release of gem5. Please use the `gem5.resources.resource.WorkloadResource`
+    .. warning::
+
+        The ``Workload`` class is deprecated. It will be removed in a future
+        release of gem5. Please use the ``gem5.resources.resource.WorkloadResource``
         class instead.
 
     The class has been stealthily converted to a function which wraps the
-    `WorkloadResource` class.
+    ``WorkloadResource`` class.
     """
     warn(
         "`Workload` has been deprecated. Please use the `obtain_resource` "
