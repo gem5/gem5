@@ -34,11 +34,18 @@ to update the gem5 config to point to the resources.json file.
 """
 
 import argparse
-import json
-from urllib import request, parse
-from pathlib import Path
-from typing import List, Dict, TextIO
 import hashlib
+import json
+from pathlib import Path
+from typing import (
+    Dict,
+    List,
+    TextIO,
+)
+from urllib import (
+    parse,
+    request,
+)
 
 
 def get_token(auth_url: str, api_key: str) -> str:
