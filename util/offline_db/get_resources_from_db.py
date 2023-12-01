@@ -143,7 +143,7 @@ def save_resources_to_file(resources: List[Dict], output: TextIO):
 
 
 def get_resource_local_filepath(
-    resource_url: str, base_output_path: TextIO
+    resource_id: str, resource_version: str, base_output_path: TextIO
 ) -> Path:
     """
     This function returns the local filepath for a resource
@@ -151,24 +151,9 @@ def get_resource_local_filepath(
     :param base_output_path: Base output directory absolute path
     :return: Local filepath for the resource
     """
-    # This line get the file path that is in the  google
-    # cloud storage bucket after the ``dist`` folder.
-    # The url: https://storage.googleapis.com/dist.gem5.org/dist/develop/checkpoints/...
-    # will be converted to  develop/checkpoints/...
-    filename = Path(
-        # This line combines the parts of the path
-        *Path(
-            # This line gets the path after https://
-            parse.urlsplit(resource_url).path
-        )
-        # This line splits the path into parts
-        # and gets the parts after the dist folder
-        .parts[3:]
-    )
+    filename = f"{resource_id}-{resource_version}"
 
     filepath = Path(base_output_path).joinpath(filename)
-
-    filepath.parent.mkdir(parents=True, exist_ok=True)
 
     return filepath
 
@@ -187,12 +172,14 @@ def download_resources(resources: List[Dict], output: TextIO):
     for resource in resources:
         if "url" in resource.keys():
             url = resource["url"]
-            filepath = get_resource_local_filepath(url, path)
+            filepath = get_resource_local_filepath(
+                resource["id"], resource["resource_version"], path
+            )
 
-            if (
-                not filepath.exists()
-                or "url-md5sum" not in resource.keys()
-                or hashlib.md5(filepath.read_bytes()).hexdigest()
+            if not filepath.exists() or (  # If the file does not exist
+                "url-md5sum"
+                in resource.keys()  # If it exist but the md5sum is wrong.
+                and hashlib.md5(filepath.read_bytes()).hexdigest()
                 != resource["url-md5sum"]
             ):
                 print(f"Downloading {url} to {filepath}")
@@ -200,7 +187,7 @@ def download_resources(resources: List[Dict], output: TextIO):
             resource["url"] = filepath.absolute().as_uri()
 
 
-if __name__ == "__main__" or __name__ == "__m5_main__":
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Get resources from the database"
     )
