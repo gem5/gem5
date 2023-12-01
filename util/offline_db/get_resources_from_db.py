@@ -36,10 +36,9 @@ to update the gem5 config to point to the resources.json file.
 import argparse
 import json
 from urllib import request, parse
-import pathlib
-from typing import List
+from pathlib import Path
+from typing import List, Dict, TextIO
 import hashlib
-from tqdm import tqdm
 
 
 def get_token(auth_url: str, api_key: str) -> str:
@@ -60,9 +59,19 @@ def get_token(auth_url: str, api_key: str) -> str:
     try:
         response = request.urlopen(req)
     except Exception as e:
-        raise Exception(f"Failed to get token: {e}")
+        raise Exception(
+            "Failed to obtain token via url request. "
+            f"Exception thrown:\n{e}"
+        )
 
-    token = json.loads(response.read().decode("utf-8"))["access_token"]
+    json_response = json.loads(response.read().decode("utf-8"))
+    assert "access_token" in json_response, (
+        "'access_token' not key in"
+        "json dictionary. JSON: \n"
+        f"{json_response}"
+    )
+    token = json_response["access_token"]
+
     return token
 
 
@@ -97,12 +106,23 @@ def get_all_resources(
     try:
         response = request.urlopen(req)
     except Exception as e:
-        raise Exception(f"Failed to get resources: {e}")
+        raise Exception(
+            "Failed to obtain resources via url request. "
+            f"Exception thrown:\n{e}"
+        )
 
-    return json.loads(response.read().decode("utf-8"))["documents"]
+    json_response = json.loads(response.read().decode("utf-8"))
+    assert "documents" in json_response, (
+        "'documents' not a key in "
+        "json dictionary. JSON: \n"
+        f"{json_response}"
+    )
+    resources = json_response["documents"]
+
+    return resources
 
 
-def save_resources_to_file(resources: List, output: pathlib.Path):
+def save_resources_to_file(resources: List[Dict], output: TextIO):
     """
     This function saves all the JSON objects for resources to a file.
     :param resources: List of JSON objects for resources
@@ -115,20 +135,38 @@ def save_resources_to_file(resources: List, output: pathlib.Path):
         json.dump(resources, f, indent=4)
 
 
-def progress_hook(t):
-    last_b = [0]
+def get_resource_local_filepath(
+    resource_url: str, base_output_path: TextIO
+) -> Path:
+    """
+    This function returns the local filepath for a resource
+    :param resource_url: URL field of the resource
+    :param base_output_path: Base output directory absolute path
+    :return: Local filepath for the resource
+    """
+    # This line get the file path that is in the  google
+    # cloud storage bucket after the ``dist`` folder.
+    # The url: https://storage.googleapis.com/dist.gem5.org/dist/develop/checkpoints/...
+    # will be converted to  develop/checkpoints/...
+    filename = Path(
+        # This line combines the parts of the path
+        *Path(
+            # This line gets the path after https://
+            parse.urlsplit(resource_url).path
+        )
+        # This line splits the path into parts
+        # and gets the parts after the dist folder
+        .parts[3:]
+    )
 
-    def update_to(b=1, bsize=1, tsize=None):
-        if tsize not in (None, -1):
-            t.total = tsize
-        displayed = t.update((b - last_b[0]) * bsize)
-        last_b[0] = b
-        return displayed
+    filepath = Path(base_output_path).joinpath(filename)
 
-    return update_to
+    filepath.parent.mkdir(parents=True, exist_ok=True)
+
+    return filepath
 
 
-def download_resources(output: pathlib.Path):
+def download_resources(resources: List[Dict], output: TextIO):
     """
     This function downloads the resources which have a url field and
     updates the url field to point to the local download of the resource.
@@ -139,35 +177,20 @@ def download_resources(output: pathlib.Path):
     if not path.exists():
         path.mkdir()
 
-    with open(output.joinpath("resources.json")) as f:
-        resources = json.load(f)
-
     for resource in resources:
         if "url" in resource.keys():
             url = resource["url"]
-            filename = pathlib.Path(
-                *pathlib.Path(parse.urlsplit(url).path).parts[3:]
-            )
-            filepath = pathlib.Path(path).joinpath(filename)
-            filepath.parent.mkdir(parents=True, exist_ok=True)
+            filepath = get_resource_local_filepath(url, path)
 
             if (
                 not filepath.exists()
+                or "url-md5sum" not in resource.keys()
                 or hashlib.md5(filepath.read_bytes()).hexdigest()
-                != resource["md5sum"]
+                != resource["url-md5sum"]
             ):
-                with tqdm(
-                    unit="B",
-                    unit_scale=True,
-                    unit_divisor=1024,
-                    miniters=1,
-                    desc=f"Downloading {url}",
-                ) as t:
-                    request.urlretrieve(url, filepath, progress_hook(t))
+                print(f"Downloading {url} to {filepath}")
+                request.urlretrieve(url, filepath)
             resource["url"] = filepath.absolute().as_uri()
-
-    with open(output.joinpath("resources.json"), "w") as f:
-        json.dump(resources, f, indent=4)
 
 
 if __name__ == "__main__" or __name__ == "__m5_main__":
@@ -176,46 +199,40 @@ if __name__ == "__main__" or __name__ == "__m5_main__":
     )
 
     parser.add_argument(
-        "--config-file-url",
+        "--config-file-path",
         type=str,
-        default="https://raw.githubusercontent.com/gem5/gem5/stable/"
-        "src/python/gem5_default_config.py",
-        help="URL to the gem5 config file",
+        default=Path(__file__)
+        .resolve()
+        .parent.joinpath("gem5_default_config.py"),
+        help="Filepath to the gem5 config file",
     )
 
     parser.add_argument(
         "--output_dir",
         type=str,
-        default=pathlib.Path.cwd(),
-        help="Output directory absolute path, default is the cwd."
+        default=Path.cwd(),
+        help="Output directory path, default is the cwd."
         "The resources.json and all resources will be saved in this directory",
     )
     args = parser.parse_args()
 
-    output_path = pathlib.Path(args.output_dir)
+    output_path = Path(args.output_dir)
 
-    config_file_suffix = pathlib.Path(
-        parse.urlsplit(args.config_file_url).path
-    ).suffix
+    # Get the gem5 config file from the  file
 
-    # Get the gem5 config file from the url
-    if config_file_suffix == ".py":
-        gem5_config = request.urlopen(args.config_file_url)
-        gem5_config = gem5_config.read().decode("utf-8").split("=")[-1]
-        gem5_config = eval(gem5_config)
-        gem5_config = gem5_config["sources"]["gem5-resources"]
-    elif config_file_suffix == ".json":
-        gem5_config = request.urlopen(args.config_file_url)
-        gem5_config = json.loads(gem5_config.read().decode("utf-8"))
-        gem5_config = gem5_config["sources"]["gem5-resources"]
+    with open(args.config_file_path) as f:
+        gem5_config_file_contents = f.read()
+    gem5_config_str = gem5_config_file_contents.split("=")[-1]
+    gem5_config_json = eval(gem5_config_str)
+    gem5_config_gem5_resources = gem5_config_json["sources"]["gem5-resources"]
 
     # Parse the gem5 config
-    db_url = gem5_config["url"]
-    data_source = gem5_config["dataSource"]
-    collection_name = gem5_config["collection"]
-    db_name = gem5_config["database"]
-    auth_url = gem5_config["authUrl"]
-    api_key = gem5_config["apiKey"]
+    db_url = gem5_config_gem5_resources["url"]
+    data_source = gem5_config_gem5_resources["dataSource"]
+    collection_name = gem5_config_gem5_resources["collection"]
+    db_name = gem5_config_gem5_resources["database"]
+    auth_url = gem5_config_gem5_resources["authUrl"]
+    api_key = gem5_config_gem5_resources["apiKey"]
 
     if not output_path.exists():
         output_path = output_path.mkdir()
@@ -230,9 +247,9 @@ if __name__ == "__main__" or __name__ == "__m5_main__":
         token,
     )
 
+    download_resources(resources, output_path)
+
     save_resources_to_file(
         resources,
         output_path,
     )
-
-    download_resources(output_path)
