@@ -42,7 +42,7 @@ from m5.objects import (
     PMAChecker,
     Port,
     RawDiskImage,
-    RiscvLinux,
+    RiscvBootloaderKernelWorkload,
     RiscvMmioVirtIO,
     RiscvRTC,
     VirtIOBlock,
@@ -97,7 +97,7 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
 
     @overrides(AbstractSystemBoard)
     def _setup_board(self) -> None:
-        self.workload = RiscvLinux()
+        self.workload = RiscvBootloaderKernelWorkload()
 
         # Contains a CLINT, PLIC, UART, and some functions for the dtb, etc.
         self.platform = HiFive()
@@ -487,6 +487,18 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
     @overrides(KernelDiskWorkload)
     def get_disk_device(self):
         return "/dev/vda"
+
+    @overrides(AbstractSystemBoard)
+    def _pre_instantiate(self):
+        if len(self._bootloader) > 0:
+            self.workload.bootloader_addr = 0x0
+            self.workload.bootloader_filename = self._bootloader[0]
+            self.workload.kernel_addr = 0x80200000
+            self.workload.entry_point = 0x80000000  # Bootloader starting point
+        else:
+            self.workload.kernel_addr = 0x0
+            self.workload.entry_point = 0x80000000
+        self._connect_things()
 
     @overrides(KernelDiskWorkload)
     def _add_disk_to_board(self, disk_image: AbstractResource):
