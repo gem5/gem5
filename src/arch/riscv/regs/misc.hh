@@ -17,6 +17,7 @@
  *
  * Copyright (c) 2016 RISC-V Foundation
  * Copyright (c) 2016 The University of Virginia
+ * Copyright (c) 2024 University of Rostock
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1046,6 +1047,7 @@ EndBitUnion(MISA)
  * this bit union.
  */
 BitUnion64(INTERRUPT)
+    Bitfield<63,16> local;
     Bitfield<11> mei;
     Bitfield<9> sei;
     Bitfield<8> uei;
@@ -1155,6 +1157,54 @@ const RegVal USTATUS_MASKS[enums::Num_RiscvType] = {
              STATUS_UPIE_MASK | STATUS_UIE_MASK,
 };
 
+const RegVal LOCAL_63_MASK = 1ULL << 63;
+const RegVal LOCAL_62_MASK = 1ULL << 62;
+const RegVal LOCAL_61_MASK = 1ULL << 61;
+const RegVal LOCAL_60_MASK = 1ULL << 60;
+const RegVal LOCAL_59_MASK = 1ULL << 59;
+const RegVal LOCAL_58_MASK = 1ULL << 58;
+const RegVal LOCAL_57_MASK = 1ULL << 57;
+const RegVal LOCAL_56_MASK = 1ULL << 56;
+const RegVal LOCAL_55_MASK = 1ULL << 55;
+const RegVal LOCAL_54_MASK = 1ULL << 54;
+const RegVal LOCAL_53_MASK = 1ULL << 53;
+const RegVal LOCAL_52_MASK = 1ULL << 52;
+const RegVal LOCAL_51_MASK = 1ULL << 51;
+const RegVal LOCAL_50_MASK = 1ULL << 50;
+const RegVal LOCAL_49_MASK = 1ULL << 49;
+const RegVal LOCAL_48_MASK = 1ULL << 48;
+const RegVal LOCAL_47_MASK = 1ULL << 47;
+const RegVal LOCAL_46_MASK = 1ULL << 46;
+const RegVal LOCAL_45_MASK = 1ULL << 45;
+const RegVal LOCAL_44_MASK = 1ULL << 44;
+const RegVal LOCAL_43_MASK = 1ULL << 43;
+const RegVal LOCAL_42_MASK = 1ULL << 42;
+const RegVal LOCAL_41_MASK = 1ULL << 41;
+const RegVal LOCAL_40_MASK = 1ULL << 40;
+const RegVal LOCAL_39_MASK = 1ULL << 39;
+const RegVal LOCAL_38_MASK = 1ULL << 38;
+const RegVal LOCAL_37_MASK = 1ULL << 37;
+const RegVal LOCAL_36_MASK = 1ULL << 36;
+const RegVal LOCAL_35_MASK = 1ULL << 35;
+const RegVal LOCAL_34_MASK = 1ULL << 34;
+const RegVal LOCAL_33_MASK = 1ULL << 33;
+const RegVal LOCAL_32_MASK = 1ULL << 32;
+const RegVal LOCAL_31_MASK = 1ULL << 31;
+const RegVal LOCAL_30_MASK = 1ULL << 30;
+const RegVal LOCAL_29_MASK = 1ULL << 29;
+const RegVal LOCAL_28_MASK = 1ULL << 28;
+const RegVal LOCAL_27_MASK = 1ULL << 27;
+const RegVal LOCAL_26_MASK = 1ULL << 26;
+const RegVal LOCAL_25_MASK = 1ULL << 25;
+const RegVal LOCAL_24_MASK = 1ULL << 24;
+const RegVal LOCAL_23_MASK = 1ULL << 23;
+const RegVal LOCAL_22_MASK = 1ULL << 22;
+const RegVal LOCAL_21_MASK = 1ULL << 21;
+const RegVal LOCAL_20_MASK = 1ULL << 20;
+const RegVal LOCAL_19_MASK = 1ULL << 19;
+const RegVal LOCAL_18_MASK = 1ULL << 18;
+const RegVal LOCAL_17_MASK = 1ULL << 17;
+const RegVal LOCAL_16_MASK = 1ULL << 16;
 const RegVal MEI_MASK = 1ULL << 11;
 const RegVal SEI_MASK = 1ULL << 9;
 const RegVal UEI_MASK = 1ULL << 8;
@@ -1164,7 +1214,31 @@ const RegVal UTI_MASK = 1ULL << 4;
 const RegVal MSI_MASK = 1ULL << 3;
 const RegVal SSI_MASK = 1ULL << 1;
 const RegVal USI_MASK = 1ULL << 0;
-const RegVal MI_MASK = MEI_MASK | SEI_MASK | UEI_MASK |
+const RegVal MI_MASK = LOCAL_62_MASK | LOCAL_63_MASK |
+                       LOCAL_60_MASK | LOCAL_61_MASK |
+                       LOCAL_58_MASK | LOCAL_59_MASK |
+                       LOCAL_56_MASK | LOCAL_57_MASK |
+                       LOCAL_54_MASK | LOCAL_55_MASK |
+                       LOCAL_52_MASK | LOCAL_53_MASK |
+                       LOCAL_50_MASK | LOCAL_51_MASK |
+                       LOCAL_48_MASK | LOCAL_49_MASK |
+                       LOCAL_46_MASK | LOCAL_47_MASK |
+                       LOCAL_44_MASK | LOCAL_45_MASK |
+                       LOCAL_42_MASK | LOCAL_43_MASK |
+                       LOCAL_40_MASK | LOCAL_41_MASK |
+                       LOCAL_38_MASK | LOCAL_39_MASK |
+                       LOCAL_36_MASK | LOCAL_37_MASK |
+                       LOCAL_34_MASK | LOCAL_35_MASK |
+                       LOCAL_32_MASK | LOCAL_33_MASK |
+                       LOCAL_30_MASK | LOCAL_31_MASK |
+                       LOCAL_28_MASK | LOCAL_29_MASK |
+                       LOCAL_26_MASK | LOCAL_27_MASK |
+                       LOCAL_24_MASK | LOCAL_25_MASK |
+                       LOCAL_22_MASK | LOCAL_23_MASK |
+                       LOCAL_20_MASK | LOCAL_21_MASK |
+                       LOCAL_18_MASK | LOCAL_19_MASK |
+                       LOCAL_16_MASK | LOCAL_17_MASK |
+                       MEI_MASK | SEI_MASK | UEI_MASK |
                        MTI_MASK | STI_MASK | UTI_MASK |
                        MSI_MASK | SSI_MASK | USI_MASK;
 const RegVal SI_MASK = SEI_MASK | UEI_MASK |
