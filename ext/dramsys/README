@@ -11,3 +11,6 @@ This is done by setting the value of the "StoreMode" key to "Store" in the base 
 Those configuration file can be found in 'DRAMSys/library/resources/configs/simulator'.
 
 Currently, DRAMSys is only supported in conjunction with a cache. Running DRAMSys in Release mode without caches will silently fail!
+
+Note: DRAMSys requires cmake version >= 3.24. This is not available via apt on Ubuntu 20.04 or 22.04. 
+See `util/dockerfiles/ubuntu-20.04_all-dependencies/Dockerfile` for an example of how to install cmake 3.24.
