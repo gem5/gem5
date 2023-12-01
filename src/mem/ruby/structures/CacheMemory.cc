@@ -188,7 +188,7 @@ bool
 CacheMemory::tryCacheAccess(Addr address, RubyRequestType type,
                             DataBlock*& data_ptr)
 {
-    DPRINTF(RubyCache, "address: %#x\n", address);
+    DPRINTF(RubyCache, "trying to access address: %#x\n", address);
     AbstractCacheEntry* entry = lookup(address);
     if (entry != nullptr) {
         // Do we even have a tag match?
@@ -197,14 +197,20 @@ CacheMemory::tryCacheAccess(Addr address, RubyRequestType type,
         data_ptr = &(entry->getDataBlk());
 
         if (entry->m_Permission == AccessPermission_Read_Write) {
+            DPRINTF(RubyCache, "Have permission to access address: %#x\n",
+                        address);
             return true;
         }
         if ((entry->m_Permission == AccessPermission_Read_Only) &&
             (type == RubyRequestType_LD || type == RubyRequestType_IFETCH)) {
+            DPRINTF(RubyCache, "Have permission to access address: %#x\n",
+                        address);
             return true;
         }
         // The line must not be accessible
     }
+    DPRINTF(RubyCache, "Do not have permission to access address: %#x\n",
+                address);
     data_ptr = NULL;
     return false;
 }
@@ -213,7 +219,7 @@ bool
 CacheMemory::testCacheAccess(Addr address, RubyRequestType type,
                              DataBlock*& data_ptr)
 {
-    DPRINTF(RubyCache, "address: %#x\n", address);
+    DPRINTF(RubyCache, "testing address: %#x\n", address);
     AbstractCacheEntry* entry = lookup(address);
     if (entry != nullptr) {
         // Do we even have a tag match?
@@ -221,9 +227,14 @@ CacheMemory::testCacheAccess(Addr address, RubyRequestType type,
         entry->setLastAccess(curTick());
         data_ptr = &(entry->getDataBlk());
 
+        DPRINTF(RubyCache, "have permission for address %#x?: %d\n",
+                    address,
+                    entry->m_Permission != AccessPermission_NotPresent);
         return entry->m_Permission != AccessPermission_NotPresent;
     }
 
+    DPRINTF(RubyCache, "do not have permission for address %#x\n",
+                address);
     data_ptr = NULL;
     return false;
 }
@@ -273,7 +284,7 @@ CacheMemory::allocate(Addr address, AbstractCacheEntry *entry)
     assert(address == makeLineAddress(address));
     assert(!isTagPresent(address));
     assert(cacheAvail(address));
-    DPRINTF(RubyCache, "address: %#x\n", address);
+    DPRINTF(RubyCache, "allocating address: %#x\n", address);
 
     // Find the first open slot
     int64_t cacheSet = addressToCacheSet(address);
@@ -311,7 +322,7 @@ CacheMemory::allocate(Addr address, AbstractCacheEntry *entry)
 void
 CacheMemory::deallocate(Addr address)
 {
-    DPRINTF(RubyCache, "address: %#x\n", address);
+    DPRINTF(RubyCache, "deallocating address: %#x\n", address);
     AbstractCacheEntry* entry = lookup(address);
     assert(entry != nullptr);
     m_replacementPolicy_ptr->invalidate(entry->replacementData);
