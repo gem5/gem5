@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2011 Google
+ * Copyright (c) 2024 University of Rostock
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,8 +37,10 @@
 #include "arch/riscv/faults.hh"
 #include "arch/riscv/regs/misc.hh"
 #include "base/logging.hh"
+#include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "debug/Interrupt.hh"
+#include "dev/intpin.hh"
 #include "params/RiscvInterrupts.hh"
 #include "sim/sim_object.hh"
 
@@ -59,71 +62,13 @@ class Interrupts : public BaseInterrupts
     std::bitset<NumInterruptTypes> ip;
     std::bitset<NumInterruptTypes> ie;
 
+    std::vector<gem5::IntSinkPin<Interrupts>*> localInterruptPins;
   public:
     using Params = RiscvInterruptsParams;
 
-    Interrupts(const Params &p) : BaseInterrupts(p), ip(0), ie(0) {}
+    Interrupts(const Params &p);
 
-    std::bitset<NumInterruptTypes>
-    globalMask() const
-    {
-        INTERRUPT mask = 0;
-        STATUS status = tc->readMiscReg(MISCREG_STATUS);
-        MISA misa = tc->readMiscRegNoEffect(MISCREG_ISA);
-        INTERRUPT mideleg = 0;
-        if (misa.rvs || misa.rvn) {
-            mideleg = tc->readMiscReg(MISCREG_MIDELEG);
-        }
-        INTERRUPT sideleg = 0;
-        if (misa.rvs && misa.rvn) {
-            sideleg = tc->readMiscReg(MISCREG_SIDELEG);
-        }
-        PrivilegeMode prv = (PrivilegeMode)tc->readMiscReg(MISCREG_PRV);
-        switch (prv) {
-            case PRV_U:
-                // status.uie is always 0 if misa.rvn is disabled
-                if (misa.rvs) {
-                    mask.mei = (!sideleg.mei) | (sideleg.mei & status.uie);
-                    mask.mti = (!sideleg.mti) | (sideleg.mti & status.uie);
-                    mask.msi = (!sideleg.msi) | (sideleg.msi & status.uie);
-                    mask.sei = (!sideleg.sei) | (sideleg.sei & status.uie);
-                    mask.sti = (!sideleg.sti) | (sideleg.sti & status.uie);
-                    mask.ssi = (!sideleg.ssi) | (sideleg.ssi & status.uie);
-                } else {
-                    // According to the RISC-V privilege spec v1.10, if the
-                    // S privilege mode is not implemented and user-trap
-                    // support, setting mideleg/medeleg bits will delegate the
-                    // trap to U-mode trap handler
-                    mask.mei = (!mideleg.mei) | (mideleg.mei & status.uie);
-                    mask.mti = (!mideleg.mti) | (mideleg.mti & status.uie);
-                    mask.msi = (!mideleg.msi) | (mideleg.msi & status.uie);
-                    mask.sei = mask.sti = mask.ssi = 0;
-                }
-                if (status.uie)
-                    mask.uei = mask.uti = mask.usi = 1;
-                break;
-            case PRV_S:
-                // status.sie is always 0 if misa.rvn is disabled
-                mask.mei = (!mideleg.mei) | (mideleg.mei & status.sie);
-                mask.mti = (!mideleg.mti) | (mideleg.mti & status.sie);
-                mask.msi = (!mideleg.msi) | (mideleg.msi & status.sie);
-                if (status.sie)
-                    mask.sei = mask.sti = mask.ssi = 1;
-                mask.uei = mask.uti = mask.usi = 0;
-                break;
-            case PRV_M:
-                if (status.mie)
-                     mask.mei = mask.mti = mask.msi = 1;
-                mask.sei = mask.sti = mask.ssi = 0;
-                mask.uei = mask.uti = mask.usi = 0;
-                break;
-            default:
-                panic("Unknown privilege mode %d.", prv);
-                break;
-        }
-
-        return std::bitset<NumInterruptTypes>(mask);
-    }
+    std::bitset<NumInterruptTypes> globalMask() const;
 
     bool
     checkNonMaskableInterrupt() const
@@ -137,83 +82,32 @@ class Interrupts : public BaseInterrupts
         return checkNonMaskableInterrupt() || (ip & ie & globalMask()).any();
     }
 
-    Fault
-    getInterrupt() override
-    {
-        assert(checkInterrupts());
-        if (checkNonMaskableInterrupt())
-            return std::make_shared<NonMaskableInterruptFault>();
-        std::bitset<NumInterruptTypes> mask = globalMask();
-        const std::vector<int> interrupt_order {
-            INT_EXT_MACHINE, INT_SOFTWARE_MACHINE, INT_TIMER_MACHINE,
-            INT_EXT_SUPER, INT_SOFTWARE_SUPER, INT_TIMER_SUPER,
-            INT_EXT_USER, INT_SOFTWARE_USER, INT_TIMER_USER
-        };
-        for (const int &id : interrupt_order)
-            if (checkInterrupt(id) && mask[id])
-                return std::make_shared<InterruptFault>(id);
-        return NoFault;
-    }
+    Fault getInterrupt() override;
 
     void updateIntrInfo() override {}
 
-    void
-    post(int int_num, int index) override
-    {
-        DPRINTF(Interrupt, "Interrupt %d:%d posted\n", int_num, index);
-        if (int_num != INT_NMI) {
-            ip[int_num] = true;
-        } else {
-            postNMI();
-        }
-    }
+    void post(int int_num, int index) override;
 
-    void
-    clear(int int_num, int index) override
-    {
-        DPRINTF(Interrupt, "Interrupt %d:%d cleared\n", int_num, index);
-        if (int_num != INT_NMI) {
-            ip[int_num] = false;
-        } else {
-            clearNMI();
-        }
-    }
+    void clear(int int_num, int index) override;
 
     void postNMI() { tc->setMiscReg(MISCREG_NMIP, 1); }
     void clearNMI() { tc->setMiscReg(MISCREG_NMIP, 0); }
 
-    void
-    clearAll() override
-    {
-        DPRINTF(Interrupt, "All interrupts cleared\n");
-        ip = 0;
-        clearNMI();
-    }
+    void clearAll() override;
 
     uint64_t readIP() const { return (uint64_t)ip.to_ulong(); }
     uint64_t readIE() const { return (uint64_t)ie.to_ulong(); }
     void setIP(const uint64_t& val) { ip = val; }
     void setIE(const uint64_t& val) { ie = val; }
 
-    void
-    serialize(CheckpointOut &cp) const override
-    {
-        unsigned long ip_ulong = ip.to_ulong();
-        unsigned long ie_ulong = ie.to_ulong();
-        SERIALIZE_SCALAR(ip_ulong);
-        SERIALIZE_SCALAR(ie_ulong);
-    }
+    void serialize(CheckpointOut &cp) const override;
 
-    void
-    unserialize(CheckpointIn &cp) override
-    {
-        unsigned long ip_ulong;
-        unsigned long ie_ulong;
-        UNSERIALIZE_SCALAR(ip_ulong);
-        ip = ip_ulong;
-        UNSERIALIZE_SCALAR(ie_ulong);
-        ie = ie_ulong;
-    }
+    void unserialize(CheckpointIn &cp) override;
+
+    Port &getPort(const std::string &if_name, PortID idx);
+
+    void raiseInterruptPin(uint32_t num);
+    void lowerInterruptPin(uint32_t num) {};
 };
 
 } // namespace RiscvISA
