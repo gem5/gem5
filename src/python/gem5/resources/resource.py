@@ -118,6 +118,10 @@ class AbstractResource:
         self._version = resource_version
         self._downloader = downloader
 
+    def get_id(self) -> str:
+        """Returns the ID of the resource."""
+        return self._id
+
     def get_category_name(cls) -> str:
         raise NotImplementedError
 
@@ -803,6 +807,40 @@ class SuiteResource(AbstractResource):
         }
 
 
+class ShadowResource(AbstractResource):
+    """A special resource class which delays the `obtain_resource` call. It is,
+    in a sense, half constructed. Only when a function or attribute is called
+    which is is neither `get_id` or `get_resource_version` does this class
+    fully construct itself by calling the `obtain_resource_call` partial
+    function.
+    """
+
+    def __init__(
+        self,
+        id: str,
+        resource_version: str,
+        obtain_resource_call: partial,
+    ):
+        super().__init__(
+            id=id,
+            resource_version=resource_version,
+        )
+        self._workload: Optional[AbstractResource] = None
+        self._obtain_resource_call = obtain_resource_call
+
+    def __getattr__(self, attr):
+        """if getting the id or resource version, we keep the object in the
+        "shdow state" where the `obtain_resource` function has not been called.
+        When more information is needed by calling another attribute, we call
+        the `obtain_resource` function and store the result in the `_workload`.
+        """
+        if attr in {"get_id", "get_resource_version"}:
+            return getattr(super(), attr)
+        if not self._workload:
+            self._workload = self._obtain_resource_call()
+        return getattr(self._workload, attr)
+
+
 class WorkloadResource(AbstractResource):
     """A workload resource. This resource is used to specify a workload to run
     on a board. It contains the function to call and the parameters to pass to
@@ -1012,12 +1050,17 @@ def obtain_resource(
         workloads_obj = {}
         for workload in workloads:
             workloads_obj[
-                obtain_resource(
-                    workload["id"],
+                ShadowResource(
+                    id=workload["id"],
                     resource_version=workload["resource_version"],
-                    resource_directory=resource_directory,
-                    clients=clients,
-                    gem5_version=gem5_version,
+                    obtain_resource_call=partial(
+                        obtain_resource,
+                        workload["id"],
+                        resource_version=workload["resource_version"],
+                        resource_directory=resource_directory,
+                        clients=clients,
+                        gem5_version=gem5_version,
+                    ),
                 )
             ] = set(workload["input_group"])
         resource_json["workloads"] = workloads_obj
