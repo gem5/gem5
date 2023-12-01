@@ -81,7 +81,7 @@ class BootloaderKernelWorkload: public Workload
   public:
     PARAMS(RiscvBootloaderKernelWorkload);
     BootloaderKernelWorkload(const Params &p)
-        : Workload(p), entryPoint(p.entry_point), bootArgs(p.boot_args)
+        : Workload(p), entryPoint(p.entry_point), bootArgs(p.command_line)
     {
         loadBootloaderSymbolTable();
         loadKernelSymbolTable();

@@ -97,8 +97,8 @@ BootloaderKernelWorkload::loadBootloaderSymbolTable()
 void
 BootloaderKernelWorkload::loadKernelSymbolTable()
 {
-    if (params().kernel_filename != "") {
-        kernel = loader::createObjectFile(params().kernel_filename);
+    if (params().object_file != "") {
+        kernel = loader::createObjectFile(params().object_file);
         kernelSymbolTable = kernel->symtab();
         auto renamedKernelSymbolTable = \
             kernelSymbolTable.functionSymbols()->rename(
@@ -131,7 +131,7 @@ BootloaderKernelWorkload::loadBootloader()
 void
 BootloaderKernelWorkload::loadKernel()
 {
-    if (params().kernel_filename != "") {
+    if (params().object_file != "") {
         Addr kernel_paddr_offset = params().kernel_addr;
         kernel->buildImage().offset(kernel_paddr_offset).write(
             system->physProxy
@@ -139,7 +139,7 @@ BootloaderKernelWorkload::loadKernel()
         delete kernel;
 
         inform("Loaded kernel \'%s\' at 0x%llx\n",
-                params().kernel_filename,
+                params().object_file,
                 kernel_paddr_offset);
     } else {
         inform("Kernel is not specified.\n");
