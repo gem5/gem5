@@ -76,7 +76,7 @@ jobs:
                   ref: develop
             - uses: actions/download-artifact@v3
               with:
-                  name: weekly-test-${{ github.run_number }}-attempt-${{ github.run_attempt }}-gem5-build-gcn3
+                  name: weekly-test-${{ github.run_number }}-attempt-${{ github.run_attempt }}-gem5-build-vega
                   path: build/VEGA_X86
             - run: chmod u+x build/VEGA_X86/gem5.opt
             - name: make hip directory
