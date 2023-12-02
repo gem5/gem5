@@ -814,6 +814,12 @@ class ShadowResource(AbstractResource):
     which is is neither `get_id` or `get_resource_version` does this class
     fully construct itself by calling the `obtain_resource_call` partial
     function.
+
+    **Note:** This class is a hack. The ideal solution to this would be to
+    enable the bundled obtaining of resources in the gem5 Standard Library.
+    Use of the class is discouraged and should not be depended on. Issue
+    https://github.com/gem5/gem5/issues/644 is tracking the implementation of
+    an alternative.
     """
 
     def __init__(
