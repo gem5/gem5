@@ -141,7 +141,7 @@ class Workload : public SimObject
         if (it == symtab.end())
             return nullptr;
 
-        return new T(system, desc, fixFuncEventAddr(it->address),
+        return new T(system, desc, fixFuncEventAddr(it->address()),
                       std::forward<Args>(args)...);
     }
 

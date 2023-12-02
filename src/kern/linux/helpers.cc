@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, 2022 Arm Limited
+ * Copyright (c) 2016, 2022-2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -37,7 +37,10 @@
 
 #include "kern/linux/helpers.hh"
 
+#include <regex>
+#include <string>
 #include <type_traits>
+#include <vector>
 
 #include "base/compiler.hh"
 #include "base/loader/object_file.hh"
@@ -125,9 +128,9 @@ dumpDmesg(ThreadContext *tc, std::ostream &os)
         return;
     }
 
-    uint32_t log_buf_len = proxy.read<uint32_t>(lb_len->address, bo);
-    uint32_t log_first_idx = proxy.read<uint32_t>(first->address, bo);
-    uint32_t log_next_idx = proxy.read<uint32_t>(next->address, bo);
+    uint32_t log_buf_len = proxy.read<uint32_t>(lb_len->address(), bo);
+    uint32_t log_first_idx = proxy.read<uint32_t>(first->address(), bo);
+    uint32_t log_next_idx = proxy.read<uint32_t>(next->address(), bo);
 
     if (log_first_idx >= log_buf_len || log_next_idx >= log_buf_len) {
         warn("dmesg pointers/length corrupted\n");
@@ -143,7 +146,7 @@ dumpDmesg(ThreadContext *tc, std::ostream &os)
             warn("Unexpected dmesg buffer length\n");
             return;
         }
-        proxy.readBlob(lb->address + log_first_idx, log_buf.data(), length);
+        proxy.readBlob(lb->address() + log_first_idx, log_buf.data(), length);
     } else {
         const int length_2 = log_buf_len - log_first_idx;
         if (length_2 < 0 || length_2 + log_next_idx > log_buf.size()) {
@@ -151,8 +154,10 @@ dumpDmesg(ThreadContext *tc, std::ostream &os)
             return;
         }
         length = log_buf_len;
-        proxy.readBlob(lb->address + log_first_idx, log_buf.data(), length_2);
-        proxy.readBlob(lb->address, log_buf.data() + length_2, log_next_idx);
+        proxy.readBlob(
+            lb->address() + log_first_idx, log_buf.data(), length_2);
+        proxy.readBlob(
+            lb->address(), log_buf.data() + length_2, log_next_idx);
     }
 
     // Print dmesg buffer content
@@ -261,6 +266,41 @@ struct GEM5_PACKED DmesgInfoRecord
     }
 };
 
+/** Metadata struct for Linux pre-v5.18.0
+ *
+ */
+template<typename AtomicVarType>
+struct Metadata_Pre_v5_18_0
+{
+    using atomic_var_t = AtomicVarType;
+    using guest_ptr_t =
+        typename std::make_unsigned_t<atomic_var_t>;
+    unsigned int mask_bits;
+    guest_ptr_t metadata_ring_ptr;
+    guest_ptr_t info_ring_ptr;
+    atomic_var_t unused1;
+    atomic_var_t unused2;
+};
+
+
+/** Metadata struct for Linux post-v5.18.0
+ *
+ */
+template<typename AtomicVarType>
+struct Metadata_Post_v5_18_0
+{
+    using atomic_var_t = AtomicVarType;
+    using guest_ptr_t =
+        typename std::make_unsigned_t<atomic_var_t>;
+    unsigned int mask_bits;
+    guest_ptr_t metadata_ring_ptr;
+    guest_ptr_t info_ring_ptr;
+    atomic_var_t unused1;
+    atomic_var_t unused2;
+    atomic_var_t unused3;
+};
+
+
 /** Top-level ringbuffer record for the Linux dmesg ringbuffer, post-v5.10.
  *
  *  Struct data members are compatible with the equivalent Linux data
@@ -271,7 +311,7 @@ struct GEM5_PACKED DmesgInfoRecord
  *  the gem5 world, and reading/generating appropriate masks.
  *
  */
-template<typename AtomicVarType>
+template<typename AtomicVarType, typename MetadataStructType>
 struct GEM5_PACKED DmesgRingbuffer
 {
     static_assert(
@@ -286,14 +326,9 @@ struct GEM5_PACKED DmesgRingbuffer
     using metadata_record_t = DmesgMetadataRecord<atomic_var_t>;
 
     // Struct data members
-    struct
-    {
-        unsigned int mask_bits;
-        guest_ptr_t metadata_ring_ptr;
-        guest_ptr_t info_ring_ptr;
-        atomic_var_t unused1;
-        atomic_var_t unused2;
-    } metadata;
+
+    // Metadata struct size depends on the Linux Kernel Version
+    MetadataStructType metadata;
     struct
     {
         unsigned int mask_bits;
@@ -386,9 +421,16 @@ struct GEM5_PACKED DmesgRingbuffer
     }
 };
 
-// Aliases for the two types of Ringbuffer that could be used.
-using Linux64_Ringbuffer = DmesgRingbuffer<int64_t>;
-using Linux32_Ringbuffer = DmesgRingbuffer<int32_t>;
+// Aliases for the types of Ringbuffer that could be used.
+using Linux64_Ringbuffer_Pre_v5_18_0 =
+    DmesgRingbuffer<int64_t, Metadata_Pre_v5_18_0<int64_t>>;
+using Linux32_Ringbuffer_Pre_v5_18_0 =
+    DmesgRingbuffer<int32_t, Metadata_Pre_v5_18_0<int32_t>>;
+
+using Linux64_Ringbuffer_Post_v5_18_0 =
+    DmesgRingbuffer<int64_t, Metadata_Post_v5_18_0<int64_t>>;
+using Linux32_Ringbuffer_Post_v5_18_0 =
+    DmesgRingbuffer<int32_t, Metadata_Post_v5_18_0<int32_t>>;
 
 /** Print the record at the specified offset into the data ringbuffer,
  *  and return the offset of the next entry in the data ringbuffer,
@@ -498,7 +540,8 @@ dumpDmesgImpl(ThreadContext *tc, std::ostream &os)
     ringbuffer_t dynamic_rb;
     auto dynamic_rb_symbol = symtab.find("printk_rb_dynamic");
     if (dynamic_rb_symbol != symtab_end_it) {
-        dynamic_rb = ringbuffer_t::read(proxy, dynamic_rb_symbol->address, bo);
+        dynamic_rb =
+            ringbuffer_t::read(proxy, dynamic_rb_symbol->address(), bo);
     } else {
         warn("Failed to find required dmesg symbols.\n");
         return;
@@ -508,7 +551,7 @@ dumpDmesgImpl(ThreadContext *tc, std::ostream &os)
     ringbuffer_t static_rb;
     auto static_rb_symbol = symtab.find("printk_rb_static");
     if (static_rb_symbol != symtab_end_it) {
-        static_rb = ringbuffer_t::read(proxy, static_rb_symbol->address, bo);
+        static_rb = ringbuffer_t::read(proxy, static_rb_symbol->address(), bo);
     } else {
         warn("Failed to find required dmesg symbols.\n");
         return;
@@ -521,21 +564,22 @@ dumpDmesgImpl(ThreadContext *tc, std::ostream &os)
     auto active_ringbuffer_ptr_symbol = symtab.find("prb");
     if (active_ringbuffer_ptr_symbol != symtab_end_it) {
         active_ringbuffer_ptr =
-            proxy.read<guest_ptr_t>(active_ringbuffer_ptr_symbol->address, bo);
+            proxy.read<guest_ptr_t>(active_ringbuffer_ptr_symbol->address(),
+                                    bo);
     } else {
         warn("Failed to find required dmesg symbols.\n");
         return;
     }
 
     if (active_ringbuffer_ptr == 0 ||
-        (active_ringbuffer_ptr != dynamic_rb_symbol->address &&
-         active_ringbuffer_ptr != static_rb_symbol->address)) {
+        (active_ringbuffer_ptr != dynamic_rb_symbol->address() &&
+         active_ringbuffer_ptr != static_rb_symbol->address())) {
         warn("Kernel Dmesg ringbuffer appears to be invalid.\n");
         return;
     }
 
     ringbuffer_t & rb =
-        (active_ringbuffer_ptr == dynamic_rb_symbol->address)
+        (active_ringbuffer_ptr == dynamic_rb_symbol->address())
         ? dynamic_rb : static_rb;
 
     atomic_var_t head_offset = rb.data.head_offset;
@@ -581,6 +625,102 @@ dumpDmesgImpl(ThreadContext *tc, std::ostream &os)
     }
 }
 
+/** Extract all null-terminated printable strings from a buffer and
+ * return them as a vector.
+ *
+ */
+std::vector<std::string>
+extract_printable_strings(const std::vector<uint8_t> buffer)
+{
+    std::vector<std::string> results;
+    std::string result;
+    bool reading_printable = false;
+    for (const uint8_t byte: buffer) {
+        if (std::isprint(byte)) {
+            result += static_cast<char>(byte);
+            reading_printable = true;
+        } else if (reading_printable) {
+            if (byte == '\0') {
+                results.push_back(result);
+            }
+            result.clear();
+            reading_printable = false;
+        }
+    }
+    return results;
+}
+
+/** Try to extract the Linux Kernel Version.
+ *
+ * This function attempts to find the Kernel version by searching the
+ * `uts_namespace` struct at the exported symbol `init_uts_ns`. This
+ * structure contains the Kernel version as a string, and is
+ * referenced by `procfs` to return the Kernel version in a running
+ * system.
+ *
+ * Different versions of the Kernel use different layouts for this
+ * structure, and the top level structure is marked as
+ * `__randomize_layout`, so the exact layout in memory cannot be
+ * relied on. Because of this, `extract_kernel_version` takes the
+ * approach of searching the memory holding the structure for
+ * printable strings, and parsing the version from those strings.
+ *
+ * If a likely match is found, the version is packed into a uint32_t
+ * in the standard format used by the Linux kernel (which allows
+ * numerical comparison of version numbers) and returned.
+ *
+ * If no likely match is found, 0x0 is returned to indicate an error.
+ *
+ */
+uint32_t
+extract_kernel_version(ThreadContext* tc) {
+    System *system = tc->getSystemPtr();
+    const auto &symtab = system->workload->symtab(tc);
+    auto symtab_end_it = symtab.end();
+
+    auto symbol = symtab.find("init_uts_ns");
+    if (symbol == symtab_end_it) {
+        return 0x0;
+    }
+
+    // Use size of `init_uts_ns` in Linux v5.18.0 as a default.
+    // (e.g. for upgraded checkpoints.)
+    const size_t INIT_UTS_NS_SIZE_DEFAULT = 432;
+    const size_t BUFFER_SIZE =
+        symbol->sizeOrDefault(INIT_UTS_NS_SIZE_DEFAULT);
+
+    TranslatingPortProxy proxy(tc);
+    std::vector<uint8_t> buffer(BUFFER_SIZE);
+    proxy.readBlob(
+        symbol->address(), buffer.data(), buffer.size() * sizeof(uint8_t));
+    auto strings = extract_printable_strings(buffer);
+
+    const std::regex version_re {"^(\\d+)\\.(\\d+)\\.(\\d)+$"};
+    std::smatch match;
+    for (const auto& string: strings) {
+        if (std::regex_search(string, match, version_re)) {
+            try {
+                int major = std::stoi(match[1]);
+                int minor = std::stoi(match[2]);
+                int point = std::stoi(match[3]);
+                return (
+                    (major & 0xFF) << 16
+                    | (minor & 0xFF) << 8
+                    | std::min(point, 255));
+            }
+            catch (const std::invalid_argument &) {
+                // This shouldn't be possible if the regex matched.
+                continue;
+            }
+            catch (const std::out_of_range &) {
+                continue;
+            }
+        }
+    }
+
+    return 0x0;
+}
+
 /** Dump the kernel Dmesg ringbuffer for Linux versions post-v5.10.
  *
  *  Delegates to an architecture specific template funtion instance.
@@ -591,11 +731,26 @@ dumpDmesg(ThreadContext *tc, std::ostream &os)
 {
     System *system = tc->getSystemPtr();
     const bool os_is_64_bit = loader::archIs64Bit(system->workload->getArch());
+    const uint32_t kernel_version = extract_kernel_version(tc);
+    const uint32_t KERNEL_5_18_0 = 0x00051200;
 
-    if (os_is_64_bit) {
-        dumpDmesgImpl<Linux64_Ringbuffer>(tc, os);
+    if (kernel_version == 0x0) {
+        warn("Could not determine Linux Kernel version. "
+             "Assuming post-v5.18.0\n");
+    }
+
+    if (kernel_version == 0x0 || kernel_version >= KERNEL_5_18_0) {
+        if (os_is_64_bit) {
+            dumpDmesgImpl<Linux64_Ringbuffer_Post_v5_18_0>(tc, os);
+        } else {
+            dumpDmesgImpl<Linux32_Ringbuffer_Post_v5_18_0>(tc, os);
+        }
     } else {
-        dumpDmesgImpl<Linux32_Ringbuffer>(tc, os);
+        if (os_is_64_bit) {
+            dumpDmesgImpl<Linux64_Ringbuffer_Pre_v5_18_0>(tc, os);
+        } else {
+            dumpDmesgImpl<Linux32_Ringbuffer_Pre_v5_18_0>(tc, os);
+        }
     }
 }
 

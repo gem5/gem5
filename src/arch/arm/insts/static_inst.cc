@@ -401,8 +401,8 @@ ArmStaticInst::printTarget(std::ostream &os, Addr target,
     if (symtab) {
         auto it = symtab->findNearest(target);
         if (it != symtab->end()) {
-            ccprintf(os, "<%s", it->name);
-            Addr delta = target - it->address;
+            ccprintf(os, "<%s", it->name());
+            Addr delta = target - it->address();
             if (delta)
                 ccprintf(os, "+%d>", delta);
             else
@@ -486,9 +486,9 @@ ArmStaticInst::printMemSymbol(std::ostream &os,
     if (symtab) {
         auto it = symtab->findNearest(addr);
         if (it != symtab->end()) {
-            ccprintf(os, "%s%s", prefix, it->name);
-            if (it->address != addr)
-                ccprintf(os, "+%d", addr - it->address);
+            ccprintf(os, "%s%s", prefix, it->name());
+            if (it->address() != addr)
+                ccprintf(os, "+%d", addr - it->address());
             ccprintf(os, suffix);
         }
     }

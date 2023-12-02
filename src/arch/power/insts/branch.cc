@@ -97,7 +97,7 @@ BranchOp::generateDisassembly(
 
     loader::SymbolTable::const_iterator it;
     if (symtab && (it = symtab->find(target)) != symtab->end())
-        ss << it->name;
+        ss << it->name();
     else
         ccprintf(ss, "%#x", target);
 
@@ -149,7 +149,7 @@ BranchDispCondOp::generateDisassembly(
 
     loader::SymbolTable::const_iterator it;
     if (symtab && (it = symtab->find(target)) != symtab->end())
-        ss << it->name;
+        ss << it->name();
     else
         ccprintf(ss, "%#x", target);
 

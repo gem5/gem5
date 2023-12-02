@@ -88,9 +88,9 @@ BranchDisp::generateDisassembly(
 
     loader::SymbolTable::const_iterator it;
     if (symtab && (it = symtab->findNearest(target)) != symtab->end()) {
-        ccprintf(response, " <%s", it->name);
-        if (it->address != target)
-            ccprintf(response, "+%d>", target - it->address);
+        ccprintf(response, " <%s", it->name());
+        if (it->address() != target)
+            ccprintf(response, "+%d>", target - it->address());
         else
             ccprintf(response, ">");
     }

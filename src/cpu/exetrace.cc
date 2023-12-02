@@ -81,11 +81,11 @@ ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
     if (debug::ExecSymbol && (!FullSystem || !in_user_mode) &&
             (it = loader::debugSymbolTable.findNearest(cur_pc)) !=
                 loader::debugSymbolTable.end()) {
-        Addr delta = cur_pc - it->address;
+        Addr delta = cur_pc - it->address();
         if (delta)
-            ccprintf(outs, " @%s+%d", it->name, delta);
+            ccprintf(outs, " @%s+%d", it->name(), delta);
         else
-            ccprintf(outs, " @%s", it->name);
+            ccprintf(outs, " @%s", it->name());
     }
 
     if (inst->isMicroop()) {
