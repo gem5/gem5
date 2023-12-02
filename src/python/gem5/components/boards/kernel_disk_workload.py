@@ -207,8 +207,9 @@ class KernelDiskWorkload:
         # implementation of the ArmBoard class expects a boot loader file to be
         # provided along with the kernel and the disk image.
 
+        self._bootloader = []
         if bootloader is not None:
-            self._bootloader = [bootloader.get_local_path()]
+            self._bootloader.append(bootloader.get_local_path())
 
         # Set the readfile.
         if readfile:

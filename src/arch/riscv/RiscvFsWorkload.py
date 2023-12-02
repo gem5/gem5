@@ -67,9 +67,7 @@ class RiscvBootloaderKernelWorkload(Workload):
     bootloader_addr = Param.Addr(
         0x0, "Where to place the bootloader in memory."
     )
-    kernel_filename = Param.String(
-        "", "vmlinux file. Don't use kernel if empty."
-    )
+    object_file = Param.String("", "vmlinux file. Don't use kernel if empty.")
     kernel_addr = Param.Addr(
         0x80200000,
         "Where to place the kernel in memory. Typically, after the first "
@@ -85,6 +83,6 @@ class RiscvBootloaderKernelWorkload(Workload):
     dtb_addr = Param.Addr(0x87E00000, "Where to place the DTB in memory.")
 
     # booting parameters
-    boot_args = Param.String(
+    command_line = Param.String(
         "", "Booting arguments, to be passed to the kernel"
     )
