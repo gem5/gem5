@@ -4657,7 +4657,7 @@ decode QUADRANT default Unknown::unknown() {
                                 tc->quiesce();
                             }
                         }}, IsNonSpeculative, IsQuiesce,
-                            IsSerializeAfter, No_OpClass);
+                            IsSerializeAfter, No_OpClass, IsSquashAfter);
                     }
                     0x9: sfence_vma({{
                         MISA misa = xc->readMiscReg(MISCREG_ISA);
