@@ -40,7 +40,6 @@
 
 namespace gem5
 {
-
 class SouthBridge;
 
 class Pc : public Platform

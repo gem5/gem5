@@ -27,7 +27,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #include "mem/ruby/network/garnet/GarnetLink.hh"
 
 #include "debug/RubyNetwork.hh"
@@ -37,15 +36,11 @@
 
 namespace gem5
 {
-
 namespace ruby
 {
-
 namespace garnet
 {
-
-GarnetIntLink::GarnetIntLink(const Params &p)
-    : BasicIntLink(p)
+GarnetIntLink::GarnetIntLink(const Params &p) : BasicIntLink(p)
 {
     // Uni-directional
 
@@ -90,13 +85,12 @@ GarnetIntLink::init()
 }
 
 void
-GarnetIntLink::print(std::ostream& out) const
+GarnetIntLink::print(std::ostream &out) const
 {
     out << name();
 }
 
-GarnetExtLink::GarnetExtLink(const Params &p)
-    : BasicExtLink(p)
+GarnetExtLink::GarnetExtLink(const Params &p) : BasicExtLink(p)
 {
     // Bi-directional
 
@@ -107,7 +101,6 @@ GarnetExtLink::GarnetExtLink(const Params &p)
     // Out
     m_network_links[1] = p.network_links[1];
     m_credit_links[1] = p.credit_links[1];
-
 
     extCdcEn = p.ext_cdc;
     intCdcEn = p.int_cdc;
@@ -139,8 +132,8 @@ void
 GarnetExtLink::init()
 {
     if (extBridgeEn) {
-        assert(extNetBridge[0] && extCredBridge[0] &&
-           extNetBridge[1] && extCredBridge[1]);
+        assert(extNetBridge[0] && extCredBridge[0] && extNetBridge[1] &&
+               extCredBridge[1]);
         extNetBridge[0]->initBridge(extCredBridge[0], extCdcEn, extSerdesEn);
         extCredBridge[0]->initBridge(extNetBridge[0], extCdcEn, extSerdesEn);
         extNetBridge[1]->initBridge(extCredBridge[1], extCdcEn, extSerdesEn);
@@ -148,8 +141,8 @@ GarnetExtLink::init()
     }
 
     if (intBridgeEn) {
-        assert(intNetBridge[0] && intCredBridge[0] &&
-           intNetBridge[1] && intCredBridge[1]);
+        assert(intNetBridge[0] && intCredBridge[0] && intNetBridge[1] &&
+               intCredBridge[1]);
         intNetBridge[0]->initBridge(intCredBridge[0], intCdcEn, intSerdesEn);
         intCredBridge[0]->initBridge(intNetBridge[0], intCdcEn, intSerdesEn);
         intNetBridge[1]->initBridge(intCredBridge[1], intCdcEn, intSerdesEn);
@@ -158,7 +151,7 @@ GarnetExtLink::init()
 }
 
 void
-GarnetExtLink::print(std::ostream& out) const
+GarnetExtLink::print(std::ostream &out) const
 {
     out << name();
 }

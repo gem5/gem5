@@ -46,12 +46,9 @@
 
 namespace gem5
 {
-
 namespace statistics
 {
-
-Group::Group(Group *parent, const char *name)
-    : mergedParent(nullptr)
+Group::Group(Group *parent, const char *name) : mergedParent(nullptr)
 {
     if (parent && name) {
         parent->addStatGroup(name, this);
@@ -60,9 +57,7 @@ Group::Group(Group *parent, const char *name)
     }
 }
 
-Group::~Group()
-{
-}
+Group::~Group() {}
 
 void
 Group::regStats()
@@ -72,11 +67,10 @@ Group::regStats()
 
     for (auto &g : statGroups) {
         if (debug::Stats) {
-            [[maybe_unused]] const Named *named = \
+            [[maybe_unused]] const Named *named =
                 dynamic_cast<const Named *>(this);
             DPRINTF(Stats, "%s: regStats in group %s\n",
-                    named ? named->name() : "?",
-                    g.first);
+                named ? named->name() : "?", g.first);
         }
         g.second->regStats();
     }
@@ -119,7 +113,7 @@ Group::addStatGroup(const char *name, Group *block)
     panic_if(!block, "Can't add null stat group %s", name);
     panic_if(block == this, "Stat group can't be added to itself");
     panic_if(statGroups.find(name) != statGroups.end(),
-             "Stats of the same group share the same name `%s`.\n", name);
+        "Stats of the same group share the same name `%s`.\n", name);
 
     statGroups[name] = block;
 }
@@ -160,8 +154,8 @@ void
 Group::mergeStatGroup(Group *block)
 {
     panic_if(!block, "No stat block provided");
-    panic_if(block->mergedParent,
-             "Stat group already merged into another group");
+    panic_if(
+        block->mergedParent, "Stat group already merged into another group");
     panic_if(block == this, "Stat group can't merge with itself");
 
     // Track the new stat group

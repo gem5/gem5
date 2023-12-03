@@ -43,10 +43,8 @@
 
 namespace gem5
 {
-
 namespace
 {
-
 struct ProtobufSingleton
 {
     ProtobufSingleton()
@@ -57,10 +55,7 @@ struct ProtobufSingleton
         GOOGLE_PROTOBUF_VERIFY_VERSION;
     }
 
-    ~ProtobufSingleton()
-    {
-        google::protobuf::ShutdownProtobufLibrary();
-    }
+    ~ProtobufSingleton() { google::protobuf::ShutdownProtobufLibrary(); }
 } protobufSingleton;
 
 } // anonymous namespace

@@ -42,15 +42,13 @@
 
 namespace gem5
 {
-
 namespace ruby
 {
-
-Consumer::Consumer(ClockedObject *_em, Event::Priority ev_prio)
-    : m_wakeup_event([this]{ processCurrentEvent(); },
-                    "Consumer Event", false, ev_prio),
-      em(_em)
-{ }
+Consumer::Consumer(ClockedObject *_em, Event::Priority ev_prio) :
+    m_wakeup_event(
+        [this] { processCurrentEvent(); }, "Consumer Event", false, ev_prio),
+    em(_em)
+{}
 
 void
 Consumer::scheduleEvent(Cycles timeDelta)

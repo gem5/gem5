@@ -30,7 +30,6 @@
 
 namespace sc_core
 {
-
 const char SC_ID_INIT_FAILED_[] = "initialization failed";
 const char SC_ID_ASSIGNMENT_FAILED_[] = "assignment failed";
 const char SC_ID_OPERATION_FAILED_[] = "operation failed";
@@ -38,13 +37,9 @@ const char SC_ID_CONVERSION_FAILED_[] = "conversion failed";
 
 namespace
 {
-
-sc_gem5::DefaultReportMessages predefinedMessages{
-    {400, SC_ID_INIT_FAILED_},
-    {401, SC_ID_ASSIGNMENT_FAILED_},
-    {402, SC_ID_OPERATION_FAILED_},
-    {403, SC_ID_CONVERSION_FAILED_}
-};
+sc_gem5::DefaultReportMessages predefinedMessages{{400, SC_ID_INIT_FAILED_},
+    {401, SC_ID_ASSIGNMENT_FAILED_}, {402, SC_ID_OPERATION_FAILED_},
+    {403, SC_ID_CONVERSION_FAILED_}};
 
 } // anonymous namespace
 

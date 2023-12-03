@@ -46,15 +46,29 @@ using testing::ElementsAreArray;
 using namespace gem5;
 
 const char data[] = {
-    0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
-    0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf,
+    0x0,
+    0x1,
+    0x2,
+    0x3,
+    0x4,
+    0x5,
+    0x6,
+    0x7,
+    0x8,
+    0x9,
+    0xa,
+    0xb,
+    0xc,
+    0xd,
+    0xe,
+    0xf,
 };
 
 // A better way to implement this would be with std::span, but that is only
 // available starting in c++20.
 template <typename T>
 std::vector<T>
-subArr(T *arr, int size, int offset=0)
+subArr(T *arr, int size, int offset = 0)
 {
     return std::vector<T>(arr + offset, arr + offset + size);
 }
@@ -91,7 +105,6 @@ TEST(CircleBufTest, SingleWriteOverflow)
     buf.peek(foo, 8);
     EXPECT_THAT(subArr(foo, 8), ElementsAreArray(data + 8, 8));
 }
-
 
 // Multi-write overflow functionality
 TEST(CircleBufTest, MultiWriteOverflow)

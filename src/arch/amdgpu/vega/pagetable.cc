@@ -37,7 +37,6 @@ namespace gem5
 {
 namespace VegaISA
 {
-
 /**
  * Serialize all of the POD fields in a TLB entry. These fields contain all
  * of the information needed to handle any of the function calls in the entry.

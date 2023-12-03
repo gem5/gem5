@@ -43,7 +43,6 @@
 
 namespace gem5
 {
-
 enum class HtmFailureFaultCause : int
 {
     INVALID = -1,

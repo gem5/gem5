@@ -32,7 +32,6 @@
 
 namespace sc_gem5
 {
-
 extern const char *TimeUnitNames[];
 extern const char *TimeUnitConstantNames[];
 extern double TimeUnitScale[];

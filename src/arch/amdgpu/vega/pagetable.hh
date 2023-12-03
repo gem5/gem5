@@ -41,7 +41,6 @@ namespace gem5
 {
 namespace VegaISA
 {
-
 /**
  * The page table entry is reverse engineered from the macros here:
  *
@@ -49,10 +48,10 @@ namespace VegaISA
  *     drivers/gpu/drm/amd/amdgpu/amdgpu_vm.h#L53
  */
 BitUnion64(PageTableEntry)
-    Bitfield<58,57> m;
+    Bitfield<58, 57> m;
     Bitfield<56> f;
     Bitfield<55> l;
-    Bitfield<53,52> sw;
+    Bitfield<53, 52> sw;
     Bitfield<51> t;
     Bitfield<47, 12> ppn;
     Bitfield<11, 7> fragment;
@@ -66,7 +65,7 @@ BitUnion64(PageTableEntry)
 EndBitUnion(PageTableEntry)
 
 BitUnion64(PageDirectoryEntry)
-    Bitfield<63,59> blockFragmentSize;
+    Bitfield<63, 59> blockFragmentSize;
     Bitfield<54> p;
     Bitfield<47, 6> baseAddr;
     Bitfield<2> c;
@@ -90,27 +89,44 @@ struct VegaTlbEntry : public Serializable
 
     // Read permission is always available, assuming it isn't blocked by
     // other mechanisms.
-    bool writable() { return pte.w; };
+    bool
+    writable()
+    {
+        return pte.w;
+    };
     // Whether the page is cacheable or not.
-    bool uncacheable() { return !pte.c; };
+    bool
+    uncacheable()
+    {
+        return !pte.c;
+    };
     // Whether or not memory on this page can be executed.
-    bool noExec() { return !pte.x; };
+    bool
+    noExec()
+    {
+        return !pte.x;
+    };
 
     // A sequence number to keep track of LRU.
     uint64_t lruSeq;
 
-    VegaTlbEntry()
-        : vmid(0), paddr(0), vaddr(0), logBytes(PageShift), pte(), lruSeq(0)
+    VegaTlbEntry() :
+        vmid(0), paddr(0), vaddr(0), logBytes(PageShift), pte(), lruSeq(0)
     {}
 
     VegaTlbEntry(Addr _vmid, Addr _vaddr, Addr _paddr, unsigned _logBytes,
-                 PageTableEntry _pte)
-        : vmid(_vmid), paddr(_paddr), vaddr(_vaddr), logBytes(_logBytes),
-          pte(_pte), lruSeq(0)
+        PageTableEntry _pte) :
+        vmid(_vmid),
+        paddr(_paddr),
+        vaddr(_vaddr),
+        logBytes(_logBytes),
+        pte(_pte),
+        lruSeq(0)
     {}
 
     // Return the page size in bytes
-    Addr size() const
+    Addr
+    size() const
     {
         return (static_cast<Addr>(1) << logBytes);
     }

@@ -43,10 +43,8 @@
 
 namespace gem5
 {
-
 namespace free_bsd
 {
-
 void
 onUDelay(ThreadContext *tc, uint64_t div, uint64_t mul, uint64_t time)
 {

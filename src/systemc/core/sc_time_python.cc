@@ -32,7 +32,6 @@
 
 namespace
 {
-
 ::sc_gem5::PythonInitFunc installScTime([](pybind11::module_ &systemc) {
     pybind11::class_<sc_core::sc_time> sc_time(systemc, "sc_time");
     sc_time
@@ -58,8 +57,7 @@ namespace
         .def(pybind11::self += pybind11::self)
         .def(pybind11::self -= pybind11::self)
         .def(pybind11::self *= double())
-        .def(pybind11::self /= double())
-        ;
+        .def(pybind11::self /= double());
 
     pybind11::enum_<sc_core::sc_time_unit>(sc_time, "sc_time_unit")
         .value("SC_FS", sc_core::SC_FS)
@@ -68,8 +66,7 @@ namespace
         .value("SC_US", sc_core::SC_US)
         .value("SC_MS", sc_core::SC_MS)
         .value("SC_SEC", sc_core::SC_SEC)
-        .export_values()
-        ;
+        .export_values();
 });
 
 } // anonymous namespace

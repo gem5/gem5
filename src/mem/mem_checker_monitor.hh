@@ -46,14 +46,12 @@
 
 namespace gem5
 {
-
 /**
  * Implements a MemChecker monitor, to be inserted between two ports.
  */
 class MemCheckerMonitor : public SimObject
 {
   public:
-
     /** Parameters of memchecker monitor */
     using Params = MemCheckerMonitorParams;
 
@@ -67,17 +65,16 @@ class MemCheckerMonitor : public SimObject
     /** Destructor */
     ~MemCheckerMonitor();
 
-    Port &getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID) override;
+    Port &getPort(
+        const std::string &if_name, PortID idx = InvalidPortID) override;
 
     void init() override;
 
   private:
-
     struct MemCheckerMonitorSenderState : public Packet::SenderState
     {
-        MemCheckerMonitorSenderState(MemChecker::Serial _serial)
-            : serial(_serial)
+        MemCheckerMonitorSenderState(MemChecker::Serial _serial) :
+            serial(_serial)
         {}
 
         MemChecker::Serial serial;
@@ -91,54 +88,56 @@ class MemCheckerMonitor : public SimObject
      */
     class MonitorRequestPort : public RequestPort
     {
-
       public:
-
-        MonitorRequestPort(const std::string& _name, MemCheckerMonitor& _mon)
-            : RequestPort(_name), mon(_mon)
-        { }
+        MonitorRequestPort(const std::string &_name, MemCheckerMonitor &_mon) :
+            RequestPort(_name), mon(_mon)
+        {}
 
       protected:
-
-        void recvFunctionalSnoop(PacketPtr pkt)
+        void
+        recvFunctionalSnoop(PacketPtr pkt)
         {
             mon.recvFunctionalSnoop(pkt);
         }
 
-        Tick recvAtomicSnoop(PacketPtr pkt)
+        Tick
+        recvAtomicSnoop(PacketPtr pkt)
         {
             return mon.recvAtomicSnoop(pkt);
         }
 
-        bool recvTimingResp(PacketPtr pkt)
+        bool
+        recvTimingResp(PacketPtr pkt)
         {
             return mon.recvTimingResp(pkt);
         }
 
-        void recvTimingSnoopReq(PacketPtr pkt)
+        void
+        recvTimingSnoopReq(PacketPtr pkt)
         {
             mon.recvTimingSnoopReq(pkt);
         }
 
-        void recvRangeChange()
+        void
+        recvRangeChange()
         {
             mon.recvRangeChange();
         }
 
-        bool isSnooping() const
+        bool
+        isSnooping() const
         {
             return mon.isSnooping();
         }
 
-        void recvReqRetry()
+        void
+        recvReqRetry()
         {
             mon.recvReqRetry();
         }
 
       private:
-
-        MemCheckerMonitor& mon;
-
+        MemCheckerMonitor &mon;
     };
 
     /** Instance of request port, facing the memory side */
@@ -152,49 +151,51 @@ class MemCheckerMonitor : public SimObject
      */
     class MonitorResponsePort : public ResponsePort
     {
-
       public:
-
-        MonitorResponsePort(const std::string& _name, MemCheckerMonitor& _mon)
-            : ResponsePort(_name), mon(_mon)
-        { }
+        MonitorResponsePort(
+            const std::string &_name, MemCheckerMonitor &_mon) :
+            ResponsePort(_name), mon(_mon)
+        {}
 
       protected:
-
-        void recvFunctional(PacketPtr pkt)
+        void
+        recvFunctional(PacketPtr pkt)
         {
             mon.recvFunctional(pkt);
         }
 
-        Tick recvAtomic(PacketPtr pkt)
+        Tick
+        recvAtomic(PacketPtr pkt)
         {
             return mon.recvAtomic(pkt);
         }
 
-        bool recvTimingReq(PacketPtr pkt)
+        bool
+        recvTimingReq(PacketPtr pkt)
         {
             return mon.recvTimingReq(pkt);
         }
 
-        bool recvTimingSnoopResp(PacketPtr pkt)
+        bool
+        recvTimingSnoopResp(PacketPtr pkt)
         {
             return mon.recvTimingSnoopResp(pkt);
         }
 
-        AddrRangeList getAddrRanges() const
+        AddrRangeList
+        getAddrRanges() const
         {
             return mon.getAddrRanges();
         }
 
-        void recvRespRetry()
+        void
+        recvRespRetry()
         {
             mon.recvRespRetry();
         }
 
       private:
-
-        MemCheckerMonitor& mon;
-
+        MemCheckerMonitor &mon;
     };
 
     /** Instance of response port, i.e. on the CPU side */

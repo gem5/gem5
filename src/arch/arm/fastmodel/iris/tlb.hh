@@ -33,10 +33,8 @@
 
 namespace gem5
 {
-
 namespace Iris
 {
-
 class TLB : public BaseTLB
 {
   public:
@@ -44,23 +42,25 @@ class TLB : public BaseTLB
 
     TLB(const Params &p) : BaseTLB(p) {}
 
-    void demapPage(Addr vaddr, uint64_t asn) override {}
-    void flushAll() override {}
-    void takeOverFrom(BaseTLB *otlb) override {}
+    void
+    demapPage(Addr vaddr, uint64_t asn) override
+    {}
+    void
+    flushAll() override
+    {}
+    void
+    takeOverFrom(BaseTLB *otlb) override
+    {}
 
-    Fault translateFunctional(
-        const RequestPtr &req, gem5::ThreadContext *tc,
+    Fault translateFunctional(const RequestPtr &req, gem5::ThreadContext *tc,
         BaseMMU::Mode mode) override;
-    Fault translateAtomic(
-        const RequestPtr &req, gem5::ThreadContext *tc,
+    Fault translateAtomic(const RequestPtr &req, gem5::ThreadContext *tc,
         BaseMMU::Mode mode) override;
-    void translateTiming(
-        const RequestPtr &req, gem5::ThreadContext *tc,
+    void translateTiming(const RequestPtr &req, gem5::ThreadContext *tc,
         BaseMMU::Translation *translation, BaseMMU::Mode mode) override;
 
     Fault
-    finalizePhysical(
-        const RequestPtr &req, gem5::ThreadContext *tc,
+    finalizePhysical(const RequestPtr &req, gem5::ThreadContext *tc,
         BaseMMU::Mode mode) const override
     {
         return NoFault;

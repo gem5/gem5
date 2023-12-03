@@ -41,9 +41,8 @@
 
 namespace gem5
 {
-
-ScalarRegisterFile::ScalarRegisterFile(const ScalarRegisterFileParams &p)
-    : RegisterFile(p)
+ScalarRegisterFile::ScalarRegisterFile(const ScalarRegisterFileParams &p) :
+    RegisterFile(p)
 {
     regFile.resize(numRegs(), 0);
 }
@@ -51,22 +50,22 @@ ScalarRegisterFile::ScalarRegisterFile(const ScalarRegisterFileParams &p)
 bool
 ScalarRegisterFile::operandsReady(Wavefront *w, GPUDynInstPtr ii) const
 {
-    for (const auto& srcScalarOp : ii->srcScalarRegOperands()) {
-        for (const auto& physIdx : srcScalarOp.physIndices()) {
+    for (const auto &srcScalarOp : ii->srcScalarRegOperands()) {
+        for (const auto &physIdx : srcScalarOp.physIndices()) {
             if (regBusy(physIdx)) {
                 DPRINTF(GPUSRF, "RAW stall: WV[%d]: %s: physReg[%d]\n",
-                        w->wfDynId, ii->disassemble(), physIdx);
+                    w->wfDynId, ii->disassemble(), physIdx);
                 w->stats.numTimesBlockedDueRAWDependencies++;
                 return false;
             }
         }
     }
 
-    for (const auto& dstScalarOp : ii->dstScalarRegOperands()) {
-        for (const auto& physIdx : dstScalarOp.physIndices()) {
+    for (const auto &dstScalarOp : ii->dstScalarRegOperands()) {
+        for (const auto &physIdx : dstScalarOp.physIndices()) {
             if (regBusy(physIdx)) {
                 DPRINTF(GPUSRF, "WAX stall: WV[%d]: %s: physReg[%d]\n",
-                        w->wfDynId, ii->disassemble(), physIdx);
+                    w->wfDynId, ii->disassemble(), physIdx);
                 w->stats.numTimesBlockedDueWAXDependencies++;
                 return false;
             }
@@ -79,8 +78,8 @@ ScalarRegisterFile::operandsReady(Wavefront *w, GPUDynInstPtr ii) const
 void
 ScalarRegisterFile::scheduleWriteOperands(Wavefront *w, GPUDynInstPtr ii)
 {
-    for (const auto& dstScalarOp : ii->dstScalarRegOperands()) {
-        for (const auto& physIdx : dstScalarOp.physIndices()) {
+    for (const auto &dstScalarOp : ii->dstScalarRegOperands()) {
+        for (const auto &physIdx : dstScalarOp.physIndices()) {
             // mark the destination scalar register as busy
             markReg(physIdx, true);
         }
@@ -96,8 +95,8 @@ ScalarRegisterFile::waveExecuteInst(Wavefront *w, GPUDynInstPtr ii)
         Cycles delay(computeUnit->scalarPipeLength());
         Tick tickDelay = computeUnit->cyclesToTicks(delay);
 
-        for (const auto& dstScalarOp : ii->dstScalarRegOperands()) {
-            for (const auto& physIdx : dstScalarOp.physIndices()) {
+        for (const auto &dstScalarOp : ii->dstScalarRegOperands()) {
+            for (const auto &physIdx : dstScalarOp.physIndices()) {
                 enqRegFreeEvent(physIdx, tickDelay);
             }
         }
@@ -107,12 +106,12 @@ ScalarRegisterFile::waveExecuteInst(Wavefront *w, GPUDynInstPtr ii)
 }
 
 void
-ScalarRegisterFile::scheduleWriteOperandsFromLoad(Wavefront *w,
-                                                  GPUDynInstPtr ii)
+ScalarRegisterFile::scheduleWriteOperandsFromLoad(
+    Wavefront *w, GPUDynInstPtr ii)
 {
     assert(ii->isLoad() || ii->isAtomicRet());
-    for (const auto& dstScalarOp : ii->dstScalarRegOperands()) {
-        for (const auto& physIdx : dstScalarOp.physIndices()) {
+    for (const auto &dstScalarOp : ii->dstScalarRegOperands()) {
+        for (const auto &physIdx : dstScalarOp.physIndices()) {
             enqRegFreeEvent(physIdx, computeUnit->clockPeriod());
         }
     }

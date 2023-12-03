@@ -37,7 +37,6 @@
 
 namespace gem5
 {
-
 class HelloObject : public SimObject
 {
   private:
@@ -50,7 +49,7 @@ class HelloObject : public SimObject
     EventFunctionWrapper event;
 
     /// Pointer to the corresponding GoodbyeObject. Set via Python
-    GoodbyeObject* goodbye;
+    GoodbyeObject *goodbye;
 
     /// The name of this object in the Python config file
     const std::string myName;

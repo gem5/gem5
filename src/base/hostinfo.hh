@@ -33,7 +33,6 @@
 
 namespace gem5
 {
-
 /**
  * Determine the simulator process' total virtual memory usage.
  *

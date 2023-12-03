@@ -39,7 +39,7 @@ test_m5_exit(uint64_t ns_delay)
     test_ns_delay = ns_delay;
 }
 
-DispatchTable dt = { .m5_exit = &test_m5_exit };
+DispatchTable dt = {.m5_exit = &test_m5_exit};
 
 bool
 run(std::initializer_list<std::string> arg_args)

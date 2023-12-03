@@ -54,10 +54,8 @@
 
 namespace gem5
 {
-
 namespace ArmISA
 {
-
 class SkipFunc : public SkipFuncBase
 {
   public:
@@ -93,30 +91,30 @@ class FsWorkload : public KernelWorkload
     loader::ObjectFile *getBootLoader(loader::ObjectFile *const obj);
 
     template <template <class ABI, class Base> class FuncEvent,
-             typename... Args>
+        typename... Args>
     PCEvent *
     addSkipFunc(Args... args)
     {
         if (getArch() == loader::Arm64) {
             return addKernelFuncEvent<FuncEvent<Aapcs64, SkipFunc>>(
-                    std::forward<Args>(args)...);
+                std::forward<Args>(args)...);
         } else {
             return addKernelFuncEvent<FuncEvent<Aapcs32, SkipFunc>>(
-                    std::forward<Args>(args)...);
+                std::forward<Args>(args)...);
         }
     }
 
     template <template <class ABI, class Base> class FuncEvent,
-             typename... Args>
+        typename... Args>
     PCEvent *
     addSkipFuncOrPanic(Args... args)
     {
         if (getArch() == loader::Arm64) {
             return addKernelFuncEventOrPanic<FuncEvent<Aapcs64, SkipFunc>>(
-                    std::forward<Args>(args)...);
+                std::forward<Args>(args)...);
         } else {
             return addKernelFuncEventOrPanic<FuncEvent<Aapcs32, SkipFunc>>(
-                    std::forward<Args>(args)...);
+                std::forward<Args>(args)...);
         }
     }
 
@@ -143,7 +141,11 @@ class FsWorkload : public KernelWorkload
             return loader::Arm64;
     }
 
-    ByteOrder byteOrder() const override { return ByteOrder::little; }
+    ByteOrder
+    byteOrder() const override
+    {
+        return ByteOrder::little;
+    }
 
     FsWorkload(const Params &p);
 
@@ -153,8 +155,8 @@ class FsWorkload : public KernelWorkload
     setSystem(System *sys) override
     {
         KernelWorkload::setSystem(sys);
-        gdb = BaseRemoteGDB::build<RemoteGDB>(
-                params().remote_gdb_port, system);
+        gdb =
+            BaseRemoteGDB::build<RemoteGDB>(params().remote_gdb_port, system);
     }
 
     Addr

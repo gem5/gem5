@@ -32,12 +32,10 @@
 
 namespace gem5
 {
-
 class ThreadContext;
 
 namespace guest_abi
 {
-
 /*
  * To implement an ABI, a subclass needs to implement a system of
  * specializations of these two templates Result and Argument, and define a
@@ -59,7 +57,7 @@ namespace guest_abi
  * std::enable_if style conditional specializations.
  */
 
-template <typename ABI, typename Ret, typename Enabled=void>
+template <typename ABI, typename Ret, typename Enabled = void>
 struct Result
 {
     /*
@@ -94,7 +92,7 @@ template <typename ABI>
 struct Result<ABI, void>
 {};
 
-template <typename ABI, typename Arg, typename Enabled=void>
+template <typename ABI, typename Arg, typename Enabled = void>
 struct Argument
 {
     /*

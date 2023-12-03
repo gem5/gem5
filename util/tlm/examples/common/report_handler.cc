@@ -48,9 +48,8 @@ reportHandler(const sc_report &report, const sc_actions &actions)
     if (actions & SC_DO_NOTHING)
         return;
 
-    if (actions & SC_DISPLAY || actions & SC_LOG)
-    {
-        std::ostream& stream = actions & SC_DISPLAY ? std::cout : std::cerr;
+    if (actions & SC_DISPLAY || actions & SC_LOG) {
+        std::ostream &stream = actions & SC_DISPLAY ? std::cout : std::cerr;
 
         stream << report.get_time();
 
@@ -62,8 +61,8 @@ reportHandler(const sc_report &report, const sc_actions &actions)
             stream << " (=) ";
         }
 
-        stream << ": " << report.get_msg_type()
-               << ' ' << report.get_msg() << '\n';
+        stream << ": " << report.get_msg_type() << ' ' << report.get_msg()
+               << '\n';
     }
 
     if (actions & SC_THROW) {

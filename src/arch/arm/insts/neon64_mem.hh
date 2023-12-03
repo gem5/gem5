@@ -46,10 +46,8 @@
 
 namespace gem5
 {
-
 namespace ArmISA
 {
-
 typedef uint64_t XReg;
 
 /// 128-bit NEON vector register.
@@ -130,4 +128,4 @@ readVecElem(VReg src, int index, int eSize)
 } // namespace ArmISA
 } // namespace gem5
 
-#endif  // __ARCH_ARM_INSTS_NEON64_MEM_HH__
+#endif // __ARCH_ARM_INSTS_NEON64_MEM_HH__

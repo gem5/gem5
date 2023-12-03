@@ -46,7 +46,6 @@
 
 namespace gem5
 {
-
 struct PyTrafficGenParams;
 
 class GEM5_LOCAL PyTrafficGen : public BaseTrafficGen

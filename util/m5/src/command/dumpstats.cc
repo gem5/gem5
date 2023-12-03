@@ -32,7 +32,6 @@
 
 namespace
 {
-
 bool
 do_dump_stats(const DispatchTable &dt, Args &args)
 {
@@ -45,9 +44,9 @@ do_dump_stats(const DispatchTable &dt, Args &args)
     return true;
 }
 
-Command dump_stats = {
-    "dumpstats", 0, 2, do_dump_stats, "[delay [period]]\n"
-        "        After delay (default 0) dump the stats, and then optionally "
-            "every period after" };
+Command dump_stats = {"dumpstats", 0, 2, do_dump_stats,
+    "[delay [period]]\n"
+    "        After delay (default 0) dump the stats, and then optionally "
+    "every period after"};
 
 } // anonymous namespace

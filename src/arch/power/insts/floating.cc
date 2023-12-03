@@ -30,7 +30,6 @@
 
 namespace gem5
 {
-
 using namespace PowerISA;
 
 std::string
@@ -52,8 +51,8 @@ FloatOp::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
         }
         printReg(ss, srcRegIdx(0));
         if (_numSrcRegs > 1) {
-          ss << ", ";
-          printReg(ss, srcRegIdx(1));
+            ss << ", ";
+            printReg(ss, srcRegIdx(1));
         }
     }
 

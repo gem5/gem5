@@ -50,18 +50,16 @@
 /**
  * Forward declaration to avoid includes
  */
-namespace dramsim3 {
-
+namespace dramsim3
+{
 class MemorySystem;
 
 }
 
 namespace gem5
 {
-
 namespace memory
 {
-
 /**
  * Wrapper class to avoid having DRAMsim3 names like ClockDomain etc
  * clashing with the normal gem5 world. Many of the DRAMsim3 headers
@@ -72,10 +70,8 @@ namespace memory
  */
 class DRAMsim3Wrapper
 {
-
   private:
-
-    dramsim3::MemorySystem* dramsim;
+    dramsim3::MemorySystem *dramsim;
 
     double _clockPeriod;
 
@@ -84,11 +80,10 @@ class DRAMsim3Wrapper
     unsigned int _burstSize;
 
     template <typename T>
-    T extractConfig(const std::string& field_name,
-                    const std::string& file_name) const;
+    T extractConfig(
+        const std::string &field_name, const std::string &file_name) const;
 
   public:
-
     /**
      * Create an instance of the DRAMsim3 multi-channel memory
      * controller using a specific config and system description.
@@ -96,10 +91,9 @@ class DRAMsim3Wrapper
      * @param config_file Memory config file
      * @param working_dir Path pre-pended to config files
      */
-    DRAMsim3Wrapper(const std::string& config_file,
-                    const std::string& working_dir,
-                    std::function<void(uint64_t)> read_cb,
-                    std::function<void(uint64_t)> write_cb);
+    DRAMsim3Wrapper(const std::string &config_file,
+        const std::string &working_dir, std::function<void(uint64_t)> read_cb,
+        std::function<void(uint64_t)> write_cb);
     ~DRAMsim3Wrapper();
 
     /**
@@ -119,7 +113,7 @@ class DRAMsim3Wrapper
      * @param write_callback Callback used for write completions
      */
     void setCallbacks(std::function<void(uint64_t)> read_complete,
-                      std::function<void(uint64_t)> write_complete);
+        std::function<void(uint64_t)> write_complete);
 
     /**
      * Determine if the controller can accept a new packet or not.

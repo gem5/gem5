@@ -33,14 +33,13 @@
 
 namespace gem5
 {
-
 namespace linux
 {
-    struct thread_info
-    {
-        struct pcb_struct       pcb;
-        Addr_a                  task;
-    };
+struct thread_info
+{
+    struct pcb_struct pcb;
+    Addr_a task;
+};
 } // namespace linux
 } // namespace gem5
 

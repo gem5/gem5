@@ -69,10 +69,8 @@
 
 namespace gem5
 {
-
 namespace
 {
-
 typedef std::vector<Process::Loader *> LoaderList;
 
 LoaderList &
@@ -84,14 +82,10 @@ process_loaders()
 
 } // anonymous namespace
 
-Process::Loader::Loader()
-{
-    process_loaders().emplace_back(this);
-}
+Process::Loader::Loader() { process_loaders().emplace_back(this); }
 
 Process *
-Process::tryLoaders(const ProcessParams &params,
-                    loader::ObjectFile *obj_file)
+Process::tryLoaders(const ProcessParams &params, loader::ObjectFile *obj_file)
 {
     for (auto &loader_it : process_loaders()) {
         Process *p = loader_it->load(params, obj_file);
@@ -103,7 +97,7 @@ Process::tryLoaders(const ProcessParams &params,
 }
 
 static std::string
-normalize(const std::string& directory)
+normalize(const std::string &directory)
 {
     if (directory.back() != '/')
         return directory + '/';
@@ -111,28 +105,33 @@ normalize(const std::string& directory)
 }
 
 Process::Process(const ProcessParams &params, EmulationPageTable *pTable,
-                 loader::ObjectFile *obj_file)
-    : SimObject(params), system(params.system),
-      seWorkload(dynamic_cast<SEWorkload *>(system->workload)),
-      useArchPT(params.useArchPT),
-      kvmInSE(params.kvmInSE),
-      useForClone(false),
-      pTable(pTable),
-      objFile(obj_file),
-      argv(params.cmd), envp(params.env),
-      executable(params.executable == "" ? params.cmd[0] : params.executable),
-      tgtCwd(normalize(params.cwd)),
-      hostCwd(checkPathRedirect(tgtCwd)),
-      release(params.release),
-      _uid(params.uid), _euid(params.euid),
-      _gid(params.gid), _egid(params.egid),
-      _pid(params.pid), _ppid(params.ppid),
-      _pgid(params.pgid), drivers(params.drivers),
-      fds(std::make_shared<FDArray>(
-                  params.input, params.output, params.errout)),
-      childClearTID(0),
-      ADD_STAT(numSyscalls, statistics::units::Count::get(),
-               "Number of system calls")
+    loader::ObjectFile *obj_file) :
+    SimObject(params),
+    system(params.system),
+    seWorkload(dynamic_cast<SEWorkload *>(system->workload)),
+    useArchPT(params.useArchPT),
+    kvmInSE(params.kvmInSE),
+    useForClone(false),
+    pTable(pTable),
+    objFile(obj_file),
+    argv(params.cmd),
+    envp(params.env),
+    executable(params.executable == "" ? params.cmd[0] : params.executable),
+    tgtCwd(normalize(params.cwd)),
+    hostCwd(checkPathRedirect(tgtCwd)),
+    release(params.release),
+    _uid(params.uid),
+    _euid(params.euid),
+    _gid(params.gid),
+    _egid(params.egid),
+    _pid(params.pid),
+    _ppid(params.ppid),
+    _pgid(params.pgid),
+    drivers(params.drivers),
+    fds(std::make_shared<FDArray>(params.input, params.output, params.errout)),
+    childClearTID(0),
+    ADD_STAT(
+        numSyscalls, statistics::units::Count::get(), "Number of system calls")
 {
     fatal_if(!seWorkload, "Couldn't find appropriate workload object.");
     fatal_if(_pid >= System::maxPID, "_pid is too large: %d", _pid);
@@ -164,20 +163,20 @@ Process::Process(const ProcessParams &params, EmulationPageTable *pTable,
 }
 
 void
-Process::clone(ThreadContext *otc, ThreadContext *ntc,
-               Process *np, RegVal flags)
+Process::clone(
+    ThreadContext *otc, ThreadContext *ntc, Process *np, RegVal flags)
 {
 #ifndef CLONE_VM
-#define CLONE_VM 0
+#    define CLONE_VM 0
 #endif
 #ifndef CLONE_FILES
-#define CLONE_FILES 0
+#    define CLONE_FILES 0
 #endif
 #ifndef CLONE_THREAD
-#define CLONE_THREAD 0
+#    define CLONE_THREAD 0
 #endif
 #ifndef CLONE_VFORK
-#define CLONE_VFORK 0
+#    define CLONE_VFORK 0
 #endif
     if (CLONE_VM & flags) {
         /**
@@ -194,7 +193,7 @@ Process::clone(ThreadContext *otc, ThreadContext *ntc,
          * Duplicate the process memory address space. The state needs to be
          * copied over (rather than using pointers to share everything).
          */
-        typedef std::vector<std::pair<Addr,Addr>> MapVec;
+        typedef std::vector<std::pair<Addr, Addr>> MapVec;
         MapVec mappings;
         pTable->getMappings(&mappings);
 
@@ -298,8 +297,8 @@ Process::initState()
 
     pTable->initState();
 
-    initVirtMem.reset(new SETranslatingPortProxy(
-                tc, SETranslatingPortProxy::Always));
+    initVirtMem.reset(
+        new SETranslatingPortProxy(tc, SETranslatingPortProxy::Always));
 
     // load object file into target memory
     image.write(*initVirtMem);
@@ -339,13 +338,13 @@ Process::allocateMem(Addr vaddr, int64_t size, bool clobber)
     const Addr paddr = seWorkload->allocPhysPages(npages);
     const Addr pages_size = npages * page_size;
     pTable->map(page_addr, paddr, pages_size,
-                clobber ? EmulationPageTable::Clobber :
-                          EmulationPageTable::MappingFlags(0));
+        clobber ? EmulationPageTable::Clobber :
+                  EmulationPageTable::MappingFlags(0));
 }
 
 void
 Process::replicatePage(Addr vaddr, Addr new_paddr, ThreadContext *old_tc,
-                       ThreadContext *new_tc, bool allocate_page)
+    ThreadContext *new_tc, bool allocate_page)
 {
     if (allocate_page)
         new_paddr = seWorkload->allocPhysPages(1);
@@ -404,8 +403,8 @@ bool
 Process::map(Addr vaddr, Addr paddr, int size, bool cacheable)
 {
     pTable->map(vaddr, paddr, size,
-                cacheable ? EmulationPageTable::MappingFlags(0) :
-                            EmulationPageTable::Uncacheable);
+        cacheable ? EmulationPageTable::MappingFlags(0) :
+                    EmulationPageTable::Uncacheable);
     return true;
 }
 

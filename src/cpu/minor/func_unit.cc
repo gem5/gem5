@@ -48,7 +48,6 @@
 
 namespace gem5
 {
-
 MinorOpClassSet::MinorOpClassSet(const MinorOpClassSetParams &params) :
     SimObject(params),
     opClasses(params.opClasses),
@@ -60,8 +59,7 @@ MinorOpClassSet::MinorOpClassSet(const MinorOpClassSetParams &params) :
         capabilityList[opClasses[i]->opClass] = true;
 }
 
-MinorFUTiming::MinorFUTiming(
-    const MinorFUTimingParams &params) :
+MinorFUTiming::MinorFUTiming(const MinorFUTimingParams &params) :
     SimObject(params),
     mask(params.mask),
     match(params.match),
@@ -72,11 +70,10 @@ MinorFUTiming::MinorFUTiming(
     extraAssumedLat(params.extraAssumedLat),
     srcRegsRelativeLats(params.srcRegsRelativeLats),
     opClasses(params.opClasses)
-{ }
+{}
 
 namespace minor
 {
-
 void
 QueuedInst::reportData(std::ostream &os) const
 {
@@ -99,8 +96,7 @@ FUPipeline::FUPipeline(const std::string &name, const MinorFU &description_,
 
     /* Add the capabilities listed in the MinorFU for this functional unit */
     for (unsigned int i = 0; i < description.opClasses->opClasses.size();
-         i++)
-    {
+         i++) {
         addCapability(description.opClasses->opClasses[i]->opClass,
             description.opLat, 1);
     }
@@ -182,16 +178,14 @@ FUPipeline::findTiming(const StaticInstPtr &inst)
      */
     uint64_t mach_inst = inst->getEMI();
 
-    const std::vector<MinorFUTiming *> &timings =
-        description.timings;
+    const std::vector<MinorFUTiming *> &timings = description.timings;
     unsigned int num_timings = timings.size();
 
     for (unsigned int i = 0; i < num_timings; i++) {
         MinorFUTiming &timing = *timings[i];
 
         if (timing.provides(inst->opClass()) &&
-            (mach_inst & timing.mask) == timing.match)
-        {
+            (mach_inst & timing.mask) == timing.match) {
             DPRINTFS(MinorTiming, static_cast<Named *>(this),
                 "Found extra timing match (pattern %d '%s')"
                 " %s %16x (type %s)\n",

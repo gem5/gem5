@@ -43,14 +43,10 @@
 
 namespace gem5
 {
-
-const char* BmpWriter::_imgExtension = "bmp";
+const char *BmpWriter::_imgExtension = "bmp";
 
 // bitmap class ctor
-BmpWriter::BmpWriter(const FrameBuffer *_fb)
-    : ImgWriter(_fb)
-{
-}
+BmpWriter::BmpWriter(const FrameBuffer *_fb) : ImgWriter(_fb) {}
 
 const BmpWriter::CompleteV1Header
 BmpWriter::getCompleteHeader() const
@@ -58,29 +54,24 @@ BmpWriter::getCompleteHeader() const
     const uint32_t pixel_array_size(sizeof(PixelType) * fb.area());
     const uint32_t file_size(sizeof(CompleteV1Header) + pixel_array_size);
 
-    const CompleteV1Header header = {
-        // File header
+    const CompleteV1Header header = {// File header
         {
-            {'B','M'}, /* Magic */
-            file_size,
-            0, 0, /* Reserved */
+            {'B', 'M'},              /* Magic */
+            file_size, 0, 0,         /* Reserved */
             sizeof(CompleteV1Header) /* Offset to pixel array */
         },
         // Info/DIB header
         {
-            sizeof(InfoHeaderV1),
-            fb.width(),
-            fb.height(),
-            1, /* Color planes */
-            32, /* Bits per pixel */
-            0, /* No compression */
+            sizeof(InfoHeaderV1), fb.width(), fb.height(),
+            1,                /* Color planes */
+            32,               /* Bits per pixel */
+            0,                /* No compression */
             pixel_array_size, /* Image size in bytes */
-            2835, /* x pixels per meter (assume 72 DPI) */
-            2835, /* y pixels per meter (assume 72 DPI) */
-            0, /* Colors in color table */
+            2835,             /* x pixels per meter (assume 72 DPI) */
+            2835,             /* y pixels per meter (assume 72 DPI) */
+            0,                /* Colors in color table */
             0 /* Important color count (0 == all are important) */
-        }
-    };
+        }};
 
     return header;
 }
@@ -102,7 +93,7 @@ BmpWriter::write(std::ostream &bmp) const
             line_buffer[x] = fb.pixel(x, fb.height() - y - 1);
 
         bmp.write(reinterpret_cast<const char *>(line_buffer.data()),
-                  line_buffer.size() * sizeof(line_buffer[0]));
+            line_buffer.size() * sizeof(line_buffer[0]));
     }
 
     bmp.flush();

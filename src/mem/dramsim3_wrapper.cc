@@ -48,17 +48,16 @@
 
 namespace gem5
 {
-
 namespace memory
 {
-
-DRAMsim3Wrapper::DRAMsim3Wrapper(const std::string& config_file,
-                                 const std::string& working_dir,
-                                 std::function<void(uint64_t)> read_cb,
-                                 std::function<void(uint64_t)> write_cb) :
-    dramsim(dramsim3::GetMemorySystem(config_file, working_dir,
-                                       read_cb, write_cb)),
-    _clockPeriod(0.0), _queueSize(0), _burstSize(0)
+DRAMsim3Wrapper::DRAMsim3Wrapper(const std::string &config_file,
+    const std::string &working_dir, std::function<void(uint64_t)> read_cb,
+    std::function<void(uint64_t)> write_cb) :
+    dramsim(dramsim3::GetMemorySystem(
+        config_file, working_dir, read_cb, write_cb)),
+    _clockPeriod(0.0),
+    _queueSize(0),
+    _burstSize(0)
 {
     // there is no way of getting DRAMsim3 to tell us what frequency
     // it is assuming, so we have to extract it ourselves
@@ -74,23 +73,18 @@ DRAMsim3Wrapper::DRAMsim3Wrapper(const std::string& config_file,
     if (!_queueSize)
         fatal("DRAMsim3 wrapper failed to get queue size\n");
 
+    // finally, get the data bus bits and burst length so we can add a
+    // sanity check for the burst size
+    unsigned int dataBusBits = dramsim->GetBusBits();
+    unsigned int burstLength = dramsim->GetBurstLength();
 
-   // finally, get the data bus bits and burst length so we can add a
-   // sanity check for the burst size
-   unsigned int dataBusBits = dramsim->GetBusBits();
-   unsigned int burstLength = dramsim->GetBurstLength();
+    if (!dataBusBits || !burstLength)
+        fatal("DRAMsim3 wrapper failed to get burst size\n");
 
-   if (!dataBusBits || !burstLength)
-       fatal("DRAMsim3 wrapper failed to get burst size\n");
-
-   _burstSize = dataBusBits * burstLength / 8;
+    _burstSize = dataBusBits * burstLength / 8;
 }
 
-DRAMsim3Wrapper::~DRAMsim3Wrapper()
-{
-    delete dramsim;
-}
-
+DRAMsim3Wrapper::~DRAMsim3Wrapper() { delete dramsim; }
 
 void
 DRAMsim3Wrapper::printStats()
@@ -106,7 +100,7 @@ DRAMsim3Wrapper::resetStats()
 
 void
 DRAMsim3Wrapper::setCallbacks(std::function<void(uint64_t)> read_complete,
-                              std::function<void(uint64_t)> write_complete)
+    std::function<void(uint64_t)> write_complete)
 {
     dramsim->RegisterCallbacks(read_complete, write_complete);
 }

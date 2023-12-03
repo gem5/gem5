@@ -35,7 +35,6 @@
 
 namespace
 {
-
 int
 read_file(const DispatchTable &dt, std::ostream &os)
 {
@@ -72,9 +71,9 @@ do_read_file(const DispatchTable &dt, Args &args)
     return true;
 }
 
-Command read_file_cmd = {
-    "readfile", 0, 0, do_read_file, "\n"
-        "        read a preselected file from the host and write it to "
-            "stdout" };
+Command read_file_cmd = {"readfile", 0, 0, do_read_file,
+    "\n"
+    "        read a preselected file from the host and write it to "
+    "stdout"};
 
 } // anonymous namespace

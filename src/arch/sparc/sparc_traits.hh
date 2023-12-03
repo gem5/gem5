@@ -31,13 +31,12 @@
 
 namespace gem5
 {
-
 namespace SparcISA
 {
 // Max trap levels
 const int MaxPTL = 2;
-const int MaxTL  = 6;
-const int MaxGL  = 3;
+const int MaxTL = 6;
+const int MaxGL = 3;
 const int MaxPGL = 2;
 
 // Number of register windows, can legally be 3 to 32

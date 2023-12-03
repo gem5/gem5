@@ -42,7 +42,6 @@
 
 namespace gem5
 {
-
 class Terminal;
 class Uart;
 class System;
@@ -65,7 +64,6 @@ class Platform : public SimObject
      * Clear a posted CPU interrupt
      */
     virtual void clearConsoleInt() = 0;
-
 
     /**
      * Cause the chipset to post a cpi interrupt to the CPU.

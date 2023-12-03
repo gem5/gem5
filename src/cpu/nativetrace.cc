@@ -47,11 +47,10 @@
 
 namespace gem5
 {
-
-namespace trace {
-
-NativeTrace::NativeTrace(const Params &p)
-    : ExeTracer(p), native_listener(listenSocketInetConfig(8000).build(p.name))
+namespace trace
+{
+NativeTrace::NativeTrace(const Params &p) :
+    ExeTracer(p), native_listener(listenSocketInetConfig(8000).build(p.name))
 {
     if (ListenSocket::allDisabled())
         fatal("All listeners are disabled!");
@@ -61,22 +60,19 @@ NativeTrace::NativeTrace(const Params &p)
     fd = native_listener->accept();
 }
 
-NativeTraceRecord::NativeTraceRecord(
-        NativeTrace *_parent,
-        Tick _when, ThreadContext *_thread,
-        const StaticInstPtr _staticInst, const PCStateBase &_pc,
-        const StaticInstPtr _macroStaticInst)
-  : ExeTracerRecord(_when, _thread, _staticInst, _pc,
-                    *_parent, _macroStaticInst),
+NativeTraceRecord::NativeTraceRecord(NativeTrace *_parent, Tick _when,
+    ThreadContext *_thread, const StaticInstPtr _staticInst,
+    const PCStateBase &_pc, const StaticInstPtr _macroStaticInst) :
+    ExeTracerRecord(
+        _when, _thread, _staticInst, _pc, *_parent, _macroStaticInst),
     parent(_parent)
-{
-}
+{}
 
 void
 NativeTraceRecord::dump()
 {
-    //Don't print what happens for each micro-op, just print out
-    //once at the last op, and for regular instructions.
+    // Don't print what happens for each micro-op, just print out
+    // once at the last op, and for regular instructions.
     if (!staticInst->isMicroop() || staticInst->isLastMicroop())
         parent->check(this);
 }

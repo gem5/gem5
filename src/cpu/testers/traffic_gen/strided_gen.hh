@@ -51,7 +51,6 @@
 
 namespace gem5
 {
-
 /**
  * The strided generator generates sequential requests from a
  * start to an end address, with a fixed block size. A
@@ -61,9 +60,7 @@ namespace gem5
  */
 class StridedGen : public StochasticGen
 {
-
   public:
-
     /**
      * Create a strided address sequence generator. Set
      * min_period == max_period for a fixed inter-transaction
@@ -85,21 +82,18 @@ class StridedGen : public StochasticGen
      * @param read_percent Percent of transactions that are reads
      * @param data_limit Upper limit on how much data to read/write
      */
-    StridedGen(SimObject &obj,
-              RequestorID requestor_id, Tick _duration,
-              Addr start_addr, Addr end_addr,
-              Addr _blocksize, Addr cacheline_size,
-              Addr stride_size, int gen_id,
-              Tick min_period, Tick max_period,
-              uint8_t read_percent, Addr data_limit)
-        : StochasticGen(obj, requestor_id, _duration, start_addr, end_addr,
-                        _blocksize, cacheline_size, min_period, max_period,
-                        read_percent, data_limit),
-          nextAddr(0),
-          dataManipulated(0),
-          strideSize(stride_size),
-          genID(gen_id)
-    { }
+    StridedGen(SimObject &obj, RequestorID requestor_id, Tick _duration,
+        Addr start_addr, Addr end_addr, Addr _blocksize, Addr cacheline_size,
+        Addr stride_size, int gen_id, Tick min_period, Tick max_period,
+        uint8_t read_percent, Addr data_limit) :
+        StochasticGen(obj, requestor_id, _duration, start_addr, end_addr,
+            _blocksize, cacheline_size, min_period, max_period, read_percent,
+            data_limit),
+        nextAddr(0),
+        dataManipulated(0),
+        strideSize(stride_size),
+        genID(gen_id)
+    {}
 
     void enter();
 

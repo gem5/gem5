@@ -49,28 +49,26 @@
 
 namespace gem5
 {
-
 namespace branch_prediction
 {
-
 class TAGE_SC_L_TAGE_8KB : public TAGE_SC_L_TAGE
 {
   public:
     TAGE_SC_L_TAGE_8KB(const TAGE_SC_L_TAGE_8KBParams &p) : TAGE_SC_L_TAGE(p)
     {}
 
-    void initFoldedHistories(ThreadHistory & history) override;
+    void initFoldedHistories(ThreadHistory &history) override;
     int gindex_ext(int index, int bank) const override;
 
     uint16_t gtag(ThreadID tid, Addr pc, int bank) const override;
 
     void handleAllocAndUReset(
-        bool alloc, bool taken, TAGEBase::BranchInfo* bi, int nrand) override;
+        bool alloc, bool taken, TAGEBase::BranchInfo *bi, int nrand) override;
 
     void handleTAGEUpdate(
-        Addr branch_pc, bool taken, TAGEBase::BranchInfo* bi) override;
+        Addr branch_pc, bool taken, TAGEBase::BranchInfo *bi) override;
 
-    void resetUctr(uint8_t & u) override;
+    void resetUctr(uint8_t &u) override;
 };
 
 class TAGE_SC_L_8KB_StatisticalCorrector : public StatisticalCorrector
@@ -79,14 +77,12 @@ class TAGE_SC_L_8KB_StatisticalCorrector : public StatisticalCorrector
     const unsigned gnb;
     const unsigned logGnb;
     std::vector<int> gm;
-    std::vector<int8_t> * ggehl;
+    std::vector<int8_t> *ggehl;
     std::vector<int8_t> wg;
 
     struct SC_8KB_ThreadHistory : public SCThreadHistory
     {
-        SC_8KB_ThreadHistory() {
-            globalHist = 0;
-        }
+        SC_8KB_ThreadHistory() { globalHist = 0; }
         int64_t globalHist; // global history
     };
 
@@ -96,19 +92,18 @@ class TAGE_SC_L_8KB_StatisticalCorrector : public StatisticalCorrector
     TAGE_SC_L_8KB_StatisticalCorrector(
         const TAGE_SC_L_8KB_StatisticalCorrectorParams &p);
 
-    unsigned getIndBiasBank( Addr branch_pc, BranchInfo* bi, int hitBank,
+    unsigned getIndBiasBank(Addr branch_pc, BranchInfo *bi, int hitBank,
         int altBank) const override;
 
-    int gPredictions( ThreadID tid, Addr branch_pc,
-        BranchInfo* bi, int & lsum, int64_t phist) override;
+    int gPredictions(ThreadID tid, Addr branch_pc, BranchInfo *bi, int &lsum,
+        int64_t phist) override;
 
     int gIndexLogsSubstr(int nbr, int i) override;
 
-    void scHistoryUpdate(
-        Addr branch_pc, const StaticInstPtr &inst, bool taken,
-        BranchInfo * tage_bi, Addr corrTarget) override;
+    void scHistoryUpdate(Addr branch_pc, const StaticInstPtr &inst, bool taken,
+        BranchInfo *tage_bi, Addr corrTarget) override;
 
-    void gUpdates(ThreadID tid, Addr pc, bool taken, BranchInfo* bi,
+    void gUpdates(ThreadID tid, Addr pc, bool taken, BranchInfo *bi,
         int64_t phist) override;
 };
 

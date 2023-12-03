@@ -33,12 +33,11 @@
 
 namespace gem5
 {
-
 namespace Iris
 {
-
 BaseCPU::BaseCPU(const BaseCPUParams &params, sc_core::sc_module *_evs) :
-    gem5::BaseCPU::BaseCPU(params), evs(_evs),
+    gem5::BaseCPU::BaseCPU(params),
+    evs(_evs),
     evs_base_cpu(dynamic_cast<Iris::BaseCpuEvs *>(_evs))
 {
     panic_if(!evs_base_cpu, "EVS should be of type BaseCpuEvs");
@@ -52,7 +51,7 @@ BaseCPU::BaseCPU(const BaseCPUParams &params, sc_core::sc_module *_evs) :
 
 BaseCPU::~BaseCPU()
 {
-    for (auto &tc: threadContexts)
+    for (auto &tc : threadContexts)
         delete tc;
     threadContexts.clear();
 }
@@ -61,7 +60,7 @@ Counter
 BaseCPU::totalInsts() const
 {
     Counter count = 0;
-    for (auto *tc: threadContexts)
+    for (auto *tc : threadContexts)
         count += tc->getCurrentInstCount();
     return count;
 }

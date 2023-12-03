@@ -49,23 +49,25 @@
 
 namespace gem5
 {
-
 namespace minor
 {
-
 /** ActivityRecorder with a Ticked interface */
 class MinorActivityRecorder : public ActivityRecorder
 {
   public:
     /** Ticked interface */
-    void evaluate() { advance(); }
+    void
+    evaluate()
+    {
+        advance();
+    }
     void minorTrace() const;
 
   public:
-    MinorActivityRecorder(const std::string &name, int num_stages,
-        int longest_latency) :
+    MinorActivityRecorder(
+        const std::string &name, int num_stages, int longest_latency) :
         ActivityRecorder(name, num_stages, longest_latency, 0)
-    { }
+    {}
 };
 
 } // namespace minor

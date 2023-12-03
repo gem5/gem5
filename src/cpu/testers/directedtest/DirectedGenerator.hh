@@ -36,7 +36,6 @@
 
 namespace gem5
 {
-
 class DirectedGenerator : public SimObject
 {
   public:
@@ -48,12 +47,12 @@ class DirectedGenerator : public SimObject
     virtual bool initiate() = 0;
     virtual void performCallback(uint32_t proc, Addr address) = 0;
 
-    void setDirectedTester(RubyDirectedTester* directed_tester);
+    void setDirectedTester(RubyDirectedTester *directed_tester);
 
   protected:
     int m_num_cpus;
     RequestorID requestorId;
-    RubyDirectedTester* m_directed_tester;
+    RubyDirectedTester *m_directed_tester;
 };
 
 } // namespace gem5

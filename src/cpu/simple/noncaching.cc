@@ -43,14 +43,13 @@
 
 namespace gem5
 {
-
 NonCachingSimpleCPU::NonCachingSimpleCPU(
-        const BaseNonCachingSimpleCPUParams &p)
-    : AtomicSimpleCPU(p)
+    const BaseNonCachingSimpleCPUParams &p) :
+    AtomicSimpleCPU(p)
 {
     assert(p.numThreads == 1);
-    fatal_if(!FullSystem && p.workload.size() != 1,
-             "only one workload allowed");
+    fatal_if(
+        !FullSystem && p.workload.size() != 1, "only one workload allowed");
 }
 
 void
@@ -73,15 +72,15 @@ NonCachingSimpleCPU::sendPacket(RequestPort &port, const PacketPtr &pkt)
     if (bd && memBackdoors.insert(bd->range(), bd) != memBackdoors.end()) {
         // Install a callback to erase this backdoor if it goes away.
         auto callback = [this](const MemBackdoor &backdoor) {
-                for (auto it = memBackdoors.begin();
-                        it != memBackdoors.end(); it++) {
-                    if (it->second == &backdoor) {
-                        memBackdoors.erase(it);
-                        return;
-                    }
+            for (auto it = memBackdoors.begin(); it != memBackdoors.end();
+                 it++) {
+                if (it->second == &backdoor) {
+                    memBackdoors.erase(it);
+                    return;
                 }
-                panic("Got invalidation for unknown memory backdoor.");
-            };
+            }
+            panic("Got invalidation for unknown memory backdoor.");
+        };
         bd->addInvalidationCallback(callback);
     }
     return latency;

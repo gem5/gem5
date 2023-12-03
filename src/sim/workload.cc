@@ -33,15 +33,13 @@
 
 namespace gem5
 {
-
 void
 Workload::registerThreadContext(ThreadContext *tc)
 {
     std::set<ThreadContext *>::iterator it;
     bool success;
     std::tie(it, success) = threads.insert(tc);
-    panic_if(!success, "Failed to add thread context %d.",
-            tc->contextId());
+    panic_if(!success, "Failed to add thread context %d.", tc->contextId());
 
     if (gdb)
         gdb->addThreadContext(tc);
@@ -52,7 +50,7 @@ Workload::replaceThreadContext(ThreadContext *tc)
 {
     ContextID id = tc->contextId();
 
-    for (auto *old: threads) {
+    for (auto *old : threads) {
         if (old->contextId() != id)
             continue;
         threads.erase(old);
@@ -60,8 +58,8 @@ Workload::replaceThreadContext(ThreadContext *tc)
         std::set<ThreadContext *>::iterator it;
         bool success;
         std::tie(it, success) = threads.insert(tc);
-        panic_if(!success,
-                "Failed to insert replacement thread context %d.", id);
+        panic_if(
+            !success, "Failed to insert replacement thread context %d.", id);
 
         if (gdb)
             gdb->replaceThreadContext(tc);
@@ -81,13 +79,13 @@ Workload::trapToGdb(GDBSignal signal, ContextID ctx_id)
     return false;
 };
 bool
-Workload::sendToGdb(std::string msg){
-     if (gdb)
+Workload::sendToGdb(std::string msg)
+{
+    if (gdb)
         return gdb->sendMessage(msg);
     else
         return false;
- }
-
+}
 
 void
 Workload::startup()
@@ -98,7 +96,7 @@ Workload::startup()
     // requested.
     if (gdb && waitForRemoteGDB) {
         inform("%s: Waiting for a remote GDB connection on %s.", name(),
-                gdb->hostSocket());
+            gdb->hostSocket());
         gdb->connect();
     }
 }

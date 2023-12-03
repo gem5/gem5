@@ -36,7 +36,6 @@
 
  *****************************************************************************/
 
-
 // $Log: scfx_pow10.cpp,v $
 // Revision 1.1.1.1  2006/12/15 20:20:04  acg
 // SystemC 2.3
@@ -50,7 +49,6 @@
 
 namespace sc_dt
 {
-
 // ----------------------------------------------------------------------------
 //  CLASS : scfx_pow10
 //
@@ -71,7 +69,7 @@ scfx_pow10::scfx_pow10()
 scfx_pow10::~scfx_pow10() {}
 
 const scfx_rep
-scfx_pow10::operator() (int i)
+scfx_pow10::operator()(int i)
 {
     if (i == 0) {
         return scfx_rep(1.0);
@@ -106,7 +104,6 @@ scfx_pow10::operator() (int i)
         return result;
     }
 }
-
 
 scfx_rep *
 scfx_pow10::pos(int i)

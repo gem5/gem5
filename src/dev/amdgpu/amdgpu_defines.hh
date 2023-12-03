@@ -36,7 +36,6 @@
 
 namespace gem5
 {
-
 /* Types of queues supported by device */
 enum QueueType
 {
@@ -59,13 +58,13 @@ constexpr int MMIO_BAR = 5;
 
 /* By default the X86 kernel expects the vga ROM at 0xc0000. */
 constexpr uint32_t VGA_ROM_DEFAULT = 0xc0000;
-constexpr uint32_t ROM_SIZE = 0x20000;        // 128kB
+constexpr uint32_t ROM_SIZE = 0x20000; // 128kB
 
 /* SDMA base, size, mmio offset shift. */
-static constexpr uint32_t SDMA0_BASE  = 0x4980;
-static constexpr uint32_t SDMA1_BASE  = 0x5180;
-static constexpr uint32_t SDMA_SIZE  = 0x800;
-static constexpr uint32_t SDMA_OFFSET_SHIFT  = 2;
+static constexpr uint32_t SDMA0_BASE = 0x4980;
+static constexpr uint32_t SDMA1_BASE = 0x5180;
+static constexpr uint32_t SDMA_SIZE = 0x800;
+static constexpr uint32_t SDMA_OFFSET_SHIFT = 2;
 
 /* Interrupt handler base, size, mmio offset shift. */
 static constexpr uint32_t IH_BASE = 0x4280;
@@ -73,14 +72,14 @@ static constexpr uint32_t IH_SIZE = 0x700;
 static constexpr uint32_t IH_OFFSET_SHIFT = 2;
 
 /* Graphics register bus manager base, size, mmio offset shift. */
-static constexpr uint32_t GRBM_BASE  = 0x8000;
-static constexpr uint32_t GRBM_SIZE  = 0x5000;
-static constexpr uint32_t GRBM_OFFSET_SHIFT  = 2;
+static constexpr uint32_t GRBM_BASE = 0x8000;
+static constexpr uint32_t GRBM_SIZE = 0x5000;
+static constexpr uint32_t GRBM_OFFSET_SHIFT = 2;
 
 /* GFX base, size, mmio offset shift. */
-static constexpr uint32_t GFX_BASE  = 0x28000;
-static constexpr uint32_t GFX_SIZE  = 0x17000;
-static constexpr uint32_t GFX_OFFSET_SHIFT  = 2;
+static constexpr uint32_t GFX_BASE = 0x28000;
+static constexpr uint32_t GFX_SIZE = 0x17000;
+static constexpr uint32_t GFX_OFFSET_SHIFT = 2;
 
 /* MMHUB base, size, mmio offset shift. */
 static constexpr uint32_t MMHUB_BASE = 0x68000;

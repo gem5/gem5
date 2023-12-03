@@ -36,10 +36,8 @@
 
 namespace gem5
 {
-
 namespace RiscvISA
 {
-
 class StackTrace : public BaseStackTrace
 {
   protected:

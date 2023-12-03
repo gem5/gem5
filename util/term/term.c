@@ -48,16 +48,16 @@
 #include <unistd.h>
 
 ssize_t atomicio(ssize_t (*)(), int, void *, size_t);
-void    readwrite(int);
-int     remote_connect_inet(char *, char *);
-int     remote_connect_unix(const char *);
+void readwrite(int);
+int remote_connect_inet(char *, char *);
+int remote_connect_unix(const char *);
 
-struct  termios saved_ios;
-void    raw_term();
-void    restore_term();
+struct termios saved_ios;
+void raw_term();
+void restore_term();
 
-char    progname[256];
-void    usage(int);
+char progname[256];
+void usage(int);
 
 int
 main(int argc, char *argv[])
@@ -127,8 +127,8 @@ remote_connect_inet(char *host, char *port)
 
     res0 = res;
     do {
-        if ((s = socket(res0->ai_family, res0->ai_socktype,
-                        res0->ai_protocol)) < 0)
+        if ((s = socket(
+                 res0->ai_family, res0->ai_socktype, res0->ai_protocol)) < 0)
             continue;
 
         if (connect(s, res0->ai_addr, res0->ai_addrlen) == 0)
@@ -364,20 +364,20 @@ usage(int ret)
  * ensure all of data on socket comes through. f==read || f==write
  */
 ssize_t
-atomicio(ssize_t (*f) (), int fd, void *_s, size_t n)
+atomicio(ssize_t (*f)(), int fd, void *_s, size_t n)
 {
     char *s = _s;
     ssize_t res, pos = 0;
 
     while (n > pos) {
-        res = (f) (fd, s + pos, n - pos);
+        res = (f)(fd, s + pos, n - pos);
         switch (res) {
-          case -1:
+        case -1:
             if (errno == EINTR || errno == EAGAIN)
                 continue;
-          case 0:
+        case 0:
             return (res);
-          default:
+        default:
             pos += res;
         }
     }
@@ -410,10 +410,10 @@ raw_term()
 
     memcpy(&saved_ios, &ios, sizeof(struct termios));
 
-    ios.c_iflag &= ~(ISTRIP|ICRNL|IGNCR|ICRNL|IXOFF|IXON);
+    ios.c_iflag &= ~(ISTRIP | ICRNL | IGNCR | ICRNL | IXOFF | IXON);
     ios.c_oflag |= OPOST;
     ios.c_oflag |= ONLCR;
-    ios.c_lflag &= ~(ISIG|ICANON|ECHO);
+    ios.c_lflag &= ~(ISIG | ICANON | ECHO);
     ios.c_cc[VMIN] = 1;
     ios.c_cc[VTIME] = 0;
 

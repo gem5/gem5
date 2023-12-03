@@ -56,10 +56,8 @@
 
 namespace gem5
 {
-
 namespace minor
 {
-
 /** This stage receives lines of data from Fetch1, separates them into
  *  instructions and passes them to Decode */
 class Fetch2 : public Named
@@ -105,7 +103,7 @@ class Fetch2 : public Named
     {
         Fetch2ThreadInfo() {}
 
-        Fetch2ThreadInfo(const Fetch2ThreadInfo& other) :
+        Fetch2ThreadInfo(const Fetch2ThreadInfo &other) :
             inputIndex(other.inputIndex),
             havePC(other.havePC),
             lastStreamSeqNum(other.lastStreamSeqNum),
@@ -119,7 +117,6 @@ class Fetch2 : public Named
         /** Index into an incompletely processed input line that instructions
          *  are to be extracted from */
         unsigned int inputIndex = 0;
-
 
         /** Remembered program counter value.  Between contiguous lines, this
          *  is just updated with advancePC.  For lines following changes of
@@ -138,14 +135,14 @@ class Fetch2 : public Named
          *  changes of instruction stream */
         InstSeqNum lastStreamSeqNum = InstId::firstStreamSeqNum;
 
-        /** Fetch2 is the source of fetch sequence numbers.  These represent the
-         *  sequence that instructions were extracted from fetched lines. */
+        /** Fetch2 is the source of fetch sequence numbers.  These represent
+         * the sequence that instructions were extracted from fetched lines. */
         InstSeqNum fetchSeqNum = InstId::firstFetchSeqNum;
 
         /** Stream sequence number remembered from last time the
-         *  predictionSeqNum changed.  Lines should only be discarded when their
-         *  predictionSeqNums disagree with Fetch2::predictionSeqNum *and* they
-         *  are from the same stream that bore that prediction number */
+         *  predictionSeqNum changed.  Lines should only be discarded when
+         * their predictionSeqNums disagree with Fetch2::predictionSeqNum *and*
+         * they are from the same stream that bore that prediction number */
         InstSeqNum expectedStreamSeqNum = InstId::firstStreamSeqNum;
 
         /** Fetch2 is the source of prediction sequence numbers.  These
@@ -198,10 +195,8 @@ class Fetch2 : public Named
     ThreadID getScheduledThread();
 
   public:
-    Fetch2(const std::string &name,
-        MinorCPU &cpu_,
-        const BaseMinorCPUParams &params,
-        Latch<ForwardLineData>::Output inp_,
+    Fetch2(const std::string &name, MinorCPU &cpu_,
+        const BaseMinorCPUParams &params, Latch<ForwardLineData>::Output inp_,
         Latch<BranchData>::Output branchInp_,
         Latch<BranchData>::Input predictionOut_,
         Latch<ForwardInstData>::Input out_,
@@ -212,7 +207,6 @@ class Fetch2 : public Named
     void evaluate();
 
     void minorTrace() const;
-
 
     /** Is this stage drained?  For Fetch2, draining is initiated by
      *  Execute halting Fetch1 causing Fetch2 to naturally drain.

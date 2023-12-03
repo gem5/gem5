@@ -42,11 +42,10 @@
 
 namespace gem5
 {
-
 namespace NullISA
 {
-    const Addr PageShift = 12;
-    const Addr PageBytes = 1ULL << PageShift;
+const Addr PageShift = 12;
+const Addr PageBytes = 1ULL << PageShift;
 } // namespace NullISA
 } // namespace gem5
 

@@ -40,11 +40,8 @@
 
 namespace gem5
 {
-
 namespace PowerISA
 {
-
-
 class RemoteGDB : public BaseRemoteGDB
 {
   protected:
@@ -52,7 +49,8 @@ class RemoteGDB : public BaseRemoteGDB
 
     class PowerGdbRegCache : public BaseGdbRegCache
     {
-      using BaseGdbRegCache::BaseGdbRegCache;
+        using BaseGdbRegCache::BaseGdbRegCache;
+
       private:
         struct GEM5_PACKED
         {
@@ -68,10 +66,18 @@ class RemoteGDB : public BaseRemoteGDB
         } r;
 
       public:
-        char *data() const { return (char *)&r; }
-        size_t size() const { return sizeof(r); }
-        void getRegs(ThreadContext*);
-        void setRegs(ThreadContext*) const;
+        char *
+        data() const
+        {
+            return (char *)&r;
+        }
+        size_t
+        size() const
+        {
+            return sizeof(r);
+        }
+        void getRegs(ThreadContext *);
+        void setRegs(ThreadContext *) const;
         const std::string
         name() const
         {
@@ -81,7 +87,8 @@ class RemoteGDB : public BaseRemoteGDB
 
     class Power64GdbRegCache : public BaseGdbRegCache
     {
-      using BaseGdbRegCache::BaseGdbRegCache;
+        using BaseGdbRegCache::BaseGdbRegCache;
+
       private:
         struct GEM5_PACKED
         {
@@ -97,10 +104,18 @@ class RemoteGDB : public BaseRemoteGDB
         } r;
 
       public:
-        char *data() const { return (char *)&r; }
-        size_t size() const { return sizeof(r); }
-        void getRegs(ThreadContext*);
-        void setRegs(ThreadContext*) const;
+        char *
+        data() const
+        {
+            return (char *)&r;
+        }
+        size_t
+        size() const
+        {
+            return sizeof(r);
+        }
+        void getRegs(ThreadContext *);
+        void setRegs(ThreadContext *) const;
         const std::string
         name() const
         {

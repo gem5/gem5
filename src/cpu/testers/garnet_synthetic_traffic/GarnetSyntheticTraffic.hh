@@ -42,16 +42,18 @@
 
 namespace gem5
 {
-
-enum TrafficType {BIT_COMPLEMENT_ = 0,
-                  BIT_REVERSE_ = 1,
-                  BIT_ROTATION_ = 2,
-                  NEIGHBOR_ = 3,
-                  SHUFFLE_ = 4,
-                  TORNADO_ = 5,
-                  TRANSPOSE_ = 6,
-                  UNIFORM_RANDOM_ = 7,
-                  NUM_TRAFFIC_PATTERNS_};
+enum TrafficType
+{
+    BIT_COMPLEMENT_ = 0,
+    BIT_REVERSE_ = 1,
+    BIT_ROTATION_ = 2,
+    NEIGHBOR_ = 3,
+    SHUFFLE_ = 4,
+    TORNADO_ = 5,
+    TRANSPOSE_ = 6,
+    UNIFORM_RANDOM_ = 7,
+    NUM_TRAFFIC_PATTERNS_
+};
 
 class Packet;
 class GarnetSyntheticTraffic : public ClockedObject
@@ -65,8 +67,8 @@ class GarnetSyntheticTraffic : public ClockedObject
     // main simulation loop (one cycle)
     void tick();
 
-    Port &getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID) override;
+    Port &getPort(
+        const std::string &if_name, PortID idx = InvalidPortID) override;
 
     /**
      * Print state of address in memory system via PrintReq (for
@@ -82,13 +84,11 @@ class GarnetSyntheticTraffic : public ClockedObject
         GarnetSyntheticTraffic *tester;
 
       public:
-
-        CpuPort(const std::string &_name, GarnetSyntheticTraffic *_tester)
-            : RequestPort(_name), tester(_tester)
-        { }
+        CpuPort(const std::string &_name, GarnetSyntheticTraffic *_tester) :
+            RequestPort(_name), tester(_tester)
+        {}
 
       protected:
-
         virtual bool recvTimingResp(PacketPtr pkt);
 
         virtual void recvReqRetry();
@@ -100,9 +100,7 @@ class GarnetSyntheticTraffic : public ClockedObject
     {
       public:
         /** Constructor. */
-        GarnetSyntheticTrafficSenderState(uint8_t *_data)
-            : data(_data)
-        { }
+        GarnetSyntheticTrafficSenderState(uint8_t *_data) : data(_data) {}
 
         // Hold onto data pointer
         uint8_t *data;
@@ -126,7 +124,7 @@ class GarnetSyntheticTraffic : public ClockedObject
     int singleDest;
 
     std::string trafficType; // string
-    TrafficType traffic; // enum from string
+    TrafficType traffic;     // enum from string
     double injRate;
     int injVnet;
     int precision;

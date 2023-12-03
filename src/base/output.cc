@@ -58,31 +58,24 @@
 
 namespace gem5
 {
-
 OutputDirectory simout;
 
+OutputStream::OutputStream(const std::string &name, std::ostream *stream) :
+    _name(name), _stream(stream)
+{}
 
-OutputStream::OutputStream(const std::string &name, std::ostream *stream)
-    : _name(name), _stream(stream)
-{
-}
-
-OutputStream::~OutputStream()
-{
-}
+OutputStream::~OutputStream() {}
 
 void
 OutputStream::relocate(const OutputDirectory &dir)
-{
-}
+{}
 
-template<class StreamType>
+template <class StreamType>
 OutputFile<StreamType>::OutputFile(const OutputDirectory &dir,
-                                   const std::string &name,
-                                   std::ios_base::openmode mode,
-                                   bool recreateable)
-  : OutputStream(name, new stream_type_t()),
-    _mode(mode), _recreateable(recreateable),
+    const std::string &name, std::ios_base::openmode mode, bool recreateable) :
+    OutputStream(name, new stream_type_t()),
+    _mode(mode),
+    _recreateable(recreateable),
     _fstream(static_cast<stream_type_t *>(_stream))
 {
     std::string resolved_path = dir.resolve(_name);
@@ -92,14 +85,14 @@ OutputFile<StreamType>::OutputFile(const OutputDirectory &dir,
     panic_if(!_fstream->is_open(), "Failed to open \"%s\"\n", resolved_path);
 }
 
-template<class StreamType>
+template <class StreamType>
 OutputFile<StreamType>::~OutputFile()
 {
     if (_fstream->is_open())
         _fstream->close();
 }
 
-template<class StreamType>
+template <class StreamType>
 void
 OutputFile<StreamType>::relocate(const OutputDirectory &dir)
 {
@@ -115,8 +108,7 @@ OutputStream OutputDirectory::stderr("stderr", &std::cerr);
 /**
  * @file This file manages creating / deleting output files for the simulator.
  */
-OutputDirectory::OutputDirectory()
-{}
+OutputDirectory::OutputDirectory() {}
 
 OutputDirectory::OutputDirectory(const std::string &name)
 {
@@ -125,7 +117,7 @@ OutputDirectory::OutputDirectory(const std::string &name)
 
 OutputDirectory::~OutputDirectory()
 {
-    for (auto& f: files) {
+    for (auto &f : files) {
         if (f.second)
             delete f.second;
     }
@@ -188,7 +180,6 @@ OutputDirectory::setDirectory(const std::string &d)
             i->second->setDirectory(dir + PATH_SEPARATOR + i->first);
         }
     }
-
 }
 
 const std::string &
@@ -221,10 +212,8 @@ OutputDirectory::create(const std::string &name, bool binary, bool no_gz)
 }
 
 OutputStream *
-OutputDirectory::open(const std::string &name,
-                      std::ios_base::openmode mode,
-                      bool recreateable,
-                      bool no_gz)
+OutputDirectory::open(const std::string &name, std::ios_base::openmode mode,
+    bool recreateable, bool no_gz)
 {
     OutputStream *os;
 
@@ -257,7 +246,6 @@ OutputDirectory::find(const std::string &name) const
     return NULL;
 }
 
-
 OutputStream *
 OutputDirectory::findOrCreate(const std::string &name, bool binary)
 {
@@ -272,7 +260,8 @@ bool
 OutputDirectory::isFile(const std::string &name) const
 {
     // definitely a file if in our data structure
-    if (find(name) != NULL) return true;
+    if (find(name) != NULL)
+        return true;
 
     struct stat st_buf;
     int st = stat(name.c_str(), &st_buf);
@@ -323,7 +312,7 @@ OutputDirectory::remove(const std::string &name, bool recursive)
             if (!subdir) {
                 perror("opendir");
                 fatal("Error opening directory for recursive removal '%s'\n",
-                      fname);
+                    fname);
             }
 
             struct dirent *de = readdir(subdir);

@@ -43,25 +43,17 @@
 
 namespace gem5
 {
-
 const FrameBuffer FrameBuffer::dummy(320, 240);
 
-FrameBuffer::FrameBuffer(unsigned width, unsigned height)
-    : pixels(width * height),
-      _width(width), _height(height)
+FrameBuffer::FrameBuffer(unsigned width, unsigned height) :
+    pixels(width * height), _width(width), _height(height)
 {
     clear();
 }
 
-FrameBuffer::FrameBuffer()
-    : _width(0), _height(0)
-{
-}
+FrameBuffer::FrameBuffer() : _width(0), _height(0) {}
 
-FrameBuffer::~FrameBuffer()
-{
-}
-
+FrameBuffer::~FrameBuffer() {}
 
 void
 FrameBuffer::serialize(CheckpointOut &cp) const
@@ -124,9 +116,8 @@ FrameBuffer::copyOut(uint8_t *fb, const PixelConverter &conv) const
 uint64_t
 FrameBuffer::getHash() const
 {
-    return adler32(0UL,
-                   reinterpret_cast<const Bytef *>(pixels.data()),
-                   area() * sizeof(Pixel));
+    return adler32(0UL, reinterpret_cast<const Bytef *>(pixels.data()),
+        area() * sizeof(Pixel));
 }
 
 } // namespace gem5

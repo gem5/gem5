@@ -50,16 +50,14 @@ std::string progname;
 void
 usage()
 {
-    std::cerr << "Usage: " << progname <<
-        "[call type] <command> [arguments]" << std::endl <<
-        std::endl <<
-        "Call types:" << std::endl <<
-        CallType::usageSummary() <<
-        std::endl <<
-        "Commands:" << std::endl <<
-        Command::usageSummary() <<
-        std::endl <<
-        "All times in nanoseconds!" << std::endl;
+    std::cerr << "Usage: " << progname << "[call type] <command> [arguments]"
+              << std::endl
+              << std::endl
+              << "Call types:" << std::endl
+              << CallType::usageSummary() << std::endl
+              << "Commands:" << std::endl
+              << Command::usageSummary() << std::endl
+              << "All times in nanoseconds!" << std::endl;
 
     exit(1);
 }

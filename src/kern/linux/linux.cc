@@ -42,18 +42,16 @@
 
 namespace gem5
 {
-
 // The OS methods are called statically. Instantiate the random number
 // generator for access to /dev/urandom here.
 Random Linux::random;
 
 int
-Linux::openSpecialFile(std::string path, Process *process,
-                       ThreadContext *tc)
+Linux::openSpecialFile(std::string path, Process *process, ThreadContext *tc)
 {
     DPRINTFR(SyscallVerbose,
-             "%d: %s: generic-open: opening special file: %s\n",
-             curTick(), tc->getCpuPtr()->name(), path.c_str());
+        "%d: %s: generic-open: opening special file: %s\n", curTick(),
+        tc->getCpuPtr()->name(), path.c_str());
 
     bool matched = false;
     std::string data;
@@ -85,7 +83,8 @@ Linux::openSpecialFile(std::string path, Process *process,
     } else {
         warn("Attempting to open special file: %s. Ignoring. Simulation may "
              "take un-expected code path or be non-deterministic until proper "
-             "handling is implemented.\n", path.c_str());
+             "handling is implemented.\n",
+            path.c_str());
         errno = EACCES;
         return -1;
     }
@@ -95,15 +94,15 @@ std::string
 Linux::procMeminfo(Process *process, ThreadContext *tc)
 {
     return csprintf("MemTotal:%12d kB\nMemFree: %12d kB\n",
-            process->seWorkload->memSize() >> 10,
-            process->seWorkload->freeMemSize() >> 10);
+        process->seWorkload->memSize() >> 10,
+        process->seWorkload->freeMemSize() >> 10);
 }
 
 std::string
 Linux::etcPasswd(Process *process, ThreadContext *tc)
 {
-    return csprintf("gem5-user:x:1000:1000:gem5-user,,,:%s:/bin/bash\n",
-                    process->tgtCwd);
+    return csprintf(
+        "gem5-user:x:1000:1000:gem5-user,,,:%s:/bin/bash\n", process->tgtCwd);
 }
 
 std::string
@@ -121,9 +120,8 @@ Linux::cpuOnline(Process *process, ThreadContext *tc)
 std::string
 Linux::devRandom(Process *process, ThreadContext *tc)
 {
-    DPRINTFR(SyscallVerbose,
-             "%d: %s: open: generating urandom\n",
-             curTick(), tc->getCpuPtr()->name());
+    DPRINTFR(SyscallVerbose, "%d: %s: open: generating urandom\n", curTick(),
+        tc->getCpuPtr()->name());
 
     std::stringstream line;
     int max = 1E5;

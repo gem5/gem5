@@ -36,12 +36,10 @@
 
 namespace gem5
 {
-
 namespace cp
 {
-
-Print::Print(std::ostream &stream, const std::string &format)
-    : stream(stream), format(format.c_str()), ptr(format.c_str()), cont(false)
+Print::Print(std::ostream &stream, const std::string &format) :
+    stream(stream), format(format.c_str()), ptr(format.c_str()), cont(false)
 {
     savedFlags = stream.flags();
     savedFill = stream.fill();
@@ -49,8 +47,8 @@ Print::Print(std::ostream &stream, const std::string &format)
     savedWidth = stream.width();
 }
 
-Print::Print(std::ostream &stream, const char *format)
-    : stream(stream), format(format), ptr(format), cont(false)
+Print::Print(std::ostream &stream, const char *format) :
+    stream(stream), format(format), ptr(format), cont(false)
 {
     savedFlags = stream.flags();
     savedFill = stream.fill();
@@ -58,9 +56,7 @@ Print::Print(std::ostream &stream, const char *format)
     savedWidth = stream.width();
 }
 
-Print::~Print()
-{
-}
+Print::~Print() {}
 
 void
 Print::process()
@@ -71,7 +67,7 @@ Print::process()
 
     while (*ptr) {
         switch (*ptr) {
-          case '%':
+        case '%':
             if (ptr[1] != '%') {
                 processFlag();
                 return;
@@ -80,17 +76,17 @@ Print::process()
             ptr += 2;
             break;
 
-          case '\n':
+        case '\n':
             stream << std::endl;
             ++ptr;
             break;
-          case '\r':
+        case '\r':
             ++ptr;
             if (*ptr != '\n')
                 stream << std::endl;
             break;
 
-          default:
+        default:
             len = strcspn(ptr, "%\n\r\0");
             stream.write(ptr, len);
             ptr += len;
@@ -120,94 +116,94 @@ Print::processFlag()
         }
 
         switch (*ptr) {
-          case 's':
+        case 's':
             fmt.format = Format::String;
             done = true;
             break;
 
-          case 'c':
+        case 'c':
             fmt.format = Format::Character;
             done = true;
             break;
 
-          case 'l':
+        case 'l':
             continue;
 
-          case 'p':
+        case 'p':
             fmt.format = Format::Integer;
             fmt.base = Format::Hex;
             fmt.alternateForm = true;
             done = true;
             break;
 
-          case 'X':
+        case 'X':
             fmt.uppercase = true;
             [[fallthrough]];
-          case 'x':
+        case 'x':
             fmt.base = Format::Hex;
             fmt.format = Format::Integer;
             done = true;
             break;
 
-          case 'o':
+        case 'o':
             fmt.base = Format::Oct;
             fmt.format = Format::Integer;
             done = true;
             break;
 
-          case 'd':
-          case 'i':
-          case 'u':
+        case 'd':
+        case 'i':
+        case 'u':
             fmt.format = Format::Integer;
             done = true;
             break;
 
-          case 'G':
+        case 'G':
             fmt.uppercase = true;
             [[fallthrough]];
-          case 'g':
+        case 'g':
             fmt.format = Format::Floating;
             fmt.floatFormat = Format::Best;
             done = true;
             break;
 
-          case 'E':
+        case 'E':
             fmt.uppercase = true;
             [[fallthrough]];
-          case 'e':
+        case 'e':
             fmt.format = Format::Floating;
             fmt.floatFormat = Format::Scientific;
             done = true;
             break;
 
-          case 'f':
+        case 'f':
             fmt.format = Format::Floating;
             fmt.floatFormat = Format::Fixed;
             done = true;
             break;
 
-          case 'n':
+        case 'n':
             stream << "we don't do %n!!!\n";
             done = true;
             break;
 
-          case '#':
+        case '#':
             fmt.alternateForm = true;
             break;
 
-          case '-':
+        case '-':
             fmt.flushLeft = true;
             break;
 
-          case '+':
+        case '+':
             fmt.printSign = true;
             break;
 
-          case ' ':
+        case ' ':
             fmt.blankSpace = true;
             break;
 
-          case '.':
+        case '.':
             fmt.width = number;
             fmt.precision = 0;
             have_precision = true;
@@ -215,36 +211,36 @@ Print::processFlag()
             end_number = false;
             break;
 
-          case '0':
+        case '0':
             if (number == 0) {
                 fmt.fillZero = true;
                 break;
             }
             [[fallthrough]];
-          case '1':
-          case '2':
-          case '3':
-          case '4':
-          case '5':
-          case '6':
-          case '7':
-          case '8':
-          case '9':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
             number = number * 10 + (*ptr - '0');
             break;
 
-          case '*':
+        case '*':
             if (have_precision)
                 fmt.getPrecision = true;
             else
                 fmt.getWidth = true;
             break;
 
-          case '%':
+        case '%':
             GEM5_UNREACHABLE;
             break;
 
-          default:
+        default:
             done = true;
             break;
         }
@@ -266,7 +262,7 @@ Print::processFlag()
                 // precision requries digits for width, must fill with 0
                 fmt.fillZero = true;
             } else if ((fmt.format == Format::Floating) && !have_precision &&
-                        fmt.fillZero) {
+                       fmt.fillZero) {
                 // ambiguous case, matching printf
                 fmt.precision = fmt.width;
             }
@@ -283,7 +279,7 @@ Print::endArgs()
 
     while (*ptr) {
         switch (*ptr) {
-          case '%':
+        case '%':
             if (ptr[1] != '%')
                 stream << "<extra arg>";
 
@@ -291,17 +287,17 @@ Print::endArgs()
             ptr += 2;
             break;
 
-          case '\n':
+        case '\n':
             stream << std::endl;
             ++ptr;
             break;
-          case '\r':
+        case '\r':
             ++ptr;
             if (*ptr != '\n')
                 stream << std::endl;
             break;
 
-          default:
+        default:
             len = strcspn(ptr, "%\n\r\0");
             stream.write(ptr, len);
             ptr += len;

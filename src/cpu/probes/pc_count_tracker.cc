@@ -28,17 +28,13 @@
 
 #include "cpu/probes/pc_count_tracker.hh"
 
-
 namespace gem5
 {
-
-PcCountTracker::PcCountTracker(const PcCountTrackerParams &p)
-    : ProbeListenerObject(p),
-      cpuptr(p.core),
-      manager(p.ptmanager)
+PcCountTracker::PcCountTracker(const PcCountTrackerParams &p) :
+    ProbeListenerObject(p), cpuptr(p.core), manager(p.ptmanager)
 {
     if (!cpuptr || !manager) {
-        fatal("%s is NULL", !cpuptr ? "CPU": "PcCountTrackerManager");
+        fatal("%s is NULL", !cpuptr ? "CPU" : "PcCountTrackerManager");
     }
     for (int i = 0; i < p.targets.size(); i++) {
         // initialize the set of targeting Program Counter addresses
@@ -54,12 +50,13 @@ PcCountTracker::regProbeListeners()
     // when "RetiredInstsPC" notifies the probe listener, then the function
     // 'check_pc' is automatically called
     typedef ProbeListenerArg<PcCountTracker, Addr> PcCountTrackerListener;
-    listeners.push_back(new PcCountTrackerListener(this, "RetiredInstsPC",
-                                            &PcCountTracker::checkPc));
+    listeners.push_back(new PcCountTrackerListener(
+        this, "RetiredInstsPC", &PcCountTracker::checkPc));
 }
 
 void
-PcCountTracker::checkPc(const Addr& pc) {
+PcCountTracker::checkPc(const Addr &pc)
+{
     if (targetPC.find(pc) != targetPC.end()) {
         // if the PC is one of the target PCs, then notify the
         // PcCounterTrackerManager by calling its `check_count` function

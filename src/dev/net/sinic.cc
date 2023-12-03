@@ -45,75 +45,70 @@
 
 namespace gem5
 {
-
 using namespace networking;
 
 namespace sinic
 {
+const char *RxStateStrings[] = {
+    "rxIdle", "rxFifoBlock", "rxBeginCopy", "rxCopy", "rxCopyDone"};
 
-const char *RxStateStrings[] =
-{
-    "rxIdle",
-    "rxFifoBlock",
-    "rxBeginCopy",
-    "rxCopy",
-    "rxCopyDone"
-};
-
-const char *TxStateStrings[] =
-{
-    "txIdle",
-    "txFifoBlock",
-    "txBeginCopy",
-    "txCopy",
-    "txCopyDone"
-};
-
+const char *TxStateStrings[] = {
+    "txIdle", "txFifoBlock", "txBeginCopy", "txCopy", "txCopyDone"};
 
 ///////////////////////////////////////////////////////////////////////
 //
 // Sinic PCI Device
 //
-Base::Base(const Params &p)
-    : EtherDevBase(p), rxEnable(false), txEnable(false),
-      intrDelay(p.intr_delay), intrTick(0), cpuIntrEnable(false),
-      cpuPendingIntr(false), intrEvent(0), interface(NULL)
-{
-}
+Base::Base(const Params &p) :
+    EtherDevBase(p),
+    rxEnable(false),
+    txEnable(false),
+    intrDelay(p.intr_delay),
+    intrTick(0),
+    cpuIntrEnable(false),
+    cpuPendingIntr(false),
+    intrEvent(0),
+    interface(NULL)
+{}
 
-Device::Device(const Params &p)
-    : Base(p), rxUnique(0), txUnique(0),
-      virtualRegs(p.virtual_count < 1 ? 1 : p.virtual_count),
-      rxFifo(p.rx_fifo_size), txFifo(p.tx_fifo_size),
-      rxKickTick(0), txKickTick(0),
-      txEvent([this]{ txEventTransmit(); }, name()),
-      rxDmaEvent([this]{ rxDmaDone(); }, name()),
-      txDmaEvent([this]{ txDmaDone(); }, name()),
-      dmaReadDelay(p.dma_read_delay), dmaReadFactor(p.dma_read_factor),
-      dmaWriteDelay(p.dma_write_delay), dmaWriteFactor(p.dma_write_factor),
-      sinicDeviceStats(this)
+Device::Device(const Params &p) :
+    Base(p),
+    rxUnique(0),
+    txUnique(0),
+    virtualRegs(p.virtual_count < 1 ? 1 : p.virtual_count),
+    rxFifo(p.rx_fifo_size),
+    txFifo(p.tx_fifo_size),
+    rxKickTick(0),
+    txKickTick(0),
+    txEvent([this] { txEventTransmit(); }, name()),
+    rxDmaEvent([this] { rxDmaDone(); }, name()),
+    txDmaEvent([this] { txDmaDone(); }, name()),
+    dmaReadDelay(p.dma_read_delay),
+    dmaReadFactor(p.dma_read_factor),
+    dmaWriteDelay(p.dma_write_delay),
+    dmaWriteFactor(p.dma_write_factor),
+    sinicDeviceStats(this)
 {
     interface = new Interface(name() + ".int0", this);
     reset();
 }
 
-Device::~Device()
-{}
+Device::~Device() {}
 
-Device::DeviceStats::DeviceStats(statistics::Group *parent)
-    : statistics::Group(parent, "SinicDevice"),
-      ADD_STAT(totalVnicDistance, statistics::units::Count::get(),
-               "Total vnic distance"),
-      ADD_STAT(numVnicDistance, statistics::units::Count::get(),
-               "Number of vnic distance measurements"),
-      ADD_STAT(maxVnicDistance, statistics::units::Count::get(),
-               "Maximum vnic distance"),
-      ADD_STAT(avgVnicDistance, statistics::units::Rate<
-                    statistics::units::Count, statistics::units::Count>::get(),
-               "Average vnic distance", totalVnicDistance / numVnicDistance),
-      _maxVnicDistance(0)
-{
-}
+Device::DeviceStats::DeviceStats(statistics::Group *parent) :
+    statistics::Group(parent, "SinicDevice"),
+    ADD_STAT(totalVnicDistance, statistics::units::Count::get(),
+        "Total vnic distance"),
+    ADD_STAT(numVnicDistance, statistics::units::Count::get(),
+        "Number of vnic distance measurements"),
+    ADD_STAT(maxVnicDistance, statistics::units::Count::get(),
+        "Maximum vnic distance"),
+    ADD_STAT(avgVnicDistance,
+        statistics::units::Rate<statistics::units::Count,
+            statistics::units::Count>::get(),
+        "Average vnic distance", totalVnicDistance / numVnicDistance),
+    _maxVnicDistance(0)
+{}
 
 void
 Device::resetStats()
@@ -131,19 +126,18 @@ Device::getPort(const std::string &if_name, PortID idx)
     return EtherDevBase::getPort(if_name, idx);
 }
 
-
 void
 Device::prepareIO(ContextID cpu, int index)
 {
     int size = virtualRegs.size();
     if (index > size)
-        panic("Trying to access a vnic that doesn't exist %d > %d\n",
-              index, size);
+        panic("Trying to access a vnic that doesn't exist %d > %d\n", index,
+            size);
 }
 
-//add stats for head of line blocking
-//add stats for average fifo length
-//add stats for average number of vnics busy
+// add stats for head of line blocking
+// add stats for average fifo length
+// add stats for average number of vnics busy
 
 void
 Device::prepareRead(ContextID cpu, int index)
@@ -209,21 +203,21 @@ Device::read(PacketPtr pkt)
     Addr raddr = daddr & registers::VirtualMask;
 
     if (!regValid(raddr)) {
-        panic("invalid register: cpu=%d vnic=%d da=%#x pa=%#x size=%d",
-              cpu, index, daddr, pkt->getAddr(), pkt->getSize());
+        panic("invalid register: cpu=%d vnic=%d da=%#x pa=%#x size=%d", cpu,
+            index, daddr, pkt->getAddr(), pkt->getSize());
     }
 
     const registers::Info &info = regInfo(raddr);
     if (!info.read) {
         panic("read %s (write only): "
               "cpu=%d vnic=%d da=%#x pa=%#x size=%d",
-              info.name, cpu, index, daddr, pkt->getAddr(), pkt->getSize());
+            info.name, cpu, index, daddr, pkt->getAddr(), pkt->getSize());
     }
 
     if (info.size != pkt->getSize()) {
         panic("read %s (invalid size): "
               "cpu=%d vnic=%d da=%#x pa=%#x size=%d",
-              info.name, cpu, index, daddr, pkt->getAddr(), pkt->getSize());
+            info.name, cpu, index, daddr, pkt->getAddr(), pkt->getSize());
     }
 
     prepareRead(cpu, index);
@@ -242,8 +236,8 @@ Device::read(PacketPtr pkt)
     }
 
     DPRINTF(EthernetPIO,
-            "read %s: cpu=%d vnic=%d da=%#x pa=%#x size=%d val=%#x\n",
-            info.name, cpu, index, daddr, pkt->getAddr(), pkt->getSize(), value);
+        "read %s: cpu=%d vnic=%d da=%#x pa=%#x size=%d val=%#x\n", info.name,
+        cpu, index, daddr, pkt->getAddr(), pkt->getSize(), value);
 
     // reading the interrupt status register has the side effect of
     // clearing it
@@ -300,52 +294,51 @@ Device::write(PacketPtr pkt)
     Addr raddr = daddr & registers::VirtualMask;
 
     if (!regValid(raddr))
-        panic("invalid register: cpu=%d, da=%#x pa=%#x size=%d",
-                cpu, daddr, pkt->getAddr(), pkt->getSize());
+        panic("invalid register: cpu=%d, da=%#x pa=%#x size=%d", cpu, daddr,
+            pkt->getAddr(), pkt->getSize());
 
     const registers::Info &info = regInfo(raddr);
     if (!info.write)
         panic("write %s (read only): "
               "cpu=%d vnic=%d da=%#x pa=%#x size=%d",
-              info.name, cpu, index, daddr, pkt->getAddr(), pkt->getSize());
+            info.name, cpu, index, daddr, pkt->getAddr(), pkt->getSize());
 
     if (pkt->getSize() != info.size)
         panic("write %s (invalid size): "
               "cpu=%d vnic=%d da=%#x pa=%#x size=%d",
-              info.name, cpu, index, daddr, pkt->getAddr(), pkt->getSize());
+            info.name, cpu, index, daddr, pkt->getAddr(), pkt->getSize());
 
     VirtualReg &vnic = virtualRegs[index];
 
     DPRINTF(EthernetPIO,
-            "write %s vnic %d: cpu=%d val=%#x da=%#x pa=%#x size=%d\n",
-            info.name, index, cpu, info.size == 4 ?
-            pkt->getLE<uint32_t>() : pkt->getLE<uint64_t>(),
-            daddr, pkt->getAddr(), pkt->getSize());
+        "write %s vnic %d: cpu=%d val=%#x da=%#x pa=%#x size=%d\n", info.name,
+        index, cpu,
+        info.size == 4 ? pkt->getLE<uint32_t>() : pkt->getLE<uint64_t>(),
+        daddr, pkt->getAddr(), pkt->getSize());
 
     prepareWrite(cpu, index);
 
     switch (raddr) {
-      case registers::Config:
+    case registers::Config:
         changeConfig(pkt->getLE<uint32_t>());
         break;
 
-      case registers::Command:
+    case registers::Command:
         command(pkt->getLE<uint32_t>());
         break;
 
-      case registers::IntrStatus:
-        devIntrClear(regs.IntrStatus &
-                pkt->getLE<uint32_t>());
+    case registers::IntrStatus:
+        devIntrClear(regs.IntrStatus & pkt->getLE<uint32_t>());
         break;
 
-      case registers::IntrMask:
+    case registers::IntrMask:
         devIntrChangeMask(pkt->getLE<uint32_t>());
         break;
 
-      case registers::RxData:
+    case registers::RxData:
         if (registers::get_RxDone_Busy(vnic.RxDone))
             panic("receive machine busy with another request! rxState=%s",
-                  RxStateStrings[rxState]);
+                RxStateStrings[rxState]);
 
         vnic.rxUnique = rxUnique++;
         vnic.RxDone = registers::RxDone_Busy;
@@ -355,8 +348,8 @@ Device::write(PacketPtr pkt)
         if (registers::get_RxData_Vaddr(pkt->getLE<uint64_t>())) {
             panic("vtophys not implemented in newmem");
         } else {
-            DPRINTF(EthernetPIO, "write RxData vnic %d (rxunique %d)\n",
-                    index, vnic.rxUnique);
+            DPRINTF(EthernetPIO, "write RxData vnic %d (rxunique %d)\n", index,
+                vnic.rxUnique);
         }
 
         if (vnic.rxIndex == rxFifo.end()) {
@@ -373,10 +366,10 @@ Device::write(PacketPtr pkt)
         }
         break;
 
-      case registers::TxData:
+    case registers::TxData:
         if (registers::get_TxDone_Busy(vnic.TxDone))
             panic("transmit machine busy with another request! txState=%s",
-                  TxStateStrings[txState]);
+                TxStateStrings[txState]);
 
         vnic.txUnique = txUnique++;
         vnic.TxDone = registers::TxDone_Busy;
@@ -384,8 +377,8 @@ Device::write(PacketPtr pkt)
         if (registers::get_TxData_Vaddr(pkt->getLE<uint64_t>())) {
             panic("vtophys won't work here in newmem.\n");
         } else {
-            DPRINTF(EthernetPIO, "write TxData vnic %d (txunique %d)\n",
-                    index, vnic.txUnique);
+            DPRINTF(EthernetPIO, "write TxData vnic %d (txunique %d)\n", index,
+                vnic.txUnique);
         }
 
         if (txList.empty() || txList.front() != index)
@@ -409,8 +402,8 @@ Device::devIntrPost(uint32_t interrupts)
     regs.IntrStatus |= interrupts;
 
     DPRINTF(EthernetIntr,
-            "interrupt written to intStatus: intr=%#x status=%#x mask=%#x\n",
-            interrupts, regs.IntrStatus, regs.IntrMask);
+        "interrupt written to intStatus: intr=%#x status=%#x mask=%#x\n",
+        interrupts, regs.IntrStatus, regs.IntrMask);
 
     interrupts = regs.IntrStatus & regs.IntrMask;
 
@@ -445,8 +438,8 @@ Device::devIntrClear(uint32_t interrupts)
     regs.IntrStatus &= ~interrupts;
 
     DPRINTF(EthernetIntr,
-            "interrupt cleared from intStatus: intr=%x status=%x mask=%x\n",
-            interrupts, regs.IntrStatus, regs.IntrMask);
+        "interrupt cleared from intStatus: intr=%x status=%x mask=%x\n",
+        interrupts, regs.IntrStatus, regs.IntrMask);
 
     if (!(regs.IntrStatus & regs.IntrMask))
         cpuIntrClear();
@@ -461,8 +454,8 @@ Device::devIntrChangeMask(uint32_t newmask)
     regs.IntrMask = newmask;
 
     DPRINTF(EthernetIntr,
-            "interrupt mask changed: intStatus=%x intMask=%x masked=%x\n",
-            regs.IntrStatus, regs.IntrMask, regs.IntrStatus & regs.IntrMask);
+        "interrupt mask changed: intStatus=%x intMask=%x masked=%x\n",
+        regs.IntrStatus, regs.IntrMask, regs.IntrStatus & regs.IntrMask);
 
     if (regs.IntrStatus & regs.IntrMask)
         cpuIntrPost(curTick());
@@ -485,14 +478,13 @@ Base::cpuIntrPost(Tick when)
     assert(when >= curTick());
     assert(intrTick >= curTick() || intrTick == 0);
     if (!cpuIntrEnable) {
-        DPRINTF(EthernetIntr, "interrupts not enabled.\n",
-                intrTick);
+        DPRINTF(EthernetIntr, "interrupts not enabled.\n", intrTick);
         return;
     }
 
     if (when > intrTick && intrTick != 0) {
         DPRINTF(EthernetIntr, "don't need to schedule event...intrTick=%d\n",
-                intrTick);
+            intrTick);
         return;
     }
 
@@ -502,13 +494,13 @@ Base::cpuIntrPost(Tick when)
     }
 
     DPRINTF(EthernetIntr, "going to schedule an interrupt for intrTick=%d\n",
-            intrTick);
+        intrTick);
 
     if (intrEvent)
         intrEvent->squash();
 
-    intrEvent = new EventFunctionWrapper([this]{ cpuInterrupt(); },
-                                         name(), true);
+    intrEvent =
+        new EventFunctionWrapper([this] { cpuInterrupt(); }, name(), true);
     schedule(intrEvent, intrTick);
 }
 
@@ -525,7 +517,7 @@ Base::cpuInterrupt()
     // Don't send an interrupt if there's already one
     if (cpuPendingIntr) {
         DPRINTF(EthernetIntr,
-                "would send an interrupt now, but there's already pending\n");
+            "would send an interrupt now, but there's already pending\n");
     } else {
         // Send interrupt
         cpuPendingIntr = true;
@@ -556,7 +548,9 @@ Base::cpuIntrClear()
 
 bool
 Base::cpuIntrPending() const
-{ return cpuPendingIntr; }
+{
+    return cpuPendingIntr;
+}
 
 void
 Device::changeConfig(uint32_t newconf)
@@ -675,8 +669,8 @@ Device::rxDmaDone()
 {
     assert(rxState == rxCopy);
     rxState = rxCopyDone;
-    DPRINTF(EthernetDMA, "end rx dma write paddr=%#x len=%d\n",
-            rxDmaAddr, rxDmaLen);
+    DPRINTF(EthernetDMA, "end rx dma write paddr=%#x len=%d\n", rxDmaAddr,
+        rxDmaLen);
     DDUMP(EthernetData, rxDmaData, rxDmaLen);
 
     // If the transmit state machine  has a pending DMA, let it go first
@@ -692,15 +686,15 @@ Device::rxKick()
     VirtualReg *vnic = NULL;
 
     DPRINTF(EthernetSM, "rxKick: rxState=%s (rxFifo.size=%d)\n",
-            RxStateStrings[rxState], rxFifo.size());
+        RxStateStrings[rxState], rxFifo.size());
 
     if (rxKickTick > curTick()) {
-        DPRINTF(EthernetSM, "rxKick: exiting, can't run till %d\n",
-                rxKickTick);
+        DPRINTF(
+            EthernetSM, "rxKick: exiting, can't run till %d\n", rxKickTick);
         return;
     }
 
-  next:
+next:
     rxFifo.check();
     if (rxState == rxIdle)
         goto exit;
@@ -709,17 +703,17 @@ Device::rxKick()
         if (rxState != rxFifoBlock)
             panic("no active vnic while in state %s", RxStateStrings[rxState]);
 
-        DPRINTF(EthernetSM, "processing rxState=%s\n",
-                RxStateStrings[rxState]);
+        DPRINTF(
+            EthernetSM, "processing rxState=%s\n", RxStateStrings[rxState]);
     } else {
         vnic = &virtualRegs[rxActive];
         DPRINTF(EthernetSM,
-                "processing rxState=%s for vnic %d (rxunique %d)\n",
-                RxStateStrings[rxState], rxActive, vnic->rxUnique);
+            "processing rxState=%s for vnic %d (rxunique %d)\n",
+            RxStateStrings[rxState], rxActive, vnic->rxUnique);
     }
 
     switch (rxState) {
-      case rxFifoBlock:
+    case rxFifoBlock:
         if (debug::EthernetSM) {
             PacketFifo::iterator end = rxFifo.end();
             int size = virtualRegs.size();
@@ -741,14 +735,14 @@ Device::rxKick()
                         status = "mapped";
 
                     DPRINTF(EthernetSM,
-                            "vnic %d %s (rxunique %d), packet %d, slack %d\n",
-                            i, status, vn->rxUnique,
-                            rxFifo.countPacketsBefore(vn->rxIndex),
-                            vn->rxIndex->slack);
+                        "vnic %d %s (rxunique %d), packet %d, slack %d\n", i,
+                        status, vn->rxUnique,
+                        rxFifo.countPacketsBefore(vn->rxIndex),
+                        vn->rxIndex->slack);
 #endif
                 } else if (busy) {
-                    DPRINTF(EthernetSM, "vnic %d unmapped (rxunique %d)\n",
-                            i, vn->rxUnique);
+                    DPRINTF(EthernetSM, "vnic %d unmapped (rxunique %d)\n", i,
+                        vn->rxUnique);
                 }
             }
         }
@@ -762,8 +756,8 @@ Device::rxKick()
                 panic("continuing vnic without packet\n");
 
             DPRINTF(EthernetSM,
-                    "continue processing for vnic %d (rxunique %d)\n",
-                    rxActive, vnic->rxUnique);
+                "continue processing for vnic %d (rxunique %d)\n", rxActive,
+                vnic->rxUnique);
 
             rxState = rxBeginCopy;
 
@@ -793,8 +787,8 @@ Device::rxKick()
         vnic = &virtualRegs[rxActive];
 
         DPRINTF(EthernetSM,
-                "processing new packet for vnic %d (rxunique %d)\n",
-                rxActive, vnic->rxUnique);
+            "processing new packet for vnic %d (rxunique %d)\n", rxActive,
+            vnic->rxUnique);
 
         // Grab a new packet from the fifo.
         vnic->rxIndex = rxFifoPtr++;
@@ -819,9 +813,8 @@ Device::rxKick()
                 UdpPtr udp(ip);
                 if (tcp) {
                     DPRINTF(Ethernet,
-                            "Src Port=%d, Dest Port=%d, Seq=%d, Ack=%d\n",
-                            tcp->sport(), tcp->dport(), tcp->seq(),
-                            tcp->ack());
+                        "Src Port=%d, Dest Port=%d, Seq=%d, Ack=%d\n",
+                        tcp->sport(), tcp->dport(), tcp->seq(), tcp->ack());
                     vnic->rxDoneData |= registers::RxDone_TcpPacket;
                     etherDeviceStats.rxTcpChecksums++;
                     if (cksum(tcp) != 0) {
@@ -841,20 +834,20 @@ Device::rxKick()
         rxState = rxBeginCopy;
         break;
 
-      case rxBeginCopy:
+    case rxBeginCopy:
         if (dmaPending() || drainState() != DrainState::Running)
             goto exit;
 
         rxDmaAddr = pciToDma(registers::get_RxData_Addr(vnic->RxData));
-        rxDmaLen = std::min<unsigned>(registers::get_RxData_Len(vnic->RxData),
-                                      vnic->rxPacketBytes);
+        rxDmaLen = std::min<unsigned>(
+            registers::get_RxData_Len(vnic->RxData), vnic->rxPacketBytes);
 
         /*
          * if we're doing zero/delay copy and we're below the fifo
          * threshold, see if we should try to do the zero/defer copy
          */
         if ((registers::get_Config_ZeroCopy(regs.Config) ||
-             registers::get_Config_DelayCopy(regs.Config)) &&
+                registers::get_Config_DelayCopy(regs.Config)) &&
             !registers::get_RxData_NoDelay(vnic->RxData) && rxLow) {
             if (rxDmaLen > regs.ZeroCopyMark)
                 rxDmaLen = regs.ZeroCopySize;
@@ -869,11 +862,11 @@ Device::rxKick()
         dmaWrite(rxDmaAddr, rxDmaLen, &rxDmaEvent, rxDmaData);
         break;
 
-      case rxCopy:
+    case rxCopy:
         DPRINTF(EthernetSM, "receive machine still copying\n");
         goto exit;
 
-      case rxCopyDone:
+    case rxCopyDone:
         vnic->RxDone = vnic->rxDoneData;
         vnic->RxDone |= registers::RxDone_Complete;
         rxBusyCount--;
@@ -887,8 +880,8 @@ Device::rxKick()
                 registers::set_RxDone_CopyLen(vnic->RxDone, rxDmaLen);
 
             DPRINTF(EthernetSM,
-                    "rxKick: packet complete on vnic %d (rxunique %d)\n",
-                    rxActive, vnic->rxUnique);
+                "rxKick: packet complete on vnic %d (rxunique %d)\n", rxActive,
+                vnic->rxUnique);
             rxFifo.remove(vnic->rxIndex);
             vnic->rxIndex = rxFifo.end();
             rxMappedCount--;
@@ -899,12 +892,12 @@ Device::rxKick()
             vnic->rxPacketBytes -= rxDmaLen;
             vnic->rxPacketOffset += rxDmaLen;
             vnic->RxDone |= registers::RxDone_More;
-            vnic->RxDone = registers::set_RxDone_CopyLen(vnic->RxDone,
-                                                    vnic->rxPacketBytes);
+            vnic->RxDone = registers::set_RxDone_CopyLen(
+                vnic->RxDone, vnic->rxPacketBytes);
             DPRINTF(EthernetSM,
-                    "rxKick: packet not complete on vnic %d (rxunique %d): "
-                    "%d bytes left\n",
-                    rxActive, vnic->rxUnique, vnic->rxPacketBytes);
+                "rxKick: packet not complete on vnic %d (rxunique %d): "
+                "%d bytes left\n",
+                rxActive, vnic->rxUnique, vnic->rxPacketBytes);
         }
 
         rxActive = -1;
@@ -924,21 +917,20 @@ Device::rxKick()
         devIntrPost(registers::Intr_RxDMA);
         break;
 
-      default:
+    default:
         panic("Invalid rxState!");
     }
 
-    DPRINTF(EthernetSM, "entering next rxState=%s\n",
-            RxStateStrings[rxState]);
+    DPRINTF(EthernetSM, "entering next rxState=%s\n", RxStateStrings[rxState]);
 
     goto next;
 
-  exit:
+exit:
     /**
      * @todo do we want to schedule a future kick?
      */
     DPRINTF(EthernetSM, "rx state machine exited rxState=%s\n",
-            RxStateStrings[rxState]);
+        RxStateStrings[rxState]);
 }
 
 void
@@ -946,8 +938,8 @@ Device::txDmaDone()
 {
     assert(txState == txCopy);
     txState = txCopyDone;
-    DPRINTF(EthernetDMA, "tx dma read paddr=%#x len=%d\n",
-            txDmaAddr, txDmaLen);
+    DPRINTF(
+        EthernetDMA, "tx dma read paddr=%#x len=%d\n", txDmaAddr, txDmaLen);
     DDUMP(EthernetData, txDmaData, txDmaLen);
 
     // If the receive state machine  has a pending DMA, let it go first
@@ -969,7 +961,7 @@ Device::transmit()
     EthPacketPtr packet = txFifo.front();
     if (!interface->sendPacket(packet)) {
         DPRINTF(Ethernet, "Packet Transmit: failed txFifo available %d\n",
-                txFifo.avail());
+            txFifo.avail());
         return;
     }
 
@@ -982,9 +974,8 @@ Device::transmit()
             TcpPtr tcp(ip);
             if (tcp) {
                 DPRINTF(Ethernet,
-                        "Src Port=%d, Dest Port=%d, Seq=%d, Ack=%d\n",
-                        tcp->sport(), tcp->dport(), tcp->seq(),
-                        tcp->ack());
+                    "Src Port=%d, Dest Port=%d, Seq=%d, Ack=%d\n",
+                    tcp->sport(), tcp->dport(), tcp->seq(), tcp->ack());
             }
         }
     }
@@ -995,7 +986,7 @@ Device::transmit()
     etherDeviceStats.txPackets++;
 
     DPRINTF(Ethernet, "Packet Transmit: successful txFifo Available %d\n",
-            txFifo.avail());
+        txFifo.avail());
 
     interrupts = registers::Intr_TxPacket;
     if (txFifo.size() < regs.TxFifoLow)
@@ -1008,15 +999,15 @@ Device::txKick()
 {
     VirtualReg *vnic;
     DPRINTF(EthernetSM, "txKick: txState=%s (txFifo.size=%d)\n",
-            TxStateStrings[txState], txFifo.size());
+        TxStateStrings[txState], txFifo.size());
 
     if (txKickTick > curTick()) {
-        DPRINTF(EthernetSM, "txKick: exiting, can't run till %d\n",
-                txKickTick);
+        DPRINTF(
+            EthernetSM, "txKick: exiting, can't run till %d\n", txKickTick);
         return;
     }
 
-  next:
+next:
     if (txState == txIdle)
         goto exit;
 
@@ -1024,7 +1015,7 @@ Device::txKick()
     vnic = &virtualRegs[txList.front()];
 
     switch (txState) {
-      case txFifoBlock:
+    case txFifoBlock:
         assert(registers::get_TxDone_Busy(vnic->TxDone));
         if (!txPacket) {
             // Grab a new packet from the fifo.
@@ -1041,7 +1032,7 @@ Device::txKick()
         txState = txBeginCopy;
         break;
 
-      case txBeginCopy:
+    case txBeginCopy:
         if (dmaPending() || drainState() != DrainState::Running)
             goto exit;
 
@@ -1053,11 +1044,11 @@ Device::txKick()
         dmaRead(txDmaAddr, txDmaLen, &txDmaEvent, txDmaData);
         break;
 
-      case txCopy:
+    case txCopy:
         DPRINTF(EthernetSM, "transmit machine still copying\n");
         goto exit;
 
-      case txCopyDone:
+    case txCopyDone:
         vnic->TxDone = txDmaLen | registers::TxDone_Complete;
         txPacket->simLength += txDmaLen;
         txPacket->length += txDmaLen;
@@ -1104,21 +1095,20 @@ Device::txKick()
         devIntrPost(registers::Intr_TxDMA);
         break;
 
-      default:
+    default:
         panic("Invalid txState!");
     }
 
-    DPRINTF(EthernetSM, "entering next txState=%s\n",
-            TxStateStrings[txState]);
+    DPRINTF(EthernetSM, "entering next txState=%s\n", TxStateStrings[txState]);
 
     goto next;
 
-  exit:
+exit:
     /**
      * @todo do we want to schedule a future kick?
      */
     DPRINTF(EthernetSM, "tx state machine exited txState=%s\n",
-            TxStateStrings[txState]);
+        TxStateStrings[txState]);
 }
 
 void
@@ -1152,7 +1142,7 @@ Device::recvPacket(EthPacketPtr packet)
     etherDeviceStats.rxPackets++;
 
     DPRINTF(Ethernet, "Receiving packet from wire, rxFifo Available is %d\n",
-            rxFifo.avail());
+        rxFifo.avail());
 
     if (!rxEnable) {
         DPRINTF(Ethernet, "receive disabled...packet dropped\n");
@@ -1169,7 +1159,7 @@ Device::recvPacket(EthPacketPtr packet)
 
     if (!rxFifo.push(packet)) {
         DPRINTF(Ethernet,
-                "packet will not fit in receive buffer...packet dropped\n");
+            "packet will not fit in receive buffer...packet dropped\n");
         return false;
     }
 
@@ -1188,8 +1178,8 @@ Device::drainResume()
 {
     Drainable::drainResume();
 
-    // During drain we could have left the state machines in a waiting state and
-    // they wouldn't get out until some other event occured to kick them.
+    // During drain we could have left the state machines in a waiting state
+    // and they wouldn't get out until some other event occured to kick them.
     // This way they'll get out immediately
     txKick();
     rxKick();
@@ -1237,8 +1227,8 @@ Base::unserialize(CheckpointIn &cp)
     Tick intrEventTick;
     UNSERIALIZE_SCALAR(intrEventTick);
     if (intrEventTick) {
-        intrEvent = new EventFunctionWrapper([this]{ cpuInterrupt(); },
-                                             name(), true);
+        intrEvent =
+            new EventFunctionWrapper([this] { cpuInterrupt(); }, name(), true);
         schedule(intrEvent, intrEventTick);
     }
 }
@@ -1253,11 +1243,11 @@ Device::serialize(CheckpointOut &cp) const
 
     if (rxState == rxCopy)
         panic("can't serialize with an in flight dma request rxState=%s",
-              RxStateStrings[rxState]);
+            RxStateStrings[rxState]);
 
     if (txState == txCopy)
         panic("can't serialize with an in flight dma request txState=%s",
-              TxStateStrings[txState]);
+            TxStateStrings[txState]);
 
     /*
      * Serialize the device registers that could be modified by the OS.
@@ -1412,7 +1402,7 @@ Device::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(rxState);
     UNSERIALIZE_SCALAR(rxEmpty);
     UNSERIALIZE_SCALAR(rxLow);
-    this->rxState = (RxState) rxState;
+    this->rxState = (RxState)rxState;
     rxFifo.unserialize("rxFifo", cp);
 
     int rxFifoPtr;
@@ -1431,7 +1421,7 @@ Device::unserialize(CheckpointIn &cp)
     int txState;
     UNSERIALIZE_SCALAR(txState);
     UNSERIALIZE_SCALAR(txFull);
-    this->txState = (TxState) txState;
+    this->txState = (TxState)txState;
     txFifo.unserialize("txFifo", cp);
     bool txPacketExists;
     UNSERIALIZE_SCALAR(txPacketExists);
@@ -1474,8 +1464,7 @@ Device::unserialize(CheckpointIn &cp)
             while (rxPacket--)
                 ++vnic->rxIndex;
 
-            paramIn(cp, reg + ".rxPacketOffset",
-                    vnic->rxPacketOffset);
+            paramIn(cp, reg + ".rxPacketOffset", vnic->rxPacketOffset);
             paramIn(cp, reg + ".rxPacketBytes", vnic->rxPacketBytes);
         } else {
             vnic->rxIndex = rxFifo.end();
@@ -1492,7 +1481,6 @@ Device::unserialize(CheckpointIn &cp)
         schedule(txEvent, curTick() + transmitTick);
 
     pioPort.sendRangeChange();
-
 }
 
 } // namespace sinic

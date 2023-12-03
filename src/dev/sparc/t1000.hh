@@ -40,7 +40,6 @@
 
 namespace gem5
 {
-
 class T1000 : public Platform
 {
   public:

@@ -27,7 +27,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #ifndef __MEM_RUBY_NETWORK_GARNET_0_CREDIT_HH__
 #define __MEM_RUBY_NETWORK_GARNET_0_CREDIT_HH__
 
@@ -40,13 +39,10 @@
 
 namespace gem5
 {
-
 namespace ruby
 {
-
 namespace garnet
 {
-
 // Credit Signal for buffers inside VC
 // Carries m_vc (inherits from flit.hh)
 // and m_is_free_signal (whether VC is free or not)
@@ -54,17 +50,21 @@ namespace garnet
 class Credit : public flit
 {
   public:
-    Credit() {};
+    Credit(){};
     Credit(int vc, bool is_free_signal, Tick curTime);
 
     // Functions used by SerDes
-    flit* serialize(int ser_id, int parts, uint32_t bWidth);
-    flit* deserialize(int des_id, int num_flits, uint32_t bWidth);
-    void print(std::ostream& out) const;
+    flit *serialize(int ser_id, int parts, uint32_t bWidth);
+    flit *deserialize(int des_id, int num_flits, uint32_t bWidth);
+    void print(std::ostream &out) const;
 
-    ~Credit() {};
+    ~Credit(){};
 
-    bool is_free_signal() { return m_is_free_signal; }
+    bool
+    is_free_signal()
+    {
+        return m_is_free_signal;
+    }
 
   private:
     bool m_is_free_signal;

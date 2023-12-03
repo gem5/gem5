@@ -51,7 +51,6 @@
 
 namespace gem5
 {
-
 static unsigned int TESTER_ALLOCATOR = 0;
 
 bool
@@ -68,7 +67,8 @@ MemTest::CpuPort::recvReqRetry()
 }
 
 bool
-MemTest::sendPkt(PacketPtr pkt) {
+MemTest::sendPkt(PacketPtr pkt)
+{
     if (atomic) {
         port.sendAtomic(pkt);
         completeRequest(pkt);
@@ -81,37 +81,38 @@ MemTest::sendPkt(PacketPtr pkt) {
     return true;
 }
 
-MemTest::MemTest(const Params &p)
-    : ClockedObject(p),
-      tickEvent([this]{ tick(); }, name()),
-      noRequestEvent([this]{ noRequest(); }, name()),
-      noResponseEvent([this]{ noResponse(); }, name()),
-      port("port", *this),
-      retryPkt(nullptr),
-      waitResponse(false),
-      size(p.size),
-      interval(p.interval),
-      percentReads(p.percent_reads),
-      percentFunctional(p.percent_functional),
-      percentUncacheable(p.percent_uncacheable),
-      percentAtomic(p.percent_atomic),
-      requestorId(p.system->getRequestorId(this)),
-      blockSize(p.system->cacheLineSize()),
-      blockAddrMask(blockSize - 1),
-      sizeBlocks(size / blockSize),
-      baseAddr1(p.base_addr_1),
-      baseAddr2(p.base_addr_2),
-      uncacheAddr(p.uncacheable_base_addr),
-      progressInterval(p.progress_interval),
-      progressCheck(p.progress_check),
-      nextProgressMessage(p.progress_interval),
-      maxLoads(p.max_loads),
-      atomic(p.system->isAtomicMode()),
-      suppressFuncErrors(p.suppress_func_errors), stats(this)
+MemTest::MemTest(const Params &p) :
+    ClockedObject(p),
+    tickEvent([this] { tick(); }, name()),
+    noRequestEvent([this] { noRequest(); }, name()),
+    noResponseEvent([this] { noResponse(); }, name()),
+    port("port", *this),
+    retryPkt(nullptr),
+    waitResponse(false),
+    size(p.size),
+    interval(p.interval),
+    percentReads(p.percent_reads),
+    percentFunctional(p.percent_functional),
+    percentUncacheable(p.percent_uncacheable),
+    percentAtomic(p.percent_atomic),
+    requestorId(p.system->getRequestorId(this)),
+    blockSize(p.system->cacheLineSize()),
+    blockAddrMask(blockSize - 1),
+    sizeBlocks(size / blockSize),
+    baseAddr1(p.base_addr_1),
+    baseAddr2(p.base_addr_2),
+    uncacheAddr(p.uncacheable_base_addr),
+    progressInterval(p.progress_interval),
+    progressCheck(p.progress_check),
+    nextProgressMessage(p.progress_interval),
+    maxLoads(p.max_loads),
+    atomic(p.system->isAtomicMode()),
+    suppressFuncErrors(p.suppress_func_errors),
+    stats(this)
 {
     id = TESTER_ALLOCATOR++;
-    fatal_if(id >= blockSize, "Too many testers, only %d allowed\n",
-             blockSize - 1);
+    fatal_if(
+        id >= blockSize, "Too many testers, only %d allowed\n", blockSize - 1);
 
     // set up counters
     numReads = 0;
@@ -144,32 +145,31 @@ MemTest::completeRequest(PacketPtr pkt, bool functional)
     outstandingAddrs.erase(remove_addr);
 
     DPRINTF(MemTest, "Completing %s at address %x (blk %x) %s\n",
-            pkt->isWrite() ? pkt->isAtomicOp() ? "atomic" : "write" : "read",
-            req->getPaddr(), blockAlign(req->getPaddr()),
-            pkt->isError() ? "error" : "success");
+        pkt->isWrite() ? pkt->isAtomicOp() ? "atomic" : "write" : "read",
+        req->getPaddr(), blockAlign(req->getPaddr()),
+        pkt->isError() ? "error" : "success");
 
     const uint8_t *pkt_data = pkt->getConstPtr<uint8_t>();
 
     if (pkt->isError()) {
         if (!functional || !suppressFuncErrors)
-            panic( "%s access failed at %#x\n",
+            panic("%s access failed at %#x\n",
                 pkt->isWrite() ? "Write" : "Read", req->getPaddr());
     } else {
         if (pkt->isAtomicOp()) {
             uint8_t ref_data = referenceData[req->getPaddr()];
             if (pkt_data[0] != ref_data) {
                 panic("%s: read of %x (blk %x) @ cycle %d "
-                      "returns %x, expected %x\n", name(),
-                       req->getPaddr(), blockAlign(req->getPaddr()), curTick(),
-                       pkt_data[0], ref_data);
+                      "returns %x, expected %x\n",
+                    name(), req->getPaddr(), blockAlign(req->getPaddr()),
+                    curTick(), pkt_data[0], ref_data);
             }
             DPRINTF(MemTest,
-                    "Completing atomic at address %x (blk %x) value %x\n",
-                    req->getPaddr(), blockAlign(req->getPaddr()),
-                    pkt_data[0]);
+                "Completing atomic at address %x (blk %x) value %x\n",
+                req->getPaddr(), blockAlign(req->getPaddr()), pkt_data[0]);
 
             referenceData[req->getPaddr()] =
-                   atomicPendingData[req->getPaddr()];
+                atomicPendingData[req->getPaddr()];
 
             numAtomics++;
             stats.numAtomics++;
@@ -177,9 +177,9 @@ MemTest::completeRequest(PacketPtr pkt, bool functional)
             uint8_t ref_data = referenceData[req->getPaddr()];
             if (pkt_data[0] != ref_data) {
                 panic("%s: read of %x (blk %x) @ cycle %d "
-                      "returns %x, expected %x\n", name(),
-                      req->getPaddr(), blockAlign(req->getPaddr()), curTick(),
-                      pkt_data[0], ref_data);
+                      "returns %x, expected %x\n",
+                    name(), req->getPaddr(), blockAlign(req->getPaddr()),
+                    curTick(), pkt_data[0], ref_data);
             }
 
             numReads++;
@@ -187,10 +187,10 @@ MemTest::completeRequest(PacketPtr pkt, bool functional)
 
             if (numReads == (uint64_t)nextProgressMessage) {
                 ccprintf(std::cerr,
-                        "%s: completed %d read, %d write, "
-                        "%d atomic accesses @%d\n",
-                        name(), numReads, numWrites, numAtomics, curTick());
-                        nextProgressMessage += progressInterval;
+                    "%s: completed %d read, %d write, "
+                    "%d atomic accesses @%d\n",
+                    name(), numReads, numWrites, numAtomics, curTick());
+                nextProgressMessage += progressInterval;
             }
 
             if (maxLoads != 0 && numReads >= maxLoads)
@@ -221,17 +221,15 @@ MemTest::completeRequest(PacketPtr pkt, bool functional)
         schedule(tickEvent, clockEdge(interval));
     }
 }
-MemTest::MemTestStats::MemTestStats(statistics::Group *parent)
-      : statistics::Group(parent),
-      ADD_STAT(numReads, statistics::units::Count::get(),
-               "number of read accesses completed"),
-      ADD_STAT(numWrites, statistics::units::Count::get(),
-               "number of write accesses completed"),
-      ADD_STAT(numAtomics, statistics::units::Count::get(),
-               "number of atomic accesses completed")
-{
-
-}
+MemTest::MemTestStats::MemTestStats(statistics::Group *parent) :
+    statistics::Group(parent),
+    ADD_STAT(numReads, statistics::units::Count::get(),
+        "number of read accesses completed"),
+    ADD_STAT(numWrites, statistics::units::Count::get(),
+        "number of write accesses completed"),
+    ADD_STAT(numAtomics, statistics::units::Count::get(),
+        "number of atomic accesses completed")
+{}
 
 void
 MemTest::tick()
@@ -244,8 +242,8 @@ MemTest::tick()
     unsigned cmd = random_mt.random(0, 100);
     uint8_t data = random_mt.random<uint8_t>();
     bool uncacheable = random_mt.random(0, 100) < percentUncacheable;
-    bool do_atomic = (random_mt.random(0, 100) < percentAtomic) &&
-                     !uncacheable;
+    bool do_atomic =
+        (random_mt.random(0, 100) < percentAtomic) && !uncacheable;
     unsigned base = random_mt.random(0, 1);
     Request::Flags flags;
     Addr paddr;
@@ -268,13 +266,13 @@ MemTest::tick()
         if (uncacheable) {
             flags.set(Request::UNCACHEABLE);
             paddr = uncacheAddr + offset;
-        } else  {
+        } else {
             paddr = ((base) ? baseAddr1 : baseAddr2) + offset;
         }
     } while (outstandingAddrs.find(paddr) != outstandingAddrs.end());
 
-    bool do_functional = (random_mt.random(0, 100) < percentFunctional) &&
-        !uncacheable;
+    bool do_functional =
+        (random_mt.random(0, 100) < percentFunctional) && !uncacheable;
     RequestPtr req = std::make_shared<Request>(paddr, 1, flags, requestorId);
     req->setContext(id);
 
@@ -282,7 +280,7 @@ MemTest::tick()
 
     // sanity check
     panic_if(outstandingAddrs.size() > 100,
-             "Tester %s has more than 100 outstanding requests\n", name());
+        "Tester %s has more than 100 outstanding requests\n", name());
 
     PacketPtr pkt = nullptr;
     uint8_t *pkt_data = new uint8_t[1];
@@ -299,24 +297,21 @@ MemTest::tick()
         }
 
         DPRINTF(MemTest,
-                "Initiating %sread at addr %x (blk %x) expecting %x\n",
-                do_functional ? "functional " : "", req->getPaddr(),
-                blockAlign(req->getPaddr()), ref_data);
+            "Initiating %sread at addr %x (blk %x) expecting %x\n",
+            do_functional ? "functional " : "", req->getPaddr(),
+            blockAlign(req->getPaddr()), ref_data);
 
         pkt = new Packet(req, MemCmd::ReadReq);
         pkt->dataDynamic(pkt_data);
     } else {
         if (do_atomic) {
             DPRINTF(MemTest,
-                    "Initiating atomic at addr %x (blk %x) value %x\n",
-                    req->getPaddr(), blockAlign(req->getPaddr()), data);
+                "Initiating atomic at addr %x (blk %x) value %x\n",
+                req->getPaddr(), blockAlign(req->getPaddr()), data);
 
             TypedAtomicOpFunctor<uint8_t> *_amo_op =
-                  new AtomicGeneric3Op<uint8_t>(
-                  data, data,
-                  [](uint8_t* b, uint8_t a, uint8_t c){
-                      *b = c;
-                  });
+                new AtomicGeneric3Op<uint8_t>(data, data,
+                    [](uint8_t *b, uint8_t a, uint8_t c) { *b = c; });
             assert(_amo_op);
             AtomicOpFunctorPtr amo_op = AtomicOpFunctorPtr(_amo_op);
             req->setAtomicOpFunctor(std::move(amo_op));
@@ -328,9 +323,9 @@ MemTest::tick()
             atomicPendingData[req->getPaddr()] = data;
         } else {
             DPRINTF(MemTest,
-                    "Initiating %swrite at addr %x (blk %x) value %x\n",
-                    do_functional ? "functional " : "", req->getPaddr(),
-                    blockAlign(req->getPaddr()), data);
+                "Initiating %swrite at addr %x (blk %x) value %x\n",
+                do_functional ? "functional " : "", req->getPaddr(),
+                blockAlign(req->getPaddr()), data);
 
             pkt = new Packet(req, MemCmd::WriteReq);
             pkt->dataDynamic(pkt_data);

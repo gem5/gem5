@@ -41,7 +41,7 @@ test_m5_checkpoint(uint64_t ns_delay, uint64_t ns_period)
     test_ns_period = ns_period;
 }
 
-DispatchTable dt = { .m5_checkpoint = &test_m5_checkpoint };
+DispatchTable dt = {.m5_checkpoint = &test_m5_checkpoint};
 
 bool
 run(std::initializer_list<std::string> arg_args)

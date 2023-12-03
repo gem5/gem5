@@ -36,12 +36,10 @@
 
 namespace gem5
 {
-
 namespace RiscvISA
 {
-
 bool
-RiscvStaticInst::alignmentOk(ExecContext* xc, Addr addr, Addr size) const
+RiscvStaticInst::alignmentOk(ExecContext *xc, Addr addr, Addr size) const
 {
     if (addr % size == 0) {
         return true;
@@ -49,7 +47,7 @@ RiscvStaticInst::alignmentOk(ExecContext* xc, Addr addr, Addr size) const
     // Even if it's not aligned, we're still fine if the check is not enabled.
     // We perform the check first because detecting whether the check itself is
     // enabled involves multiple indirect references and is quite slow.
-    auto *isa = static_cast<ISA*>(xc->tcBase()->getIsaPtr());
+    auto *isa = static_cast<ISA *>(xc->tcBase()->getIsaPtr());
     return !isa->alignmentCheckEnabled();
 }
 

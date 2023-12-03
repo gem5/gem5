@@ -38,22 +38,18 @@
 
 namespace gem5
 {
-
 namespace Gcn3ISA
 {
-    GCN3GPUStaticInst::GCN3GPUStaticInst(const std::string &opcode)
-        : GPUStaticInst(opcode), _srcLiteral(0)
-    {
-    }
+GCN3GPUStaticInst::GCN3GPUStaticInst(const std::string &opcode) :
+    GPUStaticInst(opcode), _srcLiteral(0)
+{}
 
-    GCN3GPUStaticInst::~GCN3GPUStaticInst()
-    {
-    }
+GCN3GPUStaticInst::~GCN3GPUStaticInst() {}
 
-    void
-    GCN3GPUStaticInst::panicUnimplemented() const
-    {
-        fatal("Encountered unimplemented GCN3 instruction: %s\n", _opcode);
-    }
+void
+GCN3GPUStaticInst::panicUnimplemented() const
+{
+    fatal("Encountered unimplemented GCN3 instruction: %s\n", _opcode);
+}
 } // namespace Gcn3ISA
 } // namespace gem5

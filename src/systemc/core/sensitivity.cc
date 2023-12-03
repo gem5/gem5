@@ -41,7 +41,6 @@
 
 namespace sc_gem5
 {
-
 /*
  * Common sensitivity interface.
  */
@@ -65,8 +64,8 @@ Sensitivity::notify(Event *e)
     if (scheduler.current() == process) {
         static bool warned = false;
         if (!warned) {
-            SC_REPORT_WARNING(sc_core::SC_ID_IMMEDIATE_SELF_NOTIFICATION_,
-                    process->name());
+            SC_REPORT_WARNING(
+                sc_core::SC_ID_IMMEDIATE_SELF_NOTIFICATION_, process->name());
             warned = true;
         }
         return false;
@@ -83,7 +82,6 @@ Sensitivity::ofMethod()
 {
     return process->procKind() == sc_core::SC_METHOD_PROC_;
 }
-
 
 /*
  * Dynamic vs. static sensitivity.
@@ -112,7 +110,6 @@ StaticSensitivity::delFromEvent(const ::sc_core::sc_event *e)
 {
     Event::getFromScEvent(e)->delSensitivity(this);
 }
-
 
 /*
  * Static sensitivities.
@@ -160,16 +157,17 @@ newStaticSensitivityFinder(Process *p, const sc_core::sc_event_finder *f)
     p->addStatic(s);
 }
 
-
 StaticSensitivityInterface::StaticSensitivityInterface(
-        Process *p, const sc_core::sc_interface *i) :
-    Sensitivity(p), StaticSensitivity(p),
+    Process *p, const sc_core::sc_interface *i) :
+    Sensitivity(p),
+    StaticSensitivity(p),
     SensitivityEvent(p, &i->default_event())
 {}
 
 StaticSensitivityExport::StaticSensitivityExport(
-        Process *p, const sc_core::sc_export_base *exp) :
-    Sensitivity(p), StaticSensitivity(p),
+    Process *p, const sc_core::sc_export_base *exp) :
+    Sensitivity(p),
+    StaticSensitivity(p),
     SensitivityEvent(p, &exp->get_interface()->default_event())
 {}
 
@@ -178,7 +176,6 @@ StaticSensitivityFinder::find(::sc_core::sc_interface *i)
 {
     return finder->find_event(i);
 }
-
 
 /*
  * Dynamic sensitivities.
@@ -194,26 +191,26 @@ newDynamicSensitivityEvent(Process *p, const sc_core::sc_event *e)
 
 void
 newDynamicSensitivityEventOrList(
-        Process *p, const sc_core::sc_event_or_list *eol)
+    Process *p, const sc_core::sc_event_or_list *eol)
 {
     auto s = new DynamicSensitivityEventOrList(p, eol);
-    for (auto event: s->events)
+    for (auto event : s->events)
         s->addToEvent(event);
     p->setDynamic(s);
 }
 
-void newDynamicSensitivityEventAndList(
-        Process *p, const sc_core::sc_event_and_list *eal)
+void
+newDynamicSensitivityEventAndList(
+    Process *p, const sc_core::sc_event_and_list *eal)
 {
     auto s = new DynamicSensitivityEventAndList(p, eal);
-    for (auto event: s->events)
+    for (auto event : s->events)
         s->addToEvent(event);
     p->setDynamic(s);
 }
 
-
 DynamicSensitivityEventOrList::DynamicSensitivityEventOrList(
-        Process *p, const sc_core::sc_event_or_list *eol) :
+    Process *p, const sc_core::sc_event_or_list *eol) :
     Sensitivity(p),
     DynamicSensitivity(p),
     SensitivityEvents(p, eol->events),
@@ -224,7 +221,7 @@ DynamicSensitivityEventOrList::~DynamicSensitivityEventOrList()
 {
     if (list->autoDelete) {
         panic_if(list->busy,
-                 "sc_event_or_list can never be busy in gem5 implementation");
+            "sc_event_or_list can never be busy in gem5 implementation");
         delete list;
     }
 }
@@ -236,7 +233,7 @@ DynamicSensitivityEventOrList::notifyWork(Event *e)
 
     // All the other events need this deleted from their lists since this
     // sensitivity has been satisfied without them triggering.
-    for (auto le: events)
+    for (auto le : events)
         delFromEvent(le);
 
     satisfy();
@@ -244,7 +241,7 @@ DynamicSensitivityEventOrList::notifyWork(Event *e)
 }
 
 DynamicSensitivityEventAndList::DynamicSensitivityEventAndList(
-        Process *p, const sc_core::sc_event_and_list *eal) :
+    Process *p, const sc_core::sc_event_and_list *eal) :
     Sensitivity(p),
     DynamicSensitivity(p),
     SensitivityEvents(p, eal->events),
@@ -255,7 +252,7 @@ DynamicSensitivityEventAndList::~DynamicSensitivityEventAndList()
 {
     if (list->autoDelete) {
         panic_if(list->busy,
-                 "sc_event_and_list can never be busy in gem5 implementation");
+            "sc_event_and_list can never be busy in gem5 implementation");
         delete list;
     }
 }

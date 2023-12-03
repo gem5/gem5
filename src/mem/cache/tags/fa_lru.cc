@@ -57,31 +57,27 @@
 
 namespace gem5
 {
-
 std::string
 FALRUBlk::print() const
 {
     return csprintf("%s inCachesMask: %#x", CacheBlk::print(), inCachesMask);
 }
 
-FALRU::FALRU(const Params &p)
-    : BaseTags(p),
+FALRU::FALRU(const Params &p) :
+    BaseTags(p),
 
-      cacheTracking(p.min_tracked_cache_size, size, blkSize, this)
+    cacheTracking(p.min_tracked_cache_size, size, blkSize, this)
 {
     if (!isPowerOf2(blkSize))
         fatal("cache block size (in bytes) `%d' must be a power of two",
-              blkSize);
+            blkSize);
     if (!isPowerOf2(size))
         fatal("Cache Size must be power of 2 for now");
 
     blks = new FALRUBlk[numBlocks];
 }
 
-FALRU::~FALRU()
-{
-    delete[] blks;
-}
+FALRU::~FALRU() { delete[] blks; }
 
 void
 FALRU::tagsInit()
@@ -93,12 +89,12 @@ FALRU::tagsInit()
     head->data = &dataBlks[0];
 
     for (unsigned i = 1; i < numBlocks - 1; i++) {
-        blks[i].prev = &(blks[i-1]);
-        blks[i].next = &(blks[i+1]);
+        blks[i].prev = &(blks[i - 1]);
+        blks[i].next = &(blks[i + 1]);
         blks[i].setPosition(0, i);
 
         // Associate a data chunk to the block
-        blks[i].data = &dataBlks[blkSize*i];
+        blks[i].data = &dataBlks[blkSize * i];
     }
 
     tail = &(blks[numBlocks - 1]);
@@ -127,22 +123,22 @@ FALRU::invalidate(CacheBlk *blk)
     stats.tagsInUse--;
 
     // Move the block to the tail to make it the next victim
-    moveToTail((FALRUBlk*)blk);
+    moveToTail((FALRUBlk *)blk);
 }
 
-CacheBlk*
+CacheBlk *
 FALRU::accessBlock(const PacketPtr pkt, Cycles &lat)
 {
     return accessBlock(pkt, lat, 0);
 }
 
-CacheBlk*
-FALRU::accessBlock(const PacketPtr pkt, Cycles &lat,
-                   CachesMask *in_caches_mask)
+CacheBlk *
+FALRU::accessBlock(
+    const PacketPtr pkt, Cycles &lat, CachesMask *in_caches_mask)
 {
     CachesMask mask = 0;
-    FALRUBlk* blk =
-        static_cast<FALRUBlk*>(findBlock(pkt->getAddr(), pkt->isSecure()));
+    FALRUBlk *blk =
+        static_cast<FALRUBlk *>(findBlock(pkt->getAddr(), pkt->isSecure()));
 
     // If a cache hit
     if (blk && blk->isValid()) {
@@ -163,10 +159,10 @@ FALRU::accessBlock(const PacketPtr pkt, Cycles &lat,
     return blk;
 }
 
-CacheBlk*
+CacheBlk *
 FALRU::findBlock(Addr addr, bool is_secure) const
 {
-    FALRUBlk* blk = nullptr;
+    FALRUBlk *blk = nullptr;
 
     Addr tag = extractTag(addr);
     auto iter = tagHash.find(std::make_pair(tag, is_secure));
@@ -182,19 +178,19 @@ FALRU::findBlock(Addr addr, bool is_secure) const
     return blk;
 }
 
-ReplaceableEntry*
+ReplaceableEntry *
 FALRU::findBlockBySetAndWay(int set, int way) const
 {
     assert(set == 0);
     return &blks[way];
 }
 
-CacheBlk*
+CacheBlk *
 FALRU::findVictim(Addr addr, const bool is_secure, const std::size_t size,
-                  std::vector<CacheBlk*>& evict_blks)
+    std::vector<CacheBlk *> &evict_blks)
 {
     // The victim is always stored on the tail for the FALRU
-    FALRUBlk* victim = tail;
+    FALRUBlk *victim = tail;
 
     // There is only one eviction for this replacement
     evict_blks.push_back(victim);
@@ -205,7 +201,7 @@ FALRU::findVictim(Addr addr, const bool is_secure, const std::size_t size,
 void
 FALRU::insertBlock(const PacketPtr pkt, CacheBlk *blk)
 {
-    FALRUBlk* falruBlk = static_cast<FALRUBlk*>(blk);
+    FALRUBlk *falruBlk = static_cast<FALRUBlk *>(blk);
 
     // Make sure block is not present in the cache
     assert(falruBlk->inCachesMask == 0);
@@ -236,11 +232,11 @@ FALRU::moveToHead(FALRUBlk *blk)
     if (blk != head) {
         cacheTracking.moveBlockToHead(blk);
         // If block is tail, set previous block as new tail
-        if (blk == tail){
+        if (blk == tail) {
             assert(blk->next == nullptr);
             tail = blk->prev;
             tail->next = nullptr;
-        // Inform block's surrounding blocks that it has been moved
+            // Inform block's surrounding blocks that it has been moved
         } else {
             blk->prev->next = blk->next;
             blk->next->prev = blk->prev;
@@ -263,11 +259,11 @@ FALRU::moveToTail(FALRUBlk *blk)
     if (blk != tail) {
         cacheTracking.moveBlockToTail(blk);
         // If block is head, set next block as new head
-        if (blk == head){
+        if (blk == head) {
             assert(blk->prev == nullptr);
             head = blk->next;
             head->prev = nullptr;
-        // Inform block's surrounding blocks that it has been moved
+            // Inform block's surrounding blocks that it has been moved
         } else {
             blk->prev->next = blk->next;
             blk->next->prev = blk->prev;
@@ -286,7 +282,7 @@ FALRU::moveToTail(FALRUBlk *blk)
 void
 printSize(std::ostream &stream, size_t size)
 {
-    static const char *SIZES[] = { "B", "kB", "MB", "GB", "TB", "ZB" };
+    static const char *SIZES[] = {"B", "kB", "MB", "GB", "TB", "ZB"};
     int div = 0;
     while (size >= 1024 && div < (sizeof SIZES / sizeof *SIZES)) {
         div++;
@@ -296,38 +292,36 @@ printSize(std::ostream &stream, size_t size)
 }
 
 FALRU::CacheTracking::CacheTracking(unsigned min_size, unsigned max_size,
-    unsigned block_size, statistics::Group *parent)
-    : statistics::Group(parent),
-      blkSize(block_size),
-      minTrackedSize(min_size),
-      numTrackedCaches(max_size > min_size ?
-                       floorLog2(max_size) - floorLog2(min_size) : 0),
-      inAllCachesMask(mask(numTrackedCaches)),
-      boundaries(numTrackedCaches),
-      ADD_STAT(hits, statistics::units::Count::get(),
-               "The number of hits in each cache size."),
-      ADD_STAT(misses, statistics::units::Count::get(),
-               "The number of misses in each cache size."),
-      ADD_STAT(accesses, statistics::units::Count::get(),
-               "The number of accesses to the FA LRU cache.")
+    unsigned block_size, statistics::Group *parent) :
+    statistics::Group(parent),
+    blkSize(block_size),
+    minTrackedSize(min_size),
+    numTrackedCaches(
+        max_size > min_size ? floorLog2(max_size) - floorLog2(min_size) : 0),
+    inAllCachesMask(mask(numTrackedCaches)),
+    boundaries(numTrackedCaches),
+    ADD_STAT(hits, statistics::units::Count::get(),
+        "The number of hits in each cache size."),
+    ADD_STAT(misses, statistics::units::Count::get(),
+        "The number of misses in each cache size."),
+    ADD_STAT(accesses, statistics::units::Count::get(),
+        "The number of accesses to the FA LRU cache.")
 {
     fatal_if(numTrackedCaches > sizeof(CachesMask) * 8,
-             "Not enough bits (%s) in type CachesMask type to keep "
-             "track of %d caches\n", sizeof(CachesMask),
-             numTrackedCaches);
+        "Not enough bits (%s) in type CachesMask type to keep "
+        "track of %d caches\n",
+        sizeof(CachesMask), numTrackedCaches);
 
-    hits
-        .init(numTrackedCaches + 1);
-    misses
-        .init(numTrackedCaches + 1);
+    hits.init(numTrackedCaches + 1);
+    misses.init(numTrackedCaches + 1);
 
     for (unsigned i = 0; i < numTrackedCaches + 1; ++i) {
-      std::stringstream size_str;
-      printSize(size_str, minTrackedSize << i);
-      hits.subname(i, size_str.str());
-      hits.subdesc(i, "Hits in a " + size_str.str() + " cache");
-      misses.subname(i, size_str.str());
-      misses.subdesc(i, "Misses in a " + size_str.str() + " cache");
+        std::stringstream size_str;
+        printSize(size_str, minTrackedSize << i);
+        hits.subname(i, size_str.str());
+        hits.subdesc(i, "Hits in a " + size_str.str() + " cache");
+        misses.subname(i, size_str.str());
+        misses.subdesc(i, "Misses in a " + size_str.str() + " cache");
     }
 }
 
@@ -335,20 +329,24 @@ void
 FALRU::CacheTracking::check(const FALRUBlk *head, const FALRUBlk *tail) const
 {
 #ifdef FALRU_DEBUG
-    const FALRUBlk* blk = head;
+    const FALRUBlk *blk = head;
     unsigned curr_size = 0;
     unsigned tracked_cache_size = minTrackedSize;
     CachesMask in_caches_mask = inAllCachesMask;
     int j = 0;
 
     while (blk) {
-        panic_if(blk->inCachesMask != in_caches_mask, "Expected cache mask "
-                 "%x found %x", blk->inCachesMask, in_caches_mask);
+        panic_if(blk->inCachesMask != in_caches_mask,
+            "Expected cache mask "
+            "%x found %x",
+            blk->inCachesMask, in_caches_mask);
 
         curr_size += blkSize;
         if (curr_size == tracked_cache_size && blk != tail) {
-            panic_if(boundaries[j] != blk, "Unexpected boundary for the %d-th "
-                     "cache", j);
+            panic_if(boundaries[j] != blk,
+                "Unexpected boundary for the %d-th "
+                "cache",
+                j);
             tracked_cache_size <<= 1;
             // from this point, blocks fit only in the larger caches
             in_caches_mask &= ~(1U << j);
@@ -363,7 +361,7 @@ void
 FALRU::CacheTracking::init(FALRUBlk *head, FALRUBlk *tail)
 {
     // early exit if we are not tracking any extra caches
-    FALRUBlk* blk = numTrackedCaches ? head : nullptr;
+    FALRUBlk *blk = numTrackedCaches ? head : nullptr;
     unsigned curr_size = 0;
     unsigned tracked_cache_size = minTrackedSize;
     CachesMask in_caches_mask = inAllCachesMask;
@@ -384,7 +382,6 @@ FALRU::CacheTracking::init(FALRUBlk *head, FALRUBlk *tail)
         blk = blk->next;
     }
 }
-
 
 void
 FALRU::CacheTracking::moveBlockToHead(FALRUBlk *blk)

@@ -44,8 +44,6 @@
 
 namespace gem5
 {
-
-template
-class Checker<o3::DynInstPtr>;
+template class Checker<o3::DynInstPtr>;
 
 } // namespace gem5

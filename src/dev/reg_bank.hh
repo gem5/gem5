@@ -322,12 +322,12 @@
 
 namespace gem5
 {
-
 // Common bases to make it easier to identify both endiannesses at once.
 class RegisterBankBase
 {
   public:
-    class RegisterBaseBase {};
+    class RegisterBaseBase
+    {};
 };
 
 template <ByteOrder BankByteOrder>
@@ -346,8 +346,8 @@ class RegisterBank : public RegisterBankBase
     static constexpr Data
     writeWithMask(const Data &old, const Data &value, const Data &bitmask)
     {
-        return readWithMask(
-                old, (Data)~bitmask) | readWithMask(value, bitmask);
+        return readWithMask(old, (Data)~bitmask) |
+               readWithMask(value, bitmask);
     }
 
     class RegisterBase : public RegisterBankBase::RegisterBaseBase
@@ -363,10 +363,18 @@ class RegisterBank : public RegisterBankBase
         virtual ~RegisterBase() {}
 
         // Read the register's name.
-        virtual const std::string &name() const { return _name; }
+        virtual const std::string &
+        name() const
+        {
+            return _name;
+        }
 
         // Read the register's size in bytes.
-        size_t size() const { return _size; }
+        size_t
+        size() const
+        {
+            return _size;
+        }
 
         // Perform a read on the register.
         virtual void read(void *buf) = 0;
@@ -389,7 +397,7 @@ class RegisterBank : public RegisterBankBase
     {
       protected:
         constexpr RegisterRoFill(
-                const std::string &new_name, size_t new_size) :
+            const std::string &new_name, size_t new_size) :
             RegisterBase(new_name, new_size)
         {}
 
@@ -397,22 +405,38 @@ class RegisterBank : public RegisterBankBase
 
       public:
         // Ignore writes.
-        void write(const void *buf) override {}
-        void write(const void *buf, off_t offset, size_t bytes) override {}
+        void
+        write(const void *buf) override
+        {}
+        void
+        write(const void *buf, off_t offset, size_t bytes) override
+        {}
 
         // Use fill() to handle reads.
-        void read(void *buf) override { fill(buf, 0, this->size()); }
+        void
+        read(void *buf) override
+        {
+            fill(buf, 0, this->size());
+        }
         void
         read(void *buf, off_t offset, size_t bytes) override
         {
             fill(buf, offset, bytes);
         }
 
-        void serialize(std::ostream &os) const override {}
-        bool unserialize(const std::string &s) override { return true; }
+        void
+        serialize(std::ostream &os) const override
+        {}
+        bool
+        unserialize(const std::string &s) override
+        {
+            return true;
+        }
 
         // Resetting a read only register doesn't need to do anything.
-        void reset() override {}
+        void
+        reset() override
+        {}
     };
 
     // Register which reads as all zeroes.
@@ -458,7 +482,11 @@ class RegisterBank : public RegisterBankBase
             RegisterBase(new_name, bytes), _ptr(ptr)
         {}
 
-        void write(const void *buf) override { write(buf, 0, this->size()); }
+        void
+        write(const void *buf) override
+        {
+            write(buf, 0, this->size());
+        }
         void
         write(const void *buf, off_t offset, size_t bytes) override
         {
@@ -466,7 +494,11 @@ class RegisterBank : public RegisterBankBase
             memcpy((uint8_t *)_ptr + offset, buf, bytes);
         }
 
-        void read(void *buf) override { read(buf, 0, this->size()); }
+        void
+        read(void *buf) override
+        {
+            read(buf, 0, this->size());
+        }
         void
         read(void *buf, off_t offset, size_t bytes) override
         {
@@ -475,12 +507,20 @@ class RegisterBank : public RegisterBankBase
         }
 
         // The buffer's owner is responsible for serializing it.
-        void serialize(std::ostream &os) const override {}
-        bool unserialize(const std::string &s) override { return true; }
+        void
+        serialize(std::ostream &os) const override
+        {}
+        bool
+        unserialize(const std::string &s) override
+        {
+            return true;
+        }
 
         // Assume since the buffer is managed externally, it will be reset
         // externally.
-        void reset() override {}
+        void
+        reset() override
+        {}
 
       protected:
         /**
@@ -534,7 +574,7 @@ class RegisterBank : public RegisterBankBase
 
             if (tokens.size() != BufBytes) {
                 warn("Size mismatch unserialing %s, expected %d, got %d",
-                        this->name(), BufBytes, tokens.size());
+                    this->name(), BufBytes, tokens.size());
                 return false;
             }
 
@@ -546,23 +586,27 @@ class RegisterBank : public RegisterBankBase
             return true;
         }
 
-        void reset() override { buffer = std::array<uint8_t, BufBytes>{}; }
+        void
+        reset() override
+        {
+            buffer = std::array<uint8_t, BufBytes>{};
+        }
     };
 
-    template <typename Data, ByteOrder RegByteOrder=BankByteOrder>
+    template <typename Data, ByteOrder RegByteOrder = BankByteOrder>
     class Register : public RegisterBase
     {
       protected:
         using This = Register<Data, RegByteOrder>;
 
       public:
-        using ReadFunc = std::function<Data (This &reg)>;
-        using PartialReadFunc = std::function<
-            Data (This &reg, int first, int last)>;
-        using WriteFunc = std::function<void (This &reg, const Data &value)>;
-        using PartialWriteFunc = std::function<
-            void (This &reg, const Data &value, int first, int last)>;
-        using ResetFunc = std::function<void (This &reg)>;
+        using ReadFunc = std::function<Data(This &reg)>;
+        using PartialReadFunc =
+            std::function<Data(This &reg, int first, int last)>;
+        using WriteFunc = std::function<void(This &reg, const Data &value)>;
+        using PartialWriteFunc = std::function<void(
+            This &reg, const Data &value, int first, int last)>;
+        using ResetFunc = std::function<void(This &reg)>;
 
       private:
         Data _data = {};
@@ -576,7 +620,11 @@ class RegisterBank : public RegisterBankBase
         ResetFunc _resetter = defaultResetter;
 
       protected:
-        static Data defaultReader(This &reg) { return reg.get(); }
+        static Data
+        defaultReader(This &reg)
+        {
+            return reg.get();
+        }
 
         static Data
         defaultPartialReader(This &reg, int first, int last)
@@ -593,8 +641,8 @@ class RegisterBank : public RegisterBankBase
         static void
         defaultPartialWriter(This &reg, const Data &value, int first, int last)
         {
-            reg._writer(reg, writeWithMask<Data>(reg._reader(reg), value,
-                                                 mask(first, last)));
+            reg._writer(reg, writeWithMask<Data>(
+                                 reg._reader(reg), value, mask(first, last)));
         }
 
         static void
@@ -607,11 +655,11 @@ class RegisterBank : public RegisterBankBase
         htoreg(Data data)
         {
             switch (RegByteOrder) {
-              case ByteOrder::big:
+            case ByteOrder::big:
                 return htobe(data);
-              case ByteOrder::little:
+            case ByteOrder::little:
                 return htole(data);
-              default:
+            default:
                 panic("Unrecognized byte order %d.", (unsigned)RegByteOrder);
             }
         }
@@ -620,17 +668,16 @@ class RegisterBank : public RegisterBankBase
         regtoh(Data data)
         {
             switch (RegByteOrder) {
-              case ByteOrder::big:
+            case ByteOrder::big:
                 return betoh(data);
-              case ByteOrder::little:
+            case ByteOrder::little:
                 return letoh(data);
-              default:
+            default:
                 panic("Unrecognized byte order %d.", (unsigned)RegByteOrder);
             }
         }
 
       public:
-
         /*
          * Interface for setting up the register.
          */
@@ -642,12 +689,14 @@ class RegisterBank : public RegisterBankBase
 
         // Constructor and move constructor with an initial data value.
         constexpr Register(const std::string &new_name, const Data &new_data) :
-            RegisterBase(new_name, sizeof(Data)), _data(new_data),
+            RegisterBase(new_name, sizeof(Data)),
+            _data(new_data),
             _resetData(new_data)
         {}
-        constexpr Register(const std::string &new_name,
-                           const Data &&new_data) :
-            RegisterBase(new_name, sizeof(Data)), _data(new_data),
+        constexpr Register(
+            const std::string &new_name, const Data &&new_data) :
+            RegisterBase(new_name, sizeof(Data)),
+            _data(new_data),
             _resetData(new_data)
         {}
 
@@ -660,7 +709,11 @@ class RegisterBank : public RegisterBankBase
         }
 
         // Set the register as read only.
-        constexpr This &readonly() { return writeable(0); }
+        constexpr This &
+        readonly()
+        {
+            return writeable(0);
+        }
 
         // Set the callables which handles reads or writes.
         // The default reader just returns the register value.
@@ -675,7 +728,7 @@ class RegisterBank : public RegisterBankBase
         constexpr This &
         reader(Parent *parent, Data (Parent::*nr)(Args... args))
         {
-            auto wrapper = [parent, nr](Args&&... args) -> Data {
+            auto wrapper = [parent, nr](Args &&... args) -> Data {
                 return (parent->*nr)(std::forward<Args>(args)...);
             };
             return reader(wrapper);
@@ -690,7 +743,7 @@ class RegisterBank : public RegisterBankBase
         constexpr This &
         writer(Parent *parent, void (Parent::*nw)(Args... args))
         {
-            auto wrapper = [parent, nw](Args&&... args) {
+            auto wrapper = [parent, nw](Args &&... args) {
                 (parent->*nw)(std::forward<Args>(args)...);
             };
             return writer(wrapper);
@@ -716,7 +769,7 @@ class RegisterBank : public RegisterBankBase
         constexpr This &
         partialReader(Parent *parent, Data (Parent::*nr)(Args... args))
         {
-            auto wrapper = [parent, nr](Args&&... args) -> Data {
+            auto wrapper = [parent, nr](Args &&... args) -> Data {
                 return (parent->*nr)(std::forward<Args>(args)...);
             };
             return partialReader(wrapper);
@@ -731,7 +784,7 @@ class RegisterBank : public RegisterBankBase
         constexpr This &
         partialWriter(Parent *parent, void (Parent::*nw)(Args... args))
         {
-            auto wrapper = [parent, nw](Args&&... args) {
+            auto wrapper = [parent, nw](Args &&... args) {
                 return (parent->*nw)(std::forward<Args>(args)...);
             };
             return partialWriter(wrapper);
@@ -751,7 +804,7 @@ class RegisterBank : public RegisterBankBase
         constexpr This &
         resetter(Parent *parent, void (Parent::*nr)(Args... args))
         {
-            auto wrapper = [parent, nr](Args&&... args) {
+            auto wrapper = [parent, nr](Args &&... args) {
                 return (parent->*nr)(std::forward<Args>(args)...);
             };
             return resetter(wrapper);
@@ -759,22 +812,42 @@ class RegisterBank : public RegisterBankBase
 
         // An accessor which returns the initial value as set in the
         // constructor. This is intended to be used in a resetter function.
-        const Data &initialValue() const { return _resetData; }
+        const Data &
+        initialValue() const
+        {
+            return _resetData;
+        }
 
         // Reset the initial value, which is normally set in the constructor,
         // to the register's current value.
-        void resetInitialValue() { _resetData = _data; }
+        void
+        resetInitialValue()
+        {
+            _resetData = _data;
+        }
 
         /*
          * Interface for accessing the register's state, for use by the
          * register's helper functions and the register bank.
          */
 
-        const Data &writeable() const { return _writeMask; }
+        const Data &
+        writeable() const
+        {
+            return _writeMask;
+        }
 
         // Directly access the underlying data value.
-        const Data &get() const { return _data; }
-        Data &get() { return _data; }
+        const Data &
+        get() const
+        {
+            return _data;
+        }
+        Data &
+        get()
+        {
+            return _data;
+        }
 
         // Update data while applying a mask.
         void
@@ -788,7 +861,6 @@ class RegisterBank : public RegisterBankBase
         {
             _data = writeWithMask(_data, new_data, _writeMask);
         }
-
 
         /*
          * Interface for reading/writing the register, for use by the
@@ -809,7 +881,8 @@ class RegisterBank : public RegisterBankBase
             // Move the region we're reading to be little endian, since that's
             // what gem5 uses internally in BitUnions, masks, etc.
             const off_t host_off = (RegByteOrder != ByteOrder::little) ?
-                sizeof(Data) - (offset + bytes) : offset;
+                                       sizeof(Data) - (offset + bytes) :
+                                       offset;
 
             const int first = (host_off + bytes) * 8 - 1;
             const int last = host_off * 8;
@@ -839,7 +912,8 @@ class RegisterBank : public RegisterBankBase
             // Move the region we're reading to be little endian, since that's
             // what gem5 uses internally in BitUnions, masks, etc.
             const off_t host_off = (RegByteOrder != ByteOrder::little) ?
-                sizeof(Data) - (offset + bytes) : offset;
+                                       sizeof(Data) - (offset + bytes) :
+                                       offset;
 
             const int first = (host_off + bytes) * 8 - 1;
             const int last = host_off * 8;
@@ -860,7 +934,11 @@ class RegisterBank : public RegisterBankBase
         }
 
         // Reset our data to its initial value.
-        void reset() override { _resetter(*this); }
+        void
+        reset() override
+        {
+            _resetter(*this);
+        }
     };
 
     // Allow gem5 models to set a debug flag to the register bank for logging
@@ -875,7 +953,7 @@ class RegisterBank : public RegisterBankBase
     //
     // setDebugFlag(::gem5::debug::HelloExample)
     void
-    setDebugFlag(const ::gem5::debug::SimpleFlag& flag)
+    setDebugFlag(const ::gem5::debug::SimpleFlag &flag)
     {
         _debug_flag = &flag;
     }
@@ -883,13 +961,12 @@ class RegisterBank : public RegisterBankBase
   private:
     std::map<Addr, std::reference_wrapper<RegisterBase>> _offsetMap;
 
-    const ::gem5::debug::SimpleFlag* _debug_flag = nullptr;
+    const ::gem5::debug::SimpleFlag *_debug_flag = nullptr;
     Addr _base = 0;
     Addr _size = 0;
     const std::string _name;
 
   public:
-
     using Register8 = Register<uint8_t>;
     using Register8LE = Register<uint8_t, ByteOrder::little>;
     using Register8BE = Register<uint8_t, ByteOrder::big>;
@@ -902,7 +979,6 @@ class RegisterBank : public RegisterBankBase
     using Register64 = Register<uint64_t>;
     using Register64LE = Register<uint64_t, ByteOrder::little>;
     using Register64BE = Register<uint64_t, ByteOrder::big>;
-
 
     constexpr RegisterBank(const std::string &new_name, Addr new_base) :
         _base(new_base), _name(new_name)
@@ -933,8 +1009,8 @@ class RegisterBank : public RegisterBankBase
     addRegisters(std::initializer_list<RegisterAdder> adders)
     {
         panic_if(std::empty(adders),
-                "Adding an empty list of registers to %s?", name());
-        for (auto &adder: adders) {
+            "Adding an empty list of registers to %s?", name());
+        for (auto &adder : adders) {
             const Addr offset = _base + _size;
 
             if (adder.reg) {
@@ -955,11 +1031,27 @@ class RegisterBank : public RegisterBankBase
         }
     }
 
-    void addRegister(RegisterAdder reg) { addRegisters({reg}); }
+    void
+    addRegister(RegisterAdder reg)
+    {
+        addRegisters({reg});
+    }
 
-    Addr base() const { return _base; }
-    Addr size() const { return _size; }
-    const std::string &name() const { return _name; }
+    Addr
+    base() const
+    {
+        return _base;
+    }
+    Addr
+    size() const
+    {
+        return _size;
+    }
+    const std::string &
+    name() const
+    {
+        return _name;
+    }
 
     virtual void
     read(Addr addr, void *buf, Addr bytes)
@@ -978,27 +1070,27 @@ class RegisterBank : public RegisterBankBase
 
         std::ostringstream ss;
         while (done != bytes) {
-          RegisterBase &reg = it->second.get();
-          const Addr reg_off = addr - it->first;
-          const Addr reg_size = reg.size() - reg_off;
-          const Addr reg_bytes = std::min(reg_size, bytes - done);
+            RegisterBase &reg = it->second.get();
+            const Addr reg_off = addr - it->first;
+            const Addr reg_size = reg.size() - reg_off;
+            const Addr reg_bytes = std::min(reg_size, bytes - done);
 
-          if (reg_bytes != reg.size()) {
-              if (_debug_flag) {
-                  ccprintf(ss, "Read register %s, byte offset %d, size %d\n",
-                          reg.name(), reg_off, reg_bytes);
-              }
-              reg.read(ptr + done, reg_off, reg_bytes);
-          } else {
-              if (_debug_flag) {
-                  ccprintf(ss, "Read register %s\n", reg.name());
-              }
-              reg.read(ptr + done);
-          }
+            if (reg_bytes != reg.size()) {
+                if (_debug_flag) {
+                    ccprintf(ss, "Read register %s, byte offset %d, size %d\n",
+                        reg.name(), reg_off, reg_bytes);
+                }
+                reg.read(ptr + done, reg_off, reg_bytes);
+            } else {
+                if (_debug_flag) {
+                    ccprintf(ss, "Read register %s\n", reg.name());
+                }
+                reg.read(ptr + done);
+            }
 
-          done += reg_bytes;
-          addr += reg_bytes;
-          ++it;
+            done += reg_bytes;
+            addr += reg_bytes;
+            ++it;
         }
 
         if (_debug_flag) {
@@ -1031,13 +1123,14 @@ class RegisterBank : public RegisterBankBase
 
             if (reg_bytes != reg.size()) {
                 if (_debug_flag) {
-                    ccprintf(ss, "Write register %s, byte offset %d, size %d\n",
-                              reg.name(), reg_off, reg_size);
+                    ccprintf(ss,
+                        "Write register %s, byte offset %d, size %d\n",
+                        reg.name(), reg_off, reg_size);
                 }
                 reg.write(ptr + done, reg_off, reg_bytes);
             } else {
                 if (_debug_flag) {
-                  ccprintf(ss, "Write register %s\n", reg.name());
+                    ccprintf(ss, "Write register %s\n", reg.name());
                 }
                 reg.write(ptr + done);
             }
@@ -1057,7 +1150,7 @@ class RegisterBank : public RegisterBankBase
     virtual void
     reset()
     {
-        for (auto &it: _offsetMap)
+        for (auto &it : _offsetMap)
             it.second.get().reset();
     }
 };
@@ -1068,7 +1161,7 @@ using RegisterBankBE = RegisterBank<ByteOrder::big>;
 // Delegate serialization to the individual RegisterBase subclasses.
 template <class T>
 struct ParseParam<T, std::enable_if_t<std::is_base_of_v<
-    typename RegisterBankBase::RegisterBaseBase, T>>>
+                         typename RegisterBankBase::RegisterBaseBase, T>>>
 {
     static bool
     parse(const std::string &s, T &value)
@@ -1079,7 +1172,7 @@ struct ParseParam<T, std::enable_if_t<std::is_base_of_v<
 
 template <class T>
 struct ShowParam<T, std::enable_if_t<std::is_base_of_v<
-    typename RegisterBankBase::RegisterBaseBase, T>>>
+                        typename RegisterBankBase::RegisterBaseBase, T>>>
 {
     static void
     show(std::ostream &os, const T &value)

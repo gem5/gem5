@@ -31,7 +31,6 @@
 
 namespace sc_gem5
 {
-
 ScEvent::~ScEvent()
 {
     if (scheduled())

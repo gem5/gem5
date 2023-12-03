@@ -32,7 +32,6 @@
 
 namespace
 {
-
 bool
 do_fail(const DispatchTable &dt, Args &args)
 {
@@ -45,8 +44,8 @@ do_fail(const DispatchTable &dt, Args &args)
     return true;
 }
 
-Command fail_cmd = {
-    "fail", 1, 2, do_fail, "<code> [delay]\n"
-        "        Exit with failure code code after delay, or immediately" };
+Command fail_cmd = {"fail", 1, 2, do_fail,
+    "<code> [delay]\n"
+    "        Exit with failure code code after delay, or immediately"};
 
 } // anonymous namespace

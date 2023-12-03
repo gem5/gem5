@@ -34,7 +34,6 @@
 
 namespace sc_gem5
 {
-
 /*
  * This class represents the systemc kernel. There should be exactly one in
  * the simulation. It receives gem5 SimObject lifecycle callbacks (init,

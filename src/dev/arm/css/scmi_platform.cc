@@ -45,14 +45,13 @@
 
 namespace gem5
 {
-
 using namespace scmi;
 
-AgentChannel::AgentChannel(const ScmiChannelParams &p)
-  : VirtualChannel(p),
-    readLengthEvent([this]{ readLength(); }, name()),
-    readMessageEvent([this]{ readMessage(); }, name()),
-    handleMessageEvent([this]{ handleMessage(); }, name())
+AgentChannel::AgentChannel(const ScmiChannelParams &p) :
+    VirtualChannel(p),
+    readLengthEvent([this] { readLength(); }, name()),
+    readMessageEvent([this] { readMessage(); }, name()),
+    handleMessageEvent([this] { handleMessage(); }, name())
 {}
 
 void
@@ -77,15 +76,15 @@ AgentChannel::readStatus()
     // channel status. The value will be handled by the readLength
     // event/method
     dmaPort->dmaAction(MemCmd::ReadReq, address, sizeof(uint32_t),
-                       &readLengthEvent, (uint8_t*)&msgBuffer.channelStatus,
-                       0, Request::UNCACHEABLE);
+        &readLengthEvent, (uint8_t *)&msgBuffer.channelStatus, 0,
+        Request::UNCACHEABLE);
 }
 
 void
 AgentChannel::readLength()
 {
-    DPRINTF(SCMI, "SCMI Virtual channel %u, channel.status: %u\n",
-            virtID, msgBuffer.channelStatus);
+    DPRINTF(SCMI, "SCMI Virtual channel %u, channel.status: %u\n", virtID,
+        msgBuffer.channelStatus);
 
     // Check if the channel is busy. If it is busy it means there is a
     // message so we need to process it. Abort the reads otherwise
@@ -99,8 +98,8 @@ AgentChannel::readLength()
         const Addr address = shmem.start() + offset;
 
         dmaPort->dmaAction(MemCmd::ReadReq, address, sizeof(msgBuffer.length),
-                           &readMessageEvent, (uint8_t*)&msgBuffer.length,
-                           0, Request::UNCACHEABLE);
+            &readMessageEvent, (uint8_t *)&msgBuffer.length, 0,
+            Request::UNCACHEABLE);
     }
 }
 
@@ -110,21 +109,19 @@ AgentChannel::readMessage()
     const auto offset = offsetof(Message, header);
     const Addr address = shmem.start() + offset;
 
-    DPRINTF(SCMI, "SCMI Virtual channel %u, message.length: %u\n",
-            virtID, msgBuffer.length);
+    DPRINTF(SCMI, "SCMI Virtual channel %u, message.length: %u\n", virtID,
+        msgBuffer.length);
 
-    dmaPort->dmaAction(MemCmd::ReadReq, address,
-                       msgBuffer.length,
-                       &handleMessageEvent, (uint8_t*)&msgBuffer.header,
-                       0, Request::UNCACHEABLE);
+    dmaPort->dmaAction(MemCmd::ReadReq, address, msgBuffer.length,
+        &handleMessageEvent, (uint8_t *)&msgBuffer.header, 0,
+        Request::UNCACHEABLE);
 }
 
 void
 AgentChannel::handleMessage()
 {
-    DPRINTF(SCMI,
-            "SCMI Virtual channel %u, message.header: %#x\n",
-            virtID, msgBuffer.header);
+    DPRINTF(SCMI, "SCMI Virtual channel %u, message.header: %#x\n", virtID,
+        msgBuffer.header);
 
     // Send the message to the platform which is gonna handle it
     // We are also forwarding a pointer to the agent channel so
@@ -132,11 +129,11 @@ AgentChannel::handleMessage()
     platform->handleMessage(this, msgBuffer);
 }
 
-PlatformChannel::PlatformChannel(const ScmiChannelParams &p)
-  : VirtualChannel(p),
-    clearDoorbellEvent([this]{ clearDoorbell(); }, name()),
-    notifyAgentEvent([this]{ notifyAgent(); }, name()),
-    completeEvent([this]{ complete(); }, name()),
+PlatformChannel::PlatformChannel(const ScmiChannelParams &p) :
+    VirtualChannel(p),
+    clearDoorbellEvent([this] { clearDoorbell(); }, name()),
+    notifyAgentEvent([this] { notifyAgent(); }, name()),
+    completeEvent([this] { complete(); }, name()),
     agentDoorbellVal(0),
     platformDoorbellVal(0)
 {}
@@ -145,9 +142,9 @@ void
 PlatformChannel::writeBackMessage(const Message &msg)
 {
     DPRINTF(SCMI,
-            "SCMI Virtual channel %u, writing back message %u"
-            " with status code: %d\n",
-            virtID, Platform::messageID(msg), msg.payload.status);
+        "SCMI Virtual channel %u, writing back message %u"
+        " with status code: %d\n",
+        virtID, Platform::messageID(msg), msg.payload.status);
 
     // Field by field copy of the message
     msgBuffer = msg;
@@ -156,40 +153,32 @@ PlatformChannel::writeBackMessage(const Message &msg)
     msgBuffer.channelStatus = 0x1;
 
     dmaPort->dmaAction(MemCmd::WriteReq, shmem.start(), sizeof(msgBuffer),
-                       &clearDoorbellEvent, (uint8_t*)&msgBuffer,
-                       0, Request::UNCACHEABLE);
+        &clearDoorbellEvent, (uint8_t *)&msgBuffer, 0, Request::UNCACHEABLE);
 }
 
 void
 PlatformChannel::clearDoorbell()
 {
-    DPRINTF(SCMI,
-            "SCMI Virtual channel %u, clearing doorbell\n",
-            virtID);
+    DPRINTF(SCMI, "SCMI Virtual channel %u, clearing doorbell\n", virtID);
 
-    AgentChannel* agent_ch = platform->find(this);
+    AgentChannel *agent_ch = platform->find(this);
     agent_ch->pendingMessage = false;
 
     agentDoorbellVal = 0xffffffff;
-    dmaPort->dmaAction(MemCmd::WriteReq,
-                       agent_ch->doorbell->clearAddress(),
-                       sizeof(uint32_t),
-                       &notifyAgentEvent, (uint8_t*)&agentDoorbellVal,
-                       0, Request::UNCACHEABLE);
+    dmaPort->dmaAction(MemCmd::WriteReq, agent_ch->doorbell->clearAddress(),
+        sizeof(uint32_t), &notifyAgentEvent, (uint8_t *)&agentDoorbellVal, 0,
+        Request::UNCACHEABLE);
 }
 
 void
 PlatformChannel::notifyAgent()
 {
-    DPRINTF(SCMI,
-            "SCMI Virtual channel %u, notifying agent\n",
-            virtID);
+    DPRINTF(SCMI, "SCMI Virtual channel %u, notifying agent\n", virtID);
 
     platformDoorbellVal = 1 << virtID;
     dmaPort->dmaAction(MemCmd::WriteReq, doorbell->setAddress(),
-                       sizeof(uint32_t),
-                       &completeEvent, (uint8_t*)&platformDoorbellVal,
-                       0, Request::UNCACHEABLE);
+        sizeof(uint32_t), &completeEvent, (uint8_t *)&platformDoorbellVal, 0,
+        Request::UNCACHEABLE);
 }
 
 void
@@ -199,11 +188,11 @@ PlatformChannel::complete()
     msgBuffer = Message();
 }
 
-Platform::Platform(const ScmiPlatformParams &p)
-  : Scp(p),
+Platform::Platform(const ScmiPlatformParams &p) :
+    Scp(p),
     comms(p.comms),
     agents(p.agents),
-    protocols({ {BASE, new BaseProtocol(*this)} }),
+    protocols({{BASE, new BaseProtocol(*this)}}),
     dmaPort(this, p.sys)
 {
     for (auto comm : comms) {
@@ -221,7 +210,7 @@ Platform::Platform(const ScmiPlatformParams &p)
 
 Platform::~Platform()
 {
-    for (auto& kv : protocols) {
+    for (auto &kv : protocols) {
         delete kv.second;
     }
 }
@@ -242,8 +231,8 @@ Platform::handleMessage(AgentChannel *agent_ch, Message &msg)
 
     auto it = protocols.find(prot_id);
 
-    panic_if(it == protocols.end(),
-             "Unimplemented SCMI protocol: %u\n", prot_id);
+    panic_if(
+        it == protocols.end(), "Unimplemented SCMI protocol: %u\n", prot_id);
 
     Protocol *protocol = it->second;
     protocol->handleMessage(msg);
@@ -283,8 +272,8 @@ Platform::clearInterrupt(const Doorbell *doorbell)
     DPRINTF(SCMI, "Clear interrupt in SCMI platform\n");
 }
 
-AgentChannel*
-Platform::find(PlatformChannel* platform) const
+AgentChannel *
+Platform::find(PlatformChannel *platform) const
 {
     for (auto comm : comms) {
         if (comm->platformChan == platform) {
@@ -295,8 +284,8 @@ Platform::find(PlatformChannel* platform) const
     return nullptr;
 }
 
-PlatformChannel*
-Platform::find(AgentChannel* agent) const
+PlatformChannel *
+Platform::find(AgentChannel *agent) const
 {
     for (auto comm : comms) {
         if (comm->agentChan == agent) {

@@ -46,12 +46,10 @@
 
 namespace gem5
 {
-
 struct PS2KeyboardParams;
 
 namespace ps2
 {
-
 class PS2Keyboard : public Device, VncKeyboard
 {
   protected:

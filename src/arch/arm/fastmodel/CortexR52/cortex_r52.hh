@@ -39,12 +39,10 @@
 
 namespace gem5
 {
-
 class BaseCPU;
 
 namespace fastmodel
 {
-
 // The fast model exports a class called scx_evs_CortexR52x1 which represents
 // the subsystem described in LISA+. This class specializes it to export gem5
 // ports and interface with its peer gem5 CPU. The gem5 CPU inherits from the
@@ -73,8 +71,8 @@ class CortexR52 : public Iris::CPU<CortexR52TC>
 
     void setResetAddr(Addr addr, bool secure = false) override;
 
-    Port &getPort(const std::string &if_name,
-            PortID idx=InvalidPortID) override;
+    Port &getPort(
+        const std::string &if_name, PortID idx = InvalidPortID) override;
 };
 
 class CortexR52Cluster : public SimObject
@@ -91,21 +89,29 @@ class CortexR52Cluster : public SimObject
         scx::scx_set_parameter(evs->name() + std::string(".") + n, val);
     }
 
-    CortexR52 *getCore(int num) const { return cores.at(num); }
-    sc_core::sc_module *getEvs() const { return evs; }
+    CortexR52 *
+    getCore(int num) const
+    {
+        return cores.at(num);
+    }
+    sc_core::sc_module *
+    getEvs() const
+    {
+        return evs;
+    }
 
     PARAMS(FastModelCortexR52Cluster);
     CortexR52Cluster(const Params &p);
 
-    Port &getPort(const std::string &if_name,
-            PortID idx=InvalidPortID) override;
+    Port &getPort(
+        const std::string &if_name, PortID idx = InvalidPortID) override;
 };
 
 template <class T>
 inline void
 CortexR52::set_evs_param(const std::string &n, T val)
 {
-    for (auto &path: params().thread_paths)
+    for (auto &path : params().thread_paths)
         cluster->set_evs_param(path + "." + n, val);
 }
 

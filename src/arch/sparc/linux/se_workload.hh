@@ -36,10 +36,8 @@
 
 namespace gem5
 {
-
 namespace SparcISA
 {
-
 class EmuLinux : public SEWorkload
 {
   protected:
@@ -57,8 +55,16 @@ class EmuLinux : public SEWorkload
 
     EmuLinux(const Params &p);
 
-    loader::Arch getArch() const override { return loader::SPARC64; }
-    ByteOrder byteOrder() const override { return ByteOrder::big; }
+    loader::Arch
+    getArch() const override
+    {
+        return loader::SPARC64;
+    }
+    ByteOrder
+    byteOrder() const override
+    {
+        return ByteOrder::big;
+    }
 
     void handleTrap(ThreadContext *tc, int trapNum) override;
     void syscall(ThreadContext *tc) override;

@@ -43,7 +43,6 @@
 
 namespace gem5
 {
-
 class ArmInterruptPin;
 struct MmioVirtIOParams;
 
@@ -95,7 +94,6 @@ class MmioVirtIO : public BasicPioDevice
     static const uint32_t MAGIC = 0x74726976;
     static const uint32_t VERSION = 1;
     static const uint32_t VENDOR_ID = 0x1AF4;
-
 
     uint32_t read(Addr offset);
     void write(Addr offset, uint32_t value);

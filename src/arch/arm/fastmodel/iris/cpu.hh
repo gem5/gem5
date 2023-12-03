@@ -37,10 +37,8 @@
 
 namespace gem5
 {
-
 namespace Iris
 {
-
 class ThreadContext;
 
 // The base interface of the EVS used by gem5 BaseCPU below.
@@ -84,7 +82,11 @@ class BaseCPU : public gem5::BaseCPU
     }
 
     Counter totalInsts() const override;
-    Counter totalOps() const override { return totalInsts(); }
+    Counter
+    totalOps() const override
+    {
+        return totalInsts();
+    }
 
     virtual void
     setResetAddr(Addr addr, bool secure = false)
@@ -118,18 +120,18 @@ class CPU : public Iris::BaseCPU
 {
   public:
     CPU(const IrisBaseCPUParams &params,
-            iris::IrisConnectionInterface *iris_if) :
+        iris::IrisConnectionInterface *iris_if) :
         BaseCPU(params, params.evs)
     {
         const std::string parent_path = evs->name();
         System *sys = params.system;
 
         int thread_id = 0;
-        for (const std::string &sub_path: params.thread_paths) {
+        for (const std::string &sub_path : params.thread_paths) {
             std::string path = parent_path + "." + sub_path;
             auto id = thread_id++;
-            auto *tc = new TC(this, id, sys, params.mmu,
-                    params.isa[id], iris_if, path);
+            auto *tc = new TC(
+                this, id, sys, params.mmu, params.isa[id], iris_if, path);
             threadContexts.push_back(tc);
         }
     }

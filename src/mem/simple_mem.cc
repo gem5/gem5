@@ -46,19 +46,20 @@
 
 namespace gem5
 {
-
 namespace memory
 {
-
 SimpleMemory::SimpleMemory(const SimpleMemoryParams &p) :
     AbstractMemory(p),
-    port(name() + ".port", *this), latency(p.latency),
-    latency_var(p.latency_var), bandwidth(p.bandwidth), isBusy(false),
-    retryReq(false), retryResp(false),
-    releaseEvent([this]{ release(); }, name()),
-    dequeueEvent([this]{ dequeue(); }, name())
-{
-}
+    port(name() + ".port", *this),
+    latency(p.latency),
+    latency_var(p.latency_var),
+    bandwidth(p.bandwidth),
+    isBusy(false),
+    retryReq(false),
+    retryResp(false),
+    releaseEvent([this] { release(); }, name()),
+    dequeueEvent([this] { dequeue(); }, name())
+{}
 
 void
 SimpleMemory::init()
@@ -76,7 +77,7 @@ Tick
 SimpleMemory::recvAtomic(PacketPtr pkt)
 {
     panic_if(pkt->cacheResponding(), "Should not see packets where cache "
-             "is responding");
+                                     "is responding");
 
     access(pkt);
     return getLatency();
@@ -109,8 +110,8 @@ SimpleMemory::recvFunctional(PacketPtr pkt)
 }
 
 void
-SimpleMemory::recvMemBackdoorReq(const MemBackdoorReq &req,
-        MemBackdoorPtr &_backdoor)
+SimpleMemory::recvMemBackdoorReq(
+    const MemBackdoorReq &req, MemBackdoorPtr &_backdoor)
 {
     getBackdoor(_backdoor);
 }
@@ -119,11 +120,12 @@ bool
 SimpleMemory::recvTimingReq(PacketPtr pkt)
 {
     panic_if(pkt->cacheResponding(), "Should not see packets where cache "
-             "is responding");
+                                     "is responding");
 
     panic_if(!(pkt->isRead() || pkt->isWrite()),
-             "Should only see read and writes at memory controller, "
-             "saw %s to %#llx\n", pkt->cmdString(), pkt->getAddr());
+        "Should only see read and writes at memory controller, "
+        "saw %s to %#llx\n",
+        pkt->cmdString(), pkt->getAddr());
 
     // we should not get a new request after committing to retry the
     // current one, but unfortunately the CPU violates this rule, so
@@ -225,7 +227,7 @@ SimpleMemory::dequeue()
             // if there were packets that got in-between then we
             // already have an event scheduled, so use re-schedule
             reschedule(dequeueEvent,
-                       std::max(packetQueue.front().tick, curTick()), true);
+                std::max(packetQueue.front().tick, curTick()), true);
         } else if (drainState() == DrainState::Draining) {
             DPRINTF(Drain, "Draining of SimpleMemory complete\n");
             signalDrainDone();
@@ -237,7 +239,7 @@ Tick
 SimpleMemory::getLatency() const
 {
     return latency +
-        (latency_var ? random_mt.random<Tick>(0, latency_var) : 0);
+           (latency_var ? random_mt.random<Tick>(0, latency_var) : 0);
 }
 
 void
@@ -269,10 +271,10 @@ SimpleMemory::drain()
     }
 }
 
-SimpleMemory::MemoryPort::MemoryPort(const std::string& _name,
-                                     SimpleMemory& _memory)
-    : ResponsePort(_name), mem(_memory)
-{ }
+SimpleMemory::MemoryPort::MemoryPort(
+    const std::string &_name, SimpleMemory &_memory) :
+    ResponsePort(_name), mem(_memory)
+{}
 
 AddrRangeList
 SimpleMemory::MemoryPort::getAddrRanges() const
@@ -290,7 +292,7 @@ SimpleMemory::MemoryPort::recvAtomic(PacketPtr pkt)
 
 Tick
 SimpleMemory::MemoryPort::recvAtomicBackdoor(
-        PacketPtr pkt, MemBackdoorPtr &_backdoor)
+    PacketPtr pkt, MemBackdoorPtr &_backdoor)
 {
     return mem.recvAtomicBackdoor(pkt, _backdoor);
 }
@@ -302,8 +304,8 @@ SimpleMemory::MemoryPort::recvFunctional(PacketPtr pkt)
 }
 
 void
-SimpleMemory::MemoryPort::recvMemBackdoorReq(const MemBackdoorReq &req,
-        MemBackdoorPtr &backdoor)
+SimpleMemory::MemoryPort::recvMemBackdoorReq(
+    const MemBackdoorReq &req, MemBackdoorPtr &backdoor)
 {
     mem.recvMemBackdoorReq(req, backdoor);
 }

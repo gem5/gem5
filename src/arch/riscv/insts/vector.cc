@@ -40,10 +40,8 @@
 
 namespace gem5
 {
-
 namespace RiscvISA
 {
-
 /**
  * This function translates the 3-bit value of vlmul bits to the corresponding
  * lmul value as specified in RVV 1.0 spec p11-12 chapter 3.4.2.
@@ -57,7 +55,7 @@ namespace RiscvISA
  * vlmul = 2 -> LMUL = 4
  * vlmul = 3 -> LMUL = 8
  *
-**/
+ **/
 float
 getVflmul(uint32_t vlmul_encoding)
 {
@@ -71,7 +69,7 @@ getVlmax(VTYPE vtype, uint32_t vlen)
 {
     uint32_t sew = getSew(vtype.vsew);
     // vlmax is defined in RVV 1.0 spec p12 chapter 3.4.2.
-    uint32_t vlmax = (vlen/sew) * getVflmul(vtype.vlmul);
+    uint32_t vlmax = (vlen / sew) * getVflmul(vtype.vlmul);
     return vlmax;
 }
 
@@ -106,7 +104,7 @@ VConfOp::generateZimmDisassembly() const
     s << "e" << sew;
     if (frac_lmul) {
         std::string lmul_str = "";
-        switch(lmul){
+        switch (lmul) {
         case 3:
             lmul_str = "f2";
             break;
@@ -128,106 +126,122 @@ VConfOp::generateZimmDisassembly() const
 }
 
 std::string
-VectorNonSplitInst::generateDisassembly(Addr pc,
-        const loader::SymbolTable *symtab) const
+VectorNonSplitInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", "
-        << registerName(srcRegIdx(0));
-    if (machInst.vm == 0) ss << ", v0.t";
+       << registerName(srcRegIdx(0));
+    if (machInst.vm == 0)
+        ss << ", v0.t";
     return ss.str();
 }
 
-std::string VectorArithMicroInst::generateDisassembly(Addr pc,
-        const loader::SymbolTable *symtab) const
+std::string
+VectorArithMicroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", ";
     if (machInst.funct3 == 0x3) {
         // OPIVI
-      ss  << registerName(srcRegIdx(0)) << ", " << machInst.vecimm;
+        ss << registerName(srcRegIdx(0)) << ", " << machInst.vecimm;
     } else {
-      ss  << registerName(srcRegIdx(1)) << ", " << registerName(srcRegIdx(0));
+        ss << registerName(srcRegIdx(1)) << ", " << registerName(srcRegIdx(0));
     }
-    if (machInst.vm == 0) ss << ", v0.t";
+    if (machInst.vm == 0)
+        ss << ", v0.t";
     return ss.str();
 }
 
-std::string VectorArithMacroInst::generateDisassembly(Addr pc,
-        const loader::SymbolTable *symtab) const
+std::string
+VectorArithMacroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", ";
     if (machInst.funct3 == 0x3) {
         // OPIVI
-      ss  << registerName(srcRegIdx(0)) << ", " << machInst.vecimm;
+        ss << registerName(srcRegIdx(0)) << ", " << machInst.vecimm;
     } else {
-      ss  << registerName(srcRegIdx(1)) << ", " << registerName(srcRegIdx(0));
+        ss << registerName(srcRegIdx(1)) << ", " << registerName(srcRegIdx(0));
     }
-    if (machInst.vm == 0) ss << ", v0.t";
+    if (machInst.vm == 0)
+        ss << ", v0.t";
     return ss.str();
 }
 
-std::string VectorVMUNARY0MicroInst::generateDisassembly(Addr pc,
-        const loader::SymbolTable *symtab) const
+std::string
+VectorVMUNARY0MicroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     ss << mnemonic << ' ' << registerName(destRegIdx(0));
-    if (machInst.vm == 0) ss << ", v0.t";
+    if (machInst.vm == 0)
+        ss << ", v0.t";
     return ss.str();
 }
 
-std::string VectorVMUNARY0MacroInst::generateDisassembly(Addr pc,
-        const loader::SymbolTable *symtab) const
+std::string
+VectorVMUNARY0MacroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     ss << mnemonic << ' ' << registerName(destRegIdx(0));
-    if (machInst.vm == 0) ss << ", v0.t";
+    if (machInst.vm == 0)
+        ss << ", v0.t";
     return ss.str();
 }
 
-std::string VectorSlideMicroInst::generateDisassembly(Addr pc,
-        const loader::SymbolTable *symtab) const
-{
-    std::stringstream ss;
-    ss << mnemonic << ' ' << registerName(destRegIdx(0)) <<  ", ";
-    if (machInst.funct3 == 0x3) {
-      ss  << registerName(srcRegIdx(0)) << ", " << machInst.vecimm;
-    } else {
-      ss  << registerName(srcRegIdx(1)) << ", " << registerName(srcRegIdx(0));
-    }
-    if (machInst.vm == 0) ss << ", v0.t";
-    return ss.str();
-}
-
-std::string VectorSlideMacroInst::generateDisassembly(Addr pc,
-        const loader::SymbolTable *symtab) const
+std::string
+VectorSlideMicroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", ";
     if (machInst.funct3 == 0x3) {
-      ss  << registerName(srcRegIdx(0)) << ", " << machInst.vecimm;
+        ss << registerName(srcRegIdx(0)) << ", " << machInst.vecimm;
     } else {
-      ss  << registerName(srcRegIdx(1)) << ", " << registerName(srcRegIdx(0));
+        ss << registerName(srcRegIdx(1)) << ", " << registerName(srcRegIdx(0));
     }
-    if (machInst.vm == 0) ss << ", v0.t";
+    if (machInst.vm == 0)
+        ss << ", v0.t";
     return ss.str();
 }
 
-std::string VleMicroInst::generateDisassembly(Addr pc,
-        const loader::SymbolTable *symtab) const
+std::string
+VectorSlideMacroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", ";
+    if (machInst.funct3 == 0x3) {
+        ss << registerName(srcRegIdx(0)) << ", " << machInst.vecimm;
+    } else {
+        ss << registerName(srcRegIdx(1)) << ", " << registerName(srcRegIdx(0));
+    }
+    if (machInst.vm == 0)
+        ss << ", v0.t";
+    return ss.str();
+}
+
+std::string
+VleMicroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     unsigned vlenb = vlen >> 3;
     ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", "
        << vlenb * microIdx << '(' << registerName(srcRegIdx(0)) << ')' << ", "
        << registerName(srcRegIdx(1));
-    if (!machInst.vm) ss << ", v0.t";
+    if (!machInst.vm)
+        ss << ", v0.t";
     return ss.str();
 }
 
-std::string VlWholeMicroInst::generateDisassembly(Addr pc,
-        const loader::SymbolTable *symtab) const
+std::string
+VlWholeMicroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     unsigned vlenb = vlen >> 3;
@@ -236,19 +250,22 @@ std::string VlWholeMicroInst::generateDisassembly(Addr pc,
     return ss.str();
 }
 
-std::string VseMicroInst::generateDisassembly(Addr pc,
-        const loader::SymbolTable *symtab) const
+std::string
+VseMicroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     unsigned vlenb = vlen >> 3;
     ss << mnemonic << ' ' << registerName(srcRegIdx(1)) << ", "
-       << vlenb * microIdx  << '(' << registerName(srcRegIdx(0)) << ')';
-    if (!machInst.vm) ss << ", v0.t";
+       << vlenb * microIdx << '(' << registerName(srcRegIdx(0)) << ')';
+    if (!machInst.vm)
+        ss << ", v0.t";
     return ss.str();
 }
 
-std::string VsWholeMicroInst::generateDisassembly(Addr pc,
-        const loader::SymbolTable *symtab) const
+std::string
+VsWholeMicroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     unsigned vlenb = vlen >> 3;
@@ -257,170 +274,189 @@ std::string VsWholeMicroInst::generateDisassembly(Addr pc,
     return ss.str();
 }
 
-std::string VleMacroInst::generateDisassembly(Addr pc,
-        const loader::SymbolTable *symtab) const
+std::string
+VleMacroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
-    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", " <<
-        '(' << registerName(srcRegIdx(0)) << ')';
-    if (!machInst.vm) ss << ", v0.t";
+    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", " << '('
+       << registerName(srcRegIdx(0)) << ')';
+    if (!machInst.vm)
+        ss << ", v0.t";
     return ss.str();
 }
 
-std::string VlWholeMacroInst::generateDisassembly(Addr pc,
-        const loader::SymbolTable *symtab) const
+std::string
+VlWholeMacroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
-    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", " <<
-        '(' << registerName(srcRegIdx(0)) << ')';
+    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", " << '('
+       << registerName(srcRegIdx(0)) << ')';
     return ss.str();
 }
 
-std::string VseMacroInst::generateDisassembly(Addr pc,
-        const loader::SymbolTable *symtab) const
+std::string
+VseMacroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
-    ss << mnemonic << ' ' << registerName(srcRegIdx(1)) << ", " <<
-        '(' << registerName(srcRegIdx(0)) << ')';
-    if (!machInst.vm) ss << ", v0.t";
+    ss << mnemonic << ' ' << registerName(srcRegIdx(1)) << ", " << '('
+       << registerName(srcRegIdx(0)) << ')';
+    if (!machInst.vm)
+        ss << ", v0.t";
     return ss.str();
 }
 
-std::string VsWholeMacroInst::generateDisassembly(Addr pc,
-        const loader::SymbolTable *symtab) const
+std::string
+VsWholeMacroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
-    ss << mnemonic << ' ' << registerName(srcRegIdx(1)) << ", " <<
-        '(' << registerName(srcRegIdx(0)) << ')';
+    ss << mnemonic << ' ' << registerName(srcRegIdx(1)) << ", " << '('
+       << registerName(srcRegIdx(0)) << ')';
     return ss.str();
 }
 
-std::string VlStrideMacroInst::generateDisassembly(Addr pc,
-        const loader::SymbolTable *symtab) const
+std::string
+VlStrideMacroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
-    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", " <<
-        '(' << registerName(srcRegIdx(0)) << ')' <<
-        ", " << registerName(srcRegIdx(1));
-    if (!machInst.vm) ss << ", v0.t";
+    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", " << '('
+       << registerName(srcRegIdx(0)) << ')' << ", "
+       << registerName(srcRegIdx(1));
+    if (!machInst.vm)
+        ss << ", v0.t";
     return ss.str();
 }
 
-std::string VlStrideMicroInst::generateDisassembly(Addr pc,
-        const loader::SymbolTable *symtab) const
+std::string
+VlStrideMicroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
-    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", " <<
-        '(' << registerName(srcRegIdx(0)) << ')' <<
-        ", "<< registerName(srcRegIdx(1));
+    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", " << '('
+       << registerName(srcRegIdx(0)) << ')' << ", "
+       << registerName(srcRegIdx(1));
     if (microIdx != 0 || machInst.vtype8.vma == 0 || machInst.vtype8.vta == 0)
         ss << ", " << registerName(srcRegIdx(2));
-    if (!machInst.vm) ss << ", v0.t";
+    if (!machInst.vm)
+        ss << ", v0.t";
     return ss.str();
 }
 
-std::string VsStrideMacroInst::generateDisassembly(Addr pc,
-        const loader::SymbolTable *symtab) const
+std::string
+VsStrideMacroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
-    ss << mnemonic << ' ' << registerName(srcRegIdx(2)) << ", " <<
-        '(' << registerName(srcRegIdx(0)) << ')' <<
-        ", " << registerName(srcRegIdx(1));
-    if (!machInst.vm) ss << ", v0.t";
+    ss << mnemonic << ' ' << registerName(srcRegIdx(2)) << ", " << '('
+       << registerName(srcRegIdx(0)) << ')' << ", "
+       << registerName(srcRegIdx(1));
+    if (!machInst.vm)
+        ss << ", v0.t";
     return ss.str();
 }
 
-std::string VsStrideMicroInst::generateDisassembly(Addr pc,
-        const loader::SymbolTable *symtab) const
+std::string
+VsStrideMicroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
-    ss << mnemonic << ' ' << registerName(srcRegIdx(2)) << ", " <<
-        '(' << registerName(srcRegIdx(0)) << ')' <<
-        ", "<< registerName(srcRegIdx(1));
+    ss << mnemonic << ' ' << registerName(srcRegIdx(2)) << ", " << '('
+       << registerName(srcRegIdx(0)) << ')' << ", "
+       << registerName(srcRegIdx(1));
     if (microIdx != 0 || machInst.vtype8.vma == 0 || machInst.vtype8.vta == 0)
         ss << ", " << registerName(srcRegIdx(2));
-    if (!machInst.vm) ss << ", v0.t";
+    if (!machInst.vm)
+        ss << ", v0.t";
     return ss.str();
 }
 
-std::string VlIndexMacroInst::generateDisassembly(Addr pc,
-        const loader::SymbolTable *symtab) const
+std::string
+VlIndexMacroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", " << '('
+       << registerName(srcRegIdx(0)) << ")," << registerName(srcRegIdx(1));
+    if (!machInst.vm)
+        ss << ", v0.t";
+    return ss.str();
+}
+
+std::string
+VlIndexMicroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << "["
+       << uint16_t(vdElemIdx) << "], " << '(' << registerName(srcRegIdx(0))
+       << "), " << registerName(srcRegIdx(1)) << "[" << uint16_t(vs2ElemIdx)
+       << "]";
+    if (microIdx != 0 || machInst.vtype8.vma == 0 || machInst.vtype8.vta == 0)
+        ss << ", " << registerName(srcRegIdx(2));
+    if (!machInst.vm)
+        ss << ", v0.t";
+    return ss.str();
+}
+
+std::string
+VsIndexMacroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << ' ' << registerName(srcRegIdx(2)) << ", " << '('
+       << registerName(srcRegIdx(0)) << ")," << registerName(srcRegIdx(1));
+    if (!machInst.vm)
+        ss << ", v0.t";
+    return ss.str();
+}
+
+std::string
+VsIndexMicroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << ' ' << registerName(srcRegIdx(2)) << "["
+       << uint16_t(vs3ElemIdx) << "], " << '(' << registerName(srcRegIdx(0))
+       << "), " << registerName(srcRegIdx(1)) << "[" << uint16_t(vs2ElemIdx)
+       << "]";
+    if (!machInst.vm)
+        ss << ", v0.t";
+    return ss.str();
+}
+
+std::string
+VMvWholeMacroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", "
-        << '(' << registerName(srcRegIdx(0)) << "),"
-        << registerName(srcRegIdx(1));
-    if (!machInst.vm) ss << ", v0.t";
-    return ss.str();
-}
-
-std::string VlIndexMicroInst::generateDisassembly(Addr pc,
-        const loader::SymbolTable *symtab) const
-{
-    std::stringstream ss;
-    ss << mnemonic << ' '
-        << registerName(destRegIdx(0)) << "[" << uint16_t(vdElemIdx) << "], "
-        << '(' << registerName(srcRegIdx(0)) << "), "
-        << registerName(srcRegIdx(1)) << "[" << uint16_t(vs2ElemIdx) << "]";
-    if (microIdx != 0 || machInst.vtype8.vma == 0 || machInst.vtype8.vta == 0)
-        ss << ", " << registerName(srcRegIdx(2));
-    if (!machInst.vm) ss << ", v0.t";
-    return ss.str();
-}
-
-std::string VsIndexMacroInst::generateDisassembly(Addr pc,
-        const loader::SymbolTable *symtab) const
-{
-    std::stringstream ss;
-    ss << mnemonic << ' ' << registerName(srcRegIdx(2)) << ", "
-        << '(' << registerName(srcRegIdx(0)) << "),"
-        << registerName(srcRegIdx(1));
-    if (!machInst.vm) ss << ", v0.t";
-    return ss.str();
-}
-
-std::string VsIndexMicroInst::generateDisassembly(Addr pc,
-        const loader::SymbolTable *symtab) const
-{
-    std::stringstream ss;
-    ss << mnemonic << ' '
-        << registerName(srcRegIdx(2)) << "[" << uint16_t(vs3ElemIdx) << "], "
-        << '(' << registerName(srcRegIdx(0)) << "), "
-        << registerName(srcRegIdx(1)) << "[" << uint16_t(vs2ElemIdx) << "]";
-    if (!machInst.vm) ss << ", v0.t";
+       << registerName(srcRegIdx(1));
     return ss.str();
 }
 
 std::string
-VMvWholeMacroInst::generateDisassembly(Addr pc,
-    const loader::SymbolTable *symtab) const
+VMvWholeMicroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
-    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", " <<
-        registerName(srcRegIdx(1));
-    return ss.str();
-}
-
-std::string
-VMvWholeMicroInst::generateDisassembly(Addr pc,
-    const loader::SymbolTable *symtab) const
-{
-    std::stringstream ss;
-    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", " <<
-        registerName(srcRegIdx(1));
+    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", "
+       << registerName(srcRegIdx(1));
     return ss.str();
 }
 
 VMaskMergeMicroInst::VMaskMergeMicroInst(ExtMachInst extMachInst,
-    uint8_t _dstReg, uint8_t _numSrcs, uint32_t _vlen, size_t _elemSize)
-    : VectorArithMicroInst("vmask_mv_micro", extMachInst,
-                            VectorIntegerArithOp, 0, 0),
-      vlen(_vlen),
-      elemSize(_elemSize)
+    uint8_t _dstReg, uint8_t _numSrcs, uint32_t _vlen, size_t _elemSize) :
+    VectorArithMicroInst(
+        "vmask_mv_micro", extMachInst, VectorIntegerArithOp, 0, 0),
+    vlen(_vlen),
+    elemSize(_elemSize)
 {
-    setRegIdxArrays(
-        reinterpret_cast<RegIdArrayPtr>(
-            &std::remove_pointer_t<decltype(this)>::srcRegIdxArr),
+    setRegIdxArrays(reinterpret_cast<RegIdArrayPtr>(
+                        &std::remove_pointer_t<decltype(this)>::srcRegIdxArr),
         reinterpret_cast<RegIdArrayPtr>(
             &std::remove_pointer_t<decltype(this)>::destRegIdxArr));
 
@@ -429,16 +465,16 @@ VMaskMergeMicroInst::VMaskMergeMicroInst(ExtMachInst extMachInst,
 
     setDestRegIdx(_numDestRegs++, vecRegClass[_dstReg]);
     _numTypedDestRegs[VecRegClass]++;
-    for (uint8_t i=0; i<_numSrcs; i++) {
+    for (uint8_t i = 0; i < _numSrcs; i++) {
         setSrcRegIdx(_numSrcRegs++, vecRegClass[VecMemInternalReg0 + i]);
     }
 }
 
 Fault
-VMaskMergeMicroInst::execute(ExecContext* xc,
-    trace::InstRecord* traceData) const
+VMaskMergeMicroInst::execute(
+    ExecContext *xc, trace::InstRecord *traceData) const
 {
-    vreg_t& tmp_d0 = *(vreg_t *)xc->getWritableRegOperand(this, 0);
+    vreg_t &tmp_d0 = *(vreg_t *)xc->getWritableRegOperand(this, 0);
     PCStateBase *pc_ptr = xc->tcBase()->pcState().clone();
     auto Vd = tmp_d0.as<uint8_t>();
     uint32_t vlenb = pc_ptr->as<PCState>().vlenb();
@@ -456,8 +492,8 @@ VMaskMergeMicroInst::execute(ExecContext* xc,
             const uint32_t m = (1 << elems_per_vreg) - 1;
             const uint32_t mask = m << (i * elems_per_vreg % 8);
             // clr & ext bits
-            Vd[bit_cnt/8] ^= Vd[bit_cnt/8] & mask;
-            Vd[bit_cnt/8] |= s[bit_cnt/8] & mask;
+            Vd[bit_cnt / 8] ^= Vd[bit_cnt / 8] & mask;
+            Vd[bit_cnt / 8] |= s[bit_cnt / 8] & mask;
             bit_cnt += elems_per_vreg;
         } else {
             const uint32_t byte_offset = elems_per_vreg / 8;
@@ -470,8 +506,8 @@ VMaskMergeMicroInst::execute(ExecContext* xc,
 }
 
 std::string
-VMaskMergeMicroInst::generateDisassembly(Addr pc,
-    const loader::SymbolTable *symtab) const
+VMaskMergeMicroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     ss << mnemonic << ' ' << registerName(destRegIdx(0));
@@ -484,20 +520,21 @@ VMaskMergeMicroInst::generateDisassembly(Addr pc,
 }
 
 Fault
-VxsatMicroInst::execute(ExecContext* xc, trace::InstRecord* traceData) const
+VxsatMicroInst::execute(ExecContext *xc, trace::InstRecord *traceData) const
 {
     xc->setMiscReg(MISCREG_VXSAT, *vxsat);
     auto vcsr = xc->readMiscReg(MISCREG_VCSR);
-    xc->setMiscReg(MISCREG_VCSR, ((vcsr&~1)|*vxsat));
+    xc->setMiscReg(MISCREG_VCSR, ((vcsr & ~1) | *vxsat));
     return NoFault;
 }
 
 std::string
-VxsatMicroInst::generateDisassembly(Addr pc,
-    const loader::SymbolTable *symtab) const
+VxsatMicroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
-    ss << mnemonic << ' ' << "VXSAT" << ", " << (*vxsat ? "0x1" : "0x0");
+    ss << mnemonic << ' ' << "VXSAT"
+       << ", " << (*vxsat ? "0x1" : "0x0");
     return ss.str();
 }
 

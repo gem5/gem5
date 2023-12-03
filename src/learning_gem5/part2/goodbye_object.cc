@@ -34,20 +34,19 @@
 
 namespace gem5
 {
-
 GoodbyeObject::GoodbyeObject(const GoodbyeObjectParams &params) :
-    SimObject(params), event([this]{ processEvent(); }, name() + ".event"),
-    bandwidth(params.write_bandwidth), bufferSize(params.buffer_size),
-    buffer(nullptr), bufferUsed(0)
+    SimObject(params),
+    event([this] { processEvent(); }, name() + ".event"),
+    bandwidth(params.write_bandwidth),
+    bufferSize(params.buffer_size),
+    buffer(nullptr),
+    bufferUsed(0)
 {
     buffer = new char[bufferSize]();
     DPRINTF(HelloExample, "Created the goodbye object\n");
 }
 
-GoodbyeObject::~GoodbyeObject()
-{
-    delete[] buffer;
-}
+GoodbyeObject::~GoodbyeObject() { delete[] buffer; }
 
 void
 GoodbyeObject::processEvent()
@@ -89,7 +88,7 @@ GoodbyeObject::fillBuffer()
     if (bufferUsed < bufferSize - 1) {
         // Wait for the next copy for as long as it would have taken
         DPRINTF(HelloExample, "Scheduling another fillBuffer in %d ticks\n",
-                bandwidth * bytes_copied);
+            bandwidth * bytes_copied);
         schedule(event, curTick() + bandwidth * bytes_copied);
     } else {
         DPRINTF(HelloExample, "Goodbye done copying!\n");

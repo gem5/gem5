@@ -37,7 +37,6 @@ namespace gem5
 {
 namespace VegaISA
 {
-
 void
 VegaFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {

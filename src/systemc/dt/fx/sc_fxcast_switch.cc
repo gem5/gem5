@@ -38,7 +38,6 @@
 
  *****************************************************************************/
 
-
 // $Log: sc_fxcast_switch.cpp,v $
 // Revision 1.1.1.1  2006/12/15 20:20:04  acg
 // SystemC 2.3
@@ -52,7 +51,6 @@
 
 namespace sc_dt
 {
-
 template class sc_global<sc_fxcast_switch>;
 template class sc_context<sc_fxcast_switch>;
 

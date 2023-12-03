@@ -31,7 +31,6 @@
 
 namespace gem5
 {
-
 void dumpStatsHandler(int sigtype);
 void dumprstStatsHandler(int sigtype);
 void exitNowHandler(int sigtype);

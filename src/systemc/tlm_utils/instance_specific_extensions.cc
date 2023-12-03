@@ -25,17 +25,14 @@
 
 namespace tlm
 {
-
 template class tlm_array<tlm_utils::ispex_base *>;
 
 } // namespace tlm
 
 namespace tlm_utils
 {
-
 namespace
 {
-
 class ispex_registry // Copied from tlm_gp.cpp.
 {
     typedef unsigned int key_type;
@@ -90,7 +87,7 @@ ispex_base::register_private_extension(const std::type_info &type)
 
 // Helper to do the numbering of private extension accessors.
 static unsigned int
-max_num_ispex_accessors(bool increment=false)
+max_num_ispex_accessors(bool increment = false)
 {
     static unsigned int max_num = 0;
     if (increment)
@@ -134,7 +131,7 @@ instance_specific_extension_container_pool::create()
 
 void
 instance_specific_extension_container_pool::free(
-        instance_specific_extension_container *cont)
+    instance_specific_extension_container *cont)
 {
     cont->next = unused;
     unused = cont;
@@ -166,9 +163,9 @@ instance_specific_extension_container::
 }
 
 void
-instance_specific_extension_container::
-    attach_carrier(instance_specific_extension_carrier *carrier,
-            void *txn, release_fn *rel_fn)
+instance_specific_extension_container::attach_carrier(
+    instance_specific_extension_carrier *carrier, void *txn,
+    release_fn *rel_fn)
 {
     m_txn = txn;
     m_release_fn = rel_fn;
@@ -187,8 +184,7 @@ instance_specific_extension_container::resize()
     }
 }
 
-instance_specific_extension_container::
-    ~instance_specific_extension_container()
+instance_specific_extension_container::~instance_specific_extension_container()
 {
     for (unsigned int i = 0; i < m_ispex_per_accessor.size(); ++i)
         delete m_ispex_per_accessor[i];
@@ -223,7 +219,7 @@ instance_specific_extension_container::get_accessor(unsigned int idx)
 // non-templatized version with manual index:
 ispex_base *
 instance_specific_extensions_per_accessor::set_extension(
-        unsigned int index, ispex_base *ext)
+    unsigned int index, ispex_base *ext)
 {
     resize_extensions();
     ispex_base *tmp = m_extensions[index];
@@ -235,7 +231,7 @@ instance_specific_extensions_per_accessor::set_extension(
 
 ispex_base *
 instance_specific_extensions_per_accessor::get_extension(
-        unsigned int index) const
+    unsigned int index) const
 {
     return (index < m_extensions.size()) ? m_extensions[index] : nullptr;
 }

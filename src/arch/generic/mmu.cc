@@ -48,26 +48,25 @@
 
 namespace gem5
 {
-
 void
 BaseMMU::init()
 {
     auto traverse_hierarchy = [this](BaseTLB *starter) {
         for (BaseTLB *tlb = starter; tlb; tlb = tlb->nextLevel()) {
             switch (tlb->type()) {
-              case TypeTLB::instruction:
+            case TypeTLB::instruction:
                 if (instruction.find(tlb) == instruction.end())
                     instruction.insert(tlb);
                 break;
-              case TypeTLB::data:
+            case TypeTLB::data:
                 if (data.find(tlb) == data.end())
                     data.insert(tlb);
                 break;
-              case TypeTLB::unified:
+            case TypeTLB::unified:
                 if (unified.find(tlb) == unified.end())
                     unified.insert(tlb);
                 break;
-              default:
+            default:
                 panic("Invalid TLB type\n");
             }
         }
@@ -101,38 +100,42 @@ BaseMMU::demapPage(Addr vaddr, uint64_t asn)
 }
 
 Fault
-BaseMMU::translateAtomic(const RequestPtr &req, ThreadContext *tc,
-                         BaseMMU::Mode mode)
+BaseMMU::translateAtomic(
+    const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode)
 {
     return getTlb(mode)->translateAtomic(req, tc, mode);
 }
 
 void
 BaseMMU::translateTiming(const RequestPtr &req, ThreadContext *tc,
-                         BaseMMU::Translation *translation, BaseMMU::Mode mode)
+    BaseMMU::Translation *translation, BaseMMU::Mode mode)
 {
     return getTlb(mode)->translateTiming(req, tc, translation, mode);
 }
 
 Fault
-BaseMMU::translateFunctional(const RequestPtr &req, ThreadContext *tc,
-                             BaseMMU::Mode mode)
+BaseMMU::translateFunctional(
+    const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode)
 {
     return getTlb(mode)->translateFunctional(req, tc, mode);
 }
 
 Fault
-BaseMMU::finalizePhysical(const RequestPtr &req, ThreadContext *tc,
-                          BaseMMU::Mode mode) const
+BaseMMU::finalizePhysical(
+    const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode) const
 {
     return getTlb(mode)->finalizePhysical(req, tc, mode);
 }
 
-BaseMMU::MMUTranslationGen::MMUTranslationGen(Addr page_bytes,
-        Addr new_start, Addr new_size, ThreadContext *new_tc,
-        BaseMMU *new_mmu, BaseMMU::Mode new_mode, Request::Flags new_flags) :
-    TranslationGen(new_start, new_size), tc(new_tc), cid(tc->contextId()),
-    mmu(new_mmu), mode(new_mode), flags(new_flags),
+BaseMMU::MMUTranslationGen::MMUTranslationGen(Addr page_bytes, Addr new_start,
+    Addr new_size, ThreadContext *new_tc, BaseMMU *new_mmu,
+    BaseMMU::Mode new_mode, Request::Flags new_flags) :
+    TranslationGen(new_start, new_size),
+    tc(new_tc),
+    cid(tc->contextId()),
+    mmu(new_mmu),
+    mode(new_mode),
+    flags(new_flags),
     pageBytes(page_bytes)
 {}
 
@@ -145,7 +148,7 @@ BaseMMU::MMUTranslationGen::translate(Range &range) const
     range.size = std::min(range.size, next - range.vaddr);
 
     auto req = std::make_shared<Request>(
-            range.vaddr, range.size, flags, Request::funcRequestorId, 0, cid);
+        range.vaddr, range.size, flags, Request::funcRequestorId, 0, cid);
 
     range.fault = mmu->translateFunctional(req, tc, mode);
 

@@ -28,7 +28,6 @@
 
 namespace gem5
 {
-
 volatile bool async_event = false;
 volatile bool async_statdump = false;
 volatile bool async_statreset = false;

@@ -48,7 +48,6 @@
 
 namespace gem5
 {
-
 /// Container for serializing global variables (not associated with
 /// any serialized object).
 class Globals : public Serializable

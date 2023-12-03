@@ -30,10 +30,8 @@
 
 namespace gem5
 {
-
 namespace Iris
 {
-
 enum CanonicalMsn
 {
     SecureMonitorMsn = 0x1000,

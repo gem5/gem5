@@ -47,7 +47,6 @@
 
 namespace gem5
 {
-
 /**
  * ARM implementation of a KVM-based hardware virtualized CPU.
  * Architecture specific limitations:
@@ -153,7 +152,6 @@ class ArmKvmCPU : public BaseKvmCPU
     void updateTCStateMisc();
     void updateTCStateCoProc(uint64_t id, bool show_warnings);
     void updateTCStateVFP(uint64_t id, bool show_warnings);
-
 
     /** Cached state of the IRQ line */
     bool irqAsserted;

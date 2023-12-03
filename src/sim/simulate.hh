@@ -42,7 +42,6 @@
 
 namespace gem5
 {
-
 class GlobalSimLoopExitEvent;
 
 GlobalSimLoopExitEvent *simulate(Tick num_cycles = -1);

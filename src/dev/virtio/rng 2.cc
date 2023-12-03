@@ -45,23 +45,19 @@
 
 namespace gem5
 {
-
-VirtIORng::VirtIORng(const Params &params)
-    : VirtIODeviceBase(params, ID_RNG, 0, 0),
-      qReq(params.system->physProxy, byteOrder, params.qSize, *this)
+VirtIORng::VirtIORng(const Params &params) :
+    VirtIODeviceBase(params, ID_RNG, 0, 0),
+    qReq(params.system->physProxy, byteOrder, params.qSize, *this)
 {
     registerQueue(qReq);
 }
 
-VirtIORng::~VirtIORng()
-{
-}
+VirtIORng::~VirtIORng() {}
 
-VirtIORng::RngQueue::RngQueue(PortProxy &proxy, ByteOrder bo, uint16_t size,
-    VirtIORng &_parent)
-    : VirtQueue(proxy, bo, size), parent(_parent)
-{
-}
+VirtIORng::RngQueue::RngQueue(
+    PortProxy &proxy, ByteOrder bo, uint16_t size, VirtIORng &_parent) :
+    VirtQueue(proxy, bo, size), parent(_parent)
+{}
 
 void
 VirtIORng::readConfig(PacketPtr pkt, Addr cfgOffset)

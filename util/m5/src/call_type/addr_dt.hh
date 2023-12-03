@@ -33,16 +33,15 @@
 extern "C"
 {
 #define M5OP(name, func) __typeof__(::name) M5OP_MERGE_TOKENS(name, _addr);
-M5OP_FOREACH
+    M5OP_FOREACH
 #undef M5OP
 }
 
 namespace
 {
-
 DispatchTable addr_dispatch = {
 #define M5OP(name, func) .name = &::M5OP_MERGE_TOKENS(name, _addr),
-M5OP_FOREACH
+    M5OP_FOREACH
 #undef M5OP
 };
 

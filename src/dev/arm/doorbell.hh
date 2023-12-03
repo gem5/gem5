@@ -43,7 +43,6 @@
 
 namespace gem5
 {
-
 /**
  * Generic doorbell interface.
  * A Doorbell implementation will override the set and
@@ -53,13 +52,22 @@ namespace gem5
 class Doorbell : public SimObject
 {
   public:
-    Doorbell(const DoorbellParams &p)
-        : SimObject(p), _setAddress(p.set_address),
-          _clearAddress(p.clear_address)
+    Doorbell(const DoorbellParams &p) :
+        SimObject(p),
+        _setAddress(p.set_address),
+        _clearAddress(p.clear_address)
     {}
 
-    Addr setAddress() const { return _setAddress; }
-    Addr clearAddress() const { return _clearAddress; }
+    Addr
+    setAddress() const
+    {
+        return _setAddress;
+    }
+    Addr
+    clearAddress() const
+    {
+        return _clearAddress;
+    }
 
   protected:
     const Addr _setAddress;

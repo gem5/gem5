@@ -39,10 +39,8 @@
 
 namespace gem5
 {
-
 namespace fastmodel
 {
-
 class ResetControllerExample : public BasicPioDevice
 {
   private:
@@ -84,4 +82,4 @@ class ResetControllerExample : public BasicPioDevice
 } // namespace fastmodel
 } // namespace gem5
 
-#endif  // __ARCH_ARM_FASTMODEL_RESET_CONTROLLER_EXAMPLE_HH__
+#endif // __ARCH_ARM_FASTMODEL_RESET_CONTROLLER_EXAMPLE_HH__

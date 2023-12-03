@@ -39,7 +39,7 @@
 /**
  * @file
  * Floating-point library code, which will gradually replace vfp.hh. For
- * portability, this library does not use floating-point data types.  Currently,
+ * portability, this library does not use floating-point data types. Currently,
  * C's standard integer types are used in the API, though this could be changed
  * to something like class Fp32 { uint32_t x; }, etc.
  */
@@ -53,10 +53,8 @@
 
 namespace gem5
 {
-
 namespace ArmISA
 {
-
 enum FPRounding
 {
     FPRounding_TIEEVEN = 0,
@@ -168,8 +166,8 @@ template <class T1, class T2>
 T2 fplibFPToFixed(T1 op, int fbits, bool u, FPRounding rounding, FPSCR &fpscr);
 /** Floating-point convert from fixed-point. */
 template <class T>
-T fplibFixedToFP(uint64_t op, int fbits, bool u, FPRounding rounding,
-                 FPSCR &fpscr);
+T fplibFixedToFP(
+    uint64_t op, int fbits, bool u, FPRounding rounding, FPSCR &fpscr);
 /** Floating-point value for +/- infinity. */
 template <class T>
 T fplibInfinity(int sgn);
@@ -277,14 +275,14 @@ uint32_t fplibMul(uint32_t op1, uint32_t op2, FPSCR &fpscr);
 template <>
 uint64_t fplibMul(uint64_t op1, uint64_t op2, FPSCR &fpscr);
 template <>
-uint16_t fplibMulAdd(uint16_t addend, uint16_t op1, uint16_t op2,
-                     FPSCR &fpscr);
+uint16_t fplibMulAdd(
+    uint16_t addend, uint16_t op1, uint16_t op2, FPSCR &fpscr);
 template <>
-uint32_t fplibMulAdd(uint32_t addend, uint32_t op1, uint32_t op2,
-                     FPSCR &fpscr);
+uint32_t fplibMulAdd(
+    uint32_t addend, uint32_t op1, uint32_t op2, FPSCR &fpscr);
 template <>
-uint64_t fplibMulAdd(uint64_t addend, uint64_t op1, uint64_t op2,
-                     FPSCR &fpscr);
+uint64_t fplibMulAdd(
+    uint64_t addend, uint64_t op1, uint64_t op2, FPSCR &fpscr);
 template <>
 uint16_t fplibMulX(uint16_t op1, uint16_t op2, FPSCR &fpscr);
 template <>
@@ -301,7 +299,7 @@ template <>
 uint16_t fplibRSqrtEstimate(uint16_t op, FPSCR &fpscr);
 template <>
 uint32_t fplibRSqrtEstimate(uint32_t op, FPSCR &fpscr);
-template<>
+template <>
 uint64_t fplibRSqrtEstimate(uint64_t op, FPSCR &fpscr);
 template <>
 uint16_t fplibRSqrtStepFused(uint16_t op1, uint16_t op2, FPSCR &fpscr);
@@ -328,14 +326,14 @@ uint32_t fplibRecpX(uint32_t op, FPSCR &fpscr);
 template <>
 uint64_t fplibRecpX(uint64_t op, FPSCR &fpscr);
 template <>
-uint16_t fplibRoundInt(uint16_t op, FPRounding rounding, bool exact,
-                       FPSCR &fpscr);
+uint16_t fplibRoundInt(
+    uint16_t op, FPRounding rounding, bool exact, FPSCR &fpscr);
 template <>
-uint32_t fplibRoundInt(uint32_t op, FPRounding rounding, bool exact,
-                       FPSCR &fpscr);
+uint32_t fplibRoundInt(
+    uint32_t op, FPRounding rounding, bool exact, FPSCR &fpscr);
 template <>
-uint64_t fplibRoundInt(uint64_t op, FPRounding rounding, bool exact,
-                       FPSCR &fpscr);
+uint64_t fplibRoundInt(
+    uint64_t op, FPRounding rounding, bool exact, FPSCR &fpscr);
 template <>
 uint16_t fplibScale(uint16_t op1, uint16_t op2, FPSCR &fpscr);
 template <>
@@ -355,14 +353,14 @@ uint32_t fplibSub(uint32_t op1, uint32_t op2, FPSCR &fpscr);
 template <>
 uint64_t fplibSub(uint64_t op1, uint64_t op2, FPSCR &fpscr);
 template <>
-uint16_t fplibTrigMulAdd(uint8_t coeff_index, uint16_t op1, uint16_t op2,
-                       FPSCR &fpscr);
+uint16_t fplibTrigMulAdd(
+    uint8_t coeff_index, uint16_t op1, uint16_t op2, FPSCR &fpscr);
 template <>
-uint32_t fplibTrigMulAdd(uint8_t coeff_index, uint32_t op1, uint32_t op2,
-                         FPSCR &fpscr);
+uint32_t fplibTrigMulAdd(
+    uint8_t coeff_index, uint32_t op1, uint32_t op2, FPSCR &fpscr);
 template <>
-uint64_t fplibTrigMulAdd(uint8_t coeff_index, uint64_t op1, uint64_t op2,
-                         FPSCR &fpscr);
+uint64_t fplibTrigMulAdd(
+    uint8_t coeff_index, uint64_t op1, uint64_t op2, FPSCR &fpscr);
 template <>
 uint16_t fplibTrigSMul(uint16_t op1, uint16_t op2, FPSCR &fpscr);
 template <>
@@ -376,35 +374,35 @@ uint32_t fplibTrigSSel(uint32_t op1, uint32_t op2, FPSCR &fpscr);
 template <>
 uint64_t fplibTrigSSel(uint64_t op1, uint64_t op2, FPSCR &fpscr);
 template <>
-uint16_t fplibFPToFixed(uint16_t op, int fbits, bool u, FPRounding rounding,
-                        FPSCR &fpscr);
+uint16_t fplibFPToFixed(
+    uint16_t op, int fbits, bool u, FPRounding rounding, FPSCR &fpscr);
 template <>
-uint32_t fplibFPToFixed(uint16_t op, int fbits, bool u, FPRounding rounding,
-                        FPSCR &fpscr);
+uint32_t fplibFPToFixed(
+    uint16_t op, int fbits, bool u, FPRounding rounding, FPSCR &fpscr);
 template <>
-uint32_t fplibFPToFixed(uint32_t op, int fbits, bool u, FPRounding rounding,
-                        FPSCR &fpscr);
+uint32_t fplibFPToFixed(
+    uint32_t op, int fbits, bool u, FPRounding rounding, FPSCR &fpscr);
 template <>
-uint32_t fplibFPToFixed(uint64_t op, int fbits, bool u, FPRounding rounding,
-                        FPSCR &fpscr);
+uint32_t fplibFPToFixed(
+    uint64_t op, int fbits, bool u, FPRounding rounding, FPSCR &fpscr);
 template <>
-uint64_t fplibFPToFixed(uint16_t op, int fbits, bool u, FPRounding rounding,
-                        FPSCR &fpscr);
+uint64_t fplibFPToFixed(
+    uint16_t op, int fbits, bool u, FPRounding rounding, FPSCR &fpscr);
 template <>
-uint64_t fplibFPToFixed(uint32_t op, int fbits, bool u, FPRounding rounding,
-                        FPSCR &fpscr);
+uint64_t fplibFPToFixed(
+    uint32_t op, int fbits, bool u, FPRounding rounding, FPSCR &fpscr);
 template <>
-uint64_t fplibFPToFixed(uint64_t op, int fbits, bool u, FPRounding rounding,
-                        FPSCR &fpscr);
+uint64_t fplibFPToFixed(
+    uint64_t op, int fbits, bool u, FPRounding rounding, FPSCR &fpscr);
 template <>
-uint16_t fplibFixedToFP(uint64_t op, int fbits, bool u, FPRounding rounding,
-                        FPSCR &fpscr);
+uint16_t fplibFixedToFP(
+    uint64_t op, int fbits, bool u, FPRounding rounding, FPSCR &fpscr);
 template <>
-uint32_t fplibFixedToFP(uint64_t op, int fbits, bool u, FPRounding rounding,
-                        FPSCR &fpscr);
+uint32_t fplibFixedToFP(
+    uint64_t op, int fbits, bool u, FPRounding rounding, FPSCR &fpscr);
 template <>
-uint64_t fplibFixedToFP(uint64_t op, int fbits, bool u, FPRounding rounding,
-                        FPSCR &fpscr);
+uint64_t fplibFixedToFP(
+    uint64_t op, int fbits, bool u, FPRounding rounding, FPSCR &fpscr);
 template <>
 uint16_t fplibInfinity(int sgn);
 template <>

@@ -34,10 +34,8 @@
 
 namespace sc_gem5
 {
-
 namespace
 {
-
 PythonInitFunc *&
 firstInitFunc()
 {

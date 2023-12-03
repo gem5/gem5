@@ -32,10 +32,8 @@
 
 namespace gem5
 {
-
 namespace fastmodel
 {
-
 // This ThreadContext class translates accesses to state using gem5's native
 // to the Iris API. This includes extracting and translating register indices.
 class CortexA76TC : public Iris::ThreadContext
@@ -50,10 +48,9 @@ class CortexA76TC : public Iris::ThreadContext
     static std::vector<iris::MemorySpaceId> bpSpaceIds;
 
   public:
-    CortexA76TC(gem5::BaseCPU *cpu, int id, System *system,
-                gem5::BaseMMU *mmu, gem5::BaseISA *isa,
-                iris::IrisConnectionInterface *iris_if,
-                const std::string &iris_path);
+    CortexA76TC(gem5::BaseCPU *cpu, int id, System *system, gem5::BaseMMU *mmu,
+        gem5::BaseISA *isa, iris::IrisConnectionInterface *iris_if,
+        const std::string &iris_path);
 
     bool translateAddress(Addr &paddr, Addr vaddr) override;
 

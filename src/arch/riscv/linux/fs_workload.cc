@@ -37,10 +37,8 @@
 
 namespace gem5
 {
-
 namespace RiscvISA
 {
-
 void
 FsLinux::initState()
 {
@@ -48,28 +46,29 @@ FsLinux::initState()
 
     if (params().dtb_filename != "") {
         inform("Loading DTB file: %s at address %#x\n", params().dtb_filename,
-                params().dtb_addr);
+            params().dtb_addr);
 
         auto *dtb_file = new loader::DtbFile(params().dtb_filename);
 
         if (!dtb_file->addBootCmdLine(
-                    commandLine.c_str(), commandLine.size())) {
+                commandLine.c_str(), commandLine.size())) {
             warn("couldn't append bootargs to DTB file: %s\n",
-                 params().dtb_filename);
+                params().dtb_filename);
         }
 
-        dtb_file->buildImage().offset(params().dtb_addr)
+        dtb_file->buildImage()
+            .offset(params().dtb_addr)
             .write(system->physProxy);
         delete dtb_file;
 
-        for (auto *tc: system->threads) {
+        for (auto *tc : system->threads) {
             tc->setReg(int_reg::A1, params().dtb_addr);
         }
     } else {
         warn("No DTB file specified\n");
     }
 
-    for (auto *tc: system->threads) {
+    for (auto *tc : system->threads) {
         RiscvISA::Reset().invoke(tc);
         tc->activate();
     }
@@ -82,14 +81,12 @@ BootloaderKernelWorkload::loadBootloaderSymbolTable()
         Addr bootloader_paddr_offset = params().bootloader_addr;
         bootloader = loader::createObjectFile(params().bootloader_filename);
         bootloaderSymbolTable = bootloader->symtab();
-        auto renamedBootloaderSymbolTable = \
-            bootloaderSymbolTable.offset(
-                bootloader_paddr_offset
-            )->functionSymbols()->rename(
-                [](const std::string &name) {
+        auto renamedBootloaderSymbolTable =
+            bootloaderSymbolTable.offset(bootloader_paddr_offset)
+                ->functionSymbols()
+                ->rename([](const std::string &name) {
                     return "bootloader." + name;
-                }
-            );
+                });
         loader::debugSymbolTable.insert(*renamedBootloaderSymbolTable);
     }
 }
@@ -100,12 +97,9 @@ BootloaderKernelWorkload::loadKernelSymbolTable()
     if (params().object_file != "") {
         kernel = loader::createObjectFile(params().object_file);
         kernelSymbolTable = kernel->symtab();
-        auto renamedKernelSymbolTable = \
+        auto renamedKernelSymbolTable =
             kernelSymbolTable.functionSymbols()->rename(
-                [](const std::string &name) {
-                    return "kernel." + name;
-                }
-            );
+                [](const std::string &name) { return "kernel." + name; });
         loader::debugSymbolTable.insert(*renamedKernelSymbolTable);
     }
 }
@@ -115,14 +109,13 @@ BootloaderKernelWorkload::loadBootloader()
 {
     if (params().bootloader_filename != "") {
         Addr bootloader_addr_offset = params().bootloader_addr;
-        bootloader->buildImage().offset(bootloader_addr_offset).write(
-            system->physProxy
-        );
+        bootloader->buildImage()
+            .offset(bootloader_addr_offset)
+            .write(system->physProxy);
         delete bootloader;
 
         inform("Loaded bootloader \'%s\' at 0x%llx\n",
-               params().bootloader_filename,
-               bootloader_addr_offset);
+            params().bootloader_filename, bootloader_addr_offset);
     } else {
         inform("Bootloader is not specified.\n");
     }
@@ -133,19 +126,17 @@ BootloaderKernelWorkload::loadKernel()
 {
     if (params().object_file != "") {
         Addr kernel_paddr_offset = params().kernel_addr;
-        kernel->buildImage().offset(kernel_paddr_offset).write(
-            system->physProxy
-        );
+        kernel->buildImage()
+            .offset(kernel_paddr_offset)
+            .write(system->physProxy);
         delete kernel;
 
-        inform("Loaded kernel \'%s\' at 0x%llx\n",
-                params().object_file,
-                kernel_paddr_offset);
+        inform("Loaded kernel \'%s\' at 0x%llx\n", params().object_file,
+            kernel_paddr_offset);
     } else {
         inform("Kernel is not specified.\n");
     }
 }
-
 
 void
 BootloaderKernelWorkload::loadDtb()
@@ -153,15 +144,15 @@ BootloaderKernelWorkload::loadDtb()
     if (params().dtb_filename != "") {
         auto *dtb_file = new loader::DtbFile(params().dtb_filename);
 
-        dtb_file->buildImage().offset(params().dtb_addr)
+        dtb_file->buildImage()
+            .offset(params().dtb_addr)
             .write(system->physProxy);
         delete dtb_file;
 
-        inform("Loaded DTB \'%s\' at 0x%llx\n",
-                params().dtb_filename,
-                params().dtb_addr);
+        inform("Loaded DTB \'%s\' at 0x%llx\n", params().dtb_filename,
+            params().dtb_addr);
 
-        for (auto *tc: system->threads) {
+        for (auto *tc : system->threads) {
             tc->setReg(int_reg::A1, params().dtb_addr);
         }
     } else {
@@ -176,7 +167,7 @@ BootloaderKernelWorkload::initState()
     loadKernel();
     loadDtb();
 
-    for (auto *tc: system->threads) {
+    for (auto *tc : system->threads) {
         RiscvISA::Reset().invoke(tc);
         tc->activate();
     }

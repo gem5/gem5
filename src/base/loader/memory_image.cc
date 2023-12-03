@@ -31,10 +31,8 @@
 
 namespace gem5
 {
-
 namespace loader
 {
-
 bool
 MemoryImage::writeSegment(const Segment &seg, const PortProxy &proxy) const
 {
@@ -52,7 +50,7 @@ MemoryImage::writeSegment(const Segment &seg, const PortProxy &proxy) const
 bool
 MemoryImage::write(const PortProxy &proxy) const
 {
-    for (auto &seg: _segments)
+    for (auto &seg : _segments)
         if (!writeSegment(seg, proxy))
             return false;
     return true;
@@ -61,7 +59,7 @@ MemoryImage::write(const PortProxy &proxy) const
 MemoryImage &
 MemoryImage::move(std::function<Addr(Addr)> mapper)
 {
-    for (auto &seg: _segments)
+    for (auto &seg : _segments)
         seg.base = mapper(seg.base);
     return *this;
 }

@@ -40,11 +40,10 @@
 
 namespace gem5
 {
-
 class ThreadContext;
 
-namespace MipsISA {
-
+namespace MipsISA
+{
 ////////////////////////////////////////////////////////////////////////
 //
 // Floating Point Utility Functions

@@ -36,13 +36,11 @@
 
 namespace gem5
 {
-
 class System;
 class ThreadContext;
 
 namespace MipsISA
 {
-
 class RemoteGDB : public BaseRemoteGDB
 {
   protected:
@@ -50,7 +48,8 @@ class RemoteGDB : public BaseRemoteGDB
 
     class MipsGdbRegCache : public BaseGdbRegCache
     {
-      using BaseGdbRegCache::BaseGdbRegCache;
+        using BaseGdbRegCache::BaseGdbRegCache;
+
       private:
         struct
         {
@@ -65,11 +64,20 @@ class RemoteGDB : public BaseRemoteGDB
             uint32_t fsr;
             uint32_t fir;
         } r;
+
       public:
-        char *data() const { return (char *)&r; }
-        size_t size() const { return sizeof(r); }
-        void getRegs(ThreadContext*);
-        void setRegs(ThreadContext*) const;
+        char *
+        data() const
+        {
+            return (char *)&r;
+        }
+        size_t
+        size() const
+        {
+            return sizeof(r);
+        }
+        void getRegs(ThreadContext *);
+        void setRegs(ThreadContext *) const;
         const std::string
         name() const
         {

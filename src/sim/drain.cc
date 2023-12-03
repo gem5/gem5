@@ -47,34 +47,27 @@
 
 namespace gem5
 {
-
 DrainManager DrainManager::_instance;
 
-DrainManager::DrainManager()
-    : _count(0),
-      _state(DrainState::Running)
-{
-}
+DrainManager::DrainManager() : _count(0), _state(DrainState::Running) {}
 
-DrainManager::~DrainManager()
-{
-}
+DrainManager::~DrainManager() {}
 
 bool
 DrainManager::tryDrain()
 {
-    panic_if(_state == DrainState::Drained,
-             "Trying to drain a drained system\n");
+    panic_if(
+        _state == DrainState::Drained, "Trying to drain a drained system\n");
 
     panic_if(_count != 0,
-             "Drain counter must be zero at the start of a drain cycle\n");
+        "Drain counter must be zero at the start of a drain cycle\n");
 
     DPRINTF(Drain, "Trying to drain %u objects.\n", drainableCount());
     _state = DrainState::Draining;
     for (auto *obj : _allDrainable) {
         DrainState status = obj->dmDrain();
         if (debug::Drain && status != DrainState::Drained) {
-            Named *temp = dynamic_cast<Named*>(obj);
+            Named *temp = dynamic_cast<Named *>(obj);
             if (temp)
                 DPRINTF(Drain, "Failed to drain %s\n", temp->name());
         }
@@ -87,7 +80,7 @@ DrainManager::tryDrain()
         return true;
     } else {
         DPRINTF(Drain, "Need another drain cycle. %u/%u objects not ready.\n",
-                _count, drainableCount());
+            _count, drainableCount());
         return false;
     }
 }
@@ -96,19 +89,20 @@ void
 DrainManager::resume()
 {
     panic_if(_state == DrainState::Running,
-             "Trying to resume a system that is already running\n");
+        "Trying to resume a system that is already running\n");
 
     warn_if(_state == DrainState::Draining,
-            "Resuming a system that isn't fully drained, this is untested and "
-            "likely to break\n");
+        "Resuming a system that isn't fully drained, this is untested and "
+        "likely to break\n");
 
     panic_if(_state == DrainState::Resuming,
-             "Resuming a system that is already trying to resume. This should "
-             "never happen.\n");
+        "Resuming a system that is already trying to resume. This should "
+        "never happen.\n");
 
     panic_if(_count != 0,
-             "Resume called in the middle of a drain cycle. %u objects "
-             "left to drain.\n", _count);
+        "Resume called in the middle of a drain cycle. %u objects "
+        "left to drain.\n",
+        _count);
 
     // At this point in time the DrainManager and all objects will be
     // in the the Drained state. New objects (i.e., objects created
@@ -135,11 +129,11 @@ void
 DrainManager::preCheckpointRestore()
 {
     panic_if(_state != DrainState::Running,
-             "preCheckpointRestore() called on a system that isn't in the "
-             "Running state.\n");
+        "preCheckpointRestore() called on a system that isn't in the "
+        "Running state.\n");
 
     DPRINTF(Drain, "Applying pre-restore fixes to %u objects.\n",
-            drainableCount());
+        drainableCount());
     _state = DrainState::Drained;
     for (auto *obj : _allDrainable)
         obj->_drainState = DrainState::Drained;
@@ -154,7 +148,6 @@ DrainManager::signalDrainDone()
         exitSimLoop("Finished drain", 0);
     }
 }
-
 
 void
 DrainManager::registerDrainable(Drainable *obj)
@@ -192,19 +185,13 @@ DrainManager::drainableCount() const
     return _allDrainable.size();
 }
 
-
-
-Drainable::Drainable()
-    : _drainManager(DrainManager::instance()),
-      _drainState(_drainManager.state())
+Drainable::Drainable() :
+    _drainManager(DrainManager::instance()), _drainState(_drainManager.state())
 {
     _drainManager.registerDrainable(this);
 }
 
-Drainable::~Drainable()
-{
-    _drainManager.unregisterDrainable(this);
-}
+Drainable::~Drainable() { _drainManager.unregisterDrainable(this); }
 
 DrainState
 Drainable::dmDrain()
@@ -221,8 +208,8 @@ void
 Drainable::dmDrainResume()
 {
     panic_if(_drainState != DrainState::Drained &&
-             _drainState != DrainState::Resuming,
-             "Trying to resume an object that hasn't been drained\n");
+                 _drainState != DrainState::Resuming,
+        "Trying to resume an object that hasn't been drained\n");
 
     _drainState = DrainState::Running;
     drainResume();

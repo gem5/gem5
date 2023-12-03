@@ -38,10 +38,8 @@
 
 namespace gem5
 {
-
 namespace loader
 {
-
 class ImageFile
 {
   protected:

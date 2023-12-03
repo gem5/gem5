@@ -48,10 +48,8 @@
 
 namespace gem5
 {
-
 namespace statistics
 {
-
 class Info;
 class ScalarInfo;
 class VectorInfo;

@@ -54,10 +54,8 @@
 
 namespace gem5
 {
-
 namespace X86ISA
 {
-
 void
 X86FaultBase::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
@@ -87,7 +85,7 @@ X86FaultBase::invoke(ThreadContext *tc, const StaticInstPtr &inst)
             entry = extern_label_longModeInterruptWithError;
         } else {
             panic("Legacy mode interrupts with error codes "
-                    "aren't implemented.");
+                  "aren't implemented.");
         }
         tc->setReg(intRegMicro(15), errorCode);
     }
@@ -128,8 +126,8 @@ InvalidOpcode::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         X86Fault::invoke(tc, inst);
     } else {
         auto *xsi = static_cast<X86StaticInst *>(inst.get());
-        panic("Unrecognized/invalid instruction executed:\n %s",
-                xsi->machInst);
+        panic(
+            "Unrecognized/invalid instruction executed:\n %s", xsi->machInst);
     }
 }
 
@@ -164,9 +162,9 @@ PageFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
             panic("Tried to %s unmapped address %#x.", modeStr, addr);
         } else {
             panic("Tried to %s unmapped address %#x.\nPC: %#x, Instr: %s",
-                  modeStr, addr, tc->pcState(),
-                  inst->disassemble(tc->pcState().instAddr(),
-                      &loader::debugSymbolTable));
+                modeStr, addr, tc->pcState(),
+                inst->disassemble(
+                    tc->pcState().instAddr(), &loader::debugSymbolTable));
         }
     }
 }
@@ -304,7 +302,8 @@ StartupInterrupt::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     HandyM5Reg m5Reg = tc->readMiscReg(misc_reg::M5Reg);
     if (m5Reg.mode != LegacyMode || m5Reg.submode != RealMode) {
         panic("Startup IPI recived outside of real mode. "
-                "Don't know what to do. %d, %d", m5Reg.mode, m5Reg.submode);
+              "Don't know what to do. %d, %d",
+            m5Reg.mode, m5Reg.submode);
     }
 
     tc->setMiscReg(misc_reg::Cs, vector << 8);

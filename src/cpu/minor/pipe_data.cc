@@ -39,40 +39,37 @@
 
 namespace gem5
 {
-
 namespace minor
 {
-
 std::ostream &
-operator <<(std::ostream &os, BranchData::Reason reason)
+operator<<(std::ostream &os, BranchData::Reason reason)
 {
-    switch (reason)
-    {
-      case BranchData::NoBranch:
+    switch (reason) {
+    case BranchData::NoBranch:
         os << "NoBranch";
         break;
-      case BranchData::UnpredictedBranch:
+    case BranchData::UnpredictedBranch:
         os << "UnpredictedBranch";
         break;
-      case BranchData::BranchPrediction:
+    case BranchData::BranchPrediction:
         os << "BranchPrediction";
         break;
-      case BranchData::CorrectlyPredictedBranch:
+    case BranchData::CorrectlyPredictedBranch:
         os << "CorrectlyPredictedBranch";
         break;
-      case BranchData::BadlyPredictedBranch:
+    case BranchData::BadlyPredictedBranch:
         os << "BadlyPredictedBranch";
         break;
-      case BranchData::BadlyPredictedBranchTarget:
+    case BranchData::BadlyPredictedBranchTarget:
         os << "BadlyPredictedBranchTarget";
         break;
-      case BranchData::Interrupt:
+    case BranchData::Interrupt:
         os << "Interrupt";
         break;
-      case BranchData::SuspendThread:
+    case BranchData::SuspendThread:
         os << "SuspendThread";
         break;
-      case BranchData::HaltFetch:
+    case BranchData::HaltFetch:
         os << "HaltFetch";
         break;
     }
@@ -85,22 +82,21 @@ BranchData::isStreamChange(const BranchData::Reason reason)
 {
     bool ret = false;
 
-    switch (reason)
-    {
+    switch (reason) {
         /* No change of stream (see the enum comment in pipe_data.hh) */
-      case NoBranch:
-      case CorrectlyPredictedBranch:
+    case NoBranch:
+    case CorrectlyPredictedBranch:
         ret = false;
         break;
 
         /* Change of stream (Fetch1 should act on) */
-      case UnpredictedBranch:
-      case BranchPrediction:
-      case BadlyPredictedBranchTarget:
-      case BadlyPredictedBranch:
-      case SuspendThread:
-      case Interrupt:
-      case HaltFetch:
+    case UnpredictedBranch:
+    case BranchPrediction:
+    case BadlyPredictedBranchTarget:
+    case BadlyPredictedBranch:
+    case SuspendThread:
+    case Interrupt:
+    case HaltFetch:
         ret = true;
         break;
     }
@@ -113,22 +109,21 @@ BranchData::isBranch(const BranchData::Reason reason)
 {
     bool ret = false;
 
-    switch (reason)
-    {
+    switch (reason) {
         /* No change of stream (see the enum comment in pipe_data.hh) */
-      case NoBranch:
-      case CorrectlyPredictedBranch:
-      case SuspendThread:
-      case Interrupt:
-      case HaltFetch:
+    case NoBranch:
+    case CorrectlyPredictedBranch:
+    case SuspendThread:
+    case Interrupt:
+    case HaltFetch:
         ret = false;
         break;
 
         /* Change of stream (Fetch1 should act on) */
-      case UnpredictedBranch:
-      case BranchPrediction:
-      case BadlyPredictedBranchTarget:
-      case BadlyPredictedBranch:
+    case UnpredictedBranch:
+    case BranchPrediction:
+    case BadlyPredictedBranchTarget:
+    case BadlyPredictedBranch:
         ret = true;
         break;
     }
@@ -142,22 +137,19 @@ BranchData::reportData(std::ostream &os) const
     if (isBubble()) {
         os << '-';
     } else {
-        os << reason
-            << ';' << newStreamSeqNum << '.' << newPredictionSeqNum
-            << ";0x" << std::hex << target->instAddr() << std::dec
-            << ';';
+        os << reason << ';' << newStreamSeqNum << '.' << newPredictionSeqNum
+           << ";0x" << std::hex << target->instAddr() << std::dec << ';';
         inst->reportData(os);
     }
 }
 
 std::ostream &
-operator <<(std::ostream &os, const BranchData &branch)
+operator<<(std::ostream &os, const BranchData &branch)
 {
-    os << branch.reason << " target: 0x"
-        << std::hex << branch.target->instAddr() << std::dec
-        << ' ' << *branch.inst
-        << ' ' << branch.newStreamSeqNum << "(stream)."
-        << branch.newPredictionSeqNum << "(pred)";
+    os << branch.reason << " target: 0x" << std::hex
+       << branch.target->instAddr() << std::dec << ' ' << *branch.inst << ' '
+       << branch.newStreamSeqNum << "(stream)." << branch.newPredictionSeqNum
+       << "(pred)";
 
     return os;
 }
@@ -206,7 +198,7 @@ ForwardLineData::freeLine()
         if (packet) {
             delete packet;
         } else {
-            delete [] line;
+            delete[] line;
         }
         line = NULL;
         bubbleFlag = true;
@@ -230,13 +222,10 @@ ForwardInstData::ForwardInstData(unsigned int width, ThreadID tid) :
     bubbleFill();
 }
 
-ForwardInstData::ForwardInstData(const ForwardInstData &src)
-{
-    *this = src;
-}
+ForwardInstData::ForwardInstData(const ForwardInstData &src) { *this = src; }
 
 ForwardInstData &
-ForwardInstData::operator =(const ForwardInstData &src)
+ForwardInstData::operator=(const ForwardInstData &src)
 {
     numInsts = src.numInsts;
 

@@ -35,13 +35,11 @@
 
 namespace gem5
 {
-
 struct DeltaCorrelatingPredictionTablesParams;
 struct DCPTPrefetcherParams;
 
 namespace prefetch
 {
-
 /**
  * Delta Correlating Prediction Tables Prefetcher
  * References:
@@ -76,10 +74,9 @@ class DeltaCorrelatingPredictionTables : public SimObject
          * Constructor
          * @param num_deltas number of deltas stored in the entry
          */
-        DCPTEntry(unsigned int num_deltas)
-          : TaggedEntry(), lastAddress(0), deltas(num_deltas)
-        {
-        }
+        DCPTEntry(unsigned int num_deltas) :
+            TaggedEntry(), lastAddress(0), deltas(num_deltas)
+        {}
 
         void invalidate() override;
 
@@ -99,8 +96,7 @@ class DeltaCorrelatingPredictionTables : public SimObject
          *        (ignored) when comparing deltas
          */
         void getCandidates(std::vector<Queued::AddrPriority> &pfs,
-                           unsigned int mask_bits) const;
-
+            unsigned int mask_bits) const;
     };
     /** The main table */
     AssociativeSet<DCPTEntry> table;
@@ -119,7 +115,6 @@ class DeltaCorrelatingPredictionTables : public SimObject
     void calculatePrefetch(const Base::PrefetchInfo &pfi,
         std::vector<Queued::AddrPriority> &addresses,
         const CacheAccessor &cache);
-
 };
 
 /** The prefetcher object using the DCPT */
@@ -127,6 +122,7 @@ class DCPT : public Queued
 {
     /** DCPT object */
     DeltaCorrelatingPredictionTables &dcpt;
+
   public:
     DCPT(const DCPTPrefetcherParams &p);
     ~DCPT() = default;
@@ -139,4 +135,4 @@ class DCPT : public Queued
 } // namespace prefetch
 } // namespace gem5
 
-#endif//__MEM_CACHE_PREFETCH_DELTA_CORRELATING_PREDICTION_TABLES_HH_
+#endif //__MEM_CACHE_PREFETCH_DELTA_CORRELATING_PREDICTION_TABLES_HH_

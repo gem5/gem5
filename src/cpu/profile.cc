@@ -39,7 +39,6 @@
 
 namespace gem5
 {
-
 void
 BaseStackTrace::dump()
 {
@@ -57,8 +56,8 @@ BaseStackTrace::dump()
 }
 
 bool
-BaseStackTrace::tryGetSymbol(std::string &symbol, Addr addr,
-                             const loader::SymbolTable *symtab)
+BaseStackTrace::tryGetSymbol(
+    std::string &symbol, Addr addr, const loader::SymbolTable *symtab)
 {
     const auto it = symtab->find(addr);
     if (it == symtab->end())
@@ -69,15 +68,15 @@ BaseStackTrace::tryGetSymbol(std::string &symbol, Addr addr,
 
 void
 ProfileNode::dump(const std::string &symbol, uint64_t id,
-                  const FunctionProfile &prof, std::ostream &os) const
+    const FunctionProfile &prof, std::ostream &os) const
 {
     ccprintf(os, "%#x %s %d ", id, symbol, count);
-    for (const auto &p: children)
+    for (const auto &p : children)
         ccprintf(os, "%#x ", (intptr_t)(p.second));
 
     ccprintf(os, "\n");
 
-    for (const auto &p: children) {
+    for (const auto &p : children) {
         Addr addr = p.first;
         std::string symbol;
 
@@ -92,12 +91,12 @@ void
 ProfileNode::clear()
 {
     count = 0;
-    for (const auto &p: children)
+    for (const auto &p : children)
         p.second->clear();
 }
 
 FunctionProfile::FunctionProfile(std::unique_ptr<BaseStackTrace> _trace,
-                                 const loader::SymbolTable &_symtab) :
+    const loader::SymbolTable &_symtab) :
     symtab(_symtab), trace(std::move(_trace))
 {
     statistics::registerResetCallback([this]() { clear(); });
@@ -129,7 +128,7 @@ void
 FunctionProfile::dump(std::ostream &os) const
 {
     ccprintf(os, ">>>PC data\n");
-    for (const auto &p: pc_count) {
+    for (const auto &p : pc_count) {
         Addr pc = p.first;
         Counter count = p.second;
 

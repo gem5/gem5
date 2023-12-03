@@ -37,7 +37,6 @@
 
 namespace gem5
 {
-
 Tick
 X86ISA::Speaker::read(PacketPtr pkt)
 {
@@ -45,10 +44,9 @@ X86ISA::Speaker::read(PacketPtr pkt)
     assert(pkt->getSize() == 1);
     controlVal.timer = timer->outputHigh(2) ? 1 : 0;
     DPRINTF(PcSpeaker,
-            "Reading from speaker device: gate %s, speaker %s, output %s.\n",
-            controlVal.gate ? "on" : "off",
-            controlVal.speaker ? "on" : "off",
-            controlVal.timer ? "on" : "off");
+        "Reading from speaker device: gate %s, speaker %s, output %s.\n",
+        controlVal.gate ? "on" : "off", controlVal.speaker ? "on" : "off",
+        controlVal.timer ? "on" : "off");
     pkt->setLE((uint8_t)controlVal);
     pkt->makeAtomicResponse();
     return latency;
@@ -61,16 +59,16 @@ X86ISA::Speaker::write(PacketPtr pkt)
     assert(pkt->getSize() == 1);
     SpeakerControl val = pkt->getLE<uint8_t>();
     controlVal.gate = val.gate;
-    //Change the gate value in the timer.
+    // Change the gate value in the timer.
     if (!val.gate)
         warn("The gate bit of the pc speaker isn't implemented and "
-                "is always on.\n");
-    //This would control whether the timer output is hooked up to a physical
-    //speaker. Since M5 can't make noise, it's value doesn't actually do
-    //anything.
+             "is always on.\n");
+    // This would control whether the timer output is hooked up to a physical
+    // speaker. Since M5 can't make noise, it's value doesn't actually do
+    // anything.
     controlVal.speaker = val.speaker;
     DPRINTF(PcSpeaker, "Writing to speaker device: gate %s, speaker %s.\n",
-            controlVal.gate ? "on" : "off", controlVal.speaker ? "on" : "off");
+        controlVal.gate ? "on" : "off", controlVal.speaker ? "on" : "off");
     pkt->makeAtomicResponse();
     return latency;
 }

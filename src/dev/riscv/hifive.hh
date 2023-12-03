@@ -46,7 +46,6 @@
 
 namespace gem5
 {
-
 using namespace RiscvISA;
 
 class HiFiveBase : public Platform
@@ -75,4 +74,4 @@ class HiFiveBase : public Platform
 
 } // namespace gem5
 
-#endif  // __DEV_RISCV_HIFIVE_HH__
+#endif // __DEV_RISCV_HIFIVE_HH__

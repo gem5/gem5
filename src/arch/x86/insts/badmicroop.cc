@@ -42,24 +42,21 @@
 
 namespace gem5
 {
-
-namespace {
-
+namespace
+{
 static X86ISA::ExtMachInst dummyMachInst;
 
 }
 
 namespace X86ISA
 {
-
 // This microop needs to be allocated on the heap even though it could
 // theoretically be statically allocated. The reference counted pointer would
 // try to delete the static memory when it was destructed.
 
-const StaticInstPtr badMicroop =
-    new MicroDebug(dummyMachInst, "panic", "BAD",
-        StaticInst::IsMicroop | StaticInst::IsLastMicroop,
-        new GenericISA::M5PanicFault("Invalid microop!"));
+const StaticInstPtr badMicroop = new MicroDebug(dummyMachInst, "panic", "BAD",
+    StaticInst::IsMicroop | StaticInst::IsLastMicroop,
+    new GenericISA::M5PanicFault("Invalid microop!"));
 
 } // namespace X86ISA
 } // namespace gem5

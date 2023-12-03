@@ -47,10 +47,8 @@
 
 namespace gem5
 {
-
 namespace qemu
 {
-
 /*
  * Items which can be reported by the firmware config device.
  */
@@ -63,16 +61,32 @@ class FwCfgItem
     bool _archSpecific;
 
     FwCfgItem(const std::string &new_path, bool arch_specific,
-            uint16_t new_index=0) :
+        uint16_t new_index = 0) :
         _index(new_index), _path(new_path), _archSpecific(arch_specific)
     {}
 
   public:
-    uint16_t index() const { return _index; }
-    void index(uint16_t new_index) { _index = new_index; }
+    uint16_t
+    index() const
+    {
+        return _index;
+    }
+    void
+    index(uint16_t new_index)
+    {
+        _index = new_index;
+    }
 
-    const std::string &path() const { return _path; }
-    bool archSpecific() const { return _archSpecific; }
+    const std::string &
+    path() const
+    {
+        return _path;
+    }
+    bool
+    archSpecific() const
+    {
+        return _archSpecific;
+    }
 
     virtual uint64_t length() const = 0;
 
@@ -99,7 +113,7 @@ class FwCfgItemFile : public FwCfgItemFixed
 
   public:
     FwCfgItemFile(const std::string &new_path, bool arch_specific,
-            const std::string path, uint16_t new_index=0) :
+        const std::string path, uint16_t new_index = 0) :
         FwCfgItemFixed(new_path, arch_specific, new_index), data(path)
     {}
 
@@ -107,8 +121,16 @@ class FwCfgItemFile : public FwCfgItemFixed
         FwCfgItemFile(p.path, p.arch_specific, p.file, p.index)
     {}
 
-    const void *bytes() const override { return data.data(); }
-    uint64_t length() const override { return data.len(); }
+    const void *
+    bytes() const override
+    {
+        return data.data();
+    }
+    uint64_t
+    length() const override
+    {
+        return data.len();
+    }
 };
 
 // An item who's value comes from a string.
@@ -119,7 +141,7 @@ class FwCfgItemString : public FwCfgItemFixed
 
   public:
     FwCfgItemString(const std::string &new_path, bool arch_specific,
-            const std::string _str, uint16_t new_index=0) :
+        const std::string _str, uint16_t new_index = 0) :
         FwCfgItemFixed(new_path, arch_specific, new_index), str(_str)
     {}
 
@@ -127,7 +149,11 @@ class FwCfgItemString : public FwCfgItemFixed
         FwCfgItemString(p.path, p.arch_specific, p.string, p.index)
     {}
 
-    const void *bytes() const override { return (void *)str.data(); }
+    const void *
+    bytes() const override
+    {
+        return (void *)str.data();
+    }
     uint64_t
     length() const override
     {
@@ -143,7 +169,7 @@ class FwCfgItemBytes : public FwCfgItemFixed
 
   public:
     FwCfgItemBytes(const std::string &new_path, bool arch_specific,
-            const std::vector<uint8_t> &_data, uint16_t new_index=0) :
+        const std::vector<uint8_t> &_data, uint16_t new_index = 0) :
         FwCfgItemFixed(new_path, arch_specific, new_index), data(_data)
     {}
 
@@ -151,8 +177,16 @@ class FwCfgItemBytes : public FwCfgItemFixed
         FwCfgItemBytes(p.path, p.arch_specific, p.data, p.index)
     {}
 
-    const void *bytes() const override { return (void *)data.data(); }
-    uint64_t length() const override { return data.size(); }
+    const void *
+    bytes() const override
+    {
+        return (void *)data.data();
+    }
+    uint64_t
+    length() const override
+    {
+        return data.size();
+    }
 };
 
 /*
@@ -176,10 +210,15 @@ class FwCfgItemFactory : public FwCfgItemFactoryBase
 
   public:
     template <class PType, class = typename std::enable_if_t<
-        std::is_base_of_v<SimObjectParams, PType>>>
-    FwCfgItemFactory(const PType &p) : FwCfgItemFactoryBase(p), _item(p) {}
+                               std::is_base_of_v<SimObjectParams, PType>>>
+    FwCfgItemFactory(const PType &p) : FwCfgItemFactoryBase(p), _item(p)
+    {}
 
-    FwCfgItem &item() override { return _item; }
+    FwCfgItem &
+    item() override
+    {
+        return _item;
+    }
 };
 
 /*
@@ -211,10 +250,18 @@ class FwCfg : public PioDevice
         Directory();
 
         void update(const std::map<std::string, uint16_t> &names,
-                const std::map<uint16_t, FwCfgItem *> &numbers);
+            const std::map<uint16_t, FwCfgItem *> &numbers);
 
-        const void *bytes() const override { return (void *)data.data(); }
-        uint64_t length() const override { return data.size(); }
+        const void *
+        bytes() const override
+        {
+            return (void *)data.data();
+        }
+        uint64_t
+        length() const override
+        {
+            return data.size();
+        }
     };
 
     FwCfgItemString signature;
@@ -232,7 +279,11 @@ class FwCfg : public PioDevice
     PARAMS(QemuFwCfg);
     FwCfg(const Params &p, const AddrRangeList &addr_ranges);
 
-    AddrRangeList getAddrRanges() const override { return addrRanges; }
+    AddrRangeList
+    getAddrRanges() const override
+    {
+        return addrRanges;
+    }
 
     void readItem(void *buf, uint32_t length);
 };

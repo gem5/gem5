@@ -43,12 +43,10 @@
 
 namespace gem5
 {
-
 struct ZeroCompressorParams;
 
 namespace compression
 {
-
 class Zero : public DictionaryCompressor<uint64_t>
 {
   protected:
@@ -66,7 +64,9 @@ class Zero : public DictionaryCompressor<uint64_t>
      */
     enum PatternNumber
     {
-        X, Z, NUM_PATTERNS
+        X,
+        Z,
+        NUM_PATTERNS
     };
 
     /**
@@ -75,20 +75,22 @@ class Zero : public DictionaryCompressor<uint64_t>
      */
     using PatternFactory = Factory<PatternZ, PatternX>;
 
-    uint64_t getNumPatterns() const override { return NUM_PATTERNS; }
+    uint64_t
+    getNumPatterns() const override
+    {
+        return NUM_PATTERNS;
+    }
 
     std::string
     getName(int number) const override
     {
-        static std::map<int, std::string> pattern_names = {
-            {X, "X"}, {Z, "Z"}
-        };
+        static std::map<int, std::string> pattern_names = {{X, "X"}, {Z, "Z"}};
 
         return pattern_names[number];
     };
 
     std::unique_ptr<Pattern>
-    getPattern(const DictionaryEntry& bytes, const DictionaryEntry& dict_bytes,
+    getPattern(const DictionaryEntry &bytes, const DictionaryEntry &dict_bytes,
         const int match_location) const override
     {
         return PatternFactory::getPattern(bytes, dict_bytes, match_location);
@@ -97,8 +99,8 @@ class Zero : public DictionaryCompressor<uint64_t>
     void addToDictionary(DictionaryEntry data) override;
 
     std::unique_ptr<Base::CompressionData> compress(
-        const std::vector<Base::Chunk>& chunks,
-        Cycles& comp_lat, Cycles& decomp_lat) override;
+        const std::vector<Base::Chunk> &chunks, Cycles &comp_lat,
+        Cycles &decomp_lat) override;
 
   public:
     typedef ZeroCompressorParams Params;
@@ -106,26 +108,23 @@ class Zero : public DictionaryCompressor<uint64_t>
     ~Zero() = default;
 };
 
-class Zero::PatternX
-    : public DictionaryCompressor::UncompressedPattern
+class Zero::PatternX : public DictionaryCompressor::UncompressedPattern
 {
   public:
-    PatternX(const DictionaryEntry bytes, const int match_location)
-        : DictionaryCompressor::UncompressedPattern(X, 0, 0, match_location,
-          bytes)
-    {
-    }
+    PatternX(const DictionaryEntry bytes, const int match_location) :
+        DictionaryCompressor::UncompressedPattern(
+            X, 0, 0, match_location, bytes)
+    {}
 };
 
-class Zero::PatternZ
-    : public DictionaryCompressor::MaskedValuePattern<0, 0xFFFFFFFFFFFFFFFF>
+class Zero::PatternZ :
+    public DictionaryCompressor::MaskedValuePattern<0, 0xFFFFFFFFFFFFFFFF>
 {
   public:
-    PatternZ(const DictionaryEntry bytes, const int match_location)
-        : DictionaryCompressor::MaskedValuePattern<0, 0xFFFFFFFFFFFFFFFF>(
-          Z, 1, 0, match_location, bytes)
-    {
-    }
+    PatternZ(const DictionaryEntry bytes, const int match_location) :
+        DictionaryCompressor::MaskedValuePattern<0, 0xFFFFFFFFFFFFFFFF>(
+            Z, 1, 0, match_location, bytes)
+    {}
 };
 
 } // namespace compression

@@ -48,7 +48,6 @@
 
 namespace gem5
 {
-
 class ThreadContext;
 
 /**
@@ -60,7 +59,7 @@ class ThreadContext;
 class TranslatingPortProxy : public PortProxy
 {
   protected:
-    ThreadContext* _tc;
+    ThreadContext *_tc;
     Request::Flags flags;
 
     virtual bool
@@ -70,23 +69,23 @@ class TranslatingPortProxy : public PortProxy
     }
 
     bool tryOnBlob(BaseMMU::Mode mode, TranslationGenPtr gen,
-            std::function<void(const TranslationGen::Range &)> func) const;
+        std::function<void(const TranslationGen::Range &)> func) const;
 
   public:
-    TranslatingPortProxy(ThreadContext *tc, Request::Flags _flags=0);
+    TranslatingPortProxy(ThreadContext *tc, Request::Flags _flags = 0);
 
     /** Version of tryReadblob that translates virt->phys and deals
-      * with page boundries. */
+     * with page boundries. */
     bool tryReadBlob(Addr addr, void *p, uint64_t size) const override;
 
     /** Version of tryWriteBlob that translates virt->phys and deals
-      * with page boundries. */
+     * with page boundries. */
     bool tryWriteBlob(Addr addr, const void *p, uint64_t size) const override;
 
     /**
      * Fill size bytes starting at addr with byte value val.
      */
-    bool tryMemsetBlob(Addr address, uint8_t  v, uint64_t size) const override;
+    bool tryMemsetBlob(Addr address, uint8_t v, uint64_t size) const override;
 };
 
 } // namespace gem5

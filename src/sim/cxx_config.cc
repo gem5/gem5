@@ -39,7 +39,6 @@
 
 namespace gem5
 {
-
 const std::string CxxConfigParams::invalidName = "<invalid>";
 
 /** Directory of all SimObject classes config details */

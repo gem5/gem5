@@ -32,10 +32,8 @@
 
 namespace gem5
 {
-
 namespace SparcISA
 {
-
 RegId
 IntRegClassOps::flatten(const BaseISA &isa, const RegId &id) const
 {

@@ -42,7 +42,6 @@
 
 namespace gem5
 {
-
 /**
  * Base class for BufferArg and TypedBufferArg, Not intended to be
  * used directly.
@@ -56,15 +55,13 @@ namespace gem5
  */
 class BaseBufferArg
 {
-
   public:
-
     /**
      * Allocate a buffer of size 'size' representing the memory at
      * target address 'addr'.
      */
-    BaseBufferArg(Addr _addr, int _size)
-        : addr(_addr), size(_size), bufPtr(new uint8_t[size])
+    BaseBufferArg(Addr _addr, int _size) :
+        addr(_addr), size(_size), bufPtr(new uint8_t[size])
     {
         // clear out buffer: in case we only partially populate this,
         // and then do a copyOut(), we want to make sure we don't
@@ -72,7 +69,7 @@ class BaseBufferArg
         memset(bufPtr, 0, size);
     }
 
-    ~BaseBufferArg() { delete [] bufPtr; }
+    ~BaseBufferArg() { delete[] bufPtr; }
 
     /**
      * copy data into simulator space (read from target memory)
@@ -81,7 +78,7 @@ class BaseBufferArg
     copyIn(const PortProxy &memproxy)
     {
         memproxy.readBlob(addr, bufPtr, size);
-        return true;    // no EFAULT detection for now
+        return true; // no EFAULT detection for now
     }
 
     /**
@@ -91,13 +88,13 @@ class BaseBufferArg
     copyOut(const PortProxy &memproxy)
     {
         memproxy.writeBlob(addr, bufPtr, size);
-        return true;    // no EFAULT detection for now
+        return true; // no EFAULT detection for now
     }
 
   protected:
-    const Addr addr;        ///< address of buffer in target address space
-    const int size;         ///< buffer size
-    uint8_t * const bufPtr; ///< pointer to buffer in simulator space
+    const Addr addr;       ///< address of buffer in target address space
+    const int size;        ///< buffer size
+    uint8_t *const bufPtr; ///< pointer to buffer in simulator space
 };
 
 /**
@@ -111,12 +108,16 @@ class BufferArg : public BaseBufferArg
      * Allocate a buffer of size 'size' representing the memory at
      * target address 'addr'.
      */
-    BufferArg(Addr _addr, int _size) : BaseBufferArg(_addr, _size) { }
+    BufferArg(Addr _addr, int _size) : BaseBufferArg(_addr, _size) {}
 
     /**
      * Return a pointer to the internal simulator-space buffer.
      */
-    void *bufferPtr() { return bufPtr; }
+    void *
+    bufferPtr()
+    {
+        return bufPtr;
+    }
 };
 
 /**
@@ -138,34 +139,45 @@ class TypedBufferArg : public BaseBufferArg
      * number of bytes to allocate to deal with structs that have
      * variable-size arrays at the end.
      */
-    TypedBufferArg(Addr _addr, int _size = sizeof(T))
-        : BaseBufferArg(_addr, _size)
-    { }
+    TypedBufferArg(Addr _addr, int _size = sizeof(T)) :
+        BaseBufferArg(_addr, _size)
+    {}
 
     /**
      * Convert TypedBufferArg<T> to a pointer to T that points to the
      * internal buffer.
      */
-    operator T*() { return (T *)bufPtr; }
+    operator T *() { return (T *)bufPtr; }
 
     /**
      * Convert TypedBufferArg<T> to a reference to T that references the
      * internal buffer value.
      */
-    T &operator*()       { return *((T *)bufPtr); }
-
+    T &
+    operator*()
+    {
+        return *((T *)bufPtr);
+    }
 
     /**
      * Enable the use of '->' to reference fields where T is a struct
      * type.
      */
-    T* operator->()      { return (T *)bufPtr; }
+    T *
+    operator->()
+    {
+        return (T *)bufPtr;
+    }
 
     /**
      * Enable the use of '[]' to reference fields where T is an array
      * type.
      */
-    T &operator[](int i) { return ((T *)bufPtr)[i]; }
+    T &
+    operator[](int i)
+    {
+        return ((T *)bufPtr)[i];
+    }
 };
 
 } // namespace gem5

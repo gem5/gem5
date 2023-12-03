@@ -56,10 +56,8 @@
 
 namespace gem5
 {
-
 inline void
-WriteQueueEntry::TargetList::add(PacketPtr pkt, Tick readyTime,
-                                 Counter order)
+WriteQueueEntry::TargetList::add(PacketPtr pkt, Tick readyTime, Counter order)
 {
     emplace_back(pkt, readyTime, order);
 }
@@ -67,7 +65,7 @@ WriteQueueEntry::TargetList::add(PacketPtr pkt, Tick readyTime,
 bool
 WriteQueueEntry::TargetList::trySatisfyFunctional(PacketPtr pkt)
 {
-    for (auto& t : *this) {
+    for (auto &t : *this) {
         if (pkt->trySatisfyFunctional(t.pkt)) {
             return true;
         }
@@ -77,10 +75,10 @@ WriteQueueEntry::TargetList::trySatisfyFunctional(PacketPtr pkt)
 }
 
 void
-WriteQueueEntry::TargetList::print(std::ostream &os, int verbosity,
-                                   const std::string &prefix) const
+WriteQueueEntry::TargetList::print(
+    std::ostream &os, int verbosity, const std::string &prefix) const
 {
-    for (auto& t : *this) {
+    for (auto &t : *this) {
         ccprintf(os, "%sFromCPU: ", prefix);
         t.pkt->print(os, verbosity, "");
     }
@@ -88,7 +86,7 @@ WriteQueueEntry::TargetList::print(std::ostream &os, int verbosity,
 
 void
 WriteQueueEntry::allocate(Addr blk_addr, unsigned blk_size, PacketPtr target,
-                          Tick when_ready, Counter _order)
+    Tick when_ready, Counter _order)
 {
     blkAddr = blk_addr;
     blkSize = blk_size;
@@ -102,13 +100,14 @@ WriteQueueEntry::allocate(Addr blk_addr, unsigned blk_size, PacketPtr target,
     // we should never have more than a single target for cacheable
     // writes (writebacks and clean evictions)
     panic_if(!_isUncacheable && !targets.empty(),
-             "Write queue entry %#llx should never have more than one "
-             "cacheable target", blkAddr);
+        "Write queue entry %#llx should never have more than one "
+        "cacheable target",
+        blkAddr);
     panic_if(!((target->isWrite() && _isUncacheable) ||
-               (target->isEviction() && !_isUncacheable) ||
-               target->cmd == MemCmd::WriteClean),
-             "Write queue entry %#llx should be an uncacheable write or "
-             "a cacheable eviction or a writeclean");
+                 (target->isEviction() && !_isUncacheable) ||
+                 target->cmd == MemCmd::WriteClean),
+        "Write queue entry %#llx should be an uncacheable write or "
+        "a cacheable eviction or a writeclean");
 
     targets.add(target, when_ready, _order);
 
@@ -158,21 +157,19 @@ WriteQueueEntry::matchBlockAddr(const PacketPtr pkt) const
 }
 
 bool
-WriteQueueEntry::conflictAddr(const QueueEntry* entry) const
+WriteQueueEntry::conflictAddr(const QueueEntry *entry) const
 {
     assert(hasTargets());
     return entry->matchBlockAddr(blkAddr, isSecure);
 }
 
 void
-WriteQueueEntry::print(std::ostream &os, int verbosity,
-                       const std::string &prefix) const
+WriteQueueEntry::print(
+    std::ostream &os, int verbosity, const std::string &prefix) const
 {
     ccprintf(os, "%s[%#llx:%#llx](%s) %s %s %s state: %s %s %s %s %s\n",
-             prefix, blkAddr, blkAddr + blkSize - 1,
-             isSecure ? "s" : "ns",
-             _isUncacheable ? "Unc" : "",
-             inService ? "InSvc" : "");
+        prefix, blkAddr, blkAddr + blkSize - 1, isSecure ? "s" : "ns",
+        _isUncacheable ? "Unc" : "", inService ? "InSvc" : "");
 
     ccprintf(os, "%s  Targets:\n", prefix);
     targets.print(os, verbosity, prefix + "    ");

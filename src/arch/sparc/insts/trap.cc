@@ -30,10 +30,8 @@
 
 namespace gem5
 {
-
 namespace SparcISA
 {
-
 std::string
 Trap::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
 {

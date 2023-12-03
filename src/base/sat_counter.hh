@@ -49,7 +49,6 @@
 
 namespace gem5
 {
-
 /**
  * Implements an n bit saturating counter and provides methods to
  * increment, decrement, and read it.
@@ -74,14 +73,14 @@ class GenericSatCounter
      *
      * @ingroup api_sat_counter
      */
-    explicit GenericSatCounter(unsigned bits, T initial_val = 0)
-        : initialVal(initial_val), maxVal((1ULL << bits) - 1),
-          counter(initial_val)
+    explicit GenericSatCounter(unsigned bits, T initial_val = 0) :
+        initialVal(initial_val),
+        maxVal((1ULL << bits) - 1),
+        counter(initial_val)
     {
-        fatal_if(bits > 8*sizeof(T),
-                 "Number of bits exceeds counter size");
+        fatal_if(bits > 8 * sizeof(T), "Number of bits exceeds counter size");
         fatal_if(initial_val > maxVal,
-                 "Saturating counter's initial value exceeds max value.");
+            "Saturating counter's initial value exceeds max value.");
     }
 
     /**
@@ -89,18 +88,20 @@ class GenericSatCounter
      *
      * @ingroup api_sat_counter
      */
-    GenericSatCounter(const GenericSatCounter& other)
-        : initialVal(other.initialVal), maxVal(other.maxVal),
-          counter(other.counter)
-    {
-    }
+    GenericSatCounter(const GenericSatCounter &other) :
+        initialVal(other.initialVal),
+        maxVal(other.maxVal),
+        counter(other.counter)
+    {}
 
     /**
      * Copy assignment.
      *
      * @ingroup api_sat_counter
      */
-    GenericSatCounter& operator=(const GenericSatCounter& other) {
+    GenericSatCounter &
+    operator=(const GenericSatCounter &other)
+    {
         if (this != &other) {
             GenericSatCounter temp(other);
             this->swap(temp);
@@ -113,7 +114,7 @@ class GenericSatCounter
      *
      * @ingroup api_sat_counter
      */
-    GenericSatCounter(GenericSatCounter&& other)
+    GenericSatCounter(GenericSatCounter &&other)
     {
         initialVal = other.initialVal;
         maxVal = other.maxVal;
@@ -127,7 +128,9 @@ class GenericSatCounter
      *
      * @ingroup api_sat_counter
      */
-    GenericSatCounter& operator=(GenericSatCounter&& other) {
+    GenericSatCounter &
+    operator=(GenericSatCounter &&other)
+    {
         if (this != &other) {
             initialVal = other.initialVal;
             maxVal = other.maxVal;
@@ -147,7 +150,7 @@ class GenericSatCounter
      * @ingroup api_sat_counter
      */
     void
-    swap(GenericSatCounter& other)
+    swap(GenericSatCounter &other)
     {
         std::swap(initialVal, other.initialVal);
         std::swap(maxVal, other.maxVal);
@@ -159,7 +162,7 @@ class GenericSatCounter
      *
      * @ingroup api_sat_counter
      */
-    GenericSatCounter&
+    GenericSatCounter &
     operator++()
     {
         if (counter < maxVal) {
@@ -186,7 +189,7 @@ class GenericSatCounter
      *
      * @ingroup api_sat_counter
      */
-    GenericSatCounter&
+    GenericSatCounter &
     operator--()
     {
         if (counter > 0) {
@@ -213,8 +216,8 @@ class GenericSatCounter
      *
      * @ingroup api_sat_counter
      */
-    GenericSatCounter&
-    operator>>=(const int& shift)
+    GenericSatCounter &
+    operator>>=(const int &shift)
     {
         assert(shift >= 0);
         this->counter >>= shift;
@@ -226,8 +229,8 @@ class GenericSatCounter
      *
      * @ingroup api_sat_counter
      */
-    GenericSatCounter&
-    operator<<=(const int& shift)
+    GenericSatCounter &
+    operator<<=(const int &shift)
     {
         assert(shift >= 0);
         this->counter <<= shift;
@@ -242,8 +245,8 @@ class GenericSatCounter
      *
      * @ingroup api_sat_counter
      */
-    GenericSatCounter&
-    operator+=(const long long& value)
+    GenericSatCounter &
+    operator+=(const long long &value)
     {
         if (value >= 0) {
             if (maxVal - this->counter >= value) {
@@ -262,8 +265,8 @@ class GenericSatCounter
      *
      * @ingroup api_sat_counter
      */
-    GenericSatCounter&
-    operator-=(const long long& value)
+    GenericSatCounter &
+    operator-=(const long long &value)
     {
         if (value >= 0) {
             if (this->counter > value) {
@@ -289,7 +292,11 @@ class GenericSatCounter
      *
      * @ingroup api_sat_counter
      */
-    void reset() { counter = initialVal; }
+    void
+    reset()
+    {
+        counter = initialVal;
+    }
 
     /**
      * Calculate saturation percentile of the current counter's value
@@ -300,7 +307,11 @@ class GenericSatCounter
      *
      * @ingroup api_sat_counter
      */
-    double calcSaturation() const { return (double) counter / maxVal; }
+    double
+    calcSaturation() const
+    {
+        return (double)counter / maxVal;
+    }
 
     /**
      * Whether the counter has achieved its maximum value or not.
@@ -309,7 +320,11 @@ class GenericSatCounter
      *
      * @ingroup api_sat_counter
      */
-    bool isSaturated() const { return counter == maxVal; }
+    bool
+    isSaturated() const
+    {
+        return counter == maxVal;
+    }
 
     /**
      * Saturate the counter.
@@ -318,7 +333,8 @@ class GenericSatCounter
      *
      * @ingroup api_sat_counter
      */
-    T saturate()
+    T
+    saturate()
     {
         const T diff = maxVal - counter;
         counter = maxVal;

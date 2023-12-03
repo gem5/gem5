@@ -39,12 +39,10 @@
 
 namespace gem5
 {
-
 struct WeightedLRURPParams;
 
 namespace replacement_policy
 {
-
 class WeightedLRU : public LRU
 {
   protected:
@@ -59,14 +57,15 @@ class WeightedLRU : public LRU
          */
         WeightedLRUReplData() : LRUReplData(), last_occ_ptr(0) {}
     };
+
   public:
     typedef WeightedLRURPParams Params;
     WeightedLRU(const Params &p);
     ~WeightedLRU() = default;
 
     using Base::touch;
-    void touch(const std::shared_ptr<ReplacementData>& replacement_data,
-                                        int occupancy) const;
+    void touch(const std::shared_ptr<ReplacementData> &replacement_data,
+        int occupancy) const;
 
     /**
      * Instantiate a replacement data entry.
@@ -81,8 +80,8 @@ class WeightedLRU : public LRU
      * @param candidates Replacement candidates, selected by indexing policy.
      * @return Replacement entry to be replaced.
      */
-    ReplaceableEntry* getVictim(const ReplacementCandidates&
-                                              candidates) const override;
+    ReplaceableEntry *getVictim(
+        const ReplacementCandidates &candidates) const override;
 };
 
 } // namespace replacement_policy

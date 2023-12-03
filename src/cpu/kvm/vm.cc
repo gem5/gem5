@@ -56,20 +56,17 @@
 
 namespace gem5
 {
-
 namespace
 {
-
 constexpr int ExpectedKvmApiVersion = 12;
-static_assert(KVM_API_VERSION == ExpectedKvmApiVersion,
-        "Unsupported KVM version");
+static_assert(
+    KVM_API_VERSION == ExpectedKvmApiVersion, "Unsupported KVM version");
 
 } // anonymous namespace
 
 Kvm *Kvm::instance = NULL;
 
-Kvm::Kvm()
-    : kvmFD(-1), apiVersion(-1), vcpuMMapSize(0)
+Kvm::Kvm() : kvmFD(-1), apiVersion(-1), vcpuMMapSize(0)
 {
     static bool created = false;
     if (created)
@@ -90,10 +87,7 @@ Kvm::Kvm()
         panic("KVM: Failed to get virtual CPU MMAP size\n");
 }
 
-Kvm::~Kvm()
-{
-    close(kvmFD);
-}
+Kvm::~Kvm() { close(kvmFD); }
 
 Kvm *
 Kvm::create()
@@ -231,18 +225,18 @@ const Kvm::CPUIDVector &
 Kvm::getSupportedCPUID() const
 {
     if (supportedCPUIDCache.empty()) {
-        std::unique_ptr<struct kvm_cpuid2, void(*)(void *p)>
-            cpuid(nullptr, [](void *p) { operator delete(p); });
+        std::unique_ptr<struct kvm_cpuid2, void (*)(void *p)> cpuid(
+            nullptr, [](void *p) { operator delete(p); });
         int i(1);
         do {
             cpuid.reset((struct kvm_cpuid2 *)operator new(
-                            sizeof(kvm_cpuid2) + i * sizeof(kvm_cpuid_entry2)));
+                sizeof(kvm_cpuid2) + i * sizeof(kvm_cpuid_entry2)));
 
             cpuid->nent = i;
             ++i;
         } while (!getSupportedCPUID(*cpuid));
-        supportedCPUIDCache.assign(cpuid->entries,
-                                   cpuid->entries + cpuid->nent);
+        supportedCPUIDCache.assign(
+            cpuid->entries, cpuid->entries + cpuid->nent);
     }
 
     return supportedCPUIDCache;
@@ -264,12 +258,12 @@ const Kvm::MSRIndexVector &
 Kvm::getSupportedMSRs() const
 {
     if (supportedMSRCache.empty()) {
-        std::unique_ptr<struct kvm_msr_list, void(*)(void *p)>
-            msrs(nullptr, [](void *p) { operator delete(p); });
+        std::unique_ptr<struct kvm_msr_list, void (*)(void *p)> msrs(
+            nullptr, [](void *p) { operator delete(p); });
         int i(0);
         do {
             msrs.reset((struct kvm_msr_list *)operator new(
-                           sizeof(kvm_msr_list) + i * sizeof(uint32_t)));
+                sizeof(kvm_msr_list) + i * sizeof(uint32_t)));
 
             msrs->nmsrs = i;
             ++i;
@@ -281,7 +275,6 @@ Kvm::getSupportedMSRs() const
 }
 
 #endif // x86-specific
-
 
 int
 Kvm::checkExtension(int extension) const
@@ -312,14 +305,14 @@ Kvm::createVM()
     return vmFD;
 }
 
-
-KvmVM::KvmVM(const KvmVMParams &params)
-    : SimObject(params),
-      kvm(new Kvm()), system(params.system),
-      vmFD(kvm->createVM()),
-      started(false),
-      _hasKernelIRQChip(false),
-      nextVCPUID(0)
+KvmVM::KvmVM(const KvmVMParams &params) :
+    SimObject(params),
+    kvm(new Kvm()),
+    system(params.system),
+    vmFD(kvm->createVM()),
+    started(false),
+    _hasKernelIRQChip(false),
+    nextVCPUID(0)
 {
     system->setKvmVM(this);
     maxMemorySlot = kvm->capNumMemSlots();
@@ -382,7 +375,7 @@ KvmVM::delayedStartup()
 
         if (pmem) {
             DPRINTF(Kvm, "Mapping region: 0x%p -> 0x%llx [size: 0x%llx]\n",
-                    pmem, range.start(), range.size());
+                pmem, range.start(), range.size());
 
             if (range.interleaved()) {
                 panic("Tried to map an interleaved memory range into "
@@ -390,7 +383,7 @@ KvmVM::delayedStartup()
             }
 
             const MemSlot slot = allocMemSlot(range.size());
-            setupMemSlot(slot, pmem, range.start(), 0/* flags */);
+            setupMemSlot(slot, pmem, range.start(), 0 /* flags */);
         } else {
             DPRINTF(Kvm, "Zero-region not mapped: [0x%llx]\n", range.start());
             hack("KVM: Zero memory handled as IO\n");
@@ -427,8 +420,8 @@ KvmVM::allocMemSlot(uint64_t size)
 }
 
 void
-KvmVM::setupMemSlot(const KvmVM::MemSlot num, void *host_addr, Addr guest,
-                    uint32_t flags)
+KvmVM::setupMemSlot(
+    const KvmVM::MemSlot num, void *host_addr, Addr guest, uint32_t flags)
 {
     MemorySlot &slot = memorySlots.at(num.num);
     slot.active = true;
@@ -453,9 +446,8 @@ KvmVM::freeMemSlot(const KvmVM::MemSlot num)
 }
 
 void
-KvmVM::setUserMemoryRegion(uint32_t slot,
-                           void *host_addr, Addr guest_addr,
-                           uint64_t len, uint32_t flags)
+KvmVM::setUserMemoryRegion(uint32_t slot, void *host_addr, Addr guest_addr,
+    uint64_t len, uint32_t flags)
 {
     struct kvm_userspace_memory_region m;
 
@@ -470,10 +462,8 @@ KvmVM::setUserMemoryRegion(uint32_t slot,
         panic("Failed to setup KVM memory region:\n"
               "\tHost Address: 0x%p\n"
               "\tGuest Address: 0x%llx\n",
-              "\tSize: %ll\n",
-              "\tFlags: 0x%x\n",
-              m.userspace_addr, m.guest_phys_addr,
-              m.memory_size, m.flags);
+            "\tSize: %ll\n", "\tFlags: 0x%x\n", m.userspace_addr,
+            m.guest_phys_addr, m.memory_size, m.flags);
     }
 }
 
@@ -493,10 +483,9 @@ KvmVM::coalesceMMIO(Addr start, int size)
     zone.pad = 0;
 
     DPRINTF(Kvm, "KVM: Registering coalesced MMIO region [0x%x, 0x%x]\n",
-            zone.addr, zone.addr + zone.size - 1);
+        zone.addr, zone.addr + zone.size - 1);
     if (ioctl(KVM_REGISTER_COALESCED_MMIO, (void *)&zone) == -1)
-        panic("KVM: Failed to register coalesced MMIO region (%i)\n",
-              errno);
+        panic("KVM: Failed to register coalesced MMIO region (%i)\n", errno);
 }
 
 void
@@ -515,8 +504,7 @@ KvmVM::createIRQChip()
     if (ioctl(KVM_CREATE_IRQCHIP) != -1) {
         _hasKernelIRQChip = true;
     } else {
-        warn("KVM: Failed to create in-kernel IRQ chip (errno: %i)\n",
-             errno);
+        warn("KVM: Failed to create in-kernel IRQ chip (errno: %i)\n", errno);
         _hasKernelIRQChip = false;
     }
 }
@@ -530,19 +518,17 @@ KvmVM::setIRQLine(uint32_t irq, bool high)
     kvm_level.level = high ? 1 : 0;
 
     if (ioctl(KVM_IRQ_LINE, &kvm_level) == -1)
-        panic("KVM: Failed to set IRQ line level (errno: %i)\n",
-              errno);
+        panic("KVM: Failed to set IRQ line level (errno: %i)\n", errno);
 }
 
 int
 KvmVM::createDevice(uint32_t type, uint32_t flags)
 {
 #if defined(KVM_CREATE_DEVICE)
-    struct kvm_create_device dev = { type, 0, flags };
+    struct kvm_create_device dev = {type, 0, flags};
 
     if (ioctl(KVM_CREATE_DEVICE, &dev) == -1) {
-        panic("KVM: Failed to create device (errno: %i)\n",
-              errno);
+        panic("KVM: Failed to create device (errno: %i)\n", errno);
     }
 
     return dev.fd;
@@ -554,7 +540,7 @@ KvmVM::createDevice(uint32_t type, uint32_t flags)
 bool
 KvmVM::validEnvironment() const
 {
-    for (auto *tc: system->threads) {
+    for (auto *tc : system->threads) {
         if (!dynamic_cast<BaseKvmCPU *>(tc->getCpuPtr()))
             return false;
     }
@@ -565,8 +551,8 @@ KvmVM::validEnvironment() const
 long
 KvmVM::contextIdToVCpuId(ContextID ctx) const
 {
-    return dynamic_cast<BaseKvmCPU*>
-        (system->threads[ctx]->getCpuPtr())->getVCpuID();
+    return dynamic_cast<BaseKvmCPU *>(system->threads[ctx]->getCpuPtr())
+        ->getVCpuID();
 }
 
 int
@@ -593,7 +579,7 @@ KvmVM::kvmArmPreferredTarget(struct kvm_vcpu_init &target) const
 {
     if (ioctl(KVM_ARM_PREFERRED_TARGET, &target) == -1) {
         panic("KVM: Failed to get ARM preferred CPU target (errno: %i)\n",
-              errno);
+            errno);
     }
 }
 #endif

@@ -51,22 +51,20 @@
 
 namespace gem5
 {
-
 namespace o3
 {
-
-ROB::ROB(CPU *_cpu, const BaseO3CPUParams &params)
-    : robPolicy(params.smtROBPolicy),
-      cpu(_cpu),
-      numEntries(params.numROBEntries),
-      squashWidth(params.squashWidth),
-      numInstsInROB(0),
-      numThreads(params.numThreads),
-      stats(_cpu)
+ROB::ROB(CPU *_cpu, const BaseO3CPUParams &params) :
+    robPolicy(params.smtROBPolicy),
+    cpu(_cpu),
+    numEntries(params.numROBEntries),
+    squashWidth(params.squashWidth),
+    numInstsInROB(0),
+    numThreads(params.numThreads),
+    stats(_cpu)
 {
-    //Figure out rob policy
+    // Figure out rob policy
     if (robPolicy == SMTQueuePolicy::Dynamic) {
-        //Set Max Entries to Total ROB Capacity
+        // Set Max Entries to Total ROB Capacity
         for (ThreadID tid = 0; tid < numThreads; tid++) {
             maxEntries[tid] = numEntries;
         }
@@ -77,7 +75,7 @@ ROB::ROB(CPU *_cpu, const BaseO3CPUParams &params)
         //@todo:make work if part_amt doesnt divide evenly.
         int part_amt = numEntries / numThreads;
 
-        //Divide ROB up evenly
+        // Divide ROB up evenly
         for (ThreadID tid = 0; tid < numThreads; tid++) {
             maxEntries[tid] = part_amt;
         }
@@ -85,9 +83,10 @@ ROB::ROB(CPU *_cpu, const BaseO3CPUParams &params)
     } else if (robPolicy == SMTQueuePolicy::Threshold) {
         DPRINTF(Fetch, "ROB sharing policy set to Threshold\n");
 
-        int threshold =  params.smtROBThreshold;;
+        int threshold = params.smtROBThreshold;
+        ;
 
-        //Divide up by threshold amount
+        // Divide up by threshold amount
         for (ThreadID tid = 0; tid < numThreads; tid++) {
             maxEntries[tid] = threshold;
         }
@@ -103,7 +102,7 @@ ROB::ROB(CPU *_cpu, const BaseO3CPUParams &params)
 void
 ROB::resetState()
 {
-    for (ThreadID tid = 0; tid  < MaxThreads; tid++) {
+    for (ThreadID tid = 0; tid < MaxThreads; tid++) {
         threadEntries[tid] = 0;
         squashIt[tid] = instList[tid].end();
         squashedSeqNum[tid] = 0;
@@ -133,7 +132,7 @@ ROB::setActiveThreads(std::list<ThreadID> *at_ptr)
 void
 ROB::drainSanityCheck() const
 {
-    for (ThreadID tid = 0; tid  < numThreads; tid++)
+    for (ThreadID tid = 0; tid < numThreads; tid++)
         assert(instList[tid].empty());
     assert(isEmpty());
 }
@@ -208,14 +207,14 @@ ROB::insertInst(const DynInstPtr &inst)
 
     instList[tid].push_back(inst);
 
-    //Set Up head iterator if this is the 1st instruction in the ROB
+    // Set Up head iterator if this is the 1st instruction in the ROB
     if (numInstsInROB == 0) {
         head = instList[tid].begin();
         assert((*head) == inst);
     }
 
-    //Must Decrement for iterator to actually be valid  since __.end()
-    //actually points to 1 after the last inst
+    // Must Decrement for iterator to actually be valid  since __.end()
+    // actually points to 1 after the last inst
     tail = instList[tid].end();
     tail--;
 
@@ -226,8 +225,8 @@ ROB::insertInst(const DynInstPtr &inst)
 
     assert((*tail) == inst);
 
-    DPRINTF(ROB, "[tid:%i] Now has %d instructions.\n", tid,
-            threadEntries[tid]);
+    DPRINTF(
+        ROB, "[tid:%i] Now has %d instructions.\n", tid, threadEntries[tid]);
 }
 
 void
@@ -245,9 +244,10 @@ ROB::retireHead(ThreadID tid)
 
     assert(head_inst->readyToCommit());
 
-    DPRINTF(ROB, "[tid:%i] Retiring head instruction, "
-            "instruction PC %s, [sn:%llu]\n", tid, head_inst->pcState(),
-            head_inst->seqNum);
+    DPRINTF(ROB,
+        "[tid:%i] Retiring head instruction, "
+        "instruction PC %s, [sn:%llu]\n",
+        tid, head_inst->pcState(), head_inst->seqNum);
 
     --numInstsInROB;
     --threadEntries[tid];
@@ -255,7 +255,7 @@ ROB::retireHead(ThreadID tid)
     head_inst->clearInROB();
     head_inst->setCommitted();
 
-    //Update "Global" Head of ROB
+    // Update "Global" Head of ROB
     updateHead();
 
     // @todo: A special case is needed if the instruction being
@@ -309,14 +309,13 @@ void
 ROB::doSquash(ThreadID tid)
 {
     stats.writes++;
-    DPRINTF(ROB, "[tid:%i] Squashing instructions until [sn:%llu].\n",
-            tid, squashedSeqNum[tid]);
+    DPRINTF(ROB, "[tid:%i] Squashing instructions until [sn:%llu].\n", tid,
+        squashedSeqNum[tid]);
 
     assert(squashIt[tid] != instList[tid].end());
 
     if ((*squashIt[tid])->seqNum < squashedSeqNum[tid]) {
-        DPRINTF(ROB, "[tid:%i] Done squashing instructions.\n",
-                tid);
+        DPRINTF(ROB, "[tid:%i] Done squashing instructions.\n", tid);
 
         squashIt[tid] = instList[tid].end();
 
@@ -331,21 +330,17 @@ ROB::doSquash(ThreadID tid)
     // If the CPU is exiting, squash all of the instructions
     // it is told to, even if that exceeds the squashWidth.
     // Set the number to the number of entries (the max).
-    if (cpu->isThreadExiting(tid))
-    {
+    if (cpu->isThreadExiting(tid)) {
         numInstsToSquash = numEntries;
     }
 
-    for (int numSquashed = 0;
-         numSquashed < numInstsToSquash &&
-         squashIt[tid] != instList[tid].end() &&
-         (*squashIt[tid])->seqNum > squashedSeqNum[tid];
-         ++numSquashed)
-    {
+    for (int numSquashed = 0; numSquashed < numInstsToSquash &&
+                              squashIt[tid] != instList[tid].end() &&
+                              (*squashIt[tid])->seqNum > squashedSeqNum[tid];
+         ++numSquashed) {
         DPRINTF(ROB, "[tid:%i] Squashing instruction PC %s, seq num %i.\n",
-                (*squashIt[tid])->threadNumber,
-                (*squashIt[tid])->pcState(),
-                (*squashIt[tid])->seqNum);
+            (*squashIt[tid])->threadNumber, (*squashIt[tid])->pcState(),
+            (*squashIt[tid])->seqNum);
 
         // Mark the instruction as squashed, and ready to commit so that
         // it can drain out of the pipeline.
@@ -353,10 +348,9 @@ ROB::doSquash(ThreadID tid)
 
         (*squashIt[tid])->setCanCommit();
 
-
         if (squashIt[tid] == instList[tid].begin()) {
             DPRINTF(ROB, "Reached head of instruction list while "
-                    "squashing.\n");
+                         "squashing.\n");
 
             squashIt[tid] = instList[tid].end();
 
@@ -374,11 +368,9 @@ ROB::doSquash(ThreadID tid)
         squashIt[tid]--;
     }
 
-
     // Check if ROB is done squashing.
     if ((*squashIt[tid])->seqNum <= squashedSeqNum[tid]) {
-        DPRINTF(ROB, "[tid:%i] Done squashing instructions.\n",
-                tid);
+        DPRINTF(ROB, "[tid:%i] Done squashing instructions.\n", tid);
 
         squashIt[tid] = instList[tid].end();
 
@@ -389,7 +381,6 @@ ROB::doSquash(ThreadID tid)
         updateTail();
     }
 }
-
 
 void
 ROB::updateHead()
@@ -429,7 +420,6 @@ ROB::updateHead()
     if (first_valid) {
         head = instList[0].end();
     }
-
 }
 
 void
@@ -468,14 +458,14 @@ ROB::updateTail()
     }
 }
 
-
 void
 ROB::squash(InstSeqNum squash_num, ThreadID tid)
 {
     if (isEmpty(tid)) {
-        DPRINTF(ROB, "Does not need to squash due to being empty "
-                "[sn:%llu]\n",
-                squash_num);
+        DPRINTF(ROB,
+            "Does not need to squash due to being empty "
+            "[sn:%llu]\n",
+            squash_num);
 
         return;
     }
@@ -498,7 +488,7 @@ ROB::squash(InstSeqNum squash_num, ThreadID tid)
     }
 }
 
-const DynInstPtr&
+const DynInstPtr &
 ROB::readHeadInst(ThreadID tid)
 {
     if (threadEntries[tid] != 0) {
@@ -521,14 +511,13 @@ ROB::readTailInst(ThreadID tid)
     return *tail_thread;
 }
 
-ROB::ROBStats::ROBStats(statistics::Group *parent)
-  : statistics::Group(parent, "rob"),
-    ADD_STAT(reads, statistics::units::Count::get(),
-        "The number of ROB reads"),
-    ADD_STAT(writes, statistics::units::Count::get(),
-        "The number of ROB writes")
-{
-}
+ROB::ROBStats::ROBStats(statistics::Group *parent) :
+    statistics::Group(parent, "rob"),
+    ADD_STAT(
+        reads, statistics::units::Count::get(), "The number of ROB reads"),
+    ADD_STAT(
+        writes, statistics::units::Count::get(), "The number of ROB writes")
+{}
 
 DynInstPtr
 ROB::findInst(ThreadID tid, InstSeqNum squash_inst)

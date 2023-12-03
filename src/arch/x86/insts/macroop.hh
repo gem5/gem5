@@ -45,7 +45,6 @@
 
 namespace gem5
 {
-
 namespace X86ISA
 {
 // Base class for combinationally generated macroops
@@ -57,23 +56,21 @@ class MacroopBase : public X86StaticInst
     const uint32_t numMicroops;
     X86ISA::EmulEnv env;
 
-    //Constructor.
-    MacroopBase(const char *mnem, ExtMachInst _machInst,
-            uint32_t _numMicroops, X86ISA::EmulEnv _env) :
-                X86StaticInst(mnem, _machInst, No_OpClass),
-                numMicroops(_numMicroops), env(_env)
+    // Constructor.
+    MacroopBase(const char *mnem, ExtMachInst _machInst, uint32_t _numMicroops,
+        X86ISA::EmulEnv _env) :
+        X86StaticInst(mnem, _machInst, No_OpClass),
+        numMicroops(_numMicroops),
+        env(_env)
     {
         assert(numMicroops);
         microops = new StaticInstPtr[numMicroops];
         flags[IsMacroop] = true;
     }
 
-    ~MacroopBase()
-    {
-        delete [] microops;
-    }
+    ~MacroopBase() { delete[] microops; }
 
-    StaticInstPtr * microops;
+    StaticInstPtr *microops;
 
     StaticInstPtr
     fetchMicroop(MicroPC microPC) const override
@@ -85,8 +82,8 @@ class MacroopBase : public X86StaticInst
     }
 
     std::string
-    generateDisassembly(Addr pc,
-                        const loader::SymbolTable *symtab) const override
+    generateDisassembly(
+        Addr pc, const loader::SymbolTable *symtab) const override
     {
         return mnemonic;
     }
@@ -104,7 +101,8 @@ class MacroopBase : public X86StaticInst
         return env;
     }
 
-    void size(size_t newSize) override
+    void
+    size(size_t newSize) override
     {
         for (int i = 0; i < numMicroops; i++) {
             microops[i]->size(newSize);

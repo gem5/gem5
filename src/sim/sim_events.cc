@@ -51,21 +51,21 @@
 
 namespace gem5
 {
+GlobalSimLoopExitEvent::GlobalSimLoopExitEvent(
+    Tick when, const std::string &_cause, int c, Tick r) :
+    GlobalEvent(when, Sim_Exit_Pri, IsExitEvent),
+    cause(_cause),
+    code(c),
+    repeat(r)
+{}
 
-GlobalSimLoopExitEvent::GlobalSimLoopExitEvent(Tick when,
-                                               const std::string &_cause,
-                                               int c, Tick r)
-    : GlobalEvent(when, Sim_Exit_Pri, IsExitEvent),
-      cause(_cause), code(c), repeat(r)
-{
-}
-
-GlobalSimLoopExitEvent::GlobalSimLoopExitEvent(const std::string &_cause,
-                                               int c, Tick r)
-    : GlobalEvent(curTick(), Minimum_Pri, IsExitEvent),
-      cause(_cause), code(c), repeat(r)
-{
-}
+GlobalSimLoopExitEvent::GlobalSimLoopExitEvent(
+    const std::string &_cause, int c, Tick r) :
+    GlobalEvent(curTick(), Minimum_Pri, IsExitEvent),
+    cause(_cause),
+    code(c),
+    repeat(r)
+{}
 
 const char *
 GlobalSimLoopExitEvent::description() const
@@ -86,28 +86,26 @@ GlobalSimLoopExitEvent::process()
 
 void
 exitSimLoop(const std::string &message, int exit_code, Tick when, Tick repeat,
-            bool serialize)
+    bool serialize)
 {
     warn_if(serialize && (when != curTick() || repeat),
-            "exitSimLoop called with a delay and auto serialization. This is "
-            "currently unsupported.");
+        "exitSimLoop called with a delay and auto serialization. This is "
+        "currently unsupported.");
 
     new GlobalSimLoopExitEvent(when + simQuantum, message, exit_code, repeat);
 }
 
 void
-exitSimLoopNow(const std::string &message, int exit_code, Tick repeat,
-               bool serialize)
+exitSimLoopNow(
+    const std::string &message, int exit_code, Tick repeat, bool serialize)
 {
     new GlobalSimLoopExitEvent(message, exit_code, repeat);
 }
 
-LocalSimLoopExitEvent::LocalSimLoopExitEvent(const std::string &_cause, int c,
-                                   Tick r)
-    : Event(Sim_Exit_Pri, IsExitEvent),
-      cause(_cause), code(c), repeat(r)
-{
-}
+LocalSimLoopExitEvent::LocalSimLoopExitEvent(
+    const std::string &_cause, int c, Tick r) :
+    Event(Sim_Exit_Pri, IsExitEvent), cause(_cause), code(c), repeat(r)
+{}
 
 //
 // handle termination event
@@ -117,7 +115,6 @@ LocalSimLoopExitEvent::process()
 {
     exitSimLoop(cause, 0);
 }
-
 
 const char *
 LocalSimLoopExitEvent::description() const
@@ -148,13 +145,12 @@ LocalSimLoopExitEvent::unserialize(CheckpointIn &cp)
 //
 // constructor: automatically schedules at specified time
 //
-CountedExitEvent::CountedExitEvent(const std::string &_cause, int &counter)
-    : Event(Sim_Exit_Pri), cause(_cause), downCounter(counter)
+CountedExitEvent::CountedExitEvent(const std::string &_cause, int &counter) :
+    Event(Sim_Exit_Pri), cause(_cause), downCounter(counter)
 {
     // catch stupid mistakes
     assert(downCounter > 0);
 }
-
 
 //
 // handle termination event
@@ -166,7 +162,6 @@ CountedExitEvent::process()
         exitSimLoop(cause, 0);
     }
 }
-
 
 const char *
 CountedExitEvent::description() const

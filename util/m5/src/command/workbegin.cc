@@ -32,7 +32,6 @@
 
 namespace
 {
-
 bool
 do_work_begin(const DispatchTable &dt, Args &args)
 {
@@ -45,8 +44,8 @@ do_work_begin(const DispatchTable &dt, Args &args)
     return true;
 }
 
-Command workbegin = {
-    "workbegin", 0, 2, do_work_begin, "[workid][threadid]\n"
-        "        Exit immediately" };
+Command workbegin = {"workbegin", 0, 2, do_work_begin,
+    "[workid][threadid]\n"
+    "        Exit immediately"};
 
 } // anonymous namespace

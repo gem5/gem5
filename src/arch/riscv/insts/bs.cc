@@ -35,17 +35,15 @@
 
 namespace gem5
 {
-
 namespace RiscvISA
 {
-
 std::string
 BSOp::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
-    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", " <<
-        registerName(srcRegIdx(0)) << ", " << registerName(srcRegIdx(1)) <<
-        ", " << (uint32_t)bs;
+    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", "
+       << registerName(srcRegIdx(0)) << ", " << registerName(srcRegIdx(1))
+       << ", " << (uint32_t)bs;
     return ss.str();
 }
 

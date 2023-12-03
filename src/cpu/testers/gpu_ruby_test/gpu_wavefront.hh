@@ -38,7 +38,6 @@
 
 namespace gem5
 {
-
 class GpuWavefront : public TesterThread
 {
   public:
@@ -63,7 +62,7 @@ class GpuWavefront : public TesterThread
     virtual void setExtraRequestFlags(RequestPtr req);
 
   protected:
-    int cuId;    // compute unit associated with this wavefront
+    int cuId; // compute unit associated with this wavefront
 };
 
 } // namespace gem5

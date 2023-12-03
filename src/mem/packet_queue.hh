@@ -57,7 +57,6 @@
 
 namespace gem5
 {
-
 /**
  * A packet queue is a class that holds deferred packets and later
  * sends them using the associated CPU-side port or memory-side port.
@@ -69,11 +68,9 @@ class PacketQueue : public Drainable
     class DeferredPacket
     {
       public:
-        Tick tick;      ///< The tick when the packet is ready to transmit
-        PacketPtr pkt;  ///< Pointer to the packet to transmit
-        DeferredPacket(Tick t, PacketPtr p)
-            : tick(t), pkt(p)
-        {}
+        Tick tick;     ///< The tick when the packet is ready to transmit
+        PacketPtr pkt; ///< Pointer to the packet to transmit
+        DeferredPacket(Tick t, PacketPtr p) : tick(t), pkt(p) {}
     };
 
     typedef std::list<DeferredPacket> DeferredPacketList;
@@ -82,7 +79,7 @@ class PacketQueue : public Drainable
     DeferredPacketList transmitList;
 
     /** The manager which is used for the event queue */
-    EventManager& em;
+    EventManager &em;
 
     /** Used to schedule sending of deferred packets. */
     void processSendEvent();
@@ -90,11 +87,11 @@ class PacketQueue : public Drainable
     /** Event used to call processSendEvent. */
     EventFunctionWrapper sendEvent;
 
-     /*
-      * Optionally disable the sanity check
-      * on the size of the transmitList. The
-      * sanity check will be enabled by default.
-      */
+    /*
+     * Optionally disable the sanity check
+     * on the size of the transmitList. The
+     * sanity check will be enabled by default.
+     */
     bool _disableSanityCheck;
 
     /**
@@ -105,7 +102,6 @@ class PacketQueue : public Drainable
     bool forceOrder;
 
   protected:
-
     /** Label to use for print request packets label stack. */
     const std::string label;
 
@@ -113,8 +109,11 @@ class PacketQueue : public Drainable
     bool waitingOnRetry;
 
     /** Check whether we have a packet ready to go on the transmit list. */
-    bool deferredPacketReady() const
-    { return !transmitList.empty() && transmitList.front().tick <= curTick(); }
+    bool
+    deferredPacketReady() const
+    {
+        return !transmitList.empty() && transmitList.front().tick <= curTick();
+    }
 
     /**
      * Attempt to send a packet. Note that a subclass of the
@@ -142,10 +141,9 @@ class PacketQueue : public Drainable
      * @param disable_sanity_check Flag used to disable the sanity check
      *        on the size of the transmitList. The check is enabled by default.
      */
-    PacketQueue(EventManager& _em, const std::string& _label,
-                const std::string& _sendEventName,
-                bool force_order = false,
-                bool disable_sanity_check = false);
+    PacketQueue(EventManager &_em, const std::string &_label,
+        const std::string &_sendEventName, bool force_order = false,
+        bool disable_sanity_check = false);
 
     /**
      * Virtual desctructor since the class may be used as a base class.
@@ -153,7 +151,6 @@ class PacketQueue : public Drainable
     virtual ~PacketQueue();
 
   public:
-
     /**
      * Provide a name to simplify debugging.
      *
@@ -164,13 +161,20 @@ class PacketQueue : public Drainable
     /**
      * Get the size of the queue.
      */
-    size_t size() const { return transmitList.size(); }
+    size_t
+    size() const
+    {
+        return transmitList.size();
+    }
 
     /**
      * Get the next packet ready time.
      */
-    Tick deferredPacketReadyTime() const
-    { return transmitList.empty() ? MaxTick : transmitList.front().tick; }
+    Tick
+    deferredPacketReadyTime() const
+    {
+        return transmitList.empty() ? MaxTick : transmitList.front().tick;
+    }
 
     /**
      * Check if a packet corresponding to the same address exists in the
@@ -213,31 +217,34 @@ class PacketQueue : public Drainable
     void retry();
 
     /**
-      * This allows a user to explicitly disable the sanity check
-      * on the size of the transmitList, which is enabled by default.
-      * Users must use this function to explicitly disable the sanity
-      * check.
-      */
-    void disableSanityCheck() { _disableSanityCheck = true; }
+     * This allows a user to explicitly disable the sanity check
+     * on the size of the transmitList, which is enabled by default.
+     * Users must use this function to explicitly disable the sanity
+     * check.
+     */
+    void
+    disableSanityCheck()
+    {
+        _disableSanityCheck = true;
+    }
 
     DrainState drain() override;
 };
 
 class ReqPacketQueue : public PacketQueue
 {
-
   protected:
-
-    RequestPort& memSidePort;
+    RequestPort &memSidePort;
 
     // Static definition so it can be called when constructing the parent
     // without us being completely initialized.
-    static const std::string name(const RequestPort& memSidePort,
-                                  const std::string& label)
-    { return memSidePort.name() + "-" + label; }
+    static const std::string
+    name(const RequestPort &memSidePort, const std::string &label)
+    {
+        return memSidePort.name() + "-" + label;
+    }
 
   public:
-
     /**
      * Create a request packet queue, linked to an event manager, a
      * memory-side port, and a label that will be used for functional print
@@ -247,33 +254,34 @@ class ReqPacketQueue : public PacketQueue
      * @param _mem_side_port Mem_side port used to send the packets
      * @param _label Label to push on the label stack for print request packets
      */
-    ReqPacketQueue(EventManager& _em, RequestPort& _mem_side_port,
-                   const std::string _label = "ReqPacketQueue");
+    ReqPacketQueue(EventManager &_em, RequestPort &_mem_side_port,
+        const std::string _label = "ReqPacketQueue");
 
-    virtual ~ReqPacketQueue() { }
+    virtual ~ReqPacketQueue() {}
 
-    const std::string name() const
-    { return name(memSidePort, label); }
+    const std::string
+    name() const
+    {
+        return name(memSidePort, label);
+    }
 
     bool sendTiming(PacketPtr pkt);
-
 };
 
 class SnoopRespPacketQueue : public PacketQueue
 {
-
   protected:
-
-    RequestPort& memSidePort;
+    RequestPort &memSidePort;
 
     // Static definition so it can be called when constructing the parent
     // without us being completely initialized.
-    static const std::string name(const RequestPort& memSidePort,
-                                  const std::string& label)
-    { return memSidePort.name() + "-" + label; }
+    static const std::string
+    name(const RequestPort &memSidePort, const std::string &label)
+    {
+        return memSidePort.name() + "-" + label;
+    }
 
   public:
-
     /**
      * Create a snoop response packet queue, linked to an event
      * manager, a memory-side port, and a label that will be used for
@@ -284,34 +292,35 @@ class SnoopRespPacketQueue : public PacketQueue
      * @param force_order Force insertion order for packets with same address
      * @param _label Label to push on the label stack for print request packets
      */
-    SnoopRespPacketQueue(EventManager& _em, RequestPort& _mem_side_port,
-                         bool force_order = false,
-                         const std::string _label = "SnoopRespPacketQueue");
+    SnoopRespPacketQueue(EventManager &_em, RequestPort &_mem_side_port,
+        bool force_order = false,
+        const std::string _label = "SnoopRespPacketQueue");
 
-    virtual ~SnoopRespPacketQueue() { }
+    virtual ~SnoopRespPacketQueue() {}
 
-    const std::string name() const
-    { return name(memSidePort, label); }
+    const std::string
+    name() const
+    {
+        return name(memSidePort, label);
+    }
 
     bool sendTiming(PacketPtr pkt);
-
 };
 
 class RespPacketQueue : public PacketQueue
 {
-
   protected:
-
-    ResponsePort& cpuSidePort;
+    ResponsePort &cpuSidePort;
 
     // Static definition so it can be called when constructing the parent
     // without us being completely initialized.
-    static const std::string name(const ResponsePort& cpuSidePort,
-                                  const std::string& label)
-    { return cpuSidePort.name() + "-" + label; }
+    static const std::string
+    name(const ResponsePort &cpuSidePort, const std::string &label)
+    {
+        return cpuSidePort.name() + "-" + label;
+    }
 
   public:
-
     /**
      * Create a response packet queue, linked to an event manager, a
      * CPU-side port, and a label that will be used for functional print
@@ -322,17 +331,19 @@ class RespPacketQueue : public PacketQueue
      * @param force_order Force insertion order for packets with same address
      * @param _label Label to push on the label stack for print request packets
      */
-    RespPacketQueue(EventManager& _em, ResponsePort& _cpu_side_port,
-                    bool force_order = false,
-                    const std::string _label = "RespPacketQueue");
+    RespPacketQueue(EventManager &_em, ResponsePort &_cpu_side_port,
+        bool force_order = false,
+        const std::string _label = "RespPacketQueue");
 
-    virtual ~RespPacketQueue() { }
+    virtual ~RespPacketQueue() {}
 
-    const std::string name() const
-    { return name(cpuSidePort, label); }
+    const std::string
+    name() const
+    {
+        return name(cpuSidePort, label);
+    }
 
     bool sendTiming(PacketPtr pkt);
-
 };
 
 } // namespace gem5

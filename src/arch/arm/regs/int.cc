@@ -47,10 +47,8 @@
 
 namespace gem5
 {
-
 namespace ArmISA
 {
-
 RegId
 IntRegClassOps::flatten(const BaseISA &isa, const RegId &id) const
 {
@@ -71,15 +69,15 @@ IntRegClassOps::flatten(const BaseISA &isa, const RegId &id) const
             return {flatIntRegClass, int_reg::Sp0};
 
         switch (el) {
-          case EL3:
+        case EL3:
             return {flatIntRegClass, int_reg::Sp3};
-          case EL2:
+        case EL2:
             return {flatIntRegClass, int_reg::Sp2};
-          case EL1:
+        case EL1:
             return {flatIntRegClass, int_reg::Sp1};
-          case EL0:
+        case EL0:
             return {flatIntRegClass, int_reg::Sp0};
-          default:
+        default:
             panic("Invalid exception level");
         }
     } else {

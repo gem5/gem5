@@ -35,17 +35,16 @@
 
 namespace gem5
 {
-
 /**
  * Associative container based on the previosuly defined Entry type
  * Each element is indexed by a key of type Addr, an additional
  * bool value is used as an additional tag data of the entry.
  */
-template<class Entry>
+template <class Entry>
 class AssociativeSet
 {
     static_assert(std::is_base_of_v<TaggedEntry, Entry>,
-                  "Entry must derive from TaggedEntry");
+        "Entry must derive from TaggedEntry");
 
     /** Associativity of the container */
     const int associativity;
@@ -56,9 +55,9 @@ class AssociativeSet
      */
     const int numEntries;
     /** Pointer to the indexing policy */
-    BaseIndexingPolicy* const indexingPolicy;
+    BaseIndexingPolicy *const indexingPolicy;
     /** Pointer to the replacement policy */
-    replacement_policy::Base* const replacementPolicy;
+    replacement_policy::Base *const replacementPolicy;
     /** Vector containing the entries of the container */
     std::vector<Entry> entries;
 
@@ -82,7 +81,7 @@ class AssociativeSet
      * @return returns a pointer to the wanted entry or nullptr if it does not
      *  exist.
      */
-    Entry* findEntry(Addr addr, bool is_secure) const;
+    Entry *findEntry(Addr addr, bool is_secure) const;
 
     /**
      * Do an access to the entry, this is required to
@@ -96,7 +95,7 @@ class AssociativeSet
      * @param addr key to select the possible victim
      * @result entry to be victimized
      */
-    Entry* findVictim(Addr addr);
+    Entry *findVictim(Addr addr);
 
     /**
      * Find the set of entries that could be replaced given
@@ -112,14 +111,14 @@ class AssociativeSet
      * @param is_secure tag component of the container
      * @param entry pointer to the container entry to be inserted
      */
-    void insertEntry(Addr addr, bool is_secure, Entry* entry);
+    void insertEntry(Addr addr, bool is_secure, Entry *entry);
 
     /**
      * Invalidate an entry and its respective replacement data.
      *
      * @param entry Entry to be invalidated.
      */
-    void invalidate(Entry* entry);
+    void invalidate(Entry *entry);
 
     /** Iterator types */
     using const_iterator = typename std::vector<Entry>::const_iterator;
@@ -129,7 +128,8 @@ class AssociativeSet
      * Returns an iterator to the first entry of the dictionary
      * @result iterator to the first element
      */
-    iterator begin()
+    iterator
+    begin()
     {
         return entries.begin();
     }
@@ -139,7 +139,8 @@ class AssociativeSet
      * (placeholder element, should not be accessed)
      * @result iterator to the end element
      */
-    iterator end()
+    iterator
+    end()
     {
         return entries.end();
     }
@@ -148,7 +149,8 @@ class AssociativeSet
      * Returns an iterator to the first entry of the dictionary
      * @result iterator to the first element
      */
-    const_iterator begin() const
+    const_iterator
+    begin() const
     {
         return entries.begin();
     }
@@ -158,7 +160,8 @@ class AssociativeSet
      * (placeholder element, should not be accessed)
      * @result iterator to the end element
      */
-    const_iterator end() const
+    const_iterator
+    end() const
     {
         return entries.end();
     }
@@ -166,4 +169,4 @@ class AssociativeSet
 
 } // namespace gem5
 
-#endif//__CACHE_PREFETCH_ASSOCIATIVE_SET_HH__
+#endif //__CACHE_PREFETCH_ASSOCIATIVE_SET_HH__

@@ -33,29 +33,26 @@
 
 namespace gem5
 {
-
 namespace fastmodel
 {
-
 int
 SCGIC::Terminator::countUnbound(const Initiators &inits)
 {
     int count = 0;
-    for (auto &init: inits)
+    for (auto &init : inits)
         if (!init.get_port_base().size())
             count++;
     return count;
 }
 
 SCGIC::Terminator::Terminator(
-        sc_core::sc_module_name _name, Initiators &inits) :
-    sc_core::sc_module(_name),
-    targets("targets", countUnbound(inits))
+    sc_core::sc_module_name _name, Initiators &inits) :
+    sc_core::sc_module(_name), targets("targets", countUnbound(inits))
 {
     // For every unbound initiator socket, connected it to one
     // terminator target socket.
     int i = 0;
-    for (auto &init: inits) {
+    for (auto &init : inits) {
         if (!init.get_port_base().size()) {
             auto &term = targets.at(i++);
             term.bind(*this);
@@ -70,11 +67,12 @@ SCGIC::Terminator::sendTowardsCPU(uint8_t len, const uint8_t *data)
     panic("Call to terminated interface!");
 }
 
-SCGIC::SCGIC(const SCFastModelGICParams &params,
-             sc_core::sc_module_name _name)
-    : scx_evs_GIC(_name), _params(params),
-      resetPort(params.name + ".reset", 0),
-      poResetPort(params.name + ".po_reset", 0)
+SCGIC::SCGIC(
+    const SCFastModelGICParams &params, sc_core::sc_module_name _name) :
+    scx_evs_GIC(_name),
+    _params(params),
+    resetPort(params.name + ".reset", 0),
+    poResetPort(params.name + ".po_reset", 0)
 {
     signalInterrupt.bind(signal_interrupt);
 
@@ -97,17 +95,16 @@ SCGIC::SCGIC(const SCFastModelGICParams &params,
     set_parameter("gic.CPU-affinities", params.cpu_affinities);
     set_parameter("gic.non-ARE-core-count", params.non_ARE_core_count);
     set_parameter("gic.reg-base", params.reg_base);
-    set_parameter("gic.reg-base-per-redistributor",
-                  params.reg_base_per_redistributor);
+    set_parameter(
+        "gic.reg-base-per-redistributor", params.reg_base_per_redistributor);
     set_parameter("gic.GICD-alias", params.gicd_alias);
-    set_parameter("gic.has-two-security-states",
-                  params.has_two_security_states);
+    set_parameter(
+        "gic.has-two-security-states", params.has_two_security_states);
     set_parameter("gic.DS-fixed-to-zero", params.DS_fixed_to_zero);
     set_parameter("gic.IIDR", params.IIDR);
     set_parameter("gic.gicv2-only", params.gicv2_only);
     set_parameter("gic.STATUSR-implemented", params.STATUSR_implemented);
-    set_parameter("gic.priority-bits",
-                  params.priority_bits_implemented);
+    set_parameter("gic.priority-bits", params.priority_bits_implemented);
     set_parameter("gic.GICD_ITARGETSR-RAZWI", params.itargets_razwi);
     set_parameter("gic.ICFGR-SGI-mask", params.icfgr_sgi_mask);
     set_parameter("gic.ICFGR-PPI-mask", params.icfgr_ppi_mask);
@@ -125,7 +122,7 @@ SCGIC::SCGIC(const SCFastModelGICParams &params,
     set_parameter("gic.lockable-SPI-count", params.lockable_spi_count);
     set_parameter("gic.IRI-ID-bits", params.iri_id_bits);
     set_parameter("gic.delay-redistributor-accesses",
-                  params.delay_redistributor_accesses);
+        params.delay_redistributor_accesses);
     set_parameter("gic.GICD_PIDR", params.gicd_pidr);
     set_parameter("gic.GICR_PIDR", params.gicr_pidr);
     set_parameter("gic.ITS-count", params.its_count);
@@ -142,85 +139,85 @@ SCGIC::SCGIC(const SCFastModelGICParams &params,
     set_parameter("gic.GITS_BASER5-type", params.gits_baser5_type);
     set_parameter("gic.GITS_BASER6-type", params.gits_baser6_type);
     set_parameter("gic.GITS_BASER7-type", params.gits_baser7_type);
-    set_parameter("gic.GITS_BASER0-entry-bytes",
-                  params.gits_baser0_entry_bytes);
-    set_parameter("gic.GITS_BASER1-entry-bytes",
-                  params.gits_baser1_entry_bytes);
-    set_parameter("gic.GITS_BASER2-entry-bytes",
-                  params.gits_baser2_entry_bytes);
-    set_parameter("gic.GITS_BASER3-entry-bytes",
-                  params.gits_baser3_entry_bytes);
-    set_parameter("gic.GITS_BASER4-entry-bytes",
-                  params.gits_baser4_entry_bytes);
-    set_parameter("gic.GITS_BASER5-entry-bytes",
-                  params.gits_baser5_entry_bytes);
-    set_parameter("gic.GITS_BASER6-entry-bytes",
-                  params.gits_baser6_entry_bytes);
-    set_parameter("gic.GITS_BASER7-entry-bytes",
-                  params.gits_baser7_entry_bytes);
-    set_parameter("gic.GITS_BASER0-indirect-RAZ",
-                  params.gits_baser0_indirect_raz);
-    set_parameter("gic.GITS_BASER1-indirect-RAZ",
-                  params.gits_baser1_indirect_raz);
-    set_parameter("gic.GITS_BASER2-indirect-RAZ",
-                  params.gits_baser2_indirect_raz);
-    set_parameter("gic.GITS_BASER3-indirect-RAZ",
-                  params.gits_baser3_indirect_raz);
-    set_parameter("gic.GITS_BASER4-indirect-RAZ",
-                  params.gits_baser4_indirect_raz);
-    set_parameter("gic.GITS_BASER5-indirect-RAZ",
-                  params.gits_baser5_indirect_raz);
-    set_parameter("gic.GITS_BASER6-indirect-RAZ",
-                  params.gits_baser6_indirect_raz);
-    set_parameter("gic.GITS_BASER7-indirect-RAZ",
-                  params.gits_baser7_indirect_raz);
+    set_parameter(
+        "gic.GITS_BASER0-entry-bytes", params.gits_baser0_entry_bytes);
+    set_parameter(
+        "gic.GITS_BASER1-entry-bytes", params.gits_baser1_entry_bytes);
+    set_parameter(
+        "gic.GITS_BASER2-entry-bytes", params.gits_baser2_entry_bytes);
+    set_parameter(
+        "gic.GITS_BASER3-entry-bytes", params.gits_baser3_entry_bytes);
+    set_parameter(
+        "gic.GITS_BASER4-entry-bytes", params.gits_baser4_entry_bytes);
+    set_parameter(
+        "gic.GITS_BASER5-entry-bytes", params.gits_baser5_entry_bytes);
+    set_parameter(
+        "gic.GITS_BASER6-entry-bytes", params.gits_baser6_entry_bytes);
+    set_parameter(
+        "gic.GITS_BASER7-entry-bytes", params.gits_baser7_entry_bytes);
+    set_parameter(
+        "gic.GITS_BASER0-indirect-RAZ", params.gits_baser0_indirect_raz);
+    set_parameter(
+        "gic.GITS_BASER1-indirect-RAZ", params.gits_baser1_indirect_raz);
+    set_parameter(
+        "gic.GITS_BASER2-indirect-RAZ", params.gits_baser2_indirect_raz);
+    set_parameter(
+        "gic.GITS_BASER3-indirect-RAZ", params.gits_baser3_indirect_raz);
+    set_parameter(
+        "gic.GITS_BASER4-indirect-RAZ", params.gits_baser4_indirect_raz);
+    set_parameter(
+        "gic.GITS_BASER5-indirect-RAZ", params.gits_baser5_indirect_raz);
+    set_parameter(
+        "gic.GITS_BASER6-indirect-RAZ", params.gits_baser6_indirect_raz);
+    set_parameter(
+        "gic.GITS_BASER7-indirect-RAZ", params.gits_baser7_indirect_raz);
     set_parameter("gic.ITS-BASER-force-page-alignement",
-                  params.its_baser_force_page_alignement);
+        params.its_baser_force_page_alignement);
     set_parameter("gic.processor-numbers", params.processor_numbers);
     set_parameter("gic.supports-shareability", params.supports_shareability);
     set_parameter("gic.A3-affinity-supported", params.a3_affinity_supported);
     set_parameter("gic.sgi-range-selector-support", params.SGI_RSS_support);
-    set_parameter("gic.GICR_PROPBASER-read-only",
-                  params.gicr_propbaser_read_only);
-    set_parameter("gic.GICR_PROPBASER-reset-value",
-                  params.gicr_propbaser_reset);
+    set_parameter(
+        "gic.GICR_PROPBASER-read-only", params.gicr_propbaser_read_only);
+    set_parameter(
+        "gic.GICR_PROPBASER-reset-value", params.gicr_propbaser_reset);
     set_parameter("gic.ITS-device-bits", params.its_device_bits);
     set_parameter("gic.ITS-entry-size", params.its_entry_size);
     set_parameter("gic.ITS-ID-bits", params.its_id_bits);
     set_parameter("gic.ITS-collection-ID-bits", params.its_collection_id_bits);
     set_parameter("gic.ITS-cumulative-collection-tables",
-                  params.its_cumulative_collection_tables);
+        params.its_cumulative_collection_tables);
     set_parameter("gic.delay-ITS-accesses", params.delay_ITS_accesses);
     set_parameter("gic.local-SEIs", params.local_SEIs);
     set_parameter("gic.local-VSEIs", params.local_VSEIs);
     set_parameter("gic.ITS-use-physical-target-addresses",
-                  params.ITS_use_physical_target_addresses);
+        params.ITS_use_physical_target_addresses);
     set_parameter("gic.ITS-hardware-collection-count",
-                  params.ITS_hardware_collection_count);
+        params.ITS_hardware_collection_count);
     set_parameter("gic.ITS-MOVALL-update-collections",
-                  params.ITS_MOVALL_update_collections);
+        params.ITS_MOVALL_update_collections);
     set_parameter("gic.ITS-TRANSLATE64R", params.ITS_TRANSLATE64R);
-    set_parameter("gic.enable_protocol_checking",
-                  params.enable_protocol_checking);
+    set_parameter(
+        "gic.enable_protocol_checking", params.enable_protocol_checking);
     set_parameter("gic.fixed-routed-spis", params.fixed_routed_spis);
     set_parameter("gic.irouter-default-mask", params.irouter_default_mask);
     if (params.irouter_default_reset != "") {
-        set_parameter("gic.irouter-default-reset",
-                      params.irouter_default_reset);
+        set_parameter(
+            "gic.irouter-default-reset", params.irouter_default_reset);
     }
     if (params.irouter_reset_values != "")
         set_parameter("gic.irouter-reset-values", params.irouter_reset_values);
     set_parameter("gic.irouter-mask-values", params.irouter_mask_values);
-    set_parameter("gic.ITS-threaded-command-queue",
-                  params.ITS_threaded_command_queue);
+    set_parameter(
+        "gic.ITS-threaded-command-queue", params.ITS_threaded_command_queue);
     set_parameter("gic.ITS-legacy-iidr-typer-offset",
-                  params.ITS_legacy_iidr_typer_offset);
+        params.ITS_legacy_iidr_typer_offset);
     set_parameter("gic.redistributor-threaded-sync",
-                  params.redistributor_threaded_command_queue);
+        params.redistributor_threaded_command_queue);
     set_parameter("gic.ignore-generate-sgi-when-no-are",
-                  params.ignore_generate_sgi_when_no_are);
+        params.ignore_generate_sgi_when_no_are);
     set_parameter("gic.trace-speculative-lpi-property-update",
-                  params.trace_speculative_lpi_property_updates);
+        params.trace_speculative_lpi_property_updates);
     set_parameter("gic.virtual-lpi-support", params.virtual_lpi_support);
     set_parameter("gic.virtual-priority-bits", params.virtual_priority_bits);
     set_parameter("gic.LPI-cache-type", params.LPI_cache_type);
@@ -280,24 +277,24 @@ SCGIC::SCGIC(const SCFastModelGICParams &params,
     set_parameter("gic.MSI_S-frame7-base", params.MSI_S_frame7_base);
     set_parameter("gic.MSI_S-frame7-max-SPI", params.MSI_S_frame7_max_SPI);
     set_parameter("gic.MSI_S-frame7-min-SPI", params.MSI_S_frame7_min_SPI);
-    set_parameter("gic.outer-cacheability-support",
-                  params.outer_cacheability_support);
+    set_parameter(
+        "gic.outer-cacheability-support", params.outer_cacheability_support);
     set_parameter("gic.wakeup-on-reset", params.wakeup_on_reset);
     set_parameter("gic.SPI-message-based-support", params.SPI_MBIS);
     set_parameter("gic.SPI-unimplemented", params.SPI_unimplemented);
     set_parameter("gic.IROUTER-IRM-RAZ-WI", params.irm_razwi);
-    set_parameter("gic.common-lpi-configuration",
-                  params.common_LPI_configuration);
+    set_parameter(
+        "gic.common-lpi-configuration", params.common_LPI_configuration);
     set_parameter("gic.single-set-support", params.single_set_support);
     set_parameter("gic.has_mpam", params.has_mpam);
     set_parameter("gic.mpam_partid_max", params.mpam_max_partid);
     set_parameter("gic.mpam_pmg_max", params.mpam_max_pmg);
     set_parameter("gic.output_attributes", params.output_attributes);
-    set_parameter("gic.has_VPENDBASER-dirty-flag-on-load",
-                  params.has_DirtyVLPIOnLoad);
+    set_parameter(
+        "gic.has_VPENDBASER-dirty-flag-on-load", params.has_DirtyVLPIOnLoad);
     set_parameter("gic.allow-LPIEN-clear", params.allow_LPIEN_clear);
     set_parameter("gic.GICD-legacy-registers-as-reserved",
-                  params.GICD_legacy_reg_reserved);
+        params.GICD_legacy_reg_reserved);
     set_parameter("gic.extended-spi-count", params.extended_spi_count);
     set_parameter("gic.extended-ppi-count", params.extended_ppi_count);
     set_parameter("gic.consolidators", params.consolidators);
@@ -332,8 +329,7 @@ GIC::GIC(const FastModelGICParams &params) :
     for (int i = 0; i < params.port_wake_request_connection_count; i++) {
         wakeRequestPorts.emplace_back(new IntSourcePin<GIC>(
             csprintf("%s.wakerequestport[%d]", name(), i), i, this));
-        auto handler = [this, i](bool status)
-        {
+        auto handler = [this, i](bool status) {
             auto &port = wakeRequestPorts[i];
             status ? port->raise() : port->lower();
         };
@@ -352,8 +348,7 @@ GIC::getPort(const std::string &if_name, PortID idx)
         auto &ptr = redistributors.at(idx);
         if (!ptr) {
             ptr.reset(new TlmGicInitiator(scGIC->redistributor[idx],
-                                          csprintf("%s.redistributor[%d]",
-                                                   name(), idx), idx));
+                csprintf("%s.redistributor[%d]", name(), idx), idx));
         }
         return *ptr;
     } else if (if_name == "wake_request") {

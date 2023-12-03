@@ -37,8 +37,8 @@ unsigned test_a, test_b, test_c, test_d, test_e, test_f;
 unsigned test_result;
 
 unsigned
-test_m5_sum(unsigned a, unsigned b, unsigned c,
-            unsigned d, unsigned e, unsigned f)
+test_m5_sum(
+    unsigned a, unsigned b, unsigned c, unsigned d, unsigned e, unsigned f)
 {
     test_a = a;
     test_b = b;
@@ -51,8 +51,8 @@ test_m5_sum(unsigned a, unsigned b, unsigned c,
 }
 
 void
-check_args(unsigned a, unsigned b, unsigned c,
-           unsigned d, unsigned e, unsigned f)
+check_args(
+    unsigned a, unsigned b, unsigned c, unsigned d, unsigned e, unsigned f)
 {
     EXPECT_EQ(test_a, a);
     EXPECT_EQ(test_b, b);
@@ -62,7 +62,7 @@ check_args(unsigned a, unsigned b, unsigned c,
     EXPECT_EQ(test_f, f);
 }
 
-DispatchTable dt = { .m5_sum = &test_m5_sum };
+DispatchTable dt = {.m5_sum = &test_m5_sum};
 
 std::string cout_output;
 

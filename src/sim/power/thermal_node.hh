@@ -43,7 +43,6 @@
 
 namespace gem5
 {
-
 struct ThermalNodeParams;
 
 /**

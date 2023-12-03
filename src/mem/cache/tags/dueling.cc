@@ -33,20 +33,16 @@
 
 namespace gem5
 {
-
 unsigned DuelingMonitor::numInstances = 0;
 
-Dueler::Dueler()
-  : _isSample(false), _team(0)
-{
-}
+Dueler::Dueler() : _isSample(false), _team(0) {}
 
 void
 Dueler::setSample(uint64_t id, bool team)
 {
     panic_if(popCount(id) != 1, "The id must have a single bit set.");
-    panic_if(_isSample & id,
-        "This dueler is already a sample for id %llu", id);
+    panic_if(
+        _isSample & id, "This dueler is already a sample for id %llu", id);
     _isSample |= id;
     if (team) {
         _team |= id;
@@ -54,7 +50,7 @@ Dueler::setSample(uint64_t id, bool team)
 }
 
 bool
-Dueler::isSample(uint64_t id, bool& team) const
+Dueler::isSample(uint64_t id, bool &team) const
 {
     team = _team & id;
     return _isSample & id;
@@ -62,10 +58,14 @@ Dueler::isSample(uint64_t id, bool& team) const
 
 DuelingMonitor::DuelingMonitor(std::size_t constituency_size,
     std::size_t team_size, unsigned num_bits, double low_threshold,
-    double high_threshold)
-  : id(1 << numInstances), constituencySize(constituency_size),
-    teamSize(team_size), lowThreshold(low_threshold),
-    highThreshold(high_threshold), selector(num_bits), regionCounter(0),
+    double high_threshold) :
+    id(1 << numInstances),
+    constituencySize(constituency_size),
+    teamSize(team_size),
+    lowThreshold(low_threshold),
+    highThreshold(high_threshold),
+    selector(num_bits),
+    regionCounter(0),
     winner(true)
 {
     fatal_if(constituencySize < (NUM_DUELERS * teamSize),
@@ -88,7 +88,7 @@ DuelingMonitor::DuelingMonitor(std::size_t constituency_size,
 }
 
 void
-DuelingMonitor::sample(const Dueler* dueler)
+DuelingMonitor::sample(const Dueler *dueler)
 {
     bool team;
     if (dueler->isSample(id, team)) {
@@ -109,7 +109,7 @@ DuelingMonitor::sample(const Dueler* dueler)
 }
 
 bool
-DuelingMonitor::isSample(const Dueler* dueler, bool& team) const
+DuelingMonitor::isSample(const Dueler *dueler, bool &team) const
 {
     return dueler->isSample(id, team);
 }
@@ -121,7 +121,7 @@ DuelingMonitor::getWinner() const
 }
 
 void
-DuelingMonitor::initEntry(Dueler* dueler)
+DuelingMonitor::initEntry(Dueler *dueler)
 {
     // The first entries of the constituency belong to one team, and the
     // last entries to the other

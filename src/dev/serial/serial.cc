@@ -43,14 +43,9 @@
 
 namespace gem5
 {
+SerialDevice::SerialDevice(const SerialDeviceParams &p) : SimObject(p) {}
 
-SerialDevice::SerialDevice(const SerialDeviceParams &p) : SimObject(p)
-{
-}
-
-SerialDevice::~SerialDevice()
-{
-}
+SerialDevice::~SerialDevice() {}
 
 void
 SerialDevice::regInterfaceCallback(const std::function<void()> &callback)
@@ -59,7 +54,7 @@ SerialDevice::regInterfaceCallback(const std::function<void()> &callback)
     // same terminal. In that case, each of them tries to register
     // callbacks.
     fatal_if(interfaceCallback,
-             "A UART has already been associated with this device.");
+        "A UART has already been associated with this device.");
     interfaceCallback = callback;
 }
 
@@ -72,13 +67,9 @@ SerialDevice::notifyInterface()
         interfaceCallback();
 }
 
-
-
-
-SerialNullDevice::SerialNullDevice(const SerialNullDeviceParams &p)
-    : SerialDevice(p)
-{
-}
+SerialNullDevice::SerialNullDevice(const SerialNullDeviceParams &p) :
+    SerialDevice(p)
+{}
 
 uint8_t
 SerialNullDevice::readData()

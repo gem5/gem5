@@ -41,7 +41,6 @@
 
 namespace gem5
 {
-
 /*
  * Further descriptions can be found in the "Hardware Register Values" table
  * in any of the GCN3, Vega, CDNA1, CNDA2, or RDNA ISA manuals.

@@ -40,7 +40,6 @@
 
 namespace gem5
 {
-
 /**
  * LupioBLK:
  * A virtual block device which aims to provide a disk-like interface for
@@ -61,7 +60,7 @@ class LupioBLK : public DmaDevice
 
     void dmaEventDone();
 
-  // Register map
+    // Register map
   private:
     enum
     {

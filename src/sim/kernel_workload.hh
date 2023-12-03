@@ -39,7 +39,6 @@
 
 namespace gem5
 {
-
 class System;
 
 class KernelWorkload : public Workload
@@ -76,15 +75,39 @@ class KernelWorkload : public Workload
   public:
     PARAMS(KernelWorkload);
 
-    Addr start() const { return _start; }
-    Addr end() const { return _end; }
-    Addr loadAddrMask() const { return _loadAddrMask; }
-    Addr loadAddrOffset() const { return _loadAddrOffset; }
+    Addr
+    start() const
+    {
+        return _start;
+    }
+    Addr
+    end() const
+    {
+        return _end;
+    }
+    Addr
+    loadAddrMask() const
+    {
+        return _loadAddrMask;
+    }
+    Addr
+    loadAddrOffset() const
+    {
+        return _loadAddrOffset;
+    }
 
     KernelWorkload(const Params &p);
 
-    Addr getEntry() const override { return kernelObj->entryPoint(); }
-    ByteOrder byteOrder() const override { return kernelObj->getByteOrder(); }
+    Addr
+    getEntry() const override
+    {
+        return kernelObj->entryPoint();
+    }
+    ByteOrder
+    byteOrder() const override
+    {
+        return kernelObj->getByteOrder();
+    }
     loader::Arch
     getArch() const override
     {

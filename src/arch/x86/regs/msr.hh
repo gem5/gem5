@@ -36,10 +36,8 @@
 
 namespace gem5
 {
-
 namespace X86ISA
 {
-
 typedef std::unordered_map<Addr, RegIndex> MsrMap;
 
 /**

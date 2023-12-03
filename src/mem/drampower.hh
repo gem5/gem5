@@ -48,22 +48,19 @@
 
 namespace gem5
 {
-
 /**
  * DRAMPower is a standalone tool which calculates the power consumed by a
  * DRAM in the system. This class wraps the DRAMPower library.
  */
 class DRAMPower
 {
-
- private:
-
+  private:
     /**
      * Transform the architechture parameters defined in
      * DRAMInterfaceParams to the memSpec of DRAMPower
      */
     static Data::MemArchitectureSpec getArchParams(
-                                     const DRAMInterfaceParams &p);
+        const DRAMInterfaceParams &p);
 
     /**
      * Transforms the timing parameters defined in DRAMInterfaceParams to
@@ -92,13 +89,11 @@ class DRAMPower
      */
     static Data::MemorySpecification getMemSpec(const DRAMInterfaceParams &p);
 
- public:
-
+  public:
     // Instance of DRAMPower Library
     libDRAMPower powerlib;
 
     DRAMPower(const DRAMInterfaceParams &p, bool include_io);
-
 };
 
 } // namespace gem5

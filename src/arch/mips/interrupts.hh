@@ -40,13 +40,11 @@
 
 namespace gem5
 {
-
 class BaseCPU;
 class Checkpoint;
 
 namespace MipsISA
 {
-
 class Interrupts : public BaseInterrupts
 {
   public:

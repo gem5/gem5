@@ -49,7 +49,6 @@
 
 namespace gem5
 {
-
 /*
  * Data structure describing an embedded python file.
  */
@@ -62,7 +61,7 @@ struct EmbeddedPython
     int len;
 
     EmbeddedPython(const char *abspath, const char *modpath,
-            const uint8_t *code, int zlen, int len);
+        const uint8_t *code, int zlen, int len);
 
     pybind11::object getCode() const;
     bool addModule() const;

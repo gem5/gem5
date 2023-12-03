@@ -49,7 +49,6 @@
 
 namespace gem5
 {
-
 struct MemFootprintProbeParams;
 
 /// Probe to track footprint of accessed memory
@@ -103,4 +102,4 @@ class MemFootprintProbe : public BaseMemProbe
 
 } // namespace gem5
 
-#endif  //__MEM_PROBES_MEM_FOOTPRINT_HH__
+#endif //__MEM_PROBES_MEM_FOOTPRINT_HH__

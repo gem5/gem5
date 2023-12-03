@@ -40,14 +40,17 @@
 
 namespace sc_gem5
 {
-
 struct ReportMsgInfo
 {
     explicit ReportMsgInfo() :
-        actions(sc_core::SC_UNSPECIFIED), count(0), limit(-1),
-        sevActions{ sc_core::SC_UNSPECIFIED, sc_core::SC_UNSPECIFIED,
-                sc_core::SC_UNSPECIFIED, sc_core::SC_UNSPECIFIED },
-        sevCounts{0, 0, 0, 0}, sevLimits{-1, -1, -1, -1}, id(-1)
+        actions(sc_core::SC_UNSPECIFIED),
+        count(0),
+        limit(-1),
+        sevActions{sc_core::SC_UNSPECIFIED, sc_core::SC_UNSPECIFIED,
+            sc_core::SC_UNSPECIFIED, sc_core::SC_UNSPECIFIED},
+        sevCounts{0, 0, 0, 0},
+        sevLimits{-1, -1, -1, -1},
+        id(-1)
     {}
 
     void
@@ -56,7 +59,7 @@ struct ReportMsgInfo
         int sevLimit = sevLimits[severity];
         int sevCount = sevCounts[severity];
         if ((limit != -1 && limit >= count) ||
-                (sevLimit != 1 && sevLimit >= sevCount)) {
+            (sevLimit != 1 && sevLimit >= sevCount)) {
             actions |= sc_core::SC_STOP;
         }
     }
@@ -106,8 +109,8 @@ extern sc_core::sc_report_handler_proc reportHandlerProc;
 
 // gem5-specific support for extra SystemC report handlers. Called _after_
 // the default/set handler.
-const std::list<sc_core::sc_report_handler_proc>
-    &getExtraSystemCReportHandlers();
+const std::list<sc_core::sc_report_handler_proc> &
+getExtraSystemCReportHandlers();
 void addExtraSystemCReportHandler(sc_core::sc_report_handler_proc proc);
 void removeExtraSystemCReportHandler(sc_core::sc_report_handler_proc proc);
 

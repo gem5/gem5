@@ -38,7 +38,6 @@
 
 namespace sc_gem5
 {
-
 struct ListNode
 {
     ListNode() : nextListNode(nullptr), prevListNode(nullptr) {}
@@ -108,9 +107,13 @@ struct NodeList : public ListNode
         return empty() ? nullptr : static_cast<T *>(nextListNode);
     }
 
-    bool empty() { return nextListNode == this; }
+    bool
+    empty()
+    {
+        return nextListNode == this;
+    }
 };
 
 } // namespace sc_gem5
 
-#endif  //__SYSTEMC_CORE_LIST_HH__
+#endif //__SYSTEMC_CORE_LIST_HH__

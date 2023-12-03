@@ -69,11 +69,9 @@
 
 namespace gem5
 {
-
 namespace branch_prediction
 {
-
-class TAGE: public BPredUnit
+class TAGE : public BPredUnit
 {
   protected:
     TAGEBase *tage;
@@ -85,27 +83,22 @@ class TAGE: public BPredUnit
         TageBranchInfo(TAGEBase &tage) : tageBranchInfo(tage.makeBranchInfo())
         {}
 
-        virtual ~TageBranchInfo()
-        {
-            delete tageBranchInfo;
-        }
+        virtual ~TageBranchInfo() { delete tageBranchInfo; }
     };
 
-    virtual bool predict(ThreadID tid, Addr branch_pc, bool cond_branch,
-                         void* &b);
+    virtual bool predict(
+        ThreadID tid, Addr branch_pc, bool cond_branch, void *&b);
 
   public:
-
     TAGE(const TAGEParams &params);
 
     // Base class methods.
-    bool lookup(ThreadID tid, Addr pc, void* &bp_history) override;
+    bool lookup(ThreadID tid, Addr pc, void *&bp_history) override;
     void updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
-                         Addr target,  void * &bp_history) override;
-    void update(ThreadID tid, Addr pc, bool taken,
-                void * &bp_history, bool squashed,
-                const StaticInstPtr & inst, Addr target) override;
-    virtual void squash(ThreadID tid, void * &bp_history) override;
+        Addr target, void *&bp_history) override;
+    void update(ThreadID tid, Addr pc, bool taken, void *&bp_history,
+        bool squashed, const StaticInstPtr &inst, Addr target) override;
+    virtual void squash(ThreadID tid, void *&bp_history) override;
 };
 
 } // namespace branch_prediction

@@ -30,10 +30,8 @@
 
 namespace gem5
 {
-
 namespace PowerISA
 {
-
 GenericISA::BasicDecodeCache<Decoder, ExtMachInst> Decoder::defaultCache;
 
 } // namespace PowerISA

@@ -38,17 +38,16 @@
 
 namespace
 {
-
 void
 write_file(const DispatchTable &dt, const std::string &filename,
-           const std::string &host_filename)
+    const std::string &host_filename)
 {
     std::cout << "Opening \"" << filename << "\"." << std::endl;
     std::ifstream src(filename, std::ios_base::in | std::ios_base::binary);
 
     if (!src) {
-        std::cerr << "Error opening \"" << filename << "\": " <<
-            strerror(errno) << std::endl;
+        std::cerr << "Error opening \"" << filename
+                  << "\": " << strerror(errno) << std::endl;
         exit(2);
     }
 
@@ -62,14 +61,14 @@ write_file(const DispatchTable &dt, const std::string &filename,
         src.read(buf, sizeof(buf));
         int len = src.gcount();
         if (!src && !src.eof()) {
-            std::cerr << "Error reading \"" << filename << "\": " <<
-                strerror(errno) << std::endl;
+            std::cerr << "Error reading \"" << filename
+                      << "\": " << strerror(errno) << std::endl;
             exit(2);
         }
         char *wbuf = buf;
         while (len) {
-            int bytes = (*dt.m5_write_file)(
-                    wbuf, len, offset, host_filename.c_str());
+            int bytes =
+                (*dt.m5_write_file)(wbuf, len, offset, host_filename.c_str());
             len -= bytes;
             offset += bytes;
             wbuf += bytes;
@@ -91,9 +90,9 @@ do_write_file(const DispatchTable &dt, Args &args)
     return true;
 }
 
-Command write_file_cmd = {
-    "writefile", 1, 2, do_write_file, "<filename> [host filename]\n"
-        "        Write a file to the host, optionally with a different "
-            "name" };
+Command write_file_cmd = {"writefile", 1, 2, do_write_file,
+    "<filename> [host filename]\n"
+    "        Write a file to the host, optionally with a different "
+    "name"};
 
 } // anonymous namespace

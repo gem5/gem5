@@ -43,7 +43,6 @@
 
 namespace gem5
 {
-
 void
 EmulationPageTable::map(Addr vaddr, Addr paddr, int64_t size, uint64_t flags)
 {
@@ -58,8 +57,8 @@ EmulationPageTable::map(Addr vaddr, Addr paddr, int64_t size, uint64_t flags)
         if (it != pTable.end()) {
             // already mapped
             panic_if(!clobber,
-                     "EmulationPageTable::allocate: addr %#x already mapped",
-                     vaddr);
+                "EmulationPageTable::allocate: addr %#x already mapped",
+                vaddr);
             it->second = Entry(paddr, flags);
         } else {
             pTable.emplace(vaddr, Entry(paddr, flags));
@@ -78,7 +77,7 @@ EmulationPageTable::remap(Addr vaddr, int64_t size, Addr new_vaddr)
     assert(pageOffset(new_vaddr) == 0);
 
     DPRINTF(MMU, "moving pages from vaddr %08p to %08p, size = %d\n", vaddr,
-            new_vaddr, size);
+        new_vaddr, size);
 
     while (size > 0) {
         [[maybe_unused]] auto new_it = pTable.find(new_vaddr);
@@ -224,7 +223,8 @@ const std::string
 EmulationPageTable::externalize() const
 {
     std::stringstream ss;
-    for (PTable::const_iterator it=pTable.begin(); it != pTable.end(); ++it) {
+    for (PTable::const_iterator it = pTable.begin(); it != pTable.end();
+         ++it) {
         ss << std::hex << it->first << ":" << it->second.paddr << ";";
     }
     return ss.str();

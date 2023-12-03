@@ -29,7 +29,6 @@
 
 namespace sc_core
 {
-
 const unsigned int sc_version_major = SC_VERSION_MAJOR;
 const unsigned int sc_version_minor = SC_VERSION_MINOR;
 const unsigned int sc_version_patch = SC_VERSION_PATCH;

@@ -52,13 +52,11 @@
 
 namespace gem5
 {
-
 namespace branch_prediction
 {
-
 class TAGE_SC_L_TAGE_64KB : public TAGE_SC_L_TAGE
 {
-    public:
+  public:
     TAGE_SC_L_TAGE_64KB(const TAGE_SC_L_TAGE_64KBParams &p) : TAGE_SC_L_TAGE(p)
     {}
 
@@ -67,10 +65,10 @@ class TAGE_SC_L_TAGE_64KB : public TAGE_SC_L_TAGE
     uint16_t gtag(ThreadID tid, Addr pc, int bank) const override;
 
     void handleAllocAndUReset(
-        bool alloc, bool taken, TAGEBase::BranchInfo* bi, int nrand) override;
+        bool alloc, bool taken, TAGEBase::BranchInfo *bi, int nrand) override;
 
     void handleTAGEUpdate(
-        Addr branch_pc, bool taken, TAGEBase::BranchInfo* bi) override;
+        Addr branch_pc, bool taken, TAGEBase::BranchInfo *bi) override;
 };
 
 class TAGE_SC_L_64KB_StatisticalCorrector : public StatisticalCorrector
@@ -82,28 +80,28 @@ class TAGE_SC_L_64KB_StatisticalCorrector : public StatisticalCorrector
     const unsigned pnb;
     const unsigned logPnb;
     std::vector<int> pm;
-    std::vector<int8_t> * pgehl;
+    std::vector<int8_t> *pgehl;
     std::vector<int8_t> wp;
 
     // Second local history GEHL
     const unsigned snb;
     const unsigned logSnb;
     std::vector<int> sm;
-    std::vector<int8_t> * sgehl;
+    std::vector<int8_t> *sgehl;
     std::vector<int8_t> ws;
 
     // Third local history GEHL
     const unsigned tnb;
     const unsigned logTnb;
     std::vector<int> tm;
-    std::vector<int8_t> * tgehl;
+    std::vector<int8_t> *tgehl;
     std::vector<int8_t> wt;
 
     // Second IMLI GEHL
     const unsigned imnb;
     const unsigned logImnb;
     std::vector<int> imm;
-    std::vector<int8_t> * imgehl;
+    std::vector<int8_t> *imgehl;
     std::vector<int8_t> wim;
 
     struct SC_64KB_ThreadHistory : public SCThreadHistory
@@ -117,19 +115,19 @@ class TAGE_SC_L_64KB_StatisticalCorrector : public StatisticalCorrector
     TAGE_SC_L_64KB_StatisticalCorrector(
         const TAGE_SC_L_64KB_StatisticalCorrectorParams &p);
 
-    unsigned getIndBiasBank(Addr branch_pc, BranchInfo* bi, int hitBank,
+    unsigned getIndBiasBank(Addr branch_pc, BranchInfo *bi, int hitBank,
         int altBank) const override;
 
-    int gPredictions(ThreadID tid, Addr branch_pc, BranchInfo* bi,
-                     int & lsum, int64_t phist) override;
+    int gPredictions(ThreadID tid, Addr branch_pc, BranchInfo *bi, int &lsum,
+        int64_t phist) override;
 
     int gIndexLogsSubstr(int nbr, int i) override;
 
     void scHistoryUpdate(Addr branch_pc, const StaticInstPtr &inst, bool taken,
-                         BranchInfo * tage_bi, Addr corrTarget) override;
+        BranchInfo *tage_bi, Addr corrTarget) override;
 
-    void gUpdates(ThreadID tid, Addr pc, bool taken, BranchInfo* bi,
-            int64_t phist) override;
+    void gUpdates(ThreadID tid, Addr pc, bool taken, BranchInfo *bi,
+        int64_t phist) override;
 };
 
 class TAGE_SC_L_64KB : public TAGE_SC_L

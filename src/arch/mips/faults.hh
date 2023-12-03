@@ -40,10 +40,8 @@
 
 namespace gem5
 {
-
 namespace MipsISA
 {
-
 typedef Addr FaultVect;
 
 enum ExcCode
@@ -87,7 +85,8 @@ class MipsFaultBase : public FaultBase
 
     virtual FaultVect offset(ThreadContext *tc) const = 0;
     virtual ExcCode code() const = 0;
-    virtual FaultVect base(ThreadContext *tc) const
+    virtual FaultVect
+    base(ThreadContext *tc) const
     {
         StatusReg status = tc->readMiscReg(misc_reg::Status);
         if (!status.bev)
@@ -102,8 +101,8 @@ class MipsFaultBase : public FaultBase
         return base(tc) + offset(tc);
     }
 
-    void invoke(ThreadContext * tc, const StaticInstPtr &inst =
-                nullStaticInstPtr);
+    void invoke(
+        ThreadContext *tc, const StaticInstPtr &inst = nullStaticInstPtr);
 };
 
 template <typename T>
@@ -111,59 +110,81 @@ class MipsFault : public MipsFaultBase
 {
   protected:
     static FaultVals vals;
+
   public:
-    FaultName name() const { return vals.name; }
-    FaultVect offset(ThreadContext *tc) const { return vals.offset; }
-    ExcCode code() const { return vals.code; }
+    FaultName
+    name() const
+    {
+        return vals.name;
+    }
+    FaultVect
+    offset(ThreadContext *tc) const
+    {
+        return vals.offset;
+    }
+    ExcCode
+    code() const
+    {
+        return vals.code;
+    }
 };
 
-class SystemCallFault : public MipsFault<SystemCallFault> {};
-class ReservedInstructionFault : public MipsFault<ReservedInstructionFault> {};
-class ThreadFault : public MipsFault<ThreadFault> {};
-class IntegerOverflowFault : public MipsFault<IntegerOverflowFault> {};
-class TrapFault : public MipsFault<TrapFault> {};
-class BreakpointFault : public MipsFault<BreakpointFault> {};
-class DspStateDisabledFault : public MipsFault<DspStateDisabledFault> {};
+class SystemCallFault : public MipsFault<SystemCallFault>
+{};
+class ReservedInstructionFault : public MipsFault<ReservedInstructionFault>
+{};
+class ThreadFault : public MipsFault<ThreadFault>
+{};
+class IntegerOverflowFault : public MipsFault<IntegerOverflowFault>
+{};
+class TrapFault : public MipsFault<TrapFault>
+{};
+class BreakpointFault : public MipsFault<BreakpointFault>
+{};
+class DspStateDisabledFault : public MipsFault<DspStateDisabledFault>
+{};
 
 class MachineCheckFault : public MipsFault<MachineCheckFault>
 {
   public:
-    bool isMachineCheckFault() { return true; }
+    bool
+    isMachineCheckFault()
+    {
+        return true;
+    }
 };
 
 class ResetFault : public MipsFault<ResetFault>
 {
   public:
-    void invoke(ThreadContext * tc, const StaticInstPtr &inst =
-                nullStaticInstPtr);
-
+    void invoke(
+        ThreadContext *tc, const StaticInstPtr &inst = nullStaticInstPtr);
 };
 
 class SoftResetFault : public MipsFault<SoftResetFault>
 {
   public:
-    void invoke(ThreadContext * tc, const StaticInstPtr &inst =
-                nullStaticInstPtr);
+    void invoke(
+        ThreadContext *tc, const StaticInstPtr &inst = nullStaticInstPtr);
 };
 
 class NonMaskableInterrupt : public MipsFault<NonMaskableInterrupt>
 {
   public:
-    void invoke(ThreadContext * tc, const StaticInstPtr &inst =
-                nullStaticInstPtr);
+    void invoke(
+        ThreadContext *tc, const StaticInstPtr &inst = nullStaticInstPtr);
 };
 
 class CoprocessorUnusableFault : public MipsFault<CoprocessorUnusableFault>
 {
   protected:
     int coProcID;
+
   public:
-    CoprocessorUnusableFault(int _procid) : coProcID(_procid)
-    {}
+    CoprocessorUnusableFault(int _procid) : coProcID(_procid) {}
 
     void
-    invoke(ThreadContext * tc, const StaticInstPtr &inst =
-           nullStaticInstPtr)
+    invoke(ThreadContext *tc, const StaticInstPtr &inst = nullStaticInstPtr)
     {
         MipsFault<CoprocessorUnusableFault>::invoke(tc, inst);
         if (FullSystem) {
@@ -193,12 +214,10 @@ class AddressFault : public MipsFault<T>
     Addr vaddr;
     bool store;
 
-    AddressFault(Addr _vaddr, bool _store) : vaddr(_vaddr), store(_store)
-    {}
+    AddressFault(Addr _vaddr, bool _store) : vaddr(_vaddr), store(_store) {}
 
     void
-    invoke(ThreadContext * tc, const StaticInstPtr &inst =
-           nullStaticInstPtr)
+    invoke(ThreadContext *tc, const StaticInstPtr &inst = nullStaticInstPtr)
     {
         MipsFault<T>::invoke(tc, inst);
         if (FullSystem)
@@ -218,7 +237,6 @@ class AddressErrorFault : public AddressFault<AddressErrorFault>
     {
         return store ? ExcCodeAdES : ExcCodeAdEL;
     }
-
 };
 
 template <typename T>
@@ -250,8 +268,7 @@ class TlbFault : public AddressFault<T>
     }
 
     void
-    invoke(ThreadContext * tc, const StaticInstPtr &inst =
-           nullStaticInstPtr)
+    invoke(ThreadContext *tc, const StaticInstPtr &inst = nullStaticInstPtr)
     {
         if (FullSystem) {
             DPRINTF(MipsPRA, "Fault %s encountered.\n", this->name());
@@ -300,32 +317,51 @@ class TlbModifiedFault : public TlbFault<TlbModifiedFault>
         TlbFault<TlbModifiedFault>(asid, vaddr, vpn, false)
     {}
 
-    ExcCode code() const { return MipsFault<TlbModifiedFault>::code(); }
+    ExcCode
+    code() const
+    {
+        return MipsFault<TlbModifiedFault>::code();
+    }
 };
 
 /*
  * Explicitly declare template static member variables to avoid warnings
  * in some clang versions
  */
-template<> MipsFaultBase::FaultVals MipsFault<SystemCallFault>::vals;
-template<> MipsFaultBase::FaultVals MipsFault<ReservedInstructionFault>::vals;
-template<> MipsFaultBase::FaultVals MipsFault<ThreadFault>::vals;
-template<> MipsFaultBase::FaultVals MipsFault<IntegerOverflowFault>::vals;
-template<> MipsFaultBase::FaultVals MipsFault<TrapFault>::vals;
-template<> MipsFaultBase::FaultVals MipsFault<BreakpointFault>::vals;
-template<> MipsFaultBase::FaultVals MipsFault<DspStateDisabledFault>::vals;
-template<> MipsFaultBase::FaultVals MipsFault<MachineCheckFault>::vals;
-template<> MipsFaultBase::FaultVals MipsFault<ResetFault>::vals;
-template<> MipsFaultBase::FaultVals MipsFault<SoftResetFault>::vals;
-template<> MipsFaultBase::FaultVals MipsFault<NonMaskableInterrupt>::vals;
-template<> MipsFaultBase::FaultVals MipsFault<CoprocessorUnusableFault>::vals;
-template<> MipsFaultBase::FaultVals MipsFault<InterruptFault>::vals;
-template<> MipsFaultBase::FaultVals MipsFault<AddressErrorFault>::vals;
-template<> MipsFaultBase::FaultVals MipsFault<TlbInvalidFault>::vals;
-template<> MipsFaultBase::FaultVals MipsFault<TlbRefillFault>::vals;
-template<> MipsFaultBase::FaultVals MipsFault<TlbModifiedFault>::vals;
-
-
+template <>
+MipsFaultBase::FaultVals MipsFault<SystemCallFault>::vals;
+template <>
+MipsFaultBase::FaultVals MipsFault<ReservedInstructionFault>::vals;
+template <>
+MipsFaultBase::FaultVals MipsFault<ThreadFault>::vals;
+template <>
+MipsFaultBase::FaultVals MipsFault<IntegerOverflowFault>::vals;
+template <>
+MipsFaultBase::FaultVals MipsFault<TrapFault>::vals;
+template <>
+MipsFaultBase::FaultVals MipsFault<BreakpointFault>::vals;
+template <>
+MipsFaultBase::FaultVals MipsFault<DspStateDisabledFault>::vals;
+template <>
+MipsFaultBase::FaultVals MipsFault<MachineCheckFault>::vals;
+template <>
+MipsFaultBase::FaultVals MipsFault<ResetFault>::vals;
+template <>
+MipsFaultBase::FaultVals MipsFault<SoftResetFault>::vals;
+template <>
+MipsFaultBase::FaultVals MipsFault<NonMaskableInterrupt>::vals;
+template <>
+MipsFaultBase::FaultVals MipsFault<CoprocessorUnusableFault>::vals;
+template <>
+MipsFaultBase::FaultVals MipsFault<InterruptFault>::vals;
+template <>
+MipsFaultBase::FaultVals MipsFault<AddressErrorFault>::vals;
+template <>
+MipsFaultBase::FaultVals MipsFault<TlbInvalidFault>::vals;
+template <>
+MipsFaultBase::FaultVals MipsFault<TlbRefillFault>::vals;
+template <>
+MipsFaultBase::FaultVals MipsFault<TlbModifiedFault>::vals;
 
 } // namespace MipsISA
 } // namespace gem5

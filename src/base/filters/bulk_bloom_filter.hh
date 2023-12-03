@@ -34,12 +34,10 @@
 
 namespace gem5
 {
-
 struct BloomFilterBulkParams;
 
 namespace bloom_filter
 {
-
 /**
  * Implementation of the bloom filter, as described in "Bulk Disambiguation of
  * Speculative Threads in Multiprocessors", by Ceze, Luis, et al.

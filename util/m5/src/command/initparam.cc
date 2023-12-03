@@ -34,7 +34,6 @@
 
 namespace
 {
-
 bool
 do_initparam(const DispatchTable &dt, Args &args)
 {
@@ -48,8 +47,8 @@ do_initparam(const DispatchTable &dt, Args &args)
     return true;
 }
 
-Command init_param = {
-    "initparam", 1, 1, do_initparam, "[key]\n"
-        "        optional key may be at most 16 characters long" };
+Command init_param = {"initparam", 1, 1, do_initparam,
+    "[key]\n"
+    "        optional key may be at most 16 characters long"};
 
 } // anonymous namespace

@@ -52,16 +52,13 @@
 
 namespace gem5
 {
-
 /**
  * A write queue for all eviction packets, i.e. writebacks and clean
  * evictions, as well as uncacheable writes.
  */
 class WriteQueue : public Queue<WriteQueueEntry>
 {
-
   public:
-
     /**
      * Create a write queue with a given number of entries.
      * @param num_entries The number of entries in this queue.
@@ -69,7 +66,7 @@ class WriteQueue : public Queue<WriteQueueEntry>
      *        any access.
      */
     WriteQueue(const std::string &_label, int num_entries, int reserve,
-            const std::string &name);
+        const std::string &name);
 
     /**
      * Allocates a new WriteQueueEntry for the request and size. This
@@ -85,8 +82,8 @@ class WriteQueue : public Queue<WriteQueueEntry>
      *
      * @pre There are free entries.
      */
-    WriteQueueEntry *allocate(Addr blk_addr, unsigned blk_size,
-                              PacketPtr pkt, Tick when_ready, Counter order);
+    WriteQueueEntry *allocate(Addr blk_addr, unsigned blk_size, PacketPtr pkt,
+        Tick when_ready, Counter order);
 
     /**
      * Mark the given entry as in service. This removes the entry from

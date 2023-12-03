@@ -51,11 +51,10 @@
 
 namespace gem5
 {
-
-RubyTester::RubyTester(const Params &p)
-  : ClockedObject(p),
-    checkStartEvent([this]{ wakeup(); }, "RubyTester tick",
-                    false, Event::CPU_Tick_Pri),
+RubyTester::RubyTester(const Params &p) :
+    ClockedObject(p),
+    checkStartEvent(
+        [this] { wakeup(); }, "RubyTester tick", false, Event::CPU_Tick_Pri),
     _requestorId(p.system->getRequestorId(this)),
     m_checkTable_ptr(nullptr),
     m_num_cpus(p.num_cpus),
@@ -83,20 +82,20 @@ RubyTester::RubyTester(const Params &p)
     //
     int idx = 0;
     for (int i = 0; i < p.port_cpuInstPort_connection_count; ++i) {
-        readPorts.push_back(new CpuPort(csprintf("%s-instPort%d", name(), i),
-                                        this, i, idx));
+        readPorts.push_back(
+            new CpuPort(csprintf("%s-instPort%d", name(), i), this, i, idx));
         idx++;
     }
     for (int i = 0; i < p.port_cpuInstDataPort_connection_count; ++i) {
-        CpuPort *port = new CpuPort(csprintf("%s-instDataPort%d", name(), i),
-                                    this, i, idx);
+        CpuPort *port = new CpuPort(
+            csprintf("%s-instDataPort%d", name(), i), this, i, idx);
         readPorts.push_back(port);
         writePorts.push_back(port);
         idx++;
     }
     for (int i = 0; i < p.port_cpuDataPort_connection_count; ++i) {
-        CpuPort *port = new CpuPort(csprintf("%s-dataPort%d", name(), i),
-                                    this, i, idx);
+        CpuPort *port =
+            new CpuPort(csprintf("%s-dataPort%d", name(), i), this, i, idx);
         readPorts.push_back(port);
         writePorts.push_back(port);
         idx++;
@@ -141,8 +140,7 @@ RubyTester::getPort(const std::string &if_name, PortID idx)
     } else {
         if (if_name == "cpuInstPort") {
             if (idx > m_num_inst_only_ports) {
-                panic("RubyTester::getPort: unknown inst port %d\n",
-                      idx);
+                panic("RubyTester::getPort: unknown inst port %d\n", idx);
             }
             //
             // inst ports map to the lowest readPort elements
@@ -150,8 +148,7 @@ RubyTester::getPort(const std::string &if_name, PortID idx)
             return *readPorts[idx];
         } else if (if_name == "cpuInstDataPort") {
             if (idx > m_num_inst_data_ports) {
-                panic("RubyTester::getPort: unknown inst+data port %d\n",
-                      idx);
+                panic("RubyTester::getPort: unknown inst+data port %d\n", idx);
             }
             int read_idx = idx + m_num_inst_only_ports;
             //
@@ -164,9 +161,8 @@ RubyTester::getPort(const std::string &if_name, PortID idx)
             // data only ports map to the final readPort elements
             //
             if (idx > (static_cast<int>(readPorts.size()) -
-                       (m_num_inst_only_ports + m_num_inst_data_ports))) {
-                panic("RubyTester::getPort: unknown data port %d\n",
-                      idx);
+                          (m_num_inst_only_ports + m_num_inst_data_ports))) {
+                panic("RubyTester::getPort: unknown data port %d\n", idx);
             }
             int read_idx = idx + m_num_inst_only_ports + m_num_inst_data_ports;
             return *readPorts[read_idx];
@@ -180,9 +176,9 @@ bool
 RubyTester::CpuPort::recvTimingResp(PacketPtr pkt)
 {
     // retrieve the subblock and call hitCallback
-    RubyTester::SenderState* senderState =
-        safe_cast<RubyTester::SenderState*>(pkt->senderState);
-    ruby::SubBlock& subblock = senderState->subBlock;
+    RubyTester::SenderState *senderState =
+        safe_cast<RubyTester::SenderState *>(pkt->senderState);
+    ruby::SubBlock &subblock = senderState->subBlock;
 
     tester->hitCallback(globalIdx, &subblock);
 
@@ -206,7 +202,7 @@ RubyTester::isInstDataCpuPort(int idx)
             (idx < (m_num_inst_only_ports + m_num_inst_data_ports)));
 }
 
-RequestPort*
+RequestPort *
 RubyTester::getReadableCpuPort(int idx)
 {
     assert(idx >= 0 && idx < readPorts.size());
@@ -214,7 +210,7 @@ RubyTester::getReadableCpuPort(int idx)
     return readPorts[idx];
 }
 
-RequestPort*
+RequestPort *
 RubyTester::getWritableCpuPort(int idx)
 {
     assert(idx >= 0 && idx < writePorts.size());
@@ -223,14 +219,14 @@ RubyTester::getWritableCpuPort(int idx)
 }
 
 void
-RubyTester::hitCallback(ruby::NodeID proc, ruby::SubBlock* data)
+RubyTester::hitCallback(ruby::NodeID proc, ruby::SubBlock *data)
 {
     // Mark that we made progress
     m_last_progress_vector[proc] = curCycle();
 
     DPRINTF(RubyTest, "completed request for proc: %d", proc);
-    DPRINTFR(RubyTest, " addr: 0x%x, size: %d, data: ",
-            data->getAddress(), data->getSize());
+    DPRINTFR(RubyTest, " addr: 0x%x, size: %d, data: ", data->getAddress(),
+        data->getSize());
     for (int byte = 0; byte < data->getSize(); byte++) {
         DPRINTFR(RubyTest, "%d ", data->getByte(byte));
     }
@@ -238,7 +234,7 @@ RubyTester::hitCallback(ruby::NodeID proc, ruby::SubBlock* data)
 
     // This tells us our store has 'completed' or for a load gives us
     // back the data to make the check
-    Check* check_ptr = m_checkTable_ptr->getCheck(data->getAddress());
+    Check *check_ptr = m_checkTable_ptr->getCheck(data->getAddress());
     assert(check_ptr != NULL);
     check_ptr->performCallback(proc, data, curCycle());
 }
@@ -248,7 +244,7 @@ RubyTester::wakeup()
 {
     if (m_checks_completed < m_checks_to_complete) {
         // Try to perform an action or check
-        Check* check_ptr = m_checkTable_ptr->getRandomCheck();
+        Check *check_ptr = m_checkTable_ptr->getRandomCheck();
         assert(check_ptr != NULL);
         check_ptr->initiate();
 
@@ -267,17 +263,17 @@ RubyTester::checkForDeadlock()
     Cycles current_time = curCycle();
     for (int processor = 0; processor < size; processor++) {
         if ((current_time - m_last_progress_vector[processor]) >
-                m_deadlock_threshold) {
+            m_deadlock_threshold) {
             panic("Deadlock detected: current_time: %d last_progress_time: %d "
                   "difference:  %d processor: %d\n",
-                  current_time, m_last_progress_vector[processor],
-                  current_time - m_last_progress_vector[processor], processor);
+                current_time, m_last_progress_vector[processor],
+                current_time - m_last_progress_vector[processor], processor);
         }
     }
 }
 
 void
-RubyTester::print(std::ostream& out) const
+RubyTester::print(std::ostream &out) const
 {
     out << "[RubyTester]" << std::endl;
 }

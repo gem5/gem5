@@ -45,7 +45,6 @@
 
 namespace gem5
 {
-
 namespace ArmISA
 {
 struct PageTableOps;
@@ -53,13 +52,13 @@ struct PageTableOps;
 
 struct SMMUTranslRequest
 {
-    Addr     addr;
+    Addr addr;
     unsigned size;
     uint32_t sid;  // streamId
     uint32_t ssid; // substreamId
-    bool     isWrite;
-    bool     isPrefetch;
-    bool     isAtsRequest;
+    bool isWrite;
+    bool isPrefetch;
+    bool isAtsRequest;
 
     PacketPtr pkt;
 
@@ -92,10 +91,10 @@ class SMMUTranslationProcess : public SMMUProcess
 
     struct TranslResult
     {
-        FaultType  fault;
-        Addr       addr;
-        Addr       addrMask;
-        bool       writable;
+        FaultType fault;
+        Addr addr;
+        Addr addrMask;
+        bool writable;
     };
 
     SMMUv3DeviceInterface &ifc;
@@ -123,28 +122,24 @@ class SMMUTranslationProcess : public SMMUProcess
     void configCacheUpdate(Yield &yield, const TranslContext &tc);
     bool findConfig(Yield &yield, TranslContext &tc, TranslResult &tr);
 
-    void walkCacheLookup(Yield &yield,
-                         const WalkCache::Entry *&walkEntry,
-                         Addr addr, uint16_t asid, uint16_t vmid,
-                         unsigned stage, unsigned level);
+    void walkCacheLookup(Yield &yield, const WalkCache::Entry *&walkEntry,
+        Addr addr, uint16_t asid, uint16_t vmid, unsigned stage,
+        unsigned level);
 
     void walkCacheUpdate(Yield &yield, Addr va, Addr vaMask, Addr pa,
-                         unsigned stage, unsigned level,
-                         bool leaf, uint8_t permissions);
+        unsigned stage, unsigned level, bool leaf, uint8_t permissions);
 
     TranslResult walkStage1And2(Yield &yield, Addr addr,
-                                const ArmISA::PageTableOps *pt_ops,
-                                unsigned level, Addr walkPtr);
+        const ArmISA::PageTableOps *pt_ops, unsigned level, Addr walkPtr);
 
     TranslResult walkStage2(Yield &yield, Addr addr, bool final_tr,
-                            const ArmISA::PageTableOps *pt_ops,
-                            unsigned level, Addr walkPtr);
+        const ArmISA::PageTableOps *pt_ops, unsigned level, Addr walkPtr);
 
     TranslResult translateStage1And2(Yield &yield, Addr addr);
     TranslResult translateStage2(Yield &yield, Addr addr, bool final_tr);
 
-    TranslResult combineTranslations(const TranslResult &s1tr,
-                                     const TranslResult &s2tr) const;
+    TranslResult combineTranslations(
+        const TranslResult &s1tr, const TranslResult &s2tr) const;
 
     /**
      * Used to force ordering on transactions with same
@@ -173,15 +168,15 @@ class SMMUTranslationProcess : public SMMUProcess
 
     void doReadSTE(Yield &yield, StreamTableEntry &ste, uint32_t sid);
     void doReadCD(Yield &yield, ContextDescriptor &cd,
-                  const StreamTableEntry &ste, uint32_t sid, uint32_t ssid);
+        const StreamTableEntry &ste, uint32_t sid, uint32_t ssid);
     void doReadConfig(Yield &yield, Addr addr, void *ptr, size_t size,
-                      uint32_t sid, uint32_t ssid);
-    void doReadPTE(Yield &yield, Addr va, Addr addr, void *ptr,
-                   unsigned stage, unsigned level);
+        uint32_t sid, uint32_t ssid);
+    void doReadPTE(Yield &yield, Addr va, Addr addr, void *ptr, unsigned stage,
+        unsigned level);
 
   public:
-    SMMUTranslationProcess(const std::string &name, SMMUv3 &_smmu,
-        SMMUv3DeviceInterface &_ifc);
+    SMMUTranslationProcess(
+        const std::string &name, SMMUv3 &_smmu, SMMUv3DeviceInterface &_ifc);
 
     virtual ~SMMUTranslationProcess();
 

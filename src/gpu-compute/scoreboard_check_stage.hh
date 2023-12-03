@@ -43,7 +43,6 @@
 
 namespace gem5
 {
-
 class ComputeUnit;
 class ScoreboardCheckToSchedule;
 class Wavefront;
@@ -76,18 +75,22 @@ class ScoreboardCheckStage
     };
 
     ScoreboardCheckStage(const ComputeUnitParams &p, ComputeUnit &cu,
-                         ScoreboardCheckToSchedule &to_schedule);
+        ScoreboardCheckToSchedule &to_schedule);
     ~ScoreboardCheckStage();
     void exec();
 
     // Stats related variables and methods
-    const std::string& name() const { return _name; }
+    const std::string &
+    name() const
+    {
+        return _name;
+    }
 
   private:
     void collectStatistics(nonrdytype_e rdyStatus);
     int mapWaveToExeUnit(Wavefront *w);
-    bool ready(Wavefront *w, nonrdytype_e *rdyStatus,
-               int *exeResType, int wfSlot);
+    bool ready(
+        Wavefront *w, nonrdytype_e *rdyStatus, int *exeResType, int wfSlot);
     ComputeUnit &computeUnit;
 
     /**

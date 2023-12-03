@@ -44,13 +44,11 @@
 
 namespace gem5
 {
-
 /**
  * This is exposed globally, independent of the ISA.
  */
 namespace X86ISA
 {
-
 constexpr Request::FlagsType SegmentFlagMask = mask(4);
 constexpr auto CPL0FlagShift = 4;
 constexpr auto CPL0FlagBit = 1 << CPL0FlagShift;

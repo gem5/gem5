@@ -46,7 +46,6 @@
 
 namespace gem5
 {
-
 class FunctionalResponseProtocol;
 
 class FunctionalRequestProtocol
@@ -76,7 +75,7 @@ class FunctionalRequestProtocol
      *        caller have direct access to the requested range.
      */
     void sendMemBackdoorReq(FunctionalResponseProtocol *peer,
-            const MemBackdoorReq &req, MemBackdoorPtr &backdoor);
+        const MemBackdoorReq &req, MemBackdoorPtr &backdoor);
 };
 
 class FunctionalResponseProtocol
@@ -105,8 +104,8 @@ class FunctionalResponseProtocol
      * @param backdoor Can be set to a back door pointer by the target to let
      *        caller have direct access to the requested range.
      */
-    virtual void recvMemBackdoorReq(const MemBackdoorReq &req,
-            MemBackdoorPtr &backdoor) = 0;
+    virtual void recvMemBackdoorReq(
+        const MemBackdoorReq &req, MemBackdoorPtr &backdoor) = 0;
 };
 
 } // namespace gem5

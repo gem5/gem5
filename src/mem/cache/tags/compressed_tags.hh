@@ -41,7 +41,6 @@
 
 namespace gem5
 {
-
 class BaseCache;
 class CacheBlk;
 struct CompressedTagsParams;
@@ -77,7 +76,7 @@ class CompressedTags : public SectorTags
 
   public:
     /** Convenience typedef. */
-     typedef CompressedTagsParams Params;
+    typedef CompressedTagsParams Params;
 
     /**
      * Construct and initialize this tag store.
@@ -87,7 +86,7 @@ class CompressedTags : public SectorTags
     /**
      * Destructor.
      */
-    virtual ~CompressedTags() {};
+    virtual ~CompressedTags(){};
 
     /**
      * Initialize blocks as SuperBlk and CompressionBlk instances.
@@ -104,9 +103,9 @@ class CompressedTags : public SectorTags
      * @param evict_blks Cache blocks to be evicted.
      * @return Cache block to be replaced.
      */
-    CacheBlk* findVictim(Addr addr, const bool is_secure,
-                         const std::size_t compressed_size,
-                         std::vector<CacheBlk*>& evict_blks) override;
+    CacheBlk *findVictim(Addr addr, const bool is_secure,
+        const std::size_t compressed_size,
+        std::vector<CacheBlk *> &evict_blks) override;
 
     /**
      * Find if any of the sub-blocks satisfies a condition.

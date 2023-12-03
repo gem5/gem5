@@ -33,10 +33,8 @@
 
 namespace gem5
 {
-
 namespace MipsISA
 {
-
 typedef GenericISA::DelaySlotPCState<4> PCState;
 
 } // namespace MipsISA

@@ -35,7 +35,6 @@
 
  *****************************************************************************/
 
-
 // $Log: sc_bit.cpp,v $
 // Revision 1.1.1.1  2006/12/15 20:20:04  acg
 // SystemC 2.3
@@ -66,7 +65,6 @@
 
 namespace sc_dt
 {
-
 // ----------------------------------------------------------------------------
 //  CLASS : sc_bit
 //
@@ -96,12 +94,12 @@ sc_bit::invalid_value(int i)
 // constructors
 sc_bit::sc_bit(const sc_logic &a) : m_val(a.to_bool()) // non-VSIA
 {
-   sc_deprecated_sc_bit();
+    sc_deprecated_sc_bit();
 }
 
 // assignment operators
 sc_bit &
-sc_bit::operator = (const sc_logic &b) // non-VSIA
+sc_bit::operator=(const sc_logic &b) // non-VSIA
 {
     return (*this = sc_bit(b));
 }

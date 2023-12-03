@@ -44,7 +44,6 @@ namespace gem5
 {
 namespace X86ISA
 {
-
 std::string
 FlatFloatRegClassOps::regName(const RegId &id) const
 {
@@ -58,8 +57,8 @@ FlatFloatRegClassOps::regName(const RegId &id) const
     }
     reg_idx -= NumMMXRegs;
     if (reg_idx < NumXMMRegs * 2) {
-        ccprintf(ss, "%%xmm%d_%s", reg_idx / 2,
-                (reg_idx % 2) ? "high": "low");
+        ccprintf(
+            ss, "%%xmm%d_%s", reg_idx / 2, (reg_idx % 2) ? "high" : "low");
         return ss.str();
     }
     reg_idx -= NumXMMRegs * 2;

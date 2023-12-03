@@ -35,10 +35,8 @@
 
 namespace gem5
 {
-
 namespace RiscvISA
 {
-
 class BareMetal : public Workload
 {
   protected:
@@ -60,12 +58,20 @@ class BareMetal : public Workload
     setSystem(System *sys) override
     {
         Workload::setSystem(sys);
-        gdb = BaseRemoteGDB::build<RemoteGDB>(
-                params().remote_gdb_port, system);
+        gdb =
+            BaseRemoteGDB::build<RemoteGDB>(params().remote_gdb_port, system);
     }
 
-    loader::Arch getArch() const override { return bootloader->getArch(); }
-    ByteOrder byteOrder() const override { return ByteOrder::little; }
+    loader::Arch
+    getArch() const override
+    {
+        return bootloader->getArch();
+    }
+    ByteOrder
+    byteOrder() const override
+    {
+        return ByteOrder::little;
+    }
 
     const loader::SymbolTable &
     symtab(ThreadContext *tc) override
@@ -80,12 +86,24 @@ class BareMetal : public Workload
     }
 
     // return reset vector
-    Addr resetVect() const { return _resetVect; }
+    Addr
+    resetVect() const
+    {
+        return _resetVect;
+    }
 
     // return bare metal checker
-    bool isBareMetal() const { return _isBareMetal; }
+    bool
+    isBareMetal() const
+    {
+        return _isBareMetal;
+    }
 
-    Addr getEntry() const override { return _resetVect; }
+    Addr
+    getEntry() const override
+    {
+        return _resetVect;
+    }
 };
 
 } // namespace RiscvISA

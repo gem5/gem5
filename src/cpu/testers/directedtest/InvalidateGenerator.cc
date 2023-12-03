@@ -36,9 +36,8 @@
 
 namespace gem5
 {
-
-InvalidateGenerator::InvalidateGenerator(const Params &p)
-    : DirectedGenerator(p)
+InvalidateGenerator::InvalidateGenerator(const Params &p) :
+    DirectedGenerator(p)
 {
     //
     // First, issue loads to bring the block into S state
@@ -50,21 +49,19 @@ InvalidateGenerator::InvalidateGenerator(const Params &p)
     m_addr_increment_size = p.addr_increment_size;
 }
 
-InvalidateGenerator::~InvalidateGenerator()
-{
-}
+InvalidateGenerator::~InvalidateGenerator() {}
 
 bool
 InvalidateGenerator::initiate()
 {
-    RequestPort* port;
+    RequestPort *port;
     Request::Flags flags;
     PacketPtr pkt;
     Packet::Command cmd;
 
     // For simplicity, requests are assumed to be 1 byte-sized
-    RequestPtr req = std::make_shared<Request>(m_address, 1, flags,
-                                               requestorId);
+    RequestPtr req =
+        std::make_shared<Request>(m_address, 1, flags, requestorId);
 
     //
     // Based on the current state, issue a load or a store
@@ -98,7 +95,8 @@ InvalidateGenerator::initiate()
         // will delete it
         delete pkt;
 
-        DPRINTF(DirectedTest, "failed to issue request - sequencer not ready\n");
+        DPRINTF(
+            DirectedTest, "failed to issue request - sequencer not ready\n");
         return false;
     }
 }
@@ -134,7 +132,6 @@ InvalidateGenerator::performCallback(uint32_t proc, Addr address)
         m_directed_tester->incrementCycleCompletions();
         m_status = ruby::InvalidateGeneratorStatus_Load_Waiting;
     }
-
 }
 
 } // namespace gem5

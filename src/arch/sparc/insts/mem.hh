@@ -33,10 +33,8 @@
 
 namespace gem5
 {
-
 namespace SparcISA
 {
-
 ////////////////////////////////////////////////////////////////////
 //
 // Mem utility templates and functions
@@ -60,7 +58,6 @@ class Mem : public SparcStaticInst
 class MemImm : public Mem
 {
   protected:
-
     // Constructor
     MemImm(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
         Mem(mnem, _machInst, __opClass), imm(szext<13>(_machInst))

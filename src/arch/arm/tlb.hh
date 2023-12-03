@@ -41,7 +41,6 @@
 #ifndef __ARCH_ARM_TLB_HH__
 #define __ARCH_ARM_TLB_HH__
 
-
 #include "arch/arm/faults.hh"
 #include "arch/arm/pagetable.hh"
 #include "arch/arm/utility.hh"
@@ -54,11 +53,10 @@
 
 namespace gem5
 {
-
 class ThreadContext;
 
-namespace ArmISA {
-
+namespace ArmISA
+{
 class TableWalker;
 class TLB;
 class TLBIOp;
@@ -78,8 +76,7 @@ class TlbTestInterface
      * @param domain Domain type
      */
     virtual Fault translationCheck(const RequestPtr &req, bool is_priv,
-                                   BaseMMU::Mode mode,
-                                   TlbEntry::DomainType domain) = 0;
+        BaseMMU::Mode mode, TlbEntry::DomainType domain) = 0;
 
     /**
      * Check if a page table walker access should be forced to fail.
@@ -94,15 +91,14 @@ class TlbTestInterface
      * @param lookup_level Page table walker level
      */
     virtual Fault walkCheck(Addr pa, Addr size, Addr va, bool is_secure,
-                            Addr is_priv, BaseMMU::Mode mode,
-                            TlbEntry::DomainType domain,
-                            enums::ArmLookupLevel lookup_level) = 0;
+        Addr is_priv, BaseMMU::Mode mode, TlbEntry::DomainType domain,
+        enums::ArmLookupLevel lookup_level) = 0;
 };
 
 class TLB : public BaseTLB
 {
   protected:
-    TlbEntry* table;
+    TlbEntry *table;
 
     /** TLB Size */
     int size;
@@ -153,7 +149,7 @@ class TLB : public BaseTLB
     /** PMU probe for TLB refills */
     probing::PMUUPtr ppRefills;
 
-    int rangeMRU; //On lookup, only move entries ahead when outside rangeMRU
+    int rangeMRU; // On lookup, only move entries ahead when outside rangeMRU
     vmid_t vmid;
 
   public:
@@ -183,13 +179,29 @@ class TLB : public BaseTLB
 
     void setTableWalker(TableWalker *table_walker);
 
-    TableWalker *getTableWalker() { return tableWalker; }
+    TableWalker *
+    getTableWalker()
+    {
+        return tableWalker;
+    }
 
-    int getsize() const { return size; }
+    int
+    getsize() const
+    {
+        return size;
+    }
 
-    bool walkCache() const { return _walkCache; }
+    bool
+    walkCache() const
+    {
+        return _walkCache;
+    }
 
-    void setVMID(vmid_t _vmid) { vmid = _vmid; }
+    void
+    setVMID(vmid_t _vmid)
+    {
+        vmid = _vmid;
+    }
 
     /** Insert a PTE in the current TLB */
     void insert(TlbEntry &pte);
@@ -202,45 +214,43 @@ class TLB : public BaseTLB
      */
     void flushAll() override;
 
-
     /** Flush TLB entries
      */
     void flush(const TLBIOp &tlbi_op);
 
     Fault trickBoxCheck(const RequestPtr &req, BaseMMU::Mode mode,
-                        TlbEntry::DomainType domain);
+        TlbEntry::DomainType domain);
 
     Fault walkTrickBoxCheck(Addr pa, bool is_secure, Addr va, Addr sz,
-                            bool is_exec, bool is_write,
-                            TlbEntry::DomainType domain,
-                            LookupLevel lookup_level);
+        bool is_exec, bool is_write, TlbEntry::DomainType domain,
+        LookupLevel lookup_level);
 
     void printTlb() const;
 
-    void demapPage(Addr vaddr, uint64_t asn) override
+    void
+    demapPage(Addr vaddr, uint64_t asn) override
     {
         // needed for x86 only
         panic("demapPage() is not implemented.\n");
     }
 
     Fault
-    translateAtomic(const RequestPtr &req, ThreadContext *tc,
-                    BaseMMU::Mode mode) override
+    translateAtomic(
+        const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode) override
     {
         panic("unimplemented");
     }
 
     void
     translateTiming(const RequestPtr &req, ThreadContext *tc,
-                    BaseMMU::Translation *translation,
-                    BaseMMU::Mode mode) override
+        BaseMMU::Translation *translation, BaseMMU::Mode mode) override
     {
         panic("unimplemented");
     }
 
     Fault
     finalizePhysical(const RequestPtr &req, ThreadContext *tc,
-                     BaseMMU::Mode mode) const override
+        BaseMMU::Mode mode) const override
     {
         panic("unimplemented");
     }
@@ -273,9 +283,8 @@ class TLB : public BaseTLB
      * @param in_host if hcr.e2h == 1 and hcr.tge == 1 for VHE.
      * @param entry_type type of entry to flush (instruction/data/unified)
      */
-    void _flushMva(Addr mva, uint64_t asn, bool secure_lookup,
-                   bool ignore_asn, ExceptionLevel target_el,
-                   bool in_host, TypeTLB entry_type);
+    void _flushMva(Addr mva, uint64_t asn, bool secure_lookup, bool ignore_asn,
+        ExceptionLevel target_el, bool in_host, TypeTLB entry_type);
 
     /** Check if the tlb entry passed as an argument needs to
      * be "promoted" as a unified entry:

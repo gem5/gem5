@@ -38,18 +38,16 @@
 
 namespace gem5
 {
-
 namespace RiscvISA
 {
-
 class MemInst : public RiscvStaticInst
 {
   protected:
     int64_t offset;
     Request::Flags memAccessFlags;
 
-    MemInst(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
-        : RiscvStaticInst(mnem, _machInst, __opClass), offset(0)
+    MemInst(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
+        RiscvStaticInst(mnem, _machInst, __opClass), offset(0)
     {}
 };
 

@@ -39,10 +39,8 @@
 
 namespace gem5
 {
-
 namespace free_bsd
 {
-
 void onUDelay(ThreadContext *tc, uint64_t div, uint64_t mul, uint64_t time);
 
 /** A class to skip udelay() and related calls in the kernel.
@@ -67,7 +65,7 @@ class SkipUDelay : public Base
 
   public:
     SkipUDelay(PCEventScope *s, const std::string &desc, Addr addr,
-               uint64_t mult, uint64_t div) :
+        uint64_t mult, uint64_t div) :
         Base(s, desc, addr), argDivToNs(div), argMultToNs(mult)
     {}
 
@@ -78,8 +76,8 @@ class SkipUDelay : public Base
         // sized data type.
         std::function<void(ThreadContext *, Addr)> call_udelay =
             [this](ThreadContext *tc, Addr time) {
-            onUDelay(tc, argDivToNs, argMultToNs, time);
-        };
+                onUDelay(tc, argDivToNs, argMultToNs, time);
+            };
         invokeSimcall<ABI>(tc, call_udelay);
         Base::process(tc);
     }

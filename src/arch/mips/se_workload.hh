@@ -37,10 +37,8 @@
 
 namespace gem5
 {
-
 namespace MipsISA
 {
-
 class SEWorkload : public gem5::SEWorkload
 {
   public:
@@ -54,11 +52,15 @@ class SEWorkload : public gem5::SEWorkload
     setSystem(System *sys) override
     {
         gem5::SEWorkload::setSystem(sys);
-        gdb = BaseRemoteGDB::build<RemoteGDB>(
-                params().remote_gdb_port, system);
+        gdb =
+            BaseRemoteGDB::build<RemoteGDB>(params().remote_gdb_port, system);
     }
 
-    loader::Arch getArch() const override { return loader::Mips; }
+    loader::Arch
+    getArch() const override
+    {
+        return loader::Mips;
+    }
 
     struct SyscallABI : public GenericSyscallABI64
     {
@@ -70,7 +72,6 @@ class SEWorkload : public gem5::SEWorkload
 
 namespace guest_abi
 {
-
 template <>
 struct Result<MipsISA::SEWorkload::SyscallABI, SyscallReturn>
 {

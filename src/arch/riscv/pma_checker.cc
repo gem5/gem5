@@ -46,12 +46,10 @@
 
 namespace gem5
 {
-
 PMAChecker::PMAChecker(const Params &params) :
-SimObject(params),
-uncacheable(params.uncacheable.begin(), params.uncacheable.end())
-{
-}
+    SimObject(params),
+    uncacheable(params.uncacheable.begin(), params.uncacheable.end())
+{}
 
 void
 PMAChecker::check(const RequestPtr &req)
@@ -64,7 +62,7 @@ PMAChecker::check(const RequestPtr &req)
 bool
 PMAChecker::isUncacheable(const AddrRange &range)
 {
-    for (auto const &uncacheable_range: uncacheable) {
+    for (auto const &uncacheable_range : uncacheable) {
         if (range.isSubset(uncacheable_range)) {
             return true;
         }

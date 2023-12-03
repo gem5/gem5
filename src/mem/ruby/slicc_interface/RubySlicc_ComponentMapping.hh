@@ -37,10 +37,8 @@
 
 namespace gem5
 {
-
 namespace ruby
 {
-
 inline NetDest
 broadcast(MachineType type)
 {
@@ -53,15 +51,15 @@ broadcast(MachineType type)
 }
 
 inline MachineID
-mapAddressToRange(Addr addr, MachineType type, int low_bit,
-                  int num_bits, int cluster_id = 0)
+mapAddressToRange(
+    Addr addr, MachineType type, int low_bit, int num_bits, int cluster_id = 0)
 {
     MachineID mach = {type, 0};
     if (num_bits == 0)
         mach.num = cluster_id;
     else
-        mach.num = bitSelect(addr, low_bit, low_bit + num_bits - 1)
-            + (1 << num_bits) * cluster_id;
+        mach.num = bitSelect(addr, low_bit, low_bit + num_bits - 1) +
+                   (1 << num_bits) * cluster_id;
     return mach;
 }
 
@@ -100,4 +98,4 @@ MachineTypeAndNodeIDToMachineID(MachineType type, NodeID node)
 } // namespace ruby
 } // namespace gem5
 
-#endif  // __MEM_RUBY_SLICC_INTERFACE_COMPONENTMAPPINGS_HH__
+#endif // __MEM_RUBY_SLICC_INTERFACE_COMPONENTMAPPINGS_HH__

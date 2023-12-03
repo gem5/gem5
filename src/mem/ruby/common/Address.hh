@@ -37,10 +37,8 @@
 
 namespace gem5
 {
-
 namespace ruby
 {
-
 // selects bits inclusive
 Addr bitSelect(Addr addr, unsigned int small, unsigned int big);
 Addr maskLowOrderBits(Addr addr, unsigned int number);

@@ -54,7 +54,6 @@
 
 namespace gem5
 {
-
 int ckptMaxCount = 0;
 int ckptCount = 0;
 int ckptPrevCount = -1;
@@ -62,13 +61,9 @@ std::stack<std::string> Serializable::path;
 
 /////////////////////////////
 
-Serializable::Serializable()
-{
-}
+Serializable::Serializable() {}
 
-Serializable::~Serializable()
-{
-}
+Serializable::~Serializable() {}
 
 void
 Serializable::serializeSection(CheckpointOut &cp, const char *name) const
@@ -85,12 +80,12 @@ Serializable::unserializeSection(CheckpointIn &cp, const char *name)
 }
 
 void
-Serializable::generateCheckpointOut(const std::string &cpt_dir,
-        std::ofstream &outstream)
+Serializable::generateCheckpointOut(
+    const std::string &cpt_dir, std::ofstream &outstream)
 {
     std::string dir = CheckpointIn::setDir(cpt_dir);
     if (mkdir(dir.c_str(), 0775) == -1 && errno != EEXIST)
-            fatal("couldn't mkdir %s\n", dir);
+        fatal("couldn't mkdir %s\n", dir);
 
     std::string cpt_file = dir + CheckpointIn::baseFilename;
     outstream = std::ofstream(cpt_file.c_str());
@@ -122,7 +117,7 @@ void
 Serializable::ScopedCheckpointSection::nameOut(CheckpointOut &cp)
 {
     DPRINTF(Checkpoint, "ScopedCheckpointSection::nameOut: %s\n",
-            Serializable::currentSection());
+        Serializable::currentSection());
     cp << "\n[" << Serializable::currentSection() << "]\n";
 }
 
@@ -144,7 +139,8 @@ CheckpointIn::setDir(const std::string &name)
     // use csprintf to insert curTick() into directory name if it
     // appears to have a format placeholder in it.
     currentDirectory = (name.find("%") != std::string::npos) ?
-        csprintf(name, curTick()) : name;
+                           csprintf(name, curTick()) :
+                           name;
     auto isEmptyPath = currentDirectory.empty();
     auto endsWithSlash = !isEmptyPath && currentDirectory.back() == '/';
     if (!endsWithSlash) {
@@ -159,8 +155,8 @@ CheckpointIn::dir()
     return currentDirectory;
 }
 
-CheckpointIn::CheckpointIn(const std::string &cpt_dir)
-    : db(), _cptDir(setDir(cpt_dir))
+CheckpointIn::CheckpointIn(const std::string &cpt_dir) :
+    db(), _cptDir(setDir(cpt_dir))
 {
     std::string filename = getCptDir() + "/" + CheckpointIn::baseFilename;
     if (!db.load(filename)) {
@@ -193,8 +189,8 @@ CheckpointIn::entryExists(const std::string &section, const std::string &entry)
  * the value, given the section .
  */
 bool
-CheckpointIn::find(const std::string &section, const std::string &entry,
-        std::string &value)
+CheckpointIn::find(
+    const std::string &section, const std::string &entry, std::string &value)
 {
     return db.find(section, entry, value);
 }
@@ -206,8 +202,8 @@ CheckpointIn::sectionExists(const std::string &section)
 }
 
 void
-CheckpointIn::visitSection(const std::string &section,
-    IniFile::VisitSectionCallback cb)
+CheckpointIn::visitSection(
+    const std::string &section, IniFile::VisitSectionCallback cb)
 {
     db.visitSection(section, cb);
 }

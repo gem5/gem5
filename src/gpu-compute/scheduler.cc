@@ -37,7 +37,6 @@
 
 namespace gem5
 {
-
 Scheduler::Scheduler(const ComputeUnitParams &p)
 {
     if (p.execPolicy == "OLDEST-FIRST") {
@@ -49,14 +48,14 @@ Scheduler::Scheduler(const ComputeUnitParams &p)
     }
 }
 
-Wavefront*
+Wavefront *
 Scheduler::chooseWave()
 {
     return schedPolicy->chooseWave(scheduleList);
 }
 
 void
-Scheduler::bindList(std::vector<Wavefront*> *sched_list)
+Scheduler::bindList(std::vector<Wavefront *> *sched_list)
 {
     scheduleList = sched_list;
 }

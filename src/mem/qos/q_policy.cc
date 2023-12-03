@@ -48,29 +48,26 @@
 
 namespace gem5
 {
-
 namespace memory
 {
-
 namespace qos
 {
-
-QueuePolicy*
+QueuePolicy *
 QueuePolicy::create(const QoSMemCtrlParams &p)
 {
     switch (p.qos_q_policy) {
-      case enums::QoSQPolicy::fifo:
+    case enums::QoSQPolicy::fifo:
         return new FifoQueuePolicy(p);
-      case enums::QoSQPolicy::lrg:
+    case enums::QoSQPolicy::lrg:
         return new LrgQueuePolicy(p);
-      case enums::QoSQPolicy::lifo:
-      default:
+    case enums::QoSQPolicy::lifo:
+    default:
         return new LifoQueuePolicy(p);
     }
 }
 
 QueuePolicy::PacketQueue::iterator
-LrgQueuePolicy::selectPacket(PacketQueue* q)
+LrgQueuePolicy::selectPacket(PacketQueue *q)
 {
     QueuePolicy::PacketQueue::iterator ret = q->end();
 
@@ -79,27 +76,28 @@ LrgQueuePolicy::selectPacket(PacketQueue* q)
 
     // Cycle queue only once
     for (auto pkt_it = q->begin(); pkt_it != q->end(); ++pkt_it) {
+        const auto &pkt = *pkt_it;
 
-        const auto& pkt = *pkt_it;
-
-        panic_if(!pkt->req,
-                 "QoSQPolicy::lrg detected packet without request");
+        panic_if(!pkt->req, "QoSQPolicy::lrg detected packet without request");
 
         // Get Request RequestorID
         RequestorID requestor_id = pkt->req->requestorId();
-        DPRINTF(QOS, "QoSQPolicy::lrg checking packet "
-                     "from queue with id %d\n", requestor_id);
+        DPRINTF(QOS,
+            "QoSQPolicy::lrg checking packet "
+            "from queue with id %d\n",
+            requestor_id);
 
         // Check if this is a known requestor.
         panic_if(memCtrl->hasRequestor(requestor_id),
-                 "%s: Unrecognized Requestor\n", __func__);
+            "%s: Unrecognized Requestor\n", __func__);
 
-        panic_if(toServe.size() > 0,
-                 "%s: toServe list is empty\n", __func__);
+        panic_if(toServe.size() > 0, "%s: toServe list is empty\n", __func__);
 
         if (toServe.front() == requestor_id) {
-            DPRINTF(QOS, "QoSQPolicy::lrg matched to served "
-                         "requestor id %d\n", requestor_id);
+            DPRINTF(QOS,
+                "QoSQPolicy::lrg matched to served "
+                "requestor id %d\n",
+                requestor_id);
             // This packet matches the RequestorID to be served next
             // move toServe front to back
             toServe.push_back(requestor_id);
@@ -115,21 +113,27 @@ LrgQueuePolicy::selectPacket(PacketQueue* q)
         // in the queue.
         if (track.find(requestor_id) == track.end()) {
             track[requestor_id] = pkt_it;
-            DPRINTF(QOS, "QoSQPolicy::lrg tracking a packet for "
-                         "requestor id %d\n", requestor_id);
+            DPRINTF(QOS,
+                "QoSQPolicy::lrg tracking a packet for "
+                "requestor id %d\n",
+                requestor_id);
         }
     }
 
     // If here, the current requestor to be serviced doesn't have a pending
     // packet in the queue: look for the next requestor in the list.
-    for (const auto& requestorId : toServe) {
-        DPRINTF(QOS, "QoSQPolicy::lrg evaluating alternative "
-                     "requestor id %d\n", requestorId);
+    for (const auto &requestorId : toServe) {
+        DPRINTF(QOS,
+            "QoSQPolicy::lrg evaluating alternative "
+            "requestor id %d\n",
+            requestorId);
 
         if (track.find(requestorId) != track.end()) {
             ret = track[requestorId];
-            DPRINTF(QOS, "QoSQPolicy::lrg requestor id "
-                         "%d selected for service\n", requestorId);
+            DPRINTF(QOS,
+                "QoSQPolicy::lrg requestor id "
+                "%d selected for service\n",
+                requestorId);
 
             return ret;
         }

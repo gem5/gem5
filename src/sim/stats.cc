@@ -41,7 +41,6 @@
 
 namespace gem5
 {
-
 statistics::Formula &simSeconds = rootStats.simSeconds;
 statistics::Value &simTicks = rootStats.simTicks;
 statistics::Value &simFreq = rootStats.simFreq;

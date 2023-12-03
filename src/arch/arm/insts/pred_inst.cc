@@ -42,69 +42,66 @@
 
 namespace gem5
 {
-
 namespace ArmISA
 {
 std::string
 PredIntOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     unsigned rotate = machInst.rotate * 2;
     uint32_t imm = machInst.imm;
     imm = (imm << (32 - rotate)) | (imm >> rotate);
     printDataInst(ss, false, machInst.opcode4 == 0, machInst.sField,
-            machInst.rd, machInst.rn, machInst.rm, machInst.rs,
-            machInst.shiftSize, (ArmShiftType)(uint32_t)machInst.shift,
-            imm);
+        machInst.rd, machInst.rn, machInst.rm, machInst.rs, machInst.shiftSize,
+        (ArmShiftType)(uint32_t)machInst.shift, imm);
     return ss.str();
 }
 
 std::string
 PredImmOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printDataInst(ss, true, machInst.opcode4 == 0, machInst.sField,
-            machInst.rd, machInst.rn, machInst.rm, machInst.rs,
-            machInst.shiftSize, (ArmShiftType)(uint32_t)machInst.shift,
-            imm);
+        machInst.rd, machInst.rn, machInst.rm, machInst.rs, machInst.shiftSize,
+        (ArmShiftType)(uint32_t)machInst.shift, imm);
     return ss.str();
 }
 
 std::string
 DataImmOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printDataInst(ss, true, false, /*XXX not really s*/ false, dest, op1,
-                  int_reg::Zero, int_reg::Zero, 0, LSL, imm);
+        int_reg::Zero, int_reg::Zero, 0, LSL, imm);
     return ss.str();
 }
 
 std::string
 DataRegOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
-    printDataInst(ss, false, true, /*XXX not really s*/ false, dest, op1,
-                  op2, int_reg::Zero, shiftAmt, shiftType, 0);
+    printDataInst(ss, false, true, /*XXX not really s*/ false, dest, op1, op2,
+        int_reg::Zero, shiftAmt, shiftType, 0);
     return ss.str();
 }
 
 std::string
 DataRegRegOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
-    printDataInst(ss, false, false, /*XXX not really s*/ false, dest, op1,
-                  op2, shift, 0, shiftType, 0);
+    printDataInst(ss, false, false, /*XXX not really s*/ false, dest, op1, op2,
+        shift, 0, shiftType, 0);
     return ss.str();
 }
 
 std::string
 PredMacroOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
 

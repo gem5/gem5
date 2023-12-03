@@ -53,7 +53,6 @@
 
 namespace gem5
 {
-
 using namespace RiscvISA;
 /**
  * NOTE:
@@ -92,17 +91,15 @@ using namespace RiscvISA;
 
 struct PlicOutput
 {
-  std::vector<uint32_t> maxID;
-  std::vector<uint32_t> maxPriority;
+    std::vector<uint32_t> maxID;
+    std::vector<uint32_t> maxPriority;
 };
 
 class PlicBase : public BasicPioDevice
 {
   public:
     typedef PlicBaseParams Params;
-    PlicBase(const Params &params) :
-      BasicPioDevice(params, params.pio_size)
-    {}
+    PlicBase(const Params &params) : BasicPioDevice(params, params.pio_size) {}
 
     // Interrupt interface to send signal to PLIC
     virtual void post(int src_id) = 0;
@@ -112,7 +109,7 @@ class PlicBase : public BasicPioDevice
 
 class Plic : public PlicBase
 {
-  // Params
+    // Params
   protected:
     System *system;
 
@@ -136,7 +133,7 @@ class Plic : public PlicBase
     typedef PlicParams Params;
     Plic(const Params &params);
 
-  // External API
+    // External API
   public:
     /**
      * Interrupt interface
@@ -158,9 +155,8 @@ class Plic : public PlicBase
     Tick read(PacketPtr pkt) override;
     Tick write(PacketPtr pkt) override;
 
-  // Register bank
+    // Register bank
   private:
-
     /**
      * MMIO Registers
      *
@@ -200,7 +196,7 @@ class Plic : public PlicBase
      *
      * ... reserved[3]
      */
-    class PlicRegisters: public RegisterBankLE
+    class PlicRegisters : public RegisterBankLE
     {
       public:
         const Addr pendingStart = 0x1000;
@@ -209,7 +205,6 @@ class Plic : public PlicBase
         const Addr enablePadding = 0x80;
         const Addr thresholdPadding = 0x1000;
         const Addr maxBankSize = 0x4000000;
-
 
         std::vector<Register32> priority;
         std::vector<Register32> pending;
@@ -220,11 +215,11 @@ class Plic : public PlicBase
         std::vector<RegisterRaz> claim_holes;
         std::vector<RegisterRaz> reserved;
 
-        PlicRegisters(const std::string &name, Addr base, Plic* plic) :
-          RegisterBankLE(name, base),
-          plic(plic) {}
+        PlicRegisters(const std::string &name, Addr base, Plic *plic) :
+            RegisterBankLE(name, base), plic(plic)
+        {}
 
-        Plic* plic;
+        Plic *plic;
 
         void init();
 
@@ -235,23 +230,22 @@ class Plic : public PlicBase
     /**
      * Register read / write callbacks
      */
-    void writePriority(Register32& reg, const uint32_t& data,
-      const int src_id);
+    void writePriority(
+        Register32 &reg, const uint32_t &data, const int src_id);
 
-    void writeEnable(Register32& reg, const uint32_t& data,
-      const int src32_id, const int context_id);
+    void writeEnable(Register32 &reg, const uint32_t &data, const int src32_id,
+        const int context_id);
 
-    void writeThreshold(Register32& reg, const uint32_t& data,
-      const int context_id);
+    void writeThreshold(
+        Register32 &reg, const uint32_t &data, const int context_id);
 
-    uint32_t readClaim(Register32& reg, const int context_id);
+    uint32_t readClaim(Register32 &reg, const int context_id);
 
-    void writeClaim(Register32& reg, const uint32_t& data,
-      const int context_id);
+    void writeClaim(
+        Register32 &reg, const uint32_t &data, const int context_id);
 
-  // Latency Model
+    // Latency Model
   private:
-
     // Internal states
     // per-source pending * priority
     std::vector<uint32_t> pendingPriority;

@@ -43,12 +43,11 @@
 
 namespace gem5
 {
-
 class BaseCPU;
 class ThreadContext;
 
-namespace RiscvISA {
-
+namespace RiscvISA
+{
 /*
  * This is based on version 1.10 of the RISC-V privileged ISA reference,
  * chapter 3.1.14.
@@ -80,46 +79,46 @@ class Interrupts : public BaseInterrupts
         }
         PrivilegeMode prv = (PrivilegeMode)tc->readMiscReg(MISCREG_PRV);
         switch (prv) {
-            case PRV_U:
-                // status.uie is always 0 if misa.rvn is disabled
-                if (misa.rvs) {
-                    mask.mei = (!sideleg.mei) | (sideleg.mei & status.uie);
-                    mask.mti = (!sideleg.mti) | (sideleg.mti & status.uie);
-                    mask.msi = (!sideleg.msi) | (sideleg.msi & status.uie);
-                    mask.sei = (!sideleg.sei) | (sideleg.sei & status.uie);
-                    mask.sti = (!sideleg.sti) | (sideleg.sti & status.uie);
-                    mask.ssi = (!sideleg.ssi) | (sideleg.ssi & status.uie);
-                } else {
-                    // According to the RISC-V privilege spec v1.10, if the
-                    // S privilege mode is not implemented and user-trap
-                    // support, setting mideleg/medeleg bits will delegate the
-                    // trap to U-mode trap handler
-                    mask.mei = (!mideleg.mei) | (mideleg.mei & status.uie);
-                    mask.mti = (!mideleg.mti) | (mideleg.mti & status.uie);
-                    mask.msi = (!mideleg.msi) | (mideleg.msi & status.uie);
-                    mask.sei = mask.sti = mask.ssi = 0;
-                }
-                if (status.uie)
-                    mask.uei = mask.uti = mask.usi = 1;
-                break;
-            case PRV_S:
-                // status.sie is always 0 if misa.rvn is disabled
-                mask.mei = (!mideleg.mei) | (mideleg.mei & status.sie);
-                mask.mti = (!mideleg.mti) | (mideleg.mti & status.sie);
-                mask.msi = (!mideleg.msi) | (mideleg.msi & status.sie);
-                if (status.sie)
-                    mask.sei = mask.sti = mask.ssi = 1;
-                mask.uei = mask.uti = mask.usi = 0;
-                break;
-            case PRV_M:
-                if (status.mie)
-                     mask.mei = mask.mti = mask.msi = 1;
+        case PRV_U:
+            // status.uie is always 0 if misa.rvn is disabled
+            if (misa.rvs) {
+                mask.mei = (!sideleg.mei) | (sideleg.mei & status.uie);
+                mask.mti = (!sideleg.mti) | (sideleg.mti & status.uie);
+                mask.msi = (!sideleg.msi) | (sideleg.msi & status.uie);
+                mask.sei = (!sideleg.sei) | (sideleg.sei & status.uie);
+                mask.sti = (!sideleg.sti) | (sideleg.sti & status.uie);
+                mask.ssi = (!sideleg.ssi) | (sideleg.ssi & status.uie);
+            } else {
+                // According to the RISC-V privilege spec v1.10, if the
+                // S privilege mode is not implemented and user-trap
+                // support, setting mideleg/medeleg bits will delegate the
+                // trap to U-mode trap handler
+                mask.mei = (!mideleg.mei) | (mideleg.mei & status.uie);
+                mask.mti = (!mideleg.mti) | (mideleg.mti & status.uie);
+                mask.msi = (!mideleg.msi) | (mideleg.msi & status.uie);
                 mask.sei = mask.sti = mask.ssi = 0;
-                mask.uei = mask.uti = mask.usi = 0;
-                break;
-            default:
-                panic("Unknown privilege mode %d.", prv);
-                break;
+            }
+            if (status.uie)
+                mask.uei = mask.uti = mask.usi = 1;
+            break;
+        case PRV_S:
+            // status.sie is always 0 if misa.rvn is disabled
+            mask.mei = (!mideleg.mei) | (mideleg.mei & status.sie);
+            mask.mti = (!mideleg.mti) | (mideleg.mti & status.sie);
+            mask.msi = (!mideleg.msi) | (mideleg.msi & status.sie);
+            if (status.sie)
+                mask.sei = mask.sti = mask.ssi = 1;
+            mask.uei = mask.uti = mask.usi = 0;
+            break;
+        case PRV_M:
+            if (status.mie)
+                mask.mei = mask.mti = mask.msi = 1;
+            mask.sei = mask.sti = mask.ssi = 0;
+            mask.uei = mask.uti = mask.usi = 0;
+            break;
+        default:
+            panic("Unknown privilege mode %d.", prv);
+            break;
         }
 
         return std::bitset<NumInterruptTypes>(mask);
@@ -131,8 +130,13 @@ class Interrupts : public BaseInterrupts
         return tc->readMiscReg(MISCREG_NMIP) & tc->readMiscReg(MISCREG_NMIE);
     }
 
-    bool checkInterrupt(int num) const { return ip[num] && ie[num]; }
-    bool checkInterrupts() const override
+    bool
+    checkInterrupt(int num) const
+    {
+        return ip[num] && ie[num];
+    }
+    bool
+    checkInterrupts() const override
     {
         return checkNonMaskableInterrupt() || (ip & ie & globalMask()).any();
     }
@@ -144,18 +148,19 @@ class Interrupts : public BaseInterrupts
         if (checkNonMaskableInterrupt())
             return std::make_shared<NonMaskableInterruptFault>();
         std::bitset<NumInterruptTypes> mask = globalMask();
-        const std::vector<int> interrupt_order {
-            INT_EXT_MACHINE, INT_SOFTWARE_MACHINE, INT_TIMER_MACHINE,
-            INT_EXT_SUPER, INT_SOFTWARE_SUPER, INT_TIMER_SUPER,
-            INT_EXT_USER, INT_SOFTWARE_USER, INT_TIMER_USER
-        };
+        const std::vector<int> interrupt_order{INT_EXT_MACHINE,
+            INT_SOFTWARE_MACHINE, INT_TIMER_MACHINE, INT_EXT_SUPER,
+            INT_SOFTWARE_SUPER, INT_TIMER_SUPER, INT_EXT_USER,
+            INT_SOFTWARE_USER, INT_TIMER_USER};
         for (const int &id : interrupt_order)
             if (checkInterrupt(id) && mask[id])
                 return std::make_shared<InterruptFault>(id);
         return NoFault;
     }
 
-    void updateIntrInfo() override {}
+    void
+    updateIntrInfo() override
+    {}
 
     void
     post(int int_num, int index) override
@@ -179,8 +184,16 @@ class Interrupts : public BaseInterrupts
         }
     }
 
-    void postNMI() { tc->setMiscReg(MISCREG_NMIP, 1); }
-    void clearNMI() { tc->setMiscReg(MISCREG_NMIP, 0); }
+    void
+    postNMI()
+    {
+        tc->setMiscReg(MISCREG_NMIP, 1);
+    }
+    void
+    clearNMI()
+    {
+        tc->setMiscReg(MISCREG_NMIP, 0);
+    }
 
     void
     clearAll() override
@@ -190,10 +203,26 @@ class Interrupts : public BaseInterrupts
         clearNMI();
     }
 
-    uint64_t readIP() const { return (uint64_t)ip.to_ulong(); }
-    uint64_t readIE() const { return (uint64_t)ie.to_ulong(); }
-    void setIP(const uint64_t& val) { ip = val; }
-    void setIE(const uint64_t& val) { ie = val; }
+    uint64_t
+    readIP() const
+    {
+        return (uint64_t)ip.to_ulong();
+    }
+    uint64_t
+    readIE() const
+    {
+        return (uint64_t)ie.to_ulong();
+    }
+    void
+    setIP(const uint64_t &val)
+    {
+        ip = val;
+    }
+    void
+    setIE(const uint64_t &val)
+    {
+        ie = val;
+    }
 
     void
     serialize(CheckpointOut &cp) const override

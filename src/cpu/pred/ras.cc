@@ -46,11 +46,8 @@
 
 namespace gem5
 {
-
 namespace branch_prediction
 {
-
-
 void
 ReturnAddrStack::AddrStack::init(unsigned _numEntries)
 {
@@ -75,11 +72,9 @@ ReturnAddrStack::AddrStack::top()
     return addrStack[tos].get();
 }
 
-
 void
 ReturnAddrStack::AddrStack::push(const PCStateBase &return_addr)
 {
-
     incrTos();
 
     set(addrStack[tos], return_addr);
@@ -100,8 +95,7 @@ ReturnAddrStack::AddrStack::pop()
 }
 
 void
-ReturnAddrStack::AddrStack::restore(unsigned _tos,
-                                    const PCStateBase *restored)
+ReturnAddrStack::AddrStack::restore(unsigned _tos, const PCStateBase *restored)
 {
     tos = _tos;
 
@@ -117,7 +111,7 @@ ReturnAddrStack::AddrStack::toString(int n)
 {
     std::stringstream ss;
     for (int i = 0; i < n; i++) {
-        int idx = int(tos)-i;
+        int idx = int(tos) - i;
         if (idx < 0 || addrStack[idx] == nullptr) {
             break;
         }
@@ -127,15 +121,14 @@ ReturnAddrStack::AddrStack::toString(int n)
     return ss.str();
 }
 
-
 // Return address stack class.
 //
 
-ReturnAddrStack::ReturnAddrStack(const Params &p)
-    : SimObject(p),
-      numEntries(p.numEntries),
-      numThreads(p.numThreads),
-      stats(this)
+ReturnAddrStack::ReturnAddrStack(const Params &p) :
+    SimObject(p),
+    numEntries(p.numEntries),
+    numThreads(p.numThreads),
+    stats(this)
 {
     DPRINTF(RAS, "Create RAS stacks.\n");
 
@@ -149,71 +142,69 @@ void
 ReturnAddrStack::reset()
 {
     DPRINTF(RAS, "RAS Reset.\n");
-    for (auto& r : addrStacks)
+    for (auto &r : addrStacks)
         r.reset();
 }
 
 void
-ReturnAddrStack::makeRASHistory(void* &ras_history)
+ReturnAddrStack::makeRASHistory(void *&ras_history)
 {
-    RASHistory* history = new RASHistory;
+    RASHistory *history = new RASHistory;
     history->pushed = false;
     history->poped = false;
-    ras_history = static_cast<void*>(history);
+    ras_history = static_cast<void *>(history);
 }
 
 void
-ReturnAddrStack::push(ThreadID tid, const PCStateBase &pc,
-                        void * &ras_history)
+ReturnAddrStack::push(ThreadID tid, const PCStateBase &pc, void *&ras_history)
 {
     // Note: The RAS may be both popped and pushed to
     //       support coroutines.
     if (ras_history == nullptr) {
         makeRASHistory(ras_history);
     }
-    RASHistory *history = static_cast<RASHistory*>(ras_history);
+    RASHistory *history = static_cast<RASHistory *>(ras_history);
     stats.pushes++;
     history->pushed = true;
 
     addrStacks[tid].push(pc);
 
     DPRINTF(RAS, "%s: RAS[%i] <= %#x. Entries used: %i, tid:%i\n", __func__,
-                    addrStacks[tid].tos, pc.instAddr(),
-                    addrStacks[tid].usedEntries,tid);
+        addrStacks[tid].tos, pc.instAddr(), addrStacks[tid].usedEntries, tid);
     // DPRINTF(RAS, "[%s]\n", addrStacks[tid].toString(10));
 }
 
-
-const PCStateBase*
-ReturnAddrStack::pop(ThreadID tid, void * &ras_history)
+const PCStateBase *
+ReturnAddrStack::pop(ThreadID tid, void *&ras_history)
 {
     // Note: The RAS may be both popped and pushed to
     //       support coroutines.
     if (ras_history == nullptr) {
         makeRASHistory(ras_history);
     }
-    RASHistory *history = static_cast<RASHistory*>(ras_history);
+    RASHistory *history = static_cast<RASHistory *>(ras_history);
     stats.pops++;
 
     history->poped = true;
     history->tos = addrStacks[tid].tos;
-
 
     set(history->ras_entry, addrStacks[tid].top());
     // Pop the top of stack
     addrStacks[tid].pop();
 
     DPRINTF(RAS, "%s: RAS[%i] => %#x. Entries used: %i, tid:%i\n", __func__,
-            addrStacks[tid].tos, (history->ras_entry.get() != nullptr)
-            ? history->ras_entry->instAddr() : 0,
-            addrStacks[tid].usedEntries, tid);
+        addrStacks[tid].tos,
+        (history->ras_entry.get() != nullptr) ?
+            history->ras_entry->instAddr() :
+            0,
+        addrStacks[tid].usedEntries, tid);
     // DPRINTF(RAS, "[%s]\n", addrStacks[tid].toString(10));
 
     return history->ras_entry.get();
 }
 
 void
-ReturnAddrStack::squash(ThreadID tid, void * &ras_history)
+ReturnAddrStack::squash(ThreadID tid, void *&ras_history)
 {
     if (ras_history == nullptr) {
         // If ras_history is null no stack operation was performed for
@@ -222,24 +213,28 @@ ReturnAddrStack::squash(ThreadID tid, void * &ras_history)
     }
     stats.squashes++;
 
-    RASHistory *history = static_cast<RASHistory*>(ras_history);
+    RASHistory *history = static_cast<RASHistory *>(ras_history);
 
     if (history->pushed) {
         stats.pops++;
         addrStacks[tid].pop();
 
-        DPRINTF(RAS, "RAS::%s Incorrect push. Pop RAS[%i]. "
-                "Entries used: %i, tid:%i\n", __func__,
-                addrStacks[tid].tos, addrStacks[tid].usedEntries, tid);
+        DPRINTF(RAS,
+            "RAS::%s Incorrect push. Pop RAS[%i]. "
+            "Entries used: %i, tid:%i\n",
+            __func__, addrStacks[tid].tos, addrStacks[tid].usedEntries, tid);
     }
 
     if (history->poped) {
         stats.pushes++;
         addrStacks[tid].restore(history->tos, history->ras_entry.get());
-        DPRINTF(RAS, "RAS::%s Incorrect pop. Restore to: RAS[%i]:%#x. "
-            "Entries used: %i, tid:%i\n", __func__,
-            history->tos,  (history->ras_entry.get() != nullptr)
-            ? history->ras_entry->instAddr() : 0,
+        DPRINTF(RAS,
+            "RAS::%s Incorrect pop. Restore to: RAS[%i]:%#x. "
+            "Entries used: %i, tid:%i\n",
+            __func__, history->tos,
+            (history->ras_entry.get() != nullptr) ?
+                history->ras_entry->instAddr() :
+                0,
             addrStacks[tid].usedEntries, tid);
     }
     // DPRINTF(RAS, "[%s]\n", addrStacks[tid].toString(10));
@@ -248,21 +243,19 @@ ReturnAddrStack::squash(ThreadID tid, void * &ras_history)
 }
 
 void
-ReturnAddrStack::commit(ThreadID tid, bool misp,
-                        const BranchType brType, void * &ras_history)
+ReturnAddrStack::commit(
+    ThreadID tid, bool misp, const BranchType brType, void *&ras_history)
 {
     // Skip branches that are not call or returns
-    if (!(brType == BranchType::Return ||
-          brType == BranchType::CallDirect ||
-          brType == BranchType::CallIndirect)) {
+    if (!(brType == BranchType::Return || brType == BranchType::CallDirect ||
+            brType == BranchType::CallIndirect)) {
         // If its not a call or return there should be no ras history.
         assert(ras_history == nullptr);
         return;
     }
 
-    DPRINTF(RAS, "RAS::%s Commit Branch inst: %s, tid:%i\n",
-                __func__, toString(brType),tid);
-
+    DPRINTF(RAS, "RAS::%s Commit Branch inst: %s, tid:%i\n", __func__,
+        toString(brType), tid);
 
     if (ras_history == nullptr) {
         /**
@@ -284,7 +277,7 @@ ReturnAddrStack::commit(ThreadID tid, bool misp,
     }
 
     /* Handle all other commited returns and calls */
-    RASHistory *history = static_cast<RASHistory*>(ras_history);
+    RASHistory *history = static_cast<RASHistory *>(ras_history);
 
     if (history->poped) {
         stats.used++;
@@ -295,35 +288,35 @@ ReturnAddrStack::commit(ThreadID tid, bool misp,
         }
 
         DPRINTF(RAS, "RAS::%s Commit Return PC %#x, correct:%i, tid:%i\n",
-                __func__, !misp, (history->ras_entry.get() != nullptr)
-                ? history->ras_entry->instAddr() : 0, tid);
+            __func__, !misp,
+            (history->ras_entry.get() != nullptr) ?
+                history->ras_entry->instAddr() :
+                0,
+            tid);
     }
     delete history;
     ras_history = nullptr;
 }
 
-
-
 ReturnAddrStack::ReturnAddrStackStats::ReturnAddrStackStats(
-    statistics::Group *parent)
-    : statistics::Group(parent),
-      ADD_STAT(pushes, statistics::units::Count::get(),
-               "Number of times a PC was pushed onto the RAS"),
-      ADD_STAT(pops, statistics::units::Count::get(),
-               "Number of times a PC was poped from the RAS"),
-      ADD_STAT(squashes, statistics::units::Count::get(),
-               "Number of times the stack operation was squashed due to "
-               "wrong speculation."),
-      ADD_STAT(used, statistics::units::Count::get(),
-               "Number of times the RAS is the provider"),
-      ADD_STAT(correct, statistics::units::Count::get(),
-               "Number of times the RAS is the provider and the "
-               "prediction is correct"),
-      ADD_STAT(incorrect, statistics::units::Count::get(),
-               "Number of times the RAS is the provider and the "
-               "prediction is wrong")
-{
-}
+    statistics::Group *parent) :
+    statistics::Group(parent),
+    ADD_STAT(pushes, statistics::units::Count::get(),
+        "Number of times a PC was pushed onto the RAS"),
+    ADD_STAT(pops, statistics::units::Count::get(),
+        "Number of times a PC was poped from the RAS"),
+    ADD_STAT(squashes, statistics::units::Count::get(),
+        "Number of times the stack operation was squashed due to "
+        "wrong speculation."),
+    ADD_STAT(used, statistics::units::Count::get(),
+        "Number of times the RAS is the provider"),
+    ADD_STAT(correct, statistics::units::Count::get(),
+        "Number of times the RAS is the provider and the "
+        "prediction is correct"),
+    ADD_STAT(incorrect, statistics::units::Count::get(),
+        "Number of times the RAS is the provider and the "
+        "prediction is wrong")
+{}
 
 } // namespace branch_prediction
 } // namespace gem5

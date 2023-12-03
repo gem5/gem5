@@ -53,10 +53,8 @@
 
 namespace gem5
 {
-
 namespace fastmodel
 {
-
 class CortexR52Cluster;
 
 template <class Types>
@@ -156,7 +154,9 @@ class ScxEvsCortexR52 : public Types::Base, public Iris::BaseCpuEvs
         Base::end_of_elaboration();
         Base::start_of_simulation();
     }
-    void start_of_simulation() override {}
+    void
+    start_of_simulation() override
+    {}
 
     void setClkPeriod(Tick clk_period) override;
 

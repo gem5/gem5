@@ -50,10 +50,8 @@
 
 namespace gem5
 {
-
 namespace minor
 {
-
 /** Currently unused stats class. */
 struct MinorStats : public statistics::Group
 {
@@ -61,7 +59,6 @@ struct MinorStats : public statistics::Group
 
     /** Number of cycles in quiescent state */
     statistics::Scalar quiesceCycles;
-
 };
 
 } // namespace minor

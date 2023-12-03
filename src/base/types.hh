@@ -45,7 +45,6 @@
 
 namespace gem5
 {
-
 /** Statistics counter type.  Not much excuse for not using a 64-bit
  * integer here, but if you're desperate and only run short
  * simulations you could make this 32 bits.
@@ -77,65 +76,79 @@ const Tick MaxTick = 0xffffffffffffffffULL;
  */
 class Cycles
 {
-
   private:
-
     /** Member holding the actual value. */
     uint64_t c;
 
   public:
-
     /** Explicit constructor assigning a value. */
-    explicit constexpr Cycles(uint64_t _c) : c(_c) { }
+    explicit constexpr Cycles(uint64_t _c) : c(_c) {}
 
     /** Default constructor for parameter classes. */
-    Cycles() : c(0) { }
+    Cycles() : c(0) {}
 
     /** Converting back to the value type. */
     constexpr operator uint64_t() const { return c; }
 
     /** Prefix increment operator. */
-    Cycles& operator++() { ++c; return *this; }
+    Cycles &
+    operator++()
+    {
+        ++c;
+        return *this;
+    }
 
     /** Prefix decrement operator. Is only temporarily used in the O3 CPU. */
-    Cycles& operator--() { assert(c != 0); --c; return *this; }
+    Cycles &
+    operator--()
+    {
+        assert(c != 0);
+        --c;
+        return *this;
+    }
 
     /** In-place addition of cycles. */
-    Cycles& operator+=(const Cycles& cc) { c += cc.c; return *this; }
+    Cycles &
+    operator+=(const Cycles &cc)
+    {
+        c += cc.c;
+        return *this;
+    }
 
     /** Greater than comparison used for > Cycles(0). */
     constexpr bool
-    operator>(const Cycles& cc) const
+    operator>(const Cycles &cc) const
     {
         return c > cc.c;
     }
 
     constexpr Cycles
-    operator+(const Cycles& b) const
+    operator+(const Cycles &b) const
     {
         return Cycles(c + b.c);
     }
 
     constexpr Cycles
-    operator-(const Cycles& b) const
+    operator-(const Cycles &b) const
     {
         return c >= b.c ? Cycles(c - b.c) :
-            throw std::invalid_argument("RHS cycle value larger than LHS");
+                          throw std::invalid_argument(
+                              "RHS cycle value larger than LHS");
     }
 
     constexpr Cycles
-    operator <<(const int32_t shift) const
+    operator<<(const int32_t shift) const
     {
         return Cycles(c << shift);
     }
 
     constexpr Cycles
-    operator >>(const int32_t shift) const
+    operator>>(const int32_t shift) const
     {
         return Cycles(c >> shift);
     }
 
-    friend std::ostream& operator<<(std::ostream &out, const Cycles & cycles);
+    friend std::ostream &operator<<(std::ostream &out, const Cycles &cycles);
 };
 
 /**
@@ -199,8 +212,16 @@ floatToBits64(double val)
     return u.i;
 }
 
-static inline uint64_t floatToBits(double val) { return floatToBits64(val); }
-static inline uint32_t floatToBits(float val) { return floatToBits32(val); }
+static inline uint64_t
+floatToBits(double val)
+{
+    return floatToBits64(val);
+}
+static inline uint32_t
+floatToBits(float val)
+{
+    return floatToBits32(val);
+}
 
 static inline float
 bitsToFloat32(uint32_t val)
@@ -226,8 +247,16 @@ bitsToFloat64(uint64_t val)
     return u.f;
 }
 
-static inline double bitsToFloat(uint64_t val) { return bitsToFloat64(val); }
-static inline float bitsToFloat(uint32_t val) { return bitsToFloat32(val); }
+static inline double
+bitsToFloat(uint64_t val)
+{
+    return bitsToFloat64(val);
+}
+static inline float
+bitsToFloat(uint32_t val)
+{
+    return bitsToFloat32(val);
+}
 
 /**
  * Thread index/ID type

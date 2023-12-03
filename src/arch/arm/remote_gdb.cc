@@ -165,12 +165,10 @@
 
 namespace gem5
 {
-
 using namespace ArmISA;
 
 namespace
 {
-
 // https://sourceware.org/gdb/current/onlinedocs/gdb/ARM-Breakpoint-Kinds.html
 enum class ArmBpKind
 {
@@ -180,7 +178,6 @@ enum class ArmBpKind
 };
 
 } // namespace
-
 
 static bool
 tryTranslate(ThreadContext *tc, Addr addr)
@@ -201,11 +198,9 @@ tryTranslate(ThreadContext *tc, Addr addr)
            mmu->translateFunctional(req, tc, BaseMMU::Execute) == NoFault;
 }
 
-RemoteGDB::RemoteGDB(System *_system, ListenSocketConfig _listen_config)
-    : BaseRemoteGDB(_system, _listen_config),
-    regCache32(this), regCache64(this)
-{
-}
+RemoteGDB::RemoteGDB(System *_system, ListenSocketConfig _listen_config) :
+    BaseRemoteGDB(_system, _listen_config), regCache32(this), regCache64(this)
+{}
 
 /*
  * Determine if the mapping at va..(va+len) is valid.
@@ -274,7 +269,7 @@ RemoteGDB::AArch64GdbRegCache::setRegs(ThreadContext *context) const
     size_t base = 0;
     for (int i = 0; i < NumVecV8ArchRegs; i++) {
         auto *vc = static_cast<ArmISA::VecRegContainer *>(
-                context->getWritableReg(vecRegClass[i]));
+            context->getWritableReg(vecRegClass[i]));
         auto v = vc->as<VecElem>();
         for (size_t j = 0; j < NumVecElemPerNeonVecReg; j++) {
             v[j] = r.v[base];
@@ -349,8 +344,10 @@ bool
 RemoteGDB::getXferFeaturesRead(const std::string &annex, std::string &output)
 {
 #define GDB_XML(x, s) \
-        { x, std::string(reinterpret_cast<const char *>(Blobs::s), \
-        Blobs::s ## _len) }
+    { \
+        x, std::string( \
+               reinterpret_cast<const char *>(Blobs::s), Blobs::s##_len) \
+    }
     static const std::map<std::string, std::string> annexMap32{
         GDB_XML("target.xml", gdb_xml_arm_target),
         GDB_XML("arm-core.xml", gdb_xml_arm_core),
@@ -362,7 +359,7 @@ RemoteGDB::getXferFeaturesRead(const std::string &annex, std::string &output)
         GDB_XML("aarch64-fpu.xml", gdb_xml_aarch64_fpu),
     };
 #undef GDB_XML
-    auto& annexMap = inAArch64(context()) ? annexMap64 : annexMap32;
+    auto &annexMap = inAArch64(context()) ? annexMap64 : annexMap32;
     auto it = annexMap.find(annex);
     if (it == annexMap.end())
         return false;
@@ -370,7 +367,7 @@ RemoteGDB::getXferFeaturesRead(const std::string &annex, std::string &output)
     return true;
 }
 
-BaseGdbRegCache*
+BaseGdbRegCache *
 RemoteGDB::gdbRegs()
 {
     if (inAArch64(context()))
@@ -383,11 +380,11 @@ bool
 RemoteGDB::checkBpKind(size_t kind)
 {
     switch (ArmBpKind(kind)) {
-      case ArmBpKind::THUMB:
-      case ArmBpKind::THUMB_2:
-      case ArmBpKind::ARM:
+    case ArmBpKind::THUMB:
+    case ArmBpKind::THUMB_2:
+    case ArmBpKind::ARM:
         return true;
-      default:
+    default:
         return false;
     }
 }

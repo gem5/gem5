@@ -33,10 +33,8 @@
 
 namespace gem5
 {
-
 namespace SparcISA
 {
-
 ////////////////////////////////////////////////////////////////////
 //
 // Integer operate instructions
@@ -51,10 +49,10 @@ class IntOp : public SparcStaticInst
     using SparcStaticInst::SparcStaticInst;
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 
-    virtual bool printPseudoOps(std::ostream &os, Addr pc,
-                                const loader::SymbolTable *symtab) const;
+    virtual bool printPseudoOps(
+        std::ostream &os, Addr pc, const loader::SymbolTable *symtab) const;
 };
 
 /**
@@ -64,18 +62,18 @@ class IntOpImm : public IntOp
 {
   protected:
     // Constructor
-    IntOpImm(const char *mnem, ExtMachInst _machInst,
-             OpClass __opClass, int64_t _imm) :
+    IntOpImm(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+        int64_t _imm) :
         IntOp(mnem, _machInst, __opClass), imm(_imm)
     {}
 
     int64_t imm;
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 
     bool printPseudoOps(std::ostream &os, Addr pc,
-                        const loader::SymbolTable *symtab) const override;
+        const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -124,7 +122,7 @@ class SetHi : public IntOpImm
     {}
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 } // namespace SparcISA

@@ -34,12 +34,12 @@
 
 namespace gem5
 {
-
 // This protocol is an exportable version of the clock rate protocol native to
 // fast models. It's identical to the original, except it has some extra info
 // which lets it be exported into systemc.
 
-struct ClockRateControlDummyProtocolType {};
+struct ClockRateControlDummyProtocolType
+{};
 
 class ClockRateControlFwIf : public virtual sc_core::sc_interface
 {
@@ -62,14 +62,15 @@ class ClockRateControlSlaveBase : public ClockRateControlFwIf
 
 class ClockRateControlInitiatorSocket :
     public tlm::tlm_base_initiator_socket<64, ClockRateControlFwIf,
-                                          ClockRateControlBwIf>
+        ClockRateControlBwIf>
 {
   private:
     ClockRateControlBwIf dummyBwIf;
 
   public:
     typedef tlm::tlm_base_initiator_socket<64, ClockRateControlFwIf,
-                                           ClockRateControlBwIf> Base;
+        ClockRateControlBwIf>
+        Base;
 
     using Base::bind;
     using Base::operator();
@@ -98,11 +99,12 @@ class ClockRateControlInitiatorSocket :
 
 class ClockRateControlTargetSocket :
     public tlm::tlm_base_target_socket<64, ClockRateControlFwIf,
-                                       ClockRateControlBwIf>
+        ClockRateControlBwIf>
 {
   public:
     typedef tlm::tlm_base_target_socket<64, ClockRateControlFwIf,
-                                        ClockRateControlBwIf> Base;
+        ClockRateControlBwIf>
+        Base;
 
     using Base::bind;
     using Base::operator();

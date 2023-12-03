@@ -33,7 +33,6 @@
 
 namespace gem5
 {
-
 ssize_t
 atomic_read(int fd, void *s, size_t n)
 {

@@ -32,7 +32,6 @@
 
 namespace gem5
 {
-
 /// Statically allocated null StaticInstPtr.
 extern const StaticInstPtr nullStaticInstPtr;
 

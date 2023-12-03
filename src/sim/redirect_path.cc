@@ -34,7 +34,6 @@
 
 namespace gem5
 {
-
 static std::string
 normalizePath(std::string path)
 {
@@ -44,13 +43,13 @@ normalizePath(std::string path)
     if (!startswith(path, "/")) {
         path = realpath((gem5_cwd + "/" + path).c_str(), buf);
     }
-    if (path[path.length()-1] != '/') path.push_back('/');
+    if (path[path.length() - 1] != '/')
+        path.push_back('/');
 
     return path;
 }
 
-RedirectPath::RedirectPath(const RedirectPathParams &p)
-    : SimObject(p)
+RedirectPath::RedirectPath(const RedirectPathParams &p) : SimObject(p)
 {
     _appPath = normalizePath(p.app_path);
 

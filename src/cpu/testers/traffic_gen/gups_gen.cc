@@ -37,11 +37,10 @@
 
 namespace gem5
 {
-
-GUPSGen::GUPSGen(const GUPSGenParams& params):
+GUPSGen::GUPSGen(const GUPSGenParams &params) :
     ClockedObject(params),
-    nextCreateEvent([this]{ createNextReq(); }, name()),
-    nextSendEvent([this]{ sendNextReq(); }, name()),
+    nextCreateEvent([this] { createNextReq(); }, name()),
+    nextSendEvent([this] { sendNextReq(); }, name()),
     system(params.system),
     requestorId(system->getRequestorId(this)),
     port(name() + ".port", this),
@@ -54,7 +53,7 @@ GUPSGen::GUPSGen(const GUPSGenParams& params):
     stats(this)
 {}
 
-Port&
+Port &
 GUPSGen::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name != "port") {
@@ -82,12 +81,12 @@ GUPSGen::startup()
     uint64_t stride_size = block_size / elementSize;
     if (initMemory) {
         for (uint64_t start_index = 0; start_index < tableSize;
-                                    start_index += stride_size) {
+             start_index += stride_size) {
             uint8_t write_data[block_size];
             for (uint64_t offset = 0; offset < stride_size; offset++) {
                 uint64_t value = start_index + offset;
-                std::memcpy(write_data + offset * elementSize,
-                            &value, elementSize);
+                std::memcpy(
+                    write_data + offset * elementSize, &value, elementSize);
             }
             Addr addr = indexToAddr(start_index);
             PacketPtr pkt = getWritePacket(addr, block_size, write_data);
@@ -99,7 +98,7 @@ GUPSGen::startup()
 }
 
 Addr
-GUPSGen::indexToAddr (uint64_t index)
+GUPSGen::indexToAddr(uint64_t index)
 {
     Addr ret = index * elementSize + startAddr;
     return ret;
@@ -123,8 +122,7 @@ GUPSGen::getReadPacket(Addr addr, unsigned int size)
 PacketPtr
 GUPSGen::getWritePacket(Addr addr, unsigned int size, uint8_t *data)
 {
-    RequestPtr req = std::make_shared<Request>(addr, size, 0,
-                                               requestorId);
+    RequestPtr req = std::make_shared<Request>(addr, size, 0, requestorId);
     // Dummy PC to have PC-based prefetchers latch on; get entropy into higher
     // bits
     req->setPC(((Addr)requestorId) << 2);
@@ -140,13 +138,14 @@ void
 GUPSGen::handleResponse(PacketPtr pkt)
 {
     onTheFlyRequests--;
-    DPRINTF(GUPSGen, "%s: onTheFlyRequests: %d.\n",
-                __func__, onTheFlyRequests);
+    DPRINTF(
+        GUPSGen, "%s: onTheFlyRequests: %d.\n", __func__, onTheFlyRequests);
     if (pkt->isWrite()) {
-        DPRINTF(GUPSGen, "%s: received a write resp. pkt->addr_range: %s,"
-                        " pkt->data: %d\n", __func__,
-                        pkt->getAddrRange().to_string(),
-                        *pkt->getPtr<uint64_t>());
+        DPRINTF(GUPSGen,
+            "%s: received a write resp. pkt->addr_range: %s,"
+            " pkt->data: %d\n",
+            __func__, pkt->getAddrRange().to_string(),
+            *pkt->getPtr<uint64_t>());
         stats.totalUpdates++;
         stats.totalWrites++;
         stats.totalBytesWritten += elementSize;
@@ -156,7 +155,7 @@ GUPSGen::handleResponse(PacketPtr pkt)
         delete pkt;
     } else {
         DPRINTF(GUPSGen, "%s: received a read resp. pkt->addr_range: %s\n",
-                        __func__, pkt->getAddrRange().to_string());
+            __func__, pkt->getAddrRange().to_string());
 
         stats.totalReads++;
         stats.totalBytesRead += elementSize;
@@ -173,8 +172,7 @@ GUPSGen::handleResponse(PacketPtr pkt)
 
     if ((requestPool.size() < reqQueueSize) &&
         (!doneReading || !responsePool.empty()) &&
-        !nextCreateEvent.scheduled())
-    {
+        !nextCreateEvent.scheduled()) {
         schedule(nextCreateEvent, nextCycle());
     }
 }
@@ -198,21 +196,21 @@ GUPSGen::createNextReq()
 
         uint64_t *updated_value = pkt->getPtr<uint64_t>();
         DPRINTF(GUPSGen, "%s: Read value %lu from address %s", __func__,
-                            *updated_value, pkt->getAddrRange().to_string());
+            *updated_value, pkt->getAddrRange().to_string());
         *updated_value ^= updateTable[pkt->req];
         updateTable.erase(pkt->req);
         Addr addr = pkt->getAddr();
-        PacketPtr new_pkt = getWritePacket(addr,
-                            elementSize, (uint8_t*) updated_value);
+        PacketPtr new_pkt =
+            getWritePacket(addr, elementSize, (uint8_t *)updated_value);
         delete pkt;
         requestPool.push(new_pkt);
     } else if (!doneReading) {
         // If no writes then read
         // Check to make sure we're not reading more than we should.
-        assert (readRequests < numUpdates);
+        assert(readRequests < numUpdates);
 
         uint64_t value = readRequests;
-        uint64_t index = random_mt.random((int64_t) 0, tableSize);
+        uint64_t index = random_mt.random((int64_t)0, tableSize);
         Addr addr = indexToAddr(index);
         PacketPtr pkt = getReadPacket(addr, elementSize);
         updateTable[pkt->req] = value;
@@ -222,17 +220,14 @@ GUPSGen::createNextReq()
         if (readRequests >= numUpdates) {
             DPRINTF(GUPSGen, "%s: Done creating reads.\n", __func__);
             doneReading = true;
-        }
-        else if (readRequests == updateLimit && updateLimit != 0) {
+        } else if (readRequests == updateLimit && updateLimit != 0) {
             DPRINTF(GUPSGen, "%s: Update limit reached.\n", __func__);
             doneReading = true;
         }
     }
 
-    if (!nextCreateEvent.scheduled() &&
-        (requestPool.size() < reqQueueSize) &&
-        (!doneReading || !responsePool.empty()))
-    {
+    if (!nextCreateEvent.scheduled() && (requestPool.size() < reqQueueSize) &&
+        (!doneReading || !responsePool.empty())) {
         schedule(nextCreateEvent, nextCycle());
     }
 
@@ -249,25 +244,24 @@ GUPSGen::sendNextReq()
 
         exitTimes[pkt->req] = curTick();
         if (pkt->isWrite()) {
-            DPRINTF(GUPSGen, "%s: Sent write pkt, pkt->addr_range: "
-                    "%s, pkt->data: %lu.\n", __func__,
-                    pkt->getAddrRange().to_string(),
-                    *pkt->getPtr<uint64_t>());
+            DPRINTF(GUPSGen,
+                "%s: Sent write pkt, pkt->addr_range: "
+                "%s, pkt->data: %lu.\n",
+                __func__, pkt->getAddrRange().to_string(),
+                *pkt->getPtr<uint64_t>());
         } else {
             DPRINTF(GUPSGen, "%s: Sent read pkt, pkt->addr_range: %s.\n",
-                    __func__, pkt->getAddrRange().to_string());
+                __func__, pkt->getAddrRange().to_string());
         }
         port.sendTimingPacket(pkt);
         onTheFlyRequests++;
-        DPRINTF(GUPSGen, "%s: onTheFlyRequests: %d.\n",
-                __func__, onTheFlyRequests);
+        DPRINTF(GUPSGen, "%s: onTheFlyRequests: %d.\n", __func__,
+            onTheFlyRequests);
         requestPool.pop();
     }
 
-    if (!nextCreateEvent.scheduled() &&
-        (requestPool.size() < reqQueueSize) &&
-        (!doneReading || !responsePool.empty()))
-    {
+    if (!nextCreateEvent.scheduled() && (requestPool.size() < reqQueueSize) &&
+        (!doneReading || !responsePool.empty())) {
         schedule(nextCreateEvent, nextCycle());
     }
 
@@ -277,7 +271,6 @@ GUPSGen::sendNextReq()
         }
     }
 }
-
 
 void
 GUPSGen::GenPort::sendTimingPacket(PacketPtr pkt)
@@ -310,7 +303,7 @@ GUPSGen::GenPort::recvReqRetry()
     // Try to resend it. It's possible that it fails again.
     _blocked = false;
     sendTimingPacket(blockedPacket);
-    if (!_blocked){
+    if (!_blocked) {
         blockedPacket = nullptr;
     }
 
@@ -324,19 +317,21 @@ GUPSGen::GenPort::recvTimingResp(PacketPtr pkt)
     return true;
 }
 
-GUPSGen::GUPSGenStat::GUPSGenStat(GUPSGen* parent) :
+GUPSGen::GUPSGenStat::GUPSGenStat(GUPSGen *parent) :
     statistics::Group(parent),
     ADD_STAT(totalUpdates, statistics::units::Count::get(),
         "Total number of updates the generator made in the memory"),
-    ADD_STAT(GUPS, statistics::units::Rate<statistics::units::Count,
-                statistics::units::Second>::get(),
+    ADD_STAT(GUPS,
+        statistics::units::Rate<statistics::units::Count,
+            statistics::units::Second>::get(),
         "Rate of billion updates per second"),
     ADD_STAT(totalReads, statistics::units::Count::get(),
         "Total number of read requests"),
     ADD_STAT(totalBytesRead, statistics::units::Byte::get(),
         "Total number of bytes read"),
-    ADD_STAT(avgReadBW, statistics::units::Rate<statistics::units::Byte,
-                statistics::units::Second>::get(),
+    ADD_STAT(avgReadBW,
+        statistics::units::Rate<statistics::units::Byte,
+            statistics::units::Second>::get(),
         "Average read bandwidth received from memory"),
     ADD_STAT(totalReadLat, statistics::units::Tick::get(),
         "Total latency of read requests."),
@@ -346,8 +341,9 @@ GUPSGen::GUPSGenStat::GUPSGenStat(GUPSGen* parent) :
         "Total number of write requests"),
     ADD_STAT(totalBytesWritten, statistics::units::Byte::get(),
         "Total number of bytes written"),
-    ADD_STAT(avgWriteBW, statistics::units::Rate<statistics::units::Byte,
-                statistics::units::Second>::get(),
+    ADD_STAT(avgWriteBW,
+        statistics::units::Rate<statistics::units::Byte,
+            statistics::units::Second>::get(),
         "Average write bandwidth received from memory"),
     ADD_STAT(totalWriteLat, statistics::units::Tick::get(),
         "Total latency of write requests."),
@@ -373,4 +369,4 @@ GUPSGen::GUPSGenStat::regStats()
     avgWriteLat = (totalWriteLat) / totalWrites;
 }
 
-}
+} // namespace gem5

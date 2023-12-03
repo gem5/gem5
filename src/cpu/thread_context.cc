@@ -55,7 +55,6 @@
 
 namespace gem5
 {
-
 void
 ThreadContext::compare(ThreadContext *one, ThreadContext *two)
 {
@@ -64,34 +63,34 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
     DPRINTF(Context, "Comparing thread contexts\n");
 
     // First loop through the integer registers.
-    for (auto &id: *regClasses.at(IntRegClass)) {
+    for (auto &id : *regClasses.at(IntRegClass)) {
         RegVal t1 = one->getReg(id);
         RegVal t2 = two->getReg(id);
         if (t1 != t2)
             panic("Int reg idx %d doesn't match, one: %#x, two: %#x",
-                  id.index(), t1, t2);
+                id.index(), t1, t2);
     }
 
     // Then loop through the floating point registers.
-    for (auto &id: *regClasses.at(FloatRegClass)) {
+    for (auto &id : *regClasses.at(FloatRegClass)) {
         RegVal t1 = one->getReg(id);
         RegVal t2 = two->getReg(id);
         if (t1 != t2)
             panic("Float reg idx %d doesn't match, one: %#x, two: %#x",
-                  id.index(), t1, t2);
+                id.index(), t1, t2);
     }
 
     // Then loop through the vector registers.
     const auto *vec_class = regClasses.at(VecRegClass);
     std::vector<uint8_t> vec1(vec_class->regBytes());
     std::vector<uint8_t> vec2(vec_class->regBytes());
-    for (auto &id: *regClasses.at(VecRegClass)) {
+    for (auto &id : *regClasses.at(VecRegClass)) {
         one->getReg(id, vec1.data());
         two->getReg(id, vec2.data());
         if (vec1 != vec2) {
             panic("Vec reg idx %d doesn't match, one: %#x, two: %#x",
-                  id.index(), vec_class->valString(vec1.data()),
-                  vec_class->valString(vec2.data()));
+                id.index(), vec_class->valString(vec1.data()),
+                vec_class->valString(vec2.data()));
         }
     }
 
@@ -99,13 +98,13 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
     const auto *vec_pred_class = regClasses.at(VecPredRegClass);
     std::vector<uint8_t> pred1(vec_pred_class->regBytes());
     std::vector<uint8_t> pred2(vec_pred_class->regBytes());
-    for (auto &id: *regClasses.at(VecPredRegClass)) {
+    for (auto &id : *regClasses.at(VecPredRegClass)) {
         one->getReg(id, pred1.data());
         two->getReg(id, pred2.data());
         if (pred1 != pred2) {
             panic("Pred reg idx %d doesn't match, one: %s, two: %s",
-                  id.index(), vec_pred_class->valString(pred1.data()),
-                  vec_pred_class->valString(pred2.data()));
+                id.index(), vec_pred_class->valString(pred1.data()),
+                vec_pred_class->valString(pred2.data()));
         }
     }
 
@@ -113,13 +112,13 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
     const auto *mat_class = regClasses.at(MatRegClass);
     std::vector<uint8_t> mat1(mat_class->regBytes());
     std::vector<uint8_t> mat2(mat_class->regBytes());
-    for (auto &id: *regClasses.at(MatRegClass)) {
+    for (auto &id : *regClasses.at(MatRegClass)) {
         one->getReg(id, mat1.data());
         two->getReg(id, mat2.data());
         if (mat1 != mat2) {
             panic("Mat reg idx %d doesn't match, one: %#x, two: %#x",
-                  id.index(), mat_class->valString(mat1.data()),
-                  mat_class->valString(mat2.data()));
+                id.index(), mat_class->valString(mat1.data()),
+                mat_class->valString(mat2.data()));
         }
     }
 
@@ -127,17 +126,17 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
         RegVal t1 = one->readMiscRegNoEffect(i);
         RegVal t2 = two->readMiscRegNoEffect(i);
         if (t1 != t2)
-            panic("Misc reg idx %d doesn't match, one: %#x, two: %#x",
-                  i, t1, t2);
+            panic("Misc reg idx %d doesn't match, one: %#x, two: %#x", i, t1,
+                t2);
     }
 
     // loop through the Condition Code registers.
-    for (auto &id: *regClasses.at(CCRegClass)) {
+    for (auto &id : *regClasses.at(CCRegClass)) {
         RegVal t1 = one->getReg(id);
         RegVal t2 = two->getReg(id);
         if (t1 != t2)
             panic("CC reg idx %d doesn't match, one: %#x, two: %#x",
-                  id.index(), t1, t2);
+                id.index(), t1, t2);
     }
     if (one->pcState() != two->pcState())
         panic("PC state doesn't match.");
@@ -150,8 +149,6 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
     const ContextID cid2 = two->contextId();
     if (cid1 != cid2)
         panic("Context ids don't match, one: %d, two: %d", id1, id2);
-
-
 }
 
 void
@@ -168,7 +165,6 @@ ThreadContext::quiesce()
 {
     getSystemPtr()->threads.quiesce(contextId());
 }
-
 
 void
 ThreadContext::quiesceTick(Tick resume)
@@ -193,7 +189,7 @@ ThreadContext::setReg(const RegId &reg, RegVal val)
 void
 serialize(const ThreadContext &tc, CheckpointOut &cp)
 {
-    for (const auto *reg_class: tc.getIsaPtr()->regClasses()) {
+    for (const auto *reg_class : tc.getIsaPtr()->regClasses()) {
         // MiscRegs are serialized elsewhere.
         if (reg_class->type() == MiscRegClass)
             continue;
@@ -204,13 +200,13 @@ serialize(const ThreadContext &tc, CheckpointOut &cp)
 
         uint8_t regs[array_bytes];
         auto *reg_ptr = regs;
-        for (const auto &id: *reg_class) {
+        for (const auto &id : *reg_class) {
             tc.getReg(id, reg_ptr);
             reg_ptr += reg_bytes;
         }
 
-        arrayParamOut(cp, std::string("regs.") + reg_class->name(), regs,
-                array_bytes);
+        arrayParamOut(
+            cp, std::string("regs.") + reg_class->name(), regs, array_bytes);
     }
 
     tc.pcState().serialize(cp);
@@ -221,7 +217,7 @@ serialize(const ThreadContext &tc, CheckpointOut &cp)
 void
 unserialize(ThreadContext &tc, CheckpointIn &cp)
 {
-    for (const auto *reg_class: tc.getIsaPtr()->regClasses()) {
+    for (const auto *reg_class : tc.getIsaPtr()->regClasses()) {
         // MiscRegs are serialized elsewhere.
         if (reg_class->type() == MiscRegClass)
             continue;
@@ -231,11 +227,11 @@ unserialize(ThreadContext &tc, CheckpointIn &cp)
         const size_t array_bytes = reg_bytes * reg_count;
 
         uint8_t regs[array_bytes];
-        arrayParamIn(cp, std::string("regs.") + reg_class->name(), regs,
-                array_bytes);
+        arrayParamIn(
+            cp, std::string("regs.") + reg_class->name(), regs, array_bytes);
 
         auto *reg_ptr = regs;
-        for (const auto &id: *reg_class) {
+        for (const auto &id : *reg_class) {
             tc.setReg(id, reg_ptr);
             reg_ptr += reg_bytes;
         }

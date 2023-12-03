@@ -37,10 +37,8 @@
 
 namespace gem5
 {
-
 namespace RiscvISA
 {
-
 class SEWorkload : public gem5::SEWorkload
 {
   public:
@@ -54,11 +52,15 @@ class SEWorkload : public gem5::SEWorkload
     setSystem(System *sys) override
     {
         gem5::SEWorkload::setSystem(sys);
-        gdb = BaseRemoteGDB::build<RemoteGDB>(
-                params().remote_gdb_port, system);
+        gdb =
+            BaseRemoteGDB::build<RemoteGDB>(params().remote_gdb_port, system);
     }
 
-    loader::Arch getArch() const override { return loader::Riscv64; }
+    loader::Arch
+    getArch() const override
+    {
+        return loader::Riscv64;
+    }
 
     using SyscallABI64 = RegABI64;
     using SyscallABI32 = RegABI32;
@@ -68,7 +70,6 @@ class SEWorkload : public gem5::SEWorkload
 
 namespace guest_abi
 {
-
 template <>
 struct Result<RiscvISA::SEWorkload::SyscallABI64, SyscallReturn>
 {

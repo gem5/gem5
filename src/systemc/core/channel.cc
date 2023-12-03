@@ -31,7 +31,6 @@
 
 namespace sc_gem5
 {
-
 Channel::Channel(sc_core::sc_prim_channel *_sc_chan) : _sc_chan(_sc_chan)
 {
     allChannels.insert(this);

@@ -49,7 +49,6 @@ struct kvm_vcpu_init;
 
 namespace gem5
 {
-
 struct BaseArmKvmCPUParams;
 
 class BaseArmKvmCPU : public BaseKvmCPU

@@ -57,12 +57,10 @@
 
 namespace gem5
 {
-
 struct BaseO3CPUParams;
 
 namespace o3
 {
-
 /**
  * Rename handles both single threaded and SMT rename. Its
  * width is specified by the parameters; each cycle it tries to rename
@@ -143,7 +141,11 @@ class Rename
     void setDecodeQueue(TimeBuffer<DecodeStruct> *dq_ptr);
 
     /** Sets pointer to IEW stage. Used only for initialization. */
-    void setIEWStage(IEW *iew_stage) { iew_ptr = iew_stage; }
+    void
+    setIEWStage(IEW *iew_stage)
+    {
+        iew_ptr = iew_stage;
+    }
 
     /** Sets pointer to commit stage. Used only for initialization. */
     void
@@ -219,8 +221,8 @@ class Rename
      */
     void skidInsert(ThreadID tid);
 
-    /** Separates instructions from decode into individual lists of instructions
-     * sorted by thread.
+    /** Separates instructions from decode into individual lists of
+     * instructions sorted by thread.
      */
     void sortInsts();
 
@@ -296,13 +298,13 @@ class Rename
      */
     struct RenameHistory
     {
-        RenameHistory(InstSeqNum _instSeqNum, const RegId& _archReg,
-                      PhysRegIdPtr _newPhysReg,
-                      PhysRegIdPtr _prevPhysReg)
-            : instSeqNum(_instSeqNum), archReg(_archReg),
-              newPhysReg(_newPhysReg), prevPhysReg(_prevPhysReg)
-        {
-        }
+        RenameHistory(InstSeqNum _instSeqNum, const RegId &_archReg,
+            PhysRegIdPtr _newPhysReg, PhysRegIdPtr _prevPhysReg) :
+            instSeqNum(_instSeqNum),
+            archReg(_archReg),
+            newPhysReg(_newPhysReg),
+            prevPhysReg(_prevPhysReg)
+        {}
 
         /** The sequence number of the instruction that renamed. */
         InstSeqNum instSeqNum;

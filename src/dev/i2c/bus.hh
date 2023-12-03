@@ -35,7 +35,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 /** @file
  * Implementiation of an i2c bus
  */
@@ -50,13 +49,11 @@
 
 namespace gem5
 {
-
 class I2CDevice;
 
 class I2CBus : public BasicPioDevice
 {
   protected:
-
     enum I2CState
     {
         IDLE,
@@ -108,7 +105,7 @@ class I2CBus : public BasicPioDevice
      * bus. Each device has an address that points to the actual
      * device.
      */
-    std::map<uint8_t, I2CDevice*> devices;
+    std::map<uint8_t, I2CDevice *> devices;
 
     /**
      * Update data (sda) and clock (scl) to match any transitions
@@ -143,7 +140,6 @@ class I2CBus : public BasicPioDevice
     bool isEnd(PacketPtr pkt) const;
 
   public:
-
     I2CBus(const I2CBusParams &p);
 
     Tick read(PacketPtr pkt) override;

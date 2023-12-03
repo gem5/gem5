@@ -48,7 +48,6 @@
 
 namespace gem5
 {
-
 class PioDevice;
 class System;
 
@@ -137,11 +136,10 @@ class PioDevice : public ClockedObject
 
     void init() override;
 
-    Port &getPort(const std::string &if_name,
-            PortID idx=InvalidPortID) override;
+    Port &getPort(
+        const std::string &if_name, PortID idx = InvalidPortID) override;
 
     friend class PioPort<PioDevice>;
-
 };
 
 class BasicPioDevice : public PioDevice

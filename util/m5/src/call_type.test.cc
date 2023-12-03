@@ -35,12 +35,20 @@
 
 // Simple substitute definitions for Args and DispatchTable, with an int so
 // we can tell instances apart.
-class DispatchTable { public: int i; };
+class DispatchTable
+{
+  public:
+    int i;
+};
 
 class TestCallType : public CallType
 {
   protected:
-    bool isDefault() const override { return testIsDefault; }
+    bool
+    isDefault() const override
+    {
+        return testIsDefault;
+    }
     void
     init() override
     {
@@ -48,20 +56,37 @@ class TestCallType : public CallType
         CallType::init();
     }
 
-    void printBrief(std::ostream &os) const override { os << testBrief; }
-    void printDesc(std::ostream &os) const override { os << testDesc; }
+    void
+    printBrief(std::ostream &os) const override
+    {
+        os << testBrief;
+    }
+    void
+    printDesc(std::ostream &os) const override
+    {
+        os << testDesc;
+    }
+
   public:
     TestCallType(const std::string &_name) : CallType(_name) {}
 
-    static std::map<std::string, CallType &> &testGetMap() { return map(); }
+    static std::map<std::string, CallType &> &
+    testGetMap()
+    {
+        return map();
+    }
 
     // Usage strings to return.
     std::string testBrief;
     std::string testDesc;
 
     // Return this dispatch table when requested.
-    DispatchTable testDt = { 0 };
-    const DispatchTable &getDispatch() const override { return testDt; }
+    DispatchTable testDt = {0};
+    const DispatchTable &
+    getDispatch() const override
+    {
+        return testDt;
+    }
 
     // Whether this call type should be considered default.
     bool testIsDefault = false;
@@ -208,7 +233,7 @@ TEST(CallTypeTest, Usage)
     TestCallType ct2("ct2");
     ct2.testBrief = "short 2";
     ct2.testDesc = "Very verbose text saying what call type 2 is, "
-        "and is different from 1.";
+                   "and is different from 1.";
 
     EXPECT_EQ(map.size(), 2);
 

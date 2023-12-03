@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2012, 2018, 2023 Arm Limited
+ * Copyright (c) 2012, 2018, 2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -52,24 +52,23 @@
 
 namespace gem5
 {
-
 class ArmProcess : public Process
 {
   protected:
     loader::Arch arch;
     ArmProcess(const ProcessParams &params, loader::ObjectFile *objFile,
-               loader::Arch _arch);
-    template<class IntType>
+        loader::Arch _arch);
+    template <class IntType>
     void argsInit(int pageSize, const RegId &spId);
 
-    template<class IntType>
+    template <class IntType>
     IntType
     armHwcap() const
     {
         return static_cast<IntType>(armHwcapImpl());
     }
 
-    template<class IntType>
+    template <class IntType>
     IntType
     armHwcap2() const
     {
@@ -87,21 +86,25 @@ class ArmProcess32 : public ArmProcess
 {
   public:
     ArmProcess32(const ProcessParams &params, loader::ObjectFile *objFile,
-                 loader::Arch _arch);
+        loader::Arch _arch);
 
   protected:
     void initState() override;
 
     /** AArch32 AT_HWCAP */
     uint32_t armHwcapImpl() const override;
-    uint64_t armHwcapImpl2() const override { return 0; }
+    uint64_t
+    armHwcapImpl2() const override
+    {
+        return 0;
+    }
 };
 
 class ArmProcess64 : public ArmProcess
 {
   public:
     ArmProcess64(const ProcessParams &params, loader::ObjectFile *objFile,
-                 loader::Arch _arch);
+        loader::Arch _arch);
 
   protected:
     void initState() override;

@@ -49,10 +49,8 @@
 
 namespace gem5
 {
-
 namespace ruby
 {
-
 // MN_TBEStorage is composed of multiple TBEStorage
 // partitions that could be used for specific types of TBEs.
 // Partition number 0 is the generic partition and will
@@ -65,9 +63,8 @@ class MN_TBEStorage
 {
   public:
     MN_TBEStorage(statistics::Group *parent,
-                  std::initializer_list<TBEStorage *> _partitions)
-      : m_stats(parent),
-        partitions(_partitions)
+        std::initializer_list<TBEStorage *> _partitions) :
+        m_stats(parent), partitions(_partitions)
     {}
 
     // Returns the current number of slots allocated
@@ -109,23 +106,25 @@ class MN_TBEStorage
     {
         auto generic_slots = partitions[0]->slotsAvailable();
         if (partition) {
-            return partitions[partition]->slotsAvailable() +
-                generic_slots;
+            return partitions[partition]->slotsAvailable() + generic_slots;
         } else {
             return generic_slots;
         }
     }
 
     // Returns the TBEStorage utilization
-    float utilization() const { return size() / (float)capacity(); }
+    float
+    utilization() const
+    {
+        return size() / (float)capacity();
+    }
 
     // Returns true if slotsAvailable(partition) >= n;
     //     current_time is always ignored
     // This allows this class to be used with check_allocate in SLICC to
     // trigger resource stalls when there are no slots available
     bool
-    areNSlotsAvailable(int n, int partition,
-                       Tick current_time = 0) const
+    areNSlotsAvailable(int n, int partition, Tick current_time = 0) const
     {
         return slotsAvailable(partition) >= n;
     }
@@ -135,8 +134,7 @@ class MN_TBEStorage
     void
     incrementReserved(int partition)
     {
-        if (partition &&
-            partitions[partition]->areNSlotsAvailable(1)) {
+        if (partition && partitions[partition]->areNSlotsAvailable(1)) {
             partitions[partition]->incrementReserved();
         } else {
             partitions[0]->incrementReserved();
@@ -190,8 +188,7 @@ class MN_TBEStorage
         if (slot < part_capacity) {
             partitions[partition]->removeEntryFromSlot(slot);
         } else {
-            partitions[0]->removeEntryFromSlot(
-                slot - part_capacity);
+            partitions[0]->removeEntryFromSlot(slot - part_capacity);
         }
 
         m_stats.avg_size = size();
@@ -231,8 +228,8 @@ class MN_TBEStorage
   private:
     struct MN_TBEStorageStats : public statistics::Group
     {
-        MN_TBEStorageStats(statistics::Group *parent)
-          : statistics::Group(parent),
+        MN_TBEStorageStats(statistics::Group *parent) :
+            statistics::Group(parent),
             ADD_STAT(avg_size, "Avg. number of slots allocated"),
             ADD_STAT(avg_util, "Avg. utilization"),
             ADD_STAT(avg_reserved, "Avg. number of slots reserved")

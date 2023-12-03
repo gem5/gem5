@@ -43,7 +43,6 @@
 
 namespace gem5
 {
-
 class SMMUv3;
 class SMMUv3DeviceInterface;
 
@@ -85,13 +84,15 @@ class SMMUDevicePort : public QueuedResponsePort
     virtual bool recvTimingReq(PacketPtr pkt);
 
   public:
-    SMMUDevicePort(const std::string &_name,
-                  SMMUv3DeviceInterface &_ifc,
-                  PortID _id = InvalidPortID);
+    SMMUDevicePort(const std::string &_name, SMMUv3DeviceInterface &_ifc,
+        PortID _id = InvalidPortID);
     virtual ~SMMUDevicePort() {}
 
-    virtual AddrRangeList getAddrRanges() const
-    { return AddrRangeList { AddrRange(0, UINT64_MAX) }; }
+    virtual AddrRangeList
+    getAddrRanges() const
+    {
+        return AddrRangeList{AddrRange(0, UINT64_MAX)};
+    }
 };
 
 class SMMUControlPort : public SimpleTimingPort
@@ -104,8 +105,8 @@ class SMMUControlPort : public SimpleTimingPort
     virtual AddrRangeList getAddrRanges() const;
 
   public:
-    SMMUControlPort(const std::string &_name, SMMUv3 &_smmu,
-                    AddrRange _addrRange);
+    SMMUControlPort(
+        const std::string &_name, SMMUv3 &_smmu, AddrRange _addrRange);
     virtual ~SMMUControlPort() {}
 };
 
@@ -133,8 +134,11 @@ class SMMUATSDevicePort : public QueuedResponsePort
     virtual Tick recvAtomic(PacketPtr pkt);
     virtual bool recvTimingReq(PacketPtr pkt);
 
-    virtual AddrRangeList getAddrRanges() const
-    { return AddrRangeList(); }
+    virtual AddrRangeList
+    getAddrRanges() const
+    {
+        return AddrRangeList();
+    }
 
   public:
     SMMUATSDevicePort(const std::string &_name, SMMUv3DeviceInterface &_ifc);

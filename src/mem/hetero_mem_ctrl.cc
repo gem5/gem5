@@ -53,22 +53,19 @@
 
 namespace gem5
 {
-
 namespace memory
 {
-
 HeteroMemCtrl::HeteroMemCtrl(const HeteroMemCtrlParams &p) :
-    MemCtrl(p),
-    nvm(p.nvm)
+    MemCtrl(p), nvm(p.nvm)
 {
     DPRINTF(MemCtrl, "Setting up controller\n");
     readQueue.resize(p.qos_priorities);
     writeQueue.resize(p.qos_priorities);
 
-    fatal_if(dynamic_cast<DRAMInterface*>(dram) == nullptr,
-            "HeteroMemCtrl's dram interface must be of type DRAMInterface.\n");
-    fatal_if(dynamic_cast<NVMInterface*>(nvm) == nullptr,
-            "HeteroMemCtrl's nvm interface must be of type NVMInterface.\n");
+    fatal_if(dynamic_cast<DRAMInterface *>(dram) == nullptr,
+        "HeteroMemCtrl's dram interface must be of type DRAMInterface.\n");
+    fatal_if(dynamic_cast<NVMInterface *>(nvm) == nullptr,
+        "HeteroMemCtrl's nvm interface must be of type NVMInterface.\n");
 
     // hook up interfaces to the controller
     dram->setCtrl(this, commandWindow);
@@ -83,8 +80,8 @@ HeteroMemCtrl::HeteroMemCtrl(const HeteroMemCtrlParams &p) :
     // perform a basic check of the write thresholds
     if (p.write_low_thresh_perc >= p.write_high_thresh_perc)
         fatal("Write buffer low threshold %d must be smaller than the "
-              "high threshold %d\n", p.write_low_thresh_perc,
-              p.write_high_thresh_perc);
+              "high threshold %d\n",
+            p.write_low_thresh_perc, p.write_high_thresh_perc);
 }
 
 Tick
@@ -108,13 +105,13 @@ HeteroMemCtrl::recvTimingReq(PacketPtr pkt)
 {
     // This is where we enter from the outside world
     DPRINTF(MemCtrl, "recvTimingReq: request %s addr %#x size %d\n",
-            pkt->cmdString(), pkt->getAddr(), pkt->getSize());
+        pkt->cmdString(), pkt->getAddr(), pkt->getSize());
 
     panic_if(pkt->cacheResponding(), "Should not see packets where cache "
-             "is responding");
+                                     "is responding");
 
     panic_if(!(pkt->isRead() || pkt->isWrite()),
-             "Should only see read and writes at memory controller\n");
+        "Should only see read and writes at memory controller\n");
 
     // Calc avg gap between requests
     if (prevArrival != 0) {
@@ -129,8 +126,7 @@ HeteroMemCtrl::recvTimingReq(PacketPtr pkt)
     } else if (nvm->getAddrRange().contains(pkt->getAddr())) {
         is_dram = false;
     } else {
-        panic("Can't handle address range for packet %s\n",
-              pkt->print());
+        panic("Can't handle address range for packet %s\n", pkt->print());
     }
 
     // Find out how many memory packets a pkt translates to
@@ -138,13 +134,13 @@ HeteroMemCtrl::recvTimingReq(PacketPtr pkt)
     // translates to only one memory packet. Otherwise, a pkt translates to
     // multiple memory packets
     unsigned size = pkt->getSize();
-    uint32_t burst_size = is_dram ? dram->bytesPerBurst() :
-                                    nvm->bytesPerBurst();
+    uint32_t burst_size =
+        is_dram ? dram->bytesPerBurst() : nvm->bytesPerBurst();
     unsigned offset = pkt->getAddr() & (burst_size - 1);
     unsigned int pkt_count = divCeil(offset + size, burst_size);
 
     // run the QoS scheduler and assign a QoS priority value to the packet
-    qosSchedule( { &readQueue, &writeQueue }, burst_size, pkt);
+    qosSchedule({&readQueue, &writeQueue}, burst_size, pkt);
 
     // check local buffers and do not accept if full
     if (pkt->isWrite()) {
@@ -193,13 +189,12 @@ HeteroMemCtrl::recvTimingReq(PacketPtr pkt)
 }
 
 void
-HeteroMemCtrl::processRespondEvent(MemInterface* mem_intr,
-                        MemPacketQueue& queue,
-                        EventFunctionWrapper& resp_event,
-                        bool& retry_rd_req)
+HeteroMemCtrl::processRespondEvent(MemInterface *mem_intr,
+    MemPacketQueue &queue, EventFunctionWrapper &resp_event,
+    bool &retry_rd_req)
 {
     DPRINTF(MemCtrl,
-            "processRespondEvent(): Some req has reached its readyTime\n");
+        "processRespondEvent(): Some req has reached its readyTime\n");
 
     if (queue.front()->isDram()) {
         MemCtrl::processRespondEvent(dram, queue, resp_event, retry_rd_req);
@@ -209,8 +204,8 @@ HeteroMemCtrl::processRespondEvent(MemInterface* mem_intr,
 }
 
 MemPacketQueue::iterator
-HeteroMemCtrl::chooseNext(MemPacketQueue& queue, Tick extra_col_delay,
-                    MemInterface* mem_int)
+HeteroMemCtrl::chooseNext(
+    MemPacketQueue &queue, Tick extra_col_delay, MemInterface *mem_int)
 {
     // This method does the arbitration between requests.
 
@@ -219,8 +214,8 @@ HeteroMemCtrl::chooseNext(MemPacketQueue& queue, Tick extra_col_delay,
     if (!queue.empty()) {
         if (queue.size() == 1) {
             // available rank corresponds to state refresh idle
-            MemPacket* mem_pkt = *(queue.begin());
-            if (packetReady(mem_pkt, mem_pkt->isDram()? dram : nvm)) {
+            MemPacket *mem_pkt = *(queue.begin());
+            if (packetReady(mem_pkt, mem_pkt->isDram() ? dram : nvm)) {
                 ret = queue.begin();
                 DPRINTF(MemCtrl, "Single request, going to a free rank\n");
             } else {
@@ -229,16 +224,16 @@ HeteroMemCtrl::chooseNext(MemPacketQueue& queue, Tick extra_col_delay,
         } else if (memSchedPolicy == enums::fcfs) {
             // check if there is a packet going to a free rank
             for (auto i = queue.begin(); i != queue.end(); ++i) {
-                MemPacket* mem_pkt = *i;
-                if (packetReady(mem_pkt, mem_pkt->isDram()? dram : nvm)) {
+                MemPacket *mem_pkt = *i;
+                if (packetReady(mem_pkt, mem_pkt->isDram() ? dram : nvm)) {
                     ret = i;
                     break;
                 }
             }
         } else if (memSchedPolicy == enums::frfcfs) {
             Tick col_allowed_at;
-            std::tie(ret, col_allowed_at)
-                    = chooseNextFRFCFS(queue, extra_col_delay, mem_int);
+            std::tie(ret, col_allowed_at) =
+                chooseNextFRFCFS(queue, extra_col_delay, mem_int);
         } else {
             panic("No scheduling policy chosen\n");
         }
@@ -247,21 +242,19 @@ HeteroMemCtrl::chooseNext(MemPacketQueue& queue, Tick extra_col_delay,
 }
 
 std::pair<MemPacketQueue::iterator, Tick>
-HeteroMemCtrl::chooseNextFRFCFS(MemPacketQueue& queue, Tick extra_col_delay,
-                          MemInterface* mem_intr)
+HeteroMemCtrl::chooseNextFRFCFS(
+    MemPacketQueue &queue, Tick extra_col_delay, MemInterface *mem_intr)
 {
-
     auto selected_pkt_it = queue.end();
     auto nvm_pkt_it = queue.end();
     Tick col_allowed_at = MaxTick;
     Tick nvm_col_allowed_at = MaxTick;
 
     std::tie(selected_pkt_it, col_allowed_at) =
-            MemCtrl::chooseNextFRFCFS(queue, extra_col_delay, dram);
+        MemCtrl::chooseNextFRFCFS(queue, extra_col_delay, dram);
 
     std::tie(nvm_pkt_it, nvm_col_allowed_at) =
-            MemCtrl::chooseNextFRFCFS(queue, extra_col_delay, nvm);
-
+        MemCtrl::chooseNextFRFCFS(queue, extra_col_delay, nvm);
 
     // Compare DRAM and NVM and select NVM if it can issue
     // earlier than the DRAM packet
@@ -273,9 +266,8 @@ HeteroMemCtrl::chooseNextFRFCFS(MemPacketQueue& queue, Tick extra_col_delay,
     return std::make_pair(selected_pkt_it, col_allowed_at);
 }
 
-
 Tick
-HeteroMemCtrl::doBurstAccess(MemPacket* mem_pkt, MemInterface* mem_intr)
+HeteroMemCtrl::doBurstAccess(MemPacket *mem_pkt, MemInterface *mem_intr)
 {
     // mem_intr will be dram by default in HeteroMemCtrl
 
@@ -303,8 +295,8 @@ HeteroMemCtrl::doBurstAccess(MemPacket* mem_pkt, MemInterface* mem_intr)
 }
 
 bool
-HeteroMemCtrl::memBusy(MemInterface* mem_intr) {
-
+HeteroMemCtrl::memBusy(MemInterface *mem_intr)
+{
     // mem_intr in case of HeteroMemCtrl will always be dram
 
     // check ranks for refresh/wakeup - uses busStateNext, so done after
@@ -331,7 +323,7 @@ HeteroMemCtrl::memBusy(MemInterface* mem_intr) {
 }
 
 void
-HeteroMemCtrl::nonDetermReads(MemInterface* mem_intr)
+HeteroMemCtrl::nonDetermReads(MemInterface *mem_intr)
 {
     // mem_intr by default points to dram in case
     // of HeteroMemCtrl, therefore, calling nonDetermReads
@@ -340,7 +332,7 @@ HeteroMemCtrl::nonDetermReads(MemInterface* mem_intr)
 }
 
 bool
-HeteroMemCtrl::nvmWriteBlock(MemInterface* mem_intr)
+HeteroMemCtrl::nvmWriteBlock(MemInterface *mem_intr)
 {
     // mem_intr by default points to dram in case
     // of HeteroMemCtrl, therefore, calling nvmWriteBlock
@@ -351,19 +343,19 @@ HeteroMemCtrl::nvmWriteBlock(MemInterface* mem_intr)
 Tick
 HeteroMemCtrl::minReadToWriteDataGap()
 {
-    return std::min(dram->minReadToWriteDataGap(),
-                    nvm->minReadToWriteDataGap());
+    return std::min(
+        dram->minReadToWriteDataGap(), nvm->minReadToWriteDataGap());
 }
 
 Tick
 HeteroMemCtrl::minWriteToReadDataGap()
 {
-    return std::min(dram->minWriteToReadDataGap(),
-                    nvm->minWriteToReadDataGap());
+    return std::min(
+        dram->minWriteToReadDataGap(), nvm->minWriteToReadDataGap());
 }
 
 Addr
-HeteroMemCtrl::burstAlign(Addr addr, MemInterface* mem_intr) const
+HeteroMemCtrl::burstAlign(Addr addr, MemInterface *mem_intr) const
 {
     // mem_intr will point to dram interface in HeteroMemCtrl
     if (mem_intr->getAddrRange().contains(addr)) {
@@ -375,7 +367,7 @@ HeteroMemCtrl::burstAlign(Addr addr, MemInterface* mem_intr) const
 }
 
 bool
-HeteroMemCtrl::pktSizeCheck(MemPacket* mem_pkt, MemInterface* mem_intr) const
+HeteroMemCtrl::pktSizeCheck(MemPacket *mem_pkt, MemInterface *mem_intr) const
 {
     // mem_intr will point to dram interface in HeteroMemCtrl
     if (mem_pkt->isDram()) {
@@ -418,11 +410,11 @@ HeteroMemCtrl::drain()
     // if there is anything in any of our internal queues, keep track
     // of that as well
     if (!(!totalWriteQueueSize && !totalReadQueueSize && respQueue.empty() &&
-          allIntfDrained())) {
-
-        DPRINTF(Drain, "Memory controller not drained, write: %d, read: %d,"
-                " resp: %d\n", totalWriteQueueSize, totalReadQueueSize,
-                respQueue.size());
+            allIntfDrained())) {
+        DPRINTF(Drain,
+            "Memory controller not drained, write: %d, read: %d,"
+            " resp: %d\n",
+            totalWriteQueueSize, totalReadQueueSize, respQueue.size());
 
         // the only queue that is not drained automatically over time
         // is the write queue, thus kick things into action if needed

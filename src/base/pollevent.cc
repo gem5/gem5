@@ -30,7 +30,7 @@
 #include <sys/types.h>
 
 #if defined(__sun__) || defined(__SUNPRO_CC)
-#include <sys/file.h>
+#    include <sys/file.h>
 
 #endif
 
@@ -51,13 +51,11 @@
 
 namespace gem5
 {
-
 PollQueue pollQueue;
 
 /////////////////////////////////////////////////////
 //
-PollEvent::PollEvent(int _fd, int _events)
-    : queue(NULL), enabled(true)
+PollEvent::PollEvent(int _fd, int _events) : queue(NULL), enabled(true)
 {
     pfd.fd = _fd;
     pfd.events = _events;
@@ -73,7 +71,8 @@ PollEvent::~PollEvent()
 void
 PollEvent::disable()
 {
-    if (!enabled) return;
+    if (!enabled)
+        return;
     enabled = false;
 
     if (queue)
@@ -83,7 +82,8 @@ PollEvent::disable()
 void
 PollEvent::enable()
 {
-    if (enabled) return;
+    if (enabled)
+        return;
     enabled = true;
 
     if (queue)
@@ -108,16 +108,14 @@ PollEvent::unserialize(CheckpointIn &cp)
 
 /////////////////////////////////////////////////////
 //
-PollQueue::PollQueue()
-    : poll_fds(NULL), max_size(0), num_fds(0)
-{ }
+PollQueue::PollQueue() : poll_fds(NULL), max_size(0), num_fds(0) {}
 
 PollQueue::~PollQueue()
 {
     for (int i = 0; i < num_fds; i++)
         setupAsyncIO(poll_fds[0].fd, false);
 
-    delete [] poll_fds;
+    delete[] poll_fds;
 }
 
 void
@@ -143,10 +141,10 @@ PollQueue::remove(PollEvent *event)
 
     while (i < end) {
         if (*i == event) {
-           events.erase(i);
-           copy();
-           event->queue = NULL;
-           return;
+            events.erase(i);
+            copy();
+            event->queue = NULL;
+            return;
         }
 
         ++i;
@@ -170,7 +168,7 @@ PollQueue::schedule(PollEvent *event)
     // the array with an initial size of 16
     if (++num_fds > max_size) {
         if (max_size > 0) {
-            delete [] poll_fds;
+            delete[] poll_fds;
             max_size *= 2;
         } else {
             max_size = 16;
@@ -201,24 +199,26 @@ PollQueue::service()
 }
 
 template <class ArgT>
-static int fcntlHelper(int fd, int cmd, ArgT arg)
+static int
+fcntlHelper(int fd, int cmd, ArgT arg)
 {
     int retval = fcntl(fd, cmd, arg);
     if (retval == -1) {
         char *errstr = strerror(errno);
-        panic("fcntl(%d, %d, %s): \"%s\" when setting up async IO.\n",
-              errstr, fd, cmd, arg);
+        panic("fcntl(%d, %d, %s): \"%s\" when setting up async IO.\n", errstr,
+            fd, cmd, arg);
     }
     return retval;
 }
 
-static int fcntlHelper(int fd, int cmd)
+static int
+fcntlHelper(int fd, int cmd)
 {
     int retval = fcntl(fd, cmd);
     if (retval == -1) {
         char *errstr = strerror(errno);
-        panic("fcntl(%d, %d): \"%s\" when setting up async IO.\n",
-              errstr, fd, cmd);
+        panic("fcntl(%d, %d): \"%s\" when setting up async IO.\n", errstr, fd,
+            cmd);
     }
     return retval;
 }

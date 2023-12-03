@@ -38,7 +38,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 /** @file
  * This device sits in memory and reponds appropriately so the linux kernel
  * ignores the device it is trying to talk to. It is used so the kernel doesn't
@@ -54,7 +53,6 @@
 
 namespace gem5
 {
-
 class AmbaFake : public AmbaPioDevice
 {
   public:
@@ -63,7 +61,6 @@ class AmbaFake : public AmbaPioDevice
 
     virtual Tick read(PacketPtr pkt);
     virtual Tick write(PacketPtr pkt);
-
 };
 
 } // namespace gem5

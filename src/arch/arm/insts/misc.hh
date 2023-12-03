@@ -42,19 +42,18 @@
 
 namespace gem5
 {
-
 class MrsOp : public ArmISA::PredOp
 {
   protected:
     RegIndex dest;
 
     MrsOp(const char *mnem, ArmISA::ExtMachInst _machInst, OpClass __opClass,
-            RegIndex _dest) :
+        RegIndex _dest) :
         ArmISA::PredOp(mnem, _machInst, __opClass), dest(_dest)
     {}
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 class MsrBase : public ArmISA::PredOp
@@ -63,7 +62,7 @@ class MsrBase : public ArmISA::PredOp
     uint8_t byteMask;
 
     MsrBase(const char *mnem, ArmISA::ExtMachInst _machInst, OpClass __opClass,
-            uint8_t _byteMask) :
+        uint8_t _byteMask) :
         ArmISA::PredOp(mnem, _machInst, __opClass), byteMask(_byteMask)
     {}
 
@@ -76,12 +75,12 @@ class MsrImmOp : public MsrBase
     uint32_t imm;
 
     MsrImmOp(const char *mnem, ArmISA::ExtMachInst _machInst,
-             OpClass __opClass, uint32_t _imm, uint8_t _byteMask) :
+        OpClass __opClass, uint32_t _imm, uint8_t _byteMask) :
         MsrBase(mnem, _machInst, __opClass, _byteMask), imm(_imm)
     {}
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 class MsrRegOp : public MsrBase
@@ -90,12 +89,12 @@ class MsrRegOp : public MsrBase
     RegIndex op1;
 
     MsrRegOp(const char *mnem, ArmISA::ExtMachInst _machInst,
-             OpClass __opClass, RegIndex _op1, uint8_t _byteMask) :
+        OpClass __opClass, RegIndex _op1, uint8_t _byteMask) :
         MsrBase(mnem, _machInst, __opClass, _byteMask), op1(_op1)
     {}
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 class MrrcOp : public ArmISA::PredOp
@@ -107,14 +106,17 @@ class MrrcOp : public ArmISA::PredOp
     uint32_t imm;
 
     MrrcOp(const char *mnem, ArmISA::ExtMachInst _machInst, OpClass __opClass,
-           ArmISA::MiscRegIndex _op1, RegIndex _dest, RegIndex _dest2,
-           uint32_t _imm) :
-        ArmISA::PredOp(mnem, _machInst, __opClass), op1(_op1), dest(_dest),
-        dest2(_dest2), imm(_imm)
+        ArmISA::MiscRegIndex _op1, RegIndex _dest, RegIndex _dest2,
+        uint32_t _imm) :
+        ArmISA::PredOp(mnem, _machInst, __opClass),
+        op1(_op1),
+        dest(_dest),
+        dest2(_dest2),
+        imm(_imm)
     {}
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 class McrrOp : public ArmISA::PredOp
@@ -123,17 +125,20 @@ class McrrOp : public ArmISA::PredOp
     RegIndex op1;
     RegIndex op2;
     ArmISA::MiscRegIndex dest;
-    uint32_t    imm;
+    uint32_t imm;
 
     McrrOp(const char *mnem, ArmISA::ExtMachInst _machInst, OpClass __opClass,
-           RegIndex _op1, RegIndex _op2,
-           ArmISA::MiscRegIndex _dest, uint32_t _imm) :
-        ArmISA::PredOp(mnem, _machInst, __opClass), op1(_op1), op2(_op2),
-        dest(_dest), imm(_imm)
+        RegIndex _op1, RegIndex _op2, ArmISA::MiscRegIndex _dest,
+        uint32_t _imm) :
+        ArmISA::PredOp(mnem, _machInst, __opClass),
+        op1(_op1),
+        op2(_op2),
+        dest(_dest),
+        imm(_imm)
     {}
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 class ImmOp : public ArmISA::PredOp
@@ -142,12 +147,12 @@ class ImmOp : public ArmISA::PredOp
     uint64_t imm;
 
     ImmOp(const char *mnem, ArmISA::ExtMachInst _machInst, OpClass __opClass,
-             uint64_t _imm) :
+        uint64_t _imm) :
         ArmISA::PredOp(mnem, _machInst, __opClass), imm(_imm)
     {}
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 class RegImmOp : public ArmISA::PredOp
@@ -157,12 +162,12 @@ class RegImmOp : public ArmISA::PredOp
     uint64_t imm;
 
     RegImmOp(const char *mnem, ArmISA::ExtMachInst _machInst,
-             OpClass __opClass, RegIndex _dest, uint64_t _imm) :
+        OpClass __opClass, RegIndex _dest, uint64_t _imm) :
         ArmISA::PredOp(mnem, _machInst, __opClass), dest(_dest), imm(_imm)
     {}
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 class RegRegOp : public ArmISA::PredOp
@@ -172,13 +177,12 @@ class RegRegOp : public ArmISA::PredOp
     RegIndex op1;
 
     RegRegOp(const char *mnem, ArmISA::ExtMachInst _machInst,
-             OpClass __opClass, RegIndex _dest,
-             RegIndex _op1) :
+        OpClass __opClass, RegIndex _dest, RegIndex _op1) :
         ArmISA::PredOp(mnem, _machInst, __opClass), dest(_dest), op1(_op1)
     {}
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 class RegOp : public ArmISA::PredOp
@@ -187,12 +191,12 @@ class RegOp : public ArmISA::PredOp
     RegIndex dest;
 
     RegOp(const char *mnem, ArmISA::ExtMachInst _machInst, OpClass __opClass,
-             RegIndex _dest) :
+        RegIndex _dest) :
         ArmISA::PredOp(mnem, _machInst, __opClass), dest(_dest)
     {}
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 class RegImmRegOp : public ArmISA::PredOp
@@ -203,14 +207,15 @@ class RegImmRegOp : public ArmISA::PredOp
     RegIndex op1;
 
     RegImmRegOp(const char *mnem, ArmISA::ExtMachInst _machInst,
-                OpClass __opClass, RegIndex _dest, uint64_t _imm,
-                RegIndex _op1) :
+        OpClass __opClass, RegIndex _dest, uint64_t _imm, RegIndex _op1) :
         ArmISA::PredOp(mnem, _machInst, __opClass),
-        dest(_dest), imm(_imm), op1(_op1)
+        dest(_dest),
+        imm(_imm),
+        op1(_op1)
     {}
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 class RegRegRegImmOp : public ArmISA::PredOp
@@ -222,15 +227,17 @@ class RegRegRegImmOp : public ArmISA::PredOp
     uint64_t imm;
 
     RegRegRegImmOp(const char *mnem, ArmISA::ExtMachInst _machInst,
-                   OpClass __opClass, RegIndex _dest,
-                   RegIndex _op1, RegIndex _op2,
-                   uint64_t _imm) :
+        OpClass __opClass, RegIndex _dest, RegIndex _op1, RegIndex _op2,
+        uint64_t _imm) :
         ArmISA::PredOp(mnem, _machInst, __opClass),
-        dest(_dest), op1(_op1), op2(_op2), imm(_imm)
+        dest(_dest),
+        op1(_op1),
+        op2(_op2),
+        imm(_imm)
     {}
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 class RegRegRegRegOp : public ArmISA::PredOp
@@ -242,15 +249,17 @@ class RegRegRegRegOp : public ArmISA::PredOp
     RegIndex op3;
 
     RegRegRegRegOp(const char *mnem, ArmISA::ExtMachInst _machInst,
-                   OpClass __opClass, RegIndex _dest,
-                   RegIndex _op1, RegIndex _op2,
-                   RegIndex _op3) :
+        OpClass __opClass, RegIndex _dest, RegIndex _op1, RegIndex _op2,
+        RegIndex _op3) :
         ArmISA::PredOp(mnem, _machInst, __opClass),
-        dest(_dest), op1(_op1), op2(_op2), op3(_op3)
+        dest(_dest),
+        op1(_op1),
+        op2(_op2),
+        op3(_op3)
     {}
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 class RegRegRegOp : public ArmISA::PredOp
@@ -261,14 +270,15 @@ class RegRegRegOp : public ArmISA::PredOp
     RegIndex op2;
 
     RegRegRegOp(const char *mnem, ArmISA::ExtMachInst _machInst,
-                OpClass __opClass, RegIndex _dest,
-                RegIndex _op1, RegIndex _op2) :
+        OpClass __opClass, RegIndex _dest, RegIndex _op1, RegIndex _op2) :
         ArmISA::PredOp(mnem, _machInst, __opClass),
-        dest(_dest), op1(_op1), op2(_op2)
+        dest(_dest),
+        op1(_op1),
+        op2(_op2)
     {}
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 class RegRegImmOp : public ArmISA::PredOp
@@ -279,14 +289,15 @@ class RegRegImmOp : public ArmISA::PredOp
     uint64_t imm;
 
     RegRegImmOp(const char *mnem, ArmISA::ExtMachInst _machInst,
-                OpClass __opClass, RegIndex _dest,
-                RegIndex _op1, uint64_t _imm) :
+        OpClass __opClass, RegIndex _dest, RegIndex _op1, uint64_t _imm) :
         ArmISA::PredOp(mnem, _machInst, __opClass),
-        dest(_dest), op1(_op1), imm(_imm)
+        dest(_dest),
+        op1(_op1),
+        imm(_imm)
     {}
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 class MiscRegRegImmOp : public ArmISA::PredOp
@@ -297,14 +308,16 @@ class MiscRegRegImmOp : public ArmISA::PredOp
     uint64_t imm;
 
     MiscRegRegImmOp(const char *mnem, ArmISA::ExtMachInst _machInst,
-                    OpClass __opClass, ArmISA::MiscRegIndex _dest,
-                    RegIndex _op1, uint64_t _imm) :
+        OpClass __opClass, ArmISA::MiscRegIndex _dest, RegIndex _op1,
+        uint64_t _imm) :
         ArmISA::PredOp(mnem, _machInst, __opClass),
-        dest(_dest), op1(_op1), imm(_imm)
+        dest(_dest),
+        op1(_op1),
+        imm(_imm)
     {}
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 class RegMiscRegImmOp : public ArmISA::PredOp
@@ -315,14 +328,16 @@ class RegMiscRegImmOp : public ArmISA::PredOp
     uint64_t imm;
 
     RegMiscRegImmOp(const char *mnem, ArmISA::ExtMachInst _machInst,
-                    OpClass __opClass, RegIndex _dest,
-                    ArmISA::MiscRegIndex _op1, uint64_t _imm) :
+        OpClass __opClass, RegIndex _dest, ArmISA::MiscRegIndex _op1,
+        uint64_t _imm) :
         ArmISA::PredOp(mnem, _machInst, __opClass),
-        dest(_dest), op1(_op1), imm(_imm)
+        dest(_dest),
+        op1(_op1),
+        imm(_imm)
     {}
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 class RegImmImmOp : public ArmISA::PredOp
@@ -333,14 +348,15 @@ class RegImmImmOp : public ArmISA::PredOp
     uint64_t imm2;
 
     RegImmImmOp(const char *mnem, ArmISA::ExtMachInst _machInst,
-                OpClass __opClass, RegIndex _dest,
-                uint64_t _imm1, uint64_t _imm2) :
+        OpClass __opClass, RegIndex _dest, uint64_t _imm1, uint64_t _imm2) :
         ArmISA::PredOp(mnem, _machInst, __opClass),
-        dest(_dest), imm1(_imm1), imm2(_imm2)
+        dest(_dest),
+        imm1(_imm1),
+        imm2(_imm2)
     {}
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 class RegRegImmImmOp : public ArmISA::PredOp
@@ -352,14 +368,17 @@ class RegRegImmImmOp : public ArmISA::PredOp
     uint64_t imm2;
 
     RegRegImmImmOp(const char *mnem, ArmISA::ExtMachInst _machInst,
-                   OpClass __opClass, RegIndex _dest,
-                   RegIndex _op1, uint64_t _imm1, uint64_t _imm2) :
+        OpClass __opClass, RegIndex _dest, RegIndex _op1, uint64_t _imm1,
+        uint64_t _imm2) :
         ArmISA::PredOp(mnem, _machInst, __opClass),
-        dest(_dest), op1(_op1), imm1(_imm1), imm2(_imm2)
+        dest(_dest),
+        op1(_op1),
+        imm1(_imm1),
+        imm2(_imm2)
     {}
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 class RegImmRegShiftOp : public ArmISA::PredOp
@@ -372,29 +391,30 @@ class RegImmRegShiftOp : public ArmISA::PredOp
     ArmISA::ArmShiftType shiftType;
 
     RegImmRegShiftOp(const char *mnem, ArmISA::ExtMachInst _machInst,
-                     OpClass __opClass, RegIndex _dest,
-                     uint64_t _imm, RegIndex _op1,
-                     int32_t _shiftAmt, ArmISA::ArmShiftType _shiftType) :
+        OpClass __opClass, RegIndex _dest, uint64_t _imm, RegIndex _op1,
+        int32_t _shiftAmt, ArmISA::ArmShiftType _shiftType) :
         ArmISA::PredOp(mnem, _machInst, __opClass),
-        dest(_dest), imm(_imm), op1(_op1),
-        shiftAmt(_shiftAmt), shiftType(_shiftType)
+        dest(_dest),
+        imm(_imm),
+        op1(_op1),
+        shiftAmt(_shiftAmt),
+        shiftType(_shiftType)
     {}
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 class UnknownOp : public ArmISA::PredOp
 {
   protected:
-
-    UnknownOp(const char *mnem, ArmISA::ExtMachInst _machInst,
-              OpClass __opClass) :
+    UnknownOp(
+        const char *mnem, ArmISA::ExtMachInst _machInst, OpClass __opClass) :
         ArmISA::PredOp(mnem, _machInst, __opClass)
     {}
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -411,14 +431,13 @@ class McrMrcMiscInst : public ArmISA::ArmStaticInst
 
   public:
     McrMrcMiscInst(const char *_mnemonic, ArmISA::ExtMachInst _machInst,
-                   uint64_t _iss, ArmISA::MiscRegIndex _miscReg);
+        uint64_t _iss, ArmISA::MiscRegIndex _miscReg);
 
-    Fault execute(ExecContext *xc,
-                  trace::InstRecord *traceData) const override;
+    Fault execute(
+        ExecContext *xc, trace::InstRecord *traceData) const override;
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
-
+        Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -429,27 +448,25 @@ class McrMrcImplDefined : public McrMrcMiscInst
 {
   public:
     McrMrcImplDefined(const char *_mnemonic, ArmISA::ExtMachInst _machInst,
-                      uint64_t _iss, ArmISA::MiscRegIndex _miscReg);
+        uint64_t _iss, ArmISA::MiscRegIndex _miscReg);
 
-    Fault execute(ExecContext *xc,
-                  trace::InstRecord *traceData) const override;
+    Fault execute(
+        ExecContext *xc, trace::InstRecord *traceData) const override;
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
-
+        Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 class TlbiOp : public MiscRegRegImmOp
 {
   protected:
-    TlbiOp(const char *mnem, ArmISA::ExtMachInst _machInst,
-           OpClass __opClass, ArmISA::MiscRegIndex _dest,
-           RegIndex _op1, uint64_t _imm) :
+    TlbiOp(const char *mnem, ArmISA::ExtMachInst _machInst, OpClass __opClass,
+        ArmISA::MiscRegIndex _dest, RegIndex _op1, uint64_t _imm) :
         MiscRegRegImmOp(mnem, _machInst, __opClass, _dest, _op1, _imm)
     {}
 
-    void performTlbi(ExecContext *xc,
-                     ArmISA::MiscRegIndex dest_idx, RegVal value) const;
+    void performTlbi(
+        ExecContext *xc, ArmISA::MiscRegIndex dest_idx, RegVal value) const;
 };
 
 } // namespace gem5

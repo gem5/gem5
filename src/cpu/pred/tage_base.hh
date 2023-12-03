@@ -58,10 +58,8 @@
 
 namespace gem5
 {
-
 namespace branch_prediction
 {
-
 class TAGEBase : public SimObject
 {
   public:
@@ -77,7 +75,7 @@ class TAGEBase : public SimObject
         int8_t ctr;
         uint16_t tag;
         uint8_t u;
-        TageEntry() : ctr(0), tag(0), u(0) { }
+        TageEntry() : ctr(0), tag(0), u(0) {}
     };
 
     // Folded History Table - compressed history
@@ -91,19 +89,18 @@ class TAGEBase : public SimObject
         int outpoint;
         int bufferSize;
 
-        FoldedHistory()
-        {
-            comp = 0;
-        }
+        FoldedHistory() { comp = 0; }
 
-        void init(int original_length, int compressed_length)
+        void
+        init(int original_length, int compressed_length)
         {
             origLength = original_length;
             compLength = compressed_length;
             outpoint = original_length % compressed_length;
         }
 
-        void update(uint8_t * h)
+        void
+        update(uint8_t *h)
         {
             comp = (comp << 1) | h[0];
             comp ^= h[origLength] << outpoint;
@@ -113,7 +110,6 @@ class TAGEBase : public SimObject
     };
 
   public:
-
     // provider type
     enum
     {
@@ -158,18 +154,24 @@ class TAGEBase : public SimObject
         // for stats purposes
         unsigned provider;
 
-        BranchInfo(const TAGEBase &tage)
-            : pathHist(0), ptGhist(0),
-              hitBank(0), hitBankIndex(0),
-              altBank(0), altBankIndex(0),
-              bimodalIndex(0),
-              tagePred(false), altTaken(false),
-              condBranch(false), longestMatchPred(false),
-              pseudoNewAlloc(false), branchPC(0),
-              provider(-1)
+        BranchInfo(const TAGEBase &tage) :
+            pathHist(0),
+            ptGhist(0),
+            hitBank(0),
+            hitBankIndex(0),
+            altBank(0),
+            altBankIndex(0),
+            bimodalIndex(0),
+            tagePred(false),
+            altTaken(false),
+            condBranch(false),
+            longestMatchPred(false),
+            pseudoNewAlloc(false),
+            branchPC(0),
+            provider(-1)
         {
             int sz = tage.nHistoryTables + 1;
-            storage = new int [sz * 5];
+            storage = new int[sz * 5];
             tableIndices = storage;
             tableTags = storage + sz;
             ci = tableTags + sz;
@@ -177,10 +179,7 @@ class TAGEBase : public SimObject
             ct1 = ct0 + sz;
         }
 
-        virtual ~BranchInfo()
-        {
-            delete[] storage;
-        }
+        virtual ~BranchInfo() { delete[] storage; }
     };
 
     virtual BranchInfo *makeBranchInfo();
@@ -227,8 +226,8 @@ class TAGEBase : public SimObject
      * @param taken Actual branch outcome.
      * @param nbits Counter width.
      */
-    template<typename T>
-    static void ctrUpdate(T & ctr, bool taken, int nbits);
+    template <typename T>
+    static void ctrUpdate(T &ctr, bool taken, int nbits);
 
     /**
      * Updates an unsigned counter based on up/down parameter
@@ -237,7 +236,7 @@ class TAGEBase : public SimObject
      * If true it is incremented, if false it is decremented
      * @param nbits Counter width.
      */
-    static void unsignedCtrUpdate(uint8_t & ctr, bool up, unsigned nbits);
+    static void unsignedCtrUpdate(uint8_t &ctr, bool up, unsigned nbits);
 
     /**
      * Get a branch prediction from the bimodal
@@ -246,7 +245,7 @@ class TAGEBase : public SimObject
      * @param bi Pointer to information on the
      * prediction.
      */
-    virtual bool getBimodePred(Addr pc, BranchInfo* bi) const;
+    virtual bool getBimodePred(Addr pc, BranchInfo *bi) const;
 
     /**
      * Updates the bimodal predictor.
@@ -255,17 +254,17 @@ class TAGEBase : public SimObject
      * @param bi Pointer to information on the prediction
      * recorded at prediction time.
      */
-    void baseUpdate(Addr pc, bool taken, BranchInfo* bi);
+    void baseUpdate(Addr pc, bool taken, BranchInfo *bi);
 
-   /**
-    * (Speculatively) updates the global branch history.
-    * @param h Reference to pointer to global branch history.
-    * @param dir (Predicted) outcome to update the histories
-    * with.
-    * @param tab
-    * @param PT Reference to path history.
-    */
-    void updateGHist(uint8_t * &h, bool dir, uint8_t * tab, int &PT);
+    /**
+     * (Speculatively) updates the global branch history.
+     * @param h Reference to pointer to global branch history.
+     * @param dir (Predicted) outcome to update the histories
+     * with.
+     * @param tab
+     * @param PT Reference to path history.
+     */
+    void updateGHist(uint8_t *&h, bool dir, uint8_t *tab, int &PT);
 
     /**
      * Update TAGE. Called at execute to repair histories on a misprediction
@@ -277,25 +276,23 @@ class TAGEBase : public SimObject
      * @param bi Pointer to information on the prediction
      * recorded at prediction time.
      */
-    void update(ThreadID tid, Addr branch_pc, bool taken, BranchInfo* bi);
+    void update(ThreadID tid, Addr branch_pc, bool taken, BranchInfo *bi);
 
-   /**
-    * (Speculatively) updates global histories (path and direction).
-    * Also recomputes compressed (folded) histories based on the
-    * branch direction.
-    * @param tid The thread ID to select the histories
-    * to update.
-    * @param branch_pc The unshifted branch PC.
-    * @param taken (Predicted) branch direction.
-    * @param b Wrapping pointer to BranchInfo (to allow
-    * storing derived class prediction information in the
-    * base class).
-    */
-    virtual void updateHistories(
-        ThreadID tid, Addr branch_pc, bool taken, BranchInfo* b,
-        bool speculative,
-        const StaticInstPtr & inst = nullStaticInstPtr,
-        Addr target = MaxAddr);
+    /**
+     * (Speculatively) updates global histories (path and direction).
+     * Also recomputes compressed (folded) histories based on the
+     * branch direction.
+     * @param tid The thread ID to select the histories
+     * to update.
+     * @param branch_pc The unshifted branch PC.
+     * @param taken (Predicted) branch direction.
+     * @param b Wrapping pointer to BranchInfo (to allow
+     * storing derived class prediction information in the
+     * base class).
+     */
+    virtual void updateHistories(ThreadID tid, Addr branch_pc, bool taken,
+        BranchInfo *b, bool speculative,
+        const StaticInstPtr &inst = nullStaticInstPtr, Addr target = MaxAddr);
 
     /**
      * Restores speculatively updated path and direction histories.
@@ -310,8 +307,7 @@ class TAGEBase : public SimObject
      * @param target The correct branch target
      * @post bp_history points to valid memory.
      */
-    virtual void squash(
-        ThreadID tid, bool taken, BranchInfo *bi, Addr target);
+    virtual void squash(ThreadID tid, bool taken, BranchInfo *bi, Addr target);
 
     /**
      * Update TAGE for conditional branches.
@@ -325,9 +321,9 @@ class TAGEBase : public SimObject
      * @param preAdjustAlloc call adjustAlloc before checking
      * pseudo newly allocated entries
      */
-    virtual void condBranchUpdate(
-        ThreadID tid, Addr branch_pc, bool taken, BranchInfo* bi,
-        int nrand, Addr corrTarget, bool pred, bool preAdjustAlloc = false);
+    virtual void condBranchUpdate(ThreadID tid, Addr branch_pc, bool taken,
+        BranchInfo *bi, int nrand, Addr corrTarget, bool pred,
+        bool preAdjustAlloc = false);
 
     /**
      * TAGE prediction called from TAGE::predict
@@ -338,7 +334,7 @@ class TAGEBase : public SimObject
      * @param bi Pointer to the BranchInfo
      */
     bool tagePredict(
-        ThreadID tid, Addr branch_pc, bool cond_branch, BranchInfo* bi);
+        ThreadID tid, Addr branch_pc, bool cond_branch, BranchInfo *bi);
 
     /**
      * Update the stats
@@ -346,7 +342,7 @@ class TAGEBase : public SimObject
      * @param bi Pointer to information on the prediction
      * recorded at prediction time.
      */
-    virtual void updateStats(bool taken, BranchInfo* bi);
+    virtual void updateStats(bool taken, BranchInfo *bi);
 
     /**
      * Instantiates the TAGE table entries
@@ -364,26 +360,26 @@ class TAGEBase : public SimObject
      * all the different history lengths
      */
     virtual void calculateIndicesAndTags(
-        ThreadID tid, Addr branch_pc, BranchInfo* bi);
+        ThreadID tid, Addr branch_pc, BranchInfo *bi);
 
     /**
      * Calculation of the index for useAltPredForNewlyAllocated
      * On this base TAGE implementation it is always 0
      */
-    virtual unsigned getUseAltIdx(BranchInfo* bi, Addr branch_pc);
+    virtual unsigned getUseAltIdx(BranchInfo *bi, Addr branch_pc);
 
     /**
      * Extra calculation to tell whether TAGE allocaitons may happen or not
      * on an update
      * For this base TAGE implementation it does nothing
      */
-    virtual void adjustAlloc(bool & alloc, bool taken, bool pred_taken);
+    virtual void adjustAlloc(bool &alloc, bool taken, bool pred_taken);
 
     /**
      * Handles Allocation and U bits reset on an update
      */
     virtual void handleAllocAndUReset(
-        bool alloc, bool taken, BranchInfo* bi, int nrand);
+        bool alloc, bool taken, BranchInfo *bi, int nrand);
 
     /**
      * Handles the U bits reset
@@ -393,26 +389,26 @@ class TAGEBase : public SimObject
     /**
      * Handles the update of the TAGE entries
      */
-    virtual void handleTAGEUpdate(
-        Addr branch_pc, bool taken, BranchInfo* bi);
+    virtual void handleTAGEUpdate(Addr branch_pc, bool taken, BranchInfo *bi);
 
     /**
      * Algorithm for resetting a single U counter
      */
-    virtual void resetUctr(uint8_t & u);
+    virtual void resetUctr(uint8_t &u);
 
     /**
      * Extra steps for calculating altTaken
      * For this base TAGE class it does nothing
      */
-    virtual void extraAltCalc(BranchInfo* bi);
+    virtual void extraAltCalc(BranchInfo *bi);
 
-    virtual bool isHighConfidence(BranchInfo* bi) const
+    virtual bool
+    isHighConfidence(BranchInfo *bi) const
     {
         return false;
     }
 
-    void btbUpdate(ThreadID tid, Addr branch_addr, BranchInfo* &bi);
+    void btbUpdate(ThreadID tid, Addr branch_addr, BranchInfo *&bi);
     unsigned getGHR(ThreadID tid, BranchInfo *bi) const;
     int8_t getCtr(int hitBank, int hitBankIndex) const;
     unsigned getTageCtrBits() const;
@@ -451,7 +447,7 @@ class TAGEBase : public SimObject
         uint8_t *globalHistory;
 
         // Pointer to most recent branch outcome
-        uint8_t* gHist;
+        uint8_t *gHist;
 
         // Index to most recent branch outcome
         int ptGhist;
@@ -466,7 +462,7 @@ class TAGEBase : public SimObject
     /**
      * Initialization of the folded histories
      */
-    virtual void initFoldedHistories(ThreadHistory & history);
+    virtual void initFoldedHistories(ThreadHistory &history);
 
     int *histLengths;
     int *tableIndices;

@@ -51,10 +51,8 @@
 
 namespace gem5
 {
-
 namespace fastmodel
 {
-
 class CortexA76Cluster;
 
 template <class Types>
@@ -70,10 +68,9 @@ class ScxEvsCortexA76 : public Types::Base, public Iris::BaseCpuEvs
     ClockRateControlInitiatorSocket clockRateControl;
     ClockRateControlInitiatorSocket periphClockRateControl;
 
-    using TlmGicTarget = sc_gem5::TlmTargetBaseWrapper<
-        64, svp_gicv3_comms::gicv3_comms_fw_if,
-        svp_gicv3_comms::gicv3_comms_bw_if, 1,
-        sc_core::SC_ONE_OR_MORE_BOUND>;
+    using TlmGicTarget = sc_gem5::TlmTargetBaseWrapper<64,
+        svp_gicv3_comms::gicv3_comms_fw_if, svp_gicv3_comms::gicv3_comms_bw_if,
+        1, sc_core::SC_ONE_OR_MORE_BOUND>;
 
     template <typename T>
     using SignalInitiator = amba_pv::signal_master_port<T>;
@@ -117,7 +114,9 @@ class ScxEvsCortexA76 : public Types::Base, public Iris::BaseCpuEvs
         Base::end_of_elaboration();
         Base::start_of_simulation();
     }
-    void start_of_simulation() override {}
+    void
+    start_of_simulation() override
+    {}
 
     void setClkPeriod(Tick clk_period) override;
 

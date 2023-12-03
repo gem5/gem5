@@ -39,18 +39,16 @@
 
 namespace gem5
 {
-
 std::string
 htmFailureToStr(HtmFailureFaultCause cause)
 {
     static const std::map<HtmFailureFaultCause, std::string> cause_to_str = {
-        { HtmFailureFaultCause::EXPLICIT, "explicit" },
-        { HtmFailureFaultCause::NEST, "nesting_limit" },
-        { HtmFailureFaultCause::SIZE, "transaction_size" },
-        { HtmFailureFaultCause::EXCEPTION, "exception" },
-        { HtmFailureFaultCause::MEMORY, "memory_conflict" },
-        { HtmFailureFaultCause::OTHER, "other" }
-    };
+        {HtmFailureFaultCause::EXPLICIT, "explicit"},
+        {HtmFailureFaultCause::NEST, "nesting_limit"},
+        {HtmFailureFaultCause::SIZE, "transaction_size"},
+        {HtmFailureFaultCause::EXCEPTION, "exception"},
+        {HtmFailureFaultCause::MEMORY, "memory_conflict"},
+        {HtmFailureFaultCause::OTHER, "other"}};
 
     auto it = cause_to_str.find(cause);
     return it == cause_to_str.end() ? "Unrecognized Failure" : it->second;
@@ -60,11 +58,10 @@ std::string
 htmFailureToStr(HtmCacheFailure rc)
 {
     static const std::map<HtmCacheFailure, std::string> rc_to_str = {
-        { HtmCacheFailure::NO_FAIL, "NO_FAIL" },
-        { HtmCacheFailure::FAIL_SELF, "FAIL_SELF" },
-        { HtmCacheFailure::FAIL_REMOTE, "FAIL_REMOTE" },
-        { HtmCacheFailure::FAIL_OTHER, "FAIL_OTHER" }
-    };
+        {HtmCacheFailure::NO_FAIL, "NO_FAIL"},
+        {HtmCacheFailure::FAIL_SELF, "FAIL_SELF"},
+        {HtmCacheFailure::FAIL_REMOTE, "FAIL_REMOTE"},
+        {HtmCacheFailure::FAIL_OTHER, "FAIL_OTHER"}};
 
     auto it = rc_to_str.find(rc);
     return it == rc_to_str.end() ? "Unrecognized Failure" : it->second;

@@ -47,27 +47,20 @@
 
 namespace gem5
 {
+PciHost::PciHost(const PciHostParams &p) : PioDevice(p) {}
 
-PciHost::PciHost(const PciHostParams &p)
-    : PioDevice(p)
-{
-}
-
-PciHost::~PciHost()
-{
-}
+PciHost::~PciHost() {}
 
 PciHost::DeviceInterface
 PciHost::registerDevice(PciDevice *device, PciBusAddr bus_addr, PciIntPin pin)
 {
     auto map_entry = devices.emplace(bus_addr, device);
 
-    DPRINTF(PciHost, "%02x:%02x.%i: Registering device\n",
-            bus_addr.bus, bus_addr.dev, bus_addr.func);
+    DPRINTF(PciHost, "%02x:%02x.%i: Registering device\n", bus_addr.bus,
+        bus_addr.dev, bus_addr.func);
 
-    fatal_if(!map_entry.second,
-             "%02x:%02x.%i: PCI bus ID collision\n",
-             bus_addr.bus, bus_addr.dev, bus_addr.func);
+    fatal_if(!map_entry.second, "%02x:%02x.%i: PCI bus ID collision\n",
+        bus_addr.bus, bus_addr.dev, bus_addr.func);
 
     return DeviceInterface(*this, bus_addr, pin);
 }
@@ -87,18 +80,15 @@ PciHost::getDevice(const PciBusAddr &addr) const
 }
 
 PciHost::DeviceInterface::DeviceInterface(
-    PciHost &_host,
-    PciBusAddr &bus_addr, PciIntPin interrupt_pin)
-    : host(_host),
-      busAddr(bus_addr), interruptPin(interrupt_pin)
-{
-}
+    PciHost &_host, PciBusAddr &bus_addr, PciIntPin interrupt_pin) :
+    host(_host), busAddr(bus_addr), interruptPin(interrupt_pin)
+{}
 
 const std::string
 PciHost::DeviceInterface::name() const
 {
-    return csprintf("%s.interface[%02x:%02x.%i]",
-                    host.name(), busAddr.bus, busAddr.dev, busAddr.func);
+    return csprintf("%s.interface[%02x:%02x.%i]", host.name(), busAddr.bus,
+        busAddr.dev, busAddr.func);
 }
 
 void
@@ -117,21 +107,18 @@ PciHost::DeviceInterface::clearInt()
     host.clearInt(busAddr, interruptPin);
 }
 
+GenericPciHost::GenericPciHost(const GenericPciHostParams &p) :
+    PciHost(p),
+    platform(*p.platform),
+    confBase(p.conf_base),
+    confSize(p.conf_size),
+    confDeviceBits(p.conf_device_bits),
+    pciPioBase(p.pci_pio_base),
+    pciMemBase(p.pci_mem_base),
+    pciDmaBase(p.pci_dma_base)
+{}
 
-GenericPciHost::GenericPciHost(const GenericPciHostParams &p)
-    : PciHost(p),
-      platform(*p.platform),
-      confBase(p.conf_base), confSize(p.conf_size),
-      confDeviceBits(p.conf_device_bits),
-      pciPioBase(p.pci_pio_base), pciMemBase(p.pci_mem_base),
-      pciDmaBase(p.pci_dma_base)
-{
-}
-
-GenericPciHost::~GenericPciHost()
-{
-}
-
+GenericPciHost::~GenericPciHost() {}
 
 Tick
 GenericPciHost::read(PacketPtr pkt)
@@ -140,9 +127,8 @@ GenericPciHost::read(PacketPtr pkt)
     const Addr size(pkt->getSize());
 
     DPRINTF(PciHost, "%02x:%02x.%i: read: offset=0x%x, size=0x%x\n",
-            dev_addr.first.bus, dev_addr.first.dev, dev_addr.first.func,
-            dev_addr.second,
-            size);
+        dev_addr.first.bus, dev_addr.first.dev, dev_addr.first.func,
+        dev_addr.second, size);
 
     PciDevice *const pci_dev(getDevice(dev_addr.first));
     if (pci_dev) {
@@ -163,14 +149,13 @@ GenericPciHost::write(PacketPtr pkt)
     const auto dev_addr(decodeAddress(pkt->getAddr() - confBase));
 
     DPRINTF(PciHost, "%02x:%02x.%i: write: offset=0x%x, size=0x%x\n",
-            dev_addr.first.bus, dev_addr.first.dev, dev_addr.first.func,
-            dev_addr.second,
-            pkt->getSize());
+        dev_addr.first.bus, dev_addr.first.dev, dev_addr.first.func,
+        dev_addr.second, pkt->getSize());
 
     PciDevice *const pci_dev(getDevice(dev_addr.first));
     panic_if(!pci_dev,
-             "%02x:%02x.%i: Write to config space on non-existent PCI device\n",
-             dev_addr.first.bus, dev_addr.first.dev, dev_addr.first.func);
+        "%02x:%02x.%i: Write to config space on non-existent PCI device\n",
+        dev_addr.first.bus, dev_addr.first.dev, dev_addr.first.func);
 
     // @todo Remove this after testing
     pkt->headerDelay = pkt->payloadDelay = 0;
@@ -181,7 +166,7 @@ GenericPciHost::write(PacketPtr pkt)
 AddrRangeList
 GenericPciHost::getAddrRanges() const
 {
-    return AddrRangeList({ RangeSize(confBase, confSize) });
+    return AddrRangeList({RangeSize(confBase, confSize)});
 }
 
 std::pair<PciBusAddr, Addr>
@@ -190,13 +175,10 @@ GenericPciHost::decodeAddress(Addr addr)
     const Addr offset(addr & mask(confDeviceBits));
     const Addr bus_addr(addr >> confDeviceBits);
 
-    return std::make_pair(
-        PciBusAddr(bits(bus_addr, 15, 8),
-                   bits(bus_addr,  7, 3),
-                   bits(bus_addr,  2, 0)),
+    return std::make_pair(PciBusAddr(bits(bus_addr, 15, 8),
+                              bits(bus_addr, 7, 3), bits(bus_addr, 2, 0)),
         offset);
 }
-
 
 void
 GenericPciHost::postInt(const PciBusAddr &addr, PciIntPin pin)
@@ -209,7 +191,6 @@ GenericPciHost::clearInt(const PciBusAddr &addr, PciIntPin pin)
 {
     platform.clearPciInt(mapPciInterrupt(addr, pin));
 }
-
 
 uint32_t
 GenericPciHost::mapPciInterrupt(const PciBusAddr &addr, PciIntPin pin) const

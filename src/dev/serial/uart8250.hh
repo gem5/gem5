@@ -42,7 +42,6 @@
 
 namespace gem5
 {
-
 const uint8_t UART_MCR_LOOP = 0x10;
 
 class Terminal;
@@ -52,15 +51,15 @@ class Uart8250 : public Uart
 {
   protected:
     BitUnion8(Ier)
-        Bitfield<0> rdi; // Receive data available interrupt.
+        Bitfield<0> rdi;  // Receive data available interrupt.
         Bitfield<1> thri; // Transmit holding register interrupt.
         Bitfield<2> rlsi; // Receive line status interrupt.
-        Bitfield<3> msi; // Modem status interrupt.
+        Bitfield<3> msi;  // Modem status interrupt.
     EndBitUnion(Ier)
 
     BitUnion8(Iir)
         Bitfield<0> pending; // 0 = pending, 1 = not pending.
-        Bitfield<2, 1> id; // ID of highest priority interrupt.
+        Bitfield<2, 1> id;   // ID of highest priority interrupt.
         Bitfield<7, 3> zeroes;
     EndBitUnion(Iir)
 
@@ -78,7 +77,7 @@ class Uart8250 : public Uart
         Bitfield<2> parityError;
         Bitfield<3> framingError;
         Bitfield<4> breakCond;
-        Bitfield<5> tbe; // Transmit buffer empty.
+        Bitfield<5> tbe;     // Transmit buffer empty.
         Bitfield<6> txEmpty; // Transmitter empty.
         Bitfield<7> unused;
     EndBitUnion(Lsr)
@@ -104,15 +103,22 @@ class Uart8250 : public Uart
           public:
             PairedRegister(RegisterBase &reg1, RegisterBase &reg2) :
                 RegisterBase(reg1.name() + "/" + reg2.name(), reg1.size()),
-                _reg1(reg1), _reg2(reg2)
+                _reg1(reg1),
+                _reg2(reg2)
             {
                 panic_if(reg1.size() != reg2.size(),
-                        "Mismatched paired register sizes %d, %d",
-                        reg1.size(), reg2.size());
+                    "Mismatched paired register sizes %d, %d", reg1.size(),
+                    reg2.size());
             }
 
-            void serialize(std::ostream &os) const override {}
-            bool unserialize(const std::string &s) override { return true; }
+            void
+            serialize(std::ostream &os) const override
+            {}
+            bool
+            unserialize(const std::string &s) override
+            {
+                return true;
+            }
 
             void
             reset() override
@@ -132,7 +138,11 @@ class Uart8250 : public Uart
                 PairedRegister(reg1, reg2), selected(&reg1)
             {}
 
-            void select(bool second) { selected = second ? &_reg2 : &_reg1; }
+            void
+            select(bool second)
+            {
+                selected = second ? &_reg2 : &_reg1;
+            }
 
             const std::string &
             name() const override
@@ -140,13 +150,21 @@ class Uart8250 : public Uart
                 return selected->name();
             }
 
-            void read(void *buf) override { selected->read(buf); }
+            void
+            read(void *buf) override
+            {
+                selected->read(buf);
+            }
             void
             read(void *buf, off_t offset, size_t bytes) override
             {
                 selected->read(buf, offset, bytes);
             }
-            void write(const void *buf) override { selected->write(buf); }
+            void
+            write(const void *buf) override
+            {
+                selected->write(buf);
+            }
             void
             write(const void *buf, off_t offset, size_t bytes) override
             {
@@ -159,13 +177,21 @@ class Uart8250 : public Uart
           public:
             using PairedRegister::PairedRegister;
 
-            void read(void *buf) override { _reg1.read(buf); }
+            void
+            read(void *buf) override
+            {
+                _reg1.read(buf);
+            }
             void
             read(void *buf, off_t offset, size_t bytes) override
             {
                 _reg1.read(buf, offset, bytes);
             }
-            void write(const void *buf) override { _reg2.write(buf); }
+            void
+            write(const void *buf) override
+            {
+                _reg2.write(buf);
+            }
             void
             write(const void *buf, off_t offset, size_t bytes) override
             {
@@ -232,12 +258,15 @@ class Uart8250 : public Uart
      */
     void dataAvailable() override;
 
-
     /**
      * Return if we have an interrupt pending
      * @return interrupt status
      */
-    virtual bool intStatus() { return status ? true : false; }
+    virtual bool
+    intStatus()
+    {
+        return status ? true : false;
+    }
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;

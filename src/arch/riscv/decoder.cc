@@ -35,19 +35,18 @@
 
 namespace gem5
 {
-
 namespace RiscvISA
 {
-
 Decoder::Decoder(const RiscvDecoderParams &p) : InstDecoder(p, &machInst)
 {
-    ISA *isa = dynamic_cast<ISA*>(p.isa);
+    ISA *isa = dynamic_cast<ISA *>(p.isa);
     vlen = isa->getVecLenInBits();
     elen = isa->getVecElemLenInBits();
     reset();
 }
 
-void Decoder::reset()
+void
+Decoder::reset()
 {
     aligned = true;
     mid = false;
@@ -63,8 +62,8 @@ Decoder::moreBytes(const PCStateBase &pc, Addr fetchPC)
     constexpr size_t mid_bit = sizeof(machInst) * 4 - 1;
 
     auto inst = letoh(machInst);
-    DPRINTF(Decode, "Requesting bytes 0x%08x from address %#x\n", inst,
-            fetchPC);
+    DPRINTF(
+        Decode, "Requesting bytes 0x%08x from address %#x\n", inst, fetchPC);
 
     bool aligned = pc.instAddr() % sizeof(machInst) == 0;
     if (aligned) {
@@ -93,7 +92,7 @@ StaticInstPtr
 Decoder::decode(ExtMachInst mach_inst, Addr addr)
 {
     DPRINTF(Decode, "Decoding instruction 0x%08x at address %#x\n",
-            mach_inst.instBits, addr);
+        mach_inst.instBits, addr);
 
     StaticInstPtr &si = instMap[mach_inst];
     if (!si)
@@ -101,8 +100,8 @@ Decoder::decode(ExtMachInst mach_inst, Addr addr)
 
     si->size(compressed(mach_inst) ? 2 : 4);
 
-    DPRINTF(Decode, "Decode: Decoded %s instruction: %#x\n",
-            si->getName(), mach_inst);
+    DPRINTF(Decode, "Decode: Decoded %s instruction: %#x\n", si->getName(),
+        mach_inst);
     return si;
 }
 
@@ -123,9 +122,9 @@ Decoder::decode(PCStateBase &_next_pc)
         next_pc.compressed(false);
     }
 
-    emi.vl      = next_pc.vl();
-    emi.vtype8  = next_pc.vtype() & 0xff;
-    emi.vill    = next_pc.vtype().vill;
+    emi.vl = next_pc.vl();
+    emi.vtype8 = next_pc.vtype() & 0xff;
+    emi.vill = next_pc.vtype().vill;
     emi.rv_type = static_cast<int>(next_pc.rvType());
 
     return decode(emi, next_pc.instAddr());

@@ -61,7 +61,6 @@
 
 namespace gem5
 {
-
 class CheckpointIn;
 
 /** This class allows a config file to be read into gem5 (generating the
@@ -86,11 +85,15 @@ class CxxConfigManager
       public:
         Exception(const std::string &name_, const std::string &message_) :
             name(name_), message(message_)
-        { }
+        {}
 
-        const char *what() const throw() { return message.c_str(); }
+        const char *
+        what() const throw()
+        {
+            return message.c_str();
+        }
 
-        ~Exception() throw() { }
+        ~Exception() throw() {}
     };
 
     /** Name substitution when instantiating any object whose name starts
@@ -103,11 +106,10 @@ class CxxConfigManager
         std::string fromPrefix;
         std::string toPrefix;
 
-        Renaming(const std::string &from_prefix,
-            const std::string &to_prefix) :
-            fromPrefix(from_prefix),
-            toPrefix(to_prefix)
-        { }
+        Renaming(
+            const std::string &from_prefix, const std::string &to_prefix) :
+            fromPrefix(from_prefix), toPrefix(to_prefix)
+        {}
     };
 
   public:
@@ -162,10 +164,13 @@ class CxxConfigManager
       public:
         SimObjectResolver(CxxConfigManager &configManager_) :
             configManager(configManager_)
-        { }
+        {}
 
-        SimObject *resolveSimObject(const std::string &name)
-        { return &(configManager.getObject<SimObject>(name)); }
+        SimObject *
+        resolveSimObject(const std::string &name)
+        {
+            return &(configManager.getObject<SimObject>(name));
+        }
     };
 
     /** Singleton instance of SimObjectResolver */
@@ -207,8 +212,8 @@ class CxxConfigManager
      *  </ul>
      *  After the first call, this function will return
      *  objectsByName[object_name] */
-    SimObject *findObject(const std::string &object_name,
-        bool visit_children = false);
+    SimObject *findObject(
+        const std::string &object_name, bool visit_children = false);
 
     /** Find the parameters for the named object.  Returns NULL if the
      *  object isn't in the configuration.  For the first call with a
@@ -235,21 +240,22 @@ class CxxConfigManager
     /** Find an object from objectsByName with a type-checking cast.
      *  This function is provided for manipulating objects after
      *  instantiate as it assumes the named object exists. */
-    template<typename SimObjectType>
+    template <typename SimObjectType>
     SimObjectType &
     getObject(const std::string &object_name)
     {
         if (objectsByName.find(object_name) == objectsByName.end()) {
-            throw Exception("", csprintf("No sim object named: %s",
-                object_name));
+            throw Exception(
+                "", csprintf("No sim object named: %s", object_name));
         }
 
-        SimObjectType *object = dynamic_cast<SimObjectType *>(
-            objectsByName[object_name]);
+        SimObjectType *object =
+            dynamic_cast<SimObjectType *>(objectsByName[object_name]);
 
         if (!object) {
             throw Exception("", csprintf("Sim object: %s  has the wrong"
-                " type", object_name));
+                                         " type",
+                                    object_name));
         }
 
         return *object;
@@ -264,8 +270,8 @@ class CxxConfigManager
 
     /** Parse a port string of the form 'path(.path)*.port[index]' into
      *  path, port and index */
-    static void parsePort(const std::string &inp,
-        std::string &path, std::string &port, unsigned int &index);
+    static void parsePort(const std::string &inp, std::string &path,
+        std::string &port, unsigned int &index);
 
     /** Build all objects (if build_all is true, otherwise objects must
      *  have been individually findObject-ed and added to the traversal
@@ -300,7 +306,11 @@ class CxxConfigManager
 
     /** Get the resolver used to map SimObject names to SimObjects for
      *  checkpoint restore */
-    SimObjectResolver &getSimObjectResolver() { return simObjectResolver; }
+    SimObjectResolver &
+    getSimObjectResolver()
+    {
+        return simObjectResolver;
+    }
 
     /** Convenience functions for calling set... member functions on a
      *  CxxConfigParams for an object.  These functions throw Exception

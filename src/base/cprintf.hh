@@ -39,9 +39,8 @@
 
 namespace gem5
 {
-
-namespace cp {
-
+namespace cp
+{
 struct Print
 {
   protected:
@@ -72,7 +71,7 @@ struct Print
 
     template <typename T>
     int
-    getNumber(const T& data)
+    getNumber(const T &data)
     {
         return 0;
     }
@@ -99,23 +98,23 @@ struct Print
         }
 
         switch (fmt.format) {
-          case Format::Character:
+        case Format::Character:
             formatChar(stream, data, fmt);
             break;
 
-          case Format::Integer:
+        case Format::Integer:
             formatInteger(stream, data, fmt);
             break;
 
-          case Format::Floating:
+        case Format::Floating:
             formatFloat(stream, data, fmt);
             break;
 
-          case Format::String:
+        case Format::String:
             formatString(stream, data, fmt);
             break;
 
-          default:
+        default:
             stream << "<bad format>";
             break;
         }
@@ -132,33 +131,34 @@ ccprintf(cp::Print &print)
     print.endArgs();
 }
 
-
-template<typename T, typename ...Args> void
-ccprintf(cp::Print &print, const T &value, const Args &...args)
+template <typename T, typename... Args>
+void
+ccprintf(cp::Print &print, const T &value, const Args &... args)
 {
     print.addArg(value);
 
     ccprintf(print, args...);
 }
 
-
-template<typename ...Args> void
-ccprintf(std::ostream &stream, const char *format, const Args &...args)
+template <typename... Args>
+void
+ccprintf(std::ostream &stream, const char *format, const Args &... args)
 {
     cp::Print print(stream, format);
 
     ccprintf(print, args...);
 }
 
-
-template<typename ...Args> void
-cprintf(const char *format, const Args &...args)
+template <typename... Args>
+void
+cprintf(const char *format, const Args &... args)
 {
     ccprintf(std::cout, format, args...);
 }
 
-template<typename ...Args> std::string
-csprintf(const char *format, const Args &...args)
+template <typename... Args>
+std::string
+csprintf(const char *format, const Args &... args)
 {
     std::stringstream stream;
     ccprintf(stream, format, args...);
@@ -170,20 +170,23 @@ csprintf(const char *format, const Args &...args)
  * time converting const char * to std::string since we don't take
  * advantage of it.
  */
-template<typename ...Args> void
-ccprintf(std::ostream &stream, const std::string &format, const Args &...args)
+template <typename... Args>
+void
+ccprintf(std::ostream &stream, const std::string &format, const Args &... args)
 {
     ccprintf(stream, format.c_str(), args...);
 }
 
-template<typename ...Args> void
-cprintf(const std::string &format, const Args &...args)
+template <typename... Args>
+void
+cprintf(const std::string &format, const Args &... args)
 {
     ccprintf(std::cout, format.c_str(), args...);
 }
 
-template<typename ...Args> std::string
-csprintf(const std::string &format, const Args &...args)
+template <typename... Args>
+std::string
+csprintf(const std::string &format, const Args &... args)
 {
     return csprintf(format.c_str(), args...);
 }

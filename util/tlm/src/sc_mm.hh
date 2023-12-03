@@ -39,7 +39,6 @@
 
 namespace Gem5SystemC
 {
-
 typedef tlm::tlm_generic_payload gp;
 
 class MemoryManager : public tlm::tlm_mm_interface
@@ -47,15 +46,15 @@ class MemoryManager : public tlm::tlm_mm_interface
   public:
     MemoryManager();
     virtual ~MemoryManager();
-    virtual gp* allocate();
-    virtual void free(gp* payload);
+    virtual gp *allocate();
+    virtual void free(gp *payload);
 
   private:
     unsigned int numberOfAllocations;
     unsigned int numberOfFrees;
-    std::vector<gp*> freePayloads;
+    std::vector<gp *> freePayloads;
 };
 
-}
+} // namespace Gem5SystemC
 
 #endif /* __SC_MM_HH__ */

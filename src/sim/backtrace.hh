@@ -40,7 +40,6 @@
 
 namespace gem5
 {
-
 /**
  * Print a gem5 post-mortem report
  *

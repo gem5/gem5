@@ -33,10 +33,8 @@
 
 namespace gem5
 {
-
 namespace
 {
-
 class NopStaticInst : public StaticInst
 {
   public:
@@ -55,14 +53,14 @@ class NopStaticInst : public StaticInst
     }
 
     std::string
-    generateDisassembly(Addr pc,
-            const loader::SymbolTable *symtab) const override
+    generateDisassembly(
+        Addr pc, const loader::SymbolTable *symtab) const override
     {
         return mnemonic;
     }
 };
 
-}
+} // namespace
 
 StaticInstPtr nopStaticInstPtr = new NopStaticInst;
 

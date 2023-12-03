@@ -38,8 +38,16 @@ using namespace gem5;
 class LoggingFixture : public ::testing::Test
 {
   public:
-    void SetUp() override { old = std::cerr.rdbuf(gtestLogOutput.rdbuf()); }
-    void TearDown() override { std::cerr.rdbuf(old); }
+    void
+    SetUp() override
+    {
+        old = std::cerr.rdbuf(gtestLogOutput.rdbuf());
+    }
+    void
+    TearDown() override
+    {
+        std::cerr.rdbuf(old);
+    }
 
   private:
     /** Used to restore cerr's streambuf. */
@@ -80,8 +88,8 @@ TEST_F(LoggingFixture, VariadicCharPrint)
     Logger logger("test: ");
 
     gtestLogOutput.str("");
-    logger.print(Logger::Loc("File", 10), (const char *)"%s message",
-        "sample");
+    logger.print(
+        Logger::Loc("File", 10), (const char *)"%s message", "sample");
     ASSERT_EQ(gtestLogOutput.str(), "File:10: test: sample message\n");
 
     gtestLogOutput.str("");
@@ -117,10 +125,10 @@ TEST_F(LoggingFixture, VariadicCharMissingPrint)
     ASSERT_EQ(gtestLogOutput.str(), "File:10: test: <extra arg>% message\n");
 
     gtestLogOutput.str("");
-    logger.print(Logger::Loc("File", 10), (const char *)"%s mes%ca%cge",
-        "sample", 's');
-    ASSERT_EQ(gtestLogOutput.str(),
-        "File:10: test: sample messa<extra arg>%ge\n");
+    logger.print(
+        Logger::Loc("File", 10), (const char *)"%s mes%ca%cge", "sample", 's');
+    ASSERT_EQ(
+        gtestLogOutput.str(), "File:10: test: sample messa<extra arg>%ge\n");
 }
 
 /** Test the variadic-arg print for strings with arguments missing. */
@@ -133,10 +141,10 @@ TEST_F(LoggingFixture, VariadicStringMissingPrint)
     ASSERT_EQ(gtestLogOutput.str(), "File:10: test: <extra arg>% message\n");
 
     gtestLogOutput.str("");
-    logger.print(Logger::Loc("File", 10), std::string("%s mes%ca%cge"),
-        "sample", 's');
-    ASSERT_EQ(gtestLogOutput.str(),
-        "File:10: test: sample messa<extra arg>%ge\n");
+    logger.print(
+        Logger::Loc("File", 10), std::string("%s mes%ca%cge"), "sample", 's');
+    ASSERT_EQ(
+        gtestLogOutput.str(), "File:10: test: sample messa<extra arg>%ge\n");
 }
 
 /** Test that no message is shown when printing with a disabled logger. */
@@ -145,8 +153,7 @@ TEST_F(LoggingFixture, DisabledPrint)
     class DisabledLogger : public Logger
     {
       public:
-        DisabledLogger(const char *prefix)
-          : Logger(prefix)
+        DisabledLogger(const char *prefix) : Logger(prefix)
         {
             enabled = false;
         }
@@ -286,8 +293,8 @@ TEST_F(LoggingFixture, BaseMessageOnce)
         gtestLogOutput.str("");
         base_message_once(logger, "message\n");
         if (i == 0) {
-            ASSERT_THAT(gtestLogOutput.str(),
-                ::testing::HasSubstr("test: message\n"));
+            ASSERT_THAT(
+                gtestLogOutput.str(), ::testing::HasSubstr("test: message\n"));
         } else {
             ASSERT_EQ(gtestLogOutput.str(), "");
         }
@@ -301,13 +308,11 @@ TEST_F(LoggingFixture, Warn)
     // if it does not already have at least one.
     gtestLogOutput.str("");
     warn("message");
-    ASSERT_THAT(gtestLogOutput.str(),
-        ::testing::HasSubstr("warn: message\n"));
+    ASSERT_THAT(gtestLogOutput.str(), ::testing::HasSubstr("warn: message\n"));
 
     gtestLogOutput.str("");
     warn("message\n");
-    ASSERT_THAT(gtestLogOutput.str(),
-        ::testing::HasSubstr("warn: message\n"));
+    ASSERT_THAT(gtestLogOutput.str(), ::testing::HasSubstr("warn: message\n"));
 
     gtestLogOutput.str("");
     warn("sample message\n\n");
@@ -332,13 +337,11 @@ TEST_F(LoggingFixture, Inform)
     // if it does not already have at least one.
     gtestLogOutput.str("");
     inform("message");
-    ASSERT_THAT(gtestLogOutput.str(),
-        ::testing::HasSubstr("info: message\n"));
+    ASSERT_THAT(gtestLogOutput.str(), ::testing::HasSubstr("info: message\n"));
 
     gtestLogOutput.str("");
     inform("message\n");
-    ASSERT_THAT(gtestLogOutput.str(),
-        ::testing::HasSubstr("info: message\n"));
+    ASSERT_THAT(gtestLogOutput.str(), ::testing::HasSubstr("info: message\n"));
 
     gtestLogOutput.str("");
     inform("sample message\n\n");
@@ -363,13 +366,11 @@ TEST_F(LoggingFixture, Hack)
     // if it does not already have at least one.
     gtestLogOutput.str("");
     hack("message");
-    ASSERT_THAT(gtestLogOutput.str(),
-        ::testing::HasSubstr("hack: message\n"));
+    ASSERT_THAT(gtestLogOutput.str(), ::testing::HasSubstr("hack: message\n"));
 
     gtestLogOutput.str("");
     hack("message\n");
-    ASSERT_THAT(gtestLogOutput.str(),
-        ::testing::HasSubstr("hack: message\n"));
+    ASSERT_THAT(gtestLogOutput.str(), ::testing::HasSubstr("hack: message\n"));
 
     gtestLogOutput.str("");
     hack("sample message\n\n");
@@ -394,8 +395,8 @@ TEST_F(LoggingFixture, WarnOnce)
         gtestLogOutput.str("");
         warn_once("message\n");
         if (i == 0) {
-            ASSERT_THAT(gtestLogOutput.str(),
-                ::testing::HasSubstr("warn: message\n"));
+            ASSERT_THAT(
+                gtestLogOutput.str(), ::testing::HasSubstr("warn: message\n"));
         } else {
             ASSERT_EQ(gtestLogOutput.str(), "");
         }
@@ -409,8 +410,8 @@ TEST_F(LoggingFixture, InformOnce)
         gtestLogOutput.str("");
         inform_once("message\n");
         if (i == 0) {
-            ASSERT_THAT(gtestLogOutput.str(),
-                ::testing::HasSubstr("info: message\n"));
+            ASSERT_THAT(
+                gtestLogOutput.str(), ::testing::HasSubstr("info: message\n"));
         } else {
             ASSERT_EQ(gtestLogOutput.str(), "");
         }
@@ -424,8 +425,8 @@ TEST_F(LoggingFixture, HackOnce)
         gtestLogOutput.str("");
         hack_once("message\n");
         if (i == 0) {
-            ASSERT_THAT(gtestLogOutput.str(),
-                ::testing::HasSubstr("hack: message\n"));
+            ASSERT_THAT(
+                gtestLogOutput.str(), ::testing::HasSubstr("hack: message\n"));
         } else {
             ASSERT_EQ(gtestLogOutput.str(), "");
         }
@@ -437,8 +438,7 @@ TEST_F(LoggingFixture, WarnIf)
 {
     gtestLogOutput.str("");
     warn_if(true, "message\n");
-    ASSERT_THAT(gtestLogOutput.str(),
-        ::testing::HasSubstr("warn: message\n"));
+    ASSERT_THAT(gtestLogOutput.str(), ::testing::HasSubstr("warn: message\n"));
 
     gtestLogOutput.str("");
     warn_if(false, "message\n");
@@ -452,8 +452,8 @@ TEST_F(LoggingFixture, WarnIfOnce)
         gtestLogOutput.str("");
         warn_if_once(i == 3, "message\n");
         if (i == 3) {
-            ASSERT_THAT(gtestLogOutput.str(),
-                ::testing::HasSubstr("warn: message\n"));
+            ASSERT_THAT(
+                gtestLogOutput.str(), ::testing::HasSubstr("warn: message\n"));
         } else {
             ASSERT_EQ(gtestLogOutput.str(), "");
         }
@@ -465,7 +465,7 @@ TEST(LoggingDeathTest, EmptyPrefix)
 {
 #ifdef NDEBUG
     GTEST_SKIP() << "Skipping as assertions are "
-        "stripped out of fast builds";
+                    "stripped out of fast builds";
 #endif
     ASSERT_DEATH(Logger(nullptr), "");
 }
@@ -531,16 +531,18 @@ TEST(LoggingDeathTest, Fatal)
 TEST(LoggingDeathTest, PanicIf)
 {
     panic_if(false, "No death");
-    ASSERT_DEATH(panic_if(true, "message\n"), ::testing::HasSubstr(
-        "panic: panic condition true occurred: message\nMemory Usage:"));
+    ASSERT_DEATH(panic_if(true, "message\n"),
+        ::testing::HasSubstr(
+            "panic: panic condition true occurred: message\nMemory Usage:"));
 }
 
 /** Test that fatal_if only prints the message when the condition is true. */
 TEST(LoggingDeathTest, FatalIf)
 {
     fatal_if(false, "No death");
-    ASSERT_DEATH(fatal_if(true, "message\n"), ::testing::HasSubstr(
-        "fatal: fatal condition true occurred: message\nMemory Usage:"));
+    ASSERT_DEATH(fatal_if(true, "message\n"),
+        ::testing::HasSubstr(
+            "fatal: fatal condition true occurred: message\nMemory Usage:"));
 }
 
 /** Test macro gem5_assert. */
@@ -548,15 +550,16 @@ TEST(LoggingDeathTest, gem5Assert)
 {
 #ifdef NDEBUG
     GTEST_SKIP() << "Skipping as assertions are "
-        "stripped out of fast builds";
+                    "stripped out of fast builds";
 #endif
     gem5_assert(true, "message\n");
-    ASSERT_DEATH(gem5_assert(false, "message\n"), ::testing::HasSubstr(
-        "panic: assert(false) failed: message\nMemory Usage:"));
+    ASSERT_DEATH(gem5_assert(false, "message\n"),
+        ::testing::HasSubstr(
+            "panic: assert(false) failed: message\nMemory Usage:"));
     ASSERT_DEATH(gem5_assert(false, "%s, %s!\n", "Hello", "World"),
         ::testing::HasSubstr(
-        "panic: assert(false) failed: Hello, World!\nMemory Usage:"));
+            "panic: assert(false) failed: Hello, World!\nMemory Usage:"));
     gem5_assert(true);
-    ASSERT_DEATH(gem5_assert(false), ::testing::HasSubstr(
-        "panic: assert(false) failed\nMemory Usage:"));
+    ASSERT_DEATH(gem5_assert(false),
+        ::testing::HasSubstr("panic: assert(false) failed\nMemory Usage:"));
 }

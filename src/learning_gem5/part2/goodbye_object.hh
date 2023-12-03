@@ -36,7 +36,6 @@
 
 namespace gem5
 {
-
 class GoodbyeObject : public SimObject
 {
   private:

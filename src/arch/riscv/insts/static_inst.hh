@@ -42,22 +42,20 @@
 
 namespace gem5
 {
-
 namespace RiscvISA
 {
-
 /**
  * Base class for all RISC-V static instructions.
  */
 class RiscvStaticInst : public StaticInst
 {
   protected:
-    RiscvStaticInst(const char *_mnemonic, ExtMachInst _machInst,
-            OpClass __opClass) :
+    RiscvStaticInst(
+        const char *_mnemonic, ExtMachInst _machInst, OpClass __opClass) :
         StaticInst(_mnemonic, __opClass), machInst(_machInst)
     {}
 
-    bool alignmentOk(ExecContext* xc, Addr addr, Addr size) const;
+    bool alignmentOk(ExecContext *xc, Addr addr, Addr size) const;
 
     template <typename T>
     T
@@ -67,9 +65,21 @@ class RiscvStaticInst : public StaticInst
     }
 
     template <typename T32, typename T64>
-    T64 rvExt(T64 x) const { return rvSelect((T64)(T32)x, x); }
-    uint64_t rvZext(uint64_t x) const { return rvExt<uint32_t, uint64_t>(x); }
-    int64_t rvSext(int64_t x) const { return rvExt<int32_t, int64_t>(x); }
+    T64
+    rvExt(T64 x) const
+    {
+        return rvSelect((T64)(T32)x, x);
+    }
+    uint64_t
+    rvZext(uint64_t x) const
+    {
+        return rvExt<uint32_t, uint64_t>(x);
+    }
+    int64_t
+    rvSext(int64_t x) const
+    {
+        return rvExt<int32_t, int64_t>(x);
+    }
 
   public:
     ExtMachInst machInst;
@@ -89,8 +99,8 @@ class RiscvStaticInst : public StaticInst
     }
 
     std::unique_ptr<PCStateBase>
-    buildRetPC(const PCStateBase &cur_pc,
-            const PCStateBase &call_pc) const override
+    buildRetPC(
+        const PCStateBase &cur_pc, const PCStateBase &call_pc) const override
     {
         PCStateBase *ret_pc_ptr = call_pc.clone();
         auto &ret_pc = ret_pc_ptr->as<PCState>();
@@ -113,9 +123,9 @@ class RiscvMacroInst : public RiscvStaticInst
   protected:
     std::vector<StaticInstPtr> microops;
 
-    RiscvMacroInst(const char *mnem, ExtMachInst _machInst,
-                   OpClass __opClass) :
-            RiscvStaticInst(mnem, _machInst, __opClass)
+    RiscvMacroInst(
+        const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
+        RiscvStaticInst(mnem, _machInst, __opClass)
     {
         flags[IsMacroop] = true;
     }
@@ -136,7 +146,7 @@ class RiscvMacroInst : public RiscvStaticInst
 
     Fault
     completeAcc(PacketPtr pkt, ExecContext *xc,
-                trace::InstRecord *traceData) const override
+        trace::InstRecord *traceData) const override
     {
         panic("Tried to execute a macroop directly!\n");
     }
@@ -147,14 +157,14 @@ class RiscvMacroInst : public RiscvStaticInst
         panic("Tried to execute a macroop directly!\n");
     }
 
-    void size(size_t newSize) override
+    void
+    size(size_t newSize) override
     {
         for (int i = 0; i < microops.size(); i++) {
             microops[i]->size(newSize);
         }
         _size = newSize;
     }
-
 };
 
 /**
@@ -163,9 +173,9 @@ class RiscvMacroInst : public RiscvStaticInst
 class RiscvMicroInst : public RiscvStaticInst
 {
   protected:
-    RiscvMicroInst(const char *mnem, ExtMachInst _machInst,
-                   OpClass __opClass) :
-            RiscvStaticInst(mnem, _machInst, __opClass)
+    RiscvMicroInst(
+        const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
+        RiscvStaticInst(mnem, _machInst, __opClass)
     {
         flags[IsMicroop] = true;
     }

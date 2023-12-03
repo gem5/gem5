@@ -31,7 +31,6 @@
 
 namespace gem5
 {
-
 // This custom exception type will help prevent fatal exceptions from being
 // caught by other code in gem5 and let them escape to the gtest framework.
 // Unfortunately that results in a somewhat confusing message about an unknown
@@ -58,8 +57,8 @@ class GTestLogOutput : public std::ostringstream
     EventHook eventHook;
 
   public:
-    template <typename ...Args>
-    GTestLogOutput(Args &&...args) :
+    template <typename... Args>
+    GTestLogOutput(Args &&... args) :
         std::ostringstream(std::forward<Args>(args)...), eventHook(*this)
     {}
 };

@@ -52,10 +52,8 @@
 
 namespace gem5
 {
-
 namespace statistics
 {
-
 class Hdf5 : public Output
 {
   public:
@@ -99,8 +97,8 @@ class Hdf5 : public Output
      * @param rank Stat dimensionality (including time).
      * @param dims Size of each of the dimensions.
      */
-    H5::DataSet appendStat(const Info &info, int rank, hsize_t *dims,
-                           const double *data);
+    H5::DataSet appendStat(
+        const Info &info, int rank, hsize_t *dims, const double *data);
 
     /**
      * Helper function to add a string vector attribute to a stat.
@@ -110,7 +108,7 @@ class Hdf5 : public Output
      * @param values Attribute value.
      */
     void addMetaData(H5::DataSet &loc, const char *name,
-                     const std::vector<const char *> &values);
+        const std::vector<const char *> &values);
 
     /**
      * Helper function to add a string vector attribute to a stat.
@@ -120,7 +118,7 @@ class Hdf5 : public Output
      * @param values Attribute value.
      */
     void addMetaData(H5::DataSet &loc, const char *name,
-                     const std::vector<std::string> &values);
+        const std::vector<std::string> &values);
 
     /**
      * Helper function to add a string attribute to a stat.
@@ -129,8 +127,8 @@ class Hdf5 : public Output
      * @param name Attribute name.
      * @param value Attribute value.
      */
-    void addMetaData(H5::DataSet &loc, const char *name,
-                     const std::string &value);
+    void addMetaData(
+        H5::DataSet &loc, const char *name, const std::string &value);
 
     /**
      * Helper function to add a double attribute to a stat.
@@ -153,9 +151,8 @@ class Hdf5 : public Output
     H5::H5File h5File;
 };
 
-std::unique_ptr<Output> initHDF5(
-    const std::string &filename,unsigned chunking = 10,
-    bool desc = true, bool formulas = true);
+std::unique_ptr<Output> initHDF5(const std::string &filename,
+    unsigned chunking = 10, bool desc = true, bool formulas = true);
 
 } // namespace statistics
 } // namespace gem5

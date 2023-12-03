@@ -42,17 +42,25 @@
 
 namespace sc_gem5
 {
-
 Scheduler::Scheduler() :
-    eq(nullptr), readyEvent(*this, false, ReadyPriority),
+    eq(nullptr),
+    readyEvent(*this, false, ReadyPriority),
     pauseEvent(*this, false, PausePriority),
-    stopEvent(*this, false, StopPriority), _throwUp(nullptr),
+    stopEvent(*this, false, StopPriority),
+    _throwUp(nullptr),
     starvationEvent(*this, false, StarvationPriority),
-    _elaborationDone(false), _started(false), _stopNow(false),
-    _status(StatusOther), maxTick(gem5::MaxTick),
+    _elaborationDone(false),
+    _started(false),
+    _stopNow(false),
+    _status(StatusOther),
+    maxTick(gem5::MaxTick),
     maxTickEvent(*this, false, MaxTickPriority),
-    timeAdvancesEvent(*this, false, TimeAdvancesPriority), _numCycles(0),
-    _changeStamp(0), _current(nullptr), initDone(false), runToTime(true),
+    timeAdvancesEvent(*this, false, TimeAdvancesPriority),
+    _numCycles(0),
+    _changeStamp(0),
+    _current(nullptr),
+    initDone(false),
+    runToTime(true),
     runOnce(false)
 {}
 
@@ -71,7 +79,7 @@ Scheduler::clear()
         deltas.front()->deschedule();
 
     // Timed notifications.
-    for (auto &ts: timeSlots) {
+    for (auto &ts : timeSlots) {
         while (!ts->events.empty())
             ts->events.front()->deschedule();
         deschedule(ts);
@@ -115,8 +123,8 @@ Scheduler::initPhase()
 
         if (p->dontInitialize()) {
             if (!p->hasStaticSensitivities() && !p->internal()) {
-                SC_REPORT_WARNING(sc_core::SC_ID_DISABLE_WILL_ORPHAN_PROCESS_,
-                        p->name());
+                SC_REPORT_WARNING(
+                    sc_core::SC_ID_DISABLE_WILL_ORPHAN_PROCESS_, p->name());
             }
         } else {
             p->ready();
@@ -125,7 +133,7 @@ Scheduler::initPhase()
 
     runDelta();
 
-    for (auto ets: eventsToSchedule)
+    for (auto ets : eventsToSchedule)
         eq->schedule(ets.first, ets.second);
     eventsToSchedule.clear();
 
@@ -465,7 +473,7 @@ Scheduler::throwUp()
         scMainFiber.run();
     } else {
         reportHandlerProc(reportifyException(),
-                ::sc_core::sc_report_handler::get_catch_actions());
+            ::sc_core::sc_report_handler::get_catch_actions());
     }
 }
 
@@ -487,18 +495,22 @@ Scheduler::scheduleStop(bool finish_delta)
 void
 Scheduler::trace(bool delta)
 {
-    for (auto tf: traceFiles)
+    for (auto tf : traceFiles)
         tf->trace(delta);
 }
 
 Scheduler scheduler;
-Process *getCurrentProcess() { return scheduler.current(); }
+Process *
+getCurrentProcess()
+{
+    return scheduler.current();
+}
 
-namespace {
-
+namespace
+{
 void
-throwingReportHandler(const ::sc_core::sc_report &r,
-                      const ::sc_core::sc_actions &)
+throwingReportHandler(
+    const ::sc_core::sc_report &r, const ::sc_core::sc_actions &)
 {
     throw r;
 }
@@ -523,14 +535,13 @@ reportifyException()
             panic("Kill/reset exception escaped a Process::run()");
         } catch (const std::exception &e) {
             SC_REPORT_ERROR(
-                    sc_core::SC_ID_SIMULATION_UNCAUGHT_EXCEPTION_, e.what());
+                sc_core::SC_ID_SIMULATION_UNCAUGHT_EXCEPTION_, e.what());
         } catch (const char *msg) {
             SC_REPORT_ERROR(
-                    sc_core::SC_ID_SIMULATION_UNCAUGHT_EXCEPTION_, msg);
+                sc_core::SC_ID_SIMULATION_UNCAUGHT_EXCEPTION_, msg);
         } catch (...) {
-            SC_REPORT_ERROR(
-                    sc_core::SC_ID_SIMULATION_UNCAUGHT_EXCEPTION_,
-                    "UNKNOWN EXCEPTION");
+            SC_REPORT_ERROR(sc_core::SC_ID_SIMULATION_UNCAUGHT_EXCEPTION_,
+                "UNKNOWN EXCEPTION");
         }
     } catch (const ::sc_core::sc_report &r) {
         ::sc_core::sc_report_handler::set_handler(old_handler);

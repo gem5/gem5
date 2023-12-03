@@ -48,7 +48,6 @@
 
 namespace gem5
 {
-
 /**
  * This class captures the state of an address translation.  A translation
  * can be split in two if the ISA supports it and the memory access crosses
@@ -80,9 +79,16 @@ class WholeTranslationState
      * translations to one and indicate that it is not split.
      */
     WholeTranslationState(const RequestPtr &_req, uint8_t *_data,
-                          uint64_t *_res, BaseMMU::Mode _mode)
-        : outstanding(1), delay(false), isSplit(false), mainReq(_req),
-          sreqLow(NULL), sreqHigh(NULL), data(_data), res(_res), mode(_mode)
+        uint64_t *_res, BaseMMU::Mode _mode) :
+        outstanding(1),
+        delay(false),
+        isSplit(false),
+        mainReq(_req),
+        sreqLow(NULL),
+        sreqHigh(NULL),
+        data(_data),
+        res(_res),
+        mode(_mode)
     {
         faults[0] = faults[1] = NoFault;
         assert(mode == BaseMMU::Read || mode == BaseMMU::Write);
@@ -94,11 +100,17 @@ class WholeTranslationState
      * split translation.
      */
     WholeTranslationState(const RequestPtr &_req, const RequestPtr &_sreqLow,
-                          const RequestPtr &_sreqHigh, uint8_t *_data,
-                          uint64_t *_res, BaseMMU::Mode _mode)
-        : outstanding(2), delay(false), isSplit(true), mainReq(_req),
-          sreqLow(_sreqLow), sreqHigh(_sreqHigh), data(_data), res(_res),
-          mode(_mode)
+        const RequestPtr &_sreqHigh, uint8_t *_data, uint64_t *_res,
+        BaseMMU::Mode _mode) :
+        outstanding(2),
+        delay(false),
+        isSplit(true),
+        mainReq(_req),
+        sreqLow(_sreqLow),
+        sreqHigh(_sreqHigh),
+        data(_data),
+        res(_res),
+        mode(_mode)
     {
         faults[0] = faults[1] = NoFault;
         assert(mode == BaseMMU::Read || mode == BaseMMU::Write);
@@ -118,7 +130,6 @@ class WholeTranslationState
         faults[index] = fault;
         outstanding--;
         if (isSplit && outstanding == 0) {
-
             // For ease later, we copy some state to the main request.
             if (faults[0] == NoFault) {
                 mainReq->setPaddr(sreqLow->getPaddr());
@@ -205,7 +216,6 @@ class WholeTranslationState
     }
 };
 
-
 /**
  * This class represents part of a data address translation.  All state for
  * the translation is held in WholeTranslationState (above).  Therefore this
@@ -224,16 +234,14 @@ class DataTranslation : public BaseMMU::Translation
     int index;
 
   public:
-    DataTranslation(ExecContextPtr _xc, WholeTranslationState* _state)
-        : xc(_xc), state(_state), index(0)
-    {
-    }
+    DataTranslation(ExecContextPtr _xc, WholeTranslationState *_state) :
+        xc(_xc), state(_state), index(0)
+    {}
 
-    DataTranslation(ExecContextPtr _xc, WholeTranslationState* _state,
-                    int _index)
-        : xc(_xc), state(_state), index(_index)
-    {
-    }
+    DataTranslation(
+        ExecContextPtr _xc, WholeTranslationState *_state, int _index) :
+        xc(_xc), state(_state), index(_index)
+    {}
 
     /**
      * Signal the translation state that the translation has been delayed due
@@ -251,7 +259,7 @@ class DataTranslation : public BaseMMU::Translation
      */
     void
     finish(const Fault &fault, const RequestPtr &req, ThreadContext *tc,
-           BaseMMU::Mode mode)
+        BaseMMU::Mode mode)
     {
         assert(state);
         assert(mode == state->mode);

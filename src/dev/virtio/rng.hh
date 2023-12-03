@@ -44,7 +44,6 @@
 
 namespace gem5
 {
-
 struct VirtIORngParams;
 
 /**
@@ -70,20 +69,27 @@ class VirtIORng : public VirtIODeviceBase
     /**
      * Virtqueue for data going from the host to the guest.
      */
-    class RngQueue
-        : public VirtQueue
+    class RngQueue : public VirtQueue
     {
       public:
-        RngQueue(PortProxy &proxy, ByteOrder bo, uint16_t size,
-                 VirtIORng &_parent);
+        RngQueue(
+            PortProxy &proxy, ByteOrder bo, uint16_t size, VirtIORng &_parent);
         virtual ~RngQueue() {}
 
-        void onNotify() { trySend(); }
+        void
+        onNotify()
+        {
+            trySend();
+        }
 
         /** Try to send data pending data from the terminal. */
         void trySend();
 
-        std::string name() const { return parent.name() + ".qRecv"; }
+        std::string
+        name() const
+        {
+            return parent.name() + ".qRecv";
+        }
 
       protected:
         VirtIORng &parent;

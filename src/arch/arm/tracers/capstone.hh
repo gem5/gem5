@@ -43,12 +43,10 @@
 
 namespace gem5
 {
-
 class ThreadContext;
 
 namespace trace
 {
-
 class ArmCapstoneDisassembler : public CapstoneDisassembler
 {
   public:
@@ -56,7 +54,7 @@ class ArmCapstoneDisassembler : public CapstoneDisassembler
     ArmCapstoneDisassembler(const Params &p);
 
   protected:
-    const csh* currHandle(const PCStateBase &pc) const override;
+    const csh *currHandle(const PCStateBase &pc) const override;
 
   protected:
     csh arm64Handle;

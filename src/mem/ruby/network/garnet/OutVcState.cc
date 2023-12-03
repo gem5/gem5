@@ -27,23 +27,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #include "mem/ruby/network/garnet/OutVcState.hh"
 
 #include "mem/ruby/system/RubySystem.hh"
 
 namespace gem5
 {
-
 namespace ruby
 {
-
 namespace garnet
 {
-
-OutVcState::OutVcState(int id, GarnetNetwork *network_ptr,
-    uint32_t consumerVcs)
-    : m_time(0)
+OutVcState::OutVcState(
+    int id, GarnetNetwork *network_ptr, uint32_t consumerVcs) :
+    m_time(0)
 {
     m_id = id;
     m_vc_state = IDLE_;
@@ -52,7 +48,7 @@ OutVcState::OutVcState(int id, GarnetNetwork *network_ptr,
      * vcs per vnet. This assumes that the same vcs per
      * vnet is used throughout the given object.
      */
-    int vnet = floor(id/consumerVcs);
+    int vnet = floor(id / consumerVcs);
 
     if (network_ptr->get_vnet_type(vnet) == DATA_VNET_)
         m_max_credit_count = network_ptr->getBuffersPerDataVC();

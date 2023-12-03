@@ -35,10 +35,8 @@
 
 namespace gem5
 {
-
 namespace GenericISA
 {
-
 template <typename Decoder, typename EMI>
 class BasicDecodeCache
 {

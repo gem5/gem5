@@ -38,7 +38,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 /** @file
  * This is a base class for AMBA devices that have to respond to Device and
  * Implementer ID calls.
@@ -58,7 +57,6 @@
 
 namespace gem5
 {
-
 class AmbaDevice
 {
   protected:
@@ -74,7 +72,6 @@ class AmbaDevice
     bool readId(PacketPtr pkt, uint64_t amba_id, Addr pio_addr);
 };
 
-
 class AmbaPioDevice : public BasicPioDevice, public AmbaDevice
 {
   protected:
@@ -88,7 +85,7 @@ class AmbaPioDevice : public BasicPioDevice, public AmbaDevice
 class AmbaIntDevice : public AmbaPioDevice
 {
   protected:
-    ArmInterruptPin* const interrupt;
+    ArmInterruptPin *const interrupt;
     Tick intDelay;
 
   public:
@@ -100,10 +97,10 @@ class AmbaDmaDevice : public DmaDevice, public AmbaDevice
 {
   protected:
     uint64_t ambaId;
-    Addr     pioAddr;
-    Addr     pioSize;
-    Tick     pioDelay;
-    ArmInterruptPin* const interrupt;
+    Addr pioAddr;
+    Addr pioSize;
+    Tick pioDelay;
+    ArmInterruptPin *const interrupt;
 
   public:
     typedef AmbaDmaDeviceParams Params;

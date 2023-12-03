@@ -47,35 +47,25 @@
 
 namespace gem5
 {
-
 namespace ruby
 {
-
-WeightBased::WeightBased(const Params &p)
-    :BaseRoutingUnit(p)
-{
-}
+WeightBased::WeightBased(const Params &p) : BaseRoutingUnit(p) {}
 
 void
 WeightBased::addOutPort(LinkID link_id,
-                    const std::vector<MessageBuffer*>& m_out_buffer,
-                    const NetDest& routing_table_entry,
-                    const PortDirection &direction,
-                    int link_weight)
+    const std::vector<MessageBuffer *> &m_out_buffer,
+    const NetDest &routing_table_entry, const PortDirection &direction,
+    int link_weight)
 {
     gem5_assert(link_id == m_links.size());
-    m_links.emplace_back(new LinkInfo{link_id,
-                        routing_table_entry,
-                        m_out_buffer,
-                        0, link_weight});
+    m_links.emplace_back(new LinkInfo{
+        link_id, routing_table_entry, m_out_buffer, 0, link_weight});
     sortLinks();
 }
 
 void
-WeightBased::route(const Message &msg,
-                   int vnet,
-                   bool deterministic,
-                   std::vector<RouteInfo> &out_links)
+WeightBased::route(const Message &msg, int vnet, bool deterministic,
+    std::vector<RouteInfo> &out_links)
 {
     // Makes sure ordering was reset adaptive option was set
     if (params().adaptive_routing) {
@@ -105,8 +95,8 @@ WeightBased::route(const Message &msg,
 }
 
 void
-WeightBased::findRoute(const Message &msg,
-                       std::vector<RouteInfo> &out_links) const
+WeightBased::findRoute(
+    const Message &msg, std::vector<RouteInfo> &out_links) const
 {
     NetDest msg_dsts = msg.getDestination();
     assert(out_links.size() == 0);

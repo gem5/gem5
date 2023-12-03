@@ -31,12 +31,12 @@
 #include "base/trace.hh"
 #include "debug/GDBAcc.hh"
 
-namespace gem5 {
-
+namespace gem5
+{
 using namespace ArmISA;
 
-namespace fastmodel {
-
+namespace fastmodel
+{
 void
 FastmodelRemoteGDB::AArch64GdbRegCache::setRegs(ThreadContext *context) const
 {
@@ -61,18 +61,16 @@ FastmodelRemoteGDB::AArch64GdbRegCache::setRegs(ThreadContext *context) const
     context->setMiscRegNoEffect(MISCREG_FPCR, r.fpcr);
 }
 
-FastmodelRemoteGDB::FastmodelRemoteGDB(System *_system,
-        ListenSocketConfig _listen_config)
-    : gem5::ArmISA::RemoteGDB(_system, _listen_config)
-{
-}
+FastmodelRemoteGDB::FastmodelRemoteGDB(
+    System *_system, ListenSocketConfig _listen_config) :
+    gem5::ArmISA::RemoteGDB(_system, _listen_config)
+{}
 
 bool
 FastmodelRemoteGDB::readBlob(Addr vaddr, size_t size, char *data)
 {
     auto tc = dynamic_cast<Iris::ThreadContext *>(context());
-    panic_if(!tc,
-             "FastmodelRemoteGdb can only work on Iris::ThreadContext");
+    panic_if(!tc, "FastmodelRemoteGdb can only work on Iris::ThreadContext");
     tc->readMemWithCurrentMsn(vaddr, size, data);
     return true;
 }
@@ -81,13 +79,12 @@ bool
 FastmodelRemoteGDB::writeBlob(Addr vaddr, size_t size, const char *data)
 {
     auto tc = dynamic_cast<Iris::ThreadContext *>(context());
-    panic_if(!tc,
-             "FastmodelRemoteGdb can only work on Iris::ThreadContext");
+    panic_if(!tc, "FastmodelRemoteGdb can only work on Iris::ThreadContext");
     tc->writeMemWithCurrentMsn(vaddr, size, data);
     return true;
 }
 
-BaseGdbRegCache*
+BaseGdbRegCache *
 FastmodelRemoteGDB::gdbRegs()
 {
     if (inAArch64(context()))
@@ -96,5 +93,5 @@ FastmodelRemoteGDB::gdbRegs()
         return &regCache32;
 }
 
-}  // namespace fastmodel
-}  // namespace gem5
+} // namespace fastmodel
+} // namespace gem5

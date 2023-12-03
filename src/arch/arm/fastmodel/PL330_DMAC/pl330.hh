@@ -49,10 +49,8 @@
 
 namespace gem5
 {
-
 namespace fastmodel
 {
-
 class PL330 : public scx_evs_PL330
 {
   private:
@@ -81,7 +79,8 @@ class PL330 : public scx_evs_PL330
         PL330(params, params.name.c_str())
     {}
 
-    gem5::Port &gem5_getPort(const std::string &if_name, int idx=-1) override;
+    gem5::Port &gem5_getPort(
+        const std::string &if_name, int idx = -1) override;
 
     void
     end_of_elaboration() override

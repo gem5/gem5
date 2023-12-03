@@ -44,19 +44,14 @@
 
 namespace gem5
 {
-
 SMMUv3DeviceInterface::SMMUv3DeviceInterface(
     const SMMUv3DeviceInterfaceParams &p) :
     ClockedObject(p),
     smmu(nullptr),
-    microTLB(new SMMUTLB(p.utlb_entries,
-                         p.utlb_assoc,
-                         p.utlb_policy,
-                         this, "utlb")),
-    mainTLB(new SMMUTLB(p.tlb_entries,
-                        p.tlb_assoc,
-                        p.tlb_policy,
-                        this, "maintlb")),
+    microTLB(new SMMUTLB(
+        p.utlb_entries, p.utlb_assoc, p.utlb_policy, this, "utlb")),
+    mainTLB(new SMMUTLB(
+        p.tlb_entries, p.tlb_assoc, p.tlb_policy, this, "maintlb")),
     microTLBEnable(p.utlb_enable),
     mainTLBEnable(p.tlb_enable),
     devicePortSem(1),
@@ -64,8 +59,7 @@ SMMUv3DeviceInterface::SMMUv3DeviceInterface(
     mainTLBSem(p.tlb_slots),
     microTLBLat(p.utlb_lat),
     mainTLBLat(p.tlb_lat),
-    devicePort(new SMMUDevicePort(csprintf("%s.device_port",
-                                            name()), *this)),
+    devicePort(new SMMUDevicePort(csprintf("%s.device_port", name()), *this)),
     atsDevicePort(name() + ".atsDevicePort", *this),
     atsMemPort(name() + ".atsMemPort", *this),
     portWidth(p.port_width),
@@ -73,8 +67,7 @@ SMMUv3DeviceInterface::SMMUv3DeviceInterface(
     xlateSlotsRemaining(p.xlate_slots),
     pendingMemAccesses(0),
     prefetchEnable(p.prefetch_enable),
-    prefetchReserveLastWay(
-        p.prefetch_reserve_last_way),
+    prefetchReserveLastWay(p.prefetch_reserve_last_way),
     deviceNeedsRetry(false),
     atsDeviceNeedsRetry(false),
     sendDeviceRetryEvent(*this),
@@ -93,7 +86,7 @@ SMMUv3DeviceInterface::sendRange()
     }
 }
 
-Port&
+Port &
 SMMUv3DeviceInterface::getPort(const std::string &name, PortID id)
 {
     if (name == "ats_mem_side_port") {
@@ -128,7 +121,7 @@ Tick
 SMMUv3DeviceInterface::recvAtomic(PacketPtr pkt)
 {
     DPRINTF(SMMUv3, "[a] req from %s addr=%#x size=%#x\n",
-            devicePort->getPeer(), pkt->getAddr(), pkt->getSize());
+        devicePort->getPeer(), pkt->getAddr(), pkt->getSize());
 
     std::string proc_name = csprintf("%s.port", name());
     SMMUTranslationProcess proc(proc_name, *smmu, *this);
@@ -144,17 +137,15 @@ bool
 SMMUv3DeviceInterface::recvTimingReq(PacketPtr pkt)
 {
     DPRINTF(SMMUv3, "[t] req from %s addr=%#x size=%#x\n",
-            devicePort->getPeer(), pkt->getAddr(), pkt->getSize());
+        devicePort->getPeer(), pkt->getAddr(), pkt->getSize());
 
     // @todo: We need to pay for this and not just zero it out
     pkt->headerDelay = pkt->payloadDelay = 0;
 
-    unsigned nbeats =
-        (pkt->getSize() + (portWidth-1)) / portWidth;
+    unsigned nbeats = (pkt->getSize() + (portWidth - 1)) / portWidth;
 
-    if (xlateSlotsRemaining==0 ||
-        (pkt->isWrite() && wrBufSlotsRemaining < nbeats))
-    {
+    if (xlateSlotsRemaining == 0 ||
+        (pkt->isWrite() && wrBufSlotsRemaining < nbeats)) {
         deviceNeedsRetry = true;
         return false;
     }
@@ -176,12 +167,11 @@ Tick
 SMMUv3DeviceInterface::atsRecvAtomic(PacketPtr pkt)
 {
     DPRINTF(SMMUv3, "[a] ATS responder req  addr=%#x size=%#x\n",
-            pkt->getAddr(), pkt->getSize());
+        pkt->getAddr(), pkt->getSize());
 
     std::string proc_name = csprintf("%s.atsport", name());
     const bool ats_request = true;
-    SMMUTranslationProcess proc(
-        proc_name, *smmu, *this);
+    SMMUTranslationProcess proc(proc_name, *smmu, *this);
     proc.beginTransaction(SMMUTranslRequest::fromPacket(pkt, ats_request));
 
     SMMUAction a = smmu->runProcessAtomic(&proc, pkt);
@@ -194,7 +184,7 @@ bool
 SMMUv3DeviceInterface::atsRecvTimingReq(PacketPtr pkt)
 {
     DPRINTF(SMMUv3, "[t] ATS responder  req  addr=%#x size=%#x\n",
-            pkt->getAddr(), pkt->getSize());
+        pkt->getAddr(), pkt->getSize());
 
     // @todo: We need to pay for this and not just zero it out
     pkt->headerDelay = pkt->payloadDelay = 0;
@@ -219,13 +209,12 @@ bool
 SMMUv3DeviceInterface::atsRecvTimingResp(PacketPtr pkt)
 {
     DPRINTF(SMMUv3, "[t] ATS requestor resp addr=%#x size=%#x\n",
-            pkt->getAddr(), pkt->getSize());
+        pkt->getAddr(), pkt->getSize());
 
     // @todo: We need to pay for this and not just zero it out
     pkt->headerDelay = pkt->payloadDelay = 0;
 
-    SMMUProcess *proc =
-        safe_cast<SMMUProcess *>(pkt->popSenderState());
+    SMMUProcess *proc = safe_cast<SMMUProcess *>(pkt->popSenderState());
 
     smmu->runProcessTiming(proc, pkt);
 

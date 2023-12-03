@@ -43,34 +43,29 @@
 
 namespace gem5
 {
-
 const PixelConverter PixelConverter::rgba8888_le(4, 0, 8, 16, 8, 8, 8);
-const PixelConverter PixelConverter::rgba8888_be(4, 0, 8, 16, 8, 8, 8,
-                                                 ByteOrder::big);
-const PixelConverter PixelConverter::rgb565_le(2,  0, 5, 11, 5, 6, 5);
-const PixelConverter PixelConverter::rgb565_be(2,  0, 5, 11, 5, 6, 5,
-                                               ByteOrder::big);
+const PixelConverter PixelConverter::rgba8888_be(
+    4, 0, 8, 16, 8, 8, 8, ByteOrder::big);
+const PixelConverter PixelConverter::rgb565_le(2, 0, 5, 11, 5, 6, 5);
+const PixelConverter PixelConverter::rgb565_be(
+    2, 0, 5, 11, 5, 6, 5, ByteOrder::big);
 
-PixelConverter::PixelConverter(unsigned _length,
-                               unsigned ro, unsigned go, unsigned bo,
-                               unsigned rw, unsigned gw, unsigned bw,
-                               ByteOrder _byte_order)
-    : length(_length),
-      depth(rw + gw + bw),
-      byte_order(_byte_order),
-      ch_r(ro, rw),
-      ch_g(go, gw),
-      ch_b(bo, bw)
+PixelConverter::PixelConverter(unsigned _length, unsigned ro, unsigned go,
+    unsigned bo, unsigned rw, unsigned gw, unsigned bw,
+    ByteOrder _byte_order) :
+    length(_length),
+    depth(rw + gw + bw),
+    byte_order(_byte_order),
+    ch_r(ro, rw),
+    ch_g(go, gw),
+    ch_b(bo, bw)
 {
     assert(length > 1);
 }
 
-PixelConverter::Channel::Channel(unsigned _offset, unsigned width)
-    : offset(_offset),
-      mask(gem5::mask(width)),
-      factor(255.0 / mask)
-{
-}
+PixelConverter::Channel::Channel(unsigned _offset, unsigned width) :
+    offset(_offset), mask(gem5::mask(width)), factor(255.0 / mask)
+{}
 
 uint32_t
 PixelConverter::readWord(const uint8_t *p) const

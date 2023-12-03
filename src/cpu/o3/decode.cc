@@ -57,27 +57,25 @@ using std::list;
 
 namespace gem5
 {
-
 namespace o3
 {
-
-Decode::Decode(CPU *_cpu, const BaseO3CPUParams &params)
-    : cpu(_cpu),
-      renameToDecodeDelay(params.renameToDecodeDelay),
-      iewToDecodeDelay(params.iewToDecodeDelay),
-      commitToDecodeDelay(params.commitToDecodeDelay),
-      fetchToDecodeDelay(params.fetchToDecodeDelay),
-      decodeWidth(params.decodeWidth),
-      numThreads(params.numThreads),
-      stats(_cpu)
+Decode::Decode(CPU *_cpu, const BaseO3CPUParams &params) :
+    cpu(_cpu),
+    renameToDecodeDelay(params.renameToDecodeDelay),
+    iewToDecodeDelay(params.iewToDecodeDelay),
+    commitToDecodeDelay(params.commitToDecodeDelay),
+    fetchToDecodeDelay(params.fetchToDecodeDelay),
+    decodeWidth(params.decodeWidth),
+    numThreads(params.numThreads),
+    stats(_cpu)
 {
     if (decodeWidth > MaxWidth)
         fatal("decodeWidth (%d) is larger than compiled limit (%d),\n"
-             "\tincrease MaxWidth in src/cpu/o3/limits.hh\n",
-             decodeWidth, static_cast<int>(MaxWidth));
+              "\tincrease MaxWidth in src/cpu/o3/limits.hh\n",
+            decodeWidth, static_cast<int>(MaxWidth));
 
     // @todo: Make into a parameter
-    skidBufferMax = (fetchToDecodeDelay + 1) *  params.decodeWidth;
+    skidBufferMax = (fetchToDecodeDelay + 1) * params.decodeWidth;
     for (int tid = 0; tid < MaxThreads; tid++) {
         stalls[tid] = {false};
         decodeStatus[tid] = Idle;
@@ -119,29 +117,29 @@ Decode::name() const
     return cpu->name() + ".decode";
 }
 
-Decode::DecodeStats::DecodeStats(CPU *cpu)
-    : statistics::Group(cpu, "decode"),
-      ADD_STAT(idleCycles, statistics::units::Cycle::get(),
-               "Number of cycles decode is idle"),
-      ADD_STAT(blockedCycles, statistics::units::Cycle::get(),
-               "Number of cycles decode is blocked"),
-      ADD_STAT(runCycles, statistics::units::Cycle::get(),
-               "Number of cycles decode is running"),
-      ADD_STAT(unblockCycles, statistics::units::Cycle::get(),
-               "Number of cycles decode is unblocking"),
-      ADD_STAT(squashCycles, statistics::units::Cycle::get(),
-               "Number of cycles decode is squashing"),
-      ADD_STAT(branchResolved, statistics::units::Count::get(),
-               "Number of times decode resolved a branch"),
-      ADD_STAT(branchMispred, statistics::units::Count::get(),
-               "Number of times decode detected a branch misprediction"),
-      ADD_STAT(controlMispred, statistics::units::Count::get(),
-               "Number of times decode detected an instruction incorrectly "
-               "predicted as a control"),
-      ADD_STAT(decodedInsts, statistics::units::Count::get(),
-               "Number of instructions handled by decode"),
-      ADD_STAT(squashedInsts, statistics::units::Count::get(),
-               "Number of squashed instructions handled by decode")
+Decode::DecodeStats::DecodeStats(CPU *cpu) :
+    statistics::Group(cpu, "decode"),
+    ADD_STAT(idleCycles, statistics::units::Cycle::get(),
+        "Number of cycles decode is idle"),
+    ADD_STAT(blockedCycles, statistics::units::Cycle::get(),
+        "Number of cycles decode is blocked"),
+    ADD_STAT(runCycles, statistics::units::Cycle::get(),
+        "Number of cycles decode is running"),
+    ADD_STAT(unblockCycles, statistics::units::Cycle::get(),
+        "Number of cycles decode is unblocking"),
+    ADD_STAT(squashCycles, statistics::units::Cycle::get(),
+        "Number of cycles decode is squashing"),
+    ADD_STAT(branchResolved, statistics::units::Count::get(),
+        "Number of times decode resolved a branch"),
+    ADD_STAT(branchMispred, statistics::units::Count::get(),
+        "Number of times decode detected a branch misprediction"),
+    ADD_STAT(controlMispred, statistics::units::Count::get(),
+        "Number of times decode detected an instruction incorrectly "
+        "predicted as a control"),
+    ADD_STAT(decodedInsts, statistics::units::Count::get(),
+        "Number of instructions handled by decode"),
+    ADD_STAT(squashedInsts, statistics::units::Count::get(),
+        "Number of squashed instructions handled by decode")
 {
     idleCycles.prereq(idleCycles);
     blockedCycles.prereq(blockedCycles);
@@ -207,7 +205,7 @@ Decode::isDrained() const
 {
     for (ThreadID tid = 0; tid < numThreads; ++tid) {
         if (!insts[tid].empty() || !skidBuffer[tid].empty() ||
-                (decodeStatus[tid] != Running && decodeStatus[tid] != Idle))
+            (decodeStatus[tid] != Running && decodeStatus[tid] != Idle))
             return false;
     }
     return true;
@@ -219,7 +217,7 @@ Decode::checkStall(ThreadID tid) const
     bool ret_val = false;
 
     if (stalls[tid].rename) {
-        DPRINTF(Decode,"[tid:%i] Stall fom Rename stage detected.\n", tid);
+        DPRINTF(Decode, "[tid:%i] Stall fom Rename stage detected.\n", tid);
         ret_val = true;
     }
 
@@ -282,8 +280,10 @@ Decode::unblock(ThreadID tid)
 void
 Decode::squash(const DynInstPtr &inst, ThreadID tid)
 {
-    DPRINTF(Decode, "[tid:%i] [sn:%llu] Squashing due to incorrect branch "
-            "prediction detected at decode.\n", tid, inst->seqNum);
+    DPRINTF(Decode,
+        "[tid:%i] [sn:%llu] Squashing due to incorrect branch "
+        "prediction detected at decode.\n",
+        tid, inst->seqNum);
 
     // Send back mispredict information.
     toFetch->decodeInfo[tid].branchMispredict = true;
@@ -300,23 +300,22 @@ Decode::squash(const DynInstPtr &inst, ThreadID tid)
     // Using PCState::branching()  will send execution on the
     // fallthrough and this will not be caught at execution (since
     // branch was correctly predicted taken)
-    toFetch->decodeInfo[tid].branchTaken = inst->readPredTaken() ||
-                                           inst->isUncondCtrl();
+    toFetch->decodeInfo[tid].branchTaken =
+        inst->readPredTaken() || inst->isUncondCtrl();
 
     toFetch->decodeInfo[tid].squashInst = inst;
 
     InstSeqNum squash_seq_num = inst->seqNum;
 
     // Might have to tell fetch to unblock.
-    if (decodeStatus[tid] == Blocked ||
-        decodeStatus[tid] == Unblocking) {
+    if (decodeStatus[tid] == Blocked || decodeStatus[tid] == Unblocking) {
         toFetch->decodeUnblock[tid] = 1;
     }
 
     // Set status to squashing.
     decodeStatus[tid] = Squashing;
 
-    for (int i=0; i<fromFetch->size; i++) {
+    for (int i = 0; i < fromFetch->size; i++) {
         if (fromFetch->insts[i]->threadNumber == tid &&
             fromFetch->insts[i]->seqNum > squash_seq_num) {
             fromFetch->insts[i]->setSquashed();
@@ -340,10 +339,9 @@ Decode::squash(const DynInstPtr &inst, ThreadID tid)
 unsigned
 Decode::squash(ThreadID tid)
 {
-    DPRINTF(Decode, "[tid:%i] Squashing.\n",tid);
+    DPRINTF(Decode, "[tid:%i] Squashing.\n", tid);
 
-    if (decodeStatus[tid] == Blocked ||
-        decodeStatus[tid] == Unblocking) {
+    if (decodeStatus[tid] == Blocked || decodeStatus[tid] == Unblocking) {
         if (FullSystem) {
             toFetch->decodeUnblock[tid] = 1;
         } else {
@@ -364,7 +362,7 @@ Decode::squash(ThreadID tid)
     // Go through incoming instructions from fetch and squash them.
     unsigned squash_count = 0;
 
-    for (int i=0; i<fromFetch->size; i++) {
+    for (int i = 0; i < fromFetch->size; i++) {
         if (fromFetch->insts[i]->threadNumber == tid) {
             fromFetch->insts[i]->setSquashed();
             squash_count++;
@@ -398,9 +396,11 @@ Decode::skidInsert(ThreadID tid)
 
         skidBuffer[tid].push(inst);
 
-        DPRINTF(Decode, "Inserting [tid:%d][sn:%lli] PC: %s into decode "
-                "skidBuffer %i\n", inst->threadNumber, inst->seqNum,
-                inst->pcState(), skidBuffer[tid].size());
+        DPRINTF(Decode,
+            "Inserting [tid:%d][sn:%lli] PC: %s into decode "
+            "skidBuffer %i\n",
+            inst->threadNumber, inst->seqNum, inst->pcState(),
+            skidBuffer[tid].size());
     }
 
     // @todo: Eventually need to enforce this by not letting a thread
@@ -499,9 +499,10 @@ Decode::checkSignalsAndUpdate(ThreadID tid)
 
     // Check squash signals from commit.
     if (fromCommit->commitInfo[tid].squash) {
-
-        DPRINTF(Decode, "[tid:%i] Squashing instructions due to squash "
-                "from commit.\n", tid);
+        DPRINTF(Decode,
+            "[tid:%i] Squashing instructions due to squash "
+            "from commit.\n",
+            tid);
 
         squash(tid);
 
@@ -513,8 +514,8 @@ Decode::checkSignalsAndUpdate(ThreadID tid)
     }
 
     if (decodeStatus[tid] == Blocked) {
-        DPRINTF(Decode, "[tid:%i] Done blocking, switching to unblocking.\n",
-                tid);
+        DPRINTF(
+            Decode, "[tid:%i] Done blocking, switching to unblocking.\n", tid);
 
         decodeStatus[tid] = Unblocking;
 
@@ -526,8 +527,8 @@ Decode::checkSignalsAndUpdate(ThreadID tid)
     if (decodeStatus[tid] == Squashing) {
         // Switch status to running if decode isn't being told to block or
         // squash this cycle.
-        DPRINTF(Decode, "[tid:%i] Done squashing, switching to running.\n",
-                tid);
+        DPRINTF(
+            Decode, "[tid:%i] Done squashing, switching to running.\n", tid);
 
         decodeStatus[tid] = Running;
 
@@ -553,12 +554,12 @@ Decode::tick()
 
     sortInsts();
 
-    //Check stall and squash signals.
+    // Check stall and squash signals.
     while (threads != end) {
         ThreadID tid = *threads++;
 
-        DPRINTF(Decode,"Processing [tid:%i]\n",tid);
-        status_change =  checkSignalsAndUpdate(tid) || status_change;
+        DPRINTF(Decode, "Processing [tid:%i]\n", tid);
+        status_change = checkSignalsAndUpdate(tid) || status_change;
 
         decode(status_change, tid);
     }
@@ -592,10 +593,11 @@ Decode::decode(bool &status_change, ThreadID tid)
 
     // Decode should try to decode as many instructions as its bandwidth
     // will allow, as long as it is not currently blocked.
-    if (decodeStatus[tid] == Running ||
-        decodeStatus[tid] == Idle) {
-        DPRINTF(Decode, "[tid:%i] Not blocked, so attempting to run "
-                "stage.\n",tid);
+    if (decodeStatus[tid] == Running || decodeStatus[tid] == Idle) {
+        DPRINTF(Decode,
+            "[tid:%i] Not blocked, so attempting to run "
+            "stage.\n",
+            tid);
 
         decodeInsts(tid);
     } else if (decodeStatus[tid] == Unblocking) {
@@ -624,27 +626,31 @@ Decode::decodeInsts(ThreadID tid)
     // Instructions can come either from the skid buffer or the list of
     // instructions coming from fetch, depending on decode's status.
     int insts_available = decodeStatus[tid] == Unblocking ?
-        skidBuffer[tid].size() : insts[tid].size();
+                              skidBuffer[tid].size() :
+                              insts[tid].size();
 
     if (insts_available == 0) {
-        DPRINTF(Decode, "[tid:%i] Nothing to do, breaking out"
-                " early.\n",tid);
+        DPRINTF(Decode,
+            "[tid:%i] Nothing to do, breaking out"
+            " early.\n",
+            tid);
         // Should I change the status to idle?
         ++stats.idleCycles;
         return;
     } else if (decodeStatus[tid] == Unblocking) {
-        DPRINTF(Decode, "[tid:%i] Unblocking, removing insts from skid "
-                "buffer.\n",tid);
+        DPRINTF(Decode,
+            "[tid:%i] Unblocking, removing insts from skid "
+            "buffer.\n",
+            tid);
         ++stats.unblockCycles;
     } else if (decodeStatus[tid] == Running) {
         ++stats.runCycles;
     }
 
-    std::queue<DynInstPtr>
-        &insts_to_decode = decodeStatus[tid] == Unblocking ?
-        skidBuffer[tid] : insts[tid];
+    std::queue<DynInstPtr> &insts_to_decode =
+        decodeStatus[tid] == Unblocking ? skidBuffer[tid] : insts[tid];
 
-    DPRINTF(Decode, "[tid:%i] Sending instruction to rename.\n",tid);
+    DPRINTF(Decode, "[tid:%i] Sending instruction to rename.\n", tid);
 
     while (insts_available > 0 && toRenameIndex < decodeWidth) {
         assert(!insts_to_decode.empty());
@@ -653,13 +659,16 @@ Decode::decodeInsts(ThreadID tid)
 
         insts_to_decode.pop();
 
-        DPRINTF(Decode, "[tid:%i] Processing instruction [sn:%lli] with "
-                "PC %s\n", tid, inst->seqNum, inst->pcState());
+        DPRINTF(Decode,
+            "[tid:%i] Processing instruction [sn:%lli] with "
+            "PC %s\n",
+            tid, inst->seqNum, inst->pcState());
 
         if (inst->isSquashed()) {
-            DPRINTF(Decode, "[tid:%i] Instruction %i with PC %s is "
-                    "squashed, skipping.\n",
-                    tid, inst->seqNum, inst->pcState());
+            DPRINTF(Decode,
+                "[tid:%i] Instruction %i with PC %s is "
+                "squashed, skipping.\n",
+                tid, inst->seqNum, inst->pcState());
 
             ++stats.squashedInsts;
 
@@ -710,8 +719,7 @@ Decode::decodeInsts(ThreadID tid)
         // This includes direct unconditional control and
         // direct conditional control that is predicted taken.
         if (inst->isDirectCtrl() &&
-           (inst->isUncondCtrl() || inst->readPredTaken()))
-        {
+            (inst->isUncondCtrl() || inst->readPredTaken())) {
             ++stats.branchResolved;
 
             std::unique_ptr<PCStateBase> target = inst->branchTarget();
@@ -723,11 +731,11 @@ Decode::decodeInsts(ThreadID tid)
                 squash(inst, inst->threadNumber);
 
                 DPRINTF(Decode,
-                        "[tid:%i] [sn:%llu] "
-                        "Updating predictions: Wrong predicted target: %s \
+                    "[tid:%i] [sn:%llu] "
+                    "Updating predictions: Wrong predicted target: %s \
                         PredPC: %s\n",
-                        tid, inst->seqNum, inst->readPredTarg(), *target);
-                //The micro pc after an instruction level branch should be 0
+                    tid, inst->seqNum, inst->readPredTarg(), *target);
+                // The micro pc after an instruction level branch should be 0
                 inst->setPredTarg(*target);
                 break;
             }

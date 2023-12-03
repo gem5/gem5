@@ -46,16 +46,13 @@
 
 namespace gem5
 {
-
 namespace ruby
 {
-
 namespace garnet
 {
-
 class GarnetNetwork;
 
-class NetworkBridge: public CreditLink
+class NetworkBridge : public CreditLink
 {
   public:
     typedef NetworkBridgeParams Params;
@@ -99,7 +96,6 @@ class NetworkBridge: public CreditLink
     std::vector<int> sizeSent;
     std::vector<int> flitsSent;
     std::vector<std::queue<int>> extraCredit;
-
 };
 
 } // namespace garnet

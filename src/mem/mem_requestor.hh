@@ -48,20 +48,18 @@
 
 namespace gem5
 {
-
 /**
  * The RequestorInfo class contains data about a specific requestor.
  */
 struct RequestorInfo
 {
-    RequestorInfo(const SimObject* _obj,
-               std::string requestor_name,
-               RequestorID requestor_id)
-      : obj(_obj), req_name(requestor_name), id(requestor_id)
+    RequestorInfo(const SimObject *_obj, std::string requestor_name,
+        RequestorID requestor_id) :
+        obj(_obj), req_name(requestor_name), id(requestor_id)
     {}
 
     /** SimObject related to the Requestor */
-    const SimObject* obj;
+    const SimObject *obj;
 
     /** Requestor Name */
     std::string req_name;

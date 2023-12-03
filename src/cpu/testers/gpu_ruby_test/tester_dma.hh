@@ -43,13 +43,12 @@
 
 namespace gem5
 {
-
 class TesterDma : public DmaDevice
 {
   public:
     typedef TesterDmaParams Params;
-    TesterDma(const Params &p) : DmaDevice(p) { }
-    virtual ~TesterDma() { }
+    TesterDma(const Params &p) : DmaDevice(p) {}
+    virtual ~TesterDma() {}
 
     // The tester does not use a huge memory range. The range itself is
     // choosen arbitrarily

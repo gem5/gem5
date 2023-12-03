@@ -49,9 +49,8 @@
 
 namespace gem5
 {
-
-namespace trace {
-
+namespace trace
+{
 ProtoOutputStream *InstPBTrace::traceStream;
 
 void
@@ -60,7 +59,7 @@ InstPBTraceRecord::dump()
     // We're trying to build an instruction trace so we just want macro-ops and
     // instructions that aren't macro-oped
     if ((macroStaticInst && staticInst->isFirstMicroop()) ||
-            !staticInst->isMicroop()) {
+        !staticInst->isMicroop()) {
         tracer.traceInst(thread, staticInst, *pc);
     }
 
@@ -69,8 +68,8 @@ InstPBTraceRecord::dump()
         tracer.traceMem(staticInst, getAddr(), getSize(), getFlags());
 }
 
-InstPBTrace::InstPBTrace(const InstPBTraceParams &p)
-    : InstTracer(p), buf(nullptr), bufSize(0), curMsg(nullptr)
+InstPBTrace::InstPBTrace(const InstPBTraceParams &p) :
+    InstTracer(p), buf(nullptr), bufSize(0), curMsg(nullptr)
 {
     // Create our output file
     createTraceFile(p.file_name);
@@ -113,29 +112,25 @@ InstPBTrace::closeStreams()
     traceStream = NULL;
 }
 
-InstPBTrace::~InstPBTrace()
-{
-    closeStreams();
-}
+InstPBTrace::~InstPBTrace() { closeStreams(); }
 
-InstPBTraceRecord*
-InstPBTrace::getInstRecord(Tick when, ThreadContext *tc, const StaticInstPtr si,
-                           const PCStateBase &pc, const StaticInstPtr mi)
+InstPBTraceRecord *
+InstPBTrace::getInstRecord(Tick when, ThreadContext *tc,
+    const StaticInstPtr si, const PCStateBase &pc, const StaticInstPtr mi)
 {
     // Only record the trace if Exec debugging is enabled
     if (!debug::ExecEnable)
         return NULL;
 
     return new InstPBTraceRecord(*this, when, tc, si, pc, mi);
-
 }
 
 void
-InstPBTrace::traceInst(ThreadContext *tc, StaticInstPtr si,
-        const PCStateBase &pc)
+InstPBTrace::traceInst(
+    ThreadContext *tc, StaticInstPtr si, const PCStateBase &pc)
 {
     if (curMsg) {
-        //TODO if we are running multi-threaded I assume we'd need a lock here
+        // TODO if we are running multi-threaded I assume we'd need a lock here
         traceStream->write(*curMsg);
         delete curMsg;
         curMsg = NULL;
@@ -174,7 +169,6 @@ InstPBTrace::traceMem(StaticInstPtr si, Addr a, Addr s, unsigned f)
     mem_msg->set_addr(a);
     mem_msg->set_size(s);
     mem_msg->set_mem_flags(f);
-
 }
 
 } // namespace trace

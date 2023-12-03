@@ -31,7 +31,6 @@
 
 namespace gem5
 {
-
 /**
  * The FullSystem variable can be used to determine the current mode
  * of simulation.

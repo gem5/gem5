@@ -52,7 +52,6 @@
 
 namespace gem5
 {
-
 class BaseCache;
 
 /**
@@ -61,7 +60,6 @@ class BaseCache;
  */
 class QueueEntry : public Packet::SenderState, public Named
 {
-
     /**
      * Consider the Queue a friend to avoid making everything public
      */
@@ -69,7 +67,6 @@ class QueueEntry : public Packet::SenderState, public Named
     friend class Queue;
 
   protected:
-
     /** Tick when ready to issue */
     Tick readyTime;
 
@@ -90,7 +87,7 @@ class QueueEntry : public Packet::SenderState, public Named
         const Tick recvTime;  //!< Time when request was received (for stats)
         const Tick readyTime; //!< Time when request is ready to be serviced
         const Counter order;  //!< Global order (for memory consistency mgmt)
-        PacketPtr pkt;  //!< Pending request packet.
+        PacketPtr pkt;        //!< Pending request packet.
 
         /**
          * Default constructor. Assigns the current tick as the arrival time
@@ -100,9 +97,11 @@ class QueueEntry : public Packet::SenderState, public Named
          * @param ready_time The tick at which the packet will be serviceable.
          * @param _order Global order.
          */
-        Target(PacketPtr _pkt, Tick ready_time, Counter _order)
-            : recvTime(curTick()), readyTime(ready_time), order(_order),
-              pkt(_pkt)
+        Target(PacketPtr _pkt, Tick ready_time, Counter _order) :
+            recvTime(curTick()),
+            readyTime(ready_time),
+            order(_order),
+            pkt(_pkt)
         {}
     };
 
@@ -121,13 +120,22 @@ class QueueEntry : public Packet::SenderState, public Named
     /** True if the entry targets the secure memory space. */
     bool isSecure;
 
-    QueueEntry(const std::string &name)
-        : Named(name),
-          readyTime(0), _isUncacheable(false),
-          inService(false), order(0), blkAddr(0), blkSize(0), isSecure(false)
+    QueueEntry(const std::string &name) :
+        Named(name),
+        readyTime(0),
+        _isUncacheable(false),
+        inService(false),
+        order(0),
+        blkAddr(0),
+        blkSize(0),
+        isSecure(false)
     {}
 
-    bool isUncacheable() const { return _isUncacheable; }
+    bool
+    isUncacheable() const
+    {
+        return _isUncacheable;
+    }
 
     /**
      * Check if entry corresponds to the one being looked for.
@@ -136,8 +144,8 @@ class QueueEntry : public Packet::SenderState, public Named
      * @param is_secure Whether the target should be in secure space or not.
      * @return True if entry matches given information.
      */
-    virtual bool matchBlockAddr(const Addr addr, const bool is_secure)
-                                                            const = 0;
+    virtual bool matchBlockAddr(
+        const Addr addr, const bool is_secure) const = 0;
 
     /**
      * Check if entry contains a packet that corresponds to the one being
@@ -154,7 +162,7 @@ class QueueEntry : public Packet::SenderState, public Named
      * @param entry Other entry to compare against.
      * @return True if entry matches given information.
      */
-    virtual bool conflictAddr(const QueueEntry* entry) const = 0;
+    virtual bool conflictAddr(const QueueEntry *entry) const = 0;
 
     /**
      * Send this queue entry as a downstream packet, with the exact
@@ -167,7 +175,7 @@ class QueueEntry : public Packet::SenderState, public Named
      *
      * @return A pointer to the first target.
      */
-    virtual Target* getTarget() = 0;
+    virtual Target *getTarget() = 0;
 };
 
 } // namespace gem5

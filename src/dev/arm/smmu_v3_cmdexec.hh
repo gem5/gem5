@@ -43,7 +43,6 @@
 
 namespace gem5
 {
-
 class SMMUv3;
 
 class SMMUCommandExecProcess : public SMMUProcess
@@ -57,17 +56,20 @@ class SMMUCommandExecProcess : public SMMUProcess
 
   public:
     SMMUCommandExecProcess(const std::string &name, SMMUv3 &_smmu) :
-        SMMUProcess(name, _smmu),
-        busy(false)
+        SMMUProcess(name, _smmu), busy(false)
     {
         reinit();
     }
 
     virtual ~SMMUCommandExecProcess() {}
 
-    bool isBusy() const { return busy; }
+    bool
+    isBusy() const
+    {
+        return busy;
+    }
 };
 
 } // namespace gem5
 
-#endif  /* __DEV_ARM_SMMU_V3_CMDEXEC_HH__ */
+#endif /* __DEV_ARM_SMMU_V3_CMDEXEC_HH__ */

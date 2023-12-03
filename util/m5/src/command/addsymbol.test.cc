@@ -43,7 +43,7 @@ test_m5_add_symbol(uint64_t addr, const char *symbol)
     test_symbol = symbol;
 }
 
-DispatchTable dt = { .m5_add_symbol = &test_m5_add_symbol };
+DispatchTable dt = {.m5_add_symbol = &test_m5_add_symbol};
 
 bool
 run(std::initializer_list<std::string> arg_args)

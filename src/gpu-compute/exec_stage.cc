@@ -41,14 +41,16 @@
 
 namespace gem5
 {
-
 ExecStage::ExecStage(const ComputeUnitParams &p, ComputeUnit &cu,
-                     ScheduleToExecute &from_schedule)
-    : computeUnit(cu), fromSchedule(from_schedule),
-      lastTimeInstExecuted(false),
-      thisTimeInstExecuted(false), instrExecuted (false),
-      executionResourcesUsed(0), _name(cu.name() + ".ExecStage"),
-      stats(&cu)
+    ScheduleToExecute &from_schedule) :
+    computeUnit(cu),
+    fromSchedule(from_schedule),
+    lastTimeInstExecuted(false),
+    thisTimeInstExecuted(false),
+    instrExecuted(false),
+    executionResourcesUsed(0),
+    _name(cu.name() + ".ExecStage"),
+    stats(&cu)
 
 {
     stats.numTransActiveIdle = 0;
@@ -62,7 +64,8 @@ ExecStage::init()
 }
 
 void
-ExecStage::collectStatistics(enum STAT_STATUS stage, int unitId) {
+ExecStage::collectStatistics(enum STAT_STATUS stage, int unitId)
+{
     if (stage == IdleExec) {
         // count cycles when no instruction to a specific execution resource
         // is executed
@@ -158,39 +161,36 @@ ExecStage::exec()
     for (int unitId = 0; unitId < computeUnit.numExeUnits(); ++unitId) {
         DISPATCH_STATUS s = fromSchedule.dispatchStatus(unitId);
         switch (s) {
-          case EMPTY:
+        case EMPTY:
             // Do not execute if empty, waiting for VRF reads,
             // or LM tied to GM waiting for VRF reads
             collectStatistics(IdleExec, unitId);
             break;
-          case EXREADY:
-            {
-                collectStatistics(BusyExec, unitId);
-                GPUDynInstPtr &gpu_dyn_inst = fromSchedule.readyInst(unitId);
-                assert(gpu_dyn_inst);
-                Wavefront *wf = gpu_dyn_inst->wavefront();
-                DPRINTF(GPUSched, "Exec[%d]: SIMD[%d] WV[%d]: %s\n",
-                        unitId, wf->simdId, wf->wfDynId,
-                        gpu_dyn_inst->disassemble());
-                DPRINTF(GPUSched, "dispatchList[%d] EXREADY->EMPTY\n", unitId);
-                wf->exec();
-                (computeUnit.scheduleStage).deleteFromSch(wf);
-                fromSchedule.dispatchTransition(unitId, EMPTY);
-                wf->freeResources();
-                break;
-            }
-          case SKIP:
-            {
-                collectStatistics(BusyExec, unitId);
-                GPUDynInstPtr &gpu_dyn_inst = fromSchedule.readyInst(unitId);
-                assert(gpu_dyn_inst);
-                Wavefront *wf = gpu_dyn_inst->wavefront();
-                DPRINTF(GPUSched, "dispatchList[%d] SKIP->EMPTY\n", unitId);
-                fromSchedule.dispatchTransition(unitId, EMPTY);
-                wf->freeResources();
-                break;
-            }
-          default:
+        case EXREADY: {
+            collectStatistics(BusyExec, unitId);
+            GPUDynInstPtr &gpu_dyn_inst = fromSchedule.readyInst(unitId);
+            assert(gpu_dyn_inst);
+            Wavefront *wf = gpu_dyn_inst->wavefront();
+            DPRINTF(GPUSched, "Exec[%d]: SIMD[%d] WV[%d]: %s\n", unitId,
+                wf->simdId, wf->wfDynId, gpu_dyn_inst->disassemble());
+            DPRINTF(GPUSched, "dispatchList[%d] EXREADY->EMPTY\n", unitId);
+            wf->exec();
+            (computeUnit.scheduleStage).deleteFromSch(wf);
+            fromSchedule.dispatchTransition(unitId, EMPTY);
+            wf->freeResources();
+            break;
+        }
+        case SKIP: {
+            collectStatistics(BusyExec, unitId);
+            GPUDynInstPtr &gpu_dyn_inst = fromSchedule.readyInst(unitId);
+            assert(gpu_dyn_inst);
+            Wavefront *wf = gpu_dyn_inst->wavefront();
+            DPRINTF(GPUSched, "dispatchList[%d] SKIP->EMPTY\n", unitId);
+            fromSchedule.dispatchTransition(unitId, EMPTY);
+            wf->freeResources();
+            break;
+        }
+        default:
             panic("Unknown dispatch status in exec()\n");
         }
     }
@@ -198,22 +198,23 @@ ExecStage::exec()
     collectStatistics(PostExec, 0);
 }
 
-ExecStage::ExecStageStats::ExecStageStats(statistics::Group *parent)
-    : statistics::Group(parent, "ExecStage"),
-      ADD_STAT(numTransActiveIdle,
-               "number of CU transitions from active to idle"),
-      ADD_STAT(numCyclesWithNoIssue, "number of cycles the CU issues nothing"),
-      ADD_STAT(numCyclesWithInstrIssued,
-               "number of cycles the CU issued at least one instruction"),
-      ADD_STAT(spc,
-               "Execution units active per cycle (Exec unit=SIMD,MemPipe)"),
-      ADD_STAT(idleDur, "duration of idle periods in cycles"),
-      ADD_STAT(numCyclesWithInstrTypeIssued, "Number of cycles at least one "
-               "instruction issued to execution resource type"),
-      ADD_STAT(numCyclesWithNoInstrTypeIssued, "Number of clks no instructions"
-               " issued to execution resource type")
+ExecStage::ExecStageStats::ExecStageStats(statistics::Group *parent) :
+    statistics::Group(parent, "ExecStage"),
+    ADD_STAT(
+        numTransActiveIdle, "number of CU transitions from active to idle"),
+    ADD_STAT(numCyclesWithNoIssue, "number of cycles the CU issues nothing"),
+    ADD_STAT(numCyclesWithInstrIssued,
+        "number of cycles the CU issued at least one instruction"),
+    ADD_STAT(spc, "Execution units active per cycle (Exec unit=SIMD,MemPipe)"),
+    ADD_STAT(idleDur, "duration of idle periods in cycles"),
+    ADD_STAT(numCyclesWithInstrTypeIssued,
+        "Number of cycles at least one "
+        "instruction issued to execution resource type"),
+    ADD_STAT(numCyclesWithNoInstrTypeIssued,
+        "Number of clks no instructions"
+        " issued to execution resource type")
 {
-    ComputeUnit *compute_unit = static_cast<ComputeUnit*>(parent);
+    ComputeUnit *compute_unit = static_cast<ComputeUnit *>(parent);
 
     spc.init(0, compute_unit->numExeUnits(), 1);
     idleDur.init(0, 75, 5);
@@ -221,12 +222,12 @@ ExecStage::ExecStageStats::ExecStageStats(statistics::Group *parent)
     numCyclesWithNoInstrTypeIssued.init(compute_unit->numExeUnits());
 
     int c = 0;
-    for (int i = 0; i < compute_unit->numVectorALUs; i++,c++) {
+    for (int i = 0; i < compute_unit->numVectorALUs; i++, c++) {
         std::string s = "VectorALU" + std::to_string(i);
         numCyclesWithNoInstrTypeIssued.subname(c, s);
         numCyclesWithInstrTypeIssued.subname(c, s);
     }
-    for (int i = 0; i < compute_unit->numScalarALUs; i++,c++) {
+    for (int i = 0; i < compute_unit->numScalarALUs; i++, c++) {
         std::string s = "ScalarALU" + std::to_string(i);
         numCyclesWithNoInstrTypeIssued.subname(c, s);
         numCyclesWithInstrTypeIssued.subname(c, s);

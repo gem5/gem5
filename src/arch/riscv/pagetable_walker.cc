@@ -66,17 +66,16 @@
 
 namespace gem5
 {
-
-namespace RiscvISA {
-
+namespace RiscvISA
+{
 Fault
-Walker::start(ThreadContext * _tc, BaseMMU::Translation *_translation,
-              const RequestPtr &_req, BaseMMU::Mode _mode)
+Walker::start(ThreadContext *_tc, BaseMMU::Translation *_translation,
+    const RequestPtr &_req, BaseMMU::Mode _mode)
 {
     // TODO: in timing mode, instead of blocking when there are other
     // outstanding requests, see if this request can be coalesced with
     // another one (i.e. either coalesce or start walk)
-    WalkerState * newState = new WalkerState(this, _translation, _req);
+    WalkerState *newState = new WalkerState(this, _translation, _req);
     newState->initState(_tc, _mode, sys->isTimingMode());
     if (currStates.size()) {
         assert(newState->isTiming());
@@ -95,8 +94,8 @@ Walker::start(ThreadContext * _tc, BaseMMU::Translation *_translation,
 }
 
 Fault
-Walker::startFunctional(ThreadContext * _tc, Addr &addr, unsigned &logBytes,
-              BaseMMU::Mode _mode)
+Walker::startFunctional(
+    ThreadContext *_tc, Addr &addr, unsigned &logBytes, BaseMMU::Mode _mode)
 {
     funcState.initState(_tc, _mode);
     return funcState.startFunctional(addr, logBytes);
@@ -111,15 +110,15 @@ Walker::WalkerPort::recvTimingResp(PacketPtr pkt)
 bool
 Walker::recvTimingResp(PacketPtr pkt)
 {
-    WalkerSenderState * senderState =
+    WalkerSenderState *senderState =
         dynamic_cast<WalkerSenderState *>(pkt->popSenderState());
-    WalkerState * senderWalk = senderState->senderWalk;
+    WalkerState *senderWalk = senderState->senderWalk;
     bool walkComplete = senderWalk->recvPacket(pkt);
     delete senderState;
     if (walkComplete) {
         std::list<WalkerState *>::iterator iter;
         for (iter = currStates.begin(); iter != currStates.end(); iter++) {
-            WalkerState * walkerState = *(iter);
+            WalkerState *walkerState = *(iter);
             if (walkerState == senderWalk) {
                 iter = currStates.erase(iter);
                 break;
@@ -147,16 +146,17 @@ Walker::recvReqRetry()
 {
     std::list<WalkerState *>::iterator iter;
     for (iter = currStates.begin(); iter != currStates.end(); iter++) {
-        WalkerState * walkerState = *(iter);
+        WalkerState *walkerState = *(iter);
         if (walkerState->isRetrying()) {
             walkerState->retry();
         }
     }
 }
 
-bool Walker::sendTiming(WalkerState* sendingState, PacketPtr pkt)
+bool
+Walker::sendTiming(WalkerState *sendingState, PacketPtr pkt)
 {
-    WalkerSenderState* walker_state = new WalkerSenderState(sendingState);
+    WalkerSenderState *walker_state = new WalkerSenderState(sendingState);
     pkt->pushSenderState(walker_state);
     if (port.sendTimingReq(pkt)) {
         return true;
@@ -167,7 +167,6 @@ bool Walker::sendTiming(WalkerState* sendingState, PacketPtr pkt)
         delete walker_state;
         return false;
     }
-
 }
 
 Port &
@@ -180,8 +179,8 @@ Walker::getPort(const std::string &if_name, PortID idx)
 }
 
 void
-Walker::WalkerState::initState(ThreadContext * _tc,
-        BaseMMU::Mode _mode, bool _isTiming)
+Walker::WalkerState::initState(
+    ThreadContext *_tc, BaseMMU::Mode _mode, bool _isTiming)
 {
     assert(state == Ready);
     started = false;
@@ -201,7 +200,7 @@ Walker::startWalkWrapper()
     unsigned num_squashed = 0;
     WalkerState *currState = currStates.front();
     while ((num_squashed < numSquashable) && currState &&
-        currState->translation->squashed()) {
+           currState->translation->squashed()) {
         currStates.pop_front();
         num_squashed++;
 
@@ -210,8 +209,8 @@ Walker::startWalkWrapper()
 
         // finish the translation which will delete the translation object
         currState->translation->finish(
-            std::make_shared<UnimpFault>("Squashed Inst"),
-            currState->req, currState->tc, currState->mode);
+            std::make_shared<UnimpFault>("Squashed Inst"), currState->req,
+            currState->tc, currState->mode);
 
         // delete the current request if there are no inflight packets.
         // if there is something in flight, delete when the packets are
@@ -306,7 +305,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
     // Effective privilege mode for pmp checks for page table
     // walks is S mode according to specs
     fault = walker->pmp->pmpCheck(read->req, BaseMMU::Read,
-                    RiscvISA::PrivilegeMode::PRV_S, tc, entry.vaddr);
+        RiscvISA::PrivilegeMode::PRV_S, tc, entry.vaddr);
 
     if (fault == NoFault) {
         // step 3:
@@ -314,25 +313,23 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
             doEndWalk = true;
             DPRINTF(PageTableWalker, "PTE invalid, raising PF\n");
             fault = pageFault(pte.v);
-        }
-        else {
+        } else {
             // step 4:
             if (pte.r || pte.x) {
                 // step 5: leaf PTE
                 doEndWalk = true;
-                fault = walker->tlb->checkPermissions(status, pmode,
-                                                    entry.vaddr, mode, pte);
+                fault = walker->tlb->checkPermissions(
+                    status, pmode, entry.vaddr, mode, pte);
 
                 // step 6
                 if (fault == NoFault) {
                     if (level >= 1 && pte.ppn0 != 0) {
                         DPRINTF(PageTableWalker,
-                                "PTE has misaligned PPN, raising PF\n");
+                            "PTE has misaligned PPN, raising PF\n");
                         fault = pageFault(true);
-                    }
-                    else if (level == 2 && pte.ppn1 != 0) {
+                    } else if (level == 2 && pte.ppn1 != 0) {
                         DPRINTF(PageTableWalker,
-                                "PTE has misaligned PPN, raising PF\n");
+                            "PTE has misaligned PPN, raising PF\n");
                         fault = pageFault(true);
                     }
                 }
@@ -350,19 +347,16 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
                     // Performing PMA/PMP checks
 
                     if (doWrite) {
-
                         // this read will eventually become write
                         // if doWrite is True
 
                         walker->pma->check(read->req);
 
-                        fault = walker->pmp->pmpCheck(read->req,
-                                            BaseMMU::Write, pmode, tc, entry.vaddr);
-
+                        fault = walker->pmp->pmpCheck(
+                            read->req, BaseMMU::Write, pmode, tc, entry.vaddr);
                     }
                     // perform step 8 only if pmp checks pass
                     if (fault == NoFault) {
-
                         // step 8
                         entry.logBytes = PageShift + (level * LEVEL_BITS);
                         entry.paddr = pte.ppn;
@@ -380,7 +374,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
                 level--;
                 if (level < 0) {
                     DPRINTF(PageTableWalker, "No leaf PTE found,"
-                                                  "raising PF\n");
+                                             "raising PF\n");
                     doEndWalk = true;
                     fault = pageFault(true);
                 } else {
@@ -416,14 +410,14 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
                 walker->tlb->insert(entry.vaddr, entry);
             else {
                 DPRINTF(PageTableWalker, "Translated %#x -> %#x\n",
-                        entry.vaddr, entry.paddr << PageShift |
+                    entry.vaddr,
+                    entry.paddr << PageShift |
                         (entry.vaddr & mask(entry.logBytes)));
             }
         }
         endWalk();
-    }
-    else {
-        //If we didn't return, we're setting up another read.
+    } else {
+        // If we didn't return, we're setting up another read.
         RequestPtr request = std::make_shared<Request>(
             nextRead, oldRead->getSize(), flags, walker->requestorId);
 
@@ -433,8 +427,8 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         read = new Packet(request, MemCmd::ReadReq);
         read->allocate();
 
-        DPRINTF(PageTableWalker,
-                "Loading level%d PTE from %#x\n", level, nextRead);
+        DPRINTF(PageTableWalker, "Loading level%d PTE from %#x\n", level,
+            nextRead);
     }
 
     return fault;
@@ -546,11 +540,11 @@ Walker::WalkerState::recvPacket(PacketPtr pkt)
 void
 Walker::WalkerState::sendPackets()
 {
-    //If we're already waiting for the port to become available, just return.
+    // If we're already waiting for the port to become available, just return.
     if (retrying)
         return;
 
-    //Reads always have priority
+    // Reads always have priority
     if (read) {
         PacketPtr pkt = read;
         read = NULL;
@@ -562,7 +556,7 @@ Walker::WalkerState::sendPackets()
             return;
         }
     }
-    //Send off as many of the writes as we can.
+    // Send off as many of the writes as we can.
     while (writes.size()) {
         PacketPtr write = writes.back();
         writes.pop_back();

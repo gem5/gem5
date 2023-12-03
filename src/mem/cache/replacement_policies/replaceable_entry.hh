@@ -37,15 +37,14 @@
 
 namespace gem5
 {
-
 namespace replacement_policy
 {
-
 /**
  * The replacement data needed by replacement policies. Each replacement policy
  * should have its own implementation of replacement data.
  */
-struct ReplacementData {};
+struct ReplacementData
+{};
 
 } // namespace replacement_policy
 
@@ -100,14 +99,22 @@ class ReplaceableEntry
      *
      * @return The set to which this entry belongs.
      */
-    uint32_t getSet() const { return _set; }
+    uint32_t
+    getSet() const
+    {
+        return _set;
+    }
 
     /**
      * Get way number.
      *
      * @return The way to which this entry belongs.
      */
-    uint32_t getWay() const { return _way; }
+    uint32_t
+    getWay() const
+    {
+        return _way;
+    }
 
     /**
      * Prints relevant information about this entry.

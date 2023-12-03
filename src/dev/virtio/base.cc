@@ -45,22 +45,21 @@
 
 namespace gem5
 {
-
-VirtDescriptor::VirtDescriptor(PortProxy &_memProxy, ByteOrder bo,
-                               VirtQueue &_queue, Index descIndex)
-    : memProxy(&_memProxy), queue(&_queue), byteOrder(bo), _index(descIndex),
-      desc{0, 0, 0, 0}
-{
-}
+VirtDescriptor::VirtDescriptor(
+    PortProxy &_memProxy, ByteOrder bo, VirtQueue &_queue, Index descIndex) :
+    memProxy(&_memProxy),
+    queue(&_queue),
+    byteOrder(bo),
+    _index(descIndex),
+    desc{0, 0, 0, 0}
+{}
 
 VirtDescriptor::VirtDescriptor(VirtDescriptor &&other) noexcept
 {
     *this = std::forward<VirtDescriptor>(other);
 }
 
-VirtDescriptor::~VirtDescriptor() noexcept
-{
-}
+VirtDescriptor::~VirtDescriptor() noexcept {}
 
 VirtDescriptor &
 VirtDescriptor::operator=(VirtDescriptor &&rhs) noexcept
@@ -88,9 +87,9 @@ VirtDescriptor::update()
     memProxy->readBlob(desc_addr, &guest_desc, sizeof(guest_desc));
     desc = gtoh(guest_desc, byteOrder);
     DPRINTF(VIO,
-            "VirtDescriptor(%i): Addr: 0x%x, Len: %i, Flags: 0x%x, "
-            "Next: 0x%x\n",
-            _index, desc.addr, desc.len, desc.flags, desc.next);
+        "VirtDescriptor(%i): Addr: 0x%x, Len: %i, Flags: 0x%x, "
+        "Next: 0x%x\n",
+        _index, desc.addr, desc.len, desc.flags, desc.next);
 }
 
 void
@@ -111,9 +110,10 @@ VirtDescriptor::dump() const
     if (!debug::VIO)
         return;
 
-    DPRINTF(VIO, "Descriptor[%i]: "
-            "Addr: 0x%x, Len: %i, Flags: 0x%x, Next: 0x%x\n",
-            _index, desc.addr, desc.len, desc.flags, desc.next);
+    DPRINTF(VIO,
+        "Descriptor[%i]: "
+        "Addr: 0x%x, Len: %i, Flags: 0x%x, Next: 0x%x\n",
+        _index, desc.addr, desc.len, desc.flags, desc.next);
 
     if (isIncoming()) {
         uint8_t data[desc.len];
@@ -147,8 +147,10 @@ VirtDescriptor::next() const
 void
 VirtDescriptor::read(size_t offset, uint8_t *dst, size_t size) const
 {
-    DPRINTF(VIO, "VirtDescriptor(%p, 0x%x, %i)::read: offset: %i, dst: 0x%x, size: %i\n",
-            this, desc.addr, desc.len, offset, (long)dst, size);
+    DPRINTF(VIO,
+        "VirtDescriptor(%p, 0x%x, %i)::read: offset: %i, dst: 0x%x, size: "
+        "%i\n",
+        this, desc.addr, desc.len, offset, (long)dst, size);
     assert(size <= desc.len - offset);
     if (!isIncoming())
         panic("Trying to read from outgoing buffer\n");
@@ -159,8 +161,10 @@ VirtDescriptor::read(size_t offset, uint8_t *dst, size_t size) const
 void
 VirtDescriptor::write(size_t offset, const uint8_t *src, size_t size)
 {
-    DPRINTF(VIO, "VirtDescriptor(%p, 0x%x, %i)::write: offset: %i, src: 0x%x, size: %i\n",
-            this, desc.addr, desc.len, offset, (long)src, size);
+    DPRINTF(VIO,
+        "VirtDescriptor(%p, 0x%x, %i)::write: offset: %i, src: 0x%x, size: "
+        "%i\n",
+        this, desc.addr, desc.len, offset, (long)src, size);
     assert(size <= desc.len - offset);
     if (!isOutgoing())
         panic("Trying to write to incoming buffer\n");
@@ -187,7 +191,7 @@ VirtDescriptor::chainRead(size_t offset, uint8_t *dst, size_t size) const
 
     if (size != 0) {
         panic("Failed to read %i bytes from chain of %i bytes @ offset %i\n",
-              full_size, chainSize(), offset);
+            full_size, chainSize(), offset);
     }
 }
 
@@ -210,7 +214,7 @@ VirtDescriptor::chainWrite(size_t offset, const uint8_t *src, size_t size)
 
     if (size != 0) {
         panic("Failed to write %i bytes into chain of %i bytes @ offset %i\n",
-              full_size, chainSize(), offset);
+            full_size, chainSize(), offset);
     }
 }
 
@@ -226,12 +230,14 @@ VirtDescriptor::chainSize() const
     return size;
 }
 
-
-
-VirtQueue::VirtQueue(PortProxy &proxy, ByteOrder bo, uint16_t size)
-    : byteOrder(bo), _size(size), _address(0), memProxy(proxy),
-      avail(proxy, bo, size), used(proxy, bo, size),
-      _last_avail(0)
+VirtQueue::VirtQueue(PortProxy &proxy, ByteOrder bo, uint16_t size) :
+    byteOrder(bo),
+    _size(size),
+    _address(0),
+    memProxy(proxy),
+    avail(proxy, bo, size),
+    used(proxy, bo, size),
+    _last_avail(0)
 {
     descriptors.reserve(_size);
     for (int i = 0; i < _size; ++i)
@@ -272,10 +278,11 @@ void
 VirtQueue::setAddress(Addr address)
 {
     const Addr addr_avail(address + _size * sizeof(struct vring_desc));
-    const Addr addr_avail_end(addr_avail + sizeof(struct vring_avail) +
-                              _size * sizeof(uint16_t));
-    const Addr addr_used((addr_avail_end + sizeof(uint16_t) +
-                          (ALIGN_SIZE - 1)) & ~(ALIGN_SIZE - 1));
+    const Addr addr_avail_end(
+        addr_avail + sizeof(struct vring_avail) + _size * sizeof(uint16_t));
+    const Addr addr_used(
+        (addr_avail_end + sizeof(uint16_t) + (ALIGN_SIZE - 1)) &
+        ~(ALIGN_SIZE - 1));
     _address = address;
     avail.setAddress(addr_avail);
     used.setAddress(addr_used);
@@ -286,8 +293,8 @@ VirtQueue::consumeDescriptor()
 {
     avail.read();
     DPRINTF(VIO, "consumeDescriptor: _last_avail: %i, avail.idx: %i (->%i)\n",
-            _last_avail, avail.header.index,
-            avail.ring[_last_avail % used.ring.size()]);
+        _last_avail, avail.header.index,
+        avail.ring[_last_avail % used.ring.size()]);
     if (_last_avail == avail.header.index)
         return NULL;
 
@@ -305,7 +312,7 @@ VirtQueue::produceDescriptor(VirtDescriptor *desc, uint32_t len)
 {
     used.readHeader();
     DPRINTF(VIO, "produceDescriptor: dscIdx: %i, len: %i, used.idx: %i\n",
-            desc->index(), len, used.header.index);
+        desc->index(), len, used.header.index);
 
     struct vring_used_elem &e(used.ring[used.header.index % used.ring.size()]);
     e.id = desc->index();
@@ -335,21 +342,19 @@ VirtQueue::onNotify()
         onNotifyDescriptor(d);
 }
 
-
 VirtIODeviceBase::VirtIODeviceBase(const Params &params, DeviceId id,
-                                   size_t config_size, FeatureBits features)
-    : SimObject(params),
-      guestFeatures(0),
-      byteOrder(params.byte_order),
-      deviceId(id), configSize(config_size), deviceFeatures(features),
-      _deviceStatus(0), _queueSelect(0)
-{
-}
+    size_t config_size, FeatureBits features) :
+    SimObject(params),
+    guestFeatures(0),
+    byteOrder(params.byte_order),
+    deviceId(id),
+    configSize(config_size),
+    deviceFeatures(features),
+    _deviceStatus(0),
+    _queueSelect(0)
+{}
 
-
-VirtIODeviceBase::~VirtIODeviceBase()
-{
-}
+VirtIODeviceBase::~VirtIODeviceBase() {}
 
 void
 VirtIODeviceBase::serialize(CheckpointOut &cp) const
@@ -389,7 +394,7 @@ VirtIODeviceBase::onNotify(QueueID idx)
     if (idx >= _queues.size()) {
         panic("Guest tried to notify queue (%i), but only %i "
               "queues registered.\n",
-              idx, _queues.size());
+            idx, _queues.size());
     }
     _queues[idx]->onNotify();
 }
@@ -402,18 +407,17 @@ VirtIODeviceBase::setGuestFeatures(FeatureBits features)
         panic("Guest tried to enable unsupported features:\n"
               "Device features: 0x%x\n"
               "Requested features: 0x%x\n",
-              deviceFeatures, features);
+            deviceFeatures, features);
     }
     guestFeatures = features;
 }
-
 
 void
 VirtIODeviceBase::setDeviceStatus(DeviceStatus status)
 {
     _deviceStatus = status;
     DPRINTF(VIO, "ACK: %i, DRIVER: %i, DRIVER_OK: %i, FAILED: %i\n",
-            status.acknowledge, status.driver, status.driver_ok, status.failed);
+        status.acknowledge, status.driver, status.driver_ok, status.failed);
     if (status == 0)
         reset();
 }
@@ -431,7 +435,8 @@ VirtIODeviceBase::writeConfig(PacketPtr pkt, Addr cfgOffset)
 }
 
 void
-VirtIODeviceBase::readConfigBlob(PacketPtr pkt, Addr cfgOffset, const uint8_t *cfg)
+VirtIODeviceBase::readConfigBlob(
+    PacketPtr pkt, Addr cfgOffset, const uint8_t *cfg)
 {
     const unsigned size(pkt->getSize());
 
@@ -454,12 +459,12 @@ VirtIODeviceBase::writeConfigBlob(PacketPtr pkt, Addr cfgOffset, uint8_t *cfg)
     pkt->writeData((uint8_t *)cfg + cfgOffset);
 }
 
-
 const VirtQueue &
 VirtIODeviceBase::getCurrentQueue() const
 {
     if (_queueSelect >= _queues.size())
-        panic("Guest tried to access non-existing VirtQueue (%i).\n", _queueSelect);
+        panic("Guest tried to access non-existing VirtQueue (%i).\n",
+            _queueSelect);
 
     return *_queues[_queueSelect];
 }
@@ -468,7 +473,8 @@ VirtQueue &
 VirtIODeviceBase::getCurrentQueue()
 {
     if (_queueSelect >= _queues.size())
-        panic("Guest tried to access non-existing VirtQueue (%i).\n", _queueSelect);
+        panic("Guest tried to access non-existing VirtQueue (%i).\n",
+            _queueSelect);
 
     return *_queues[_queueSelect];
 }
@@ -493,10 +499,8 @@ VirtIODeviceBase::registerQueue(VirtQueue &queue)
     _queues.push_back(&queue);
 }
 
-
-VirtIODummyDevice::VirtIODummyDevice(const VirtIODummyDeviceParams &params)
-    : VirtIODeviceBase(params, ID_INVALID, 0, 0)
-{
-}
+VirtIODummyDevice::VirtIODummyDevice(const VirtIODummyDeviceParams &params) :
+    VirtIODeviceBase(params, ID_INVALID, 0, 0)
+{}
 
 } // namespace gem5

@@ -32,7 +32,6 @@
 
 namespace gem5
 {
-
 /// Pointer to a statically allocated generic "nop" instruction object.
 extern StaticInstPtr nopStaticInstPtr;
 

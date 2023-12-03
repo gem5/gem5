@@ -48,58 +48,76 @@
 
 namespace gem5
 {
-
 class ThreadContext;
 
-namespace ArmISA {
+namespace ArmISA
+{
 class Translation;
 class TLB;
-
 
 class Stage2LookUp : public BaseMMU::Translation
 {
   private:
-    MMU                     *mmu;
-    TlbEntry                stage1Te;
-    RequestPtr              s1Req;
-    BaseMMU::Translation    *transState;
-    BaseMMU::Mode           mode;
-    bool                    timing;
-    bool                    functional;
+    MMU *mmu;
+    TlbEntry stage1Te;
+    RequestPtr s1Req;
+    BaseMMU::Translation *transState;
+    BaseMMU::Mode mode;
+    bool timing;
+    bool functional;
     MMU::ArmTranslationType tranType;
-    TlbEntry                *stage2Te;
-    RequestPtr              req;
-    Fault                   fault;
-    bool                    complete;
-    bool                    selfDelete;
-    bool                    secure;
+    TlbEntry *stage2Te;
+    RequestPtr req;
+    Fault fault;
+    bool complete;
+    bool selfDelete;
+    bool secure;
 
   public:
     Stage2LookUp(MMU *_mmu, TlbEntry s1_te, const RequestPtr &_req,
         MMU::Translation *_transState, BaseMMU::Mode _mode, bool _timing,
         bool _functional, bool _secure, MMU::ArmTranslationType _tranType) :
-        mmu(_mmu), stage1Te(s1_te), s1Req(_req),
-        transState(_transState), mode(_mode), timing(_timing),
-        functional(_functional), tranType(_tranType), stage2Te(nullptr),
-        fault(NoFault), complete(false), selfDelete(false), secure(_secure)
+        mmu(_mmu),
+        stage1Te(s1_te),
+        s1Req(_req),
+        transState(_transState),
+        mode(_mode),
+        timing(_timing),
+        functional(_functional),
+        tranType(_tranType),
+        stage2Te(nullptr),
+        fault(NoFault),
+        complete(false),
+        selfDelete(false),
+        secure(_secure)
     {
         req = std::make_shared<Request>();
         req->setVirt(s1_te.pAddr(s1Req->getVaddr()), s1Req->getSize(),
-                     s1Req->getFlags(), s1Req->requestorId(), 0);
+            s1Req->getFlags(), s1Req->requestorId(), 0);
     }
 
     Fault getTe(ThreadContext *tc, TlbEntry *destTe);
 
     void mergeTe(BaseMMU::Mode mode);
 
-    void setSelfDelete() { selfDelete = true; }
+    void
+    setSelfDelete()
+    {
+        selfDelete = true;
+    }
 
-    bool isComplete() const { return complete; }
+    bool
+    isComplete() const
+    {
+        return complete;
+    }
 
-    void markDelayed() {}
+    void
+    markDelayed()
+    {}
 
     void finish(const Fault &fault, const RequestPtr &req, ThreadContext *tc,
-                BaseMMU::Mode mode);
+        BaseMMU::Mode mode);
 };
 
 } // namespace ArmISA

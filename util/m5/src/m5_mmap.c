@@ -53,7 +53,7 @@
 void *m5_mem = NULL;
 
 #ifndef M5OP_ADDR
-#define M5OP_ADDR 0
+#    define M5OP_ADDR 0
 #endif
 uint64_t m5op_addr = M5OP_ADDR;
 
@@ -75,8 +75,8 @@ map_m5_mem()
         exit(1);
     }
 
-    m5_mem = mmap(NULL, 0x10000, PROT_READ | PROT_WRITE, MAP_SHARED, fd,
-                  m5op_addr);
+    m5_mem =
+        mmap(NULL, 0x10000, PROT_READ | PROT_WRITE, MAP_SHARED, fd, m5op_addr);
     close(fd);
 
     if (!m5_mem) {

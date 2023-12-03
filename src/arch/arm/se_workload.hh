@@ -35,10 +35,8 @@
 
 namespace gem5
 {
-
 namespace ArmISA
 {
-
 class SEWorkload : public gem5::SEWorkload
 {
   public:
@@ -52,11 +50,15 @@ class SEWorkload : public gem5::SEWorkload
     setSystem(System *sys) override
     {
         gem5::SEWorkload::setSystem(sys);
-        gdb = BaseRemoteGDB::build<RemoteGDB>(
-                params().remote_gdb_port, system);
+        gdb =
+            BaseRemoteGDB::build<RemoteGDB>(params().remote_gdb_port, system);
     }
 
-    loader::Arch getArch() const override { return loader::Arm64; }
+    loader::Arch
+    getArch() const override
+    {
+        return loader::Arm64;
+    }
 
     using SyscallABI32 = RegABI32;
     using SyscallABI64 = RegABI64;

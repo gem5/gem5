@@ -32,9 +32,13 @@
 #include "dispatch_table.hh"
 
 bool test_load_symbol_called;
-void test_m5_load_symbol() { test_load_symbol_called = true;}
+void
+test_m5_load_symbol()
+{
+    test_load_symbol_called = true;
+}
 
-DispatchTable dt = { .m5_load_symbol = &test_m5_load_symbol };
+DispatchTable dt = {.m5_load_symbol = &test_m5_load_symbol};
 
 bool
 run(std::initializer_list<std::string> arg_args)

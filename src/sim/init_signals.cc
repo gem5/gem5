@@ -49,7 +49,7 @@
 #include <string>
 
 #if defined(__FreeBSD__)
-#include <sys/param.h>
+#    include <sys/param.h>
 
 #endif
 
@@ -62,7 +62,6 @@
 
 namespace gem5
 {
-
 // Use an separate stack for fatal signal handlers
 
 static bool
@@ -84,8 +83,7 @@ setupAltStack()
 
 static void
 installSignalHandler(int signal, void (*handler)(int sigtype),
-                     int flags = SA_RESTART,
-                     struct sigaction *old_sa = NULL)
+    int flags = SA_RESTART, struct sigaction *old_sa = NULL)
 {
     struct sigaction sa;
 
@@ -104,7 +102,8 @@ raiseFatalSignal(int signo)
     // The signal handler should have been reset and unmasked (it was
     // registered with SA_RESETHAND | SA_NODEFER), just raise the
     // signal again to invoke the default handler.
-    STATIC_ERR("For more info on how to address this issue, please visit "
+    STATIC_ERR(
+        "For more info on how to address this issue, please visit "
         "https://www.gem5.org/documentation/general_docs/common-errors/ \n\n");
     pthread_kill(pthread_self(), signo);
 
@@ -150,8 +149,8 @@ abortHandler(int sigtype)
 {
     const EventQueue *const eq(curEventQueue());
     if (eq) {
-        ccprintf(std::cerr, "Program aborted at tick %llu\n",
-                eq->getCurTick());
+        ccprintf(
+            std::cerr, "Program aborted at tick %llu\n", eq->getCurTick());
     } else {
         STATIC_ERR("Program aborted\n\n");
     }
@@ -204,8 +203,8 @@ initSignals()
 
     // Setup a SIGSEGV handler with a private stack
     if (setupAltStack()) {
-        installSignalHandler(SIGSEGV, segvHandler,
-                             SA_RESETHAND | SA_NODEFER | SA_ONSTACK);
+        installSignalHandler(
+            SIGSEGV, segvHandler, SA_RESETHAND | SA_NODEFER | SA_ONSTACK);
     } else {
         warn("Failed to setup stack for SIGSEGV handler, "
              "using default signal handler.\n");
@@ -218,17 +217,18 @@ initSignals()
 
 struct sigaction old_int_sa;
 
-void initSigInt()
+void
+initSigInt()
 {
     // Exit cleanly on Interrupt (Ctrl-C)
     installSignalHandler(SIGINT, exitNowHandler, SA_RESTART, &old_int_sa);
 }
 
-void restoreSigInt()
+void
+restoreSigInt()
 {
     // Restore the old SIGINT handler
     sigaction(SIGINT, &old_int_sa, NULL);
 }
-
 
 } // namespace gem5

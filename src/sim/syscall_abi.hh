@@ -36,7 +36,6 @@
 
 namespace gem5
 {
-
 class SyscallDesc;
 
 struct GenericSyscallABI
@@ -54,8 +53,9 @@ struct GenericSyscallABI32 : public GenericSyscallABI
     using UintPtr = uint32_t;
 
     // Is this argument too big for a single register?
-    template <typename T, typename Enabled=void>
-    struct IsWide : public std::false_type {};
+    template <typename T, typename Enabled = void>
+    struct IsWide : public std::false_type
+    {};
 
     template <typename T>
     struct IsWide<T, std::enable_if_t<(sizeof(T) > sizeof(UintPtr))>> :
@@ -77,19 +77,17 @@ struct GenericSyscallABI32 : public GenericSyscallABI
 
 namespace guest_abi
 {
-
 // For 64 bit systems, return syscall args directly.
 template <typename ABI, typename Arg>
 struct Argument<ABI, Arg,
-    typename std::enable_if_t<
-        std::is_base_of_v<GenericSyscallABI64, ABI> &&
-        std::is_integral_v<Arg>>>
+    typename std::enable_if_t<std::is_base_of_v<GenericSyscallABI64, ABI> &&
+                              std::is_integral_v<Arg>>>
 {
     static Arg
     get(ThreadContext *tc, typename ABI::State &state)
     {
         panic_if(state >= ABI::ArgumentRegs.size(),
-                "Ran out of syscall argument registers.");
+            "Ran out of syscall argument registers.");
         return tc->getReg(ABI::ArgumentRegs[state++]);
     }
 };
@@ -99,13 +97,13 @@ struct Argument<ABI, Arg,
 template <typename ABI, typename Arg>
 struct Argument<ABI, Arg,
     typename std::enable_if_t<std::is_integral_v<Arg> &&
-        !ABI::template IsWideV<Arg>>>
+                              !ABI::template IsWideV<Arg>>>
 {
     static Arg
     get(ThreadContext *tc, typename ABI::State &state)
     {
         panic_if(state >= ABI::ArgumentRegs.size(),
-                "Ran out of syscall argument registers.");
+            "Ran out of syscall argument registers.");
         return bits(tc->getReg(ABI::ArgumentRegs[state++]), 31, 0);
     }
 };

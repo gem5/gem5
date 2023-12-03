@@ -61,12 +61,11 @@
 
 namespace gem5
 {
-
 /**
  * A high-level queue interface, to be used by both the MSHR queue and
  * the write buffer.
  */
-template<class Entry>
+template <class Entry>
 class Queue : public Drainable, public Named
 {
     static_assert(std::is_base_of_v<QueueEntry, Entry>,
@@ -101,7 +100,8 @@ class Queue : public Drainable, public Named
     /** Holds non allocated entries. */
     typename Entry::List freeList;
 
-    typename Entry::Iterator addToReadyList(Entry* entry)
+    typename Entry::Iterator
+    addToReadyList(Entry *entry)
     {
         if (readyList.empty() ||
             readyList.back()->readyTime <= entry->readyTime) {
@@ -123,7 +123,6 @@ class Queue : public Drainable, public Named
     int allocated;
 
   public:
-
     /**
      * Create a queue with a given number of entries.
      *
@@ -131,28 +130,34 @@ class Queue : public Drainable, public Named
      * @param reserve The extra overflow entries needed.
      */
     Queue(const std::string &_label, int num_entries, int reserve,
-            const std::string &name) :
+        const std::string &name) :
         Named(name),
-        label(_label), numEntries(num_entries + reserve),
-        numReserve(reserve), entries(numEntries, name + ".entry"),
-        _numInService(0), allocated(0)
+        label(_label),
+        numEntries(num_entries + reserve),
+        numReserve(reserve),
+        entries(numEntries, name + ".entry"),
+        _numInService(0),
+        allocated(0)
     {
         for (int i = 0; i < numEntries; ++i) {
             freeList.push_back(&entries[i]);
         }
     }
 
-    bool isEmpty() const
+    bool
+    isEmpty() const
     {
         return allocated == 0;
     }
 
-    bool isFull() const
+    bool
+    isFull() const
     {
         return (allocated >= numEntries - numReserve);
     }
 
-    int numInService() const
+    int
+    numInService() const
     {
         return _numInService;
     }
@@ -165,10 +170,11 @@ class Queue : public Drainable, public Named
      * @param ignore_uncacheable Should uncacheables be ignored or not
      * @return Pointer to the matching WriteQueueEntry, null if not found.
      */
-    Entry* findMatch(Addr blk_addr, bool is_secure,
-                     bool ignore_uncacheable = true) const
+    Entry *
+    findMatch(
+        Addr blk_addr, bool is_secure, bool ignore_uncacheable = true) const
     {
-        for (const auto& entry : allocatedList) {
+        for (const auto &entry : allocatedList) {
             // we ignore any entries allocated for uncacheable
             // accesses and simply ignore them when matching, in the
             // cache we never check for matches when adding new
@@ -183,10 +189,11 @@ class Queue : public Drainable, public Named
         return nullptr;
     }
 
-    bool trySatisfyFunctional(PacketPtr pkt)
+    bool
+    trySatisfyFunctional(PacketPtr pkt)
     {
         pkt->pushLabel(label);
-        for (const auto& entry : allocatedList) {
+        for (const auto &entry : allocatedList) {
             if (entry->matchBlockAddr(pkt) &&
                 entry->trySatisfyFunctional(pkt)) {
                 pkt->popLabel();
@@ -204,9 +211,10 @@ class Queue : public Drainable, public Named
      * @param entry The entry to be compared against.
      * @return A pointer to the earliest matching entry.
      */
-    Entry* findPending(const QueueEntry* entry) const
+    Entry *
+    findPending(const QueueEntry *entry) const
     {
-        for (const auto& ready_entry : readyList) {
+        for (const auto &ready_entry : readyList) {
             if (ready_entry->conflictAddr(entry)) {
                 return ready_entry;
             }
@@ -218,7 +226,8 @@ class Queue : public Drainable, public Named
      * Returns the WriteQueueEntry at the head of the readyList.
      * @return The next request to service.
      */
-    Entry* getNext() const
+    Entry *
+    getNext() const
     {
         if (readyList.empty() || readyList.front()->readyTime > curTick()) {
             return nullptr;
@@ -226,7 +235,8 @@ class Queue : public Drainable, public Named
         return readyList.front();
     }
 
-    Tick nextReadyTime() const
+    Tick
+    nextReadyTime() const
     {
         return readyList.empty() ? MaxTick : readyList.front()->readyTime;
     }
@@ -258,7 +268,8 @@ class Queue : public Drainable, public Named
         }
     }
 
-    DrainState drain() override
+    DrainState
+    drain() override
     {
         return allocated == 0 ? DrainState::Drained : DrainState::Draining;
     }

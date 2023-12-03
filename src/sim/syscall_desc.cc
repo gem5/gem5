@@ -35,7 +35,6 @@
 
 namespace gem5
 {
-
 class ThreadContext;
 
 void
@@ -86,8 +85,8 @@ SyscallDesc::setupRetry(ThreadContext *tc)
     // Schedule it in about 100 CPU cycles. That will give other contexts
     // a chance to execute a bit of code before trying again.
     auto *cpu = tc->getCpuPtr();
-    curEventQueue()->schedule(event,
-            curTick() + cpu->cyclesToTicks(Cycles(100)));
+    curEventQueue()->schedule(
+        event, curTick() + cpu->cyclesToTicks(Cycles(100)));
 }
 
 void

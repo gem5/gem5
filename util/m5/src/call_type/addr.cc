@@ -35,7 +35,6 @@
 
 namespace
 {
-
 #if defined(M5OP_ADDR)
 const bool DefaultAddrDefined = true;
 constexpr uint64_t DefaultAddress = M5OP_ADDR;
@@ -49,14 +48,23 @@ class AddrCallType : public CallType
   public:
     AddrCallType() : CallType("addr") {}
 
-    bool isDefault() const override { return CALL_TYPE_IS_DEFAULT; }
-    const DispatchTable &getDispatch() const override { return addr_dispatch; }
+    bool
+    isDefault() const override
+    {
+        return CALL_TYPE_IS_DEFAULT;
+    }
+    const DispatchTable &
+    getDispatch() const override
+    {
+        return addr_dispatch;
+    }
 
     void
     printBrief(std::ostream &os) const override
     {
-        os << "--" << name << (DefaultAddrDefined ? " [address override]" :
-                                                    " <address override>");
+        os << "--" << name
+           << (DefaultAddrDefined ? " [address override]" :
+                                    " <address override>");
     }
 
     void
@@ -64,8 +72,8 @@ class AddrCallType : public CallType
     {
         os << "Use the address based invocation method.";
         if (DefaultAddrDefined) {
-            os << " The default address is 0x" <<
-                std::hex << DefaultAddress << std::dec << ".";
+            os << " The default address is 0x" << std::hex << DefaultAddress
+               << std::dec << ".";
         }
     }
 
@@ -106,7 +114,11 @@ class AddrCallType : public CallType
         return CheckArgsResult::Match;
     }
 
-    void init() override { map_m5_mem(); }
+    void
+    init() override
+    {
+        map_m5_mem();
+    }
 } addr_call_type;
 
 } // anonymous namespace

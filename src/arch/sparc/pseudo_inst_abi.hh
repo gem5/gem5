@@ -34,7 +34,6 @@
 
 namespace gem5
 {
-
 struct SparcPseudoInstABI
 {
     using State = int;
@@ -42,7 +41,6 @@ struct SparcPseudoInstABI
 
 namespace guest_abi
 {
-
 template <typename T>
 struct Result<SparcPseudoInstABI, T>
 {

@@ -44,7 +44,6 @@
 
 namespace gem5
 {
-
 /**
  * Class holding a guest address in a contiguous channel-local address
  * space.
@@ -60,92 +59,151 @@ class ChannelAddr
      * @ingroup api_channel_addr
      * @{
      */
-    explicit constexpr ChannelAddr(Type _a) : a(_a) { }
+    explicit constexpr ChannelAddr(Type _a) : a(_a) {}
 
     /** Converting back to the value type. */
     explicit constexpr operator Type() const { return a; }
 
     /** Converting back to the value type. */
-    constexpr Type value() const { return a; }
+    constexpr Type
+    value() const
+    {
+        return a;
+    }
 
-    constexpr ChannelAddr() : a(0) { }
+    constexpr ChannelAddr() : a(0) {}
 
-    ChannelAddr(const AddrRange &range, Addr _a)
-        : a(range.removeIntlvBits(_a)) {}
+    ChannelAddr(const AddrRange &range, Addr _a) : a(range.removeIntlvBits(_a))
+    {}
 
     ChannelAddr(const ChannelAddr &) = default;
     ChannelAddr &operator=(const ChannelAddr &) = default;
 
-
-    Addr getPA(const AddrRange &range) const {
+    Addr
+    getPA(const AddrRange &range) const
+    {
         return range.addIntlvBits(a);
     }
 
-    constexpr ChannelAddr operator|(const Type b) const {
+    constexpr ChannelAddr
+    operator|(const Type b) const
+    {
         return ChannelAddr(a | b);
     }
-    constexpr ChannelAddr operator&(const Type b) const {
+    constexpr ChannelAddr
+    operator&(const Type b) const
+    {
         return ChannelAddr(a & b);
     }
 
-    constexpr ChannelAddr operator>>(const int b) const {
+    constexpr ChannelAddr
+    operator>>(const int b) const
+    {
         return ChannelAddr(a >> b);
     }
 
-    constexpr ChannelAddr operator<<(const int b) const {
+    constexpr ChannelAddr
+    operator<<(const int b) const
+    {
         return ChannelAddr(a << b);
     }
 
-    constexpr ChannelAddr operator^(const int b) const {
+    constexpr ChannelAddr
+    operator^(const int b) const
+    {
         return ChannelAddr(a ^ b);
     }
 
-    constexpr ChannelAddr operator%(const int b) const {
+    constexpr ChannelAddr
+    operator%(const int b) const
+    {
         return ChannelAddr(a % b);
     }
 
-    constexpr ChannelAddr operator*(const Type &b) const {
+    constexpr ChannelAddr
+    operator*(const Type &b) const
+    {
         return ChannelAddr(a * b);
     }
 
-    constexpr ChannelAddr operator/(const Type &b) const {
+    constexpr ChannelAddr
+    operator/(const Type &b) const
+    {
         return ChannelAddr(a / b);
     }
 
-    constexpr ChannelAddr operator+(const Type &b) const {
+    constexpr ChannelAddr
+    operator+(const Type &b) const
+    {
         return ChannelAddr(a + b);
     }
 
-    constexpr ChannelAddr operator-(const Type &b) const {
+    constexpr ChannelAddr
+    operator-(const Type &b) const
+    {
         return ChannelAddr(a - b);
     }
 
-    constexpr ChannelAddr operator|(const ChannelAddr &b) const {
+    constexpr ChannelAddr
+    operator|(const ChannelAddr &b) const
+    {
         return ChannelAddr(a | b.a);
     }
 
-    constexpr ChannelAddr operator&(const ChannelAddr &b) const {
+    constexpr ChannelAddr
+    operator&(const ChannelAddr &b) const
+    {
         return ChannelAddr(a & b.a);
     }
 
-    constexpr ChannelAddr operator^(const ChannelAddr &b) const {
+    constexpr ChannelAddr
+    operator^(const ChannelAddr &b) const
+    {
         return ChannelAddr(a ^ b.a);
     }
 
-    constexpr ChannelAddr operator+(const ChannelAddr &b) const {
+    constexpr ChannelAddr
+    operator+(const ChannelAddr &b) const
+    {
         return ChannelAddr(a + b.a);
     }
 
-    constexpr ChannelAddr operator-(const ChannelAddr &b) const {
+    constexpr ChannelAddr
+    operator-(const ChannelAddr &b) const
+    {
         return ChannelAddr(a - b.a);
     }
 
-    constexpr bool operator>(const ChannelAddr &b) const { return a > b.a; }
-    constexpr bool operator>=(const ChannelAddr &b) const { return a >= b.a; }
-    constexpr bool operator<(const ChannelAddr &b) const { return a < b.a; }
-    constexpr bool operator<=(const ChannelAddr &b) const { return a <= b.a; }
-    constexpr bool operator==(const ChannelAddr &b) const { return a == b.a; }
-    constexpr bool operator!=(const ChannelAddr &b) const { return a != b.a; }
+    constexpr bool
+    operator>(const ChannelAddr &b) const
+    {
+        return a > b.a;
+    }
+    constexpr bool
+    operator>=(const ChannelAddr &b) const
+    {
+        return a >= b.a;
+    }
+    constexpr bool
+    operator<(const ChannelAddr &b) const
+    {
+        return a < b.a;
+    }
+    constexpr bool
+    operator<=(const ChannelAddr &b) const
+    {
+        return a <= b.a;
+    }
+    constexpr bool
+    operator==(const ChannelAddr &b) const
+    {
+        return a == b.a;
+    }
+    constexpr bool
+    operator!=(const ChannelAddr &b) const
+    {
+        return a != b.a;
+    }
 
     /** @} */ // end of api_channel_addr
 
@@ -166,25 +224,45 @@ class ChannelAddrRange
      * @ingroup api_channel_addr
      * @{
      */
-    constexpr ChannelAddrRange()
-        : ChannelAddrRange(ChannelAddr(1), ChannelAddr(0)) {}
+    constexpr ChannelAddrRange() :
+        ChannelAddrRange(ChannelAddr(1), ChannelAddr(0))
+    {}
 
-    constexpr ChannelAddrRange(ChannelAddr start, ChannelAddr end)
-        : _start(start), _end(end) {}
+    constexpr ChannelAddrRange(ChannelAddr start, ChannelAddr end) :
+        _start(start), _end(end)
+    {}
 
     ChannelAddrRange(AddrRange ch_range, Addr start, Addr end);
     ChannelAddrRange(AddrRange ch_range, AddrRange range);
 
     constexpr ChannelAddrRange(const ChannelAddrRange &) = default;
 
-    constexpr ChannelAddr size() const { return _end - _start; }
+    constexpr ChannelAddr
+    size() const
+    {
+        return _end - _start;
+    }
 
-    constexpr bool valid() const { return _start < _end; }
+    constexpr bool
+    valid() const
+    {
+        return _start < _end;
+    }
 
-    constexpr ChannelAddr start() const { return _start; }
-    constexpr ChannelAddr end() const { return _end; }
+    constexpr ChannelAddr
+    start() const
+    {
+        return _start;
+    }
+    constexpr ChannelAddr
+    end() const
+    {
+        return _end;
+    }
 
-    constexpr bool contains(ChannelAddr a) const {
+    constexpr bool
+    contains(ChannelAddr a) const
+    {
         return a >= _start && a < _end;
     }
 
@@ -204,19 +282,19 @@ std::ostream &operator<<(std::ostream &out, const gem5::ChannelAddr &addr);
 
 namespace std
 {
-    template<>
-    struct hash<gem5::ChannelAddr>
-    {
-        typedef gem5::ChannelAddr argument_type;
-        typedef std::size_t result_type;
+template <>
+struct hash<gem5::ChannelAddr>
+{
+    typedef gem5::ChannelAddr argument_type;
+    typedef std::size_t result_type;
 
-        result_type
-        operator()(argument_type const &a) const noexcept
-        {
-            return std::hash<gem5::ChannelAddr::Type>{}(
-                static_cast<argument_type::Type>(a));
-        }
-    };
-}
+    result_type
+    operator()(argument_type const &a) const noexcept
+    {
+        return std::hash<gem5::ChannelAddr::Type>{}(
+            static_cast<argument_type::Type>(a));
+    }
+};
+} // namespace std
 
 #endif // __BASE_CHANNEL_ADDR_HH__

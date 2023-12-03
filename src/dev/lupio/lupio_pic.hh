@@ -39,7 +39,6 @@
 
 namespace gem5
 {
-
 /**
  * LupioPIC:
  * A programmable interrupt controller virtual device that can
@@ -57,7 +56,7 @@ class LupioPIC : public BasicPioDevice
 
     const ByteOrder byteOrder = ByteOrder::little;
 
-  // Register map
+    // Register map
   private:
     enum
     {

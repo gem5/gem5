@@ -29,7 +29,6 @@
 
 namespace gem5
 {
-
 thread_local GTestLogOutput gtestLogOutput;
 
 GTestLogOutput::EventHook::EventHook(GTestLogOutput &_stream) : stream(_stream)

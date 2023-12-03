@@ -30,22 +30,15 @@
 
 namespace gem5
 {
-
 namespace ruby
 {
+PersistentTable::PersistentTable() {}
 
-PersistentTable::PersistentTable()
-{
-}
-
-PersistentTable::~PersistentTable()
-{
-}
+PersistentTable::~PersistentTable() {}
 
 void
-PersistentTable::persistentRequestLock(Addr address,
-                                       MachineID locker,
-                                       AccessType type)
+PersistentTable::persistentRequestLock(
+    Addr address, MachineID locker, AccessType type)
 {
     assert(address == makeLineAddress(address));
 
@@ -70,12 +63,11 @@ PersistentTable::persistentRequestLock(Addr address,
 }
 
 void
-PersistentTable::persistentRequestUnlock(Addr address,
-                                         MachineID unlocker)
+PersistentTable::persistentRequestUnlock(Addr address, MachineID unlocker)
 {
     assert(address == makeLineAddress(address));
     assert(m_map.count(address));
-    PersistentTableEntry& entry = m_map[address];
+    PersistentTableEntry &entry = m_map[address];
 
     //
     // Make sure we're in the locked set
@@ -95,8 +87,7 @@ PersistentTable::persistentRequestUnlock(Addr address,
 }
 
 bool
-PersistentTable::okToIssueStarving(Addr address,
-                                   MachineID machId) const
+PersistentTable::okToIssueStarving(Addr address, MachineID machId) const
 {
     assert(address == makeLineAddress(address));
 
@@ -123,7 +114,7 @@ PersistentTable::findSmallest(Addr address) const
     assert(address == makeLineAddress(address));
     AddressMap::const_iterator i = m_map.find(address);
     assert(i != m_map.end());
-    const PersistentTableEntry& entry = i->second;
+    const PersistentTableEntry &entry = i->second;
     return entry.m_starving.smallestElement();
 }
 
@@ -133,9 +124,9 @@ PersistentTable::typeOfSmallest(Addr address) const
     assert(address == makeLineAddress(address));
     AddressMap::const_iterator i = m_map.find(address);
     assert(i != m_map.end());
-    const PersistentTableEntry& entry = i->second;
-    if (entry.m_request_to_write.
-        isElement(entry.m_starving.smallestElement())) {
+    const PersistentTableEntry &entry = i->second;
+    if (entry.m_request_to_write.isElement(
+            entry.m_starving.smallestElement())) {
         return AccessType_Write;
     } else {
         return AccessType_Read;
@@ -150,7 +141,7 @@ PersistentTable::markEntries(Addr address)
     if (i == m_map.end())
         return;
 
-    PersistentTableEntry& entry = i->second;
+    PersistentTableEntry &entry = i->second;
 
     // None should be marked
     assert(entry.m_marked.isEmpty());
@@ -176,7 +167,7 @@ PersistentTable::countStarvingForAddress(Addr address) const
     if (i == m_map.end())
         return 0;
 
-    const PersistentTableEntry& entry = i->second;
+    const PersistentTableEntry &entry = i->second;
     return entry.m_starving.count();
 }
 
@@ -188,14 +179,13 @@ PersistentTable::countReadStarvingForAddress(Addr address) const
     if (i == m_map.end())
         return 0;
 
-    const PersistentTableEntry& entry = i->second;
+    const PersistentTableEntry &entry = i->second;
     return entry.m_starving.count() - entry.m_request_to_write.count();
 }
 
 void
-PersistentTable::print(std::ostream& out) const
-{
-}
+PersistentTable::print(std::ostream &out) const
+{}
 
 } // namespace ruby
 } // namespace gem5

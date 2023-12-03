@@ -34,10 +34,8 @@
 
 namespace gem5
 {
-
 namespace SparcISA
 {
-
 void
 FsWorkload::initState()
 {

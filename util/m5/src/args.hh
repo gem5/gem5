@@ -167,9 +167,17 @@ class Args
         }
     }
 
-    size_t size() { return args.size() - offset; }
+    size_t
+    size()
+    {
+        return args.size() - offset;
+    }
 
-    const std::string &operator [] (size_t idx) { return args[offset + idx]; }
+    const std::string &
+    operator[](size_t idx)
+    {
+        return args[offset + idx];
+    }
 };
 
 #endif // __ARGS_HH__

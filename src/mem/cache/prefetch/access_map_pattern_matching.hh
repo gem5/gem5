@@ -26,14 +26,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /**
-  * Implementation of the Access Map Pattern Matching Prefetcher
-  *
-  * References:
-  *     Access map pattern matching for high performance data cache prefetch.
-  *     Ishii, Y., Inaba, M., & Hiraki, K. (2011).
-  *     Journal of Instruction-Level Parallelism, 13, 1-24.
-  */
+/**
+ * Implementation of the Access Map Pattern Matching Prefetcher
+ *
+ * References:
+ *     Access map pattern matching for high performance data cache prefetch.
+ *     Ishii, Y., Inaba, M., & Hiraki, K. (2011).
+ *     Journal of Instruction-Level Parallelism, 13, 1-24.
+ */
 
 #ifndef __MEM_CACHE_PREFETCH_ACCESS_MAP_PATTERN_MATCHING_HH__
 #define __MEM_CACHE_PREFETCH_ACCESS_MAP_PATTERN_MATCHING_HH__
@@ -45,13 +45,11 @@
 
 namespace gem5
 {
-
 struct AccessMapPatternMatchingParams;
 struct AMPMPrefetcherParams;
 
 namespace prefetch
 {
-
 class AccessMapPatternMatching : public ClockedObject
 {
     /** Cacheline size used by the prefetcher using this object */
@@ -94,10 +92,9 @@ class AccessMapPatternMatching : public ClockedObject
         /** vector containing the state of the cachelines in this zone */
         std::vector<AccessMapState> states;
 
-        AccessMapEntry(size_t num_entries)
-          : TaggedEntry(), states(num_entries, AM_INIT)
-        {
-        }
+        AccessMapEntry(size_t num_entries) :
+            TaggedEntry(), states(num_entries, AM_INIT)
+        {}
 
         void
         invalidate() override
@@ -145,16 +142,17 @@ class AccessMapPatternMatching : public ClockedObject
      * @param stride access stride to obtain the reference cachelines
      * @return true if current is a prefetch candidate
      */
-    inline bool checkCandidate(std::vector<AccessMapState> const &states,
-                        Addr current, int stride) const
+    inline bool
+    checkCandidate(std::vector<AccessMapState> const &states, Addr current,
+        int stride) const
     {
-        enum AccessMapState tgt   = states[current - stride];
-        enum AccessMapState s     = states[current + stride];
-        enum AccessMapState s2    = states[current + 2 * stride];
+        enum AccessMapState tgt = states[current - stride];
+        enum AccessMapState s = states[current + stride];
+        enum AccessMapState s2 = states[current + 2 * stride];
         enum AccessMapState s2_p1 = states[current + 2 * stride + 1];
-        return (tgt != AM_INVALID &&
-                ((s == AM_ACCESS && s2 == AM_ACCESS) ||
-                (s == AM_ACCESS && s2_p1 == AM_ACCESS)));
+        return (
+            tgt != AM_INVALID && ((s == AM_ACCESS && s2 == AM_ACCESS) ||
+                                     (s == AM_ACCESS && s2_p1 == AM_ACCESS)));
     }
 
     /**
@@ -173,8 +171,8 @@ class AccessMapPatternMatching : public ClockedObject
      * @param block cacheline within the hot zone
      * @param state new state
      */
-    void setEntryState(AccessMapEntry &entry, Addr block,
-        enum AccessMapState state);
+    void setEntryState(
+        AccessMapEntry &entry, Addr block, enum AccessMapState state);
 
     /**
      * This event constitues the epoch of the statistics that keep track of
@@ -197,16 +195,17 @@ class AccessMapPatternMatching : public ClockedObject
 class AMPM : public Queued
 {
     AccessMapPatternMatching &ampm;
+
   public:
     AMPM(const AMPMPrefetcherParams &p);
     ~AMPM() = default;
 
     void calculatePrefetch(const PrefetchInfo &pfi,
-                           std::vector<AddrPriority> &addresses,
-                           const CacheAccessor &cache) override;
+        std::vector<AddrPriority> &addresses,
+        const CacheAccessor &cache) override;
 };
 
 } // namespace prefetch
 } // namespace gem5
 
-#endif//__MEM_CACHE_PREFETCH_ACCESS_MAP_PATTERN_MATCHING_HH__
+#endif //__MEM_CACHE_PREFETCH_ACCESS_MAP_PATTERN_MATCHING_HH__

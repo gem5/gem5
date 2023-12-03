@@ -49,10 +49,7 @@ class Printer : public sc_core::sc_module
     sc_core::sc_in<const char *> input;
     std::string prefix;
 
-    SC_CTOR(Printer)
-    {
-        SC_THREAD(print);
-    }
+    SC_CTOR(Printer) { SC_THREAD(print); }
 
     void
     print()
@@ -78,10 +75,8 @@ class Printer : public sc_core::sc_module
     void
     end_of_elaboration() override
     {
-        numWords
-            .name(std::string(name()) + ".numWords")
-            .desc("number of words printed")
-            ;
+        numWords.name(std::string(name()) + ".numWords")
+            .desc("number of words printed");
     }
 };
 

@@ -42,7 +42,6 @@
 
 namespace gem5
 {
-
 class IdeDisk;
 
 /**
@@ -78,7 +77,7 @@ class IdeController : public PciDevice
             // just store values for now, but should presumably do something
             // in a more accurate model.
             addRegisters({primaryTiming, secondaryTiming, deviceTiming, raz0,
-                          udmaControl, raz1, udmaTiming, raz2});
+                udmaControl, raz1, udmaTiming, raz2});
         }
 
         enum
@@ -87,10 +86,10 @@ class IdeController : public PciDevice
         };
 
         /* Offset in config space */
-        /* 0x40-0x41 */ Register16 primaryTiming =
-                            {"primary timing", TimeRegWithDecodeEnabled};
-        /* 0x42-0x43 */ Register16 secondaryTiming =
-                            {"secondary timing", TimeRegWithDecodeEnabled};
+        /* 0x40-0x41 */ Register16 primaryTiming = {
+            "primary timing", TimeRegWithDecodeEnabled};
+        /* 0x42-0x43 */ Register16 secondaryTiming = {
+            "secondary timing", TimeRegWithDecodeEnabled};
         /* 0x44      */ Register8 deviceTiming = {"device timing"};
         /* 0x45-0x47 */ RegisterRaz raz0 = {"raz0", 3};
         /* 0x48      */ Register8 udmaControl = {"udma control"};
@@ -115,7 +114,7 @@ class IdeController : public PciDevice
          * https://en.wikipedia.org/wiki/Parallel_ATA
          * #Multiple_devices_on_a_cable
          *
-        */
+         */
         IdeDisk *device0 = nullptr, *device1 = nullptr;
 
         /** Currently selected disk */
@@ -127,12 +126,28 @@ class IdeController : public PciDevice
         bool _pendingInterrupt = false;
 
       public:
-        bool isPrimary() const { return primary; }
+        bool
+        isPrimary() const
+        {
+            return primary;
+        }
 
-        bool pendingInterrupt() const { return _pendingInterrupt; }
+        bool
+        pendingInterrupt() const
+        {
+            return _pendingInterrupt;
+        }
 
-        IdeDisk *selected() const { return _selected; }
-        IdeController *controller() const { return ctrl; }
+        IdeDisk *
+        selected() const
+        {
+            return _selected;
+        }
+        IdeController *
+        controller() const
+        {
+            return ctrl;
+        }
 
         void
         setDevice0(IdeDisk *disk)
@@ -180,8 +195,8 @@ class IdeController : public PciDevice
         void postInterrupt();
         void clearInterrupt();
 
-        Channel(std::string new_name, IdeController *new_ctrl,
-                bool new_primary);
+        Channel(
+            std::string new_name, IdeController *new_ctrl, bool new_primary);
 
         void serialize(const std::string &base, std::ostream &os) const;
         void unserialize(const std::string &base, CheckpointIn &cp);

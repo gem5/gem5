@@ -37,10 +37,8 @@
 
 namespace gem5
 {
-
 namespace MipsISA
 {
-
 class EmuLinux : public SEWorkload
 {
   protected:
@@ -51,7 +49,11 @@ class EmuLinux : public SEWorkload
     using Params = MipsEmuLinuxParams;
 
     EmuLinux(const Params &p) : SEWorkload(p, PageShift) {}
-    ByteOrder byteOrder() const override { return ByteOrder::little; }
+    ByteOrder
+    byteOrder() const override
+    {
+        return ByteOrder::little;
+    }
 
     void syscall(ThreadContext *tc) override;
 };

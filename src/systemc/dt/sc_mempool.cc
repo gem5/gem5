@@ -30,7 +30,6 @@
 
 namespace sc_core
 {
-
 void *
 sc_mempool::allocate(std::size_t sz)
 {
@@ -47,4 +46,4 @@ sc_mempool::display_statistics()
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
 }
 
-};
+}; // namespace sc_core

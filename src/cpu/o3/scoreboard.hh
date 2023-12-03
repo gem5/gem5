@@ -41,10 +41,8 @@
 
 namespace gem5
 {
-
 namespace o3
 {
-
 /**
  * Implements a simple scoreboard to track which registers are
  * ready. This class operates on the unified physical register space,
@@ -76,7 +74,11 @@ class Scoreboard
     ~Scoreboard() {}
 
     /** Returns the name of the scoreboard. */
-    std::string name() const { return _name; };
+    std::string
+    name() const
+    {
+        return _name;
+    };
 
     /** Checks if the register is ready. */
     bool
@@ -105,7 +107,7 @@ class Scoreboard
         assert(phys_reg->flatIndex() < numPhysRegs);
 
         DPRINTF(Scoreboard, "Setting reg %i (%s) as ready\n",
-                phys_reg->index(), phys_reg->className());
+            phys_reg->index(), phys_reg->className());
 
         regScoreBoard[phys_reg->flatIndex()] = true;
     }
@@ -124,7 +126,6 @@ class Scoreboard
 
         regScoreBoard[phys_reg->flatIndex()] = false;
     }
-
 };
 
 } // namespace o3

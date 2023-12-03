@@ -32,10 +32,8 @@
 
 namespace sc_core
 {
-
 namespace
 {
-
 std::vector<sc_object *> top_level_objects;
 
 } // anonymous namespace
@@ -130,10 +128,7 @@ sc_object::simcontext() const
     return _gem5_object->simcontext();
 }
 
-sc_object::sc_object()
-{
-    _gem5_object = new sc_gem5::Object(this);
-}
+sc_object::sc_object() { _gem5_object = new sc_gem5::Object(this); }
 
 sc_object::sc_object(const char *name)
 {
@@ -146,16 +141,13 @@ sc_object::sc_object(const sc_object &other)
 }
 
 sc_object &
-sc_object::operator = (const sc_object &other)
+sc_object::operator=(const sc_object &other)
 {
     *_gem5_object = *other._gem5_object;
     return *this;
 }
 
-sc_object::~sc_object()
-{
-    delete _gem5_object;
-}
+sc_object::~sc_object() { delete _gem5_object; }
 
 const std::vector<sc_object *> &
 sc_get_top_level_objects()

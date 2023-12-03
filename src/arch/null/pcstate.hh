@@ -42,10 +42,8 @@
 
 namespace gem5
 {
-
 namespace NullISA
 {
-
 typedef GenericISA::UPCState<4> PCState;
 
 } // namespace NullISA

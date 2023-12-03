@@ -39,7 +39,6 @@
 
 namespace sc_gem5
 {
-
 // Forward declaration
 template <typename IF>
 class ScPortWrapper;
@@ -54,11 +53,11 @@ class ScPortWrapper : public gem5::Port
   public:
     using ScPort = sc_core::sc_port_b<IF>;
 
-    ScPortWrapper(ScPort& p, const std::string& name, gem5::PortID id)
-        : gem5::Port(name, id), port_(p)
+    ScPortWrapper(ScPort &p, const std::string &name, gem5::PortID id) :
+        gem5::Port(name, id), port_(p)
     {}
 
-    ScPort&
+    ScPort &
     port()
     {
         return port_;
@@ -73,36 +72,36 @@ class ScPortWrapper : public gem5::Port
     }
 
     void
-    bind(gem5::Port& peer) override
+    bind(gem5::Port &peer) override
     {
         using namespace gem5;
 
         // Try ScPortWrapper or ScInterfaceWrapper
-        if (auto* beer = dynamic_cast<ScPortWrapper<IF>*>(&peer)) {
+        if (auto *beer = dynamic_cast<ScPortWrapper<IF> *>(&peer)) {
             port_.bind(beer->port());
-        } else if (auto* iface =
-                       dynamic_cast<ScInterfaceWrapper<IF>*>(&peer)) {
+        } else if (auto *iface =
+                       dynamic_cast<ScInterfaceWrapper<IF> *>(&peer)) {
             port_.bind(iface->interface());
         } else {
             fatal("Attempt to bind sc_port %s to incompatible port %s.",
-                  name(), peer.name());
+                name(), peer.name());
         }
         gem5::Port::bind(peer);
     }
 
   private:
-    ScPort& port_;
+    ScPort &port_;
 };
 
 template <typename IF>
 class ScInterfaceWrapper : public gem5::Port
 {
   public:
-    ScInterfaceWrapper(IF& i, const std::string name, gem5::PortID id)
-        : gem5::Port(name, id), iface_(i)
+    ScInterfaceWrapper(IF &i, const std::string name, gem5::PortID id) :
+        gem5::Port(name, id), iface_(i)
     {}
 
-    IF&
+    IF &
     interface()
     {
         return iface_;
@@ -117,15 +116,15 @@ class ScInterfaceWrapper : public gem5::Port
     }
 
     void
-    bind(gem5::Port& peer) override
+    bind(gem5::Port &peer) override
     {
         using namespace gem5;
 
         // fatal error if peer is neither ScPortWrapper nor ScExportWrapper
-        fatal_if(!dynamic_cast<ScPortWrapper<IF>*>(&peer) &&
-                     !dynamic_cast<ScExportWrapper<IF>*>(&peer),
-                 "Attempt to bind sc_interface %s to incompatible port %s.",
-                 name(), peer.name());
+        fatal_if(!dynamic_cast<ScPortWrapper<IF> *>(&peer) &&
+                     !dynamic_cast<ScExportWrapper<IF> *>(&peer),
+            "Attempt to bind sc_interface %s to incompatible port %s.", name(),
+            peer.name());
 
         // Don't bind to peer otherwise we may have error messages saying that
         // this interface has already be bound since the peer may already did
@@ -134,7 +133,7 @@ class ScInterfaceWrapper : public gem5::Port
     }
 
   private:
-    IF& iface_;
+    IF &iface_;
 };
 
 template <typename IF>
@@ -143,11 +142,11 @@ class ScExportWrapper : public gem5::Port
   public:
     using ScExport = sc_core::sc_export<IF>;
 
-    ScExportWrapper(ScExport& p, const std::string& name, gem5::PortID id)
-        : gem5::Port(name, id), port_(p)
+    ScExportWrapper(ScExport &p, const std::string &name, gem5::PortID id) :
+        gem5::Port(name, id), port_(p)
     {}
 
-    ScExport&
+    ScExport &
     port()
     {
         return port_;
@@ -162,23 +161,23 @@ class ScExportWrapper : public gem5::Port
     }
 
     void
-    bind(gem5::Port& peer) override
+    bind(gem5::Port &peer) override
     {
         using namespace gem5;
 
-        auto* iface = dynamic_cast<ScInterfaceWrapper<IF>*>(&peer);
+        auto *iface = dynamic_cast<ScInterfaceWrapper<IF> *>(&peer);
         fatal_if(!iface,
-                 "Attempt to bind sc_export %s to incompatible port %s.",
-                 name(), peer.name());
+            "Attempt to bind sc_export %s to incompatible port %s.", name(),
+            peer.name());
 
         port_.bind(iface->interface());
         gem5::Port::bind(peer);
     }
 
   private:
-    ScExport& port_;
+    ScExport &port_;
 };
 
-}  // namespace sc_gem5
+} // namespace sc_gem5
 
-#endif  // __SYSTEMC_SC_PORT_WRAPPER_HH__
+#endif // __SYSTEMC_SC_PORT_WRAPPER_HH__

@@ -53,7 +53,6 @@
 
 namespace gem5
 {
-
 class ComputeUnit;
 
 class GlobalMemPipeline
@@ -92,12 +91,16 @@ class GlobalMemPipeline
     void handleResponse(GPUDynInstPtr gpuDynInst);
 
     bool
-    isGMReqFIFOWrRdy(uint32_t pendReqs=0) const
+    isGMReqFIFOWrRdy(uint32_t pendReqs = 0) const
     {
         return (gmIssuedRequests.size() + pendReqs) < gmQueueSize;
     }
 
-    const std::string &name() const { return _name; }
+    const std::string &
+    name() const
+    {
+        return _name;
+    }
     void
     incLoadVRFBankConflictCycles(int num_cycles)
     {

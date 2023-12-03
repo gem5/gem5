@@ -39,7 +39,6 @@
 
 namespace gem5
 {
-
 namespace ruby
 {
 class SubBlock;
@@ -51,16 +50,20 @@ const int CHECK_SIZE = (1 << CHECK_SIZE_BITS);
 class Check
 {
   public:
-    Check(Addr address, Addr pc, int _num_writers,
-          int _num_readers, RubyTester* _tester);
+    Check(Addr address, Addr pc, int _num_writers, int _num_readers,
+        RubyTester *_tester);
 
     void initiate(); // Does Action or Check or nether
-    void performCallback(ruby::NodeID proc, ruby::SubBlock* data,
-        Cycles curTime);
-    Addr getAddress() const { return m_address; }
+    void performCallback(
+        ruby::NodeID proc, ruby::SubBlock *data, Cycles curTime);
+    Addr
+    getAddress() const
+    {
+        return m_address;
+    }
     void changeAddress(Addr address);
 
-    void print(std::ostream& out) const;
+    void print(std::ostream &out) const;
 
   private:
     void initiateFlush();
@@ -82,11 +85,11 @@ class Check
     ruby::RubyAccessMode m_access_mode;
     int m_num_writers;
     int m_num_readers;
-    RubyTester* m_tester_ptr;
+    RubyTester *m_tester_ptr;
 };
 
-inline std::ostream&
-operator<<(std::ostream& out, const Check& obj)
+inline std::ostream &
+operator<<(std::ostream &out, const Check &obj)
 {
     obj.print(out);
     out << std::flush;

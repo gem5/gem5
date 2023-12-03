@@ -36,7 +36,6 @@
 
 namespace gem5
 {
-
 class TranslationGenConstIterator;
 
 /**
@@ -108,8 +107,16 @@ class TranslationGen
     {}
     virtual ~TranslationGen() {}
 
-    Addr start() const { return _start; }
-    Addr size() const { return _size; }
+    Addr
+    start() const
+    {
+        return _start;
+    }
+    Addr
+    size() const
+    {
+        return _size;
+    }
 
     /**
      * A const iterator class is provided so this generator can be used in a
@@ -191,8 +198,16 @@ class TranslationGenConstIterator
         return *this;
     }
 
-    reference operator*() { return current; }
-    pointer operator->() { return &current; }
+    reference
+    operator*()
+    {
+        return current;
+    }
+    pointer
+    operator->()
+    {
+        return &current;
+    }
 
     /**
      * The increment operator, which is the main work horse of this class.

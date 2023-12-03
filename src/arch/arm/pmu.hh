@@ -53,15 +53,13 @@
 
 namespace gem5
 {
-
 struct ArmPMUParams;
 class Platform;
 class ThreadContext;
 class ArmInterruptPin;
 
-namespace ArmISA {
-
-
+namespace ArmISA
+{
 /**
  * Model of an ARM PMU version 3
  *
@@ -233,7 +231,9 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
      * @return Value of the performance counter, 0 if the counter does
      * not exist.
      */
-    uint64_t getCounterValue(CounterId id) const {
+    uint64_t
+    getCounterValue(CounterId id) const
+    {
         return isValidCounter(id) ? getCounter(id).getValue() : 0;
     }
 
@@ -294,7 +294,6 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
      */
     struct PMUEvent
     {
-
         PMUEvent() {}
 
         virtual ~PMUEvent() {}
@@ -336,34 +335,38 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
          *  Method called immediately before a counter access in order for
          *  the associated event to update its state (if required)
          */
-        virtual void updateAttachedCounters() {}
+        virtual void
+        updateAttachedCounters()
+        {}
 
       protected:
-
         /** set of counters using this event  **/
-        std::set<PMU::CounterState*> userCounters;
+        std::set<PMU::CounterState *> userCounters;
     };
 
     struct RegularEvent : public PMUEvent
     {
-        typedef std::pair<SimObject*, std::string> EventTypeEntry;
+        typedef std::pair<SimObject *, std::string> EventTypeEntry;
 
-        void addMicroarchitectureProbe(SimObject* object,
-            std::string name) {
-
-            panic_if(!object,"malformed probe-point"
-                " definition with name %s\n", name);
+        void
+        addMicroarchitectureProbe(SimObject *object, std::string name)
+        {
+            panic_if(!object,
+                "malformed probe-point"
+                " definition with name %s\n",
+                name);
 
             microArchitectureEventSet.emplace(object, name);
         }
 
       protected:
-        struct RegularProbe: public  ProbeListenerArgBase<uint64_t>
+        struct RegularProbe : public ProbeListenerArgBase<uint64_t>
         {
-            RegularProbe(RegularEvent *parent, SimObject* obj,
-                std::string name)
-                : ProbeListenerArgBase(obj->getProbeManager(), name),
-                  parentEvent(parent) {}
+            RegularProbe(
+                RegularEvent *parent, SimObject *obj, std::string name) :
+                ProbeListenerArgBase(obj->getProbeManager(), name),
+                parentEvent(parent)
+            {}
 
             RegularProbe() = delete;
 
@@ -388,11 +391,14 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
 
     class SWIncrementEvent : public PMUEvent
     {
-        void enable() override {}
-        void disable() override {}
+        void
+        enable() override
+        {}
+        void
+        disable() override
+        {}
 
       public:
-
         /**
          * write on the sw increment register inducing an increment of the
          * counters with this event selected according to the bitfield written.
@@ -413,15 +419,21 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
     /** State of a counter within the PMU. **/
     struct CounterState : public Serializable
     {
-        CounterState(PMU &pmuReference, uint64_t counter_id,
-                     const bool is_64_bit)
-            : eventId(0), filter(0), enabled(false),
-              overflow64(is_64_bit), sourceEvent(nullptr),
-              counterId(counter_id), value(0), resetValue(false),
-              pmu(pmuReference) {}
+        CounterState(
+            PMU &pmuReference, uint64_t counter_id, const bool is_64_bit) :
+            eventId(0),
+            filter(0),
+            enabled(false),
+            overflow64(is_64_bit),
+            sourceEvent(nullptr),
+            counterId(counter_id),
+            value(0),
+            resetValue(false),
+            pmu(pmuReference)
+        {}
 
         void serialize(CheckpointOut &cp) const override;
-        void unserialize(CheckpointIn &cp)  override;
+        void unserialize(CheckpointIn &cp) override;
 
         /**
          * Add an event count to the counter and check for overflow.
@@ -450,7 +462,9 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
          *
          * @return the pysical counter id
          */
-        uint64_t getCounterId() const{
+        uint64_t
+        getCounterId() const
+        {
             return counterId;
         }
 
@@ -496,14 +510,14 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
 
         PMU &pmu;
 
-        template <typename ...Args>
-        void debugCounter(const char* mainString, Args &...args) const {
-
+        template <typename... Args>
+        void
+        debugCounter(const char *mainString, Args &... args) const
+        {
             std::string userString = csprintf(mainString, args...);
 
             warn("[counterId = %d, eventId = %d, sourceEvent = 0x%x] %s",
                 counterId, eventId, sourceEvent, userString.c_str());
-
         }
     };
 
@@ -515,7 +529,9 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
      * @return true if counter is within the allowed range or the
      * cycle counter, false otherwise.
      */
-    bool isValidCounter(CounterId id) const {
+    bool
+    isValidCounter(CounterId id) const
+    {
         return id < counters.size() || id == PMCCNTR;
     }
 
@@ -526,7 +542,9 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
      * @return Reference to a CounterState instance representing the
      * counter.
      */
-    CounterState &getCounter(CounterId id) {
+    CounterState &
+    getCounter(CounterId id)
+    {
         assert(isValidCounter(id));
         return id == PMCCNTR ? cycleCounter : counters[id];
     }
@@ -538,7 +556,9 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
      * @return Reference to a CounterState instance representing the
      * counter.
      */
-    const CounterState &getCounter(CounterId id) const {
+    const CounterState &
+    getCounter(CounterId id) const
+    {
         assert(isValidCounter(id));
         return id == PMCCNTR ? cycleCounter : counters[id];
     }

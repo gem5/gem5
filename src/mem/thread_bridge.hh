@@ -34,14 +34,13 @@
 
 namespace gem5
 {
-
 class ThreadBridge : public SimObject
 {
   public:
     explicit ThreadBridge(const ThreadBridgeParams &p);
 
-    Port &getPort(const std::string &if_name,
-                  PortID idx = InvalidPortID) override;
+    Port &getPort(
+        const std::string &if_name, PortID idx = InvalidPortID) override;
 
   private:
     class IncomingPort : public ResponsePort
@@ -82,5 +81,5 @@ class ThreadBridge : public SimObject
     OutgoingPort out_port_;
 };
 
-}  // namespace gem5
-#endif  // __MEM_THREAD_BRIDGE_HH__
+} // namespace gem5
+#endif // __MEM_THREAD_BRIDGE_HH__

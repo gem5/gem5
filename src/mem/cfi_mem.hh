@@ -46,10 +46,8 @@
 
 namespace gem5
 {
-
 namespace memory
 {
-
 /**
  * CfiMemory: This is modelling a flash memory adhering to the
  * Common Flash Interface (CFI):
@@ -86,7 +84,7 @@ class CfiMemory : public AbstractMemory
         BUFFERED_PROGRAM_CONFIRM = 0xD0,
         BLOCK_ERASE_CONFIRM = 0xD0,
         UNLOCK_BLOCK = 0xD0,
-        AMD_RESET=0xF0,
+        AMD_RESET = 0xF0,
         READ_ARRAY = 0xFF,
         /** This is not a real command, but it is used by the internal
          * model only to represent the 2nd write cycle state for a buffered
@@ -103,8 +101,10 @@ class CfiMemory : public AbstractMemory
     /** Metadata about the erase blocks in flash */
     struct BlockData : public Serializable
     {
-        BlockData(const CfiMemory &_parent, ssize_t number, ssize_t size)
-          : Serializable(), locked(number, false), blockSize(size),
+        BlockData(const CfiMemory &_parent, ssize_t number, ssize_t size) :
+            Serializable(),
+            locked(number, false),
+            blockSize(size),
             parent(_parent)
         {}
 
@@ -144,10 +144,18 @@ class CfiMemory : public AbstractMemory
         void erase(PacketPtr pkt);
 
         /** Number of erase blocks in flash memory */
-        ssize_t number() const { return locked.size(); }
+        ssize_t
+        number() const
+        {
+            return locked.size();
+        }
 
         /** Size in bytes of a single erase block */
-        ssize_t size() const { return blockSize; }
+        ssize_t
+        size() const
+        {
+            return blockSize;
+        }
 
       private: // Serializable
         void serialize(CheckpointOut &cp) const override;
@@ -176,8 +184,8 @@ class CfiMemory : public AbstractMemory
         // program buffer max size = 32 words
         static const ssize_t MAX_BUFFER_SIZE = 32 * 4;
 
-        ProgramBuffer(const CfiMemory &_parent)
-          : Serializable(), parent(_parent)
+        ProgramBuffer(const CfiMemory &_parent) :
+            Serializable(), parent(_parent)
         {}
 
         /**
@@ -225,31 +233,28 @@ class CfiMemory : public AbstractMemory
      */
     class DeferredPacket
     {
-
       public:
-
         const Tick tick;
         const PacketPtr pkt;
 
-        DeferredPacket(PacketPtr _pkt, Tick _tick) : tick(_tick), pkt(_pkt)
-        { }
+        DeferredPacket(PacketPtr _pkt, Tick _tick) : tick(_tick), pkt(_pkt) {}
     };
 
     class MemoryPort : public ResponsePort
     {
       private:
-        CfiMemory& mem;
+        CfiMemory &mem;
 
       public:
-        MemoryPort(const std::string& _name, CfiMemory& _memory);
+        MemoryPort(const std::string &_name, CfiMemory &_memory);
 
       protected:
         Tick recvAtomic(PacketPtr pkt) override;
         Tick recvAtomicBackdoor(
-                PacketPtr pkt, MemBackdoorPtr &_backdoor) override;
+            PacketPtr pkt, MemBackdoorPtr &_backdoor) override;
         void recvFunctional(PacketPtr pkt) override;
-        void recvMemBackdoorReq(const MemBackdoorReq &req,
-                MemBackdoorPtr &_backdoor) override;
+        void recvMemBackdoorReq(
+            const MemBackdoorReq &req, MemBackdoorPtr &_backdoor) override;
         bool recvTimingReq(PacketPtr pkt) override;
         void recvRespRetry() override;
         AddrRangeList getAddrRanges() const override;
@@ -352,8 +357,8 @@ class CfiMemory : public AbstractMemory
 
     DrainState drain() override;
 
-    Port &getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID) override;
+    Port &getPort(
+        const std::string &if_name, PortID idx = InvalidPortID) override;
     void init() override;
 
     void serialize(CheckpointOut &cp) const override;
@@ -363,8 +368,8 @@ class CfiMemory : public AbstractMemory
     Tick recvAtomic(PacketPtr pkt);
     Tick recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &_backdoor);
     void recvFunctional(PacketPtr pkt);
-    void recvMemBackdoorReq(const MemBackdoorReq &req,
-            MemBackdoorPtr &_backdoor);
+    void recvMemBackdoorReq(
+        const MemBackdoorReq &req, MemBackdoorPtr &_backdoor);
     bool recvTimingReq(PacketPtr pkt);
     void recvRespRetry();
 

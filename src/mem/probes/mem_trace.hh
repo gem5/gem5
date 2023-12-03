@@ -44,7 +44,6 @@
 
 namespace gem5
 {
-
 struct MemTraceProbeParams;
 class System;
 
@@ -65,14 +64,12 @@ class MemTraceProbe : public BaseMemProbe
     void startup() override;
 
   protected:
-
     /** Trace output stream */
     ProtoOutputStream *traceStream;
 
     System *system;
 
   private:
-
     /** Include the Program Counter in the memory trace */
     const bool withPC;
 };

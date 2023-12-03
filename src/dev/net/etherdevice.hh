@@ -42,16 +42,14 @@
 
 namespace gem5
 {
-
 class EtherInt;
 
 class EtherDevice : public PciDevice
 {
   public:
     using Params = EtherDeviceParams;
-    EtherDevice(const Params &params)
-        : PciDevice(params),
-          etherDeviceStats(this)
+    EtherDevice(const Params &params) :
+        PciDevice(params), etherDeviceStats(this)
     {}
 
   protected:
@@ -144,9 +142,7 @@ class EtherDevBase : public EtherDevice
 {
   public:
     using Params = EtherDevBaseParams;
-    EtherDevBase(const Params &params)
-        : EtherDevice(params)
-    {}
+    EtherDevBase(const Params &params) : EtherDevice(params) {}
 };
 
 } // namespace gem5

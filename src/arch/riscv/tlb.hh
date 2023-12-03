@@ -47,13 +47,12 @@
 
 namespace gem5
 {
-
 class ThreadContext;
 
 /* To maintain compatibility with other architectures, we'll
    simply create an ITLB and DTLB that will point to the real TLB */
-namespace RiscvISA {
-
+namespace RiscvISA
+{
 class Walker;
 
 class TLB : public BaseTLB
@@ -62,9 +61,9 @@ class TLB : public BaseTLB
 
   protected:
     size_t size;
-    std::vector<TlbEntry> tlb;  // our TLB
-    TlbEntryTrie trie;          // for quick access
-    EntryList freeList;         // free entries
+    std::vector<TlbEntry> tlb; // our TLB
+    TlbEntryTrie trie;         // for quick access
+    EntryList freeList;        // free entries
     uint64_t lruSeq;
 
     Walker *walker;
@@ -95,14 +94,16 @@ class TLB : public BaseTLB
 
     Walker *getWalker();
 
-    void takeOverFrom(BaseTLB *old) override {}
+    void
+    takeOverFrom(BaseTLB *old) override
+    {}
 
     TlbEntry *insert(Addr vpn, const TlbEntry &entry);
     void flushAll() override;
     void demapPage(Addr vaddr, uint64_t asn) override;
 
     Fault checkPermissions(STATUS status, PrivilegeMode pmode, Addr vaddr,
-                           BaseMMU::Mode mode, PTESv39 pte);
+        BaseMMU::Mode mode, PTESv39 pte);
     Fault createPagefault(Addr vaddr, BaseMMU::Mode mode);
 
     PrivilegeMode getMemPriv(ThreadContext *tc, BaseMMU::Mode mode);
@@ -125,18 +126,21 @@ class TLB : public BaseTLB
 
     Addr translateWithTLB(Addr vaddr, uint16_t asid, BaseMMU::Mode mode);
 
-    Fault translateAtomic(const RequestPtr &req,
-                          ThreadContext *tc, BaseMMU::Mode mode) override;
+    Fault translateAtomic(
+        const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode) override;
     void translateTiming(const RequestPtr &req, ThreadContext *tc,
-                         BaseMMU::Translation *translation,
-                         BaseMMU::Mode mode) override;
-    Fault translateFunctional(const RequestPtr &req, ThreadContext *tc,
-                              BaseMMU::Mode mode) override;
+        BaseMMU::Translation *translation, BaseMMU::Mode mode) override;
+    Fault translateFunctional(
+        const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode) override;
     Fault finalizePhysical(const RequestPtr &req, ThreadContext *tc,
-                           BaseMMU::Mode mode) const override;
+        BaseMMU::Mode mode) const override;
 
   private:
-    uint64_t nextSeq() { return ++lruSeq; }
+    uint64_t
+    nextSeq()
+    {
+        return ++lruSeq;
+    }
 
     TlbEntry *lookup(Addr vpn, uint16_t asid, BaseMMU::Mode mode, bool hidden);
 
@@ -144,11 +148,9 @@ class TLB : public BaseTLB
     void remove(size_t idx);
 
     Fault translate(const RequestPtr &req, ThreadContext *tc,
-                    BaseMMU::Translation *translation, BaseMMU::Mode mode,
-                    bool &delayed);
+        BaseMMU::Translation *translation, BaseMMU::Mode mode, bool &delayed);
     Fault doTranslate(const RequestPtr &req, ThreadContext *tc,
-                      BaseMMU::Translation *translation, BaseMMU::Mode mode,
-                      bool &delayed);
+        BaseMMU::Translation *translation, BaseMMU::Mode mode, bool &delayed);
 };
 
 } // namespace RiscvISA

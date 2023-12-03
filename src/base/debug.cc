@@ -51,10 +51,8 @@
 
 namespace gem5
 {
-
 namespace debug
 {
-
 //
 // This function will cause the process to signal itself with a
 // SIGTRAP which is ignored if not in gdb, but will cause the debugger
@@ -97,8 +95,7 @@ findFlag(const std::string &name)
     return i->second;
 }
 
-Flag::Flag(const char *name, const char *desc)
-    : _name(name), _desc(desc)
+Flag::Flag(const char *name, const char *desc) : _name(name), _desc(desc)
 {
     std::pair<FlagsMap::iterator, bool> result =
         allFlags().insert(std::make_pair(name, this));
@@ -108,16 +105,13 @@ Flag::Flag(const char *name, const char *desc)
     sync();
 }
 
-Flag::~Flag()
-{
-    allFlags().erase(name());
-}
+Flag::~Flag() { allFlags().erase(name()); }
 
 void
 Flag::globalEnable()
 {
     _globalEnable = true;
-    for (auto& i : allFlags())
+    for (auto &i : allFlags())
         i.second->sync();
 }
 
@@ -125,12 +119,12 @@ void
 Flag::globalDisable()
 {
     _globalEnable = false;
-    for (auto& i : allFlags())
+    for (auto &i : allFlags())
         i.second->sync();
 }
 
-SimpleFlag::SimpleFlag(const char *name, const char *desc, bool is_format)
-  : Flag(name, desc), _isFormat(is_format)
+SimpleFlag::SimpleFlag(const char *name, const char *desc, bool is_format) :
+    Flag(name, desc), _isFormat(is_format)
 {
     // Add non-format flags to the special "All" compound flag.
     if (!isFormat())
@@ -140,18 +134,19 @@ SimpleFlag::SimpleFlag(const char *name, const char *desc, bool is_format)
 void
 CompoundFlag::enable()
 {
-    for (auto& k : _kids)
+    for (auto &k : _kids)
         k->enable();
 }
 
 void
 CompoundFlag::disable()
 {
-    for (auto& k : _kids)
+    for (auto &k : _kids)
         k->disable();
 }
 
-AllFlagsFlag::AllFlagsFlag() : CompoundFlag("All",
+AllFlagsFlag::AllFlagsFlag() :
+    CompoundFlag("All",
         "Controls all debug flags. It should not be used within C++ code.", {})
 {}
 

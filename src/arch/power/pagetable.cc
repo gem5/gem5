@@ -35,10 +35,8 @@
 
 namespace gem5
 {
-
 namespace PowerISA
 {
-
 void
 PTE::serialize(CheckpointOut &cp) const
 {

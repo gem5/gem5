@@ -6,7 +6,6 @@
 
 namespace gem5
 {
-
 HMCController::HMCController(const HMCControllerParams &p) :
     NoncoherentXBar(p),
     numMemSidePorts(p.port_mem_side_ports_connection_count),
@@ -17,18 +16,18 @@ HMCController::HMCController(const HMCControllerParams &p) :
 
 // Since this module is a load distributor, all its request ports have the same
 //  range so we should keep only one of the ranges and ignore the others
-void HMCController::recvRangeChange(PortID mem_side_port_id)
+void
+HMCController::recvRangeChange(PortID mem_side_port_id)
 {
-    if (mem_side_port_id == 0)
-    {
-       gotAllAddrRanges = true;
-       BaseXBar::recvRangeChange(mem_side_port_id);
-    }
-    else
+    if (mem_side_port_id == 0) {
+        gotAllAddrRanges = true;
+        BaseXBar::recvRangeChange(mem_side_port_id);
+    } else
         gotAddrRanges[mem_side_port_id] = true;
 }
 
-int HMCController::rotate_counter()
+int
+HMCController::rotate_counter()
 {
     int current_value = rr_counter;
     rr_counter++;
@@ -37,7 +36,8 @@ int HMCController::rotate_counter()
     return current_value;
 }
 
-bool HMCController::recvTimingReq(PacketPtr pkt, PortID cpu_side_port_id)
+bool
+HMCController::recvTimingReq(PacketPtr pkt, PortID cpu_side_port_id)
 {
     // determine the source port based on the id
     ResponsePort *src_port = cpuSidePorts[cpu_side_port_id];
@@ -53,12 +53,12 @@ bool HMCController::recvTimingReq(PacketPtr pkt, PortID cpu_side_port_id)
     // port
     if (!reqLayers[mem_side_port_id]->tryTiming(src_port)) {
         DPRINTF(HMCController, "recvTimingReq: src %s %s 0x%x BUSY\n",
-                src_port->name(), pkt->cmdString(), pkt->getAddr());
+            src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
     }
 
-    DPRINTF(HMCController, "recvTimingReq: src %s %s 0x%x\n",
-            src_port->name(), pkt->cmdString(), pkt->getAddr());
+    DPRINTF(HMCController, "recvTimingReq: src %s %s 0x%x\n", src_port->name(),
+        pkt->cmdString(), pkt->getAddr());
 
     // store size and command as they might be modified when
     // forwarding the packet
@@ -79,22 +79,22 @@ bool HMCController::recvTimingReq(PacketPtr pkt, PortID cpu_side_port_id)
 
     // before forwarding the packet (and possibly altering it),
     // remember if we are expecting a response
-    const bool expect_response = pkt->needsResponse() &&
-        !pkt->cacheResponding();
+    const bool expect_response =
+        pkt->needsResponse() && !pkt->cacheResponding();
 
     // since it is a normal request, attempt to send the packet
     bool success = memSidePorts[mem_side_port_id]->sendTimingReq(pkt);
 
-    if (!success)  {
+    if (!success) {
         DPRINTF(HMCController, "recvTimingReq: src %s %s 0x%x RETRY\n",
-                src_port->name(), pkt->cmdString(), pkt->getAddr());
+            src_port->name(), pkt->cmdString(), pkt->getAddr());
 
         // restore the header delay as it is additive
         pkt->headerDelay = old_header_delay;
 
         // occupy until the header is sent
-        reqLayers[mem_side_port_id]->failedTiming(src_port,
-                                                clockEdge(Cycles(1)));
+        reqLayers[mem_side_port_id]->failedTiming(
+            src_port, clockEdge(Cycles(1)));
 
         return false;
     }

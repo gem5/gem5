@@ -34,7 +34,6 @@
 
 namespace gem5
 {
-
 void
 Iris::ISA::serialize(CheckpointOut &cp) const
 {

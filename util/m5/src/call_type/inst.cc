@@ -33,14 +33,21 @@
 
 namespace
 {
-
 class InstCallType : public CallType
 {
   public:
     InstCallType() : CallType("inst") {}
 
-    bool isDefault() const override { return CALL_TYPE_IS_DEFAULT; }
-    const DispatchTable &getDispatch() const override { return inst_dispatch; }
+    bool
+    isDefault() const override
+    {
+        return CALL_TYPE_IS_DEFAULT;
+    }
+    const DispatchTable &
+    getDispatch() const override
+    {
+        return inst_dispatch;
+    }
 
     void
     printDesc(std::ostream &os) const override

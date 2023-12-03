@@ -50,7 +50,6 @@
 
 namespace gem5
 {
-
 class EtherSwitch : public SimObject
 {
   public:
@@ -59,8 +58,8 @@ class EtherSwitch : public SimObject
     EtherSwitch(const Params &p);
     ~EtherSwitch();
 
-    Port &getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID) override;
+    Port &getPort(
+        const std::string &if_name, PortID idx = InvalidPortID) override;
 
   protected:
     /**
@@ -70,8 +69,8 @@ class EtherSwitch : public SimObject
     {
       public:
         Interface(const std::string &name, EtherSwitch *_etherSwitch,
-                  uint64_t outputBufferSize, Tick delay, Tick delay_var,
-                  double rate, unsigned id);
+            uint64_t outputBufferSize, Tick delay, Tick delay_var, double rate,
+            unsigned id);
         /**
          * When a packet is received from a device, route it
          * through an (several) output queue(s)
@@ -81,11 +80,14 @@ class EtherSwitch : public SimObject
          * enqueue packet to the outputFifo
          */
         void enqueue(EthPacketPtr packet, unsigned senderId);
-        void sendDone() {}
+        void
+        sendDone()
+        {}
         Tick switchingDelay();
 
-        Interface* lookupDestPort(networking::EthAddr destAddr);
-        void learnSenderAddr(networking::EthAddr srcMacAddr, Interface *sender);
+        Interface *lookupDestPort(networking::EthAddr destAddr);
+        void learnSenderAddr(
+            networking::EthAddr srcMacAddr, Interface *sender);
 
         void serialize(CheckpointOut &cp) const;
         void unserialize(CheckpointIn &cp);
@@ -97,11 +99,13 @@ class EtherSwitch : public SimObject
         const unsigned interfaceId;
 
         EtherSwitch *parent;
+
       protected:
         struct PortFifoEntry : public Serializable
         {
-            PortFifoEntry(EthPacketPtr pkt, Tick recv_tick, unsigned id)
-                : packet(pkt), recvTick(recv_tick), srcId(id) {}
+            PortFifoEntry(EthPacketPtr pkt, Tick recv_tick, unsigned id) :
+                packet(pkt), recvTick(recv_tick), srcId(id)
+            {}
 
             EthPacketPtr packet;
             Tick recvTick;
@@ -122,8 +126,9 @@ class EtherSwitch : public SimObject
           protected:
             struct EntryOrder
             {
-                bool operator() (const PortFifoEntry& lhs,
-                                 const PortFifoEntry& rhs) const
+                bool
+                operator()(
+                    const PortFifoEntry &lhs, const PortFifoEntry &rhs) const
                 {
                     if (lhs.recvTick == rhs.recvTick)
                         return lhs.srcId < rhs.srcId;
@@ -138,21 +143,42 @@ class EtherSwitch : public SimObject
             unsigned _size;
 
           public:
-            PortFifo(const std::string &name, int max)
-                :objName(name), _maxsize(max), _size(0) {}
+            PortFifo(const std::string &name, int max) :
+                objName(name), _maxsize(max), _size(0)
+            {}
             ~PortFifo() {}
 
-            const std::string name() { return objName; }
+            const std::string
+            name()
+            {
+                return objName;
+            }
             // Returns the available capacity of the fifo.
             // It can return a negative value because in "push" function
             // we first push the received packet into the fifo and then
             // check if we exceed the available capacity (if avail() < 0)
             // and remove packets from the end of fifo
-            int avail() const { return _maxsize - _size; }
+            int
+            avail() const
+            {
+                return _maxsize - _size;
+            }
 
-            EthPacketPtr front() { return fifo.begin()->packet; }
-            bool empty() const { return _size == 0; }
-            unsigned size() const { return _size; }
+            EthPacketPtr
+            front()
+            {
+                return fifo.begin()->packet;
+            }
+            bool
+            empty() const
+            {
+                return _size == 0;
+            }
+            unsigned
+            size() const
+            {
+                return _size;
+            }
 
             /**
              * Push a packet into the fifo
@@ -177,15 +203,15 @@ class EtherSwitch : public SimObject
 
     struct SwitchTableEntry
     {
-            Interface *interface;
-            Tick lastUseTime;
-        };
+        Interface *interface;
+        Tick lastUseTime;
+    };
 
   private:
     // time to live for MAC address mappings
     const double ttl;
     // all interfaces of the switch
-    std::vector<Interface*> interfaces;
+    std::vector<Interface *> interfaces;
     // table that maps MAC address to interfaces
     std::map<uint64_t, SwitchTableEntry> forwardingTable;
 

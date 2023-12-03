@@ -33,15 +33,11 @@
 
 namespace gem5
 {
-
 using namespace RiscvISA;
 
 LupV::LupV(const Params &params) :
-    Platform(params),
-    pic(params.pic),
-    uartIntID(params.uart_int_id)
-{
-}
+    Platform(params), pic(params.pic), uartIntID(params.uart_int_id)
+{}
 
 void
 LupV::postConsoleInt()
@@ -75,12 +71,10 @@ LupV::pciToDma(Addr pciAddr) const
 
 void
 LupV::serialize(CheckpointOut &cp) const
-{
-}
+{}
 
 void
 LupV::unserialize(CheckpointIn &cp)
-{
-}
+{}
 
 } // namespace gem5

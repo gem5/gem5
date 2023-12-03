@@ -33,7 +33,6 @@
 
 namespace gem5
 {
-
 class Process;
 
 class BasicSignal

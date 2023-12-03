@@ -31,10 +31,8 @@
 
 namespace gem5
 {
-
 namespace SparcISA
 {
-
 std::string
 Priv::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
 {
@@ -80,7 +78,7 @@ WrPriv::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
 
 std::string
 WrPrivImm::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream response;
 

@@ -41,21 +41,23 @@
 
 namespace gem5
 {
-
-ScalarMemPipeline::ScalarMemPipeline(const ComputeUnitParams &p,
-                                     ComputeUnit &cu)
-    : computeUnit(cu), _name(cu.name() + ".ScalarMemPipeline"),
-      queueSize(p.scalar_mem_queue_size),
-      inflightStores(0), inflightLoads(0)
-{
-}
+ScalarMemPipeline::ScalarMemPipeline(
+    const ComputeUnitParams &p, ComputeUnit &cu) :
+    computeUnit(cu),
+    _name(cu.name() + ".ScalarMemPipeline"),
+    queueSize(p.scalar_mem_queue_size),
+    inflightStores(0),
+    inflightLoads(0)
+{}
 
 void
 ScalarMemPipeline::exec()
 {
     // afind oldest scalar request whose data has arrived
-    GPUDynInstPtr m = !returnedLoads.empty() ? returnedLoads.front() :
-        !returnedStores.empty() ? returnedStores.front() : nullptr;
+    GPUDynInstPtr m =
+        !returnedLoads.empty() ?
+            returnedLoads.front() :
+            !returnedStores.empty() ? returnedStores.front() : nullptr;
 
     Wavefront *w = nullptr;
 
@@ -66,21 +68,19 @@ ScalarMemPipeline::exec()
         w = m->wavefront();
 
         accessSrf =
-            w->computeUnit->srf[w->simdId]->
-                canScheduleWriteOperandsFromLoad(w, m);
+            w->computeUnit->srf[w->simdId]->canScheduleWriteOperandsFromLoad(
+                w, m);
     }
 
     if ((!returnedStores.empty() || !returnedLoads.empty()) &&
-        m->latency.rdy() && computeUnit.scalarMemToSrfBus.rdy() &&
-        accessSrf &&
+        m->latency.rdy() && computeUnit.scalarMemToSrfBus.rdy() && accessSrf &&
         (computeUnit.shader->coissue_return ||
-         computeUnit.scalarMemUnit.rdy())) {
-
+            computeUnit.scalarMemUnit.rdy())) {
         w = m->wavefront();
 
         if (m->isLoad() || m->isAtomicRet()) {
-            w->computeUnit->srf[w->simdId]->
-                scheduleWriteOperandsFromLoad(w, m);
+            w->computeUnit->srf[w->simdId]->scheduleWriteOperandsFromLoad(
+                w, m);
         }
 
         m->completeAcc(m);
@@ -100,13 +100,13 @@ ScalarMemPipeline::exec()
         computeUnit.shader->ScheduleAdd(&w->outstandingReqs, m->time, -1);
 
         if (m->isStore() || m->isAtomic()) {
-            computeUnit.shader->ScheduleAdd(&w->scalarOutstandingReqsWrGm,
-                                             m->time, -1);
+            computeUnit.shader->ScheduleAdd(
+                &w->scalarOutstandingReqsWrGm, m->time, -1);
         }
 
         if (m->isLoad() || m->isAtomic()) {
-            computeUnit.shader->ScheduleAdd(&w->scalarOutstandingReqsRdGm,
-                                             m->time, -1);
+            computeUnit.shader->ScheduleAdd(
+                &w->scalarOutstandingReqsRdGm, m->time, -1);
         }
 
         // Mark write bus busy for appropriate amount of time
@@ -121,7 +121,6 @@ ScalarMemPipeline::exec()
     if (!issuedRequests.empty()) {
         GPUDynInstPtr mp = issuedRequests.front();
         if (mp->isLoad() || mp->isAtomic()) {
-
             if (inflightLoads >= queueSize) {
                 return;
             } else {
@@ -138,7 +137,7 @@ ScalarMemPipeline::exec()
         issuedRequests.pop();
 
         DPRINTF(GPUMem, "CU%d: WF[%d][%d] Popping scalar mem_op\n",
-                computeUnit.cu_id, mp->simdId, mp->wfSlotId);
+            computeUnit.cu_id, mp->simdId, mp->wfSlotId);
     }
 }
 

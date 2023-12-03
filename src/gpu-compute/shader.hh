@@ -59,7 +59,6 @@
 
 namespace gem5
 {
-
 class BaseTLB;
 class GPUCommandProcessor;
 class GPUDispatcher;
@@ -103,14 +102,18 @@ class Shader : public ClockedObject
 
   public:
     typedef ShaderParams Params;
-    enum hsail_mode_e {SIMT,VECTOR_SCALAR};
+    enum hsail_mode_e
+    {
+        SIMT,
+        VECTOR_SCALAR
+    };
 
     GPUDispatcher &dispatcher();
     void sampleLoad(const Tick accessTime);
     void sampleStore(const Tick accessTime);
     void sampleInstRoundTrip(std::vector<Tick> roundTripTime);
-    void sampleLineRoundTrip(const std::map<Addr,
-        std::vector<Tick>> &roundTripTime);
+    void sampleLineRoundTrip(
+        const std::map<Addr, std::vector<Tick>> &roundTripTime);
 
     SimpleThread *cpuThread;
     ThreadContext *gpuTc;
@@ -128,13 +131,13 @@ class Shader : public ClockedObject
         return hwRegs[regIdx];
     }
 
-    const ApertureRegister&
+    const ApertureRegister &
     gpuVmApe() const
     {
         return _gpuVmApe;
     }
 
-    const ApertureRegister&
+    const ApertureRegister &
     ldsApe() const
     {
         return _ldsApe;
@@ -147,7 +150,7 @@ class Shader : public ClockedObject
         _ldsApe.limit = limit;
     }
 
-    const ApertureRegister&
+    const ApertureRegister &
     scratchApe() const
     {
         return _scratchApe;
@@ -179,8 +182,8 @@ class Shader : public ClockedObject
     bool
     isScratchApe(Addr addr) const
     {
-        bool is_scratch
-            = addr >= _scratchApe.base && addr <= _scratchApe.limit;
+        bool is_scratch =
+            addr >= _scratchApe.base && addr <= _scratchApe.limit;
 
         return is_scratch;
     }
@@ -212,7 +215,7 @@ class Shader : public ClockedObject
             // if the value is initilized and we get
             // a differnt base later.
             panic_if(shHiddenPrivateBaseVmid != 0,
-                     "Currently we support only single process\n");
+                "Currently we support only single process\n");
         }
         shHiddenPrivateBaseVmid = sh_hidden_base_new;
     }
@@ -248,14 +251,14 @@ class Shader : public ClockedObject
     uint32_t sa_n;
 
     // Pointer to value to be increments
-    std::vector<int*> sa_val;
+    std::vector<int *> sa_val;
     // When to do the increment
     std::vector<uint64_t> sa_when;
     // Amount to increment by
     std::vector<int32_t> sa_x;
 
     // List of Compute Units (CU's)
-    std::vector<ComputeUnit*> cuList;
+    std::vector<ComputeUnit *> cuList;
 
     GPUCommandProcessor &gpuCmdProc;
     GPUDispatcher &_dispatcher;
@@ -276,20 +279,20 @@ class Shader : public ClockedObject
     bool processTimingPacket(PacketPtr pkt);
 
     void AccessMem(uint64_t address, void *ptr, uint32_t size, int cu_id,
-                   MemCmd cmd, bool suppress_func_errors);
+        MemCmd cmd, bool suppress_func_errors);
 
     void ReadMem(uint64_t address, void *ptr, uint32_t sz, int cu_id);
 
     void ReadMem(uint64_t address, void *ptr, uint32_t sz, int cu_id,
-                 bool suppress_func_errors);
+        bool suppress_func_errors);
 
     void WriteMem(uint64_t address, void *ptr, uint32_t sz, int cu_id);
 
     void WriteMem(uint64_t address, void *ptr, uint32_t sz, int cu_id,
-                  bool suppress_func_errors);
+        bool suppress_func_errors);
 
     void doFunctionalAccess(const RequestPtr &req, MemCmd cmd, void *data,
-                            bool suppress_func_errors, int cu_id);
+        bool suppress_func_errors, int cu_id);
 
     void
     registerCU(int cu_id, ComputeUnit *compute_unit)

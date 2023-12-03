@@ -51,39 +51,39 @@
  *      drivers/gpu/drm/amd/include/ asic_reg/mmhub/mmhub_1_0_offset.h
  */
 
-#define mmVM_INVALIDATE_ENG17_ACK                                     0x08c6
-#define mmVM_CONTEXT0_PAGE_TABLE_BASE_ADDR_LO32                       0x08eb
-#define mmVM_CONTEXT0_PAGE_TABLE_BASE_ADDR_HI32                       0x08ec
-#define mmVM_CONTEXT0_PAGE_TABLE_START_ADDR_LO32                      0x090b
-#define mmVM_CONTEXT0_PAGE_TABLE_START_ADDR_HI32                      0x090c
-#define mmVM_CONTEXT0_PAGE_TABLE_END_ADDR_LO32                        0x092b
-#define mmVM_CONTEXT0_PAGE_TABLE_END_ADDR_HI32                        0x092c
+#define mmVM_INVALIDATE_ENG17_ACK 0x08c6
+#define mmVM_CONTEXT0_PAGE_TABLE_BASE_ADDR_LO32 0x08eb
+#define mmVM_CONTEXT0_PAGE_TABLE_BASE_ADDR_HI32 0x08ec
+#define mmVM_CONTEXT0_PAGE_TABLE_START_ADDR_LO32 0x090b
+#define mmVM_CONTEXT0_PAGE_TABLE_START_ADDR_HI32 0x090c
+#define mmVM_CONTEXT0_PAGE_TABLE_END_ADDR_LO32 0x092b
+#define mmVM_CONTEXT0_PAGE_TABLE_END_ADDR_HI32 0x092c
 
-#define mmMC_VM_FB_OFFSET                                             0x096b
-#define mmMC_VM_FB_LOCATION_BASE                                      0x0980
-#define mmMC_VM_FB_LOCATION_TOP                                       0x0981
-#define mmMC_VM_AGP_TOP                                               0x0982
-#define mmMC_VM_AGP_BOT                                               0x0983
-#define mmMC_VM_AGP_BASE                                              0x0984
-#define mmMC_VM_SYSTEM_APERTURE_LOW_ADDR                              0x0985
-#define mmMC_VM_SYSTEM_APERTURE_HIGH_ADDR                             0x0986
+#define mmMC_VM_FB_OFFSET 0x096b
+#define mmMC_VM_FB_LOCATION_BASE 0x0980
+#define mmMC_VM_FB_LOCATION_TOP 0x0981
+#define mmMC_VM_AGP_TOP 0x0982
+#define mmMC_VM_AGP_BOT 0x0983
+#define mmMC_VM_AGP_BASE 0x0984
+#define mmMC_VM_SYSTEM_APERTURE_LOW_ADDR 0x0985
+#define mmMC_VM_SYSTEM_APERTURE_HIGH_ADDR 0x0986
 
-#define mmMMHUB_VM_INVALIDATE_ENG17_SEM                               0x06e2
-#define mmMMHUB_VM_INVALIDATE_ENG17_REQ                               0x06f4
-#define mmMMHUB_VM_INVALIDATE_ENG17_ACK                               0x0706
-#define mmMMHUB_VM_FB_LOCATION_BASE                                   0x082c
-#define mmMMHUB_VM_FB_LOCATION_TOP                                    0x082d
+#define mmMMHUB_VM_INVALIDATE_ENG17_SEM 0x06e2
+#define mmMMHUB_VM_INVALIDATE_ENG17_REQ 0x06f4
+#define mmMMHUB_VM_INVALIDATE_ENG17_ACK 0x0706
+#define mmMMHUB_VM_FB_LOCATION_BASE 0x082c
+#define mmMMHUB_VM_FB_LOCATION_TOP 0x082d
 
-#define VEGA10_FB_LOCATION_BASE                                      0x6a0b0
-#define VEGA10_FB_LOCATION_TOP                                       0x6a0b4
+#define VEGA10_FB_LOCATION_BASE 0x6a0b0
+#define VEGA10_FB_LOCATION_TOP 0x6a0b4
 
-#define MI100_MEM_SIZE_REG                                           0x0378c
-#define MI100_FB_LOCATION_BASE                                       0x6ac00
-#define MI100_FB_LOCATION_TOP                                        0x6ac04
+#define MI100_MEM_SIZE_REG 0x0378c
+#define MI100_FB_LOCATION_BASE 0x6ac00
+#define MI100_FB_LOCATION_TOP 0x6ac04
 
-#define MI200_MEM_SIZE_REG                                           0x0378c
-#define MI200_FB_LOCATION_BASE                                       0x6b300
-#define MI200_FB_LOCATION_TOP                                        0x6b304
+#define MI200_MEM_SIZE_REG 0x0378c
+#define MI200_FB_LOCATION_BASE 0x6b300
+#define MI200_FB_LOCATION_TOP 0x6b304
 
 // AMD GPUs support 16 different virtual address spaces
 static constexpr int AMDGPU_VM_COUNT = 16;
@@ -98,7 +98,6 @@ static constexpr int AMDGPU_USER_PAGE_SIZE = 4096;
 
 namespace gem5
 {
-
 class AMDGPUVM : public Serializable
 {
   private:
@@ -190,9 +189,21 @@ class AMDGPUVM : public Serializable
         return ((vaddr >= vmContext0.agpBot) && (vaddr <= vmContext0.agpTop));
     }
 
-    Addr getAGPBot() { return vmContext0.agpBot; }
-    Addr getAGPTop() { return vmContext0.agpTop; }
-    Addr getAGPBase() { return vmContext0.agpBase; }
+    Addr
+    getAGPBot()
+    {
+        return vmContext0.agpBot;
+    }
+    Addr
+    getAGPTop()
+    {
+        return vmContext0.agpTop;
+    }
+    Addr
+    getAGPBase()
+    {
+        return vmContext0.agpBase;
+    }
 
     bool
     inMMHUB(Addr vaddr)
@@ -200,11 +211,27 @@ class AMDGPUVM : public Serializable
         return ((vaddr >= getMMHUBBase()) && (vaddr <= getMMHUBTop()));
     }
 
-    Addr getMMHUBBase() { return mmhubBase; }
-    Addr getMMHUBTop() { return mmhubTop; }
+    Addr
+    getMMHUBBase()
+    {
+        return mmhubBase;
+    }
+    Addr
+    getMMHUBTop()
+    {
+        return mmhubTop;
+    }
 
-    void setMMHUBBase(Addr base) { mmhubBase = base; }
-    void setMMHUBTop(Addr top) { mmhubTop = top; }
+    void
+    setMMHUBBase(Addr base)
+    {
+        mmhubBase = base;
+    }
+    void
+    setMMHUBTop(Addr top)
+    {
+        mmhubTop = top;
+    }
 
     bool
     inFB(Addr vaddr)
@@ -212,19 +239,39 @@ class AMDGPUVM : public Serializable
         return ((vaddr >= vmContext0.fbBase) && (vaddr <= vmContext0.fbTop));
     }
 
-    Addr getFBBase() { return vmContext0.fbBase; }
-    Addr getFBTop() { return vmContext0.fbTop; }
-    Addr getFBOffset() { return vmContext0.fbOffset; }
+    Addr
+    getFBBase()
+    {
+        return vmContext0.fbBase;
+    }
+    Addr
+    getFBTop()
+    {
+        return vmContext0.fbTop;
+    }
+    Addr
+    getFBOffset()
+    {
+        return vmContext0.fbOffset;
+    }
 
     bool
     inSys(Addr vaddr)
     {
-        return ((vaddr >= vmContext0.sysAddrL) &&
-                (vaddr <= vmContext0.sysAddrH));
+        return (
+            (vaddr >= vmContext0.sysAddrL) && (vaddr <= vmContext0.sysAddrH));
     }
 
-    Addr getSysAddrRangeLow () { return vmContext0.sysAddrL; }
-    Addr getSysAddrRangeHigh () { return vmContext0.sysAddrH; }
+    Addr
+    getSysAddrRangeLow()
+    {
+        return vmContext0.sysAddrL;
+    }
+    Addr
+    getSysAddrRangeHigh()
+    {
+        return vmContext0.sysAddrH;
+    }
 
     Addr
     getMmioAperture(Addr addr)
@@ -254,7 +301,6 @@ class AMDGPUVM : public Serializable
             warn_once("Accessing unsupported MMIO aperture! Assuming NBIO\n");
             return NBIO_BASE;
         }
-
     }
 
     // Gettig mapped aperture base addresses
@@ -270,7 +316,6 @@ class AMDGPUVM : public Serializable
             warn_once("Accessing unsupported frame apperture!\n");
             return ~0;
         }
-
     }
 
     /**
@@ -302,7 +347,6 @@ class AMDGPUVM : public Serializable
     void registerTLB(VegaISA::GpuTLB *tlb);
     void invalidateTLBs();
 
-
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 
@@ -321,8 +365,8 @@ class AMDGPUVM : public Serializable
         void translate(Range &range) const override;
 
       public:
-        AGPTranslationGen(AMDGPUVM *_vm, Addr vaddr, Addr size)
-            : TranslationGen(vaddr, size), vm(_vm)
+        AGPTranslationGen(AMDGPUVM *_vm, Addr vaddr, Addr size) :
+            TranslationGen(vaddr, size), vm(_vm)
         {}
     };
 
@@ -334,8 +378,8 @@ class AMDGPUVM : public Serializable
         void translate(Range &range) const override;
 
       public:
-        GARTTranslationGen(AMDGPUVM *_vm, Addr vaddr, Addr size)
-            : TranslationGen(vaddr, size), vm(_vm)
+        GARTTranslationGen(AMDGPUVM *_vm, Addr vaddr, Addr size) :
+            TranslationGen(vaddr, size), vm(_vm)
         {}
     };
 
@@ -347,8 +391,8 @@ class AMDGPUVM : public Serializable
         void translate(Range &range) const override;
 
       public:
-        MMHUBTranslationGen(AMDGPUVM *_vm, Addr vaddr, Addr size)
-            : TranslationGen(vaddr, size), vm(_vm)
+        MMHUBTranslationGen(AMDGPUVM *_vm, Addr vaddr, Addr size) :
+            TranslationGen(vaddr, size), vm(_vm)
         {}
     };
 
@@ -363,9 +407,8 @@ class AMDGPUVM : public Serializable
 
       public:
         UserTranslationGen(AMDGPUVM *_vm, VegaISA::Walker *_walker, int _vmid,
-                           Addr vaddr, Addr size)
-            : TranslationGen(vaddr, size), vm(_vm), walker(_walker),
-              vmid(_vmid)
+            Addr vaddr, Addr size) :
+            TranslationGen(vaddr, size), vm(_vm), walker(_walker), vmid(_vmid)
         {}
     };
 };

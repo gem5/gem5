@@ -53,13 +53,11 @@
 
 namespace gem5
 {
-
 class System;
 class ThreadContext;
 
 namespace ArmISA
 {
-
 class RemoteGDB : public BaseRemoteGDB
 {
   protected:
@@ -67,20 +65,30 @@ class RemoteGDB : public BaseRemoteGDB
 
     class AArch32GdbRegCache : public BaseGdbRegCache
     {
-      using BaseGdbRegCache::BaseGdbRegCache;
+        using BaseGdbRegCache::BaseGdbRegCache;
+
       protected:
         struct GEM5_PACKED
         {
-          uint32_t gpr[16];
-          uint32_t cpsr;
-          uint64_t fpr[32];
-          uint32_t fpscr;
+            uint32_t gpr[16];
+            uint32_t cpsr;
+            uint64_t fpr[32];
+            uint32_t fpscr;
         } r;
+
       public:
-        char *data() const override { return (char *)&r; }
-        size_t size() const override { return sizeof(r); }
-        void getRegs(ThreadContext*) override;
-        void setRegs(ThreadContext*) const override;
+        char *
+        data() const override
+        {
+            return (char *)&r;
+        }
+        size_t
+        size() const override
+        {
+            return sizeof(r);
+        }
+        void getRegs(ThreadContext *) override;
+        void setRegs(ThreadContext *) const override;
         const std::string
         name() const override
         {
@@ -90,23 +98,33 @@ class RemoteGDB : public BaseRemoteGDB
 
     class AArch64GdbRegCache : public BaseGdbRegCache
     {
-      using BaseGdbRegCache::BaseGdbRegCache;
+        using BaseGdbRegCache::BaseGdbRegCache;
+
       protected:
         struct GEM5_PACKED
         {
-          uint64_t x[31];
-          uint64_t spx;
-          uint64_t pc;
-          uint32_t cpsr;
-          VecElem v[NumVecV8ArchRegs * NumVecElemPerNeonVecReg];
-          uint32_t fpsr;
-          uint32_t fpcr;
+            uint64_t x[31];
+            uint64_t spx;
+            uint64_t pc;
+            uint32_t cpsr;
+            VecElem v[NumVecV8ArchRegs * NumVecElemPerNeonVecReg];
+            uint32_t fpsr;
+            uint32_t fpcr;
         } r;
+
       public:
-        char *data() const override { return (char *)&r; }
-        size_t size() const override { return sizeof(r); }
-        void getRegs(ThreadContext*) override;
-        void setRegs(ThreadContext*) const override;
+        char *
+        data() const override
+        {
+            return (char *)&r;
+        }
+        size_t
+        size() const override
+        {
+            return sizeof(r);
+        }
+        void getRegs(ThreadContext *) override;
+        void setRegs(ThreadContext *) const override;
         const std::string
         name() const override
         {
@@ -126,8 +144,8 @@ class RemoteGDB : public BaseRemoteGDB
     {
         return {"qXfer:features:read+"};
     };
-    bool getXferFeaturesRead(const std::string &annex,
-                             std::string &output) override;
+    bool getXferFeaturesRead(
+        const std::string &annex, std::string &output) override;
 };
 
 } // namespace ArmISA

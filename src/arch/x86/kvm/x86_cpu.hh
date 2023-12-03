@@ -45,7 +45,6 @@ struct kvm_xsave;
 
 namespace gem5
 {
-
 /**
  * x86 implementation of a KVM-based hardware virtualized CPU.
  */
@@ -226,8 +225,8 @@ class X86KvmCPU : public BaseKvmCPU
      * @{
      */
     /** Update integer registers */
-    void updateThreadContextRegs(const struct kvm_regs &regs,
-                                 const struct kvm_sregs &sregs);
+    void updateThreadContextRegs(
+        const struct kvm_regs &regs, const struct kvm_sregs &sregs);
     /** Update control registers (CRx, segments, etc.) */
     void updateThreadContextSRegs(const struct kvm_sregs &sregs);
     /** Update FPU and SIMD registers using the legacy API */

@@ -47,11 +47,7 @@
 
 namespace gem5
 {
-
-AmbaFake::AmbaFake(const Params &p)
-    : AmbaPioDevice(p, 0x1000)
-{
-}
+AmbaFake::AmbaFake(const Params &p) : AmbaPioDevice(p, 0x1000) {}
 
 Tick
 AmbaFake::read(PacketPtr pkt)
@@ -65,7 +61,7 @@ AmbaFake::read(PacketPtr pkt)
     pkt->setLE<uint32_t>(0);
     if (!readId(pkt, ambaId, pioAddr) && !params().ignore_access)
         panic("Tried to read AmbaFake %s at offset %#x that doesn't exist\n",
-              name(), daddr);
+            name(), daddr);
 
     pkt->makeAtomicResponse();
     return pioDelay;
@@ -74,12 +70,11 @@ AmbaFake::read(PacketPtr pkt)
 Tick
 AmbaFake::write(PacketPtr pkt)
 {
-
     Addr daddr = pkt->getAddr() - pioAddr;
 
     if (!params().ignore_access)
         panic("Tried to write AmbaFake %s at offset %#x that doesn't exist\n",
-              name(), daddr);
+            name(), daddr);
 
     pkt->makeAtomicResponse();
     return pioDelay;

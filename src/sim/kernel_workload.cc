@@ -33,9 +33,10 @@
 
 namespace gem5
 {
-
-KernelWorkload::KernelWorkload(const Params &p) : Workload(p),
-    _loadAddrMask(p.load_addr_mask), _loadAddrOffset(p.load_addr_offset),
+KernelWorkload::KernelWorkload(const Params &p) :
+    Workload(p),
+    _loadAddrMask(p.load_addr_mask),
+    _loadAddrOffset(p.load_addr_offset),
     commandLine(p.command_line)
 {
     if (params().object_file == "") {
@@ -45,8 +46,8 @@ KernelWorkload::KernelWorkload(const Params &p) : Workload(p),
         kernelObj = loader::createObjectFile(params().object_file);
         inform("kernel located at: %s", params().object_file);
 
-        fatal_if(!kernelObj,
-                "Could not load kernel file %s", params().object_file);
+        fatal_if(
+            !kernelObj, "Could not load kernel file %s", params().object_file);
 
         image = kernelObj->buildImage();
 
@@ -59,16 +60,15 @@ KernelWorkload::KernelWorkload(const Params &p) : Workload(p),
         if (_loadAddrMask == 0)
             _loadAddrMask = mask(findMsbSet(_end - _start) + 1);
 
-        image.move([this](Addr a) {
-            return (a & _loadAddrMask) + _loadAddrOffset;
-        });
+        image.move(
+            [this](Addr a) { return (a & _loadAddrMask) + _loadAddrOffset; });
 
         kernelSymtab = kernelObj->symtab();
         auto initKernelSymtab = kernelSymtab.mask(_loadAddrMask)
-            ->offset(_loadAddrOffset)
-            ->rename([](const std::string &name) {
-                return "kernel_init." + name;
-            });
+                                    ->offset(_loadAddrOffset)
+                                    ->rename([](const std::string &name) {
+                                        return "kernel_init." + name;
+                                    });
 
         loader::debugSymbolTable.insert(*initKernelSymtab);
         loader::debugSymbolTable.insert(kernelSymtab);
@@ -87,7 +87,7 @@ KernelWorkload::KernelWorkload(const Params &p) : Workload(p),
         const bool raw = extras_addrs[ker_idx] != MaxAddr;
         auto *obj = loader::createObjectFile(obj_name, raw);
         fatal_if(!obj, "Failed to build additional kernel object '%s'.\n",
-                 obj_name);
+            obj_name);
         extras.push_back(obj);
     }
 }
@@ -102,14 +102,14 @@ KernelWorkload::initState()
     auto mapper = [this](Addr a) {
         return (a & _loadAddrMask) + _loadAddrOffset;
     };
-    if (params().object_file != "")  {
+    if (params().object_file != "") {
         if (params().addr_check) {
             // Validate kernel mapping before loading binary
             fatal_if(!system->isMemAddr(mapper(_start)) ||
-                    !system->isMemAddr(mapper(_end)),
-                    "Kernel is mapped to invalid location (not memory). "
-                    "start (%#x) - end (%#x) %#x:%#x\n",
-                    _start, _end, mapper(_start), mapper(_end));
+                         !system->isMemAddr(mapper(_end)),
+                "Kernel is mapped to invalid location (not memory). "
+                "start (%#x) - end (%#x) %#x:%#x\n",
+                _start, _end, mapper(_start), mapper(_end));
         }
         // Load program sections into memory
         image.write(phys_mem);

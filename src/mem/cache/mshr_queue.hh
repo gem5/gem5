@@ -54,14 +54,12 @@
 
 namespace gem5
 {
-
 /**
  * A Class for maintaining a list of pending and allocated memory requests.
  */
 class MSHRQueue : public Queue<MSHR>
 {
   private:
-
     /**
      * The number of entries to reserve for future demand accesses.
      * Prevent prefetcher from taking all mshr entries
@@ -69,7 +67,6 @@ class MSHRQueue : public Queue<MSHR>
     const int demandReserve;
 
   public:
-
     /**
      * Create a queue with a given number of entries.
      * @param num_entrys The number of entries in this queue.
@@ -79,7 +76,7 @@ class MSHRQueue : public Queue<MSHR>
      * demand accesses.
      */
     MSHRQueue(const std::string &_label, int num_entries, int reserve,
-              int demand_reserve, std::string cache_name);
+        int demand_reserve, std::string cache_name);
 
     /**
      * Allocates a new MSHR for the request and size. This places the request
@@ -97,7 +94,7 @@ class MSHRQueue : public Queue<MSHR>
      * @pre There are free entries.
      */
     MSHR *allocate(Addr blk_addr, unsigned blk_size, PacketPtr pkt,
-                   Tick when_ready, Counter order, bool alloc_on_fill);
+        Tick when_ready, Counter order, bool alloc_on_fill);
 
     /**
      * Deallocate a MSHR and its targets
@@ -146,7 +143,8 @@ class MSHRQueue : public Queue<MSHR>
      * Returns true if the pending list is not empty.
      * @return True if there are outstanding requests.
      */
-    bool havePending() const
+    bool
+    havePending() const
     {
         return !readyList.empty();
     }
@@ -155,7 +153,8 @@ class MSHRQueue : public Queue<MSHR>
      * Returns true if sufficient mshrs for prefetch.
      * @return True if sufficient mshrs for prefetch.
      */
-    bool canPrefetch() const
+    bool
+    canPrefetch() const
     {
         // @todo we may want to revisit the +1, currently added to
         // keep regressions unchanged

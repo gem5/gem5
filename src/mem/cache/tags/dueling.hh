@@ -36,7 +36,6 @@
 
 namespace gem5
 {
-
 /**
  * A dueler is an entry that may or may not be accounted for sampling.
  * Whenever an action triggers sampling, the dueling monitor will check
@@ -87,7 +86,7 @@ class Dueler
      * @param team Team to which this sampling entry belongs (only 2 possible).
      * @return Whether this is a sampling entry.
      */
-    bool isSample(uint64_t id, bool& team) const;
+    bool isSample(uint64_t id, bool &team) const;
 };
 
 /**
@@ -175,7 +174,7 @@ class DuelingMonitor
      *
      * @param dueler The selected entry.
      */
-    void sample(const Dueler* dueler);
+    void sample(const Dueler *dueler);
 
     /**
      * Check if the given dueler is a sample for this instance. If so, get its
@@ -185,7 +184,7 @@ class DuelingMonitor
      * @param team Team to which this sampling entry belongs (only 2 possible).
      * @return Whether this is a sampling entry.
      */
-    bool isSample(const Dueler* dueler, bool& team) const;
+    bool isSample(const Dueler *dueler, bool &team) const;
 
     /**
      * Get the team that is currently winning the duel.
@@ -201,7 +200,7 @@ class DuelingMonitor
      *
      * @param dueler The entry to be initialized.
      */
-    void initEntry(Dueler* dueler);
+    void initEntry(Dueler *dueler);
 };
 
 } // namespace gem5

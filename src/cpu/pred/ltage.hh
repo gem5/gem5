@@ -61,7 +61,6 @@
 #ifndef __CPU_PRED_LTAGE_HH__
 #define __CPU_PRED_LTAGE_HH__
 
-
 #include <vector>
 
 #include "base/types.hh"
@@ -71,20 +70,17 @@
 
 namespace gem5
 {
-
 namespace branch_prediction
 {
-
 class LTAGE : public TAGE
 {
   public:
     LTAGE(const LTAGEParams &params);
 
     // Base class methods.
-    void squash(ThreadID tid, void * &bp_history) override;
-    void update(ThreadID tid, Addr pc, bool taken,
-                void * &bp_history, bool squashed,
-                const StaticInstPtr & inst, Addr target) override;
+    void squash(ThreadID tid, void *&bp_history) override;
+    void update(ThreadID tid, Addr pc, bool taken, void *&bp_history,
+        bool squashed, const StaticInstPtr &inst, Addr target) override;
 
     void init() override;
 
@@ -103,8 +99,8 @@ class LTAGE : public TAGE
     struct LTageBranchInfo : public TageBranchInfo
     {
         LoopPredictor::BranchInfo *lpBranchInfo;
-        LTageBranchInfo(TAGEBase &tage, LoopPredictor &lp)
-          : TageBranchInfo(tage), lpBranchInfo(lp.makeBranchInfo())
+        LTageBranchInfo(TAGEBase &tage, LoopPredictor &lp) :
+            TageBranchInfo(tage), lpBranchInfo(lp.makeBranchInfo())
         {}
 
         virtual ~LTageBranchInfo()
@@ -125,7 +121,7 @@ class LTAGE : public TAGE
      * derived class prediction information in the base class.
      */
     bool predict(
-        ThreadID tid, Addr branch_pc, bool cond_branch, void* &b) override;
+        ThreadID tid, Addr branch_pc, bool cond_branch, void *&b) override;
 };
 
 } // namespace branch_prediction

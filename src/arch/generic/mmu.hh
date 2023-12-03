@@ -47,19 +47,22 @@
 
 namespace gem5
 {
-
 class BaseTLB;
 
 class BaseMMU : public SimObject
 {
   public:
-    enum Mode { Read, Write, Execute };
+    enum Mode
+    {
+        Read,
+        Write,
+        Execute
+    };
 
     class Translation
     {
       public:
-        virtual ~Translation()
-        {}
+        virtual ~Translation() {}
 
         /**
          * Signal that the translation has been delayed due to a hw page table
@@ -73,7 +76,7 @@ class BaseMMU : public SimObject
          * function. Once it's called, the object is no longer valid.
          */
         virtual void finish(const Fault &fault, const RequestPtr &req,
-                            ThreadContext *tc, BaseMMU::Mode mode) = 0;
+            ThreadContext *tc, BaseMMU::Mode mode) = 0;
 
         /** This function is used by the page table walker to determine
          * if it should translate the a pending request or if the underlying
@@ -81,17 +84,19 @@ class BaseMMU : public SimObject
          * @ return Is the instruction that requested this translation
          * squashed?
          */
-        virtual bool squashed() const { return false; }
+        virtual bool
+        squashed() const
+        {
+            return false;
+        }
     };
 
   protected:
     typedef BaseMMUParams Params;
 
-    BaseMMU(const Params &p)
-      : SimObject(p), dtb(p.dtb), itb(p.itb)
-    {}
+    BaseMMU(const Params &p) : SimObject(p), dtb(p.dtb), itb(p.itb) {}
 
-    BaseTLB*
+    BaseTLB *
     getTlb(Mode mode) const
     {
         if (mode == Execute)
@@ -111,17 +116,14 @@ class BaseMMU : public SimObject
 
     void demapPage(Addr vaddr, uint64_t asn);
 
-    virtual Fault
-    translateAtomic(const RequestPtr &req, ThreadContext *tc,
-                    Mode mode);
+    virtual Fault translateAtomic(
+        const RequestPtr &req, ThreadContext *tc, Mode mode);
 
-    virtual void
-    translateTiming(const RequestPtr &req, ThreadContext *tc,
-                    Translation *translation, Mode mode);
+    virtual void translateTiming(const RequestPtr &req, ThreadContext *tc,
+        Translation *translation, Mode mode);
 
-    virtual Fault
-    translateFunctional(const RequestPtr &req, ThreadContext *tc,
-                        Mode mode);
+    virtual Fault translateFunctional(
+        const RequestPtr &req, ThreadContext *tc, Mode mode);
 
     class MMUTranslationGen : public TranslationGen
     {
@@ -137,8 +139,8 @@ class BaseMMU : public SimObject
 
       public:
         MMUTranslationGen(Addr page_bytes, Addr new_start, Addr new_size,
-                ThreadContext *new_tc, BaseMMU *new_mmu,
-                BaseMMU::Mode new_mode, Request::Flags new_flags);
+            ThreadContext *new_tc, BaseMMU *new_mmu, BaseMMU::Mode new_mode,
+            Request::Flags new_flags);
     };
 
     /**
@@ -146,17 +148,16 @@ class BaseMMU : public SimObject
      * instead of directly translating a specific address.
      */
     virtual TranslationGenPtr translateFunctional(Addr start, Addr size,
-            ThreadContext *tc, BaseMMU::Mode mode, Request::Flags flags) = 0;
+        ThreadContext *tc, BaseMMU::Mode mode, Request::Flags flags) = 0;
 
-    virtual Fault
-    finalizePhysical(const RequestPtr &req, ThreadContext *tc,
-                     Mode mode) const;
+    virtual Fault finalizePhysical(
+        const RequestPtr &req, ThreadContext *tc, Mode mode) const;
 
     virtual void takeOverFrom(BaseMMU *old_mmu);
 
   public:
-    BaseTLB* dtb;
-    BaseTLB* itb;
+    BaseTLB *dtb;
+    BaseTLB *itb;
 
   protected:
     /**
@@ -178,10 +179,9 @@ class BaseMMU : public SimObject
      * TLB to the appropriate set. This makes invalidation (and any
      * operation targeting a specific kind of TLBs) easier.
      */
-    std::set<BaseTLB*> instruction;
-    std::set<BaseTLB*> data;
-    std::set<BaseTLB*> unified;
-
+    std::set<BaseTLB *> instruction;
+    std::set<BaseTLB *> data;
+    std::set<BaseTLB *> unified;
 };
 
 } // namespace gem5

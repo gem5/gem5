@@ -42,7 +42,6 @@
 
 namespace gem5
 {
-
 /* The request protocol. */
 
 bool
@@ -54,15 +53,15 @@ TimingRequestProtocol::sendReq(TimingResponseProtocol *peer, PacketPtr pkt)
 
 bool
 TimingRequestProtocol::trySend(
-        TimingResponseProtocol *peer, PacketPtr pkt) const
+    TimingResponseProtocol *peer, PacketPtr pkt) const
 {
-  assert(pkt->isRequest());
-  return peer->tryTiming(pkt);
+    assert(pkt->isRequest());
+    return peer->tryTiming(pkt);
 }
 
 bool
 TimingRequestProtocol::sendSnoopResp(
-        TimingResponseProtocol *peer, PacketPtr pkt)
+    TimingResponseProtocol *peer, PacketPtr pkt)
 {
     assert(pkt->isResponse());
     return peer->recvTimingSnoopResp(pkt);
@@ -85,7 +84,7 @@ TimingResponseProtocol::sendResp(TimingRequestProtocol *peer, PacketPtr pkt)
 
 void
 TimingResponseProtocol::sendSnoopReq(
-        TimingRequestProtocol *peer, PacketPtr pkt)
+    TimingRequestProtocol *peer, PacketPtr pkt)
 {
     assert(pkt->isRequest());
     peer->recvTimingSnoopReq(pkt);

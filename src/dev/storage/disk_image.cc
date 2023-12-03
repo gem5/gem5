@@ -52,21 +52,16 @@
 
 namespace gem5
 {
-
 ////////////////////////////////////////////////////////////////////////
 //
 // Raw Disk image
 //
-RawDiskImage::RawDiskImage(const Params &p)
-    : DiskImage(p), disk_size(0)
+RawDiskImage::RawDiskImage(const Params &p) : DiskImage(p), disk_size(0)
 {
     open(p.image_file, p.read_only);
 }
 
-RawDiskImage::~RawDiskImage()
-{
-    close();
-}
+RawDiskImage::~RawDiskImage() { close(); }
 
 void
 RawDiskImage::notifyFork()
@@ -168,8 +163,8 @@ RawDiskImage::write(const uint8_t *data, std::streampos offset)
 const uint32_t CowDiskImage::VersionMajor = 1;
 const uint32_t CowDiskImage::VersionMinor = 0;
 
-CowDiskImage::CowDiskImage(const Params &p)
-    : DiskImage(p), filename(p.image_file), child(p.child), table(NULL)
+CowDiskImage::CowDiskImage(const Params &p) :
+    DiskImage(p), filename(p.image_file), child(p.child), table(NULL)
 {
     if (filename.empty()) {
         initSectorTable(p.table_size);
@@ -220,19 +215,19 @@ SafeRead(std::ifstream &stream, void *data, int count)
         panic("error reading cowdisk image");
 }
 
-template<class T>
+template <class T>
 void
 SafeRead(std::ifstream &stream, T &data)
 {
     SafeRead(stream, &data, sizeof(data));
 }
 
-template<class T>
+template <class T>
 void
 SafeReadSwap(std::ifstream &stream, T &data)
 {
     SafeRead(stream, &data, sizeof(data));
-    data = letoh(data); //is this the proper byte order conversion?
+    data = letoh(data); // is this the proper byte order conversion?
 }
 
 bool
@@ -256,13 +251,12 @@ CowDiskImage::open(const std::string &file)
     SafeReadSwap(stream, minor_version);
 
     if (major_version != VersionMajor && minor_version != VersionMinor)
-        panic("Could not open %s: invalid version %d.%d != %d.%d",
-              file, major_version, minor_version, VersionMajor, VersionMinor);
+        panic("Could not open %s: invalid version %d.%d != %d.%d", file,
+            major_version, minor_version, VersionMajor, VersionMinor);
 
     uint64_t sector_count;
     SafeReadSwap(stream, sector_count);
     table = new SectorTable(sector_count);
-
 
     for (uint64_t i = 0; i < sector_count; i++) {
         uint64_t offset;
@@ -303,18 +297,18 @@ SafeWrite(std::ofstream &stream, const void *data, int count)
         panic("error reading cowdisk image");
 }
 
-template<class T>
+template <class T>
 void
 SafeWrite(std::ofstream &stream, const T &data)
 {
     SafeWrite(stream, &data, sizeof(data));
 }
 
-template<class T>
+template <class T>
 void
 SafeWriteSwap(std::ofstream &stream, const T &data)
 {
-    T swappeddata = letoh(data); //is this the proper byte order conversion?
+    T swappeddata = letoh(data); // is this the proper byte order conversion?
     SafeWrite(stream, &swappeddata, sizeof(data));
 }
 void
@@ -325,7 +319,8 @@ CowDiskImage::save() const
     // called because there is no easy way to unregister the exit
     // callback.
     if (!filename.empty())
-        save(filename);}
+        save(filename);
+}
 
 void
 CowDiskImage::save(const std::string &file) const
@@ -375,7 +370,9 @@ CowDiskImage::writeback()
 
 std::streampos
 CowDiskImage::size() const
-{ return child->size(); }
+{
+    return child->size();
+}
 
 std::streampos
 CowDiskImage::read(uint8_t *data, std::streampos offset) const

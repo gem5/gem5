@@ -50,7 +50,6 @@
 // STORAGE POOLS USED BY sc_concatref:
 namespace sc_core
 {
-
 template class sc_vpool<sc_dt::sc_concatref>;
 template class sc_vpool<sc_dt::sc_concat_bool>;
 sc_byte_heap sc_temp_heap(0x300000);
@@ -59,7 +58,6 @@ sc_byte_heap sc_temp_heap(0x300000);
 
 namespace sc_dt
 {
-
 sc_core::sc_vpool<sc_concat_bool> sc_concat_bool::m_pool(9);
 sc_core::sc_vpool<sc_concatref> sc_concatref::m_pool(9);
 

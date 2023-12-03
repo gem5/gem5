@@ -48,13 +48,12 @@
 
 namespace gem5
 {
-
 /**
  * Circular buffer backed by a vector.
  *
  * The data in the cricular buffer is stored in a standard vector.
  */
-template<typename T>
+template <typename T>
 class CircleBuf
 {
   private:
@@ -68,9 +67,21 @@ class CircleBuf
 
     explicit CircleBuf(size_t size) : buffer(size), maxSize(size) {}
 
-    bool empty() const { return used == 0; }
-    size_t size() const { return used; }
-    size_t capacity() const { return maxSize; }
+    bool
+    empty() const
+    {
+        return used == 0;
+    }
+    size_t
+    size() const
+    {
+        return used;
+    }
+    size_t
+    capacity() const
+    {
+        return maxSize;
+    }
 
     /**
      * Throw away any data in the buffer.
@@ -107,7 +118,7 @@ class CircleBuf
     peek(OutputIterator out, off_t offset, size_t len) const
     {
         panic_if(offset + len > used,
-                 "Trying to read past end of circular buffer.");
+            "Trying to read past end of circular buffer.");
 
         if (!len)
             return;
@@ -171,8 +182,8 @@ class CircleBuf
 
         // How much existing data will be overwritten?
         const size_t total_bytes = used + len;
-        const size_t overflow = total_bytes > maxSize ?
-                                total_bytes - maxSize : 0;
+        const size_t overflow =
+            total_bytes > maxSize ? total_bytes - maxSize : 0;
         // The iterator of the next byte to add.
         auto next_it = buffer.begin() + (start + used) % maxSize;
         // How much there is to copy to the end of the buffer.
@@ -209,7 +220,7 @@ class CircleBuf
  *        in the buffer.
  * </ul>
  */
-template<typename T>
+template <typename T>
 class Fifo
 {
   public:
@@ -218,16 +229,40 @@ class Fifo
   public:
     Fifo(size_t size) : buf(size) {}
 
-    bool empty() const { return buf.empty(); }
-    size_t size() const { return buf.size(); }
-    size_t capacity() const { return buf.capacity(); }
+    bool
+    empty() const
+    {
+        return buf.empty();
+    }
+    size_t
+    size() const
+    {
+        return buf.size();
+    }
+    size_t
+    capacity() const
+    {
+        return buf.capacity();
+    }
 
-    void flush() { buf.flush(); }
+    void
+    flush()
+    {
+        buf.flush();
+    }
 
     template <class OutputIterator>
-    void peek(OutputIterator out, size_t len) const { buf.peek(out, len); }
+    void
+    peek(OutputIterator out, size_t len) const
+    {
+        buf.peek(out, len);
+    }
     template <class OutputIterator>
-    void read(OutputIterator out, size_t len) { buf.read(out, len); }
+    void
+    read(OutputIterator out, size_t len)
+    {
+        buf.read(out, len);
+    }
 
     template <class InputIterator>
     void
@@ -241,11 +276,10 @@ class Fifo
     CircleBuf<value_type> buf;
 };
 
-
 template <typename T>
 void
-arrayParamOut(CheckpointOut &cp, const std::string &name,
-              const CircleBuf<T> &param)
+arrayParamOut(
+    CheckpointOut &cp, const std::string &name, const CircleBuf<T> &param)
 {
     std::vector<T> temp(param.size());
     param.peek(temp.begin(), temp.size());
@@ -280,7 +314,7 @@ arrayParamIn(CheckpointIn &cp, const std::string &name, Fifo<T> &param)
     arrayParamIn(cp, name, temp);
 
     fatal_if(param.capacity() < temp.size(),
-             "Trying to unserialize data into too small FIFO");
+        "Trying to unserialize data into too small FIFO");
 
     param.flush();
     param.write(temp.cbegin(), temp.size());

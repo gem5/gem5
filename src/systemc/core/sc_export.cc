@@ -34,13 +34,11 @@
 
 namespace sc_core
 {
-
 namespace
 {
-
 void
-reportError(const char *id, const char *add_msg,
-        const char *name, const char *kind)
+reportError(
+    const char *id, const char *add_msg, const char *name, const char *kind)
 {
     std::string msg;
     if (add_msg)
@@ -51,13 +49,13 @@ reportError(const char *id, const char *add_msg,
     SC_REPORT_ERROR(id, msg.c_str());
 }
 
-}
+} // namespace
 
 sc_export_base::sc_export_base(const char *n) : sc_object(n)
 {
     if (sc_is_running()) {
-        reportError(SC_ID_INSERT_EXPORT_, "simulation running",
-                name(), kind());
+        reportError(
+            SC_ID_INSERT_EXPORT_, "simulation running", name(), kind());
     }
     if (::sc_gem5::scheduler.elaborationDone())
         reportError(SC_ID_INSERT_EXPORT_, "elaboration done", name(), kind());

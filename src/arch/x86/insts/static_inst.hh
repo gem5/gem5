@@ -48,10 +48,8 @@
 
 namespace gem5
 {
-
 namespace X86ISA
 {
-
 /**
  * Classes for register indices passed to instruction constructors. Using a
  * wrapper struct for these lets take advantage of the compiler's type
@@ -101,11 +99,11 @@ class X86StaticInst : public StaticInst
 {
   public:
     static void printMnemonic(std::ostream &os, const char *mnemonic);
-    static void printMnemonic(std::ostream &os, const char *instMnemonic,
-            const char *mnemonic);
-    static void printMem(std::ostream &os, uint8_t segment,
-            uint8_t scale, RegIndex index, RegIndex base,
-            uint64_t disp, uint8_t addressSize, bool rip);
+    static void printMnemonic(
+        std::ostream &os, const char *instMnemonic, const char *mnemonic);
+    static void printMem(std::ostream &os, uint8_t segment, uint8_t scale,
+        RegIndex index, RegIndex base, uint64_t disp, uint8_t addressSize,
+        bool rip);
 
     static void printSegment(std::ostream &os, int segment);
 
@@ -124,10 +122,10 @@ class X86StaticInst : public StaticInst
     {}
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 
     static void divideStep(uint64_t divident, uint64_t divisor,
-            uint64_t &quotient, uint64_t &remainder);
+        uint64_t &quotient, uint64_t &remainder);
 
     static inline uint64_t
     merge(uint64_t into, RegIndex index, uint64_t val, int size)
@@ -137,22 +135,22 @@ class X86StaticInst : public StaticInst
             reg.H = val;
             return reg;
         }
-        switch(size) {
-          case 1:
+        switch (size) {
+        case 1:
             reg.L = val;
             break;
-          case 2:
+        case 2:
             reg.X = val;
             break;
-          case 4:
-            //XXX Check if this should be zeroed or sign extended
+        case 4:
+            // XXX Check if this should be zeroed or sign extended
             reg = 0;
             reg.E = val;
             break;
-          case 8:
+        case 8:
             reg.R = val;
             break;
-          default:
+        default:
             panic("Tried to merge with unrecognized size %d.\n", size);
         }
         return reg;
@@ -165,16 +163,16 @@ class X86StaticInst : public StaticInst
         DPRINTF(X86, "Picking with size %d\n", size);
         if (index & IntFoldBit)
             return reg.H;
-        switch(size) {
-          case 1:
+        switch (size) {
+        case 1:
             return reg.L;
-          case 2:
+        case 2:
             return reg.X;
-          case 4:
+        case 4:
             return reg.E;
-          case 8:
+        case 8:
             return reg.R;
-          default:
+        default:
             panic("Tried to pick with unrecognized size %d.\n", size);
         }
     }
@@ -186,16 +184,16 @@ class X86StaticInst : public StaticInst
         DPRINTF(X86, "Picking with size %d\n", size);
         if (index & IntFoldBit)
             return reg.SH;
-        switch(size) {
-          case 1:
+        switch (size) {
+        case 1:
             return reg.SL;
-          case 2:
+        case 2:
             return reg.SX;
-          case 4:
+        case 4:
             return reg.SE;
-          case 8:
+        case 8:
             return reg.SR;
-          default:
+        default:
             panic("Tried to pick with unrecognized size %d.\n", size);
         }
     }
@@ -215,8 +213,8 @@ class X86StaticInst : public StaticInst
     }
 
     std::unique_ptr<PCStateBase>
-    buildRetPC(const PCStateBase &cur_pc,
-            const PCStateBase &call_pc) const override
+    buildRetPC(
+        const PCStateBase &cur_pc, const PCStateBase &call_pc) const override
     {
         PCStateBase *ret_pc_ptr = call_pc.clone();
         ret_pc_ptr->as<PCState>().uEnd();

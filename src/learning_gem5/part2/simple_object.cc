@@ -32,7 +32,6 @@
 
 namespace gem5
 {
-
 SimpleObject::SimpleObject(const SimpleObjectParams &params) :
     SimObject(params)
 {

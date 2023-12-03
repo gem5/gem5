@@ -44,7 +44,6 @@
 
 namespace gem5
 {
-
 struct PciVirtIOParams;
 
 class PciVirtIO : public PciDevice
@@ -76,7 +75,6 @@ class PciVirtIO : public PciDevice
     /** @} */
 
     static const Addr BAR0_SIZE_BASE = OFF_VIO_DEVICE;
-
 
     VirtIODeviceBase::QueueID queueNotify;
 

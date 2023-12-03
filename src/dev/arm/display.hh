@@ -42,7 +42,6 @@
 
 namespace gem5
 {
-
 struct DisplayParams;
 
 class Display : public SimObject

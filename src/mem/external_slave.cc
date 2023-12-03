@@ -46,7 +46,6 @@
 
 namespace gem5
 {
-
 /** Implement a `stub' port which just responds to requests by printing
  *  a message.  The stub port can be used to configure and test a system
  *  where the external port is used for a peripheral before connecting
@@ -66,12 +65,12 @@ class StubSlavePort : public ExternalSlave::ExternalPort
      *  a retry after completing this packet */
     bool mustRetry;
 
-    StubSlavePort(const std::string &name_,
-        ExternalSlave &owner_) :
+    StubSlavePort(const std::string &name_, ExternalSlave &owner_) :
         ExternalSlave::ExternalPort(name_, owner_),
-        responseEvent([this]{ processResponseEvent(); }, name()),
-        responsePacket(NULL), mustRetry(false)
-    { }
+        responseEvent([this] { processResponseEvent(); }, name()),
+        responsePacket(NULL),
+        mustRetry(false)
+    {}
 
     Tick recvAtomic(PacketPtr packet);
     void recvFunctional(PacketPtr packet);
@@ -81,13 +80,11 @@ class StubSlavePort : public ExternalSlave::ExternalPort
     void recvFunctionalSnoop(PacketPtr packet);
 };
 
-class StubSlavePortHandler : public
-    ExternalSlave::Handler
+class StubSlavePortHandler : public ExternalSlave::Handler
 {
   public:
-    ExternalSlave::ExternalPort *getExternalPort(
-        const std::string &name_,
-        ExternalSlave &owner,
+    ExternalSlave::ExternalPort *
+    getExternalPort(const std::string &name_, ExternalSlave &owner,
         const std::string &port_data)
     {
         StringWrap name(name_);
@@ -103,8 +100,10 @@ StubSlavePort::recvAtomic(PacketPtr packet)
     if (debug::ExternalPort) {
         [[maybe_unused]] unsigned int size = packet->getSize();
 
-        DPRINTF(ExternalPort, "StubSlavePort: recvAtomic a: 0x%x size: %d"
-            " data: ...\n", packet->getAddr(), size);
+        DPRINTF(ExternalPort,
+            "StubSlavePort: recvAtomic a: 0x%x size: %d"
+            " data: ...\n",
+            packet->getAddr(), size);
         DDUMP(ExternalPort, packet->getConstPtr<uint8_t>(), size);
     }
 
@@ -173,8 +172,7 @@ StubSlavePort::recvFunctionalSnoop(PacketPtr packet)
     fatal("StubSlavePort: unimplemented function: %s\n", __func__);
 }
 
-std::map<std::string, ExternalSlave::Handler *>
-    ExternalSlave::portHandlers;
+std::map<std::string, ExternalSlave::Handler *> ExternalSlave::portHandlers;
 
 AddrRangeList
 ExternalSlave::ExternalPort::getAddrRanges() const
@@ -208,12 +206,13 @@ ExternalSlave::getPort(const std::string &if_name, PortID idx)
             if (handlerIter == portHandlers.end())
                 fatal("Can't find port handler type '%s'\n", portType);
 
-            externalPort = portHandlers[portType]->getExternalPort(portName,
-                *this, portData);
+            externalPort = portHandlers[portType]->getExternalPort(
+                portName, *this, portData);
 
             if (!externalPort) {
                 fatal("%s: Can't find external port type: %s"
-                    " port_data: '%s'\n", portName, portType, portData);
+                      " port_data: '%s'\n",
+                    portName, portType, portData);
             }
         }
         return *externalPort;
@@ -235,8 +234,8 @@ ExternalSlave::init()
 }
 
 void
-ExternalSlave::registerHandler(const std::string &handler_name,
-    Handler *handler)
+ExternalSlave::registerHandler(
+    const std::string &handler_name, Handler *handler)
 {
     portHandlers[handler_name] = handler;
 }

@@ -53,7 +53,6 @@
 
 namespace gem5
 {
-
 // The guaranteed interface.
 class PCStateBase : public Serializable
 {
@@ -68,14 +67,14 @@ class PCStateBase : public Serializable
   public:
     virtual ~PCStateBase() = default;
 
-    template<class Target>
+    template <class Target>
     Target &
     as()
     {
         return static_cast<Target &>(*this);
     }
 
-    template<class Target>
+    template <class Target>
     const Target &
     as() const
     {
@@ -89,7 +88,11 @@ class PCStateBase : public Serializable
         _pc = other._pc;
         _upc = other._upc;
     }
-    void update(const PCStateBase *ptr) { update(*ptr); }
+    void
+    update(const PCStateBase *ptr)
+    {
+        update(*ptr);
+    }
 
     virtual void output(std::ostream &os) const = 0;
 
@@ -153,7 +156,7 @@ class PCStateBase : public Serializable
 };
 
 static inline std::ostream &
-operator<<(std::ostream & os, const PCStateBase &pc)
+operator<<(std::ostream &os, const PCStateBase &pc)
 {
     pc.output(os);
     return os;
@@ -173,7 +176,6 @@ operator!=(const PCStateBase &a, const PCStateBase &b)
 
 namespace
 {
-
 inline void
 set(PCStateBase *&dest, const PCStateBase *src)
 {
@@ -213,7 +215,7 @@ set(PCStateBase *&dest, const std::unique_ptr<PCStateBase> &src)
 
 inline void
 set(std::unique_ptr<PCStateBase> &dest,
-        const std::unique_ptr<PCStateBase> &src)
+    const std::unique_ptr<PCStateBase> &src)
 {
     PCStateBase *dest_ptr = dest.get();
     const PCStateBase *src_ptr = src.get();
@@ -253,7 +255,6 @@ set(PCStateBase &dest, const PCStateBase &src)
 
 namespace GenericISA
 {
-
 class PCStateWithNext : public PCStateBase
 {
   protected:
@@ -261,24 +262,56 @@ class PCStateWithNext : public PCStateBase
 
     MicroPC _nupc = 1;
 
-    PCStateWithNext(const PCStateWithNext &other) : PCStateBase(other),
-        _npc(other._npc), _nupc(other._nupc)
+    PCStateWithNext(const PCStateWithNext &other) :
+        PCStateBase(other), _npc(other._npc), _nupc(other._nupc)
     {}
     PCStateWithNext &operator=(const PCStateWithNext &other) = default;
     PCStateWithNext() {}
 
   public:
-    Addr pc() const { return _pc; }
-    void pc(Addr val) { _pc = val; }
+    Addr
+    pc() const
+    {
+        return _pc;
+    }
+    void
+    pc(Addr val)
+    {
+        _pc = val;
+    }
 
-    Addr npc() const { return _npc; }
-    void npc(Addr val) { _npc = val; }
+    Addr
+    npc() const
+    {
+        return _npc;
+    }
+    void
+    npc(Addr val)
+    {
+        _npc = val;
+    }
 
-    MicroPC upc() const { return _upc; }
-    void upc(MicroPC val) { _upc = val; }
+    MicroPC
+    upc() const
+    {
+        return _upc;
+    }
+    void
+    upc(MicroPC val)
+    {
+        _upc = val;
+    }
 
-    MicroPC nupc() const { return _nupc; }
-    void nupc(MicroPC val) { _nupc = val; }
+    MicroPC
+    nupc() const
+    {
+        return _nupc;
+    }
+    void
+    nupc(MicroPC val)
+    {
+        _nupc = val;
+    }
 
     // Reset the macroop's upc without advancing the regular pc.
     void
@@ -313,8 +346,8 @@ class PCStateWithNext : public PCStateBase
     equals(const PCStateBase &other) const override
     {
         auto &ps = other.as<PCStateWithNext>();
-        return PCStateBase::equals(other) &&
-            _npc == ps._npc && _nupc == ps._nupc;
+        return PCStateBase::equals(other) && _npc == ps._npc &&
+               _nupc == ps._nupc;
     }
 
     void
@@ -341,7 +374,6 @@ class PCStateWithNext : public PCStateBase
         UNSERIALIZE_SCALAR(_nupc);
     }
 };
-
 
 /*
  * Different flavors of PC state. Only ISA specific code should rely on
@@ -485,8 +517,16 @@ class DelaySlotPCState : public SimplePCState<InstWidth>
         _nnpc = pcstate._nnpc;
     }
 
-    Addr nnpc() const { return _nnpc; }
-    void nnpc(Addr val) { _nnpc = val; }
+    Addr
+    nnpc() const
+    {
+        return _nnpc;
+    }
+    void
+    nnpc(Addr val)
+    {
+        _nnpc = val;
+    }
 
     void
     set(Addr val) override
@@ -507,7 +547,7 @@ class DelaySlotPCState : public SimplePCState<InstWidth>
     {
         return !(this->nnpc() == this->npc() + InstWidth &&
                  (this->npc() == this->pc() + InstWidth ||
-                  this->npc() == this->pc() + 2 * InstWidth));
+                     this->npc() == this->pc() + 2 * InstWidth));
     }
 
     // Advance the PC.
@@ -599,7 +639,7 @@ class DelaySlotUPCState : public DelaySlotPCState<InstWidth>
     }
 };
 
-}
+} // namespace GenericISA
 
 } // namespace gem5
 

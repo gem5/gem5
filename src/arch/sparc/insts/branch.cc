@@ -35,10 +35,8 @@
 
 namespace gem5
 {
-
 namespace SparcISA
 {
-
 template class BranchNBits<19>;
 template class BranchNBits<22>;
 template class BranchNBits<30>;
@@ -51,7 +49,7 @@ Branch::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
     printMnemonic(response, mnemonic);
     printRegArray(response, &srcRegIdx(0), _numSrcRegs);
     if (_numDestRegs && _numSrcRegs)
-            response << ", ";
+        response << ", ";
     printDestReg(response, 0);
 
     return response.str();
@@ -59,7 +57,7 @@ Branch::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
 
 std::string
 BranchImm13::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream response;
 
@@ -77,7 +75,7 @@ BranchImm13::generateDisassembly(
 
 std::string
 BranchDisp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream response;
 

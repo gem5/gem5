@@ -35,10 +35,8 @@
 
 namespace gem5
 {
-
 namespace qemu
 {
-
 // An item which holds the E820 table, precomputed for the firmware.
 class FwCfgItemE820 : public FwCfgItemFixed
 {
@@ -48,8 +46,16 @@ class FwCfgItemE820 : public FwCfgItemFixed
   public:
     FwCfgItemE820(const QemuFwCfgItemE820Params &p);
 
-    const void *bytes() const override { return data.data(); }
-    uint64_t length() const override { return data.size(); }
+    const void *
+    bytes() const override
+    {
+        return data.data();
+    }
+    uint64_t
+    length() const override
+    {
+        return data.size();
+    }
 };
 
 } // namespace qemu

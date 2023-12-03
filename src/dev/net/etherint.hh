@@ -41,7 +41,6 @@
 
 namespace gem5
 {
-
 /*
  * Class representing the actual interface between two ethernet
  * components.  These components are intended to attach to another
@@ -54,28 +53,52 @@ class EtherInt : public Port
     EtherInt *peer;
 
   public:
-    EtherInt(const std::string &name, int idx=InvalidPortID)
-        : Port(name, idx), portName(name), peer(NULL) {}
+    EtherInt(const std::string &name, int idx = InvalidPortID) :
+        Port(name, idx), portName(name), peer(NULL)
+    {}
     virtual ~EtherInt() {}
 
     /** Return port name (for DPRINTF). */
-    const std::string &name() const { return portName; }
+    const std::string &
+    name() const
+    {
+        return portName;
+    }
 
     void bind(Port &peer) override;
     void unbind() override;
 
     void setPeer(EtherInt *p);
-    EtherInt* getPeer() { return peer; }
+    EtherInt *
+    getPeer()
+    {
+        return peer;
+    }
 
-    void recvDone() { peer->sendDone(); }
+    void
+    recvDone()
+    {
+        peer->sendDone();
+    }
     virtual void sendDone() = 0;
 
-    bool sendPacket(EthPacketPtr packet)
-    { return peer ? peer->recvPacket(packet) : true; }
+    bool
+    sendPacket(EthPacketPtr packet)
+    {
+        return peer ? peer->recvPacket(packet) : true;
+    }
     virtual bool recvPacket(EthPacketPtr packet) = 0;
 
-    bool askBusy() {return peer->isBusy(); }
-    virtual bool isBusy() { return false; }
+    bool
+    askBusy()
+    {
+        return peer->isBusy();
+    }
+    virtual bool
+    isBusy()
+    {
+        return false;
+    }
 };
 
 } // namespace gem5

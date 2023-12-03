@@ -41,12 +41,10 @@
 
 namespace gem5
 {
-
 namespace compression
 {
 namespace encoder
 {
-
 /**
  * This encoder builds a Huffman tree using the frequency of each value to
  * be encoded.
@@ -90,20 +88,24 @@ class Huffman : public Base
 
       public:
         /** Initialize node as a leaf node. */
-        Node(uint64_t value, uint64_t frequency)
-          : _frequency(frequency), _value(value), _left(), _right()
-        {
-        }
+        Node(uint64_t value, uint64_t frequency) :
+            _frequency(frequency), _value(value), _left(), _right()
+        {}
 
         /** Initialize node as an internal node. */
-        Node(Node* left, Node* right)
-          : _frequency(left->getFrequency() + right->getFrequency()),
-            _value(0), _left(left), _right(right)
-        {
-        }
+        Node(Node *left, Node *right) :
+            _frequency(left->getFrequency() + right->getFrequency()),
+            _value(0),
+            _left(left),
+            _right(right)
+        {}
 
         /** Getter for the frequency counter. */
-        uint64_t getFrequency() const { return _frequency; }
+        uint64_t
+        getFrequency() const
+        {
+            return _frequency;
+        }
 
         /**
          * Determine if the node is a leaf node by checking if it does not
@@ -129,8 +131,16 @@ class Huffman : public Base
             return _value;
         }
 
-        const Node* getLeftSubTree() const { return _left.get(); }
-        const Node* getRightSubTree() const { return _right.get(); }
+        const Node *
+        getLeftSubTree() const
+        {
+            return _left.get();
+        }
+        const Node *
+        getRightSubTree() const
+        {
+            return _right.get();
+        }
     };
 
     /**
@@ -153,12 +163,12 @@ class Huffman : public Base
     struct NodeComparator
     {
         bool
-        operator()(const Node* lhs, const Node* rhs) const
+        operator()(const Node *lhs, const Node *rhs) const
         {
             return lhs->getFrequency() > rhs->getFrequency();
         }
     };
-    std::priority_queue<Node*, std::vector<Node*>, NodeComparator> trees;
+    std::priority_queue<Node *, std::vector<Node *>, NodeComparator> trees;
 
     /**
      * Build a Huffman tree using the values and their respective
@@ -177,7 +187,7 @@ class Huffman : public Base
      * @param node The node being analyzed.
      * @param current_code The code so far.
      */
-    void generateCodes(const Node* node, const Code& current_code);
+    void generateCodes(const Node *node, const Code &current_code);
 };
 
 } // namespace encoder

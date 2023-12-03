@@ -42,7 +42,6 @@
 
 namespace gem5
 {
-
 class Barrier
 {
   private:
@@ -50,7 +49,8 @@ class Barrier
     std::mutex bMutex;
     /// Condition variable for waiting on barrier
     std::condition_variable bCond;
-    /// Number of threads we should be waiting for before completing the barrier
+    /// Number of threads we should be waiting for before completing the
+    /// barrier
     unsigned numWaiting;
     /// Generation of this barrier
     unsigned generation;
@@ -58,8 +58,8 @@ class Barrier
     unsigned numLeft;
 
   public:
-    Barrier(unsigned _numWaiting)
-        : numWaiting(_numWaiting), generation(0), numLeft(_numWaiting)
+    Barrier(unsigned _numWaiting) :
+        numWaiting(_numWaiting), generation(0), numLeft(_numWaiting)
     {}
 
     bool

@@ -44,14 +44,13 @@
 
 namespace Gem5SystemC
 {
-
 struct TlmSenderState : public gem5::Packet::SenderState
 {
     tlm::tlm_generic_payload &trans;
     TlmSenderState(tlm::tlm_generic_payload &trans) : trans(trans) {}
 };
 
-class Gem5Extension: public tlm::tlm_extension<Gem5Extension>
+class Gem5Extension : public tlm::tlm_extension<Gem5Extension>
 {
   public:
     Gem5Extension(gem5::PacketPtr p);
@@ -60,31 +59,30 @@ class Gem5Extension: public tlm::tlm_extension<Gem5Extension>
     void copy_from(const tlm_extension_base &ext) override;
 
     static Gem5Extension &getExtension(
-            const tlm::tlm_generic_payload *payload);
+        const tlm::tlm_generic_payload *payload);
     static Gem5Extension &getExtension(
-            const tlm::tlm_generic_payload &payload);
+        const tlm::tlm_generic_payload &payload);
     gem5::PacketPtr getPacket();
 
   private:
     gem5::PacketPtr packet;
 };
 
-class AtomicExtension: public tlm::tlm_extension<AtomicExtension>
+class AtomicExtension : public tlm::tlm_extension<AtomicExtension>
 {
   public:
-    AtomicExtension(
-        std::shared_ptr<gem5::AtomicOpFunctor> o, bool r);
+    AtomicExtension(std::shared_ptr<gem5::AtomicOpFunctor> o, bool r);
 
     tlm_extension_base *clone() const override;
     void copy_from(const tlm_extension_base &ext) override;
 
     static AtomicExtension &getExtension(
-            const tlm::tlm_generic_payload *payload);
+        const tlm::tlm_generic_payload *payload);
     static AtomicExtension &getExtension(
-            const tlm::tlm_generic_payload &payload);
+        const tlm::tlm_generic_payload &payload);
 
     bool isReturnRequired() const;
-    gem5::AtomicOpFunctor* getAtomicOpFunctor() const;
+    gem5::AtomicOpFunctor *getAtomicOpFunctor() const;
 
   private:
     std::shared_ptr<gem5::AtomicOpFunctor> op;
@@ -100,9 +98,9 @@ class ControlExtension : public tlm::tlm_extension<ControlExtension>
     void copy_from(const tlm_extension_base &ext) override;
 
     static ControlExtension &getExtension(
-            const tlm::tlm_generic_payload *payload);
+        const tlm::tlm_generic_payload *payload);
     static ControlExtension &getExtension(
-            const tlm::tlm_generic_payload &payload);
+        const tlm::tlm_generic_payload &payload);
 
     /* Secure and privileged access */
     bool isPrivileged() const;

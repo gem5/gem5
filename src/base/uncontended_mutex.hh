@@ -34,7 +34,6 @@
 
 namespace gem5
 {
-
 /*
  * The std::mutex implementation is slower than expected because of many mode
  * checking and legacy support.

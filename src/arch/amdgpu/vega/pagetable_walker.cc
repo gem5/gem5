@@ -41,13 +41,12 @@ namespace gem5
 {
 namespace VegaISA
 {
-
 /*
  * Functional/atomic mode methods
  */
 Fault
 Walker::startFunctional(Addr base, Addr &addr, unsigned &logBytes,
-                        BaseMMU::Mode mode, bool &isSystem)
+    BaseMMU::Mode mode, bool &isSystem)
 {
     PageTableEntry pte;
     Addr vaddr = addr;
@@ -60,29 +59,32 @@ Walker::startFunctional(Addr base, Addr &addr, unsigned &logBytes,
 
 Fault
 Walker::startFunctional(Addr base, Addr vaddr, PageTableEntry &pte,
-                        unsigned &logBytes, BaseMMU::Mode mode)
+    unsigned &logBytes, BaseMMU::Mode mode)
 {
-    DPRINTF(GPUPTWalker, "Vega walker walker: %p funcState: %p "
-            "funcState->walker %p\n",
-            this, &funcState, funcState.getWalker());
+    DPRINTF(GPUPTWalker,
+        "Vega walker walker: %p funcState: %p "
+        "funcState->walker %p\n",
+        this, &funcState, funcState.getWalker());
     funcState.initState(mode, base, vaddr, true);
     return funcState.startFunctional(base, vaddr, pte, logBytes);
 }
 
 Fault
-Walker::WalkerState::startFunctional(Addr base, Addr vaddr,
-                                     PageTableEntry &pte, unsigned &logBytes)
+Walker::WalkerState::startFunctional(
+    Addr base, Addr vaddr, PageTableEntry &pte, unsigned &logBytes)
 {
     Fault fault = NoFault;
-    DPRINTF(GPUPTWalker, "Vega walker starting with addr: %#lx "
-            "logical: %#lx\n", vaddr, vaddr >> PageShift);
+    DPRINTF(GPUPTWalker,
+        "Vega walker starting with addr: %#lx "
+        "logical: %#lx\n",
+        vaddr, vaddr >> PageShift);
 
     assert(!started);
     started = true;
 
     do {
-        DPRINTF(GPUPTWalker, "Sending functional read to %#lx\n",
-                read->getAddr());
+        DPRINTF(
+            GPUPTWalker, "Sending functional read to %#lx\n", read->getAddr());
 
         auto devmem = walker->system->getDeviceMemory(read);
         assert(devmem);
@@ -100,15 +102,16 @@ Walker::WalkerState::startFunctional(Addr base, Addr vaddr,
     return fault;
 }
 
-
 /*
  * Timing mode methods
  */
 void
 Walker::startTiming(PacketPtr pkt, Addr base, Addr vaddr, BaseMMU::Mode mode)
 {
-    DPRINTF(GPUPTWalker, "Vega walker starting with addr: %#lx "
-            "logical: %#lx\n", vaddr, vaddr >> PageShift);
+    DPRINTF(GPUPTWalker,
+        "Vega walker starting with addr: %#lx "
+        "logical: %#lx\n",
+        vaddr, vaddr >> PageShift);
 
     WalkerState *newState = new WalkerState(this, pkt);
 
@@ -120,8 +123,8 @@ Walker::startTiming(PacketPtr pkt, Addr base, Addr vaddr, BaseMMU::Mode mode)
 }
 
 void
-Walker::WalkerState::initState(BaseMMU::Mode _mode, Addr baseAddr, Addr vaddr,
-                               bool is_functional)
+Walker::WalkerState::initState(
+    BaseMMU::Mode _mode, Addr baseAddr, Addr vaddr, bool is_functional)
 {
     DPRINTF(GPUPTWalker, "Walker::WalkerState::initState\n");
     DPRINTF(GPUPTWalker, "Walker::WalkerState::initState %p\n", this);
@@ -141,7 +144,7 @@ Walker::WalkerState::initState(BaseMMU::Mode _mode, Addr baseAddr, Addr vaddr,
     // baseAddr and vaddr.
     state = PDE2;
     Addr logical_addr = vaddr >> PageShift;
-    Addr pde2Addr = (((baseAddr >> 6) << 3) + (logical_addr >> 3*9)) << 3;
+    Addr pde2Addr = (((baseAddr >> 6) << 3) + (logical_addr >> 3 * 9)) << 3;
     DPRINTF(GPUPTWalker, "Walk PDE2 address is %#lx\n", pde2Addr);
 
     // Start populating the VegaTlbEntry response
@@ -162,8 +165,7 @@ Walker::WalkerState::startWalk()
 {
     if (!started) {
         // Read the first PDE to begin
-        DPRINTF(GPUPTWalker, "Sending timing read to %#lx\n",
-                read->getAddr());
+        DPRINTF(GPUPTWalker, "Sending timing read to %#lx\n", read->getAddr());
 
         sendPackets();
         started = true;
@@ -176,8 +178,8 @@ Walker::WalkerState::startWalk()
         state = nextState;
 
         if (read) {
-            DPRINTF(GPUPTWalker, "Sending timing read to %#lx\n",
-                    read->getAddr());
+            DPRINTF(
+                GPUPTWalker, "Sending timing read to %#lx\n", read->getAddr());
             sendPackets();
         } else {
             // Set physical page address in entry
@@ -214,7 +216,7 @@ Walker::WalkerState::stepWalk()
     } else {
         PacketPtr oldRead = read;
 
-        //If we didn't return, we're setting up another read.
+        // If we didn't return, we're setting up another read.
         Request::Flags flags = oldRead->req->getFlags();
         flags.set(Request::UNCACHEABLE, uncacheable);
         RequestPtr request = std::make_shared<Request>(
@@ -230,8 +232,8 @@ Walker::WalkerState::stepWalk()
 }
 
 void
-Walker::WalkerState::walkStateMachine(PageTableEntry &pte, Addr &nextRead,
-                                      bool &doEndWalk, Fault &fault)
+Walker::WalkerState::walkStateMachine(
+    PageTableEntry &pte, Addr &nextRead, bool &doEndWalk, Fault &fault)
 {
     Addr vaddr = entry.vaddr;
     bool badNX = pte.x && mode == BaseMMU::Execute && enableNX;
@@ -246,8 +248,8 @@ Walker::WalkerState::walkStateMachine(PageTableEntry &pte, Addr &nextRead,
     // for debugging.
     if (pde.blockFragmentSize) {
         DPRINTF(GPUPTWalker,
-                "blockFragmentSize: %d, pde: %#016lx, state: %d\n",
-                pde.blockFragmentSize, pde, state);
+            "blockFragmentSize: %d, pde: %#016lx, state: %d\n",
+            pde.blockFragmentSize, pde, state);
         blockFragmentSize = pde.blockFragmentSize;
 
         // At this time, only a value of 9 is used in the driver:
@@ -256,14 +258,14 @@ Walker::WalkerState::walkStateMachine(PageTableEntry &pte, Addr &nextRead,
         assert(pde.blockFragmentSize == 9);
     }
 
-    switch(state) {
-      case PDE2:
+    switch (state) {
+    case PDE2:
         if (pde.p) {
             DPRINTF(GPUPTWalker, "Treating PDE2 as PTE: %#016x frag: %d\n",
-                    (uint64_t)pte, pte.fragment);
+                (uint64_t)pte, pte.fragment);
             entry.pte = pte;
             int fragment = pte.fragment;
-            entry.logBytes = PageShift + std::min(3*9, fragment);
+            entry.logBytes = PageShift + std::min(3 * 9, fragment);
             entry.vaddr <<= PageShift;
             entry.vaddr = entry.vaddr & ~mask(entry.logBytes);
             doEndWalk = true;
@@ -271,20 +273,20 @@ Walker::WalkerState::walkStateMachine(PageTableEntry &pte, Addr &nextRead,
 
         // Read the pde1Addr
         part1 = ((((uint64_t)pte) >> 6) << 3);
-        part2 = offsetFunc(vaddr, 3*9, 2*9);
+        part2 = offsetFunc(vaddr, 3 * 9, 2 * 9);
         nextRead = ((part1 + part2) << 3) & mask(48);
         DPRINTF(GPUPTWalker,
-                "Got PDE2 entry %#016x. write:%s->%#016x va:%#016x\n",
-                (uint64_t)pte, pte.w == 0 ? "yes" : "no", nextRead, vaddr);
+            "Got PDE2 entry %#016x. write:%s->%#016x va:%#016x\n",
+            (uint64_t)pte, pte.w == 0 ? "yes" : "no", nextRead, vaddr);
         nextState = PDE1;
         break;
-      case PDE1:
+    case PDE1:
         if (pde.p) {
             DPRINTF(GPUPTWalker, "Treating PDE1 as PTE: %#016x frag: %d\n",
-                    (uint64_t)pte, pte.fragment);
+                (uint64_t)pte, pte.fragment);
             entry.pte = pte;
             int fragment = pte.fragment;
-            entry.logBytes = PageShift + std::min(2*9, fragment);
+            entry.logBytes = PageShift + std::min(2 * 9, fragment);
             entry.vaddr <<= PageShift;
             entry.vaddr = entry.vaddr & ~mask(entry.logBytes);
             doEndWalk = true;
@@ -292,17 +294,17 @@ Walker::WalkerState::walkStateMachine(PageTableEntry &pte, Addr &nextRead,
 
         // Read the pde0Addr
         part1 = ((((uint64_t)pte) >> 6) << 3);
-        part2 = offsetFunc(vaddr, 2*9, 9);
+        part2 = offsetFunc(vaddr, 2 * 9, 9);
         nextRead = ((part1 + part2) << 3) & mask(48);
         DPRINTF(GPUPTWalker,
-                "Got PDE1 entry %#016x. write:%s->%#016x va: %#016x\n",
-                (uint64_t)pte, pte.w == 0 ? "yes" : "no", nextRead, vaddr);
+            "Got PDE1 entry %#016x. write:%s->%#016x va: %#016x\n",
+            (uint64_t)pte, pte.w == 0 ? "yes" : "no", nextRead, vaddr);
         nextState = PDE0;
         break;
-      case PDE0:
+    case PDE0:
         if (pde.p || (blockFragmentSize && !pte.f)) {
             DPRINTF(GPUPTWalker, "Treating PDE0 as PTE: %#016x frag: %d\n",
-                    (uint64_t)pte, pte.fragment);
+                (uint64_t)pte, pte.fragment);
             entry.pte = pte;
             int fragment = pte.fragment;
             entry.logBytes = PageShift + std::min(9, fragment);
@@ -315,29 +317,27 @@ Walker::WalkerState::walkStateMachine(PageTableEntry &pte, Addr &nextRead,
         if (pte.f) {
             // For F bit we want to use the blockFragmentSize in the previous
             // PDE and the blockFragmentSize in this PTE for offset function.
-            part2 = offsetFunc(vaddr,
-                               blockFragmentSize,
-                               pde.blockFragmentSize);
+            part2 =
+                offsetFunc(vaddr, blockFragmentSize, pde.blockFragmentSize);
         } else {
             part2 = offsetFunc(vaddr, 9, 0);
         }
         nextRead = ((part1 + part2) << 3) & mask(48);
         DPRINTF(GPUPTWalker,
-                "Got PDE0 entry %#016x. write:%s->%#016x va:%#016x\n",
-                (uint64_t)pte, pte.w == 0 ? "yes" : "no", nextRead, vaddr);
+            "Got PDE0 entry %#016x. write:%s->%#016x va:%#016x\n",
+            (uint64_t)pte, pte.w == 0 ? "yes" : "no", nextRead, vaddr);
         nextState = PTE;
         break;
-      case PTE:
-        DPRINTF(GPUPTWalker,
-                " PTE entry %#016x. write: %s va: %#016x\n",
-                (uint64_t)pte, pte.w == 0 ? "yes" : "no", vaddr);
+    case PTE:
+        DPRINTF(GPUPTWalker, " PTE entry %#016x. write: %s va: %#016x\n",
+            (uint64_t)pte, pte.w == 0 ? "yes" : "no", vaddr);
         entry.pte = pte;
         entry.logBytes = PageShift;
         entry.vaddr <<= PageShift;
         entry.vaddr = entry.vaddr & ~mask(entry.logBytes);
         doEndWalk = true;
         break;
-      default:
+    default:
         panic("Unknown page table walker state %d!\n");
     }
 
@@ -368,24 +368,25 @@ Walker::WalkerState::sendPackets()
         return;
 
     if (!walker->sendTiming(this, read)) {
-        DPRINTF(GPUPTWalker, "Timing request for %#lx failed\n",
-                read->getAddr());
+        DPRINTF(
+            GPUPTWalker, "Timing request for %#lx failed\n", read->getAddr());
 
         retrying = true;
     } else {
         DPRINTF(GPUPTWalker, "Timing request for %#lx successful\n",
-                read->getAddr());
+            read->getAddr());
     }
 }
 
-bool Walker::sendTiming(WalkerState* sending_walker, PacketPtr pkt)
+bool
+Walker::sendTiming(WalkerState *sending_walker, PacketPtr pkt)
 {
     auto walker_state = new WalkerSenderState(sending_walker);
     pkt->pushSenderState(walker_state);
 
     if (port.sendTimingReq(pkt)) {
         DPRINTF(GPUPTWalker, "Sending timing read to %#lx from walker %p\n",
-                pkt->getAddr(), sending_walker);
+            pkt->getAddr(), sending_walker);
 
         return true;
     } else {
@@ -407,11 +408,11 @@ Walker::WalkerPort::recvTimingResp(PacketPtr pkt)
 void
 Walker::recvTimingResp(PacketPtr pkt)
 {
-    WalkerSenderState * senderState =
+    WalkerSenderState *senderState =
         safe_cast<WalkerSenderState *>(pkt->popSenderState());
 
     DPRINTF(GPUPTWalker, "Got response for %#lx from walker %p -- %#lx\n",
-            pkt->getAddr(), senderState->senderWalk, pkt->getLE<uint64_t>());
+        pkt->getAddr(), senderState->senderWalk, pkt->getLE<uint64_t>());
     senderState->senderWalk->startWalk();
 
     delete senderState;
@@ -428,7 +429,7 @@ Walker::recvReqRetry()
 {
     std::list<WalkerState *>::iterator iter;
     for (iter = currStates.begin(); iter != currStates.end(); iter++) {
-        WalkerState * walkerState = *(iter);
+        WalkerState *walkerState = *(iter);
         if (walkerState->isRetrying()) {
             walkerState->retry();
         }
@@ -436,13 +437,12 @@ Walker::recvReqRetry()
 }
 
 void
-Walker::walkerResponse(WalkerState *state, VegaTlbEntry& entry, PacketPtr pkt)
+Walker::walkerResponse(WalkerState *state, VegaTlbEntry &entry, PacketPtr pkt)
 {
     tlb->walkerResponse(entry, pkt);
 
     delete state;
 }
-
 
 /*
  *  Helper methods
@@ -483,7 +483,6 @@ Walker::WalkerState::offsetFunc(Addr logicalAddr, int top, int lsb)
     assert(lsb < 32);
     return ((logicalAddr & ((1 << top) - 1)) >> lsb);
 }
-
 
 /**
  * gem5 methods

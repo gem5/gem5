@@ -34,7 +34,6 @@
 
 namespace gem5
 {
-
 class CallbackQueue : public std::list<std::function<void()>>
 {
   public:
@@ -48,7 +47,7 @@ class CallbackQueue : public std::list<std::function<void()>>
     void
     process()
     {
-        for (auto &f: *this)
+        for (auto &f : *this)
             f();
     }
 };

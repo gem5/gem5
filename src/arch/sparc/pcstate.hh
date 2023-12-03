@@ -33,10 +33,8 @@
 
 namespace gem5
 {
-
 namespace SparcISA
 {
-
 typedef GenericISA::DelaySlotUPCState<4> PCState;
 
 } // namespace SparcISA

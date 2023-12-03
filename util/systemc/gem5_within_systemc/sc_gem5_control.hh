@@ -62,7 +62,6 @@ class CxxConfigManager;
 
 namespace Gem5SystemC
 {
-
 class Gem5TopLevelModule;
 class Gem5Control;
 
@@ -147,15 +146,15 @@ class Gem5Control
 
     /** Make a System from the config file description for system
      *  system_name and call it instance_name in gem5 */
-    virtual Gem5System *makeSystem(const std::string &system_name,
-        const std::string &top_instance);
+    virtual Gem5System *makeSystem(
+        const std::string &system_name, const std::string &top_instance);
 
     /** set/get version string */
     virtual const std::string &getVersion() const;
     virtual void setVersion(const std::string &new_version);
 };
 
-}
+} // namespace Gem5SystemC
 
 /** Instantiate a Gem5Control.  This can be called using dlopen/dlsym
  *  to kick-start gem5 */

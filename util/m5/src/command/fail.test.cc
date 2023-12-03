@@ -41,7 +41,7 @@ test_m5_fail(uint64_t ns_delay, uint64_t code)
     test_code = code;
 }
 
-DispatchTable dt = { .m5_fail = &test_m5_fail };
+DispatchTable dt = {.m5_fail = &test_m5_fail};
 
 bool
 run(std::initializer_list<std::string> arg_args)

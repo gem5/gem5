@@ -40,40 +40,43 @@
 
 namespace gem5
 {
-
 class SparcProcess : public Process
 {
   protected:
-
     const Addr StackBias;
 
     // The locations of the fill and spill handlers
     Addr fillStart, spillStart;
 
     SparcProcess(const ProcessParams &params, loader::ObjectFile *objFile,
-                 Addr _StackBias);
+        Addr _StackBias);
 
     void initState() override;
 
-    template<class IntType>
+    template <class IntType>
     void argsInit(int pageSize);
 
   public:
-
-    Addr readFillStart() { return fillStart; }
-    Addr readSpillStart() { return spillStart; }
+    Addr
+    readFillStart()
+    {
+        return fillStart;
+    }
+    Addr
+    readSpillStart()
+    {
+        return spillStart;
+    }
 };
 
 class Sparc32Process : public SparcProcess
 {
   protected:
-
     void initState() override;
 
   public:
-
-    Sparc32Process(const ProcessParams &params, loader::ObjectFile *objFile)
-        : SparcProcess(params, objFile, 0)
+    Sparc32Process(const ProcessParams &params, loader::ObjectFile *objFile) :
+        SparcProcess(params, objFile, 0)
     {
         Addr brk_point = image.maxAddr();
         brk_point = roundUp(brk_point, SparcISA::PageBytes);
@@ -92,9 +95,7 @@ class Sparc32Process : public SparcProcess
         Addr mmap_end = 0x70000000;
 
         memState = std::make_shared<MemState>(this, brk_point, stack_base,
-                                              max_stack_size,
-                                              next_thread_stack_base,
-                                              mmap_end);
+            max_stack_size, next_thread_stack_base, mmap_end);
     }
 
     void argsInit(int intSize, int pageSize);
@@ -106,9 +107,8 @@ class Sparc64Process : public SparcProcess
     void initState() override;
 
   public:
-
-    Sparc64Process(const ProcessParams &params, loader::ObjectFile *objFile)
-        : SparcProcess(params, objFile, 2047)
+    Sparc64Process(const ProcessParams &params, loader::ObjectFile *objFile) :
+        SparcProcess(params, objFile, 2047)
     {
         Addr brk_point = image.maxAddr();
         brk_point = roundUp(brk_point, SparcISA::PageBytes);
@@ -126,9 +126,7 @@ class Sparc64Process : public SparcProcess
         Addr mmap_end = 0xfffff80000000000ULL;
 
         memState = std::make_shared<MemState>(this, brk_point, stack_base,
-                                              max_stack_size,
-                                              next_thread_stack_base,
-                                              mmap_end);
+            max_stack_size, next_thread_stack_base, mmap_end);
     }
 
     void argsInit(int intSize, int pageSize);

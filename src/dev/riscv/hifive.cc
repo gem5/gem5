@@ -45,12 +45,12 @@
 
 namespace gem5
 {
-
 using namespace RiscvISA;
 
 HiFiveBase::HiFiveBase(const Params &params) :
     Platform(params),
-    clint(params.clint), plic(params.plic),
+    clint(params.clint),
+    plic(params.plic),
     uartIntID(params.uart_int_id)
 {
     fatal_if(clint == nullptr, "CLINT should not be NULL");
@@ -83,12 +83,10 @@ HiFiveBase::clearPciInt(int line)
 
 void
 HiFiveBase::serialize(CheckpointOut &cp) const
-{
-}
+{}
 
 void
 HiFiveBase::unserialize(CheckpointIn &cp)
-{
-}
+{}
 
 } // namespace gem5

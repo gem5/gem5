@@ -41,21 +41,18 @@
 
 namespace gem5
 {
-
-ChannelAddrRange::ChannelAddrRange(AddrRange ch_range, Addr start, Addr end)
-    : ChannelAddrRange(ChannelAddr(ch_range, start),
-                       ChannelAddr(ch_range, end))
+ChannelAddrRange::ChannelAddrRange(AddrRange ch_range, Addr start, Addr end) :
+    ChannelAddrRange(ChannelAddr(ch_range, start), ChannelAddr(ch_range, end))
 {
     panic_if(!ch_range.valid(), "Invalid channel range.");
 }
 
-ChannelAddrRange::ChannelAddrRange(AddrRange ch_range, AddrRange range)
-    : ChannelAddrRange(ch_range, range.start(), range.end())
+ChannelAddrRange::ChannelAddrRange(AddrRange ch_range, AddrRange range) :
+    ChannelAddrRange(ch_range, range.start(), range.end())
 {
     panic_if(range.interleaved(),
-             "Only contiguous ranges can be mapped onto an interleaved range");
+        "Only contiguous ranges can be mapped onto an interleaved range");
 }
-
 
 std::ostream &
 operator<<(std::ostream &out, const ChannelAddr &addr)

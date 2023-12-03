@@ -45,7 +45,6 @@
 
 namespace gem5
 {
-
 class DecoderFaultInst : public ArmISA::ArmStaticInst
 {
   protected:
@@ -56,11 +55,11 @@ class DecoderFaultInst : public ArmISA::ArmStaticInst
   public:
     DecoderFaultInst(ArmISA::ExtMachInst _machInst);
 
-    Fault execute(ExecContext *xc,
-                  trace::InstRecord *traceData) const override;
+    Fault execute(
+        ExecContext *xc, trace::InstRecord *traceData) const override;
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -80,13 +79,13 @@ class FailUnimplemented : public ArmISA::ArmStaticInst
   public:
     FailUnimplemented(const char *_mnemonic, ArmISA::ExtMachInst _machInst);
     FailUnimplemented(const char *_mnemonic, ArmISA::ExtMachInst _machInst,
-                      const std::string& _fullMnemonic);
+        const std::string &_fullMnemonic);
 
-    Fault execute(ExecContext *xc,
-                  trace::InstRecord *traceData) const override;
+    Fault execute(
+        ExecContext *xc, trace::InstRecord *traceData) const override;
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -110,13 +109,13 @@ class WarnUnimplemented : public ArmISA::ArmStaticInst
   public:
     WarnUnimplemented(const char *_mnemonic, ArmISA::ExtMachInst _machInst);
     WarnUnimplemented(const char *_mnemonic, ArmISA::ExtMachInst _machInst,
-                      const std::string& _fullMnemonic);
+        const std::string &_fullMnemonic);
 
-    Fault execute(ExecContext *xc,
-                  trace::InstRecord *traceData) const override;
+    Fault execute(
+        ExecContext *xc, trace::InstRecord *traceData) const override;
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -131,8 +130,8 @@ class IllegalExecInst : public ArmISA::ArmStaticInst
   public:
     IllegalExecInst(ArmISA::ExtMachInst _machInst);
 
-    Fault execute(ExecContext *xc,
-                  trace::InstRecord *traceData) const override;
+    Fault execute(
+        ExecContext *xc, trace::InstRecord *traceData) const override;
 };
 
 class DebugStep : public ArmISA::ArmStaticInst
@@ -140,8 +139,8 @@ class DebugStep : public ArmISA::ArmStaticInst
   public:
     DebugStep(ArmISA::ExtMachInst _machInst);
 
-    Fault execute(ExecContext *xc,
-                  trace::InstRecord *traceData) const override;
+    Fault execute(
+        ExecContext *xc, trace::InstRecord *traceData) const override;
 };
 
 } // namespace gem5

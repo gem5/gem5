@@ -39,13 +39,13 @@
  * https://github.com/RadeonOpenCompute/ROCK-Kernel-Driver/blob/roc-4.3.x/
  *      drivers/gpu/drm/amd/include/asic_reg/oss/osssys_4_0_offset.h
  */
-#define mmIH_RB_CNTL                                            0x0080
-#define mmIH_RB_BASE                                            0x0081
-#define mmIH_RB_BASE_HI                                         0x0082
-#define mmIH_RB_RPTR                                            0x0083
-#define mmIH_RB_WPTR                                            0x0084
-#define mmIH_RB_WPTR_ADDR_HI                                    0x0085
-#define mmIH_RB_WPTR_ADDR_LO                                    0x0086
-#define mmIH_DOORBELL_RPTR                                      0x0087
+#define mmIH_RB_CNTL 0x0080
+#define mmIH_RB_BASE 0x0081
+#define mmIH_RB_BASE_HI 0x0082
+#define mmIH_RB_RPTR 0x0083
+#define mmIH_RB_WPTR 0x0084
+#define mmIH_RB_WPTR_ADDR_HI 0x0085
+#define mmIH_RB_WPTR_ADDR_LO 0x0086
+#define mmIH_DOORBELL_RPTR 0x0087
 
 #endif // __DEV_AMDGPU_IH_MMIO_HH__

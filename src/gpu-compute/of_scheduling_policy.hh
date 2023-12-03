@@ -39,20 +39,17 @@
 
 namespace gem5
 {
-
 // oldest first where age is marked by the wave id
 class OFSchedulingPolicy final : public __SchedulingPolicy<OFSchedulingPolicy>
 {
   public:
-    OFSchedulingPolicy()
-    {
-    }
+    OFSchedulingPolicy() {}
 
-    static Wavefront*
-    __chooseWave(std::vector<Wavefront*> *sched_list)
+    static Wavefront *
+    __chooseWave(std::vector<Wavefront *> *sched_list)
     {
         panic_if(!sched_list->size(), "OF scheduling policy sched list is "
-            "empty.\n");
+                                      "empty.\n");
         // set when policy choose a wave to schedule
         Wavefront *selected_wave(nullptr);
         int selected_wave_id = -1;

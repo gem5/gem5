@@ -52,7 +52,6 @@
 
 namespace gem5
 {
-
 class Gicv3;
 class Gicv3Redistributor;
 class ItsProcess;
@@ -94,19 +93,26 @@ class Gicv3Its : public BasicPioDevice
 
       public:
         DataPort(const std::string &_name, Gicv3Its &_its) :
-            RequestPort(_name),
-            its(_its)
+            RequestPort(_name), its(_its)
         {}
 
         virtual ~DataPort() {}
 
-        bool recvTimingResp(PacketPtr pkt) { return its.recvTimingResp(pkt); }
-        void recvReqRetry() { return its.recvReqRetry(); }
+        bool
+        recvTimingResp(PacketPtr pkt)
+        {
+            return its.recvTimingResp(pkt);
+        }
+        void
+        recvReqRetry()
+        {
+            return its.recvReqRetry();
+        }
     };
 
     DataPort dmaPort;
 
-    Port & getPort(const std::string &if_name, PortID idx) override;
+    Port &getPort(const std::string &if_name, PortID idx) override;
     bool recvTimingResp(PacketPtr pkt);
     void recvReqRetry();
 
@@ -140,12 +146,12 @@ class Gicv3Its : public BasicPioDevice
     enum : Addr
     {
         // Control frame
-        GITS_CTLR    = itsControl + 0x0000,
-        GITS_IIDR    = itsControl + 0x0004,
-        GITS_TYPER   = itsControl + 0x0008,
-        GITS_CBASER  = itsControl + 0x0080,
+        GITS_CTLR = itsControl + 0x0000,
+        GITS_IIDR = itsControl + 0x0004,
+        GITS_TYPER = itsControl + 0x0008,
+        GITS_CBASER = itsControl + 0x0080,
         GITS_CWRITER = itsControl + 0x0088,
-        GITS_CREADR  = itsControl + 0x0090,
+        GITS_CREADR = itsControl + 0x0090,
         GITS_PIDR2 = itsControl + 0xffe8,
 
         // Translation frame
@@ -158,8 +164,8 @@ class Gicv3Its : public BasicPioDevice
     Tick write(PacketPtr pkt) override;
 
     DrainState drain() override;
-    void serialize(CheckpointOut & cp) const override;
-    void unserialize(CheckpointIn & cp) override;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
     void translate(PacketPtr pkt);
 
@@ -220,11 +226,11 @@ class Gicv3Its : public BasicPioDevice
         Bitfield<0> physical;
     EndBitUnion(TYPER)
 
-    CTLR     gitsControl;
-    TYPER    gitsTyper;
-    CBASER   gitsCbaser;
-    CRDWR    gitsCreadr;
-    CRDWR    gitsCwriter;
+    CTLR gitsControl;
+    TYPER gitsTyper;
+    CBASER gitsCbaser;
+    CRDWR gitsCreadr;
+    CRDWR gitsCwriter;
     uint32_t gitsIidr;
     uint32_t gitsTranslater;
 
@@ -297,8 +303,9 @@ class Gicv3Its : public BasicPioDevice
     };
 
   private:
-    Gicv3Redistributor* getRedistributor(uint64_t rd_base);
-    Gicv3Redistributor* getRedistributor(CTE cte)
+    Gicv3Redistributor *getRedistributor(uint64_t rd_base);
+    Gicv3Redistributor *
+    getRedistributor(CTE cte)
     {
         return getRedistributor(cte.rdBase);
     }
@@ -324,8 +331,7 @@ class Gicv3Its : public BasicPioDevice
 
     Addr pageAddress(enum ItsTables table);
 
-    void moveAllPendingState(
-        Gicv3Redistributor *rd1, Gicv3Redistributor *rd2);
+    void moveAllPendingState(Gicv3Redistributor *rd1, Gicv3Redistributor *rd2);
 
   private:
     std::queue<ItsAction> packetsToRetry;
@@ -381,8 +387,7 @@ class ItsProcess : public Packet::SenderState
     void writeIrqCollectionTable(
         Yield &yield, uint32_t collection_id, CTE cte);
 
-    uint64_t readDeviceTable(
-        Yield &yield, uint32_t device_id);
+    uint64_t readDeviceTable(Yield &yield, uint32_t device_id);
 
     uint64_t readIrqTranslationTable(
         Yield &yield, const Addr itt_base, uint32_t event_id);
@@ -415,8 +420,8 @@ class ItsTranslation : public ItsProcess
   protected:
     void main(Yield &yield) override;
 
-    std::pair<uint32_t, Gicv3Redistributor *>
-    translateLPI(Yield &yield, uint32_t device_id, uint32_t event_id);
+    std::pair<uint32_t, Gicv3Redistributor *> translateLPI(
+        Yield &yield, uint32_t device_id, uint32_t event_id);
 };
 
 /**
@@ -476,18 +481,20 @@ class ItsCommand : public ItsProcess
      */
     struct DispatchEntry
     {
-        using ExecFn = std::function<void(ItsCommand*, Yield&, CommandEntry&)>;
+        using ExecFn =
+            std::function<void(ItsCommand *, Yield &, CommandEntry &)>;
 
-        DispatchEntry(std::string _name, ExecFn _exec)
-          : name(_name), exec(_exec)
+        DispatchEntry(std::string _name, ExecFn _exec) :
+            name(_name), exec(_exec)
         {}
 
         std::string name;
         ExecFn exec;
     };
 
-    using DispatchTable = std::unordered_map<
-        std::underlying_type<enum CommandType>::type, DispatchEntry>;
+    using DispatchTable =
+        std::unordered_map<std::underlying_type<enum CommandType>::type,
+            DispatchEntry>;
 
     static DispatchTable cmdDispatcher;
 
@@ -520,17 +527,20 @@ class ItsCommand : public ItsProcess
     void vsync(Yield &yield, CommandEntry &command);
 
   protected: // Helpers
-    bool idOutOfRange(CommandEntry &command, DTE dte) const
+    bool
+    idOutOfRange(CommandEntry &command, DTE dte) const
     {
         return its.idOutOfRange(command.eventId, dte.ittRange);
     }
 
-    bool deviceOutOfRange(CommandEntry &command) const
+    bool
+    deviceOutOfRange(CommandEntry &command) const
     {
         return its.deviceOutOfRange(command.deviceId);
     }
 
-    bool sizeOutOfRange(CommandEntry &command) const
+    bool
+    sizeOutOfRange(CommandEntry &command) const
     {
         const auto size = bits(command.raw[1], 4, 0);
         const auto valid = bits(command.raw[2], 63);
@@ -540,7 +550,8 @@ class ItsCommand : public ItsProcess
             return false;
     }
 
-    bool collectionOutOfRange(CommandEntry &command) const
+    bool
+    collectionOutOfRange(CommandEntry &command) const
     {
         return its.collectionOutOfRange(bits(command.raw[2], 15, 0));
     }

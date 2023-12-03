@@ -33,7 +33,7 @@
 #ifndef __REPORT_HANDLER_HH__
 #define __REPORT_HANDLER_HH__
 
-void reportHandler(const sc_core::sc_report &report,
-                   const sc_core::sc_actions &actions);
+void reportHandler(
+    const sc_core::sc_report &report, const sc_core::sc_actions &actions);
 
 #endif

@@ -34,7 +34,6 @@
 
 namespace gem5
 {
-
 SEWorkload::SEWorkload(const Params &p, Addr page_shift) :
     Workload(p), memPools(page_shift)
 {}

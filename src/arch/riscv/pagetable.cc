@@ -34,10 +34,8 @@
 
 namespace gem5
 {
-
 namespace RiscvISA
 {
-
 void
 TlbEntry::serialize(CheckpointOut &cp) const
 {

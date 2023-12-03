@@ -35,7 +35,6 @@
 
  *****************************************************************************/
 
-
 // $Log: sc_lv_base.cpp,v $
 // Revision 1.2  2011/08/24 22:05:40  acg
 //  Torsten Maehne: initialization changes to remove warnings.
@@ -56,7 +55,6 @@
 
 namespace sc_dt
 {
-
 // explicit template instantiations
 template class sc_proxy<sc_lv_base>;
 template class sc_proxy<sc_bv_base>;
@@ -79,15 +77,13 @@ sc_proxy_out_of_bounds(const char *msg, int64 val)
 // ----------------------------------------------------------------------------
 
 static const sc_digit data_array[] = {
-    SC_DIGIT_ZERO, ~SC_DIGIT_ZERO, SC_DIGIT_ZERO, ~SC_DIGIT_ZERO
-};
+    SC_DIGIT_ZERO, ~SC_DIGIT_ZERO, SC_DIGIT_ZERO, ~SC_DIGIT_ZERO};
 
 static const sc_digit ctrl_array[] = {
-    SC_DIGIT_ZERO, SC_DIGIT_ZERO, ~SC_DIGIT_ZERO, ~SC_DIGIT_ZERO
-};
+    SC_DIGIT_ZERO, SC_DIGIT_ZERO, ~SC_DIGIT_ZERO, ~SC_DIGIT_ZERO};
 
 void
-sc_lv_base::init(int length_, const sc_logic& init_value)
+sc_lv_base::init(int length_, const sc_logic &init_value)
 {
     // check the length
     if (length_ <= 0) {
@@ -123,8 +119,8 @@ sc_lv_base::assign_from_string(const std::string &s)
         set_bit(i, sc_logic::char_to_logic[(int)c]);
     }
     // if formatted, fill the rest with sign(s), otherwise fill with zeros
-    sc_logic_value_t fill = (s[s_len] == 'F' ? sc_logic_value_t(s[0] - '0')
-                                             : sc_logic_value_t(0));
+    sc_logic_value_t fill =
+        (s[s_len] == 'F' ? sc_logic_value_t(s[0] - '0') : sc_logic_value_t(0));
     for (; i < len; ++i) {
         set_bit(i, fill);
     }
@@ -147,8 +143,11 @@ sc_lv_base::sc_lv_base(const char *a, int length_) :
 }
 
 sc_lv_base::sc_lv_base(const sc_lv_base &a) :
-    sc_proxy<sc_lv_base>(), m_len(a.m_len), m_size(a.m_size),
-      m_data(new sc_digit[m_size * 2]), m_ctrl(m_data + m_size)
+    sc_proxy<sc_lv_base>(),
+    m_len(a.m_len),
+    m_size(a.m_size),
+    m_data(new sc_digit[m_size * 2]),
+    m_ctrl(m_data + m_size)
 {
     // copy the bits
     int sz = m_size;
@@ -160,7 +159,7 @@ sc_lv_base::sc_lv_base(const sc_lv_base &a) :
 
 // assignment operators
 sc_lv_base &
-sc_lv_base::operator = (const char *a)
+sc_lv_base::operator=(const char *a)
 {
     assign_from_string(convert_to_bin(a));
     return *this;

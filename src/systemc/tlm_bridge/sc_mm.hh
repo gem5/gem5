@@ -39,7 +39,6 @@
 
 namespace Gem5SystemC
 {
-
 typedef tlm::tlm_generic_payload gp;
 
 class MemoryManager : public tlm::tlm_mm_interface

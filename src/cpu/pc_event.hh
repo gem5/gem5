@@ -36,7 +36,6 @@
 
 namespace gem5
 {
-
 class ThreadContext;
 class PCEventQueue;
 class System;
@@ -52,13 +51,29 @@ class PCEvent
   public:
     PCEvent(PCEventScope *q, const std::string &desc, Addr pc);
 
-    virtual ~PCEvent() { if (scope) remove(); }
+    virtual ~PCEvent()
+    {
+        if (scope)
+            remove();
+    }
 
     // for DPRINTF
-    virtual const std::string name() const { return description; }
+    virtual const std::string
+    name() const
+    {
+        return description;
+    }
 
-    std::string descr() const { return description; }
-    Addr pc() const { return evpc; }
+    std::string
+    descr() const
+    {
+        return description;
+    }
+    Addr
+    pc() const
+    {
+        return evpc;
+    }
 
     bool remove();
     virtual void process(ThreadContext *tc) = 0;
@@ -78,17 +93,17 @@ class PCEventQueue : public PCEventScope
     {
       public:
         bool
-        operator()(PCEvent * const &l, PCEvent * const &r) const
+        operator()(PCEvent *const &l, PCEvent *const &r) const
         {
             return l->pc() < r->pc();
         }
         bool
-        operator()(PCEvent * const &l, Addr pc) const
+        operator()(PCEvent *const &l, Addr pc) const
         {
             return l->pc() < pc;
         }
         bool
-        operator()(Addr pc, PCEvent * const &r) const
+        operator()(Addr pc, PCEvent *const &r) const
         {
             return pc < r->pc();
         }
@@ -114,7 +129,8 @@ class PCEventQueue : public PCEventScope
 
     bool remove(PCEvent *event) override;
     bool schedule(PCEvent *event) override;
-    bool service(Addr pc, ThreadContext *tc)
+    bool
+    service(Addr pc, ThreadContext *tc)
     {
         if (pcMap.empty())
             return false;
@@ -123,15 +139,17 @@ class PCEventQueue : public PCEventScope
     }
 
     range_t equal_range(Addr pc);
-    range_t equal_range(PCEvent *event) { return equal_range(event->pc()); }
+    range_t
+    equal_range(PCEvent *event)
+    {
+        return equal_range(event->pc());
+    }
 
     void dump() const;
 };
 
-
-inline
-PCEvent::PCEvent(PCEventScope *s, const std::string &desc, Addr pc)
-    : description(desc), scope(s), evpc(pc)
+inline PCEvent::PCEvent(PCEventScope *s, const std::string &desc, Addr pc) :
+    description(desc), scope(s), evpc(pc)
 {
     scope->schedule(this);
 }
@@ -151,8 +169,8 @@ class BreakPCEvent : public PCEvent
     bool remove;
 
   public:
-    BreakPCEvent(PCEventScope *s, const std::string &desc, Addr addr,
-                 bool del = false);
+    BreakPCEvent(
+        PCEventScope *s, const std::string &desc, Addr addr, bool del = false);
     virtual void process(ThreadContext *tc);
 };
 

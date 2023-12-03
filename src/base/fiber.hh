@@ -32,11 +32,11 @@
 // as deprecated and are hence hidden in latest macOS releases.
 // By defining _XOPEN_SOURCE we make them available at compilation time.
 #if defined(__APPLE__) && defined(__MACH__)
-#define _XOPEN_SOURCE 600
-#include <ucontext.h>
-#undef _XOPEN_SOURCE
+#    define _XOPEN_SOURCE 600
+#    include <ucontext.h>
+#    undef _XOPEN_SOURCE
 #else
-#include <ucontext.h>
+#    include <ucontext.h>
 #endif
 
 // Avoid fortify source for longjmp to work between ucontext stacks.
@@ -52,7 +52,6 @@
 
 namespace gem5
 {
-
 /**
  * This class represents a fiber, which is a light weight sort of thread which
  * is cooperatively scheduled and runs sequentially with other fibers, swapping
@@ -84,8 +83,8 @@ class Fiber
      * @ingroup api_fiber
      * @{
      */
-    Fiber(size_t stack_size=DefaultStackSize);
-    Fiber(Fiber *link, size_t stack_size=DefaultStackSize);
+    Fiber(size_t stack_size = DefaultStackSize);
+    Fiber(Fiber *link, size_t stack_size = DefaultStackSize);
     /** @} */ // end of api_fiber
 
     /**
@@ -106,14 +105,22 @@ class Fiber
      *
      * @ingroup api_fiber
      */
-    bool finished() const { return _finished; };
+    bool
+    finished() const
+    {
+        return _finished;
+    };
 
     /**
      * Returns whether the "main" function of this fiber has started.
      *
      * @ingroup api_fiber
      */
-    bool started() const { return _started; };
+    bool
+    started() const
+    {
+        return _started;
+    };
 
     /**
      * Get a pointer to the current running Fiber.
@@ -139,7 +146,11 @@ class Fiber
      */
     virtual void main() = 0;
 
-    void setStarted() { _started = true; }
+    void
+    setStarted()
+    {
+        _started = true;
+    }
 
   private:
     static void entryTrampoline();

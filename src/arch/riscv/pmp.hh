@@ -45,7 +45,6 @@
 
 namespace gem5
 {
-
 /**
  * This class helps to implement RISCV's physical memory
  * protection (pmp) primitive.
@@ -125,8 +124,7 @@ class PMP : public SimObject
      * @return Fault.
      */
     Fault pmpCheck(const RequestPtr &req, BaseMMU::Mode mode,
-                  RiscvISA::PrivilegeMode pmode, ThreadContext *tc,
-                  Addr vaddr = 0);
+        RiscvISA::PrivilegeMode pmode, ThreadContext *tc, Addr vaddr = 0);
 
     /**
      * pmpUpdateCfg updates the pmpcfg for a pmp
@@ -202,7 +200,6 @@ class PMP : public SimObject
      * @return an address range.
      */
     inline AddrRange pmpDecodeNapot(Addr pmpaddr);
-
 };
 
 } // namespace gem5

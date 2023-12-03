@@ -33,7 +33,6 @@
 
 namespace gem5
 {
-
 /**
  * Calculate the carry flag from an addition. This should work even when
  * a carry value is also added in.
@@ -84,9 +83,9 @@ static inline bool
 findCarry(int width, uint64_t dest, uint64_t src1, uint64_t src2)
 {
     int shift = width - 1;
-    return ((~(dest >> shift) & 1) +
-            ((src1 >> shift) & 1) +
-            ((src2 >> shift) & 1)) & 0x2;
+    return ((~(dest >> shift) & 1) + ((src1 >> shift) & 1) +
+               ((src2 >> shift) & 1)) &
+           0x2;
 }
 
 /**
