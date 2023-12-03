@@ -619,13 +619,13 @@ BAC::generateFetchTargets(ThreadID tid, bool &status_change)
 
     bool branch_found = false;
     bool predict_taken = false;
-    unsigned n_addr_searched = 0;
 
     // Get a reference to the current PC state for this thread.
     // The search itself is done on the instruction address to speed up
     // simulation time.
     PCStateBase &cur_pc = *bacPC[tid];
     Addr search_addr = cur_pc.instAddr();
+    Addr start_addr = search_addr;
 
     // In each cycles a new fetch target is created starting with
     // the current PC.
@@ -634,20 +634,20 @@ BAC::generateFetchTargets(ThreadID tid, bool &status_change)
 
     // Scan through the instruction stream and search for branches.
     // The BTB contains only branches where taken at least once.
-    while (n_addr_searched < fetchTargetWidth) {
+    while (true) {
 
         // Check if the current search address can be found in the BTB
         // indicating the end of the branch.
         branch_found = bpu->BTBValid(tid, search_addr);
-        n_addr_searched++;
 
         // If its a branch stop searching
         if (branch_found) {
             break;
         }
 
-        // If we exceed the maximum search width stop searching
-        if (n_addr_searched >= fetchTargetWidth) {
+        // If its not a branch check if the maximum search width is reached.
+        // If yes stop searching.
+        if ((search_addr - start_addr) >= fetchTargetWidth) {
             break;
         }
 
@@ -727,7 +727,8 @@ BAC::generateFetchTargets(ThreadID tid, bool &status_change)
     // This could be circumvented by using not only the PC but also the
     // microPC to make predictions. However, since such instructions are
     // rare this is not implemented.
-    if (staticInst && !staticInst->isLastMicroop()) {
+    if (staticInst
+        && staticInst->isMicroop() && !staticInst->isLastMicroop()) {
         stats.branchesNotLastuOp++;
         // The target is always to itself no matter if its taken or not.
         // assert(next_pc->instAddr() == search_addr);
@@ -739,9 +740,10 @@ BAC::generateFetchTargets(ThreadID tid, bool &status_change)
 
     DPRINTF(BAC, "[tid:%i] [fn:%llu] %i addresses searched. "
             "Branch found:%i. Continue with PC:%s in next cycle\n",
-            tid, curFT->ftNum(), n_addr_searched, branch_found, *next_pc);
+            tid, curFT->ftNum(), (search_addr - start_addr),
+            branch_found, *next_pc);
 
-    stats.ftSizeDist.sample(n_addr_searched);
+    stats.ftSizeDist.sample(search_addr - start_addr);
 
     // Finally set the BPU PC to the next FT in the next cycle
     set(cur_pc, *next_pc);
@@ -825,7 +827,7 @@ BAC::updatePreDecode(ThreadID tid, const InstSeqNum seqNum,
     //
     // Note we might end up here multiple times until the full instruction
     // is completed.
-    if (!inst->isLastMicroop() && (hist == nullptr)) {
+    if (inst->isMicroop() && !inst->isLastMicroop() && (hist == nullptr)) {
 
         DPRINTF(Branch, "No history for complex instruction found. \n");
         stats.multiBranchInst++;
@@ -957,9 +959,10 @@ BAC::updatePC(const DynInstPtr &inst,
         // For the decoupled front-end we need to check if this instruction
         // is the exit instruction of the fetch target. It does not need
         // to be a branch.
+        // If the instruction is micro coded check if its the last uOp.
         // Also remove the fetch target if the FTQ became invalid.
-        if ((inst->isLastMicroop()
-                && ft->isExitInst(inst->pcState().instAddr()))
+        if ((ft->isExitInst(inst->pcState().instAddr())
+                && (!inst->isMicroop() || inst->isLastMicroop()))
             || !ftq->isValid(tid)) {
 
             DPRINTF(BAC, "[tid:%i][ft:%llu] Reached end of Fetch Target\n",
