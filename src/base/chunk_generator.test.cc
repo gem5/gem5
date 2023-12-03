@@ -197,7 +197,7 @@ TEST(ChunkGeneratorTest, ChunkSizeZero)
     EXPECT_FALSE(chunk_generator.done());
     EXPECT_TRUE(chunk_generator.last());
 
-    //Process the entire region.
+    // Process the entire region.
     EXPECT_FALSE(chunk_generator.next());
     EXPECT_EQ(0, chunk_generator.addr());
     EXPECT_EQ(0, chunk_generator.size());
@@ -211,7 +211,7 @@ TEST(ChunkGeneratorTest, ChunkSizeZero)
  */
 TEST(ChunkGeneratorTest, StartAtNonZero)
 {
-    ChunkGenerator chunk_generator(4, 32, 8); //End address: 36.
+    ChunkGenerator chunk_generator(4, 32, 8); // End address: 36.
     EXPECT_EQ(4, chunk_generator.addr());
     EXPECT_EQ(4, chunk_generator.size());
     EXPECT_EQ(0, chunk_generator.complete());

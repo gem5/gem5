@@ -52,9 +52,31 @@ sc_join::add_process(sc_process_handle h)
     p->joinWait(this);
 }
 
-int sc_join::process_count() { return remaining; }
-void sc_join::signal() { if (!--remaining) joinEvent.notify(); }
-void sc_join::wait() { ::sc_core::wait(joinEvent); }
-void sc_join::wait_clocked() { do { ::sc_core::wait(); } while (remaining); }
+int
+sc_join::process_count()
+{
+    return remaining;
+}
+
+void
+sc_join::signal()
+{
+    if (!--remaining)
+        joinEvent.notify();
+}
+
+void
+sc_join::wait()
+{
+    ::sc_core::wait(joinEvent);
+}
+
+void
+sc_join::wait_clocked()
+{
+    do {
+        ::sc_core::wait();
+    } while (remaining);
+}
 
 } // namespace sc_core

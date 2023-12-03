@@ -59,79 +59,75 @@ writeUnimpl(const std::string &label)
 
 } // anonymous namespace
 
-I8237::Channel::ChannelAddrReg::ChannelAddrReg(Channel &channel) :
-    Register(csprintf("channel %d current address", channel.number))
+I8237::Channel::ChannelAddrReg::ChannelAddrReg(Channel &channel)
+    : Register(csprintf("channel %d current address", channel.number))
 {
     reader(readUnimpl(name()));
     writer(writeUnimpl(name()));
 }
 
-I8237::Channel::ChannelRemainingReg::ChannelRemainingReg(Channel &channel) :
-    Register(csprintf("channel %d remaining word count", channel.number))
+I8237::Channel::ChannelRemainingReg::ChannelRemainingReg(Channel &channel)
+    : Register(csprintf("channel %d remaining word count", channel.number))
 {
     reader(readUnimpl(name()));
     writer(writeUnimpl(name()));
 }
 
-I8237::WriteOnlyReg::WriteOnlyReg(const std::string &new_name, Addr offset) :
-    Register(new_name)
+I8237::WriteOnlyReg::WriteOnlyReg(const std::string &new_name, Addr offset)
+    : Register(new_name)
 {
     reader([offset](I8237::Register &reg) -> uint8_t {
         panic("Illegal read from i8237 register %d.", offset);
     });
 }
 
-I8237::I8237(const Params &p) : BasicPioDevice(p, 16), latency(p.pio_latency),
-    regs("registers", pioAddr), channels{{{0}, {1}, {2}, {3}}},
-    statusCommandReg("status/command"),
-    requestReg("request", 0x9),
-    setMaskBitReg("set mask bit", 0xa),
-    modeReg("mode", 0xb),
-    clearFlipFlopReg("clear flip-flop", 0xc),
-    temporaryMasterClearReg("temporary/maskter clear"),
-    clearMaskReg("clear mask", 0xe),
-    writeMaskReg("write mask", 0xf)
+I8237::I8237(const Params &p)
+    : BasicPioDevice(p, 16),
+      latency(p.pio_latency),
+      regs("registers", pioAddr),
+      channels{ { { 0 }, { 1 }, { 2 }, { 3 } } },
+      statusCommandReg("status/command"),
+      requestReg("request", 0x9),
+      setMaskBitReg("set mask bit", 0xa),
+      modeReg("mode", 0xb),
+      clearFlipFlopReg("clear flip-flop", 0xc),
+      temporaryMasterClearReg("temporary/maskter clear"),
+      clearMaskReg("clear mask", 0xe),
+      writeMaskReg("write mask", 0xf)
 {
     // Add the channel address and remaining registers.
-    for (auto &channel: channels)
+    for (auto &channel : channels)
         regs.addRegisters({ channel.addrReg, channel.remainingReg });
 
     // Add the other registers individually.
-    regs.addRegisters({
-        statusCommandReg.
-            reader([this](auto &reg) -> uint8_t { return statusVal; }).
-            writer([this](auto &reg, const uint8_t &value) {
-                        commandVal = value;
-                    }),
+    regs.addRegisters(
+        { statusCommandReg
+              .reader([this](auto &reg) -> uint8_t { return statusVal; })
+              .writer([this](auto &reg, const uint8_t &value) {
+                  commandVal = value;
+              }),
 
-        requestReg.
-            writer(this, &I8237::setRequestBit),
+          requestReg.writer(this, &I8237::setRequestBit),
 
-        setMaskBitReg.
-            writer(this, &I8237::setMaskBit),
+          setMaskBitReg.writer(this, &I8237::setMaskBit),
 
-        modeReg.
-            writer([this](auto &reg, const uint8_t &value) {
-                        channels[bits(value, 1, 0)].mode = value;
-                    }),
+          modeReg.writer([this](auto &reg, const uint8_t &value) {
+              channels[bits(value, 1, 0)].mode = value;
+          }),
 
-        clearFlipFlopReg.
-            writer([this](auto &reg, const uint8_t &value) {
-                        highByte = false;
-                    }),
+          clearFlipFlopReg.writer(
+              [this](auto &reg, const uint8_t &value) { highByte = false; }),
 
-        temporaryMasterClearReg.
-            reader([this](auto &reg) ->uint8_t { return tempVal; }).
-            writer([this](auto &reg, const uint8_t &value) { reset(); }),
+          temporaryMasterClearReg
+              .reader([this](auto &reg) -> uint8_t { return tempVal; })
+              .writer([this](auto &reg, const uint8_t &value) { reset(); }),
 
-        clearMaskReg.
-            writer([this](auto &reg, const uint8_t &value) { maskVal = 0x0; }),
+          clearMaskReg.writer(
+              [this](auto &reg, const uint8_t &value) { maskVal = 0x0; }),
 
-        writeMaskReg.
-            writer([this](auto &reg, const uint8_t &value) {
-                        maskVal = bits(value, 3, 0);
-                    })
-    });
+          writeMaskReg.writer([this](auto &reg, const uint8_t &value) {
+              maskVal = bits(value, 3, 0);
+          }) });
 
     reset();
 }

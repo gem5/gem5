@@ -42,10 +42,7 @@
 namespace gem5
 {
 
-BaseMemProbe::BaseMemProbe(const BaseMemProbeParams &p)
-    : SimObject(p)
-{
-}
+BaseMemProbe::BaseMemProbe(const BaseMemProbeParams &p) : SimObject(p) {}
 
 void
 BaseMemProbe::regProbeListeners()

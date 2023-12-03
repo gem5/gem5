@@ -57,19 +57,20 @@ class PngWriter : public ImgWriter
      * Create a png that takes data in a given mode & size and
      * outputs to an ostream.
      */
-    PngWriter(const FrameBuffer *_fb)
-      : ImgWriter(_fb)
-    {}
+    PngWriter(const FrameBuffer *_fb) : ImgWriter(_fb) {}
 
-    ~PngWriter() {};
+    ~PngWriter(){};
 
     /**
      * Return Image format as a string
      *
      * @return img extension (e.g. .png for Png)
      */
-    const char* getImgExtension() const override
-    { return _imgExtension; }
+    const char *
+    getImgExtension() const override
+    {
+        return _imgExtension;
+    }
 
     /**
      * Write the frame buffer data into the provided ostream
@@ -77,17 +78,21 @@ class PngWriter : public ImgWriter
      * @param png stream to write to
      */
     void write(std::ostream &png) const override;
+
   private:
     /** Png Pixel type: not containing padding */
     struct GEM5_PACKED PngPixel24
     {
-        PngPixel24 &operator=(const Pixel &rhs) {
+        PngPixel24 &
+        operator=(const Pixel &rhs)
+        {
             red = rhs.red;
             green = rhs.green;
             blue = rhs.blue;
 
             return *this;
         }
+
         uint8_t red;
         uint8_t green;
         uint8_t blue;
@@ -105,7 +110,7 @@ class PngWriter : public ImgWriter
 
     typedef PngPixel24 PixelType;
 
-    static const char* _imgExtension;
+    static const char *_imgExtension;
 };
 
 } // namespace gem5

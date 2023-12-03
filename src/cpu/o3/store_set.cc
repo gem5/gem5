@@ -43,8 +43,8 @@ StoreSet::StoreSet(uint64_t clear_period, int _SSIT_size, int _LFST_size)
     : clearPeriod(clear_period), SSITSize(_SSIT_size), LFSTSize(_LFST_size)
 {
     DPRINTF(StoreSet, "StoreSet: Creating store set object.\n");
-    DPRINTF(StoreSet, "StoreSet: SSIT size: %i, LFST size: %i.\n",
-            SSITSize, LFSTSize);
+    DPRINTF(StoreSet, "StoreSet: SSIT size: %i, LFST size: %i.\n", SSITSize,
+            LFSTSize);
 
     if (!isPowerOf2(SSITSize)) {
         fatal("Invalid SSIT size!\n");
@@ -77,9 +77,7 @@ StoreSet::StoreSet(uint64_t clear_period, int _SSIT_size, int _LFST_size)
     memOpsPred = 0;
 }
 
-StoreSet::~StoreSet()
-{
-}
+StoreSet::~StoreSet() {}
 
 void
 StoreSet::init(uint64_t clear_period, int _SSIT_size, int _LFST_size)
@@ -89,8 +87,8 @@ StoreSet::init(uint64_t clear_period, int _SSIT_size, int _LFST_size)
     clearPeriod = clear_period;
 
     DPRINTF(StoreSet, "StoreSet: Creating store set object.\n");
-    DPRINTF(StoreSet, "StoreSet: SSIT size: %i, LFST size: %i.\n",
-            SSITSize, LFSTSize);
+    DPRINTF(StoreSet, "StoreSet: SSIT size: %i, LFST size: %i.\n", SSITSize,
+            LFSTSize);
 
     SSIT.resize(SSITSize);
 
@@ -114,7 +112,6 @@ StoreSet::init(uint64_t clear_period, int _SSIT_size, int _LFST_size)
 
     memOpsPred = 0;
 }
-
 
 void
 StoreSet::violation(Addr store_PC, Addr load_PC)
@@ -141,7 +138,8 @@ StoreSet::violation(Addr store_PC, Addr load_PC)
 
         assert(new_set < LFSTSize);
 
-        DPRINTF(StoreSet, "StoreSet: Neither load nor store had a valid "
+        DPRINTF(StoreSet,
+                "StoreSet: Neither load nor store had a valid "
                 "storeset, creating a new one: %i for load %#x, store %#x\n",
                 new_set, load_PC, store_PC);
     } else if (valid_load_SSID && !valid_store_SSID) {
@@ -153,7 +151,8 @@ StoreSet::violation(Addr store_PC, Addr load_PC)
 
         assert(load_SSID < LFSTSize);
 
-        DPRINTF(StoreSet, "StoreSet: Load had a valid store set.  Adding "
+        DPRINTF(StoreSet,
+                "StoreSet: Load had a valid store set.  Adding "
                 "store to that set: %i for load %#x, store %#x\n",
                 load_SSID, load_PC, store_PC);
     } else if (!valid_load_SSID && valid_store_SSID) {
@@ -163,7 +162,8 @@ StoreSet::violation(Addr store_PC, Addr load_PC)
 
         SSIT[load_index] = store_SSID;
 
-        DPRINTF(StoreSet, "StoreSet: Store had a valid store set: %i for "
+        DPRINTF(StoreSet,
+                "StoreSet: Store had a valid store set: %i for "
                 "load %#x, store %#x\n",
                 store_SSID, load_PC, store_PC);
     } else {
@@ -176,13 +176,15 @@ StoreSet::violation(Addr store_PC, Addr load_PC)
         if (store_SSID > load_SSID) {
             SSIT[store_index] = load_SSID;
 
-            DPRINTF(StoreSet, "StoreSet: Load had smaller store set: %i; "
+            DPRINTF(StoreSet,
+                    "StoreSet: Load had smaller store set: %i; "
                     "for load %#x, store %#x\n",
                     load_SSID, load_PC, store_PC);
         } else {
             SSIT[load_index] = store_SSID;
 
-            DPRINTF(StoreSet, "StoreSet: Store had smaller store set: %i; "
+            DPRINTF(StoreSet,
+                    "StoreSet: Store had smaller store set: %i; "
                     "for load %#x, store %#x\n",
                     store_SSID, load_PC, store_PC);
         }
@@ -234,8 +236,8 @@ StoreSet::insertStore(Addr store_PC, InstSeqNum store_seq_num, ThreadID tid)
 
         storeList[store_seq_num] = store_SSID;
 
-        DPRINTF(StoreSet, "Store %#x updated the LFST, SSID: %i\n",
-                store_PC, store_SSID);
+        DPRINTF(StoreSet, "Store %#x updated the LFST, SSID: %i\n", store_PC,
+                store_SSID);
     }
 }
 
@@ -249,8 +251,7 @@ StoreSet::checkInst(Addr PC)
     assert(index < SSITSize);
 
     if (!validSSIT[index]) {
-        DPRINTF(StoreSet, "Inst %#x with index %i had no SSID\n",
-                PC, index);
+        DPRINTF(StoreSet, "Inst %#x with index %i had no SSID\n", PC, index);
 
         // Return 0 if there's no valid entry.
         return 0;
@@ -260,14 +261,17 @@ StoreSet::checkInst(Addr PC)
         assert(inst_SSID < LFSTSize);
 
         if (!validLFST[inst_SSID]) {
-
-            DPRINTF(StoreSet, "Inst %#x with index %i and SSID %i had no "
-                    "dependency\n", PC, index, inst_SSID);
+            DPRINTF(StoreSet,
+                    "Inst %#x with index %i and SSID %i had no "
+                    "dependency\n",
+                    PC, index, inst_SSID);
 
             return 0;
         } else {
-            DPRINTF(StoreSet, "Inst %#x with index %i and SSID %i had LFST "
-                    "inum of %i\n", PC, index, inst_SSID, LFST[inst_SSID]);
+            DPRINTF(StoreSet,
+                    "Inst %#x with index %i and SSID %i had LFST "
+                    "inum of %i\n",
+                    PC, index, inst_SSID, LFST[inst_SSID]);
 
             return LFST[inst_SSID];
         }
@@ -314,8 +318,7 @@ StoreSet::issued(Addr issued_PC, InstSeqNum issued_seq_num, bool is_store)
 void
 StoreSet::squash(InstSeqNum squashed_num, ThreadID tid)
 {
-    DPRINTF(StoreSet, "StoreSet: Squashing until inum %i\n",
-            squashed_num);
+    DPRINTF(StoreSet, "StoreSet: Squashing until inum %i\n", squashed_num);
 
     int idx;
     SeqNumMapIt store_list_it = storeList.begin();
@@ -364,8 +367,8 @@ StoreSet::dump()
     int num = 0;
 
     while (store_list_it != storeList.end()) {
-        cprintf("%i: [sn:%lli] SSID:%i\n",
-                num, (*store_list_it).first, (*store_list_it).second);
+        cprintf("%i: [sn:%lli] SSID:%i\n", num, (*store_list_it).first,
+                (*store_list_it).second);
         num++;
         store_list_it++;
     }

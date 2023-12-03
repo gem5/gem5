@@ -42,18 +42,20 @@
 
 // check if filesystem library is available
 #if defined(__cpp_lib_filesystem) || __has_include(<filesystem>)
-    #include <filesystem>
+#include <filesystem>
 #else
-    // This is only reachable if we're using GCC 7 or clang versions 6
-    // through 10 (note: gem5 does not support GCC versions older than
-    // GCC 7 or clang versions older than clang 6.0 as they do not
-    // support the C++17 standard).
-    // If we're using GCC 7 or clang versions 6 through 10, we need to use
-    // <experimental/filesystem>.
-    #include <experimental/filesystem>
-    namespace std {
-        namespace filesystem = experimental::filesystem;
-    }
+// This is only reachable if we're using GCC 7 or clang versions 6
+// through 10 (note: gem5 does not support GCC versions older than
+// GCC 7 or clang versions older than clang 6.0 as they do not
+// support the C++17 standard).
+// If we're using GCC 7 or clang versions 6 through 10, we need to use
+// <experimental/filesystem>.
+#include <experimental/filesystem>
+
+namespace std
+{
+namespace filesystem = experimental::filesystem;
+}
 #endif
 
 #include "base/logging.hh"
@@ -113,7 +115,7 @@ ListenSocket::socketCloexec(int domain, int type, int protocol)
 
 int
 ListenSocket::acceptCloexec(int sockfd, struct sockaddr *addr,
-                             socklen_t *addrlen)
+                            socklen_t *addrlen)
 {
 #if defined(_GNU_SOURCE) && defined(SOCK_CLOEXEC)
     return ::accept4(sockfd, addr, addrlen, SOCK_CLOEXEC);
@@ -142,15 +144,15 @@ ListenSocket::accept()
     struct sockaddr_in sockaddr;
     socklen_t slen = sizeof(sockaddr);
     int sfd = acceptCloexec(fd, (struct sockaddr *)&sockaddr, &slen);
-    panic_if(sfd == -1, "%s: Failed to accept connection: %s",
-            name(), strerror(errno));
+    panic_if(sfd == -1, "%s: Failed to accept connection: %s", name(),
+             strerror(errno));
 
     return sfd;
 }
 
 bool
 ListenSocketConfig::parseIni(const std::string &value,
-        ListenSocketConfig &retval)
+                             ListenSocketConfig &retval)
 {
     if (value.size() == 0) {
         retval = listenSocketEmptyConfig();
@@ -207,7 +209,7 @@ ListenSocketInet::listen(int port)
     int i = 1;
     int ret = ::setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &i, sizeof(i));
     panic_if(ret < 0,
-            "ListenSocket(listen): setsockopt() SO_REUSEADDR failed!");
+             "ListenSocket(listen): setsockopt() SO_REUSEADDR failed!");
 
     struct sockaddr_in sockaddr;
     sockaddr.sin_family = PF_INET;
@@ -216,16 +218,16 @@ ListenSocketInet::listen(int port)
     sockaddr.sin_port = htons(port);
     // finally clear sin_zero
     std::memset(&sockaddr.sin_zero, 0, sizeof(sockaddr.sin_zero));
-    ret = ::bind(fd, (struct sockaddr *)&sockaddr, sizeof (sockaddr));
+    ret = ::bind(fd, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
     if (ret != 0) {
         panic_if(ret == -1 && errno != EADDRINUSE,
-                "ListenSocket(listen): bind() failed!");
+                 "ListenSocket(listen): bind() failed!");
         return false;
     }
 
     if (::listen(fd, 1) == -1) {
         panic_if(errno != EADDRINUSE,
-                "ListenSocket(listen): listen() failed!");
+                 "ListenSocket(listen): listen() failed!");
         // User may decide to retry with a different port later; however, the
         // socket is already bound to a port and the next bind will surely
         // fail. We'll close the socket and reset fd to -1 so our user can
@@ -246,8 +248,8 @@ ListenSocketInet::listen()
         _port++;
         fatal_if(_port > 65536, "%s: cannot find an available port.", name());
     }
-    ccprintf(std::cerr, "%s: Listening for connections on %s\n",
-            name(), *this);
+    ccprintf(std::cerr, "%s: Listening for connections on %s\n", name(),
+             *this);
 }
 
 void
@@ -268,8 +270,8 @@ void
 ListenSocketUnix::checkPathLength(const std::string &original, size_t max_len)
 {
     fatal_if(original.size() > max_len,
-            "Length of socket path '%s' is %d, greater than max %d.",
-            original, original.size(), max_len);
+             "Length of socket path '%s' is %d, greater than max %d.",
+             original, original.size(), max_len);
 }
 
 void
@@ -280,8 +282,8 @@ ListenSocketUnix::listen()
     // only create socket if not already created by previous call
     if (fd == -1) {
         fd = socketCloexec(PF_UNIX, SOCK_STREAM, 0);
-        panic_if(fd < 0, "%s: Can't create unix socket:%s !",
-                name(), strerror(errno));
+        panic_if(fd < 0, "%s: Can't create unix socket:%s !", name(),
+                 strerror(errno));
     }
 
     sockaddr_un serv_addr;
@@ -289,21 +291,22 @@ ListenSocketUnix::listen()
     size_t addr_size = prepSockaddrUn(serv_addr);
 
     fatal_if(bind(fd, (struct sockaddr *)&(serv_addr), addr_size) != 0,
-            "%s: Cannot bind unix socket %s: %s", name(), *this,
-            strerror(errno));
+             "%s: Cannot bind unix socket %s: %s", name(), *this,
+             strerror(errno));
 
-    fatal_if(::listen(fd, 1) == -1, "%s: Failed to listen on %s: %s\n",
-            name(), *this, strerror(errno));
+    fatal_if(::listen(fd, 1) == -1, "%s: Failed to listen on %s: %s\n", name(),
+             *this, strerror(errno));
 
-    ccprintf(std::cerr, "%s: Listening for connections on %s\n",
-            name(), *this);
+    ccprintf(std::cerr, "%s: Listening for connections on %s\n", name(),
+             *this);
 
     setListening();
 }
 
 ListenSocketUnixFile::ListenSocketUnixFile(const std::string &_name,
-        const std::string &_dir, const std::string &_fname) :
-    ListenSocketUnix(_name), dir(_dir), fname(_fname)
+                                           const std::string &_dir,
+                                           const std::string &_fname)
+    : ListenSocketUnix(_name), dir(_dir), fname(_fname)
 {
     checkPathLength(fname, sizeof(sockaddr_un::sun_path) - 1);
 }
@@ -351,8 +354,8 @@ ListenSocketUnixFile::listen()
     auto cwd = std::filesystem::current_path(ec);
     panic_if(ec, "Failed to get current working directory %s", ec.message());
     std::filesystem::current_path(resolvedDir, ec);
-    fatal_if(ec, "Failed to change to directory %s: %s",
-            resolvedDir, ec.message());
+    fatal_if(ec, "Failed to change to directory %s: %s", resolvedDir,
+             ec.message());
 
     ListenSocketUnix::listen();
 
@@ -383,9 +386,9 @@ ListenSocketUnixAbstract::prepSockaddrUn(sockaddr_un &addr) const
     return offsetof(sockaddr_un, sun_path) + path.size() + 1;
 }
 
-ListenSocketUnixAbstract::ListenSocketUnixAbstract(
-        const std::string &_name, const std::string &_path) :
-    ListenSocketUnix(_name), path(_path)
+ListenSocketUnixAbstract::ListenSocketUnixAbstract(const std::string &_name,
+                                                   const std::string &_path)
+    : ListenSocketUnix(_name), path(_path)
 {
     checkPathLength(path, sizeof(sockaddr_un::sun_path) - 1);
 }

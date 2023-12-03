@@ -57,33 +57,33 @@ const char *
 archToString(Arch arch)
 {
     switch (arch) {
-      case UnknownArch:
+    case UnknownArch:
         return "unknown";
-      case SPARC64:
+    case SPARC64:
         return "sparc64";
-      case SPARC32:
+    case SPARC32:
         return "sparc32";
-      case Mips:
+    case Mips:
         return "mips";
-      case X86_64:
+    case X86_64:
         return "x86_64";
-      case I386:
+    case I386:
         return "i386";
-      case Arm64:
+    case Arm64:
         return "arm64";
-      case Arm:
+    case Arm:
         return "arm";
-      case Thumb:
+    case Thumb:
         return "thumb";
-      case Power:
+    case Power:
         return "power";
-      case Power64:
+    case Power64:
         return "power64";
-      case Riscv64:
+    case Riscv64:
         return "riscv64";
-      case Riscv32:
+    case Riscv32:
         return "riscv32";
-      default:
+    default:
         panic("Unrecognized arch %d.", arch);
     }
 }
@@ -92,21 +92,21 @@ const char *
 opSysToString(OpSys op_sys)
 {
     switch (op_sys) {
-      case UnknownOpSys:
+    case UnknownOpSys:
         return "unknown";
-      case Tru64:
+    case Tru64:
         return "tru64";
-      case Linux:
-      case LinuxPower64ABIv1:
-      case LinuxPower64ABIv2:
+    case Linux:
+    case LinuxPower64ABIv1:
+    case LinuxPower64ABIv2:
         return "linux";
-      case Solaris:
+    case Solaris:
         return "solaris";
-      case LinuxArmOABI:
+    case LinuxArmOABI:
         return "linux_arm_OABI";
-      case FreeBSD:
+    case FreeBSD:
         return "freebsd";
-      default:
+    default:
         panic("Unrecognized operating system %d.", op_sys);
     }
 }
@@ -135,7 +135,7 @@ createObjectFile(const std::string &fname, bool raw)
 {
     ImageFileDataPtr ifd(new ImageFileData(fname));
 
-    for (auto &format: object_file_formats()) {
+    for (auto &format : object_file_formats()) {
         ObjectFile *file_obj = format->load(ifd);
         if (file_obj)
             return file_obj;
@@ -151,13 +151,13 @@ bool
 archIs64Bit(const loader::Arch arch)
 {
     switch (arch) {
-      case SPARC64:
-      case X86_64:
-      case Arm64:
-      case Power64:
-      case Riscv64:
+    case SPARC64:
+    case X86_64:
+    case Arm64:
+    case Power64:
+    case Riscv64:
         return true;
-      default:
+    default:
         return false;
     }
 }

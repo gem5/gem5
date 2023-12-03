@@ -46,22 +46,22 @@ broadcast(MachineType type)
 {
     NetDest dest;
     for (NodeID i = 0; i < MachineType_base_count(type); i++) {
-        MachineID mach = {type, i};
+        MachineID mach = { type, i };
         dest.add(mach);
     }
     return dest;
 }
 
 inline MachineID
-mapAddressToRange(Addr addr, MachineType type, int low_bit,
-                  int num_bits, int cluster_id = 0)
+mapAddressToRange(Addr addr, MachineType type, int low_bit, int num_bits,
+                  int cluster_id = 0)
 {
-    MachineID mach = {type, 0};
+    MachineID mach = { type, 0 };
     if (num_bits == 0)
         mach.num = cluster_id;
     else
-        mach.num = bitSelect(addr, low_bit, low_bit + num_bits - 1)
-            + (1 << num_bits) * cluster_id;
+        mach.num = bitSelect(addr, low_bit, low_bit + num_bits - 1) +
+                   (1 << num_bits) * cluster_id;
     return mach;
 }
 
@@ -86,18 +86,18 @@ machineCount(MachineType machType)
 inline MachineID
 createMachineID(MachineType type, NodeID id)
 {
-    MachineID mach = {type, id};
+    MachineID mach = { type, id };
     return mach;
 }
 
 inline MachineID
 MachineTypeAndNodeIDToMachineID(MachineType type, NodeID node)
 {
-    MachineID mach = {type, node};
+    MachineID mach = { type, node };
     return mach;
 }
 
 } // namespace ruby
 } // namespace gem5
 
-#endif  // __MEM_RUBY_SLICC_INTERFACE_COMPONENTMAPPINGS_HH__
+#endif // __MEM_RUBY_SLICC_INTERFACE_COMPONENTMAPPINGS_HH__

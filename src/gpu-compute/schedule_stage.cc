@@ -49,12 +49,19 @@ namespace gem5
 ScheduleStage::ScheduleStage(const ComputeUnitParams &p, ComputeUnit &cu,
                              ScoreboardCheckToSchedule &from_scoreboard_check,
                              ScheduleToExecute &to_execute)
-    : computeUnit(cu), fromScoreboardCheck(from_scoreboard_check),
+    : computeUnit(cu),
+      fromScoreboardCheck(from_scoreboard_check),
       toExecute(to_execute),
       _name(cu.name() + ".ScheduleStage"),
-      vectorAluRdy(false), scalarAluRdy(false), scalarMemBusRdy(false),
-      scalarMemIssueRdy(false), glbMemBusRdy(false), glbMemIssueRdy(false),
-      locMemBusRdy(false), locMemIssueRdy(false), stats(&cu, cu.numExeUnits())
+      vectorAluRdy(false),
+      scalarAluRdy(false),
+      scalarMemBusRdy(false),
+      scalarMemIssueRdy(false),
+      glbMemBusRdy(false),
+      glbMemIssueRdy(false),
+      locMemBusRdy(false),
+      locMemIssueRdy(false),
+      stats(&cu, cu.numExeUnits())
 {
     for (int j = 0; j < cu.numExeUnits(); ++j) {
         scheduler.emplace_back(p);
@@ -76,7 +83,6 @@ ScheduleStage::~ScheduleStage()
 void
 ScheduleStage::init()
 {
-
     fatal_if(scheduler.size() != fromScoreboardCheck.numReadyLists(),
              "Scheduler should have same number of entries as CU's readyList");
     for (int j = 0; j < computeUnit.numExeUnits(); ++j) {
@@ -230,11 +236,11 @@ ScheduleStage::schedRfWrites(int exeType, const GPUDynInstPtr &gpu_dyn_inst)
     Wavefront *wf = gpu_dyn_inst->wavefront();
     bool accessVrfWr = true;
     if (!gpu_dyn_inst->isScalar()) {
-        accessVrfWr = computeUnit.vrf[wf->simdId]
-            ->canScheduleWriteOperands(wf, gpu_dyn_inst);
+        accessVrfWr = computeUnit.vrf[wf->simdId]->canScheduleWriteOperands(
+            wf, gpu_dyn_inst);
     }
-    bool accessSrfWr = computeUnit.srf[wf->simdId]
-        ->canScheduleWriteOperands(wf, gpu_dyn_inst);
+    bool accessSrfWr = computeUnit.srf[wf->simdId]->canScheduleWriteOperands(
+        wf, gpu_dyn_inst);
     bool accessRf = accessVrfWr && accessSrfWr;
     if (accessRf) {
         if (!gpu_dyn_inst->isScalar()) {
@@ -283,8 +289,7 @@ ScheduleStage::scheduleRfDestOperands()
             // pass the RF destination operand check here, and execute
             // instead of the FLAT.
             if (wf->instructionBuffer.front()->isFlat()) {
-                assert(toExecute.dispatchStatus(wf->localMem)
-                       == SKIP);
+                assert(toExecute.dispatchStatus(wf->localMem) == SKIP);
                 doDispatchListTransition(wf->localMem, EMPTY);
             }
         }
@@ -300,19 +305,19 @@ ScheduleStage::addToSchList(int exeType, const GPUDynInstPtr &gpu_dyn_inst)
     Wavefront *wf = gpu_dyn_inst->wavefront();
     bool accessVrf = true;
     if (!gpu_dyn_inst->isScalar()) {
-        accessVrf = computeUnit.vrf[wf->simdId]
-            ->canScheduleReadOperands(wf, gpu_dyn_inst);
+        accessVrf = computeUnit.vrf[wf->simdId]->canScheduleReadOperands(
+            wf, gpu_dyn_inst);
     }
-    bool accessSrf = computeUnit.srf[wf->simdId]
-        ->canScheduleReadOperands(wf, gpu_dyn_inst);
+    bool accessSrf =
+        computeUnit.srf[wf->simdId]->canScheduleReadOperands(wf, gpu_dyn_inst);
     // If RFs can support instruction, add to schList in RFBUSY state,
     // place wave in wavesInSch and pipeMap, and schedule Rd/Wr operands
     // to the VRF
     bool accessRf = accessVrf && accessSrf;
     if (accessRf) {
         DPRINTF(GPUSched, "schList[%d]: Adding: SIMD[%d] WV[%d]: %d: %s\n",
-                exeType, wf->simdId, wf->wfDynId,
-                gpu_dyn_inst->seqNum(), gpu_dyn_inst->disassemble());
+                exeType, wf->simdId, wf->wfDynId, gpu_dyn_inst->seqNum(),
+                gpu_dyn_inst->disassemble());
 
         computeUnit.insertInPipeMap(wf);
         wavesInSch.emplace(wf->wfDynId);
@@ -327,14 +332,14 @@ ScheduleStage::addToSchList(int exeType, const GPUDynInstPtr &gpu_dyn_inst)
             wf->setStatus(Wavefront::S_STALLED_SLEEP);
         }
         if (!gpu_dyn_inst->isScalar()) {
-            computeUnit.vrf[wf->simdId]
-                ->scheduleReadOperands(wf, gpu_dyn_inst);
+            computeUnit.vrf[wf->simdId]->scheduleReadOperands(wf,
+                                                              gpu_dyn_inst);
         }
         computeUnit.srf[wf->simdId]->scheduleReadOperands(wf, gpu_dyn_inst);
 
         DPRINTF(GPUSched, "schList[%d]: Added: SIMD[%d] WV[%d]: %d: %s\n",
-                exeType, wf->simdId, wf->wfDynId,
-                gpu_dyn_inst->seqNum(), gpu_dyn_inst->disassemble());
+                exeType, wf->simdId, wf->wfDynId, gpu_dyn_inst->seqNum(),
+                gpu_dyn_inst->disassemble());
         return true;
     } else {
         // Number of stall cycles due to RF access denied
@@ -351,10 +356,11 @@ ScheduleStage::addToSchList(int exeType, const GPUDynInstPtr &gpu_dyn_inst)
         // Increment stall counts for WF
         wf->stats.schStalls++;
         wf->stats.schRfAccessStalls++;
-        DPRINTF(GPUSched, "schList[%d]: Could not add: "
+        DPRINTF(GPUSched,
+                "schList[%d]: Could not add: "
                 "SIMD[%d] WV[%d]: %d: %s\n",
-                exeType, wf->simdId, wf->wfDynId,
-                gpu_dyn_inst->seqNum(), gpu_dyn_inst->disassemble());
+                exeType, wf->simdId, wf->wfDynId, gpu_dyn_inst->seqNum(),
+                gpu_dyn_inst->disassemble());
     }
     return false;
 }
@@ -368,8 +374,8 @@ ScheduleStage::reinsertToSchList(int exeType,
     // front of the schList
     assert(gpu_dyn_inst);
     auto schIter = schList.at(exeType).begin();
-    while (schIter != schList.at(exeType).end()
-           && schIter->first->wfDynId < gpu_dyn_inst->wfDynId) {
+    while (schIter != schList.at(exeType).end() &&
+           schIter->first->wfDynId < gpu_dyn_inst->wfDynId) {
         schIter++;
     }
     schList.at(exeType).insert(schIter, std::make_pair(gpu_dyn_inst, RFREADY));
@@ -445,8 +451,8 @@ ScheduleStage::dispatchReady(const GPUDynInstPtr &gpu_dyn_inst)
             stats.dispNrdyStalls[SCH_SCALAR_ALU_NRDY]++;
             return false;
         }
-    } else if (gpu_dyn_inst->isBarrier() || gpu_dyn_inst->isBranch()
-               || gpu_dyn_inst->isALU()) {
+    } else if (gpu_dyn_inst->isBarrier() || gpu_dyn_inst->isBranch() ||
+               gpu_dyn_inst->isALU()) {
         // Barrier, Branch, or ALU instruction
         if (gpu_dyn_inst->isScalar() && !scalarAluRdy) {
             stats.dispNrdyStalls[SCH_SCALAR_ALU_NRDY]++;
@@ -488,10 +494,8 @@ ScheduleStage::dispatchReady(const GPUDynInstPtr &gpu_dyn_inst)
             rdy = false;
             stats.dispNrdyStalls[SCH_SCALAR_MEM_BUS_BUSY_NRDY]++;
         }
-        if (!computeUnit.scalarMemoryPipe
-            .isGMReqFIFOWrRdy(wf->scalarRdGmReqsInPipe
-            + wf->scalarWrGmReqsInPipe))
-        {
+        if (!computeUnit.scalarMemoryPipe.isGMReqFIFOWrRdy(
+                wf->scalarRdGmReqsInPipe + wf->scalarWrGmReqsInPipe)) {
             rdy = false;
             stats.dispNrdyStalls[SCH_SCALAR_MEM_FIFO_NRDY]++;
         }
@@ -509,8 +513,8 @@ ScheduleStage::dispatchReady(const GPUDynInstPtr &gpu_dyn_inst)
             rdy = false;
             stats.dispNrdyStalls[SCH_LOCAL_MEM_BUS_BUSY_NRDY]++;
         }
-        if (!computeUnit.localMemoryPipe.
-                isLMReqFIFOWrRdy(wf->rdLmReqsInPipe + wf->wrLmReqsInPipe)) {
+        if (!computeUnit.localMemoryPipe.isLMReqFIFOWrRdy(
+                wf->rdLmReqsInPipe + wf->wrLmReqsInPipe)) {
             rdy = false;
             stats.dispNrdyStalls[SCH_LOCAL_MEM_FIFO_NRDY]++;
         }
@@ -536,8 +540,8 @@ ScheduleStage::dispatchReady(const GPUDynInstPtr &gpu_dyn_inst)
             rdy = false;
             stats.dispNrdyStalls[SCH_FLAT_MEM_REQS_NRDY]++;
         }
-        if (!computeUnit.localMemoryPipe.
-                isLMReqFIFOWrRdy(wf->rdLmReqsInPipe + wf->wrLmReqsInPipe)) {
+        if (!computeUnit.localMemoryPipe.isLMReqFIFOWrRdy(
+                wf->rdLmReqsInPipe + wf->wrLmReqsInPipe)) {
             rdy = false;
             stats.dispNrdyStalls[SCH_FLAT_MEM_FIFO_NRDY]++;
         }
@@ -590,8 +594,10 @@ ScheduleStage::fillDispatchList()
                     }
 
                     doDispatchListTransition(j, EXREADY, schIter->first);
-                    DPRINTF(GPUSched, "dispatchList[%d]: fillDispatchList: "
-                            "EMPTY->EXREADY\n", j);
+                    DPRINTF(GPUSched,
+                            "dispatchList[%d]: fillDispatchList: "
+                            "EMPTY->EXREADY\n",
+                            j);
                     schIter->first = nullptr;
                     schIter = schList.at(j).erase(schIter);
                     dispatched = true;
@@ -632,31 +638,33 @@ ScheduleStage::arbitrateVrfToLdsBus()
         // get the GM pipe index in the dispatchList
         int gm_exe_unit = computeUnit.firstMemUnit() + i;
         // get the wave in the dispatchList
-        GPUDynInstPtr &gpu_dyn_inst
-            = toExecute.readyInst(gm_exe_unit);
+        GPUDynInstPtr &gpu_dyn_inst = toExecute.readyInst(gm_exe_unit);
         // If the WF is valid, ready to execute, and the instruction
         // is a flat access, arbitrate with the WF's assigned LM pipe
-        if (gpu_dyn_inst && toExecute.dispatchStatus(gm_exe_unit)
-            == EXREADY && gpu_dyn_inst->isFlat()) {
+        if (gpu_dyn_inst && toExecute.dispatchStatus(gm_exe_unit) == EXREADY &&
+            gpu_dyn_inst->isFlat()) {
             Wavefront *wf = gpu_dyn_inst->wavefront();
             // If the associated LM pipe also has a wave selected, block
             // that wave and let the Flat instruction issue. The WF in the
             // LM pipe is added back to the schList for consideration next
             // cycle.
             if (toExecute.dispatchStatus(wf->localMem) == EXREADY) {
-                reinsertToSchList(wf->localMem, toExecute
-                                  .readyInst(wf->localMem));
+                reinsertToSchList(wf->localMem,
+                                  toExecute.readyInst(wf->localMem));
                 // Increment stall stats for LDS-VRF arbitration
                 stats.ldsBusArbStalls++;
                 toExecute.readyInst(wf->localMem)
-                    ->wavefront()->stats.schLdsArbStalls++;
+                    ->wavefront()
+                    ->stats.schLdsArbStalls++;
             }
             // With arbitration of LM pipe complete, transition the
             // LM pipe to SKIP state in the dispatchList to inform EX stage
             // that a Flat instruction is executing next cycle
             doDispatchListTransition(wf->localMem, SKIP, gpu_dyn_inst);
-            DPRINTF(GPUSched, "dispatchList[%d]: arbVrfLds: "
-                    "EXREADY->SKIP\n", wf->localMem);
+            DPRINTF(GPUSched,
+                    "dispatchList[%d]: arbVrfLds: "
+                    "EXREADY->SKIP\n",
+                    wf->localMem);
         }
     }
 }
@@ -679,23 +687,27 @@ ScheduleStage::checkRfOperandReadComplete()
 
             bool vrfRdy = true;
             if (!gpu_dyn_inst->isScalar()) {
-                vrfRdy = computeUnit.vrf[wf->simdId]
-                    ->operandReadComplete(wf, gpu_dyn_inst);
+                vrfRdy = computeUnit.vrf[wf->simdId]->operandReadComplete(
+                    wf, gpu_dyn_inst);
             }
-            bool srfRdy = computeUnit.srf[wf->simdId]
-                ->operandReadComplete(wf, gpu_dyn_inst);
+            bool srfRdy = computeUnit.srf[wf->simdId]->operandReadComplete(
+                wf, gpu_dyn_inst);
             bool operandsReady = vrfRdy && srfRdy;
             if (operandsReady) {
-                DPRINTF(GPUSched, "schList[%d]: WV[%d] operands ready for: "
-                        "%d: %s\n", j, wf->wfDynId, gpu_dyn_inst->seqNum(),
+                DPRINTF(GPUSched,
+                        "schList[%d]: WV[%d] operands ready for: "
+                        "%d: %s\n",
+                        j, wf->wfDynId, gpu_dyn_inst->seqNum(),
                         gpu_dyn_inst->disassemble());
-                DPRINTF(GPUSched, "schList[%d]: WV[%d] RFBUSY->RFREADY\n",
-                        j, wf->wfDynId);
+                DPRINTF(GPUSched, "schList[%d]: WV[%d] RFBUSY->RFREADY\n", j,
+                        wf->wfDynId);
                 p.second = RFREADY;
             } else {
-                DPRINTF(GPUSched, "schList[%d]: WV[%d] operands not ready "
-                        "for: %d: %s\n", j, wf->wfDynId,
-                        gpu_dyn_inst->seqNum(), gpu_dyn_inst->disassemble());
+                DPRINTF(GPUSched,
+                        "schList[%d]: WV[%d] operands not ready "
+                        "for: %d: %s\n",
+                        j, wf->wfDynId, gpu_dyn_inst->seqNum(),
+                        gpu_dyn_inst->disassemble());
 
                 // operands not ready yet, increment SCH stage stats
                 // aggregate to all wavefronts on the CU
@@ -735,8 +747,8 @@ ScheduleStage::reserveResources()
                 std::vector<int> execUnitIds = wf->reserveResources();
 
                 if (!gpu_dyn_inst->isScalar()) {
-                    computeUnit.vrf[wf->simdId]
-                        ->dispatchInstruction(gpu_dyn_inst);
+                    computeUnit.vrf[wf->simdId]->dispatchInstruction(
+                        gpu_dyn_inst);
                 }
                 computeUnit.srf[wf->simdId]->dispatchInstruction(gpu_dyn_inst);
 
@@ -744,7 +756,8 @@ ScheduleStage::reserveResources()
                 for (auto id : execUnitIds) {
                     ss << id << " ";
                 }
-                DPRINTF(GPUSched, "dispatchList[%d]: SIMD[%d] WV[%d]: %d: %s"
+                DPRINTF(GPUSched,
+                        "dispatchList[%d]: SIMD[%d] WV[%d]: %d: %s"
                         "    Reserving ExeRes[ %s]\n",
                         j, wf->simdId, wf->wfDynId, gpu_dyn_inst->seqNum(),
                         gpu_dyn_inst->disassemble(), ss.str());
@@ -765,8 +778,7 @@ ScheduleStage::reserveResources()
                 // we need to mark the latter execution unit as not available.
                 if (execUnitIds.size() > 1) {
                     [[maybe_unused]] int lm_exec_unit = wf->localMem;
-                    assert(toExecute.dispatchStatus(lm_exec_unit)
-                           == SKIP);
+                    assert(toExecute.dispatchStatus(lm_exec_unit) == SKIP);
                 }
             } else if (s == SKIP) {
                 // Shared Memory pipe reserved for FLAT instruction.
@@ -774,10 +786,9 @@ ScheduleStage::reserveResources()
                 // and the wave in the GM pipe is the same as the wave
                 // in the LM pipe
                 [[maybe_unused]] int gm_exec_unit = wf->globalMem;
-                assert(wf->wfDynId == toExecute
-                       .readyInst(gm_exec_unit)->wfDynId);
-                assert(toExecute.dispatchStatus(gm_exec_unit)
-                       == EXREADY);
+                assert(wf->wfDynId ==
+                       toExecute.readyInst(gm_exec_unit)->wfDynId);
+                assert(toExecute.dispatchStatus(gm_exec_unit) == EXREADY);
             }
         }
     }
@@ -792,23 +803,25 @@ ScheduleStage::deleteFromSch(Wavefront *w)
 ScheduleStage::ScheduleStageStats::ScheduleStageStats(
     statistics::Group *parent, int num_exec_units)
     : statistics::Group(parent, "ScheduleStage"),
-      ADD_STAT(rdyListEmpty ,"number of cycles no wave on ready list per "
-               "execution resource"),
+      ADD_STAT(rdyListEmpty, "number of cycles no wave on ready list per "
+                             "execution resource"),
       ADD_STAT(rdyListNotEmpty, "number of cycles one or more wave on ready "
-               "list per execution resource"),
-      ADD_STAT(addToSchListStalls, "number of cycles a wave is not added to "
+                                "list per execution resource"),
+      ADD_STAT(addToSchListStalls,
+               "number of cycles a wave is not added to "
                "schList per execution resource when ready list is not empty"),
       ADD_STAT(schListToDispList, "number of cycles a wave is added to "
-               "dispatchList per execution resource"),
-      ADD_STAT(schListToDispListStalls, "number of cycles no wave is added to"
+                                  "dispatchList per execution resource"),
+      ADD_STAT(schListToDispListStalls,
+               "number of cycles no wave is added to"
                " dispatchList per execution resource"),
       ADD_STAT(rfAccessStalls, "number of stalls due to RF access denied"),
       ADD_STAT(ldsBusArbStalls, "number of stalls due to VRF->LDS bus "
-               "conflicts"),
+                                "conflicts"),
       ADD_STAT(opdNrdyStalls, "number of stalls in SCH due to operands not "
-               "ready"),
+                              "ready"),
       ADD_STAT(dispNrdyStalls, "number of stalls in SCH due to resource not "
-               "ready")
+                               "ready")
 {
     rdyListNotEmpty.init(num_exec_units);
     rdyListEmpty.init(num_exec_units);
@@ -826,32 +839,29 @@ ScheduleStage::ScheduleStageStats::ScheduleStageStats(
     dispNrdyStalls.subname(SCH_SCALAR_ALU_NRDY, csprintf("ScalarAlu"));
     dispNrdyStalls.subname(SCH_VECTOR_ALU_NRDY, csprintf("VectorAlu"));
     dispNrdyStalls.subname(SCH_VECTOR_MEM_ISSUE_NRDY,
-                                  csprintf("VectorMemIssue"));
+                           csprintf("VectorMemIssue"));
     dispNrdyStalls.subname(SCH_VECTOR_MEM_BUS_BUSY_NRDY,
-                                  csprintf("VectorMemBusBusy"));
+                           csprintf("VectorMemBusBusy"));
     dispNrdyStalls.subname(SCH_VECTOR_MEM_COALESCER_NRDY,
-                                  csprintf("VectorMemCoalescer"));
+                           csprintf("VectorMemCoalescer"));
     dispNrdyStalls.subname(SCH_CEDE_SIMD_NRDY, csprintf("CedeSimd"));
     dispNrdyStalls.subname(SCH_SCALAR_MEM_ISSUE_NRDY,
-                                  csprintf("ScalarMemIssue"));
+                           csprintf("ScalarMemIssue"));
     dispNrdyStalls.subname(SCH_SCALAR_MEM_BUS_BUSY_NRDY,
-                                  csprintf("ScalarMemBusBusy"));
+                           csprintf("ScalarMemBusBusy"));
     dispNrdyStalls.subname(SCH_SCALAR_MEM_FIFO_NRDY,
-                                  csprintf("ScalarMemFIFO"));
+                           csprintf("ScalarMemFIFO"));
     dispNrdyStalls.subname(SCH_LOCAL_MEM_ISSUE_NRDY,
-                                  csprintf("LocalMemIssue"));
+                           csprintf("LocalMemIssue"));
     dispNrdyStalls.subname(SCH_LOCAL_MEM_BUS_BUSY_NRDY,
-                                  csprintf("LocalMemBusBusy"));
-    dispNrdyStalls.subname(SCH_LOCAL_MEM_FIFO_NRDY,
-                                  csprintf("LocalMemFIFO"));
-    dispNrdyStalls.subname(SCH_FLAT_MEM_ISSUE_NRDY,
-                                  csprintf("FlatMemIssue"));
+                           csprintf("LocalMemBusBusy"));
+    dispNrdyStalls.subname(SCH_LOCAL_MEM_FIFO_NRDY, csprintf("LocalMemFIFO"));
+    dispNrdyStalls.subname(SCH_FLAT_MEM_ISSUE_NRDY, csprintf("FlatMemIssue"));
     dispNrdyStalls.subname(SCH_FLAT_MEM_BUS_BUSY_NRDY,
-                                  csprintf("FlatMemBusBusy"));
+                           csprintf("FlatMemBusBusy"));
     dispNrdyStalls.subname(SCH_FLAT_MEM_COALESCER_NRDY,
-                                  csprintf("FlatMemCoalescer"));
-    dispNrdyStalls.subname(SCH_FLAT_MEM_FIFO_NRDY,
-                                  csprintf("FlatMemFIFO"));
+                           csprintf("FlatMemCoalescer"));
+    dispNrdyStalls.subname(SCH_FLAT_MEM_FIFO_NRDY, csprintf("FlatMemFIFO"));
     dispNrdyStalls.subname(SCH_RDY, csprintf("Ready"));
 
     rfAccessStalls.subname(SCH_VRF_RD_ACCESS_NRDY, csprintf("VrfRd"));

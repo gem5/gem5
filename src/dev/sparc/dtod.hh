@@ -44,7 +44,8 @@ namespace gem5
 
 /**
  * DumbTOD simply returns some idea of time when read.  Until we finish with
- * legion it starts with the start time and increments itself by 1000 each time.
+ * legion it starts with the start time and increments itself by 1000 each
+ * time.
  */
 class DumbTOD : public BasicPioDevice
 {

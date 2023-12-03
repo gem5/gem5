@@ -56,18 +56,21 @@ class SMMUCommandExecProcess : public SMMUProcess
     virtual void main(Yield &yield);
 
   public:
-    SMMUCommandExecProcess(const std::string &name, SMMUv3 &_smmu) :
-        SMMUProcess(name, _smmu),
-        busy(false)
+    SMMUCommandExecProcess(const std::string &name, SMMUv3 &_smmu)
+        : SMMUProcess(name, _smmu), busy(false)
     {
         reinit();
     }
 
     virtual ~SMMUCommandExecProcess() {}
 
-    bool isBusy() const { return busy; }
+    bool
+    isBusy() const
+    {
+        return busy;
+    }
 };
 
 } // namespace gem5
 
-#endif  /* __DEV_ARM_SMMU_V3_CMDEXEC_HH__ */
+#endif /* __DEV_ARM_SMMU_V3_CMDEXEC_HH__ */

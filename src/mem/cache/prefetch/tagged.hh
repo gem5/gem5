@@ -48,7 +48,7 @@ namespace prefetch
 class Tagged : public Queued
 {
   protected:
-      const int degree;
+    const int degree;
 
   public:
     Tagged(const TaggedPrefetcherParams &p);

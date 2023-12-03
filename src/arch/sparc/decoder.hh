@@ -66,8 +66,7 @@ class Decoder : public InstDecoder
         // slightly redundant, but it removes the need to put a condition
         // into all the execute functions
         if (emi & (1 << 13)) {
-            emi |= (static_cast<ExtMachInst>(
-                        asi << (sizeof(machInst) * 8)));
+            emi |= (static_cast<ExtMachInst>(asi << (sizeof(machInst) * 8)));
         } else {
             emi |= (static_cast<ExtMachInst>(bits(emi, 12, 5))
                     << (sizeof(machInst) * 8));
@@ -95,8 +94,8 @@ class Decoder : public InstDecoder
     decode(ExtMachInst mach_inst, Addr addr)
     {
         StaticInstPtr si = defaultCache.decode(this, mach_inst, addr);
-        DPRINTF(Decode, "Decode: Decoded %s instruction: %#x\n",
-                si->getName(), mach_inst);
+        DPRINTF(Decode, "Decode: Decoded %s instruction: %#x\n", si->getName(),
+                mach_inst);
         return si;
     }
 

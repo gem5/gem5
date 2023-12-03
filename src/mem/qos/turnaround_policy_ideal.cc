@@ -52,11 +52,10 @@ namespace qos
 {
 
 TurnaroundPolicyIdeal::TurnaroundPolicyIdeal(const Params &p)
-  : TurnaroundPolicy(p)
+    : TurnaroundPolicy(p)
 {}
 
-TurnaroundPolicyIdeal::~TurnaroundPolicyIdeal()
-{}
+TurnaroundPolicyIdeal::~TurnaroundPolicyIdeal() {}
 
 MemCtrl::BusState
 TurnaroundPolicyIdeal::selectBusState()
@@ -67,7 +66,6 @@ TurnaroundPolicyIdeal::selectBusState()
     // QoS-aware turnaround policy
     // Loop for every queue in the memory controller.
     for (uint8_t i = 0; i < num_priorities; i++) {
-
         // Starting from top priority queues first
         uint8_t queue_idx = num_priorities - i - 1;
 
@@ -87,17 +85,19 @@ TurnaroundPolicyIdeal::selectBusState()
             bus_state = MemCtrl::READ;
         } else {
             // readq_size > 0 && writeq_size > 0
-            bus_state = ((memCtrl->getBusState() == MemCtrl::READ) ?
-                    MemCtrl::WRITE : MemCtrl::READ);
+            bus_state =
+                ((memCtrl->getBusState() == MemCtrl::READ) ? MemCtrl::WRITE :
+                                                             MemCtrl::READ);
         }
 
         DPRINTF(QOS,
                 "QoSMemoryTurnaround::QoSTurnaroundPolicyIdeal - "
                 "QoS priority %d queues %d, %d triggering bus %s "
-                "in state %s\n", queue_idx, readq_size, writeq_size,
-                (bus_state != memCtrl->getBusState()) ?
-                "turnaround" : "staying",
-                (bus_state == MemCtrl::READ)? "READ" : "WRITE");
+                "in state %s\n",
+                queue_idx, readq_size, writeq_size,
+                (bus_state != memCtrl->getBusState()) ? "turnaround" :
+                                                        "staying",
+                (bus_state == MemCtrl::READ) ? "READ" : "WRITE");
         // State selected - exit loop
         break;
     }

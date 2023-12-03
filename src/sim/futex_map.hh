@@ -56,24 +56,25 @@ class FutexKey
 
 namespace std
 {
-    /**
-     * The unordered_map structure needs the parenthesis operator defined for
-     * std::hash if a user defined key is used. Our key is is user defined
-     * so we need to provide the hash functor.
-     */
-    template <>
-    struct hash<gem5::FutexKey>
+/**
+ * The unordered_map structure needs the parenthesis operator defined for
+ * std::hash if a user defined key is used. Our key is is user defined
+ * so we need to provide the hash functor.
+ */
+template <>
+struct hash<gem5::FutexKey>
+{
+    size_t
+    operator()(const gem5::FutexKey &in) const
     {
-        size_t operator()(const gem5::FutexKey& in) const
-        {
-            size_t hash = 65521;
-            for (int i = 0; i < sizeof(uint64_t) / sizeof(size_t); i++) {
-                hash ^= (size_t)(in.addr >> sizeof(size_t) * i) ^
-                        (size_t)(in.tgid >> sizeof(size_t) * i);
-            }
-            return hash;
+        size_t hash = 65521;
+        for (int i = 0; i < sizeof(uint64_t) / sizeof(size_t); i++) {
+            hash ^= (size_t)(in.addr >> sizeof(size_t) * i) ^
+                    (size_t)(in.tgid >> sizeof(size_t) * i);
         }
-    };
+        return hash;
+    }
+};
 } // namespace std
 
 namespace gem5
@@ -86,13 +87,13 @@ namespace gem5
 class WaiterState
 {
   public:
-    ThreadContext* tc;
+    ThreadContext *tc;
     int bitmask;
 
     /**
      * this constructor is used if futex ops with bitset are used
      */
-    WaiterState(ThreadContext* _tc, int _bitmask);
+    WaiterState(ThreadContext *_tc, int _bitmask);
 
     /**
      * return true if the bit-wise AND of the wakeup_bitmask given by
@@ -116,7 +117,7 @@ class FutexMap : public std::unordered_map<FutexKey, WaiterList>
     int wakeup(Addr addr, uint64_t tgid, int count);
 
     void suspend_bitset(Addr addr, uint64_t tgid, ThreadContext *tc,
-                   int bitmask);
+                        int bitmask);
 
     int wakeup_bitset(Addr addr, uint64_t tgid, int bitmask);
 
@@ -139,7 +140,6 @@ class FutexMap : public std::unordered_map<FutexKey, WaiterList>
     bool is_waiting(ThreadContext *tc);
 
   private:
-
     std::unordered_set<ThreadContext *> waitingTcs;
 };
 

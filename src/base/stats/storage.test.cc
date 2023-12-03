@@ -41,7 +41,11 @@ using namespace gem5;
 GTestTickHandler tickHandler;
 
 /** Increases the current tick by one. */
-void increaseTick() { tickHandler.setCurTick(curTick() + 1); }
+void
+increaseTick()
+{
+    tickHandler.setCurTick(curTick() + 1);
+}
 
 /** A pair of value and its number of samples, used for sampling. */
 struct ValueSamples
@@ -50,9 +54,8 @@ struct ValueSamples
     statistics::Counter numSamples;
 
     ValueSamples(statistics::Counter value, statistics::Counter num_samples)
-      : value(value), numSamples(num_samples)
-    {
-    }
+        : value(value), numSamples(num_samples)
+    {}
 };
 
 /** Test setting and getting a value to the storage. */
@@ -142,8 +145,9 @@ TEST(StatsAvgStorTest, SetValueResult)
     stor.set(val);
     last_tick = curTick();
     ASSERT_EQ(stor.value(), val);
-    ASSERT_EQ(stor.result(), statistics::Result(total + val) /
-        statistics::Result(curTick() - last_reset + 1));
+    ASSERT_EQ(stor.result(),
+              statistics::Result(total + val) /
+                  statistics::Result(curTick() - last_reset + 1));
     increaseTick();
 
     total += val * (curTick() - last_tick);
@@ -151,8 +155,9 @@ TEST(StatsAvgStorTest, SetValueResult)
     stor.set(val);
     last_tick = curTick();
     ASSERT_EQ(stor.value(), val);
-    ASSERT_EQ(stor.result(), statistics::Result(total + val) /
-        statistics::Result(curTick() - last_reset + 1));
+    ASSERT_EQ(stor.result(),
+              statistics::Result(total + val) /
+                  statistics::Result(curTick() - last_reset + 1));
     increaseTick();
 }
 
@@ -184,16 +189,18 @@ TEST(StatsAvgStorTest, Prepare)
     stor.set(val);
     last_tick = curTick();
     ASSERT_EQ(stor.value(), val);
-    ASSERT_EQ(stor.result(), statistics::Result(total + val) /
-        statistics::Result(curTick() - last_reset + 1));
+    ASSERT_EQ(stor.result(),
+              statistics::Result(total + val) /
+                  statistics::Result(curTick() - last_reset + 1));
     increaseTick();
 
     total += val * (curTick() - last_tick);
     stor.prepare(nullptr);
     last_tick = curTick();
     ASSERT_EQ(stor.value(), val);
-    ASSERT_EQ(stor.result(), statistics::Result(total + val) /
-        statistics::Result(curTick() - last_reset + 1));
+    ASSERT_EQ(stor.result(),
+              statistics::Result(total + val) /
+                  statistics::Result(curTick() - last_reset + 1));
     increaseTick();
 }
 
@@ -312,8 +319,9 @@ TEST(StatsDistStorTest, Size)
  * @param no_log Whether log should not be compared.
  */
 void
-checkExpectedDistData(const statistics::DistData& data,
-    const statistics::DistData& expected_data, bool no_log = true)
+checkExpectedDistData(const statistics::DistData &data,
+                      const statistics::DistData &expected_data,
+                      bool no_log = true)
 {
     ASSERT_EQ(data.type, expected_data.type);
     ASSERT_EQ(data.min, expected_data.min);
@@ -344,8 +352,9 @@ checkExpectedDistData(const statistics::DistData& data,
  *  setup to the expected values: bucket_size, min, max_val, and cvec.
  */
 void
-prepareCheckDistStor(statistics::DistStor::Params& params,
-    ValueSamples* values, int num_values, statistics::DistData& expected_data)
+prepareCheckDistStor(statistics::DistStor::Params &params,
+                     ValueSamples *values, int num_values,
+                     statistics::DistData &expected_data)
 {
     statistics::DistStor stor(&params);
 
@@ -379,7 +388,7 @@ TEST(StatsDistStorTest, SamplePrepareSingle)
 {
     statistics::DistStor::Params params(0, 99, 5);
 
-    ValueSamples values[] = {{10, 5}};
+    ValueSamples values[] = { { 10, 5 } };
     int num_values = sizeof(values) / sizeof(ValueSamples);
 
     // Setup expected data
@@ -408,8 +417,10 @@ TEST(StatsDistStorTest, SamplePrepareMultiple)
     // minimum bucket value (-10, -1) are added to the underflow counter.
     // The extremes (0 and 99) are added to check if they go to the first and
     // last buckets.
-    ValueSamples values[] = {{10, 5}, {1234, 2}, {12345678, 99}, {-10, 4},
-        {17, 17}, {52, 63}, {18, 11}, {0, 1}, {99, 15}, {-1, 200}, {100, 50}};
+    ValueSamples values[] = { { 10, 5 },   { 1234, 2 }, { 12345678, 99 },
+                              { -10, 4 },  { 17, 17 },  { 52, 63 },
+                              { 18, 11 },  { 0, 1 },    { 99, 15 },
+                              { -1, 200 }, { 100, 50 } };
     int num_values = sizeof(values) / sizeof(ValueSamples);
 
     // Setup variables that should always match params' values
@@ -427,7 +438,7 @@ TEST(StatsDistStorTest, SamplePrepareMultiple)
     expected_data.cvec.resize(params.buckets);
     expected_data.cvec[0] = 1;
     expected_data.cvec[2] = 5;
-    expected_data.cvec[3] = 17+11;
+    expected_data.cvec[3] = 17 + 11;
     expected_data.cvec[10] = 63;
     expected_data.cvec[19] = 15;
 
@@ -441,8 +452,10 @@ TEST(StatsDistStorTest, Reset)
     statistics::DistStor stor(&params);
 
     // Populate storage with random samples
-    ValueSamples values[] = {{10, 5}, {1234, 2}, {12345678, 99}, {-10, 4},
-        {17, 17}, {52, 63}, {18, 11}, {0, 1}, {99, 15}, {-1, 200}, {100, 50}};
+    ValueSamples values[] = { { 10, 5 },   { 1234, 2 }, { 12345678, 99 },
+                              { -10, 4 },  { 17, 17 },  { 52, 63 },
+                              { 18, 11 },  { 0, 1 },    { 99, 15 },
+                              { -1, 200 }, { 100, 50 } };
     int num_values = sizeof(values) / sizeof(ValueSamples);
     for (int i = 0; i < num_values; i++) {
         stor.sample(values[i].value, values[i].numSamples);
@@ -516,7 +529,7 @@ TEST(StatsHistStorTest, Size)
     statistics::Counter val = 10;
     statistics::Counter num_samples = 5;
     statistics::DistData data;
-    statistics::size_type sizes[] = {2, 10, 1234};
+    statistics::size_type sizes[] = { 2, 10, 1234 };
 
     for (int i = 0; i < (sizeof(sizes) / sizeof(statistics::size_type)); i++) {
         statistics::HistStor::Params params(sizes[i]);
@@ -545,8 +558,9 @@ TEST(StatsHistStorTest, Size)
  *  setup to the expected values: bucket_size, min, max_val, and cvec.
  */
 void
-prepareCheckHistStor(statistics::HistStor::Params& params,
-    ValueSamples* values, int num_values, statistics::DistData& expected_data)
+prepareCheckHistStor(statistics::HistStor::Params &params,
+                     ValueSamples *values, int num_values,
+                     statistics::DistData &expected_data)
 {
     statistics::HistStor stor(&params);
 
@@ -592,7 +606,7 @@ TEST(StatsHistStorTest, SamplePrepareFit)
     // Setup expected data for the hand-carved values given. The final buckets
     // will be divided at:
     //   Bkt0=[0,1[ , Bkt1=[1,2[, Bkt2=[2,3[, Bkt3=[3,4[
-    ValueSamples values[] = {{0, 5}, {1, 2}, {2, 99}, {3, 4}};
+    ValueSamples values[] = { { 0, 5 }, { 1, 2 }, { 2, 99 }, { 3, 4 } };
     const int num_values = sizeof(values) / sizeof(ValueSamples);
     statistics::DistData expected_data;
     expected_data.type = statistics::Hist;
@@ -621,7 +635,7 @@ TEST(StatsHistStorTest, SamplePrepareSingleGrowUp)
     // are four buckets, and the highest value is 4, the bucket size will
     // grow to be 2. The final buckets will be divided at:
     //   Bkt0=[0,2[ , Bkt1=[2,4[, Bkt2=[4,6[, Bkt3=[6,8[
-    ValueSamples values[] = {{0, 5}, {1, 2}, {2, 99}, {4, 4}};
+    ValueSamples values[] = { { 0, 5 }, { 1, 2 }, { 2, 99 }, { 4, 4 } };
     const int num_values = sizeof(values) / sizeof(ValueSamples);
     statistics::DistData expected_data;
     expected_data.type = statistics::Hist;
@@ -630,7 +644,7 @@ TEST(StatsHistStorTest, SamplePrepareSingleGrowUp)
     expected_data.max_val = 6;
     expected_data.cvec.clear();
     expected_data.cvec.resize(params.buckets);
-    expected_data.cvec[0] = 5+2;
+    expected_data.cvec[0] = 5 + 2;
     expected_data.cvec[1] = 99;
     expected_data.cvec[2] = 4;
     expected_data.cvec[3] = 0;
@@ -650,7 +664,7 @@ TEST(StatsHistStorTest, SamplePrepareMultipleGrowUp)
     // are four buckets, and the highest value is 4, the bucket size will
     // grow thrice to become 8. The final buckets will be divided at:
     //   Bkt0=[0,8[ , Bkt1=[8,16[, Bkt2=[16,24[, Bkt3=[24,32[
-    ValueSamples values[] = {{0, 5}, {1, 2}, {2, 99}, {16, 4}};
+    ValueSamples values[] = { { 0, 5 }, { 1, 2 }, { 2, 99 }, { 16, 4 } };
     const int num_values = sizeof(values) / sizeof(ValueSamples);
     statistics::DistData expected_data;
     expected_data.type = statistics::Hist;
@@ -659,7 +673,7 @@ TEST(StatsHistStorTest, SamplePrepareMultipleGrowUp)
     expected_data.max_val = 24;
     expected_data.cvec.clear();
     expected_data.cvec.resize(params.buckets);
-    expected_data.cvec[0] = 5+2+99;
+    expected_data.cvec[0] = 5 + 2 + 99;
     expected_data.cvec[1] = 0;
     expected_data.cvec[2] = 4;
     expected_data.cvec[3] = 0;
@@ -680,8 +694,8 @@ TEST(StatsHistStorTest, SamplePrepareGrowDownOddBuckets)
     // is a negative value, the min bucket will change, and the bucket size
     // will grow to be 2. The final buckets will be divided at:
     //   Bkt0=[-4,-2[ , Bkt1=[-2,-0[, Bkt2=[0,2[, Bkt3=[2,4[, Bkt4=[4,6[
-    ValueSamples values[] =
-        {{0, 5}, {1, 2}, {2, 99}, {3, 12}, {4, 33}, {-1, 4}};
+    ValueSamples values[] = { { 0, 5 },  { 1, 2 },  { 2, 99 },
+                              { 3, 12 }, { 4, 33 }, { -1, 4 } };
     const int num_values = sizeof(values) / sizeof(ValueSamples);
     statistics::DistData expected_data;
     expected_data.type = statistics::Hist;
@@ -692,8 +706,8 @@ TEST(StatsHistStorTest, SamplePrepareGrowDownOddBuckets)
     expected_data.cvec.resize(params.buckets);
     expected_data.cvec[0] = 0;
     expected_data.cvec[1] = 4;
-    expected_data.cvec[2] = 5+2;
-    expected_data.cvec[3] = 99+12;
+    expected_data.cvec[2] = 5 + 2;
+    expected_data.cvec[3] = 99 + 12;
     expected_data.cvec[4] = 33;
 
     prepareCheckHistStor(params, values, num_values, expected_data);
@@ -712,7 +726,7 @@ TEST(StatsHistStorTest, SamplePrepareGrowDownEvenBuckets)
     // is a negative value, the min bucket will change, and the bucket size
     // will grow to be 2. The final buckets will be divided at:
     //   Bkt0=[-4,-2[ , Bkt1=[-2,0[, Bkt2=[0,2[, Bkt3=[2,4[
-    ValueSamples values[] = {{0, 5}, {1, 2}, {2, 99}, {-1, 4}};
+    ValueSamples values[] = { { 0, 5 }, { 1, 2 }, { 2, 99 }, { -1, 4 } };
     const int num_values = sizeof(values) / sizeof(ValueSamples);
     statistics::DistData expected_data;
     expected_data.type = statistics::Hist;
@@ -723,7 +737,7 @@ TEST(StatsHistStorTest, SamplePrepareGrowDownEvenBuckets)
     expected_data.cvec.resize(params.buckets);
     expected_data.cvec[0] = 0;
     expected_data.cvec[1] = 4;
-    expected_data.cvec[2] = 5+2;
+    expected_data.cvec[2] = 5 + 2;
     expected_data.cvec[3] = 99;
 
     prepareCheckHistStor(params, values, num_values, expected_data);
@@ -742,8 +756,8 @@ TEST(StatsHistStorTest, SamplePrepareGrowDownGrowOutOddBuckets)
     // is a negative value, the min bucket will change, and the bucket size
     // will grow to be 8. The final buckets will be divided at:
     //   Bkt0=[-16,-8[ , Bkt1=[-8,0[, Bkt2=[0,8[, Bkt3=[8,16[, Bkt4=[16,24[
-    ValueSamples values[] =
-        {{0, 5}, {1, 2}, {2, 99}, {3, 12}, {4, 33}, {-12, 4}};
+    ValueSamples values[] = { { 0, 5 },  { 1, 2 },  { 2, 99 },
+                              { 3, 12 }, { 4, 33 }, { -12, 4 } };
     const int num_values = sizeof(values) / sizeof(ValueSamples);
     statistics::DistData expected_data;
     expected_data.type = statistics::Hist;
@@ -754,7 +768,7 @@ TEST(StatsHistStorTest, SamplePrepareGrowDownGrowOutOddBuckets)
     expected_data.cvec.resize(params.buckets);
     expected_data.cvec[0] = 4;
     expected_data.cvec[1] = 0;
-    expected_data.cvec[2] = 5+2+99+12+33;
+    expected_data.cvec[2] = 5 + 2 + 99 + 12 + 33;
     expected_data.cvec[3] = 0;
     expected_data.cvec[4] = 0;
 
@@ -774,8 +788,9 @@ TEST(StatsHistStorTest, SamplePrepareGrowDownGrowOutEvenBuckets)
     // is a negative value, the min bucket will change, and the bucket size
     // will grow to be 8. The final buckets will be divided at:
     //   Bkt0=[-16,-8[ , Bkt1=[-8,0[, Bkt2=[0,8[, Bkt3=[8,16[
-    ValueSamples values[] =
-        {{0, 5}, {1, 2}, {2, 99}, {3, 12}, {-12, 4}};
+    ValueSamples values[] = {
+        { 0, 5 }, { 1, 2 }, { 2, 99 }, { 3, 12 }, { -12, 4 }
+    };
     const int num_values = sizeof(values) / sizeof(ValueSamples);
     statistics::DistData expected_data;
     expected_data.type = statistics::Hist;
@@ -786,7 +801,7 @@ TEST(StatsHistStorTest, SamplePrepareGrowDownGrowOutEvenBuckets)
     expected_data.cvec.resize(params.buckets);
     expected_data.cvec[0] = 4;
     expected_data.cvec[1] = 0;
-    expected_data.cvec[2] = 5+2+99+12;
+    expected_data.cvec[2] = 5 + 2 + 99 + 12;
     expected_data.cvec[3] = 0;
 
     prepareCheckHistStor(params, values, num_values, expected_data);
@@ -806,8 +821,8 @@ TEST(StatsHistStorTest, SamplePrepareMultipleGrowOddBuckets)
     // be 64. The final buckets will be divided at:
     //   Bkt0=[-128,-64[ , Bkt1=[-64,0[, Bkt2=[0,64[, Bkt3=[64,128[,
     //   Bkt4=[128,192[
-    ValueSamples values[] =
-        {{0, 5}, {7, 2}, {31, 99}, {-8, 12}, {127, 4}, {-120, 53}, {-50, 1}};
+    ValueSamples values[] = { { 0, 5 },   { 7, 2 },     { 31, 99 }, { -8, 12 },
+                              { 127, 4 }, { -120, 53 }, { -50, 1 } };
     const int num_values = sizeof(values) / sizeof(ValueSamples);
     statistics::DistData expected_data;
     expected_data.type = statistics::Hist;
@@ -817,8 +832,8 @@ TEST(StatsHistStorTest, SamplePrepareMultipleGrowOddBuckets)
     expected_data.cvec.clear();
     expected_data.cvec.resize(params.buckets);
     expected_data.cvec[0] = 53;
-    expected_data.cvec[1] = 12+1;
-    expected_data.cvec[2] = 5+2+99;
+    expected_data.cvec[1] = 12 + 1;
+    expected_data.cvec[2] = 5 + 2 + 99;
     expected_data.cvec[3] = 4;
     expected_data.cvec[4] = 0;
 
@@ -838,8 +853,8 @@ TEST(StatsHistStorTest, SamplePrepareMultipleGrowEvenBuckets)
     // a few positive and negative samples, and the bucket size will grow to
     // be 64. The final buckets will be divided at:
     //   Bkt0=[-128,-64[ , Bkt1=[-64,0[, Bkt2=[0,64[, Bkt3=[64,128[
-    ValueSamples values[] =
-        {{0, 5}, {7, 2}, {31, 99}, {-8, 12}, {127, 4}, {-120, 53}, {-50, 1}};
+    ValueSamples values[] = { { 0, 5 },   { 7, 2 },     { 31, 99 }, { -8, 12 },
+                              { 127, 4 }, { -120, 53 }, { -50, 1 } };
     const int num_values = sizeof(values) / sizeof(ValueSamples);
     statistics::DistData expected_data;
     expected_data.type = statistics::Hist;
@@ -849,8 +864,8 @@ TEST(StatsHistStorTest, SamplePrepareMultipleGrowEvenBuckets)
     expected_data.cvec.clear();
     expected_data.cvec.resize(params.buckets);
     expected_data.cvec[0] = 53;
-    expected_data.cvec[1] = 12+1;
-    expected_data.cvec[2] = 5+2+99;
+    expected_data.cvec[1] = 12 + 1;
+    expected_data.cvec[2] = 5 + 2 + 99;
     expected_data.cvec[3] = 4;
 
     prepareCheckHistStor(params, values, num_values, expected_data);
@@ -866,8 +881,8 @@ TEST(StatsHistStorTest, Reset)
     // a few positive and negative samples, and the bucket size will grow to
     // be 64. The final buckets will be divided at:
     //   Bkt0=[-128,-64[ , Bkt1=[-64,0[, Bkt2=[0,64[, Bkt3=[64,128[
-    ValueSamples values[] =
-        {{0, 5}, {7, 2}, {31, 99}, {-8, 12}, {127, 4}, {-120, 53}, {-50, 1}};
+    ValueSamples values[] = { { 0, 5 },   { 7, 2 },     { 31, 99 }, { -8, 12 },
+                              { 127, 4 }, { -120, 53 }, { -50, 1 } };
     const int num_values = sizeof(values) / sizeof(ValueSamples);
     for (int i = 0; i < num_values; i++) {
         stor.sample(values[i].value, values[i].numSamples);
@@ -922,7 +937,7 @@ TEST(StatsHistStorTest, Add)
     // Setup first storage. Buckets are:
     //   Bkt0=[0,16[, Bkt1=[16,32[, Bkt2=[32,48[, Bkt3=[58,64[
     statistics::HistStor stor(&params);
-    ValueSamples values[] = {{0, 5}, {3, 2}, {20, 37}, {32, 18}};
+    ValueSamples values[] = { { 0, 5 }, { 3, 2 }, { 20, 37 }, { 32, 18 } };
     int num_values = sizeof(values) / sizeof(ValueSamples);
     for (int i = 0; i < num_values; i++) {
         stor.sample(values[i].value, values[i].numSamples);
@@ -933,7 +948,9 @@ TEST(StatsHistStorTest, Add)
     // Setup second storage. Buckets are:
     //   Bkt0=[0,32[, Bkt1=[32,64[, Bkt2=[64,96[, Bkt3=[96,128[
     statistics::HistStor stor2(&params);
-    ValueSamples values2[] = {{10, 10}, {0, 1}, {80, 4}, {17, 100}, {95, 79}};
+    ValueSamples values2[] = {
+        { 10, 10 }, { 0, 1 }, { 80, 4 }, { 17, 100 }, { 95, 79 }
+    };
     int num_values2 = sizeof(values2) / sizeof(ValueSamples);
     for (int i = 0; i < num_values2; i++) {
         stor2.sample(values2[i].value, values2[i].numSamples);
@@ -957,9 +974,9 @@ TEST(StatsHistStorTest, Add)
     expected_data.max_val = 96;
     expected_data.cvec.clear();
     expected_data.cvec.resize(params.buckets);
-    expected_data.cvec[0] = 5+2+37+10+1+100;
+    expected_data.cvec[0] = 5 + 2 + 37 + 10 + 1 + 100;
     expected_data.cvec[1] = 18;
-    expected_data.cvec[2] = 4+79;
+    expected_data.cvec[2] = 4 + 79;
     expected_data.cvec[3] = 0;
     expected_data.sum = data.sum + data2.sum;
     expected_data.squares = data.squares + data2.squares;
@@ -995,7 +1012,7 @@ TEST(StatsSampleStorTest, ZeroReset)
 TEST(StatsSampleStorTest, SamplePrepare)
 {
     statistics::SampleStor stor(nullptr);
-    ValueSamples values[] = {{10, 5}, {1234, 2}, {0xFFFFFFFF, 18}};
+    ValueSamples values[] = { { 10, 5 }, { 1234, 2 }, { 0xFFFFFFFF, 18 } };
     int num_values = sizeof(values) / sizeof(ValueSamples);
     statistics::Counter val;
     statistics::DistData data;
@@ -1087,7 +1104,7 @@ TEST(StatsAvgSampleStorTest, ZeroReset)
 TEST(StatsAvgSampleStorTest, SamplePrepare)
 {
     statistics::AvgSampleStor stor(nullptr);
-    ValueSamples values[] = {{10, 5}, {1234, 2}, {0xFFFFFFFF, 18}};
+    ValueSamples values[] = { { 10, 5 }, { 1234, 2 }, { 0xFFFFFFFF, 18 } };
     int num_values = sizeof(values) / sizeof(ValueSamples);
     statistics::Counter val;
     statistics::DistData data;
@@ -1180,7 +1197,7 @@ TEST(StatsSparseHistStorTest, ZeroReset)
 TEST(StatsSparseHistStorTest, SamplePrepare)
 {
     statistics::SparseHistStor stor(nullptr);
-    ValueSamples values[] = {{10, 5}, {1234, 2}, {0xFFFFFFFF, 18}};
+    ValueSamples values[] = { { 10, 5 }, { 1234, 2 }, { 0xFFFFFFFF, 18 } };
     int num_values = sizeof(values) / sizeof(ValueSamples);
     statistics::Counter total_samples;
     statistics::SparseHistData data;

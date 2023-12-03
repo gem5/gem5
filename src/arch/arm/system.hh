@@ -55,7 +55,6 @@
 #include "sim/system.hh"
 #include "enums/ArmExtension.hh"
 
-
 namespace gem5
 {
 
@@ -153,9 +152,17 @@ class ArmSystem : public System
     /** true if this a multiprocessor system */
     bool multiProc;
 
-    const ArmRelease* releaseFS() const { return release; }
+    const ArmRelease *
+    releaseFS() const
+    {
+        return release;
+    }
 
-    bool has(ArmExtension ext) const { return release->has(ext); }
+    bool
+    has(ArmExtension ext) const
+    {
+        return release->has(ext);
+    }
 
     /** Sets the pointer to the Generic Timer. */
     void
@@ -165,26 +172,47 @@ class ArmSystem : public System
     }
 
     /** Sets the pointer to the GIC. */
-    void setGIC(BaseGic *gic) { _gic = gic; }
+    void
+    setGIC(BaseGic *gic)
+    {
+        _gic = gic;
+    }
 
     /** Sets the pointer to the Power Controller */
-    void setPowerController(FVPBasePwrCtrl *pwr_ctrl)
+    void
+    setPowerController(FVPBasePwrCtrl *pwr_ctrl)
     {
         _pwrCtrl = pwr_ctrl;
     }
 
     /** Get a pointer to the system's generic timer model */
-    GenericTimer *getGenericTimer() const { return _genericTimer; }
+    GenericTimer *
+    getGenericTimer() const
+    {
+        return _genericTimer;
+    }
 
     /** Get a pointer to the system's GIC */
-    BaseGic *getGIC() const { return _gic; }
+    BaseGic *
+    getGIC() const
+    {
+        return _gic;
+    }
 
     /** Get a pointer to the system's power controller */
-    FVPBasePwrCtrl *getPowerController() const { return _pwrCtrl; }
+    FVPBasePwrCtrl *
+    getPowerController() const
+    {
+        return _pwrCtrl;
+    }
 
     /** Returns true if the register width of the highest implemented exception
      * level is 64 bits (ARMv8) */
-    bool highestELIs64() const { return _highestELIs64; }
+    bool
+    highestELIs64() const
+    {
+        return _highestELIs64;
+    }
 
     /** Returns the highest implemented exception level */
     ArmISA::ExceptionLevel
@@ -199,21 +227,46 @@ class ArmSystem : public System
 
     /** Returns the reset address if the highest implemented exception level is
      * 64 bits (ARMv8) */
-    Addr resetAddr() const { return _resetAddr; }
-    void setResetAddr(Addr addr) { _resetAddr = addr; }
+    Addr
+    resetAddr() const
+    {
+        return _resetAddr;
+    }
+
+    void
+    setResetAddr(Addr addr)
+    {
+        _resetAddr = addr;
+    }
 
     /** Returns true if ASID is 16 bits in AArch64 (ARMv8) */
-    bool haveLargeAsid64() const { return _haveLargeAsid64; }
+    bool
+    haveLargeAsid64() const
+    {
+        return _haveLargeAsid64;
+    }
 
     /** Returns the SVE vector length at reset, in quadwords */
-    unsigned sveVL() const { return _sveVL; }
+    unsigned
+    sveVL() const
+    {
+        return _sveVL;
+    }
 
     /** Returns the SME vector length at reset, in quadwords */
-    unsigned smeVL() const { return _smeVL; }
+    unsigned
+    smeVL() const
+    {
+        return _smeVL;
+    }
 
     /** Returns the supported physical address range in bits if the highest
      * implemented exception level is 64 bits (ARMv8) */
-    uint8_t physAddrRange64() const { return _physAddrRange64; }
+    uint8_t
+    physAddrRange64() const
+    {
+        return _physAddrRange64;
+    }
 
     /** Returns the supported physical address range in bits */
     uint8_t
@@ -227,16 +280,24 @@ class ArmSystem : public System
     }
 
     /** Returns the physical address mask */
-    Addr physAddrMask() const { return mask(physAddrRange()); }
+    Addr
+    physAddrMask() const
+    {
+        return mask(physAddrRange());
+    }
 
     /** Is Arm Semihosting support enabled? */
-    bool haveSemihosting() const { return semihosting != nullptr; }
+    bool
+    haveSemihosting() const
+    {
+        return semihosting != nullptr;
+    }
 
     /**
      * Returns a valid ArmSystem pointer if using ARM ISA, it fails
      * otherwise.
      */
-    static ArmSystem*
+    static ArmSystem *
     getArmSystem(ThreadContext *tc)
     {
         assert(FullSystem);
@@ -260,8 +321,8 @@ class ArmSystem : public System
      */
     static Addr resetAddr(ThreadContext *tc);
 
-    /** Returns the supported physical address range in bits for the system of a
-     * specific thread context
+    /** Returns the supported physical address range in bits for the system of
+     * a specific thread context
      */
     static uint8_t physAddrRange(ThreadContext *tc);
 
@@ -278,13 +339,13 @@ class ArmSystem : public System
     static bool haveSemihosting(ThreadContext *tc);
 
     /** Make a Semihosting call from aarch64 */
-    static bool callSemihosting64(ThreadContext *tc, bool gem5_ops=false);
+    static bool callSemihosting64(ThreadContext *tc, bool gem5_ops = false);
 
     /** Make a Semihosting call from aarch32 */
-    static bool callSemihosting32(ThreadContext *tc, bool gem5_ops=false);
+    static bool callSemihosting32(ThreadContext *tc, bool gem5_ops = false);
 
     /** Make a Semihosting call from either aarch64 or aarch32 */
-    static bool callSemihosting(ThreadContext *tc, bool gem5_ops=false);
+    static bool callSemihosting(ThreadContext *tc, bool gem5_ops = false);
 
     /** Make a call to notify the power controller of STANDBYWFI assertion */
     static void callSetStandByWfi(ThreadContext *tc);

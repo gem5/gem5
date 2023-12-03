@@ -103,10 +103,9 @@ disable()
 
 ObjectMatch ignore;
 
-
 void
-Logger::dump(Tick when, const std::string &name,
-         const void *d, int len, const std::string &flag)
+Logger::dump(Tick when, const std::string &name, const void *d, int len,
+             const std::string &flag)
 {
     if (!isEnabled(name))
         return;
@@ -119,7 +118,8 @@ Logger::dump(Tick when, const std::string &name,
 
         ccprintf(line, "%08x  ", i);
         c = len - i;
-        if (c > 16) c = 16;
+        if (c > 16)
+            c = 16;
 
         for (j = 0; j < c; j++) {
             ccprintf(line, "%02x ", data[i + j] & 0xff);
@@ -146,7 +146,7 @@ Logger::dump(Tick when, const std::string &name,
 
 void
 OstreamLogger::logMessage(Tick when, const std::string &name,
-        const std::string &flag, const std::string &message)
+                          const std::string &flag, const std::string &message)
 {
     if (!isEnabled(name))
         return;

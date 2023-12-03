@@ -43,29 +43,26 @@
 namespace gem5
 {
 
-StaticRegisterManagerPolicy::StaticRegisterManagerPolicy()
-{
-}
+StaticRegisterManagerPolicy::StaticRegisterManagerPolicy() {}
 
 void
 StaticRegisterManagerPolicy::exec()
-{
-}
+{}
 
 int
-StaticRegisterManagerPolicy::mapVgpr(Wavefront* w, int vgprIndex)
+StaticRegisterManagerPolicy::mapVgpr(Wavefront *w, int vgprIndex)
 {
-    panic_if((vgprIndex >= w->reservedVectorRegs)
-             || (w->reservedVectorRegs < 0),
-             "VGPR index %d is out of range: VGPR range=[0,%d]",
-             vgprIndex, w->reservedVectorRegs);
+    panic_if((vgprIndex >= w->reservedVectorRegs) ||
+                 (w->reservedVectorRegs < 0),
+             "VGPR index %d is out of range: VGPR range=[0,%d]", vgprIndex,
+             w->reservedVectorRegs);
 
     // add the offset from where the VGPRs of the wavefront have been assigned
     int physicalVgprIndex = w->startVgprIndex + vgprIndex;
 
     panic_if(!((w->startVgprIndex <= physicalVgprIndex) &&
-             (w->startVgprIndex + w->reservedVectorRegs - 1)
-             >= physicalVgprIndex),
+               (w->startVgprIndex + w->reservedVectorRegs - 1) >=
+                   physicalVgprIndex),
              "Invalid VGPR index %d\n", physicalVgprIndex);
 
     // calculate physical VGPR index
@@ -73,19 +70,19 @@ StaticRegisterManagerPolicy::mapVgpr(Wavefront* w, int vgprIndex)
 }
 
 int
-StaticRegisterManagerPolicy::mapSgpr(Wavefront* w, int sgprIndex)
+StaticRegisterManagerPolicy::mapSgpr(Wavefront *w, int sgprIndex)
 {
-    panic_if(!((sgprIndex < w->reservedScalarRegs)
-             && (w->reservedScalarRegs > 0)),
-             "SGPR index %d is out of range: SGPR range=[0,%d]\n",
-             sgprIndex, w->reservedScalarRegs);
+    panic_if(
+        !((sgprIndex < w->reservedScalarRegs) && (w->reservedScalarRegs > 0)),
+        "SGPR index %d is out of range: SGPR range=[0,%d]\n", sgprIndex,
+        w->reservedScalarRegs);
 
     // add the offset from where the SGPRs of the wavefront have been assigned
     int physicalSgprIndex = w->startSgprIndex + sgprIndex;
 
     panic_if(!((w->startSgprIndex <= physicalSgprIndex) &&
-             (w->startSgprIndex + w->reservedScalarRegs - 1)
-             >= physicalSgprIndex),
+               (w->startSgprIndex + w->reservedScalarRegs - 1) >=
+                   physicalSgprIndex),
              "Invalid SGPR index %d\n", physicalSgprIndex);
 
     // calculate physical SGPR index
@@ -96,16 +93,16 @@ bool
 StaticRegisterManagerPolicy::canAllocateVgprs(int simdId, int nWfs,
                                               int demandPerWf)
 {
-    return cu->registerManager->vrfPoolMgrs[simdId]->
-        canAllocate(nWfs, demandPerWf);
+    return cu->registerManager->vrfPoolMgrs[simdId]->canAllocate(nWfs,
+                                                                 demandPerWf);
 }
 
 bool
 StaticRegisterManagerPolicy::canAllocateSgprs(int simdId, int nWfs,
                                               int demandPerWf)
 {
-    return cu->registerManager->srfPoolMgrs[simdId]->
-        canAllocate(nWfs, demandPerWf);
+    return cu->registerManager->srfPoolMgrs[simdId]->canAllocate(nWfs,
+                                                                 demandPerWf);
 }
 
 void
@@ -113,24 +110,24 @@ StaticRegisterManagerPolicy::allocateRegisters(Wavefront *w, int vectorDemand,
                                                int scalarDemand)
 {
     uint32_t allocatedSize = 0;
-    w->startVgprIndex = cu->registerManager->vrfPoolMgrs[w->simdId]->
-        allocateRegion(vectorDemand, &allocatedSize);
+    w->startVgprIndex =
+        cu->registerManager->vrfPoolMgrs[w->simdId]->allocateRegion(
+            vectorDemand, &allocatedSize);
     w->reservedVectorRegs = allocatedSize;
     cu->vectorRegsReserved[w->simdId] += w->reservedVectorRegs;
     panic_if(cu->vectorRegsReserved[w->simdId] > cu->numVecRegsPerSimd,
-             "VRF[%d] has been overallocated %d > %d\n",
-             w->simdId, cu->vectorRegsReserved[w->simdId],
-             cu->numVecRegsPerSimd);
+             "VRF[%d] has been overallocated %d > %d\n", w->simdId,
+             cu->vectorRegsReserved[w->simdId], cu->numVecRegsPerSimd);
 
     if (scalarDemand) {
-        w->startSgprIndex = cu->registerManager->srfPoolMgrs[w->simdId]->
-            allocateRegion(scalarDemand, &allocatedSize);
+        w->startSgprIndex =
+            cu->registerManager->srfPoolMgrs[w->simdId]->allocateRegion(
+                scalarDemand, &allocatedSize);
         w->reservedScalarRegs = allocatedSize;
         cu->scalarRegsReserved[w->simdId] += w->reservedScalarRegs;
         panic_if(cu->scalarRegsReserved[w->simdId] > cu->numScalarRegsPerSimd,
-                 "SRF[%d] has been overallocated %d > %d\n",
-                 w->simdId, cu->scalarRegsReserved[w->simdId],
-                 cu->numScalarRegsPerSimd);
+                 "SRF[%d] has been overallocated %d > %d\n", w->simdId,
+                 cu->scalarRegsReserved[w->simdId], cu->numScalarRegsPerSimd);
     }
 }
 
@@ -144,18 +141,16 @@ StaticRegisterManagerPolicy::freeRegisters(Wavefront *w)
 
     panic_if(w->computeUnit->vectorRegsReserved[w->simdId] < 0,
              "Freeing VRF[%d] registers left %d registers reserved\n",
-             w->simdId,
-             w->computeUnit->vectorRegsReserved[w->simdId]);
+             w->simdId, w->computeUnit->vectorRegsReserved[w->simdId]);
     panic_if(w->computeUnit->scalarRegsReserved[w->simdId] < 0,
              "Freeing SRF[%d] registers left %d registers reserved\n",
-             w->simdId,
-             w->computeUnit->scalarRegsReserved[w->simdId]);
+             w->simdId, w->computeUnit->scalarRegsReserved[w->simdId]);
 
     // Current dynamic register allocation does not handle wraparound
     int endIndex = w->startVgprIndex + w->reservedVectorRegs;
 
-    w->computeUnit->registerManager->vrfPoolMgrs[w->simdId]->
-        freeRegion(w->startVgprIndex, endIndex);
+    w->computeUnit->registerManager->vrfPoolMgrs[w->simdId]->freeRegion(
+        w->startVgprIndex, endIndex);
 
     // mark/pre-mark all registers are not busy
     for (int i = 0; i < w->reservedVectorRegs; i++) {
@@ -167,8 +162,8 @@ StaticRegisterManagerPolicy::freeRegisters(Wavefront *w)
     w->startVgprIndex = 0;
 
     endIndex = w->startSgprIndex + w->reservedScalarRegs;
-    w->computeUnit->registerManager->srfPoolMgrs[w->simdId]->
-        freeRegion(w->startSgprIndex, endIndex);
+    w->computeUnit->registerManager->srfPoolMgrs[w->simdId]->freeRegion(
+        w->startSgprIndex, endIndex);
 
     // mark/pre-mark all registers are not busy
     for (int i = 0; i < w->reservedScalarRegs; i++) {

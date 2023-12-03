@@ -49,12 +49,12 @@ namespace misc_reg
 // in CP0 instructions.
 enum : RegIndex
 {
-    Index = 0,       //Bank 0: 0 - 3
+    Index = 0, // Bank 0: 0 - 3
     MvpControl,
     MvpConf0,
     MvpConf1,
 
-    Cp0Random = 8,      //Bank 1: 8 - 15
+    Cp0Random = 8, // Bank 1: 8 - 15
     VpeControl,
     VpeConf0,
     VpeConf1,
@@ -63,7 +63,7 @@ enum : RegIndex
     VpeSchefback,
     VpeOpt,
 
-    Entrylo0 = 16,   //Bank 2: 16 - 23
+    Entrylo0 = 16, // Bank 2: 16 - 23
     TcStatus,
     TcBind,
     TcRestart,
@@ -72,44 +72,44 @@ enum : RegIndex
     TcSchedule,
     TcSchefback,
 
-    Entrylo1 = 24,   // Bank 3: 24
+    Entrylo1 = 24, // Bank 3: 24
 
-    Context = 32,    // Bank 4: 32 - 33
+    Context = 32, // Bank 4: 32 - 33
     ContextConfig,
 
-    Pagemask = 40, //Bank 5: 40 - 41
+    Pagemask = 40, // Bank 5: 40 - 41
     Pagegrain = 41,
 
-    Wired = 48,          //Bank 6:48-55
+    Wired = 48, // Bank 6:48-55
     SrsConf0,
     SrsConf1,
     SrsConf2,
     SrsConf3,
     SrsConf4,
 
-    Hwrena = 56,         //Bank 7: 56-63
+    Hwrena = 56, // Bank 7: 56-63
 
-    Badvaddr = 64,       //Bank 8: 64-71
+    Badvaddr = 64, // Bank 8: 64-71
 
-    Count = 72,          //Bank 9: 72-79
+    Count = 72, // Bank 9: 72-79
 
-    Entryhi = 80,        //Bank 10: 80-87
+    Entryhi = 80, // Bank 10: 80-87
 
-    Compare = 88,        //Bank 11: 88-95
+    Compare = 88, // Bank 11: 88-95
 
-    Status = 96,         //Bank 12: 96-103
+    Status = 96, // Bank 12: 96-103
     Intctl,
     Srsctl,
     Srsmap,
 
-    Cause = 104,         //Bank 13: 104-111
+    Cause = 104, // Bank 13: 104-111
 
-    Epc = 112,           //Bank 14: 112-119
+    Epc = 112, // Bank 14: 112-119
 
-    Prid = 120,          //Bank 15: 120-127,
+    Prid = 120, // Bank 15: 120-127,
     Ebase,
 
-    Config = 128,        //Bank 16: 128-135
+    Config = 128, // Bank 16: 128-135
     Config1,
     Config2,
     Config3,
@@ -118,10 +118,9 @@ enum : RegIndex
     Config6,
     Config7,
 
+    Lladdr = 136, // Bank 17: 136-143
 
-    Lladdr = 136,        //Bank 17: 136-143
-
-    Watchlo0 = 144,      //Bank 18: 144-151
+    Watchlo0 = 144, // Bank 18: 144-151
     Watchlo1,
     Watchlo2,
     Watchlo3,
@@ -130,7 +129,7 @@ enum : RegIndex
     Watchlo6,
     Watchlo7,
 
-    Watchhi0 = 152,     //Bank 19: 152-159
+    Watchhi0 = 152, // Bank 19: 152-159
     Watchhi1,
     Watchhi2,
     Watchhi3,
@@ -139,21 +138,21 @@ enum : RegIndex
     Watchhi6,
     Watchhi7,
 
-    Xccontext64 = 160, //Bank 20: 160-167
+    Xccontext64 = 160, // Bank 20: 160-167
 
-                       //Bank 21: 168-175
+    // Bank 21: 168-175
 
-                       //Bank 22: 176-183
+    // Bank 22: 176-183
 
-    Debug = 184,       //Bank 23: 184-191
+    Debug = 184, // Bank 23: 184-191
     TraceControl1,
     TraceControl2,
     UserTraceData,
     TraceBpc,
 
-    Depc = 192,        //Bank 24: 192-199
+    Depc = 192, // Bank 24: 192-199
 
-    Perfcnt0 = 200,    //Bank 25: 200-207
+    Perfcnt0 = 200, // Bank 25: 200-207
     Perfcnt1,
     Perfcnt2,
     Perfcnt3,
@@ -162,14 +161,14 @@ enum : RegIndex
     Perfcnt6,
     Perfcnt7,
 
-    Errctl = 208,      //Bank 26: 208-215
+    Errctl = 208, // Bank 26: 208-215
 
-    Cacheerr0 = 216,   //Bank 27: 216-223
+    Cacheerr0 = 216, // Bank 27: 216-223
     Cacheerr1,
     Cacheerr2,
     Cacheerr3,
 
-    Taglo0 = 224,      //Bank 28: 224-231
+    Taglo0 = 224, // Bank 28: 224-231
     Datalo1,
     Taglo2,
     Datalo3,
@@ -178,7 +177,7 @@ enum : RegIndex
     Taglo6,
     Datalo7,
 
-    Taghi0 = 232,      //Bank 29: 232-239
+    Taghi0 = 232, // Bank 29: 232-239
     Datahi1,
     Taghi2,
     Datahi3,
@@ -187,10 +186,9 @@ enum : RegIndex
     Taghi6,
     Datahi7,
 
+    ErrorEpc = 240, // Bank 30: 240-247
 
-    ErrorEpc = 240,    //Bank 30: 240-247
-
-    Desave = 248,       //Bank 31: 248-256
+    Desave = 248, // Bank 31: 248-256
 
     Llflag = 257,
     TpValue,
@@ -201,7 +199,7 @@ enum : RegIndex
 } // namespace misc_reg
 
 inline constexpr RegClass miscRegClass(MiscRegClass, MiscRegClassName,
-        misc_reg::NumRegs, debug::MiscRegs);
+                                       misc_reg::NumRegs, debug::MiscRegs);
 
 } // namespace MipsISA
 } // namespace gem5

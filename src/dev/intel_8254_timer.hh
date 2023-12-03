@@ -56,7 +56,7 @@ class Intel8254Timer : public EventManager
 
     BitUnion8(ReadBackCommandVal)
         Bitfield<4> status; // Active low.
-        Bitfield<5> count; // Active low.
+        Bitfield<5> count;  // Active low.
         SubBitUnion(select, 3, 1)
             Bitfield<3> cnt2;
             Bitfield<2> cnt1;
@@ -98,11 +98,11 @@ class Intel8254Timer : public EventManager
         {
           private:
             /** Pointer back to Counter */
-            Counter* counter;
+            Counter *counter;
             Tick interval;
 
           public:
-            CounterEvent(Counter*);
+            CounterEvent(Counter *);
 
             /** Event process */
             void process();
@@ -121,7 +121,12 @@ class Intel8254Timer : public EventManager
 
       private:
         std::string _name;
-        const std::string &name() const { return _name; }
+
+        const std::string &
+        name() const
+        {
+            return _name;
+        }
 
         unsigned int num;
 
@@ -152,7 +157,11 @@ class Intel8254Timer : public EventManager
         bool latch_on;
 
         /** Set of values for read_byte and write_byte */
-        enum {LSB, MSB};
+        enum
+        {
+            LSB,
+            MSB
+        };
 
         /** Determine which byte of a 16-bit count value to read/write */
         uint8_t read_byte, write_byte;
@@ -163,7 +172,11 @@ class Intel8254Timer : public EventManager
       public:
         Counter(Intel8254Timer *p, const std::string &name, unsigned int num);
 
-        unsigned int index() const { return num; }
+        unsigned int
+        index() const
+        {
+            return num;
+        }
 
         /** Latch the current count (if one is not already latched) */
         void latchCount();
@@ -210,7 +223,12 @@ class Intel8254Timer : public EventManager
 
   protected:
     std::string _name;
-    const std::string &name() const { return _name; }
+
+    const std::string &
+    name() const
+    {
+        return _name;
+    }
 
     /** PIT has three seperate counters */
     std::array<Counter, 3> counters;
@@ -222,10 +240,7 @@ class Intel8254Timer : public EventManager
     }
 
   public:
-
-    virtual
-    ~Intel8254Timer()
-    {}
+    virtual ~Intel8254Timer() {}
 
     Intel8254Timer(EventManager *em, const std::string &name);
 

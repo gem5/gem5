@@ -47,17 +47,30 @@ class PoolManager : public SimObject
 {
   public:
     PoolManager(const PoolManagerParams &p);
+
     virtual ~PoolManager() { _poolSize = 0; }
-    uint32_t minAllocation() { return _minAllocation; }
+
+    uint32_t
+    minAllocation()
+    {
+        return _minAllocation;
+    }
+
     virtual std::string printRegion() = 0;
-    virtual uint32_t regionSize(std::pair<uint32_t,uint32_t> &region) = 0;
+    virtual uint32_t regionSize(std::pair<uint32_t, uint32_t> &region) = 0;
     virtual bool canAllocate(uint32_t numRegions, uint32_t size) = 0;
 
     virtual uint32_t allocateRegion(const uint32_t size,
                                     uint32_t *reserved) = 0;
 
     virtual void freeRegion(uint32_t firstIdx, uint32_t lastIdx) = 0;
-    uint32_t poolSize() { return _poolSize; }
+
+    uint32_t
+    poolSize()
+    {
+        return _poolSize;
+    }
+
     // I don't think with the current API it is possible to do what
     // we intend to - reset the entire register pool.
     // Because we need to reset the register pool when all WGs on
@@ -65,7 +78,7 @@ class PoolManager : public SimObject
     // another kernel.
     // TsungTai Yeh added a virtual method do the very same - at a diff
     // place though.
-    virtual void resetRegion(const int & regsPerSimd) {}; // do nothing
+    virtual void resetRegion(const int &regsPerSimd){}; // do nothing
 
   private:
     // minimum size that can be reserved per allocation

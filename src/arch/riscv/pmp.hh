@@ -128,8 +128,7 @@ class PMP : public SimObject
      * @return Fault.
      */
     Fault pmpCheck(const RequestPtr &req, BaseMMU::Mode mode,
-                  PrivilegeMode pmode, ThreadContext *tc,
-                  Addr vaddr = 0);
+                   PrivilegeMode pmode, ThreadContext *tc, Addr vaddr = 0);
 
     /**
      * pmpUpdateCfg updates the pmpcfg for a pmp
@@ -205,7 +204,6 @@ class PMP : public SimObject
      * @return an address range.
      */
     inline AddrRange pmpDecodeNapot(Addr pmpaddr);
-
 };
 
 } // namespace RiscvISA

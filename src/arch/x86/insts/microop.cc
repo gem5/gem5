@@ -49,73 +49,72 @@ bool
 X86MicroopBase::checkCondition(uint64_t flags, int condition) const
 {
     CCFlagBits ccflags = flags;
-    switch(condition)
-    {
-      case condition_tests::True:
+    switch (condition) {
+    case condition_tests::True:
         return true;
-      case condition_tests::ECF:
+    case condition_tests::ECF:
         return ccflags.ecf;
-      case condition_tests::EZF:
+    case condition_tests::EZF:
         return ccflags.ezf;
-      case condition_tests::SZnZF:
+    case condition_tests::SZnZF:
         return !(!ccflags.ezf && ccflags.zf);
-      case condition_tests::MSTRZ:
+    case condition_tests::MSTRZ:
         panic("This condition is not implemented!");
-      case condition_tests::STRZ:
+    case condition_tests::STRZ:
         panic("This condition is not implemented!");
-      case condition_tests::MSTRC:
+    case condition_tests::MSTRC:
         panic("This condition is not implemented!");
-      case condition_tests::STRZnEZF:
+    case condition_tests::STRZnEZF:
         return !ccflags.ezf && ccflags.zf;
-            //And no interrupts or debug traps are waiting
-      case condition_tests::OF:
+        // And no interrupts or debug traps are waiting
+    case condition_tests::OF:
         return ccflags.of;
-      case condition_tests::CF:
+    case condition_tests::CF:
         return ccflags.cf;
-      case condition_tests::ZF:
+    case condition_tests::ZF:
         return ccflags.zf;
-      case condition_tests::CvZF:
+    case condition_tests::CvZF:
         return ccflags.cf | ccflags.zf;
-      case condition_tests::SF:
+    case condition_tests::SF:
         return ccflags.sf;
-      case condition_tests::PF:
+    case condition_tests::PF:
         return ccflags.pf;
-      case condition_tests::SxOF:
+    case condition_tests::SxOF:
         return ccflags.sf ^ ccflags.of;
-      case condition_tests::SxOvZF:
+    case condition_tests::SxOvZF:
         return (ccflags.sf ^ ccflags.of) | ccflags.zf;
-      case condition_tests::False:
+    case condition_tests::False:
         return false;
-      case condition_tests::NotECF:
+    case condition_tests::NotECF:
         return !ccflags.ecf;
-      case condition_tests::NotEZF:
+    case condition_tests::NotEZF:
         return !ccflags.ezf;
-      case condition_tests::NotSZnZF:
+    case condition_tests::NotSZnZF:
         return !ccflags.ezf && ccflags.zf;
-      case condition_tests::NotMSTRZ:
+    case condition_tests::NotMSTRZ:
         panic("This condition is not implemented!");
-      case condition_tests::NotSTRZ:
+    case condition_tests::NotSTRZ:
         panic("This condition is not implemented!");
-      case condition_tests::NotMSTRC:
+    case condition_tests::NotMSTRC:
         panic("This condition is not implemented!");
-      case condition_tests::STRnZnEZF:
+    case condition_tests::STRnZnEZF:
         return !ccflags.ezf && !ccflags.zf;
-            //And no interrupts or debug traps are waiting
-      case condition_tests::NotOF:
+        // And no interrupts or debug traps are waiting
+    case condition_tests::NotOF:
         return !ccflags.of;
-      case condition_tests::NotCF:
+    case condition_tests::NotCF:
         return !ccflags.cf;
-      case condition_tests::NotZF:
+    case condition_tests::NotZF:
         return !ccflags.zf;
-      case condition_tests::NotCvZF:
+    case condition_tests::NotCvZF:
         return !(ccflags.cf | ccflags.zf);
-      case condition_tests::NotSF:
+    case condition_tests::NotSF:
         return !ccflags.sf;
-      case condition_tests::NotPF:
+    case condition_tests::NotPF:
         return !ccflags.pf;
-      case condition_tests::NotSxOF:
+    case condition_tests::NotSxOF:
         return !(ccflags.sf ^ ccflags.of);
-      case condition_tests::NotSxOvZF:
+    case condition_tests::NotSxOvZF:
         return !((ccflags.sf ^ ccflags.of) | ccflags.zf);
     }
     panic("Unknown condition: %d\n", condition);
@@ -131,7 +130,7 @@ X86MicroopBase::branchTarget(const PCStateBase &branch_pc) const
     auto &xpc = pcs->as<PCState>();
     xpc.npc(xpc.npc() + (int64_t)machInst.immediate);
     xpc.uEnd();
-    return std::unique_ptr<PCStateBase>{pcs};
+    return std::unique_ptr<PCStateBase>{ pcs };
 }
 
 } // namespace X86ISA

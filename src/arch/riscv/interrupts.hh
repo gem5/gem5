@@ -50,7 +50,8 @@ namespace gem5
 class BaseCPU;
 class ThreadContext;
 
-namespace RiscvISA {
+namespace RiscvISA
+{
 
 /*
  * This is based on version 1.10 of the RISC-V privileged ISA reference,
@@ -62,7 +63,8 @@ class Interrupts : public BaseInterrupts
     std::bitset<NumInterruptTypes> ip;
     std::bitset<NumInterruptTypes> ie;
 
-    std::vector<gem5::IntSinkPin<Interrupts>*> localInterruptPins;
+    std::vector<gem5::IntSinkPin<Interrupts> *> localInterruptPins;
+
   public:
     using Params = RiscvInterruptsParams;
 
@@ -76,29 +78,65 @@ class Interrupts : public BaseInterrupts
         return tc->readMiscReg(MISCREG_NMIP) & tc->readMiscReg(MISCREG_NMIE);
     }
 
-    bool checkInterrupt(int num) const { return ip[num] && ie[num]; }
-    bool checkInterrupts() const override
+    bool
+    checkInterrupt(int num) const
+    {
+        return ip[num] && ie[num];
+    }
+
+    bool
+    checkInterrupts() const override
     {
         return checkNonMaskableInterrupt() || (ip & ie & globalMask()).any();
     }
 
     Fault getInterrupt() override;
 
-    void updateIntrInfo() override {}
+    void
+    updateIntrInfo() override
+    {}
 
     void post(int int_num, int index) override;
 
     void clear(int int_num, int index) override;
 
-    void postNMI() { tc->setMiscReg(MISCREG_NMIP, 1); }
-    void clearNMI() { tc->setMiscReg(MISCREG_NMIP, 0); }
+    void
+    postNMI()
+    {
+        tc->setMiscReg(MISCREG_NMIP, 1);
+    }
+
+    void
+    clearNMI()
+    {
+        tc->setMiscReg(MISCREG_NMIP, 0);
+    }
 
     void clearAll() override;
 
-    uint64_t readIP() const { return (uint64_t)ip.to_ulong(); }
-    uint64_t readIE() const { return (uint64_t)ie.to_ulong(); }
-    void setIP(const uint64_t& val) { ip = val; }
-    void setIE(const uint64_t& val) { ie = val; }
+    uint64_t
+    readIP() const
+    {
+        return (uint64_t)ip.to_ulong();
+    }
+
+    uint64_t
+    readIE() const
+    {
+        return (uint64_t)ie.to_ulong();
+    }
+
+    void
+    setIP(const uint64_t &val)
+    {
+        ip = val;
+    }
+
+    void
+    setIE(const uint64_t &val)
+    {
+        ie = val;
+    }
 
     void serialize(CheckpointOut &cp) const override;
 
@@ -107,7 +145,7 @@ class Interrupts : public BaseInterrupts
     Port &getPort(const std::string &if_name, PortID idx) override;
 
     void raiseInterruptPin(uint32_t num);
-    void lowerInterruptPin(uint32_t num) {};
+    void lowerInterruptPin(uint32_t num){};
 };
 
 } // namespace RiscvISA

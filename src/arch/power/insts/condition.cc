@@ -34,8 +34,8 @@ namespace gem5
 using namespace PowerISA;
 
 std::string
-CondLogicOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+CondLogicOp::generateDisassembly(Addr pc,
+                                 const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
 
@@ -48,8 +48,8 @@ CondLogicOp::generateDisassembly(
 }
 
 std::string
-CondMoveOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+CondMoveOp::generateDisassembly(Addr pc,
+                                const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
 

@@ -64,25 +64,21 @@ namespace gem5
  * serializer component at the transmitter side does not need to receive the
  * whole packet to start the serialization. But the deserializer waits for the
  * complete packet to check its integrity first.
-  */
+ */
 class SerialLink : public ClockedObject
 {
   protected:
-
     /**
      * A deferred packet stores a packet along with its scheduled
      * transmission time
      */
     class DeferredPacket
     {
-
       public:
-
         const Tick tick;
         const PacketPtr pkt;
 
-        DeferredPacket(PacketPtr _pkt, Tick _tick) : tick(_tick), pkt(_pkt)
-        { }
+        DeferredPacket(PacketPtr _pkt, Tick _tick) : tick(_tick), pkt(_pkt) {}
     };
 
     // Forward declaration to allow the CPU-side port to have a pointer
@@ -96,16 +92,14 @@ class SerialLink : public ClockedObject
      */
     class SerialLinkResponsePort : public ResponsePort
     {
-
       private:
-
         /** The serial_link to which this port belongs. */
-        SerialLink& serial_link;
+        SerialLink &serial_link;
 
         /**
          * Request port on the other side of the serial_link.
          */
-        SerialLinkRequestPort& mem_side_port;
+        SerialLinkRequestPort &mem_side_port;
 
         /** Minimum request delay though this serial_link. */
         const Cycles delay;
@@ -148,7 +142,6 @@ class SerialLink : public ClockedObject
         EventFunctionWrapper sendEvent;
 
       public:
-
         /**
          * Constructor for the SerialLinkResponsePort.
          *
@@ -160,10 +153,11 @@ class SerialLink : public ClockedObject
          * @param _resp_limit the size of the response queue
          * @param _ranges a number of address ranges to forward
          */
-        SerialLinkResponsePort(const std::string& _name, SerialLink&
-                        _serial_link, SerialLinkRequestPort& _mem_side_port,
-                        Cycles _delay, int _resp_limit, const
-                        std::vector<AddrRange>& _ranges);
+        SerialLinkResponsePort(const std::string &_name,
+                               SerialLink &_serial_link,
+                               SerialLinkRequestPort &_mem_side_port,
+                               Cycles _delay, int _resp_limit,
+                               const std::vector<AddrRange> &_ranges);
 
         /**
          * Queue a response packet to be sent out later and also schedule
@@ -182,7 +176,6 @@ class SerialLink : public ClockedObject
         void retryStalledReq();
 
       protected:
-
         /** When receiving a timing request from the peer port,
             pass it to the serial_link. */
         bool recvTimingReq(PacketPtr pkt);
@@ -204,7 +197,6 @@ class SerialLink : public ClockedObject
         AddrRangeList getAddrRanges() const;
     };
 
-
     /**
      * Port on the side that forwards requests and receives
      * responses. The memory-side port has a buffer for the requests not
@@ -212,17 +204,15 @@ class SerialLink : public ClockedObject
      */
     class SerialLinkRequestPort : public RequestPort
     {
-
       private:
-
         /** The serial_link to which this port belongs. */
-        SerialLink& serial_link;
+        SerialLink &serial_link;
 
         /**
          * The response (CPU-side port) port on the other side of
          * the serial_link.
          */
-        SerialLinkResponsePort& cpu_side_port;
+        SerialLinkResponsePort &cpu_side_port;
 
         /** Minimum delay though this serial_link. */
         const Cycles delay;
@@ -249,7 +239,6 @@ class SerialLink : public ClockedObject
         EventFunctionWrapper sendEvent;
 
       public:
-
         /**
          * Constructor for the SerialLinkRequestPort.
          *
@@ -260,9 +249,10 @@ class SerialLink : public ClockedObject
          * @param _delay the delay in cycles from receiving to sending
          * @param _req_limit the size of the request queue
          */
-        SerialLinkRequestPort(const std::string& _name, SerialLink&
-                         _serial_link, SerialLinkResponsePort& _cpu_side_port,
-                         Cycles _delay, int _req_limit);
+        SerialLinkRequestPort(const std::string &_name,
+                              SerialLink &_serial_link,
+                              SerialLinkResponsePort &_cpu_side_port,
+                              Cycles _delay, int _req_limit);
 
         /**
          * Is this side blocked from accepting new request packets.
@@ -291,7 +281,6 @@ class SerialLink : public ClockedObject
         bool trySatisfyFunctional(PacketPtr pkt);
 
       protected:
-
         /** When receiving a timing request from the peer port,
             pass it to the serial_link. */
         bool recvTimingResp(PacketPtr pkt);
@@ -314,9 +303,7 @@ class SerialLink : public ClockedObject
     uint64_t link_speed;
 
   public:
-
-    Port &getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID);
+    Port &getPort(const std::string &if_name, PortID idx = InvalidPortID);
 
     virtual void init();
 

@@ -35,7 +35,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 /** @file
  * This is a base class for UFS devices
  * The UFS interface consists out of one host controller which connects a
@@ -172,7 +171,6 @@ namespace gem5
 class UFSHostDevice : public DmaDevice
 {
   public:
-
     UFSHostDevice(const UFSHostDeviceParams &p);
 
     DrainState drain() override;
@@ -350,7 +348,6 @@ class UFSHostDevice : public DmaDevice
      */
     struct UTPTransferReqDesc
     {
-
         /**
          * struct RequestDescHeader
          * dword0: Descriptor Header DW0
@@ -385,8 +382,10 @@ class UFSHostDevice : public DmaDevice
      */
     struct SCSIReply
     {
-        void reset() {
-            memset(static_cast<void*>(this), 0, sizeof(*this));
+        void
+        reset()
+        {
+            memset(static_cast<void *>(this), 0, sizeof(*this));
         }
 
         uint8_t status;
@@ -394,7 +393,7 @@ class UFSHostDevice : public DmaDevice
         uint8_t LUN;
         struct UPIUMessage message;
         uint8_t senseSize;
-        uint8_t expectMore;//0x01 is for writes, 0x02 is for reads
+        uint8_t expectMore; // 0x01 is for writes, 0x02 is for reads
         uint64_t offset;
         uint8_t senseCode[19];
     };
@@ -402,7 +401,8 @@ class UFSHostDevice : public DmaDevice
     /**
      * Logic unit information structure. SCSI requires information of each LUN.
      * This structure is defined in the SCSI standard, and can also be found in
-     * the UFS standard. http://www.jedec.org/standards-documents/results/jesd220
+     * the UFS standard.
+     * http://www.jedec.org/standards-documents/results/jesd220
      */
     struct LUNInfo
     {
@@ -420,8 +420,8 @@ class UFSHostDevice : public DmaDevice
     /**
      * Different events, and scenarios require different types of information.
      * Keep in mind that for a read-from-disk transaction the host at first a
-     * datastructure fetches to determine where and what the command is, then the
-     * command fetches and the structure fetches to determine where the
+     * datastructure fetches to determine where and what the command is, then
+     * the command fetches and the structure fetches to determine where the
      * different read transactions should be placed and then transfers all the
      * read fragments. It then answers to the original caller with two replies,
      * one for the command, and one for UFS. Each of these stages trigger a
@@ -433,12 +433,13 @@ class UFSHostDevice : public DmaDevice
 
     /**
      * Transfer information.
-     * @filePointer this does not point to a file, but to a position on the disk
-     * image (which is from the software systems perspective a position in a file)
+     * @filePointer this does not point to a file, but to a position on the
+     * disk image (which is from the software systems perspective a position in
+     * a file)
      */
     struct transferInfo
     {
-        std::vector <uint8_t> buffer;
+        std::vector<uint8_t> buffer;
         uint32_t size;
         uint64_t offset;
         uint32_t filePointer;
@@ -466,7 +467,7 @@ class UFSHostDevice : public DmaDevice
      */
     struct transferStart
     {
-        struct UTPTransferReqDesc* destination;
+        struct UTPTransferReqDesc *destination;
         uint32_t mask;
         Addr address;
         uint32_t size;
@@ -492,17 +493,17 @@ class UFSHostDevice : public DmaDevice
      */
     struct SCSIResumeInfo
     {
-        struct UTPTransferReqDesc* RequestIn;
+        struct UTPTransferReqDesc *RequestIn;
         int reqPos;
         Addr finalAddress;
         uint32_t finalSize;
-        std::vector <uint8_t> destination;
+        std::vector<uint8_t> destination;
         uint32_t done;
     };
 
     /**
-     * Disk transfer burst information. Needed to allow communication between the
-     * disk transactions and dma transactions.
+     * Disk transfer burst information. Needed to allow communication between
+     * the disk transactions and dma transactions.
      */
     struct writeToDiskBurst
     {
@@ -556,7 +557,7 @@ class UFSHostDevice : public DmaDevice
      * This layer implements the SCSI functionality of the UFS Device
      * One logic unit controls one or more disk partitions
      */
-    class UFSSCSIDevice: SimObject
+    class UFSSCSIDevice : SimObject
     {
       public:
         using Callback = std::function<void()>;
@@ -573,7 +574,7 @@ class UFSHostDevice : public DmaDevice
          * returns a reply structure that allows the host device to continue
          * with the transfer.
          */
-        struct SCSIReply SCSICMDHandle(uint32_t* SCSI_msg);
+        struct SCSIReply SCSICMDHandle(uint32_t *SCSI_msg);
 
         /**
          * Disk access functions. These will transfer the data from/to the disk
@@ -583,26 +584,34 @@ class UFSHostDevice : public DmaDevice
          * Read flash. read the data from the disk image. This function
          * doesn't model timing behaviour
          */
-        void readFlash(uint8_t* readaddr, uint64_t offset, uint32_t size);
+        void readFlash(uint8_t *readaddr, uint64_t offset, uint32_t size);
 
         /**
          * Write flash. write the data to the disk image. This function
          * doesn't model timing behaviour
          */
-        void writeFlash(uint8_t* writeaddr, uint64_t offset, uint32_t size);
+        void writeFlash(uint8_t *writeaddr, uint64_t offset, uint32_t size);
 
         /**
          * finished command. Probe to find out wether this logic unit
          * finished its transfer and triggered the callback; The host needs
          * this to handle the final part of the transaction.
          */
-        bool finishedCommand() const {return transferCompleted;};
+        bool
+        finishedCommand() const
+        {
+            return transferCompleted;
+        };
 
         /**
          * Clear signal. Handle for the host to clear the transfer complete
          * signal.
          */
-        void clearSignal() {transferCompleted = false;};
+        void
+        clearSignal()
+        {
+            transferCompleted = false;
+        };
 
         /**
          * Finished read. Probe to find out which logic unit finished its
@@ -611,13 +620,21 @@ class UFSHostDevice : public DmaDevice
          * the right order. (because writes work the other way round, they do
          * not need this mechanism)
          */
-        bool finishedRead() const {return readCompleted;};
+        bool
+        finishedRead() const
+        {
+            return readCompleted;
+        };
 
         /**
          * Clear signal. Handle for the host to clear the read complete
          * signal.
          */
-        void clearReadSignal() {readCompleted = false;};
+        void
+        clearReadSignal()
+        {
+            readCompleted = false;
+        };
 
         /**
          * Start the transactions to (and from) the disk
@@ -632,7 +649,11 @@ class UFSHostDevice : public DmaDevice
          * First they need to be fetched via DMA, so this value is needed in
          * a later stage.
          */
-        void setTotalWrite(uint32_t total_write) {totalWrite = total_write;};
+        void
+        setTotalWrite(uint32_t total_write)
+        {
+            totalWrite = total_write;
+        };
 
         /**
          * End of transfer information
@@ -689,25 +710,33 @@ class UFSHostDevice : public DmaDevice
          * For now it (mainly) fills a data structure with sense information
          * for a successfull transaction
          */
-        void statusCheck(uint8_t status, uint8_t* sensecodelist);
+        void statusCheck(uint8_t status, uint8_t *sensecodelist);
 
         /**
          * set signal to indicate that the transaction has been completed.
          */
-        void setSignal() {transferCompleted = true;};
+        void
+        setSignal()
+        {
+            transferCompleted = true;
+        };
 
         /**
          * set signal to indicate that the read action has been completed
          */
-        void setReadSignal() {readCompleted = true;};
+        void
+        setReadSignal()
+        {
+            readCompleted = true;
+        };
 
         /**
          * The objects this model links to.
          * 1: the disk data model
          * 2: the memory timing model
          */
-        DiskImage* flashDisk;
-        AbstractNVM* flashDevice;
+        DiskImage *flashDisk;
+        AbstractNVM *flashDevice;
 
         /**
          * Logic unit dimensions
@@ -797,7 +826,7 @@ class UFSHostDevice : public DmaDevice
             SCSIFormatUnit = 0x04,
             SCSISendDiagnostic = 0x1D,
             SCSISynchronizeCache = 0x35,
-            //UFS SCSI additional command set for full functionality
+            // UFS SCSI additional command set for full functionality
             SCSIModeSelect10 = 0x55,
             SCSIModeSense6 = 0x1A,
             SCSIModeSense10 = 0x5A,
@@ -805,7 +834,7 @@ class UFSHostDevice : public DmaDevice
             SCSIUnmap = 0x42,
             SCSIWriteBuffer = 0x3B,
             SCSIReadBuffer = 0x3C,
-            //SCSI commands not supported by UFS; but Linux send them anyway
+            // SCSI commands not supported by UFS; but Linux send them anyway
             SCSIMaintenanceIn = 0xA3
         };
 
@@ -847,10 +876,9 @@ class UFSHostDevice : public DmaDevice
             SCSIVolumeOverflow = 0x0D,
             SCSIMisCompare = 0x0E
         };
-
     };
 
-    //All access functions are inherrited; no need to make them public
+    // All access functions are inherrited; no need to make them public
     /**
      * Address range functions
      */
@@ -900,8 +928,8 @@ class UFSHostDevice : public DmaDevice
      * because there are not many tasks implemented yet this is kept in the
      * Host controller layer
      */
-    void taskHandler(struct UTPUPIUTaskReq* request_in,
-                     uint32_t req_pos, Addr finaladdress, uint32_t finalsize);
+    void taskHandler(struct UTPUPIUTaskReq *request_in, uint32_t req_pos,
+                     Addr finaladdress, uint32_t finalsize);
 
     /**
      * Transfer Start function. Starts the transfer handler once the transfer
@@ -918,9 +946,8 @@ class UFSHostDevice : public DmaDevice
      * the host has no indication whatsoever which LU to address. That will
      * follow in the next transaction.
      */
-    void transferHandler(struct UTPTransferReqDesc*
-                         request_in, int req_pos, Addr finaladdress,
-                         uint32_t finalsize, uint32_t done);
+    void transferHandler(struct UTPTransferReqDesc *request_in, int req_pos,
+                         Addr finaladdress, uint32_t finalsize, uint32_t done);
 
     /**
      * Transfer SCSI function. Determines which Logic unit to address and
@@ -945,7 +972,7 @@ class UFSHostDevice : public DmaDevice
      */
     void transferDone(Addr responseStartAddr, uint32_t req_pos,
                       struct UTPUPIURSP request_out, uint32_t size,
-                      Addr address, uint8_t* destination, bool finished,
+                      Addr address, uint8_t *destination, bool finished,
                       uint32_t lun_id);
     /**
      * final UTP, sends the last acknowledge data structure to the system;
@@ -966,12 +993,12 @@ class UFSHostDevice : public DmaDevice
      * the obtained data, or what the follow up action is once the data has
      * been pushed to the memory
      */
-    void writeDevice(Event* additional_action, bool toDisk, Addr start,
-                     int size, uint8_t* destination, uint64_t SCSIDiskOffset,
+    void writeDevice(Event *additional_action, bool toDisk, Addr start,
+                     int size, uint8_t *destination, uint64_t SCSIDiskOffset,
                      uint32_t lun_id);
     void readDevice(bool lastTransfer, Addr SCSIStart, uint32_t SCSISize,
-                    uint8_t* SCSIDestination, bool no_cache,
-                    Event* additional_action);
+                    uint8_t *SCSIDestination, bool no_cache,
+                    Event *additional_action);
 
     /**
      * Disk transfer management functions
@@ -979,11 +1006,12 @@ class UFSHostDevice : public DmaDevice
      * transaction timing model based on the scatter gather list constructed
      * in SCSIresume.
      */
-    void manageWriteTransfer(uint8_t LUN, uint64_t offset, uint32_t
-                             sg_table_length, struct UFSHCDSGEntry* sglist);
+    void manageWriteTransfer(uint8_t LUN, uint64_t offset,
+                             uint32_t sg_table_length,
+                             struct UFSHCDSGEntry *sglist);
     void manageReadTransfer(uint32_t size, uint32_t LUN, uint64_t offset,
                             uint32_t sg_table_length,
-                            struct UFSHCDSGEntry* sglist);
+                            struct UFSHCDSGEntry *sglist);
 
     /**
      * Read done
@@ -1025,7 +1053,7 @@ class UFSHostDevice : public DmaDevice
     const Addr pioSize;
     const Tick pioDelay;
     const int intNum;
-    BaseGic* gic;
+    BaseGic *gic;
     const uint32_t lunAvail;
     const uint8_t UFSSlots;
 
@@ -1085,7 +1113,7 @@ class UFSHostDevice : public DmaDevice
      * Note again that the "device" as such is represented by one or multiple
      * logic units.
      */
-    std::vector<UFSSCSIDevice*> UFSDevice;
+    std::vector<UFSSCSIDevice *> UFSDevice;
 
     /**
      * SCSI reply structure, used for direct answering. Might be refered to
@@ -1141,7 +1169,7 @@ class UFSHostDevice : public DmaDevice
     /**
      * garbage queue, ensure clearing of the allocated memory
      */
-    std::deque<struct UTPTransferReqDesc*> garbage;
+    std::deque<struct UTPTransferReqDesc *> garbage;
 
     /**
      * RequestHandler stats
@@ -1193,10 +1221,10 @@ class UFSHostDevice : public DmaDevice
     /**
      * Bits of interest within UFS data packages
      */
-    static const unsigned int UTPTransferREQCOMPL = 0x01;//UFS_BIT(0)
-    static const unsigned int UTPTaskREQCOMPL = 0x200;//UFS_BIT(9)
-    static const unsigned int UICCommandCOMPL = 0x400;//UFS_BIT(10)
-    static const unsigned int UICCommandReady = 0x08;//UFS_BIT(3)
+    static const unsigned int UTPTransferREQCOMPL = 0x01; // UFS_BIT(0)
+    static const unsigned int UTPTaskREQCOMPL = 0x200;    // UFS_BIT(9)
+    static const unsigned int UICCommandCOMPL = 0x400;    // UFS_BIT(10)
+    static const unsigned int UICCommandReady = 0x08;     // UFS_BIT(3)
 
     /*
      * UFSHCI Registers; please refer to

@@ -36,7 +36,6 @@
 
  *****************************************************************************/
 
-
 // $Log: sc_nbutils.cpp,v $
 // Revision 1.4  2011/08/24 22:05:46  acg
 //  Torsten Maehne: initialization changes to remove warnings.
@@ -74,23 +73,28 @@ static inline void
 is_valid_base(sc_numrep base)
 {
     switch (base) {
-      case SC_NOBASE: case SC_BIN:
-      case SC_OCT: case SC_DEC:
-      case SC_HEX:
+    case SC_NOBASE:
+    case SC_BIN:
+    case SC_OCT:
+    case SC_DEC:
+    case SC_HEX:
         break;
-      case SC_BIN_US: case SC_BIN_SM:
-      case SC_OCT_US: case SC_OCT_SM:
-      case SC_HEX_US: case SC_HEX_SM:
-      case SC_CSD:
+    case SC_BIN_US:
+    case SC_BIN_SM:
+    case SC_OCT_US:
+    case SC_OCT_SM:
+    case SC_HEX_US:
+    case SC_HEX_SM:
+    case SC_CSD:
         SC_REPORT_ERROR("not implemented",
                         "is_valid_base( sc_numrep base ) : "
                         "bases SC_CSD, or ending in _US and _SM are "
                         "not supported");
         break;
-      default:
+    default:
         std::stringstream msg;
-        msg << "is_valid_base( sc_numrep base ) : base = " << base <<
-               " is not valid";
+        msg << "is_valid_base( sc_numrep base ) : base = " << base
+            << " is not valid";
         SC_REPORT_ERROR(sc_core::SC_ID_VALUE_NOT_VALID_, msg.str().c_str());
     }
 }
@@ -105,27 +109,29 @@ const std::string
 to_string(sc_numrep numrep)
 {
     switch (numrep) {
-#define CASE_ENUM2STR(Value) case Value: return #Value
+#define CASE_ENUM2STR(Value)                                                  \
+    case Value:                                                               \
+        return #Value
 
-      CASE_ENUM2STR(SC_DEC);
+        CASE_ENUM2STR(SC_DEC);
 
-      CASE_ENUM2STR(SC_BIN);
-      CASE_ENUM2STR(SC_BIN_US);
-      CASE_ENUM2STR(SC_BIN_SM);
+        CASE_ENUM2STR(SC_BIN);
+        CASE_ENUM2STR(SC_BIN_US);
+        CASE_ENUM2STR(SC_BIN_SM);
 
-      CASE_ENUM2STR(SC_OCT);
-      CASE_ENUM2STR(SC_OCT_US);
-      CASE_ENUM2STR(SC_OCT_SM);
+        CASE_ENUM2STR(SC_OCT);
+        CASE_ENUM2STR(SC_OCT_US);
+        CASE_ENUM2STR(SC_OCT_SM);
 
-      CASE_ENUM2STR(SC_HEX);
-      CASE_ENUM2STR(SC_HEX_US);
-      CASE_ENUM2STR(SC_HEX_SM);
+        CASE_ENUM2STR(SC_HEX);
+        CASE_ENUM2STR(SC_HEX_US);
+        CASE_ENUM2STR(SC_HEX_SM);
 
-      CASE_ENUM2STR(SC_CSD);
+        CASE_ENUM2STR(SC_CSD);
 
 #undef CASE_ENUM2STR
 
-      default:
+    default:
         return "unknown";
     }
 }
@@ -155,39 +161,74 @@ fsm_move(char c, small_type &b, small_type &s, small_type &state)
     // Default sign = SC_POS, default base = NB_DEFAULT_BASE.
 
     switch (state) {
-      case 0: // The initial state.
+    case 0: // The initial state.
         switch (c) {
-          case '0': s = SC_POS; state = 1; return 0; // RE 1 or 3
-          case '+': s = SC_POS; state = 2; return 1; // RE 2
-          case '-': s = SC_NEG; state = 2; return 1; // RE 2
-          default:
-            s = SC_POS; b = NB_DEFAULT_BASE; state = 3; return 0; // RE 1
+        case '0':
+            s = SC_POS;
+            state = 1;
+            return 0; // RE 1 or 3
+        case '+':
+            s = SC_POS;
+            state = 2;
+            return 1; // RE 2
+        case '-':
+            s = SC_NEG;
+            state = 2;
+            return 1; // RE 2
+        default:
+            s = SC_POS;
+            b = NB_DEFAULT_BASE;
+            state = 3;
+            return 0; // RE 1
         }
         // break; //unreachable code
-      case 1: // 0...
+    case 1: // 0...
         switch (c) {
-          case 'x': case 'X': b = SC_HEX; state = 3; return 2; // RE 3 or 4
-          case 'd': case 'D': b = SC_DEC; state = 3; return 2; // RE 3 or 4
-          case 'o': case 'O': b = SC_OCT; state = 3; return 2; // RE 3 or 4
-          case 'b': case 'B': b = SC_BIN; state = 3; return 2; // RE 3 or 4
-          default: b = NB_DEFAULT_BASE; state = 3; return 0; // RE 1
+        case 'x':
+        case 'X':
+            b = SC_HEX;
+            state = 3;
+            return 2; // RE 3 or 4
+        case 'd':
+        case 'D':
+            b = SC_DEC;
+            state = 3;
+            return 2; // RE 3 or 4
+        case 'o':
+        case 'O':
+            b = SC_OCT;
+            state = 3;
+            return 2; // RE 3 or 4
+        case 'b':
+        case 'B':
+            b = SC_BIN;
+            state = 3;
+            return 2; // RE 3 or 4
+        default:
+            b = NB_DEFAULT_BASE;
+            state = 3;
+            return 0; // RE 1
         }
         // break; //unreachable code
-      case 2: // +... or -...
+    case 2: // +... or -...
         switch (c) {
-          case '0': state = 1; return 0; // RE 2 or 4
-          default: b = NB_DEFAULT_BASE; state = 3; return 0; // RE 2
+        case '0':
+            state = 1;
+            return 0; // RE 2 or 4
+        default:
+            b = NB_DEFAULT_BASE;
+            state = 3;
+            return 0; // RE 2
         }
         // break; //unreachable code
-      case 3: // The final state.
+    case 3: // The final state.
         break;
-      default:
+    default:
         // Any other state is not possible.
         sc_assert((0 <= state) && (state <= 3));
     } // switch
     return 0;
 }
-
 
 // Get base b and sign s of the number in the char string v. Return a
 // pointer to the first char after the point where b and s are
@@ -216,9 +257,9 @@ get_base_and_sign(const char *v, small_type &b, small_type &s)
         } else {
             nskip += fsm_move(*u, b, s, state);
             if (state == STATE_FINISH)
-              break;
+                break;
             else
-              ++u;
+                ++u;
         }
     }
 
@@ -253,16 +294,16 @@ get_base_and_sign(const char *v, small_type &b, small_type &s)
 // Result is true if value was non-zero.
 //-----------------------------------------------------------------------------
 void
-parse_binary_bits(const char *src_p, int dst_n,
-                  sc_digit *data_p, sc_digit *ctrl_p)
+parse_binary_bits(const char *src_p, int dst_n, sc_digit *data_p,
+                  sc_digit *ctrl_p)
 {
-    int bit_i; // Number of bit now processing.
+    int bit_i;     // Number of bit now processing.
     sc_digit ctrl; // Control word now assembling.
     sc_digit data; // Data word now assembling.
-    int delta_n; // src_n - dst_n*BITS_PER_DIGIT.
-    int src_i; // Index in src_p now accessing (left to right).
-    int src_n; // Length of source that is left in bits.
-    int word_i; // Bit within word now accessing (left to right).
+    int delta_n;   // src_n - dst_n*BITS_PER_DIGIT.
+    int src_i;     // Index in src_p now accessing (left to right).
+    int src_n;     // Length of source that is left in bits.
+    int word_i;    // Bit within word now accessing (left to right).
 
     // MAKE SURE WE HAVE A STRING TO PARSE:
     if (src_p == 0) {
@@ -276,13 +317,12 @@ parse_binary_bits(const char *src_p, int dst_n,
         return;
     }
 
-
     // INDEX INTO THE SOURCE TO A DEPTH THAT WILL ACCOMODATE OUR SIZE:
     //
     // If the source is smaller than our value initialize our value to zero.
 
     src_n = strlen(src_p);
-    delta_n = src_n - (dst_n*BITS_PER_DIGIT);
+    delta_n = src_n - (dst_n * BITS_PER_DIGIT);
     if (delta_n > 0) {
         src_p = &src_p[delta_n];
         src_n -= delta_n;
@@ -300,7 +340,7 @@ parse_binary_bits(const char *src_p, int dst_n,
     // Each of those chunks is processed from left to right a bit at a time.
     // We process the high order word specially, since there are less bits.
     src_n = src_n - BITS_PER_DIGIT;
-    for (word_i=0; word_i < dst_n; word_i++) {
+    for (word_i = 0; word_i < dst_n; word_i++) {
         src_i = src_n;
 
         // PARTIAL LAST WORD TO ASSEMBLE:
@@ -312,22 +352,27 @@ parse_binary_bits(const char *src_p, int dst_n,
                 ctrl = ctrl << 1;
                 data = data << 1;
                 switch (src_p[src_i]) {
-                  case 'X':
-                  case 'x': ctrl = ctrl | 1; data = data | 1; break;
-                  case '1': data = data | 1; break;
-                  case 'Z':
-                  case 'z': ctrl = ctrl | 1; break;
-                  case '0': break;
-                  default:
-                    {
-                        std::stringstream msg;
-                        msg << "character string '" << src_p <<
-                               "' is not valid";
-                        SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
-                                        msg.str().c_str());
-                        return;
-                    }
+                case 'X':
+                case 'x':
+                    ctrl = ctrl | 1;
+                    data = data | 1;
                     break;
+                case '1':
+                    data = data | 1;
+                    break;
+                case 'Z':
+                case 'z':
+                    ctrl = ctrl | 1;
+                    break;
+                case '0':
+                    break;
+                default: {
+                    std::stringstream msg;
+                    msg << "character string '" << src_p << "' is not valid";
+                    SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
+                                    msg.str().c_str());
+                    return;
+                } break;
                 }
             }
             if (ctrl_p)
@@ -343,22 +388,27 @@ parse_binary_bits(const char *src_p, int dst_n,
             ctrl = ctrl << 1;
             data = data << 1;
             switch (src_p[src_i++]) {
-              case 'X':
-              case 'x': ctrl = ctrl | 1; data = data | 1; break;
-              case '1': data = data | 1; break;
-              case 'Z':
-              case 'z': ctrl = ctrl | 1; break;
-              case '0': break;
-              default:
-                {
-                    std::stringstream msg;
-                    msg << "character string '" << src_p <<
-                           "' is not valid";
-                    SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
-                                    msg.str().c_str());
-                    return;
-                }
+            case 'X':
+            case 'x':
+                ctrl = ctrl | 1;
+                data = data | 1;
                 break;
+            case '1':
+                data = data | 1;
+                break;
+            case 'Z':
+            case 'z':
+                ctrl = ctrl | 1;
+                break;
+            case '0':
+                break;
+            default: {
+                std::stringstream msg;
+                msg << "character string '" << src_p << "' is not valid";
+                SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
+                                msg.str().c_str());
+                return;
+            } break;
             }
         }
         if (ctrl_p)
@@ -367,7 +417,6 @@ parse_binary_bits(const char *src_p, int dst_n,
         src_n = src_n - BITS_PER_DIGIT;
     }
 }
-
 
 //-----------------------------------------------------------------------------
 //"parse_hex_bits"
@@ -382,16 +431,16 @@ parse_binary_bits(const char *src_p, int dst_n,
 // Result is true if value was non-zero.
 //-----------------------------------------------------------------------------
 void
-parse_hex_bits(const char *src_p, int dst_n,
-               sc_digit *data_p, sc_digit *ctrl_p)
+parse_hex_bits(const char *src_p, int dst_n, sc_digit *data_p,
+               sc_digit *ctrl_p)
 {
     sc_digit ctrl; // Control word now assembling.
     sc_digit data; // Data word now assembling.
-    int delta_n; // src_n - dst_n*BITS_PER_DIGIT.
-    int digit_i; // Number of digit now processing.
-    int src_i; // Index in src_p now accessing (left to right).
-    int src_n; // Length of source that is left in bits.
-    int word_i; // Bit within word now accessing (left to right).
+    int delta_n;   // src_n - dst_n*BITS_PER_DIGIT.
+    int digit_i;   // Number of digit now processing.
+    int src_i;     // Index in src_p now accessing (left to right).
+    int src_n;     // Length of source that is left in bits.
+    int word_i;    // Bit within word now accessing (left to right).
 
     // MAKE SURE WE HAVE A STRING TO PARSE:
     if (src_p == 0) {
@@ -409,7 +458,7 @@ parse_hex_bits(const char *src_p, int dst_n,
     //
     // If the source is smaller than our value initialize our value to zero.
     src_n = strlen(src_p);
-    delta_n = src_n - (dst_n*8);
+    delta_n = src_n - (dst_n * 8);
     if (delta_n > 0) {
         src_p = &src_p[delta_n];
         src_n -= delta_n;
@@ -439,42 +488,75 @@ parse_hex_bits(const char *src_p, int dst_n,
                 ctrl = ctrl << 4;
                 data = data << 4;
                 switch (src_p[src_i]) {
-                  case 'X':
-                  case 'x': ctrl = ctrl | 15; data = data | 15; break;
-                  case 'F':
-                  case 'f': data = data | 15; break;
-                  case 'E':
-                  case 'e': data = data | 14; break;
-                  case 'D':
-                  case 'd': data = data | 13; break;
-                  case 'C':
-                  case 'c': data = data | 12; break;
-                  case 'B':
-                  case 'b': data = data | 11; break;
-                  case 'A':
-                  case 'a': data = data | 10; break;
-                  case '9': data = data |  9; break;
-                  case '8': data = data |  8; break;
-                  case '7': data = data |  7; break;
-                  case '6': data = data |  6; break;
-                  case '5': data = data |  5; break;
-                  case '4': data = data |  4; break;
-                  case '3': data = data |  3; break;
-                  case '2': data = data |  2; break;
-                  case '1': data = data |  1; break;
-                  case '0': break;
-                  case 'Z':
-                  case 'z': ctrl = ctrl | 15; break;
-                  default:
-                    {
-                        std::stringstream msg;
-                        msg << "character string '" << src_p <<
-                               "' is not valid";
-                        SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
-                                        msg.str().c_str());
-                        return;
-                    }
+                case 'X':
+                case 'x':
+                    ctrl = ctrl | 15;
+                    data = data | 15;
                     break;
+                case 'F':
+                case 'f':
+                    data = data | 15;
+                    break;
+                case 'E':
+                case 'e':
+                    data = data | 14;
+                    break;
+                case 'D':
+                case 'd':
+                    data = data | 13;
+                    break;
+                case 'C':
+                case 'c':
+                    data = data | 12;
+                    break;
+                case 'B':
+                case 'b':
+                    data = data | 11;
+                    break;
+                case 'A':
+                case 'a':
+                    data = data | 10;
+                    break;
+                case '9':
+                    data = data | 9;
+                    break;
+                case '8':
+                    data = data | 8;
+                    break;
+                case '7':
+                    data = data | 7;
+                    break;
+                case '6':
+                    data = data | 6;
+                    break;
+                case '5':
+                    data = data | 5;
+                    break;
+                case '4':
+                    data = data | 4;
+                    break;
+                case '3':
+                    data = data | 3;
+                    break;
+                case '2':
+                    data = data | 2;
+                    break;
+                case '1':
+                    data = data | 1;
+                    break;
+                case '0':
+                    break;
+                case 'Z':
+                case 'z':
+                    ctrl = ctrl | 15;
+                    break;
+                default: {
+                    std::stringstream msg;
+                    msg << "character string '" << src_p << "' is not valid";
+                    SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
+                                    msg.str().c_str());
+                    return;
+                } break;
                 }
             }
             if (ctrl_p)
@@ -490,41 +572,75 @@ parse_hex_bits(const char *src_p, int dst_n,
             ctrl = ctrl << 4;
             data = data << 4;
             switch (src_p[src_i++]) {
-              case 'X':
-              case 'x': ctrl = ctrl | 15; data = data | 15; break;
-              case 'F':
-              case 'f': data = data | 15; break;
-              case 'E':
-              case 'e': data = data | 14; break;
-              case 'D':
-              case 'd': data = data | 13; break;
-              case 'C':
-              case 'c': data = data | 12; break;
-              case 'B':
-              case 'b': data = data | 11; break;
-              case 'A':
-              case 'a': data = data | 10; break;
-              case '9': data = data |  9; break;
-              case '8': data = data |  8; break;
-              case '7': data = data |  7; break;
-              case '6': data = data |  6; break;
-              case '5': data = data |  5; break;
-              case '4': data = data |  4; break;
-              case '3': data = data |  3; break;
-              case '2': data = data |  2; break;
-              case '1': data = data |  1; break;
-              case '0': break;
-              case 'Z':
-              case 'z': ctrl = ctrl | 15; break;
-              default:
-                {
-                    std::stringstream msg;
-                    msg << "character string '" << src_p << "' is not valid";
-                    SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
-                                    msg.str().c_str() );
-                    return;
-                }
+            case 'X':
+            case 'x':
+                ctrl = ctrl | 15;
+                data = data | 15;
                 break;
+            case 'F':
+            case 'f':
+                data = data | 15;
+                break;
+            case 'E':
+            case 'e':
+                data = data | 14;
+                break;
+            case 'D':
+            case 'd':
+                data = data | 13;
+                break;
+            case 'C':
+            case 'c':
+                data = data | 12;
+                break;
+            case 'B':
+            case 'b':
+                data = data | 11;
+                break;
+            case 'A':
+            case 'a':
+                data = data | 10;
+                break;
+            case '9':
+                data = data | 9;
+                break;
+            case '8':
+                data = data | 8;
+                break;
+            case '7':
+                data = data | 7;
+                break;
+            case '6':
+                data = data | 6;
+                break;
+            case '5':
+                data = data | 5;
+                break;
+            case '4':
+                data = data | 4;
+                break;
+            case '3':
+                data = data | 3;
+                break;
+            case '2':
+                data = data | 2;
+                break;
+            case '1':
+                data = data | 1;
+                break;
+            case '0':
+                break;
+            case 'Z':
+            case 'z':
+                ctrl = ctrl | 15;
+                break;
+            default: {
+                std::stringstream msg;
+                msg << "character string '" << src_p << "' is not valid";
+                SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
+                                msg.str().c_str());
+                return;
+            } break;
             }
         }
         if (ctrl_p)
@@ -533,7 +649,6 @@ parse_hex_bits(const char *src_p, int dst_n,
         src_n = src_n - BITS_PER_DIGIT;
     }
 }
-
 
 // ----------------------------------------------------------------------------
 //  SECTION: Utility functions involving unsigned vectors.
@@ -544,7 +659,6 @@ parse_hex_bits(const char *src_p, int dst_n,
 small_type
 vec_from_str(int unb, int und, sc_digit *u, const char *v, sc_numrep base)
 {
-
 #ifdef DEBUG_SYSTEMC
     sc_assert((unb > 0) && (und > 0) && (u != NULL));
     sc_assert(v != NULL);
@@ -560,9 +674,9 @@ vec_from_str(int unb, int und, sc_digit *u, const char *v, sc_numrep base)
             b = base;
         } else {
             std::stringstream msg;
-            msg << "vec_from_str( int, int, sc_digit*, const char*, " <<
-                   "sc_numrep base ) : base = " << base <<
-                   " does not match the default base";
+            msg << "vec_from_str( int, int, sc_digit*, const char*, "
+                << "sc_numrep base ) : base = " << base
+                << " does not match the default base";
             SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
                             msg.str().c_str());
             return 0;
@@ -574,7 +688,7 @@ vec_from_str(int unb, int und, sc_digit *u, const char *v, sc_numrep base)
     char c;
     for (; (c = *v); ++v) {
         if (isalnum(c)) {
-            small_type val;  // Numeric value of a char.
+            small_type val; // Numeric value of a char.
 
             if (isalpha(c)) // Hex digit.
                 val = toupper(c) - 'A' + 10;
@@ -583,9 +697,9 @@ vec_from_str(int unb, int und, sc_digit *u, const char *v, sc_numrep base)
 
             if (val >= b) {
                 std::stringstream msg;
-                msg << "vec_from_str( int, int, sc_digit*, const char*, " <<
-                       "sc_numrep base ) : '" << *v << "' is not a valid " <<
-                       "digit in base " << b;
+                msg << "vec_from_str( int, int, sc_digit*, const char*, "
+                    << "sc_numrep base ) : '" << *v << "' is not a valid "
+                    << "digit in base " << b;
                 SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
                                 msg.str().c_str());
                 return 0;
@@ -598,9 +712,9 @@ vec_from_str(int unb, int und, sc_digit *u, const char *v, sc_numrep base)
                 vec_add_small_on(und, u, val);
         } else {
             std::stringstream msg;
-            msg << "vec_from_str( int, int, sc_digit*, const char*, " <<
-                   "sc_numrep base ) : '" << *v << "' is not a valid " <<
-                   "digit in base " << b;
+            msg << "vec_from_str( int, int, sc_digit*, const char*, "
+                << "sc_numrep base ) : '" << *v << "' is not a valid "
+                << "digit in base " << b;
             SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
                             msg.str().c_str());
             return 0;
@@ -609,7 +723,6 @@ vec_from_str(int unb, int und, sc_digit *u, const char *v, sc_numrep base)
 
     return convert_signed_SM_to_2C_to_SM(s, unb, und, u);
 }
-
 
 // All vec_ functions assume that the vector to hold the result,
 // called w, has sufficient length to hold the result. For efficiency
@@ -656,7 +769,6 @@ vec_add(int ulen, const sc_digit *u, int vlen, const sc_digit *v, sc_digit *w)
         (*w) = 1;
 }
 
-
 // Compute u += v, where u and v are vectors.
 // - ulen >= vlen
 void
@@ -688,7 +800,7 @@ vec_add_on(int ulen, sc_digit *ubegin, int vlen, const sc_digit *v)
         carry >>= BITS_PER_DIGIT;
     }
 
-#ifdef   DEBUG_SYSTEMC
+#ifdef DEBUG_SYSTEMC
     if (carry != 0) {
         SC_REPORT_WARNING(sc_core::SC_ID_WITHOUT_MESSAGE_,
                           "vec_add_on( int, sc_digit*, int, const "
@@ -697,7 +809,6 @@ vec_add_on(int ulen, sc_digit *ubegin, int vlen, const sc_digit *v)
     }
 #endif
 }
-
 
 // Compute u += v, where u and v are vectors.
 // - ulen < vlen
@@ -726,7 +837,7 @@ vec_add_on2(int ulen, sc_digit *ubegin, int,
         carry >>= BITS_PER_DIGIT;
     }
 
-#ifdef   DEBUG_SYSTEMC
+#ifdef DEBUG_SYSTEMC
     if (carry != 0) {
         SC_REPORT_WARNING(sc_core::SC_ID_WITHOUT_MESSAGE_,
                           "vec_add_on2( int, sc_digit*, int, const "
@@ -735,7 +846,6 @@ vec_add_on2(int ulen, sc_digit *ubegin, int,
     }
 #endif
 }
-
 
 // Compute w = u + v, where w and u are vectors, and v is a scalar.
 void
@@ -785,7 +895,7 @@ vec_add_small_on(int ulen, sc_digit *u, sc_digit v)
         v >>= BITS_PER_DIGIT;
     }
 
-#ifdef   DEBUG_SYSTEMC
+#ifdef DEBUG_SYSTEMC
     if (v != 0) {
         SC_REPORT_WARNING(sc_core::SC_ID_WITHOUT_MESSAGE_,
                           "vec_add_small_on( int, sc_digit*, unsigned "
@@ -852,7 +962,7 @@ vec_sub_on(int ulen, sc_digit *ubegin, int vlen, const sc_digit *v)
     const sc_digit *uend = (u + ulen);
     const sc_digit *vend = (v + vlen);
 
-    sc_digit borrow = 0;   // Also used as diff to save space.
+    sc_digit borrow = 0; // Also used as diff to save space.
 
     // Subtract along the shorter v.
     while (v < vend) {
@@ -887,7 +997,7 @@ vec_sub_on2(int ulen, sc_digit *ubegin, int vlen, const sc_digit *v)
     sc_digit *u = ubegin;
     const sc_digit *uend = (u + sc_min(ulen, vlen));
 
-    sc_digit borrow = 0;   // Also used as diff to save space.
+    sc_digit borrow = 0; // Also used as diff to save space.
 
     // Subtract along the shorter u.
     while (u < uend) {
@@ -929,7 +1039,7 @@ vec_sub_small(int ulen, const sc_digit *u, sc_digit v, sc_digit *w)
         borrow = 1 - (borrow >> BITS_PER_DIGIT);
     }
 
-#ifdef   DEBUG_SYSTEMC
+#ifdef DEBUG_SYSTEMC
     sc_assert(borrow == 0);
 #endif
 
@@ -937,7 +1047,6 @@ vec_sub_small(int ulen, const sc_digit *u, sc_digit v, sc_digit *w)
     while (u < uend)
         (*w++) = (*u++);
 }
-
 
 // Compute u -= v, where u is vectors, and v is a scalar.
 void
@@ -948,9 +1057,9 @@ vec_sub_small_on(int ulen, sc_digit *u, sc_digit v)
 #endif
 
     for (int i = 0; i < ulen; ++i) {
-      v = (u[i] + DIGIT_RADIX) - v;
-      u[i] = v & DIGIT_MASK;
-      v = 1 - (v >> BITS_PER_DIGIT);
+        v = (u[i] + DIGIT_RADIX) - v;
+        u[i] = v & DIGIT_MASK;
+        v = 1 - (v >> BITS_PER_DIGIT);
     }
 
 #ifdef DEBUG_SYSTEMC
@@ -963,62 +1072,61 @@ void
 vec_mul(int ulen, const sc_digit *u, int vlen, const sc_digit *vbegin,
         sc_digit *wbegin)
 {
+    /* Consider u = Ax + B and v = Cx + D where x is equal to
+       HALF_DIGIT_RADIX. In other words, A is the higher half of u and
+       B is the lower half of u. The interpretation for v is
+       similar. Then, we have the following picture:
 
-  /* Consider u = Ax + B and v = Cx + D where x is equal to
-     HALF_DIGIT_RADIX. In other words, A is the higher half of u and
-     B is the lower half of u. The interpretation for v is
-     similar. Then, we have the following picture:
+                u_h     u_l
+       u: -------- --------
+                 A        B
 
-              u_h     u_l
-     u: -------- --------
-               A        B
+                v_h     v_l
+       v: -------- --------
+                 C        D
 
-              v_h     v_l
-     v: -------- --------
-               C        D
+       result (d):
+       carry_before:                           -------- --------
+                                                carry_h  carry_l
+       result_before:        -------- -------- -------- --------
+                                 R1_h     R1_l     R0_h     R0_l
+                                               -------- --------
+                                                   BD_h     BD_l
+                                      -------- --------
+                                          AD_h     AD_l
+                                      -------- --------
+                                          BC_h     BC_l
+                             -------- --------
+                                 AC_h     AC_l
+       result_after:         -------- -------- -------- --------
+                                R1_h'    R1_l'    R0_h'    R0_l'
 
-     result (d):
-     carry_before:                           -------- --------
-                                              carry_h  carry_l
-     result_before:        -------- -------- -------- --------
-                               R1_h     R1_l     R0_h     R0_l
-                                             -------- --------
-                                                 BD_h     BD_l
-                                    -------- --------
-                                        AD_h     AD_l
-                                    -------- --------
-                                        BC_h     BC_l
-                           -------- --------
-                               AC_h     AC_l
-     result_after:         -------- -------- -------- --------
-                              R1_h'    R1_l'    R0_h'    R0_l'
+       prod_l = R0_h|R0_l + B * D  + 0|carry_l
+              = R0_h|R0_l + BD_h|BD_l + 0|carry_l
 
-     prod_l = R0_h|R0_l + B * D  + 0|carry_l
-            = R0_h|R0_l + BD_h|BD_l + 0|carry_l
+       prod_h = A * D + B * C + high_half(prod_l) + carry_h
+              = AD_h|AD_l + BC_h|BC_l + high_half(prod_l) + 0|carry_h
 
-     prod_h = A * D + B * C + high_half(prod_l) + carry_h
-            = AD_h|AD_l + BC_h|BC_l + high_half(prod_l) + 0|carry_h
+       carry = A * C + high_half(prod_h)
+             = AC_h|AC_l + high_half(prod_h)
 
-     carry = A * C + high_half(prod_h)
-           = AC_h|AC_l + high_half(prod_h)
+       R0_l' = low_half(prod_l)
 
-     R0_l' = low_half(prod_l)
+       R0_h' = low_half(prod_h)
 
-     R0_h' = low_half(prod_h)
+       R0 = high_half(prod_h)|low_half(prod_l)
 
-     R0 = high_half(prod_h)|low_half(prod_l)
+       where '|' is the concatenation operation and the suffixes 0 and 1
+       show the iteration number, i.e., 0 is the current iteration and 1
+       is the next iteration.
 
-     where '|' is the concatenation operation and the suffixes 0 and 1
-     show the iteration number, i.e., 0 is the current iteration and 1
-     is the next iteration.
+       NOTE: sc_max(prod_l, prod_h, carry) <= 2 * x^2 - 1, so any
+       of these numbers can be stored in a digit.
 
-     NOTE: sc_max(prod_l, prod_h, carry) <= 2 * x^2 - 1, so any
-     of these numbers can be stored in a digit.
-
-     NOTE: low_half(u) returns the lower BITS_PER_HALF_DIGIT of u,
-     whereas high_half(u) returns the rest of the bits, which may
-     contain more bits than BITS_PER_HALF_DIGIT.
-  */
+       NOTE: low_half(u) returns the lower BITS_PER_HALF_DIGIT of u,
+       whereas high_half(u) returns the rest of the bits, which may
+       contain more bits than BITS_PER_HALF_DIGIT.
+    */
 
 #ifdef DEBUG_SYSTEMC
     sc_assert((ulen > 0) && (u != NULL));
@@ -1031,9 +1139,9 @@ vec_mul(int ulen, const sc_digit *u, int vlen, const sc_digit *vbegin,
     const sc_digit *vend = (vbegin + vlen);
 
     while (u < uend) {
-        sc_digit u_h = (*u++); // A|B
+        sc_digit u_h = (*u++);        // A|B
         sc_digit u_l = low_half(u_h); // B
-        u_h = high_half(u_h); // A
+        u_h = high_half(u_h);         // A
 
 #ifdef DEBUG_SYSTEMC
         // The overflow bits must be zero.
@@ -1044,19 +1152,19 @@ vec_mul(int ulen, const sc_digit *u, int vlen, const sc_digit *vbegin,
         const sc_digit *v = vbegin;
 
         while (v < vend) {
-            sc_digit v_h = (*v++); // C|D
+            sc_digit v_h = (*v++);        // C|D
             sc_digit v_l = low_half(v_h); // D
 
             v_h = high_half(v_h); // C
 
-#ifdef   DEBUG_SYSTEMC
+#ifdef DEBUG_SYSTEMC
             // The overflow bits must be zero.
             sc_assert(v_h == (v_h & HALF_DIGIT_MASK));
 #endif
 
             sc_digit prod_l = (*w) + u_l * v_l + low_half(carry);
-            prod_h = u_h * v_l + u_l * v_h +
-                high_half(prod_l) + high_half(carry);
+            prod_h =
+                u_h * v_l + u_l * v_h + high_half(prod_l) + high_half(carry);
             (*w++) = concat(low_half(prod_h), low_half(prod_l));
             carry = u_h * v_h + high_half(prod_h);
         }
@@ -1105,7 +1213,7 @@ vec_mul_small_on(int ulen, sc_digit *u, sc_digit v)
     sc_assert((0 < v) && (v < HALF_DIGIT_RADIX));
 #endif
 
-#define   prod_h carry
+#define prod_h carry
     sc_digit carry = 0;
     for (int i = 0; i < ulen; ++i) {
 #ifdef DEBUG_SYSTEMC
@@ -1117,9 +1225,9 @@ vec_mul_small_on(int ulen, sc_digit *u, sc_digit v)
         u[i] = concat(low_half(prod_h), low_half(prod_l));
         carry = high_half(prod_h);
     }
-#undef   prod_h
+#undef prod_h
 
-#ifdef   DEBUG_SYSTEMC
+#ifdef DEBUG_SYSTEMC
     if (carry != 0) {
         SC_REPORT_WARNING(sc_core::SC_ID_WITHOUT_MESSAGE_,
                           "vec_mul_small_on( int, sc_digit*, unsigned "
@@ -1168,7 +1276,7 @@ vec_div_large(int ulen, const sc_digit *u, int vlen, const sc_digit *v,
     xlen = vec_to_char(ulen, u, xlen, x);
 
     // Skip all the leading zeros in x.
-    while ((--xlen >= 0) && (! x[xlen]))
+    while ((--xlen >= 0) && (!x[xlen]))
         continue;
     xlen++;
 
@@ -1176,7 +1284,7 @@ vec_div_large(int ulen, const sc_digit *u, int vlen, const sc_digit *v,
     ylen = vec_to_char(vlen, v, ylen, y);
 
     // Skip all the leading zeros in y.
-    while ((--ylen >= 0) && (! y[ylen]))
+    while ((--ylen >= 0) && (!y[ylen]))
         continue;
     ylen++;
 
@@ -1204,15 +1312,16 @@ vec_div_large(int ulen, const sc_digit *u, int vlen, const sc_digit *v,
         // following code assumes that sizeof(sc_digit) >= 3 BYTEs.
         int k2 = k + ylen;
 
-        qk = ((x[k2] << DOUBLE_BITS_PER_BYTE) +
-              (x[k2 - 1] << BITS_PER_BYTE) + x[k2 - 2]) / y2;
+        qk = ((x[k2] << DOUBLE_BITS_PER_BYTE) + (x[k2 - 1] << BITS_PER_BYTE) +
+              x[k2 - 2]) /
+             y2;
 
-        if (qk >= BYTE_RADIX) // qk cannot be larger than the largest
+        if (qk >= BYTE_RADIX)    // qk cannot be larger than the largest
             qk = BYTE_RADIX - 1; // digit in BYTE_RADIX.
 
         // q[k] = qk or qk - 1. The following if-statement determines which:
         if (qk) {
-            uchar *xk = (x + k);  // A shortcut for x[k].
+            uchar *xk = (x + k); // A shortcut for x[k].
 
             // x = x - y * qk :
             sc_digit carry = 0;
@@ -1221,8 +1330,8 @@ vec_div_large(int ulen, const sc_digit *u, int vlen, const sc_digit *v,
                 carry += y[i] * qk;
                 sc_digit diff = (xk[i] + BYTE_RADIX) - (carry & BYTE_MASK);
                 xk[i] = (uchar)(diff & BYTE_MASK);
-                carry = (carry >> BITS_PER_BYTE) +
-                    (1 - (diff >> BITS_PER_BYTE));
+                carry =
+                    (carry >> BITS_PER_BYTE) + (1 - (diff >> BITS_PER_BYTE));
             }
 
             // If carry, qk may be one too large.
@@ -1233,38 +1342,36 @@ vec_div_large(int ulen, const sc_digit *u, int vlen, const sc_digit *v,
                 carry = 1 - (carry >> BITS_PER_BYTE);
 
                 if (carry) {
+                    // qk was one too large, so decrement it.
+                    --qk;
 
-                  // qk was one too large, so decrement it.
-                  --qk;
+                    // Since qk was decreased by one, y must be added to x:
+                    // x = x - y * (qk - 1) = x - y * qk + y = x_above + y.
+                    carry = 0;
 
-                  // Since qk was decreased by one, y must be added to x:
-                  // x = x - y * (qk - 1) = x - y * qk + y = x_above + y.
-                  carry = 0;
+                    for (int i = 0; i < ylen; ++i) {
+                        carry += xk[i] + y[i];
+                        xk[i] = (uchar)(carry & BYTE_MASK);
+                        carry >>= BITS_PER_BYTE;
+                    }
 
-                  for (int i = 0; i < ylen; ++i) {
-                      carry += xk[i] + y[i];
-                      xk[i] = (uchar)(carry & BYTE_MASK);
-                      carry >>= BITS_PER_BYTE;
-                  }
+                    if (carry)
+                        xk[ylen] = (uchar)((xk[ylen] + 1) & BYTE_MASK);
 
-                  if (carry)
-                      xk[ylen] = (uchar)((xk[ylen] + 1) & BYTE_MASK);
-
-                }  // second if carry
-            }  // first if carry
-        }  // if qk
+                } // second if carry
+            }     // first if carry
+        }         // if qk
         q[k] = (uchar)qk;
-    }  // for k
+    } // for k
 
     // Set (sc_digit) w = (uchar) q.
     vec_from_char(xlen - ylen + 1, q, ulen, w);
 
 #ifndef SC_MAX_NBITS
-    delete [] x;
-    delete [] y;
-    delete [] q;
+    delete[] x;
+    delete[] y;
+    delete[] q;
 #endif
-
 }
 
 // Compute w = u / v, where u and w are vectors, and v is a scalar.
@@ -1318,9 +1425,9 @@ vec_div_small(int ulen, const sc_digit *u, sc_digit v, sc_digit *q)
 #endif
 
         sc_digit num = concat(r, high_half(u_AB)); // num = r|A
-        q_h = num / v; // C
-        num = concat((num % v), low_half(u_AB)); // num = (((r|A) % v)|B)
-        (*--q) = concat(q_h, num / v); // q = C|D
+        q_h = num / v;                             // C
+        num = concat((num % v), low_half(u_AB));   // num = (((r|A) % v)|B)
+        (*--q) = concat(q_h, num / v);             // q = C|D
         r = num % v;
     }
 #undef q_h
@@ -1393,15 +1500,16 @@ vec_rem_large(int ulen, const sc_digit *u, int vlen, const sc_digit *v,
         // following code assumes that sizeof(sc_digit) >= 3 BYTEs.
         int k2 = k + ylen;
 
-        qk = ((x[k2] << DOUBLE_BITS_PER_BYTE) +
-            (x[k2 - 1] << BITS_PER_BYTE) + x[k2 - 2]) / y2;
+        qk = ((x[k2] << DOUBLE_BITS_PER_BYTE) + (x[k2 - 1] << BITS_PER_BYTE) +
+              x[k2 - 2]) /
+             y2;
 
-        if (qk >= BYTE_RADIX) // qk cannot be larger than the largest
+        if (qk >= BYTE_RADIX)    // qk cannot be larger than the largest
             qk = BYTE_RADIX - 1; // digit in BYTE_RADIX.
 
         // q[k] = qk or qk - 1. The following if-statement determines which.
         if (qk) {
-            uchar *xk = (x + k);  // A shortcut for x[k].
+            uchar *xk = (x + k); // A shortcut for x[k].
 
             // x = x - y * qk;
             sc_digit carry = 0;
@@ -1410,8 +1518,8 @@ vec_rem_large(int ulen, const sc_digit *u, int vlen, const sc_digit *v,
                 carry += y[i] * qk;
                 sc_digit diff = (xk[i] + BYTE_RADIX) - (carry & BYTE_MASK);
                 xk[i] = (uchar)(diff & BYTE_MASK);
-                carry = (carry >> BITS_PER_BYTE) +
-                    (1 - (diff >> BITS_PER_BYTE));
+                carry =
+                    (carry >> BITS_PER_BYTE) + (1 - (diff >> BITS_PER_BYTE));
             }
 
             if (carry) {
@@ -1421,33 +1529,32 @@ vec_rem_large(int ulen, const sc_digit *u, int vlen, const sc_digit *v,
                 carry = 1 - (carry >> BITS_PER_BYTE);
 
                 if (carry) {
-                  // qk was one too large, so decrement it.
-                  // --qk;
+                    // qk was one too large, so decrement it.
+                    // --qk;
 
-                  // x = x - y * (qk - 1) = x - y * qk + y = x_above + y.
-                  carry = 0;
+                    // x = x - y * (qk - 1) = x - y * qk + y = x_above + y.
+                    carry = 0;
 
-                  for (int i = 0; i < ylen; ++i) {
-                      carry += xk[i] + y[i];
-                      xk[i] = (uchar)(carry & BYTE_MASK);
-                      carry >>= BITS_PER_BYTE;
-                  }
+                    for (int i = 0; i < ylen; ++i) {
+                        carry += xk[i] + y[i];
+                        xk[i] = (uchar)(carry & BYTE_MASK);
+                        carry >>= BITS_PER_BYTE;
+                    }
 
-                  if (carry)
-                      xk[ylen] = (uchar)((xk[ylen] + 1) & BYTE_MASK);
-                }  // second if carry
-            } // first if carry
-        }  // if qk
-    }  // for k
+                    if (carry)
+                        xk[ylen] = (uchar)((xk[ylen] + 1) & BYTE_MASK);
+                } // second if carry
+            }     // first if carry
+        }         // if qk
+    }             // for k
 
     // Set (sc_digit) w = (uchar) x for the remainder.
     vec_from_char(ylen, x, ulen, w);
 
 #ifndef SC_MAX_NBITS
-    delete [] x;
-    delete [] y;
+    delete[] x;
+    delete[] y;
 #endif
-
 }
 
 // Compute r = u % v, where u is a vector, and r and v are scalars.
@@ -1456,7 +1563,6 @@ vec_rem_large(int ulen, const sc_digit *u, int vlen, const sc_digit *v,
 sc_digit
 vec_rem_small(int ulen, const sc_digit *u, sc_digit v)
 {
-
 #ifdef DEBUG_SYSTEMC
     sc_assert((ulen > 0) && (u != NULL));
     sc_assert((0 < v) && (v < HALF_DIGIT_RADIX));
@@ -1503,9 +1609,9 @@ vec_rem_on_small(int ulen, sc_digit *u, sc_digit v)
         sc_assert(high_half(u_AB) == high_half_masked(u_AB));
 #endif
         sc_digit num = concat(r, high_half(u_AB)); // num = r|A
-        q_h = num / v; // C
-        num = concat((num % v), low_half(u_AB)); // num = (((r|A) % v)|B)
-        (*u) = concat(q_h, num / v); // q = C|D
+        q_h = num / v;                             // C
+        num = concat((num % v), low_half(u_AB));   // num = (((r|A) % v)|B)
+        (*u) = concat(q_h, num / v);               // q = C|D
         r = num % v;
     }
 #undef q_h
@@ -1562,7 +1668,7 @@ vec_from_char(int ulen, const uchar *u, int vlen, sc_digit *v)
     const int nsr = BITS_PER_DIGIT - BITS_PER_BYTE;
     const sc_digit mask = one_and_ones(nsr);
 
-    (*v) = (sc_digit) u[ulen - 1];
+    (*v) = (sc_digit)u[ulen - 1];
 
     for (int i = ulen - 2; i >= 0; --i) {
         // Manual inlining of vec_shift_left().
@@ -1594,7 +1700,7 @@ vec_shift_left(int ulen, sc_digit *u, int nsl)
         return;
 
     // Shift left whole digits if nsl is large enough.
-    if (nsl >= (int) BITS_PER_DIGIT) {
+    if (nsl >= (int)BITS_PER_DIGIT) {
         int nd;
         if (nsl % BITS_PER_DIGIT == 0) {
             nd = nsl / BITS_PER_DIGIT; // No need to use DIV_CEIL(nsl).
@@ -1648,7 +1754,7 @@ vec_shift_right(int ulen, sc_digit *u, int nsr, sc_digit fill)
         return;
 
     // Shift right whole digits if nsr is large enough.
-    if (nsr >= (int) BITS_PER_DIGIT) {
+    if (nsr >= (int)BITS_PER_DIGIT) {
         int nd;
         if (nsr % BITS_PER_DIGIT == 0) {
             nd = nsr / BITS_PER_DIGIT;
@@ -1664,14 +1770,14 @@ vec_shift_right(int ulen, sc_digit *u, int nsr, sc_digit fill)
                 u[j] = u[j + nd];
 
             if (fill) {
-                for (int j = ulen - sc_min( nd, ulen ); j < ulen; ++j)
+                for (int j = ulen - sc_min(nd, ulen); j < ulen; ++j)
                     u[j] = fill;
             } else {
-                vec_zero(ulen - sc_min( nd, ulen ), ulen, u);
+                vec_zero(ulen - sc_min(nd, ulen), ulen, u);
             }
         }
         if (nsr == 0)
-          return;
+            return;
     }
 
     // Shift right if nsr < BITS_PER_DIGIT.
@@ -1690,7 +1796,6 @@ vec_shift_right(int ulen, sc_digit *u, int nsr, sc_digit fill)
     }
 }
 
-
 // Let u[l..r], where l and r are left and right bit positions
 // respectively, be equal to its mirror image.
 void
@@ -1703,9 +1808,10 @@ vec_reverse(int unb, int und, sc_digit *ud, int l, int r)
 
     if (l < r) {
         std::stringstream msg;
-        msg << "vec_reverse( int, int, sc_digit*, int l, int r ) : " <<
-               "l = " << l << " < r = " << r << " is not valid",
-        SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_, msg.str().c_str());
+        msg << "vec_reverse( int, int, sc_digit*, int l, int r ) : "
+            << "l = " << l << " < r = " << r << " is not valid",
+            SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
+                            msg.str().c_str());
         return;
     }
 
@@ -1727,23 +1833,24 @@ vec_reverse(int unb, int und, sc_digit *ud, int l, int r)
     // in ud.
     for (int i = l, j = r; i >= r; --i, ++j) {
         if ((d[digit_ord(i)] & one_and_zeros(bit_ord(i))) != 0) // Test.
-            ud[digit_ord(j)] |= one_and_zeros(bit_ord(j)); // Set.
+            ud[digit_ord(j)] |= one_and_zeros(bit_ord(j));      // Set.
         else
             ud[digit_ord(j)] &= ~(one_and_zeros(bit_ord(j))); // Clear.
     }
 
 #ifndef SC_MAX_NBITS
-    delete [] d;
+    delete[] d;
 #endif
 }
 
 #ifdef SC_MAX_NBITS
-void test_bound_failed(int nb)
+void
+test_bound_failed(int nb)
 {
     std::stringstream msg;
     msg << "test_bound( int nb ) : "
-           "nb = " << nb << " > SC_MAX_NBITS = " << SC_MAX_NBITS <<
-           "  is not valid";
+           "nb = "
+        << nb << " > SC_MAX_NBITS = " << SC_MAX_NBITS << "  is not valid";
     SC_REPORT_ERROR(sc_core::SC_ID_OUT_OF_BOUNDS_, msg.str().c_str());
 }
 #endif // SC_MAX_NBITS

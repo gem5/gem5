@@ -71,9 +71,7 @@ class SimulatorThreads
     SimulatorThreads &operator=(SimulatorThreads &) = delete;
 
     SimulatorThreads(uint32_t num_queues)
-        : terminate(false),
-          numQueues(num_queues),
-          barrier(num_queues)
+        : terminate(false), numQueues(num_queues), barrier(num_queues)
     {
         threads.reserve(num_queues);
     }
@@ -90,7 +88,8 @@ class SimulatorThreads
         terminateThreads();
     }
 
-    void runUntilLocalExit()
+    void
+    runUntilLocalExit()
     {
         assert(!terminate);
 
@@ -101,9 +100,8 @@ class SimulatorThreads
             // We'll call these the "subordinate" threads.
             for (uint32_t i = 1; i < numQueues; i++) {
                 threads.emplace_back(
-                    [this](EventQueue *eq) {
-                        thread_main(eq);
-                    }, mainEventQueue[i]);
+                    [this](EventQueue *eq) { thread_main(eq); },
+                    mainEventQueue[i]);
             }
         }
 
@@ -169,7 +167,8 @@ static std::unique_ptr<SimulatorThreads> simulatorThreads;
 
 struct DescheduleDeleter
 {
-    void operator()(BaseGlobalEvent *event)
+    void
+    operator()(BaseGlobalEvent *event)
     {
         if (!event)
             return;
@@ -184,7 +183,8 @@ struct DescheduleDeleter
  * via the 'set_max_tick' function prior. This function is exported to Python.
  * @return The SimLoopExitEvent that caused the loop to exit.
  */
-GlobalSimLoopExitEvent *global_exit_event= nullptr;
+GlobalSimLoopExitEvent *global_exit_event = nullptr;
+
 GlobalSimLoopExitEvent *
 simulate(Tick num_cycles)
 {
@@ -192,7 +192,7 @@ simulate(Tick num_cycles)
     // Note: This should be done before initializing the threads
     initSigInt();
 
-    if (global_exit_event)//cleaning last global exit event
+    if (global_exit_event) // cleaning last global exit event
         global_exit_event->clean();
     std::unique_ptr<GlobalSyncEvent, DescheduleDeleter> quantum_event;
 
@@ -211,7 +211,8 @@ simulate(Tick num_cycles)
         // Note: This will override any prior set max_tick behaviour (such as
         // that above when it is set to MAxTick).
         const Tick max_tick = num_cycles < MaxTick - curTick() ?
-                                    curTick() + num_cycles : MaxTick;
+                                  curTick() + num_cycles :
+                                  MaxTick;
 
         // This is kept to `set_max_tick` instead of `schedule_tick_exit` to
         // preserve backwards functionality. It may be better to deprecate this
@@ -243,25 +244,24 @@ simulate(Tick num_cycles)
     BaseGlobalEvent *global_event = local_event->globalEvent();
     assert(global_event);
 
-    global_exit_event =
-        dynamic_cast<GlobalSimLoopExitEvent *>(global_event);
+    global_exit_event = dynamic_cast<GlobalSimLoopExitEvent *>(global_event);
     assert(global_exit_event);
 
     return global_exit_event;
 }
 
-void set_max_tick(Tick tick)
+void
+set_max_tick(Tick tick)
 {
     if (!simulate_limit_event) {
         simulate_limit_event = new GlobalSimLoopExitEvent(
-            mainEventQueue[0]->getCurTick(),
-            "simulate() limit reached", 0);
+            mainEventQueue[0]->getCurTick(), "simulate() limit reached", 0);
     }
     simulate_limit_event->reschedule(tick);
 }
 
-
-Tick get_max_tick()
+Tick
+get_max_tick()
 {
     if (!simulate_limit_event) {
         /* If the GlobalSimLoopExitEvent has not been setup, the maximum tick
@@ -278,7 +278,6 @@ terminateEventQueueThreads()
 {
     simulatorThreads->terminateThreads();
 }
-
 
 /**
  * The main per-thread simulation loop. This loop is executed by all

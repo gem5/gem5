@@ -73,13 +73,14 @@ class FrequentValues : public Base
 
       public:
         FrequentValuesListener(FrequentValues &_parent, ProbeManager *pm,
-            const std::string &name)
-          : ProbeListenerArgBase(pm, name), parent(_parent)
-        {
-        }
+                               const std::string &name)
+            : ProbeListenerArgBase(pm, name), parent(_parent)
+        {}
+
         void notify(const DataUpdate &data_update) override;
     };
-    std::vector<FrequentValuesListener*> listeners;
+
+    std::vector<FrequentValuesListener *> listeners;
 
     /** Whether Huffman encoding is applied to the VFT indices. */
     const bool useHuffmanEncoding;
@@ -109,7 +110,13 @@ class FrequentValues : public Base
      * The phase that the compressor is at. It assumes that sampling and
      * code generation are done only once.
      */
-    enum Phase {SAMPLING, CODE_GENERATION, COMPRESSING};
+    enum Phase
+    {
+        SAMPLING,
+        CODE_GENERATION,
+        COMPRESSING
+    };
+
     Phase phase;
 
     class VFTEntry : public TaggedEntry
@@ -130,9 +137,8 @@ class FrequentValues : public Base
         SatCounter32 counter;
 
         VFTEntry(std::size_t num_bits)
-          : TaggedEntry(), value(0), counter(num_bits)
-        {
-        }
+            : TaggedEntry(), value(0), counter(num_bits)
+        {}
 
         void
         invalidate() override
@@ -165,17 +171,16 @@ class FrequentValues : public Base
      * @param data The line being sampled.
      * @param is_invalidation whether this event comes from an invalidation.
      */
-    void sampleValues(const std::vector<uint64_t> &data,
-        bool is_invalidation);
+    void sampleValues(const std::vector<uint64_t> &data, bool is_invalidation);
 
     /** End sampling phase and start the code generation. */
     void generateCodes();
 
-    std::unique_ptr<Base::CompressionData> compress(
-        const std::vector<Chunk>& chunks, Cycles& comp_lat,
-        Cycles& decomp_lat) override;
+    std::unique_ptr<Base::CompressionData>
+    compress(const std::vector<Chunk> &chunks, Cycles &comp_lat,
+             Cycles &decomp_lat) override;
 
-    void decompress(const CompressionData* comp_data, uint64_t* data) override;
+    void decompress(const CompressionData *comp_data, uint64_t *data) override;
 
   public:
     typedef FrequentValuesCompressorParams Params;
@@ -211,9 +216,8 @@ class FrequentValues::CompData : public CompressionData
         uint64_t value;
 
         CompressedValue(encoder::Code _code, uint64_t _value)
-          : code(_code), value(_value)
-        {
-        }
+            : code(_code), value(_value)
+        {}
     };
 
     /**

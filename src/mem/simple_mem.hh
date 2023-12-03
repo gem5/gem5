@@ -66,40 +66,35 @@ namespace memory
  */
 class SimpleMemory : public AbstractMemory
 {
-
   private:
-
     /**
      * A deferred packet stores a packet along with its scheduled
      * transmission time
      */
     class DeferredPacket
     {
-
       public:
-
         const Tick tick;
         const PacketPtr pkt;
 
-        DeferredPacket(PacketPtr _pkt, Tick _tick) : tick(_tick), pkt(_pkt)
-        { }
+        DeferredPacket(PacketPtr _pkt, Tick _tick) : tick(_tick), pkt(_pkt) {}
     };
 
     class MemoryPort : public ResponsePort
     {
       private:
-        SimpleMemory& mem;
+        SimpleMemory &mem;
 
       public:
-        MemoryPort(const std::string& _name, SimpleMemory& _memory);
+        MemoryPort(const std::string &_name, SimpleMemory &_memory);
 
       protected:
         Tick recvAtomic(PacketPtr pkt) override;
-        Tick recvAtomicBackdoor(
-                PacketPtr pkt, MemBackdoorPtr &_backdoor) override;
+        Tick recvAtomicBackdoor(PacketPtr pkt,
+                                MemBackdoorPtr &_backdoor) override;
         void recvFunctional(PacketPtr pkt) override;
         void recvMemBackdoorReq(const MemBackdoorReq &req,
-                MemBackdoorPtr &backdoor) override;
+                                MemBackdoorPtr &backdoor) override;
         bool recvTimingReq(PacketPtr pkt) override;
         void recvRespRetry() override;
         AddrRangeList getAddrRanges() const override;
@@ -180,13 +175,12 @@ class SimpleMemory : public AbstractMemory
     std::unique_ptr<Packet> pendingDelete;
 
   public:
-
     SimpleMemory(const SimpleMemoryParams &p);
 
     DrainState drain() override;
 
     Port &getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID) override;
+                  PortID idx = InvalidPortID) override;
     void init() override;
 
   protected:
@@ -194,7 +188,7 @@ class SimpleMemory : public AbstractMemory
     Tick recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &_backdoor);
     void recvFunctional(PacketPtr pkt);
     void recvMemBackdoorReq(const MemBackdoorReq &req,
-            MemBackdoorPtr &backdoor);
+                            MemBackdoorPtr &backdoor);
     bool recvTimingReq(PacketPtr pkt);
     void recvRespRetry();
 };

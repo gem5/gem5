@@ -102,52 +102,67 @@ class VirtIOConsole : public VirtIODeviceBase
     static const FeatureBits F_MULTIPORT = 0x02;
     /** @} */
 
-
   protected:
     /**
      * Virtqueue for data going from the host to the guest.
      */
-    class TermRecvQueue
-        : public VirtQueue
+    class TermRecvQueue : public VirtQueue
     {
       public:
-        TermRecvQueue(PortProxy &proxy, ByteOrder bo,
-                uint16_t size, VirtIOConsole &_parent)
-            : VirtQueue(proxy, bo, size), parent(_parent) {}
+        TermRecvQueue(PortProxy &proxy, ByteOrder bo, uint16_t size,
+                      VirtIOConsole &_parent)
+            : VirtQueue(proxy, bo, size), parent(_parent)
+        {}
+
         virtual ~TermRecvQueue() {}
 
-        void onNotify() { trySend(); }
+        void
+        onNotify()
+        {
+            trySend();
+        }
 
         /** Try to send data pending data from the terminal. */
         void trySend();
 
-        std::string name() const { return parent.name() + ".qRecv"; }
+        std::string
+        name() const
+        {
+            return parent.name() + ".qRecv";
+        }
 
       protected:
         VirtIOConsole &parent;
     };
+
     /** Receive queue for port 0 */
     TermRecvQueue qRecv;
 
     /**
      * Virtqueue for data going from the guest to the host.
      */
-    class TermTransQueue
-        : public VirtQueue
+    class TermTransQueue : public VirtQueue
     {
       public:
-        TermTransQueue(PortProxy &proxy, ByteOrder bo,
-                uint16_t size, VirtIOConsole &_parent)
-            : VirtQueue(proxy, bo, size), parent(_parent) {}
+        TermTransQueue(PortProxy &proxy, ByteOrder bo, uint16_t size,
+                       VirtIOConsole &_parent)
+            : VirtQueue(proxy, bo, size), parent(_parent)
+        {}
+
         virtual ~TermTransQueue() {}
 
         void onNotifyDescriptor(VirtDescriptor *desc);
 
-        std::string name() const { return parent.name() + ".qTrans"; }
+        std::string
+        name() const
+        {
+            return parent.name() + ".qTrans";
+        }
 
       protected:
         VirtIOConsole &parent;
     };
+
     /** Transmit queue for port 0 */
     TermTransQueue qTrans;
 

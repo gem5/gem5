@@ -40,8 +40,9 @@ namespace gem5
 typedef RubyTester::SenderState SenderState;
 
 Check::Check(Addr address, Addr pc, int _num_writers, int _num_readers,
-             RubyTester* _tester)
-    : m_num_writers(_num_writers), m_num_readers(_num_readers),
+             RubyTester *_tester)
+    : m_num_writers(_num_writers),
+      m_num_readers(_num_readers),
       m_tester_ptr(_tester)
 {
     m_status = ruby::TesterStatus_Idle;
@@ -87,7 +88,7 @@ Check::initiatePrefetch()
     DPRINTF(RubyTest, "initiating prefetch\n");
 
     int index = random_mt.random(0, m_num_readers - 1);
-    RequestPort* port = m_tester_ptr->getReadableCpuPort(index);
+    RequestPort *port = m_tester_ptr->getReadableCpuPort(index);
 
     Request::Flags flags;
     flags.set(Request::PREFETCH);
@@ -110,8 +111,8 @@ Check::initiatePrefetch()
     }
 
     // Prefetches are assumed to be 0 sized
-    RequestPtr req = std::make_shared<Request>(
-            m_address, 0, flags, m_tester_ptr->requestorId());
+    RequestPtr req = std::make_shared<Request>(m_address, 0, flags,
+                                               m_tester_ptr->requestorId());
     req->setPC(m_pc);
     req->setContext(index);
 
@@ -141,16 +142,15 @@ Check::initiatePrefetch()
 void
 Check::initiateFlush()
 {
-
     DPRINTF(RubyTest, "initiating Flush\n");
 
     int index = random_mt.random(0, m_num_writers - 1);
-    RequestPort* port = m_tester_ptr->getWritableCpuPort(index);
+    RequestPort *port = m_tester_ptr->getWritableCpuPort(index);
 
     Request::Flags flags;
 
-    RequestPtr req = std::make_shared<Request>(
-            m_address, CHECK_SIZE, flags, m_tester_ptr->requestorId());
+    RequestPtr req = std::make_shared<Request>(m_address, CHECK_SIZE, flags,
+                                               m_tester_ptr->requestorId());
     req->setPC(m_pc);
 
     Packet::Command cmd;
@@ -175,7 +175,7 @@ Check::initiateAction()
     assert(m_status == ruby::TesterStatus_Idle);
 
     int index = random_mt.random(0, m_num_writers - 1);
-    RequestPort* port = m_tester_ptr->getWritableCpuPort(index);
+    RequestPort *port = m_tester_ptr->getWritableCpuPort(index);
 
     Request::Flags flags;
 
@@ -183,8 +183,8 @@ Check::initiateAction()
     Addr writeAddr(m_address + m_store_count);
 
     // Stores are assumed to be 1 byte-sized
-    RequestPtr req = std::make_shared<Request>(
-        writeAddr, 1, flags, m_tester_ptr->requestorId());
+    RequestPtr req = std::make_shared<Request>(writeAddr, 1, flags,
+                                               m_tester_ptr->requestorId());
     req->setPC(m_pc);
 
     req->setContext(index);
@@ -236,7 +236,7 @@ Check::initiateCheck()
     assert(m_status == ruby::TesterStatus_Ready);
 
     int index = random_mt.random(0, m_num_readers - 1);
-    RequestPort* port = m_tester_ptr->getReadableCpuPort(index);
+    RequestPort *port = m_tester_ptr->getReadableCpuPort(index);
 
     Request::Flags flags;
 
@@ -248,8 +248,8 @@ Check::initiateCheck()
     }
 
     // Checks are sized depending on the number of bytes written
-    RequestPtr req = std::make_shared<Request>(
-            m_address, CHECK_SIZE, flags, m_tester_ptr->requestorId());
+    RequestPtr req = std::make_shared<Request>(m_address, CHECK_SIZE, flags,
+                                               m_tester_ptr->requestorId());
     req->setPC(m_pc);
 
     req->setContext(index);
@@ -284,7 +284,7 @@ Check::initiateCheck()
 }
 
 void
-Check::performCallback(ruby::NodeID proc, ruby::SubBlock* data, Cycles curTime)
+Check::performCallback(ruby::NodeID proc, ruby::SubBlock *data, Cycles curTime)
 {
     Addr address = data->getAddress();
 
@@ -316,7 +316,7 @@ Check::performCallback(ruby::NodeID proc, ruby::SubBlock* data, Cycles curTime)
     } else if (m_status == ruby::TesterStatus_Check_Pending) {
         DPRINTF(RubyTest, "Check callback\n");
         // Perform load/check
-        for (int byte_number=0; byte_number<CHECK_SIZE; byte_number++) {
+        for (int byte_number = 0; byte_number < CHECK_SIZE; byte_number++) {
             if (uint8_t(m_value + byte_number) != data->getByte(byte_number)) {
                 panic("Action/check failure: proc: %d address: %#x data: %s "
                       "byte_number: %d m_value+byte_number: %d byte: %d %s"
@@ -338,7 +338,8 @@ Check::performCallback(ruby::NodeID proc, ruby::SubBlock* data, Cycles curTime)
 
     } else {
         panic("Unexpected TesterStatus: %s proc: %d data: %s m_status: %s "
-              "time: %d\n", *this, proc, data, m_status, curTime);
+              "time: %d\n",
+              *this, proc, data, m_status, curTime);
     }
 
     DPRINTF(RubyTest, "proc: %d, Address: 0x%x\n", proc,
@@ -351,7 +352,7 @@ void
 Check::changeAddress(Addr address)
 {
     assert(m_status == ruby::TesterStatus_Idle ||
-        m_status == ruby::TesterStatus_Ready);
+           m_status == ruby::TesterStatus_Ready);
     m_status = ruby::TesterStatus_Idle;
     m_address = address;
     DPRINTF(RubyTest, "Check %#x, State=Idle\n", m_address);
@@ -370,7 +371,7 @@ void
 Check::pickInitiatingNode()
 {
     assert(m_status == ruby::TesterStatus_Idle ||
-        m_status == ruby::TesterStatus_Ready);
+           m_status == ruby::TesterStatus_Ready);
     m_status = ruby::TesterStatus_Idle;
     m_initiatingNode = (random_mt.random(0, m_num_writers - 1));
     DPRINTF(RubyTest, "Check %#x, State=Idle, picked initiating node %d\n",
@@ -379,25 +380,23 @@ Check::pickInitiatingNode()
 }
 
 void
-Check::print(std::ostream& out) const
+Check::print(std::ostream &out) const
 {
-    out << "["
-        << m_address << ", value: "
-        << (int)m_value << ", status: "
-        << m_status << ", initiating node: "
-        << m_initiatingNode << ", store_count: "
-        << m_store_count
-        << "]" << std::flush;
+    out << "[" << m_address << ", value: " << (int)m_value
+        << ", status: " << m_status
+        << ", initiating node: " << m_initiatingNode
+        << ", store_count: " << m_store_count << "]" << std::flush;
 }
 
 void
 Check::debugPrint()
 {
-    DPRINTF(RubyTest,
+    DPRINTF(
+        RubyTest,
         "[%#x, value: %d, status: %s, initiating node: %d, store_count: %d]\n",
         m_address, (int)m_value,
-        ruby::TesterStatus_to_string(m_status).c_str(),
-        m_initiatingNode, m_store_count);
+        ruby::TesterStatus_to_string(m_status).c_str(), m_initiatingNode,
+        m_store_count);
 }
 
 } // namespace gem5

@@ -54,6 +54,6 @@ void statsReset();
 void statsEnable();
 void statsPrepare();
 
-}
+} // namespace CxxConfig
 
 #endif // __UTIL_CXX_CONFIG_STATS_H__

@@ -89,7 +89,7 @@ MC146818::setTime(const struct tm time)
 }
 
 MC146818::MC146818(EventManager *em, const std::string &n,
-        const struct tm time, bool bcd, Tick frequency)
+                   const struct tm time, bool bcd, Tick frequency)
     : EventManager(em), _name(n), event(this, frequency), tickEvent(this)
 {
     memset(clock_data, 0, sizeof(clock_data));
@@ -116,8 +116,7 @@ MC146818::~MC146818()
 bool
 MC146818::rega_dv_disabled(const RtcRegA &reg)
 {
-    return reg.dv == RTCA_DV_DISABLED0 ||
-        reg.dv == RTCA_DV_DISABLED1;
+    return reg.dv == RTCA_DV_DISABLED0 || reg.dv == RTCA_DV_DISABLED1;
 }
 
 void
@@ -148,50 +147,51 @@ MC146818::writeData(const uint8_t addr, const uint8_t data)
         curTime.tm_wday = unbcdize(wday) - 1;
     } else {
         switch (addr) {
-          case RTC_STAT_REGA: {
-              RtcRegA old_rega(stat_regA);
-              stat_regA = data;
-              // The "update in progress" bit is read only.
-              stat_regA.uip = old_rega;
+        case RTC_STAT_REGA: {
+            RtcRegA old_rega(stat_regA);
+            stat_regA = data;
+            // The "update in progress" bit is read only.
+            stat_regA.uip = old_rega;
 
-              if (!rega_dv_disabled(stat_regA) &&
-                  stat_regA.dv != RTCA_DV_32768HZ) {
-                  inform("RTC: Unimplemented divider configuration: %i\n",
-                        stat_regA.dv);
-                  panic_unsupported = true;
-              }
+            if (!rega_dv_disabled(stat_regA) &&
+                stat_regA.dv != RTCA_DV_32768HZ) {
+                inform("RTC: Unimplemented divider configuration: %i\n",
+                       stat_regA.dv);
+                panic_unsupported = true;
+            }
 
-              if (stat_regA.rs != RTCA_RS_1024HZ) {
-                  inform("RTC: Unimplemented interrupt rate: %i\n",
-                        stat_regA.rs);
-                  panic_unsupported = true;
-              }
+            if (stat_regA.rs != RTCA_RS_1024HZ) {
+                inform("RTC: Unimplemented interrupt rate: %i\n",
+                       stat_regA.rs);
+                panic_unsupported = true;
+            }
 
-              if (rega_dv_disabled(stat_regA)) {
-                  // The divider is disabled, make sure that we don't
-                  // schedule any ticks.
-                  if (tickEvent.scheduled())
-                      deschedule(tickEvent);
-              } else if (rega_dv_disabled(old_rega))  {
-                  // According to the specification, the next tick
-                  // happens after 0.5s when the divider chain goes
-                  // from reset to active. So, we simply schedule the
-                  // tick after 0.5s.
-                  assert(!tickEvent.scheduled());
-                  schedule(tickEvent, curTick() + sim_clock::as_int::s / 2);
-              }
-          } break;
-          case RTC_STAT_REGB:
+            if (rega_dv_disabled(stat_regA)) {
+                // The divider is disabled, make sure that we don't
+                // schedule any ticks.
+                if (tickEvent.scheduled())
+                    deschedule(tickEvent);
+            } else if (rega_dv_disabled(old_rega)) {
+                // According to the specification, the next tick
+                // happens after 0.5s when the divider chain goes
+                // from reset to active. So, we simply schedule the
+                // tick after 0.5s.
+                assert(!tickEvent.scheduled());
+                schedule(tickEvent, curTick() + sim_clock::as_int::s / 2);
+            }
+        } break;
+        case RTC_STAT_REGB:
             stat_regB = data;
             if (stat_regB.aie || stat_regB.uie) {
                 inform("RTC: Unimplemented interrupt configuration: %s %s\n",
-                      stat_regB.aie ? "alarm" : "",
-                      stat_regB.uie ? "update" : "");
+                       stat_regB.aie ? "alarm" : "",
+                       stat_regB.uie ? "update" : "");
                 panic_unsupported = true;
             }
 
             if (stat_regB.dm) {
-                inform("RTC: The binary interface is not fully implemented.\n");
+                inform(
+                    "RTC: The binary interface is not fully implemented.\n");
                 panic_unsupported = true;
             }
 
@@ -213,8 +213,8 @@ MC146818::writeData(const uint8_t addr, const uint8_t data)
                     deschedule(event);
             }
             break;
-          case RTC_STAT_REGC:
-          case RTC_STAT_REGD:
+        case RTC_STAT_REGC:
+        case RTC_STAT_REGD:
             panic("RTC status registers C and D are not implemented.\n");
             break;
         }
@@ -222,7 +222,6 @@ MC146818::writeData(const uint8_t addr, const uint8_t data)
 
     if (panic_unsupported)
         panic("Unimplemented RTC configuration!\n");
-
 }
 
 uint8_t
@@ -232,20 +231,20 @@ MC146818::readData(uint8_t addr)
         return clock_data[addr];
     else {
         switch (addr) {
-          case RTC_STAT_REGA:
+        case RTC_STAT_REGA:
             // Linux after v5.10 checks this multiple times so toggling
             // leads to a deadlock on bootup.
             stat_regA.uip = 0;
             return stat_regA;
             break;
-          case RTC_STAT_REGB:
+        case RTC_STAT_REGB:
             return stat_regB;
             break;
-          case RTC_STAT_REGC:
-          case RTC_STAT_REGD:
+        case RTC_STAT_REGC:
+        case RTC_STAT_REGD:
             return 0x00;
             break;
-          default:
+        default:
             panic("Shouldn't be here");
         }
     }
@@ -288,8 +287,7 @@ MC146818::unserialize(const std::string &base, CheckpointIn &cp)
 {
     uint8_t tmp8;
 
-    arrayParamIn(cp, base + ".clock_data", clock_data,
-                 sizeof(clock_data));
+    arrayParamIn(cp, base + ".clock_data", clock_data, sizeof(clock_data));
 
     paramIn(cp, base + ".stat_regA", tmp8);
     stat_regA = tmp8;
@@ -307,7 +305,7 @@ MC146818::unserialize(const std::string &base, CheckpointIn &cp)
     tickEvent.offset = rtcClockTickOffset;
 }
 
-MC146818::RTCEvent::RTCEvent(MC146818 * _parent, Tick i)
+MC146818::RTCEvent::RTCEvent(MC146818 *_parent, Tick i)
     : parent(_parent), interval(i), offset(i)
 {
     DPRINTF(MC146818, "RTC Event Initilizing\n");

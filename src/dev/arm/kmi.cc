@@ -52,7 +52,10 @@ namespace gem5
 {
 
 Pl050::Pl050(const Pl050Params &p)
-    : AmbaIntDevice(p, 0x1000), control(0), status(0x43), clkdiv(0),
+    : AmbaIntDevice(p, 0x1000),
+      control(0),
+      status(0x43),
+      clkdiv(0),
       rawInterrupts(0),
       ps2Device(p.ps2)
 {
@@ -69,33 +72,33 @@ Pl050::read(PacketPtr pkt)
     uint32_t data = 0;
 
     switch (daddr) {
-      case kmiCr:
+    case kmiCr:
         DPRINTF(Pl050, "Read Commmand: %#x\n", (uint32_t)control);
         data = control;
         break;
 
-      case kmiStat:
+    case kmiStat:
         status.rxfull = ps2Device->hostDataAvailable() ? 1 : 0;
         DPRINTF(Pl050, "Read Status: %#x\n", (uint32_t)status);
         data = status;
         break;
 
-      case kmiData:
+    case kmiData:
         data = ps2Device->hostDataAvailable() ? ps2Device->hostRead() : 0;
         updateRxInt();
         DPRINTF(Pl050, "Read Data: %#x\n", (uint32_t)data);
         break;
 
-      case kmiClkDiv:
+    case kmiClkDiv:
         data = clkdiv;
         break;
 
-      case kmiISR:
+    case kmiISR:
         data = getInterrupt();
         DPRINTF(Pl050, "Read Interrupts: %#x\n", getInterrupt());
         break;
 
-      default:
+    default:
         if (readId(pkt, ambaId, pioAddr)) {
             // Hack for variable size accesses
             data = pkt->getUintX(ByteOrder::little);
@@ -114,7 +117,6 @@ Pl050::read(PacketPtr pkt)
 Tick
 Pl050::write(PacketPtr pkt)
 {
-
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
 
     Addr daddr = pkt->getAddr() - pioAddr;
@@ -126,14 +128,14 @@ Pl050::write(PacketPtr pkt)
              daddr, data, pkt->getSize());
 
     switch (daddr) {
-      case kmiCr:
+    case kmiCr:
         DPRINTF(Pl050, "Write Commmand: %#x\n", data);
         // Use the update interrupts helper to make sure any interrupt
         // mask changes are handled correctly.
         setControl((uint8_t)data);
         break;
 
-      case kmiData:
+    case kmiData:
         DPRINTF(Pl050, "Write Data: %#x\n", data);
         // Clear the TX interrupt before writing new data.
         setTxInt(false);
@@ -142,11 +144,11 @@ Pl050::write(PacketPtr pkt)
         setTxInt(true);
         break;
 
-      case kmiClkDiv:
+    case kmiClkDiv:
         clkdiv = (uint8_t)data;
         break;
 
-      default:
+    default:
         warn("PL050: Unhandled write of %#x to offset %#x\n", data, daddr);
         break;
     }

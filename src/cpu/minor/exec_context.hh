@@ -83,14 +83,9 @@ class ExecContext : public gem5::ExecContext
     /** Instruction for the benefit of memory operations and for PC */
     MinorDynInstPtr inst;
 
-    ExecContext (
-        MinorCPU &cpu_,
-        SimpleThread &thread_, Execute &execute_,
-        MinorDynInstPtr inst_) :
-        cpu(cpu_),
-        thread(thread_),
-        execute(execute_),
-        inst(inst_)
+    ExecContext(MinorCPU &cpu_, SimpleThread &thread_, Execute &execute_,
+                MinorDynInstPtr inst_)
+        : cpu(cpu_), thread(thread_), execute(execute_), inst(inst_)
     {
         DPRINTF(MinorExecute, "ExecContext setting PC: %s\n", *inst->pc);
         pcState(*inst->pc);
@@ -105,13 +100,13 @@ class ExecContext : public gem5::ExecContext
     }
 
     Fault
-    initiateMemRead(Addr addr, unsigned int size,
-                    Request::Flags flags,
-                    const std::vector<bool>& byte_enable) override
+    initiateMemRead(Addr addr, unsigned int size, Request::Flags flags,
+                    const std::vector<bool> &byte_enable) override
     {
         assert(byte_enable.size() == size);
         return execute.getLSQ().pushRequest(inst, true /* load */, nullptr,
-            size, addr, flags, nullptr, nullptr, byte_enable);
+                                            size, addr, flags, nullptr,
+                                            nullptr, byte_enable);
     }
 
     Fault
@@ -123,14 +118,13 @@ class ExecContext : public gem5::ExecContext
     }
 
     Fault
-    writeMem(uint8_t *data, unsigned int size, Addr addr,
-             Request::Flags flags, uint64_t *res,
-             const std::vector<bool>& byte_enable)
-        override
+    writeMem(uint8_t *data, unsigned int size, Addr addr, Request::Flags flags,
+             uint64_t *res, const std::vector<bool> &byte_enable) override
     {
         assert(byte_enable.size() == size);
         return execute.getLSQ().pushRequest(inst, false /* store */, data,
-            size, addr, flags, res, nullptr, byte_enable);
+                                            size, addr, flags, res, nullptr,
+                                            byte_enable);
     }
 
     Fault
@@ -138,9 +132,9 @@ class ExecContext : public gem5::ExecContext
                    AtomicOpFunctorPtr amo_op) override
     {
         // AMO requests are pushed through the store path
-        return execute.getLSQ().pushRequest(inst, false /* amo */, nullptr,
-            size, addr, flags, nullptr, std::move(amo_op),
-            std::vector<bool>(size, true));
+        return execute.getLSQ().pushRequest(
+            inst, false /* amo */, nullptr, size, addr, flags, nullptr,
+            std::move(amo_op), std::vector<bool>(size, true));
     }
 
     RegVal
@@ -269,7 +263,7 @@ class ExecContext : public gem5::ExecContext
     RegVal
     readMiscRegOperand(const StaticInst *si, int idx) override
     {
-        const RegId& reg = si->srcRegIdx(idx);
+        const RegId &reg = si->srcRegIdx(idx);
         assert(reg.is(MiscRegClass));
         return thread.readMiscReg(reg.index());
     }
@@ -277,18 +271,34 @@ class ExecContext : public gem5::ExecContext
     void
     setMiscRegOperand(const StaticInst *si, int idx, RegVal val) override
     {
-        const RegId& reg = si->destRegIdx(idx);
+        const RegId &reg = si->destRegIdx(idx);
         assert(reg.is(MiscRegClass));
         return thread.setMiscReg(reg.index(), val);
     }
 
-    ThreadContext *tcBase() const override { return thread.getTC(); }
+    ThreadContext *
+    tcBase() const override
+    {
+        return thread.getTC();
+    }
 
     /* @todo, should make stCondFailures persistent somewhere */
-    unsigned int readStCondFailures() const override { return 0; }
-    void setStCondFailures(unsigned int st_cond_failures) override {}
+    unsigned int
+    readStCondFailures() const override
+    {
+        return 0;
+    }
 
-    ContextID contextId() { return thread.contextId(); }
+    void
+    setStCondFailures(unsigned int st_cond_failures) override
+    {}
+
+    ContextID
+    contextId()
+    {
+        return thread.contextId();
+    }
+
     /* ISA-specific (or at least currently ISA singleton) functions */
 
     /* X86: TLB twiddling */
@@ -298,7 +308,11 @@ class ExecContext : public gem5::ExecContext
         thread.getMMUPtr()->demapPage(vaddr, asn);
     }
 
-    BaseCPU *getCpuPtr() { return &cpu; }
+    BaseCPU *
+    getCpuPtr()
+    {
+        return &cpu;
+    }
 
   public:
     // monitor/mwait funtions

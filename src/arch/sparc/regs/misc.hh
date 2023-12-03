@@ -42,8 +42,8 @@ namespace SparcISA
 enum MiscRegIndex
 {
     /** Ancillary State Registers */
-//    MISCREG_Y,
-//    MISCREG_CCR,
+    //    MISCREG_Y,
+    //    MISCREG_CCR,
     MISCREG_ASI,
     MISCREG_TICK,
     MISCREG_FPRS,
@@ -68,11 +68,11 @@ enum MiscRegIndex
     MISCREG_TL,
     MISCREG_PIL,
     MISCREG_CWP,
-//    MISCREG_CANSAVE,
-//    MISCREG_CANRESTORE,
-//    MISCREG_CLEANWIN,
-//    MISCREG_OTHERWIN,
-//    MISCREG_WSTATE,
+    //    MISCREG_CANSAVE,
+    //    MISCREG_CANRESTORE,
+    //    MISCREG_CLEANWIN,
+    //    MISCREG_OTHERWIN,
+    //    MISCREG_WSTATE,
     MISCREG_GL,
 
     /** Hyper privileged registers */
@@ -123,7 +123,7 @@ BitUnion64(HPSTATE)
     Bitfield<2> hpriv;
     Bitfield<5> red;
     Bitfield<10> ibe;
-    Bitfield<11> id;  // this impl. dependent (id) field m
+    Bitfield<11> id; // this impl. dependent (id) field m
 EndBitUnion(HPSTATE)
 
 BitUnion16(PSTATE)
@@ -155,27 +155,26 @@ EndBitUnion(CCR)
 
 struct STS
 {
-    const static int st_idle     = 0x00;
-    const static int st_wait     = 0x01;
-    const static int st_halt     = 0x02;
-    const static int st_run      = 0x05;
+    const static int st_idle = 0x00;
+    const static int st_wait = 0x01;
+    const static int st_halt = 0x02;
+    const static int st_run = 0x05;
     const static int st_spec_run = 0x07;
     const static int st_spec_rdy = 0x13;
-    const static int st_ready    = 0x19;
-    const static int active      = 0x01;
+    const static int st_ready = 0x19;
+    const static int active = 0x01;
     const static int speculative = 0x04;
-    const static int shft_id     = 8;
-    const static int shft_fsm0   = 31;
-    const static int shft_fsm1   = 26;
-    const static int shft_fsm2   = 21;
-    const static int shft_fsm3   = 16;
+    const static int shft_id = 8;
+    const static int shft_fsm0 = 31;
+    const static int shft_fsm1 = 26;
+    const static int shft_fsm2 = 21;
+    const static int shft_fsm3 = 16;
 };
-
 
 const int NumMiscRegs = MISCREG_NUMMISCREGS;
 
 inline constexpr RegClass miscRegClass(MiscRegClass, MiscRegClassName,
-        NumMiscRegs, debug::MiscRegs);
+                                       NumMiscRegs, debug::MiscRegs);
 
 } // namespace SparcISA
 } // namespace gem5

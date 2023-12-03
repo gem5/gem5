@@ -117,7 +117,6 @@ class CPU : public BaseCPU
     Status _status;
 
   private:
-
     /** The tick event used for scheduling CPU ticks. */
     EventFunctionWrapper tickEvent;
 
@@ -235,7 +234,11 @@ class CPU : public BaseCPU
     void updateThreadPriority();
 
     /** Is the CPU draining? */
-    bool isDraining() const { return drainState() == DrainState::Draining; }
+    bool
+    isDraining() const
+    {
+        return drainState() == DrainState::Draining;
+    }
 
     void serializeThread(CheckpointOut &cp, ThreadID tid) const override;
     void unserializeThread(CheckpointIn &cp, ThreadID tid) override;
@@ -281,7 +284,11 @@ class CPU : public BaseCPU
     void verifyMemoryMode() const override;
 
     /** Get the current instruction sequence number, and increment it. */
-    InstSeqNum getAndIncrementInstSeq() { return globalSeqNum++; }
+    InstSeqNum
+    getAndIncrementInstSeq()
+    {
+        return globalSeqNum++;
+    }
 
     /** Traps to handle given fault. */
     void trap(const Fault &fault, ThreadID tid, const StaticInstPtr &inst);
@@ -293,7 +300,11 @@ class CPU : public BaseCPU
     void processInterrupts(const Fault &interrupt);
 
     /** Halts the CPU. */
-    void halt() { panic("Halt not implemented!\n"); }
+    void
+    halt()
+    {
+        panic("Halt not implemented!\n");
+    }
 
     /** Register accessors.  Index refers to the physical register index. */
 
@@ -485,7 +496,11 @@ class CPU : public BaseCPU
 
   public:
     /** Records that there was time buffer activity this cycle. */
-    void activityThisCycle() { activityRec.activity(); }
+    void
+    activityThisCycle()
+    {
+        activityRec.activity();
+    }
 
     /** Changes a stage's status to active within the activity recorder. */
     void
@@ -518,7 +533,7 @@ class CPU : public BaseCPU
     }
 
     /** The global sequence number counter. */
-    InstSeqNum globalSeqNum;//[MaxThreads];
+    InstSeqNum globalSeqNum; //[MaxThreads];
 
     /** Pointer to the checker, which can dynamically verify
      * instruction results at run time.  This can be set to NULL if it
@@ -549,14 +564,14 @@ class CPU : public BaseCPU
 
     /** CPU pushRequest function, forwards request to LSQ. */
     Fault
-    pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
+    pushRequest(const DynInstPtr &inst, bool isLoad, uint8_t *data,
                 unsigned int size, Addr addr, Request::Flags flags,
                 uint64_t *res, AtomicOpFunctorPtr amo_op = nullptr,
-                const std::vector<bool>& byte_enable=std::vector<bool>())
+                const std::vector<bool> &byte_enable = std::vector<bool>())
 
     {
-        return iew.ldstQueue.pushRequest(inst, isLoad, data, size, addr,
-                flags, res, std::move(amo_op), byte_enable);
+        return iew.ldstQueue.pushRequest(inst, isLoad, data, size, addr, flags,
+                                         res, std::move(amo_op), byte_enable);
     }
 
     /** Used by the fetch unit to get a hold of the instruction port. */

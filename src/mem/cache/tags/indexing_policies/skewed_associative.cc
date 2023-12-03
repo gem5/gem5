@@ -45,14 +45,14 @@ SkewedAssociative::SkewedAssociative(const Params &p)
     : BaseIndexingPolicy(p), msbShift(floorLog2(numSets) - 1)
 {
     if (assoc > NUM_SKEWING_FUNCTIONS) {
-        warn_once("Associativity higher than number of skewing functions. " \
+        warn_once("Associativity higher than number of skewing functions. "
                   "Expect sub-optimal skewing.\n");
     }
 
     // Check if set is too big to do skewing. If using big sets, rewrite
     // skewing functions accordingly to make good use of the hashing function
-    panic_if(setShift + 2 * (msbShift + 1) > 64, "Unsuported number of bits " \
-             "for the skewing functions.");
+    panic_if(setShift + 2 * (msbShift + 1) > 64, "Unsuported number of bits "
+                                                 "for the skewing functions.");
 
     // We must have more than two sets, otherwise the MSB and LSB are the same
     // bit, and the xor of them will always be 0
@@ -100,38 +100,38 @@ SkewedAssociative::skew(const Addr addr, const uint32_t way) const
 
     // Select and apply skewing function for given way
     switch (way % NUM_SKEWING_FUNCTIONS) {
-      case 0:
+    case 0:
         addr1 = hash(addr1) ^ hash(addr2) ^ addr2;
         break;
-      case 1:
+    case 1:
         addr1 = hash(addr1) ^ hash(addr2) ^ addr1;
         break;
-      case 2:
+    case 2:
         addr1 = hash(addr1) ^ dehash(addr2) ^ addr2;
         break;
-      case 3:
+    case 3:
         addr1 = hash(addr1) ^ dehash(addr2) ^ addr1;
         break;
-      case 4:
+    case 4:
         addr1 = dehash(addr1) ^ hash(addr2) ^ addr2;
         break;
-      case 5:
+    case 5:
         addr1 = dehash(addr1) ^ hash(addr2) ^ addr1;
         break;
-      case 6:
+    case 6:
         addr1 = dehash(addr1) ^ dehash(addr2) ^ addr2;
         break;
-      case 7:
+    case 7:
         addr1 = dehash(addr1) ^ dehash(addr2) ^ addr1;
         break;
-      default:
+    default:
         panic("A skewing function has not been implemented for this way.");
     }
 
     // If we have more than 8 ways, just pile them up on hashes. This is not
     // the optimal solution, and can be improved by adding more skewing
     // functions to the previous selector
-    for (uint32_t i = 0; i < way/NUM_SKEWING_FUNCTIONS; i++) {
+    for (uint32_t i = 0; i < way / NUM_SKEWING_FUNCTIONS; i++) {
         addr1 = hash(addr1);
     }
 
@@ -147,46 +147,46 @@ SkewedAssociative::deskew(const Addr addr, const uint32_t way) const
 
     // If we have more than NUM_SKEWING_FUNCTIONS ways, unpile the hashes
     if (way >= NUM_SKEWING_FUNCTIONS) {
-        for (uint32_t i = 0; i < way/NUM_SKEWING_FUNCTIONS; i++) {
+        for (uint32_t i = 0; i < way / NUM_SKEWING_FUNCTIONS; i++) {
             addr1 = dehash(addr1);
         }
     }
 
     // Select and apply skewing function for given way
     switch (way % 8) {
-      case 0:
+    case 0:
         return dehash(addr1 ^ hash(addr2) ^ addr2);
-      case 1:
+    case 1:
         addr1 = addr1 ^ hash(addr2);
         for (int i = 0; i < msbShift; i++) {
             addr1 = hash(addr1);
         }
         return addr1;
-      case 2:
+    case 2:
         return dehash(addr1 ^ dehash(addr2) ^ addr2);
-      case 3:
+    case 3:
         addr1 = addr1 ^ dehash(addr2);
         for (int i = 0; i < msbShift; i++) {
             addr1 = hash(addr1);
         }
         return addr1;
-      case 4:
+    case 4:
         return hash(addr1 ^ hash(addr2) ^ addr2);
-      case 5:
+    case 5:
         addr1 = addr1 ^ hash(addr2);
         for (int i = 0; i <= msbShift; i++) {
             addr1 = hash(addr1);
         }
         return addr1;
-      case 6:
+    case 6:
         return hash(addr1 ^ dehash(addr2) ^ addr2);
-      case 7:
+    case 7:
         addr1 = addr1 ^ dehash(addr2);
         for (int i = 0; i <= msbShift; i++) {
             addr1 = hash(addr1);
         }
         return addr1;
-      default:
+    default:
         panic("A skewing function has not been implemented for this way.");
     }
 }
@@ -199,17 +199,17 @@ SkewedAssociative::extractSet(const Addr addr, const uint32_t way) const
 
 Addr
 SkewedAssociative::regenerateAddr(const Addr tag,
-                                  const ReplaceableEntry* entry) const
+                                  const ReplaceableEntry *entry) const
 {
     const Addr addr_set = (tag << (msbShift + 1)) | entry->getSet();
     return (tag << tagShift) |
            ((deskew(addr_set, entry->getWay()) & setMask) << setShift);
 }
 
-std::vector<ReplaceableEntry*>
+std::vector<ReplaceableEntry *>
 SkewedAssociative::getPossibleEntries(const Addr addr) const
 {
-    std::vector<ReplaceableEntry*> entries;
+    std::vector<ReplaceableEntry *> entries;
 
     // Parse all ways
     for (uint32_t way = 0; way < assoc; ++way) {

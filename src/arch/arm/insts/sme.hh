@@ -55,15 +55,18 @@ class SmeAddOp : public ArmStaticInst
     RegIndex gp1;
     RegIndex gp2;
 
-    SmeAddOp(const char *mnem, ExtMachInst _machInst,
-             OpClass __opClass, uint64_t _imm, RegIndex _op1,
-             RegIndex _gp1, RegIndex _gp2) :
-        ArmStaticInst(mnem, _machInst, __opClass),
-        imm(_imm), op1(_op1), gp1(_gp1), gp2(_gp2)
+    SmeAddOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+             uint64_t _imm, RegIndex _op1, RegIndex _gp1, RegIndex _gp2)
+        : ArmStaticInst(mnem, _machInst, __opClass),
+          imm(_imm),
+          op1(_op1),
+          gp1(_gp1),
+          gp2(_gp2)
     {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 // Used for the SME ADDSPL/ADDSVL instructions
@@ -74,15 +77,17 @@ class SmeAddVlOp : public ArmStaticInst
     RegIndex op1;
     int8_t imm;
 
-    SmeAddVlOp(const char *mnem, ExtMachInst _machInst,
-               OpClass __opClass, RegIndex _dest, RegIndex _op1,
-               int8_t _imm) :
-        ArmStaticInst(mnem, _machInst, __opClass),
-        dest(_dest), op1(_op1), imm(_imm)
+    SmeAddVlOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+               RegIndex _dest, RegIndex _op1, int8_t _imm)
+        : ArmStaticInst(mnem, _machInst, __opClass),
+          dest(_dest),
+          op1(_op1),
+          imm(_imm)
     {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 // Used for SME LD1x/ST1x instrucions
@@ -96,16 +101,21 @@ class SmeLd1xSt1xOp : public ArmStaticInst
     RegIndex op3;
     bool V;
 
-    SmeLd1xSt1xOp(const char *mnem, ExtMachInst _machInst,
-                    OpClass __opClass, uint64_t _imm, RegIndex _op1,
-                    RegIndex _gp, RegIndex _op2,
-                    RegIndex _op3, bool _V) :
-        ArmStaticInst(mnem, _machInst, __opClass),
-        imm(_imm), op1(_op1), gp(_gp), op2(_op2), op3(_op3), V(_V)
+    SmeLd1xSt1xOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+                  uint64_t _imm, RegIndex _op1, RegIndex _gp, RegIndex _op2,
+                  RegIndex _op3, bool _V)
+        : ArmStaticInst(mnem, _machInst, __opClass),
+          imm(_imm),
+          op1(_op1),
+          gp(_gp),
+          op2(_op2),
+          op3(_op3),
+          V(_V)
     {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 // Used for SME LDR/STR instructions
@@ -116,15 +126,17 @@ class SmeLdrStrOp : public ArmStaticInst
     RegIndex op1;
     RegIndex op2;
 
-    SmeLdrStrOp(const char *mnem, ExtMachInst _machInst,
-                OpClass __opClass, uint64_t _imm, RegIndex _op1,
-                RegIndex _op2) :
-        ArmStaticInst(mnem, _machInst, __opClass),
-        imm(_imm), op1(_op1), op2(_op2)
+    SmeLdrStrOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+                uint64_t _imm, RegIndex _op1, RegIndex _op2)
+        : ArmStaticInst(mnem, _machInst, __opClass),
+          imm(_imm),
+          op1(_op1),
+          op2(_op2)
     {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 // Used for SME MOVA (Tile to Vector)
@@ -137,15 +149,20 @@ class SmeMovExtractOp : public ArmStaticInst
     RegIndex op2;
     bool v;
 
-    SmeMovExtractOp(const char *mnem, ExtMachInst _machInst,
-                    OpClass __opClass, RegIndex _op1, uint8_t _imm,
-                    RegIndex _gp, RegIndex _op2, bool _v) :
-        ArmStaticInst(mnem, _machInst, __opClass),
-        op1(_op1), imm(_imm), gp(_gp), op2(_op2), v(_v)
+    SmeMovExtractOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+                    RegIndex _op1, uint8_t _imm, RegIndex _gp, RegIndex _op2,
+                    bool _v)
+        : ArmStaticInst(mnem, _machInst, __opClass),
+          op1(_op1),
+          imm(_imm),
+          gp(_gp),
+          op2(_op2),
+          v(_v)
     {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 // Used for SME MOVA (Vector to Tile)
@@ -158,15 +175,20 @@ class SmeMovInsertOp : public ArmStaticInst
     RegIndex op2;
     bool v;
 
-    SmeMovInsertOp(const char *mnem, ExtMachInst _machInst,
-                    OpClass __opClass, uint8_t _imm, RegIndex _op1,
-                    RegIndex _gp, RegIndex _op2, bool _v) :
-        ArmStaticInst(mnem, _machInst, __opClass),
-        imm(_imm), op1(_op1), gp(_gp), op2(_op2), v(_v)
+    SmeMovInsertOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+                   uint8_t _imm, RegIndex _op1, RegIndex _gp, RegIndex _op2,
+                   bool _v)
+        : ArmStaticInst(mnem, _machInst, __opClass),
+          imm(_imm),
+          op1(_op1),
+          gp(_gp),
+          op2(_op2),
+          v(_v)
     {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 // Used for SME output product instructions
@@ -180,14 +202,19 @@ class SmeOPOp : public ArmStaticInst
     RegIndex op2;
 
     SmeOPOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-            uint64_t _imm, RegIndex _op1, RegIndex _gp1,
-            RegIndex _gp2, RegIndex _op2) :
-        ArmStaticInst(mnem, _machInst, __opClass),
-        imm(_imm), op1(_op1), gp1(_gp1), gp2(_gp2), op2(_op2)
+            uint64_t _imm, RegIndex _op1, RegIndex _gp1, RegIndex _gp2,
+            RegIndex _op2)
+        : ArmStaticInst(mnem, _machInst, __opClass),
+          imm(_imm),
+          op1(_op1),
+          gp1(_gp1),
+          gp2(_gp2),
+          op2(_op2)
     {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 // Used for the SME RDSVL instruction
@@ -197,14 +224,14 @@ class SmeRdsvlOp : public ArmStaticInst
     RegIndex dest;
     int8_t imm;
 
-    SmeRdsvlOp(const char *mnem, ExtMachInst _machInst,
-               OpClass __opClass, RegIndex _dest, int8_t _imm) :
-        ArmStaticInst(mnem, _machInst, __opClass),
-        dest(_dest), imm(_imm)
+    SmeRdsvlOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+               RegIndex _dest, int8_t _imm)
+        : ArmStaticInst(mnem, _machInst, __opClass), dest(_dest), imm(_imm)
     {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 // Used for SME ZERO
@@ -213,17 +240,17 @@ class SmeZeroOp : public ArmStaticInst
   protected:
     uint8_t imm;
 
-    SmeZeroOp(const char *mnem, ExtMachInst _machInst,
-                OpClass __opClass, uint8_t _imm) :
-        ArmStaticInst(mnem, _machInst, __opClass),
-        imm(_imm)
+    SmeZeroOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+              uint8_t _imm)
+        : ArmStaticInst(mnem, _machInst, __opClass), imm(_imm)
     {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 } // namespace ArmISA
 } // namespace gem5
 
-#endif  // __ARCH_ARM_INSTS_SME_HH__
+#endif // __ARCH_ARM_INSTS_SME_HH__

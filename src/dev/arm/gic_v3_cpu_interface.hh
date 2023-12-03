@@ -58,16 +58,14 @@ class ISA;
 class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
 {
   private:
-
     friend class Gicv3Distributor;
     friend class Gicv3Redistributor;
     friend class ArmISA::ISA;
 
   protected:
-
-    Gicv3 * gic;
-    Gicv3Redistributor * redistributor;
-    Gicv3Distributor * distributor;
+    Gicv3 *gic;
+    Gicv3Redistributor *redistributor;
+    Gicv3Distributor *distributor;
 
     ThreadContext *tc;
     ArmInterruptPin *maintenanceInterrupt;
@@ -75,77 +73,77 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
 
     BitUnion64(ICC_CTLR_EL1)
         Bitfield<63, 20> res0_3;
-        Bitfield<19>     ExtRange;
-        Bitfield<18>     RSS;
+        Bitfield<19> ExtRange;
+        Bitfield<18> RSS;
         Bitfield<17, 16> res0_2;
-        Bitfield<15>     A3V;
-        Bitfield<14>     SEIS;
+        Bitfield<15> A3V;
+        Bitfield<14> SEIS;
         Bitfield<13, 11> IDbits;
-        Bitfield<10, 8>  PRIbits;
-        Bitfield<7>      res0_1;
-        Bitfield<6>      PMHE;
-        Bitfield<5, 2>   res0_0;
-        Bitfield<1>      EOImode;
-        Bitfield<0>      CBPR;
+        Bitfield<10, 8> PRIbits;
+        Bitfield<7> res0_1;
+        Bitfield<6> PMHE;
+        Bitfield<5, 2> res0_0;
+        Bitfield<1> EOImode;
+        Bitfield<0> CBPR;
     EndBitUnion(ICC_CTLR_EL1)
 
     BitUnion64(ICC_CTLR_EL3)
         Bitfield<63, 20> res0_2;
-        Bitfield<19>     ExtRange;
-        Bitfield<18>     RSS;
-        Bitfield<17>     nDS;
-        Bitfield<16>     res0_1;
-        Bitfield<15>     A3V;
-        Bitfield<14>     SEIS;
+        Bitfield<19> ExtRange;
+        Bitfield<18> RSS;
+        Bitfield<17> nDS;
+        Bitfield<16> res0_1;
+        Bitfield<15> A3V;
+        Bitfield<14> SEIS;
         Bitfield<13, 11> IDbits;
-        Bitfield<10, 8>  PRIbits;
-        Bitfield<7>      res0_0;
-        Bitfield<6>      PMHE;
-        Bitfield<5>      RM;
-        Bitfield<4>      EOImode_EL1NS;
-        Bitfield<3>      EOImode_EL1S;
-        Bitfield<2>      EOImode_EL3;
-        Bitfield<1>      CBPR_EL1NS;
-        Bitfield<0>      CBPR_EL1S;
+        Bitfield<10, 8> PRIbits;
+        Bitfield<7> res0_0;
+        Bitfield<6> PMHE;
+        Bitfield<5> RM;
+        Bitfield<4> EOImode_EL1NS;
+        Bitfield<3> EOImode_EL1S;
+        Bitfield<2> EOImode_EL3;
+        Bitfield<1> CBPR_EL1NS;
+        Bitfield<0> CBPR_EL1S;
     EndBitUnion(ICC_CTLR_EL3)
 
     BitUnion64(ICC_IGRPEN0_EL1)
         Bitfield<63, 1> res0;
-        Bitfield<0>     Enable;
+        Bitfield<0> Enable;
     EndBitUnion(ICC_IGRPEN0_EL1)
 
     BitUnion64(ICC_IGRPEN1_EL1)
         Bitfield<63, 1> res0;
-        Bitfield<0>     Enable;
+        Bitfield<0> Enable;
     EndBitUnion(ICC_IGRPEN1_EL1)
 
     BitUnion64(ICC_IGRPEN1_EL3)
         Bitfield<63, 2> res0;
-        Bitfield<1>     EnableGrp1S;
-        Bitfield<0>     EnableGrp1NS;
+        Bitfield<1> EnableGrp1S;
+        Bitfield<0> EnableGrp1NS;
     EndBitUnion(ICC_IGRPEN1_EL3)
 
     BitUnion64(ICC_SRE_EL1)
         Bitfield<63, 3> res0;
-        Bitfield<2>     DIB;
-        Bitfield<1>     DFB;
-        Bitfield<0>     SRE;
+        Bitfield<2> DIB;
+        Bitfield<1> DFB;
+        Bitfield<0> SRE;
     EndBitUnion(ICC_SRE_EL1)
 
     BitUnion64(ICC_SRE_EL2)
         Bitfield<63, 4> res0;
-        Bitfield<3>     Enable;
-        Bitfield<2>     DIB;
-        Bitfield<1>     DFB;
-        Bitfield<0>     SRE;
+        Bitfield<3> Enable;
+        Bitfield<2> DIB;
+        Bitfield<1> DFB;
+        Bitfield<0> SRE;
     EndBitUnion(ICC_SRE_EL2)
 
     BitUnion64(ICC_SRE_EL3)
         Bitfield<63, 4> res0;
-        Bitfield<3>     Enable;
-        Bitfield<2>     DIB;
-        Bitfield<1>     DFB;
-        Bitfield<0>     SRE;
+        Bitfield<3> Enable;
+        Bitfield<2> DIB;
+        Bitfield<1> DFB;
+        Bitfield<0> SRE;
     EndBitUnion(ICC_SRE_EL3)
 
     static const uint8_t PRIORITY_BITS = 5;
@@ -155,9 +153,9 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
     //  Minimum BPR for Nonsecure when security is enabled
     static const uint8_t GIC_MIN_BPR_NS = GIC_MIN_BPR + 1;
 
-    static const uint8_t VIRTUAL_PRIORITY_BITS   = 5;
+    static const uint8_t VIRTUAL_PRIORITY_BITS = 5;
     static const uint8_t VIRTUAL_PREEMPTION_BITS = 5;
-    static const uint8_t VIRTUAL_NUM_LIST_REGS   = 16;
+    static const uint8_t VIRTUAL_NUM_LIST_REGS = 16;
 
     static const uint8_t GIC_MIN_VBPR = 7 - VIRTUAL_PREEMPTION_BITS;
 
@@ -173,19 +171,19 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
     // GIC CPU interface memory mapped control registers (legacy)
     enum
     {
-        GICC_CTLR    = 0x0000,
-        GICC_PMR     = 0x0004,
-        GICC_BPR     = 0x0008,
-        GICC_IAR     = 0x000C,
-        GICC_EOIR    = 0x0010,
-        GICC_RPR     = 0x0014,
-        GICC_HPPI    = 0x0018,
-        GICC_ABPR    = 0x001C,
-        GICC_AIAR    = 0x0020,
-        GICC_AEOIR   = 0x0024,
-        GICC_AHPPIR  = 0x0028,
+        GICC_CTLR = 0x0000,
+        GICC_PMR = 0x0004,
+        GICC_BPR = 0x0008,
+        GICC_IAR = 0x000C,
+        GICC_EOIR = 0x0010,
+        GICC_RPR = 0x0014,
+        GICC_HPPI = 0x0018,
+        GICC_ABPR = 0x001C,
+        GICC_AIAR = 0x0020,
+        GICC_AEOIR = 0x0024,
+        GICC_AHPPIR = 0x0028,
         GICC_STATUSR = 0x002C,
-        GICC_IIDR    = 0x00FC,
+        GICC_IIDR = 0x00FC,
     };
 
     static const AddrRange GICC_APR;
@@ -194,11 +192,11 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
     // GIC CPU virtual interface memory mapped control registers (legacy)
     enum
     {
-        GICH_HCR   = 0x0000,
-        GICH_VTR   = 0x0004,
-        GICH_VMCR  = 0x0008,
-        GICH_MISR  = 0x0010,
-        GICH_EISR  = 0x0020,
+        GICH_HCR = 0x0000,
+        GICH_VTR = 0x0004,
+        GICH_VMCR = 0x0008,
+        GICH_MISR = 0x0010,
+        GICH_EISR = 0x0020,
         GICH_ELRSR = 0x0030,
     };
 
@@ -210,61 +208,61 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
         Bitfield<63, 32> res0_2;
         Bitfield<31, 27> EOIcount;
         Bitfield<26, 15> res0_1;
-        Bitfield<14>     TDIR;
-        Bitfield<13>     TSEI;
-        Bitfield<12>     TALL1;
-        Bitfield<11>     TALL0;
-        Bitfield<10>     TC;
-        Bitfield<9, 8>   res0_0;
-        Bitfield<7>      VGrp1DIE;
-        Bitfield<6>      VGrp1EIE;
-        Bitfield<5>      VGrp0DIE;
-        Bitfield<4>      VGrp0EIE;
-        Bitfield<3>      NPIE;
-        Bitfield<2>      LRENPIE;
-        Bitfield<1>      UIE;
-        Bitfield<0>      En;
+        Bitfield<14> TDIR;
+        Bitfield<13> TSEI;
+        Bitfield<12> TALL1;
+        Bitfield<11> TALL0;
+        Bitfield<10> TC;
+        Bitfield<9, 8> res0_0;
+        Bitfield<7> VGrp1DIE;
+        Bitfield<6> VGrp1EIE;
+        Bitfield<5> VGrp0DIE;
+        Bitfield<4> VGrp0EIE;
+        Bitfield<3> NPIE;
+        Bitfield<2> LRENPIE;
+        Bitfield<1> UIE;
+        Bitfield<0> En;
     EndBitUnion(ICH_HCR_EL2)
 
   protected:
     BitUnion64(ICH_LR_EL2)
         Bitfield<63, 62> State;
-        Bitfield<61>     HW;
-        Bitfield<60>     Group;
+        Bitfield<61> HW;
+        Bitfield<60> Group;
         Bitfield<59, 56> res0_1;
         Bitfield<55, 48> Priority;
         Bitfield<47, 45> res0_0;
         Bitfield<44, 32> pINTID;
-        Bitfield<41>     EOI;
-        Bitfield<31, 0>  vINTID;
+        Bitfield<41> EOI;
+        Bitfield<31, 0> vINTID;
     EndBitUnion(ICH_LR_EL2)
 
-    static const uint64_t ICH_LR_EL2_STATE_INVALID        = 0;
-    static const uint64_t ICH_LR_EL2_STATE_PENDING        = 1;
-    static const uint64_t ICH_LR_EL2_STATE_ACTIVE         = 2;
+    static const uint64_t ICH_LR_EL2_STATE_INVALID = 0;
+    static const uint64_t ICH_LR_EL2_STATE_PENDING = 1;
+    static const uint64_t ICH_LR_EL2_STATE_ACTIVE = 2;
     static const uint64_t ICH_LR_EL2_STATE_ACTIVE_PENDING = 3;
 
     BitUnion32(ICH_LRC)
         Bitfield<31, 30> State;
-        Bitfield<29>     HW;
-        Bitfield<28>     Group;
+        Bitfield<29> HW;
+        Bitfield<28> Group;
         Bitfield<27, 24> res0_1;
         Bitfield<23, 16> Priority;
         Bitfield<15, 13> res0_0;
-        Bitfield<12, 0>  pINTID;
-        Bitfield<9>      EOI;
+        Bitfield<12, 0> pINTID;
+        Bitfield<9> EOI;
     EndBitUnion(ICH_LRC)
 
     BitUnion64(ICH_MISR_EL2)
         Bitfield<63, 8> res0;
-        Bitfield<7>     VGrp1D;
-        Bitfield<6>     VGrp1E;
-        Bitfield<5>     VGrp0D;
-        Bitfield<4>     VGrp0E;
-        Bitfield<3>     NP;
-        Bitfield<2>     LRENP;
-        Bitfield<1>     U;
-        Bitfield<0>     EOI;
+        Bitfield<7> VGrp1D;
+        Bitfield<6> VGrp1E;
+        Bitfield<5> VGrp0D;
+        Bitfield<4> VGrp0E;
+        Bitfield<3> NP;
+        Bitfield<2> LRENP;
+        Bitfield<1> U;
+        Bitfield<0> EOI;
     EndBitUnion(ICH_MISR_EL2)
 
     BitUnion64(ICH_VMCR_EL2)
@@ -273,13 +271,13 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
         Bitfield<23, 21> VBPR0;
         Bitfield<20, 18> VBPR1;
         Bitfield<17, 10> res0_1;
-        Bitfield<9>      VEOIM;
-        Bitfield<8, 5>   res0_0;
-        Bitfield<4>      VCBPR;
-        Bitfield<3>      VFIQEn;
-        Bitfield<2>      VAckCtl;
-        Bitfield<1>      VENG1;
-        Bitfield<0>      VENG0;
+        Bitfield<9> VEOIM;
+        Bitfield<8, 5> res0_0;
+        Bitfield<4> VCBPR;
+        Bitfield<3> VFIQEn;
+        Bitfield<2> VAckCtl;
+        Bitfield<1> VENG1;
+        Bitfield<0> VENG0;
     EndBitUnion(ICH_VMCR_EL2)
 
     BitUnion64(ICH_VTR_EL2)
@@ -287,29 +285,28 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
         Bitfield<31, 29> PRIbits;
         Bitfield<28, 26> PREbits;
         Bitfield<25, 23> IDbits;
-        Bitfield<22>     SEIS;
-        Bitfield<21>     A3V;
-        Bitfield<20>     res1;
-        Bitfield<19>     TDS;
-        Bitfield<18, 5>  res0_0;
-        Bitfield<4, 0>   ListRegs;
+        Bitfield<22> SEIS;
+        Bitfield<21> A3V;
+        Bitfield<20> res1;
+        Bitfield<19> TDS;
+        Bitfield<18, 5> res0_0;
+        Bitfield<4, 0> ListRegs;
     EndBitUnion(ICH_VTR_EL2)
 
     BitUnion64(ICV_CTLR_EL1)
         Bitfield<63, 19> res0_2;
-        Bitfield<18>     RSS;
+        Bitfield<18> RSS;
         Bitfield<17, 16> res0_1;
-        Bitfield<15>     A3V;
-        Bitfield<14>     SEIS;
+        Bitfield<15> A3V;
+        Bitfield<14> SEIS;
         Bitfield<13, 11> IDbits;
-        Bitfield<10, 8>  PRIbits;
-        Bitfield<7, 2>   res0_0;
-        Bitfield<1>      EOImode;
-        Bitfield<0>      CBPR;
+        Bitfield<10, 8> PRIbits;
+        Bitfield<7, 2> res0_0;
+        Bitfield<1> EOImode;
+        Bitfield<0> CBPR;
     EndBitUnion(ICV_CTLR_EL1)
 
   protected:
-
     void activateIRQ(uint32_t intid, Gicv3::GroupId group);
     void generateSGI(RegVal val, Gicv3::GroupId group);
     ArmISA::ExceptionLevel currEL() const;
@@ -336,8 +333,8 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
     bool isSecureBelowEL3() const;
     ICH_MISR_EL2 maintenanceInterruptStatus() const;
     void resetHppi(uint32_t intid);
-    void serialize(CheckpointOut & cp) const override;
-    void unserialize(CheckpointIn & cp) override;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
     void update();
     void updateDistributor();
     void virtualActivateIRQ(uint32_t lrIdx);
@@ -357,9 +354,9 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
 
     RegVal readBankedMiscReg(ArmISA::MiscRegIndex misc_reg) const;
     void setBankedMiscReg(ArmISA::MiscRegIndex misc_reg, RegVal val) const;
-  public:
 
-    Gicv3CPUInterface(Gicv3 * gic, ThreadContext *tc);
+  public:
+    Gicv3CPUInterface(Gicv3 *gic, ThreadContext *tc);
 
     void init();
 

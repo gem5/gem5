@@ -104,8 +104,8 @@ CfiMemory::ProgramBuffer::setup(ssize_t buffer_size)
 }
 
 bool
-CfiMemory::ProgramBuffer::write(Addr flash_address,
-    void *data_ptr, ssize_t size)
+CfiMemory::ProgramBuffer::write(Addr flash_address, void *data_ptr,
+                                ssize_t size)
 {
     if (bytesWritten >= buffer.size())
         return true;
@@ -132,7 +132,7 @@ CfiMemory::ProgramBuffer::writeback()
         return false;
     } else {
         std::memcpy(parent.toHostAddr(parent.start() + blockPointer),
-            buffer.data(), bytesWritten);
+                    buffer.data(), bytesWritten);
         return true;
     }
 }
@@ -154,75 +154,82 @@ CfiMemory::ProgramBuffer::unserialize(CheckpointIn &cp)
 }
 
 CfiMemory::CfiMemory(const CfiMemoryParams &p)
-  : AbstractMemory(p),
-    port(name() + ".port", *this), latency(p.latency),
-    latency_var(p.latency_var), bandwidth(p.bandwidth), isBusy(false),
-    retryReq(false), retryResp(false),
-    releaseEvent([this]{ release(); }, name()),
-    dequeueEvent([this]{ dequeue(); }, name()),
-    numberOfChips(2),
-    vendorID(p.vendor_id),
-    deviceID(p.device_id),
-    bankWidth(p.bank_width),
-    readState(CfiCommand::READ_ARRAY), writeState(CfiCommand::NO_CMD),
-    statusRegister(STATUS_READY),
-    blocks(*this, size() / p.blk_size, p.blk_size),
-    programBuffer(*this),
-    cfiQueryTable{
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        /* Query-unique ASCII string */
-        'Q', 'R', 'Y',
-        /* Primary Algorithm Command Set and Control = Intel/Sharp */
-        0x01, 0x00,
-        /* Address for Primary Algorithm extended Query */
-        0x31, 0x00,
-        /* Alternative Algorithm Command Set and Control Interface */
-        0x00, 0x00,
-        /* Address for Alternative Algorithm extended Query */
-        0x00, 0x00,
-        /* Vcc Minimum Program/Erase or Write voltage ([7:4].[3-0]V) */
-        0x45,
-        /* Vcc Maximum Program/Erase or Write voltage ([7:4].[3-0]V) */
-        0x55,
-        /* Vpp Minimum Program/Erase voltage (0 = No Vpp pin) */
-        0x00,
-        /* Vpp Minimum Program/Erase voltage (0 = No Vpp pin) */
-        0x00,
-        /* Typical timeout per single byte/word/D-word program: (2^N us) */
-        0x01,
-        /* Typical timeout for maximum-size multi-byte program: (2^N us) */
-        0x01,
-        /* Typical timeout per individual block erase: (2^N ms) */
-        0x01,
-        /* Typical timeout for full chip erase: (2^N ms) */
-        0x00,
-        /* Maximum timeout for byte/word/D-word program (2^N typical) */
-        0x00,
-        /* Maximum timeout for multi-byte program (2^N typical) */
-        0x00,
-        /* Maximum timeout per individual block erase (2^N typical) */
-        0x00,
-        /* Maximum timeout for chip erase (2^N typical) */
-        0x00,
-        /* Device Size in number of bytes (2^N) */
-        static_cast<uint8_t>(log2(size())),
-        /* Flash Device Interface Code description */
-        0x05, 0x00,
-        /* Maximum number of bytes in multi-byte program (2^N) */
-        static_cast<uint8_t>(bits(log2i(ProgramBuffer::MAX_BUFFER_SIZE), 7, 0)),
-        static_cast<uint8_t>(bits(log2i(ProgramBuffer::MAX_BUFFER_SIZE), 15, 8)),
-        /* Number of Erase Block Regions within device */
-        0x01,
-        /* Erase Block Region Information */
-        static_cast<uint8_t>(bits(blocks.number(), 7, 0)),
-        static_cast<uint8_t>(bits(blocks.number(), 15, 8)),
-        static_cast<uint8_t>(bits(blocks.size(), 7, 0)),
-        static_cast<uint8_t>(bits(blocks.size(), 15, 8)),
-        0x00,0x00,0x00,0x00,//empty Block region 2 info
-        0x00,0x00,0x00,0x00,//empty Block region 3 info
-        0x00,0x00,0x00,0x00//empty Block region 4 info
-    }
+    : AbstractMemory(p),
+      port(name() + ".port", *this),
+      latency(p.latency),
+      latency_var(p.latency_var),
+      bandwidth(p.bandwidth),
+      isBusy(false),
+      retryReq(false),
+      retryResp(false),
+      releaseEvent([this] { release(); }, name()),
+      dequeueEvent([this] { dequeue(); }, name()),
+      numberOfChips(2),
+      vendorID(p.vendor_id),
+      deviceID(p.device_id),
+      bankWidth(p.bank_width),
+      readState(CfiCommand::READ_ARRAY),
+      writeState(CfiCommand::NO_CMD),
+      statusRegister(STATUS_READY),
+      blocks(*this, size() / p.blk_size, p.blk_size),
+      programBuffer(*this),
+      cfiQueryTable{
+          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x00, 0x00, 0x00, 0x00, 0x00,
+          /* Query-unique ASCII string */
+          'Q', 'R', 'Y',
+          /* Primary Algorithm Command Set and Control = Intel/Sharp */
+          0x01, 0x00,
+          /* Address for Primary Algorithm extended Query */
+          0x31, 0x00,
+          /* Alternative Algorithm Command Set and Control Interface */
+          0x00, 0x00,
+          /* Address for Alternative Algorithm extended Query */
+          0x00, 0x00,
+          /* Vcc Minimum Program/Erase or Write voltage ([7:4].[3-0]V) */
+          0x45,
+          /* Vcc Maximum Program/Erase or Write voltage ([7:4].[3-0]V) */
+          0x55,
+          /* Vpp Minimum Program/Erase voltage (0 = No Vpp pin) */
+          0x00,
+          /* Vpp Minimum Program/Erase voltage (0 = No Vpp pin) */
+          0x00,
+          /* Typical timeout per single byte/word/D-word program: (2^N us) */
+          0x01,
+          /* Typical timeout for maximum-size multi-byte program: (2^N us) */
+          0x01,
+          /* Typical timeout per individual block erase: (2^N ms) */
+          0x01,
+          /* Typical timeout for full chip erase: (2^N ms) */
+          0x00,
+          /* Maximum timeout for byte/word/D-word program (2^N typical) */
+          0x00,
+          /* Maximum timeout for multi-byte program (2^N typical) */
+          0x00,
+          /* Maximum timeout per individual block erase (2^N typical) */
+          0x00,
+          /* Maximum timeout for chip erase (2^N typical) */
+          0x00,
+          /* Device Size in number of bytes (2^N) */
+          static_cast<uint8_t>(log2(size())),
+          /* Flash Device Interface Code description */
+          0x05, 0x00,
+          /* Maximum number of bytes in multi-byte program (2^N) */
+          static_cast<uint8_t>(
+              bits(log2i(ProgramBuffer::MAX_BUFFER_SIZE), 7, 0)),
+          static_cast<uint8_t>(
+              bits(log2i(ProgramBuffer::MAX_BUFFER_SIZE), 15, 8)),
+          /* Number of Erase Block Regions within device */
+          0x01,
+          /* Erase Block Region Information */
+          static_cast<uint8_t>(bits(blocks.number(), 7, 0)),
+          static_cast<uint8_t>(bits(blocks.number(), 15, 8)),
+          static_cast<uint8_t>(bits(blocks.size(), 7, 0)),
+          static_cast<uint8_t>(bits(blocks.size(), 15, 8)), 0x00, 0x00, 0x00,
+          0x00,                   // empty Block region 2 info
+          0x00, 0x00, 0x00, 0x00, // empty Block region 3 info
+          0x00, 0x00, 0x00, 0x00  // empty Block region 4 info
+      }
 {}
 
 void
@@ -241,7 +248,7 @@ Tick
 CfiMemory::recvAtomic(PacketPtr pkt)
 {
     panic_if(pkt->cacheResponding(), "Should not see packets where cache "
-             "is responding");
+                                     "is responding");
 
     cfiAccess(pkt);
     return getLatency();
@@ -277,7 +284,7 @@ CfiMemory::recvFunctional(PacketPtr pkt)
 
 void
 CfiMemory::recvMemBackdoorReq(const MemBackdoorReq &req,
-        MemBackdoorPtr &_backdoor)
+                              MemBackdoorPtr &_backdoor)
 {
     if (backdoor.ptr())
         _backdoor = &backdoor;
@@ -287,11 +294,12 @@ bool
 CfiMemory::recvTimingReq(PacketPtr pkt)
 {
     panic_if(pkt->cacheResponding(), "Should not see packets where cache "
-             "is responding");
+                                     "is responding");
 
     panic_if(!(pkt->isRead() || pkt->isWrite()),
              "Should only see read and writes at memory controller, "
-             "saw %s to %#llx\n", pkt->cmdString(), pkt->getAddr());
+             "saw %s to %#llx\n",
+             pkt->cmdString(), pkt->getAddr());
 
     // we should not get a new request after committing to retry the
     // current one, but unfortunately the CPU violates this rule, so
@@ -406,7 +414,7 @@ Tick
 CfiMemory::getLatency() const
 {
     return latency +
-        (latency_var ? random_mt.random<Tick>(0, latency_var) : 0);
+           (latency_var ? random_mt.random<Tick>(0, latency_var) : 0);
 }
 
 void
@@ -462,10 +470,9 @@ CfiMemory::unserialize(CheckpointIn &cp)
     UNSERIALIZE_OBJ(programBuffer);
 }
 
-CfiMemory::MemoryPort::MemoryPort(const std::string& _name,
-                                     CfiMemory& _memory)
+CfiMemory::MemoryPort::MemoryPort(const std::string &_name, CfiMemory &_memory)
     : ResponsePort(_name), mem(_memory)
-{ }
+{}
 
 AddrRangeList
 CfiMemory::MemoryPort::getAddrRanges() const
@@ -482,8 +489,8 @@ CfiMemory::MemoryPort::recvAtomic(PacketPtr pkt)
 }
 
 Tick
-CfiMemory::MemoryPort::recvAtomicBackdoor(
-        PacketPtr pkt, MemBackdoorPtr &_backdoor)
+CfiMemory::MemoryPort::recvAtomicBackdoor(PacketPtr pkt,
+                                          MemBackdoorPtr &_backdoor)
 {
     return mem.recvAtomicBackdoor(pkt, _backdoor);
 }
@@ -496,7 +503,7 @@ CfiMemory::MemoryPort::recvFunctional(PacketPtr pkt)
 
 void
 CfiMemory::MemoryPort::recvMemBackdoorReq(const MemBackdoorReq &req,
-        MemBackdoorPtr &_backdoor)
+                                          MemBackdoorPtr &_backdoor)
 {
     mem.recvMemBackdoorReq(req, _backdoor);
 }
@@ -527,7 +534,7 @@ void
 CfiMemory::write(PacketPtr pkt)
 {
     DPRINTF(CFI, "write, address: %#x, val: %#x\n", pkt->getAddr(),
-        pkt->getUintX(ByteOrder::little));
+            pkt->getUintX(ByteOrder::little));
 
     const Addr flash_address = pkt->getAddr() - start();
 
@@ -535,94 +542,92 @@ CfiMemory::write(PacketPtr pkt)
     const auto new_cmd = static_cast<CfiCommand>(value & 0xff);
 
     switch (writeState) {
-        case CfiCommand::NO_CMD:
-          handleCommand(new_cmd);
-          break;
+    case CfiCommand::NO_CMD:
+        handleCommand(new_cmd);
+        break;
 
-        case CfiCommand::ERASE_BLOCK_SETUP:
-          if (new_cmd == CfiCommand::BLOCK_ERASE_CONFIRM) {
-              // Erasing the block
-              // Check if block is locked
-              if (blocks.isLocked(flash_address)) {
-                  statusRegister |= STATUS_LOCK_ERROR;
-              } else {
-                  blocks.erase(pkt);
-              }
-          } else {
-              statusRegister |= STATUS_ERASE_ERROR;
-          }
-          writeState = CfiCommand::NO_CMD;
-          readState = CfiCommand::READ_STATUS_REG;
-          break;
+    case CfiCommand::ERASE_BLOCK_SETUP:
+        if (new_cmd == CfiCommand::BLOCK_ERASE_CONFIRM) {
+            // Erasing the block
+            // Check if block is locked
+            if (blocks.isLocked(flash_address)) {
+                statusRegister |= STATUS_LOCK_ERROR;
+            } else {
+                blocks.erase(pkt);
+            }
+        } else {
+            statusRegister |= STATUS_ERASE_ERROR;
+        }
+        writeState = CfiCommand::NO_CMD;
+        readState = CfiCommand::READ_STATUS_REG;
+        break;
 
-        case CfiCommand::LOCK_BLOCK_SETUP:
-          if (new_cmd == CfiCommand::LOCK_BLOCK) {
+    case CfiCommand::LOCK_BLOCK_SETUP:
+        if (new_cmd == CfiCommand::LOCK_BLOCK) {
+            // Lock the addressed block
+            blocks.lock(flash_address);
+            readState = CfiCommand::READ_STATUS_REG;
 
-              // Lock the addressed block
-              blocks.lock(flash_address);
-              readState = CfiCommand::READ_STATUS_REG;
+        } else if (new_cmd == CfiCommand::UNLOCK_BLOCK) {
+            // Unlock the addressed block
+            blocks.unlock(flash_address);
+            readState = CfiCommand::READ_STATUS_REG;
 
-          } else if (new_cmd == CfiCommand::UNLOCK_BLOCK) {
-
-              // Unlock the addressed block
-              blocks.unlock(flash_address);
-              readState = CfiCommand::READ_STATUS_REG;
-
-          } else {
-              statusRegister |= STATUS_ERASE_ERROR;
-          }
-
-          writeState = CfiCommand::NO_CMD;
-          break;
-
-        case CfiCommand::WORD_PROGRAM:
-          readState = CfiCommand::READ_STATUS_REG;
-          writeState = CfiCommand::NO_CMD;
-
-          if (blocks.isLocked(flash_address)) {
-              statusRegister |= STATUS_LOCK_ERROR;
-          } else {
-              AbstractMemory::access(pkt);
-              return;
-          }
-          break;
-
-        case CfiCommand::BUFFERED_PROGRAM_SETUP: {
-          // Buffer size in bytes
-          auto buffer_size = (value + 1) * sizeof(uint32_t);
-
-          // Clearing the program buffer
-          programBuffer.setup(buffer_size);
-
-          readState = CfiCommand::READ_STATUS_REG;
-          writeState = CfiCommand::BUFFER_SIZE_READ;
-          break;
+        } else {
+            statusRegister |= STATUS_ERASE_ERROR;
         }
 
-        case CfiCommand::BUFFER_SIZE_READ: {
-          // Write to the buffer and check if a writeback is needed
-          // (if the buffer is full)
-          auto writeback = programBuffer.write(
-              flash_address, pkt->getPtr<void>(), pkt->getSize());
+        writeState = CfiCommand::NO_CMD;
+        break;
 
-          if (writeback) {
-              if (new_cmd == CfiCommand::BUFFERED_PROGRAM_CONFIRM) {
-                  auto success = programBuffer.writeback();
-                  if (!success)
-                      statusRegister |= STATUS_LOCK_ERROR;
+    case CfiCommand::WORD_PROGRAM:
+        readState = CfiCommand::READ_STATUS_REG;
+        writeState = CfiCommand::NO_CMD;
 
-                  readState = CfiCommand::READ_STATUS_REG;
-              } else {
-                  statusRegister |= STATUS_PROGRAM_LOCK_BIT;
-              }
-              writeState = CfiCommand::NO_CMD;
-          }
-          break;
+        if (blocks.isLocked(flash_address)) {
+            statusRegister |= STATUS_LOCK_ERROR;
+        } else {
+            AbstractMemory::access(pkt);
+            return;
         }
+        break;
 
-        default:
-          panic("Invalid Write State\n");
-          return;
+    case CfiCommand::BUFFERED_PROGRAM_SETUP: {
+        // Buffer size in bytes
+        auto buffer_size = (value + 1) * sizeof(uint32_t);
+
+        // Clearing the program buffer
+        programBuffer.setup(buffer_size);
+
+        readState = CfiCommand::READ_STATUS_REG;
+        writeState = CfiCommand::BUFFER_SIZE_READ;
+        break;
+    }
+
+    case CfiCommand::BUFFER_SIZE_READ: {
+        // Write to the buffer and check if a writeback is needed
+        // (if the buffer is full)
+        auto writeback = programBuffer.write(
+            flash_address, pkt->getPtr<void>(), pkt->getSize());
+
+        if (writeback) {
+            if (new_cmd == CfiCommand::BUFFERED_PROGRAM_CONFIRM) {
+                auto success = programBuffer.writeback();
+                if (!success)
+                    statusRegister |= STATUS_LOCK_ERROR;
+
+                readState = CfiCommand::READ_STATUS_REG;
+            } else {
+                statusRegister |= STATUS_PROGRAM_LOCK_BIT;
+            }
+            writeState = CfiCommand::NO_CMD;
+        }
+        break;
+    }
+
+    default:
+        panic("Invalid Write State\n");
+        return;
     }
 
     pkt->makeResponse();
@@ -635,19 +640,19 @@ CfiMemory::read(PacketPtr pkt)
     uint64_t value = 0;
 
     switch (readState) {
-      case CfiCommand::READ_STATUS_REG:
+    case CfiCommand::READ_STATUS_REG:
         value = statusRegister;
         break;
-      case CfiCommand::READ_DEVICE_ID:
+    case CfiCommand::READ_DEVICE_ID:
         value = readDeviceID(flash_address);
         break;
-      case CfiCommand::READ_CFI_QUERY:
+    case CfiCommand::READ_CFI_QUERY:
         value = cfiQuery(flash_address);
         break;
-      case CfiCommand::READ_ARRAY:
+    case CfiCommand::READ_ARRAY:
         AbstractMemory::access(pkt);
         return;
-      default:
+    default:
         panic("Invalid Read State\n");
         return;
     }
@@ -660,21 +665,20 @@ CfiMemory::read(PacketPtr pkt)
     pkt->makeResponse();
 
     DPRINTF(CFI, "read, address: %#x, val: %#x\n", pkt->getAddr(),
-        pkt->getUintX(ByteOrder::little));
-
+            pkt->getUintX(ByteOrder::little));
 }
 
 uint64_t
 CfiMemory::readDeviceID(Addr flash_address) const
 {
     switch ((flash_address & 0xff) / bankWidth) {
-      case 0x00: // vendor ID
+    case 0x00: // vendor ID
         return vendorID;
-      case 0x01: // device ID
+    case 0x01: // device ID
         return deviceID;
-      case 0x02: // lock bit
+    case 0x02: // lock bit
         return blocks.isLocked(flash_address);
-      default:
+    default:
         // Unsupported entries
         warn("Invalid Device Identifier code: %d\n", flash_address & 0xff);
         return 0;
@@ -685,58 +689,57 @@ void
 CfiMemory::handleCommand(CfiCommand new_cmd)
 {
     switch (new_cmd) {
-      case CfiCommand::READ_ARRAY:
+    case CfiCommand::READ_ARRAY:
         DPRINTF(CFI, "CFI Command: Read Array\n");
         readState = CfiCommand::READ_ARRAY;
         break;
-      case CfiCommand::READ_DEVICE_ID:
+    case CfiCommand::READ_DEVICE_ID:
         DPRINTF(CFI, "CFI Command: Read Device Identifier\n");
         readState = CfiCommand::READ_DEVICE_ID;
         break;
-     case CfiCommand::READ_CFI_QUERY:
+    case CfiCommand::READ_CFI_QUERY:
         DPRINTF(CFI, "CFI Command: CFI Query\n");
         readState = CfiCommand::READ_CFI_QUERY;
         break;
-      case CfiCommand::READ_STATUS_REG:
+    case CfiCommand::READ_STATUS_REG:
         DPRINTF(CFI, "CFI Command: Read Status Register\n");
         readState = CfiCommand::READ_STATUS_REG;
         break;
-      case CfiCommand::CLEAR_STATUS_REG:
+    case CfiCommand::CLEAR_STATUS_REG:
         DPRINTF(CFI, "CFI Command: Clear Status Register\n");
         statusRegister = STATUS_READY;
         break;
-      case CfiCommand::BUFFERED_PROGRAM_CONFIRM:
+    case CfiCommand::BUFFERED_PROGRAM_CONFIRM:
         DPRINTF(CFI, "CFI Command: Buffered Program Confirm\n");
         break;
-      case CfiCommand::ERASE_BLOCK_SETUP:
+    case CfiCommand::ERASE_BLOCK_SETUP:
         DPRINTF(CFI, "CFI Command: Erase Block Setup\n");
         writeState = CfiCommand::ERASE_BLOCK_SETUP;
         readState = CfiCommand::READ_STATUS_REG;
         break;
-      case CfiCommand::LOCK_BLOCK_SETUP:
+    case CfiCommand::LOCK_BLOCK_SETUP:
         DPRINTF(CFI, "CFI Command: Lock Block Setup\n");
         writeState = CfiCommand::LOCK_BLOCK_SETUP;
         break;
-      case CfiCommand::WORD_PROGRAM:
+    case CfiCommand::WORD_PROGRAM:
         DPRINTF(CFI, "CFI Command: Word Program\n");
         writeState = CfiCommand::WORD_PROGRAM;
         readState = CfiCommand::READ_STATUS_REG;
         break;
-      case CfiCommand::BUFFERED_PROGRAM_SETUP:
+    case CfiCommand::BUFFERED_PROGRAM_SETUP:
         DPRINTF(CFI, "CFI Command: Buffered Program Setup\n");
         writeState = CfiCommand::BUFFERED_PROGRAM_SETUP;
         readState = CfiCommand::READ_STATUS_REG;
         break;
-      case CfiCommand::AMD_RESET:
-        //because of how u-boot works and reset the flash
-        //we have to ignore the AMD RESET explicitly
-        // (see the function __flash_cmd_reset in drivers/mtd/cfi_flash.c)
+    case CfiCommand::AMD_RESET:
+        // because of how u-boot works and reset the flash
+        // we have to ignore the AMD RESET explicitly
+        //  (see the function __flash_cmd_reset in drivers/mtd/cfi_flash.c)
         break;
-      default:
+    default:
         panic("Don't know what to do with %#x\n",
-            static_cast<uint16_t>(new_cmd));
+              static_cast<uint16_t>(new_cmd));
     }
-
 }
 
 uint64_t
@@ -745,8 +748,8 @@ CfiMemory::cfiQuery(Addr flash_address)
     flash_address /= bankWidth;
 
     panic_if(flash_address >= sizeof(cfiQueryTable),
-        "Acessing invalid entry in CFI query table (addr=%#x)",
-        flash_address);
+             "Acessing invalid entry in CFI query table (addr=%#x)",
+             flash_address);
 
     return cfiQueryTable[flash_address];
 }

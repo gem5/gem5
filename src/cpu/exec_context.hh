@@ -71,21 +71,20 @@ namespace gem5
 class ExecContext
 {
   public:
-
     virtual RegVal getRegOperand(const StaticInst *si, int idx) = 0;
     virtual void getRegOperand(const StaticInst *si, int idx, void *val) = 0;
     virtual void *getWritableRegOperand(const StaticInst *si, int idx) = 0;
     virtual void setRegOperand(const StaticInst *si, int idx, RegVal val) = 0;
     virtual void setRegOperand(const StaticInst *si, int idx,
-            const void *val) = 0;
+                               const void *val) = 0;
 
     /**
      * @{
      * @name Misc Register Interfaces
      */
     virtual RegVal readMiscRegOperand(const StaticInst *si, int idx) = 0;
-    virtual void setMiscRegOperand(const StaticInst *si,
-                                   int idx, RegVal val) = 0;
+    virtual void setMiscRegOperand(const StaticInst *si, int idx,
+                                   RegVal val) = 0;
 
     /**
      * Reads a miscellaneous register, handling any architectural
@@ -107,6 +106,7 @@ class ExecContext
      */
     virtual const PCStateBase &pcState() const = 0;
     virtual void pcState(const PCStateBase &val) = 0;
+
     /** @} */
 
     /**
@@ -121,8 +121,8 @@ class ExecContext
      * should never be called).
      */
     virtual Fault
-    readMem(Addr addr, uint8_t *data, unsigned int size,
-            Request::Flags flags, const std::vector<bool>& byte_enable)
+    readMem(Addr addr, uint8_t *data, unsigned int size, Request::Flags flags,
+            const std::vector<bool> &byte_enable)
     {
         panic("ExecContext::readMem() should be overridden\n");
     }
@@ -135,8 +135,8 @@ class ExecContext
      * should never be called).
      */
     virtual Fault
-    initiateMemRead(Addr addr, unsigned int size,
-            Request::Flags flags, const std::vector<bool>& byte_enable)
+    initiateMemRead(Addr addr, unsigned int size, Request::Flags flags,
+                    const std::vector<bool> &byte_enable)
     {
         panic("ExecContext::initiateMemRead() should be overridden\n");
     }
@@ -156,15 +156,15 @@ class ExecContext
      */
     virtual Fault writeMem(uint8_t *data, unsigned int size, Addr addr,
                            Request::Flags flags, uint64_t *res,
-                           const std::vector<bool>& byte_enable) = 0;
+                           const std::vector<bool> &byte_enable) = 0;
 
     /**
      * For atomic-mode contexts, perform an atomic AMO (a.k.a., Atomic
      * Read-Modify-Write Memory Operation)
      */
     virtual Fault
-    amoMem(Addr addr, uint8_t *data, unsigned int size,
-            Request::Flags flags, AtomicOpFunctorPtr amo_op)
+    amoMem(Addr addr, uint8_t *data, unsigned int size, Request::Flags flags,
+           AtomicOpFunctorPtr amo_op)
     {
         panic("ExecContext::amoMem() should be overridden\n");
     }
@@ -175,7 +175,7 @@ class ExecContext
      */
     virtual Fault
     initiateMemAMO(Addr addr, unsigned int size, Request::Flags flags,
-            AtomicOpFunctorPtr amo_op)
+                   AtomicOpFunctorPtr amo_op)
     {
         panic("ExecContext::initiateMemAMO() should be overridden\n");
     }

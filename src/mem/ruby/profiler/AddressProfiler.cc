@@ -46,8 +46,8 @@ typedef AddressProfiler::AddressMap AddressMap;
 using gem5::stl_helpers::operator<<;
 
 // Helper functions
-AccessTraceForAddress&
-lookupTraceForAddress(Addr addr, AddressMap& record_map)
+AccessTraceForAddress &
+lookupTraceForAddress(Addr addr, AddressMap &record_map)
 {
     // we create a static default object here that is used to insert
     // since the insertion will create a copy of the object in the
@@ -69,9 +69,9 @@ lookupTraceForAddress(Addr addr, AddressMap& record_map)
 }
 
 void
-printSorted(std::ostream& out, int num_of_sequencers,
-        const AddressMap &record_map, std::string description,
-        Profiler *profiler)
+printSorted(std::ostream &out, int num_of_sequencers,
+            const AddressMap &record_map, std::string description,
+            Profiler *profiler)
 {
     const int records_printed = 100;
 
@@ -81,7 +81,7 @@ printSorted(std::ostream& out, int num_of_sequencers,
     AddressMap::const_iterator i = record_map.begin();
     AddressMap::const_iterator end = record_map.end();
     for (; i != end; ++i) {
-        const AccessTraceForAddress* record = &i->second;
+        const AccessTraceForAddress *record = &i->second;
         misses += record->getTotal();
         sorted.push_back(record);
     }
@@ -108,8 +108,8 @@ printSorted(std::ostream& out, int num_of_sequencers,
     // Allows us to track how many lines where touched by n processors
     std::vector<int64_t> m_touched_vec;
     std::vector<int64_t> m_touched_weighted_vec;
-    m_touched_vec.resize(num_of_sequencers+1);
-    m_touched_weighted_vec.resize(num_of_sequencers+1);
+    m_touched_vec.resize(num_of_sequencers + 1);
+    m_touched_weighted_vec.resize(num_of_sequencers + 1);
     for (int j = 0; j < m_touched_vec.size(); j++) {
         m_touched_vec[j] = 0;
         m_touched_weighted_vec[j] = 0;
@@ -118,7 +118,7 @@ printSorted(std::ostream& out, int num_of_sequencers,
     int counter = 0;
     int max = sorted.size();
     while (counter < max && counter < records_printed) {
-        const AccessTraceForAddress* record = sorted[counter];
+        const AccessTraceForAddress *record = sorted[counter];
         double percent = 100.0 * (record->getTotal() / double(misses));
         out << description << " | " << percent << " % " << *record
             << std::endl;
@@ -130,7 +130,7 @@ printSorted(std::ostream& out, int num_of_sequencers,
     }
 
     while (counter < max) {
-        const AccessTraceForAddress* record = sorted[counter];
+        const AccessTraceForAddress *record = sorted[counter];
         all_records.add(record->getTotal());
         remaining_records.add(record->getTotal());
         all_records_log.add(record->getTotal());
@@ -139,16 +139,14 @@ printSorted(std::ostream& out, int num_of_sequencers,
         m_touched_weighted_vec[record->getTouchedBy()] += record->getTotal();
     }
     out << std::endl;
-    out << "all_records_" << description << ": "
-        << all_records << std::endl
-        << "all_records_log_" << description << ": "
-        << all_records_log << std::endl
-        << "remaining_records_" << description << ": "
-        << remaining_records << std::endl
+    out << "all_records_" << description << ": " << all_records << std::endl
+        << "all_records_log_" << description << ": " << all_records_log
+        << std::endl
+        << "remaining_records_" << description << ": " << remaining_records
+        << std::endl
         << "remaining_records_log_" << description << ": "
         << remaining_records_log << std::endl
-        << "touched_by_" << description << ": "
-        << m_touched_vec << std::endl
+        << "touched_by_" << description << ": " << m_touched_vec << std::endl
         << "touched_by_weighted_" << description << ": "
         << m_touched_weighted_vec << std::endl
         << std::endl;
@@ -161,9 +159,7 @@ AddressProfiler::AddressProfiler(int num_of_sequencers, Profiler *profiler)
     clearStats();
 }
 
-AddressProfiler::~AddressProfiler()
-{
-}
+AddressProfiler::~AddressProfiler() {}
 
 void
 AddressProfiler::setHotLines(bool hot_lines)
@@ -178,7 +174,7 @@ AddressProfiler::setAllInstructions(bool all_instructions)
 }
 
 void
-AddressProfiler::printStats(std::ostream& out) const
+AddressProfiler::printStats(std::ostream &out) const
 {
     if (m_hot_lines) {
         out << std::endl;
@@ -261,9 +257,8 @@ AddressProfiler::clearStats()
 }
 
 void
-AddressProfiler::profileGetX(Addr datablock, Addr PC,
-                             const Set& owner, const Set& sharers,
-                             NodeID requestor)
+AddressProfiler::profileGetX(Addr datablock, Addr PC, const Set &owner,
+                             const Set &sharers, NodeID requestor)
 {
     Set indirection_set;
     indirection_set.addSet(sharers);
@@ -279,9 +274,8 @@ AddressProfiler::profileGetX(Addr datablock, Addr PC,
 }
 
 void
-AddressProfiler::profileGetS(Addr datablock, Addr PC,
-                             const Set& owner, const Set& sharers,
-                             NodeID requestor)
+AddressProfiler::profileGetS(Addr datablock, Addr PC, const Set &owner,
+                             const Set &sharers, NodeID requestor)
 {
     Set indirection_set;
     indirection_set.addSet(owner);
@@ -308,27 +302,27 @@ AddressProfiler::addTraceSample(Addr data_addr, Addr pc_addr,
 
         // record data address trace info
         data_addr = makeLineAddress(data_addr);
-        lookupTraceForAddress(data_addr, m_dataAccessTrace).
-            update(type, access_mode, id, sharing_miss);
+        lookupTraceForAddress(data_addr, m_dataAccessTrace)
+            .update(type, access_mode, id, sharing_miss);
 
         // record macro data address trace info
 
         // 6 for datablock, 4 to make it 16x more coarse
         Addr macro_addr = mbits<Addr>(data_addr, 63, 10);
-        lookupTraceForAddress(macro_addr, m_macroBlockAccessTrace).
-            update(type, access_mode, id, sharing_miss);
+        lookupTraceForAddress(macro_addr, m_macroBlockAccessTrace)
+            .update(type, access_mode, id, sharing_miss);
 
         // record program counter address trace info
-        lookupTraceForAddress(pc_addr, m_programCounterAccessTrace).
-            update(type, access_mode, id, sharing_miss);
+        lookupTraceForAddress(pc_addr, m_programCounterAccessTrace)
+            .update(type, access_mode, id, sharing_miss);
     }
 
     if (m_all_instructions) {
         // This code is used if the address profiler is an
         // all-instructions profiler record program counter address
         // trace info
-        lookupTraceForAddress(pc_addr, m_programCounterAccessTrace).
-            update(type, access_mode, id, sharing_miss);
+        lookupTraceForAddress(pc_addr, m_programCounterAccessTrace)
+            .update(type, access_mode, id, sharing_miss);
     }
 }
 

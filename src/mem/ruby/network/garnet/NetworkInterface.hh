@@ -29,7 +29,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #ifndef __MEM_RUBY_NETWORK_GARNET_0_NETWORKINTERFACE_HH__
 #define __MEM_RUBY_NETWORK_GARNET_0_NETWORKINTERFACE_HH__
 
@@ -68,23 +67,29 @@ class NetworkInterface : public ClockedObject, public Consumer
 
     void addInPort(NetworkLink *in_link, CreditLink *credit_link);
     void addOutPort(NetworkLink *out_link, CreditLink *credit_link,
-        SwitchID router_id, uint32_t consumerVcs);
+                    SwitchID router_id, uint32_t consumerVcs);
 
     void dequeueCallback();
     void wakeup();
     void addNode(std::vector<MessageBuffer *> &inNode,
                  std::vector<MessageBuffer *> &outNode);
 
-    void print(std::ostream& out) const;
+    void print(std::ostream &out) const;
     int get_vnet(int vc);
-    void init_net_ptr(GarnetNetwork *net_ptr) { m_net_ptr = net_ptr; }
+
+    void
+    init_net_ptr(GarnetNetwork *net_ptr)
+    {
+        m_net_ptr = net_ptr;
+    }
 
     bool functionalRead(Packet *pkt, WriteMask &mask);
     uint32_t functionalWrite(Packet *);
 
     void scheduleFlit(flit *t_flit);
 
-    int get_router_id(int vnet)
+    int
+    get_router_id(int vnet)
     {
         OutputPort *oPort = getOutportForVnet(vnet);
         assert(oPort);
@@ -94,179 +99,181 @@ class NetworkInterface : public ClockedObject, public Consumer
     class OutputPort
     {
       public:
-          OutputPort(NetworkLink *outLink, CreditLink *creditLink,
-              int routerID)
-          {
-              _vnets = outLink->mVnets;
-              _outFlitQueue = new flitBuffer();
+        OutputPort(NetworkLink *outLink, CreditLink *creditLink, int routerID)
+        {
+            _vnets = outLink->mVnets;
+            _outFlitQueue = new flitBuffer();
 
-              _outNetLink = outLink;
-              _inCreditLink = creditLink;
+            _outNetLink = outLink;
+            _inCreditLink = creditLink;
 
-              _routerID = routerID;
-              _bitWidth = outLink->bitWidth;
-              _vcRoundRobin = 0;
+            _routerID = routerID;
+            _bitWidth = outLink->bitWidth;
+            _vcRoundRobin = 0;
+        }
 
-          }
+        flitBuffer *
+        outFlitQueue()
+        {
+            return _outFlitQueue;
+        }
 
-          flitBuffer *
-          outFlitQueue()
-          {
-              return _outFlitQueue;
-          }
+        NetworkLink *
+        outNetLink()
+        {
+            return _outNetLink;
+        }
 
-          NetworkLink *
-          outNetLink()
-          {
-              return _outNetLink;
-          }
+        CreditLink *
+        inCreditLink()
+        {
+            return _inCreditLink;
+        }
 
-          CreditLink *
-          inCreditLink()
-          {
-              return _inCreditLink;
-          }
+        int
+        routerID()
+        {
+            return _routerID;
+        }
 
-          int
-          routerID()
-          {
-              return _routerID;
-          }
+        uint32_t
+        bitWidth()
+        {
+            return _bitWidth;
+        }
 
-          uint32_t bitWidth()
-          {
-              return _bitWidth;
-          }
+        bool
+        isVnetSupported(int pVnet)
+        {
+            if (!_vnets.size()) {
+                return true;
+            }
 
-          bool isVnetSupported(int pVnet)
-          {
-              if (!_vnets.size()) {
-                  return true;
-              }
+            for (auto &it : _vnets) {
+                if (it == pVnet) {
+                    return true;
+                }
+            }
+            return false;
+        }
 
-              for (auto &it : _vnets) {
-                  if (it == pVnet) {
-                      return true;
-                  }
-              }
-              return false;
+        std::string
+        printVnets()
+        {
+            std::stringstream ss;
+            for (auto &it : _vnets) {
+                ss << it;
+                ss << " ";
+            }
+            return ss.str();
+        }
 
-          }
+        int
+        vcRoundRobin()
+        {
+            return _vcRoundRobin;
+        }
 
-          std::string
-          printVnets()
-          {
-              std::stringstream ss;
-              for (auto &it : _vnets) {
-                  ss << it;
-                  ss << " ";
-              }
-              return ss.str();
-          }
-
-          int vcRoundRobin()
-          {
-              return _vcRoundRobin;
-          }
-
-          void vcRoundRobin(int vc)
-          {
-              _vcRoundRobin = vc;
-          }
-
+        void
+        vcRoundRobin(int vc)
+        {
+            _vcRoundRobin = vc;
+        }
 
       private:
-          std::vector<int> _vnets;
-          flitBuffer *_outFlitQueue;
+        std::vector<int> _vnets;
+        flitBuffer *_outFlitQueue;
 
-          NetworkLink *_outNetLink;
-          CreditLink *_inCreditLink;
+        NetworkLink *_outNetLink;
+        CreditLink *_inCreditLink;
 
-          int _vcRoundRobin; // For round robin scheduling
+        int _vcRoundRobin; // For round robin scheduling
 
-          int _routerID;
-          uint32_t _bitWidth;
+        int _routerID;
+        uint32_t _bitWidth;
     };
 
     class InputPort
     {
       public:
-          InputPort(NetworkLink *inLink, CreditLink *creditLink)
-          {
-              _vnets = inLink->mVnets;
-              _outCreditQueue = new flitBuffer();
+        InputPort(NetworkLink *inLink, CreditLink *creditLink)
+        {
+            _vnets = inLink->mVnets;
+            _outCreditQueue = new flitBuffer();
 
-              _inNetLink = inLink;
-              _outCreditLink = creditLink;
-              _bitWidth = inLink->bitWidth;
-          }
+            _inNetLink = inLink;
+            _outCreditLink = creditLink;
+            _bitWidth = inLink->bitWidth;
+        }
 
-          flitBuffer *
-          outCreditQueue()
-          {
-              return _outCreditQueue;
-          }
+        flitBuffer *
+        outCreditQueue()
+        {
+            return _outCreditQueue;
+        }
 
-          NetworkLink *
-          inNetLink()
-          {
-              return _inNetLink;
-          }
+        NetworkLink *
+        inNetLink()
+        {
+            return _inNetLink;
+        }
 
-          CreditLink *
-          outCreditLink()
-          {
-              return _outCreditLink;
-          }
+        CreditLink *
+        outCreditLink()
+        {
+            return _outCreditLink;
+        }
 
-          bool isVnetSupported(int pVnet)
-          {
-              if (!_vnets.size()) {
-                  return true;
-              }
+        bool
+        isVnetSupported(int pVnet)
+        {
+            if (!_vnets.size()) {
+                return true;
+            }
 
-              for (auto &it : _vnets) {
-                  if (it == pVnet) {
-                      return true;
-                  }
-              }
-              return false;
+            for (auto &it : _vnets) {
+                if (it == pVnet) {
+                    return true;
+                }
+            }
+            return false;
+        }
 
-          }
+        void
+        sendCredit(Credit *cFlit)
+        {
+            _outCreditQueue->insert(cFlit);
+        }
 
-          void sendCredit(Credit *cFlit)
-          {
-              _outCreditQueue->insert(cFlit);
-          }
+        uint32_t
+        bitWidth()
+        {
+            return _bitWidth;
+        }
 
-          uint32_t bitWidth()
-          {
-              return _bitWidth;
-          }
+        std::string
+        printVnets()
+        {
+            std::stringstream ss;
+            for (auto &it : _vnets) {
+                ss << it;
+                ss << " ";
+            }
+            return ss.str();
+        }
 
-          std::string
-          printVnets()
-          {
-              std::stringstream ss;
-              for (auto &it : _vnets) {
-                  ss << it;
-                  ss << " ";
-              }
-              return ss.str();
-          }
+        // Queue for stalled flits
+        std::deque<flit *> m_stall_queue;
+        bool messageEnqueuedThisCycle;
 
-          // Queue for stalled flits
-          std::deque<flit *> m_stall_queue;
-          bool messageEnqueuedThisCycle;
       private:
-          std::vector<int> _vnets;
-          flitBuffer *_outCreditQueue;
+        std::vector<int> _vnets;
+        flitBuffer *_outCreditQueue;
 
-          NetworkLink *_inNetLink;
-          CreditLink *_outCreditLink;
-          uint32_t _bitWidth;
+        NetworkLink *_inNetLink;
+        CreditLink *_outCreditLink;
+        uint32_t _bitWidth;
     };
-
 
   private:
     GarnetNetwork *m_net_ptr;
@@ -283,7 +290,7 @@ class NetworkInterface : public ClockedObject, public Consumer
 
     // Input Flit Buffers
     // The flit buffers which will serve the Consumer
-    std::vector<flitBuffer>  niOutVcs;
+    std::vector<flitBuffer> niOutVcs;
     std::vector<Tick> m_ni_out_vcs_enqueue_time;
 
     // The Message buffers that takes messages from the protocol
@@ -296,7 +303,6 @@ class NetworkInterface : public ClockedObject, public Consumer
     void checkStallQueue();
     bool flitisizeMessage(MsgPtr msg_ptr, int vnet);
     int calculateVC(int vnet);
-
 
     void scheduleOutputPort(OutputPort *oPort);
     void scheduleOutputLink();

@@ -62,18 +62,19 @@ class Dueling : public Base
         std::shared_ptr<ReplacementData> replDataB;
 
         /** Default constructor. Initialize sub-replacement data. */
-        DuelerReplData(const std::shared_ptr<ReplacementData>& repl_data_a,
-            const std::shared_ptr<ReplacementData>& repl_data_b)
-          : ReplacementData(), Dueler(), replDataA(repl_data_a),
-            replDataB(repl_data_b)
-        {
-        }
+        DuelerReplData(const std::shared_ptr<ReplacementData> &repl_data_a,
+                       const std::shared_ptr<ReplacementData> &repl_data_b)
+            : ReplacementData(),
+              Dueler(),
+              replDataA(repl_data_a),
+              replDataB(repl_data_b)
+        {}
     };
 
     /** Sub-replacement policy used in this multiple container. */
-    Base* const replPolicyA;
+    Base *const replPolicyA;
     /** Sub-replacement policy used in this multiple container. */
-    Base* const replPolicyB;
+    Base *const replPolicyB;
 
     /**
      * A dueling monitor that decides which is the best sub-policy based on
@@ -83,7 +84,7 @@ class Dueling : public Base
 
     mutable struct DuelingStats : public statistics::Group
     {
-        DuelingStats(statistics::Group* parent);
+        DuelingStats(statistics::Group *parent);
 
         /** Number of times A was selected on victimization. */
         statistics::Scalar selectedA;
@@ -97,18 +98,18 @@ class Dueling : public Base
     Dueling(const Params &p);
     ~Dueling() = default;
 
-    void invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
-                                                                    override;
-    void touch(const std::shared_ptr<ReplacementData>& replacement_data,
-        const PacketPtr pkt) override;
-    void touch(const std::shared_ptr<ReplacementData>& replacement_data) const
-                                                                     override;
-    void reset(const std::shared_ptr<ReplacementData>& replacement_data,
-        const PacketPtr pkt) override;
-    void reset(const std::shared_ptr<ReplacementData>& replacement_data) const
-                                                                     override;
-    ReplaceableEntry* getVictim(const ReplacementCandidates& candidates) const
-                                                                     override;
+    void invalidate(
+        const std::shared_ptr<ReplacementData> &replacement_data) override;
+    void touch(const std::shared_ptr<ReplacementData> &replacement_data,
+               const PacketPtr pkt) override;
+    void touch(const std::shared_ptr<ReplacementData> &replacement_data)
+        const override;
+    void reset(const std::shared_ptr<ReplacementData> &replacement_data,
+               const PacketPtr pkt) override;
+    void reset(const std::shared_ptr<ReplacementData> &replacement_data)
+        const override;
+    ReplaceableEntry *
+    getVictim(const ReplacementCandidates &candidates) const override;
     std::shared_ptr<ReplacementData> instantiateEntry() override;
 };
 

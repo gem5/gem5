@@ -55,15 +55,10 @@ namespace ruby
 {
 
 VIPERCoalescer::VIPERCoalescer(const Params &p)
-    : GPUCoalescer(p),
-      m_cache_inv_pkt(nullptr),
-      m_num_pending_invs(0)
-{
-}
+    : GPUCoalescer(p), m_cache_inv_pkt(nullptr), m_num_pending_invs(0)
+{}
 
-VIPERCoalescer::~VIPERCoalescer()
-{
-}
+VIPERCoalescer::~VIPERCoalescer() {}
 
 // Places an uncoalesced packet in uncoalescedTable. If the packet is a
 // special type (MemFence, scoping, etc), it is issued immediately.
@@ -80,10 +75,8 @@ VIPERCoalescer::makeRequest(PacketPtr pkt)
     // VIPER does not expect MemSyncReq & Release since compute unit
     // does not specify an equivalent type of memory request.
     assert((pkt->cmd == MemCmd::MemSyncReq && pkt->req->isInvL1()) ||
-            pkt->cmd == MemCmd::ReadReq ||
-            pkt->cmd == MemCmd::WriteReq ||
-            pkt->cmd == MemCmd::FlushReq ||
-            pkt->isAtomicOp());
+           pkt->cmd == MemCmd::ReadReq || pkt->cmd == MemCmd::WriteReq ||
+           pkt->cmd == MemCmd::FlushReq || pkt->isAtomicOp());
 
     if (pkt->req->isInvL1() && m_cache_inv_pkt) {
         // In VIPER protocol, the coalescer is not able to handle two or
@@ -110,7 +103,7 @@ VIPERCoalescer::makeRequest(PacketPtr pkt)
 }
 
 void
-VIPERCoalescer::issueRequest(CoalescedRequest* crequest)
+VIPERCoalescer::issueRequest(CoalescedRequest *crequest)
 {
     PacketPtr pkt = crequest->getFirstPkt();
 
@@ -133,20 +126,19 @@ VIPERCoalescer::issueRequest(CoalescedRequest* crequest)
     DataBlock dataBlock;
     dataBlock.clear();
     uint32_t blockSize = RubySystem::getBlockSizeBytes();
-    std::vector<bool> accessMask(blockSize,false);
-    std::vector< std::pair<int,AtomicOpFunctor*> > atomicOps;
+    std::vector<bool> accessMask(blockSize, false);
+    std::vector<std::pair<int, AtomicOpFunctor *> > atomicOps;
     uint32_t tableSize = crequest->getPackets().size();
     for (int i = 0; i < tableSize; i++) {
         PacketPtr tmpPkt = crequest->getPackets()[i];
         uint32_t tmpOffset = (tmpPkt->getAddr()) - line_addr;
         uint32_t tmpSize = tmpPkt->getSize();
         if (tmpPkt->isAtomicOp()) {
-            std::pair<int,AtomicOpFunctor *> tmpAtomicOp(tmpOffset,
-                                                        tmpPkt->getAtomicOp());
+            std::pair<int, AtomicOpFunctor *> tmpAtomicOp(
+                tmpOffset, tmpPkt->getAtomicOp());
             atomicOps.push_back(tmpAtomicOp);
         } else if (tmpPkt->isWrite()) {
-            dataBlock.setData(tmpPkt->getPtr<uint8_t>(),
-                              tmpOffset, tmpSize);
+            dataBlock.setData(tmpPkt->getPtr<uint8_t>(), tmpOffset, tmpSize);
         }
         for (int j = 0; j < tmpSize; j++) {
             accessMask[tmpOffset + j] = true;
@@ -154,27 +146,25 @@ VIPERCoalescer::issueRequest(CoalescedRequest* crequest)
     }
     std::shared_ptr<RubyRequest> msg;
     if (pkt->isAtomicOp()) {
-        msg = std::make_shared<RubyRequest>(clockEdge(), pkt->getAddr(),
-                              pkt->getSize(), pc, crequest->getRubyType(),
-                              RubyAccessMode_Supervisor, pkt,
-                              PrefetchBit_No, proc_id, 100,
-                              blockSize, accessMask,
-                              dataBlock, atomicOps, crequest->getSeqNum());
+        msg = std::make_shared<RubyRequest>(
+            clockEdge(), pkt->getAddr(), pkt->getSize(), pc,
+            crequest->getRubyType(), RubyAccessMode_Supervisor, pkt,
+            PrefetchBit_No, proc_id, 100, blockSize, accessMask, dataBlock,
+            atomicOps, crequest->getSeqNum());
     } else {
-        msg = std::make_shared<RubyRequest>(clockEdge(), pkt->getAddr(),
-                              pkt->getSize(), pc, crequest->getRubyType(),
-                              RubyAccessMode_Supervisor, pkt,
-                              PrefetchBit_No, proc_id, 100,
-                              blockSize, accessMask,
-                              dataBlock, crequest->getSeqNum());
+        msg = std::make_shared<RubyRequest>(
+            clockEdge(), pkt->getAddr(), pkt->getSize(), pc,
+            crequest->getRubyType(), RubyAccessMode_Supervisor, pkt,
+            PrefetchBit_No, proc_id, 100, blockSize, accessMask, dataBlock,
+            crequest->getSeqNum());
     }
 
     if (pkt->cmd == MemCmd::WriteReq) {
         makeWriteCompletePkts(crequest);
     }
 
-    DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %s %s\n",
-             curTick(), m_version, "Coal", "Begin", "", "",
+    DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %s %s\n", curTick(),
+             m_version, "Coal", "Begin", "", "",
              printAddress(msg->getPhysicalAddress()),
              RubyRequestType_to_string(crequest->getRubyType()));
 
@@ -183,8 +173,7 @@ VIPERCoalescer::issueRequest(CoalescedRequest* crequest)
 
     if (!deadlockCheckEvent.scheduled()) {
         schedule(deadlockCheckEvent,
-                 m_deadlock_threshold * clockPeriod() +
-                 curTick());
+                 m_deadlock_threshold * clockPeriod() + curTick());
     }
 
     assert(m_mandatory_q_ptr);
@@ -194,7 +183,7 @@ VIPERCoalescer::issueRequest(CoalescedRequest* crequest)
 }
 
 void
-VIPERCoalescer::makeWriteCompletePkts(CoalescedRequest* crequest)
+VIPERCoalescer::makeWriteCompletePkts(CoalescedRequest *crequest)
 {
     // In VIPER protocol, for each write request, down-stream caches
     // return two responses: writeCallback and writeCompleteCallback.
@@ -207,15 +196,14 @@ VIPERCoalescer::makeWriteCompletePkts(CoalescedRequest* crequest)
     // before writeCompleteCallback is called.
 
     auto key = crequest->getSeqNum();
-    std::vector<PacketPtr>& req_pkts = crequest->getPackets();
+    std::vector<PacketPtr> &req_pkts = crequest->getPackets();
 
     for (auto pkt : req_pkts) {
-        DPRINTF(GPUCoalescer, "makeWriteCompletePkts: instSeqNum %d\n",
-                key);
+        DPRINTF(GPUCoalescer, "makeWriteCompletePkts: instSeqNum %d\n", key);
         assert(pkt->cmd == MemCmd::WriteReq);
 
-        PacketPtr writeCompletePkt = new Packet(pkt->req,
-            MemCmd::WriteCompleteResp);
+        PacketPtr writeCompletePkt =
+            new Packet(pkt->req, MemCmd::WriteCompleteResp);
         writeCompletePkt->setAddr(pkt->getAddr());
         writeCompletePkt->senderState = pkt->senderState;
         m_writeCompletePktMap[key].push_back(writeCompletePkt);
@@ -233,27 +221,25 @@ VIPERCoalescer::writeCompleteCallback(Addr addr, uint64_t instSeqNum)
            !m_writeCompletePktMap[key].empty());
 
     m_writeCompletePktMap[key].erase(
-        std::remove_if(
-            m_writeCompletePktMap[key].begin(),
-            m_writeCompletePktMap[key].end(),
-            [addr](PacketPtr writeCompletePkt) -> bool {
-                if (makeLineAddress(writeCompletePkt->getAddr()) == addr) {
-                    RubyPort::SenderState *ss =
-                        safe_cast<RubyPort::SenderState *>
-                            (writeCompletePkt->senderState);
-                    MemResponsePort *port = ss->port;
-                    assert(port != NULL);
+        std::remove_if(m_writeCompletePktMap[key].begin(),
+                       m_writeCompletePktMap[key].end(),
+                       [addr](PacketPtr writeCompletePkt) -> bool {
+                           if (makeLineAddress(writeCompletePkt->getAddr()) ==
+                               addr) {
+                               RubyPort::SenderState *ss =
+                                   safe_cast<RubyPort::SenderState *>(
+                                       writeCompletePkt->senderState);
+                               MemResponsePort *port = ss->port;
+                               assert(port != NULL);
 
-                    writeCompletePkt->senderState = ss->predecessor;
-                    delete ss;
-                    port->hitCallback(writeCompletePkt);
-                    return true;
-                }
-                return false;
-            }
-        ),
-        m_writeCompletePktMap[key].end()
-    );
+                               writeCompletePkt->senderState = ss->predecessor;
+                               delete ss;
+                               port->hitCallback(writeCompletePkt);
+                               return true;
+                           }
+                           return false;
+                       }),
+        m_writeCompletePktMap[key].end());
 
     trySendRetries();
 
@@ -269,15 +255,15 @@ VIPERCoalescer::invTCPCallback(Addr addr)
     m_num_pending_invs--;
 
     if (m_num_pending_invs == 0) {
-        std::vector<PacketPtr> pkt_list { m_cache_inv_pkt };
+        std::vector<PacketPtr> pkt_list{ m_cache_inv_pkt };
         m_cache_inv_pkt = nullptr;
         completeHitCallback(pkt_list);
     }
 }
 
 /**
-  * Invalidate TCP
-  */
+ * Invalidate TCP
+ */
 void
 VIPERCoalescer::invTCP()
 {
@@ -291,13 +277,12 @@ VIPERCoalescer::invTCP()
         // Evict Read-only data
         RubyRequestType request_type = RubyRequestType_REPLACEMENT;
         std::shared_ptr<RubyRequest> msg = std::make_shared<RubyRequest>(
-            clockEdge(), addr, 0, 0,
-            request_type, RubyAccessMode_Supervisor,
+            clockEdge(), addr, 0, 0, request_type, RubyAccessMode_Supervisor,
             nullptr);
         DPRINTF(GPUCoalescer, "Evicting addr 0x%x\n", addr);
         assert(m_mandatory_q_ptr != NULL);
-        Tick latency = cyclesToTicks(
-            m_controller->mandatoryQueueLatency(request_type));
+        Tick latency =
+            cyclesToTicks(m_controller->mandatoryQueueLatency(request_type));
         m_mandatory_q_ptr->enqueue(msg, clockEdge(), latency);
         m_num_pending_invs++;
     }

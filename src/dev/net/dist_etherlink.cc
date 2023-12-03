@@ -72,11 +72,12 @@ namespace gem5
 DistEtherLink::DistEtherLink(const Params &p)
     : SimObject(p), linkDelay(p.delay)
 {
-    DPRINTF(DistEthernet,"DistEtherLink::DistEtherLink() "
-            "link delay:%llu ticksPerByte:%f\n", p.delay, p.speed);
+    DPRINTF(DistEthernet,
+            "DistEtherLink::DistEtherLink() "
+            "link delay:%llu ticksPerByte:%f\n",
+            p.delay, p.speed);
 
-    txLink = new TxLink(name() + ".link0", this, p.speed, p.delay_var,
-                        p.dump);
+    txLink = new TxLink(name() + ".link0", this, p.speed, p.delay_var, p.dump);
     rxLink = new RxLink(name() + ".link1", this, p.delay, p.dump);
 
     Tick sync_repeat;
@@ -90,11 +91,9 @@ DistEtherLink::DistEtherLink(const Params &p)
     }
 
     // create the dist (TCP) interface to talk to the peer gem5 processes.
-    distIface = new TCPIface(p.server_name, p.server_port,
-                             p.dist_rank, p.dist_size,
-                             p.sync_start, sync_repeat, this,
-                             p.dist_sync_on_pseudo_op, p.is_switch,
-                             p.num_nodes);
+    distIface = new TCPIface(
+        p.server_name, p.server_port, p.dist_rank, p.dist_size, p.sync_start,
+        sync_repeat, this, p.dist_sync_on_pseudo_op, p.is_switch, p.num_nodes);
 
     localIface = new LocalIface(name() + ".int0", txLink, rxLink, distIface);
 }
@@ -134,14 +133,14 @@ DistEtherLink::unserialize(CheckpointIn &cp)
 void
 DistEtherLink::init()
 {
-    DPRINTF(DistEthernet,"DistEtherLink::init() called\n");
+    DPRINTF(DistEthernet, "DistEtherLink::init() called\n");
     distIface->init(rxLink->doneEvent(), linkDelay);
 }
 
 void
 DistEtherLink::startup()
 {
-    DPRINTF(DistEthernet,"DistEtherLink::startup() called\n");
+    DPRINTF(DistEthernet, "DistEtherLink::startup() called\n");
     distIface->startup();
 }
 
@@ -163,8 +162,10 @@ DistEtherLink::RxLink::rxDone()
     if (dump)
         dump->dump(packet);
 
-    DPRINTF(DistEthernetPkt, "DistEtherLink::DistLink::rxDone() "
-            "packet received: len=%d\n", packet->length);
+    DPRINTF(DistEthernetPkt,
+            "DistEtherLink::DistLink::rxDone() "
+            "packet received: len=%d\n",
+            packet->length);
     DDUMP(EthernetData, packet->data, packet->length);
 
     localIface->sendPacket(packet);
@@ -242,11 +243,9 @@ DistEtherLink::Link::unserialize(CheckpointIn &cp)
     }
 }
 
-DistEtherLink::LocalIface::LocalIface(const std::string &name,
-                                       TxLink *tx,
-                                       RxLink *rx,
-                                       DistIface *m) :
-    EtherInt(name), txLink(tx)
+DistEtherLink::LocalIface::LocalIface(const std::string &name, TxLink *tx,
+                                      RxLink *rx, DistIface *m)
+    : EtherInt(name), txLink(tx)
 {
     tx->setLocalInt(this);
     rx->setLocalInt(this);

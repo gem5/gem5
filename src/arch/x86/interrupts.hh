@@ -171,7 +171,11 @@ class Interrupts : public BaseInterrupts
         return bits(regs[base + (vector / 32)], vector % 32);
     }
 
-    Tick clockPeriod() const { return clockDomain.clockPeriod(); }
+    Tick
+    clockPeriod() const
+    {
+        return clockDomain.clockPeriod();
+    }
 
     void requestInterrupt(uint8_t vector, uint8_t deliveryMode, bool level);
 
@@ -192,8 +196,11 @@ class Interrupts : public BaseInterrupts
     Addr pioAddr = MaxAddr;
 
   public:
-
-    int getInitialApicId() { return initialApicId; }
+    int
+    getInitialApicId()
+    {
+        return initialApicId;
+    }
 
     /*
      * Params stuff.
@@ -231,8 +238,7 @@ class Interrupts : public BaseInterrupts
     void lowerInterruptPin(int number);
 
     Port &
-    getPort(const std::string &if_name,
-            PortID idx=InvalidPortID) override
+    getPort(const std::string &if_name, PortID idx = InvalidPortID) override
     {
         if (if_name == "int_requestor") {
             return intRequestPort;
@@ -255,6 +261,7 @@ class Interrupts : public BaseInterrupts
 
     uint32_t readReg(ApicRegIndex miscReg);
     void setReg(ApicRegIndex reg, uint32_t val);
+
     void
     setRegNoEffect(ApicRegIndex reg, uint32_t val)
     {
@@ -279,12 +286,18 @@ class Interrupts : public BaseInterrupts
      * @return true if there are interrupts pending.
      */
     bool checkInterruptsRaw() const;
+
     /**
      * Check if there are pending unmaskable interrupts.
      *
      * @return true there are unmaskable interrupts pending.
      */
-    bool hasPendingUnmaskable() const { return pendingUnmaskableInt; }
+    bool
+    hasPendingUnmaskable() const
+    {
+        return pendingUnmaskableInt;
+    }
+
     Fault getInterrupt() override;
     void updateIntrInfo() override;
 

@@ -46,8 +46,7 @@ const int AddressManager::INVALID_VALUE = -1;
 const int AddressManager::INVALID_LOCATION = -1;
 
 AddressManager::AddressManager(int n_atomic_locs, int n_normal_locs_per_atomic)
-      : numAtomicLocs(n_atomic_locs),
-        numLocsPerAtomic(n_normal_locs_per_atomic)
+    : numAtomicLocs(n_atomic_locs), numLocsPerAtomic(n_normal_locs_per_atomic)
 {
     assert(numAtomicLocs > 0 && numLocsPerAtomic > 0);
     numNormalLocs = numAtomicLocs * numLocsPerAtomic;
@@ -62,10 +61,8 @@ AddressManager::AddressManager(int n_atomic_locs, int n_normal_locs_per_atomic)
     // randomly shuffle randAddressMap. The seed is determined by the random_mt
     // gem5 rng. This allows for deterministic randomization.
     std::shuffle(
-        randAddressMap.begin(),
-        randAddressMap.end(),
-        std::default_random_engine(random_mt.random<unsigned>(0,UINT_MAX))
-    );
+        randAddressMap.begin(), randAddressMap.end(),
+        std::default_random_engine(random_mt.random<unsigned>(0, UINT_MAX)));
 
     // initialize atomic locations
     // first and last normal location per atomic location
@@ -84,9 +81,9 @@ AddressManager::AddressManager(int n_atomic_locs, int n_normal_locs_per_atomic)
 
 AddressManager::~AddressManager()
 {
-    for (AtomicStruct* atomic_struct : atomicStructs)
+    for (AtomicStruct *atomic_struct : atomicStructs)
         delete atomic_struct;
-    for (LastWriter* lw : logTable)
+    for (LastWriter *lw : logTable)
         delete lw;
 }
 
@@ -100,7 +97,7 @@ AddressManager::getAddress(Location loc)
 AddressManager::Location
 AddressManager::getAtomicLoc()
 {
-    Location ret_atomic_loc = \
+    Location ret_atomic_loc =
         random_mt.random<unsigned long>() % numAtomicLocs;
     atomicStructs[ret_atomic_loc]->startLocSelection();
     return ret_atomic_loc;
@@ -170,10 +167,7 @@ AddressManager::AtomicStruct::AtomicStruct(Location atomic_loc,
     requestCount = 0;
 }
 
-AddressManager::AtomicStruct::~AtomicStruct()
-{
-    delete[] locArray;
-}
+AddressManager::AtomicStruct::~AtomicStruct() { delete[] locArray; }
 
 void
 AddressManager::AtomicStruct::startLocSelection()
@@ -206,9 +200,9 @@ AddressManager::AtomicStruct::getLoadLoc()
         // we can pick any location btw
         // locArray [firstMark : arraySize-1]
         int range_size = arraySize - firstMark;
-        Location ret_loc = locArray[
-                firstMark + random_mt.random<unsigned int>() % range_size
-        ];
+        Location ret_loc =
+            locArray[firstMark +
+                     random_mt.random<unsigned int>() % range_size];
 
         // update loadStoreMap
         LdStMap::iterator it = loadStoreMap.find(ret_loc);
@@ -216,8 +210,8 @@ AddressManager::AtomicStruct::getLoadLoc()
         if (it == loadStoreMap.end()) {
             // insert a new entry to the map b/c the entry is not there yet
             // to mark this location has been picked for a LD
-            loadStoreMap.insert(std::pair<Location, LdStBits>
-                                            (ret_loc, LdStBits(true,false)));
+            loadStoreMap.insert(
+                std::pair<Location, LdStBits>(ret_loc, LdStBits(true, false)));
         } else {
             // otherwise, just update the LD bit
             (it->second).first = true;
@@ -240,9 +234,9 @@ AddressManager::AtomicStruct::getStoreLoc()
     } else {
         // we can pick any location btw [firstMark : secondMark-1]
         int range_size = secondMark - firstMark;
-        Location ret_loc = locArray[
-            firstMark + random_mt.random<unsigned int>() % range_size
-        ];
+        Location ret_loc =
+            locArray[firstMark +
+                     random_mt.random<unsigned int>() % range_size];
 
         // update loadStoreMap
         LdStMap::iterator it = loadStoreMap.find(ret_loc);
@@ -250,8 +244,8 @@ AddressManager::AtomicStruct::getStoreLoc()
         if (it == loadStoreMap.end()) {
             // insert a new entry to the map b/c the entry is not there yet
             // to mark this location has been picked for a ST
-            loadStoreMap.insert(std::pair<Location, LdStBits>
-                                            (ret_loc, LdStBits(false,true)));
+            loadStoreMap.insert(
+                std::pair<Location, LdStBits>(ret_loc, LdStBits(false, true)));
         } else {
             // otherwise, just update the ST bit
             (it->second).second = true;
@@ -275,12 +269,12 @@ AddressManager::AtomicStruct::endLocSelection()
     assert(firstMark <= secondMark);
     assert(secondMark <= arraySize);
 
-    for (auto& it : loadStoreMap) {
+    for (auto &it : loadStoreMap) {
         Location loc = it.first;
         LdStBits p = it.second;
 
         assert(loc >= locationBase && loc < locationBase + arraySize);
-        LocProperty& loc_prop = locProps[loc - locationBase];
+        LocProperty &loc_prop = locProps[loc - locationBase];
 
         if (p.first && !p.second) {
             // this location has been picked for LD(s) but not ST
@@ -294,8 +288,8 @@ AddressManager::AtomicStruct::endLocSelection()
 
                 // pick the last location in (2) to swap
                 Location swapped_loc = locArray[secondMark - 1];
-                LocProperty& swapped_loc_prop =
-                                         locProps[swapped_loc - locationBase];
+                LocProperty &swapped_loc_prop =
+                    locProps[swapped_loc - locationBase];
 
                 // swap loc and swapped_loc
                 swap(loc_prop, swapped_loc_prop);
@@ -313,8 +307,8 @@ AddressManager::AtomicStruct::endLocSelection()
 
             // pick the first location in (2) to swap
             Location swapped_loc = locArray[firstMark];
-            LocProperty& swapped_loc_prop =
-                                        locProps[swapped_loc - locationBase];
+            LocProperty &swapped_loc_prop =
+                locProps[swapped_loc - locationBase];
 
             // swap loc and swapped_loc
             swap(loc_prop, swapped_loc_prop);
@@ -326,7 +320,7 @@ AddressManager::AtomicStruct::endLocSelection()
             loc_prop.second++;
         } else {
             panic("Location in loadStoreMap but wasn't picked in any"
-                            " action\n");
+                  " action\n");
         }
     }
 
@@ -339,7 +333,7 @@ AddressManager::AtomicStruct::releaseLoc(Location loc)
 {
     assert(loc >= locationBase && loc < locationBase + arraySize);
 
-    LocProperty& loc_prop = locProps[loc - locationBase];
+    LocProperty &loc_prop = locProps[loc - locationBase];
 
     if (inFirstRegion(loc_prop.first)) {
         // this location must have exactly 1 owner
@@ -347,7 +341,7 @@ AddressManager::AtomicStruct::releaseLoc(Location loc)
 
         // pick the last location in region 1 to swap
         Location swapped_loc = locArray[firstMark - 1];
-        LocProperty& swapped_loc_prop = locProps[swapped_loc - locationBase];
+        LocProperty &swapped_loc_prop = locProps[swapped_loc - locationBase];
 
         // swap loc and swapped_loc
         swap(loc_prop, swapped_loc_prop);
@@ -364,8 +358,8 @@ AddressManager::AtomicStruct::releaseLoc(Location loc)
         if (loc_prop.second == 1) {
             // pick the first location in region 3 to swap
             Location swapped_loc = locArray[secondMark];
-            LocProperty& swapped_loc_prop =
-                                        locProps[swapped_loc - locationBase];
+            LocProperty &swapped_loc_prop =
+                locProps[swapped_loc - locationBase];
 
             // swap loc and swapped_loc
             swap(loc_prop, swapped_loc_prop);
@@ -388,7 +382,7 @@ AddressManager::AtomicStruct::isExpectedValue(Value val)
 
     if (it == expectedValues.end()) {
         std::stringstream exp_val_ss;
-        for (auto& val : expectedValues) {
+        for (auto &val : expectedValues) {
             exp_val_ss << " " << val;
         }
 
@@ -404,7 +398,7 @@ AddressManager::AtomicStruct::isExpectedValue(Value val)
 }
 
 void
-AddressManager::AtomicStruct::swap(LocProperty& prop_1, LocProperty& prop_2)
+AddressManager::AtomicStruct::swap(LocProperty &prop_1, LocProperty &prop_2)
 {
     int new_idx_1 = prop_2.first;
     int new_idx_2 = prop_1.first;

@@ -44,27 +44,34 @@ namespace ruby
 class StoreTrace
 {
   public:
-    StoreTrace() { }
+    StoreTrace() {}
+
     explicit StoreTrace(Addr addr);
     ~StoreTrace();
 
     void store(NodeID node);
     void downgrade(NodeID node);
-    int getTotal() const { return m_total_samples; }
+
+    int
+    getTotal() const
+    {
+        return m_total_samples;
+    }
+
     static void initSummary();
-    static void printSummary(std::ostream& out);
+    static void printSummary(std::ostream &out);
     static void clearSummary();
 
-    void print(std::ostream& out) const;
+    void print(std::ostream &out) const;
 
   private:
     static bool s_init;
     static int64_t s_total_samples; // Total number of store lifetimes
-                                  // of all lines
-    static Histogram* s_store_count_ptr;
-    static Histogram* s_store_first_to_stolen_ptr;
-    static Histogram* s_store_last_to_stolen_ptr;
-    static Histogram* s_store_first_to_last_ptr;
+                                    // of all lines
+    static Histogram *s_store_count_ptr;
+    static Histogram *s_store_first_to_stolen_ptr;
+    static Histogram *s_store_last_to_stolen_ptr;
+    static Histogram *s_store_first_to_last_ptr;
 
     Addr m_addr;
     NodeID m_last_writer;
@@ -80,13 +87,13 @@ class StoreTrace
 };
 
 inline bool
-node_less_then_eq(const StoreTrace* n1, const StoreTrace* n2)
+node_less_then_eq(const StoreTrace *n1, const StoreTrace *n2)
 {
     return n1->getTotal() > n2->getTotal();
 }
 
-inline std::ostream&
-operator<<(std::ostream& out, const StoreTrace& obj)
+inline std::ostream &
+operator<<(std::ostream &out, const StoreTrace &obj)
 {
     obj.print(out);
     out << std::flush;

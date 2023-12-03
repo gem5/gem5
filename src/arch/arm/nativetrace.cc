@@ -67,6 +67,7 @@ namespace trace
     "f23", "f24", "f25", "f26", "f27", "f28", "f29",  "f30",
     "f31", "fpscr"
 };
+
 /* clang-format on */
 
 void
@@ -117,11 +118,11 @@ ArmNativeTrace::ThreadState::update(ThreadContext *tc)
         changed[i] = (oldState[i] != newState[i]);
     }
 
-    //R15, aliased with the PC
+    // R15, aliased with the PC
     newState[STATE_PC] = tc->pcState().as<ArmISA::PCState>().npc();
     changed[STATE_PC] = (newState[STATE_PC] != oldState[STATE_PC]);
 
-    //CPSR
+    // CPSR
     CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
     cpsr.nz = tc->getReg(cc_reg::Nz);
     cpsr.c = tc->getReg(cc_reg::C);
@@ -135,11 +136,11 @@ ArmNativeTrace::ThreadState::update(ThreadContext *tc)
         ArmISA::VecRegContainer vec_container;
         tc->getReg(vecRegClass[i], &vec_container);
         auto *vec = vec_container.as<uint64_t>();
-        newState[STATE_F0 + 2*i] = vec[0];
-        newState[STATE_F0 + 2*i + 1] = vec[1];
+        newState[STATE_F0 + 2 * i] = vec[0];
+        newState[STATE_F0 + 2 * i + 1] = vec[1];
     }
-    newState[STATE_FPSCR] = tc->readMiscRegNoEffect(MISCREG_FPSCR) |
-                            tc->getReg(cc_reg::Fp);
+    newState[STATE_FPSCR] =
+        tc->readMiscRegNoEffect(MISCREG_FPSCR) | tc->getReg(cc_reg::Fp);
 }
 
 void
@@ -155,10 +156,9 @@ ArmNativeTrace::check(NativeTraceRecord *record)
 
     // If a syscall just happened native trace needs another tick
     if ((mState.oldState[STATE_PC] == nState.oldState[STATE_PC]) &&
-            (mState.newState[STATE_PC] - 4 == nState.newState[STATE_PC])) {
-            DPRINTF(ExecRegDelta, "Advancing to match PCs after syscall\n");
-            nState.update(this);
-
+        (mState.newState[STATE_PC] - 4 == nState.newState[STATE_PC])) {
+        DPRINTF(ExecRegDelta, "Advancing to match PCs after syscall\n");
+        nState.update(this);
     }
 
     bool errorFound = false;
@@ -183,26 +183,27 @@ ArmNativeTrace::check(NativeTraceRecord *record)
             }
 
             if (!nState.changed[i]) {
-                DPRINTF(ExecRegDelta, "%s [%5s] "\
-                                      "Native:         %#010x         "\
-                                      "M5:     %#010x => %#010x\n",
-                                      vergence, regNames[i],
-                                      nState.newState[i],
-                                      mState.oldState[i], mState.newState[i]);
+                DPRINTF(ExecRegDelta,
+                        "%s [%5s] "
+                        "Native:         %#010x         "
+                        "M5:     %#010x => %#010x\n",
+                        vergence, regNames[i], nState.newState[i],
+                        mState.oldState[i], mState.newState[i]);
             } else if (!mState.changed[i]) {
-                DPRINTF(ExecRegDelta, "%s [%5s] "\
-                                      "Native: %#010x => %#010x "\
-                                      "M5:             %#010x        \n",
-                                      vergence, regNames[i],
-                                      nState.oldState[i], nState.newState[i],
-                                      mState.newState[i]);
+                DPRINTF(ExecRegDelta,
+                        "%s [%5s] "
+                        "Native: %#010x => %#010x "
+                        "M5:             %#010x        \n",
+                        vergence, regNames[i], nState.oldState[i],
+                        nState.newState[i], mState.newState[i]);
             } else {
-                DPRINTF(ExecRegDelta, "%s [%5s] "\
-                                      "Native: %#010x => %#010x "\
-                                      "M5:     %#010x => %#010x\n",
-                                      vergence, regNames[i],
-                                      nState.oldState[i], nState.newState[i],
-                                      mState.oldState[i], mState.newState[i]);
+                DPRINTF(ExecRegDelta,
+                        "%s [%5s] "
+                        "Native: %#010x => %#010x "
+                        "M5:     %#010x => %#010x\n",
+                        vergence, regNames[i], nState.oldState[i],
+                        nState.newState[i], mState.oldState[i],
+                        mState.newState[i]);
             }
 #endif
         }
@@ -218,8 +219,8 @@ ArmNativeTrace::check(NativeTraceRecord *record)
         assert(inst);
         record->traceInst(inst, ran);
 
-        bool pcError = (mState.newState[STATE_PC] !=
-                        nState.newState[STATE_PC]);
+        bool pcError =
+            (mState.newState[STATE_PC] != nState.newState[STATE_PC]);
         if (stopOnPCError && pcError)
             panic("Native trace detected an error in control flow!");
     }

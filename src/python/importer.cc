@@ -42,8 +42,8 @@ importerInit(py::module_ &m)
 {
     m.def("_init_all_embedded", gem5::EmbeddedPython::initAll);
     py::str importer_code(
-            reinterpret_cast<const char *>(gem5::Blobs::m5ImporterCode),
-            gem5::Blobs::m5ImporterCode_len);
+        reinterpret_cast<const char *>(gem5::Blobs::m5ImporterCode),
+        gem5::Blobs::m5ImporterCode_len);
     py::exec(std::move(importer_code), m.attr("__dict__"));
 }
 

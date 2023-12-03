@@ -38,7 +38,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 /**
  * @file
  * HMCController declaration
@@ -75,12 +74,10 @@ namespace gem5
 
 class HMCController : public NoncoherentXBar
 {
-public:
-
+  public:
     HMCController(const HMCControllerParams &p);
 
-private:
-
+  private:
     // Receive range change only on one of the ports (because they all have
     //  the same range)
     virtual void recvRangeChange(PortID mem_side_port_id);

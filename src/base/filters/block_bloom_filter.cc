@@ -40,27 +40,24 @@ namespace bloom_filter
 {
 
 Block::Block(const BloomFilterBlockParams &p)
-    : Base(p), masksLSBs(p.masks_lsbs),
-      masksSizes(p.masks_sizes)
+    : Base(p), masksLSBs(p.masks_lsbs), masksSizes(p.masks_sizes)
 {
     fatal_if(masksLSBs.size() != masksSizes.size(),
-        "Masks haven't been properly provided");
+             "Masks haven't been properly provided");
     fatal_if(masksLSBs.size() < 1,
-        "There must be at least one mask to extract an address bitfield");
+             "There must be at least one mask to extract an address bitfield");
 
     for (int i = 0; i < masksLSBs.size(); i++) {
         fatal_if((masksSizes[i] > sizeBits) || (masksSizes[i] <= 0),
-            "The bitfields must be indexable in the filter");
+                 "The bitfields must be indexable in the filter");
         fatal_if(masksLSBs[i] + masksSizes[i] >
-            std::numeric_limits<Addr>::digits,
-            "The total size of the bitfields cannot be bigger than the " \
-            "number of bits in an address");
+                     std::numeric_limits<Addr>::digits,
+                 "The total size of the bitfields cannot be bigger than the "
+                 "number of bits in an address");
     }
 }
 
-Block::~Block()
-{
-}
+Block::~Block() {}
 
 void
 Block::set(Addr addr)
@@ -87,7 +84,7 @@ Block::hash(Addr addr) const
     for (int i = 0; i < masksLSBs.size(); i++) {
         hashed_addr ^=
             bits(addr, offsetBits + masksLSBs[i] + masksSizes[i] - 1,
-            offsetBits + masksLSBs[i]);
+                 offsetBits + masksLSBs[i]);
     }
     assert(hashed_addr < filter.size());
     return hashed_addr;

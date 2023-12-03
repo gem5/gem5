@@ -60,15 +60,14 @@ SMMUCommandExecProcess::main(Yield &yield)
             // Masking depending on CMDQ_BASE.LOG2SIZE (log(number of
             // queue entries)). Example: a value of 0b101 (32 entries)
             // generates a 0b11111 mask.
-            int size_mask = mask(
-                smmu.regs.cmdq_base & Q_BASE_SIZE_MASK);
+            int size_mask = mask(smmu.regs.cmdq_base & Q_BASE_SIZE_MASK);
 
             // In this case the wrap bit is considered (+1)
-            int size_mask_wrap = mask(
-                (smmu.regs.cmdq_base & Q_BASE_SIZE_MASK) + 1);
+            int size_mask_wrap =
+                mask((smmu.regs.cmdq_base & Q_BASE_SIZE_MASK) + 1);
 
             if ((smmu.regs.cmdq_cons & size_mask_wrap) ==
-                    (smmu.regs.cmdq_prod & size_mask_wrap))
+                (smmu.regs.cmdq_prod & size_mask_wrap))
                 break; // command queue empty
 
             Addr cmd_addr =

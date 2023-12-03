@@ -47,7 +47,9 @@ namespace gem5
 {
 
 PciVirtIO::PciVirtIO(const Params &params)
-    : PciDevice(params), queueNotify(0), interruptDeliveryPending(false),
+    : PciDevice(params),
+      queueNotify(0),
+      interruptDeliveryPending(false),
       vio(*params.vio)
 {
     // Override the subsystem ID with the device ID from VirtIO
@@ -62,9 +64,7 @@ PciVirtIO::PciVirtIO(const Params &params)
     vio.registerKickCallback([this]() { kick(); });
 }
 
-PciVirtIO::~PciVirtIO()
-{
-}
+PciVirtIO::~PciVirtIO() {}
 
 Tick
 PciVirtIO::read(PacketPtr pkt)
@@ -86,61 +86,61 @@ PciVirtIO::read(PacketPtr pkt)
 
     pkt->makeResponse();
 
-    switch(offset) {
-      case OFF_DEVICE_FEATURES:
+    switch (offset) {
+    case OFF_DEVICE_FEATURES:
         DPRINTF(VIOIface, "   DEVICE_FEATURES request\n");
         assert(size == sizeof(uint32_t));
         pkt->setLE<uint32_t>(vio.deviceFeatures);
         break;
 
-      case OFF_GUEST_FEATURES:
+    case OFF_GUEST_FEATURES:
         DPRINTF(VIOIface, "   GUEST_FEATURES request\n");
         assert(size == sizeof(uint32_t));
         pkt->setLE<uint32_t>(vio.getGuestFeatures());
         break;
 
-      case OFF_QUEUE_ADDRESS:
+    case OFF_QUEUE_ADDRESS:
         DPRINTF(VIOIface, "   QUEUE_ADDRESS request\n");
         assert(size == sizeof(uint32_t));
         pkt->setLE<uint32_t>(vio.getQueueAddress());
         break;
 
-      case OFF_QUEUE_SIZE:
+    case OFF_QUEUE_SIZE:
         DPRINTF(VIOIface, "   QUEUE_SIZE request\n");
         assert(size == sizeof(uint16_t));
         pkt->setLE<uint16_t>(vio.getQueueSize());
         break;
 
-      case OFF_QUEUE_SELECT:
+    case OFF_QUEUE_SELECT:
         DPRINTF(VIOIface, "   QUEUE_SELECT\n");
         assert(size == sizeof(uint16_t));
         pkt->setLE<uint16_t>(vio.getQueueSelect());
         break;
 
-      case OFF_QUEUE_NOTIFY:
+    case OFF_QUEUE_NOTIFY:
         DPRINTF(VIOIface, "   QUEUE_NOTIFY request\n");
         assert(size == sizeof(uint16_t));
         pkt->setLE<uint16_t>(queueNotify);
         break;
 
-      case OFF_DEVICE_STATUS:
+    case OFF_DEVICE_STATUS:
         DPRINTF(VIOIface, "   DEVICE_STATUS request\n");
         assert(size == sizeof(uint8_t));
         pkt->setLE<uint8_t>(vio.getDeviceStatus());
         break;
 
-      case OFF_ISR_STATUS: {
-          DPRINTF(VIOIface, "   ISR_STATUS\n");
-          assert(size == sizeof(uint8_t));
-          const uint8_t isr_status(interruptDeliveryPending ? 1 : 0);
-          if (interruptDeliveryPending) {
-              interruptDeliveryPending = false;
-              intrClear();
-          }
-          pkt->setLE<uint8_t>(isr_status);
-      } break;
+    case OFF_ISR_STATUS: {
+        DPRINTF(VIOIface, "   ISR_STATUS\n");
+        assert(size == sizeof(uint8_t));
+        const uint8_t isr_status(interruptDeliveryPending ? 1 : 0);
+        if (interruptDeliveryPending) {
+            interruptDeliveryPending = false;
+            intrClear();
+        }
+        pkt->setLE<uint8_t>(isr_status);
+    } break;
 
-      default:
+    default:
         panic("Unhandled read offset (0x%x)\n", offset);
     }
 
@@ -167,52 +167,52 @@ PciVirtIO::write(PacketPtr pkt)
 
     pkt->makeResponse();
 
-    switch(offset) {
-      case OFF_DEVICE_FEATURES:
+    switch (offset) {
+    case OFF_DEVICE_FEATURES:
         warn("Guest tried to write device features.");
         break;
 
-      case OFF_GUEST_FEATURES:
+    case OFF_GUEST_FEATURES:
         DPRINTF(VIOIface, "   WRITE GUEST_FEATURES request\n");
         assert(size == sizeof(uint32_t));
         vio.setGuestFeatures(pkt->getLE<uint32_t>());
         break;
 
-      case OFF_QUEUE_ADDRESS:
+    case OFF_QUEUE_ADDRESS:
         DPRINTF(VIOIface, "   WRITE QUEUE_ADDRESS\n");
         assert(size == sizeof(uint32_t));
         vio.setQueueAddress(pkt->getLE<uint32_t>());
         break;
 
-      case OFF_QUEUE_SIZE:
+    case OFF_QUEUE_SIZE:
         panic("Guest tried to write queue size.");
         break;
 
-      case OFF_QUEUE_SELECT:
+    case OFF_QUEUE_SELECT:
         DPRINTF(VIOIface, "   WRITE QUEUE_SELECT\n");
         assert(size == sizeof(uint16_t));
         vio.setQueueSelect(pkt->getLE<uint16_t>());
         break;
 
-      case OFF_QUEUE_NOTIFY:
+    case OFF_QUEUE_NOTIFY:
         DPRINTF(VIOIface, "   WRITE QUEUE_NOTIFY\n");
         assert(size == sizeof(uint16_t));
         queueNotify = pkt->getLE<uint16_t>();
         vio.onNotify(queueNotify);
         break;
 
-      case OFF_DEVICE_STATUS: {
-          assert(size == sizeof(uint8_t));
-          uint8_t status(pkt->getLE<uint8_t>());
-          DPRINTF(VIOIface, "VirtIO set status: 0x%x\n", status);
-          vio.setDeviceStatus(status);
-      } break;
+    case OFF_DEVICE_STATUS: {
+        assert(size == sizeof(uint8_t));
+        uint8_t status(pkt->getLE<uint8_t>());
+        DPRINTF(VIOIface, "VirtIO set status: 0x%x\n", status);
+        vio.setDeviceStatus(status);
+    } break;
 
-      case OFF_ISR_STATUS:
+    case OFF_ISR_STATUS:
         warn("Guest tried to write ISR status.");
         break;
 
-      default:
+    default:
         panic("Unhandled read offset (0x%x)\n", offset);
     }
 

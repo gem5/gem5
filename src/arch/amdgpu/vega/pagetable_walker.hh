@@ -58,8 +58,8 @@ class Walker : public ClockedObject
     class WalkerPort : public RequestPort
     {
       public:
-        WalkerPort(const std::string &_name, Walker * _walker) :
-            RequestPort(_name), walker(_walker)
+        WalkerPort(const std::string &_name, Walker *_walker)
+            : RequestPort(_name), walker(_walker)
         {}
 
       protected:
@@ -82,7 +82,10 @@ class Walker : public ClockedObject
         {
             Ready,
             Waiting,
-            PDE2, PDE1, PDE0, PTE
+            PDE2,
+            PDE1,
+            PDE0,
+            PTE
         };
 
       protected:
@@ -103,12 +106,18 @@ class Walker : public ClockedObject
 
       public:
         WalkerState(Walker *_walker, PacketPtr pkt, bool is_functional = false)
-            : walker(_walker), state(Ready), nextState(Ready), dataSize(8),
-              enableNX(true), retrying(false), started(false), tlbPkt(pkt),
+            : walker(_walker),
+              state(Ready),
+              nextState(Ready),
+              dataSize(8),
+              enableNX(true),
+              retrying(false),
+              started(false),
+              tlbPkt(pkt),
               blockFragmentSize(0)
         {
-            DPRINTF(GPUPTWalker, "Walker::WalkerState %p %p %d\n",
-                    this, walker, state);
+            DPRINTF(GPUPTWalker, "Walker::WalkerState %p %p %d\n", this,
+                    walker, state);
         }
 
         void initState(BaseMMU::Mode _mode, Addr baseAddr, Addr vaddr,
@@ -119,8 +128,18 @@ class Walker : public ClockedObject
 
         bool isRetrying();
         void retry();
-        std::string name() const { return walker->name(); }
-        Walker* getWalker() const { return walker; }
+
+        std::string
+        name() const
+        {
+            return walker->name();
+        }
+
+        Walker *
+        getWalker() const
+        {
+            return walker;
+        }
 
       private:
         Fault stepWalk();
@@ -142,9 +161,10 @@ class Walker : public ClockedObject
 
     struct WalkerSenderState : public Packet::SenderState
     {
-        WalkerState * senderWalk;
-        WalkerSenderState(WalkerState * _senderWalk) :
-            senderWalk(_senderWalk) {}
+        WalkerState *senderWalk;
+
+        WalkerSenderState(WalkerState *_senderWalk) : senderWalk(_senderWalk)
+        {}
     };
 
   public:
@@ -156,13 +176,31 @@ class Walker : public ClockedObject
                           BaseMMU::Mode mode, bool &isSystem);
 
     Port &getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID) override;
+                  PortID idx = InvalidPortID) override;
 
-    Addr getBaseAddr() const { return baseAddr; }
-    void setBaseAddr(Addr ta) { baseAddr = ta; }
+    Addr
+    getBaseAddr() const
+    {
+        return baseAddr;
+    }
 
-    void setDevRequestor(RequestorID mid) { deviceRequestorId = mid; }
-    RequestorID getDevRequestor() const { return deviceRequestorId; }
+    void
+    setBaseAddr(Addr ta)
+    {
+        baseAddr = ta;
+    }
+
+    void
+    setDevRequestor(RequestorID mid)
+    {
+        deviceRequestorId = mid;
+    }
+
+    RequestorID
+    getDevRequestor() const
+    {
+        return deviceRequestorId;
+    }
 
   protected:
     // The TLB we're supposed to load.
@@ -176,27 +214,30 @@ class Walker : public ClockedObject
     // Functions for dealing with packets.
     void recvTimingResp(PacketPtr pkt);
     void recvReqRetry();
-    bool sendTiming(WalkerState * sendingState, PacketPtr pkt);
+    bool sendTiming(WalkerState *sendingState, PacketPtr pkt);
 
-    void walkerResponse(WalkerState *state, VegaTlbEntry& entry,
+    void walkerResponse(WalkerState *state, VegaTlbEntry &entry,
                         PacketPtr pkt);
 
     // System pointer for functional accesses
     System *system;
 
   public:
-    void setTLB(GpuTLB * _tlb)
+    void
+    setTLB(GpuTLB *_tlb)
     {
         assert(tlb == nullptr); // only set it once
         tlb = _tlb;
     }
 
     Walker(const VegaPagetableWalkerParams &p)
-      : ClockedObject(p),
-        port(name() + ".port", this),
-        funcState(this, nullptr, true), tlb(nullptr),
-        requestorId(p.system->getRequestorId(this)),
-        deviceRequestorId(999), system(p.system)
+        : ClockedObject(p),
+          port(name() + ".port", this),
+          funcState(this, nullptr, true),
+          tlb(nullptr),
+          requestorId(p.system->getRequestorId(this)),
+          deviceRequestorId(999),
+          system(p.system)
     {
         DPRINTF(GPUPTWalker, "Walker::Walker %p\n", this);
     }

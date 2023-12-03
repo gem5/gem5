@@ -54,9 +54,7 @@ namespace gem5
 ///
 class Solaris : public OperatingSystem
 {
-
   public:
-
     //@{
     /// Basic Solaris types.
     typedef uint64_t size_t;
@@ -69,6 +67,7 @@ class Solaris : public OperatingSystem
     typedef uint64_t dev_t;
     typedef uint32_t mode_t;
     typedef uint32_t nlink_t;
+
     //@}
 
     struct tgt_timespec
@@ -81,41 +80,43 @@ class Solaris : public OperatingSystem
     /// gets #defined to something else on some systems.
     struct tgt_stat
     {
-        uint64_t        st_dev;         //!< device
-        uint64_t        st_ino;         //!< inode
-        uint32_t        st_mode;        //!< mode
-        uint32_t        st_nlink;       //!< link count
-        int32_t         st_uid;         //!< owner's user ID
-        int32_t         st_gid;         //!< owner's group ID
-        uint64_t        st_rdev;        //!< device number
-        int64_t         st_size;        //!< file size in bytes
-        //struct tgt_timespec   st_atimeX;      //!< time of last access
-        //struct tgt_timespec   st_mtimeX;      //!< time of last modification
-        //struct tgt_timespec   st_ctimeX;      //!< time of last status change
+        uint64_t st_dev;   //!< device
+        uint64_t st_ino;   //!< inode
+        uint32_t st_mode;  //!< mode
+        uint32_t st_nlink; //!< link count
+        int32_t st_uid;    //!< owner's user ID
+        int32_t st_gid;    //!< owner's group ID
+        uint64_t st_rdev;  //!< device number
+        int64_t st_size;   //!< file size in bytes
+        // struct tgt_timespec   st_atimeX;      //!< time of last access
+        // struct tgt_timespec   st_mtimeX;      //!< time of last modification
+        // struct tgt_timespec   st_ctimeX;      //!< time of last status
+        // change
         int64_t st_atimeX, st_mtimeX, st_ctimeX;
-        int32_t         st_blksize;     //!< optimal I/O block size
-        int64_t         st_blocks;      //!< number of blocks allocated
-        char            st_fstype[16];
+        int32_t st_blksize; //!< optimal I/O block size
+        int64_t st_blocks;  //!< number of blocks allocated
+        char st_fstype[16];
     };
 
     // same for stat64
     struct tgt_stat64
     {
-        uint64_t        st_dev;         //!< device
-        uint64_t        st_ino;         //!< inode
-        uint32_t        st_mode;        //!< mode
-        uint32_t        st_nlink;       //!< link count
-        int32_t         st_uid;         //!< owner's user ID
-        int32_t         st_gid;         //!< owner's group ID
-        uint64_t        st_rdev;        //!< device number
-        int64_t         st_size;        //!< file size in bytes
-        //struct tgt_timespec   st_atimeX;      //!< time of last access
-        //struct tgt_timespec   st_mtimeX;      //!< time of last modification
-        //struct tgt_timespec   st_ctimeX;      //!< time of last status change
+        uint64_t st_dev;   //!< device
+        uint64_t st_ino;   //!< inode
+        uint32_t st_mode;  //!< mode
+        uint32_t st_nlink; //!< link count
+        int32_t st_uid;    //!< owner's user ID
+        int32_t st_gid;    //!< owner's group ID
+        uint64_t st_rdev;  //!< device number
+        int64_t st_size;   //!< file size in bytes
+        // struct tgt_timespec   st_atimeX;      //!< time of last access
+        // struct tgt_timespec   st_mtimeX;      //!< time of last modification
+        // struct tgt_timespec   st_ctimeX;      //!< time of last status
+        // change
         int64_t st_atimeX, st_mtimeX, st_ctimeX;
-        int32_t         st_blksize;     //!< optimal I/O block size
-        int64_t         st_blocks;      //!< number of blocks allocated
-        char            st_fstype[16];
+        int32_t st_blksize; //!< optimal I/O block size
+        int64_t st_blocks;  //!< number of blocks allocated
+        char st_fstype[16];
     };
 
     /// Length of strings in struct utsname (plus 1 for null char).
@@ -124,18 +125,18 @@ class Solaris : public OperatingSystem
     /// Interface struct for uname().
     struct utsname
     {
-        char sysname[_SYS_NMLN];        //!< System name.
-        char nodename[_SYS_NMLN];       //!< Node name.
-        char release[_SYS_NMLN];        //!< OS release.
-        char version[_SYS_NMLN];        //!< OS version.
-        char machine[_SYS_NMLN];        //!< Machine type.
+        char sysname[_SYS_NMLN];  //!< System name.
+        char nodename[_SYS_NMLN]; //!< Node name.
+        char release[_SYS_NMLN];  //!< OS release.
+        char version[_SYS_NMLN];  //!< OS version.
+        char machine[_SYS_NMLN];  //!< Machine type.
     };
 
     // for *at syscalls
-    static const int TGT_AT_FDCWD     = -100;
+    static const int TGT_AT_FDCWD = -100;
     static const int TGT_AT_REMOVEDIR = 0x800;
 
-};  // class Solaris
+}; // class Solaris
 
 } // namespace gem5
 

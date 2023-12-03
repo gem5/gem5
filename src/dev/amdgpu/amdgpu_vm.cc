@@ -70,7 +70,7 @@ AMDGPUVM::getMMIORange(mmio_range_t mmio_aperture)
     return mmioRanges[mmio_aperture];
 }
 
-const AddrRange&
+const AddrRange &
 AMDGPUVM::getMMIOAperture(Addr offset)
 {
     for (int i = 0; i < NUM_MMIO_RANGES; ++i) {
@@ -101,31 +101,31 @@ AMDGPUVM::readMMIO(PacketPtr pkt, Addr offset)
     uint32_t value = pkt->getLE<uint32_t>();
 
     switch (offset) {
-      // MMHUB MMIOs
-      case mmMMHUB_VM_INVALIDATE_ENG17_SEM:
+    // MMHUB MMIOs
+    case mmMMHUB_VM_INVALIDATE_ENG17_SEM:
         DPRINTF(AMDGPUDevice, "Marking invalidate ENG17 SEM acquired\n");
         pkt->setLE<uint32_t>(1);
         break;
-      case mmMMHUB_VM_INVALIDATE_ENG17_ACK:
+    case mmMMHUB_VM_INVALIDATE_ENG17_ACK:
         // This is only used by driver initialization and only expects an ACK
         // for VMID 0 which is the first bit in the response.
         DPRINTF(AMDGPUDevice, "Telling driver invalidate ENG17 is complete\n");
         pkt->setLE<uint32_t>(1);
         break;
-      case mmMMHUB_VM_FB_LOCATION_BASE:
+    case mmMMHUB_VM_FB_LOCATION_BASE:
         mmhubBase = ((Addr)bits(value, 23, 0) << 24);
         DPRINTF(AMDGPUDevice, "MMHUB FB base set to %#x\n", mmhubBase);
         break;
-      case mmMMHUB_VM_FB_LOCATION_TOP:
+    case mmMMHUB_VM_FB_LOCATION_TOP:
         mmhubTop = ((Addr)bits(value, 23, 0) << 24) | 0xFFFFFFULL;
         DPRINTF(AMDGPUDevice, "MMHUB FB top set to %#x\n", mmhubTop);
         break;
-      // GRBM MMIOs
-      case mmVM_INVALIDATE_ENG17_ACK:
+    // GRBM MMIOs
+    case mmVM_INVALIDATE_ENG17_ACK:
         DPRINTF(AMDGPUDevice, "Overwritting invalidation ENG17 ACK\n");
         pkt->setLE<uint32_t>(1);
         break;
-      default:
+    default:
         DPRINTF(AMDGPUDevice, "GPUVM read of unknown MMIO %#x\n", offset);
         break;
     }
@@ -135,60 +135,60 @@ void
 AMDGPUVM::writeMMIO(PacketPtr pkt, Addr offset)
 {
     switch (offset) {
-      // VMID0 MMIOs
-      case mmVM_CONTEXT0_PAGE_TABLE_BASE_ADDR_LO32:
+    // VMID0 MMIOs
+    case mmVM_CONTEXT0_PAGE_TABLE_BASE_ADDR_LO32:
         vmContext0.ptBaseL = pkt->getLE<uint32_t>();
         // Clear extra bits not part of address
         vmContext0.ptBaseL = insertBits(vmContext0.ptBaseL, 0, 0, 0);
         break;
-      case mmVM_CONTEXT0_PAGE_TABLE_BASE_ADDR_HI32:
+    case mmVM_CONTEXT0_PAGE_TABLE_BASE_ADDR_HI32:
         vmContext0.ptBaseH = pkt->getLE<uint32_t>();
         break;
-      case mmVM_CONTEXT0_PAGE_TABLE_START_ADDR_LO32:
+    case mmVM_CONTEXT0_PAGE_TABLE_START_ADDR_LO32:
         vmContext0.ptStartL = pkt->getLE<uint32_t>();
         break;
-      case mmVM_CONTEXT0_PAGE_TABLE_START_ADDR_HI32:
+    case mmVM_CONTEXT0_PAGE_TABLE_START_ADDR_HI32:
         vmContext0.ptStartH = pkt->getLE<uint32_t>();
         break;
-      case mmVM_CONTEXT0_PAGE_TABLE_END_ADDR_LO32:
+    case mmVM_CONTEXT0_PAGE_TABLE_END_ADDR_LO32:
         vmContext0.ptEndL = pkt->getLE<uint32_t>();
         break;
-      case mmVM_CONTEXT0_PAGE_TABLE_END_ADDR_HI32:
+    case mmVM_CONTEXT0_PAGE_TABLE_END_ADDR_HI32:
         vmContext0.ptEndH = pkt->getLE<uint32_t>();
         break;
-      case mmMC_VM_AGP_TOP: {
+    case mmMC_VM_AGP_TOP: {
         uint32_t val = pkt->getLE<uint32_t>();
         vmContext0.agpTop = (((Addr)bits(val, 23, 0)) << 24) | 0xffffff;
-        } break;
-      case mmMC_VM_AGP_BOT: {
+    } break;
+    case mmMC_VM_AGP_BOT: {
         uint32_t val = pkt->getLE<uint32_t>();
         vmContext0.agpBot = ((Addr)bits(val, 23, 0)) << 24;
-        } break;
-      case mmMC_VM_AGP_BASE: {
+    } break;
+    case mmMC_VM_AGP_BASE: {
         uint32_t val = pkt->getLE<uint32_t>();
         vmContext0.agpBase = ((Addr)bits(val, 23, 0)) << 24;
-        } break;
-      case mmMC_VM_FB_LOCATION_TOP: {
+    } break;
+    case mmMC_VM_FB_LOCATION_TOP: {
         uint32_t val = pkt->getLE<uint32_t>();
         vmContext0.fbTop = (((Addr)bits(val, 23, 0)) << 24) | 0xffffff;
-        } break;
-      case mmMC_VM_FB_LOCATION_BASE: {
+    } break;
+    case mmMC_VM_FB_LOCATION_BASE: {
         uint32_t val = pkt->getLE<uint32_t>();
         vmContext0.fbBase = ((Addr)bits(val, 23, 0)) << 24;
-        } break;
-      case mmMC_VM_FB_OFFSET: {
+    } break;
+    case mmMC_VM_FB_OFFSET: {
         uint32_t val = pkt->getLE<uint32_t>();
         vmContext0.fbOffset = ((Addr)bits(val, 23, 0)) << 24;
-        } break;
-      case mmMC_VM_SYSTEM_APERTURE_LOW_ADDR: {
+    } break;
+    case mmMC_VM_SYSTEM_APERTURE_LOW_ADDR: {
         uint32_t val = pkt->getLE<uint32_t>();
         vmContext0.sysAddrL = ((Addr)bits(val, 29, 0)) << 18;
-        } break;
-      case mmMC_VM_SYSTEM_APERTURE_HIGH_ADDR: {
+    } break;
+    case mmMC_VM_SYSTEM_APERTURE_HIGH_ADDR: {
         uint32_t val = pkt->getLE<uint32_t>();
         vmContext0.sysAddrH = ((Addr)bits(val, 29, 0)) << 18;
-        } break;
-      default:
+    } break;
+    default:
         break;
     }
 }
@@ -246,8 +246,8 @@ AMDGPUVM::serialize(CheckpointOut &cp) const
     SERIALIZE_ARRAY(ptEnd, AMDGPU_VM_COUNT);
 
     gartTableSize = gartTable.size();
-    uint64_t* gartTableKey = new uint64_t[gartTableSize];
-    uint64_t* gartTableValue = new uint64_t[gartTableSize];
+    uint64_t *gartTableKey = new uint64_t[gartTableSize];
+    uint64_t *gartTableValue = new uint64_t[gartTableSize];
     SERIALIZE_SCALAR(gartTableSize);
     int i = 0;
     for (auto it = gartTable.begin(); it != gartTable.end(); ++it) {
@@ -385,8 +385,8 @@ AMDGPUVM::UserTranslationGen::translate(Range &range) const
     // Get base address of the page table for this vmid
     Addr base = vm->getPageTableBase(vmid);
     Addr start = vm->getPageTableStart(vmid);
-    DPRINTF(AMDGPUDevice, "User tl base %#lx start %#lx walker %p\n",
-            base, start, walker);
+    DPRINTF(AMDGPUDevice, "User tl base %#lx start %#lx walker %p\n", base,
+            start, walker);
 
     bool system_bit;
     unsigned logBytes;

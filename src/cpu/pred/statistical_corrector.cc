@@ -49,30 +49,29 @@ namespace gem5
 namespace branch_prediction
 {
 
-StatisticalCorrector::StatisticalCorrector(
-    const StatisticalCorrectorParams &p)
-  : SimObject(p),
-    logBias(p.logBias),
-    logSizeUp(p.logSizeUp),
-    logSizeUps(logSizeUp / 2),
-    numEntriesFirstLocalHistories(p.numEntriesFirstLocalHistories),
-    bwnb(p.bwnb),
-    logBwnb(p.logBwnb),
-    bwm(p.bwm),
-    lnb(p.lnb),
-    logLnb(p.logLnb),
-    lm(p.lm),
-    inb(p.inb),
-    logInb(p.logInb),
-    im(p.im),
-    chooserConfWidth(p.chooserConfWidth),
-    updateThresholdWidth(p.updateThresholdWidth),
-    pUpdateThresholdWidth(p.pUpdateThresholdWidth),
-    extraWeightsWidth(p.extraWeightsWidth),
-    scCountersWidth(p.scCountersWidth),
-    firstH(0),
-    secondH(0),
-    stats(this)
+StatisticalCorrector::StatisticalCorrector(const StatisticalCorrectorParams &p)
+    : SimObject(p),
+      logBias(p.logBias),
+      logSizeUp(p.logSizeUp),
+      logSizeUps(logSizeUp / 2),
+      numEntriesFirstLocalHistories(p.numEntriesFirstLocalHistories),
+      bwnb(p.bwnb),
+      logBwnb(p.logBwnb),
+      bwm(p.bwm),
+      lnb(p.lnb),
+      logLnb(p.logLnb),
+      lm(p.lm),
+      inb(p.inb),
+      logInb(p.logInb),
+      im(p.im),
+      chooserConfWidth(p.chooserConfWidth),
+      updateThresholdWidth(p.updateThresholdWidth),
+      pUpdateThresholdWidth(p.pUpdateThresholdWidth),
+      extraWeightsWidth(p.extraWeightsWidth),
+      scCountersWidth(p.scCountersWidth),
+      firstH(0),
+      secondH(0),
+      stats(this)
 {
     wb.resize(1 << logSizeUps, 4);
 
@@ -89,13 +88,13 @@ StatisticalCorrector::StatisticalCorrector(
     biasBank.resize(1 << logBias);
 }
 
-StatisticalCorrector::BranchInfo*
+StatisticalCorrector::BranchInfo *
 StatisticalCorrector::makeBranchInfo()
 {
     return new BranchInfo();
 }
 
-StatisticalCorrector::SCThreadHistory*
+StatisticalCorrector::SCThreadHistory *
 StatisticalCorrector::makeThreadHistory()
 {
     return new SCThreadHistory();
@@ -106,22 +105,22 @@ StatisticalCorrector::initBias()
 {
     for (int j = 0; j < (1 << logBias); j++) {
         switch (j & 3) {
-          case 0:
+        case 0:
             bias[j] = -32;
             biasSK[j] = -8;
             biasBank[j] = -32;
             break;
-          case 1:
+        case 1:
             bias[j] = 31;
             biasSK[j] = 7;
             biasBank[j] = 31;
             break;
-          case 2:
+        case 2:
             bias[j] = -1;
             biasSK[j] = -32;
             biasBank[j] = -1;
             break;
-          case 3:
+        case 3:
             bias[j] = 0;
             biasSK[j] = 31;
             biasBank[j] = 0;
@@ -132,18 +131,20 @@ StatisticalCorrector::initBias()
 
 void
 StatisticalCorrector::initGEHLTable(unsigned numLenghts,
-    std::vector<int> lengths, std::vector<int8_t> * & table,
-    unsigned logNumEntries, std::vector<int8_t> & w, int8_t wInitValue)
+                                    std::vector<int> lengths,
+                                    std::vector<int8_t> *&table,
+                                    unsigned logNumEntries,
+                                    std::vector<int8_t> &w, int8_t wInitValue)
 {
     assert(lengths.size() == numLenghts);
     if (numLenghts == 0) {
         return;
     }
-    table = new std::vector<int8_t> [numLenghts];
+    table = new std::vector<int8_t>[numLenghts];
     for (int i = 0; i < numLenghts; ++i) {
         table[i].resize(1 << logNumEntries, 0);
         for (int j = 0; j < ((1 << logNumEntries) - 1); ++j) {
-            if (! (j & 1)) {
+            if (!(j & 1)) {
                 table[i][j] = -1;
             }
         }
@@ -153,37 +154,42 @@ StatisticalCorrector::initGEHLTable(unsigned numLenghts,
 }
 
 unsigned
-StatisticalCorrector::getIndBias(Addr branch_pc, BranchInfo* bi,
+StatisticalCorrector::getIndBias(Addr branch_pc, BranchInfo *bi,
                                  bool bias) const
 {
-    return (((((branch_pc ^(branch_pc >>2))<<1) ^ (bi->lowConf & bias)) <<1)
-            +  bi->predBeforeSC) & ((1<<logBias) -1);
+    return (((((branch_pc ^ (branch_pc >> 2)) << 1) ^ (bi->lowConf & bias))
+             << 1) +
+            bi->predBeforeSC) &
+           ((1 << logBias) - 1);
 }
 
 unsigned
-StatisticalCorrector::getIndBiasSK(Addr branch_pc, BranchInfo* bi) const
+StatisticalCorrector::getIndBiasSK(Addr branch_pc, BranchInfo *bi) const
 {
-    return (((((branch_pc ^ (branch_pc >> (logBias-2)))<<1) ^
-           (bi->highConf))<<1) + bi->predBeforeSC) & ((1<<logBias) -1);
+    return (((((branch_pc ^ (branch_pc >> (logBias - 2))) << 1) ^
+              (bi->highConf))
+             << 1) +
+            bi->predBeforeSC) &
+           ((1 << logBias) - 1);
 }
 
 unsigned
 StatisticalCorrector::getIndUpd(Addr branch_pc) const
 {
-    return ((branch_pc ^ (branch_pc >>2)) & ((1 << (logSizeUp)) - 1));
+    return ((branch_pc ^ (branch_pc >> 2)) & ((1 << (logSizeUp)) - 1));
 }
 
 unsigned
 StatisticalCorrector::getIndUpds(Addr branch_pc) const
 {
-    return ((branch_pc ^ (branch_pc >>2)) & ((1 << (logSizeUps)) - 1));
+    return ((branch_pc ^ (branch_pc >> 2)) & ((1 << (logSizeUps)) - 1));
 }
 
 int64_t
 StatisticalCorrector::gIndex(Addr branch_pc, int64_t bhist, int logs, int nbr,
                              int i)
 {
-    return (((int64_t) branch_pc) ^ bhist ^ (bhist >> (8 - i)) ^
+    return (((int64_t)branch_pc) ^ bhist ^ (bhist >> (8 - i)) ^
             (bhist >> (16 - 2 * i)) ^ (bhist >> (24 - 3 * i)) ^
             (bhist >> (32 - 3 * i)) ^ (bhist >> (40 - 4 * i))) &
            ((1 << (logs - gIndexLogsSubstr(nbr, i))) - 1);
@@ -191,12 +197,13 @@ StatisticalCorrector::gIndex(Addr branch_pc, int64_t bhist, int logs, int nbr,
 
 int
 StatisticalCorrector::gPredict(Addr branch_pc, int64_t hist,
-        std::vector<int> & length, std::vector<int8_t> * tab, int nbr,
-        int logs, std::vector<int8_t> & w)
+                               std::vector<int> &length,
+                               std::vector<int8_t> *tab, int nbr, int logs,
+                               std::vector<int8_t> &w)
 {
     int percsum = 0;
     for (int i = 0; i < nbr; i++) {
-        int64_t bhist = hist & ((int64_t) ((1 << length[i]) - 1));
+        int64_t bhist = hist & ((int64_t)((1 << length[i]) - 1));
         int64_t index = gIndex(branch_pc, bhist, logs, nbr, i);
         int8_t ctr = tab[i][index];
         percsum += (2 * ctr + 1);
@@ -207,13 +214,13 @@ StatisticalCorrector::gPredict(Addr branch_pc, int64_t hist,
 
 void
 StatisticalCorrector::gUpdate(Addr branch_pc, bool taken, int64_t hist,
-                   std::vector<int> & length, std::vector<int8_t> * tab,
-                   int nbr, int logs, std::vector<int8_t> & w,
-                   BranchInfo* bi)
+                              std::vector<int> &length,
+                              std::vector<int8_t> *tab, int nbr, int logs,
+                              std::vector<int8_t> &w, BranchInfo *bi)
 {
     int percsum = 0;
     for (int i = 0; i < nbr; i++) {
-        int64_t bhist = hist & ((int64_t) ((1 << length[i]) - 1));
+        int64_t bhist = hist & ((int64_t)((1 << length[i]) - 1));
         int64_t index = gIndex(branch_pc, bhist, logs, nbr, i);
         percsum += (2 * tab[i][index] + 1);
         ctrUpdate(tab[i][index], taken, scCountersWidth);
@@ -228,20 +235,21 @@ StatisticalCorrector::gUpdate(Addr branch_pc, bool taken, int64_t hist,
 
 bool
 StatisticalCorrector::scPredict(ThreadID tid, Addr branch_pc, bool cond_branch,
-                     BranchInfo* bi, bool prev_pred_taken, bool bias_bit,
-                     bool use_conf_ctr, int8_t conf_ctr, unsigned conf_bits,
-                     int hitBank, int altBank, int64_t phist, int init_lsum)
+                                BranchInfo *bi, bool prev_pred_taken,
+                                bool bias_bit, bool use_conf_ctr,
+                                int8_t conf_ctr, unsigned conf_bits,
+                                int hitBank, int altBank, int64_t phist,
+                                int init_lsum)
 {
     bool pred_taken = prev_pred_taken;
     if (cond_branch) {
-
         bi->predBeforeSC = prev_pred_taken;
 
         // first calc/update the confidences from the TAGE prediction
         if (use_conf_ctr) {
             bi->lowConf = (abs(2 * conf_ctr + 1) == 1);
             bi->medConf = (abs(2 * conf_ctr + 1) == 5);
-            bi->highConf = (abs(2 * conf_ctr + 1) >= (1<<conf_bits) - 1);
+            bi->highConf = (abs(2 * conf_ctr + 1) >= (1 << conf_bits) - 1);
         }
 
         int lsum = init_lsum;
@@ -265,17 +273,17 @@ StatisticalCorrector::scPredict(ThreadID tid, Addr branch_pc, bool cond_branch,
 
         if (pred_taken != scPred) {
             bool useScPred = true;
-            //Choser uses TAGE confidence and |LSUM|
+            // Choser uses TAGE confidence and |LSUM|
             if (bi->highConf) {
-                if (abs (lsum) < (thres / 4)) {
+                if (abs(lsum) < (thres / 4)) {
                     useScPred = false;
-                } else if (abs (lsum) < (thres / 2)) {
+                } else if (abs(lsum) < (thres / 2)) {
                     useScPred = (secondH < 0);
                 }
             }
 
             if (bi->medConf) {
-                if (abs (lsum) < (thres / 4)) {
+                if (abs(lsum) < (thres / 4)) {
                     useScPred = (firstH < 0);
                 }
             }
@@ -293,19 +301,19 @@ StatisticalCorrector::scPredict(ThreadID tid, Addr branch_pc, bool cond_branch,
 
 void
 StatisticalCorrector::scHistoryUpdate(Addr branch_pc,
-        const StaticInstPtr &inst, bool taken, BranchInfo * tage_bi,
-        Addr corrTarget)
+                                      const StaticInstPtr &inst, bool taken,
+                                      BranchInfo *tage_bi, Addr corrTarget)
 {
     int brtype = inst->isDirectCtrl() ? 0 : 2;
-    if (! inst->isUncondCtrl()) {
+    if (!inst->isUncondCtrl()) {
         ++brtype;
     }
     // Non speculative SC histories update
     if (brtype & 1) {
         if (corrTarget < branch_pc) {
-            //This branch corresponds to a loop
+            // This branch corresponds to a loop
             if (!taken) {
-                //exit of the "loop"
+                // exit of the "loop"
                 scHistory->imliCount = 0;
             } else {
                 if (scHistory->imliCount < ((1 << im[0]) - 1)) {
@@ -314,16 +322,17 @@ StatisticalCorrector::scHistoryUpdate(Addr branch_pc,
             }
         }
 
-        scHistory->bwHist = (scHistory->bwHist << 1) +
-                                (taken & (corrTarget < branch_pc));
+        scHistory->bwHist =
+            (scHistory->bwHist << 1) + (taken & (corrTarget < branch_pc));
         scHistory->updateLocalHistory(1, branch_pc, taken);
     }
 }
 
 void
 StatisticalCorrector::condBranchUpdate(ThreadID tid, Addr branch_pc,
-        bool taken, BranchInfo *bi, Addr corrTarget, bool b, int hitBank,
-        int altBank, int64_t phist)
+                                       bool taken, BranchInfo *bi,
+                                       Addr corrTarget, bool b, int hitBank,
+                                       int altBank, int64_t phist)
 {
     bool scPred = (bi->lsum >= 0);
 
@@ -357,17 +366,17 @@ StatisticalCorrector::condBranchUpdate(ThreadID tid, Addr branch_pc,
         unsigned indBiasBank = getIndBiasBank(branch_pc, bi, hitBank, altBank);
 
         int xsum = bi->lsum -
-                      ((wb[indUpds] >= 0) * ((2 * bias[indBias] + 1) +
-                          (2 * biasSK[indBiasSK] + 1) +
-                          (2 * biasBank[indBiasBank] + 1)));
+                   ((wb[indUpds] >= 0) *
+                    ((2 * bias[indBias] + 1) + (2 * biasSK[indBiasSK] + 1) +
+                     (2 * biasBank[indBiasBank] + 1)));
 
         if ((xsum + ((2 * bias[indBias] + 1) + (2 * biasSK[indBiasSK] + 1) +
-            (2 * biasBank[indBiasBank] + 1)) >= 0) != (xsum >= 0))
-        {
+                     (2 * biasBank[indBiasBank] + 1)) >=
+             0) != (xsum >= 0)) {
             ctrUpdate(wb[indUpds],
-                      (((2 * bias[indBias] + 1) +
-                        (2 * biasSK[indBiasSK] + 1) +
-                        (2 * biasBank[indBiasBank] + 1) >= 0) == taken),
+                      (((2 * bias[indBias] + 1) + (2 * biasSK[indBiasSK] + 1) +
+                            (2 * biasBank[indBiasBank] + 1) >=
+                        0) == taken),
                       extraWeightsWidth);
         }
 
@@ -412,8 +421,7 @@ StatisticalCorrector::StatisticalCorrectorStats::StatisticalCorrectorStats(
       ADD_STAT(wrong, statistics::units::Count::get(),
                "Number of time the SC predictor is the provider and the "
                "prediction is wrong")
-{
-}
+{}
 
 } // namespace branch_prediction
 } // namespace gem5

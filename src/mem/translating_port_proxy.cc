@@ -54,18 +54,21 @@
 namespace gem5
 {
 
-TranslatingPortProxy::TranslatingPortProxy(
-        ThreadContext *tc, Request::Flags _flags) :
-    PortProxy(tc, tc->getSystemPtr()->cacheLineSize()), _tc(tc), flags(_flags)
+TranslatingPortProxy::TranslatingPortProxy(ThreadContext *tc,
+                                           Request::Flags _flags)
+    : PortProxy(tc, tc->getSystemPtr()->cacheLineSize()),
+      _tc(tc),
+      flags(_flags)
 {}
 
 bool
-TranslatingPortProxy::tryOnBlob(BaseMMU::Mode mode, TranslationGenPtr gen,
-        std::function<void(const TranslationGen::Range &)> func) const
+TranslatingPortProxy::tryOnBlob(
+    BaseMMU::Mode mode, TranslationGenPtr gen,
+    std::function<void(const TranslationGen::Range &)> func) const
 {
     // Wether we're trying to get past a fault.
     bool faulting = false;
-    for (const auto &range: *gen) {
+    for (const auto &range : *gen) {
         // Was there a fault this time?
         if (range.fault) {
             // If there was a fault last time too, or the fixup this time
@@ -89,36 +92,39 @@ bool
 TranslatingPortProxy::tryReadBlob(Addr addr, void *p, uint64_t size) const
 {
     constexpr auto mode = BaseMMU::Read;
-    return tryOnBlob(mode, _tc->getMMUPtr()->translateFunctional(
-            addr, size, _tc, mode, flags),
+    return tryOnBlob(
+        mode,
+        _tc->getMMUPtr()->translateFunctional(addr, size, _tc, mode, flags),
         [this, &p](const auto &range) {
             PortProxy::readBlobPhys(range.paddr, flags, p, range.size);
             p = static_cast<uint8_t *>(p) + range.size;
-    });
+        });
 }
 
 bool
-TranslatingPortProxy::tryWriteBlob(
-        Addr addr, const void *p, uint64_t size) const
+TranslatingPortProxy::tryWriteBlob(Addr addr, const void *p,
+                                   uint64_t size) const
 {
     constexpr auto mode = BaseMMU::Write;
-    return tryOnBlob(mode, _tc->getMMUPtr()->translateFunctional(
-            addr, size, _tc, mode, flags),
+    return tryOnBlob(
+        mode,
+        _tc->getMMUPtr()->translateFunctional(addr, size, _tc, mode, flags),
         [this, &p](const auto &range) {
             PortProxy::writeBlobPhys(range.paddr, flags, p, range.size);
             p = static_cast<const uint8_t *>(p) + range.size;
-    });
+        });
 }
 
 bool
 TranslatingPortProxy::tryMemsetBlob(Addr addr, uint8_t v, uint64_t size) const
 {
     constexpr auto mode = BaseMMU::Write;
-    return tryOnBlob(mode, _tc->getMMUPtr()->translateFunctional(
-            addr, size, _tc, mode, flags),
+    return tryOnBlob(
+        mode,
+        _tc->getMMUPtr()->translateFunctional(addr, size, _tc, mode, flags),
         [this, v](const auto &range) {
             PortProxy::memsetBlobPhys(range.paddr, flags, v, range.size);
-    });
+        });
 }
 
 } // namespace gem5

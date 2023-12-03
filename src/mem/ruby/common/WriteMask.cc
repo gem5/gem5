@@ -39,25 +39,24 @@ namespace ruby
 {
 
 WriteMask::WriteMask()
-    : mSize(RubySystem::getBlockSizeBytes()), mMask(mSize, false),
+    : mSize(RubySystem::getBlockSizeBytes()),
+      mMask(mSize, false),
       mAtomic(false)
 {}
 
 void
-WriteMask::print(std::ostream& out) const
+WriteMask::print(std::ostream &out) const
 {
-    std::string str(mSize,'0');
+    std::string str(mSize, '0');
     for (int i = 0; i < mSize; i++) {
         str[i] = mMask[i] ? ('1') : ('0');
     }
-    out << "dirty mask="
-        << str
-        << std::flush;
+    out << "dirty mask=" << str << std::flush;
 }
 
 void
-WriteMask::performAtomic(uint8_t * p,
-        std::deque<uint8_t*>& log, bool isAtomicNoReturn) const
+WriteMask::performAtomic(uint8_t *p, std::deque<uint8_t *> &log,
+                         bool isAtomicNoReturn) const
 {
     int offset;
     uint8_t *block_update;

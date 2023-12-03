@@ -133,7 +133,7 @@ TEST(StatsGroupTest, ConstructCorrectlyAssigned)
     node1_1.addStatGroup("Node1_1_1", &node1_1_1);
 
     ASSERT_EQ(node1.getStatGroups().find("Node1_1")->second->getStatGroups(),
-        node1_1.getStatGroups());
+              node1_1.getStatGroups());
 }
 
 /**
@@ -202,7 +202,7 @@ TEST(StatsGroupTest, ConstructTwoLevelsLinear)
 
     ASSERT_EQ(node1.getStatGroups().size(), 1);
     ASSERT_NE(node1.getStatGroups().find("Node1_1"),
-        node1.getStatGroups().end());
+              node1.getStatGroups().end());
 
     ASSERT_EQ(node1_1.getStatGroups().size(), 0);
 }
@@ -236,19 +236,19 @@ TEST(StatsGroupTest, ConstructTwoLevelsUnbalancedTree)
 
     ASSERT_EQ(node1.getStatGroups().size(), 1);
     ASSERT_NE(node1.getStatGroups().find("Node1_1"),
-        node1.getStatGroups().end());
+              node1.getStatGroups().end());
     ASSERT_EQ(node1.getStatGroups().find("Node2_1"),
-        node1.getStatGroups().end());
+              node1.getStatGroups().end());
     ASSERT_EQ(node1.getStatGroups().find("Node2_2"),
-        node1.getStatGroups().end());
+              node1.getStatGroups().end());
 
     ASSERT_EQ(node2.getStatGroups().size(), 2);
     ASSERT_EQ(node2.getStatGroups().find("Node1_1"),
-        node2.getStatGroups().end());
+              node2.getStatGroups().end());
     ASSERT_NE(node2.getStatGroups().find("Node2_1"),
-        node2.getStatGroups().end());
+              node2.getStatGroups().end());
     ASSERT_NE(node2.getStatGroups().find("Node2_2"),
-        node2.getStatGroups().end());
+              node2.getStatGroups().end());
 
     ASSERT_EQ(node1_1.getStatGroups().size(), 0);
     ASSERT_EQ(node2_1.getStatGroups().size(), 0);
@@ -262,11 +262,31 @@ class DummyInfo : public statistics::Info
 
     int value = 0;
 
-    bool check() const override { return true; }
-    void prepare() override {}
-    void reset() override { value = 0; }
-    bool zero() const override { return false; }
-    void visit(statistics::Output &visitor) override {}
+    bool
+    check() const override
+    {
+        return true;
+    }
+
+    void
+    prepare() override
+    {}
+
+    void
+    reset() override
+    {
+        value = 0;
+    }
+
+    bool
+    zero() const override
+    {
+        return false;
+    }
+
+    void
+    visit(statistics::Output &visitor) override
+    {}
 };
 
 /** Test adding stats to a group. */
@@ -590,8 +610,8 @@ TEST(StatsGroupTest, ResolveSubGroupStatFromParent)
     ASSERT_NE(info_found, nullptr);
     ASSERT_EQ(info_found->name, "InfoResolveSubGroupStatFromParent");
 
-    info_found = root.resolveStat(
-        "Node1.Node1_1.InfoResolveSubGroupStatFromParent2");
+    info_found =
+        root.resolveStat("Node1.Node1_1.InfoResolveSubGroupStatFromParent2");
     ASSERT_NE(info_found, nullptr);
     ASSERT_EQ(info_found->name, "InfoResolveSubGroupStatFromParent2");
 

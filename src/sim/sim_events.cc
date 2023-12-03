@@ -56,16 +56,18 @@ GlobalSimLoopExitEvent::GlobalSimLoopExitEvent(Tick when,
                                                const std::string &_cause,
                                                int c, Tick r)
     : GlobalEvent(when, Sim_Exit_Pri, IsExitEvent),
-      cause(_cause), code(c), repeat(r)
-{
-}
+      cause(_cause),
+      code(c),
+      repeat(r)
+{}
 
 GlobalSimLoopExitEvent::GlobalSimLoopExitEvent(const std::string &_cause,
                                                int c, Tick r)
     : GlobalEvent(curTick(), Minimum_Pri, IsExitEvent),
-      cause(_cause), code(c), repeat(r)
-{
-}
+      cause(_cause),
+      code(c),
+      repeat(r)
+{}
 
 const char *
 GlobalSimLoopExitEvent::description() const
@@ -103,11 +105,9 @@ exitSimLoopNow(const std::string &message, int exit_code, Tick repeat,
 }
 
 LocalSimLoopExitEvent::LocalSimLoopExitEvent(const std::string &_cause, int c,
-                                   Tick r)
-    : Event(Sim_Exit_Pri, IsExitEvent),
-      cause(_cause), code(c), repeat(r)
-{
-}
+                                             Tick r)
+    : Event(Sim_Exit_Pri, IsExitEvent), cause(_cause), code(c), repeat(r)
+{}
 
 //
 // handle termination event
@@ -117,7 +117,6 @@ LocalSimLoopExitEvent::process()
 {
     exitSimLoop(cause, 0);
 }
-
 
 const char *
 LocalSimLoopExitEvent::description() const
@@ -155,7 +154,6 @@ CountedExitEvent::CountedExitEvent(const std::string &_cause, int &counter)
     assert(downCounter > 0);
 }
 
-
 //
 // handle termination event
 //
@@ -166,7 +164,6 @@ CountedExitEvent::process()
         exitSimLoop(cause, 0);
     }
 }
-
 
 const char *
 CountedExitEvent::description() const

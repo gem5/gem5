@@ -52,10 +52,7 @@ namespace branch_prediction
 
 TAGE_SC_L_8KB_StatisticalCorrector::TAGE_SC_L_8KB_StatisticalCorrector(
     const TAGE_SC_L_8KB_StatisticalCorrectorParams &p)
-  : StatisticalCorrector(p),
-    gnb(p.gnb),
-    logGnb(p.logGnb),
-    gm(p.gm)
+    : StatisticalCorrector(p), gnb(p.gnb), logGnb(p.logGnb), gm(p.gm)
 {
     initGEHLTable(gnb, gm, ggehl, logGnb, wg, 7);
 }
@@ -71,48 +68,51 @@ TAGE_SC_L_8KB_StatisticalCorrector::makeThreadHistory()
 
 unsigned
 TAGE_SC_L_8KB_StatisticalCorrector::getIndBiasBank(Addr branch_pc,
-        BranchInfo* bi, int hitBank, int altBank) const
+                                                   BranchInfo *bi, int hitBank,
+                                                   int altBank) const
 {
-    return (bi->predBeforeSC + (((hitBank+1)/4)<<4) + (bi->highConf<<1) +
-            (bi->lowConf <<2) +((altBank!=0)<<3)) & ((1<<logBias) -1);
+    return (bi->predBeforeSC + (((hitBank + 1) / 4) << 4) +
+            (bi->highConf << 1) + (bi->lowConf << 2) + ((altBank != 0) << 3)) &
+           ((1 << logBias) - 1);
 }
 
 int
-TAGE_SC_L_8KB_StatisticalCorrector::gPredictions(
-    ThreadID tid, Addr branch_pc, BranchInfo* bi, int & lsum, int64_t phist)
+TAGE_SC_L_8KB_StatisticalCorrector::gPredictions(ThreadID tid, Addr branch_pc,
+                                                 BranchInfo *bi, int &lsum,
+                                                 int64_t phist)
 {
     SC_8KB_ThreadHistory *sh = static_cast<SC_8KB_ThreadHistory *>(scHistory);
-    lsum += gPredict(
-        branch_pc, sh->globalHist, gm, ggehl, gnb, logGnb, wg);
+    lsum += gPredict(branch_pc, sh->globalHist, gm, ggehl, gnb, logGnb, wg);
 
-    lsum += gPredict(
-        branch_pc, sh->bwHist, bwm, bwgehl, bwnb, logBwnb, wbw);
+    lsum += gPredict(branch_pc, sh->bwHist, bwm, bwgehl, bwnb, logBwnb, wbw);
 
     // only 1 local history here
-    lsum += gPredict(
-        branch_pc, sh->getLocalHistory(1, branch_pc), lm,
-        lgehl, lnb, logLnb, wl);
+    lsum += gPredict(branch_pc, sh->getLocalHistory(1, branch_pc), lm, lgehl,
+                     lnb, logLnb, wl);
 
-    lsum += gPredict(
-        branch_pc, sh->imliCount, im, igehl, inb, logInb, wi);
+    lsum += gPredict(branch_pc, sh->imliCount, im, igehl, inb, logInb, wi);
 
-    int thres = (updateThreshold>>3)+pUpdateThreshold[getIndUpd(branch_pc)];
+    int thres =
+        (updateThreshold >> 3) + pUpdateThreshold[getIndUpd(branch_pc)];
 
     return thres;
 }
 
-int TAGE_SC_L_8KB_StatisticalCorrector::gIndexLogsSubstr(int nbr, int i)
+int
+TAGE_SC_L_8KB_StatisticalCorrector::gIndexLogsSubstr(int nbr, int i)
 {
     return 0;
 }
 
 void
 TAGE_SC_L_8KB_StatisticalCorrector::scHistoryUpdate(Addr branch_pc,
-    const StaticInstPtr &inst, bool taken, BranchInfo *tage_bi,
-    Addr corrTarget)
+                                                    const StaticInstPtr &inst,
+                                                    bool taken,
+                                                    BranchInfo *tage_bi,
+                                                    Addr corrTarget)
 {
     int brtype = inst->isDirectCtrl() ? 0 : 2;
-    if (! inst->isUncondCtrl()) {
+    if (!inst->isUncondCtrl()) {
         ++brtype;
     }
     // Non speculative SC histories update
@@ -128,7 +128,7 @@ TAGE_SC_L_8KB_StatisticalCorrector::scHistoryUpdate(Addr branch_pc,
 
 void
 TAGE_SC_L_8KB_StatisticalCorrector::gUpdates(ThreadID tid, Addr pc, bool taken,
-        BranchInfo* bi, int64_t phist)
+                                             BranchInfo *bi, int64_t phist)
 {
     SC_8KB_ThreadHistory *sh = static_cast<SC_8KB_ThreadHistory *>(scHistory);
     gUpdate(pc, taken, sh->globalHist, gm, ggehl, gnb, logGnb, wg, bi);
@@ -139,22 +139,21 @@ TAGE_SC_L_8KB_StatisticalCorrector::gUpdates(ThreadID tid, Addr pc, bool taken,
 }
 
 TAGE_SC_L_8KB::TAGE_SC_L_8KB(const TAGE_SC_L_8KBParams &params)
-  : TAGE_SC_L(params)
-{
-}
+    : TAGE_SC_L(params)
+{}
 
 void
-TAGE_SC_L_TAGE_8KB::initFoldedHistories(ThreadHistory & history)
+TAGE_SC_L_TAGE_8KB::initFoldedHistories(ThreadHistory &history)
 {
     // Some hardcoded values are used here
     // (they do not seem to depend on any parameter)
     for (int i = 1; i <= nHistoryTables; i++) {
-        history.computeIndices[i].init(
-            histLengths[i], 17 + (2 * ((i - 1) / 2) % 4));
-        history.computeTags[0][i].init(
-            history.computeIndices[i].origLength, 13);
-        history.computeTags[1][i].init(
-            history.computeIndices[i].origLength, 11);
+        history.computeIndices[i].init(histLengths[i],
+                                       17 + (2 * ((i - 1) / 2) % 4));
+        history.computeTags[0][i].init(history.computeIndices[i].origLength,
+                                       13);
+        history.computeTags[1][i].init(history.computeIndices[i].origLength,
+                                       11);
         DPRINTF(TageSCL, "HistLength:%d, TTSize:%d, TTTWidth:%d\n",
                 histLengths[i], logTagTableSizes[i], tagTableTagWidths[i]);
     }
@@ -163,8 +162,8 @@ TAGE_SC_L_TAGE_8KB::initFoldedHistories(ThreadHistory & history)
 int
 TAGE_SC_L_TAGE_8KB::gindex_ext(int index, int bank) const
 {
-    return (index ^ (index >> logTagTableSizes[bank])
-                  ^ (index >> 2 * logTagTableSizes[bank]));
+    return (index ^ (index >> logTagTableSizes[bank]) ^
+            (index >> 2 * logTagTableSizes[bank]));
 }
 
 uint16_t
@@ -173,21 +172,21 @@ TAGE_SC_L_TAGE_8KB::gtag(ThreadID tid, Addr pc, int bank) const
     int tag = (threadHistory[tid].computeIndices[bank - 1].comp << 2) ^ pc ^
               (pc >> instShiftAmt) ^
               threadHistory[tid].computeIndices[bank].comp;
-    int hlen = (histLengths[bank] > pathHistBits) ? pathHistBits :
-                                                    histLengths[bank];
+    int hlen =
+        (histLengths[bank] > pathHistBits) ? pathHistBits : histLengths[bank];
 
     tag = (tag >> 1) ^ ((tag & 1) << 10) ^
-           F(threadHistory[tid].pathHist, hlen, bank);
+          F(threadHistory[tid].pathHist, hlen, bank);
     tag ^= threadHistory[tid].computeTags[0][bank].comp ^
            (threadHistory[tid].computeTags[1][bank].comp << 1);
 
-    return ((tag ^ (tag >> tagTableTagWidths[bank]))
-            & ((1ULL << tagTableTagWidths[bank]) - 1));
+    return ((tag ^ (tag >> tagTableTagWidths[bank])) &
+            ((1ULL << tagTableTagWidths[bank]) - 1));
 }
 
 void
-TAGE_SC_L_TAGE_8KB::handleAllocAndUReset(
-    bool alloc, bool taken, TAGEBase::BranchInfo* bi, int nrand)
+TAGE_SC_L_TAGE_8KB::handleAllocAndUReset(bool alloc, bool taken,
+                                         TAGEBase::BranchInfo *bi, int nrand)
 {
     if (!alloc) {
         return;
@@ -222,7 +221,7 @@ TAGE_SC_L_TAGE_8KB::handleAllocAndUReset(
                 } else {
                     int8_t ctr = gtable[i][bi->tableIndices[i]].ctr;
                     if ((gtable[i][bi->tableIndices[i]].u == 1) &
-                        (abs (2 * ctr + 1) == 1)) {
+                        (abs(2 * ctr + 1) == 1)) {
                         if ((random_mt.random<int>() & 7) == 0) {
                             gtable[i][bi->tableIndices[i]].u = 0;
                         }
@@ -246,7 +245,7 @@ TAGE_SC_L_TAGE_8KB::handleAllocAndUReset(
 }
 
 void
-TAGE_SC_L_TAGE_8KB::resetUctr(uint8_t & u)
+TAGE_SC_L_TAGE_8KB::resetUctr(uint8_t &u)
 {
     // On real HW it should be u >>= 1 instead of if > 0 then u--
     if (u > 0) {
@@ -256,22 +255,22 @@ TAGE_SC_L_TAGE_8KB::resetUctr(uint8_t & u)
 
 void
 TAGE_SC_L_TAGE_8KB::handleTAGEUpdate(Addr branch_pc, bool taken,
-                                     TAGEBase::BranchInfo* bi)
+                                     TAGEBase::BranchInfo *bi)
 {
     if (bi->hitBank > 0) {
-        if (abs (2 * gtable[bi->hitBank][bi->hitBankIndex].ctr + 1) == 1) {
+        if (abs(2 * gtable[bi->hitBank][bi->hitBankIndex].ctr + 1) == 1) {
             if (bi->longestMatchPred != taken) { // acts as a protection
                 if (bi->altBank > 0) {
                     int8_t ctr = gtable[bi->altBank][bi->altBankIndex].ctr;
-                    if (abs (2 * ctr + 1) == 1) {
+                    if (abs(2 * ctr + 1) == 1) {
                         gtable[bi->altBank][bi->altBankIndex].u = 0;
                     }
 
-                    //just mute from protected to unprotected
+                    // just mute from protected to unprotected
                     ctrUpdate(gtable[bi->altBank][bi->altBankIndex].ctr, taken,
                               tagTableCounterBits);
                     ctr = gtable[bi->altBank][bi->altBankIndex].ctr;
-                    if (abs (2 * ctr + 1) == 1) {
+                    if (abs(2 * ctr + 1) == 1) {
                         gtable[bi->altBank][bi->altBankIndex].u = 0;
                     }
                 }
@@ -281,23 +280,23 @@ TAGE_SC_L_TAGE_8KB::handleTAGEUpdate(Addr branch_pc, bool taken,
             }
         }
 
-        //just mute from protected to unprotected
-        if (abs (2 * gtable[bi->hitBank][bi->hitBankIndex].ctr + 1) == 1) {
+        // just mute from protected to unprotected
+        if (abs(2 * gtable[bi->hitBank][bi->hitBankIndex].ctr + 1) == 1) {
             gtable[bi->hitBank][bi->hitBankIndex].u = 0;
         }
 
         ctrUpdate(gtable[bi->hitBank][bi->hitBankIndex].ctr, taken,
                   tagTableCounterBits);
 
-        //sign changes: no way it can have been useful
-        if (abs (2 * gtable[bi->hitBank][bi->hitBankIndex].ctr + 1) == 1) {
+        // sign changes: no way it can have been useful
+        if (abs(2 * gtable[bi->hitBank][bi->hitBankIndex].ctr + 1) == 1) {
             gtable[bi->hitBank][bi->hitBankIndex].u = 0;
         }
 
         if (bi->altTaken == taken) {
             if (bi->altBank > 0) {
                 int8_t ctr = gtable[bi->altBank][bi->altBankIndex].ctr;
-                if (abs (2*ctr + 1) == 7) {
+                if (abs(2 * ctr + 1) == 7) {
                     if (gtable[bi->hitBank][bi->hitBankIndex].u == 1) {
                         if (bi->longestMatchPred == taken) {
                             gtable[bi->hitBank][bi->hitBankIndex].u = 0;
@@ -312,8 +311,8 @@ TAGE_SC_L_TAGE_8KB::handleTAGEUpdate(Addr branch_pc, bool taken,
 
     if ((bi->longestMatchPred != bi->altTaken) &&
         (bi->longestMatchPred == taken) &&
-        (gtable[bi->hitBank][bi->hitBankIndex].u < (1 << tagTableUBits) -1)) {
-            gtable[bi->hitBank][bi->hitBankIndex].u++;
+        (gtable[bi->hitBank][bi->hitBankIndex].u < (1 << tagTableUBits) - 1)) {
+        gtable[bi->hitBank][bi->hitBankIndex].u++;
     }
 }
 

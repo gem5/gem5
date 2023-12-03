@@ -42,7 +42,6 @@ namespace gem5
 
 void
 print_backtrace()
-{
-}
+{}
 
 } // namespace gem5

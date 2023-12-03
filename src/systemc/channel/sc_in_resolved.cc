@@ -34,8 +34,7 @@ namespace sc_core
 
 sc_in_resolved::sc_in_resolved() : sc_in<sc_dt::sc_logic>() {}
 
-sc_in_resolved::sc_in_resolved(const char *name) :
-        sc_in<sc_dt::sc_logic>(name)
+sc_in_resolved::sc_in_resolved(const char *name) : sc_in<sc_dt::sc_logic>(name)
 {}
 
 sc_in_resolved::~sc_in_resolved() {}
@@ -47,7 +46,7 @@ sc_in_resolved::end_of_elaboration()
     if (!dynamic_cast<sc_signal_resolved *>(get_interface())) {
         std::string msg = gem5::csprintf("port '%s' (%s)", name(), kind());
         SC_REPORT_ERROR("(E117) resolved port not bound to resolved signal",
-                msg.c_str());
+                        msg.c_str());
     }
 }
 

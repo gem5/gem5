@@ -36,7 +36,6 @@
 
  *****************************************************************************/
 
-
 // $Log: scfx_mant.cpp,v $
 // Revision 1.1.1.1  2006/12/15 20:20:04  acg
 // SystemC 2.3
@@ -86,12 +85,12 @@ scfx_mant::alloc_word(std::size_t size)
     unsigned slot_index = next_pow2_index(size);
     unsigned alloc_size = (UINT64_ONE << slot_index);
 
-    word_list*& slot = free_words[slot_index];
+    word_list *&slot = free_words[slot_index];
 
     if (!slot) {
         slot = new word_list[ALLOC_SIZE * alloc_size];
         unsigned i;
-        for (i = 0; i < alloc_size * (ALLOC_SIZE - 1) ; i += alloc_size) {
+        for (i = 0; i < alloc_size * (ALLOC_SIZE - 1); i += alloc_size) {
             slot[i].m_next_p = &slot[i + alloc_size];
         }
         slot[i].m_next_p = 0;

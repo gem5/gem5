@@ -53,13 +53,13 @@ struct PageTableOps;
 
 struct SMMUTranslRequest
 {
-    Addr     addr;
+    Addr addr;
     unsigned size;
     uint32_t sid;  // streamId
     uint32_t ssid; // substreamId
-    bool     isWrite;
-    bool     isPrefetch;
-    bool     isAtsRequest;
+    bool isWrite;
+    bool isPrefetch;
+    bool isAtsRequest;
 
     PacketPtr pkt;
 
@@ -87,24 +87,29 @@ class SMMUTranslationProcess : public SMMUProcess
     {
         FAULT_NONE,
         FAULT_UUT = 0x1, // F_UUT = Unsupported Upstream Transaction
-        FAULT_BAD_STREAMID = 0x2, // C_BAD_STREAMID = Transaction streamID out of range
-        FAULT_STE_FETCH = 0x3, // F_STE_FETCH = Fetch of STE caused external abort
-        FAULT_BAD_STE = 0x4, // C_BAD_STE = Invalid STE
+        FAULT_BAD_STREAMID =
+            0x2, // C_BAD_STREAMID = Transaction streamID out of range
+        FAULT_STE_FETCH =
+            0x3, // F_STE_FETCH = Fetch of STE caused external abort
+        FAULT_BAD_STE = 0x4,      // C_BAD_STE = Invalid STE
         FAULT_BAD_ATS_TREQ = 0x5, // F_BAD_ATS_TREQ
-        FAULT_STREAM_DISABLED = 0x6, // F_STREAM_DISABLED = Non-substream trans disabled
-        FAULT_TRANSL_FORBIDDEN = 0x7, // F_TRANSL_FORBIDDEN = SMMU bypass not allowed
+        FAULT_STREAM_DISABLED =
+            0x6, // F_STREAM_DISABLED = Non-substream trans disabled
+        FAULT_TRANSL_FORBIDDEN =
+            0x7, // F_TRANSL_FORBIDDEN = SMMU bypass not allowed
         FAULT_BAD_SUBSTREAMID = 0x8, // F_BAD_SUBSTREAMID = Bad substreamID
         FAULT_CD_FETCH = 0x9, // F_CD_FETCH = Fetch of CD caused external abort
-        FAULT_BAD_CD = 0xa, // C_BAD_CD = Invalid CD
-        FAULT_WALK_EABT = 0xb, // F_WALK_EABT = Table walk/update caused external abort
-        FAULT_TRANSLATION = 0x10, // F_TRANSLATION = Translation Fault
-        FAULT_ADDR_SIZE = 0x11, // F_ADDR_SIZE = Address Size fault
-        FAULT_ACCESS = 0x12, // F_ACCESS = Access flag fault
-        FAULT_PERMISSION = 0x13, // F_PERMISSION = Permission fault
+        FAULT_BAD_CD = 0xa,   // C_BAD_CD = Invalid CD
+        FAULT_WALK_EABT =
+            0xb, // F_WALK_EABT = Table walk/update caused external abort
+        FAULT_TRANSLATION = 0x10,  // F_TRANSLATION = Translation Fault
+        FAULT_ADDR_SIZE = 0x11,    // F_ADDR_SIZE = Address Size fault
+        FAULT_ACCESS = 0x12,       // F_ACCESS = Access flag fault
+        FAULT_PERMISSION = 0x13,   // F_PERMISSION = Permission fault
         FAULT_TLB_CONFLICT = 0x20, // F_TLB_CONFLICT = TLB conflict
         FAULT_CFG_CONFLICT = 0x21, // F_CFG_CONFLICT = Config cache conflict
         FAULT_PAGE_REQUEST = 0x24, // E_PAGE_REQUEST
-        FAULT_VMS_FETCH = 0x25, // F_VMS_FETCH
+        FAULT_VMS_FETCH = 0x25,    // F_VMS_FETCH
     };
 
     /* The class of the operation that caused the fault */
@@ -119,15 +124,19 @@ class SMMUTranslationProcess : public SMMUProcess
     struct Fault
     {
         explicit Fault(FaultType _type,
-                       FaultClass _clss=FaultClass::RESERVED,
-                       bool _stage2=false, Addr _ipa=0)
-          : type(_type), clss(_clss), stage2(_stage2), ipa(_ipa)
+                       FaultClass _clss = FaultClass::RESERVED,
+                       bool _stage2 = false, Addr _ipa = 0)
+            : type(_type), clss(_clss), stage2(_stage2), ipa(_ipa)
         {}
 
         Fault(const Fault &rhs) = default;
-        Fault& operator=(const Fault &rhs) = default;
+        Fault &operator=(const Fault &rhs) = default;
 
-        bool isFaulting() const { return type != FAULT_NONE; }
+        bool
+        isFaulting() const
+        {
+            return type != FAULT_NONE;
+        }
 
         FaultType type;
         FaultClass clss;
@@ -138,18 +147,24 @@ class SMMUTranslationProcess : public SMMUProcess
     struct TranslResult
     {
         TranslResult()
-          : fault(FaultType::FAULT_NONE),
-            addr(0), addrMask(0), writable(false)
+            : fault(FaultType::FAULT_NONE),
+              addr(0),
+              addrMask(0),
+              writable(false)
         {}
 
-        TranslResult& operator=(const TranslResult &rhs) = default;
+        TranslResult &operator=(const TranslResult &rhs) = default;
 
-        bool isFaulting() const { return fault.isFaulting(); }
+        bool
+        isFaulting() const
+        {
+            return fault.isFaulting();
+        }
 
         Fault fault;
-        Addr  addr;
-        Addr  addrMask;
-        bool  writable;
+        Addr addr;
+        Addr addrMask;
+        bool writable;
     };
 
     SMMUv3DeviceInterface &ifc;
@@ -177,22 +192,21 @@ class SMMUTranslationProcess : public SMMUProcess
     void configCacheUpdate(Yield &yield, const TranslContext &tc);
     bool findConfig(Yield &yield, TranslContext &tc, TranslResult &tr);
 
-    void walkCacheLookup(Yield &yield,
-                         const WalkCache::Entry *&walkEntry,
+    void walkCacheLookup(Yield &yield, const WalkCache::Entry *&walkEntry,
                          Addr addr, uint16_t asid, uint16_t vmid,
                          unsigned stage, unsigned level);
 
     void walkCacheUpdate(Yield &yield, Addr va, Addr vaMask, Addr pa,
-                         unsigned stage, unsigned level,
-                         bool leaf, uint8_t permissions);
+                         unsigned stage, unsigned level, bool leaf,
+                         uint8_t permissions);
 
     TranslResult walkStage1And2(Yield &yield, Addr addr,
                                 const ArmISA::PageTableOps *pt_ops,
                                 unsigned level, Addr walkPtr);
 
     TranslResult walkStage2(Yield &yield, Addr addr, bool final_tr,
-                            const ArmISA::PageTableOps *pt_ops,
-                            unsigned level, Addr walkPtr);
+                            const ArmISA::PageTableOps *pt_ops, unsigned level,
+                            Addr walkPtr);
 
     TranslResult translateStage1And2(Yield &yield, Addr addr);
     TranslResult translateStage2(Yield &yield, Addr addr, bool final_tr);
@@ -230,15 +244,16 @@ class SMMUTranslationProcess : public SMMUProcess
 
     void doReadSTE(Yield &yield, StreamTableEntry &ste, uint32_t sid);
     TranslResult doReadCD(Yield &yield, ContextDescriptor &cd,
-                          const StreamTableEntry &ste, uint32_t sid, uint32_t ssid);
+                          const StreamTableEntry &ste, uint32_t sid,
+                          uint32_t ssid);
     void doReadConfig(Yield &yield, Addr addr, void *ptr, size_t size,
                       uint32_t sid, uint32_t ssid);
-    void doReadPTE(Yield &yield, Addr va, Addr addr, void *ptr,
-                   unsigned stage, unsigned level);
+    void doReadPTE(Yield &yield, Addr va, Addr addr, void *ptr, unsigned stage,
+                   unsigned level);
 
   public:
     SMMUTranslationProcess(const std::string &name, SMMUv3 &_smmu,
-        SMMUv3DeviceInterface &_ifc);
+                           SMMUv3DeviceInterface &_ifc);
 
     virtual ~SMMUTranslationProcess();
 

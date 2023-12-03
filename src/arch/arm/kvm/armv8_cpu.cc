@@ -60,12 +60,10 @@ static_assert(NUM_XREGS == 31, "Unexpected number of aarch64 int. regs.");
 constexpr static unsigned NUM_QREGS = NumVecV8ArchRegs;
 static_assert(NUM_QREGS == 32, "Unexpected number of aarch64 vector regs.");
 
-#define EXTRACT_FIELD(v, name) \
-    (((v) & name ## _MASK) >> name ## _SHIFT)
+#define EXTRACT_FIELD(v, name) (((v)&name##_MASK) >> name##_SHIFT)
 
-#define CORE_REG(name, size)                               \
-    (KVM_REG_ARM64 | KVM_REG_ARM_CORE |                    \
-     KVM_REG_SIZE_ ## size |                               \
+#define CORE_REG(name, size)                                                  \
+    (KVM_REG_ARM64 | KVM_REG_ARM_CORE | KVM_REG_SIZE_##size |                 \
      KVM_REG_ARM_CORE_REG(name))
 
 #define INT_REG(name) CORE_REG(name, U64)
@@ -77,14 +75,14 @@ constexpr uint64_t
 kvmXReg(const int num)
 {
     return INT_REG(regs.regs[0]) +
-        (INT_REG(regs.regs[1]) - INT_REG(regs.regs[0])) * num;
+           (INT_REG(regs.regs[1]) - INT_REG(regs.regs[0])) * num;
 }
 
 constexpr uint64_t
 kvmFPReg(const int num)
 {
     return SIMD_REG(fp_regs.vregs[0]) +
-        (SIMD_REG(fp_regs.vregs[1]) - SIMD_REG(fp_regs.vregs[0])) * num;
+           (SIMD_REG(fp_regs.vregs[1]) - SIMD_REG(fp_regs.vregs[0])) * num;
 }
 
 union KvmFPReg
@@ -134,12 +132,9 @@ const std::vector<ArmV8KvmCPU::MiscRegInfo> ArmV8KvmCPU::miscRegIdMap = {
 
 ArmV8KvmCPU::ArmV8KvmCPU(const ArmV8KvmCPUParams &params)
     : BaseArmKvmCPU(params)
-{
-}
+{}
 
-ArmV8KvmCPU::~ArmV8KvmCPU()
-{
-}
+ArmV8KvmCPU::~ArmV8KvmCPU() {}
 
 void
 ArmV8KvmCPU::startup()
@@ -185,37 +180,36 @@ ArmV8KvmCPU::dump() const
 
         const uint64_t type(reg & KVM_REG_ARM_COPROC_MASK);
         switch (type) {
-          case KVM_REG_ARM_CORE:
+        case KVM_REG_ARM_CORE:
             // These have already been printed
             break;
 
-          case KVM_REG_ARM64_SYSREG: {
-              const uint64_t op0(EXTRACT_FIELD(reg, KVM_REG_ARM64_SYSREG_OP0));
-              const uint64_t op1(EXTRACT_FIELD(reg, KVM_REG_ARM64_SYSREG_OP1));
-              const uint64_t crn(EXTRACT_FIELD(reg, KVM_REG_ARM64_SYSREG_CRN));
-              const uint64_t crm(EXTRACT_FIELD(reg, KVM_REG_ARM64_SYSREG_CRM));
-              const uint64_t op2(EXTRACT_FIELD(reg, KVM_REG_ARM64_SYSREG_OP2));
-              const MiscRegIndex idx(
-                  decodeAArch64SysReg(op0, op1, crn, crm, op2));
+        case KVM_REG_ARM64_SYSREG: {
+            const uint64_t op0(EXTRACT_FIELD(reg, KVM_REG_ARM64_SYSREG_OP0));
+            const uint64_t op1(EXTRACT_FIELD(reg, KVM_REG_ARM64_SYSREG_OP1));
+            const uint64_t crn(EXTRACT_FIELD(reg, KVM_REG_ARM64_SYSREG_CRN));
+            const uint64_t crm(EXTRACT_FIELD(reg, KVM_REG_ARM64_SYSREG_CRM));
+            const uint64_t op2(EXTRACT_FIELD(reg, KVM_REG_ARM64_SYSREG_OP2));
+            const MiscRegIndex idx(
+                decodeAArch64SysReg(op0, op1, crn, crm, op2));
 
-              inform("  %s (op0: %i, op1: %i, crn: %i, crm: %i, op2: %i): %s",
-                     miscRegName[idx], op0, op1, crn, crm, op2,
-                     getAndFormatOneReg(reg));
-          } break;
+            inform("  %s (op0: %i, op1: %i, crn: %i, crm: %i, op2: %i): %s",
+                   miscRegName[idx], op0, op1, crn, crm, op2,
+                   getAndFormatOneReg(reg));
+        } break;
 
-          case KVM_REG_ARM_DEMUX: {
-              const uint64_t id(EXTRACT_FIELD(reg, KVM_REG_ARM_DEMUX_ID));
-              const uint64_t val(EXTRACT_FIELD(reg, KVM_REG_ARM_DEMUX_VAL));
-              if (id == KVM_REG_ARM_DEMUX_ID_CCSIDR) {
-                  inform("  CSSIDR[%i]: %s\n", val,
-                         getAndFormatOneReg(reg));
-              } else {
-                  inform("  UNKNOWN[%i:%i]: %s\n", id, val,
-                         getAndFormatOneReg(reg));
-              }
-          } break;
+        case KVM_REG_ARM_DEMUX: {
+            const uint64_t id(EXTRACT_FIELD(reg, KVM_REG_ARM_DEMUX_ID));
+            const uint64_t val(EXTRACT_FIELD(reg, KVM_REG_ARM_DEMUX_VAL));
+            if (id == KVM_REG_ARM_DEMUX_ID_CCSIDR) {
+                inform("  CSSIDR[%i]: %s\n", val, getAndFormatOneReg(reg));
+            } else {
+                inform("  UNKNOWN[%i:%i]: %s\n", id, val,
+                       getAndFormatOneReg(reg));
+            }
+        } break;
 
-          default:
+        default:
             inform("0x%x: %s\n", reg, getAndFormatOneReg(reg));
         }
     }
@@ -367,8 +361,8 @@ ArmV8KvmCPU::updateThreadContext()
     // TODO: This is a massive assumption that will break when
     // switching to thumb.
     pc.nextThumb(cpsr.t);
-    DPRINTF(KvmContext, "  PC := 0x%x (t: %i, a64: %i)\n",
-            pc.instAddr(), pc.thumb(), pc.aarch64());
+    DPRINTF(KvmContext, "  PC := 0x%x (t: %i, a64: %i)\n", pc.instAddr(),
+            pc.thumb(), pc.aarch64());
     tc->pcState(pc);
 }
 
@@ -398,16 +392,17 @@ ArmV8KvmCPU::getSysRegMap() const
         const bool writeable(
             info[MISCREG_USR_NS_WR] || info[MISCREG_USR_S_WR] ||
             info[MISCREG_PRI_S_WR] || info[MISCREG_PRI_NS_WR] ||
-            info[MISCREG_HYP_NS_WR] ||
-            info[MISCREG_MON_NS0_WR] || info[MISCREG_MON_NS1_WR]);
-        const bool implemented(
-            info[MISCREG_IMPLEMENTED] || info[MISCREG_WARN_NOT_FAIL]);
+            info[MISCREG_HYP_NS_WR] || info[MISCREG_MON_NS0_WR] ||
+            info[MISCREG_MON_NS1_WR]);
+        const bool implemented(info[MISCREG_IMPLEMENTED] ||
+                               info[MISCREG_WARN_NOT_FAIL]);
 
         // Only add implemented registers that we are going to be able
         // to write.
         if (implemented && writeable)
             sysRegMap.emplace_back(reg, idx, miscRegName[idx],
-                deviceRegSet.find(idx) != deviceRegSet.end());
+                                   deviceRegSet.find(idx) !=
+                                       deviceRegSet.end());
     }
 
     return sysRegMap;

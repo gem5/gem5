@@ -59,15 +59,15 @@ pybind11::module_ *EmbeddedPyBind::mod = nullptr;
 
 EmbeddedPyBind::EmbeddedPyBind(const char *_name,
                                void (*init_func)(py::module_ &),
-                               const char *_base) :
-    initFunc(init_func), name(_name), base(_base)
+                               const char *_base)
+    : initFunc(init_func), name(_name), base(_base)
 {
     init();
 }
 
 EmbeddedPyBind::EmbeddedPyBind(const char *_name,
-                               void (*init_func)(py::module_ &)) :
-    EmbeddedPyBind(_name, init_func, "")
+                               void (*init_func)(py::module_ &))
+    : EmbeddedPyBind(_name, init_func, "")
 {}
 
 void
@@ -84,7 +84,7 @@ EmbeddedPyBind::init()
 
     // If we're not ready for this module yet, defer intialization.
     if (!mod || (!base.empty() && ready.find(base) == ready.end())) {
-        pending.insert({std::string(base), this});
+        pending.insert({ std::string(base), this });
         return;
     }
 
@@ -103,11 +103,11 @@ EmbeddedPyBind::initPending(const std::string &finished)
     auto &pending = getPending();
 
     auto range = pending.equal_range(finished);
-    std::list<std::pair<std::string, EmbeddedPyBind *>> todo(
-        range.first, range.second);
+    std::list<std::pair<std::string, EmbeddedPyBind *>> todo(range.first,
+                                                             range.second);
     pending.erase(range.first, range.second);
 
-    for (auto &entry: todo)
+    for (auto &entry : todo)
         entry.second->init();
 }
 

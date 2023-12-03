@@ -45,11 +45,25 @@ class Interrupts : public BaseInterrupts
 
     Interrupts(const Params &p) : BaseInterrupts(p) {}
 
-    bool checkInterrupts() const override { return false; }
-    Fault getInterrupt() override { return NoFault; }
-    void updateIntrInfo() override {}
+    bool
+    checkInterrupts() const override
+    {
+        return false;
+    }
 
-    void clearAll() override {}
+    Fault
+    getInterrupt() override
+    {
+        return NoFault;
+    }
+
+    void
+    updateIntrInfo() override
+    {}
+
+    void
+    clearAll() override
+    {}
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;

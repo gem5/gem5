@@ -43,18 +43,26 @@ objectfile_pybind(py::module_ &m_internal)
     py::module_ m = m_internal.def_submodule("object_file");
 
     py::class_<loader::ObjectFile>(m, "ObjectFile")
-        .def("get_arch", [](const loader::ObjectFile &obj) {
+        .def(
+            "get_arch",
+            [](const loader::ObjectFile &obj) {
                 return loader::archToString(obj.getArch());
-                }, py::return_value_policy::reference)
-        .def("get_op_sys", [](const loader::ObjectFile &obj) {
+            },
+            py::return_value_policy::reference)
+        .def(
+            "get_op_sys",
+            [](const loader::ObjectFile &obj) {
                 return loader::opSysToString(obj.getOpSys());
-                }, py::return_value_policy::reference)
+            },
+            py::return_value_policy::reference)
         .def("entry_point", &loader::ObjectFile::entryPoint)
         .def("get_interpreter", &loader::ObjectFile::getInterpreter);
 
     m.def("create", [](const std::string &fname) {
-            return loader::createObjectFile(fname); });
+        return loader::createObjectFile(fname);
+    });
 }
+
 EmbeddedPyBind embed_("object_file", &objectfile_pybind);
 
 } // anonymous namespace

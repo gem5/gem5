@@ -39,37 +39,34 @@ using namespace std;
 namespace Gem5SystemC
 {
 
-MemoryManager::MemoryManager(): numberOfAllocations(0), numberOfFrees(0)
-{
-
-}
+MemoryManager::MemoryManager() : numberOfAllocations(0), numberOfFrees(0) {}
 
 MemoryManager::~MemoryManager()
 {
-    for (gp* payload: freePayloads) {
+    for (gp *payload : freePayloads) {
         delete payload;
         numberOfFrees++;
     }
 }
 
-gp*
+gp *
 MemoryManager::allocate()
 {
     if (freePayloads.empty()) {
         numberOfAllocations++;
         return new gp(this);
     } else {
-        gp* result = freePayloads.back();
+        gp *result = freePayloads.back();
         freePayloads.pop_back();
         return result;
     }
 }
 
 void
-MemoryManager::free(gp* payload)
+MemoryManager::free(gp *payload)
 {
-    payload->reset(); //clears all extensions
+    payload->reset(); // clears all extensions
     freePayloads.push_back(payload);
 }
 
-}
+} // namespace Gem5SystemC

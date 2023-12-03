@@ -54,33 +54,31 @@ namespace ps2
 {
 
 PS2Mouse::PS2Mouse(const PS2MouseParams &p)
-    : Device(p),
-      status(0), resolution(4), sampleRate(100)
-{
-}
+    : Device(p), status(0), resolution(4), sampleRate(100)
+{}
 
 bool
 PS2Mouse::recv(const std::vector<uint8_t> &data)
 {
     switch (data[0]) {
-      case ReadID:
+    case ReadID:
         DPRINTF(PS2, "Mouse ID requested.\n");
         sendAck();
         send(mouse::ID);
         return true;
-      case Disable:
+    case Disable:
         DPRINTF(PS2, "Disabling data reporting.\n");
         status.enabled = 0;
         sendAck();
         return true;
-      case Enable:
+    case Enable:
         DPRINTF(PS2, "Enabling data reporting.\n");
         status.enabled = 1;
         sendAck();
         return true;
-      case Resend:
+    case Resend:
         panic("Mouse resend unimplemented.\n");
-      case Reset:
+    case Reset:
         DPRINTF(PS2, "Resetting the mouse.\n");
         sampleRate = 100;
         resolution = 4;
@@ -91,17 +89,17 @@ PS2Mouse::recv(const std::vector<uint8_t> &data)
         send(mouse::ID);
         return true;
 
-      case mouse::Scale1to1:
+    case mouse::Scale1to1:
         DPRINTF(PS2, "Setting mouse scale to 1:1.\n");
         status.twoToOne = 0;
         sendAck();
         return true;
-      case mouse::Scale2to1:
+    case mouse::Scale2to1:
         DPRINTF(PS2, "Setting mouse scale to 2:1.\n");
         status.twoToOne = 1;
         sendAck();
         return true;
-      case mouse::SetResolution:
+    case mouse::SetResolution:
         if (data.size() == 1) {
             DPRINTF(PS2, "Setting mouse resolution.\n");
             sendAck();
@@ -112,34 +110,36 @@ PS2Mouse::recv(const std::vector<uint8_t> &data)
             sendAck();
             return true;
         }
-      case mouse::GetStatus:
+    case mouse::GetStatus:
         DPRINTF(PS2, "Getting mouse status.\n");
         sendAck();
         send((uint8_t *)&(status), 1);
         send(&resolution, sizeof(resolution));
         send(&sampleRate, sizeof(sampleRate));
         return true;
-      case mouse::ReadData:
+    case mouse::ReadData:
         panic("Reading mouse data unimplemented.\n");
-      case mouse::ResetWrapMode:
+    case mouse::ResetWrapMode:
         panic("Resetting mouse wrap mode unimplemented.\n");
-      case mouse::WrapMode:
+    case mouse::WrapMode:
         panic("Setting mouse wrap mode unimplemented.\n");
-      case mouse::RemoteMode:
+    case mouse::RemoteMode:
         panic("Setting mouse remote mode unimplemented.\n");
-      case mouse::SampleRate:
+    case mouse::SampleRate:
         if (data.size() == 1) {
             DPRINTF(PS2, "Setting mouse sample rate.\n");
             sendAck();
             return false;
         } else {
-            DPRINTF(PS2, "Mouse sample rate %d samples "
-                    "per second.\n", data[1]);
+            DPRINTF(PS2,
+                    "Mouse sample rate %d samples "
+                    "per second.\n",
+                    data[1]);
             sampleRate = data[1];
             sendAck();
             return true;
         }
-      case DefaultsAndDisable:
+    case DefaultsAndDisable:
         DPRINTF(PS2, "Disabling and resetting mouse.\n");
         sampleRate = 100;
         resolution = 4;
@@ -147,7 +147,7 @@ PS2Mouse::recv(const std::vector<uint8_t> &data)
         status.enabled = 0;
         sendAck();
         return true;
-      default:
+    default:
         warn("Unknown mouse command %#02x.\n", data[0]);
         send(Resend);
         return true;

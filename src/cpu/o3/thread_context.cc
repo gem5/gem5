@@ -67,8 +67,7 @@ ThreadContext::takeOverFrom(gem5::ThreadContext *old_context)
 void
 ThreadContext::activate()
 {
-    DPRINTF(O3CPU, "Calling activate on Thread Context %d\n",
-            threadId());
+    DPRINTF(O3CPU, "Calling activate on Thread Context %d\n", threadId());
 
     if (thread->status() == gem5::ThreadContext::Active)
         return;
@@ -83,8 +82,7 @@ ThreadContext::activate()
 void
 ThreadContext::suspend()
 {
-    DPRINTF(O3CPU, "Calling suspend on Thread Context %d\n",
-            threadId());
+    DPRINTF(O3CPU, "Calling suspend on Thread Context %d\n", threadId());
 
     if (thread->status() == gem5::ThreadContext::Suspended)
         return;
@@ -213,15 +211,14 @@ ThreadContext::setMiscReg(RegIndex misc_reg, RegVal val)
 
 // hardware transactional memory
 void
-ThreadContext::htmAbortTransaction(uint64_t htmUid,
-        HtmFailureFaultCause cause)
+ThreadContext::htmAbortTransaction(uint64_t htmUid, HtmFailureFaultCause cause)
 {
     cpu->htmSendAbortSignal(thread->threadId(), htmUid, cause);
 
     conditionalSquash();
 }
 
-BaseHTMCheckpointPtr&
+BaseHTMCheckpointPtr &
 ThreadContext::getHtmCheckpointPtr()
 {
     return thread->htmCheckpoint;

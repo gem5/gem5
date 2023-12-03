@@ -52,7 +52,6 @@ TlbEntry::serialize(CheckpointOut &cp) const
     SERIALIZE_SCALAR(valid);
 }
 
-
 void
 TlbEntry::unserialize(CheckpointIn &cp)
 {
@@ -69,11 +68,10 @@ TlbEntry::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(valid);
 }
 
+int PageTableEntry::pageSizes[] = { 8 * 1024, 64 * 1024,
+                                    0,        4 * 1024 * 1024,
+                                    0,        256 * 1024 * 1024L };
 
-int PageTableEntry::pageSizes[] =
-    { 8 * 1024, 64 * 1024, 0, 4 * 1024 * 1024, 0, 256 * 1024 * 1024L} ;
-
-
-}
+} // namespace SparcISA
 
 } // namespace gem5

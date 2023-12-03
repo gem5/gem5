@@ -265,7 +265,7 @@ TEST(AddrRangeTest, isSubsetPartialSubset)
 
 TEST(AddrRangeTest, isSubsetInterleavedCompleteOverlap)
 {
-    AddrRange r1(0x00, 0x100, {0x40}, 0);
+    AddrRange r1(0x00, 0x100, { 0x40 }, 0);
     AddrRange r2(0x00, 0x40);
 
     EXPECT_TRUE(r2.isSubset(r1));
@@ -273,7 +273,7 @@ TEST(AddrRangeTest, isSubsetInterleavedCompleteOverlap)
 
 TEST(AddrRangeTest, isSubsetInterleavedNoOverlap)
 {
-    AddrRange r1(0x00, 0x100, {0x40}, 1);
+    AddrRange r1(0x00, 0x100, { 0x40 }, 1);
     AddrRange r2(0x00, 0x40);
 
     EXPECT_FALSE(r2.isSubset(r1));
@@ -281,7 +281,7 @@ TEST(AddrRangeTest, isSubsetInterleavedNoOverlap)
 
 TEST(AddrRangeTest, isSubsetInterleavedPartialOverlap)
 {
-    AddrRange r1(0x00, 0x100, {0x40}, 0);
+    AddrRange r1(0x00, 0x100, { 0x40 }, 0);
     AddrRange r2(0x10, 0x50);
 
     EXPECT_FALSE(r2.isSubset(r1));
@@ -362,7 +362,7 @@ TEST(AddrRangeTest, OffsetOutOfRangeBefore)
 TEST(AddrRangeTest, LsbInterleavingMask)
 {
     Addr start = 0x00;
-    Addr end   = 0xFF;
+    Addr end = 0xFF;
     std::vector<Addr> masks;
     /*
      * The address is in range if the LSB is set, i.e. is the value is odd.
@@ -392,7 +392,7 @@ TEST(AddrRangeTest, LsbInterleavingMask)
 TEST(AddrRangeTest, TwoInterleavingMasks)
 {
     Addr start = 0x0000;
-    Addr end   = 0xFFFF;
+    Addr end = 0xFFFF;
     std::vector<Addr> masks;
     /*
      * There are two marks, the two LSBs.
@@ -415,7 +415,7 @@ TEST(AddrRangeTest, TwoInterleavingMasks)
 TEST(AddrRangeTest, ComplexInterleavingMasks)
 {
     Addr start = 0x0000;
-    Addr end   = 0xFFFF;
+    Addr end = 0xFFFF;
     std::vector<Addr> masks;
     masks.push_back((1 << 1) | 1);
     masks.push_back((1ULL << 63) | (1ULL << 62));
@@ -435,7 +435,7 @@ TEST(AddrRangeTest, ComplexInterleavingMasks)
 TEST(AddrRangeTest, InterleavingAddressesMergesWith)
 {
     Addr start1 = 0x0000;
-    Addr end1   = 0xFFFF;
+    Addr end1 = 0xFFFF;
     std::vector<Addr> masks;
     masks.push_back((1 << 29) | (1 << 20) | (1 << 10) | 1);
     masks.push_back((1 << 2));
@@ -443,7 +443,7 @@ TEST(AddrRangeTest, InterleavingAddressesMergesWith)
     AddrRange r1(start1, end1, masks, intlv_match1);
 
     Addr start2 = 0x0000;
-    Addr end2   = 0xFFFF;
+    Addr end2 = 0xFFFF;
     uint8_t intlv_match2 = 1; // intlv_match may differ.
     AddrRange r2(start2, end2, masks, intlv_match2);
 
@@ -454,7 +454,7 @@ TEST(AddrRangeTest, InterleavingAddressesMergesWith)
 TEST(AddrRangeTest, InterleavingAddressesDoNotMergeWith)
 {
     Addr start1 = 0x0000;
-    Addr end1   = 0xFFFF;
+    Addr end1 = 0xFFFF;
     std::vector<Addr> masks1;
     masks1.push_back((1 << 29) | (1 << 20) | (1 << 10) | 1);
     masks1.push_back((1 << 2));
@@ -462,11 +462,11 @@ TEST(AddrRangeTest, InterleavingAddressesDoNotMergeWith)
     AddrRange r1(start1, end1, masks1, intlv_match1);
 
     Addr start2 = 0x0000;
-    Addr end2   = 0xFFFF;
+    Addr end2 = 0xFFFF;
     std::vector<Addr> masks2;
     masks2.push_back((1 << 29) | (1 << 20) | (1 << 10) | 1);
     masks2.push_back((1 << 3)); // Different mask here.
-    uint8_t intlv_match2 = 1; // intlv_match may differ.
+    uint8_t intlv_match2 = 1;   // intlv_match may differ.
     AddrRange r2(start2, end2, masks2, intlv_match2);
 
     EXPECT_FALSE(r1.mergesWith(r2));
@@ -479,7 +479,7 @@ TEST(AddrRangeTest, InterleavingAddressesDoNotIntersect)
      * Range 1: all the odd addresses between 0x0000 and 0xFFFF.
      */
     Addr start1 = 0x0000;
-    Addr end1   = 0xFFFF;
+    Addr end1 = 0xFFFF;
     std::vector<Addr> masks1;
     masks1.push_back(1);
     uint8_t intlv_match1 = 1;
@@ -490,7 +490,7 @@ TEST(AddrRangeTest, InterleavingAddressesDoNotIntersect)
      * addresses should thereby not intersect.
      */
     Addr start2 = 0x0000;
-    Addr end2   = 0xFFFF;
+    Addr end2 = 0xFFFF;
     std::vector<Addr> masks2;
     masks2.push_back(1);
     uint8_t intv_match2 = 0;
@@ -503,7 +503,7 @@ TEST(AddrRangeTest, InterleavingAddressesDoNotIntersect)
 TEST(AddrRangeTest, InterleavingAddressesIntersectsViaMerging)
 {
     Addr start1 = 0x0000;
-    Addr end1   = 0xFFFF;
+    Addr end1 = 0xFFFF;
     std::vector<Addr> masks1;
     masks1.push_back((1 << 29) | (1 << 20) | (1 << 10) | 1);
     masks1.push_back((1 << 2));
@@ -511,7 +511,7 @@ TEST(AddrRangeTest, InterleavingAddressesIntersectsViaMerging)
     AddrRange r1(start1, end1, masks1, intlv_match1);
 
     Addr start2 = 0x0000;
-    Addr end2   = 0xFFFF;
+    Addr end2 = 0xFFFF;
     std::vector<Addr> masks2;
     masks2.push_back((1 << 29) | (1 << 20) | (1 << 10) | 1);
     masks2.push_back((1 << 2));
@@ -525,7 +525,7 @@ TEST(AddrRangeTest, InterleavingAddressesIntersectsViaMerging)
 TEST(AddrRangeTest, InterleavingAddressesDoesNotIntersectViaMerging)
 {
     Addr start1 = 0x0000;
-    Addr end1   = 0xFFFF;
+    Addr end1 = 0xFFFF;
     std::vector<Addr> masks1;
     masks1.push_back((1 << 29) | (1 << 20) | (1 << 10) | 1);
     masks1.push_back((1 << 2));
@@ -533,7 +533,7 @@ TEST(AddrRangeTest, InterleavingAddressesDoesNotIntersectViaMerging)
     AddrRange r1(start1, end1, masks1, intlv_match1);
 
     Addr start2 = 0x0000;
-    Addr end2   = 0xFFFF;
+    Addr end2 = 0xFFFF;
     std::vector<Addr> masks2;
     masks2.push_back((1 << 29) | (1 << 20) | (1 << 10) | 1);
     masks2.push_back((1 << 2));
@@ -564,7 +564,7 @@ TEST(AddrRangeTest, DISABLED_InterleavingAddressesIntersect)
      * Range 1: all the odd addresses between 0x0000 and 0xFFFF.
      */
     Addr start1 = 0x0000;
-    Addr end1   = 0xFFFF;
+    Addr end1 = 0xFFFF;
     std::vector<Addr> masks1;
     masks1.push_back(1);
     uint8_t intlv_match1 = 0;
@@ -575,7 +575,7 @@ TEST(AddrRangeTest, DISABLED_InterleavingAddressesIntersect)
      * 0xFFFF. These addresses should thereby intersect.
      */
     Addr start2 = 0x0000;
-    Addr end2   = 0xFFFF;
+    Addr end2 = 0xFFFF;
     std::vector<Addr> masks2;
     masks2.push_back(1 << 2);
     uint8_t intlv_match2 = 1;
@@ -591,7 +591,7 @@ TEST(AddrRangeTest, DISABLED_InterleavingAddressesIntersectsOnOneByteAddress)
      * Range: all the odd addresses between 0x0000 and 0xFFFF.
      */
     Addr start = 0x0000;
-    Addr end   = 0xFFFF;
+    Addr end = 0xFFFF;
     std::vector<Addr> masks;
     masks.push_back(1);
     uint8_t intlv_match = 1;
@@ -604,13 +604,13 @@ TEST(AddrRangeTest, DISABLED_InterleavingAddressesIntersectsOnOneByteAddress)
 }
 
 TEST(AddrRangeTest,
-    DISABLED_InterleavingAddressesDoesNotIntersectOnOneByteAddress)
+     DISABLED_InterleavingAddressesDoesNotIntersectOnOneByteAddress)
 {
     /*
      * Range: all the odd addresses between 0x0000 and 0xFFFF.
      */
     Addr start = 0x0000;
-    Addr end   = 0xFFFF;
+    Addr end = 0xFFFF;
     std::vector<Addr> masks;
     masks.push_back(1);
     uint8_t intlv_match = 1;
@@ -622,7 +622,6 @@ TEST(AddrRangeTest,
     EXPECT_TRUE(r2.intersects(r1));
 }
 
-
 /*
  * The following three tests were created to test the addr_range.isSubset
  * function for Interleaving address ranges. However, for now, this
@@ -632,7 +631,7 @@ TEST(AddrRangeTest, DISABLED_InterleavingAddressIsSubset)
 {
     // Range 1: all the even addresses between 0x0000 and 0xFFFF.
     Addr start1 = 0x0000;
-    Addr end1   = 0xFFFF;
+    Addr end1 = 0xFFFF;
     std::vector<Addr> masks1;
     masks1.push_back(1);
     uint8_t intlv_match1 = 0;
@@ -641,7 +640,7 @@ TEST(AddrRangeTest, DISABLED_InterleavingAddressIsSubset)
     // Range 2: all the even addresses between 0xF000 and 0x0FFF, this is
     // a subset of Range 1.
     Addr start2 = 0xF000;
-    Addr end2   = 0x0FFF;
+    Addr end2 = 0x0FFF;
     std::vector<Addr> masks2;
     masks2.push_back(1);
     uint8_t intlv_match2 = 0;
@@ -653,19 +652,18 @@ TEST(AddrRangeTest, DISABLED_InterleavingAddressIsSubset)
 
 TEST(AddrRangeTest, DISABLED_InterleavingAddressIsNotSubset)
 {
-    //Range 1: all the even addresses between 0x0000 and 0xFFFF.
+    // Range 1: all the even addresses between 0x0000 and 0xFFFF.
     Addr start1 = 0x0000;
-    Addr end1   = 0xFFFF;
+    Addr end1 = 0xFFFF;
     std::vector<Addr> masks1;
     masks1.push_back(1);
     uint8_t intlv_match1 = 0;
     AddrRange r1(start1, end1, masks1, intlv_match1);
 
-
     // Range 2: all the odd addresses between 0xF000 and 0x0FFF, this is
-    //a subset of Range 1.
+    // a subset of Range 1.
     Addr start2 = 0xF000;
-    Addr end2   = 0x0FFF;
+    Addr end2 = 0x0FFF;
     std::vector<Addr> masks2;
     masks2.push_back(1);
     uint8_t intlv_match2 = 1;
@@ -682,15 +680,15 @@ TEST(AddrRangeTest, DISABLED_InterleavingAddressContains)
      * and 5th bits 1, or both are 0
      */
     Addr start = 0x00;
-    Addr end   = 0xFF;
+    Addr end = 0xFF;
     std::vector<Addr> masks;
     masks.push_back((1 << 4) | 1);
     uint8_t intlv_match = 0;
     AddrRange r(start, end, masks, intlv_match);
 
     for (Addr addr = start; addr < end; addr++) {
-        if (((addr & 1) && ((1 << 4) & addr)) || // addr[0] && addr[4]
-            (!(addr & 1) && !((1 << 4) & addr))) { //!addr[0] && !addr[4]
+        if (((addr & 1) && ((1 << 4) & addr)) ||   // addr[0] && addr[4]
+            (!(addr & 1) && !((1 << 4) & addr))) { //! addr[0] && !addr[4]
             EXPECT_TRUE(r.contains(addr));
         } else {
             EXPECT_FALSE(r.contains(addr));
@@ -701,7 +699,7 @@ TEST(AddrRangeTest, DISABLED_InterleavingAddressContains)
 TEST(AddrRangeTest, InterleavingAddressAddRemoveInterlvBits)
 {
     Addr start = 0x00000;
-    Addr end   = 0x10000;
+    Addr end = 0x10000;
     std::vector<Addr> masks;
     masks.push_back(1);
     uint8_t intlv_match = 1;
@@ -736,7 +734,7 @@ TEST(AddrRangeTest, InterleavingAddressAddRemoveInterlvBits)
 TEST(AddrRangeTest, InterleavingAddressAddRemoveInterlvBitsTwoMasks)
 {
     Addr start = 0x00000;
-    Addr end   = 0x10000;
+    Addr end = 0x10000;
     std::vector<Addr> masks;
     masks.push_back((1 << 3) | (1 << 2) | (1 << 1) | 1);
     masks.push_back((1 << 11) | (1 << 10) | (1 << 9) | (1 << 8));
@@ -770,7 +768,7 @@ TEST(AddrRangeTest, AddRemoveInterleavBitsAcrossRange)
      * always return an_address.
      */
     Addr start = 0x00000;
-    Addr end   = 0x10000;
+    Addr end = 0x10000;
     std::vector<Addr> masks;
     masks.push_back(1 << 2);
     masks.push_back(1 << 3);
@@ -799,7 +797,7 @@ TEST(AddrRangeTest, AddRemoveInterleavBitsAcrossContiguousRange)
      * always return an_address.
      */
     Addr start = 0x00000;
-    Addr end   = 0x10000;
+    Addr end = 0x10000;
     std::vector<Addr> masks;
     masks.push_back(1 << 2);
     masks.push_back(1 << 3);
@@ -820,15 +818,15 @@ TEST(AddrRangeTest, AddRemoveInterleavBitsAcrossContiguousRange)
 TEST(AddrRangeTest, InterleavingAddressesGetOffset)
 {
     Addr start = 0x0002;
-    Addr end   = 0xFFFF;
+    Addr end = 0xFFFF;
     std::vector<Addr> masks;
     masks.push_back((1 << 4) | (1 << 2));
     uint8_t intlv_match = 0;
     AddrRange r(start, end, masks, intlv_match);
 
-    Addr value = ((1 << 10) | (1 << 9) | (1 <<  8) | (1 << 2) | (1 << 1) | 1);
+    Addr value = ((1 << 10) | (1 << 9) | (1 << 8) | (1 << 2) | (1 << 1) | 1);
     Addr value_interleaving_bits_removed =
-                            ((1 << 9) | (1 << 8) | (1 << 7) | (1 << 1) | 1);
+        ((1 << 9) | (1 << 8) | (1 << 7) | (1 << 1) | 1);
 
     Addr expected_output = value_interleaving_bits_removed - start;
 
@@ -838,14 +836,14 @@ TEST(AddrRangeTest, InterleavingAddressesGetOffset)
 TEST(AddrRangeTest, InterleavingLessThanStartEquals)
 {
     Addr start1 = 0x0000FFFF;
-    Addr end1   = 0xFFFF0000;
+    Addr end1 = 0xFFFF0000;
     std::vector<Addr> masks1;
     masks1.push_back((1 << 4) | (1 << 2));
     uint8_t intlv_match1 = 0;
     AddrRange r1(start1, end1, masks1, intlv_match1);
 
     Addr start2 = 0x0000FFFF;
-    Addr end2   = 0x000F0000;
+    Addr end2 = 0x000F0000;
     std::vector<Addr> masks2;
     masks2.push_back((1 << 4) | (1 << 2));
     masks2.push_back((1 << 10));
@@ -863,14 +861,14 @@ TEST(AddrRangeTest, InterleavingLessThanStartEquals)
 TEST(AddrRangeTest, InterleavingLessThanStartNotEquals)
 {
     Addr start1 = 0x0000FFFF;
-    Addr end1   = 0xFFFF0000;
+    Addr end1 = 0xFFFF0000;
     std::vector<Addr> masks1;
     masks1.push_back((1 << 4) | (1 << 2));
     uint8_t intlv_match1 = 0;
     AddrRange r1(start1, end1, masks1, intlv_match1);
 
     Addr start2 = 0x0000FFFE;
-    Addr end2   = 0x000F0000;
+    Addr end2 = 0x000F0000;
     std::vector<Addr> masks2;
     masks2.push_back((1 << 4) | (1 << 2));
     masks2.push_back((1 << 10));
@@ -884,14 +882,14 @@ TEST(AddrRangeTest, InterleavingLessThanStartNotEquals)
 TEST(AddrRangeTest, InterleavingEqualTo)
 {
     Addr start1 = 0x0000FFFF;
-    Addr end1   = 0xFFFF0000;
+    Addr end1 = 0xFFFF0000;
     std::vector<Addr> masks1;
     masks1.push_back((1 << 4) | (1 << 2));
     uint8_t intlv_match1 = 0;
     AddrRange r1(start1, end1, masks1, intlv_match1);
 
     Addr start2 = 0x0000FFFF;
-    Addr end2   = 0xFFFF0000;
+    Addr end2 = 0xFFFF0000;
     std::vector<Addr> masks2;
     masks2.push_back((1 << 4) | (1 << 2));
     uint8_t intlv_match2 = 0;
@@ -903,14 +901,14 @@ TEST(AddrRangeTest, InterleavingEqualTo)
 TEST(AddrRangeTest, InterleavingNotEqualTo)
 {
     Addr start1 = 0x0000FFFF;
-    Addr end1   = 0xFFFF0000;
+    Addr end1 = 0xFFFF0000;
     std::vector<Addr> masks1;
     masks1.push_back((1 << 4) | (1 << 2));
     uint8_t intlv_match1 = 0;
     AddrRange r1(start1, end1, masks1, intlv_match1);
 
     Addr start2 = 0x0000FFFF;
-    Addr end2   = 0xFFFF0000;
+    Addr end2 = 0xFFFF0000;
     std::vector<Addr> masks2;
     masks2.push_back((1 << 4) | (1 << 2));
     masks2.push_back((1 << 10));
@@ -932,14 +930,14 @@ TEST(AddrRangeTest, InterleavingNotEqualTo)
 TEST(AddrRangeTest, MergingInterleavingAddressRanges)
 {
     Addr start1 = 0x0000;
-    Addr end1   = 0xFFFF;
+    Addr end1 = 0xFFFF;
     std::vector<Addr> masks1;
     masks1.push_back((1 << 4) | (1 << 2));
     uint8_t intlv_match1 = 0;
     AddrRange r1(start1, end1, masks1, intlv_match1);
 
     Addr start2 = 0x0000;
-    Addr end2   = 0xFFFF;
+    Addr end2 = 0xFFFF;
     std::vector<Addr> masks2;
     masks2.push_back((1 << 4) | (1 << 2));
     uint8_t intlv_match2 = 1;
@@ -963,7 +961,7 @@ TEST(AddrRangeTest, MergingInterleavingAddressRangesOneRange)
      * address range is equal to that range.
      */
     Addr start = 0x0000;
-    Addr end   = 0xFFFF;
+    Addr end = 0xFFFF;
     std::vector<Addr> masks;
     masks.push_back((1 << 4) | (1 << 2));
     uint8_t intlv_match = 0;
@@ -998,7 +996,7 @@ TEST(AddrRangeTest, LegacyConstructorNoInterleaving)
     /*
      * This constructor should create a range with no interleaving.
      */
-    AddrRange range(0x0000, 0xFFFF, 0, 0, 0 ,0);
+    AddrRange range(0x0000, 0xFFFF, 0, 0, 0, 0);
     AddrRange expected(0x0000, 0xFFFF);
 
     EXPECT_EQ(expected, range);
@@ -1045,7 +1043,7 @@ TEST(AddrRangeTest, LegacyConstructorTwoBitMaskWithXOR)
      * If XORed value is equal to 3, then the address is in range.
      */
 
-    AddrRange range(0x00000000, 0xFFFFFFFF, 1, 11, 2,  3);
+    AddrRange range(0x00000000, 0xFFFFFFFF, 1, 11, 2, 3);
 
     /*
      * The easiest way to ensure this range is correct is to iterate throguh
@@ -1088,7 +1086,8 @@ TEST(AddrRangeTest, RangeInConstruction)
     EXPECT_EQ(0xF, r.end());
 }
 
-TEST(AddrRangeTest, RangeSizeConstruction){
+TEST(AddrRangeTest, RangeSizeConstruction)
+{
     AddrRange r = RangeSize(0x5, 5);
     EXPECT_EQ(0x5, r.start());
     EXPECT_EQ(0xA, r.end());
@@ -1108,9 +1107,7 @@ TEST(AddrRangeTest, RangeSizeConstruction){
  */
 TEST(AddrRangeTest, ExcludeAll)
 {
-    const AddrRangeList exclude_ranges{
-        AddrRange(0x0, 0x200)
-    };
+    const AddrRangeList exclude_ranges{ AddrRange(0x0, 0x200) };
 
     AddrRange r(0x00, 0x100);
     auto ranges = r.exclude(exclude_ranges);
@@ -1132,9 +1129,7 @@ TEST(AddrRangeTest, ExcludeAll)
  */
 TEST(AddrRangeTest, ExcludeAllEqual)
 {
-    const AddrRangeList exclude_ranges{
-        AddrRange(0x0, 0x100)
-    };
+    const AddrRangeList exclude_ranges{ AddrRange(0x0, 0x100) };
 
     AddrRange r(0x00, 0x100);
     auto ranges = r.exclude(exclude_ranges);
@@ -1156,11 +1151,9 @@ TEST(AddrRangeTest, ExcludeAllEqual)
  */
 TEST(AddrRangeTest, ExcludeAllMultiple)
 {
-    const AddrRangeList exclude_ranges{
-        AddrRange(0x0, 0x30),
-        AddrRange(0x30, 0x40),
-        AddrRange(0x40, 0x120)
-    };
+    const AddrRangeList exclude_ranges{ AddrRange(0x0, 0x30),
+                                        AddrRange(0x30, 0x40),
+                                        AddrRange(0x40, 0x120) };
 
     AddrRange r(0x00, 0x100);
     auto ranges = r.exclude(exclude_ranges);
@@ -1186,10 +1179,8 @@ TEST(AddrRangeTest, ExcludeAllMultiple)
  */
 TEST(AddrRangeTest, ExcludeAllOverlapping)
 {
-    const AddrRangeList exclude_ranges{
-        AddrRange(0x0, 0x150),
-        AddrRange(0x140, 0x220)
-    };
+    const AddrRangeList exclude_ranges{ AddrRange(0x0, 0x150),
+                                        AddrRange(0x140, 0x220) };
 
     AddrRange r(0x100, 0x200);
 
@@ -1218,7 +1209,6 @@ TEST(AddrRangeTest, ExcludeEmpty)
     EXPECT_EQ(ranges.front(), r);
 }
 
-
 /*
  * Ranges do not overlap:
  * the return list contains the unmodified range
@@ -1233,9 +1223,7 @@ TEST(AddrRangeTest, ExcludeEmpty)
  */
 TEST(AddrRangeTest, NoExclusion)
 {
-    const AddrRangeList exclude_ranges{
-        AddrRange(0x100, 0x200)
-    };
+    const AddrRangeList exclude_ranges{ AddrRange(0x100, 0x200) };
 
     AddrRange r(0x00, 0x100);
     auto ranges = r.exclude(exclude_ranges);
@@ -1291,11 +1279,9 @@ TEST(AddrRangeTest, DoubleExclusion)
  */
 TEST(AddrRangeTest, MultipleExclusion)
 {
-    const AddrRangeList exclude_ranges{
-        AddrRange(0x000, 0x130),
-        AddrRange(0x140, 0x170),
-        AddrRange(0x180, 0x210)
-    };
+    const AddrRangeList exclude_ranges{ AddrRange(0x000, 0x130),
+                                        AddrRange(0x140, 0x170),
+                                        AddrRange(0x180, 0x210) };
 
     const AddrRange expected_range1(0x130, 0x140);
     const AddrRange expected_range2(0x170, 0x180);
@@ -1325,11 +1311,9 @@ TEST(AddrRangeTest, MultipleExclusion)
  */
 TEST(AddrRangeTest, MultipleExclusionOverlapping)
 {
-    const AddrRangeList exclude_ranges{
-        AddrRange(0x000, 0x130),
-        AddrRange(0x140, 0x170),
-        AddrRange(0x150, 0x210)
-    };
+    const AddrRangeList exclude_ranges{ AddrRange(0x000, 0x130),
+                                        AddrRange(0x140, 0x170),
+                                        AddrRange(0x150, 0x210) };
 
     const AddrRange expected_range1(0x130, 0x140);
 
@@ -1360,10 +1344,8 @@ TEST(AddrRangeTest, MultipleExclusionOverlapping)
  */
 TEST(AddrRangeTest, ExclusionOverlapping)
 {
-    const AddrRangeList exclude_ranges{
-        AddrRange(0x120, 0x180),
-        AddrRange(0x130, 0x170)
-    };
+    const AddrRangeList exclude_ranges{ AddrRange(0x120, 0x180),
+                                        AddrRange(0x130, 0x170) };
 
     const AddrRange expected_range1(0x100, 0x120);
     const AddrRange expected_range2(0x180, 0x200);
@@ -1393,11 +1375,9 @@ TEST(AddrRangeTest, ExclusionOverlapping)
  */
 TEST(AddrRangeTest, MultipleExclusionUnsorted)
 {
-    const AddrRangeList exclude_ranges{
-        AddrRange(0x180, 0x210),
-        AddrRange(0x000, 0x130),
-        AddrRange(0x140, 0x170)
-    };
+    const AddrRangeList exclude_ranges{ AddrRange(0x180, 0x210),
+                                        AddrRange(0x000, 0x130),
+                                        AddrRange(0x140, 0x170) };
 
     const AddrRange expected_range1(0x130, 0x140);
     const AddrRange expected_range2(0x170, 0x180);
@@ -1423,7 +1403,7 @@ TEST(AddrRangeTest, ExclusionOfSingleRange)
 
 TEST(AddrRangeTest, ExclusionOfRangeFromRangeList)
 {
-    AddrRangeList base({AddrRange(0x100, 0x200), AddrRange(0x300, 0x400)});
+    AddrRangeList base({ AddrRange(0x100, 0x200), AddrRange(0x300, 0x400) });
 
     const AddrRange expected_range1(0x100, 0x180);
     const AddrRange expected_range2(0x380, 0x400);
@@ -1436,21 +1416,20 @@ TEST(AddrRangeTest, ExclusionOfRangeFromRangeList)
 
 TEST(AddrRangeTest, ExclusionOfRangeListFromRangeList)
 {
-    AddrRangeList base({AddrRange(0x100, 0x200), AddrRange(0x300, 0x400)});
+    AddrRangeList base({ AddrRange(0x100, 0x200), AddrRange(0x300, 0x400) });
 
     const AddrRange expected_range1(0x100, 0x140);
     const AddrRange expected_range2(0x180, 0x200);
     const AddrRange expected_range3(0x300, 0x340);
     const AddrRange expected_range4(0x380, 0x400);
 
-    const AddrRangeList to_exclude({
-            AddrRange(0x140, 0x180), AddrRange(0x340, 0x380)});
+    const AddrRangeList to_exclude(
+        { AddrRange(0x140, 0x180), AddrRange(0x340, 0x380) });
     auto ranges = exclude(base, to_exclude);
 
     EXPECT_EQ(ranges.size(), 4);
-    EXPECT_THAT(ranges, ElementsAre(
-                expected_range1, expected_range2,
-                expected_range3, expected_range4));
+    EXPECT_THAT(ranges, ElementsAre(expected_range1, expected_range2,
+                                    expected_range3, expected_range4));
 }
 
 TEST(AddrRangeTest, SubtractionOperatorRange)
@@ -1472,17 +1451,17 @@ TEST(AddrRangeTest, SubtractionOperatorRangeList)
     const AddrRange expected_range3(0x1a0, 0x200);
 
     AddrRange r(0x100, 0x200);
-    auto ranges = r - AddrRangeList(
-            {AddrRange(0x140, 0x160), AddrRange(0x180, 0x1a0)});
+    auto ranges = r - AddrRangeList({ AddrRange(0x140, 0x160),
+                                      AddrRange(0x180, 0x1a0) });
 
     EXPECT_EQ(ranges.size(), 3);
-    EXPECT_THAT(ranges, ElementsAre(
-                expected_range1, expected_range2, expected_range3));
+    EXPECT_THAT(ranges, ElementsAre(expected_range1, expected_range2,
+                                    expected_range3));
 }
 
 TEST(AddrRangeTest, SubtractionOfRangeFromRangeList)
 {
-    AddrRangeList base({AddrRange(0x100, 0x200), AddrRange(0x300, 0x400)});
+    AddrRangeList base({ AddrRange(0x100, 0x200), AddrRange(0x300, 0x400) });
 
     const AddrRange expected_range1(0x100, 0x180);
     const AddrRange expected_range2(0x380, 0x400);
@@ -1495,26 +1474,25 @@ TEST(AddrRangeTest, SubtractionOfRangeFromRangeList)
 
 TEST(AddrRangeTest, SubtractionOfRangeListFromRangeList)
 {
-    AddrRangeList base({AddrRange(0x100, 0x200), AddrRange(0x300, 0x400)});
+    AddrRangeList base({ AddrRange(0x100, 0x200), AddrRange(0x300, 0x400) });
 
     const AddrRange expected_range1(0x100, 0x140);
     const AddrRange expected_range2(0x180, 0x200);
     const AddrRange expected_range3(0x300, 0x340);
     const AddrRange expected_range4(0x380, 0x400);
 
-    const AddrRangeList to_exclude({
-            AddrRange(0x140, 0x180), AddrRange(0x340, 0x380)});
+    const AddrRangeList to_exclude(
+        { AddrRange(0x140, 0x180), AddrRange(0x340, 0x380) });
     auto ranges = base - to_exclude;
 
     EXPECT_EQ(ranges.size(), 4);
-    EXPECT_THAT(ranges, ElementsAre(
-                expected_range1, expected_range2,
-                expected_range3, expected_range4));
+    EXPECT_THAT(ranges, ElementsAre(expected_range1, expected_range2,
+                                    expected_range3, expected_range4));
 }
 
 TEST(AddrRangeTest, SubtractionAssignmentOfRangeFromRangeList)
 {
-    AddrRangeList base({AddrRange(0x100, 0x200), AddrRange(0x300, 0x400)});
+    AddrRangeList base({ AddrRange(0x100, 0x200), AddrRange(0x300, 0x400) });
 
     const AddrRange expected_range1(0x100, 0x180);
     const AddrRange expected_range2(0x380, 0x400);
@@ -1527,21 +1505,20 @@ TEST(AddrRangeTest, SubtractionAssignmentOfRangeFromRangeList)
 
 TEST(AddrRangeTest, SubtractionAssignmentOfRangeListFromRangeList)
 {
-    AddrRangeList base({AddrRange(0x100, 0x200), AddrRange(0x300, 0x400)});
+    AddrRangeList base({ AddrRange(0x100, 0x200), AddrRange(0x300, 0x400) });
 
     const AddrRange expected_range1(0x100, 0x140);
     const AddrRange expected_range2(0x180, 0x200);
     const AddrRange expected_range3(0x300, 0x340);
     const AddrRange expected_range4(0x380, 0x400);
 
-    const AddrRangeList to_exclude({
-            AddrRange(0x140, 0x180), AddrRange(0x340, 0x380)});
+    const AddrRangeList to_exclude(
+        { AddrRange(0x140, 0x180), AddrRange(0x340, 0x380) });
     base -= to_exclude;
 
     EXPECT_EQ(base.size(), 4);
-    EXPECT_THAT(base, ElementsAre(
-                expected_range1, expected_range2,
-                expected_range3, expected_range4));
+    EXPECT_THAT(base, ElementsAre(expected_range1, expected_range2,
+                                  expected_range3, expected_range4));
 }
 
 TEST(AddrRangeTest, isNotSubsetLastByte)
@@ -1580,13 +1557,13 @@ TEST(AddrRangeTest, isSubsetLastByte)
  */
 TEST(AddrRangeDeathTest, ExcludeInterleavingRanges)
 {
-  /* An `assert(!interleaved());` exists at the top of the `exclude(...)`
-   * method. This means EXPECT_DEATH will only function when DEBUG is enabled
-   * (as when compiled to `.opt`). When disabled (as when compiled to `.fast`),
-   * `r.exclude` fails more catastrophically via a `panic` which GTest cannot
-   * handle correctly. We therefore include a `#ifdef NDEBUG` guard so this
-   * test is skipped when DEBUG is disabled.
-   */
+    /* An `assert(!interleaved());` exists at the top of the `exclude(...)`
+     * method. This means EXPECT_DEATH will only function when DEBUG is enabled
+     * (as when compiled to `.opt`). When disabled (as when compiled to
+     * `.fast`), `r.exclude` fails more catastrophically via a `panic` which
+     * GTest cannot handle correctly. We therefore include a `#ifdef NDEBUG`
+     * guard so this test is skipped when DEBUG is disabled.
+     */
 #ifdef NDEBUG
     GTEST_SKIP() << "Skipping as assetions are stripped from fast builds.";
 #endif
@@ -1594,7 +1571,7 @@ TEST(AddrRangeDeathTest, ExcludeInterleavingRanges)
         AddrRange(0x180, 0x210),
     };
 
-    AddrRange r(0x100, 0x200, {1}, 0);
+    AddrRange r(0x100, 0x200, { 1 }, 0);
 
     EXPECT_TRUE(r.interleaved());
     EXPECT_DEATH(r.exclude(exclude_ranges), "");

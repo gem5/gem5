@@ -89,6 +89,7 @@ class VirtIOBlock : public VirtIODeviceBase
     {
         uint64_t capacity;
     };
+
     Config config;
 
     /** @{
@@ -124,6 +125,7 @@ class VirtIOBlock : public VirtIODeviceBase
     static const Status S_IOERR = 1;
     /** Request not supported */
     static const Status S_UNSUPP = 2;
+
     /** @} */
 
     /** VirtIO block device request as sent by guest */
@@ -163,18 +165,23 @@ class VirtIOBlock : public VirtIODeviceBase
     /**
      * Virtqueue for disk requests.
      */
-    class RequestQueue
-        : public VirtQueue
+    class RequestQueue : public VirtQueue
     {
       public:
-        RequestQueue(PortProxy &proxy, ByteOrder bo,
-                uint16_t size, VirtIOBlock &_parent)
-            : VirtQueue(proxy, bo, size), parent(_parent) {}
+        RequestQueue(PortProxy &proxy, ByteOrder bo, uint16_t size,
+                     VirtIOBlock &_parent)
+            : VirtQueue(proxy, bo, size), parent(_parent)
+        {}
+
         virtual ~RequestQueue() {}
 
         void onNotifyDescriptor(VirtDescriptor *desc);
 
-        std::string name() const { return parent.name() + ".qRequests"; }
+        std::string
+        name() const
+        {
+            return parent.name() + ".qRequests";
+        }
 
       protected:
         VirtIOBlock &parent;

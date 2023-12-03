@@ -57,32 +57,23 @@ namespace ArmISA
  * vector length will be chosen (and this can potentially vary during
  * runtime).
  */
-using MatRegContainer = gem5::MatStore<MaxSmeVecLenInBytes,
-                                       MaxSmeVecLenInBytes>;
+using MatRegContainer =
+    gem5::MatStore<MaxSmeVecLenInBytes, MaxSmeVecLenInBytes>;
 
-template<typename ElemType>
-using MatTile = gem5::Tile<ElemType,
-                           MatRegContainer>;
+template <typename ElemType>
+using MatTile = gem5::Tile<ElemType, MatRegContainer>;
 
-template<typename ElemType>
-using MatTileRow = gem5::HorizontalSlice<ElemType,
-                                         MatRegContainer,
-                                         true>;
+template <typename ElemType>
+using MatTileRow = gem5::HorizontalSlice<ElemType, MatRegContainer, true>;
 
-template<typename ElemType>
-using MatTileCol = gem5::VerticalSlice<ElemType,
-                                       MatRegContainer,
-                                       true>;
+template <typename ElemType>
+using MatTileCol = gem5::VerticalSlice<ElemType, MatRegContainer, true>;
 
-template<typename ElemType>
-using MatRow = gem5::HorizontalSlice<ElemType,
-                                     MatRegContainer,
-                                     false>;
+template <typename ElemType>
+using MatRow = gem5::HorizontalSlice<ElemType, MatRegContainer, false>;
 
-template<typename ElemType>
-using MatCol = gem5::VerticalSlice<ElemType,
-                                   MatRegContainer,
-                                   false>;
+template <typename ElemType>
+using MatCol = gem5::VerticalSlice<ElemType, MatRegContainer, false>;
 
 // SME ZA tile, i.e. matrix
 const int NumMatrixRegs = 1;
@@ -90,40 +81,44 @@ const int NumMatrixRegs = 1;
 static inline TypedRegClassOps<ArmISA::MatRegContainer> matRegClassOps;
 
 inline constexpr RegClass matRegClass =
-    RegClass(MatRegClass, MatRegClassName, NumMatrixRegs, debug::MatRegs).
-        ops(matRegClassOps).
-        regType<MatRegContainer>();
+    RegClass(MatRegClass, MatRegClassName, NumMatrixRegs, debug::MatRegs)
+        .ops(matRegClassOps)
+        .regType<MatRegContainer>();
 
 /*
  * Helpers for providing access to the different views of a matrix
  * register. Intended to be called from the instruction implementations
  * themselves.
  */
-template<typename ElemType>
+template <typename ElemType>
 MatTile<ElemType>
 getTile(MatRegContainer &reg, uint8_t tile_idx)
 {
     return reg.asTile<ElemType>(tile_idx);
 }
-template<typename ElemType>
+
+template <typename ElemType>
 MatTileRow<ElemType>
 getTileHSlice(MatRegContainer &reg, uint8_t tile_idx, uint8_t row_idx)
 {
     return reg.asTile<ElemType>(tile_idx).asHSlice(row_idx);
 }
-template<typename ElemType>
+
+template <typename ElemType>
 MatTileCol<ElemType>
 getTileVSlice(MatRegContainer &reg, uint8_t tile_idx, uint8_t col_idx)
 {
     return reg.asTile<ElemType>(tile_idx).asVSlice(col_idx);
 }
-template<typename ElemType>
+
+template <typename ElemType>
 MatRow<ElemType>
 getHSlice(MatRegContainer &reg, uint8_t row_idx)
 {
     return reg.asHSlice<ElemType>(row_idx);
 }
-template<typename ElemType>
+
+template <typename ElemType>
 MatCol<ElemType>
 getVSlice(MatRegContainer &reg, uint8_t col_idx)
 {

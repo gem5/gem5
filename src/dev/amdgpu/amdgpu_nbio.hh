@@ -53,42 +53,42 @@ class AMDGPUDevice;
  * The addresses in the file are dword addresses. Here they are converted
  * to byte addresses so gem5 does not need to do any shifting.
  */
-#define AMDGPU_MM_INDEX                                   0x00000
-#define AMDGPU_MM_INDEX_HI                                0x00018
-#define AMDGPU_MM_DATA                                    0x00004
+#define AMDGPU_MM_INDEX 0x00000
+#define AMDGPU_MM_INDEX_HI 0x00018
+#define AMDGPU_MM_DATA 0x00004
 
-#define AMDGPU_PCIE_INDEX                                 0x00030
-#define AMDGPU_PCIE_INDEX2                                0x00038
-#define AMDGPU_PCIE_DATA                                  0x00034
-#define AMDGPU_PCIE_DATA2                                 0x0003c
+#define AMDGPU_PCIE_INDEX 0x00030
+#define AMDGPU_PCIE_INDEX2 0x00038
+#define AMDGPU_PCIE_DATA 0x00034
+#define AMDGPU_PCIE_DATA2 0x0003c
 
 // Message bus related to psp
-#define AMDGPU_MP0_SMN_C2PMSG_33                          0x58184
-#define AMDGPU_MP0_SMN_C2PMSG_35                          0x5818c
-#define AMDGPU_MP0_SMN_C2PMSG_64                          0x58200
-#define AMDGPU_MP0_SMN_C2PMSG_69                          0x58214
-#define AMDGPU_MP0_SMN_C2PMSG_70                          0x58218
-#define AMDGPU_MP0_SMN_C2PMSG_71                          0x5821c
-#define AMDGPU_MP0_SMN_C2PMSG_81                          0x58244
-#define AMDGPU_MP1_SMN_C2PMSG_90                          0x58a68
+#define AMDGPU_MP0_SMN_C2PMSG_33 0x58184
+#define AMDGPU_MP0_SMN_C2PMSG_35 0x5818c
+#define AMDGPU_MP0_SMN_C2PMSG_64 0x58200
+#define AMDGPU_MP0_SMN_C2PMSG_69 0x58214
+#define AMDGPU_MP0_SMN_C2PMSG_70 0x58218
+#define AMDGPU_MP0_SMN_C2PMSG_71 0x5821c
+#define AMDGPU_MP0_SMN_C2PMSG_81 0x58244
+#define AMDGPU_MP1_SMN_C2PMSG_90 0x58a68
 
 // Device specific invalidation engines used during initialization
-#define VEGA10_INV_ENG17_ACK1                             0x0a318
-#define VEGA10_INV_ENG17_ACK2                             0x69c18
-#define VEGA10_INV_ENG17_SEM1                             0x0a288
-#define VEGA10_INV_ENG17_SEM2                             0x69b88
+#define VEGA10_INV_ENG17_ACK1 0x0a318
+#define VEGA10_INV_ENG17_ACK2 0x69c18
+#define VEGA10_INV_ENG17_SEM1 0x0a288
+#define VEGA10_INV_ENG17_SEM2 0x69b88
 
-#define MI100_INV_ENG17_ACK1                              0x0a318
-#define MI100_INV_ENG17_ACK2                              0x6a918
-#define MI100_INV_ENG17_ACK3                              0x76918
-#define MI100_INV_ENG17_SEM1                              0x0a288
-#define MI100_INV_ENG17_SEM2                              0x6a888
-#define MI100_INV_ENG17_SEM3                              0x76888
+#define MI100_INV_ENG17_ACK1 0x0a318
+#define MI100_INV_ENG17_ACK2 0x6a918
+#define MI100_INV_ENG17_ACK3 0x76918
+#define MI100_INV_ENG17_SEM1 0x0a288
+#define MI100_INV_ENG17_SEM2 0x6a888
+#define MI100_INV_ENG17_SEM3 0x76888
 
-#define MI200_INV_ENG17_ACK1                              0x0a318
-#define MI200_INV_ENG17_ACK2                              0x6b018
-#define MI200_INV_ENG17_SEM1                              0x0a288
-#define MI200_INV_ENG17_SEM2                              0x6af88
+#define MI200_INV_ENG17_ACK1 0x0a318
+#define MI200_INV_ENG17_ACK2 0x6b018
+#define MI200_INV_ENG17_SEM1 0x0a288
+#define MI200_INV_ENG17_SEM2 0x6af88
 
 class AMDGPUNbio
 {

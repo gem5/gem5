@@ -48,8 +48,17 @@ class FwCfgItemE820 : public FwCfgItemFixed
   public:
     FwCfgItemE820(const QemuFwCfgItemE820Params &p);
 
-    const void *bytes() const override { return data.data(); }
-    uint64_t length() const override { return data.size(); }
+    const void *
+    bytes() const override
+    {
+        return data.data();
+    }
+
+    uint64_t
+    length() const override
+    {
+        return data.size();
+    }
 };
 
 } // namespace qemu

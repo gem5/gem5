@@ -36,80 +36,77 @@ namespace gem5
 
 namespace VegaISA
 {
-    // --- Inst_VINTRP__V_INTERP_P1_F32 class methods ---
+// --- Inst_VINTRP__V_INTERP_P1_F32 class methods ---
 
-    Inst_VINTRP__V_INTERP_P1_F32::Inst_VINTRP__V_INTERP_P1_F32(
-          InFmt_VINTRP *iFmt)
-        : Inst_VINTRP(iFmt, "v_interp_p1_f32")
-    {
-        setFlag(ALU);
-        setFlag(F32);
-    } // Inst_VINTRP__V_INTERP_P1_F32
+Inst_VINTRP__V_INTERP_P1_F32::Inst_VINTRP__V_INTERP_P1_F32(InFmt_VINTRP *iFmt)
+    : Inst_VINTRP(iFmt, "v_interp_p1_f32")
+{
+    setFlag(ALU);
+    setFlag(F32);
+} // Inst_VINTRP__V_INTERP_P1_F32
 
-    Inst_VINTRP__V_INTERP_P1_F32::~Inst_VINTRP__V_INTERP_P1_F32()
-    {
-    } // ~Inst_VINTRP__V_INTERP_P1_F32
+Inst_VINTRP__V_INTERP_P1_F32::~Inst_VINTRP__V_INTERP_P1_F32() {
+} // ~Inst_VINTRP__V_INTERP_P1_F32
 
-    // --- description from .arch file ---
-    // D.f = P10 * S.f + P0; parameter interpolation (SQ translates to
-    // V_MAD_F32 for SP).
-    // CAUTION: when in HALF_LDS mode, D must not be the same GPR as S;
-    // if D == S then data corruption will occur.
-    // NOTE: In textual representations the I/J VGPR is the first source and
-    // the attribute is the second source; however in the VOP3 encoding the
-    // attribute is stored in the src0 field and the VGPR is stored in the
-    // src1 field.
-    void
-    Inst_VINTRP__V_INTERP_P1_F32::execute(GPUDynInstPtr gpuDynInst)
-    {
-        panicUnimplemented();
-    } // execute
-    // --- Inst_VINTRP__V_INTERP_P2_F32 class methods ---
+// --- description from .arch file ---
+// D.f = P10 * S.f + P0; parameter interpolation (SQ translates to
+// V_MAD_F32 for SP).
+// CAUTION: when in HALF_LDS mode, D must not be the same GPR as S;
+// if D == S then data corruption will occur.
+// NOTE: In textual representations the I/J VGPR is the first source and
+// the attribute is the second source; however in the VOP3 encoding the
+// attribute is stored in the src0 field and the VGPR is stored in the
+// src1 field.
+void
+Inst_VINTRP__V_INTERP_P1_F32::execute(GPUDynInstPtr gpuDynInst)
+{
+    panicUnimplemented();
+} // execute
 
-    Inst_VINTRP__V_INTERP_P2_F32::Inst_VINTRP__V_INTERP_P2_F32(
-          InFmt_VINTRP *iFmt)
-        : Inst_VINTRP(iFmt, "v_interp_p2_f32")
-    {
-        setFlag(ALU);
-        setFlag(F32);
-    } // Inst_VINTRP__V_INTERP_P2_F32
+// --- Inst_VINTRP__V_INTERP_P2_F32 class methods ---
 
-    Inst_VINTRP__V_INTERP_P2_F32::~Inst_VINTRP__V_INTERP_P2_F32()
-    {
-    } // ~Inst_VINTRP__V_INTERP_P2_F32
+Inst_VINTRP__V_INTERP_P2_F32::Inst_VINTRP__V_INTERP_P2_F32(InFmt_VINTRP *iFmt)
+    : Inst_VINTRP(iFmt, "v_interp_p2_f32")
+{
+    setFlag(ALU);
+    setFlag(F32);
+} // Inst_VINTRP__V_INTERP_P2_F32
 
-    // --- description from .arch file ---
-    // D.f = P20 * S.f + D.f; parameter interpolation (SQ translates to
-    // V_MAD_F32 for SP).
-    // NOTE: In textual representations the I/J VGPR is the first source and
-    // the attribute is the second source; however in the VOP3 encoding the
-    // attribute is stored in the src0 field and the VGPR is stored in the
-    // src1 field.
-    void
-    Inst_VINTRP__V_INTERP_P2_F32::execute(GPUDynInstPtr gpuDynInst)
-    {
-        panicUnimplemented();
-    } // execute
-    // --- Inst_VINTRP__V_INTERP_MOV_F32 class methods ---
+Inst_VINTRP__V_INTERP_P2_F32::~Inst_VINTRP__V_INTERP_P2_F32() {
+} // ~Inst_VINTRP__V_INTERP_P2_F32
 
-    Inst_VINTRP__V_INTERP_MOV_F32::Inst_VINTRP__V_INTERP_MOV_F32(
-          InFmt_VINTRP *iFmt)
-        : Inst_VINTRP(iFmt, "v_interp_mov_f32")
-    {
-        setFlag(ALU);
-        setFlag(F32);
-    } // Inst_VINTRP__V_INTERP_MOV_F32
+// --- description from .arch file ---
+// D.f = P20 * S.f + D.f; parameter interpolation (SQ translates to
+// V_MAD_F32 for SP).
+// NOTE: In textual representations the I/J VGPR is the first source and
+// the attribute is the second source; however in the VOP3 encoding the
+// attribute is stored in the src0 field and the VGPR is stored in the
+// src1 field.
+void
+Inst_VINTRP__V_INTERP_P2_F32::execute(GPUDynInstPtr gpuDynInst)
+{
+    panicUnimplemented();
+} // execute
 
-    Inst_VINTRP__V_INTERP_MOV_F32::~Inst_VINTRP__V_INTERP_MOV_F32()
-    {
-    } // ~Inst_VINTRP__V_INTERP_MOV_F32
+// --- Inst_VINTRP__V_INTERP_MOV_F32 class methods ---
 
-    // --- description from .arch file ---
-    // D.f = {P10,P20,P0}[S.u]; parameter load.
-    void
-    Inst_VINTRP__V_INTERP_MOV_F32::execute(GPUDynInstPtr gpuDynInst)
-    {
-        panicUnimplemented();
-    } // execute
+Inst_VINTRP__V_INTERP_MOV_F32::Inst_VINTRP__V_INTERP_MOV_F32(
+    InFmt_VINTRP *iFmt)
+    : Inst_VINTRP(iFmt, "v_interp_mov_f32")
+{
+    setFlag(ALU);
+    setFlag(F32);
+} // Inst_VINTRP__V_INTERP_MOV_F32
+
+Inst_VINTRP__V_INTERP_MOV_F32::~Inst_VINTRP__V_INTERP_MOV_F32() {
+} // ~Inst_VINTRP__V_INTERP_MOV_F32
+
+// --- description from .arch file ---
+// D.f = {P10,P20,P0}[S.u]; parameter load.
+void
+Inst_VINTRP__V_INTERP_MOV_F32::execute(GPUDynInstPtr gpuDynInst)
+{
+    panicUnimplemented();
+} // execute
 } // namespace VegaISA
 } // namespace gem5

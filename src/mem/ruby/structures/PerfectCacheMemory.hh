@@ -53,22 +53,23 @@ namespace gem5
 namespace ruby
 {
 
-template<class ENTRY>
+template <class ENTRY>
 struct PerfectCacheLineState
 {
     PerfectCacheLineState() { m_permission = AccessPermission_NUM; }
+
     AccessPermission m_permission;
     ENTRY m_entry;
 };
 
-template<class ENTRY>
-inline std::ostream&
-operator<<(std::ostream& out, const PerfectCacheLineState<ENTRY>& obj)
+template <class ENTRY>
+inline std::ostream &
+operator<<(std::ostream &out, const PerfectCacheLineState<ENTRY> &obj)
 {
     return out;
 }
 
-template<class ENTRY>
+template <class ENTRY>
 class PerfectCacheMemory
 {
   public:
@@ -91,49 +92,47 @@ class PerfectCacheMemory
     Addr cacheProbe(Addr newAddress) const;
 
     // looks an address up in the cache
-    ENTRY* lookup(Addr address);
-    const ENTRY* lookup(Addr address) const;
+    ENTRY *lookup(Addr address);
+    const ENTRY *lookup(Addr address) const;
 
     // Get/Set permission of cache block
     AccessPermission getPermission(Addr address) const;
     void changePermission(Addr address, AccessPermission new_perm);
 
     // Print cache contents
-    void print(std::ostream& out) const;
+    void print(std::ostream &out) const;
 
   private:
     // Private copy constructor and assignment operator
-    PerfectCacheMemory(const PerfectCacheMemory& obj);
-    PerfectCacheMemory& operator=(const PerfectCacheMemory& obj);
+    PerfectCacheMemory(const PerfectCacheMemory &obj);
+    PerfectCacheMemory &operator=(const PerfectCacheMemory &obj);
 
     // Data Members (m_prefix)
     std::unordered_map<Addr, PerfectCacheLineState<ENTRY> > m_map;
 };
 
-template<class ENTRY>
-inline std::ostream&
-operator<<(std::ostream& out, const PerfectCacheMemory<ENTRY>& obj)
+template <class ENTRY>
+inline std::ostream &
+operator<<(std::ostream &out, const PerfectCacheMemory<ENTRY> &obj)
 {
     obj.print(out);
     out << std::flush;
     return out;
 }
 
-template<class ENTRY>
-inline
-PerfectCacheMemory<ENTRY>::PerfectCacheMemory()
-{
-}
+template <class ENTRY>
+inline PerfectCacheMemory<ENTRY>::PerfectCacheMemory()
+{}
 
 // tests to see if an address is present in the cache
-template<class ENTRY>
+template <class ENTRY>
 inline bool
 PerfectCacheMemory<ENTRY>::isTagPresent(Addr address) const
 {
     return m_map.count(makeLineAddress(address)) > 0;
 }
 
-template<class ENTRY>
+template <class ENTRY>
 inline bool
 PerfectCacheMemory<ENTRY>::cacheAvail(Addr address) const
 {
@@ -142,7 +141,7 @@ PerfectCacheMemory<ENTRY>::cacheAvail(Addr address) const
 
 // find an Invalid or already allocated entry and sets the tag
 // appropriate for the address
-template<class ENTRY>
+template <class ENTRY>
 inline void
 PerfectCacheMemory<ENTRY>::allocate(Addr address)
 {
@@ -153,7 +152,7 @@ PerfectCacheMemory<ENTRY>::allocate(Addr address)
 }
 
 // deallocate entry
-template<class ENTRY>
+template <class ENTRY>
 inline void
 PerfectCacheMemory<ENTRY>::deallocate(Addr address)
 {
@@ -162,7 +161,7 @@ PerfectCacheMemory<ENTRY>::deallocate(Addr address)
 }
 
 // Returns with the physical address of the conflicting cache line
-template<class ENTRY>
+template <class ENTRY>
 inline Addr
 PerfectCacheMemory<ENTRY>::cacheProbe(Addr newAddress) const
 {
@@ -171,43 +170,42 @@ PerfectCacheMemory<ENTRY>::cacheProbe(Addr newAddress) const
 }
 
 // looks an address up in the cache
-template<class ENTRY>
-inline ENTRY*
+template <class ENTRY>
+inline ENTRY *
 PerfectCacheMemory<ENTRY>::lookup(Addr address)
 {
     return &m_map[makeLineAddress(address)].m_entry;
 }
 
 // looks an address up in the cache
-template<class ENTRY>
-inline const ENTRY*
+template <class ENTRY>
+inline const ENTRY *
 PerfectCacheMemory<ENTRY>::lookup(Addr address) const
 {
     return &m_map[makeLineAddress(address)].m_entry;
 }
 
-template<class ENTRY>
+template <class ENTRY>
 inline AccessPermission
 PerfectCacheMemory<ENTRY>::getPermission(Addr address) const
 {
     return m_map[makeLineAddress(address)].m_permission;
 }
 
-template<class ENTRY>
+template <class ENTRY>
 inline void
 PerfectCacheMemory<ENTRY>::changePermission(Addr address,
                                             AccessPermission new_perm)
 {
     Addr line_address = makeLineAddress(address);
-    PerfectCacheLineState<ENTRY>& line_state = m_map[line_address];
+    PerfectCacheLineState<ENTRY> &line_state = m_map[line_address];
     line_state.m_permission = new_perm;
 }
 
-template<class ENTRY>
+template <class ENTRY>
 inline void
-PerfectCacheMemory<ENTRY>::print(std::ostream& out) const
-{
-}
+PerfectCacheMemory<ENTRY>::print(std::ostream &out) const
+{}
 
 } // namespace ruby
 } // namespace gem5

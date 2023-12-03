@@ -38,7 +38,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 /** @file
  * Implementiation of a PL050 KMI
  */
@@ -55,18 +54,19 @@
 namespace gem5
 {
 
-namespace ps2 {
+namespace ps2
+{
 class Device;
 } // namespace ps2
 
 class Pl050 : public AmbaIntDevice
 {
   protected:
-    static const int kmiCr       = 0x000;
-    static const int kmiStat     = 0x004;
-    static const int kmiData     = 0x008;
-    static const int kmiClkDiv   = 0x00C;
-    static const int kmiISR      = 0x010;
+    static const int kmiCr = 0x000;
+    static const int kmiStat = 0x004;
+    static const int kmiData = 0x008;
+    static const int kmiClkDiv = 0x00C;
+    static const int kmiISR = 0x010;
 
     BitUnion8(ControlReg)
         Bitfield<0> force_clock_low;
@@ -121,8 +121,17 @@ class Pl050 : public AmbaIntDevice
      */
     void updateIntCtrl(InterruptReg ints, ControlReg ctrl);
 
-    void setInterrupts(InterruptReg ints) { updateIntCtrl(ints, control); }
-    void setControl(ControlReg ctrl) { updateIntCtrl(rawInterrupts, ctrl); }
+    void
+    setInterrupts(InterruptReg ints)
+    {
+        updateIntCtrl(ints, control);
+    }
+
+    void
+    setControl(ControlReg ctrl)
+    {
+        updateIntCtrl(rawInterrupts, ctrl);
+    }
 
     /** Get current interrupt value */
     InterruptReg getInterrupt() const;

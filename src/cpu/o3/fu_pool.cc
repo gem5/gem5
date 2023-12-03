@@ -81,10 +81,8 @@ FUPool::~FUPool()
         delete *i;
 }
 
-
 // Constructor
-FUPool::FUPool(const Params &p)
-    : SimObject(p)
+FUPool::FUPool(const Params &p) : SimObject(p)
 {
     numFU = 0;
 
@@ -96,9 +94,8 @@ FUPool::FUPool(const Params &p)
     //
     //  Iterate through the list of FUDescData structures
     //
-    const std::vector<FUDesc *> &paramList =  p.FUList;
+    const std::vector<FUDesc *> &paramList = p.FUList;
     for (FUDDiterator i = paramList.begin(); i != paramList.end(); ++i) {
-
         //
         //  Don't bother with this if we're not going to create any FU's
         //

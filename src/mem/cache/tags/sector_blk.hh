@@ -54,7 +54,7 @@ class SectorSubBlk : public CacheBlk
     /**
      * Sector block associated to this block.
      */
-    SectorBlk* _sectorBlk;
+    SectorBlk *_sectorBlk;
 
     /**
      * The offset of this sub-block in the sector.
@@ -63,10 +63,11 @@ class SectorSubBlk : public CacheBlk
 
   public:
     SectorSubBlk() : CacheBlk(), _sectorBlk(nullptr), _sectorOffset(0) {}
-    SectorSubBlk(const SectorSubBlk&) = delete;
+
+    SectorSubBlk(const SectorSubBlk &) = delete;
     using CacheBlk::operator=;
-    SectorSubBlk& operator=(const SectorSubBlk&) = delete;
-    SectorSubBlk(SectorSubBlk&&) = delete;
+    SectorSubBlk &operator=(const SectorSubBlk &) = delete;
+    SectorSubBlk(SectorSubBlk &&) = delete;
     /**
      * Move assignment operator.
      * This should only be used to move an existing valid entry into an
@@ -75,7 +76,7 @@ class SectorSubBlk : public CacheBlk
      * variables will remain the same, that is, an entry cannot change
      * its sector block nor its offset.
      */
-    SectorSubBlk& operator=(SectorSubBlk&& other) = default;
+    SectorSubBlk &operator=(SectorSubBlk &&other) = default;
     ~SectorSubBlk() = default;
 
     /**
@@ -83,14 +84,14 @@ class SectorSubBlk : public CacheBlk
      *
      * @param sector_blk The sector block pointer.
      */
-    void setSectorBlock(SectorBlk* sector_blk);
+    void setSectorBlock(SectorBlk *sector_blk);
 
     /**
      * Get sector block associated to this block.
      *
      * @return The sector block pointer.
      */
-    SectorBlk* getSectorBlock() const;
+    SectorBlk *getSectorBlock() const;
 
     /**
      * Set offset of this sub-block within the sector.
@@ -143,12 +144,12 @@ class SectorBlk : public TaggedEntry
 
   public:
     SectorBlk();
-    SectorBlk(const SectorBlk&) = delete;
-    SectorBlk& operator=(const SectorBlk&) = delete;
-    ~SectorBlk() {};
+    SectorBlk(const SectorBlk &) = delete;
+    SectorBlk &operator=(const SectorBlk &) = delete;
+    ~SectorBlk(){};
 
     /** List of blocks associated to this sector. */
-    std::vector<SectorSubBlk*> blks;
+    std::vector<SectorSubBlk *> blks;
 
     /**
      * Checks that a sector block is valid.

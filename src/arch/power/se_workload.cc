@@ -34,12 +34,8 @@ namespace PowerISA
 {
 
 const std::vector<RegId> SEWorkload::SyscallABI::ArgumentRegs = {
-    ArgumentReg0,
-    ArgumentReg1,
-    ArgumentReg2,
-    ArgumentReg3,
-    ArgumentReg4,
-    ArgumentReg5
+    ArgumentReg0, ArgumentReg1, ArgumentReg2,
+    ArgumentReg3, ArgumentReg4, ArgumentReg5
 };
 
 } // namespace PowerISA

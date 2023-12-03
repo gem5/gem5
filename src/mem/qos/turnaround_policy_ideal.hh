@@ -58,7 +58,7 @@ namespace qos
  * and write queues are resolved by selecting current bus
  * state.
  */
-class TurnaroundPolicyIdeal: public TurnaroundPolicy
+class TurnaroundPolicyIdeal : public TurnaroundPolicy
 {
   public:
     TurnaroundPolicyIdeal(const Params &);

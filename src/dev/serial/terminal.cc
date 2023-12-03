@@ -81,8 +81,7 @@ namespace gem5
  */
 Terminal::ListenEvent::ListenEvent(Terminal *t, int fd, int e)
     : PollEvent(fd, e), term(t)
-{
-}
+{}
 
 void
 Terminal::ListenEvent::process(int revent)
@@ -99,8 +98,7 @@ Terminal::ListenEvent::process(int revent)
  */
 Terminal::DataEvent::DataEvent(Terminal *t, int fd, int e)
     : PollEvent(fd, e), term(t)
-{
-}
+{}
 
 void
 Terminal::DataEvent::process(int revent)
@@ -120,11 +118,18 @@ Terminal::DataEvent::process(int revent)
  * Terminal code
  */
 Terminal::Terminal(const Params &p)
-    : SerialDevice(p), listenEvent(NULL), dataEvent(NULL),
-      number(p.number), data_fd(-1), listener(p.port.build(p.name)),
-      txbuf(16384), rxbuf(16384), outfile(terminalDump(p))
+    : SerialDevice(p),
+      listenEvent(NULL),
+      dataEvent(NULL),
+      number(p.number),
+      data_fd(-1),
+      listener(p.port.build(p.name)),
+      txbuf(16384),
+      rxbuf(16384),
+      outfile(terminalDump(p))
 #if TRACING_ON == 1
-      , linebuf(16384)
+      ,
+      linebuf(16384)
 #endif
 {
     if (outfile)
@@ -150,15 +155,15 @@ OutputStream *
 Terminal::terminalDump(const TerminalParams &p)
 {
     switch (p.outfile) {
-      case TerminalDump::none:
+    case TerminalDump::none:
         return nullptr;
-      case TerminalDump::stdoutput:
+    case TerminalDump::stdoutput:
         return simout.findOrCreate("stdout");
-      case TerminalDump::stderror:
+    case TerminalDump::stderror:
         return simout.findOrCreate("stderr");
-      case TerminalDump::file:
+    case TerminalDump::file:
         return simout.findOrCreate(p.name);
-      default:
+    default:
         panic("Invalid option\n");
     }
 }
@@ -253,9 +258,8 @@ Terminal::read(uint8_t *buf, size_t len)
 
     ssize_t ret;
     do {
-      ret = ::read(data_fd, buf, len);
+        ret = ::read(data_fd, buf, len);
     } while (ret == -1 && errno == EINTR);
-
 
     if (ret < 0)
         DPRINTFN("Read failed.\n");
@@ -309,7 +313,7 @@ Terminal::console_in()
     if (dataAvailable()) {
         value = RECEIVE_SUCCESS | readData();
         if (!rxbuf.empty())
-            value  |= MORE_PENDING;
+            value |= MORE_PENDING;
     } else {
         value = RECEIVE_NONE;
     }
@@ -333,7 +337,7 @@ Terminal::writeData(uint8_t c)
                 linebuf.read(buffer, size);
                 buffer[size] = '\0';
                 DPRINTF(Terminal, "%s\n", buffer);
-                delete [] buffer;
+                delete[] buffer;
             } else {
                 linebuf.write(&c, 1);
             }
@@ -351,9 +355,8 @@ Terminal::writeData(uint8_t c)
     if (outfile)
         outfile->stream()->put((char)c);
 
-    DPRINTF(TerminalVerbose, "out: \'%c\' %#02x\n",
-            isprint(c) ? c : ' ', (int)c);
-
+    DPRINTF(TerminalVerbose, "out: \'%c\' %#02x\n", isprint(c) ? c : ' ',
+            (int)c);
 }
 
 } // namespace gem5

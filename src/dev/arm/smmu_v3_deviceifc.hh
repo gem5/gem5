@@ -62,8 +62,8 @@ class SMMUv3DeviceInterface : public ClockedObject
 
   public:
     SMMUv3 *smmu;
-    SMMUTLB* microTLB;
-    SMMUTLB* mainTLB;
+    SMMUTLB *microTLB;
+    SMMUTLB *mainTLB;
 
     const bool microTLBEnable;
     const bool mainTLBEnable;
@@ -76,7 +76,7 @@ class SMMUv3DeviceInterface : public ClockedObject
     const Cycles mainTLBLat;
 
     SMMUDevicePort *devicePort;
-    SMMUATSDevicePort  atsDevicePort;
+    SMMUATSDevicePort atsDevicePort;
     SMMUATSMemoryPort atsMemPort;
 
     // in bytes
@@ -114,9 +114,10 @@ class SMMUv3DeviceInterface : public ClockedObject
     bool atsDeviceNeedsRetry;
 
     SMMUDeviceRetryEvent sendDeviceRetryEvent;
-    MemberEventWrapper<&SMMUv3DeviceInterface::atsSendDeviceRetry> atsSendDeviceRetryEvent;
+    MemberEventWrapper<&SMMUv3DeviceInterface::atsSendDeviceRetry>
+        atsSendDeviceRetryEvent;
 
-    Port& getPort(const std::string &name, PortID id) override;
+    Port &getPort(const std::string &name, PortID id) override;
 
   public:
     PARAMS(SMMUv3DeviceInterface);
@@ -130,7 +131,12 @@ class SMMUv3DeviceInterface : public ClockedObject
 
     DrainState drain() override;
 
-    void setSMMU(SMMUv3 *_smmu) { smmu = _smmu; }
+    void
+    setSMMU(SMMUv3 *_smmu)
+    {
+        smmu = _smmu;
+    }
+
     void sendRange();
 };
 

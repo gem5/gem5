@@ -41,7 +41,6 @@
 #ifndef __CPU_PRED_BTB_HH__
 #define __CPU_PRED_BTB_HH__
 
-
 #include "arch/generic/pcstate.hh"
 #include "base/statistics.hh"
 #include "cpu/pred/branch_type.hh"
@@ -78,8 +77,9 @@ class BranchTargetBuffer : public ClockedObject
      *  @return The target of the branch or nullptr if the branch is not
      *          in the BTB.
      */
-    virtual const PCStateBase *lookup(ThreadID tid, Addr instPC,
-                            BranchType type = BranchType::NoBranch) = 0;
+    virtual const PCStateBase *
+    lookup(ThreadID tid, Addr instPC,
+           BranchType type = BranchType::NoBranch) = 0;
 
     /** Looks up an address in the BTB and return the instruction
      * information if existant. Does not update statistics.
@@ -88,22 +88,21 @@ class BranchTargetBuffer : public ClockedObject
      */
     virtual const StaticInstPtr getInst(ThreadID tid, Addr instPC) = 0;
 
-
     /** Updates the BTB with the target of a branch.
      *  @param inst_pc The address of the branch being updated.
      *  @param target_pc The target address of the branch.
      */
     virtual void update(ThreadID tid, Addr inst_pc,
-                          const PCStateBase &target_pc,
-                          BranchType type = BranchType::NoBranch,
-                          StaticInstPtr inst = nullptr) = 0;
+                        const PCStateBase &target_pc,
+                        BranchType type = BranchType::NoBranch,
+                        StaticInstPtr inst = nullptr) = 0;
 
     /** Update BTB statistics
      */
-    virtual void incorrectTarget(Addr inst_pc,
-                                  BranchType type = BranchType::NoBranch)
+    virtual void
+    incorrectTarget(Addr inst_pc, BranchType type = BranchType::NoBranch)
     {
-      stats.mispredict[type]++;
+        stats.mispredict[type]++;
     }
 
   protected:
@@ -121,7 +120,6 @@ class BranchTargetBuffer : public ClockedObject
         statistics::Scalar evictions;
 
     } stats;
-
 };
 
 } // namespace branch_prediction

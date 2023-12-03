@@ -50,8 +50,7 @@ namespace gem5
 namespace statistics
 {
 
-Group::Group(Group *parent, const char *name)
-    : mergedParent(nullptr)
+Group::Group(Group *parent, const char *name) : mergedParent(nullptr)
 {
     if (parent && name) {
         parent->addStatGroup(name, this);
@@ -60,9 +59,7 @@ Group::Group(Group *parent, const char *name)
     }
 }
 
-Group::~Group()
-{
-}
+Group::~Group() {}
 
 void
 Group::regStats()
@@ -72,11 +69,10 @@ Group::regStats()
 
     for (auto &g : statGroups) {
         if (debug::Stats) {
-            [[maybe_unused]] const Named *named = \
+            [[maybe_unused]] const Named *named =
                 dynamic_cast<const Named *>(this);
             DPRINTF(Stats, "%s: regStats in group %s\n",
-                    named ? named->name() : "?",
-                    g.first);
+                    named ? named->name() : "?", g.first);
         }
         g.second->regStats();
     }

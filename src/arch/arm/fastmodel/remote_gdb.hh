@@ -44,19 +44,20 @@ class FastmodelRemoteGDB : public ArmISA::RemoteGDB
   protected:
     class AArch64GdbRegCache : public ArmISA::RemoteGDB::AArch64GdbRegCache
     {
-      using ArmISA::RemoteGDB::AArch64GdbRegCache::AArch64GdbRegCache;
+        using ArmISA::RemoteGDB::AArch64GdbRegCache::AArch64GdbRegCache;
+
       public:
-        void setRegs(ThreadContext*) const override;
+        void setRegs(ThreadContext *) const override;
     };
 
     bool readBlob(Addr vaddr, size_t size, char *data) override;
     bool writeBlob(Addr vaddr, size_t size, const char *data) override;
-    BaseGdbRegCache* gdbRegs() override;
+    BaseGdbRegCache *gdbRegs() override;
 
     AArch64GdbRegCache regCache64;
 };
 
-}  // namespace fastmodel
-}  // namespace gem5
+} // namespace fastmodel
+} // namespace gem5
 
-#endif  // __ARCH_ARM_FASTMODEL_FASTMODEL_REMOTE_GDB_HH__
+#endif // __ARCH_ARM_FASTMODEL_FASTMODEL_REMOTE_GDB_HH__

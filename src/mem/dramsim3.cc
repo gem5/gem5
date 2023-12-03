@@ -49,18 +49,21 @@ namespace gem5
 namespace memory
 {
 
-DRAMsim3::DRAMsim3(const Params &p) :
-    AbstractMemory(p),
-    port(name() + ".port", *this),
-    read_cb(std::bind(&DRAMsim3::readComplete,
-                      this, 0, std::placeholders::_1)),
-    write_cb(std::bind(&DRAMsim3::writeComplete,
-                       this, 0, std::placeholders::_1)),
-    wrapper(p.configFile, p.filePath, read_cb, write_cb),
-    retryReq(false), retryResp(false), startTick(0),
-    nbrOutstandingReads(0), nbrOutstandingWrites(0),
-    sendResponseEvent([this]{ sendResponse(); }, name()),
-    tickEvent([this]{ tick(); }, name())
+DRAMsim3::DRAMsim3(const Params &p)
+    : AbstractMemory(p),
+      port(name() + ".port", *this),
+      read_cb(
+          std::bind(&DRAMsim3::readComplete, this, 0, std::placeholders::_1)),
+      write_cb(
+          std::bind(&DRAMsim3::writeComplete, this, 0, std::placeholders::_1)),
+      wrapper(p.configFile, p.filePath, read_cb, write_cb),
+      retryReq(false),
+      retryResp(false),
+      startTick(0),
+      nbrOutstandingReads(0),
+      nbrOutstandingWrites(0),
+      sendResponseEvent([this] { sendResponse(); }, name()),
+      tickEvent([this] { tick(); }, name())
 {
     DPRINTF(DRAMsim3,
             "Instantiated DRAMsim3 with clock %d ns and queue size %d\n",
@@ -97,7 +100,8 @@ DRAMsim3::startup()
 }
 
 void
-DRAMsim3::resetStats() {
+DRAMsim3::resetStats()
+{
     wrapper.resetStats();
 }
 
@@ -153,7 +157,7 @@ DRAMsim3::tick()
     }
 
     schedule(tickEvent,
-        curTick() + wrapper.clockPeriod() * sim_clock::as_int::ns);
+             curTick() + wrapper.clockPeriod() * sim_clock::as_int::ns);
 }
 
 Tick
@@ -289,9 +293,9 @@ DRAMsim3::accessAndRespond(PacketPtr pkt)
     }
 }
 
-void DRAMsim3::readComplete(unsigned id, uint64_t addr)
+void
+DRAMsim3::readComplete(unsigned id, uint64_t addr)
 {
-
     DPRINTF(DRAMsim3, "Read to address %lld complete\n", addr);
 
     // get the outstanding reads for the address in question
@@ -315,9 +319,9 @@ void DRAMsim3::readComplete(unsigned id, uint64_t addr)
     accessAndRespond(pkt);
 }
 
-void DRAMsim3::writeComplete(unsigned id, uint64_t addr)
+void
+DRAMsim3::writeComplete(unsigned id, uint64_t addr)
 {
-
     DPRINTF(DRAMsim3, "Write to address %lld complete\n", addr);
 
     // get the outstanding reads for the address in question
@@ -337,7 +341,7 @@ void DRAMsim3::writeComplete(unsigned id, uint64_t addr)
         signalDrainDone();
 }
 
-Port&
+Port &
 DRAMsim3::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name != "port") {
@@ -355,10 +359,9 @@ DRAMsim3::drain()
     return nbrOutstanding() != 0 ? DrainState::Draining : DrainState::Drained;
 }
 
-DRAMsim3::MemoryPort::MemoryPort(const std::string& _name,
-                                 DRAMsim3& _memory)
+DRAMsim3::MemoryPort::MemoryPort(const std::string &_name, DRAMsim3 &_memory)
     : ResponsePort(_name), mem(_memory)
-{ }
+{}
 
 AddrRangeList
 DRAMsim3::MemoryPort::getAddrRanges() const

@@ -47,11 +47,28 @@ class DefaultCallType : public CallType
     DefaultCallType() : CallType("default") {}
 
     bool init_called = false;
-    void init() override { init_called = true; }
 
-    bool isDefault() const override { return true; }
-    void printDesc(std::ostream &os) const override {}
-    const DispatchTable &getDispatch() const override { return dt; }
+    void
+    init() override
+    {
+        init_called = true;
+    }
+
+    bool
+    isDefault() const override
+    {
+        return true;
+    }
+
+    void
+    printDesc(std::ostream &os) const override
+    {}
+
+    const DispatchTable &
+    getDispatch() const override
+    {
+        return dt;
+    }
 };
 
 DefaultCallType defaultCallType;
@@ -75,7 +92,7 @@ TEST_F(SemiCallTypeTest, EmptyArgs)
 TEST_F(SemiCallTypeTest, NotAnyArg)
 {
     // Inst should not be selected if --semi isn't the first argument.
-    Args one_arg({"one"});
+    Args one_arg({ "one" });
     defaultCallType.init_called = false;
     ct = CallType::detect(one_arg);
     EXPECT_EQ(ct, &defaultCallType);
@@ -85,7 +102,7 @@ TEST_F(SemiCallTypeTest, NotAnyArg)
 TEST_F(SemiCallTypeTest, FirstArg)
 {
     // Semi should be selected if --semi is the first argument.
-    Args selected({"--semi"});
+    Args selected({ "--semi" });
     defaultCallType.init_called = false;
     ct = CallType::detect(selected);
     EXPECT_NE(ct, &defaultCallType);
@@ -95,7 +112,7 @@ TEST_F(SemiCallTypeTest, FirstArg)
 
 TEST_F(SemiCallTypeTest, ExtraArg)
 {
-    Args extra({"--semi", "foo"});
+    Args extra({ "--semi", "foo" });
     defaultCallType.init_called = false;
     ct = CallType::detect(extra);
     EXPECT_NE(ct, &defaultCallType);
@@ -106,7 +123,7 @@ TEST_F(SemiCallTypeTest, ExtraArg)
 TEST_F(SemiCallTypeTest, NotFirstArg)
 {
     // Semi should not be selected if --semi isn't first.
-    Args not_first({"foo", "--semi"});
+    Args not_first({ "foo", "--semi" });
     defaultCallType.init_called = false;
     ct = CallType::detect(not_first);
     EXPECT_EQ(ct, &defaultCallType);
@@ -126,7 +143,7 @@ sigillHandler(int sig, siginfo_t *info, void *ucontext)
 TEST(SemiCallType, Sum)
 {
     // Get the semi call type, which is in an anonymous namespace.
-    Args args({"--semi"});
+    Args args({ "--semi" });
     CallType *semi_call_type = CallType::detect(args);
     EXPECT_NE(semi_call_type, nullptr);
 
@@ -172,5 +189,5 @@ TEST(SemiCallType, Sum)
     EXPECT_EQ(info.si_signo, SIGILL);
     EXPECT_TRUE(info.si_code == ILL_ILLOPC || info.si_code == ILL_ILLOPN);
 
-    abi_verify_semi(info, M5OP_SUM, {2, 2, 0, 0, 0, 0});
+    abi_verify_semi(info, M5OP_SUM, { 2, 2, 0, 0, 0, 0 });
 }

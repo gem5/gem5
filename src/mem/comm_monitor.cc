@@ -52,14 +52,14 @@ CommMonitor::CommMonitor(const Params &params)
     : SimObject(params),
       memSidePort(name() + "-mem_side_port", *this),
       cpuSidePort(name() + "-cpu_side_port", *this),
-      samplePeriodicEvent([this]{ samplePeriodic(); }, name()),
+      samplePeriodicEvent([this] { samplePeriodic(); }, name()),
       samplePeriodTicks(params.sample_period),
       samplePeriod(params.sample_period / sim_clock::as_float::s),
       stats(this, params)
 {
     DPRINTF(CommMonitor,
-            "Created monitor %s with sample period %d ticks (%f ms)\n",
-            name(), samplePeriodTicks, samplePeriod * 1E3);
+            "Created monitor %s with sample period %d ticks (%f ms)\n", name(),
+            samplePeriodTicks, samplePeriod * 1E3);
 }
 
 void
@@ -113,27 +113,30 @@ CommMonitor::MonitorStats::MonitorStats(statistics::Group *parent,
 
       disableBandwidthHists(params.disable_bandwidth_hists),
       readBytes(0),
-      ADD_STAT(readBandwidthHist, statistics::units::Rate<
-                    statistics::units::Byte, statistics::units::Second>::get(),
+      ADD_STAT(readBandwidthHist,
+               statistics::units::Rate<statistics::units::Byte,
+                                       statistics::units::Second>::get(),
                "Histogram of read bandwidth per sample period"),
       ADD_STAT(totalReadBytes, statistics::units::Byte::get(),
                "Number of bytes read"),
-      ADD_STAT(averageReadBandwidth, statistics::units::Rate<
-                    statistics::units::Byte, statistics::units::Second>::get(),
-               "Average read bandwidth",
-               totalReadBytes / simSeconds),
+      ADD_STAT(averageReadBandwidth,
+               statistics::units::Rate<statistics::units::Byte,
+                                       statistics::units::Second>::get(),
+               "Average read bandwidth", totalReadBytes / simSeconds),
 
       writtenBytes(0),
-      ADD_STAT(writeBandwidthHist, statistics::units::Rate<
-                    statistics::units::Byte, statistics::units::Second>::get(),
+      ADD_STAT(writeBandwidthHist,
+               statistics::units::Rate<statistics::units::Byte,
+                                       statistics::units::Second>::get(),
                "Histogram of write bandwidth"),
-      ADD_STAT(totalWrittenBytes, statistics::units::Rate<
-                    statistics::units::Byte, statistics::units::Second>::get(),
+      ADD_STAT(totalWrittenBytes,
+               statistics::units::Rate<statistics::units::Byte,
+                                       statistics::units::Second>::get(),
                "Number of bytes written"),
-      ADD_STAT(averageWriteBandwidth, statistics::units::Rate<
-                    statistics::units::Byte, statistics::units::Second>::get(),
-               "Average write bandwidth",
-               totalWrittenBytes / simSeconds),
+      ADD_STAT(averageWriteBandwidth,
+               statistics::units::Rate<statistics::units::Byte,
+                                       statistics::units::Second>::get(),
+               "Average write bandwidth", totalWrittenBytes / simSeconds),
 
       disableLatencyHists(params.disable_latency_hists),
       ADD_STAT(readLatencyHist, statistics::units::Tick::get(),
@@ -148,7 +151,9 @@ CommMonitor::MonitorStats::MonitorStats(statistics::Group *parent,
                "Write-to-write inter transaction time"),
       ADD_STAT(ittReqReq, statistics::units::Tick::get(),
                "Request-to-request inter transaction time"),
-      timeOfLastRead(0), timeOfLastWrite(0), timeOfLastReq(0),
+      timeOfLastRead(0),
+      timeOfLastWrite(0),
+      timeOfLastReq(0),
 
       disableOutstandingHists(params.disable_outstanding_hists),
       ADD_STAT(outstandingReadsHist, statistics::units::Count::get(),
@@ -176,89 +181,66 @@ CommMonitor::MonitorStats::MonitorStats(statistics::Group *parent,
 {
     using namespace statistics;
 
-    readBurstLengthHist
-        .init(params.burst_length_bins)
+    readBurstLengthHist.init(params.burst_length_bins)
         .flags(disableBurstLengthHists ? nozero : pdf);
 
-    writeBurstLengthHist
-        .init(params.burst_length_bins)
+    writeBurstLengthHist.init(params.burst_length_bins)
         .flags(disableBurstLengthHists ? nozero : pdf);
 
     // Stats based on received responses
-    readBandwidthHist
-        .init(params.bandwidth_bins)
+    readBandwidthHist.init(params.bandwidth_bins)
         .flags(disableBandwidthHists ? nozero : pdf);
 
-    averageReadBandwidth
-        .flags(disableBandwidthHists ? nozero : pdf);
+    averageReadBandwidth.flags(disableBandwidthHists ? nozero : pdf);
 
-    totalReadBytes
-        .flags(disableBandwidthHists ? nozero : pdf);
+    totalReadBytes.flags(disableBandwidthHists ? nozero : pdf);
 
     // Stats based on successfully sent requests
-    writeBandwidthHist
-        .init(params.bandwidth_bins)
+    writeBandwidthHist.init(params.bandwidth_bins)
         .flags(disableBandwidthHists ? (pdf | nozero) : pdf);
 
-    averageWriteBandwidth
-        .flags(disableBandwidthHists ? nozero : pdf);
+    averageWriteBandwidth.flags(disableBandwidthHists ? nozero : pdf);
 
-    totalWrittenBytes
-        .flags(disableBandwidthHists ? nozero : pdf);
+    totalWrittenBytes.flags(disableBandwidthHists ? nozero : pdf);
 
-
-    readLatencyHist
-        .init(params.latency_bins)
+    readLatencyHist.init(params.latency_bins)
         .flags(disableLatencyHists ? nozero : pdf);
 
-    writeLatencyHist
-        .init(params.latency_bins)
+    writeLatencyHist.init(params.latency_bins)
         .flags(disableLatencyHists ? nozero : pdf);
 
     ittReadRead
-        .init(1, params.itt_max_bin, params.itt_max_bin /
-              params.itt_bins)
+        .init(1, params.itt_max_bin, params.itt_max_bin / params.itt_bins)
         .flags(disableITTDists ? nozero : pdf);
 
     ittWriteWrite
-        .init(1, params.itt_max_bin, params.itt_max_bin /
-              params.itt_bins)
+        .init(1, params.itt_max_bin, params.itt_max_bin / params.itt_bins)
         .flags(disableITTDists ? nozero : pdf);
 
-    ittReqReq
-        .init(1, params.itt_max_bin, params.itt_max_bin /
-              params.itt_bins)
+    ittReqReq.init(1, params.itt_max_bin, params.itt_max_bin / params.itt_bins)
         .flags(disableITTDists ? nozero : pdf);
 
-    outstandingReadsHist
-        .init(params.outstanding_bins)
+    outstandingReadsHist.init(params.outstanding_bins)
         .flags(disableOutstandingHists ? nozero : pdf);
 
-    outstandingWritesHist
-        .init(params.outstanding_bins)
+    outstandingWritesHist.init(params.outstanding_bins)
         .flags(disableOutstandingHists ? nozero : pdf);
 
-    readTransHist
-        .init(params.transaction_bins)
+    readTransHist.init(params.transaction_bins)
         .flags(disableTransactionHists ? nozero : pdf);
 
-    writeTransHist
-        .init(params.transaction_bins)
+    writeTransHist.init(params.transaction_bins)
         .flags(disableTransactionHists ? nozero : pdf);
 
-    readAddrDist
-        .init(0)
-        .flags(disableAddrDists ? nozero : pdf);
+    readAddrDist.init(0).flags(disableAddrDists ? nozero : pdf);
 
-    writeAddrDist
-        .init(0)
-        .flags(disableAddrDists ? nozero : pdf);
+    writeAddrDist.init(0).flags(disableAddrDists ? nozero : pdf);
 }
 
 void
-CommMonitor::MonitorStats::updateReqStats(
-    const probing::PacketInfo& pkt_info, bool is_atomic,
-    bool expects_response)
+CommMonitor::MonitorStats::updateReqStats(const probing::PacketInfo &pkt_info,
+                                          bool is_atomic,
+                                          bool expects_response)
 {
     if (pkt_info.cmd.isRead()) {
         // Increment number of observed read transactions
@@ -323,8 +305,8 @@ CommMonitor::MonitorStats::updateReqStats(
 }
 
 void
-CommMonitor::MonitorStats::updateRespStats(
-    const probing::PacketInfo& pkt_info, Tick latency, bool is_atomic)
+CommMonitor::MonitorStats::updateRespStats(const probing::PacketInfo &pkt_info,
+                                           Tick latency, bool is_atomic)
 {
     if (pkt_info.cmd.isRead()) {
         // Decrement number of outstanding read requests
@@ -415,8 +397,10 @@ CommMonitor::recvTimingReq(PacketPtr pkt)
     }
 
     if (successful) {
-        DPRINTF(CommMonitor, "Forwarded %s request\n", pkt->isRead() ? "read" :
-                pkt->isWrite() ? "write" : "non read/write");
+        DPRINTF(CommMonitor, "Forwarded %s request\n",
+                pkt->isRead()  ? "read" :
+                pkt->isWrite() ? "write" :
+                                 "non read/write");
         stats.updateReqStats(pkt_info, false, expects_response);
     }
     return successful;
@@ -433,8 +417,8 @@ CommMonitor::recvTimingResp(PacketPtr pkt)
     const probing::PacketInfo pkt_info(pkt);
 
     Tick latency = 0;
-    CommMonitorSenderState* received_state =
-        dynamic_cast<CommMonitorSenderState*>(pkt->senderState);
+    CommMonitorSenderState *received_state =
+        dynamic_cast<CommMonitorSenderState *>(pkt->senderState);
 
     if (!stats.disableLatencyHists) {
         // Restore initial sender state
@@ -464,8 +448,10 @@ CommMonitor::recvTimingResp(PacketPtr pkt)
 
     if (successful) {
         ppPktResp->notify(pkt_info);
-        DPRINTF(CommMonitor, "Received %s response\n", pkt->isRead() ? "read" :
-                pkt->isWrite() ?  "write" : "non read/write");
+        DPRINTF(CommMonitor, "Received %s response\n",
+                pkt->isRead()  ? "read" :
+                pkt->isWrite() ? "write" :
+                                 "non read/write");
         stats.updateRespStats(pkt_info, latency, false);
     }
     return successful;

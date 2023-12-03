@@ -55,13 +55,18 @@ namespace gem5
 
 Pl011::Pl011(const Pl011Params &p)
     : Uart(p, 0x1000),
-      intEvent([this]{ generateInterrupt(); }, name()),
-      control(0x300), fbrd(0), ibrd(0), lcrh(0), ifls(0x12),
-      imsc(0), rawInt(0),
-      endOnEOT(p.end_on_eot), interrupt(p.interrupt->get()),
+      intEvent([this] { generateInterrupt(); }, name()),
+      control(0x300),
+      fbrd(0),
+      ibrd(0),
+      lcrh(0),
+      ifls(0x12),
+      imsc(0),
+      rawInt(0),
+      endOnEOT(p.end_on_eot),
+      interrupt(p.interrupt->get()),
       intDelay(p.int_delay)
-{
-}
+{}
 
 Tick
 Pl011::read(PacketPtr pkt)
@@ -78,8 +83,8 @@ Pl011::read(PacketPtr pkt)
     //
     uint32_t data = 0;
 
-    switch(daddr) {
-      case UART_DR:
+    switch (daddr) {
+    case UART_DR:
         data = 0;
         if (device->dataAvailable()) {
             data = device->readData();
@@ -88,57 +93,57 @@ Pl011::read(PacketPtr pkt)
             clearInterrupts(UART_RXINTR | UART_RTINTR);
             if (device->dataAvailable()) {
                 DPRINTF(Uart, "Re-raising interrupt due to more data "
-                        "after UART_DR read\n");
+                              "after UART_DR read\n");
                 dataAvailable();
             }
         }
         break;
-      case UART_RSR:
+    case UART_RSR:
         data = 0x0; // We never have errors
         break;
-      case UART_FR:
-        data =
-            UART_FR_CTS | // Clear To Send
-            // Given we do not simulate a FIFO we are either empty or full.
-            (!device->dataAvailable() ? UART_FR_RXFE : UART_FR_RXFF) |
-            UART_FR_TXFE; // TX FIFO empty
+    case UART_FR:
+        data = UART_FR_CTS | // Clear To Send
+                             // Given we do not simulate a FIFO we are either
+                             // empty or full.
+               (!device->dataAvailable() ? UART_FR_RXFE : UART_FR_RXFF) |
+               UART_FR_TXFE; // TX FIFO empty
 
         DPRINTF(Uart,
                 "Reading FR register as %#x rawInt=0x%x "
                 "imsc=0x%x maskInt=0x%x\n",
                 data, rawInt, imsc, maskInt());
         break;
-      case UART_CR:
+    case UART_CR:
         data = control;
         break;
-      case UART_IBRD:
+    case UART_IBRD:
         data = ibrd;
         break;
-      case UART_FBRD:
+    case UART_FBRD:
         data = fbrd;
         break;
-      case UART_LCRH:
+    case UART_LCRH:
         data = lcrh;
         break;
-      case UART_IFLS:
+    case UART_IFLS:
         data = ifls;
         break;
-      case UART_IMSC:
+    case UART_IMSC:
         data = imsc;
         break;
-      case UART_RIS:
+    case UART_RIS:
         data = rawInt;
         DPRINTF(Uart, "Reading Raw Int status as 0x%x\n", rawInt);
         break;
-      case UART_MIS:
+    case UART_MIS:
         DPRINTF(Uart, "Reading Masked Int status as 0x%x\n", maskInt());
         data = maskInt();
         break;
-      case UART_DMACR:
+    case UART_DMACR:
         warn("PL011: DMA not supported\n");
         data = 0x0; // DMA never enabled
         break;
-      default:
+    default:
         if (readId(pkt, AMBA_ID, pioAddr)) {
             // Hack for variable size accesses
             data = pkt->getUintX(ByteOrder::little);
@@ -157,7 +162,6 @@ Pl011::read(PacketPtr pkt)
 Tick
 Pl011::write(PacketPtr pkt)
 {
-
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
     assert(pkt->getSize() <= 4);
 
@@ -172,8 +176,8 @@ Pl011::write(PacketPtr pkt)
     const uint32_t data = pkt->getUintX(ByteOrder::little);
 
     switch (daddr) {
-        case UART_DR:
-          if ((data & 0xFF) == 0x04 && endOnEOT)
+    case UART_DR:
+        if ((data & 0xFF) == 0x04 && endOnEOT)
             exitSimLoop("UART received EOT", 0);
 
         device->writeData(data & 0xFF);
@@ -183,38 +187,38 @@ Pl011::write(PacketPtr pkt)
         clearInterrupts(UART_TXINTR);
         raiseInterrupts(UART_TXINTR);
         break;
-      case UART_ECR: // clears errors, ignore
+    case UART_ECR: // clears errors, ignore
         break;
-      case UART_CR:
+    case UART_CR:
         control = data;
         break;
-      case UART_IBRD:
+    case UART_IBRD:
         ibrd = data;
         break;
-      case UART_FBRD:
+    case UART_FBRD:
         fbrd = data;
         break;
-      case UART_LCRH:
+    case UART_LCRH:
         lcrh = data;
         break;
-      case UART_IFLS:
+    case UART_IFLS:
         ifls = data;
         break;
-      case UART_IMSC:
+    case UART_IMSC:
         DPRINTF(Uart, "Setting interrupt mask 0x%x\n", data);
         setInterruptMask(data);
         break;
 
-      case UART_ICR:
+    case UART_ICR:
         DPRINTF(Uart, "Clearing interrupts 0x%x\n", data);
         clearInterrupts(data);
         if (device->dataAvailable()) {
             DPRINTF(Uart, "Re-raising interrupt due to more data after "
-                    "UART_ICR write\n");
+                          "UART_ICR write\n");
             dataAvailable();
         }
         break;
-      case UART_DMACR:
+    case UART_DMACR:
         // DMA is not supported, so panic if anyome tries to enable it.
         // Bits 0, 1, 2 enables DMA on RX, TX, ERR respectively, others res0.
         if (data & 0x7) {
@@ -222,8 +226,9 @@ Pl011::write(PacketPtr pkt)
         }
         warn("PL011: DMA not supported\n");
         break;
-      default:
-        panic("Tried to write PL011 at offset %#x that doesn't exist\n", daddr);
+    default:
+        panic("Tried to write PL011 at offset %#x that doesn't exist\n",
+              daddr);
         break;
     }
     pkt->makeAtomicResponse();
@@ -266,8 +271,6 @@ Pl011::setInterrupts(uint16_t ints, uint16_t mask)
         interrupt->clear();
     }
 }
-
-
 
 void
 Pl011::serialize(CheckpointOut &cp) const

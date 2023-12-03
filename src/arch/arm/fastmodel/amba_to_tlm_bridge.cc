@@ -36,7 +36,8 @@
 namespace gem5
 {
 
-namespace {
+namespace
+{
 
 // According to AbstractMemory::access in mem/abstract_mem.cc, the gem5 memory
 // model would set original data into the packet buffer. However, the TLM
@@ -51,7 +52,7 @@ struct FarAtomicOpFunctor : public AtomicOpFunctor
     FarAtomicOpFunctor(far_atomic::FarAtomic *_fa) : fa(_fa) {}
 
     void
-    operator() (uint8_t *p) override
+    operator()(uint8_t *p) override
     {
         fa->serviceWasFound();
         fa->doAtomicOperation(p);
@@ -66,19 +67,19 @@ struct FarAtomicOpFunctor : public AtomicOpFunctor
     far_atomic::FarAtomic *fa;
 };
 
-}
+} // namespace
 
 namespace fastmodel
 {
 
 AmbaToTlmBridge64::AmbaToTlmBridge64(const AmbaToTlmBridge64Params &params,
-                                     const sc_core::sc_module_name& name) :
-    amba_pv::amba_pv_to_tlm_bridge<64>(name),
-    targetProxy("target_proxy"),
-    initiatorProxy("initiator_proxy"),
-    tlmWrapper(initiatorProxy, std::string(name) + ".tlm", -1),
-    ambaWrapper(amba_pv_s, std::string(name) + ".amba", -1),
-    setStreamId(params.set_stream_id)
+                                     const sc_core::sc_module_name &name)
+    : amba_pv::amba_pv_to_tlm_bridge<64>(name),
+      targetProxy("target_proxy"),
+      initiatorProxy("initiator_proxy"),
+      tlmWrapper(initiatorProxy, std::string(name) + ".tlm", -1),
+      ambaWrapper(amba_pv_s, std::string(name) + ".amba", -1),
+      setStreamId(params.set_stream_id)
 {
     targetProxy.register_b_transport(this, &AmbaToTlmBridge64::bTransport);
     targetProxy.register_get_direct_mem_ptr(
@@ -149,15 +150,14 @@ AmbaToTlmBridge64::maybeSetupAtomicExtension(
         return;
 
     std::pair<void *, std::size_t> u_data = user_ex->get_user_data();
-    far_atomic::FarAtomic *fa = static_cast<far_atomic::FarAtomic *>(
-        u_data.first);
+    far_atomic::FarAtomic *fa =
+        static_cast<far_atomic::FarAtomic *>(u_data.first);
 
     // Correct the request size manually and give it a dummy buffer preventing
     // from segmentation fault.
-    fatal_if(
-        fa->getDataValueSizeInBytes() > sizeof(dummy_buffer),
-        "atomic operation(%d) is larger than dummy buffer(%d)",
-        fa->getDataValueSizeInBytes(), sizeof(dummy_buffer));
+    fatal_if(fa->getDataValueSizeInBytes() > sizeof(dummy_buffer),
+             "atomic operation(%d) is larger than dummy buffer(%d)",
+             fa->getDataValueSizeInBytes(), sizeof(dummy_buffer));
     trans.set_data_length(fa->getDataValueSizeInBytes());
     trans.set_data_ptr(dummy_buffer);
 

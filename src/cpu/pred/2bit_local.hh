@@ -71,17 +71,20 @@ class LocalBP : public BPredUnit
     LocalBP(const LocalBPParams &params);
 
     // Overriding interface functions
-    bool lookup(ThreadID tid, Addr pc, void * &bp_history) override;
+    bool lookup(ThreadID tid, Addr pc, void *&bp_history) override;
 
     void updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
-                         Addr target,  void * &bp_history) override;
+                         Addr target, void *&bp_history) override;
 
-    void update(ThreadID tid, Addr pc, bool taken,
-                void * &bp_history, bool squashed,
-                const StaticInstPtr & inst, Addr target) override;
+    void update(ThreadID tid, Addr pc, bool taken, void *&bp_history,
+                bool squashed, const StaticInstPtr &inst,
+                Addr target) override;
 
-    void squash(ThreadID tid, void * &bp_history) override
-    { assert(bp_history == NULL); }
+    void
+    squash(ThreadID tid, void *&bp_history) override
+    {
+        assert(bp_history == NULL);
+    }
 
   private:
     /**

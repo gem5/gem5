@@ -61,7 +61,6 @@ struct MinorStats : public statistics::Group
 
     /** Number of cycles in quiescent state */
     statistics::Scalar quiesceCycles;
-
 };
 
 } // namespace minor

@@ -80,8 +80,8 @@ using PayloadToPacketConversionStep =
 
 void addPayloadToPacketConversionStep(PayloadToPacketConversionStep step);
 
-std::pair<gem5::PacketPtr, bool> payload2packet(gem5::RequestorID _id,
-    tlm::tlm_generic_payload &trans);
+std::pair<gem5::PacketPtr, bool>
+payload2packet(gem5::RequestorID _id, tlm::tlm_generic_payload &trans);
 
 class TlmToGem5BridgeBase : public sc_core::sc_module
 {
@@ -103,13 +103,23 @@ class TlmToGem5Bridge : public TlmToGem5BridgeBase
         {
             return bridge.recvTimingResp(pkt);
         }
-        void recvReqRetry() override { bridge.recvReqRetry(); }
-        void recvRangeChange() override { bridge.recvRangeChange(); }
+
+        void
+        recvReqRetry() override
+        {
+            bridge.recvReqRetry();
+        }
+
+        void
+        recvRangeChange() override
+        {
+            bridge.recvRangeChange();
+        }
 
       public:
         BridgeRequestPort(const std::string &name_,
-                         TlmToGem5Bridge<BITWIDTH> &bridge_) :
-            RequestPort(name_), bridge(bridge_)
+                          TlmToGem5Bridge<BITWIDTH> &bridge_)
+            : RequestPort(name_), bridge(bridge_)
         {}
     };
 
@@ -126,8 +136,8 @@ class TlmToGem5Bridge : public TlmToGem5BridgeBase
     std::unordered_set<gem5::MemBackdoorPtr> requestedBackdoors;
 
     BridgeRequestPort bmp;
-    tlm_utils::simple_target_socket<
-        TlmToGem5Bridge<BITWIDTH>, BITWIDTH> socket;
+    tlm_utils::simple_target_socket<TlmToGem5Bridge<BITWIDTH>, BITWIDTH>
+        socket;
     sc_gem5::TlmTargetWrapper<BITWIDTH> wrapper;
 
     gem5::System *system;
@@ -164,7 +174,8 @@ class TlmToGem5Bridge : public TlmToGem5BridgeBase
     void recvRangeChange();
 
   public:
-    gem5::Port &gem5_getPort(const std::string &if_name, int idx=-1) override;
+    gem5::Port &gem5_getPort(const std::string &if_name,
+                             int idx = -1) override;
 
     typedef gem5::TlmToGem5BridgeBaseParams Params;
     TlmToGem5Bridge(const Params &p, const sc_core::sc_module_name &mn);

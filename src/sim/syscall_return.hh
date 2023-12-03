@@ -55,7 +55,6 @@ namespace gem5
 class SyscallReturn
 {
   public:
-
     /// For simplicity, allow the object to be initialized with a
     /// single signed integer using the same positive=success,
     /// negative=-errno convention described above.
@@ -71,8 +70,7 @@ class SyscallReturn
 
     /// A SyscallReturn constructed with two values means put the second value
     /// in additional return registers as defined by the ABI, if they exist.
-    SyscallReturn(int64_t v1, int64_t v2) :
-        _value(v1), _value2(v2), _count(2)
+    SyscallReturn(int64_t v1, int64_t v2) : _value(v1), _value2(v2), _count(2)
     {}
 
     /// Pseudo-constructor to create an instance with the retry flag set.
@@ -94,13 +92,25 @@ class SyscallReturn
     }
 
     /// Does the syscall need to be retried?
-    bool needsRetry() const { return retryFlag; }
+    bool
+    needsRetry() const
+    {
+        return retryFlag;
+    }
 
     /// Should returning this value be suppressed?
-    bool suppressed() const { return _count == 0; }
+    bool
+    suppressed() const
+    {
+        return _count == 0;
+    }
 
     /// How many values did the syscall attempt to return?
-    int count() const { return _count; }
+    int
+    count() const
+    {
+        return _count;
+    }
 
     /// The return value
     int64_t
@@ -119,8 +129,17 @@ class SyscallReturn
     }
 
     /// The encoded value (as described above)
-    int64_t encodedValue() const { return _value; }
-    int64_t value2() const { return _value2; }
+    int64_t
+    encodedValue() const
+    {
+        return _value;
+    }
+
+    int64_t
+    value2() const
+    {
+        return _value2;
+    }
 
   private:
     int64_t _value, _value2;

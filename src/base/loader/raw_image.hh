@@ -38,19 +38,19 @@ namespace gem5
 namespace loader
 {
 
-class RawImage: public ObjectFile
+class RawImage : public ObjectFile
 {
   public:
     RawImage(ImageFileDataPtr ifd) : ObjectFile(ifd) {}
 
-    RawImage(const std::string &filename) :
-        RawImage(ImageFileDataPtr(new ImageFileData(filename)))
+    RawImage(const std::string &filename)
+        : RawImage(ImageFileDataPtr(new ImageFileData(filename)))
     {}
 
     MemoryImage
     buildImage() const override
     {
-        return {{ "data", imageData }};
+        return { { "data", imageData } };
     }
 };
 

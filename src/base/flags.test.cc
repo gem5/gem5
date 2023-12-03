@@ -73,7 +73,7 @@ TEST(FlagsTest, TypeAssignment)
  */
 TEST(FlagsTest, TypeAssignmentOverwrite)
 {
-    const uint32_t init_value = (1 << 5) | (1 << 6) ;
+    const uint32_t init_value = (1 << 5) | (1 << 6);
     const uint32_t value = (1 << 3) | (1 << 5) | (1 << 9);
     Flags<uint32_t> flags(init_value);
     flags = value;

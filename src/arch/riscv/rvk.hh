@@ -121,53 +121,89 @@ const uint8_t _rvk_emu_sm4_sbox[256] = {
     0xD7, 0xCB, 0x39, 0x48
 };
 
-inline int32_t _rvk_emu_sll_32(int32_t rs1, int32_t rs2)
-    { return rs1 << (rs2 & 31); }
-inline int32_t _rvk_emu_srl_32(int32_t rs1, int32_t rs2)
-    { return (uint32_t)rs1 >> (rs2 & 31); }
-inline int64_t _rvk_emu_sll_64(int64_t rs1, int64_t rs2)
-    { return rs1 << (rs2 & 63); }
-inline int64_t _rvk_emu_srl_64(int64_t rs1, int64_t rs2)
-    { return (uint64_t)rs1 >> (rs2 & 63); }
+inline int32_t
+_rvk_emu_sll_32(int32_t rs1, int32_t rs2)
+{
+    return rs1 << (rs2 & 31);
+}
+
+inline int32_t
+_rvk_emu_srl_32(int32_t rs1, int32_t rs2)
+{
+    return (uint32_t)rs1 >> (rs2 & 31);
+}
+
+inline int64_t
+_rvk_emu_sll_64(int64_t rs1, int64_t rs2)
+{
+    return rs1 << (rs2 & 63);
+}
+
+inline int64_t
+_rvk_emu_srl_64(int64_t rs1, int64_t rs2)
+{
+    return (uint64_t)rs1 >> (rs2 & 63);
+}
 
 // rotate (a part of the extension). no separate intrinsic for rori
-inline int32_t _rvk_emu_rol_32(int32_t rs1, int32_t rs2)
-    { return _rvk_emu_sll_32(rs1, rs2) | _rvk_emu_srl_32(rs1, -rs2); }
-inline int32_t _rvk_emu_ror_32(int32_t rs1, int32_t rs2)
-    { return _rvk_emu_srl_32(rs1, rs2) | _rvk_emu_sll_32(rs1, -rs2); }
+inline int32_t
+_rvk_emu_rol_32(int32_t rs1, int32_t rs2)
+{
+    return _rvk_emu_sll_32(rs1, rs2) | _rvk_emu_srl_32(rs1, -rs2);
+}
 
-inline int64_t _rvk_emu_rol_64(int64_t rs1, int64_t rs2)
-    { return _rvk_emu_sll_64(rs1, rs2) | _rvk_emu_srl_64(rs1, -rs2); }
-inline int64_t _rvk_emu_ror_64(int64_t rs1, int64_t rs2)
-    { return _rvk_emu_srl_64(rs1, rs2) | _rvk_emu_sll_64(rs1, -rs2); }
+inline int32_t
+_rvk_emu_ror_32(int32_t rs1, int32_t rs2)
+{
+    return _rvk_emu_srl_32(rs1, rs2) | _rvk_emu_sll_32(rs1, -rs2);
+}
+
+inline int64_t
+_rvk_emu_rol_64(int64_t rs1, int64_t rs2)
+{
+    return _rvk_emu_sll_64(rs1, rs2) | _rvk_emu_srl_64(rs1, -rs2);
+}
+
+inline int64_t
+_rvk_emu_ror_64(int64_t rs1, int64_t rs2)
+{
+    return _rvk_emu_srl_64(rs1, rs2) | _rvk_emu_sll_64(rs1, -rs2);
+}
 
 // brev8, rev8
-inline int32_t _rvk_emu_grev_32(int32_t rs1, int32_t rs2)
+inline int32_t
+_rvk_emu_grev_32(int32_t rs1, int32_t rs2)
 {
     uint32_t x = rs1;
     int shamt = rs2 & 31;
-    if (shamt &  1) x = ((x & 0x55555555) <<  1) | ((x & 0xAAAAAAAA) >>  1);
-    if (shamt &  2) x = ((x & 0x33333333) <<  2) | ((x & 0xCCCCCCCC) >>  2);
-    if (shamt &  4) x = ((x & 0x0F0F0F0F) <<  4) | ((x & 0xF0F0F0F0) >>  4);
-    if (shamt &  8) x = ((x & 0x00FF00FF) <<  8) | ((x & 0xFF00FF00) >>  8);
-    if (shamt & 16) x = ((x & 0x0000FFFF) << 16) | ((x & 0xFFFF0000) >> 16);
+    if (shamt & 1)
+        x = ((x & 0x55555555) << 1) | ((x & 0xAAAAAAAA) >> 1);
+    if (shamt & 2)
+        x = ((x & 0x33333333) << 2) | ((x & 0xCCCCCCCC) >> 2);
+    if (shamt & 4)
+        x = ((x & 0x0F0F0F0F) << 4) | ((x & 0xF0F0F0F0) >> 4);
+    if (shamt & 8)
+        x = ((x & 0x00FF00FF) << 8) | ((x & 0xFF00FF00) >> 8);
+    if (shamt & 16)
+        x = ((x & 0x0000FFFF) << 16) | ((x & 0xFFFF0000) >> 16);
     return x;
 }
 
-inline int64_t _rvk_emu_grev_64(int64_t rs1, int64_t rs2)
+inline int64_t
+_rvk_emu_grev_64(int64_t rs1, int64_t rs2)
 {
     uint64_t x = rs1;
     int shamt = rs2 & 63;
-    if (shamt &  1)
+    if (shamt & 1)
         x = ((x & 0x5555555555555555LL) << 1) |
             ((x & 0xAAAAAAAAAAAAAAAALL) >> 1);
-    if (shamt &  2)
+    if (shamt & 2)
         x = ((x & 0x3333333333333333LL) << 2) |
             ((x & 0xCCCCCCCCCCCCCCCCLL) >> 2);
-    if (shamt &  4)
+    if (shamt & 4)
         x = ((x & 0x0F0F0F0F0F0F0F0FLL) << 4) |
             ((x & 0xF0F0F0F0F0F0F0F0LL) >> 4);
-    if (shamt &  8)
+    if (shamt & 8)
         x = ((x & 0x00FF00FF00FF00FFLL) << 8) |
             ((x & 0xFF00FF00FF00FF00LL) >> 8);
     if (shamt & 16)
@@ -179,54 +215,77 @@ inline int64_t _rvk_emu_grev_64(int64_t rs1, int64_t rs2)
     return x;
 }
 
-inline int32_t _rvk_emu_brev8_32(int32_t rs1)
-    { return _rvk_emu_grev_32(rs1, 7); }
+inline int32_t
+_rvk_emu_brev8_32(int32_t rs1)
+{
+    return _rvk_emu_grev_32(rs1, 7);
+}
 
-inline int64_t _rvk_emu_brev8_64(int64_t rs1)
-    { return _rvk_emu_grev_64(rs1, 7); }
+inline int64_t
+_rvk_emu_brev8_64(int64_t rs1)
+{
+    return _rvk_emu_grev_64(rs1, 7);
+}
 
-inline uint32_t _rvk_emu_shuffle32_stage(uint32_t src,
-    uint32_t maskL, uint32_t maskR, int N)
+inline uint32_t
+_rvk_emu_shuffle32_stage(uint32_t src, uint32_t maskL, uint32_t maskR, int N)
 {
     uint32_t x = src & ~(maskL | maskR);
-    x |= ((src <<  N) & maskL) | ((src >>  N) & maskR);
+    x |= ((src << N) & maskL) | ((src >> N) & maskR);
     return x;
 }
 
-inline int32_t _rvk_emu_shfl_32(int32_t rs1, int32_t rs2)
+inline int32_t
+_rvk_emu_shfl_32(int32_t rs1, int32_t rs2)
 {
     uint32_t x = rs1;
     int shamt = rs2 & 15;
 
-    if (shamt & 8) x = _rvk_emu_shuffle32_stage(x, 0x00ff0000, 0x0000ff00, 8);
-    if (shamt & 4) x = _rvk_emu_shuffle32_stage(x, 0x0f000f00, 0x00f000f0, 4);
-    if (shamt & 2) x = _rvk_emu_shuffle32_stage(x, 0x30303030, 0x0c0c0c0c, 2);
-    if (shamt & 1) x = _rvk_emu_shuffle32_stage(x, 0x44444444, 0x22222222, 1);
+    if (shamt & 8)
+        x = _rvk_emu_shuffle32_stage(x, 0x00ff0000, 0x0000ff00, 8);
+    if (shamt & 4)
+        x = _rvk_emu_shuffle32_stage(x, 0x0f000f00, 0x00f000f0, 4);
+    if (shamt & 2)
+        x = _rvk_emu_shuffle32_stage(x, 0x30303030, 0x0c0c0c0c, 2);
+    if (shamt & 1)
+        x = _rvk_emu_shuffle32_stage(x, 0x44444444, 0x22222222, 1);
 
     return x;
 }
 
-inline int32_t _rvk_emu_unshfl_32(int32_t rs1, int32_t rs2)
+inline int32_t
+_rvk_emu_unshfl_32(int32_t rs1, int32_t rs2)
 {
     uint32_t x = rs1;
     int shamt = rs2 & 15;
 
-    if (shamt & 1) x = _rvk_emu_shuffle32_stage(x, 0x44444444, 0x22222222, 1);
-    if (shamt & 2) x = _rvk_emu_shuffle32_stage(x, 0x30303030, 0x0c0c0c0c, 2);
-    if (shamt & 4) x = _rvk_emu_shuffle32_stage(x, 0x0f000f00, 0x00f000f0, 4);
-    if (shamt & 8) x = _rvk_emu_shuffle32_stage(x, 0x00ff0000, 0x0000ff00, 8);
+    if (shamt & 1)
+        x = _rvk_emu_shuffle32_stage(x, 0x44444444, 0x22222222, 1);
+    if (shamt & 2)
+        x = _rvk_emu_shuffle32_stage(x, 0x30303030, 0x0c0c0c0c, 2);
+    if (shamt & 4)
+        x = _rvk_emu_shuffle32_stage(x, 0x0f000f00, 0x00f000f0, 4);
+    if (shamt & 8)
+        x = _rvk_emu_shuffle32_stage(x, 0x00ff0000, 0x0000ff00, 8);
 
     return x;
 }
 
-inline int32_t _rvk_emu_zip_32(int32_t rs1)
-    { return _rvk_emu_shfl_32(rs1, 15); }
+inline int32_t
+_rvk_emu_zip_32(int32_t rs1)
+{
+    return _rvk_emu_shfl_32(rs1, 15);
+}
 
-inline int32_t _rvk_emu_unzip_32(int32_t rs1)
-    { return _rvk_emu_unshfl_32(rs1, 15); }
+inline int32_t
+_rvk_emu_unzip_32(int32_t rs1)
+{
+    return _rvk_emu_unshfl_32(rs1, 15);
+}
 
 // Zbkc: Carry-less multiply instructions
-inline int32_t _rvk_emu_clmul_32(int32_t rs1, int32_t rs2)
+inline int32_t
+_rvk_emu_clmul_32(int32_t rs1, int32_t rs2)
 {
     uint32_t a = rs1, b = rs2, x = 0;
     for (int i = 0; i < 32; i++) {
@@ -236,17 +295,19 @@ inline int32_t _rvk_emu_clmul_32(int32_t rs1, int32_t rs2)
     return x;
 }
 
-inline int32_t _rvk_emu_clmulh_32(int32_t rs1, int32_t rs2)
+inline int32_t
+_rvk_emu_clmulh_32(int32_t rs1, int32_t rs2)
 {
     uint32_t a = rs1, b = rs2, x = 0;
     for (int i = 1; i < 32; i++) {
         if ((b >> i) & 1)
-            x ^= a >> (32-i);
+            x ^= a >> (32 - i);
     }
     return x;
 }
 
-inline int64_t _rvk_emu_clmul_64(int64_t rs1, int64_t rs2)
+inline int64_t
+_rvk_emu_clmul_64(int64_t rs1, int64_t rs2)
 {
     uint64_t a = rs1, b = rs2, x = 0;
 
@@ -257,19 +318,21 @@ inline int64_t _rvk_emu_clmul_64(int64_t rs1, int64_t rs2)
     return x;
 }
 
-inline int64_t _rvk_emu_clmulh_64(int64_t rs1, int64_t rs2)
+inline int64_t
+_rvk_emu_clmulh_64(int64_t rs1, int64_t rs2)
 {
     uint64_t a = rs1, b = rs2, x = 0;
 
     for (int i = 1; i < 64; i++) {
         if ((b >> i) & 1)
-            x ^= a >> (64-i);
+            x ^= a >> (64 - i);
     }
     return x;
 }
 
 // Zbkx: Crossbar permutation instructions
-inline uint32_t _rvk_emu_xperm32(uint32_t rs1, uint32_t rs2, int sz_log2)
+inline uint32_t
+_rvk_emu_xperm32(uint32_t rs1, uint32_t rs2, int sz_log2)
 {
     uint32_t r = 0;
     uint32_t sz = 1LL << sz_log2;
@@ -282,13 +345,20 @@ inline uint32_t _rvk_emu_xperm32(uint32_t rs1, uint32_t rs2, int sz_log2)
     return r;
 }
 
-inline int32_t _rvk_emu_xperm4_32(int32_t rs1, int32_t rs2)
-    { return _rvk_emu_xperm32(rs1, rs2, 2); }
+inline int32_t
+_rvk_emu_xperm4_32(int32_t rs1, int32_t rs2)
+{
+    return _rvk_emu_xperm32(rs1, rs2, 2);
+}
 
-inline int32_t _rvk_emu_xperm8_32(int32_t rs1, int32_t rs2)
-    { return _rvk_emu_xperm32(rs1, rs2, 3); }
+inline int32_t
+_rvk_emu_xperm8_32(int32_t rs1, int32_t rs2)
+{
+    return _rvk_emu_xperm32(rs1, rs2, 3);
+}
 
-inline uint64_t _rvk_emu_xperm64(uint64_t rs1, uint64_t rs2, int sz_log2)
+inline uint64_t
+_rvk_emu_xperm64(uint64_t rs1, uint64_t rs2, int sz_log2)
 {
     uint64_t r = 0;
     uint64_t sz = 1LL << sz_log2;
@@ -301,38 +371,48 @@ inline uint64_t _rvk_emu_xperm64(uint64_t rs1, uint64_t rs2, int sz_log2)
     return r;
 }
 
-inline int64_t _rvk_emu_xperm4_64(int64_t rs1, int64_t rs2)
-    { return _rvk_emu_xperm64(rs1, rs2, 2); }
+inline int64_t
+_rvk_emu_xperm4_64(int64_t rs1, int64_t rs2)
+{
+    return _rvk_emu_xperm64(rs1, rs2, 2);
+}
 
-inline int64_t _rvk_emu_xperm8_64(int64_t rs1, int64_t rs2)
-    { return _rvk_emu_xperm64(rs1, rs2, 3); }
+inline int64_t
+_rvk_emu_xperm8_64(int64_t rs1, int64_t rs2)
+{
+    return _rvk_emu_xperm64(rs1, rs2, 3);
+}
 
 // rvk_emu internal: multiply by 0x02 in AES's GF(256) - LFSR style.
-inline uint8_t _rvk_emu_aes_xtime(uint8_t x)
+inline uint8_t
+_rvk_emu_aes_xtime(uint8_t x)
 {
     return (x << 1) ^ ((x & 0x80) ? 0x11B : 0x00);
 }
 
 // rvk_emu internal: AES forward MixColumns 8->32 bits
-inline uint32_t _rvk_emu_aes_fwd_mc_8(uint32_t x)
+inline uint32_t
+_rvk_emu_aes_fwd_mc_8(uint32_t x)
 {
     uint32_t x2;
     x2 = _rvk_emu_aes_xtime(x);
-    x = ((x ^ x2) << 24) | (x << 16) |(x << 8) | x2;
+    x = ((x ^ x2) << 24) | (x << 16) | (x << 8) | x2;
     return x;
 }
 
 // rvk_emu internal: AES forward MixColumns 32->32 bits
-inline uint32_t _rvk_emu_aes_fwd_mc_32(uint32_t x)
+inline uint32_t
+_rvk_emu_aes_fwd_mc_32(uint32_t x)
 {
     return _rvk_emu_aes_fwd_mc_8(x & 0xFF) ^
-        _rvk_emu_rol_32(_rvk_emu_aes_fwd_mc_8((x >>  8) & 0xFF),  8) ^
-        _rvk_emu_rol_32(_rvk_emu_aes_fwd_mc_8((x >> 16) & 0xFF), 16) ^
-        _rvk_emu_rol_32(_rvk_emu_aes_fwd_mc_8((x >> 24) & 0xFF), 24);
+           _rvk_emu_rol_32(_rvk_emu_aes_fwd_mc_8((x >> 8) & 0xFF), 8) ^
+           _rvk_emu_rol_32(_rvk_emu_aes_fwd_mc_8((x >> 16) & 0xFF), 16) ^
+           _rvk_emu_rol_32(_rvk_emu_aes_fwd_mc_8((x >> 24) & 0xFF), 24);
 }
 
 // rvk_emu internal: AES inverse MixColumns 8->32 bits
-inline uint32_t _rvk_emu_aes_inv_mc_8(uint32_t x)
+inline uint32_t
+_rvk_emu_aes_inv_mc_8(uint32_t x)
 {
     uint32_t x2, x4, x8;
 
@@ -340,25 +420,25 @@ inline uint32_t _rvk_emu_aes_inv_mc_8(uint32_t x)
     x4 = _rvk_emu_aes_xtime(x2);
     x8 = _rvk_emu_aes_xtime(x4);
 
-    x = ((x ^ x2 ^ x8) << 24) |
-    ((x ^ x4 ^ x8) << 16) |
-    ((x ^ x8) << 8) |
-    (x2 ^ x4 ^ x8);
+    x = ((x ^ x2 ^ x8) << 24) | ((x ^ x4 ^ x8) << 16) | ((x ^ x8) << 8) |
+        (x2 ^ x4 ^ x8);
 
     return x;
 }
 
 // rvk_emu internal: AES inverse MixColumns 32->32 bits
-inline uint32_t _rvk_emu_aes_inv_mc_32(uint32_t x)
+inline uint32_t
+_rvk_emu_aes_inv_mc_32(uint32_t x)
 {
     return _rvk_emu_aes_inv_mc_8(x & 0xFF) ^
-        _rvk_emu_rol_32(_rvk_emu_aes_inv_mc_8((x >>  8) & 0xFF),  8) ^
-        _rvk_emu_rol_32(_rvk_emu_aes_inv_mc_8((x >> 16) & 0xFF), 16) ^
-        _rvk_emu_rol_32(_rvk_emu_aes_inv_mc_8((x >> 24) & 0xFF), 24);
+           _rvk_emu_rol_32(_rvk_emu_aes_inv_mc_8((x >> 8) & 0xFF), 8) ^
+           _rvk_emu_rol_32(_rvk_emu_aes_inv_mc_8((x >> 16) & 0xFF), 16) ^
+           _rvk_emu_rol_32(_rvk_emu_aes_inv_mc_8((x >> 24) & 0xFF), 24);
 }
 
 // Zknd: NIST Suite: AES Decryption
-inline int32_t _rvk_emu_aes32dsi(int32_t rs1, int32_t rs2, uint8_t bs)
+inline int32_t
+_rvk_emu_aes32dsi(int32_t rs1, int32_t rs2, uint8_t bs)
 {
     int32_t x;
 
@@ -369,7 +449,8 @@ inline int32_t _rvk_emu_aes32dsi(int32_t rs1, int32_t rs2, uint8_t bs)
     return rs1 ^ _rvk_emu_rol_32(x, bs);
 }
 
-inline int32_t _rvk_emu_aes32dsmi(int32_t rs1, int32_t rs2, uint8_t bs)
+inline int32_t
+_rvk_emu_aes32dsmi(int32_t rs1, int32_t rs2, uint8_t bs)
 {
     int32_t x;
 
@@ -381,25 +462,28 @@ inline int32_t _rvk_emu_aes32dsmi(int32_t rs1, int32_t rs2, uint8_t bs)
     return rs1 ^ _rvk_emu_rol_32(x, bs);
 }
 
-inline int64_t _rvk_emu_aes64ds(int64_t rs1, int64_t rs2)
+inline int64_t
+_rvk_emu_aes64ds(int64_t rs1, int64_t rs2)
 {
-    return ((int64_t) _rvk_emu_aes_inv_sbox[rs1 & 0xFF]) |
-        (((int64_t) _rvk_emu_aes_inv_sbox[(rs2 >> 40) & 0xFF]) <<  8) |
-        (((int64_t) _rvk_emu_aes_inv_sbox[(rs2 >> 16) & 0xFF]) << 16) |
-        (((int64_t) _rvk_emu_aes_inv_sbox[(rs1 >> 56) & 0xFF]) << 24) |
-        (((int64_t) _rvk_emu_aes_inv_sbox[(rs1 >> 32) & 0xFF]) << 32) |
-        (((int64_t) _rvk_emu_aes_inv_sbox[(rs1 >>  8) & 0xFF]) << 40) |
-        (((int64_t) _rvk_emu_aes_inv_sbox[(rs2 >> 48) & 0xFF]) << 48) |
-        (((int64_t) _rvk_emu_aes_inv_sbox[(rs2 >> 24) & 0xFF]) << 56);
+    return ((int64_t)_rvk_emu_aes_inv_sbox[rs1 & 0xFF]) |
+           (((int64_t)_rvk_emu_aes_inv_sbox[(rs2 >> 40) & 0xFF]) << 8) |
+           (((int64_t)_rvk_emu_aes_inv_sbox[(rs2 >> 16) & 0xFF]) << 16) |
+           (((int64_t)_rvk_emu_aes_inv_sbox[(rs1 >> 56) & 0xFF]) << 24) |
+           (((int64_t)_rvk_emu_aes_inv_sbox[(rs1 >> 32) & 0xFF]) << 32) |
+           (((int64_t)_rvk_emu_aes_inv_sbox[(rs1 >> 8) & 0xFF]) << 40) |
+           (((int64_t)_rvk_emu_aes_inv_sbox[(rs2 >> 48) & 0xFF]) << 48) |
+           (((int64_t)_rvk_emu_aes_inv_sbox[(rs2 >> 24) & 0xFF]) << 56);
 }
 
-inline int64_t _rvk_emu_aes64im(int64_t rs1)
+inline int64_t
+_rvk_emu_aes64im(int64_t rs1)
 {
-    return ((int64_t) _rvk_emu_aes_inv_mc_32(rs1)) |
-        (((int64_t) _rvk_emu_aes_inv_mc_32(rs1 >> 32)) << 32);
+    return ((int64_t)_rvk_emu_aes_inv_mc_32(rs1)) |
+           (((int64_t)_rvk_emu_aes_inv_mc_32(rs1 >> 32)) << 32);
 }
 
-inline int64_t _rvk_emu_aes64dsm(int64_t rs1, int64_t rs2)
+inline int64_t
+_rvk_emu_aes64dsm(int64_t rs1, int64_t rs2)
 {
     int64_t x;
 
@@ -408,11 +492,11 @@ inline int64_t _rvk_emu_aes64dsm(int64_t rs1, int64_t rs2)
     return x;
 }
 
-inline int64_t _rvk_emu_aes64ks1i(int64_t rs1, int rnum)
+inline int64_t
+_rvk_emu_aes64ks1i(int64_t rs1, int rnum)
 {
-    const uint8_t aes_rcon[] = {
-        0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36
-    };
+    const uint8_t aes_rcon[] = { 0x01, 0x02, 0x04, 0x08, 0x10,
+                                 0x20, 0x40, 0x80, 0x1B, 0x36 };
 
     uint32_t t, rc;
 
@@ -424,27 +508,28 @@ inline int64_t _rvk_emu_aes64ks1i(int64_t rs1, int rnum)
         rc = aes_rcon[rnum];
     }
 
-    t = ((uint32_t) _rvk_emu_aes_fwd_sbox[t & 0xFF]) |
-        (((uint32_t) _rvk_emu_aes_fwd_sbox[(t >>  8) & 0xFF]) <<  8) |
-        (((uint32_t) _rvk_emu_aes_fwd_sbox[(t >> 16) & 0xFF]) << 16) |
-        (((uint32_t) _rvk_emu_aes_fwd_sbox[(t >> 24) & 0xFF]) << 24);
+    t = ((uint32_t)_rvk_emu_aes_fwd_sbox[t & 0xFF]) |
+        (((uint32_t)_rvk_emu_aes_fwd_sbox[(t >> 8) & 0xFF]) << 8) |
+        (((uint32_t)_rvk_emu_aes_fwd_sbox[(t >> 16) & 0xFF]) << 16) |
+        (((uint32_t)_rvk_emu_aes_fwd_sbox[(t >> 24) & 0xFF]) << 24);
 
     t ^= rc;
 
-    return ((int64_t) t) | (((int64_t) t) << 32);
+    return ((int64_t)t) | (((int64_t)t) << 32);
 }
 
-inline int64_t _rvk_emu_aes64ks2(int64_t rs1, int64_t rs2)
+inline int64_t
+_rvk_emu_aes64ks2(int64_t rs1, int64_t rs2)
 {
     uint32_t t;
 
     t = (rs1 >> 32) ^ (rs2 & 0xFFFFFFFF);
 
-    return ((int64_t) t) ^
-        (((int64_t) t) << 32) ^ (rs2 & 0xFFFFFFFF00000000ULL);
+    return ((int64_t)t) ^ (((int64_t)t) << 32) ^ (rs2 & 0xFFFFFFFF00000000ULL);
 }
 
-inline int32_t _rvk_emu_aes32esi(int32_t rs1, int32_t rs2, uint8_t bs)
+inline int32_t
+_rvk_emu_aes32esi(int32_t rs1, int32_t rs2, uint8_t bs)
 {
     int32_t x;
 
@@ -455,7 +540,8 @@ inline int32_t _rvk_emu_aes32esi(int32_t rs1, int32_t rs2, uint8_t bs)
     return rs1 ^ _rvk_emu_rol_32(x, bs);
 }
 
-inline int32_t _rvk_emu_aes32esmi(int32_t rs1, int32_t rs2, uint8_t bs)
+inline int32_t
+_rvk_emu_aes32esmi(int32_t rs1, int32_t rs2, uint8_t bs)
 {
     uint32_t x;
 
@@ -467,132 +553,149 @@ inline int32_t _rvk_emu_aes32esmi(int32_t rs1, int32_t rs2, uint8_t bs)
     return rs1 ^ _rvk_emu_rol_32(x, bs);
 }
 
-inline int64_t _rvk_emu_aes64es(int64_t rs1, int64_t rs2)
+inline int64_t
+_rvk_emu_aes64es(int64_t rs1, int64_t rs2)
 {
-    return ((int64_t) _rvk_emu_aes_fwd_sbox[rs1 & 0xFF]) |
-        (((int64_t) _rvk_emu_aes_fwd_sbox[(rs1 >> 40) & 0xFF]) <<  8) |
-        (((int64_t) _rvk_emu_aes_fwd_sbox[(rs2 >> 16) & 0xFF]) << 16) |
-        (((int64_t) _rvk_emu_aes_fwd_sbox[(rs2 >> 56) & 0xFF]) << 24) |
-        (((int64_t) _rvk_emu_aes_fwd_sbox[(rs1 >> 32) & 0xFF]) << 32) |
-        (((int64_t) _rvk_emu_aes_fwd_sbox[(rs2 >>  8) & 0xFF]) << 40) |
-        (((int64_t) _rvk_emu_aes_fwd_sbox[(rs2 >> 48) & 0xFF]) << 48) |
-        (((int64_t) _rvk_emu_aes_fwd_sbox[(rs1 >> 24) & 0xFF]) << 56);
+    return ((int64_t)_rvk_emu_aes_fwd_sbox[rs1 & 0xFF]) |
+           (((int64_t)_rvk_emu_aes_fwd_sbox[(rs1 >> 40) & 0xFF]) << 8) |
+           (((int64_t)_rvk_emu_aes_fwd_sbox[(rs2 >> 16) & 0xFF]) << 16) |
+           (((int64_t)_rvk_emu_aes_fwd_sbox[(rs2 >> 56) & 0xFF]) << 24) |
+           (((int64_t)_rvk_emu_aes_fwd_sbox[(rs1 >> 32) & 0xFF]) << 32) |
+           (((int64_t)_rvk_emu_aes_fwd_sbox[(rs2 >> 8) & 0xFF]) << 40) |
+           (((int64_t)_rvk_emu_aes_fwd_sbox[(rs2 >> 48) & 0xFF]) << 48) |
+           (((int64_t)_rvk_emu_aes_fwd_sbox[(rs1 >> 24) & 0xFF]) << 56);
 }
 
-inline int64_t _rvk_emu_aes64esm(int64_t rs1, int64_t rs2)
+inline int64_t
+_rvk_emu_aes64esm(int64_t rs1, int64_t rs2)
 {
     int64_t x;
 
     x = _rvk_emu_aes64es(rs1, rs2);
-    x = ((int64_t) _rvk_emu_aes_fwd_mc_32(x)) |
-        (((int64_t) _rvk_emu_aes_fwd_mc_32(x >> 32)) << 32);
+    x = ((int64_t)_rvk_emu_aes_fwd_mc_32(x)) |
+        (((int64_t)_rvk_emu_aes_fwd_mc_32(x >> 32)) << 32);
     return x;
 }
 
-inline int32_t _rvk_emu_sha256sig0(int32_t rs1)
+inline int32_t
+_rvk_emu_sha256sig0(int32_t rs1)
 {
     int32_t x;
 
     x = _rvk_emu_ror_32(rs1, 7) ^ _rvk_emu_ror_32(rs1, 18) ^
         _rvk_emu_srl_32(rs1, 3);
-    return (int32_t) x;
+    return (int32_t)x;
 }
 
-inline int32_t _rvk_emu_sha256sig1(int32_t rs1)
+inline int32_t
+_rvk_emu_sha256sig1(int32_t rs1)
 {
     int32_t x;
 
     x = _rvk_emu_ror_32(rs1, 17) ^ _rvk_emu_ror_32(rs1, 19) ^
         _rvk_emu_srl_32(rs1, 10);
-    return (int32_t) x;
+    return (int32_t)x;
 }
 
-inline int32_t _rvk_emu_sha256sum0(int32_t rs1)
+inline int32_t
+_rvk_emu_sha256sum0(int32_t rs1)
 {
     int32_t x;
 
     x = _rvk_emu_ror_32(rs1, 2) ^ _rvk_emu_ror_32(rs1, 13) ^
         _rvk_emu_ror_32(rs1, 22);
-    return (int32_t) x;
+    return (int32_t)x;
 }
 
-inline int32_t _rvk_emu_sha256sum1(int32_t rs1)
+inline int32_t
+_rvk_emu_sha256sum1(int32_t rs1)
 {
     int32_t x;
 
     x = _rvk_emu_ror_32(rs1, 6) ^ _rvk_emu_ror_32(rs1, 11) ^
         _rvk_emu_ror_32(rs1, 25);
-    return (int32_t) x;
+    return (int32_t)x;
 }
 
-static inline int32_t  _rvk_emu_sha512sig0h(int32_t rs1, int32_t rs2)
+static inline int32_t
+_rvk_emu_sha512sig0h(int32_t rs1, int32_t rs2)
 {
-    return  _rvk_emu_srl_32(rs1, 1) ^ _rvk_emu_srl_32(rs1, 7) ^
-            _rvk_emu_srl_32(rs1, 8) ^ _rvk_emu_sll_32(rs2, 31) ^
-            _rvk_emu_sll_32(rs2, 24);
+    return _rvk_emu_srl_32(rs1, 1) ^ _rvk_emu_srl_32(rs1, 7) ^
+           _rvk_emu_srl_32(rs1, 8) ^ _rvk_emu_sll_32(rs2, 31) ^
+           _rvk_emu_sll_32(rs2, 24);
 }
 
-static inline int32_t  _rvk_emu_sha512sig0l(int32_t rs1, int32_t rs2)
+static inline int32_t
+_rvk_emu_sha512sig0l(int32_t rs1, int32_t rs2)
 {
-    return  _rvk_emu_srl_32(rs1, 1) ^ _rvk_emu_srl_32(rs1, 7) ^
-            _rvk_emu_srl_32(rs1, 8) ^ _rvk_emu_sll_32(rs2, 31) ^
-            _rvk_emu_sll_32(rs2, 25) ^ _rvk_emu_sll_32(rs2, 24);
+    return _rvk_emu_srl_32(rs1, 1) ^ _rvk_emu_srl_32(rs1, 7) ^
+           _rvk_emu_srl_32(rs1, 8) ^ _rvk_emu_sll_32(rs2, 31) ^
+           _rvk_emu_sll_32(rs2, 25) ^ _rvk_emu_sll_32(rs2, 24);
 }
 
-static inline int32_t  _rvk_emu_sha512sig1h(int32_t rs1, int32_t rs2)
+static inline int32_t
+_rvk_emu_sha512sig1h(int32_t rs1, int32_t rs2)
 {
-    return  _rvk_emu_sll_32(rs1, 3) ^ _rvk_emu_srl_32(rs1, 6) ^
-            _rvk_emu_srl_32(rs1, 19) ^ _rvk_emu_srl_32(rs2, 29) ^
-            _rvk_emu_sll_32(rs2, 13);
+    return _rvk_emu_sll_32(rs1, 3) ^ _rvk_emu_srl_32(rs1, 6) ^
+           _rvk_emu_srl_32(rs1, 19) ^ _rvk_emu_srl_32(rs2, 29) ^
+           _rvk_emu_sll_32(rs2, 13);
 }
 
-static inline int32_t  _rvk_emu_sha512sig1l(int32_t rs1, int32_t rs2)
+static inline int32_t
+_rvk_emu_sha512sig1l(int32_t rs1, int32_t rs2)
 {
-    return  _rvk_emu_sll_32(rs1, 3) ^ _rvk_emu_srl_32(rs1, 6) ^
-            _rvk_emu_srl_32(rs1,19) ^ _rvk_emu_srl_32(rs2, 29) ^
-            _rvk_emu_sll_32(rs2, 26) ^ _rvk_emu_sll_32(rs2, 13);
+    return _rvk_emu_sll_32(rs1, 3) ^ _rvk_emu_srl_32(rs1, 6) ^
+           _rvk_emu_srl_32(rs1, 19) ^ _rvk_emu_srl_32(rs2, 29) ^
+           _rvk_emu_sll_32(rs2, 26) ^ _rvk_emu_sll_32(rs2, 13);
 }
 
-static inline int32_t  _rvk_emu_sha512sum0r(int32_t rs1, int32_t rs2)
+static inline int32_t
+_rvk_emu_sha512sum0r(int32_t rs1, int32_t rs2)
 {
-    return  _rvk_emu_sll_32(rs1, 25) ^ _rvk_emu_sll_32(rs1, 30) ^
-            _rvk_emu_srl_32(rs1, 28) ^ _rvk_emu_srl_32(rs2, 7) ^
-            _rvk_emu_srl_32(rs2, 2) ^ _rvk_emu_sll_32(rs2, 4);
+    return _rvk_emu_sll_32(rs1, 25) ^ _rvk_emu_sll_32(rs1, 30) ^
+           _rvk_emu_srl_32(rs1, 28) ^ _rvk_emu_srl_32(rs2, 7) ^
+           _rvk_emu_srl_32(rs2, 2) ^ _rvk_emu_sll_32(rs2, 4);
 }
 
-static inline int32_t  _rvk_emu_sha512sum1r(int32_t rs1, int32_t rs2)
+static inline int32_t
+_rvk_emu_sha512sum1r(int32_t rs1, int32_t rs2)
 {
-    return  _rvk_emu_sll_32(rs1, 23) ^ _rvk_emu_srl_32(rs1,14) ^
-            _rvk_emu_srl_32(rs1, 18) ^ _rvk_emu_srl_32(rs2, 9) ^
-            _rvk_emu_sll_32(rs2, 18) ^ _rvk_emu_sll_32(rs2, 14);
+    return _rvk_emu_sll_32(rs1, 23) ^ _rvk_emu_srl_32(rs1, 14) ^
+           _rvk_emu_srl_32(rs1, 18) ^ _rvk_emu_srl_32(rs2, 9) ^
+           _rvk_emu_sll_32(rs2, 18) ^ _rvk_emu_sll_32(rs2, 14);
 }
 
-inline int64_t  _rvk_emu_sha512sig0(int64_t rs1)
+inline int64_t
+_rvk_emu_sha512sig0(int64_t rs1)
 {
     return _rvk_emu_ror_64(rs1, 1) ^ _rvk_emu_ror_64(rs1, 8) ^
-            _rvk_emu_srl_64(rs1,7);
+           _rvk_emu_srl_64(rs1, 7);
 }
 
-inline int64_t  _rvk_emu_sha512sig1(int64_t rs1)
+inline int64_t
+_rvk_emu_sha512sig1(int64_t rs1)
 {
     return _rvk_emu_ror_64(rs1, 19) ^ _rvk_emu_ror_64(rs1, 61) ^
-            _rvk_emu_srl_64(rs1, 6);
+           _rvk_emu_srl_64(rs1, 6);
 }
 
-inline int64_t  _rvk_emu_sha512sum0(int64_t rs1)
+inline int64_t
+_rvk_emu_sha512sum0(int64_t rs1)
 {
     return _rvk_emu_ror_64(rs1, 28) ^ _rvk_emu_ror_64(rs1, 34) ^
-            _rvk_emu_ror_64(rs1, 39);
+           _rvk_emu_ror_64(rs1, 39);
 }
 
-inline int64_t  _rvk_emu_sha512sum1(int64_t rs1)
+inline int64_t
+_rvk_emu_sha512sum1(int64_t rs1)
 {
     return _rvk_emu_ror_64(rs1, 14) ^ _rvk_emu_ror_64(rs1, 18) ^
-            _rvk_emu_ror_64(rs1, 41);
+           _rvk_emu_ror_64(rs1, 41);
 }
 
 // Zksed: ShangMi Suite: SM4 Block Cipher Instructions
-inline int32_t _rvk_emu_sm4ed(int32_t rs1, int32_t rs2, uint8_t bs)
+inline int32_t
+_rvk_emu_sm4ed(int32_t rs1, int32_t rs2, uint8_t bs)
 {
     int32_t x;
 
@@ -600,13 +703,14 @@ inline int32_t _rvk_emu_sm4ed(int32_t rs1, int32_t rs2, uint8_t bs)
     x = (rs2 >> bs) & 0xFF;
     x = _rvk_emu_sm4_sbox[x];
 
-    x = x ^ (x << 8) ^ (x << 2) ^ (x << 18) ^
-            ((x & 0x3F) << 26) ^ ((x & 0xC0) << 10);
+    x = x ^ (x << 8) ^ (x << 2) ^ (x << 18) ^ ((x & 0x3F) << 26) ^
+        ((x & 0xC0) << 10);
     x = rs1 ^ _rvk_emu_rol_32(x, bs);
-    return (int32_t) x;
+    return (int32_t)x;
 }
 
-inline int32_t _rvk_emu_sm4ks(int32_t rs1, int32_t rs2, uint8_t bs)
+inline int32_t
+_rvk_emu_sm4ks(int32_t rs1, int32_t rs2, uint8_t bs)
 {
     int32_t x;
 
@@ -614,27 +718,29 @@ inline int32_t _rvk_emu_sm4ks(int32_t rs1, int32_t rs2, uint8_t bs)
     x = (rs2 >> bs) & 0xFF;
     x = _rvk_emu_sm4_sbox[x];
 
-    x = x ^ ((x & 0x07) << 29) ^ ((x & 0xFE) << 7) ^
-        ((x & 1) << 23) ^ ((x & 0xF8) << 13);
+    x = x ^ ((x & 0x07) << 29) ^ ((x & 0xFE) << 7) ^ ((x & 1) << 23) ^
+        ((x & 0xF8) << 13);
     x = rs1 ^ _rvk_emu_rol_32(x, bs);
-    return (int32_t) x;
+    return (int32_t)x;
 }
 
 // Zksh: ShangMi Suite: SM3 Hash Function Instructions
-inline int32_t  _rvk_emu_sm3p0(int32_t rs1)
+inline int32_t
+_rvk_emu_sm3p0(int32_t rs1)
 {
     int32_t x;
 
     x = rs1 ^ _rvk_emu_rol_32(rs1, 9) ^ _rvk_emu_rol_32(rs1, 17);
-    return (int32_t) x;
+    return (int32_t)x;
 }
 
-inline int32_t  _rvk_emu_sm3p1(int32_t rs1)
+inline int32_t
+_rvk_emu_sm3p1(int32_t rs1)
 {
     int32_t x;
 
     x = rs1 ^ _rvk_emu_rol_32(rs1, 15) ^ _rvk_emu_rol_32(rs1, 23);
-    return (int32_t) x;
+    return (int32_t)x;
 }
 
 } // namespace RiscvISA

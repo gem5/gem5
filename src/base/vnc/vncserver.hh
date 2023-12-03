@@ -62,45 +62,45 @@ namespace gem5
 class VncServer : public VncInput
 {
   public:
-
     /**
      * \defgroup VncConstants A set of constants and structs from the VNC spec
      * @{
      */
     /** Authentication modes */
     const static uint32_t AuthInvalid = 0;
-    const static uint32_t AuthNone    = 1;
+    const static uint32_t AuthNone = 1;
 
     /** Error conditions */
-    const static uint32_t VncOK   = 0;
+    const static uint32_t VncOK = 0;
 
     /** Server -> Client message IDs */
     enum ServerMessages
     {
-        ServerFrameBufferUpdate     = 0,
-        ServerSetColorMapEntries    = 1,
-        ServerBell                  = 2,
-        ServerCutText               = 3
+        ServerFrameBufferUpdate = 0,
+        ServerSetColorMapEntries = 1,
+        ServerBell = 2,
+        ServerCutText = 3
     };
 
     /** Encoding types */
     enum EncodingTypes
     {
-        EncodingRaw         = 0,
-        EncodingCopyRect    = 1,
-        EncodingHextile     = 5,
+        EncodingRaw = 0,
+        EncodingCopyRect = 1,
+        EncodingHextile = 5,
         EncodingDesktopSize = -223
     };
 
     /** keyboard/mouse support */
     enum MouseEvents
     {
-        MouseLeftButton     = 0x1,
-        MouseRightButton    = 0x2,
-        MouseMiddleButton   = 0x4
+        MouseLeftButton = 0x1,
+        MouseRightButton = 0x2,
+        MouseMiddleButton = 0x4
     };
 
-    const char* vncVersion() const
+    const char *
+    vncVersion() const
     {
         return "RFB 003.008\n";
     }
@@ -150,7 +150,7 @@ class VncServer : public VncInput
 
   protected:
     /** ListenEvent to accept a vnc client connection */
-    class ListenEvent: public PollEvent
+    class ListenEvent : public PollEvent
     {
       protected:
         VncServer *vncserver;
@@ -164,7 +164,7 @@ class VncServer : public VncInput
     ListenEvent *listenEvent;
 
     /** DataEvent to read data from vnc */
-    class DataEvent: public PollEvent
+    class DataEvent : public PollEvent
     {
       protected:
         VncServer *vncserver;
@@ -194,7 +194,6 @@ class VncServer : public VncInput
 
     // RFB
   protected:
-
     /** The rfb prototol state the connection is in */
     ConnectionState curState;
 
@@ -219,7 +218,7 @@ class VncServer : public VncInput
     /** Send an error message to the client
      * @param error_msg text to send describing the error
      */
-    void sendError(const char* error_msg);
+    void sendError(const char *error_msg);
 
     /** Read some data from the client
      * @param buf the data to read
@@ -238,13 +237,12 @@ class VncServer : public VncInput
      */
     bool read1(uint8_t *buf, size_t len);
 
-
     /** Templated version of the read function above to
      * read simple data to the client
      * @param val data to recv from the client
      */
-    template <typename T> bool read(T* val);
-
+    template <typename T>
+    bool read(T *val);
 
     /** Write a buffer to the client.
      * @param buf buffer to send
@@ -257,12 +255,13 @@ class VncServer : public VncInput
      * write simple data to the client
      * @param val data to send to the client
      */
-    template <typename T> bool write(T* val);
+    template <typename T>
+    bool write(T *val);
 
     /** Send a string to the client
      * @param str string to transmit
      */
-    bool write(const char* str);
+    bool write(const char *str);
 
     /** Check the client's protocol verion for compatibility and send
      * the security types we support
@@ -298,7 +297,8 @@ class VncServer : public VncInput
     /** Receive message from client providing new keyboard input */
     void recvKeyboardInput();
 
-    /** Recv message from client providing new mouse movement or button click */
+    /** Recv message from client providing new mouse movement or button click
+     */
     void recvPointerInput();
 
     /**  Receive message from client that there is text in it's paste buffer.

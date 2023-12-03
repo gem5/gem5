@@ -34,8 +34,8 @@
 
 #include "base/stl_helpers/ostream_helpers.hh"
 
-
-TEST(OstreamHelpers, pair) {
+TEST(OstreamHelpers, pair)
+{
     using gem5::stl_helpers::operator<<;
     auto p = std::make_pair(1, 2);
     std::ostringstream os;
@@ -43,32 +43,37 @@ TEST(OstreamHelpers, pair) {
     EXPECT_EQ(os.str(), "(1, 2)");
 }
 
-TEST(OstreamHelpers, tuple) {
+TEST(OstreamHelpers, tuple)
+{
     using gem5::stl_helpers::operator<<;
-    auto t = std::make_tuple(true,
-        std::make_pair("Hello", std::string_view("World")), '!');
+    auto t = std::make_tuple(
+        true, std::make_pair("Hello", std::string_view("World")), '!');
     std::ostringstream os;
     os << t;
     EXPECT_EQ(os.str(), "(1, (Hello, World), !)");
 }
 
-TEST(OstreamHelpers, vector) {
+TEST(OstreamHelpers, vector)
+{
     using gem5::stl_helpers::operator<<;
-    auto v = std::vector<const char*>{"abc", "defg", "hijklm", "\n"};
+    auto v = std::vector<const char *>{ "abc", "defg", "hijklm", "\n" };
     std::ostringstream os;
     os << v;
     EXPECT_EQ(os.str(), "[ abc, defg, hijklm, \n, ]");
 }
 
-TEST(OstreamHelpers, map) {
+TEST(OstreamHelpers, map)
+{
     using gem5::stl_helpers::operator<<;
-    auto m = std::map<char, int>{{'a', 0}, {'b', 1}, {'c', 2}, {'d', 3}};
+    auto m =
+        std::map<char, int>{ { 'a', 0 }, { 'b', 1 }, { 'c', 2 }, { 'd', 3 } };
     std::ostringstream os;
     os << m;
     EXPECT_EQ(os.str(), "[ (a, 0), (b, 1), (c, 2), (d, 3), ]");
 }
 
-TEST(OstreamHelpers, optional) {
+TEST(OstreamHelpers, optional)
+{
     using gem5::stl_helpers::operator<<;
     auto m = std::make_optional<int>(42);
     std::ostringstream os;
@@ -80,7 +85,8 @@ TEST(OstreamHelpers, optional) {
     EXPECT_EQ(os.str(), "(-)");
 }
 
-TEST(OstreamHelpers, printer) {
+TEST(OstreamHelpers, printer)
+{
     std::string hello = "Hello";
     std::ostringstream os;
     os << hello;
@@ -91,23 +97,23 @@ TEST(OstreamHelpers, printer) {
     EXPECT_EQ(os2.str(), "[ H, e, l, l, o, ]");
 }
 
-
-TEST(OstreamHelpers, pointers) {
-    auto helped_representation = [](const auto& val) {
+TEST(OstreamHelpers, pointers)
+{
+    auto helped_representation = [](const auto &val) {
         std::ostringstream os;
         os << gem5::stl_helpers::Printer(val);
         return os.str();
     };
-    auto expected_representation = [&](const auto& ptr) {
+    auto expected_representation = [&](const auto &ptr) {
         using gem5::stl_helpers::operator<<;
         std::ostringstream os;
-        auto* raw_ptr = &*ptr;
+        auto *raw_ptr = &*ptr;
         os << '(' << raw_ptr << ": " << *ptr << ')';
         return os.str();
     };
 
     int x = 42;
-    auto* ptr = &x;
+    auto *ptr = &x;
     EXPECT_EQ(helped_representation(ptr), expected_representation(ptr));
 
     auto uptr = std::make_unique<std::string>("Hello, World!");

@@ -27,7 +27,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #ifndef __MEM_RUBY_NETWORK_GARNET_0_ROUTINGUNIT_HH__
 #define __MEM_RUBY_NETWORK_GARNET_0_ROUTINGUNIT_HH__
 
@@ -53,35 +52,30 @@ class RoutingUnit
 {
   public:
     RoutingUnit(Router *router);
-    int outportCompute(RouteInfo route,
-                      int inport,
-                      PortDirection inport_dirn);
+    int outportCompute(RouteInfo route, int inport, PortDirection inport_dirn);
 
     // Topology-agnostic Routing Table based routing (default)
-    void addRoute(std::vector<NetDest>& routing_table_entry);
+    void addRoute(std::vector<NetDest> &routing_table_entry);
     void addWeight(int link_weight);
 
     // get output port from routing table
-    int  lookupRoutingTable(int vnet, NetDest net_dest);
+    int lookupRoutingTable(int vnet, NetDest net_dest);
 
     // Topology-specific direction based routing
     void addInDirection(PortDirection inport_dirn, int inport);
     void addOutDirection(PortDirection outport_dirn, int outport);
 
     // Routing for Mesh
-    int outportComputeXY(RouteInfo route,
-                         int inport,
+    int outportComputeXY(RouteInfo route, int inport,
                          PortDirection inport_dirn);
 
     // Custom Routing Algorithm using Port Directions
-    int outportComputeCustom(RouteInfo route,
-                             int inport,
+    int outportComputeCustom(RouteInfo route, int inport,
                              PortDirection inport_dirn);
 
     // Returns true if vnet is present in the vector
     // of vnets or if the vector supports all vnets.
     bool supportsVnet(int vnet, std::vector<int> sVnets);
-
 
   private:
     Router *m_router;

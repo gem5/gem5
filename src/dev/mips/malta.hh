@@ -45,11 +45,11 @@ class MaltaCChip;
 class MaltaIO;
 
 /**
-  * Top level class for Malta Chipset emulation.
-  * This structure just contains pointers to all the
-  * children so the children can commnicate to do the
-  * read work
-  */
+ * Top level class for Malta Chipset emulation.
+ * This structure just contains pointers to all the
+ * children so the children can commnicate to do the
+ * read work
+ */
 
 class Malta : public Platform
 {

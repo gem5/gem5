@@ -72,14 +72,15 @@ SystemCounter::SystemCounter(const SystemCounterParams &p)
       _freqTable(p.freqs),
       _activeFreqEntry(0),
       _updateTick(0),
-      _freqUpdateEvent([this]{ freqUpdateCallback(); }, name()),
+      _freqUpdateEvent([this] { freqUpdateCallback(); }, name()),
       _nextFreqEntry(0)
 {
     fatal_if(_freqTable.empty(), "SystemCounter::SystemCounter: Base "
-        "frequency not provided\n");
+                                 "frequency not provided\n");
     // Store the table end marker as a 32-bit zero word
     _freqTable.push_back(0);
-    fatal_if(_freqTable.size() > MAX_FREQ_ENTRIES,
+    fatal_if(
+        _freqTable.size() > MAX_FREQ_ENTRIES,
         "SystemCounter::SystemCounter: Architecture states a maximum of 1004 "
         "frequency table entries, limit surpassed\n");
     // Set the active frequency to be the base
@@ -91,7 +92,7 @@ void
 SystemCounter::validateCounterRef(SystemCounter *const sys_cnt)
 {
     fatal_if(!sys_cnt, "SystemCounter::validateCounterRef: No valid system "
-             "counter, can't instantiate system timers\n");
+                       "counter, can't instantiate system timers\n");
 }
 
 void
@@ -145,7 +146,7 @@ SystemCounter::whenValue(uint64_t cur_val, uint64_t target_val) const
     Tick when = curTick();
     if (target_val > cur_val) {
         uint64_t num_cycles =
-            std::ceil((target_val - cur_val) / ((double) _increment));
+            std::ceil((target_val - cur_val) / ((double)_increment));
         // Take into account current cycle remaining ticks
         Tick rem_ticks = _period - (curTick() % _period);
         if (rem_ticks < _period) {
@@ -191,7 +192,7 @@ void
 SystemCounter::freqUpdateCallback()
 {
     DPRINTF(Timer, "SystemCounter::freqUpdateCallback: Changing counter "
-            "frequency\n");
+                   "frequency\n");
     if (_enabled)
         updateValue();
     _activeFreqEntry = _nextFreqEntry;
@@ -257,14 +258,16 @@ SystemCounter::unserialize(CheckpointIn &cp)
     _period = (1.0 / _freq) * sim_clock::Frequency;
 }
 
-ArchTimer::ArchTimer(const std::string &name,
-                     SimObject &parent,
-                     SystemCounter &sysctr,
-                     ArmInterruptPin *interrupt)
-    : _name(name), _parent(parent), _systemCounter(sysctr),
+ArchTimer::ArchTimer(const std::string &name, SimObject &parent,
+                     SystemCounter &sysctr, ArmInterruptPin *interrupt)
+    : _name(name),
+      _parent(parent),
+      _systemCounter(sysctr),
       _interrupt(interrupt),
-      _control(0), _counterLimit(0), _offset(0),
-      _counterLimitReachedEvent([this]{ counterLimitReached(); }, name)
+      _control(0),
+      _counterLimit(0),
+      _offset(0),
+      _counterLimitReachedEvent([this] { counterLimitReached(); }, name)
 {
     _systemCounter.registerListener(this);
 }
@@ -337,7 +340,6 @@ ArchTimer::setControl(uint32_t val)
     // Timer masked or disabled
     else if ((!old_ctl.imask && new_ctl.imask) ||
              (old_ctl.enable && !new_ctl.enable)) {
-
         if (_interrupt->active()) {
             DPRINTF(Timer, "Clearing interrupt\n");
             // We are clearing the interrupt but we are not
@@ -411,7 +413,7 @@ bool
 ArchTimerKvm::scheduleEvents()
 {
     if constexpr (USE_KVM &&
-            std::string_view(KVM_ISA) == std::string_view("arm")) {
+                  std::string_view(KVM_ISA) == std::string_view("arm")) {
         auto *vm = system.getKvmVM();
         return !vm || !vm->validEnvironment();
     } else {
@@ -420,13 +422,11 @@ ArchTimerKvm::scheduleEvents()
 }
 
 GenericTimer::GenericTimer(const GenericTimerParams &p)
-    : SimObject(p),
-      systemCounter(*p.counter),
-      system(*p.system)
+    : SimObject(p), systemCounter(*p.counter), system(*p.system)
 {
     SystemCounter::validateCounterRef(p.counter);
     fatal_if(!p.system, "GenericTimer::GenericTimer: No system specified, "
-             "can't instantiate architected timers\n");
+                        "can't instantiate architected timers\n");
     system.setGenericTimer(this);
 }
 
@@ -456,9 +456,9 @@ GenericTimer::unserialize(CheckpointIn &cp)
     }
 
     // We cannot assert for equality here because CPU timers are dynamically
-    // created on the first miscreg access. Therefore, if we take the checkpoint
-    // before any timer registers have been accessed, the number of counters
-    // is actually smaller than the total number of CPUs.
+    // created on the first miscreg access. Therefore, if we take the
+    // checkpoint before any timer registers have been accessed, the number of
+    // counters is actually smaller than the total number of CPUs.
     if (cpu_count > system.threads.size()) {
         fatal("The simulated system has been initialized with %d CPUs, "
               "but the Generic Timer checkpoint expects %d CPUs. Consider "
@@ -490,24 +490,20 @@ GenericTimer::createTimers(unsigned cpus)
     const unsigned old_cpu_count(timers.size());
     timers.resize(cpus);
     for (unsigned i = old_cpu_count; i < cpus; ++i) {
-
         ThreadContext *tc = system.threads[i];
 
-        timers[i].reset(
-            new CoreTimers(*this, system, i,
-                           p.int_el3_phys->get(tc),
-                           p.int_el1_phys->get(tc),
-                           p.int_el1_virt->get(tc),
-                           p.int_el2_ns_phys->get(tc),
-                           p.int_el2_ns_virt->get(tc),
-                           p.int_el2_s_phys->get(tc),
-                           p.int_el2_s_virt->get(tc)));
+        timers[i].reset(new CoreTimers(
+            *this, system, i, p.int_el3_phys->get(tc), p.int_el1_phys->get(tc),
+            p.int_el1_virt->get(tc), p.int_el2_ns_phys->get(tc),
+            p.int_el2_ns_virt->get(tc), p.int_el2_s_phys->get(tc),
+            p.int_el2_s_virt->get(tc)));
     }
 }
 
 void
 GenericTimer::handleStream(CoreTimers::EventStream *ev_stream,
-    ArchTimer *timer, RegVal old_cnt_ctl, RegVal cnt_ctl)
+                           ArchTimer *timer, RegVal old_cnt_ctl,
+                           RegVal cnt_ctl)
 {
     uint64_t evnten = bits(cnt_ctl, 2);
     uint64_t old_evnten = bits(old_cnt_ctl, 2);
@@ -517,12 +513,11 @@ GenericTimer::handleStream(CoreTimers::EventStream *ev_stream,
     ev_stream->transitionBit = bits(cnt_ctl, 7, 4);
     // Reschedule the Event Stream if enabled and any change in
     // configuration
-    if (evnten && ((old_evnten != evnten) ||
-        (old_trans_to != ev_stream->transitionTo) ||
-        (old_trans_bit != ev_stream->transitionBit))) {
-
-        Tick when = timer->whenValue(
-            ev_stream->eventTargetValue(timer->value()));
+    if (evnten &&
+        ((old_evnten != evnten) || (old_trans_to != ev_stream->transitionTo) ||
+         (old_trans_bit != ev_stream->transitionBit))) {
+        Tick when =
+            timer->whenValue(ev_stream->eventTargetValue(timer->value()));
         reschedule(ev_stream->event, when, true);
     } else if (old_evnten && !evnten) {
         // Event Stream generation disabled
@@ -537,15 +532,15 @@ GenericTimer::setMiscReg(int reg, unsigned cpu, RegVal val)
     CoreTimers &core(getTimers(cpu));
 
     switch (reg) {
-      case MISCREG_CNTFRQ:
-      case MISCREG_CNTFRQ_EL0:
+    case MISCREG_CNTFRQ:
+    case MISCREG_CNTFRQ_EL0:
         core.cntfrq = val;
-        warn_if(core.cntfrq != systemCounter.freq(), "CNTFRQ configured freq "
+        warn_if(core.cntfrq != systemCounter.freq(),
+                "CNTFRQ configured freq "
                 "does not match the system counter freq\n");
         return;
-      case MISCREG_CNTKCTL:
-      case MISCREG_CNTKCTL_EL1:
-      {
+    case MISCREG_CNTKCTL:
+    case MISCREG_CNTKCTL_EL1: {
         RegVal old_cnt_ctl = core.cntkctl;
         core.cntkctl = val;
 
@@ -554,10 +549,9 @@ GenericTimer::setMiscReg(int reg, unsigned cpu, RegVal val)
 
         handleStream(ev_stream, timer, old_cnt_ctl, val);
         return;
-      }
-      case MISCREG_CNTHCTL:
-      case MISCREG_CNTHCTL_EL2:
-      {
+    }
+    case MISCREG_CNTHCTL:
+    case MISCREG_CNTHCTL_EL2: {
         RegVal old_cnt_ctl = core.cnthctl;
         core.cnthctl = val;
 
@@ -566,130 +560,129 @@ GenericTimer::setMiscReg(int reg, unsigned cpu, RegVal val)
 
         handleStream(ev_stream, timer, old_cnt_ctl, val);
         return;
-      }
-      // EL1 physical timer
-      case MISCREG_CNTP_CVAL_NS:
-      case MISCREG_CNTP_CVAL_EL0:
+    }
+    // EL1 physical timer
+    case MISCREG_CNTP_CVAL_NS:
+    case MISCREG_CNTP_CVAL_EL0:
         core.physEL1.setCompareValue(val);
         return;
 
-      case MISCREG_CNTP_TVAL_NS:
-      case MISCREG_CNTP_TVAL_EL0:
+    case MISCREG_CNTP_TVAL_NS:
+    case MISCREG_CNTP_TVAL_EL0:
         core.physEL1.setTimerValue(val);
         return;
 
-      case MISCREG_CNTP_CTL_NS:
-      case MISCREG_CNTP_CTL_EL0:
+    case MISCREG_CNTP_CTL_NS:
+    case MISCREG_CNTP_CTL_EL0:
         core.physEL1.setControl(val);
         return;
 
-      // Count registers
-      case MISCREG_CNTPCT:
-      case MISCREG_CNTPCT_EL0:
-      case MISCREG_CNTVCT:
-      case MISCREG_CNTVCT_EL0:
+    // Count registers
+    case MISCREG_CNTPCT:
+    case MISCREG_CNTPCT_EL0:
+    case MISCREG_CNTVCT:
+    case MISCREG_CNTVCT_EL0:
         warn("Ignoring write to read only count register: %s\n",
              miscRegName[reg]);
         return;
 
-      // EL1 virtual timer
-      case MISCREG_CNTVOFF:
-      case MISCREG_CNTVOFF_EL2:
+    // EL1 virtual timer
+    case MISCREG_CNTVOFF:
+    case MISCREG_CNTVOFF_EL2:
         core.virtEL1.setOffset(val);
         return;
 
-      case MISCREG_CNTV_CVAL:
-      case MISCREG_CNTV_CVAL_EL0:
+    case MISCREG_CNTV_CVAL:
+    case MISCREG_CNTV_CVAL_EL0:
         core.virtEL1.setCompareValue(val);
         return;
 
-      case MISCREG_CNTV_TVAL:
-      case MISCREG_CNTV_TVAL_EL0:
+    case MISCREG_CNTV_TVAL:
+    case MISCREG_CNTV_TVAL_EL0:
         core.virtEL1.setTimerValue(val);
         return;
 
-      case MISCREG_CNTV_CTL:
-      case MISCREG_CNTV_CTL_EL0:
+    case MISCREG_CNTV_CTL:
+    case MISCREG_CNTV_CTL_EL0:
         core.virtEL1.setControl(val);
         return;
 
-      // EL3 physical timer
-      case MISCREG_CNTP_CTL_S:
-      case MISCREG_CNTPS_CTL_EL1:
+    // EL3 physical timer
+    case MISCREG_CNTP_CTL_S:
+    case MISCREG_CNTPS_CTL_EL1:
         core.physEL3.setControl(val);
         return;
 
-      case MISCREG_CNTP_CVAL_S:
-      case MISCREG_CNTPS_CVAL_EL1:
+    case MISCREG_CNTP_CVAL_S:
+    case MISCREG_CNTPS_CVAL_EL1:
         core.physEL3.setCompareValue(val);
         return;
 
-      case MISCREG_CNTP_TVAL_S:
-      case MISCREG_CNTPS_TVAL_EL1:
+    case MISCREG_CNTP_TVAL_S:
+    case MISCREG_CNTPS_TVAL_EL1:
         core.physEL3.setTimerValue(val);
         return;
 
-      // EL2 Non-secure physical timer
-      case MISCREG_CNTHP_CTL:
-      case MISCREG_CNTHP_CTL_EL2:
+    // EL2 Non-secure physical timer
+    case MISCREG_CNTHP_CTL:
+    case MISCREG_CNTHP_CTL_EL2:
         core.physNsEL2.setControl(val);
         return;
 
-      case MISCREG_CNTHP_CVAL:
-      case MISCREG_CNTHP_CVAL_EL2:
+    case MISCREG_CNTHP_CVAL:
+    case MISCREG_CNTHP_CVAL_EL2:
         core.physNsEL2.setCompareValue(val);
         return;
 
-      case MISCREG_CNTHP_TVAL:
-      case MISCREG_CNTHP_TVAL_EL2:
+    case MISCREG_CNTHP_TVAL:
+    case MISCREG_CNTHP_TVAL_EL2:
         core.physNsEL2.setTimerValue(val);
         return;
 
-      // EL2 Non-secure virtual timer
-      case MISCREG_CNTHV_CTL_EL2:
+    // EL2 Non-secure virtual timer
+    case MISCREG_CNTHV_CTL_EL2:
         core.virtNsEL2.setControl(val);
         return;
 
-      case MISCREG_CNTHV_CVAL_EL2:
+    case MISCREG_CNTHV_CVAL_EL2:
         core.virtNsEL2.setCompareValue(val);
         return;
 
-      case MISCREG_CNTHV_TVAL_EL2:
+    case MISCREG_CNTHV_TVAL_EL2:
         core.virtNsEL2.setTimerValue(val);
         return;
 
-      // EL2 Secure physical timer
-      case MISCREG_CNTHPS_CTL_EL2:
+    // EL2 Secure physical timer
+    case MISCREG_CNTHPS_CTL_EL2:
         core.physSEL2.setControl(val);
         return;
 
-      case MISCREG_CNTHPS_CVAL_EL2:
+    case MISCREG_CNTHPS_CVAL_EL2:
         core.physSEL2.setCompareValue(val);
         return;
 
-      case MISCREG_CNTHPS_TVAL_EL2:
+    case MISCREG_CNTHPS_TVAL_EL2:
         core.physSEL2.setTimerValue(val);
         return;
 
-      // EL2 Secure virtual timer
-      case MISCREG_CNTHVS_CTL_EL2:
+    // EL2 Secure virtual timer
+    case MISCREG_CNTHVS_CTL_EL2:
         core.virtSEL2.setControl(val);
         return;
 
-      case MISCREG_CNTHVS_CVAL_EL2:
+    case MISCREG_CNTHVS_CVAL_EL2:
         core.virtSEL2.setCompareValue(val);
         return;
 
-      case MISCREG_CNTHVS_TVAL_EL2:
+    case MISCREG_CNTHVS_TVAL_EL2:
         core.virtSEL2.setTimerValue(val);
         return;
 
-      default:
+    default:
         warn("Writing to unknown register: %s\n", miscRegName[reg]);
         return;
     }
 }
-
 
 RegVal
 GenericTimer::readMiscReg(int reg, unsigned cpu)
@@ -697,164 +690,156 @@ GenericTimer::readMiscReg(int reg, unsigned cpu)
     CoreTimers &core(getTimers(cpu));
 
     switch (reg) {
-      case MISCREG_CNTFRQ:
-      case MISCREG_CNTFRQ_EL0:
+    case MISCREG_CNTFRQ:
+    case MISCREG_CNTFRQ_EL0:
         return core.cntfrq;
-      case MISCREG_CNTKCTL:
-      case MISCREG_CNTKCTL_EL1:
+    case MISCREG_CNTKCTL:
+    case MISCREG_CNTKCTL_EL1:
         return core.cntkctl & 0x00000000ffffffff;
-      case MISCREG_CNTHCTL:
-      case MISCREG_CNTHCTL_EL2:
+    case MISCREG_CNTHCTL:
+    case MISCREG_CNTHCTL_EL2:
         return core.cnthctl & 0x00000000ffffffff;
-      // EL1 physical timer
-      case MISCREG_CNTP_CVAL_NS:
-      case MISCREG_CNTP_CVAL_EL0:
+    // EL1 physical timer
+    case MISCREG_CNTP_CVAL_NS:
+    case MISCREG_CNTP_CVAL_EL0:
         return core.physEL1.compareValue();
 
-      case MISCREG_CNTP_TVAL_NS:
-      case MISCREG_CNTP_TVAL_EL0:
+    case MISCREG_CNTP_TVAL_NS:
+    case MISCREG_CNTP_TVAL_EL0:
         return core.physEL1.timerValue();
 
-      case MISCREG_CNTP_CTL_EL0:
-      case MISCREG_CNTP_CTL_NS:
+    case MISCREG_CNTP_CTL_EL0:
+    case MISCREG_CNTP_CTL_NS:
         return core.physEL1.control();
 
-      case MISCREG_CNTPCT:
-      case MISCREG_CNTPCT_EL0:
+    case MISCREG_CNTPCT:
+    case MISCREG_CNTPCT_EL0:
         return core.physEL1.value();
 
-
-      // EL1 virtual timer
-      case MISCREG_CNTVCT:
-      case MISCREG_CNTVCT_EL0:
+    // EL1 virtual timer
+    case MISCREG_CNTVCT:
+    case MISCREG_CNTVCT_EL0:
         return core.virtEL1.value();
 
-      case MISCREG_CNTVOFF:
-      case MISCREG_CNTVOFF_EL2:
+    case MISCREG_CNTVOFF:
+    case MISCREG_CNTVOFF_EL2:
         return core.virtEL1.offset();
 
-      case MISCREG_CNTV_CVAL:
-      case MISCREG_CNTV_CVAL_EL0:
+    case MISCREG_CNTV_CVAL:
+    case MISCREG_CNTV_CVAL_EL0:
         return core.virtEL1.compareValue();
 
-      case MISCREG_CNTV_TVAL:
-      case MISCREG_CNTV_TVAL_EL0:
+    case MISCREG_CNTV_TVAL:
+    case MISCREG_CNTV_TVAL_EL0:
         return core.virtEL1.timerValue();
 
-      case MISCREG_CNTV_CTL:
-      case MISCREG_CNTV_CTL_EL0:
+    case MISCREG_CNTV_CTL:
+    case MISCREG_CNTV_CTL_EL0:
         return core.virtEL1.control();
 
-      // EL3 physical timer
-      case MISCREG_CNTP_CTL_S:
-      case MISCREG_CNTPS_CTL_EL1:
+    // EL3 physical timer
+    case MISCREG_CNTP_CTL_S:
+    case MISCREG_CNTPS_CTL_EL1:
         return core.physEL3.control();
 
-      case MISCREG_CNTP_CVAL_S:
-      case MISCREG_CNTPS_CVAL_EL1:
+    case MISCREG_CNTP_CVAL_S:
+    case MISCREG_CNTPS_CVAL_EL1:
         return core.physEL3.compareValue();
 
-      case MISCREG_CNTP_TVAL_S:
-      case MISCREG_CNTPS_TVAL_EL1:
+    case MISCREG_CNTP_TVAL_S:
+    case MISCREG_CNTPS_TVAL_EL1:
         return core.physEL3.timerValue();
 
-      // EL2 Non-secure physical timer
-      case MISCREG_CNTHP_CTL:
-      case MISCREG_CNTHP_CTL_EL2:
+    // EL2 Non-secure physical timer
+    case MISCREG_CNTHP_CTL:
+    case MISCREG_CNTHP_CTL_EL2:
         return core.physNsEL2.control();
 
-      case MISCREG_CNTHP_CVAL:
-      case MISCREG_CNTHP_CVAL_EL2:
+    case MISCREG_CNTHP_CVAL:
+    case MISCREG_CNTHP_CVAL_EL2:
         return core.physNsEL2.compareValue();
 
-      case MISCREG_CNTHP_TVAL:
-      case MISCREG_CNTHP_TVAL_EL2:
+    case MISCREG_CNTHP_TVAL:
+    case MISCREG_CNTHP_TVAL_EL2:
         return core.physNsEL2.timerValue();
 
-      // EL2 Non-secure virtual timer
-      case MISCREG_CNTHV_CTL_EL2:
+    // EL2 Non-secure virtual timer
+    case MISCREG_CNTHV_CTL_EL2:
         return core.virtNsEL2.control();
 
-      case MISCREG_CNTHV_CVAL_EL2:
+    case MISCREG_CNTHV_CVAL_EL2:
         return core.virtNsEL2.compareValue();
 
-      case MISCREG_CNTHV_TVAL_EL2:
+    case MISCREG_CNTHV_TVAL_EL2:
         return core.virtNsEL2.timerValue();
 
-      // EL2 Secure physical timer
-      case MISCREG_CNTHPS_CTL_EL2:
+    // EL2 Secure physical timer
+    case MISCREG_CNTHPS_CTL_EL2:
         return core.physSEL2.control();
 
-      case MISCREG_CNTHPS_CVAL_EL2:
+    case MISCREG_CNTHPS_CVAL_EL2:
         return core.physSEL2.compareValue();
 
-      case MISCREG_CNTHPS_TVAL_EL2:
+    case MISCREG_CNTHPS_TVAL_EL2:
         return core.physSEL2.timerValue();
 
-      // EL2 Secure virtual timer
-      case MISCREG_CNTHVS_CTL_EL2:
+    // EL2 Secure virtual timer
+    case MISCREG_CNTHVS_CTL_EL2:
         return core.virtSEL2.control();
 
-      case MISCREG_CNTHVS_CVAL_EL2:
+    case MISCREG_CNTHVS_CVAL_EL2:
         return core.virtSEL2.compareValue();
 
-      case MISCREG_CNTHVS_TVAL_EL2:
+    case MISCREG_CNTHVS_TVAL_EL2:
         return core.virtSEL2.timerValue();
 
-      default:
+    default:
         warn("Reading from unknown register: %s\n", miscRegName[reg]);
         return 0;
     }
 }
 
-GenericTimer::CoreTimers::CoreTimers(GenericTimer &_parent,
-    ArmSystem &system, unsigned cpu,
+GenericTimer::CoreTimers::CoreTimers(
+    GenericTimer &_parent, ArmSystem &system, unsigned cpu,
     ArmInterruptPin *irq_el3_phys, ArmInterruptPin *irq_el1_phys,
     ArmInterruptPin *irq_el1_virt, ArmInterruptPin *irq_el2_ns_phys,
     ArmInterruptPin *irq_el2_ns_virt, ArmInterruptPin *irq_el2_s_phys,
     ArmInterruptPin *irq_el2_s_virt)
-      : parent(_parent),
-        cntfrq(parent.params().cntfrq),
-        cntkctl(0), cnthctl(0),
-        threadContext(system.threads[cpu]),
-        irqPhysEL3(irq_el3_phys),
-        irqPhysEL1(irq_el1_phys),
-        irqVirtEL1(irq_el1_virt),
-        irqPhysNsEL2(irq_el2_ns_phys),
-        irqVirtNsEL2(irq_el2_ns_virt),
-        irqPhysSEL2(irq_el2_s_phys),
-        irqVirtSEL2(irq_el2_s_virt),
-        physEL3(csprintf("%s.el3_phys_timer%d", parent.name(), cpu),
-                system, parent, parent.systemCounter,
-                irq_el3_phys),
-        physEL1(csprintf("%s.el1_phys_timer%d", parent.name(), cpu),
-                system, parent, parent.systemCounter,
-                irq_el1_phys),
-        virtEL1(csprintf("%s.el1_virt_timer%d", parent.name(), cpu),
-                system, parent, parent.systemCounter,
-                irq_el1_virt),
-        physNsEL2(csprintf("%s.el2_ns_phys_timer%d", parent.name(), cpu),
-                  system, parent, parent.systemCounter,
-                  irq_el2_ns_phys),
-        virtNsEL2(csprintf("%s.el2_ns_virt_timer%d", parent.name(), cpu),
-                  system, parent, parent.systemCounter,
-                  irq_el2_ns_virt),
-        physSEL2(csprintf("%s.el2_s_phys_timer%d", parent.name(), cpu),
-                 system, parent, parent.systemCounter,
-                 irq_el2_s_phys),
-        virtSEL2(csprintf("%s.el2_s_virt_timer%d", parent.name(), cpu),
-                 system, parent, parent.systemCounter,
-                 irq_el2_s_virt),
-        physEvStream{
-           EventFunctionWrapper([this]{ physEventStreamCallback(); },
-           csprintf("%s.phys_event_gen%d", parent.name(), cpu)), 0, 0
-        },
-        virtEvStream{
-           EventFunctionWrapper([this]{ virtEventStreamCallback(); },
-           csprintf("%s.virt_event_gen%d", parent.name(), cpu)), 0, 0
-        }
-{
-}
+    : parent(_parent),
+      cntfrq(parent.params().cntfrq),
+      cntkctl(0),
+      cnthctl(0),
+      threadContext(system.threads[cpu]),
+      irqPhysEL3(irq_el3_phys),
+      irqPhysEL1(irq_el1_phys),
+      irqVirtEL1(irq_el1_virt),
+      irqPhysNsEL2(irq_el2_ns_phys),
+      irqVirtNsEL2(irq_el2_ns_virt),
+      irqPhysSEL2(irq_el2_s_phys),
+      irqVirtSEL2(irq_el2_s_virt),
+      physEL3(csprintf("%s.el3_phys_timer%d", parent.name(), cpu), system,
+              parent, parent.systemCounter, irq_el3_phys),
+      physEL1(csprintf("%s.el1_phys_timer%d", parent.name(), cpu), system,
+              parent, parent.systemCounter, irq_el1_phys),
+      virtEL1(csprintf("%s.el1_virt_timer%d", parent.name(), cpu), system,
+              parent, parent.systemCounter, irq_el1_virt),
+      physNsEL2(csprintf("%s.el2_ns_phys_timer%d", parent.name(), cpu), system,
+                parent, parent.systemCounter, irq_el2_ns_phys),
+      virtNsEL2(csprintf("%s.el2_ns_virt_timer%d", parent.name(), cpu), system,
+                parent, parent.systemCounter, irq_el2_ns_virt),
+      physSEL2(csprintf("%s.el2_s_phys_timer%d", parent.name(), cpu), system,
+               parent, parent.systemCounter, irq_el2_s_phys),
+      virtSEL2(csprintf("%s.el2_s_virt_timer%d", parent.name(), cpu), system,
+               parent, parent.systemCounter, irq_el2_s_virt),
+      physEvStream{ EventFunctionWrapper(
+                        [this] { physEventStreamCallback(); },
+                        csprintf("%s.phys_event_gen%d", parent.name(), cpu)),
+                    0, 0 },
+      virtEvStream{ EventFunctionWrapper(
+                        [this] { virtEventStreamCallback(); },
+                        csprintf("%s.virt_event_gen%d", parent.name(), cpu)),
+                    0, 0 }
+{}
 
 void
 GenericTimer::CoreTimers::physEventStreamCallback()
@@ -881,8 +866,9 @@ void
 GenericTimer::CoreTimers::schedNextEvent(EventStream &ev_stream,
                                          ArchTimer &timer)
 {
-    parent.reschedule(ev_stream.event, timer.whenValue(
-        ev_stream.eventTargetValue(timer.value())), true);
+    parent.reschedule(
+        ev_stream.event,
+        timer.whenValue(ev_stream.eventTargetValue(timer.value())), true);
 }
 
 void
@@ -980,12 +966,11 @@ GenericTimerISA::readMiscReg(int reg)
 GenericTimerFrame::GenericTimerFrame(const GenericTimerFrameParams &p)
     : PioDevice(p),
       timerRange(RangeSize(p.cnt_base, ArmSystem::PageBytes)),
-      addrRanges({timerRange}),
+      addrRanges({ timerRange }),
       systemCounter(*p.counter),
-      physTimer(csprintf("%s.phys_timer", name()),
-                *this, systemCounter, p.int_phys->get()),
-      virtTimer(csprintf("%s.virt_timer", name()),
-                *this, systemCounter,
+      physTimer(csprintf("%s.phys_timer", name()), *this, systemCounter,
+                p.int_phys->get()),
+      virtTimer(csprintf("%s.virt_timer", name()), *this, systemCounter,
                 p.int_virt->get()),
       accessBits(0x3f),
       system(*dynamic_cast<ArmSystem *>(sys))
@@ -1149,105 +1134,106 @@ GenericTimerFrame::timerRead(Addr addr, size_t size, bool is_sec,
         return 0;
 
     switch (addr) {
-      case TIMER_CNTPCT_LO:
+    case TIMER_CNTPCT_LO:
         if (!accessBits.rpct || (to_el0 && !accessBitsEl0.pcten))
             return 0;
         else
             return physTimer.value();
 
-      case TIMER_CNTPCT_HI:
+    case TIMER_CNTPCT_HI:
         if (!accessBits.rpct || (to_el0 && !accessBitsEl0.pcten))
             return 0;
         else
             return physTimer.value() >> 32;
 
-      case TIMER_CNTFRQ:
+    case TIMER_CNTFRQ:
         if ((!accessBits.rfrq) ||
             (to_el0 && (!accessBitsEl0.pcten && !accessBitsEl0.vcten)))
             return 0;
         else
             return systemCounter.freq();
 
-      case TIMER_CNTEL0ACR:
+    case TIMER_CNTEL0ACR:
         if (!hasEl0View() || to_el0)
             return 0;
         else
             return accessBitsEl0;
 
-      case TIMER_CNTP_CVAL_LO:
+    case TIMER_CNTP_CVAL_LO:
         if (!accessBits.rwpt || (to_el0 && !accessBitsEl0.pten))
             return 0;
         else
             return physTimer.compareValue();
 
-      case TIMER_CNTP_CVAL_HI:
+    case TIMER_CNTP_CVAL_HI:
         if (!accessBits.rwpt || (to_el0 && !accessBitsEl0.pten))
             return 0;
         else
             return physTimer.compareValue() >> 32;
 
-      case TIMER_CNTP_TVAL:
+    case TIMER_CNTP_TVAL:
         if (!accessBits.rwpt || (to_el0 && !accessBitsEl0.pten))
             return 0;
         else
             return physTimer.timerValue();
-      case TIMER_CNTP_CTL:
+    case TIMER_CNTP_CTL:
         if (!accessBits.rwpt || (to_el0 && !accessBitsEl0.pten))
             return 0;
         else
             return physTimer.control();
 
-      case TIMER_CNTVCT_LO:
+    case TIMER_CNTVCT_LO:
         if (!accessBits.rvct || (to_el0 && !accessBitsEl0.vcten))
             return 0;
         else
             return virtTimer.value();
 
-      case TIMER_CNTVCT_HI:
+    case TIMER_CNTVCT_HI:
         if (!accessBits.rvct || (to_el0 && !accessBitsEl0.vcten))
             return 0;
         else
             return virtTimer.value() >> 32;
 
-      case TIMER_CNTVOFF_LO:
+    case TIMER_CNTVOFF_LO:
         if (!accessBits.rvoff || (to_el0))
             return 0;
         else
             return virtTimer.offset();
 
-      case TIMER_CNTVOFF_HI:
+    case TIMER_CNTVOFF_HI:
         if (!accessBits.rvoff || (to_el0))
             return 0;
         else
             return virtTimer.offset() >> 32;
 
-      case TIMER_CNTV_CVAL_LO:
+    case TIMER_CNTV_CVAL_LO:
         if (!accessBits.rwvt || (to_el0 && !accessBitsEl0.vten))
             return 0;
         else
             return virtTimer.compareValue();
 
-      case TIMER_CNTV_CVAL_HI:
+    case TIMER_CNTV_CVAL_HI:
         if (!accessBits.rwvt || (to_el0 && !accessBitsEl0.vten))
             return 0;
         else
             return virtTimer.compareValue() >> 32;
 
-      case TIMER_CNTV_TVAL:
+    case TIMER_CNTV_TVAL:
         if (!accessBits.rwvt || (to_el0 && !accessBitsEl0.vten))
             return 0;
         else
             return virtTimer.timerValue();
 
-      case TIMER_CNTV_CTL:
+    case TIMER_CNTV_CTL:
         if (!accessBits.rwvt || (to_el0 && !accessBitsEl0.vten))
             return 0;
         else
             return virtTimer.control();
 
-      default:
+    default:
         warn("GenericTimerFrame::timerRead: Unexpected address (0x%x:%i), "
-             "assuming RAZ\n", addr, size);
+             "assuming RAZ\n",
+             addr, size);
         return 0;
     }
 }
@@ -1261,17 +1247,15 @@ GenericTimerFrame::timerWrite(Addr addr, size_t size, uint64_t data,
         return;
 
     switch (addr) {
-      case TIMER_CNTPCT_LO ... TIMER_CNTPCT_HI:
-        warn("GenericTimerFrame::timerWrite: RO reg (0x%x) [CNTPCT]\n",
-             addr);
+    case TIMER_CNTPCT_LO ... TIMER_CNTPCT_HI:
+        warn("GenericTimerFrame::timerWrite: RO reg (0x%x) [CNTPCT]\n", addr);
         return;
 
-      case TIMER_CNTFRQ:
-        warn("GenericTimerFrame::timerWrite: RO reg (0x%x) [CNTFRQ]\n",
-             addr);
+    case TIMER_CNTFRQ:
+        warn("GenericTimerFrame::timerWrite: RO reg (0x%x) [CNTFRQ]\n", addr);
         return;
 
-      case TIMER_CNTEL0ACR:
+    case TIMER_CNTEL0ACR:
         if (!hasEl0View() || to_el0)
             return;
 
@@ -1279,72 +1263,71 @@ GenericTimerFrame::timerWrite(Addr addr, size_t size, uint64_t data,
         insertBits(accessBitsEl0, 1, 0, data);
         return;
 
-      case TIMER_CNTP_CVAL_LO:
+    case TIMER_CNTP_CVAL_LO:
         if ((!accessBits.rwpt) || (to_el0 && !accessBitsEl0.pten))
             return;
-        data = size == 4 ? insertBits(physTimer.compareValue(),
-                                      31, 0, data) : data;
+        data = size == 4 ? insertBits(physTimer.compareValue(), 31, 0, data) :
+                           data;
         physTimer.setCompareValue(data);
         return;
 
-      case TIMER_CNTP_CVAL_HI:
+    case TIMER_CNTP_CVAL_HI:
         if ((!accessBits.rwpt) || (to_el0 && !accessBitsEl0.pten))
             return;
         data = insertBits(physTimer.compareValue(), 63, 32, data);
         physTimer.setCompareValue(data);
         return;
 
-      case TIMER_CNTP_TVAL:
+    case TIMER_CNTP_TVAL:
         if ((!accessBits.rwpt) || (to_el0 && !accessBitsEl0.pten))
             return;
         physTimer.setTimerValue(data);
         return;
 
-      case TIMER_CNTP_CTL:
+    case TIMER_CNTP_CTL:
         if ((!accessBits.rwpt) || (to_el0 && !accessBitsEl0.pten))
             return;
         physTimer.setControl(data);
         return;
 
-      case TIMER_CNTVCT_LO ... TIMER_CNTVCT_HI:
-        warn("GenericTimerFrame::timerWrite: RO reg (0x%x) [CNTVCT]\n",
-             addr);
+    case TIMER_CNTVCT_LO ... TIMER_CNTVCT_HI:
+        warn("GenericTimerFrame::timerWrite: RO reg (0x%x) [CNTVCT]\n", addr);
         return;
-      case TIMER_CNTVOFF_LO ... TIMER_CNTVOFF_HI:
-        warn("GenericTimerFrame::timerWrite: RO reg (0x%x) [CNTVOFF]\n",
-             addr);
+    case TIMER_CNTVOFF_LO ... TIMER_CNTVOFF_HI:
+        warn("GenericTimerFrame::timerWrite: RO reg (0x%x) [CNTVOFF]\n", addr);
         return;
 
-      case TIMER_CNTV_CVAL_LO:
+    case TIMER_CNTV_CVAL_LO:
         if ((!accessBits.rwvt) || (to_el0 && !accessBitsEl0.vten))
             return;
-        data = size == 4 ? insertBits(virtTimer.compareValue(),
-                                      31, 0, data) : data;
+        data = size == 4 ? insertBits(virtTimer.compareValue(), 31, 0, data) :
+                           data;
         virtTimer.setCompareValue(data);
         return;
 
-      case TIMER_CNTV_CVAL_HI:
+    case TIMER_CNTV_CVAL_HI:
         if ((!accessBits.rwvt) || (to_el0 && !accessBitsEl0.vten))
             return;
         data = insertBits(virtTimer.compareValue(), 63, 32, data);
         virtTimer.setCompareValue(data);
         return;
 
-      case TIMER_CNTV_TVAL:
+    case TIMER_CNTV_TVAL:
         if ((!accessBits.rwvt) || (to_el0 && !accessBitsEl0.vten))
             return;
         virtTimer.setTimerValue(data);
         return;
 
-      case TIMER_CNTV_CTL:
+    case TIMER_CNTV_CTL:
         if ((!accessBits.rwvt) || (to_el0 && !accessBitsEl0.vten))
             return;
         virtTimer.setControl(data);
         return;
 
-      default:
+    default:
         warn("GenericTimerFrame::timerWrite: Unexpected address (0x%x:%i), "
-             "assuming WI\n", addr, size);
+             "assuming WI\n",
+             addr, size);
     }
 }
 
@@ -1354,7 +1337,7 @@ GenericTimerMem::GenericTimerMem(const GenericTimerMemParams &p)
       counterStatusRange(RangeSize(p.cnt_read_base, ArmSystem::PageBytes)),
       timerCtrlRange(RangeSize(p.cnt_ctl_base, ArmSystem::PageBytes)),
       cnttidr(0x0),
-      addrRanges{counterCtrlRange, counterStatusRange, timerCtrlRange},
+      addrRanges{ counterCtrlRange, counterStatusRange, timerCtrlRange },
       systemCounter(*p.counter),
       frames(p.frames),
       system(*dynamic_cast<ArmSystem *>(sys))
@@ -1362,7 +1345,8 @@ GenericTimerMem::GenericTimerMem(const GenericTimerMemParams &p)
     SystemCounter::validateCounterRef(p.counter);
     for (auto &range : addrRanges)
         GenericTimerMem::validateFrameRange(range);
-    fatal_if(frames.size() > MAX_TIMER_FRAMES,
+    fatal_if(
+        frames.size() > MAX_TIMER_FRAMES,
         "GenericTimerMem::GenericTimerMem: Architecture states a maximum of "
         "8 memory-mapped timer frames, limit surpassed\n");
     // Initialize CNTTIDR with each frame's features
@@ -1456,25 +1440,26 @@ GenericTimerMem::counterCtrlRead(Addr addr, size_t size, bool is_sec) const
     if (!GenericTimerMem::validateAccessPerm(system, is_sec))
         return 0;
     switch (addr) {
-      case COUNTER_CTRL_CNTCR:
-      {
+    case COUNTER_CTRL_CNTCR: {
         CNTCR cntcr = 0;
         cntcr.en = systemCounter.enabled();
         cntcr.fcreq = systemCounter.activeFreqEntry();
         return cntcr;
-      }
-      case COUNTER_CTRL_CNTSR:
-      {
+    }
+    case COUNTER_CTRL_CNTSR: {
         CNTSR cntsr = 0;
         cntsr.fcack = systemCounter.activeFreqEntry();
         return cntsr;
-      }
-      case COUNTER_CTRL_CNTCV_LO: return systemCounter.value();
-      case COUNTER_CTRL_CNTCV_HI: return systemCounter.value() >> 32;
-      case COUNTER_CTRL_CNTSCR: return 0;
-      case COUNTER_CTRL_CNTID: return 0;
-      default:
-      {
+    }
+    case COUNTER_CTRL_CNTCV_LO:
+        return systemCounter.value();
+    case COUNTER_CTRL_CNTCV_HI:
+        return systemCounter.value() >> 32;
+    case COUNTER_CTRL_CNTSCR:
+        return 0;
+    case COUNTER_CTRL_CNTID:
+        return 0;
+    default: {
         auto &freq_table = systemCounter.freqTable();
         for (int i = 0; i < (freq_table.size() - 1); i++) {
             Addr offset = COUNTER_CTRL_CNTFID + (i * 0x4);
@@ -1482,9 +1467,10 @@ GenericTimerMem::counterCtrlRead(Addr addr, size_t size, bool is_sec) const
                 return freq_table[i];
         }
         warn("GenericTimerMem::counterCtrlRead: Unexpected address "
-             "(0x%x:%i), assuming RAZ\n", addr, size);
+             "(0x%x:%i), assuming RAZ\n",
+             addr, size);
         return 0;
-      }
+    }
     }
 }
 
@@ -1496,8 +1482,7 @@ GenericTimerMem::counterCtrlWrite(Addr addr, size_t size, uint64_t data,
         return;
 
     switch (addr) {
-      case COUNTER_CTRL_CNTCR:
-      {
+    case COUNTER_CTRL_CNTCR: {
         CNTCR val = data;
         if (!systemCounter.enabled() && val.en)
             systemCounter.enable();
@@ -1513,34 +1498,33 @@ GenericTimerMem::counterCtrlWrite(Addr addr, size_t size, uint64_t data,
         if (val.fcreq != systemCounter.activeFreqEntry())
             systemCounter.freqUpdateSchedule(val.fcreq);
         return;
-      }
+    }
 
-      case COUNTER_CTRL_CNTSR:
+    case COUNTER_CTRL_CNTSR:
         warn("GenericTimerMem::counterCtrlWrite: RO reg (0x%x) [CNTSR]\n",
              addr);
         return;
 
-      case COUNTER_CTRL_CNTCV_LO:
-        data = size == 4 ? insertBits(systemCounter.value(), 31, 0, data)
-                         : data;
+    case COUNTER_CTRL_CNTCV_LO:
+        data =
+            size == 4 ? insertBits(systemCounter.value(), 31, 0, data) : data;
         systemCounter.setValue(data);
         return;
 
-      case COUNTER_CTRL_CNTCV_HI:
+    case COUNTER_CTRL_CNTCV_HI:
         data = insertBits(systemCounter.value(), 63, 32, data);
         systemCounter.setValue(data);
         return;
 
-      case COUNTER_CTRL_CNTSCR:
+    case COUNTER_CTRL_CNTSCR:
         return;
 
-      case COUNTER_CTRL_CNTID:
+    case COUNTER_CTRL_CNTID:
         warn("GenericTimerMem::counterCtrlWrite: RO reg (0x%x) [CNTID]\n",
              addr);
         return;
 
-      default:
-      {
+    default: {
         auto &freq_table = systemCounter.freqTable();
         for (int i = 0; i < (freq_table.size() - 1); i++) {
             Addr offset = COUNTER_CTRL_CNTFID + (i * 0x4);
@@ -1557,8 +1541,9 @@ GenericTimerMem::counterCtrlWrite(Addr addr, size_t size, uint64_t data,
             }
         }
         warn("GenericTimerMem::counterCtrlWrite: Unexpected address "
-             "(0x%x:%i), assuming WI\n", addr, size);
-      }
+             "(0x%x:%i), assuming WI\n",
+             addr, size);
+    }
     }
 }
 
@@ -1566,11 +1551,14 @@ uint64_t
 GenericTimerMem::counterStatusRead(Addr addr, size_t size) const
 {
     switch (addr) {
-      case COUNTER_STATUS_CNTCV_LO: return systemCounter.value();
-      case COUNTER_STATUS_CNTCV_HI: return systemCounter.value() >> 32;
-      default:
+    case COUNTER_STATUS_CNTCV_LO:
+        return systemCounter.value();
+    case COUNTER_STATUS_CNTCV_HI:
+        return systemCounter.value() >> 32;
+    default:
         warn("GenericTimerMem::counterStatusRead: Unexpected address "
-             "(0x%x:%i), assuming RAZ\n", addr, size);
+             "(0x%x:%i), assuming RAZ\n",
+             addr, size);
         return 0;
     }
 }
@@ -1579,13 +1567,14 @@ void
 GenericTimerMem::counterStatusWrite(Addr addr, size_t size, uint64_t data)
 {
     switch (addr) {
-      case COUNTER_STATUS_CNTCV_LO ... COUNTER_STATUS_CNTCV_HI:
+    case COUNTER_STATUS_CNTCV_LO ... COUNTER_STATUS_CNTCV_HI:
         warn("GenericTimerMem::counterStatusWrite: RO reg (0x%x) [CNTCV]\n",
              addr);
         return;
-      default:
+    default:
         warn("GenericTimerMem::counterStatusWrite: Unexpected address "
-             "(0x%x:%i), assuming WI\n", addr, size);
+             "(0x%x:%i), assuming WI\n",
+             addr, size);
     }
 }
 
@@ -1593,21 +1582,23 @@ uint64_t
 GenericTimerMem::timerCtrlRead(Addr addr, size_t size, bool is_sec) const
 {
     switch (addr) {
-      case TIMER_CTRL_CNTFRQ:
-        if (!GenericTimerMem::validateAccessPerm(system, is_sec)) return 0;
+    case TIMER_CTRL_CNTFRQ:
+        if (!GenericTimerMem::validateAccessPerm(system, is_sec))
+            return 0;
         return systemCounter.freq();
-      case TIMER_CTRL_CNTNSAR:
-      {
-        if (!GenericTimerMem::validateAccessPerm(system, is_sec)) return 0;
+    case TIMER_CTRL_CNTNSAR: {
+        if (!GenericTimerMem::validateAccessPerm(system, is_sec))
+            return 0;
         uint32_t cntnsar = 0x0;
         for (int i = 0; i < frames.size(); i++) {
             if (frames[i]->hasNonSecureAccess())
                 cntnsar |= 0x1 << i;
         }
         return cntnsar;
-      }
-      case TIMER_CTRL_CNTTIDR: return cnttidr;
-      default:
+    }
+    case TIMER_CTRL_CNTTIDR:
+        return cnttidr;
+    default:
         for (int i = 0; i < frames.size(); i++) {
             Addr cntacr_off = TIMER_CTRL_CNTACR + (i * 0x4);
             Addr cntvoff_lo_off = TIMER_CTRL_CNTVOFF_LO + (i * 0x4);
@@ -1619,16 +1610,19 @@ GenericTimerMem::timerCtrlRead(Addr addr, size_t size, bool is_sec) const
             bool has_access =
                 GenericTimerMem::validateAccessPerm(system, is_sec) ||
                 frames[i]->hasNonSecureAccess();
-            if (hit && !has_access) return 0;
+            if (hit && !has_access)
+                return 0;
             if (addr == cntacr_off)
                 return frames[i]->getAccessBits();
             if (addr == cntvoff_lo_off || addr == cntvoff_hi_off) {
-                return addr == cntvoff_lo_off ? frames[i]->getVirtOffset()
-                               : frames[i]->getVirtOffset() >> 32;
+                return addr == cntvoff_lo_off ?
+                           frames[i]->getVirtOffset() :
+                           frames[i]->getVirtOffset() >> 32;
             }
         }
         warn("GenericTimerMem::timerCtrlRead: Unexpected address (0x%x:%i), "
-             "assuming RAZ\n", addr, size);
+             "assuming RAZ\n",
+             addr, size);
         return 0;
     }
 }
@@ -1638,25 +1632,27 @@ GenericTimerMem::timerCtrlWrite(Addr addr, size_t size, uint64_t data,
                                 bool is_sec)
 {
     switch (addr) {
-      case TIMER_CTRL_CNTFRQ:
-        if (!GenericTimerMem::validateAccessPerm(system, is_sec)) return;
+    case TIMER_CTRL_CNTFRQ:
+        if (!GenericTimerMem::validateAccessPerm(system, is_sec))
+            return;
         warn_if(data != systemCounter.freq(),
                 "GenericTimerMem::timerCtrlWrite: CNTFRQ configured freq "
                 "does not match the counter freq, ignoring\n");
         return;
-      case TIMER_CTRL_CNTNSAR:
-        if (!GenericTimerMem::validateAccessPerm(system, is_sec)) return;
+    case TIMER_CTRL_CNTNSAR:
+        if (!GenericTimerMem::validateAccessPerm(system, is_sec))
+            return;
         for (int i = 0; i < frames.size(); i++) {
             // Check if the CNTNSAR.NS bit is set for this frame
             if (data & (0x1 << i))
                 frames[i]->setNonSecureAccess();
         }
         return;
-      case TIMER_CTRL_CNTTIDR:
+    case TIMER_CTRL_CNTTIDR:
         warn("GenericTimerMem::timerCtrlWrite: RO reg (0x%x) [CNTTIDR]\n",
              addr);
         return;
-      default:
+    default:
         for (int i = 0; i < frames.size(); i++) {
             Addr cntacr_off = TIMER_CTRL_CNTACR + (i * 0x4);
             Addr cntvoff_lo_off = TIMER_CTRL_CNTVOFF_LO + (i * 0x4);
@@ -1668,7 +1664,8 @@ GenericTimerMem::timerCtrlWrite(Addr addr, size_t size, uint64_t data,
             bool has_access =
                 GenericTimerMem::validateAccessPerm(system, is_sec) ||
                 frames[i]->hasNonSecureAccess();
-            if (hit && !has_access) return;
+            if (hit && !has_access)
+                return;
             if (addr == cntacr_off) {
                 frames[i]->setAccessBits(data);
                 return;
@@ -1676,16 +1673,18 @@ GenericTimerMem::timerCtrlWrite(Addr addr, size_t size, uint64_t data,
             if (addr == cntvoff_lo_off || addr == cntvoff_hi_off) {
                 if (addr == cntvoff_lo_off)
                     data = size == 4 ? insertBits(frames[i]->getVirtOffset(),
-                                                  31, 0, data) : data;
+                                                  31, 0, data) :
+                                       data;
                 else
-                    data = insertBits(frames[i]->getVirtOffset(),
-                                      63, 32, data);
+                    data =
+                        insertBits(frames[i]->getVirtOffset(), 63, 32, data);
                 frames[i]->setVirtOffset(data);
                 return;
             }
         }
         warn("GenericTimerMem::timerCtrlWrite: Unexpected address "
-             "(0x%x:%i), assuming WI\n", addr, size);
+             "(0x%x:%i), assuming WI\n",
+             addr, size);
     }
 }
 

@@ -62,24 +62,25 @@ namespace gem5
 class Gicv2mFrame : public SimObject
 {
   public:
-    const Addr          addr;
-    const unsigned int  spi_base;
-    const unsigned int  spi_len;
+    const Addr addr;
+    const unsigned int spi_base;
+    const unsigned int spi_len;
 
     typedef Gicv2mFrameParams Params;
-    Gicv2mFrame(const Params &p) :
-        SimObject(p), addr(p.addr), spi_base(p.spi_base), spi_len(p.spi_len)
+
+    Gicv2mFrame(const Params &p)
+        : SimObject(p), addr(p.addr), spi_base(p.spi_base), spi_len(p.spi_len)
     {}
 };
 
 class Gicv2m : public PioDevice
 {
   private:
-    static const int FRAME_SIZE         = 0x10000;
+    static const int FRAME_SIZE = 0x10000;
 
-    static const int MSI_TYPER          = 0x0008;
-    static const int MSI_SETSPI_NSR     = 0x0040;
-    static const int PER_ID4            = 0x0fd0;
+    static const int MSI_TYPER = 0x0008;
+    static const int MSI_SETSPI_NSR = 0x0040;
+    static const int PER_ID4 = 0x0fd0;
 
     /** Latency for an MMIO operation */
     const Tick pioDelay;

@@ -70,13 +70,14 @@ class ThreadContext;
 
 namespace trace
 {
-    class InstRecord;
+class InstRecord;
 }
 
 struct BaseSimpleCPUParams;
+
 namespace branch_prediction
 {
-    class BPredUnit;
+class BPredUnit;
 } // namespace branch_prediction
 class SimpleExecContext;
 
@@ -93,11 +94,12 @@ class BaseSimpleCPU : public BaseCPU
     BaseSimpleCPU(const BaseSimpleCPUParams &params);
     virtual ~BaseSimpleCPU();
     void wakeup(ThreadID tid) override;
+
   public:
     trace::InstRecord *traceData;
     CheckerCPU *checker;
 
-    std::vector<SimpleExecContext*> threadInfo;
+    std::vector<SimpleExecContext *> threadInfo;
     std::list<ThreadID> activeThreads;
 
     /** Current instruction */
@@ -146,37 +148,37 @@ class BaseSimpleCPU : public BaseCPU
     void resetStats() override;
 
     virtual Fault
-    readMem(Addr addr, uint8_t* data, unsigned size, Request::Flags flags,
-            const std::vector<bool>& byte_enable=std::vector<bool>())
+    readMem(Addr addr, uint8_t *data, unsigned size, Request::Flags flags,
+            const std::vector<bool> &byte_enable = std::vector<bool>())
     {
         panic("readMem() is not implemented");
     }
 
     virtual Fault
     initiateMemRead(Addr addr, unsigned size, Request::Flags flags,
-            const std::vector<bool>& byte_enable=std::vector<bool>())
+                    const std::vector<bool> &byte_enable = std::vector<bool>())
     {
         panic("initiateMemRead() is not implemented\n");
     }
 
     virtual Fault
-    writeMem(uint8_t* data, unsigned size, Addr addr, Request::Flags flags,
-            uint64_t* res,
-            const std::vector<bool>& byte_enable=std::vector<bool>())
+    writeMem(uint8_t *data, unsigned size, Addr addr, Request::Flags flags,
+             uint64_t *res,
+             const std::vector<bool> &byte_enable = std::vector<bool>())
     {
         panic("writeMem() is not implemented\n");
     }
 
     virtual Fault
-    amoMem(Addr addr, uint8_t* data, unsigned size, Request::Flags flags,
-            AtomicOpFunctorPtr amo_op)
+    amoMem(Addr addr, uint8_t *data, unsigned size, Request::Flags flags,
+           AtomicOpFunctorPtr amo_op)
     {
         panic("amoMem() is not implemented\n");
     }
 
     virtual Fault
     initiateMemAMO(Addr addr, unsigned size, Request::Flags flags,
-            AtomicOpFunctorPtr amo_op)
+                   AtomicOpFunctorPtr amo_op)
     {
         panic("initiateMemAMO() is not implemented\n");
     }
@@ -198,7 +200,6 @@ class BaseSimpleCPU : public BaseCPU
      * and initiateMemMgmtCmd() is used to instigate the command.
      */
     virtual Fault initiateMemMgmtCmd(Request::Flags flags) = 0;
-
 };
 
 } // namespace gem5

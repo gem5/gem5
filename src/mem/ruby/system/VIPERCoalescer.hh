@@ -64,13 +64,13 @@ class VIPERCoalescer : public GPUCoalescer
     void writeCompleteCallback(Addr address, uint64_t instSeqNum);
     void invTCPCallback(Addr address);
     RequestStatus makeRequest(PacketPtr pkt) override;
-    void issueRequest(CoalescedRequest* crequest) override;
+    void issueRequest(CoalescedRequest *crequest) override;
 
   private:
     void invTCP();
 
     // make write-complete response packets from original write request packets
-    void makeWriteCompletePkts(CoalescedRequest* crequest);
+    void makeWriteCompletePkts(CoalescedRequest *crequest);
 
     // current cache invalidation packet
     // nullptr if there is no active cache invalidation request

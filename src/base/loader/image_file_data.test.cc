@@ -68,7 +68,6 @@ TEST(ImageFileDataTest, SimpleImage)
     unlink(filename);
 }
 
-
 TEST(ImageFileDataTest, GZipImage)
 {
     /*
@@ -77,8 +76,8 @@ TEST(ImageFileDataTest, GZipImage)
     char filename_gz[] = "image-XXXXXX";
     int fd_gz = mkstemp(filename_gz);
     ASSERT_NE(-1, fd_gz);
-    ssize_t size_gz = write(fd_gz, image_file_gzipped,
-                            sizeof(image_file_gzipped));
+    ssize_t size_gz =
+        write(fd_gz, image_file_gzipped, sizeof(image_file_gzipped));
 
     char filename[] = "image-XXXXXX";
     int fd = mkstemp(filename);

@@ -60,10 +60,10 @@ const InstSeqNum InstId::firstFetchSeqNum;
 const InstSeqNum InstId::firstExecSeqNum;
 
 std::ostream &
-operator <<(std::ostream &os, const InstId &id)
+operator<<(std::ostream &os, const InstId &id)
 {
-    os << id.threadId << '/' << id.streamSeqNum << '.'
-        << id.predictionSeqNum << '/' << id.lineSeqNum;
+    os << id.threadId << '/' << id.streamSeqNum << '.' << id.predictionSeqNum
+       << '/' << id.lineSeqNum;
 
     /* Not all structures have fetch and exec sequence numbers */
     if (id.fetchSeqNum != 0) {
@@ -110,15 +110,15 @@ MinorDynInst::reportData(std::ostream &os) const
 }
 
 std::ostream &
-operator <<(std::ostream &os, const MinorDynInst &inst)
+operator<<(std::ostream &os, const MinorDynInst &inst)
 {
     if (!inst.pc) {
         os << inst.id << " pc: 0x???????? (bubble)";
         return os;
     }
 
-    os << inst.id << " pc: 0x"
-        << std::hex << inst.pc->instAddr() << std::dec << " (";
+    os << inst.id << " pc: 0x" << std::hex << inst.pc->instAddr() << std::dec
+       << " (";
 
     if (inst.isFault())
         os << "fault: \"" << inst.fault->name() << '"';
@@ -137,34 +137,32 @@ operator <<(std::ostream &os, const MinorDynInst &inst)
 /** Print a register in the form r<n>, f<n>, m<n>(<name>) for integer,
  *  float, and misc given an 'architectural register number' */
 static void
-printRegName(std::ostream &os, const RegId& reg)
+printRegName(std::ostream &os, const RegId &reg)
 {
     switch (reg.classValue()) {
-      case InvalidRegClass:
+    case InvalidRegClass:
         os << 'z';
         break;
-      case MiscRegClass:
-        {
-            RegIndex misc_reg = reg.index();
-            os << 'm' << misc_reg << '(' << reg << ')';
-        }
-        break;
-      case FloatRegClass:
+    case MiscRegClass: {
+        RegIndex misc_reg = reg.index();
+        os << 'm' << misc_reg << '(' << reg << ')';
+    } break;
+    case FloatRegClass:
         os << 'f' << reg.index();
         break;
-      case VecRegClass:
+    case VecRegClass:
         os << 'v' << reg.index();
         break;
-      case VecElemClass:
+    case VecElemClass:
         os << reg;
         break;
-      case IntRegClass:
+    case IntRegClass:
         os << 'r' << reg.index();
         break;
-      case CCRegClass:
+    case CCRegClass:
         os << 'c' << reg.index();
         break;
-      default:
+    default:
         panic("Unknown register class: %d", (int)reg.classValue());
     }
 }
@@ -173,8 +171,8 @@ void
 MinorDynInst::minorTraceInst(const Named &named_object) const
 {
     if (isFault()) {
-        minorInst(named_object, "id=F;%s addr=0x%x fault=\"%s\"\n",
-            id, pc ? pc->instAddr() : 0, fault->name());
+        minorInst(named_object, "id=F;%s addr=0x%x fault=\"%s\"\n", id,
+                  pc ? pc->instAddr() : 0, fault->name());
     } else {
         unsigned int num_src_regs = staticInst->numSrcRegs();
         unsigned int num_dest_regs = staticInst->numDestRegs();
@@ -212,15 +210,15 @@ MinorDynInst::minorTraceInst(const Named &named_object) const
         std::ostringstream flags;
         staticInst->printFlags(flags, " ");
 
-        minorInst(named_object, "id=%s addr=0x%x inst=\"%s\" class=%s"
-            " flags=\"%s\"%s%s\n",
-            id, pc ? pc->instAddr() : 0,
-            (staticInst->opClass() == No_OpClass ?
-                "(invalid)" : staticInst->disassemble(0,NULL)),
-            enums::OpClassStrings[staticInst->opClass()],
-            flags.str(),
-            regs_str.str(),
-            (predictedTaken ? " predictedTaken" : ""));
+        minorInst(named_object,
+                  "id=%s addr=0x%x inst=\"%s\" class=%s"
+                  " flags=\"%s\"%s%s\n",
+                  id, pc ? pc->instAddr() : 0,
+                  (staticInst->opClass() == No_OpClass ?
+                       "(invalid)" :
+                       staticInst->disassemble(0, NULL)),
+                  enums::OpClassStrings[staticInst->opClass()], flags.str(),
+                  regs_str.str(), (predictedTaken ? " predictedTaken" : ""));
     }
 }
 

@@ -42,18 +42,20 @@
 
 // check if filesystem library is available
 #if defined(__cpp_lib_filesystem) || __has_include(<filesystem>)
-    #include <filesystem>
+#include <filesystem>
 #else
-    // This is only reachable if we're using GCC 7 or clang versions 6
-    // through 10 (note: gem5 does not support GCC versions older than
-    // GCC 7 or clang versions older than clang 6.0 as they do not
-    // support the C++17 standard).
-    // If we're using GCC 7 or clang versions 6 through 10, we need to use
-    // <experimental/filesystem>.
-    #include <experimental/filesystem>
-    namespace std {
-        namespace filesystem = experimental::filesystem;
-    }
+// This is only reachable if we're using GCC 7 or clang versions 6
+// through 10 (note: gem5 does not support GCC versions older than
+// GCC 7 or clang versions older than clang 6.0 as they do not
+// support the C++17 standard).
+// If we're using GCC 7 or clang versions 6 through 10, we need to use
+// <experimental/filesystem>.
+#include <experimental/filesystem>
+
+namespace std
+{
+namespace filesystem = experimental::filesystem;
+}
 #endif
 
 #include "base/logging.hh"
@@ -76,13 +78,13 @@ buildListenSocket(const std::string &path, const std::string &name)
         return listenSocketUnixAbstractConfig(path.substr(1)).build(name);
 
     std::filesystem::path p(path);
-    return listenSocketUnixFileConfig(
-            p.parent_path(), p.filename()).build(name);
+    return listenSocketUnixFileConfig(p.parent_path(), p.filename())
+        .build(name);
 }
 
 } // anonymous namespace
 
-SharedMemoryServer::SharedMemoryServer(const SharedMemoryServerParams& params)
+SharedMemoryServer::SharedMemoryServer(const SharedMemoryServerParams &params)
     : SimObject(params),
       system(params.system),
       listener(buildListenSocket(params.server_path, name()))
@@ -98,22 +100,22 @@ SharedMemoryServer::SharedMemoryServer(const SharedMemoryServerParams& params)
 SharedMemoryServer::~SharedMemoryServer() {}
 
 SharedMemoryServer::BaseShmPollEvent::BaseShmPollEvent(
-    int fd, SharedMemoryServer* shm_server)
-    : PollEvent(fd, POLLIN), shmServer(shm_server),
+    int fd, SharedMemoryServer *shm_server)
+    : PollEvent(fd, POLLIN),
+      shmServer(shm_server),
       eventName(shmServer->name() + ".fd" + std::to_string(fd))
-{
-}
+{}
 
-const std::string&
+const std::string &
 SharedMemoryServer::BaseShmPollEvent::name() const
 {
     return eventName;
 }
 
 bool
-SharedMemoryServer::BaseShmPollEvent::tryReadAll(void* buffer, size_t size)
+SharedMemoryServer::BaseShmPollEvent::tryReadAll(void *buffer, size_t size)
 {
-    char* char_buffer = reinterpret_cast<char*>(buffer);
+    char *char_buffer = reinterpret_cast<char *>(buffer);
     for (size_t offset = 0; offset < size;) {
         ssize_t retv = recv(pfd.fd, char_buffer + offset, size - offset, 0);
         if (retv >= 0) {
@@ -148,11 +150,13 @@ SharedMemoryServer::ClientSocketEvent::process(int revents)
         // Receive a request packet. We ignore the endianness as unix socket
         // only allows communication on the same system anyway.
         RequestType req_type;
+
         struct
         {
             uint64_t start;
             uint64_t end;
         } request;
+
         if (!tryReadAll(&req_type, sizeof(req_type))) {
             break;
         }
@@ -168,9 +172,9 @@ SharedMemoryServer::ClientSocketEvent::process(int revents)
         inform("%s: receive request: %s", name(), range.to_string());
 
         // Identify the backing store.
-        const auto& stores = shmServer->system->getPhysMem().getBackingStore();
+        const auto &stores = shmServer->system->getPhysMem().getBackingStore();
         auto it = std::find_if(
-            stores.begin(), stores.end(), [&](const BackingStoreEntry& entry) {
+            stores.begin(), stores.end(), [&](const BackingStoreEntry &entry) {
                 return entry.shmFd >= 0 && range.isSubset(entry.range);
             });
         if (it == stores.end()) {
@@ -185,28 +189,32 @@ SharedMemoryServer::ClientSocketEvent::process(int revents)
         // Populate response message.
         // mmap fd @ offset <===> [start, end] in simulated phys mem.
         msghdr msg = {};
+
         // Setup iovec for fields other than fd. We ignore the endianness as
         // unix socket only allows communication on the same system anyway.
         struct
         {
             off_t offset;
         } response;
+
         // (offset of the request range in shared memory) =
         //     (offset of the full range in shared memory) +
         //     (offset of the request range in the full range)
         response.offset = it->shmOffset + (range.start() - it->range.start());
-        iovec ios = {.iov_base = &response, .iov_len = sizeof(response)};
+        iovec ios = { .iov_base = &response, .iov_len = sizeof(response) };
         msg.msg_iov = &ios;
         msg.msg_iovlen = 1;
+
         // Setup fd as an ancillary data.
         union
         {
             char buf[CMSG_SPACE(sizeof(it->shmFd))];
             struct cmsghdr align;
         } cmsgs;
+
         msg.msg_control = cmsgs.buf;
         msg.msg_controllen = sizeof(cmsgs.buf);
-        cmsghdr* cmsg = CMSG_FIRSTHDR(&msg);
+        cmsghdr *cmsg = CMSG_FIRSTHDR(&msg);
         cmsg->cmsg_level = SOL_SOCKET;
         cmsg->cmsg_type = SCM_RIGHTS;
         cmsg->cmsg_len = CMSG_LEN(sizeof(it->shmFd));

@@ -88,21 +88,16 @@ TEST(AddrRangeMapTest, LegacyTests)
 TEST(AddrRangeMapTest, InterleavedTest1)
 {
     const auto N = 16;
-    const auto masks = std::vector<Addr>{
-        0x40,
-        0x80,
-        0x100,
-        0x200
-    };
+    const auto masks = std::vector<Addr>{ 0x40, 0x80, 0x100, 0x200 };
     const Addr start = 0x80000000;
-    const Addr end   = 0xc0000000;
+    const Addr end = 0xc0000000;
 
     AddrRangeMap<int> r;
     AddrRangeMap<int>::const_iterator i;
 
     // populate AddrRangeMap with N-way interleaved address ranges
     // for all intlvMatch values 0..N-1
-    for (int k=0; k < N; k++) {
+    for (int k = 0; k < N; k++) {
         r.insert(AddrRange(start, end, masks, k), k);
     }
     // find AddrRange element containing start address
@@ -132,21 +127,17 @@ TEST(AddrRangeMapTest, InterleavedTest1)
 TEST(AddrRangeMapTest, InterleavedTest2)
 {
     const auto N = 16;
-    const auto masks = std::vector<Addr>{
-        0x4444444444440,
-        0x8888888888880,
-        0x1111111111100,
-        0x2222222222200
-    };
+    const auto masks = std::vector<Addr>{ 0x4444444444440, 0x8888888888880,
+                                          0x1111111111100, 0x2222222222200 };
     const Addr start = 0x80000000;
-    const Addr end   = 0xc0000000;
+    const Addr end = 0xc0000000;
 
     AddrRangeMap<int> r;
     AddrRangeMap<int>::const_iterator i;
 
     // populate AddrRangeMap with N-way interleaved address ranges
     // for all intlvMatch values 0..N-1
-    for (int k=0; k < N; k++) {
+    for (int k = 0; k < N; k++) {
         r.insert(AddrRange(start, end, masks, k), k);
     }
     // find AddrRange element containing start address

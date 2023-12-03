@@ -61,38 +61,35 @@ class BaseRoutingUnit : public SimObject
   public:
     PARAMS(BaseRoutingUnit);
 
-    BaseRoutingUnit(const Params &p)
-      :SimObject(p)
-    {
-    }
+    BaseRoutingUnit(const Params &p) : SimObject(p) {}
 
     virtual void addOutPort(LinkID link_id,
-                           const std::vector<MessageBuffer*>& m_out_buffer,
-                           const NetDest& routing_table_entry,
-                           const PortDirection &direction,
-                           int link_weight) = 0;
+                            const std::vector<MessageBuffer *> &m_out_buffer,
+                            const NetDest &routing_table_entry,
+                            const PortDirection &direction,
+                            int link_weight) = 0;
 
     struct RouteInfo
     {
         RouteInfo(const NetDest &dests, const LinkID link_id)
-          :m_destinations(dests), m_link_id(link_id)
+            : m_destinations(dests), m_link_id(link_id)
         {}
+
         const NetDest m_destinations;
         const LinkID m_link_id;
     };
 
-    virtual void route(const Message &msg,
-                       int vnet,
-                       bool deterministic,
+    virtual void route(const Message &msg, int vnet, bool deterministic,
                        std::vector<RouteInfo> &out_links) = 0;
 
-    void init_parent(Switch *parent_switch)
-    { m_parent_switch = parent_switch; }
+    void
+    init_parent(Switch *parent_switch)
+    {
+        m_parent_switch = parent_switch;
+    }
 
   protected:
-
     Switch *m_parent_switch;
-
 };
 
 } // namespace ruby

@@ -60,9 +60,7 @@ namespace gem5
  */
 class HybridGen : public BaseGen
 {
-
   public:
-
     /**
      * Create a hybrid DRAM + NVM address sequence generator.
      *
@@ -96,23 +94,19 @@ class HybridGen : public BaseGen
      * @param nbr_of_ranks_nvm Number of NVM ranks
      * @param nvm_percent Percentage of traffic going to NVM
      */
-    HybridGen(SimObject &obj,
-           RequestorID requestor_id, Tick _duration,
-           Addr start_addr_dram, Addr end_addr_dram,
-           Addr blocksize_dram,
-           Addr start_addr_nvm, Addr end_addr_nvm,
-           Addr blocksize_nvm,
-           Addr cacheline_size,
-           Tick min_period, Tick max_period,
-           uint8_t read_percent, Addr data_limit,
-           unsigned int num_seq_pkts_dram, unsigned int page_size_dram,
-           unsigned int nbr_of_banks_dram, unsigned int nbr_of_banks_util_dram,
-           unsigned int num_seq_pkts_nvm, unsigned int buffer_size_nvm,
-           unsigned int nbr_of_banks_nvm, unsigned int nbr_of_banks_util_nvm,
-           enums::AddrMap addr_mapping,
-           unsigned int nbr_of_ranks_dram,
-           unsigned int nbr_of_ranks_nvm,
-           uint8_t nvm_percent);
+    HybridGen(SimObject &obj, RequestorID requestor_id, Tick _duration,
+              Addr start_addr_dram, Addr end_addr_dram, Addr blocksize_dram,
+              Addr start_addr_nvm, Addr end_addr_nvm, Addr blocksize_nvm,
+              Addr cacheline_size, Tick min_period, Tick max_period,
+              uint8_t read_percent, Addr data_limit,
+              unsigned int num_seq_pkts_dram, unsigned int page_size_dram,
+              unsigned int nbr_of_banks_dram,
+              unsigned int nbr_of_banks_util_dram,
+              unsigned int num_seq_pkts_nvm, unsigned int buffer_size_nvm,
+              unsigned int nbr_of_banks_nvm,
+              unsigned int nbr_of_banks_util_nvm, enums::AddrMap addr_mapping,
+              unsigned int nbr_of_ranks_dram, unsigned int nbr_of_ranks_nvm,
+              uint8_t nvm_percent);
 
     void enter();
 
@@ -123,8 +117,8 @@ class HybridGen : public BaseGen
      *  series
      * @param new_bank Bank number of next packet series
      * @param new_rank Rank value of next packet series
-    */
-    void genStartAddr(unsigned int new_bank , unsigned int new_rank);
+     */
+    void genStartAddr(unsigned int new_bank, unsigned int new_rank);
 
     Tick nextPacketTick(bool elastic, Tick delay) const;
 
@@ -154,7 +148,7 @@ class HybridGen : public BaseGen
     const Tick minPeriod;
     const Tick maxPeriod;
 
-     /** Percent of generated transactions that should be reads */
+    /** Percent of generated transactions that should be reads */
     const uint8_t readPercent;
 
     /** Maximum amount of data to manipulate */
@@ -272,7 +266,6 @@ class HybridGen : public BaseGen
 
     /** Number of rank bits in DRAM address*/
     unsigned int rankBits;
-
 };
 
 } // namespace gem5

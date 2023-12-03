@@ -87,8 +87,8 @@ class PioPort : public SimpleTimingPort
     }
 
   public:
-    PioPort(Device *dev) :
-        SimpleTimingPort(dev->name() + ".pio", dev), device(dev)
+    PioPort(Device *dev)
+        : SimpleTimingPort(dev->name() + ".pio", dev), device(dev)
     {}
 };
 
@@ -138,10 +138,9 @@ class PioDevice : public ClockedObject
     void init() override;
 
     Port &getPort(const std::string &if_name,
-            PortID idx=InvalidPortID) override;
+                  PortID idx = InvalidPortID) override;
 
     friend class PioPort<PioDevice>;
-
 };
 
 class BasicPioDevice : public PioDevice

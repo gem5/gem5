@@ -48,39 +48,55 @@ class ThreadContext;
 /* MIPS does not distinguish between a DTLB and an ITLB -> unified TLB
    However, to maintain compatibility with other architectures, we'll
    simply create an ITLB and DTLB that will point to the real TLB */
-namespace MipsISA {
+namespace MipsISA
+{
 
 class TLB : public BaseTLB
 {
   protected:
     typedef std::multimap<Addr, int> PageTable;
-    PageTable lookupTable;      // Quick lookup into page table
+    PageTable lookupTable; // Quick lookup into page table
 
-    MipsISA::PTE *table;        // the Page Table
-    int size;                   // TLB Size
-    int nlu;                    // not last used entry (for replacement)
+    MipsISA::PTE *table; // the Page Table
+    int size;            // TLB Size
+    int nlu;             // not last used entry (for replacement)
 
-    void nextnlu() { if (++nlu >= size) nlu = 0; }
+    void
+    nextnlu()
+    {
+        if (++nlu >= size)
+            nlu = 0;
+    }
+
     MipsISA::PTE *lookup(Addr vpn, uint8_t asn) const;
 
   public:
     typedef MipsTLBParams Params;
     TLB(const Params &p);
 
-    int probeEntry(Addr vpn,uint8_t) const;
+    int probeEntry(Addr vpn, uint8_t) const;
     MipsISA::PTE *getEntry(unsigned) const;
     virtual ~TLB();
 
-    void takeOverFrom(BaseTLB *otlb) override {}
+    void
+    takeOverFrom(BaseTLB *otlb) override
+    {}
 
     int smallPages;
-    int getsize() const { return size; }
+
+    int
+    getsize() const
+    {
+        return size;
+    }
 
     MipsISA::PTE &index(bool advance = true);
     void insert(Addr vaddr, MipsISA::PTE &pte);
     void insertAt(MipsISA::PTE &pte, unsigned Index, int _smallPages);
     void flushAll() override;
-    void demapPage(Addr vaddr, uint64_t asn) override
+
+    void
+    demapPage(Addr vaddr, uint64_t asn) override
     {
         panic("demapPage unimplemented.\n");
     }
@@ -94,16 +110,15 @@ class TLB : public BaseTLB
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 
-    Fault translateAtomic(
-        const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode) override;
-    void translateTiming(
-        const RequestPtr &req, ThreadContext *tc,
-        BaseMMU::Translation *translation, BaseMMU::Mode mode) override;
-    Fault translateFunctional(
-        const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode) override;
-    Fault finalizePhysical(
-        const RequestPtr &req,
-        ThreadContext *tc, BaseMMU::Mode mode) const override;
+    Fault translateAtomic(const RequestPtr &req, ThreadContext *tc,
+                          BaseMMU::Mode mode) override;
+    void translateTiming(const RequestPtr &req, ThreadContext *tc,
+                         BaseMMU::Translation *translation,
+                         BaseMMU::Mode mode) override;
+    Fault translateFunctional(const RequestPtr &req, ThreadContext *tc,
+                              BaseMMU::Mode mode) override;
+    Fault finalizePhysical(const RequestPtr &req, ThreadContext *tc,
+                           BaseMMU::Mode mode) const override;
 };
 
 } // namespace MipsISA

@@ -50,7 +50,7 @@ using namespace gem5;
  */
 TEST(AtomicioTest, AtomicReadBigBuffer)
 {
-    FILE* file;
+    FILE *file;
     file = tmpfile();
 
     std::string file_contents = "This is just some test data to ensure that we"
@@ -77,7 +77,7 @@ TEST(AtomicioTest, AtomicReadBigBuffer)
  */
 TEST(AtomicioTest, AtomicReadSmallBuffer)
 {
-    FILE* file;
+    FILE *file;
     file = tmpfile();
 
     std::string file_contents = "This is just some test data to ensure that we"
@@ -103,14 +103,13 @@ TEST(AtomicioTest, AtomicReadSmallBuffer)
  */
 TEST(AtomicioTest, AtomicWrite)
 {
-    FILE* file;
+    FILE *file;
     file = tmpfile();
 
     std::string file_contents = "This is just some test data to ensure that we"
                                 " can write correctly to a file.";
 
-    ssize_t size = atomic_write(fileno(file),
-                                file_contents.c_str(),
+    ssize_t size = atomic_write(fileno(file), file_contents.c_str(),
                                 file_contents.size());
     fflush(file);
     rewind(file);

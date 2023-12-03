@@ -56,7 +56,9 @@ class DiskImage : public SimObject
 
   public:
     typedef DiskImageParams Params;
+
     DiskImage(const Params &p) : SimObject(p), initialized(false) {}
+
     virtual ~DiskImage() {}
 
     virtual std::streampos size() const = 0;
@@ -115,6 +117,7 @@ class CowDiskImage : public DiskImage
     {
         uint8_t data[SectorSize];
     };
+
     typedef std::unordered_map<uint64_t, Sector *> SectorTable;
 
   protected:
@@ -146,21 +149,20 @@ class CowDiskImage : public DiskImage
 
 void SafeRead(std::ifstream &stream, void *data, int count);
 
-template<class T>
+template <class T>
 void SafeRead(std::ifstream &stream, T &data);
 
-template<class T>
+template <class T>
 void SafeReadSwap(std::ifstream &stream, T &data);
 
 void SafeWrite(std::ofstream &stream, const void *data, int count);
 
-template<class T>
+template <class T>
 void SafeWrite(std::ofstream &stream, const T &data);
 
-template<class T>
+template <class T>
 void SafeWriteSwap(std::ofstream &stream, const T &data);
 
 } // namespace gem5
-
 
 #endif // __DEV_STORAGE_DISK_IMAGE_HH__

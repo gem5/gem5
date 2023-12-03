@@ -61,15 +61,19 @@ class TurnaroundPolicy : public SimObject
     using Params = QoSTurnaroundPolicyParams;
 
   public:
-    TurnaroundPolicy(const Params &p) : SimObject(p) {};
+    TurnaroundPolicy(const Params &p) : SimObject(p){};
 
-    virtual ~TurnaroundPolicy() {};
+    virtual ~TurnaroundPolicy(){};
 
     /**
      * Setting a pointer to the Memory Controller implementing
      * the turnaround policy.
      */
-    void setMemCtrl(MemCtrl* mem) { memCtrl = mem; };
+    void
+    setMemCtrl(MemCtrl *mem)
+    {
+        memCtrl = mem;
+    };
 
     /**
      * Bus Selection function
@@ -80,7 +84,7 @@ class TurnaroundPolicy : public SimObject
 
   protected:
     /** Pointer to container object */
-    MemCtrl* memCtrl;
+    MemCtrl *memCtrl;
 };
 
 } // namespace qos

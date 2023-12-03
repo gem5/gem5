@@ -28,7 +28,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #ifndef __MEM_RUBY_NETWORK_GARNET_0_VIRTUALCHANNEL_HH__
 #define __MEM_RUBY_NETWORK_GARNET_0_VIRTUALCHANNEL_HH__
 
@@ -55,14 +54,48 @@ class VirtualChannel
     bool need_stage(flit_stage stage, Tick time);
     void set_idle(Tick curTime);
     void set_active(Tick curTime);
-    void set_outvc(int outvc)               { m_output_vc = outvc; }
-    inline int get_outvc()                  { return m_output_vc; }
-    void set_outport(int outport)           { m_output_port = outport; };
-    inline int get_outport()                  { return m_output_port; }
 
-    inline Tick get_enqueue_time()          { return m_enqueue_time; }
-    inline void set_enqueue_time(Tick time) { m_enqueue_time = time; }
-    inline VC_state_type get_state()        { return m_vc_state.first; }
+    void
+    set_outvc(int outvc)
+    {
+        m_output_vc = outvc;
+    }
+
+    inline int
+    get_outvc()
+    {
+        return m_output_vc;
+    }
+
+    void
+    set_outport(int outport)
+    {
+        m_output_port = outport;
+    };
+
+    inline int
+    get_outport()
+    {
+        return m_output_port;
+    }
+
+    inline Tick
+    get_enqueue_time()
+    {
+        return m_enqueue_time;
+    }
+
+    inline void
+    set_enqueue_time(Tick time)
+    {
+        m_enqueue_time = time;
+    }
+
+    inline VC_state_type
+    get_state()
+    {
+        return m_vc_state.first;
+    }
 
     inline bool
     isReady(Tick curTime)
@@ -83,13 +116,13 @@ class VirtualChannel
         m_vc_state.second = curTime;
     }
 
-    inline flit*
+    inline flit *
     peekTopFlit()
     {
         return inputBuffer.peekTopFlit();
     }
 
-    inline flit*
+    inline flit *
     getTopFlit()
     {
         return inputBuffer.getTopFlit();

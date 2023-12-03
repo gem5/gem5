@@ -40,34 +40,31 @@
 namespace gem5
 {
 
-const int  MaxNiagaraProcs = 32;
+const int MaxNiagaraProcs = 32;
 // IOB Managment Addresses
-const Addr IntManAddr       = 0x0000;
-const Addr IntManSize       = 0x0020;
-const Addr IntCtlAddr       = 0x0400;
-const Addr IntCtlSize       = 0x0020;
-const Addr JIntVecAddr      = 0x0A00;
-const Addr IntVecDisAddr    = 0x0800;
-const Addr IntVecDisSize    = 0x0100;
-
+const Addr IntManAddr = 0x0000;
+const Addr IntManSize = 0x0020;
+const Addr IntCtlAddr = 0x0400;
+const Addr IntCtlSize = 0x0020;
+const Addr JIntVecAddr = 0x0A00;
+const Addr IntVecDisAddr = 0x0800;
+const Addr IntVecDisSize = 0x0100;
 
 // IOB Control Addresses
-const Addr JIntData0Addr   = 0x0400;
-const Addr JIntData1Addr   = 0x0500;
-const Addr JIntDataA0Addr  = 0x0600;
-const Addr JIntDataA1Addr  = 0x0700;
-const Addr JIntBusyAddr    = 0x0900;
-const Addr JIntBusySize    = 0x0100;
-const Addr JIntABusyAddr   = 0x0B00;
-
+const Addr JIntData0Addr = 0x0400;
+const Addr JIntData1Addr = 0x0500;
+const Addr JIntDataA0Addr = 0x0600;
+const Addr JIntDataA1Addr = 0x0700;
+const Addr JIntBusyAddr = 0x0900;
+const Addr JIntBusySize = 0x0100;
+const Addr JIntABusyAddr = 0x0B00;
 
 // IOB Masks
-const uint64_t IntManMask   = 0x01F3F;
-const uint64_t IntCtlMask   = 0x00006;
-const uint64_t JIntVecMask  = 0x0003F;
-const uint64_t IntVecDis    = 0x31F3F;
+const uint64_t IntManMask = 0x01F3F;
+const uint64_t IntCtlMask = 0x00006;
+const uint64_t JIntVecMask = 0x0003F;
+const uint64_t IntVecDis = 0x31F3F;
 const uint64_t JIntBusyMask = 0x0003F;
-
 
 class Iob : public PioDevice
 {

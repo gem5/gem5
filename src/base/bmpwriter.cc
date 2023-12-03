@@ -44,13 +44,10 @@
 namespace gem5
 {
 
-const char* BmpWriter::_imgExtension = "bmp";
+const char *BmpWriter::_imgExtension = "bmp";
 
 // bitmap class ctor
-BmpWriter::BmpWriter(const FrameBuffer *_fb)
-    : ImgWriter(_fb)
-{
-}
+BmpWriter::BmpWriter(const FrameBuffer *_fb) : ImgWriter(_fb) {}
 
 const BmpWriter::CompleteV1Header
 BmpWriter::getCompleteHeader() const
@@ -61,23 +58,22 @@ BmpWriter::getCompleteHeader() const
     const CompleteV1Header header = {
         // File header
         {
-            {'B','M'}, /* Magic */
+            { 'B', 'M' }, /* Magic */
             file_size,
-            0, 0, /* Reserved */
+            0,
+            0,                       /* Reserved */
             sizeof(CompleteV1Header) /* Offset to pixel array */
         },
         // Info/DIB header
         {
-            sizeof(InfoHeaderV1),
-            fb.width(),
-            fb.height(),
-            1, /* Color planes */
-            32, /* Bits per pixel */
-            0, /* No compression */
+            sizeof(InfoHeaderV1), fb.width(), fb.height(),
+            1,                /* Color planes */
+            32,               /* Bits per pixel */
+            0,                /* No compression */
             pixel_array_size, /* Image size in bytes */
-            2835, /* x pixels per meter (assume 72 DPI) */
-            2835, /* y pixels per meter (assume 72 DPI) */
-            0, /* Colors in color table */
+            2835,             /* x pixels per meter (assume 72 DPI) */
+            2835,             /* y pixels per meter (assume 72 DPI) */
+            0,                /* Colors in color table */
             0 /* Important color count (0 == all are important) */
         }
     };

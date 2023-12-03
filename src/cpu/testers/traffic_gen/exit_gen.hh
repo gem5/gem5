@@ -54,19 +54,16 @@ namespace gem5
  */
 class ExitGen : public BaseGen
 {
-
   public:
-
     ExitGen(SimObject &obj, RequestorID requestor_id, Tick _duration)
         : BaseGen(obj, requestor_id, _duration)
-    { }
+    {}
 
     void enter();
 
     PacketPtr getNextPacket();
 
     Tick nextPacketTick(bool elastic, Tick delay) const;
-
 };
 
 } // namespace gem5

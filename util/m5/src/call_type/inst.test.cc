@@ -49,11 +49,28 @@ class DefaultCallType : public CallType
     DefaultCallType() : CallType("default") {}
 
     bool init_called = false;
-    void init() override { init_called = true; }
 
-    bool isDefault() const override { return true; }
-    void printDesc(std::ostream &os) const override {}
-    const DispatchTable &getDispatch() const override { return dt; }
+    void
+    init() override
+    {
+        init_called = true;
+    }
+
+    bool
+    isDefault() const override
+    {
+        return true;
+    }
+
+    void
+    printDesc(std::ostream &os) const override
+    {}
+
+    const DispatchTable &
+    getDispatch() const override
+    {
+        return dt;
+    }
 };
 
 DefaultCallType defaultCallType;
@@ -77,7 +94,7 @@ TEST_F(InstCallTypeTest, EmptyArgs)
 TEST_F(InstCallTypeTest, NotAnyArg)
 {
     // Inst should not be selected if --inst isn't the first argument.
-    Args one_arg({"one"});
+    Args one_arg({ "one" });
     defaultCallType.init_called = false;
     ct = CallType::detect(one_arg);
     EXPECT_EQ(ct, &defaultCallType);
@@ -87,7 +104,7 @@ TEST_F(InstCallTypeTest, NotAnyArg)
 TEST_F(InstCallTypeTest, FirstArg)
 {
     // Inst should be selected if --inst is the first argument.
-    Args selected({"--inst"});
+    Args selected({ "--inst" });
     defaultCallType.init_called = false;
     ct = CallType::detect(selected);
     EXPECT_NE(ct, &defaultCallType);
@@ -97,7 +114,7 @@ TEST_F(InstCallTypeTest, FirstArg)
 
 TEST_F(InstCallTypeTest, ExtraArg)
 {
-    Args extra({"--inst", "foo"});
+    Args extra({ "--inst", "foo" });
     defaultCallType.init_called = false;
     ct = CallType::detect(extra);
     EXPECT_NE(ct, &defaultCallType);
@@ -108,7 +125,7 @@ TEST_F(InstCallTypeTest, ExtraArg)
 TEST_F(InstCallTypeTest, NotFirstArg)
 {
     // Inst should not be selected if --inst isn't first.
-    Args not_first({"foo", "--inst"});
+    Args not_first({ "foo", "--inst" });
     defaultCallType.init_called = false;
     ct = CallType::detect(not_first);
     EXPECT_EQ(ct, &defaultCallType);
@@ -128,7 +145,7 @@ sigillHandler(int sig, siginfo_t *info, void *ucontext)
 TEST(InstCallType, Sum)
 {
     // Get the inst call type, which is in an anonymous namespace.
-    Args args({"--inst"});
+    Args args({ "--inst" });
     CallType *inst_call_type = CallType::detect(args);
     EXPECT_NE(inst_call_type, nullptr);
 

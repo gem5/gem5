@@ -55,19 +55,17 @@ namespace SparcISA
 class ISA : public BaseISA
 {
   private:
-
     /* ASR Registers */
     // uint64_t y;          // Y (used in obsolete multiplication)
     // uint8_t ccr;         // Condition Code Register
-    uint8_t asi;            // Address Space Identifier
-    uint64_t tick;          // Hardware clock-tick counter
-    uint8_t fprs;           // Floating-Point Register State
-    uint64_t gsr;           // General Status Register
+    uint8_t asi;   // Address Space Identifier
+    uint64_t tick; // Hardware clock-tick counter
+    uint8_t fprs;  // Floating-Point Register State
+    uint64_t gsr;  // General Status Register
     uint64_t softint;
-    uint64_t tick_cmpr;     // Hardware tick compare registers
-    uint64_t stick;         // Hardware clock-tick counter
-    uint64_t stick_cmpr;    // Hardware tick compare registers
-
+    uint64_t tick_cmpr;  // Hardware tick compare registers
+    uint64_t stick;      // Hardware clock-tick counter
+    uint64_t stick_cmpr; // Hardware tick compare registers
 
     /* Privileged Registers */
     uint64_t tpc[MaxTL];    // Trap Program Counter (value from
@@ -79,28 +77,28 @@ class ISA : public BaseISA
                             // on the previous level)
     uint64_t tba;           // Trap Base Address
 
-    PSTATE pstate;        // Process State Register
-    uint8_t tl;             // Trap Level
-    uint8_t pil;            // Process Interrupt Register
-    uint8_t cwp;            // Current Window Pointer
+    PSTATE pstate; // Process State Register
+    uint8_t tl;    // Trap Level
+    uint8_t pil;   // Process Interrupt Register
+    uint8_t cwp;   // Current Window Pointer
     // uint8_t cansave;     // Savable windows
     // uint8_t canrestore;  // Restorable windows
     // uint8_t cleanwin;    // Clean windows
     // uint8_t otherwin;    // Other windows
     // uint8_t wstate;      // Window State
-    uint8_t gl;             // Global level register
+    uint8_t gl; // Global level register
 
     /** Hyperprivileged Registers */
-    HPSTATE hpstate;       // Hyperprivileged State Register
-    uint64_t htstate[MaxTL];// Hyperprivileged Trap State Register
+    HPSTATE hpstate;         // Hyperprivileged State Register
+    uint64_t htstate[MaxTL]; // Hyperprivileged Trap State Register
     uint64_t hintp;
-    uint64_t htba;          // Hyperprivileged Trap Base Address register
-    uint64_t hstick_cmpr;   // Hardware tick compare registers
+    uint64_t htba;        // Hyperprivileged Trap Base Address register
+    uint64_t hstick_cmpr; // Hardware tick compare registers
 
-    uint64_t strandStatusReg;// Per strand status register
+    uint64_t strandStatusReg; // Per strand status register
 
     /** Floating point misc registers. */
-    uint64_t fsr;           // Floating-Point State Register
+    uint64_t fsr; // Floating-Point State Register
 
     /** MMU Internal Registers */
     uint16_t priContext;
@@ -121,7 +119,7 @@ class ISA : public BaseISA
 
     // These need to check the int_dis field and if 0 then
     // set appropriate bit in softint and checkinterrutps on the cpu
-    void  setFSReg(int miscReg, RegVal val);
+    void setFSReg(int miscReg, RegVal val);
     RegVal readFSReg(int miscReg);
 
     // Update interrupt state on softint or pil change
@@ -168,12 +166,16 @@ class ISA : public BaseISA
     void reloadRegMap();
 
   public:
-    const RegIndex &mapIntRegId(RegIndex idx) const { return intRegMap[idx]; }
+    const RegIndex &
+    mapIntRegId(RegIndex idx) const
+    {
+        return intRegMap[idx];
+    }
 
     void clear() override;
 
     PCStateBase *
-    newPCState(Addr new_inst_addr=0) const override
+    newPCState(Addr new_inst_addr = 0) const override
     {
         return new PCState(new_inst_addr);
     }
@@ -182,12 +184,25 @@ class ISA : public BaseISA
     void unserialize(CheckpointIn &cp) override;
 
   protected:
-    bool isHyperPriv() { return hpstate.hpriv; }
-    bool isPriv() { return hpstate.hpriv || pstate.priv; }
-    bool isNonPriv() { return !isPriv(); }
+    bool
+    isHyperPriv()
+    {
+        return hpstate.hpriv;
+    }
+
+    bool
+    isPriv()
+    {
+        return hpstate.hpriv || pstate.priv;
+    }
+
+    bool
+    isNonPriv()
+    {
+        return !isPriv();
+    }
 
   public:
-
     RegVal readMiscRegNoEffect(RegIndex idx) const override;
     RegVal readMiscReg(RegIndex idx) override;
 

@@ -78,20 +78,20 @@ class CacheBlk : public TaggedEntry
     enum CoherenceBits : unsigned
     {
         /** write permission */
-        WritableBit =       0x02,
+        WritableBit = 0x02,
         /**
          * Read permission. Note that a block can be valid but not readable
          * if there is an outstanding write upgrade miss.
          */
-        ReadableBit =       0x04,
+        ReadableBit = 0x04,
         /** dirty (modified) */
-        DirtyBit =          0x08,
+        DirtyBit = 0x08,
 
         /**
          * Helper enum value that includes all other bits. Whenever a new
          * bits is added, this should be updated.
          */
-        AllBits  =          0x0E,
+        AllBits = 0x0E,
     };
 
     /**
@@ -117,22 +117,24 @@ class CacheBlk : public TaggedEntry
     class Lock
     {
       public:
-        ContextID contextId;     // locking context
-        Addr lowAddr;      // low address of lock range
-        Addr highAddr;     // high address of lock range
+        ContextID contextId; // locking context
+        Addr lowAddr;        // low address of lock range
+        Addr highAddr;       // high address of lock range
 
         // check for matching execution context, and an address that
         // is within the lock
-        bool matches(const RequestPtr &req) const
+        bool
+        matches(const RequestPtr &req) const
         {
             Addr req_low = req->getPaddr();
-            Addr req_high = req_low + req->getSize() -1;
-            return (contextId == req->contextId()) &&
-                   (req_low >= lowAddr) && (req_high <= highAddr);
+            Addr req_high = req_low + req->getSize() - 1;
+            return (contextId == req->contextId()) && (req_low >= lowAddr) &&
+                   (req_high <= highAddr);
         }
 
         // check if a request is intersecting and thus invalidating the lock
-        bool intersects(const RequestPtr &req) const
+        bool
+        intersects(const RequestPtr &req) const
         {
             Addr req_low = req->getPaddr();
             Addr req_high = req_low + req->getSize() - 1;
@@ -144,8 +146,7 @@ class CacheBlk : public TaggedEntry
             : contextId(req->contextId()),
               lowAddr(req->getPaddr()),
               highAddr(lowAddr + req->getSize() - 1)
-        {
-        }
+        {}
     };
 
     /** List of thread contexts that have performed a load-locked (LL)
@@ -153,14 +154,12 @@ class CacheBlk : public TaggedEntry
     std::list<Lock> lockList;
 
   public:
-    CacheBlk()
-    {
-        invalidate();
-    }
+    CacheBlk() { invalidate(); }
 
-    CacheBlk(const CacheBlk&) = delete;
-    CacheBlk& operator=(const CacheBlk&) = delete;
-    CacheBlk(const CacheBlk&&) = delete;
+    CacheBlk(const CacheBlk &) = delete;
+    CacheBlk &operator=(const CacheBlk &) = delete;
+    CacheBlk(const CacheBlk &&) = delete;
+
     /**
      * Move assignment operator.
      * This should only be used to move an existing valid entry into an
@@ -169,8 +168,8 @@ class CacheBlk : public TaggedEntry
      * variables will remain the same, that is, an entry cannot move its
      * data, just its metadata contents.
      */
-    virtual CacheBlk&
-    operator=(CacheBlk&& other)
+    virtual CacheBlk &
+    operator=(CacheBlk &&other)
     {
         // Copying an entry into a valid one would imply in skipping all
         // replacement steps, so it cannot be allowed
@@ -194,12 +193,14 @@ class CacheBlk : public TaggedEntry
 
         return *this;
     }
-    virtual ~CacheBlk() {};
+
+    virtual ~CacheBlk(){};
 
     /**
      * Invalidate the block and clear all state.
      */
-    virtual void invalidate() override
+    virtual void
+    invalidate() override
     {
         TaggedEntry::invalidate();
 
@@ -231,7 +232,11 @@ class CacheBlk : public TaggedEntry
      *
      * @param bits The coherence bits to be cleared.
      */
-    void clearCoherenceBits(unsigned bits) { coherence &= ~bits; }
+    void
+    clearCoherenceBits(unsigned bits)
+    {
+        coherence &= ~bits;
+    }
 
     /**
      * Checks the given coherence bits are set.
@@ -249,23 +254,36 @@ class CacheBlk : public TaggedEntry
      * be touched.
      * @return True if the block was a hardware prefetch, unaccesed.
      */
-    bool wasPrefetched() const { return _prefetched; }
+    bool
+    wasPrefetched() const
+    {
+        return _prefetched;
+    }
 
     /**
      * Clear the prefetching bit. Either because it was recently used, or due
      * to the block being invalidated.
      */
-    void clearPrefetched() { _prefetched = false; }
+    void
+    clearPrefetched()
+    {
+        _prefetched = false;
+    }
 
     /** Marks this blocks as a recently prefetched block. */
-    void setPrefetched() { _prefetched = true; }
+    void
+    setPrefetched()
+    {
+        _prefetched = true;
+    }
 
     /**
      * Get tick at which block's data will be available for access.
      *
      * @return Data ready tick.
      */
-    Tick getWhenReady() const
+    Tick
+    getWhenReady() const
     {
         assert(whenReady != MaxTick);
         return whenReady;
@@ -278,26 +296,47 @@ class CacheBlk : public TaggedEntry
      *
      * @param tick New data ready tick.
      */
-    void setWhenReady(const Tick tick)
+    void
+    setWhenReady(const Tick tick)
     {
         assert(tick >= _tickInserted);
         whenReady = tick;
     }
 
     /** Get the task id associated to this block. */
-    uint32_t getTaskId() const { return _taskId; }
+    uint32_t
+    getTaskId() const
+    {
+        return _taskId;
+    }
 
     /** Get the requestor id associated to this block. */
-    uint32_t getSrcRequestorId() const { return _srcRequestorId; }
+    uint32_t
+    getSrcRequestorId() const
+    {
+        return _srcRequestorId;
+    }
 
     /** Getter for _partitionId */
-    uint64_t getPartitionId() const { return _partitionId; }
+    uint64_t
+    getPartitionId() const
+    {
+        return _partitionId;
+    }
 
     /** Get the number of references to this block since insertion. */
-    unsigned getRefCount() const { return _refCount; }
+    unsigned
+    getRefCount() const
+    {
+        return _refCount;
+    }
 
     /** Get the number of references to this block since insertion. */
-    void increaseRefCount() { _refCount++; }
+    void
+    increaseRefCount()
+    {
+        _refCount++;
+    }
 
     /**
      * Get the block's age, that is, the number of ticks since its insertion.
@@ -324,15 +363,16 @@ class CacheBlk : public TaggedEntry
      * @param partition_id The source partition ID.
      */
     void insert(const Addr tag, const bool is_secure,
-        const int src_requestor_ID, const uint32_t task_ID,
-        const uint64_t partition_id);
+                const int src_requestor_ID, const uint32_t task_ID,
+                const uint64_t partition_id);
     using TaggedEntry::insert;
 
     /**
      * Track the fact that a local locked was issued to the
      * block. Invalidate any previous LL to the same address.
      */
-    void trackLoadLocked(PacketPtr pkt)
+    void
+    trackLoadLocked(PacketPtr pkt)
     {
         assert(pkt->isLLSC());
         auto l = lockList.begin();
@@ -350,7 +390,8 @@ class CacheBlk : public TaggedEntry
      * Clear the any load lock that intersect the request, and is from
      * a different context.
      */
-    void clearLoadLocks(const RequestPtr &req)
+    void
+    clearLoadLocks(const RequestPtr &req)
     {
         auto l = lockList.begin();
         while (l != lockList.end()) {
@@ -399,17 +440,30 @@ class CacheBlk : public TaggedEntry
             isSet(WritableBit) << 2 | isSet(DirtyBit) << 1 | isValid();
         char s = '?';
         switch (state) {
-          case 0b111: s = 'M'; break;
-          case 0b011: s = 'O'; break;
-          case 0b101: s = 'E'; break;
-          case 0b001: s = 'S'; break;
-          case 0b000: s = 'I'; break;
-          default:    s = 'T'; break; // @TODO add other types
+        case 0b111:
+            s = 'M';
+            break;
+        case 0b011:
+            s = 'O';
+            break;
+        case 0b101:
+            s = 'E';
+            break;
+        case 0b001:
+            s = 'S';
+            break;
+        case 0b000:
+            s = 'I';
+            break;
+        default:
+            s = 'T';
+            break; // @TODO add other types
         }
         return csprintf("state: %x (%c) writable: %d readable: %d "
-            "dirty: %d prefetched: %d | %s", coherence, s,
-            isSet(WritableBit), isSet(ReadableBit), isSet(DirtyBit),
-            wasPrefetched(), TaggedEntry::print());
+                        "dirty: %d prefetched: %d | %s",
+                        coherence, s, isSet(WritableBit), isSet(ReadableBit),
+                        isSet(DirtyBit), wasPrefetched(),
+                        TaggedEntry::print());
     }
 
     /**
@@ -417,7 +471,8 @@ class CacheBlk : public TaggedEntry
      * @return True if write should proceed, false otherwise.  Returns
      * false only in the case of a failed store conditional.
      */
-    bool checkWrite(PacketPtr pkt)
+    bool
+    checkWrite(PacketPtr pkt)
     {
         assert(pkt->isWrite());
 
@@ -469,20 +524,39 @@ class CacheBlk : public TaggedEntry
     // called by the functions that perform those actions.
 
     /** Set the task id value. */
-    void setTaskId(const uint32_t task_id) { _taskId = task_id; }
+    void
+    setTaskId(const uint32_t task_id)
+    {
+        _taskId = task_id;
+    }
 
     /** Set the source requestor id. */
-    void setSrcRequestorId(const uint32_t id) { _srcRequestorId = id; }
+    void
+    setSrcRequestorId(const uint32_t id)
+    {
+        _srcRequestorId = id;
+    }
 
     /** Setter for _partitionId */
     void
-    setPartitionId(const uint64_t partitionId) { _partitionId = partitionId; }
+    setPartitionId(const uint64_t partitionId)
+    {
+        _partitionId = partitionId;
+    }
 
     /** Set the number of references to this block since insertion. */
-    void setRefCount(const unsigned count) { _refCount = count; }
+    void
+    setRefCount(const unsigned count)
+    {
+        _refCount = count;
+    }
 
     /** Set the current tick as this block's insertion tick. */
-    void setTickInserted() { _tickInserted = curTick(); }
+    void
+    setTickInserted()
+    {
+        _tickInserted = curTick();
+    }
 
   private:
     /** Task Id associated with this block */
@@ -526,19 +600,20 @@ class TempCacheBlk final : public CacheBlk
      * Creates a temporary cache block, with its own storage.
      * @param size The size (in bytes) of this cache block.
      */
-    TempCacheBlk(unsigned size) : CacheBlk()
-    {
-        data = new uint8_t[size];
-    }
-    TempCacheBlk(const TempCacheBlk&) = delete;
+    TempCacheBlk(unsigned size) : CacheBlk() { data = new uint8_t[size]; }
+
+    TempCacheBlk(const TempCacheBlk &) = delete;
     using CacheBlk::operator=;
-    TempCacheBlk& operator=(const TempCacheBlk&) = delete;
-    ~TempCacheBlk() { delete [] data; };
+    TempCacheBlk &operator=(const TempCacheBlk &) = delete;
+
+    ~TempCacheBlk() { delete[] data; };
 
     /**
      * Invalidate the block and clear all state.
      */
-    void invalidate() override {
+    void
+    invalidate() override
+    {
         CacheBlk::invalidate();
 
         _addr = MaxAddr;
@@ -556,7 +631,8 @@ class TempCacheBlk final : public CacheBlk
      *
      * @return addr Address value.
      */
-    Addr getAddr() const
+    Addr
+    getAddr() const
     {
         return _addr;
     }
@@ -571,9 +647,12 @@ class TempCacheBlk final : public CacheBlk
 class CacheBlkPrintWrapper : public Printable
 {
     CacheBlk *blk;
+
   public:
     CacheBlkPrintWrapper(CacheBlk *_blk) : blk(_blk) {}
+
     virtual ~CacheBlkPrintWrapper() {}
+
     void print(std::ostream &o, int verbosity = 0,
                const std::string &prefix = "") const;
 };

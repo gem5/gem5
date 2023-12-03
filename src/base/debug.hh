@@ -68,16 +68,31 @@ class Flag
     const char *_name;
     const char *_desc;
 
-    virtual void sync() { }
+    virtual void
+    sync()
+    {}
 
   public:
     Flag(const char *name, const char *desc);
     virtual ~Flag();
 
-    std::string name() const { return _name; }
-    std::string desc() const { return _desc; }
+    std::string
+    name() const
+    {
+        return _name;
+    }
 
-    bool tracing() const { return TRACING_ON && _tracing; }
+    std::string
+    desc() const
+    {
+        return _desc;
+    }
+
+    bool
+    tracing() const
+    {
+        return TRACING_ON && _tracing;
+    }
 
     virtual void enable() = 0;
     virtual void disable() = 0;
@@ -96,13 +111,28 @@ class SimpleFlag : public Flag
 
     bool _enabled = false; // flag enablement status
 
-    void sync() override { _tracing = _globalEnable && _enabled; }
+    void
+    sync() override
+    {
+        _tracing = _globalEnable && _enabled;
+    }
 
   public:
-    SimpleFlag(const char *name, const char *desc, bool is_format=false);
+    SimpleFlag(const char *name, const char *desc, bool is_format = false);
 
-    void enable() override  { _enabled = true;  sync(); }
-    void disable() override { _enabled = false; sync(); }
+    void
+    enable() override
+    {
+        _enabled = true;
+        sync();
+    }
+
+    void
+    disable() override
+    {
+        _enabled = false;
+        sync();
+    }
 
     /**
      * Checks whether this flag is a conventional debug flag, or a flag that
@@ -110,7 +140,11 @@ class SimpleFlag : public Flag
      *
      * @return True if this flag is a debug-formatting flag.
      */
-    bool isFormat() const { return _isFormat; }
+    bool
+    isFormat() const
+    {
+        return _isFormat;
+    }
 };
 
 class CompoundFlag : public Flag
@@ -119,15 +153,17 @@ class CompoundFlag : public Flag
     std::vector<Flag *> _kids;
 
   public:
-    template<typename... Args>
+    template <typename... Args>
     CompoundFlag(const char *name, const char *desc,
                  std::initializer_list<Flag *> flags)
-        : Flag(name, desc),
-          _kids(flags)
-    {
-    }
+        : Flag(name, desc), _kids(flags)
+    {}
 
-    const std::vector<Flag *> &kids() const { return _kids; }
+    const std::vector<Flag *> &
+    kids() const
+    {
+        return _kids;
+    }
 
     void enable() override;
     void disable() override;
@@ -144,7 +180,12 @@ class AllFlagsFlag : public CompoundFlag
     void add(SimpleFlag *flag);
 
     static AllFlagsFlag &instance();
-    static int version() { return _version; }
+
+    static int
+    version()
+    {
+        return _version;
+    }
 };
 
 typedef std::map<std::string, Flag *> FlagsMap;
@@ -160,7 +201,7 @@ void setDebugFlag(const char *string);
 
 void clearDebugFlag(const char *string);
 
-void dumpDebugFlags(std::ostream &os=std::cout);
+void dumpDebugFlags(std::ostream &os = std::cout);
 
 /**
  * \def DTRACE(x)
@@ -168,8 +209,8 @@ void dumpDebugFlags(std::ostream &os=std::cout);
  * @ingroup api_trace
  * @{
  */
-#define DTRACE(x) GEM5_DEPRECATED_MACRO(DTRACE, debug::x, \
-        "Replace DTRACE(x) with debug::x.")
+#define DTRACE(x)                                                             \
+    GEM5_DEPRECATED_MACRO(DTRACE, debug::x, "Replace DTRACE(x) with debug::x.")
 /** @} */ // end of api_trace
 
 } // namespace gem5

@@ -45,21 +45,20 @@
 namespace gem5
 {
 
-namespace MipsISA {
+namespace MipsISA
+{
 
 class MMU : public BaseMMU
 {
   public:
-    MMU(const MipsMMUParams &p)
-      : BaseMMU(p)
-    {}
+    MMU(const MipsMMUParams &p) : BaseMMU(p) {}
 
     TranslationGenPtr
-    translateFunctional(Addr start, Addr size, ThreadContext *tc,
-            Mode mode, Request::Flags flags) override
+    translateFunctional(Addr start, Addr size, ThreadContext *tc, Mode mode,
+                        Request::Flags flags) override
     {
-        return TranslationGenPtr(new MMUTranslationGen(
-                PageBytes, start, size, tc, this, mode, flags));
+        return TranslationGenPtr(new MMUTranslationGen(PageBytes, start, size,
+                                                       tc, this, mode, flags));
     }
 };
 

@@ -46,10 +46,7 @@
 namespace gem5
 {
 
-A9SCU::A9SCU(const Params &p)
-    : BasicPioDevice(p, 0x60)
-{
-}
+A9SCU::A9SCU(const Params &p) : BasicPioDevice(p, 0x60) {}
 
 Tick
 A9SCU::read(PacketPtr pkt)
@@ -58,37 +55,33 @@ A9SCU::read(PacketPtr pkt)
     assert(pkt->getSize() == 4);
     Addr daddr = pkt->getAddr() - pioAddr;
 
-    switch(daddr) {
-      case Control:
+    switch (daddr) {
+    case Control:
         pkt->setLE(1); // SCU already enabled
         break;
-      case Config:
-        {
-            /* Without making a completely new SCU, we can use the core count
-             * field as 4 bits and inform the OS of up to 16 CPUs.  Although
-             * the core count is technically bits [1:0] only, bits [3:2] are
-             * SBZ for future expansion like this.
-             */
-            int threads = sys->threads.size();
-            if (threads > 4) {
-                warn_once("A9SCU with >4 CPUs is unsupported");
-                fatal_if(threads > 15,
-                        "Too many CPUs (%d) for A9SCU!", threads);
-            }
-            int smp_bits, core_cnt;
-            smp_bits = (1 << threads) - 1;
-            core_cnt = threads - 1;
-            pkt->setLE(smp_bits << 4 | core_cnt);
+    case Config: {
+        /* Without making a completely new SCU, we can use the core count
+         * field as 4 bits and inform the OS of up to 16 CPUs.  Although
+         * the core count is technically bits [1:0] only, bits [3:2] are
+         * SBZ for future expansion like this.
+         */
+        int threads = sys->threads.size();
+        if (threads > 4) {
+            warn_once("A9SCU with >4 CPUs is unsupported");
+            fatal_if(threads > 15, "Too many CPUs (%d) for A9SCU!", threads);
         }
-        break;
-      default:
+        int smp_bits, core_cnt;
+        smp_bits = (1 << threads) - 1;
+        core_cnt = threads - 1;
+        pkt->setLE(smp_bits << 4 | core_cnt);
+    } break;
+    default:
         // Only configuration register is implemented
         panic("Tried to read SCU at offset %#x\n", daddr);
         break;
     }
     pkt->makeAtomicResponse();
     return pioDelay;
-
 }
 
 Tick
@@ -98,7 +91,7 @@ A9SCU::write(PacketPtr pkt)
 
     Addr daddr = pkt->getAddr() - pioAddr;
     switch (daddr) {
-      default:
+    default:
         // Nothing implemented at this point
         warn("Tried to write SCU at offset %#x\n", daddr);
         break;

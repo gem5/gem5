@@ -79,7 +79,7 @@ fillCopy(void *dest, size_t dest_size, const std::string &src)
 const char RSDP::signature[] = "RSD PTR ";
 
 static uint8_t
-apic_checksum(uint8_t* ptr, std::size_t size)
+apic_checksum(uint8_t *ptr, std::size_t size)
 {
     uint8_t sum = 0;
     for (unsigned i = 0; i < size; ++i)
@@ -101,21 +101,17 @@ LinearAllocator::alloc(std::size_t size, unsigned align)
     return chunk;
 }
 
-RSDP::RSDP(const Params &p) :
-    SimObject(p),
-    rsdt(p.rsdt),
-    xsdt(p.xsdt)
-{}
+RSDP::RSDP(const Params &p) : SimObject(p), rsdt(p.rsdt), xsdt(p.xsdt) {}
 
 Addr
-RSDP::write(PortProxy& phys_proxy, Allocator& alloc) const
+RSDP::write(PortProxy &phys_proxy, Allocator &alloc) const
 {
     std::vector<uint8_t> mem(sizeof(Mem));
     Addr addr = alloc.alloc(mem.size(), 16);
 
-    Mem* data = (Mem*)mem.data();
+    Mem *data = (Mem *)mem.data();
     static_assert(sizeof(signature) - 1 == sizeof(data->signature),
-            "signature length mismatch");
+                  "signature length mismatch");
     std::memcpy(data->signature, signature, sizeof(data->signature));
     fillCopy(data->oemID, sizeof(data->oemID), params().oem_id);
     data->revision = params().revision;
@@ -141,8 +137,8 @@ RSDP::write(PortProxy& phys_proxy, Allocator& alloc) const
 }
 
 Addr
-SysDescTable::writeBuf(PortProxy& phys_proxy, Allocator& alloc,
-        std::vector<uint8_t> &mem) const
+SysDescTable::writeBuf(PortProxy &phys_proxy, Allocator &alloc,
+                       std::vector<uint8_t> &mem) const
 {
     // An empty SysDescTable doesn't make any sense, so assert that somebody
     // else allocated a large enough blob.
@@ -155,8 +151,8 @@ SysDescTable::writeBuf(PortProxy& phys_proxy, Allocator& alloc,
             addr + mem.size());
 
     // Fill in the header.
-    auto& p = params();
-    Mem* header = (Mem*)mem.data();
+    auto &p = params();
+    Mem *header = (Mem *)mem.data();
     fillCopy(header->signature, sizeof(header->signature), signature);
     header->length = mem.size();
     header->revision = revision;
@@ -176,15 +172,15 @@ SysDescTable::writeBuf(PortProxy& phys_proxy, Allocator& alloc,
 }
 
 //// RSDT, XSDT
-template<class T>
-RXSDT<T>::RXSDT(const Params& p, const char *_signature, uint8_t _revision) :
-    SysDescTable(p, _signature, _revision)
+template <class T>
+RXSDT<T>::RXSDT(const Params &p, const char *_signature, uint8_t _revision)
+    : SysDescTable(p, _signature, _revision)
 {}
 
-template<class T>
+template <class T>
 Addr
-RXSDT<T>::writeBuf(PortProxy& phys_proxy, Allocator& alloc,
-        std::vector<uint8_t>& mem) const
+RXSDT<T>::writeBuf(PortProxy &phys_proxy, Allocator &alloc,
+                   std::vector<uint8_t> &mem) const
 {
     // Since this table ends with a variably sized array, it can't be extended
     // by another table type.
@@ -194,13 +190,13 @@ RXSDT<T>::writeBuf(PortProxy& phys_proxy, Allocator& alloc,
     auto base_size = mem.size();
     mem.resize(base_size + sizeof(Ptr) * entries.size());
 
-    Ptr* ptr_array = reinterpret_cast<Ptr*>(mem.data() + base_size);
+    Ptr *ptr_array = reinterpret_cast<Ptr *>(mem.data() + base_size);
     DPRINTF(ACPI, "RXSDT: Writing %d entries (ptr size: %d)\n", entries.size(),
             sizeof(Ptr));
     for (const auto *entry : entries) {
         Addr entry_addr = entry->write(phys_proxy, alloc);
         fatal_if((entry_addr & mask(sizeof(Ptr) * 8)) != entry_addr,
-                "RXSDT: Entry address doesn't fit in pointer type.");
+                 "RXSDT: Entry address doesn't fit in pointer type.");
         DPRINTF(ACPI, "RXSDT: wrote entry @ %llx\n", entry_addr);
         *ptr_array++ = entry_addr;
     }
@@ -208,66 +204,58 @@ RXSDT<T>::writeBuf(PortProxy& phys_proxy, Allocator& alloc,
     return SysDescTable::writeBuf(phys_proxy, alloc, mem);
 }
 
-RSDT::RSDT(const Params& p) : RXSDT(p, "RSDT", 1)
-{
-    entries = p.entries;
-}
+RSDT::RSDT(const Params &p) : RXSDT(p, "RSDT", 1) { entries = p.entries; }
 
-XSDT::XSDT(const Params& p) : RXSDT(p, "XSDT", 1)
-{
-    entries = p.entries;
-}
-
+XSDT::XSDT(const Params &p) : RXSDT(p, "XSDT", 1) { entries = p.entries; }
 
 //// MADT
-MADT::MADT::MADT(const Params& p) :
-    SysDescTable(p, "APIC", 4),
-    records(p.records)
+MADT::MADT::MADT(const Params &p)
+    : SysDescTable(p, "APIC", 4), records(p.records)
 {}
 
 Addr
-MADT::MADT::writeBuf(PortProxy& phys_proxy, Allocator& alloc,
-        std::vector<uint8_t>& mem) const
+MADT::MADT::writeBuf(PortProxy &phys_proxy, Allocator &alloc,
+                     std::vector<uint8_t> &mem) const
 {
     // Since this table ends with a variably sized array, it can't be extended
     // by another table type.
     assert(mem.empty());
     mem.resize(sizeof(Mem));
 
-    Mem* header = reinterpret_cast<Mem*>(mem.data());
+    Mem *header = reinterpret_cast<Mem *>(mem.data());
     header->localAPICAddress = params().local_apic_address;
     header->flags = params().flags;
 
-    for (const auto& record : records) {
+    for (const auto &record : records) {
         auto entry = record->prepare();
         mem.insert(mem.end(), entry.begin(), entry.end());
     }
 
-    DPRINTF(ACPI, "MADT: writing %d records (size: %d)\n",
-            records.size(), mem.size());
+    DPRINTF(ACPI, "MADT: writing %d records (size: %d)\n", records.size(),
+            mem.size());
 
     return SysDescTable::writeBuf(phys_proxy, alloc, mem);
 }
 
 void
-MADT::Record::prepareBuf(std::vector<uint8_t>& mem) const
+MADT::Record::prepareBuf(std::vector<uint8_t> &mem) const
 {
     assert(mem.size() >= sizeof(Mem));
-    DPRINTF(ACPI, "MADT: writing record type %d (size: %d)\n",
-            type, mem.size());
+    DPRINTF(ACPI, "MADT: writing record type %d (size: %d)\n", type,
+            mem.size());
 
-    Mem* header = reinterpret_cast<Mem*>(mem.data());
+    Mem *header = reinterpret_cast<Mem *>(mem.data());
     header->type = type;
     header->length = mem.size();
 }
 
 void
-MADT::LAPIC::prepareBuf(std::vector<uint8_t>& mem) const
+MADT::LAPIC::prepareBuf(std::vector<uint8_t> &mem) const
 {
     assert(mem.empty());
     mem.resize(sizeof(Mem));
 
-    Mem* data = reinterpret_cast<Mem*>(mem.data());
+    Mem *data = reinterpret_cast<Mem *>(mem.data());
     data->acpiProcessorId = params().acpi_processor_id;
     data->apicId = params().apic_id;
     data->flags = params().flags;
@@ -276,12 +264,12 @@ MADT::LAPIC::prepareBuf(std::vector<uint8_t>& mem) const
 }
 
 void
-MADT::IOAPIC::prepareBuf(std::vector<uint8_t>& mem) const
+MADT::IOAPIC::prepareBuf(std::vector<uint8_t> &mem) const
 {
     assert(mem.empty());
     mem.resize(sizeof(Mem));
 
-    Mem* data = reinterpret_cast<Mem*>(mem.data());
+    Mem *data = reinterpret_cast<Mem *>(mem.data());
     data->ioApicId = params().id;
     data->ioApicAddress = params().address;
     data->intBase = params().int_base;
@@ -290,12 +278,12 @@ MADT::IOAPIC::prepareBuf(std::vector<uint8_t>& mem) const
 }
 
 void
-MADT::IntSourceOverride::prepareBuf(std::vector<uint8_t>& mem) const
+MADT::IntSourceOverride::prepareBuf(std::vector<uint8_t> &mem) const
 {
     assert(mem.empty());
     mem.resize(sizeof(Mem));
 
-    Mem* data = reinterpret_cast<Mem*>(mem.data());
+    Mem *data = reinterpret_cast<Mem *>(mem.data());
     data->busSource = params().bus_source;
     data->irqSource = params().irq_source;
     data->globalSystemInterrupt = params().sys_int;
@@ -305,12 +293,12 @@ MADT::IntSourceOverride::prepareBuf(std::vector<uint8_t>& mem) const
 }
 
 void
-MADT::NMI::prepareBuf(std::vector<uint8_t>& mem) const
+MADT::NMI::prepareBuf(std::vector<uint8_t> &mem) const
 {
     assert(mem.empty());
     mem.resize(sizeof(Mem));
 
-    Mem* data = reinterpret_cast<Mem*>(mem.data());
+    Mem *data = reinterpret_cast<Mem *>(mem.data());
     data->acpiProcessorId = params().acpi_processor_id;
     // The "flags" field is not properly aligned.
     memcpy(&data->flags, &params().flags, sizeof(data->flags));
@@ -320,12 +308,12 @@ MADT::NMI::prepareBuf(std::vector<uint8_t>& mem) const
 }
 
 void
-MADT::LAPICOverride::prepareBuf(std::vector<uint8_t>& mem) const
+MADT::LAPICOverride::prepareBuf(std::vector<uint8_t> &mem) const
 {
     assert(mem.empty());
     mem.resize(sizeof(Mem));
 
-    Mem* data = reinterpret_cast<Mem*>(mem.data());
+    Mem *data = reinterpret_cast<Mem *>(mem.data());
     data->localAPICAddress = params().address;
 
     Record::prepareBuf(mem);

@@ -54,12 +54,22 @@ class Doorbell : public SimObject
 {
   public:
     Doorbell(const DoorbellParams &p)
-        : SimObject(p), _setAddress(p.set_address),
+        : SimObject(p),
+          _setAddress(p.set_address),
           _clearAddress(p.clear_address)
     {}
 
-    Addr setAddress() const { return _setAddress; }
-    Addr clearAddress() const { return _clearAddress; }
+    Addr
+    setAddress() const
+    {
+        return _setAddress;
+    }
+
+    Addr
+    clearAddress() const
+    {
+        return _clearAddress;
+    }
 
   protected:
     const Addr _setAddress;

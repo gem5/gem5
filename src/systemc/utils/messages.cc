@@ -45,8 +45,7 @@ const char SC_ID_FRONT_ON_EMPTY_LIST_[] =
     "attempt to take front() on an empty list";
 const char SC_ID_BACK_ON_EMPTY_LIST_[] =
     "attempt to take back() on an empty list";
-const char SC_ID_IEEE_1666_DEPRECATION_[] =
-    "/IEEE_Std_1666/deprecated";
+const char SC_ID_IEEE_1666_DEPRECATION_[] = "/IEEE_Std_1666/deprecated";
 const char SC_ID_VECTOR_INIT_CALLED_TWICE_[] =
     "sc_vector::init has already been called";
 const char SC_ID_VECTOR_BIND_EMPTY_[] =
@@ -59,23 +58,23 @@ namespace
 {
 
 sc_gem5::DefaultReportMessages predefinedMessages{
-    {800, SC_ID_REGISTER_ID_FAILED_},
-    {0, SC_ID_UNKNOWN_ERROR_},
-    {1, SC_ID_WITHOUT_MESSAGE_},
-    {2, SC_ID_NOT_IMPLEMENTED_},
-    {3, SC_ID_INTERNAL_ERROR_},
-    {4, SC_ID_ASSERTION_FAILED_},
-    {5, SC_ID_OUT_OF_BOUNDS_},
+    { 800, SC_ID_REGISTER_ID_FAILED_ },
+    { 0, SC_ID_UNKNOWN_ERROR_ },
+    { 1, SC_ID_WITHOUT_MESSAGE_ },
+    { 2, SC_ID_NOT_IMPLEMENTED_ },
+    { 3, SC_ID_INTERNAL_ERROR_ },
+    { 4, SC_ID_ASSERTION_FAILED_ },
+    { 5, SC_ID_OUT_OF_BOUNDS_ },
 
-    {99, SC_ID_ABORT_},
+    { 99, SC_ID_ABORT_ },
 
-    {801, SC_ID_STRING_TOO_LONG_},
-    {802, SC_ID_FRONT_ON_EMPTY_LIST_},
-    {803, SC_ID_BACK_ON_EMPTY_LIST_},
-    {804, SC_ID_IEEE_1666_DEPRECATION_},
-    {805, SC_ID_VECTOR_INIT_CALLED_TWICE_},
-    {807, SC_ID_VECTOR_BIND_EMPTY_},
-    {808, SC_ID_VECTOR_NONOBJECT_ELEMENTS_}
+    { 801, SC_ID_STRING_TOO_LONG_ },
+    { 802, SC_ID_FRONT_ON_EMPTY_LIST_ },
+    { 803, SC_ID_BACK_ON_EMPTY_LIST_ },
+    { 804, SC_ID_IEEE_1666_DEPRECATION_ },
+    { 805, SC_ID_VECTOR_INIT_CALLED_TWICE_ },
+    { 807, SC_ID_VECTOR_BIND_EMPTY_ },
+    { 808, SC_ID_VECTOR_NONOBJECT_ELEMENTS_ }
 };
 
 } // anonymous namespace

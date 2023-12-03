@@ -26,11 +26,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- #include "mem/cache/prefetch/indirect_memory.hh"
+#include "mem/cache/prefetch/indirect_memory.hh"
 
- #include "mem/cache/base.hh"
- #include "mem/cache/prefetch/associative_set_impl.hh"
- #include "params/IndirectMemoryPrefetcher.hh"
+#include "mem/cache/base.hh"
+#include "mem/cache/prefetch/associative_set_impl.hh"
+#include "params/IndirectMemoryPrefetcher.hh"
 
 namespace gem5
 {
@@ -39,25 +39,26 @@ namespace prefetch
 {
 
 IndirectMemory::IndirectMemory(const IndirectMemoryPrefetcherParams &p)
-  : Queued(p),
-    maxPrefetchDistance(p.max_prefetch_distance),
-    shiftValues(p.shift_values), prefetchThreshold(p.prefetch_threshold),
-    streamCounterThreshold(p.stream_counter_threshold),
-    streamingDistance(p.streaming_distance),
-    prefetchTable(p.pt_table_assoc, p.pt_table_entries,
-                  p.pt_table_indexing_policy, p.pt_table_replacement_policy,
-                  PrefetchTableEntry(p.num_indirect_counter_bits)),
-    ipd(p.ipd_table_assoc, p.ipd_table_entries, p.ipd_table_indexing_policy,
-        p.ipd_table_replacement_policy,
-        IndirectPatternDetectorEntry(p.addr_array_len, shiftValues.size())),
-    ipdEntryTrackingMisses(nullptr), byteOrder(p.sys->getGuestByteOrder())
-{
-}
+    : Queued(p),
+      maxPrefetchDistance(p.max_prefetch_distance),
+      shiftValues(p.shift_values),
+      prefetchThreshold(p.prefetch_threshold),
+      streamCounterThreshold(p.stream_counter_threshold),
+      streamingDistance(p.streaming_distance),
+      prefetchTable(p.pt_table_assoc, p.pt_table_entries,
+                    p.pt_table_indexing_policy, p.pt_table_replacement_policy,
+                    PrefetchTableEntry(p.num_indirect_counter_bits)),
+      ipd(p.ipd_table_assoc, p.ipd_table_entries, p.ipd_table_indexing_policy,
+          p.ipd_table_replacement_policy,
+          IndirectPatternDetectorEntry(p.addr_array_len, shiftValues.size())),
+      ipdEntryTrackingMisses(nullptr),
+      byteOrder(p.sys->getGuestByteOrder())
+{}
 
 void
 IndirectMemory::calculatePrefetch(const PrefetchInfo &pfi,
-    std::vector<AddrPriority> &addresses,
-    const CacheAccessor &cache)
+                                  std::vector<AddrPriority> &addresses,
+                                  const CacheAccessor &cache)
 {
     // This prefetcher requires a PC
     if (!pfi.hasPC()) {
@@ -98,7 +99,6 @@ IndirectMemory::calculatePrefetch(const PrefetchInfo &pfi,
                 pt_entry->address = addr;
                 pt_entry->secure = is_secure;
 
-
                 // if this is a read, read the data from the cache and assume
                 // it is an index (this is only possible if the data is already
                 // in the cache), also, only indexes up to 8 bytes are
@@ -107,22 +107,22 @@ IndirectMemory::calculatePrefetch(const PrefetchInfo &pfi,
                 if (!miss && !pfi.isWrite() && pfi.getSize() <= 8) {
                     int64_t index = 0;
                     bool read_index = true;
-                    switch(pfi.getSize()) {
-                        case sizeof(uint8_t):
-                            index = pfi.get<uint8_t>(byteOrder);
-                            break;
-                        case sizeof(uint16_t):
-                            index = pfi.get<uint16_t>(byteOrder);
-                            break;
-                        case sizeof(uint32_t):
-                            index = pfi.get<uint32_t>(byteOrder);
-                            break;
-                        case sizeof(uint64_t):
-                            index = pfi.get<uint64_t>(byteOrder);
-                            break;
-                        default:
-                            // Ignore non-power-of-two sizes
-                            read_index = false;
+                    switch (pfi.getSize()) {
+                    case sizeof(uint8_t):
+                        index = pfi.get<uint8_t>(byteOrder);
+                        break;
+                    case sizeof(uint16_t):
+                        index = pfi.get<uint16_t>(byteOrder);
+                        break;
+                    case sizeof(uint32_t):
+                        index = pfi.get<uint32_t>(byteOrder);
+                        break;
+                    case sizeof(uint64_t):
+                        index = pfi.get<uint64_t>(byteOrder);
+                        break;
+                    default:
+                        // Ignore non-power-of-two sizes
+                        read_index = false;
                     }
                     if (read_index && !pt_entry->enabled) {
                         // Not enabled (no pattern detected in this stream),
@@ -142,10 +142,12 @@ IndirectMemory::calculatePrefetch(const PrefetchInfo &pfi,
 
                         // If the counter is high enough, start prefetching
                         if (pt_entry->indirectCounter > prefetchThreshold) {
-                            unsigned distance = maxPrefetchDistance *
+                            unsigned distance =
+                                maxPrefetchDistance *
                                 pt_entry->indirectCounter.calcSaturation();
                             for (int delta = 1; delta < distance; delta += 1) {
-                                Addr pf_addr = pt_entry->baseAddr +
+                                Addr pf_addr =
+                                    pt_entry->baseAddr +
                                     (pt_entry->index << pt_entry->shift);
                                 addresses.push_back(AddrPriority(pf_addr, 0));
                             }
@@ -164,13 +166,13 @@ IndirectMemory::calculatePrefetch(const PrefetchInfo &pfi,
 }
 
 void
-IndirectMemory::allocateOrUpdateIPDEntry(
-    const PrefetchTableEntry *pt_entry, int64_t index)
+IndirectMemory::allocateOrUpdateIPDEntry(const PrefetchTableEntry *pt_entry,
+                                         int64_t index)
 {
     // The address of the pt_entry is used to index the IPD
-    Addr ipd_entry_addr = (Addr) pt_entry;
-    IndirectPatternDetectorEntry *ipd_entry = ipd.findEntry(ipd_entry_addr,
-                                                            false/* unused */);
+    Addr ipd_entry_addr = (Addr)pt_entry;
+    IndirectPatternDetectorEntry *ipd_entry =
+        ipd.findEntry(ipd_entry_addr, false /* unused */);
     if (ipd_entry != nullptr) {
         ipd.accessEntry(ipd_entry);
         if (!ipd_entry->secondIndexSet) {
@@ -212,6 +214,7 @@ IndirectMemory::trackMissIndex1(Addr miss_addr)
         ipdEntryTrackingMisses = nullptr;
     }
 }
+
 void
 IndirectMemory::trackMissIndex2(Addr miss_addr)
 {
@@ -220,8 +223,7 @@ IndirectMemory::trackMissIndex2(Addr miss_addr)
     // the previous misses (using idx1) against newly generated values
     // using idx2, if a match is found, fill the additional fields
     // of the PT entry
-    for (int midx = 0; midx < entry->numMisses; midx += 1)
-    {
+    for (int midx = 0; midx < entry->numMisses; midx += 1) {
         std::vector<Addr> &ba_array = entry->baseAddr[midx];
         int idx = 0;
         for (int shift : shiftValues) {
@@ -229,7 +231,7 @@ IndirectMemory::trackMissIndex2(Addr miss_addr)
                 // Match found!
                 // Fill the corresponding pt_entry
                 PrefetchTableEntry *pt_entry =
-                    (PrefetchTableEntry *) entry->getTag();
+                    (PrefetchTableEntry *)entry->getTag();
                 pt_entry->baseAddr = ba_array[idx];
                 pt_entry->shift = shift;
                 pt_entry->enabled = true;
@@ -250,8 +252,8 @@ IndirectMemory::checkAccessMatchOnActiveEntries(Addr addr)
 {
     for (auto &pt_entry : prefetchTable) {
         if (pt_entry.enabled) {
-            if (addr == pt_entry.baseAddr +
-                       (pt_entry.index << pt_entry.shift)) {
+            if (addr ==
+                pt_entry.baseAddr + (pt_entry.index << pt_entry.shift)) {
                 pt_entry.indirectCounter++;
                 pt_entry.increasedIndirectCounter = true;
             }

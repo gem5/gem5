@@ -76,7 +76,11 @@ class Scoreboard
     ~Scoreboard() {}
 
     /** Returns the name of the scoreboard. */
-    std::string name() const { return _name; };
+    std::string
+    name() const
+    {
+        return _name;
+    };
 
     /** Checks if the register is ready. */
     bool
@@ -124,7 +128,6 @@ class Scoreboard
 
         regScoreBoard[phys_reg->flatIndex()] = false;
     }
-
 };
 
 } // namespace o3

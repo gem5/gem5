@@ -62,46 +62,47 @@ namespace gem5
 {
 
 const std::map<uint32_t, ArmSemihosting::SemiCall> ArmSemihosting::calls{
-    { SYS_OPEN,     { "SYS_OPEN", &ArmSemihosting::callOpen } },
-    { SYS_CLOSE,    { "SYS_CLOSE", &ArmSemihosting::callClose } },
-    { SYS_WRITEC,   { "SYS_WRITEC", &ArmSemihosting::callWriteC } },
-    { SYS_WRITE0,   { "SYS_WRITE0", &ArmSemihosting::callWrite0 } },
-    { SYS_WRITE,    { "SYS_WRITE", &ArmSemihosting::callWrite } },
-    { SYS_READ,     { "SYS_READ", &ArmSemihosting::callRead } },
-    { SYS_READC,    { "SYS_READC", &ArmSemihosting::callReadC } },
-    { SYS_ISERROR,  { "SYS_ISERROR", &ArmSemihosting::callIsError } },
-    { SYS_ISTTY,    { "SYS_ISTTY", &ArmSemihosting::callIsTTY } },
-    { SYS_SEEK,     { "SYS_SEEK", &ArmSemihosting::callSeek } },
-    { SYS_FLEN,     { "SYS_FLEN", &ArmSemihosting::callFLen } },
-    { SYS_TMPNAM,   { "SYS_TMPNAM", &ArmSemihosting::callTmpNam } },
-    { SYS_REMOVE,   { "SYS_REMOVE", &ArmSemihosting::callRemove } },
-    { SYS_RENAME,   { "SYS_RENAME", &ArmSemihosting::callRename } },
-    { SYS_CLOCK,    { "SYS_CLOCK", &ArmSemihosting::callClock } },
-    { SYS_TIME,     { "SYS_TIME", &ArmSemihosting::callTime } },
-    { SYS_SYSTEM,   { "SYS_SYSTEM", &ArmSemihosting::callSystem } },
-    { SYS_ERRNO,    { "SYS_ERRNO", &ArmSemihosting::callErrno } },
+    { SYS_OPEN, { "SYS_OPEN", &ArmSemihosting::callOpen } },
+    { SYS_CLOSE, { "SYS_CLOSE", &ArmSemihosting::callClose } },
+    { SYS_WRITEC, { "SYS_WRITEC", &ArmSemihosting::callWriteC } },
+    { SYS_WRITE0, { "SYS_WRITE0", &ArmSemihosting::callWrite0 } },
+    { SYS_WRITE, { "SYS_WRITE", &ArmSemihosting::callWrite } },
+    { SYS_READ, { "SYS_READ", &ArmSemihosting::callRead } },
+    { SYS_READC, { "SYS_READC", &ArmSemihosting::callReadC } },
+    { SYS_ISERROR, { "SYS_ISERROR", &ArmSemihosting::callIsError } },
+    { SYS_ISTTY, { "SYS_ISTTY", &ArmSemihosting::callIsTTY } },
+    { SYS_SEEK, { "SYS_SEEK", &ArmSemihosting::callSeek } },
+    { SYS_FLEN, { "SYS_FLEN", &ArmSemihosting::callFLen } },
+    { SYS_TMPNAM, { "SYS_TMPNAM", &ArmSemihosting::callTmpNam } },
+    { SYS_REMOVE, { "SYS_REMOVE", &ArmSemihosting::callRemove } },
+    { SYS_RENAME, { "SYS_RENAME", &ArmSemihosting::callRename } },
+    { SYS_CLOCK, { "SYS_CLOCK", &ArmSemihosting::callClock } },
+    { SYS_TIME, { "SYS_TIME", &ArmSemihosting::callTime } },
+    { SYS_SYSTEM, { "SYS_SYSTEM", &ArmSemihosting::callSystem } },
+    { SYS_ERRNO, { "SYS_ERRNO", &ArmSemihosting::callErrno } },
     { SYS_GET_CMDLINE,
-        { "SYS_GET_CMDLINE", &ArmSemihosting::callGetCmdLine } },
-    { SYS_HEAPINFO, { "SYS_HEAPINFO", &ArmSemihosting::callHeapInfo32,
-                                      &ArmSemihosting::callHeapInfo64 } },
+      { "SYS_GET_CMDLINE", &ArmSemihosting::callGetCmdLine } },
+    { SYS_HEAPINFO,
+      { "SYS_HEAPINFO", &ArmSemihosting::callHeapInfo32,
+        &ArmSemihosting::callHeapInfo64 } },
 
-    { SYS_EXIT,     { "SYS_EXIT", &ArmSemihosting::callExit32,
-                                  &ArmSemihosting::callExit64} },
+    { SYS_EXIT,
+      { "SYS_EXIT", &ArmSemihosting::callExit32,
+        &ArmSemihosting::callExit64 } },
     { SYS_EXIT_EXTENDED,
-        { "SYS_EXIT_EXTENDED", &ArmSemihosting::callExitExtended } },
+      { "SYS_EXIT_EXTENDED", &ArmSemihosting::callExitExtended } },
 
-    { SYS_ELAPSED,  { "SYS_ELAPSED", &ArmSemihosting::callElapsed32,
-                                     &ArmSemihosting::callElapsed64 } },
+    { SYS_ELAPSED,
+      { "SYS_ELAPSED", &ArmSemihosting::callElapsed32,
+        &ArmSemihosting::callElapsed64 } },
     { SYS_TICKFREQ, { "SYS_TICKFREQ", &ArmSemihosting::callTickFreq } },
     { SYS_GEM5_PSEUDO_OP,
-        { "SYS_GEM5_PSEUDO_OP", &ArmSemihosting::callGem5PseudoOp32,
-                                &ArmSemihosting::callGem5PseudoOp64 } },
+      { "SYS_GEM5_PSEUDO_OP", &ArmSemihosting::callGem5PseudoOp32,
+        &ArmSemihosting::callGem5PseudoOp64 } },
 };
 
 const std::vector<const char *> ArmSemihosting::fmodes{
-    "r", "rb", "r+", "r+b",
-    "w", "wb", "w+", "w+b",
-    "a", "ab", "a+", "a+b",
+    "r", "rb", "r+", "r+b", "w", "wb", "w+", "w+b", "a", "ab", "a+", "a+b",
 };
 
 const std::map<uint64_t, const char *> ArmSemihosting::exitCodes{
@@ -126,19 +127,14 @@ const std::map<uint64_t, const char *> ArmSemihosting::exitCodes{
     { 0x20029, "semi:ADP_Stopped_DivisionByZero" },
 };
 
-
 const std::vector<uint8_t> ArmSemihosting::features{
     0x53, 0x48, 0x46, 0x42, // Magic
     0x3,                    // EXT_EXIT_EXTENDED, EXT_STDOUT_STDERR
 };
 
 const std::map<const std::string, FILE *> ArmSemihosting::stdioMap{
-    {"cin",    ::stdin},
-    {"stdin",  ::stdin},
-    {"cout",   ::stdout},
-    {"stdout", ::stdout},
-    {"cerr",   ::stderr},
-    {"stderr", ::stderr},
+    { "cin", ::stdin },     { "stdin", ::stdin }, { "cout", ::stdout },
+    { "stdout", ::stdout }, { "cerr", ::stderr }, { "stderr", ::stderr },
 };
 
 ArmSemihosting::ArmSemihosting(const ArmSemihostingParams &p)
@@ -146,24 +142,26 @@ ArmSemihosting::ArmSemihosting(const ArmSemihostingParams &p)
       cmdLine(p.cmd_line),
       memReserve(p.mem_reserve),
       stackSize(p.stack_size),
-      timeBase([p]{ struct tm t = p.time; return mkutctime(&t); }()),
+      timeBase([p] {
+          struct tm t = p.time;
+          return mkutctime(&t);
+      }()),
       tickShift(calcTickShift()),
       semiErrno(0),
       filesRootDir(!p.files_root_dir.empty() &&
-                   p.files_root_dir.back() != '/' ?
-                   p.files_root_dir + '/' : p.files_root_dir),
+                           p.files_root_dir.back() != '/' ?
+                       p.files_root_dir + '/' :
+                       p.files_root_dir),
       stdin(getSTDIO("stdin", p.stdin, "r")),
       stdout(getSTDIO("stdout", p.stdout, "w")),
-      stderr(p.stderr == p.stdout ?
-             stdout : getSTDIO("stderr", p.stderr, "w"))
+      stderr(p.stderr == p.stdout ? stdout : getSTDIO("stderr", p.stderr, "w"))
 {
     // Create an empty place-holder file for position 0 as semi-hosting
     // calls typically expect non-zero file handles.
     files.push_back(nullptr);
 
     if (tickShift > 0)
-        inform("Semihosting: Shifting elapsed ticks by %i bits.",
-               tickShift);
+        inform("Semihosting: Shifting elapsed ticks by %i bits.", tickShift);
 }
 
 bool
@@ -172,14 +170,14 @@ ArmSemihosting::call64(ThreadContext *tc, bool gem5_ops)
     RegVal op = tc->getReg(ArmISA::int_reg::X0) & mask(32);
     if (op > MaxStandardOp && !gem5_ops) {
         unrecognizedCall<Abi64>(
-                tc, "Gem5 semihosting op (0x%x) disabled from here.", op);
+            tc, "Gem5 semihosting op (0x%x) disabled from here.", op);
         return false;
     }
 
     auto it = calls.find(op);
     if (it == calls.end()) {
         unrecognizedCall<Abi64>(
-                tc, "Unknown aarch64 semihosting call: op = 0x%x", op);
+            tc, "Unknown aarch64 semihosting call: op = 0x%x", op);
         return false;
     }
     const SemiCall &call = it->second;
@@ -198,14 +196,14 @@ ArmSemihosting::call32(ThreadContext *tc, bool gem5_ops)
     RegVal op = tc->getReg(ArmISA::int_reg::R0);
     if (op > MaxStandardOp && !gem5_ops) {
         unrecognizedCall<Abi32>(
-                tc, "Gem5 semihosting op (0x%x) disabled from here.", op);
+            tc, "Gem5 semihosting op (0x%x) disabled from here.", op);
         return false;
     }
 
     auto it = calls.find(op);
     if (it == calls.end()) {
         unrecognizedCall<Abi32>(
-                tc, "Unknown aarch32 semihosting call: op = 0x%x", op);
+            tc, "Unknown aarch32 semihosting call: op = 0x%x", op);
         return false;
     }
     const SemiCall &call = it->second;
@@ -257,12 +255,10 @@ ArmSemihosting::portProxy(ThreadContext *tc)
         if (sys != secure_sys) {
             if (FullSystem) {
                 port_proxy_s.reset(
-                        new TranslatingPortProxy(tc, Request::SECURE));
+                    new TranslatingPortProxy(tc, Request::SECURE));
             } else {
-                port_proxy_s.reset(
-                        new SETranslatingPortProxy(
-                            tc, SETranslatingPortProxy::NextPage,
-                            Request::SECURE));
+                port_proxy_s.reset(new SETranslatingPortProxy(
+                    tc, SETranslatingPortProxy::NextPage, Request::SECURE));
             }
         }
         secure_sys = sys;
@@ -280,7 +276,6 @@ ArmSemihosting::portProxy(ThreadContext *tc)
     }
 }
 
-
 std::string
 ArmSemihosting::readString(ThreadContext *tc, Addr ptr, size_t len)
 {
@@ -293,13 +288,13 @@ ArmSemihosting::readString(ThreadContext *tc, Addr ptr, size_t len)
 }
 
 ArmSemihosting::RetErrno
-ArmSemihosting::callOpen(ThreadContext *tc, const Addr name_base,
-                         int fmode, size_t name_size)
+ArmSemihosting::callOpen(ThreadContext *tc, const Addr name_base, int fmode,
+                         size_t name_size)
 {
     const char *mode = fmode < fmodes.size() ? fmodes[fmode] : nullptr;
 
-    DPRINTF(Semihosting, "Semihosting SYS_OPEN(0x%x, %i[%s], %i)\n",
-            name_base, fmode, mode ? mode : "-", name_size);
+    DPRINTF(Semihosting, "Semihosting SYS_OPEN(0x%x, %i[%s], %i)\n", name_base,
+            fmode, mode ? mode : "-", name_size);
     if (!mode || !name_base)
         return retError(EINVAL);
 
@@ -310,8 +305,8 @@ ArmSemihosting::callOpen(ThreadContext *tc, const Addr name_base,
     std::unique_ptr<ArmSemihosting::FileBase> file =
         FileBase::create(*this, fname, mode);
     int64_t ret = file->open();
-    DPRINTF(Semihosting, "Semihosting SYS_OPEN(\"%s\", %i[%s]): %i\n",
-            fname, fmode, mode, ret);
+    DPRINTF(Semihosting, "Semihosting SYS_OPEN(\"%s\", %i[%s]): %i\n", fname,
+            fmode, mode, ret);
     if (ret < 0) {
         return retError(-ret);
     } else {
@@ -330,8 +325,8 @@ ArmSemihosting::callClose(ThreadContext *tc, Handle handle)
 
     std::unique_ptr<FileBase> &file = files[handle];
     int64_t error = file->close();
-    DPRINTF(Semihosting, "Semihosting SYS_CLOSE(%i[%s]): %i\n",
-            handle, file->fileName(), error);
+    DPRINTF(Semihosting, "Semihosting SYS_CLOSE(%i[%s]): %i\n", handle,
+            file->fileName(), error);
     if (error < 0) {
         return retError(-error);
     } else {
@@ -472,7 +467,7 @@ ArmSemihosting::callTmpNam(ThreadContext *tc, Addr addr, uint64_t id,
         path = simout.resolve(csprintf("%s.tmp%05i", name(), tmpNameIndex++));
         // remove the (potentially existing) file of the given path
         unlink_call_ret = unlink(path.c_str());
-    // if the file is busy, find another name
+        // if the file is busy, find another name
     } while ((unlink_call_ret < 0) && (errno == EBUSY));
 
     const size_t path_len = path.length();
@@ -528,7 +523,6 @@ ArmSemihosting::callSystem(ThreadContext *tc, Addr cmd_addr, size_t cmd_size)
     warn("Semihosting: SYS_SYSTEM not implemented. Guest tried to run: %s\n",
          cmd);
     return retError(EINVAL);
-
 }
 
 ArmSemihosting::RetErrno
@@ -564,7 +558,7 @@ ArmSemihosting::gatherHeapInfo(ThreadContext *tc, bool aarch64,
     const AddrRangeList memories = phys.getConfAddrRanges();
     fatal_if(memories.size() < 1, "No memories reported from System");
     warn_if(memories.size() > 1, "Multiple physical memory ranges available. "
-            "Using first range heap/stack.");
+                                 "Using first range heap/stack.");
     const AddrRange mem = *memories.begin();
     const Addr mem_start = mem.start() + memReserve;
     Addr mem_end = mem.end();
@@ -602,10 +596,10 @@ ArmSemihosting::callHeapInfo32(ThreadContext *tc, Addr block_addr)
     uint64_t heap_base, heap_limit, stack_base, stack_limit;
     gatherHeapInfo(tc, false, heap_base, heap_limit, stack_base, stack_limit);
 
-    std::array<uint32_t, 4> block = {{
-        (uint32_t)heap_base, (uint32_t)heap_limit,
-        (uint32_t)stack_base, (uint32_t)stack_limit
-    }};
+    std::array<uint32_t, 4> block = {
+        { (uint32_t)heap_base, (uint32_t)heap_limit, (uint32_t)stack_base,
+          (uint32_t)stack_limit }
+    };
     portProxy(tc).write(block_addr, block, ArmISA::byteOrder(tc));
 
     return retOK(0);
@@ -617,9 +611,8 @@ ArmSemihosting::callHeapInfo64(ThreadContext *tc, Addr block_addr)
     uint64_t heap_base, heap_limit, stack_base, stack_limit;
     gatherHeapInfo(tc, true, heap_base, heap_limit, stack_base, stack_limit);
 
-    std::array<uint64_t, 4> block = {{
-        heap_base, heap_limit, stack_base, stack_limit
-    }};
+    std::array<uint64_t, 4> block = { { heap_base, heap_limit, stack_base,
+                                        stack_limit } };
     portProxy(tc).write(block_addr, block, ArmISA::byteOrder(tc));
 
     return retOK(0);
@@ -640,8 +633,8 @@ ArmSemihosting::callExit64(ThreadContext *tc, uint64_t code, uint64_t subcode)
 }
 
 ArmSemihosting::RetErrno
-ArmSemihosting::callExitExtended(ThreadContext *tc,
-                                 uint64_t code, uint64_t subcode)
+ArmSemihosting::callExitExtended(ThreadContext *tc, uint64_t code,
+                                 uint64_t subcode)
 {
     semiExit(code, subcode);
     return retOK(0);
@@ -658,7 +651,6 @@ ArmSemihosting::semiExit(uint64_t code, uint64_t subcode)
     }
 }
 
-
 ArmSemihosting::RetErrno
 ArmSemihosting::callElapsed32(ThreadContext *tc, InPlaceArg low,
                               InPlaceArg high)
@@ -672,7 +664,6 @@ ArmSemihosting::callElapsed32(ThreadContext *tc, InPlaceArg low,
     return retOK(0);
 }
 
-
 ArmSemihosting::RetErrno
 ArmSemihosting::callElapsed64(ThreadContext *tc, InPlaceArg ticks)
 {
@@ -680,13 +671,11 @@ ArmSemihosting::callElapsed64(ThreadContext *tc, InPlaceArg ticks)
     return retOK(0);
 }
 
-
 ArmSemihosting::RetErrno
 ArmSemihosting::callTickFreq(ThreadContext *tc)
 {
     return retOK(semiTick(sim_clock::Frequency));
 }
-
 
 struct SemiPseudoAbi32 : public ArmSemihosting::Abi32
 {
@@ -720,13 +709,14 @@ namespace guest_abi
 // Handle arguments the same as for semihosting operations. Skipping the first
 // slot is handled internally by the State type.
 template <typename T>
-struct Argument<SemiPseudoAbi32, T> :
-    public Argument<ArmSemihosting::Abi32, T>
-{};
+struct Argument<SemiPseudoAbi32, T> : public Argument<ArmSemihosting::Abi32, T>
+{
+};
+
 template <typename T>
-struct Argument<SemiPseudoAbi64, T> :
-    public Argument<ArmSemihosting::Abi64, T>
-{};
+struct Argument<SemiPseudoAbi64, T> : public Argument<ArmSemihosting::Abi64, T>
+{
+};
 
 } // namespace guest_abi
 
@@ -757,15 +747,15 @@ ArmSemihosting::callGem5PseudoOp64(ThreadContext *tc, uint64_t encoded_func)
 }
 
 FILE *
-ArmSemihosting::getSTDIO(const char *stream_name,
-                         const std::string &name, const char *mode)
+ArmSemihosting::getSTDIO(const char *stream_name, const std::string &name,
+                         const char *mode)
 {
     auto it = stdioMap.find(name);
     if (it == stdioMap.end()) {
         FILE *f = fopen(name.c_str(), mode);
         if (!f) {
-            fatal("Failed to open %s (%s): %s\n",
-                  stream_name, name, strerror(errno));
+            fatal("Failed to open %s (%s): %s\n", stream_name, name,
+                  strerror(errno));
         }
         return f;
     } else {
@@ -774,8 +764,8 @@ ArmSemihosting::getSTDIO(const char *stream_name,
 }
 
 std::unique_ptr<ArmSemihosting::FileBase>
-ArmSemihosting::FileBase::create(
-    ArmSemihosting &parent, const std::string &fname, const char *mode)
+ArmSemihosting::FileBase::create(ArmSemihosting &parent,
+                                 const std::string &fname, const char *mode)
 {
     std::unique_ptr<FileBase> file;
     if (fname == ":semihosting-features") {
@@ -788,8 +778,8 @@ ArmSemihosting::FileBase::create(
 }
 
 std::unique_ptr<ArmSemihosting::FileBase>
-ArmSemihosting::FileBase::create(ArmSemihosting &parent,
-                                 CheckpointIn &cp, const std::string &sec)
+ArmSemihosting::FileBase::create(ArmSemihosting &parent, CheckpointIn &cp,
+                                 const std::string &sec)
 {
     std::unique_ptr<FileBase> file;
     ScopedCheckpointSection _sec(cp, sec);
@@ -846,12 +836,11 @@ ArmSemihosting::FileBase::flen()
     return -EINVAL;
 }
 
-
-ArmSemihosting::FileFeatures::FileFeatures(
-    ArmSemihosting &_parent, const char *_name, const char *_mode)
+ArmSemihosting::FileFeatures::FileFeatures(ArmSemihosting &_parent,
+                                           const char *_name,
+                                           const char *_mode)
     : FileBase(_parent, _name, _mode)
-{
-}
+{}
 
 int64_t
 ArmSemihosting::FileFeatures::read(uint8_t *buffer, uint64_t size)
@@ -889,14 +878,10 @@ ArmSemihosting::FileFeatures::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(pos);
 }
 
-
-
-ArmSemihosting::File::File(ArmSemihosting &_parent,
-                           const char *_name, const char *_perms)
-    : FileBase(_parent, _name, _perms),
-      file(nullptr)
-{
-}
+ArmSemihosting::File::File(ArmSemihosting &_parent, const char *_name,
+                           const char *_perms)
+    : FileBase(_parent, _name, _perms), file(nullptr)
+{}
 
 ArmSemihosting::File::~File()
 {
@@ -949,9 +934,8 @@ ArmSemihosting::File::close()
 bool
 ArmSemihosting::File::isTTY() const
 {
-    return file == parent.stdout ||
-        file == parent.stderr ||
-        file == parent.stdin;
+    return file == parent.stdout || file == parent.stderr ||
+           file == parent.stdin;
 }
 
 int64_t
@@ -973,7 +957,6 @@ int64_t
 ArmSemihosting::File::write(const uint8_t *buffer, uint64_t size)
 {
     panic_if(!file, "Trying to write to a closed file");
-
 
     size_t ret = fwrite(buffer, 1, size, file);
     if (ret == 0) {
@@ -1018,7 +1001,6 @@ ArmSemihosting::File::flen()
     return len;
 }
 
-
 void
 ArmSemihosting::File::serialize(CheckpointOut &cp) const
 {
@@ -1050,7 +1032,7 @@ ArmSemihosting::File::unserialize(CheckpointIn &cp)
 }
 
 std::ostream &
-operator << (std::ostream &os, const ArmSemihosting::InPlaceArg &ipa)
+operator<<(std::ostream &os, const ArmSemihosting::InPlaceArg &ipa)
 {
     ccprintf(os, "[%#x-%#x)", ipa.addr, ipa.addr + ipa.size - 1);
     return os;

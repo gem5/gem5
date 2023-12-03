@@ -50,7 +50,7 @@ multiply3Op(int *b, int a, int c)
 }
 
 void
-addSubColumns(int *b, const std::array<int, 2>& a, const std::array<int, 2>& c)
+addSubColumns(int *b, const std::array<int, 2> &a, const std::array<int, 2> &c)
 {
     *b += a[0] + c[0];
     *b -= a[1] + c[1];
@@ -193,7 +193,7 @@ TEST(AmoTest, AtomicOpXor)
     amo_op_int->execute(&test_int);
     amo_op_char->execute(&test_char);
 
-    EXPECT_EQ(test_int, 8); // 1010 ^ 0010 = 1000
+    EXPECT_EQ(test_int, 8);  // 1010 ^ 0010 = 1000
     EXPECT_EQ(test_char, 2); // 99 ^ 97 = 2
 }
 
@@ -255,10 +255,10 @@ TEST(AmoTest, AtomicGenericPair3Op)
 {
     int test_int = 5;
 
-    std::array<int, 2> a = {6, 3};
-    std::array<int, 2> c = {10, 8};
+    std::array<int, 2> a = { 6, 3 };
+    std::array<int, 2> c = { 10, 8 };
     std::unique_ptr<TypedAtomicOpFunctor<int>> amo_op_int =
-            std::make_unique<AtomicGenericPair3Op<int>>(a, c, addSubColumns);
+        std::make_unique<AtomicGenericPair3Op<int>>(a, c, addSubColumns);
     amo_op_int->execute(&test_int);
 
     EXPECT_EQ(test_int, 10);

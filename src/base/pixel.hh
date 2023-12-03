@@ -57,11 +57,11 @@ namespace gem5
  */
 struct Pixel
 {
-    Pixel()
-        : red(0), green(0), blue(0), padding(0) {}
+    Pixel() : red(0), green(0), blue(0), padding(0) {}
 
     Pixel(uint8_t _red, uint8_t _green, uint8_t _blue)
-        : red(_red), green(_green), blue(_blue), padding(0) {}
+        : red(_red), green(_green), blue(_blue), padding(0)
+    {}
 
     uint8_t red;
     uint8_t green;
@@ -72,10 +72,8 @@ struct Pixel
 inline bool
 operator==(const Pixel &lhs, const Pixel &rhs)
 {
-    return lhs.red == rhs.red &&
-        lhs.green == rhs.green &&
-        lhs.blue == rhs.blue &&
-        lhs.padding == rhs.padding;
+    return lhs.red == rhs.red && lhs.green == rhs.green &&
+           lhs.blue == rhs.blue && lhs.padding == rhs.padding;
 }
 
 /**
@@ -106,7 +104,9 @@ class PixelConverter
          * Get the value of a single color channel represented as an
          * 8-bit number.
          */
-        uint8_t toPixel(uint32_t word) const {
+        uint8_t
+        toPixel(uint32_t word) const
+        {
             return round(((word >> offset) & mask) * factor);
         }
 
@@ -114,7 +114,9 @@ class PixelConverter
          * Convert an 8-bit representation of a color into an external
          * format.
          */
-        uint32_t fromPixel(uint8_t ch) const {
+        uint32_t
+        fromPixel(uint8_t ch) const
+        {
             return (static_cast<uint8_t>(round(ch / factor)) & mask) << offset;
         }
 
@@ -129,35 +131,40 @@ class PixelConverter
         float factor;
     };
 
-    PixelConverter(unsigned length,
-                   unsigned ro, unsigned go, unsigned bo,
+    PixelConverter(unsigned length, unsigned ro, unsigned go, unsigned bo,
                    unsigned rw, unsigned gw, unsigned bw,
                    ByteOrder byte_order = ByteOrder::little);
 
     /** Get the Pixel representation of a color word. */
-    Pixel toPixel(uint32_t word) const {
-        return Pixel(ch_r.toPixel(word),
-                     ch_g.toPixel(word),
+    Pixel
+    toPixel(uint32_t word) const
+    {
+        return Pixel(ch_r.toPixel(word), ch_g.toPixel(word),
                      ch_b.toPixel(word));
     }
 
     /** Get a Pixel representation by reading a word from memory. */
-    Pixel toPixel(const uint8_t *rfb) const {
+    Pixel
+    toPixel(const uint8_t *rfb) const
+    {
         return toPixel(readWord(rfb));
     }
 
     /** Convert a Pixel into a color word */
-    uint32_t fromPixel(const Pixel &pixel) const {
-        return ch_r.fromPixel(pixel.red) |
-            ch_g.fromPixel(pixel.green) |
-            ch_b.fromPixel(pixel.blue);
+    uint32_t
+    fromPixel(const Pixel &pixel) const
+    {
+        return ch_r.fromPixel(pixel.red) | ch_g.fromPixel(pixel.green) |
+               ch_b.fromPixel(pixel.blue);
     }
 
     /**
      * Convert a pixel into a color word and store the resulting word
      * in memory.
      */
-    void fromPixel(uint8_t *rfb, const Pixel &pixel) const {
+    void
+    fromPixel(uint8_t *rfb, const Pixel &pixel) const
+    {
         writeWord(rfb, fromPixel(pixel));
     }
 

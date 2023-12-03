@@ -51,35 +51,35 @@ namespace partitioning_policy
 const uint64_t DEFAULT_PARTITION_ID = 0;
 const uint64_t DEFAULT_PARTITION_MONITORING_ID = 0;
 
-class PartitionFieldExtention : public Extension<Request,
-                                                 PartitionFieldExtention>
+class PartitionFieldExtention :
+    public Extension<Request, PartitionFieldExtention>
 {
   public:
     std::unique_ptr<ExtensionBase> clone() const override;
     PartitionFieldExtention() = default;
 
     /**
-    * _partitionID getter
-    * @return extension Partition ID
-    */
+     * _partitionID getter
+     * @return extension Partition ID
+     */
     uint64_t getPartitionID() const;
 
     /**
-    * _partitionMonitoringID getter
-    * @return extension Partition Monitoring ID
-    */
+     * _partitionMonitoringID getter
+     * @return extension Partition Monitoring ID
+     */
     uint64_t getPartitionMonitoringID() const;
 
     /**
-    * _partitionID setter
-    * @param id Partition ID to set for the extension
-    */
+     * _partitionID setter
+     * @param id Partition ID to set for the extension
+     */
     void setPartitionID(uint64_t id);
 
     /**
-    * _partitionMonitoringID setter
-    * @param id Partition Monitoring ID to set for the extension
-    */
+     * _partitionMonitoringID setter
+     * @param id Partition Monitoring ID to set for the extension
+     */
     void setPartitionMonitoringID(uint64_t id);
 
   private:
@@ -88,12 +88,12 @@ class PartitionFieldExtention : public Extension<Request,
 };
 
 /**
-* Helper function to retrieve PartitionID from a packet; Returns packet
-* PartitionID if available or DEFAULT_PARTITION_ID if extention is not set
-* @param pkt pointer to packet (PacketPtr)
-* @return packet PartitionID.
-*/
-uint64_t readPacketPartitionID (PacketPtr pkt);
+ * Helper function to retrieve PartitionID from a packet; Returns packet
+ * PartitionID if available or DEFAULT_PARTITION_ID if extention is not set
+ * @param pkt pointer to packet (PacketPtr)
+ * @return packet PartitionID.
+ */
+uint64_t readPacketPartitionID(PacketPtr pkt);
 
 } // namespace partitioning_policy
 

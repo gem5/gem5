@@ -47,11 +47,11 @@ namespace gem5
 class BaseGic;
 struct GenericArmPciHostParams;
 
-class GenericArmPciHost
-    : public GenericPciHost
+class GenericArmPciHost : public GenericPciHost
 {
   public:
     GenericArmPciHost(const GenericArmPciHostParams &p);
+
     virtual ~GenericArmPciHost() {}
 
   protected:

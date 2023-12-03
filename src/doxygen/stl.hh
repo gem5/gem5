@@ -31,31 +31,40 @@
  * Dummy definitions of STL classes to pick up relationships in doxygen.
  */
 
-namespace std {
+namespace std
+{
 
 /** STL vector class*/
-template <class T> class vector {
+template <class T>
+class vector
+{
   public:
     /** Dummy Item */
     T item;
 };
 
 /** STL deque class */
-template <class T> class deque {
+template <class T>
+class deque
+{
   public:
     /** Dummy Item */
     T item;
 };
 
 /** STL list class */
-template <class T> class list {
+template <class T>
+class list
+{
   public:
     /** Dummy Item */
     T item;
 };
 
 /** STL pair class */
-template <class X, class Y> class pair {
+template <class X, class Y>
+class pair
+{
   public:
     /** Dummy Item */
     X item1;
@@ -63,4 +72,4 @@ template <class X, class Y> class pair {
     Y item2;
 };
 
-}
+} // namespace std

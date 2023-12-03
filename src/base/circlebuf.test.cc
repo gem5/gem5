@@ -54,7 +54,7 @@ const char data[] = {
 // available starting in c++20.
 template <typename T>
 std::vector<T>
-subArr(T *arr, int size, int offset=0)
+subArr(T *arr, int size, int offset = 0)
 {
     return std::vector<T>(arr + offset, arr + offset + size);
 }
@@ -91,7 +91,6 @@ TEST(CircleBufTest, SingleWriteOverflow)
     buf.peek(foo, 8);
     EXPECT_THAT(subArr(foo, 8), ElementsAreArray(data + 8, 8));
 }
-
 
 // Multi-write overflow functionality
 TEST(CircleBufTest, MultiWriteOverflow)
@@ -136,7 +135,7 @@ TEST(CircleBufTest, PointerWrapAround)
 TEST(CircleBufTest, ProduceConsumeEmpty)
 {
     CircleBuf<char> buf(8);
-    char foo[1] = {'a'};
+    char foo[1] = { 'a' };
 
     // buf is empty to begin with.
     EXPECT_TRUE(buf.empty());

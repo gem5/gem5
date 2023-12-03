@@ -41,12 +41,12 @@ namespace gem5
 /// To avoid races, signal handlers simply set these flags, which are
 /// then checked in the main event loop.  Defined in main.cc.
 //@{
-extern volatile bool async_event;       ///< Some asynchronous event has happened.
-extern volatile bool async_statdump;    ///< Async request to dump stats.
-extern volatile bool async_statreset;   ///< Async request to reset stats.
-extern volatile bool async_exit;        ///< Async request to exit simulator.
-extern volatile bool async_io;          ///< Async I/O request (SIGIO).
-extern volatile bool async_exception;   ///< Python exception.
+extern volatile bool async_event;    ///< Some asynchronous event has happened.
+extern volatile bool async_statdump; ///< Async request to dump stats.
+extern volatile bool async_statreset; ///< Async request to reset stats.
+extern volatile bool async_exit;      ///< Async request to exit simulator.
+extern volatile bool async_io;        ///< Async I/O request (SIGIO).
+extern volatile bool async_exception; ///< Python exception.
 //@}
 
 } // namespace gem5

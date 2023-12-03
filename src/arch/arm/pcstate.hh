@@ -69,7 +69,6 @@ EndBitUnion(ITSTATE)
 class PCState : public GenericISA::UPCState<4>
 {
   protected:
-
     typedef GenericISA::UPCState<4> Base;
 
     enum FlagBits
@@ -97,18 +96,29 @@ class PCState : public GenericISA::UPCState<4>
         npc(val + (thumb() ? 2 : 4));
     }
 
-    PCState(const PCState &other) : Base(other),
-        flags(other.flags), nextFlags(other.nextFlags),
-        _itstate(other._itstate), _nextItstate(other._nextItstate),
-        _size(other._size), _illegalExec(other._illegalExec),
-        _debugStep(other._debugStep), _stepped(other._stepped)
+    PCState(const PCState &other)
+        : Base(other),
+          flags(other.flags),
+          nextFlags(other.nextFlags),
+          _itstate(other._itstate),
+          _nextItstate(other._nextItstate),
+          _size(other._size),
+          _illegalExec(other._illegalExec),
+          _debugStep(other._debugStep),
+          _stepped(other._stepped)
     {}
+
     PCState &operator=(const PCState &other) = default;
 
     PCState() {}
+
     explicit PCState(Addr val) { set(val); }
 
-    PCStateBase *clone() const override { return new PCState(*this); }
+    PCStateBase *
+    clone() const override
+    {
+        return new PCState(*this);
+    }
 
     void
     update(const PCStateBase &other) override
@@ -191,15 +201,23 @@ class PCState : public GenericISA::UPCState<4>
             nextFlags &= ~ThumbBit;
     }
 
-    void size(uint8_t s) { _size = s; }
-    uint8_t size() const { return _size; }
+    void
+    size(uint8_t s)
+    {
+        _size = s;
+    }
+
+    uint8_t
+    size() const
+    {
+        return _size;
+    }
 
     bool
     branching() const override
     {
         return ((this->pc() + this->size()) != this->npc());
     }
-
 
     bool
     aarch64() const
@@ -230,7 +248,6 @@ class PCState : public GenericISA::UPCState<4>
         else
             nextFlags &= ~AArch64Bit;
     }
-
 
     uint8_t
     itstate() const
@@ -270,8 +287,8 @@ class PCState : public GenericISA::UPCState<4>
             ITSTATE it = _itstate;
             uint8_t cond_mask = it.mask;
             uint8_t thumb_cond = it.cond;
-            DPRINTF(Decoder, "Advancing ITSTATE from %#x,%#x.\n",
-                    thumb_cond, cond_mask);
+            DPRINTF(Decoder, "Advancing ITSTATE from %#x,%#x.\n", thumb_cond,
+                    cond_mask);
             cond_mask <<= 1;
             uint8_t new_bit = bits(cond_mask, 4);
             cond_mask &= mask(4);
@@ -279,8 +296,8 @@ class PCState : public GenericISA::UPCState<4>
                 thumb_cond = 0;
             else
                 replaceBits(thumb_cond, 0, new_bit);
-            DPRINTF(Decoder, "Advancing ITSTATE to %#x,%#x.\n",
-                    thumb_cond, cond_mask);
+            DPRINTF(Decoder, "Advancing ITSTATE to %#x,%#x.\n", thumb_cond,
+                    cond_mask);
             it.mask = cond_mask;
             it.cond = thumb_cond;
             _itstate = it;
@@ -307,10 +324,10 @@ class PCState : public GenericISA::UPCState<4>
         // @todo: review this when AArch32/64 interprocessing is
         // supported
         if (aarch64())
-            npc(val);  // AArch64 doesn't force PC alignment, a PC
-                       // Alignment Fault can be raised instead
+            npc(val); // AArch64 doesn't force PC alignment, a PC
+                      // Alignment Fault can be raised instead
         else
-            npc(val &~ mask(nextThumb() ? 1 : 2));
+            npc(val & ~mask(nextThumb() ? 1 : 2));
     }
 
     Addr
@@ -352,13 +369,11 @@ class PCState : public GenericISA::UPCState<4>
     equals(const PCStateBase &other) const override
     {
         auto &opc = other.as<PCState>();
-        return Base::equals(other) &&
-            flags == opc.flags && nextFlags == opc.nextFlags &&
-            _itstate == opc._itstate &&
-            _nextItstate == opc._nextItstate &&
-            _illegalExec == opc._illegalExec &&
-            _debugStep == opc._debugStep &&
-            _stepped == opc._stepped;
+        return Base::equals(other) && flags == opc.flags &&
+               nextFlags == opc.nextFlags && _itstate == opc._itstate &&
+               _nextItstate == opc._nextItstate &&
+               _illegalExec == opc._illegalExec &&
+               _debugStep == opc._debugStep && _stepped == opc._stepped;
     }
 
     void

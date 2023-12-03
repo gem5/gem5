@@ -43,7 +43,8 @@
 namespace gem5
 {
 
-namespace {
+namespace
+{
 
 static X86ISA::ExtMachInst dummyMachInst;
 
@@ -58,8 +59,8 @@ namespace X86ISA
 
 const StaticInstPtr badMicroop =
     new MicroDebug(dummyMachInst, "panic", "BAD",
-        StaticInst::IsMicroop | StaticInst::IsLastMicroop,
-        new GenericISA::M5PanicFault("Invalid microop!"));
+                   StaticInst::IsMicroop | StaticInst::IsLastMicroop,
+                   new GenericISA::M5PanicFault("Invalid microop!"));
 
 } // namespace X86ISA
 } // namespace gem5

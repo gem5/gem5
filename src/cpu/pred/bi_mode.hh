@@ -60,8 +60,8 @@ namespace branch_prediction
  * branch predictor that has three seprate history arrays: a taken array, a
  * not-taken array, and a choice array. The taken/not-taken arrays are indexed
  * by a hash of the PC and the global history. The choice array is indexed by
- * the PC only. Because the taken/not-taken arrays use the same index, they must
- * be the same size.
+ * the PC only. Because the taken/not-taken arrays use the same index, they
+ * must be the same size.
  *
  * The bi-mode branch predictor aims to eliminate the destructive aliasing that
  * occurs when two branches of opposite biases share the same global history
@@ -73,17 +73,17 @@ class BiModeBP : public BPredUnit
 {
   public:
     BiModeBP(const BiModeBPParams &params);
-    bool lookup(ThreadID tid, Addr pc, void * &bp_history) override;
+    bool lookup(ThreadID tid, Addr pc, void *&bp_history) override;
     void updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
-                         Addr target,  void * &bp_history) override;
-    void squash(ThreadID tid, void * &bp_history) override;
-    void update(ThreadID tid, Addr pc, bool taken,
-                void * &bp_history, bool squashed,
-                const StaticInstPtr & inst, Addr target) override;
+                         Addr target, void *&bp_history) override;
+    void squash(ThreadID tid, void *&bp_history) override;
+    void update(ThreadID tid, Addr pc, bool taken, void *&bp_history,
+                bool squashed, const StaticInstPtr &inst,
+                Addr target) override;
 
   private:
     void updateGlobalHistReg(ThreadID tid, bool taken);
-    void uncondBranch(ThreadID tid, Addr pc, void * &bp_history);
+    void uncondBranch(ThreadID tid, Addr pc, void *&bp_history);
 
     struct BPHistory
     {

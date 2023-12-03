@@ -52,14 +52,14 @@ TEST(Exit, Arguments)
 {
     // Called with no arguments.
     test_ns_delay = 50;
-    EXPECT_TRUE(run({"exit"}));
+    EXPECT_TRUE(run({ "exit" }));
     EXPECT_EQ(test_ns_delay, 0);
 
     // Called with one argument.
     test_ns_delay = 50;
-    EXPECT_TRUE(run({"exit", "1"}));
+    EXPECT_TRUE(run({ "exit", "1" }));
     EXPECT_EQ(test_ns_delay, 1);
 
     // Called with two arguments.
-    EXPECT_FALSE(run({"exit", "1", "2"}));
+    EXPECT_FALSE(run({ "exit", "1", "2" }));
 }

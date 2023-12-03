@@ -50,36 +50,41 @@ class NetDest
     NetDest();
     explicit NetDest(int bit_size);
 
-    NetDest& operator=(const Set& obj);
+    NetDest &operator=(const Set &obj);
 
-    ~NetDest()
-    { }
+    ~NetDest() {}
 
     void add(MachineID newElement);
-    void addNetDest(const NetDest& netDest);
-    void setNetDest(MachineType machine, const Set& set);
+    void addNetDest(const NetDest &netDest);
+    void setNetDest(MachineType machine, const Set &set);
     void remove(MachineID oldElement);
-    void removeNetDest(const NetDest& netDest);
+    void removeNetDest(const NetDest &netDest);
     void clear();
     void broadcast();
     void broadcast(MachineType machine);
     int count() const;
-    bool isEqual(const NetDest& netDest) const;
+    bool isEqual(const NetDest &netDest) const;
 
     // return the logical OR of this netDest and orNetDest
-    NetDest OR(const NetDest& orNetDest) const;
+    NetDest OR(const NetDest &orNetDest) const;
 
     // return the logical AND of this netDest and andNetDest
-    NetDest AND(const NetDest& andNetDest) const;
+    NetDest AND(const NetDest &andNetDest) const;
 
     // Returns true if the intersection of the two netDests is non-empty
-    bool intersectionIsNotEmpty(const NetDest& other_netDest) const;
+    bool intersectionIsNotEmpty(const NetDest &other_netDest) const;
 
     // Returns true if the intersection of the two netDests is empty
-    bool intersectionIsEmpty(const NetDest& other_netDest) const;
+    bool intersectionIsEmpty(const NetDest &other_netDest) const;
 
-    bool isSuperset(const NetDest& test) const;
-    bool isSubset(const NetDest& test) const { return test.isSuperset(*this); }
+    bool isSuperset(const NetDest &test) const;
+
+    bool
+    isSubset(const NetDest &test) const
+    {
+        return test.isSuperset(*this);
+    }
+
     bool isElement(MachineID element) const;
     bool isBroadcast() const;
     bool isEmpty() const;
@@ -91,12 +96,17 @@ class NetDest
     MachineID smallestElement(MachineType machine) const;
 
     void resize();
-    int getSize() const { return m_bits.size(); }
+
+    int
+    getSize() const
+    {
+        return m_bits.size();
+    }
 
     // get element for a index
     NodeID elementAt(MachineID index);
 
-    void print(std::ostream& out) const;
+    void print(std::ostream &out) const;
 
   private:
     // returns a value >= MachineType_base_level("this machine")
@@ -109,13 +119,17 @@ class NetDest
         return vec_index;
     }
 
-    NodeID bitIndex(NodeID index) const { return index; }
+    NodeID
+    bitIndex(NodeID index) const
+    {
+        return index;
+    }
 
-    std::vector<Set> m_bits;  // a vector of bit vectors - i.e. Sets
+    std::vector<Set> m_bits; // a vector of bit vectors - i.e. Sets
 };
 
-inline std::ostream&
-operator<<(std::ostream& out, const NetDest& obj)
+inline std::ostream &
+operator<<(std::ostream &out, const NetDest &obj)
 {
     obj.print(out);
     out << std::flush;

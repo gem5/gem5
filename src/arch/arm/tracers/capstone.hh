@@ -56,7 +56,7 @@ class ArmCapstoneDisassembler : public CapstoneDisassembler
     ArmCapstoneDisassembler(const Params &p);
 
   protected:
-    const csh* currHandle(const PCStateBase &pc) const override;
+    const csh *currHandle(const PCStateBase &pc) const override;
 
   protected:
     csh arm64Handle;

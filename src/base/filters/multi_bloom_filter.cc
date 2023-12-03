@@ -38,29 +38,24 @@ namespace gem5
 namespace bloom_filter
 {
 
-Multi::Multi(const BloomFilterMultiParams &p)
-    : Base(p), filters(p.filters)
-{
-}
+Multi::Multi(const BloomFilterMultiParams &p) : Base(p), filters(p.filters) {}
 
-Multi::~Multi()
-{
-}
+Multi::~Multi() {}
 
 void
 Multi::clear()
 {
-    for (auto& sub_filter : filters) {
+    for (auto &sub_filter : filters) {
         sub_filter->clear();
     }
 }
 
 void
-Multi::merge(const Base* other)
+Multi::merge(const Base *other)
 {
-    auto* cast_other = static_cast<const Multi*>(other);
+    auto *cast_other = static_cast<const Multi *>(other);
     assert(filters.size() == cast_other->filters.size());
-    for (int i = 0; i < filters.size(); ++i){
+    for (int i = 0; i < filters.size(); ++i) {
         filters[i]->merge(cast_other->filters[i]);
     }
 }
@@ -68,7 +63,7 @@ Multi::merge(const Base* other)
 void
 Multi::set(Addr addr)
 {
-    for (auto& sub_filter : filters) {
+    for (auto &sub_filter : filters) {
         sub_filter->set(addr);
     }
 }
@@ -76,7 +71,7 @@ Multi::set(Addr addr)
 void
 Multi::unset(Addr addr)
 {
-    for (auto& sub_filter : filters) {
+    for (auto &sub_filter : filters) {
         sub_filter->unset(addr);
     }
 }
@@ -85,7 +80,7 @@ bool
 Multi::isSet(Addr addr) const
 {
     int count = 0;
-    for (const auto& sub_filter : filters) {
+    for (const auto &sub_filter : filters) {
         if (sub_filter->isSet(addr)) {
             count++;
         }
@@ -97,7 +92,7 @@ int
 Multi::getCount(Addr addr) const
 {
     int count = 0;
-    for (const auto& sub_filter : filters) {
+    for (const auto &sub_filter : filters) {
         count += sub_filter->getCount(addr);
     }
     return count;
@@ -107,7 +102,7 @@ int
 Multi::getTotalCount() const
 {
     int count = 0;
-    for (const auto& sub_filter : filters) {
+    for (const auto &sub_filter : filters) {
         count += sub_filter->getTotalCount();
     }
     return count;

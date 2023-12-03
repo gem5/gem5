@@ -125,8 +125,8 @@ class SHiP : public BRRIP
      *
      * @param replacement_data Replacement data to be invalidated.
      */
-    void invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
-                                                                    override;
+    void invalidate(
+        const std::shared_ptr<ReplacementData> &replacement_data) override;
 
     /**
      * Touch an entry to update its replacement data.
@@ -135,10 +135,10 @@ class SHiP : public BRRIP
      * @param replacement_data Replacement data to be touched.
      * @param pkt Packet that generated this hit.
      */
-    void touch(const std::shared_ptr<ReplacementData>& replacement_data,
-        const PacketPtr pkt) override;
-    void touch(const std::shared_ptr<ReplacementData>& replacement_data) const
-        override;
+    void touch(const std::shared_ptr<ReplacementData> &replacement_data,
+               const PacketPtr pkt) override;
+    void touch(const std::shared_ptr<ReplacementData> &replacement_data)
+        const override;
 
     /**
      * Reset replacement data. Used when an entry is inserted.
@@ -147,10 +147,10 @@ class SHiP : public BRRIP
      * @param replacement_data Replacement data to be reset.
      * @param pkt Packet that generated this miss.
      */
-    void reset(const std::shared_ptr<ReplacementData>& replacement_data,
-        const PacketPtr pkt) override;
-    void reset(const std::shared_ptr<ReplacementData>& replacement_data) const
-        override;
+    void reset(const std::shared_ptr<ReplacementData> &replacement_data,
+               const PacketPtr pkt) override;
+    void reset(const std::shared_ptr<ReplacementData> &replacement_data)
+        const override;
 
     /**
      * Instantiate a replacement data entry.

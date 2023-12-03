@@ -150,11 +150,13 @@ struct ParseParam<MatStore<X, Y>>;
 template <typename ElemType, typename Container, bool FromTile>
 class HorizontalSlice
 {
-    template <size_t, size_t> friend class MatStore;
-    template <typename, typename> friend class Tile;
+    template <size_t, size_t>
+    friend class MatStore;
+    template <typename, typename>
+    friend class Tile;
 
   private:
-    Container * container;
+    Container *container;
     size_t index;
     size_t xElems;
     size_t yElems;
@@ -162,20 +164,21 @@ class HorizontalSlice
     size_t strideElts;
 
   private:
-    HorizontalSlice(Container& cnt, size_t _startBytes, size_t _strideBytes,
+    HorizontalSlice(Container &cnt, size_t _startBytes, size_t _strideBytes,
                     size_t idx)
-      : container(&cnt), index(idx),
-        xElems(container->xSize() / sizeof(ElemType)),
-        yElems(container->ySize() / (FromTile ? sizeof(ElemType): 1)),
-        startElts(_startBytes / sizeof(ElemType)),
-        strideElts(_strideBytes / sizeof(ElemType))
+        : container(&cnt),
+          index(idx),
+          xElems(container->xSize() / sizeof(ElemType)),
+          yElems(container->ySize() / (FromTile ? sizeof(ElemType) : 1)),
+          startElts(_startBytes / sizeof(ElemType)),
+          strideElts(_strideBytes / sizeof(ElemType))
     {
         gem5_assert(xElems > 0, "The number of xElems cannot be 0");
         gem5_assert(yElems > 0, "The number of yElems cannot be 0");
 
         // Make sure that we have a whole multiple of an element size
-        assert (_startBytes % sizeof(ElemType) == 0);
-        assert (_strideBytes % sizeof(ElemType) == 0);
+        assert(_startBytes % sizeof(ElemType) == 0);
+        assert(_strideBytes % sizeof(ElemType) == 0);
 
         if constexpr (!FromTile) {
             // If we are not operating on a tile, the stride must be the
@@ -189,7 +192,7 @@ class HorizontalSlice
     };
 
   public:
-    ElemType&
+    ElemType &
     operator[](size_t elem_idx)
     {
         assert(elem_idx < xElems);
@@ -223,11 +226,13 @@ class HorizontalSlice
 template <typename ElemType, typename Container, bool FromTile>
 class VerticalSlice
 {
-    template <size_t, size_t> friend class MatStore;
-    template <typename, typename> friend class Tile;
+    template <size_t, size_t>
+    friend class MatStore;
+    template <typename, typename>
+    friend class Tile;
 
   private:
-    Container * container;
+    Container *container;
     size_t index;
     size_t xElems;
     size_t yElems;
@@ -235,19 +240,21 @@ class VerticalSlice
     size_t strideElts;
 
   private:
-    VerticalSlice(Container& cnt, size_t _startBytes, size_t _strideBytes, size_t idx)
-      : container(&cnt), index(idx),
-        xElems(container->xSize() / sizeof(ElemType)),
-        yElems(container->ySize() / (FromTile ? sizeof(ElemType): 1)),
-        startElts(_startBytes / sizeof(ElemType)),
-        strideElts(_strideBytes / sizeof(ElemType))
+    VerticalSlice(Container &cnt, size_t _startBytes, size_t _strideBytes,
+                  size_t idx)
+        : container(&cnt),
+          index(idx),
+          xElems(container->xSize() / sizeof(ElemType)),
+          yElems(container->ySize() / (FromTile ? sizeof(ElemType) : 1)),
+          startElts(_startBytes / sizeof(ElemType)),
+          strideElts(_strideBytes / sizeof(ElemType))
     {
         gem5_assert(xElems > 0, "The number of xElems cannot be 0");
         gem5_assert(yElems > 0, "The number of yElems cannot be 0");
 
         // Make sure that we have a whole multiple of an element size
-        assert (_startBytes % sizeof(ElemType) == 0);
-        assert (_strideBytes % sizeof(ElemType) == 0);
+        assert(_startBytes % sizeof(ElemType) == 0);
+        assert(_strideBytes % sizeof(ElemType) == 0);
 
         if constexpr (!FromTile) {
             // If we are not operating on a tile, the stride must be the
@@ -261,7 +268,7 @@ class VerticalSlice
     };
 
   public:
-    ElemType&
+    ElemType &
     operator[](size_t elem_idx)
     {
         assert(elem_idx < yElems);
@@ -294,20 +301,20 @@ class VerticalSlice
 template <typename ElemType, typename Container>
 class Tile
 {
-    template <size_t, size_t> friend class MatStore;
+    template <size_t, size_t>
+    friend class MatStore;
 
     // We "calculate" the number of possible tiles based on the element size
     static constexpr size_t NUM_TILES = sizeof(ElemType);
 
   private:
-    Container * container;
+    Container *container;
     size_t index;
     size_t startBytes;
     size_t strideBytes;
 
   private:
-    Tile(Container& cnt, size_t idx)
-      : container(&cnt), index(idx)
+    Tile(Container &cnt, size_t idx) : container(&cnt), index(idx)
     {
         assert(index < NUM_TILES);
         startBytes = container->xSize() * index;
@@ -322,7 +329,7 @@ class Tile
         return asHSlice(idx);
     };
 
-    Container*
+    Container *
     getContainer()
     {
         return container;
@@ -332,10 +339,8 @@ class Tile
     asHSlice(size_t row_idx)
     {
         assert(row_idx < container->ySize() / NUM_TILES);
-        return HorizontalSlice<ElemType, Container, true>(*container,
-                                                          startBytes,
-                                                          strideBytes,
-                                                          row_idx);
+        return HorizontalSlice<ElemType, Container, true>(
+            *container, startBytes, strideBytes, row_idx);
     };
 
     auto
@@ -384,51 +389,69 @@ class MatStore
 
     static constexpr size_t LINEAR_SIZE = X * Y;
 
-    template <typename, typename, bool> friend class HorizontalSlice;
-    template <typename, typename, bool> friend class VerticalSlice;
+    template <typename, typename, bool>
+    friend class HorizontalSlice;
+    template <typename, typename, bool>
+    friend class VerticalSlice;
 
   public:
-    static constexpr inline size_t xSize() { return X; };
-    static constexpr inline size_t ySize() { return Y; };
-    static constexpr inline size_t linearSize() { return LINEAR_SIZE; };
+    static constexpr inline size_t
+    xSize()
+    {
+        return X;
+    };
+
+    static constexpr inline size_t
+    ySize()
+    {
+        return Y;
+    };
+
+    static constexpr inline size_t
+    linearSize()
+    {
+        return LINEAR_SIZE;
+    };
 
     using Container = std::array<uint8_t, LINEAR_SIZE>;
     using MyClass = MatStore<X, Y>;
+
   private:
     // We need to be able to handle 128-bit types; align accordingly
     alignas(16) Container container;
 
   public:
     /** Constructor */
-    MatStore() {};
+    MatStore(){};
 
-    MatStore(const MatStore&) = default;
+    MatStore(const MatStore &) = default;
 
     void
     zero()
     {
-        memset(container.data(), 0 , LINEAR_SIZE);
+        memset(container.data(), 0, LINEAR_SIZE);
     }
 
     /** Assignment operators. */
     /** @{ */
     /** From MatStore */
-    MyClass&
-    operator=(const MyClass& that)
+    MyClass &
+    operator=(const MyClass &that)
     {
         if (&that == this)
             return *this;
         memcpy(container.data(), that.container.data(), LINEAR_SIZE);
         return *this;
     }
+
     /** @} */
 
     /** Equality operator.
      * Required to compare thread contexts.
      */
-    template<size_t X2, size_t Y2>
+    template <size_t X2, size_t Y2>
     inline bool
-    operator==(const MatStore<X2, Y2>& that) const
+    operator==(const MatStore<X2, Y2> &that) const
     {
         return X == X2 && Y == Y2 &&
                !memcmp(container.data(), that.container.data(), LINEAR_SIZE);
@@ -437,9 +460,9 @@ class MatStore
     /** Inequality operator.
      * Required to compare thread contexts.
      */
-    template<size_t X2, size_t Y2>
+    template <size_t X2, size_t Y2>
     bool
-    operator!=(const MatStore<X2, Y2>& that) const
+    operator!=(const MatStore<X2, Y2> &that) const
     {
         return !operator==(that);
     }
@@ -447,13 +470,18 @@ class MatStore
   private:
     /** Get pointer to the raw data. */
     template <typename ElemType>
-    const ElemType* rawPtr() const
+    const ElemType *
+    rawPtr() const
     {
-        return reinterpret_cast<const ElemType*>(container.data());
+        return reinterpret_cast<const ElemType *>(container.data());
     }
 
     template <typename ElemType>
-    ElemType* rawPtr() { return reinterpret_cast<ElemType*>(container.data()); }
+    ElemType *
+    rawPtr()
+    {
+        return reinterpret_cast<ElemType *>(container.data());
+    }
 
   public:
     template <typename ElemType>
@@ -477,13 +505,13 @@ class MatStore
         return VerticalSlice<ElemType, MyClass, false>(*this, 0, X, col_idx);
     }
 
-    friend std::ostream&
-    operator<<(std::ostream& os, const MatStore<X, Y>& v)
+    friend std::ostream &
+    operator<<(std::ostream &os, const MatStore<X, Y> &v)
     {
         // When printing for human consumption, break into 4 byte chunks.
         ccprintf(os, "[");
         size_t count = 0;
-        for (auto& b: v.container) {
+        for (auto &b : v.container) {
             if (count && (count % 4) == 0)
                 os << "_";
             ccprintf(os, "%02x", b);
@@ -499,7 +527,6 @@ class MatStore
      */
     friend ParseParam<MatStore<X, Y>>;
     friend ShowParam<MatStore<X, Y>>;
-
 };
 
 /**
@@ -533,10 +560,11 @@ struct ShowParam<MatStore<X, Y>>
     static void
     show(std::ostream &os, const MatStore<X, Y> &value)
     {
-        for (auto& b: value.container)
+        for (auto &b : value.container)
             ccprintf(os, "%02x", b);
     }
 };
+
 /** @} */
 
 /**
@@ -547,9 +575,20 @@ struct ShowParam<MatStore<X, Y>>
 struct DummyMatRegContainer
 {
     RegVal filler = 0;
-    bool operator == (const DummyMatRegContainer &d) const { return true; }
-    bool operator != (const DummyMatRegContainer &d) const { return true; }
+
+    bool
+    operator==(const DummyMatRegContainer &d) const
+    {
+        return true;
+    }
+
+    bool
+    operator!=(const DummyMatRegContainer &d) const
+    {
+        return true;
+    }
 };
+
 template <>
 struct ParseParam<DummyMatRegContainer>
 {
@@ -559,12 +598,15 @@ struct ParseParam<DummyMatRegContainer>
         return false;
     }
 };
+
 static_assert(sizeof(DummyMatRegContainer) == sizeof(RegVal));
+
 static inline std::ostream &
 operator<<(std::ostream &os, const DummyMatRegContainer &d)
 {
     return os;
 }
+
 /** @} */
 
 } // namespace gem5

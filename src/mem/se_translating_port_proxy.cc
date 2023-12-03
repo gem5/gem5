@@ -46,14 +46,15 @@
 namespace gem5
 {
 
-SETranslatingPortProxy::SETranslatingPortProxy(
-        ThreadContext *tc, AllocType alloc, Request::Flags _flags) :
-    TranslatingPortProxy(tc, _flags), allocating(alloc)
+SETranslatingPortProxy::SETranslatingPortProxy(ThreadContext *tc,
+                                               AllocType alloc,
+                                               Request::Flags _flags)
+    : TranslatingPortProxy(tc, _flags), allocating(alloc)
 {}
 
 bool
 SETranslatingPortProxy::fixupRange(const TranslationGen::Range &range,
-        BaseMMU::Mode mode) const
+                                   BaseMMU::Mode mode) const
 {
     auto *process = _tc->getProcessPtr();
 
@@ -62,7 +63,7 @@ SETranslatingPortProxy::fixupRange(const TranslationGen::Range &range,
             process->allocateMem(range.vaddr, range.size);
             return true;
         } else if (allocating == NextPage &&
-                process->fixupFault(range.vaddr)) {
+                   process->fixupFault(range.vaddr)) {
             // We've accessed the next page on the stack.
             return true;
         }

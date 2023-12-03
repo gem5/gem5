@@ -59,15 +59,16 @@ class FaultBase
 {
   public:
     virtual FaultName name() const = 0;
-    virtual void invoke(ThreadContext * tc, const StaticInstPtr &inst=
-                        nullStaticInstPtr);
-    virtual ~FaultBase() {};
+    virtual void invoke(ThreadContext *tc,
+                        const StaticInstPtr &inst = nullStaticInstPtr);
+    virtual ~FaultBase(){};
 };
 
 class UnimpFault : public FaultBase
 {
   private:
     std::string panicStr;
+
   public:
     UnimpFault(std::string _str) : panicStr(_str) {}
 
@@ -76,25 +77,35 @@ class UnimpFault : public FaultBase
     {
         return "Unimplemented simulator feature";
     }
-    void invoke(ThreadContext *tc, const StaticInstPtr &inst =
-                nullStaticInstPtr) override;
+
+    void invoke(ThreadContext *tc,
+                const StaticInstPtr &inst = nullStaticInstPtr) override;
 };
 
 // A fault to trigger a system call in SE mode.
 class SESyscallFault : public FaultBase
 {
-    const char *name() const override { return "syscall_fault"; }
+    const char *
+    name() const override
+    {
+        return "syscall_fault";
+    }
 
-    void invoke(ThreadContext *tc, const StaticInstPtr &inst=
-            nullStaticInstPtr) override;
+    void invoke(ThreadContext *tc,
+                const StaticInstPtr &inst = nullStaticInstPtr) override;
 };
 
 class ReExec : public FaultBase
 {
   public:
-    virtual FaultName name() const override { return "Re-execution fault"; }
-    void invoke(ThreadContext *tc, const StaticInstPtr &inst=
-                nullStaticInstPtr) override;
+    virtual FaultName
+    name() const override
+    {
+        return "Re-execution fault";
+    }
+
+    void invoke(ThreadContext *tc,
+                const StaticInstPtr &inst = nullStaticInstPtr) override;
 };
 
 /*
@@ -107,34 +118,64 @@ class ReExec : public FaultBase
 class SyscallRetryFault : public FaultBase
 {
   public:
-    FaultName name() const override { return "System call retry fault"; }
+    FaultName
+    name() const override
+    {
+        return "System call retry fault";
+    }
+
     SyscallRetryFault() {}
-    void invoke(ThreadContext *tc, const StaticInstPtr &inst=
-                nullStaticInstPtr) override;
+
+    void invoke(ThreadContext *tc,
+                const StaticInstPtr &inst = nullStaticInstPtr) override;
 };
 
 class GenericPageTableFault : public FaultBase
 {
   private:
     Addr vaddr;
+
   public:
-    FaultName name() const override { return "Generic page table fault"; }
+    FaultName
+    name() const override
+    {
+        return "Generic page table fault";
+    }
+
     GenericPageTableFault(Addr va) : vaddr(va) {}
-    void invoke(ThreadContext *tc, const StaticInstPtr &inst=
-                nullStaticInstPtr) override;
-    Addr getFaultVAddr() const { return vaddr; }
+
+    void invoke(ThreadContext *tc,
+                const StaticInstPtr &inst = nullStaticInstPtr) override;
+
+    Addr
+    getFaultVAddr() const
+    {
+        return vaddr;
+    }
 };
 
 class GenericAlignmentFault : public FaultBase
 {
   private:
     Addr vaddr;
+
   public:
-    FaultName name() const override { return "Generic alignment fault"; }
+    FaultName
+    name() const override
+    {
+        return "Generic alignment fault";
+    }
+
     GenericAlignmentFault(Addr va) : vaddr(va) {}
-    void invoke(ThreadContext *tc, const StaticInstPtr &inst=
-                nullStaticInstPtr) override;
-    Addr getFaultVAddr() const { return vaddr; }
+
+    void invoke(ThreadContext *tc,
+                const StaticInstPtr &inst = nullStaticInstPtr) override;
+
+    Addr
+    getFaultVAddr() const
+    {
+        return vaddr;
+    }
 };
 
 class GenericHtmFailureFault : public FaultBase
@@ -145,15 +186,29 @@ class GenericHtmFailureFault : public FaultBase
 
   public:
     GenericHtmFailureFault(uint64_t htm_uid, HtmFailureFaultCause _cause)
-      : htmUid(htm_uid), cause(_cause)
+        : htmUid(htm_uid), cause(_cause)
     {}
 
-    FaultName name() const override { return "Generic HTM failure fault"; }
+    FaultName
+    name() const override
+    {
+        return "Generic HTM failure fault";
+    }
 
-    uint64_t getHtmUid() const { return htmUid; }
-    HtmFailureFaultCause getHtmFailureFaultCause() const { return cause; }
-    void invoke(ThreadContext *tc, const StaticInstPtr &inst =
-                nullStaticInstPtr) override;
+    uint64_t
+    getHtmUid() const
+    {
+        return htmUid;
+    }
+
+    HtmFailureFaultCause
+    getHtmFailureFaultCause() const
+    {
+        return cause;
+    }
+
+    void invoke(ThreadContext *tc,
+                const StaticInstPtr &inst = nullStaticInstPtr) override;
 };
 
 } // namespace gem5

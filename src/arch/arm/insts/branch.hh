@@ -56,12 +56,13 @@ class BranchImm : public PredOp
 
   public:
     BranchImm(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-              int32_t _imm) :
-        PredOp(mnem, _machInst, __opClass), imm(_imm)
+              int32_t _imm)
+        : PredOp(mnem, _machInst, __opClass), imm(_imm)
     {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 // Conditionally Branch to a target computed with an immediate
@@ -69,8 +70,8 @@ class BranchImmCond : public BranchImm
 {
   public:
     BranchImmCond(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                  int32_t _imm, ConditionCode _condCode) :
-        BranchImm(mnem, _machInst, __opClass, _imm)
+                  int32_t _imm, ConditionCode _condCode)
+        : BranchImm(mnem, _machInst, __opClass, _imm)
     {
         // Only update if this isn't part of an IT block
         if (!machInst.itstateMask)
@@ -86,12 +87,13 @@ class BranchReg : public PredOp
 
   public:
     BranchReg(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-              RegIndex _op1) :
-        PredOp(mnem, _machInst, __opClass), op1(_op1)
+              RegIndex _op1)
+        : PredOp(mnem, _machInst, __opClass), op1(_op1)
     {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 // Conditionally Branch to a target computed with a register
@@ -99,8 +101,8 @@ class BranchRegCond : public BranchReg
 {
   public:
     BranchRegCond(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                  RegIndex _op1, ConditionCode _condCode) :
-        BranchReg(mnem, _machInst, __opClass, _op1)
+                  RegIndex _op1, ConditionCode _condCode)
+        : BranchReg(mnem, _machInst, __opClass, _op1)
     {
         // Only update if this isn't part of an IT block
         if (!machInst.itstateMask)
@@ -117,12 +119,13 @@ class BranchRegReg : public PredOp
 
   public:
     BranchRegReg(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                 RegIndex _op1, RegIndex _op2) :
-        PredOp(mnem, _machInst, __opClass), op1(_op1), op2(_op2)
+                 RegIndex _op1, RegIndex _op2)
+        : PredOp(mnem, _machInst, __opClass), op1(_op1), op2(_op2)
     {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 // Branch to a target computed with an immediate and a register
@@ -134,8 +137,8 @@ class BranchImmReg : public PredOp
 
   public:
     BranchImmReg(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                 int32_t _imm, RegIndex _op1) :
-        PredOp(mnem, _machInst, __opClass), imm(_imm), op1(_op1)
+                 int32_t _imm, RegIndex _op1)
+        : PredOp(mnem, _machInst, __opClass), imm(_imm), op1(_op1)
     {}
 };
 

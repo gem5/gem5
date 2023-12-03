@@ -63,10 +63,7 @@ TLB::TLB(const Params &p) : BaseTLB(p), size(p.size), nlu(0)
     smallPages = 0;
 }
 
-TLB::~TLB()
-{
-    delete [] table;
-}
+TLB::~TLB() { delete[] table; }
 
 // look up an entry in the TLB
 MipsISA::PTE *
@@ -83,9 +80,9 @@ TLB::lookup(Addr vpn, uint8_t asn) const
             /* 1KB TLB Lookup code - from MIPS ARM Volume III - Rev. 2.50 */
             Addr Mask = pte->Mask;
             Addr InvMask = ~Mask;
-            Addr VPN  = pte->VPN;
+            Addr VPN = pte->VPN;
             if (((vpn & InvMask) == (VPN & InvMask)) &&
-                    (pte->G  || (asn == pte->asid))) {
+                (pte->G || (asn == pte->asid))) {
                 // We have a VPN + ASID Match
                 retval = pte;
                 break;
@@ -99,11 +96,11 @@ TLB::lookup(Addr vpn, uint8_t asn) const
     return retval;
 }
 
-MipsISA::PTE*
+MipsISA::PTE *
 TLB::getEntry(unsigned Index) const
 {
     // Make sure that Index is valid
-    assert(Index<size);
+    assert(Index < size);
     return &table[Index];
 }
 
@@ -123,7 +120,7 @@ TLB::probeEntry(Addr vpn, uint8_t asn) const
             Addr InvMask = ~Mask;
             Addr VPN = pte->VPN;
             if (((vpn & InvMask) == (VPN & InvMask)) &&
-                    (pte->G  || (asn == pte->asid))) {
+                (pte->G || (asn == pte->asid))) {
                 // We have a VPN + ASID Match
                 Ind = index;
                 break;
@@ -131,7 +128,7 @@ TLB::probeEntry(Addr vpn, uint8_t asn) const
             ++i;
         }
     }
-    DPRINTF(MipsPRA,"VPN: %x, asid: %d, Result of TLBP: %d\n",vpn,asn,Ind);
+    DPRINTF(MipsPRA, "VPN: %x, asid: %d, Result of TLBP: %d\n", vpn, asn, Ind);
     return Ind;
 }
 
@@ -153,23 +150,22 @@ TLB::insertAt(PTE &pte, unsigned Index, int _smallPages)
 {
     smallPages = _smallPages;
     if (Index > size) {
-        warn("Attempted to write at index (%d) beyond TLB size (%d)",
-                Index, size);
+        warn("Attempted to write at index (%d) beyond TLB size (%d)", Index,
+             size);
     } else {
         // Update TLB
-        DPRINTF(TLB, "TLB[%d]: %x %x %x %x\n",
-                Index, pte.Mask << 11,
+        DPRINTF(TLB, "TLB[%d]: %x %x %x %x\n", Index, pte.Mask << 11,
                 ((pte.VPN << 11) | pte.asid),
-                ((pte.PFN0 << 6) | (pte.C0 << 3) |
-                 (pte.D0 << 2) | (pte.V0 <<1) | pte.G),
-                ((pte.PFN1 <<6) | (pte.C1 << 3) |
-                 (pte.D1 << 2) | (pte.V1 <<1) | pte.G));
+                ((pte.PFN0 << 6) | (pte.C0 << 3) | (pte.D0 << 2) |
+                 (pte.V0 << 1) | pte.G),
+                ((pte.PFN1 << 6) | (pte.C1 << 3) | (pte.D1 << 2) |
+                 (pte.V1 << 1) | pte.G));
         if (table[Index].V0 || table[Index].V1) {
             // Previous entry is valid
             PageTable::iterator i = lookupTable.find(table[Index].VPN);
             lookupTable.erase(i);
         }
-        table[Index]=pte;
+        table[Index] = pte;
         // Update fast lookup table
         lookupTable.insert(std::make_pair(table[Index].VPN, Index));
     }
@@ -243,12 +239,11 @@ TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc,
 }
 
 Fault
-TLB::finalizePhysical(const RequestPtr &req,
-                      ThreadContext *tc, BaseMMU::Mode mode) const
+TLB::finalizePhysical(const RequestPtr &req, ThreadContext *tc,
+                      BaseMMU::Mode mode) const
 {
     return NoFault;
 }
-
 
 MipsISA::PTE &
 TLB::index(bool advance)

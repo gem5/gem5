@@ -35,7 +35,6 @@
 
  *****************************************************************************/
 
-
 // $Log: sc_fxval_observer.cpp,v $
 // Revision 1.1.1.1  2006/12/15 20:20:04  acg
 // SystemC 2.3
@@ -57,8 +56,7 @@ namespace sc_dt
 //  arbitrary precision.
 // ----------------------------------------------------------------------------
 
-sc_fxval_observer *(* sc_fxval_observer::default_observer)() = 0;
-
+sc_fxval_observer *(*sc_fxval_observer::default_observer)() = 0;
 
 // ----------------------------------------------------------------------------
 //  CLASS : sc_fxval_fast_observer
@@ -67,6 +65,6 @@ sc_fxval_observer *(* sc_fxval_observer::default_observer)() = 0;
 //  limited precision.
 // ----------------------------------------------------------------------------
 
-sc_fxval_fast_observer *(* sc_fxval_fast_observer::default_observer)() = 0;
+sc_fxval_fast_observer *(*sc_fxval_fast_observer::default_observer)() = 0;
 
 } // namespace sc_dt

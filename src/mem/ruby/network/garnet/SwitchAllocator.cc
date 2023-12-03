@@ -28,7 +28,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #include "mem/ruby/network/garnet/SwitchAllocator.hh"
 
 #include "debug/RubyNetwork.hh"
@@ -46,8 +45,7 @@ namespace ruby
 namespace garnet
 {
 
-SwitchAllocator::SwitchAllocator(Router *router)
-    : Consumer(router)
+SwitchAllocator::SwitchAllocator(Router *router) : Consumer(router)
 {
     m_router = router;
     m_num_vcs = m_router->get_num_vcs();
@@ -90,7 +88,7 @@ SwitchAllocator::init()
 void
 SwitchAllocator::wakeup()
 {
-    arbitrate_inports(); // First stage of allocation
+    arbitrate_inports();  // First stage of allocation
     arbitrate_outports(); // Second stage of allocation
 
     clear_request_vector();
@@ -126,8 +124,7 @@ SwitchAllocator::arbitrate_inports()
 
                 // check if the flit in this InputVC is allowed to be sent
                 // send_allowed conditions described in that function.
-                bool make_request =
-                    send_allowed(inport, invc, outport, outvc);
+                bool make_request = send_allowed(inport, invc, outport, outvc);
 
                 if (make_request) {
                     m_input_arbiter_activity++;
@@ -168,9 +165,7 @@ SwitchAllocator::arbitrate_outports()
     for (int outport = 0; outport < m_num_outports; outport++) {
         int inport = m_round_robin_inport[outport];
 
-        for (int inport_iter = 0; inport_iter < m_num_inports;
-                 inport_iter++) {
-
+        for (int inport_iter = 0; inport_iter < m_num_inports; inport_iter++) {
             // inport has a request this cycle for outport
             if (m_port_requests[inport] == outport) {
                 auto output_unit = m_router->getOutputUnit(outport);
@@ -188,19 +183,18 @@ SwitchAllocator::arbitrate_outports()
                 // remove flit from Input VC
                 flit *t_flit = input_unit->getTopFlit(invc);
 
-                DPRINTF(RubyNetwork, "SwitchAllocator at Router %d "
-                                     "granted outvc %d at outport %d "
-                                     "to invc %d at inport %d to flit %s at "
-                                     "cycle: %lld\n",
+                DPRINTF(RubyNetwork,
+                        "SwitchAllocator at Router %d "
+                        "granted outvc %d at outport %d "
+                        "to invc %d at inport %d to flit %s at "
+                        "cycle: %lld\n",
                         m_router->get_id(), outvc,
                         m_router->getPortDirectionName(
                             output_unit->get_direction()),
                         invc,
                         m_router->getPortDirectionName(
                             input_unit->get_direction()),
-                            *t_flit,
-                        m_router->curCycle());
-
+                        *t_flit, m_router->curCycle());
 
                 // Update outport field in the flit since this is
                 // used by CrossbarSwitch code to send it out of
@@ -223,7 +217,6 @@ SwitchAllocator::arbitrate_outports()
 
                 if ((t_flit->get_type() == TAIL_) ||
                     t_flit->get_type() == HEAD_TAIL_) {
-
                     // This Input VC should now be empty
                     assert(!(input_unit->isReady(invc, curTick())));
 
@@ -254,7 +247,6 @@ SwitchAllocator::arbitrate_outports()
                 m_round_robin_invc[inport] = invc + 1;
                 if (m_round_robin_invc[inport] >= m_num_vcs)
                     m_round_robin_invc[inport] = 0;
-
 
                 break; // got a input winner for this outport
             }
@@ -293,12 +285,10 @@ SwitchAllocator::send_allowed(int inport, int invc, int outport, int outvc)
 
     auto output_unit = m_router->getOutputUnit(outport);
     if (!has_outvc) {
-
         // needs outvc
         // this is only true for HEAD and HEAD_TAIL flits.
 
         if (output_unit->has_free_vc(vnet)) {
-
             has_outvc = true;
 
             // each VC has at least one buffer,
@@ -313,7 +303,6 @@ SwitchAllocator::send_allowed(int inport, int invc, int outport, int outvc)
     if (!has_outvc || !has_credit)
         return false;
 
-
     // protocol ordering check
     if ((m_router->get_net_ptr())->isVNetOrdered(vnet)) {
         auto input_unit = m_router->getInputUnit(inport);
@@ -323,12 +312,12 @@ SwitchAllocator::send_allowed(int inport, int invc, int outport, int outvc)
 
         // check if any other flit is ready for SA and for same output port
         // and was enqueued before this flit
-        int vc_base = vnet*m_vc_per_vnet;
+        int vc_base = vnet * m_vc_per_vnet;
         for (int vc_offset = 0; vc_offset < m_vc_per_vnet; vc_offset++) {
             int temp_vc = vc_base + vc_offset;
             if (input_unit->need_stage(temp_vc, SA_, curTick()) &&
-               (input_unit->get_outport(temp_vc) == outport) &&
-               (input_unit->get_enqueue_time(temp_vc) < t_enqueue_time)) {
+                (input_unit->get_outport(temp_vc) == outport) &&
+                (input_unit->get_enqueue_time(temp_vc) < t_enqueue_time)) {
                 return false;
             }
         }
@@ -375,11 +364,10 @@ SwitchAllocator::check_for_wakeup()
 int
 SwitchAllocator::get_vnet(int invc)
 {
-    int vnet = invc/m_vc_per_vnet;
+    int vnet = invc / m_vc_per_vnet;
     assert(vnet < m_router->get_num_vnets());
     return vnet;
 }
-
 
 // Clear the request vector within the allocator at end of SA-II.
 // Was populated by SA-I.

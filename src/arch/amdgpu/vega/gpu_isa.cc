@@ -41,63 +41,59 @@ namespace gem5
 
 namespace VegaISA
 {
-    GPUISA::GPUISA(Wavefront &wf) : wavefront(wf), m0(0)
-    {
+GPUISA::GPUISA(Wavefront &wf) : wavefront(wf), m0(0) {}
+
+ScalarRegU32
+GPUISA::readMiscReg(int opIdx) const
+{
+    switch (opIdx) {
+    case REG_M0:
+        return m0;
+    case REG_ZERO:
+        return 0;
+    case REG_SCC:
+        return statusReg.SCC;
+    default:
+        fatal("attempting to read from unsupported or non-readable "
+              "register. selector val: %i\n",
+              opIdx);
+        return 0;
     }
+}
 
-    ScalarRegU32
-    GPUISA::readMiscReg(int opIdx) const
-    {
-        switch (opIdx) {
-          case REG_M0:
-            return m0;
-          case REG_ZERO:
-            return 0;
-          case REG_SCC:
-            return statusReg.SCC;
-          default:
-            fatal("attempting to read from unsupported or non-readable "
-                  "register. selector val: %i\n", opIdx);
-            return 0;
-        }
+void
+GPUISA::writeMiscReg(int opIdx, ScalarRegU32 operandVal)
+{
+    switch (opIdx) {
+    case REG_M0:
+        m0 = operandVal;
+        break;
+    case REG_SCC:
+        statusReg.SCC = operandVal ? 1 : 0;
+        break;
+    default:
+        fatal("attempting to write to an unsupported or non-writable "
+              "register. selector val: %i\n",
+              opIdx);
+        break;
     }
+}
 
-    void
-    GPUISA::writeMiscReg(int opIdx, ScalarRegU32 operandVal)
-    {
-        switch (opIdx) {
-          case REG_M0:
-            m0 = operandVal;
-            break;
-          case REG_SCC:
-            statusReg.SCC = operandVal ? 1 : 0;
-            break;
-          default:
-            fatal("attempting to write to an unsupported or non-writable "
-                  "register. selector val: %i\n", opIdx);
-            break;
-        }
-    }
+void
+GPUISA::advancePC(GPUDynInstPtr gpuDynInst)
+{
+    wavefront.pc(wavefront.pc() + gpuDynInst->staticInstruction()->instSize());
+}
 
-    void
-    GPUISA::advancePC(GPUDynInstPtr gpuDynInst)
-    {
-        wavefront.pc(wavefront.pc()
-                     + gpuDynInst->staticInstruction()->instSize());
-    }
+const std::array<const ScalarRegU32, NumPosConstRegs> GPUISA::posConstRegs = {
+    { 1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16,
+      17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
+      33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48,
+      49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64 }
+};
 
-    const std::array<const ScalarRegU32, NumPosConstRegs>
-        GPUISA::posConstRegs = { {
-            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-            20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36,
-            37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53,
-            54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64
-        } };
-
-    const std::array<const ScalarRegI32, NumNegConstRegs>
-        GPUISA::negConstRegs = { {
-            -1, -2, -3, -4, -5, -6, -7, -8, -9, -10, -11, -12, -13, -14, -15,
-            -16
-        } };
+const std::array<const ScalarRegI32, NumNegConstRegs> GPUISA::negConstRegs = {
+    { -1, -2, -3, -4, -5, -6, -7, -8, -9, -10, -11, -12, -13, -14, -15, -16 }
+};
 } // namespace VegaISA
 } // namespace gem5

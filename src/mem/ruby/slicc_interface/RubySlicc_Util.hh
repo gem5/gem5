@@ -65,11 +65,23 @@ namespace gem5
 namespace ruby
 {
 
-inline Cycles zero_time() { return Cycles(0); }
+inline Cycles
+zero_time()
+{
+    return Cycles(0);
+}
 
-inline Cycles intToCycles(int c) { return Cycles(c); }
+inline Cycles
+intToCycles(int c)
+{
+    return Cycles(c);
+}
 
-inline Tick intToTick(int c) { return c; }
+inline Tick
+intToTick(int c)
+{
+    return c;
+}
 
 inline NodeID
 intToID(int nodenum)
@@ -105,25 +117,25 @@ mod(int val, int mod)
     return val % mod;
 }
 
-inline int max_tokens()
+inline int
+max_tokens()
 {
-  return 1024;
+    return 1024;
 }
 
 inline bool
 isWriteRequest(RubyRequestType type)
 {
-    if ((type == RubyRequestType_ST) ||
-        (type == RubyRequestType_ATOMIC) ||
+    if ((type == RubyRequestType_ST) || (type == RubyRequestType_ATOMIC) ||
         (type == RubyRequestType_RMW_Read) ||
         (type == RubyRequestType_RMW_Write) ||
         (type == RubyRequestType_Store_Conditional) ||
         (type == RubyRequestType_Locked_RMW_Read) ||
         (type == RubyRequestType_Locked_RMW_Write) ||
         (type == RubyRequestType_FLUSH)) {
-            return true;
+        return true;
     } else {
-            return false;
+        return false;
     }
 }
 
@@ -132,46 +144,45 @@ isDataReadRequest(RubyRequestType type)
 {
     if ((type == RubyRequestType_LD) ||
         (type == RubyRequestType_Load_Linked)) {
-            return true;
+        return true;
     } else {
-            return false;
+        return false;
     }
 }
 
 inline bool
 isReadRequest(RubyRequestType type)
 {
-    if (isDataReadRequest(type) ||
-        (type == RubyRequestType_IFETCH)) {
-            return true;
+    if (isDataReadRequest(type) || (type == RubyRequestType_IFETCH)) {
+        return true;
     } else {
-            return false;
+        return false;
     }
 }
 
 inline bool
 isHtmCmdRequest(RubyRequestType type)
 {
-    if ((type == RubyRequestType_HTM_Start)  ||
+    if ((type == RubyRequestType_HTM_Start) ||
         (type == RubyRequestType_HTM_Commit) ||
         (type == RubyRequestType_HTM_Cancel) ||
         (type == RubyRequestType_HTM_Abort)) {
-            return true;
+        return true;
     } else {
-            return false;
+        return false;
     }
 }
 
 inline bool
 isTlbiCmdRequest(RubyRequestType type)
 {
-    if ((type == RubyRequestType_TLBI)  ||
+    if ((type == RubyRequestType_TLBI) ||
         (type == RubyRequestType_TLBI_SYNC) ||
         (type == RubyRequestType_TLBI_EXT_SYNC) ||
         (type == RubyRequestType_TLBI_EXT_SYNC_COMP)) {
-            return true;
+        return true;
     } else {
-            return false;
+        return false;
     }
 }
 
@@ -186,8 +197,7 @@ htmCmdToRubyRequestType(const Packet *pkt)
         return RubyRequestType_HTM_Cancel;
     } else if (pkt->req->isHTMAbort()) {
         return RubyRequestType_HTM_Abort;
-    }
-    else {
+    } else {
         panic("invalid ruby packet type\n");
     }
 }
@@ -231,7 +241,7 @@ addressOffset(Addr addr, Addr base)
  * state, including empty.
  */
 inline bool
-testAndRead(Addr addr, DataBlock& blk, Packet *pkt)
+testAndRead(Addr addr, DataBlock &blk, Packet *pkt)
 {
     Addr pktLineAddr = makeLineAddress(pkt->getAddr());
     Addr lineAddr = makeLineAddress(addr);
@@ -257,7 +267,7 @@ testAndRead(Addr addr, DataBlock& blk, Packet *pkt)
  * otherwise false is returned.
  */
 inline bool
-testAndReadMask(Addr addr, DataBlock& blk, WriteMask& mask, Packet *pkt)
+testAndReadMask(Addr addr, DataBlock &blk, WriteMask &mask, Packet *pkt)
 {
     Addr pktLineAddr = makeLineAddress(pkt->getAddr());
     Addr lineAddr = makeLineAddress(addr);
@@ -286,7 +296,7 @@ testAndReadMask(Addr addr, DataBlock& blk, WriteMask& mask, Packet *pkt)
  * returned if the data block was written, otherwise false is returned.
  */
 inline bool
-testAndWrite(Addr addr, DataBlock& blk, Packet *pkt)
+testAndWrite(Addr addr, DataBlock &blk, Packet *pkt)
 {
     Addr pktLineAddr = makeLineAddress(pkt->getAddr());
     Addr lineAddr = makeLineAddress(addr);
@@ -308,7 +318,7 @@ inline int
 countBoolVec(BoolVec bVec)
 {
     int count = 0;
-    for (const bool e: bVec) {
+    for (const bool e : bVec) {
         if (e) {
             count++;
         }

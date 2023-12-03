@@ -74,49 +74,56 @@ class VecPredRegT
 {
   protected:
     /// Size of the register in bits.
-    static constexpr size_t NUM_BITS = Packed ? NumElems :
-                                                sizeof(VecElem) * NumElems;
+    static constexpr size_t NUM_BITS =
+        Packed ? NumElems : sizeof(VecElem) * NumElems;
 
   public:
     /// Container type alias.
     using Container = typename std::conditional_t<
-        Const,
-        const VecPredRegContainer<NUM_BITS, Packed>,
+        Const, const VecPredRegContainer<NUM_BITS, Packed>,
         VecPredRegContainer<NUM_BITS, Packed>>;
 
   protected:
     // Alias for this type
     using MyClass = VecPredRegT<VecElem, NumElems, Packed, Const>;
     /// Container corresponding to this view.
-    Container& container;
+    Container &container;
 
   public:
-    VecPredRegT(Container& c) : container(c) {}
+    VecPredRegT(Container &c) : container(c) {}
 
     /// Reset the register to an all-false value.
-    template<bool Condition = !Const>
-    std::enable_if_t<Condition> reset() { container.reset(); }
+    template <bool Condition = !Const>
+    std::enable_if_t<Condition>
+    reset()
+    {
+        container.reset();
+    }
 
     /// Reset the register to an all-true value.
-    template<bool Condition = !Const>
-    std::enable_if_t<Condition> set() { container.set(); }
+    template <bool Condition = !Const>
+    std::enable_if_t<Condition>
+    set()
+    {
+        container.set();
+    }
 
-    template<bool Condition = !Const>
-    std::enable_if_t<Condition, MyClass&>
-    operator=(const MyClass& that)
+    template <bool Condition = !Const>
+    std::enable_if_t<Condition, MyClass &>
+    operator=(const MyClass &that)
     {
         container = that.container;
         return *this;
     }
 
-    const bool&
+    const bool &
     operator[](size_t idx) const
     {
         return container[idx * (Packed ? 1 : sizeof(VecElem))];
     }
 
-    template<bool Condition = !Const>
-    std::enable_if_t<Condition, bool&>
+    template <bool Condition = !Const>
+    std::enable_if_t<Condition, bool &>
     operator[](size_t idx)
     {
         return container[idx * (Packed ? 1 : sizeof(VecElem))];
@@ -128,36 +135,36 @@ class VecPredRegT
     getRaw(size_t idx) const
     {
         return container.getBits(idx * (Packed ? 1 : sizeof(VecElem)),
-                (Packed ? 1 : sizeof(VecElem)));
+                                 (Packed ? 1 : sizeof(VecElem)));
     }
 
     /// Write a raw value in an element of the predicate register
-    template<bool Condition = !Const>
+    template <bool Condition = !Const>
     std::enable_if_t<Condition>
     setRaw(size_t idx, uint8_t val)
     {
         container.setBits(idx * (Packed ? 1 : sizeof(VecElem)),
-                (Packed ? 1 : sizeof(VecElem)), val);
+                          (Packed ? 1 : sizeof(VecElem)), val);
     }
 
     /// Equality operator, required to compare thread contexts.
-    template<typename VE2, size_t NE2, bool P2, bool C2>
+    template <typename VE2, size_t NE2, bool P2, bool C2>
     bool
-    operator==(const VecPredRegT<VE2, NE2, P2, C2>& that) const
+    operator==(const VecPredRegT<VE2, NE2, P2, C2> &that) const
     {
         return container == that.container;
     }
 
     /// Inequality operator, required to compare thread contexts.
-    template<typename VE2, size_t NE2, bool P2, bool C2>
+    template <typename VE2, size_t NE2, bool P2, bool C2>
     bool
-    operator!=(const VecPredRegT<VE2, NE2, P2, C2>& that) const
+    operator!=(const VecPredRegT<VE2, NE2, P2, C2> &that) const
     {
         return !operator==(that);
     }
 
-    friend std::ostream&
-    operator<<(std::ostream& os, const MyClass& p)
+    friend std::ostream &
+    operator<<(std::ostream &os, const MyClass &p)
     {
         // Size must be greater than 0.
         for (int i = 0; i < NUM_BITS; i++)
@@ -172,7 +179,7 @@ class VecPredRegT
     /// the test (corresponding to the current vector length).
     template <bool MC>
     bool
-    firstActive(const VecPredRegT<VecElem, NumElems, Packed, MC>& mask,
+    firstActive(const VecPredRegT<VecElem, NumElems, Packed, MC> &mask,
                 size_t actual_num_elems) const
     {
         assert(actual_num_elems <= NumElems);
@@ -190,7 +197,7 @@ class VecPredRegT
     /// the test (corresponding to the current vector length).
     template <bool MC>
     bool
-    noneActive(const VecPredRegT<VecElem, NumElems, Packed, MC>& mask,
+    noneActive(const VecPredRegT<VecElem, NumElems, Packed, MC> &mask,
                size_t actual_num_elems) const
     {
         assert(actual_num_elems <= NumElems);
@@ -208,7 +215,7 @@ class VecPredRegT
     /// the test (corresponding to the current vector length).
     template <bool MC>
     bool
-    lastActive(const VecPredRegT<VecElem, NumElems, Packed, MC>& mask,
+    lastActive(const VecPredRegT<VecElem, NumElems, Packed, MC> &mask,
                size_t actual_num_elems) const
     {
         assert(actual_num_elems <= NumElems);
@@ -230,8 +237,7 @@ class VecPredRegT
 template <size_t NumBits, bool Packed>
 class VecPredRegContainer
 {
-    static_assert(NumBits > 0,
-                  "Size of a predicate register must be > 0");
+    static_assert(NumBits > 0, "Size of a predicate register must be > 0");
 
   public:
     static constexpr size_t NUM_BITS = NumBits;
@@ -244,10 +250,11 @@ class VecPredRegContainer
 
   public:
     VecPredRegContainer() {}
+
     VecPredRegContainer(const VecPredRegContainer &) = default;
 
-    MyClass&
-    operator=(const MyClass& that)
+    MyClass &
+    operator=(const MyClass &that)
     {
         if (&that == this)
             return *this;
@@ -256,8 +263,8 @@ class VecPredRegContainer
     }
 
     /// Required for de-serialization.
-    MyClass&
-    operator=(const std::vector<uint8_t>& that)
+    MyClass &
+    operator=(const std::vector<uint8_t> &that)
     {
         assert(that.size() == NUM_BITS);
         std::copy(that.begin(), that.end(), container.begin());
@@ -279,27 +286,35 @@ class VecPredRegContainer
     }
 
     /// Equality operator, required to compare thread contexts.
-    template<size_t N2, bool P2>
+    template <size_t N2, bool P2>
     inline bool
-    operator==(const VecPredRegContainer<N2, P2>& that) const
+    operator==(const VecPredRegContainer<N2, P2> &that) const
     {
         return NumBits == N2 && Packed == P2 && container == that.container;
     }
 
     /// Inequality operator, required to compare thread contexts.
-    template<size_t N2, bool P2>
+    template <size_t N2, bool P2>
     bool
-    operator!=(const VecPredRegContainer<N2, P2>& that) const
+    operator!=(const VecPredRegContainer<N2, P2> &that) const
     {
         return !operator==(that);
     }
 
     /// Returns a reference to a specific element of the internal container.
-    bool& operator[](size_t idx) { return container[idx]; }
+    bool &
+    operator[](size_t idx)
+    {
+        return container[idx];
+    }
 
     /// Returns a const reference to a specific element of the internal
     /// container.
-    const bool& operator[](size_t idx) const { return container[idx]; }
+    const bool &
+    operator[](size_t idx) const
+    {
+        return container[idx];
+    }
 
     /// Returns a subset of bits starting from a specific element in the
     /// container.
@@ -328,8 +343,8 @@ class VecPredRegContainer
         }
     }
 
-    friend std::ostream&
-    operator<<(std::ostream& os, const MyClass& p)
+    friend std::ostream &
+    operator<<(std::ostream &os, const MyClass &p)
     {
         // Size must be greater than 0.
         for (int i = 0; i < NumBits; i++)
@@ -349,10 +364,10 @@ class VecPredRegContainer
     as() const
     {
         static_assert(NumBits % sizeof(VecElem) == 0,
-                "Container size incompatible with view size.");
-        return VecPredRegT<VecElem,
-                           Packed ? NumBits : (NumBits / sizeof(VecElem)),
-                           Packed, true>(*this);
+                      "Container size incompatible with view size.");
+        return VecPredRegT < VecElem,
+               Packed ? NumBits : (NumBits / sizeof(VecElem)), Packed,
+               true > (*this);
     }
 
     template <typename VecElem>
@@ -360,11 +375,12 @@ class VecPredRegContainer
     as()
     {
         static_assert(NumBits % sizeof(VecElem) == 0,
-                "Container size incompatible with view size.");
-        return VecPredRegT<VecElem,
-                           Packed ? NumBits : (NumBits / sizeof(VecElem)),
-                           Packed, false>(*this);
+                      "Container size incompatible with view size.");
+        return VecPredRegT < VecElem,
+               Packed ? NumBits : (NumBits / sizeof(VecElem)), Packed,
+               false > (*this);
     }
+
     /// @}
 };
 
@@ -375,7 +391,7 @@ struct ParseParam<VecPredRegContainer<NumBits, Packed>>
     parse(const std::string &s, VecPredRegContainer<NumBits, Packed> &value)
     {
         int i = 0;
-        for (const auto& c: s)
+        for (const auto &c : s)
             value[i++] = (c == '1');
         return true;
     }
@@ -387,7 +403,7 @@ struct ShowParam<VecPredRegContainer<NumBits, Packed>>
     static void
     show(std::ostream &os, const VecPredRegContainer<NumBits, Packed> &value)
     {
-        for (auto b: value.container)
+        for (auto b : value.container)
             ccprintf(os, "%d", b);
     }
 };
@@ -398,11 +414,27 @@ struct ShowParam<VecPredRegContainer<NumBits, Packed>>
 struct DummyVecPredRegContainer
 {
     RegVal filler = 0;
-    bool operator == (const DummyVecPredRegContainer &d) const { return true; }
-    bool operator != (const DummyVecPredRegContainer &d) const { return true; }
+
+    bool
+    operator==(const DummyVecPredRegContainer &d) const
+    {
+        return true;
+    }
+
+    bool
+    operator!=(const DummyVecPredRegContainer &d) const
+    {
+        return true;
+    }
+
     template <typename VecElem>
-    VecElem *as() { return nullptr; }
+    VecElem *
+    as()
+    {
+        return nullptr;
+    }
 };
+
 template <>
 struct ParseParam<DummyVecPredRegContainer>
 {
@@ -412,14 +444,17 @@ struct ParseParam<DummyVecPredRegContainer>
         return false;
     }
 };
+
 static_assert(sizeof(DummyVecPredRegContainer) == sizeof(RegVal));
+
 static inline std::ostream &
 operator<<(std::ostream &os, const DummyVecPredRegContainer &d)
 {
     return os;
 }
+
 /// @}
 
 } // namespace gem5
 
-#endif  // __ARCH_GENERIC_VEC_PRED_REG_HH__
+#endif // __ARCH_GENERIC_VEC_PRED_REG_HH__

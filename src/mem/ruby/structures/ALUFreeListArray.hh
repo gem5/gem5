@@ -50,9 +50,10 @@ class ALUFreeListArray
     class AccessRecord
     {
       public:
-        AccessRecord(Addr line_addr, Tick start_tick) {
-          this->lineAddr = line_addr;
-          this->startTick = start_tick;
+        AccessRecord(Addr line_addr, Tick start_tick)
+        {
+            this->lineAddr = line_addr;
+            this->startTick = start_tick;
         }
 
         Addr lineAddr;
@@ -69,7 +70,11 @@ class ALUFreeListArray
 
     void reserve(Addr addr);
 
-    Tick getLatency() const { return accessLatency; }
+    Tick
+    getLatency() const
+    {
+        return accessLatency;
+    }
 };
 
 } // namespace ruby

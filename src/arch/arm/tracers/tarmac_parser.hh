@@ -62,7 +62,8 @@
 namespace gem5
 {
 
-namespace trace {
+namespace trace
+{
 
 class TarmacParserRecord : public TarmacBaseRecord
 {
@@ -73,14 +74,14 @@ class TarmacParserRecord : public TarmacBaseRecord
      * has been dumped.  E.g., the SVC instruction updates the CPSR and SPSR as
      * part of the fault handling routine.
      */
-    struct TarmacParserRecordEvent: public Event
+    struct TarmacParserRecordEvent : public Event
     {
         /**
          * Reference to the TARMAC trace object to which this record belongs.
          */
-        TarmacParser& parent;
+        TarmacParser &parent;
         /** Current thread context. */
-        ThreadContext* thread;
+        ThreadContext *thread;
         /** Current instruction. */
         const StaticInstPtr inst;
         /** PC of the current instruction. */
@@ -93,17 +94,17 @@ class TarmacParserRecord : public TarmacBaseRecord
          */
         bool mismatchOnPcOrOpcode;
 
-        TarmacParserRecordEvent(TarmacParser& _parent,
-                                ThreadContext *_thread,
+        TarmacParserRecordEvent(TarmacParser &_parent, ThreadContext *_thread,
                                 const StaticInstPtr _inst,
-                                const PCStateBase &_pc,
-                                bool _mismatch,
-                                bool _mismatch_on_pc_or_opcode) :
-            parent(_parent), thread(_thread), inst(_inst), pc(_pc.clone()),
-            mismatch(_mismatch),
-            mismatchOnPcOrOpcode(_mismatch_on_pc_or_opcode)
-        {
-        }
+                                const PCStateBase &_pc, bool _mismatch,
+                                bool _mismatch_on_pc_or_opcode)
+            : parent(_parent),
+              thread(_thread),
+              inst(_inst),
+              pc(_pc.clone()),
+              mismatch(_mismatch),
+              mismatchOnPcOrOpcode(_mismatch_on_pc_or_opcode)
+        {}
 
         void process();
         const char *description() const;
@@ -122,7 +123,8 @@ class TarmacParserRecord : public TarmacBaseRecord
     };
 
     struct ParserMemEntry : public MemEntry
-    { };
+    {
+    };
 
     static const int MaxLineLength = 256;
 
@@ -134,9 +136,8 @@ class TarmacParserRecord : public TarmacBaseRecord
                                     const PCStateBase &pc);
 
     TarmacParserRecord(Tick _when, ThreadContext *_thread,
-                       const StaticInstPtr _staticInst,
-                       const PCStateBase &_pc,
-                       TarmacParser& _parent,
+                       const StaticInstPtr _staticInst, const PCStateBase &_pc,
+                       TarmacParser &_parent,
                        const StaticInstPtr _macroStaticInst = NULL);
 
     void dump() override;
@@ -205,7 +206,7 @@ class TarmacParserRecord : public TarmacBaseRecord
     static int8_t maxVectorLength;
 
   protected:
-    TarmacParser& parent;
+    TarmacParser &parent;
 };
 
 /**
@@ -220,13 +221,15 @@ class TarmacParser : public InstTracer
   public:
     typedef TarmacParserParams Params;
 
-    TarmacParser(const Params &p) : InstTracer(p), startPc(p.start_pc),
-                                    exitOnDiff(p.exit_on_diff),
-                                    exitOnInsnDiff(p.exit_on_insn_diff),
-                                    memWrCheck(p.mem_wr_check),
-                                    ignoredAddrRange(p.ignore_mem_addr),
-                                    cpuId(p.cpu_id),
-                                    macroopInProgress(false)
+    TarmacParser(const Params &p)
+        : InstTracer(p),
+          startPc(p.start_pc),
+          exitOnDiff(p.exit_on_diff),
+          exitOnInsnDiff(p.exit_on_insn_diff),
+          memWrCheck(p.mem_wr_check),
+          ignoredAddrRange(p.ignore_mem_addr),
+          cpuId(p.cpu_id),
+          macroopInProgress(false)
     {
         assert(!(exitOnDiff && exitOnInsnDiff));
 
@@ -239,15 +242,12 @@ class TarmacParser : public InstTracer
         }
     }
 
-    virtual ~TarmacParser()
-    {
-        trace.close();
-    }
+    virtual ~TarmacParser() { trace.close(); }
 
     InstRecord *
     getInstRecord(Tick when, ThreadContext *tc, const StaticInstPtr staticInst,
                   const PCStateBase &pc,
-                  const StaticInstPtr macroStaticInst=nullptr) override
+                  const StaticInstPtr macroStaticInst = nullptr) override
     {
         if (!started && pc.instAddr() == startPc)
             started = true;

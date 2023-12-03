@@ -35,16 +35,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 /** @file
  * Implementiation of a GIC-400 List Register-based VGIC interface.
- * The VGIC is, in this implementation, completely separate from the GIC itself.
- * Only a VIRQ line to the CPU and a PPI line to the GIC (for a HV maintenance IRQ)
- * is required.
+ * The VGIC is, in this implementation, completely separate from the GIC
+ * itself. Only a VIRQ line to the CPU and a PPI line to the GIC (for a HV
+ * maintenance IRQ) is required.
  *
- * The mode in which the List Registers may flag (via LR.HW) that a hardware EOI
- * is to be performed is NOT supported.  (This requires tighter integration with
- * the GIC.)
+ * The mode in which the List Registers may flag (via LR.HW) that a hardware
+ * EOI is to be performed is NOT supported.  (This requires tighter integration
+ * with the GIC.)
  */
 
 #ifndef __DEV_ARM_VGIC_H__
@@ -65,52 +64,52 @@ namespace gem5
 class VGic : public PioDevice
 {
   private:
-    static const int VGIC_CPU_MAX       = 256;
-    static const int NUM_LR             = 4;
+    static const int VGIC_CPU_MAX = 256;
+    static const int NUM_LR = 4;
 
-    static const int GICH_SIZE          = 0x200;
-    static const int GICH_REG_SIZE      = 0x2000;
+    static const int GICH_SIZE = 0x200;
+    static const int GICH_REG_SIZE = 0x2000;
 
-    static const int GICH_HCR           = 0x000;
-    static const int GICH_VTR           = 0x004;
-    static const int GICH_VMCR          = 0x008;
-    static const int GICH_MISR          = 0x010;
-    static const int GICH_EISR0         = 0x020;
-    static const int GICH_EISR1         = 0x024;
-    static const int GICH_ELSR0         = 0x030;
-    static const int GICH_ELSR1         = 0x034;
-    static const int GICH_APR0          = 0x0f0;
-    static const int GICH_LR0           = 0x100;
-    static const int GICH_LR1           = 0x104;
-    static const int GICH_LR2           = 0x108;
-    static const int GICH_LR3           = 0x10c;
+    static const int GICH_HCR = 0x000;
+    static const int GICH_VTR = 0x004;
+    static const int GICH_VMCR = 0x008;
+    static const int GICH_MISR = 0x010;
+    static const int GICH_EISR0 = 0x020;
+    static const int GICH_EISR1 = 0x024;
+    static const int GICH_ELSR0 = 0x030;
+    static const int GICH_ELSR1 = 0x034;
+    static const int GICH_APR0 = 0x0f0;
+    static const int GICH_LR0 = 0x100;
+    static const int GICH_LR1 = 0x104;
+    static const int GICH_LR2 = 0x108;
+    static const int GICH_LR3 = 0x10c;
 
-    static const int GICV_SIZE          = 0x2000;
-    static const int GICV_CTLR          = 0x000;
-    static const int GICV_PMR           = 0x004;
-    static const int GICV_BPR           = 0x008;
-    static const int GICV_IAR           = 0x00c;
-    static const int GICV_EOIR          = 0x010;
-    static const int GICV_RPR           = 0x014;
-    static const int GICV_HPPIR         = 0x018;
-    static const int GICV_ABPR          = 0x01c;
-    static const int GICV_AIAR          = 0x020;
-    static const int GICV_AEOIR         = 0x024;
-    static const int GICV_AHPPIR        = 0x028;
-    static const int GICV_APR0          = 0x0d0;
-    static const int GICV_IIDR          = 0x0fc;
-    static const int GICV_DIR           = 0x1000;
+    static const int GICV_SIZE = 0x2000;
+    static const int GICV_CTLR = 0x000;
+    static const int GICV_PMR = 0x004;
+    static const int GICV_BPR = 0x008;
+    static const int GICV_IAR = 0x00c;
+    static const int GICV_EOIR = 0x010;
+    static const int GICV_RPR = 0x014;
+    static const int GICV_HPPIR = 0x018;
+    static const int GICV_ABPR = 0x01c;
+    static const int GICV_AIAR = 0x020;
+    static const int GICV_AEOIR = 0x024;
+    static const int GICV_AHPPIR = 0x028;
+    static const int GICV_APR0 = 0x0d0;
+    static const int GICV_IIDR = 0x0fc;
+    static const int GICV_DIR = 0x1000;
 
-    static const uint32_t LR_PENDING    = 1;
-    static const uint32_t LR_ACTIVE     = 2;
+    static const uint32_t LR_PENDING = 1;
+    static const uint32_t LR_ACTIVE = 2;
     const uint32_t gicvIIDR;
 
     /** Post interrupt to CPU */
     void processPostVIntEvent(uint32_t cpu);
 
     EventFunctionWrapper *postVIntEvent[VGIC_CPU_MAX];
-    bool        maintIntPosted[VGIC_CPU_MAX];
-    bool        vIntPosted[VGIC_CPU_MAX];
+    bool maintIntPosted[VGIC_CPU_MAX];
+    bool vIntPosted[VGIC_CPU_MAX];
 
     Platform *platform;
     BaseGic *gic;
@@ -121,48 +120,58 @@ class VGic : public PioDevice
     int maintInt;
 
     BitUnion32(ListReg)
-    Bitfield<31> HW;
-    Bitfield<30> Grp1;
-    Bitfield<29,28> State;
-    Bitfield<27,23> Priority;
-    Bitfield<19> EOI;
-    Bitfield<12,10> CpuID;
-    Bitfield<9,0> VirtualID;
+        Bitfield<31> HW;
+        Bitfield<30> Grp1;
+        Bitfield<29, 28> State;
+        Bitfield<27, 23> Priority;
+        Bitfield<19> EOI;
+        Bitfield<12, 10> CpuID;
+        Bitfield<9, 0> VirtualID;
     EndBitUnion(ListReg)
 
     BitUnion32(HCR)
-    Bitfield<31,27> EOICount;
-    Bitfield<7> VGrp1DIE;
-    Bitfield<6> VGrp1EIE;
-    Bitfield<5> VGrp0DIE;
-    Bitfield<4> VGrp0EIE;
-    Bitfield<3> NPIE;
-    Bitfield<2> LRENPIE;
-    Bitfield<1> UIE;
-    Bitfield<0> En;
+        Bitfield<31, 27> EOICount;
+        Bitfield<7> VGrp1DIE;
+        Bitfield<6> VGrp1EIE;
+        Bitfield<5> VGrp0DIE;
+        Bitfield<4> VGrp0EIE;
+        Bitfield<3> NPIE;
+        Bitfield<2> LRENPIE;
+        Bitfield<1> UIE;
+        Bitfield<0> En;
     EndBitUnion(HCR)
 
     BitUnion32(VCTLR)
-    Bitfield<9> EOImode;
-    Bitfield<4> CPBR;
-    Bitfield<3> FIQEn;
-    Bitfield<2> AckCtl;
-    Bitfield<1> EnGrp1;
-    Bitfield<0> En;     // This gets written to enable, not group 1.
+        Bitfield<9> EOImode;
+        Bitfield<4> CPBR;
+        Bitfield<3> FIQEn;
+        Bitfield<2> AckCtl;
+        Bitfield<1> EnGrp1;
+        Bitfield<0> En; // This gets written to enable, not group 1.
     EndBitUnion(VCTLR)
 
-    /* State per CPU.  EVERYTHING should be in this struct and simply replicated
-     * N times.
+    /* State per CPU.  EVERYTHING should be in this struct and simply
+     * replicated N times.
      */
     struct vcpuIntData : public Serializable
     {
         vcpuIntData()
-            : vctrl(0), hcr(0), eisr(0), VMGrp0En(0), VMGrp1En(0),
-              VMAckCtl(0), VMFiqEn(0), VMCBPR(0), VEM(0), VMABP(0), VMBP(0),
+            : vctrl(0),
+              hcr(0),
+              eisr(0),
+              VMGrp0En(0),
+              VMGrp1En(0),
+              VMAckCtl(0),
+              VMFiqEn(0),
+              VMCBPR(0),
+              VEM(0),
+              VMABP(0),
+              VMBP(0),
               VMPriMask(0)
         {
             std::fill(LR.begin(), LR.end(), 0);
         }
+
         virtual ~vcpuIntData() {}
 
         std::array<ListReg, NUM_LR> LR;
@@ -171,7 +180,8 @@ class VGic : public PioDevice
         HCR hcr;
         uint64_t eisr;
 
-        /* Host info, guest info (should be 100% accessible via GICH_* regs!) */
+        /* Host info, guest info (should be 100% accessible via GICH_* regs!)
+         */
         uint8_t VMGrp0En;
         uint8_t VMGrp1En;
         uint8_t VMAckCtl;
@@ -186,7 +196,7 @@ class VGic : public PioDevice
         void unserialize(CheckpointIn &cp) override;
     };
 
-    struct std::array<vcpuIntData, VGIC_CPU_MAX>  vcpuData;
+    struct std::array<vcpuIntData, VGIC_CPU_MAX> vcpuData;
 
   public:
     using Params = VGicParams;
@@ -215,7 +225,8 @@ class VGic : public PioDevice
     void postMaintInt(uint32_t cpu);
     void unPostMaintInt(uint32_t cpu);
 
-    unsigned int lrPending(struct vcpuIntData *vid)
+    unsigned int
+    lrPending(struct vcpuIntData *vid)
     {
         unsigned int pend = 0;
         for (int i = 0; i < NUM_LR; i++) {
@@ -224,7 +235,9 @@ class VGic : public PioDevice
         }
         return pend;
     }
-    unsigned int lrValid(struct vcpuIntData *vid)
+
+    unsigned int
+    lrValid(struct vcpuIntData *vid)
     {
         unsigned int valid = 0;
         for (int i = 0; i < NUM_LR; i++) {
@@ -235,12 +248,14 @@ class VGic : public PioDevice
     }
 
     /** Returns LR index or -1 if none pending */
-    int findHighestPendingLR(struct vcpuIntData *vid)
+    int
+    findHighestPendingLR(struct vcpuIntData *vid)
     {
         unsigned int prio = 0xff;
         int p = -1;
         for (int i = 0; i < NUM_LR; i++) {
-            if ((vid->LR[i].State & LR_PENDING) && (vid->LR[i].Priority < prio)) {
+            if ((vid->LR[i].State & LR_PENDING) &&
+                (vid->LR[i].Priority < prio)) {
                 p = i;
                 prio = vid->LR[i].Priority;
             }
@@ -248,11 +263,11 @@ class VGic : public PioDevice
         return p;
     }
 
-    int findLRForVIRQ(struct vcpuIntData *vid, int virq, int vcpu)
+    int
+    findLRForVIRQ(struct vcpuIntData *vid, int virq, int vcpu)
     {
         for (int i = 0; i < NUM_LR; i++) {
-            if (vid->LR[i].State &&
-                vid->LR[i].VirtualID == virq &&
+            if (vid->LR[i].State && vid->LR[i].VirtualID == virq &&
                 vid->LR[i].CpuID == vcpu)
                 return i;
         }

@@ -62,7 +62,7 @@ class BaseISA : public SimObject
 
   protected:
     BaseISA(const SimObjectParams &p, const std::string &name)
-      : SimObject(p), isaName(name)
+        : SimObject(p), isaName(name)
     {}
 
     ThreadContext *tc = nullptr;
@@ -72,8 +72,11 @@ class BaseISA : public SimObject
     std::string isaName;
 
   public:
-    virtual PCStateBase *newPCState(Addr new_inst_addr=0) const = 0;
-    virtual void clear() {}
+    virtual PCStateBase *newPCState(Addr new_inst_addr = 0) const = 0;
+
+    virtual void
+    clear()
+    {}
 
     virtual RegVal readMiscRegNoEffect(RegIndex idx) const = 0;
     virtual RegVal readMiscReg(RegIndex idx) = 0;
@@ -81,51 +84,91 @@ class BaseISA : public SimObject
     virtual void setMiscRegNoEffect(RegIndex idx, RegVal val) = 0;
     virtual void setMiscReg(RegIndex idx, RegVal val) = 0;
 
-    virtual void takeOverFrom(ThreadContext *new_tc, ThreadContext *old_tc) {}
-    virtual void setThreadContext(ThreadContext *_tc) { tc = _tc; }
+    virtual void
+    takeOverFrom(ThreadContext *new_tc, ThreadContext *old_tc)
+    {}
 
-    virtual uint64_t getExecutingAsid() const { return 0; }
+    virtual void
+    setThreadContext(ThreadContext *_tc)
+    {
+        tc = _tc;
+    }
+
+    virtual uint64_t
+    getExecutingAsid() const
+    {
+        return 0;
+    }
+
     virtual bool inUserMode() const = 0;
     virtual void copyRegsFrom(ThreadContext *src) = 0;
 
-    virtual void resetThread() { panic("Thread reset not implemented."); }
+    virtual void
+    resetThread()
+    {
+        panic("Thread reset not implemented.");
+    }
 
-    const RegClasses &regClasses() const { return _regClasses; }
-    const std::string getIsaName() const { return isaName; }
+    const RegClasses &
+    regClasses() const
+    {
+        return _regClasses;
+    }
+
+    const std::string
+    getIsaName() const
+    {
+        return isaName;
+    }
 
     // Locked memory handling functions.
-    virtual void handleLockedRead(const RequestPtr &req) {}
+    virtual void
+    handleLockedRead(const RequestPtr &req)
+    {}
+
     virtual void
     handleLockedRead(ExecContext *xc, const RequestPtr &req)
     {
         handleLockedRead(req);
     }
+
     virtual bool
     handleLockedWrite(const RequestPtr &req, Addr cacheBlockMask)
     {
         return true;
     }
+
     virtual bool
     handleLockedWrite(ExecContext *xc, const RequestPtr &req,
-            Addr cacheBlockMask)
+                      Addr cacheBlockMask)
     {
         return handleLockedWrite(req, cacheBlockMask);
     }
 
-    virtual void handleLockedSnoop(PacketPtr pkt, Addr cacheBlockMask) {}
+    virtual void
+    handleLockedSnoop(PacketPtr pkt, Addr cacheBlockMask)
+    {}
+
     virtual void
     handleLockedSnoop(ExecContext *xc, PacketPtr pkt, Addr cacheBlockMask)
     {
         handleLockedSnoop(pkt, cacheBlockMask);
     }
-    virtual void handleLockedSnoopHit() {}
+
+    virtual void
+    handleLockedSnoopHit()
+    {}
+
     virtual void
     handleLockedSnoopHit(ExecContext *xc)
     {
         handleLockedSnoopHit();
     }
 
-    virtual void globalClearExclusive() {}
+    virtual void
+    globalClearExclusive()
+    {}
+
     virtual void
     globalClearExclusive(ExecContext *xc)
     {

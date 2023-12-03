@@ -29,7 +29,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #include "mem/ruby/network/garnet/NetworkBridge.hh"
 
 #include <cmath>
@@ -46,8 +45,7 @@ namespace ruby
 namespace garnet
 {
 
-NetworkBridge::NetworkBridge(const Params &p)
-    :CreditLink(p)
+NetworkBridge::NetworkBridge(const Params &p) : CreditLink(p)
 {
     enCdc = true;
     enSerDes = true;
@@ -91,9 +89,7 @@ NetworkBridge::initBridge(NetworkBridge *coBrid, bool cdc_en, bool serdes_en)
     enSerDes = serdes_en;
 }
 
-NetworkBridge::~NetworkBridge()
-{
-}
+NetworkBridge::~NetworkBridge() {}
 
 void
 NetworkBridge::scheduleFlit(flit *t_flit, Cycles latency)
@@ -106,8 +102,8 @@ NetworkBridge::scheduleFlit(flit *t_flit, Cycles latency)
     }
 
     Tick sendTime = link_consumer->getObject()->clockEdge(totLatency);
-    Tick nextAvailTick = lastScheduledAt + link_consumer->getObject()->\
-            cyclesToTicks(Cycles(1));
+    Tick nextAvailTick =
+        lastScheduledAt + link_consumer->getObject()->cyclesToTicks(Cycles(1));
     sendTime = std::max(nextAvailTick, sendTime);
     t_flit->set_time(sendTime);
     lastScheduledAt = sendTime;
@@ -134,8 +130,8 @@ NetworkBridge::flitisizeAndSend(flit *t_flit)
             cur_width = bitWidth;
         }
 
-        DPRINTF(RubyNetwork, "Target width: %d Current: %d\n",
-            target_width, cur_width);
+        DPRINTF(RubyNetwork, "Target width: %d Current: %d\n", target_width,
+                cur_width);
         assert(target_width != cur_width);
 
         int vc = t_flit->get_vc();
@@ -159,8 +155,8 @@ NetworkBridge::flitisizeAndSend(flit *t_flit)
                 // If its the end of packet, then send whatever
                 // is available.
                 int sizeAvail = (t_flit->msgSize - sizeSent[vc]);
-                flitPossible = ceil((float)sizeAvail/(float)target_width);
-                assert (flitPossible < 2);
+                flitPossible = ceil((float)sizeAvail / (float)target_width);
+                assert(flitPossible < 2);
                 num_flits = (t_flit->get_id() + 1) - flitsSent[vc];
                 // Stop tracking the packet.
                 flitsSent[vc] = 0;
@@ -169,9 +165,9 @@ NetworkBridge::flitisizeAndSend(flit *t_flit)
                 // If we are yet to receive the complete packet
                 // track the size recieved and flits deserialized.
                 int sizeAvail =
-                    ((t_flit->get_id() + 1)*cur_width) - sizeSent[vc];
-                flitPossible = floor((float)sizeAvail/(float)target_width);
-                assert (flitPossible < 2);
+                    ((t_flit->get_id() + 1) * cur_width) - sizeSent[vc];
+                flitPossible = floor((float)sizeAvail / (float)target_width);
+                assert(flitPossible < 2);
                 num_flits = (t_flit->get_id() + 1) - flitsSent[vc];
                 if (flitPossible) {
                     sizeSent[vc] += target_width;
@@ -179,13 +175,15 @@ NetworkBridge::flitisizeAndSend(flit *t_flit)
                 }
             }
 
-            DPRINTF(RubyNetwork, "Deserialize :%dB -----> %dB "
-                " vc:%d\n", cur_width, target_width, vc);
+            DPRINTF(RubyNetwork,
+                    "Deserialize :%dB -----> %dB "
+                    " vc:%d\n",
+                    cur_width, target_width, vc);
 
             flit *fl = NULL;
             if (flitPossible) {
                 fl = t_flit->deserialize(lenBuffer[vc], num_flits,
-                    target_width);
+                                         target_width);
             }
 
             // Inform the credit serializer about the number
@@ -204,9 +202,10 @@ NetworkBridge::flitisizeAndSend(flit *t_flit)
             delete t_flit;
         } else {
             // Serialize
-            DPRINTF(RubyNetwork, "Serializing flit :%d -----> %d "
-            "(vc:%d, Original Message Size: %d)\n",
-                cur_width, target_width, vc, t_flit->msgSize);
+            DPRINTF(RubyNetwork,
+                    "Serializing flit :%d -----> %d "
+                    "(vc:%d, Original Message Size: %d)\n",
+                    cur_width, target_width, vc, t_flit->msgSize);
 
             int flitPossible = 0;
             if (t_flit->get_type() == CREDIT_) {
@@ -217,17 +216,17 @@ NetworkBridge::flitisizeAndSend(flit *t_flit)
                 flitPossible = extraCredit[vc].front();
                 extraCredit[vc].pop();
             } else if (t_flit->get_type() == HEAD_ ||
-                    t_flit->get_type() == BODY_) {
+                       t_flit->get_type() == BODY_) {
                 int sizeAvail =
-                    ((t_flit->get_id() + 1)*cur_width) - sizeSent[vc];
-                flitPossible = floor((float)sizeAvail/(float)target_width);
+                    ((t_flit->get_id() + 1) * cur_width) - sizeSent[vc];
+                flitPossible = floor((float)sizeAvail / (float)target_width);
                 if (flitPossible) {
-                    sizeSent[vc] += flitPossible*target_width;
+                    sizeSent[vc] += flitPossible * target_width;
                     flitsSent[vc] += flitPossible;
                 }
             } else {
                 int sizeAvail = t_flit->msgSize - sizeSent[vc];
-                flitPossible = ceil((float)sizeAvail/(float)target_width);
+                flitPossible = ceil((float)sizeAvail / (float)target_width);
                 sizeSent[vc] = 0;
                 flitsSent[vc] = 0;
             }
@@ -239,8 +238,10 @@ NetworkBridge::flitisizeAndSend(flit *t_flit)
                 // Ignore neutralized credits
                 flit *fl = t_flit->serialize(i, flitPossible, target_width);
                 scheduleFlit(fl, serDesLatency);
-                DPRINTF(RubyNetwork, "Serialized to flit[%d of %d parts]:"
-                " %s\n", i+1, flitPossible, *fl);
+                DPRINTF(RubyNetwork,
+                        "Serialized to flit[%d of %d parts]:"
+                        " %s\n",
+                        i + 1, flitPossible, *fl);
             }
 
             if (t_flit->get_type() != CREDIT_) {
@@ -255,6 +256,7 @@ NetworkBridge::flitisizeAndSend(flit *t_flit)
     // If only CDC is enabled schedule it
     scheduleFlit(t_flit, Cycles(0));
 }
+
 void
 NetworkBridge::wakeup()
 {

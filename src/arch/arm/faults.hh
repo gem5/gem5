@@ -68,13 +68,13 @@ class ArmFault : public FaultBase
     uint32_t issRaw;
 
     // Helper variables for ARMv8 exception handling
-    bool bStep; // True if the Arm Faul exception is a software Step exception
-    bool from64;  // True if the exception is generated from the AArch64 state
-    bool to64;  // True if the exception is taken in AArch64 state
+    bool bStep;  // True if the Arm Faul exception is a software Step exception
+    bool from64; // True if the exception is generated from the AArch64 state
+    bool to64;   // True if the exception is taken in AArch64 state
     ExceptionLevel fromEL;  // Source exception level
-    ExceptionLevel toEL;  // Target exception level
-    OperatingMode fromMode;  // Source operating mode (aarch32)
-    OperatingMode toMode;  // Next operating mode (aarch32)
+    ExceptionLevel toEL;    // Target exception level
+    OperatingMode fromMode; // Source operating mode (aarch32)
+    OperatingMode toMode;   // Next operating mode (aarch32)
 
     // This variable is true if the above fault specific informations
     // have been updated. This is to prevent that a client is using their
@@ -82,20 +82,20 @@ class ArmFault : public FaultBase
     bool faultUpdated;
 
     bool hypRouted; // True if the fault has been routed to Hypervisor
-    bool span; // True if the fault is setting the PSTATE.PAN bit
+    bool span;      // True if the fault is setting the PSTATE.PAN bit
 
     virtual Addr getVector(ThreadContext *tc);
     Addr getVector64(ThreadContext *tc);
 
   public:
     /// Generic fault source enums used to index into
-    /// {short/long/aarch64}DescFaultSources[] to get the actual encodings based
-    /// on the current register width state and the translation table format in
-    /// use
+    /// {short/long/aarch64}DescFaultSources[] to get the actual encodings
+    /// based on the current register width state and the translation table
+    /// format in use
     enum FaultSource
     {
         AlignmentFault = 0,
-        InstructionCacheMaintenance,  // Short-desc. format only
+        InstructionCacheMaintenance, // Short-desc. format only
         SynchExtAbtOnTranslTableWalkLL,
         SynchPtyErrOnTranslTableWalkLL = SynchExtAbtOnTranslTableWalkLL + 4,
         TranslationLL = SynchPtyErrOnTranslTableWalkLL + 4,
@@ -104,11 +104,11 @@ class ArmFault : public FaultBase
         PermissionLL = DomainLL + 4,
         DebugEvent = PermissionLL + 4,
         SynchronousExternalAbort,
-        TLBConflictAbort,  // Requires LPAE
+        TLBConflictAbort, // Requires LPAE
         SynchPtyErrOnMemoryAccess,
         AsynchronousExternalAbort,
         AsynchPtyErrOnMemoryAccess,
-        AddressSizeLL,  // AArch64 only
+        AddressSizeLL, // AArch64 only
 
         // Not real faults. These are faults to allow the translation function
         // to inform the memory access function not to proceed for a prefetch
@@ -132,7 +132,8 @@ class ArmFault : public FaultBase
     enum AnnotationIDs
     {
         S1PTW, // DataAbort, PrefetchAbort: Stage 1 Page Table Walk,
-        OVA,   // DataAbort, PrefetchAbort: stage 1 Virtual Address for stage 2 faults
+        OVA,   // DataAbort, PrefetchAbort: stage 1 Virtual Address for stage 2
+               // faults
         SAS,   // DataAbort: Syndrome Access Size
         SSE,   // DataAbort: Syndrome Sign Extend
         SRT,   // DataAbort: Syndrome Register Transfer
@@ -143,8 +144,8 @@ class ArmFault : public FaultBase
                // instruction and not the cacheline address (See FAR doc)
 
         // AArch64 only
-        SF,    // DataAbort: width of the accessed register is SixtyFour
-        AR     // DataAbort: Acquire/Release semantics
+        SF, // DataAbort: width of the accessed register is SixtyFour
+        AR  // DataAbort: Acquire/Release semantics
     };
 
     enum TranMethod
@@ -193,29 +194,44 @@ class ArmFault : public FaultBase
         // (exceptions taken in HYP mode or in AArch64 state)
         const ExceptionClass ec;
 
-        FaultVals(const FaultName& name_, FaultOffset offset_,
+        FaultVals(const FaultName &name_, FaultOffset offset_,
                   uint16_t curr_elt_offset, uint16_t curr_elh_offset,
-                  uint16_t lower_el64_offset,
-                  uint16_t lower_el32_offset,
+                  uint16_t lower_el64_offset, uint16_t lower_el32_offset,
                   OperatingMode next_mode, uint8_t arm_pc_offset,
                   uint8_t thumb_pc_offset, uint8_t arm_pc_elr_offset,
                   uint8_t thumb_pc_elr_offset, bool hyp_trappable,
-                  bool abort_disable, bool fiq_disable,
-                  ExceptionClass ec_)
-        : name(name_), offset(offset_), currELTOffset(curr_elt_offset),
-          currELHOffset(curr_elh_offset), lowerEL64Offset(lower_el64_offset),
-          lowerEL32Offset(lower_el32_offset), nextMode(next_mode),
-          armPcOffset(arm_pc_offset), thumbPcOffset(thumb_pc_offset),
-          armPcElrOffset(arm_pc_elr_offset),
-          thumbPcElrOffset(thumb_pc_elr_offset),
-          hypTrappable(hyp_trappable), abortDisable(abort_disable),
-          fiqDisable(fiq_disable), ec(ec_) {}
+                  bool abort_disable, bool fiq_disable, ExceptionClass ec_)
+            : name(name_),
+              offset(offset_),
+              currELTOffset(curr_elt_offset),
+              currELHOffset(curr_elh_offset),
+              lowerEL64Offset(lower_el64_offset),
+              lowerEL32Offset(lower_el32_offset),
+              nextMode(next_mode),
+              armPcOffset(arm_pc_offset),
+              thumbPcOffset(thumb_pc_offset),
+              armPcElrOffset(arm_pc_elr_offset),
+              thumbPcElrOffset(thumb_pc_elr_offset),
+              hypTrappable(hyp_trappable),
+              abortDisable(abort_disable),
+              fiqDisable(fiq_disable),
+              ec(ec_)
+        {}
     };
 
-    ArmFault(ExtMachInst mach_inst = 0, uint32_t _iss = 0) :
-        machInst(mach_inst), issRaw(_iss), bStep(false), from64(false),
-        to64(false), fromEL(EL0), toEL(EL0), fromMode(MODE_UNDEFINED),
-        faultUpdated(false), hypRouted(false), span(false) {}
+    ArmFault(ExtMachInst mach_inst = 0, uint32_t _iss = 0)
+        : machInst(mach_inst),
+          issRaw(_iss),
+          bStep(false),
+          from64(false),
+          to64(false),
+          fromEL(EL0),
+          toEL(EL0),
+          fromMode(MODE_UNDEFINED),
+          faultUpdated(false),
+          hypRouted(false),
+          span(false)
+    {}
 
     // Returns the actual syndrome register to use based on the target
     // exception level
@@ -224,24 +240,39 @@ class ArmFault : public FaultBase
     // exception level
     MiscRegIndex getFaultAddrReg64() const;
 
-    void invoke(ThreadContext *tc, const StaticInstPtr &inst =
-                nullStaticInstPtr) override;
-    void invoke32(ThreadContext *tc, const StaticInstPtr &inst =
-                  nullStaticInstPtr);
-    void invoke64(ThreadContext *tc, const StaticInstPtr &inst =
-                  nullStaticInstPtr);
+    void invoke(ThreadContext *tc,
+                const StaticInstPtr &inst = nullStaticInstPtr) override;
+    void invoke32(ThreadContext *tc,
+                  const StaticInstPtr &inst = nullStaticInstPtr);
+    void invoke64(ThreadContext *tc,
+                  const StaticInstPtr &inst = nullStaticInstPtr);
     void update(ThreadContext *tc);
-    bool isResetSPSR(){ return bStep; }
+
+    bool
+    isResetSPSR()
+    {
+        return bStep;
+    }
 
     bool vectorCatch(ThreadContext *tc, const StaticInstPtr &inst);
 
     ArmStaticInst *instrAnnotate(const StaticInstPtr &inst);
-    virtual void annotate(AnnotationIDs id, uint64_t val) {}
+
+    virtual void
+    annotate(AnnotationIDs id, uint64_t val)
+    {}
+
     virtual FaultOffset offset(ThreadContext *tc) = 0;
     virtual FaultOffset offset64(ThreadContext *tc) = 0;
     virtual OperatingMode nextMode() = 0;
     virtual bool routeToMonitor(ThreadContext *tc) const = 0;
-    virtual bool routeToHyp(ThreadContext *tc) const { return false; }
+
+    virtual bool
+    routeToHyp(ThreadContext *tc) const
+    {
+        return false;
+    }
+
     virtual uint8_t armPcOffset(bool is_hyp) = 0;
     virtual uint8_t thumbPcOffset(bool is_hyp) = 0;
     virtual uint8_t armPcElrOffset() = 0;
@@ -251,29 +282,66 @@ class ArmFault : public FaultBase
     virtual ExceptionClass ec(ThreadContext *tc) const = 0;
     virtual bool il(ThreadContext *tc) const = 0;
     virtual uint32_t iss() const = 0;
-    virtual uint32_t vectorCatchFlag() const { return 0x0; }
-    virtual bool isStage2() const { return false; }
-    virtual FSR getFsr(ThreadContext *tc) const { return 0; }
+
+    virtual uint32_t
+    vectorCatchFlag() const
+    {
+        return 0x0;
+    }
+
+    virtual bool
+    isStage2() const
+    {
+        return false;
+    }
+
+    virtual FSR
+    getFsr(ThreadContext *tc) const
+    {
+        return 0;
+    }
+
     virtual void setSyndrome(ThreadContext *tc, MiscRegIndex syndrome_reg);
-    virtual bool getFaultVAddr(Addr &va) const { return false; }
-    OperatingMode getToMode() const { return toMode; }
+
+    virtual bool
+    getFaultVAddr(Addr &va) const
+    {
+        return false;
+    }
+
+    OperatingMode
+    getToMode() const
+    {
+        return toMode;
+    }
 };
 
-template<typename T>
+template <typename T>
 class ArmFaultVals : public ArmFault
 {
   protected:
     static FaultVals vals;
 
   public:
-    ArmFaultVals<T>(ExtMachInst mach_inst = 0, uint32_t _iss = 0) :
-        ArmFault(mach_inst, _iss) {}
-    FaultName name() const override { return vals.name; }
+    ArmFaultVals<T>(ExtMachInst mach_inst = 0, uint32_t _iss = 0)
+        : ArmFault(mach_inst, _iss)
+    {}
+
+    FaultName
+    name() const override
+    {
+        return vals.name;
+    }
+
     FaultOffset offset(ThreadContext *tc) override;
 
     FaultOffset offset64(ThreadContext *tc) override;
 
-    OperatingMode nextMode() override { return vals.nextMode; }
+    OperatingMode
+    nextMode() override
+    {
+        return vals.nextMode;
+    }
 
     virtual bool
     routeToMonitor(ThreadContext *tc) const override
@@ -284,32 +352,59 @@ class ArmFaultVals : public ArmFault
     uint8_t
     armPcOffset(bool is_hyp) override
     {
-        return is_hyp ? vals.armPcElrOffset
-                      : vals.armPcOffset;
+        return is_hyp ? vals.armPcElrOffset : vals.armPcOffset;
     }
 
     uint8_t
     thumbPcOffset(bool is_hyp) override
     {
-        return is_hyp ? vals.thumbPcElrOffset
-                      : vals.thumbPcOffset;
+        return is_hyp ? vals.thumbPcElrOffset : vals.thumbPcOffset;
     }
 
-    uint8_t armPcElrOffset() override { return vals.armPcElrOffset; }
-    uint8_t thumbPcElrOffset() override { return vals.thumbPcElrOffset; }
-    bool abortDisable(ThreadContext* tc) override { return vals.abortDisable; }
-    bool fiqDisable(ThreadContext* tc) override { return vals.fiqDisable; }
+    uint8_t
+    armPcElrOffset() override
+    {
+        return vals.armPcElrOffset;
+    }
+
+    uint8_t
+    thumbPcElrOffset() override
+    {
+        return vals.thumbPcElrOffset;
+    }
+
+    bool
+    abortDisable(ThreadContext *tc) override
+    {
+        return vals.abortDisable;
+    }
+
+    bool
+    fiqDisable(ThreadContext *tc) override
+    {
+        return vals.fiqDisable;
+    }
 
     /** Syndrome methods */
-    ExceptionClass ec(ThreadContext *tc) const override { return vals.ec; }
+    ExceptionClass
+    ec(ThreadContext *tc) const override
+    {
+        return vals.ec;
+    }
+
     bool
     il(ThreadContext *tc) const override
     {
         // ESR.IL = 1 if exception cause is unknown (EC = 0)
-        return ec(tc) == ExceptionClass::UNKNOWN ||
-            !machInst.thumb || machInst.bigThumb;
+        return ec(tc) == ExceptionClass::UNKNOWN || !machInst.thumb ||
+               machInst.bigThumb;
     }
-    uint32_t iss() const override { return issRaw; }
+
+    uint32_t
+    iss() const override
+    {
+        return issRaw;
+    }
 };
 
 class Reset : public ArmFaultVals<Reset>
@@ -318,8 +413,8 @@ class Reset : public ArmFaultVals<Reset>
     Addr getVector(ThreadContext *tc) override;
 
   public:
-    void invoke(ThreadContext *tc, const StaticInstPtr &inst =
-                nullStaticInstPtr) override;
+    void invoke(ThreadContext *tc,
+                const StaticInstPtr &inst = nullStaticInstPtr) override;
 };
 
 class UndefinedInstruction : public ArmFaultVals<UndefinedInstruction>
@@ -331,25 +426,34 @@ class UndefinedInstruction : public ArmFaultVals<UndefinedInstruction>
     const char *mnemonic;
 
   public:
-    UndefinedInstruction(ExtMachInst mach_inst,
-                         bool _unknown,
-                         const char *_mnemonic = NULL,
-                         bool _disabled = false) :
-        ArmFaultVals<UndefinedInstruction>(mach_inst),
-        unknown(_unknown), disabled(_disabled),
-        overrideEc(ExceptionClass::INVALID), mnemonic(_mnemonic)
-    {}
-    UndefinedInstruction(ExtMachInst mach_inst, uint32_t _iss,
-            ExceptionClass _overrideEc, const char *_mnemonic = NULL) :
-        ArmFaultVals<UndefinedInstruction>(mach_inst, _iss),
-        unknown(false), disabled(true), overrideEc(_overrideEc),
-        mnemonic(_mnemonic)
+    UndefinedInstruction(ExtMachInst mach_inst, bool _unknown,
+                         const char *_mnemonic = NULL, bool _disabled = false)
+        : ArmFaultVals<UndefinedInstruction>(mach_inst),
+          unknown(_unknown),
+          disabled(_disabled),
+          overrideEc(ExceptionClass::INVALID),
+          mnemonic(_mnemonic)
     {}
 
-    void invoke(ThreadContext *tc, const StaticInstPtr &inst =
-                nullStaticInstPtr) override;
+    UndefinedInstruction(ExtMachInst mach_inst, uint32_t _iss,
+                         ExceptionClass _overrideEc,
+                         const char *_mnemonic = NULL)
+        : ArmFaultVals<UndefinedInstruction>(mach_inst, _iss),
+          unknown(false),
+          disabled(true),
+          overrideEc(_overrideEc),
+          mnemonic(_mnemonic)
+    {}
+
+    void invoke(ThreadContext *tc,
+                const StaticInstPtr &inst = nullStaticInstPtr) override;
     bool routeToHyp(ThreadContext *tc) const override;
-    uint32_t vectorCatchFlag() const override { return 0x02000002; }
+
+    uint32_t
+    vectorCatchFlag() const override
+    {
+        return 0x02000002;
+    }
 
     /** Syndrome methods */
     ExceptionClass ec(ThreadContext *tc) const override;
@@ -360,19 +464,25 @@ class SupervisorCall : public ArmFaultVals<SupervisorCall>
 {
   protected:
     ExceptionClass overrideEc;
+
   public:
     SupervisorCall(ExtMachInst mach_inst, uint32_t _iss,
-                   ExceptionClass _overrideEc = ExceptionClass::INVALID) :
-        ArmFaultVals<SupervisorCall>(mach_inst, _iss),
-        overrideEc(_overrideEc)
+                   ExceptionClass _overrideEc = ExceptionClass::INVALID)
+        : ArmFaultVals<SupervisorCall>(mach_inst, _iss),
+          overrideEc(_overrideEc)
     {
         bStep = true;
     }
 
-    void invoke(ThreadContext *tc, const StaticInstPtr &inst =
-                nullStaticInstPtr) override;
+    void invoke(ThreadContext *tc,
+                const StaticInstPtr &inst = nullStaticInstPtr) override;
     bool routeToHyp(ThreadContext *tc) const override;
-    uint32_t vectorCatchFlag() const override { return 0x04000404; }
+
+    uint32_t
+    vectorCatchFlag() const override
+    {
+        return 0x04000404;
+    }
 
     /** Syndrome methods */
     ExceptionClass ec(ThreadContext *tc) const override;
@@ -382,15 +492,20 @@ class SupervisorCall : public ArmFaultVals<SupervisorCall>
 class SecureMonitorCall : public ArmFaultVals<SecureMonitorCall>
 {
   public:
-    SecureMonitorCall(ExtMachInst mach_inst) :
-        ArmFaultVals<SecureMonitorCall>(mach_inst)
+    SecureMonitorCall(ExtMachInst mach_inst)
+        : ArmFaultVals<SecureMonitorCall>(mach_inst)
     {
         bStep = true;
     }
 
-    void invoke(ThreadContext *tc, const StaticInstPtr &inst =
-                nullStaticInstPtr) override;
-    uint32_t vectorCatchFlag() const override { return 0x00000400; }
+    void invoke(ThreadContext *tc,
+                const StaticInstPtr &inst = nullStaticInstPtr) override;
+
+    uint32_t
+    vectorCatchFlag() const override
+    {
+        return 0x00000400;
+    }
 
     /** Syndrome methods */
     ExceptionClass ec(ThreadContext *tc) const override;
@@ -405,9 +520,9 @@ class SupervisorTrap : public ArmFaultVals<SupervisorTrap>
 
   public:
     SupervisorTrap(ExtMachInst mach_inst, uint32_t _iss,
-                   ExceptionClass _overrideEc = ExceptionClass::INVALID) :
-        ArmFaultVals<SupervisorTrap>(mach_inst, _iss),
-        overrideEc(_overrideEc)
+                   ExceptionClass _overrideEc = ExceptionClass::INVALID)
+        : ArmFaultVals<SupervisorTrap>(mach_inst, _iss),
+          overrideEc(_overrideEc)
     {}
 
     bool routeToHyp(ThreadContext *tc) const override;
@@ -419,15 +534,15 @@ class SupervisorTrap : public ArmFaultVals<SupervisorTrap>
 
 class SecureMonitorTrap : public ArmFaultVals<SecureMonitorTrap>
 {
- protected:
+  protected:
     ExtMachInst machInst;
     ExceptionClass overrideEc;
 
   public:
     SecureMonitorTrap(ExtMachInst mach_inst, uint32_t _iss,
-                      ExceptionClass _overrideEc = ExceptionClass::INVALID) :
-        ArmFaultVals<SecureMonitorTrap>(mach_inst, _iss),
-        overrideEc(_overrideEc)
+                      ExceptionClass _overrideEc = ExceptionClass::INVALID)
+        : ArmFaultVals<SecureMonitorTrap>(mach_inst, _iss),
+          overrideEc(_overrideEc)
     {}
 
     /** Syndrome methods */
@@ -441,7 +556,12 @@ class HypervisorCall : public ArmFaultVals<HypervisorCall>
 
     bool routeToHyp(ThreadContext *tc) const override;
     bool routeToMonitor(ThreadContext *tc) const override;
-    uint32_t vectorCatchFlag() const override { return 0xFFFFFFFF; }
+
+    uint32_t
+    vectorCatchFlag() const override
+    {
+        return 0xFFFFFFFF;
+    }
 
     /** Syndrome methods */
     ExceptionClass ec(ThreadContext *tc) const override;
@@ -455,9 +575,9 @@ class HypervisorTrap : public ArmFaultVals<HypervisorTrap>
 
   public:
     HypervisorTrap(ExtMachInst mach_inst, uint32_t _iss,
-                   ExceptionClass _overrideEc = ExceptionClass::INVALID) :
-      ArmFaultVals<HypervisorTrap>(mach_inst, _iss),
-      overrideEc(_overrideEc)
+                   ExceptionClass _overrideEc = ExceptionClass::INVALID)
+        : ArmFaultVals<HypervisorTrap>(mach_inst, _iss),
+          overrideEc(_overrideEc)
     {}
 
     /** Syndrome methods */
@@ -494,22 +614,34 @@ class AbortFault : public ArmFaultVals<T>
     AbortFault(Addr _faultAddr, bool _write, TlbEntry::DomainType _domain,
                uint8_t _source, bool _stage2,
                ArmFault::TranMethod _tranMethod = ArmFault::UnknownTran,
-               ArmFault::DebugType _debug = ArmFault::NODEBUG) :
-        faultAddr(_faultAddr), OVAddr(0), write(_write),
-        domain(_domain), source(_source), srcEncoded(0),
-        stage2(_stage2), s1ptw(false), tranMethod(_tranMethod),
-        debugType(_debug)
+               ArmFault::DebugType _debug = ArmFault::NODEBUG)
+        : faultAddr(_faultAddr),
+          OVAddr(0),
+          write(_write),
+          domain(_domain),
+          source(_source),
+          srcEncoded(0),
+          stage2(_stage2),
+          s1ptw(false),
+          tranMethod(_tranMethod),
+          debugType(_debug)
     {}
 
     bool getFaultVAddr(Addr &va) const override;
 
-    void invoke(ThreadContext *tc, const StaticInstPtr &inst =
-                nullStaticInstPtr) override;
+    void invoke(ThreadContext *tc,
+                const StaticInstPtr &inst = nullStaticInstPtr) override;
 
     FSR getFsr(ThreadContext *tc) const override;
     uint8_t getFaultStatusCode(ThreadContext *tc) const;
     bool abortDisable(ThreadContext *tc) override;
-    bool isStage2() const override { return stage2; }
+
+    bool
+    isStage2() const override
+    {
+        return stage2;
+    }
+
     void annotate(ArmFault::AnnotationIDs id, uint64_t val) override;
     void setSyndrome(ThreadContext *tc, MiscRegIndex syndrome_reg) override;
     bool isMMUFault() const;
@@ -518,35 +650,47 @@ class AbortFault : public ArmFaultVals<T>
 class PrefetchAbort : public AbortFault<PrefetchAbort>
 {
   public:
-    static const MiscRegIndex FsrIndex  = MISCREG_IFSR;
-    static const MiscRegIndex FarIndex  = MISCREG_IFAR;
+    static const MiscRegIndex FsrIndex = MISCREG_IFSR;
+    static const MiscRegIndex FarIndex = MISCREG_IFAR;
     static const MiscRegIndex HFarIndex = MISCREG_HIFAR;
 
     PrefetchAbort(Addr _addr, uint8_t _source, bool _stage2 = false,
                   ArmFault::TranMethod _tranMethod = ArmFault::UnknownTran,
-                  ArmFault::DebugType _debug = ArmFault::NODEBUG) :
-        AbortFault<PrefetchAbort>(_addr, false, TlbEntry::DomainType::NoAccess,
-                _source, _stage2, _tranMethod, _debug)
+                  ArmFault::DebugType _debug = ArmFault::NODEBUG)
+        : AbortFault<PrefetchAbort>(_addr, false,
+                                    TlbEntry::DomainType::NoAccess, _source,
+                                    _stage2, _tranMethod, _debug)
     {}
 
     // @todo: external aborts should be routed if SCR.EA == 1
     bool routeToMonitor(ThreadContext *tc) const override;
     bool routeToHyp(ThreadContext *tc) const override;
-    uint32_t vectorCatchFlag() const override { return 0x08000808; }
+
+    uint32_t
+    vectorCatchFlag() const override
+    {
+        return 0x08000808;
+    }
 
     /** Syndrome methods */
     ExceptionClass ec(ThreadContext *tc) const override;
-    bool il(ThreadContext *tc) const override { return true; }
+
+    bool
+    il(ThreadContext *tc) const override
+    {
+        return true;
+    }
+
     uint32_t iss() const override;
 };
 
 class DataAbort : public AbortFault<DataAbort>
 {
   public:
-    static const MiscRegIndex FsrIndex  = MISCREG_DFSR;
-    static const MiscRegIndex FarIndex  = MISCREG_DFAR;
+    static const MiscRegIndex FsrIndex = MISCREG_DFSR;
+    static const MiscRegIndex FarIndex = MISCREG_DFAR;
     static const MiscRegIndex HFarIndex = MISCREG_HDFAR;
-    bool    isv;
+    bool isv;
     uint8_t sas;
     uint8_t sse;
     uint8_t srt;
@@ -556,20 +700,31 @@ class DataAbort : public AbortFault<DataAbort>
     bool sf;
     bool ar;
 
-    DataAbort(Addr _addr, TlbEntry::DomainType _domain, bool _write, uint8_t _source,
-              bool _stage2=false,
-              ArmFault::TranMethod _tranMethod=ArmFault::UnknownTran,
-              ArmFault::DebugType _debug_type=ArmFault::NODEBUG) :
-        AbortFault<DataAbort>(_addr, _write, _domain, _source, _stage2,
-                              _tranMethod, _debug_type),
-        isv(false), sas (0), sse(0), srt(0), cm(0), sf(false), ar(false)
+    DataAbort(Addr _addr, TlbEntry::DomainType _domain, bool _write,
+              uint8_t _source, bool _stage2 = false,
+              ArmFault::TranMethod _tranMethod = ArmFault::UnknownTran,
+              ArmFault::DebugType _debug_type = ArmFault::NODEBUG)
+        : AbortFault<DataAbort>(_addr, _write, _domain, _source, _stage2,
+                                _tranMethod, _debug_type),
+          isv(false),
+          sas(0),
+          sse(0),
+          srt(0),
+          cm(0),
+          sf(false),
+          ar(false)
     {}
 
     // @todo: external aborts should be routed if SCR.EA == 1
     bool routeToMonitor(ThreadContext *tc) const override;
     bool routeToHyp(ThreadContext *tc) const override;
     void annotate(AnnotationIDs id, uint64_t val) override;
-    uint32_t vectorCatchFlag() const override { return 0x10001010; }
+
+    uint32_t
+    vectorCatchFlag() const override
+    {
+        return 0x10001010;
+    }
 
     /** Syndrome methods */
     ExceptionClass ec(ThreadContext *tc) const override;
@@ -580,13 +735,13 @@ class DataAbort : public AbortFault<DataAbort>
 class VirtualDataAbort : public AbortFault<VirtualDataAbort>
 {
   public:
-    static const MiscRegIndex FsrIndex  = MISCREG_DFSR;
-    static const MiscRegIndex FarIndex  = MISCREG_DFAR;
+    static const MiscRegIndex FsrIndex = MISCREG_DFSR;
+    static const MiscRegIndex FarIndex = MISCREG_DFAR;
     static const MiscRegIndex HFarIndex = MISCREG_HDFAR;
 
     VirtualDataAbort(Addr _addr, TlbEntry::DomainType _domain, bool _write,
-                     uint8_t _source) :
-        AbortFault<VirtualDataAbort>(_addr, _write, _domain, _source, false)
+                     uint8_t _source)
+        : AbortFault<VirtualDataAbort>(_addr, _write, _domain, _source, false)
     {}
 
     void invoke(ThreadContext *tc, const StaticInstPtr &inst) override;
@@ -598,7 +753,12 @@ class Interrupt : public ArmFaultVals<Interrupt>
     bool routeToMonitor(ThreadContext *tc) const override;
     bool routeToHyp(ThreadContext *tc) const override;
     bool abortDisable(ThreadContext *tc) override;
-    uint32_t vectorCatchFlag() const override { return 0x40004040; }
+
+    uint32_t
+    vectorCatchFlag() const override
+    {
+        return 0x40004040;
+    }
 };
 
 class VirtualInterrupt : public ArmFaultVals<VirtualInterrupt>
@@ -614,7 +774,12 @@ class FastInterrupt : public ArmFaultVals<FastInterrupt>
     bool routeToHyp(ThreadContext *tc) const override;
     bool abortDisable(ThreadContext *tc) override;
     bool fiqDisable(ThreadContext *tc) override;
-    uint32_t vectorCatchFlag() const override { return 0x80008080; }
+
+    uint32_t
+    vectorCatchFlag() const override
+    {
+        return 0x80008080;
+    }
 };
 
 class VirtualFastInterrupt : public ArmFaultVals<VirtualFastInterrupt>
@@ -629,15 +794,20 @@ class PCAlignmentFault : public ArmFaultVals<PCAlignmentFault>
   protected:
     /// The unaligned value of the PC
     Addr faultPC;
+
   public:
-    PCAlignmentFault(Addr fault_pc) : faultPC(fault_pc)
-    {}
-    void invoke(ThreadContext *tc, const StaticInstPtr &inst =
-                nullStaticInstPtr) override;
+    PCAlignmentFault(Addr fault_pc) : faultPC(fault_pc) {}
+
+    void invoke(ThreadContext *tc,
+                const StaticInstPtr &inst = nullStaticInstPtr) override;
     bool routeToHyp(ThreadContext *tc) const override;
 
     /** Syndrome methods */
-    bool il(ThreadContext *tc) const override { return true; }
+    bool
+    il(ThreadContext *tc) const override
+    {
+        return true;
+    }
 };
 
 /// Stack pointer alignment fault (AArch64 only)
@@ -648,7 +818,11 @@ class SPAlignmentFault : public ArmFaultVals<SPAlignmentFault>
     bool routeToHyp(ThreadContext *tc) const override;
 
     /** Syndrome methods */
-    bool il(ThreadContext *tc) const override { return true; }
+    bool
+    il(ThreadContext *tc) const override
+    {
+        return true;
+    }
 };
 
 /// System error (AArch64 only)
@@ -656,13 +830,17 @@ class SystemError : public ArmFaultVals<SystemError>
 {
   public:
     SystemError();
-    void invoke(ThreadContext *tc, const StaticInstPtr &inst =
-                nullStaticInstPtr) override;
+    void invoke(ThreadContext *tc,
+                const StaticInstPtr &inst = nullStaticInstPtr) override;
     bool routeToMonitor(ThreadContext *tc) const override;
     bool routeToHyp(ThreadContext *tc) const override;
 
     /** Syndrome methods */
-    bool il(ThreadContext *tc) const override { return true; }
+    bool
+    il(ThreadContext *tc) const override
+    {
+        return true;
+    }
 };
 
 /// Software Breakpoint (AArch64 only)
@@ -680,15 +858,21 @@ class HardwareBreakpoint : public ArmFaultVals<HardwareBreakpoint>
 {
   private:
     Addr vAddr;
+
   public:
-    void invoke(ThreadContext *tc, const StaticInstPtr &inst =
-                nullStaticInstPtr) override;
+    void invoke(ThreadContext *tc,
+                const StaticInstPtr &inst = nullStaticInstPtr) override;
     HardwareBreakpoint(Addr _vaddr, uint32_t _iss);
     bool routeToHyp(ThreadContext *tc) const override;
 
     /** Syndrome methods */
     ExceptionClass ec(ThreadContext *tc) const override;
-    bool il(ThreadContext *tc) const override { return true; }
+
+    bool
+    il(ThreadContext *tc) const override
+    {
+        return true;
+    }
 };
 
 class Watchpoint : public ArmFaultVals<Watchpoint>
@@ -700,14 +884,20 @@ class Watchpoint : public ArmFaultVals<Watchpoint>
 
   public:
     Watchpoint(ExtMachInst mach_inst, Addr vaddr, bool _write, bool _cm);
-    void invoke(ThreadContext *tc, const StaticInstPtr &inst =
-                nullStaticInstPtr) override;
+    void invoke(ThreadContext *tc,
+                const StaticInstPtr &inst = nullStaticInstPtr) override;
     bool routeToHyp(ThreadContext *tc) const override;
     void annotate(AnnotationIDs id, uint64_t val) override;
 
     /** Syndrome methods */
     ExceptionClass ec(ThreadContext *tc) const override;
-    bool il(ThreadContext *tc) const override { return true; }
+
+    bool
+    il(ThreadContext *tc) const override
+    {
+        return true;
+    }
+
     uint32_t iss() const override;
 };
 
@@ -723,7 +913,13 @@ class SoftwareStepFault : public ArmFaultVals<SoftwareStepFault>
 
     /** Syndrome methods */
     ExceptionClass ec(ThreadContext *tc) const override;
-    bool il(ThreadContext *tc) const override { return true; }
+
+    bool
+    il(ThreadContext *tc) const override
+    {
+        return true;
+    }
+
     uint32_t iss() const override;
 };
 
@@ -732,8 +928,9 @@ class ArmSev : public ArmFaultVals<ArmSev>
 {
   public:
     ArmSev() {}
-    void invoke(ThreadContext *tc, const StaticInstPtr &inst =
-                nullStaticInstPtr) override;
+
+    void invoke(ThreadContext *tc,
+                const StaticInstPtr &inst = nullStaticInstPtr) override;
 };
 
 /// Illegal Instruction Set State fault (AArch64 only)
@@ -744,37 +941,65 @@ class IllegalInstSetStateFault : public ArmFaultVals<IllegalInstSetStateFault>
     bool routeToHyp(ThreadContext *tc) const override;
 
     /** Syndrome methods */
-    bool il(ThreadContext *tc) const override { return true; }
+    bool
+    il(ThreadContext *tc) const override
+    {
+        return true;
+    }
 };
 
 /*
  * Explicitly declare template static member variables to avoid warnings
  * in some clang versions
  */
-template<> ArmFault::FaultVals ArmFaultVals<Reset>::vals;
-template<> ArmFault::FaultVals ArmFaultVals<UndefinedInstruction>::vals;
-template<> ArmFault::FaultVals ArmFaultVals<SupervisorCall>::vals;
-template<> ArmFault::FaultVals ArmFaultVals<SecureMonitorCall>::vals;
-template<> ArmFault::FaultVals ArmFaultVals<HypervisorCall>::vals;
-template<> ArmFault::FaultVals ArmFaultVals<PrefetchAbort>::vals;
-template<> ArmFault::FaultVals ArmFaultVals<DataAbort>::vals;
-template<> ArmFault::FaultVals ArmFaultVals<VirtualDataAbort>::vals;
-template<> ArmFault::FaultVals ArmFaultVals<HypervisorTrap>::vals;
-template<> ArmFault::FaultVals ArmFaultVals<Interrupt>::vals;
-template<> ArmFault::FaultVals ArmFaultVals<VirtualInterrupt>::vals;
-template<> ArmFault::FaultVals ArmFaultVals<FastInterrupt>::vals;
-template<> ArmFault::FaultVals ArmFaultVals<VirtualFastInterrupt>::vals;
-template<> ArmFault::FaultVals ArmFaultVals<IllegalInstSetStateFault>::vals;
-template<> ArmFault::FaultVals ArmFaultVals<SupervisorTrap>::vals;
-template<> ArmFault::FaultVals ArmFaultVals<SecureMonitorTrap>::vals;
-template<> ArmFault::FaultVals ArmFaultVals<PCAlignmentFault>::vals;
-template<> ArmFault::FaultVals ArmFaultVals<SPAlignmentFault>::vals;
-template<> ArmFault::FaultVals ArmFaultVals<SystemError>::vals;
-template<> ArmFault::FaultVals ArmFaultVals<SoftwareBreakpoint>::vals;
-template<> ArmFault::FaultVals ArmFaultVals<HardwareBreakpoint>::vals;
-template<> ArmFault::FaultVals ArmFaultVals<Watchpoint>::vals;
-template<> ArmFault::FaultVals ArmFaultVals<SoftwareStepFault>::vals;
-template<> ArmFault::FaultVals ArmFaultVals<ArmSev>::vals;
+template <>
+ArmFault::FaultVals ArmFaultVals<Reset>::vals;
+template <>
+ArmFault::FaultVals ArmFaultVals<UndefinedInstruction>::vals;
+template <>
+ArmFault::FaultVals ArmFaultVals<SupervisorCall>::vals;
+template <>
+ArmFault::FaultVals ArmFaultVals<SecureMonitorCall>::vals;
+template <>
+ArmFault::FaultVals ArmFaultVals<HypervisorCall>::vals;
+template <>
+ArmFault::FaultVals ArmFaultVals<PrefetchAbort>::vals;
+template <>
+ArmFault::FaultVals ArmFaultVals<DataAbort>::vals;
+template <>
+ArmFault::FaultVals ArmFaultVals<VirtualDataAbort>::vals;
+template <>
+ArmFault::FaultVals ArmFaultVals<HypervisorTrap>::vals;
+template <>
+ArmFault::FaultVals ArmFaultVals<Interrupt>::vals;
+template <>
+ArmFault::FaultVals ArmFaultVals<VirtualInterrupt>::vals;
+template <>
+ArmFault::FaultVals ArmFaultVals<FastInterrupt>::vals;
+template <>
+ArmFault::FaultVals ArmFaultVals<VirtualFastInterrupt>::vals;
+template <>
+ArmFault::FaultVals ArmFaultVals<IllegalInstSetStateFault>::vals;
+template <>
+ArmFault::FaultVals ArmFaultVals<SupervisorTrap>::vals;
+template <>
+ArmFault::FaultVals ArmFaultVals<SecureMonitorTrap>::vals;
+template <>
+ArmFault::FaultVals ArmFaultVals<PCAlignmentFault>::vals;
+template <>
+ArmFault::FaultVals ArmFaultVals<SPAlignmentFault>::vals;
+template <>
+ArmFault::FaultVals ArmFaultVals<SystemError>::vals;
+template <>
+ArmFault::FaultVals ArmFaultVals<SoftwareBreakpoint>::vals;
+template <>
+ArmFault::FaultVals ArmFaultVals<HardwareBreakpoint>::vals;
+template <>
+ArmFault::FaultVals ArmFaultVals<Watchpoint>::vals;
+template <>
+ArmFault::FaultVals ArmFaultVals<SoftwareStepFault>::vals;
+template <>
+ArmFault::FaultVals ArmFaultVals<ArmSev>::vals;
 
 /**
  * Returns true if the fault passed as a first argument was triggered

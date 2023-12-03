@@ -40,13 +40,10 @@ namespace gem5
 namespace replacement_policy
 {
 
-BIP::BIP(const Params &p)
-  : LRU(p), btp(p.btp)
-{
-}
+BIP::BIP(const Params &p) : LRU(p), btp(p.btp) {}
 
 void
-BIP::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
+BIP::reset(const std::shared_ptr<ReplacementData> &replacement_data) const
 {
     std::shared_ptr<LRUReplData> casted_replacement_data =
         std::static_pointer_cast<LRUReplData>(replacement_data);

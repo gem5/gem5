@@ -147,7 +147,7 @@ quiesceTime(ThreadContext *tc)
     DPRINTF(PseudoInst, "pseudo_inst::quiesceTime()\n");
 
     return (tc->readLastActivate() - tc->readLastSuspend()) /
-        sim_clock::as_int::ns;
+           sim_clock::as_int::ns;
 }
 
 uint64_t
@@ -165,7 +165,8 @@ wakeCPU(ThreadContext *tc, uint64_t cpuid)
 
     if (sys->threads.size() <= cpuid) {
         warn("pseudo_inst::wakeCPU(%i), cpuid greater than number of contexts"
-             "(%i)\n", cpuid, sys->threads.size());
+             "(%i)\n",
+             cpuid, sys->threads.size());
         return;
     }
 
@@ -186,8 +187,8 @@ m5exit(ThreadContext *tc, Tick delay)
 
 // m5sum is for sanity checking the gem5 op interface.
 uint64_t
-m5sum(ThreadContext *tc, uint64_t a, uint64_t b, uint64_t c,
-                         uint64_t d, uint64_t e, uint64_t f)
+m5sum(ThreadContext *tc, uint64_t a, uint64_t b, uint64_t c, uint64_t d,
+      uint64_t e, uint64_t f)
 {
     DPRINTF(PseudoInst, "pseudo_inst::m5sum(%#x, %#x, %#x, %#x, %#x, %#x)\n",
             a, b, c, d, e, f);
@@ -244,11 +245,10 @@ loadsymbol(ThreadContext *tc)
             continue;
 
         if (!tc->getSystemPtr()->workload->insertSymbol(
-            { loader::Symbol::Binding::Global,
-              loader::Symbol::SymbolType::Function, symbol, addr })) {
-                continue;
-              }
-
+                { loader::Symbol::Binding::Global,
+                  loader::Symbol::SymbolType::Function, symbol, addr })) {
+            continue;
+        }
 
         DPRINTF(Loader, "Loaded symbol: %s @ %#llx\n", symbol, addr);
     }
@@ -258,8 +258,8 @@ loadsymbol(ThreadContext *tc)
 void
 addsymbol(ThreadContext *tc, Addr addr, Addr symbolAddr)
 {
-    DPRINTF(PseudoInst, "pseudo_inst::addsymbol(0x%x, 0x%x)\n",
-            addr, symbolAddr);
+    DPRINTF(PseudoInst, "pseudo_inst::addsymbol(0x%x, 0x%x)\n", addr,
+            symbolAddr);
 
     std::string symbol;
     TranslatingPortProxy fs_proxy(tc);
@@ -272,19 +272,17 @@ addsymbol(ThreadContext *tc, Addr addr, Addr symbolAddr)
 
     tc->getSystemPtr()->workload->insertSymbol(
         { loader::Symbol::Binding::Global,
-          loader::Symbol::SymbolType::Function, symbol, addr }
-    );
-    loader::debugSymbolTable.insert(
-        { loader::Symbol::Binding::Global,
-          loader::Symbol::SymbolType::Function, symbol, addr }
-    );
+          loader::Symbol::SymbolType::Function, symbol, addr });
+    loader::debugSymbolTable.insert({ loader::Symbol::Binding::Global,
+                                      loader::Symbol::SymbolType::Function,
+                                      symbol, addr });
 }
 
 uint64_t
 initParam(ThreadContext *tc, uint64_t key_str1, uint64_t key_str2)
 {
     DPRINTF(PseudoInst, "pseudo_inst::initParam() key:%s%s\n",
-        (char *)&key_str1, (char *)&key_str2);
+            (char *)&key_str1, (char *)&key_str2);
 
     // The key parameter string is passed in via two 64-bit registers. We copy
     // out the characters from the 64-bit integer variables here, and
@@ -293,7 +291,7 @@ initParam(ThreadContext *tc, uint64_t key_str1, uint64_t key_str2)
     char key[len];
     std::memset(key, '\0', len);
 
-    std::array<uint64_t, 2> key_regs = {{ key_str1, key_str2 }};
+    std::array<uint64_t, 2> key_regs = { { key_str1, key_str2 } };
     key_regs = letoh(key_regs);
     std::memcpy(key, key_regs.data(), sizeof(key_regs));
 
@@ -309,14 +307,12 @@ initParam(ThreadContext *tc, uint64_t key_str1, uint64_t key_str2)
         panic("Unknown key for initparam pseudo instruction:\"%s\"", key_str);
 }
 
-
 void
 resetstats(ThreadContext *tc, Tick delay, Tick period)
 {
     DPRINTF(PseudoInst, "pseudo_inst::resetstats(%i, %i)\n", delay, period);
     if (!tc->getCpuPtr()->params().do_statistics_insts)
         return;
-
 
     Tick when = curTick() + delay * sim_clock::as_int::ns;
     Tick repeat = period * sim_clock::as_int::ns;
@@ -331,7 +327,6 @@ dumpstats(ThreadContext *tc, Tick delay, Tick period)
     if (!tc->getCpuPtr()->params().do_statistics_insts)
         return;
 
-
     Tick when = curTick() + delay * sim_clock::as_int::ns;
     Tick repeat = period * sim_clock::as_int::ns;
 
@@ -342,10 +337,9 @@ void
 dumpresetstats(ThreadContext *tc, Tick delay, Tick period)
 {
     DPRINTF(PseudoInst, "pseudo_inst::dumpresetstats(%i, %i)\n", delay,
-        period);
+            period);
     if (!tc->getCpuPtr()->params().do_statistics_insts)
         return;
-
 
     Tick when = curTick() + delay * sim_clock::as_int::ns;
     Tick repeat = period * sim_clock::as_int::ns;
@@ -370,8 +364,8 @@ m5checkpoint(ThreadContext *tc, Tick delay, Tick period)
 uint64_t
 readfile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset)
 {
-    DPRINTF(PseudoInst, "pseudo_inst::readfile(0x%x, 0x%x, 0x%x)\n",
-            vaddr, len, offset);
+    DPRINTF(PseudoInst, "pseudo_inst::readfile(0x%x, 0x%x, 0x%x)\n", vaddr,
+            len, offset);
 
     const std::string &file = tc->getSystemPtr()->params().readfile;
     if (file.empty()) {
@@ -405,13 +399,13 @@ readfile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset)
     PortProxy &virt_proxy = FullSystem ? fs_proxy : se_proxy;
 
     virt_proxy.writeBlob(vaddr, buf, result);
-    delete [] buf;
+    delete[] buf;
     return result;
 }
 
 uint64_t
 writefile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset,
-            Addr filename_addr)
+          Addr filename_addr)
 {
     DPRINTF(PseudoInst, "pseudo_inst::writefile(0x%x, 0x%x, 0x%x, 0x%x)\n",
             vaddr, len, offset, filename_addr);
@@ -432,8 +426,8 @@ writefile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset,
         // do not truncate file if offset is non-zero
         // (ios::in flag is required as well to keep the existing data
         //  intact, otherwise existing data will be zeroed out.)
-        out = simout.open(filename,
-                std::ios::in | std::ios::out | std::ios::binary, true);
+        out = simout.open(
+            filename, std::ios::in | std::ios::out | std::ios::binary, true);
     }
 
     std::ostream *os(out->stream());
@@ -455,7 +449,7 @@ writefile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset,
 
     simout.close(out);
 
-    delete [] buf;
+    delete[] buf;
 
     return len;
 }
@@ -515,7 +509,6 @@ workbegin(ThreadContext *tc, uint64_t workid, uint64_t threadid)
     // identified
     //
     if (params.work_item_id == -1 || params.work_item_id == workid) {
-
         uint64_t systemWorkBeginCount = sys->incWorkItemsBegin();
         int cpuId = tc->getCpuPtr()->cpuId();
 
@@ -577,7 +570,6 @@ workend(ThreadContext *tc, uint64_t workid, uint64_t threadid)
     // identified
     //
     if (params.work_item_id == -1 || params.work_item_id == workid) {
-
         uint64_t systemWorkEndCount = sys->incWorkItemsEnd();
         int cpuId = tc->getCpuPtr()->cpuId();
 

@@ -39,46 +39,43 @@ namespace gem5
 namespace replacement_policy
 {
 
-LFU::LFU(const Params &p)
-  : Base(p)
-{
-}
+LFU::LFU(const Params &p) : Base(p) {}
 
 void
-LFU::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
+LFU::invalidate(const std::shared_ptr<ReplacementData> &replacement_data)
 {
     // Reset reference count
     std::static_pointer_cast<LFUReplData>(replacement_data)->refCount = 0;
 }
 
 void
-LFU::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
+LFU::touch(const std::shared_ptr<ReplacementData> &replacement_data) const
 {
     // Update reference count
     std::static_pointer_cast<LFUReplData>(replacement_data)->refCount++;
 }
 
 void
-LFU::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
+LFU::reset(const std::shared_ptr<ReplacementData> &replacement_data) const
 {
     // Reset reference count
     std::static_pointer_cast<LFUReplData>(replacement_data)->refCount = 1;
 }
 
-ReplaceableEntry*
-LFU::getVictim(const ReplacementCandidates& candidates) const
+ReplaceableEntry *
+LFU::getVictim(const ReplacementCandidates &candidates) const
 {
     // There must be at least one replacement candidate
     assert(candidates.size() > 0);
 
     // Visit all candidates to find victim
-    ReplaceableEntry* victim = candidates[0];
-    for (const auto& candidate : candidates) {
+    ReplaceableEntry *victim = candidates[0];
+    for (const auto &candidate : candidates) {
         // Update victim entry if necessary
-        if (std::static_pointer_cast<LFUReplData>(
-                    candidate->replacementData)->refCount <
-                std::static_pointer_cast<LFUReplData>(
-                    victim->replacementData)->refCount) {
+        if (std::static_pointer_cast<LFUReplData>(candidate->replacementData)
+                ->refCount <
+            std::static_pointer_cast<LFUReplData>(victim->replacementData)
+                ->refCount) {
             victim = candidate;
         }
     }

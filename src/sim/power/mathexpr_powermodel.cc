@@ -50,24 +50,23 @@ namespace gem5
 
 MathExprPowerModel::MathExprPowerModel(const Params &p)
     : PowerModelState(p), dyn_expr(p.dyn), st_expr(p.st)
-{
-}
+{}
 
 void
 MathExprPowerModel::startup()
 {
-    for (auto expr: {dyn_expr, st_expr}) {
+    for (auto expr : { dyn_expr, st_expr }) {
         std::vector<std::string> vars = expr.getVariables();
 
-        for (auto var: vars) {
+        for (auto var : vars) {
             // Automatic variables:
             if (var == "temp" || var == "voltage" || var == "clock_period") {
                 continue;
             }
 
             auto *info = statistics::resolve(var);
-            fatal_if(!info, "Failed to evaluate %s in expression:\n%s\n",
-                     var, expr.toStr());
+            fatal_if(!info, "Failed to evaluate %s in expression:\n%s\n", var,
+                     expr.toStr());
             statsMap[var] = info;
         }
     }
@@ -76,10 +75,8 @@ MathExprPowerModel::startup()
 double
 MathExprPowerModel::eval(const MathExpr &expr) const
 {
-    return expr.eval(
-        std::bind(&MathExprPowerModel::getStatValue,
-                  this, std::placeholders::_1)
-        );
+    return expr.eval(std::bind(&MathExprPowerModel::getStatValue, this,
+                               std::placeholders::_1));
 }
 
 double
@@ -92,7 +89,7 @@ MathExprPowerModel::getStatValue(const std::string &name) const
         return _temp.toCelsius();
     } else if (name == "voltage") {
         return clocked_object->voltage();
-    } else if (name=="clock_period") {
+    } else if (name == "clock_period") {
         return clocked_object->clockPeriod();
     }
 

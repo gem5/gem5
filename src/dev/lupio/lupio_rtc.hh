@@ -48,7 +48,7 @@ class LupioRTC : public BasicPioDevice
     time_t start;
     struct tm time;
 
-  // Register map
+    // Register map
   private:
     enum
     {

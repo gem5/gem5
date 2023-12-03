@@ -77,14 +77,14 @@ namespace gem5
  */
 namespace context_switch_task_id
 {
-    enum TaskId
-    {
-        MaxNormalTaskId = 1021, /* Maximum number of normal tasks */
-        Prefetcher = 1022, /* For cache lines brought in by prefetcher */
-        DMA = 1023, /* Mostly Table Walker */
-        Unknown = 1024,
-        NumTaskId
-    };
+enum TaskId
+{
+    MaxNormalTaskId = 1021, /* Maximum number of normal tasks */
+    Prefetcher = 1022,      /* For cache lines brought in by prefetcher */
+    DMA = 1023,             /* Mostly Table Walker */
+    Unknown = 1024,
+    NumTaskId
+};
 }
 
 class Packet;
@@ -110,11 +110,11 @@ class Request : public Extensible<Request>
          * architecture-specific code. For example, SPARC uses them to
          * represent ASIs.
          */
-        ARCH_BITS                   = 0x000000FF,
+        ARCH_BITS = 0x000000FF,
         /** The request was an instruction fetch. */
-        INST_FETCH                  = 0x00000100,
+        INST_FETCH = 0x00000100,
         /** The virtual address is also the physical address. */
-        PHYSICAL                    = 0x00000200,
+        PHYSICAL = 0x00000200,
         /**
          * The request is to an uncacheable address.
          *
@@ -122,7 +122,7 @@ class Request : public Extensible<Request>
          * STRICT_ORDER flag should be set if such reordering is
          * undesirable.
          */
-        UNCACHEABLE                 = 0x00000400,
+        UNCACHEABLE = 0x00000400,
         /**
          * The request is required to be strictly ordered by <i>CPU
          * models</i> and is non-speculative.
@@ -132,18 +132,18 @@ class Request : public Extensible<Request>
          * memory system may still reorder requests in caches unless
          * the UNCACHEABLE flag is set as well.
          */
-        STRICT_ORDER                = 0x00000800,
+        STRICT_ORDER = 0x00000800,
         /** This request is made in privileged mode. */
-        PRIVILEGED                  = 0x00008000,
+        PRIVILEGED = 0x00008000,
 
         /**
          * This is a write that is targeted and zeroing an entire
          * cache block.  There is no need for a read/modify/write
          */
-        CACHE_BLOCK_ZERO            = 0x00010000,
+        CACHE_BLOCK_ZERO = 0x00010000,
 
         /** The request should not cause a memory access. */
-        NO_ACCESS                   = 0x00080000,
+        NO_ACCESS = 0x00080000,
         /**
          * This request will lock or unlock the accessed memory. When
          * used with a load, the access locks the particular chunk of
@@ -151,69 +151,69 @@ class Request : public Extensible<Request>
          * that locked accesses have to be made up of a locked load,
          * some operation on the data, and then a locked store.
          */
-        LOCKED_RMW                  = 0x00100000,
+        LOCKED_RMW = 0x00100000,
         /** The request is a Load locked/store conditional. */
-        LLSC                        = 0x00200000,
+        LLSC = 0x00200000,
         /** This request is for a memory swap. */
-        MEM_SWAP                    = 0x00400000,
-        MEM_SWAP_COND               = 0x00800000,
+        MEM_SWAP = 0x00400000,
+        MEM_SWAP_COND = 0x00800000,
         /** This request is a read which will be followed by a write. */
-        READ_MODIFY_WRITE           = 0x0020000000000000,
+        READ_MODIFY_WRITE = 0x0020000000000000,
 
         /** The request is a prefetch. */
-        PREFETCH                    = 0x01000000,
+        PREFETCH = 0x01000000,
         /** The request should be prefetched into the exclusive state. */
-        PF_EXCLUSIVE                = 0x02000000,
+        PF_EXCLUSIVE = 0x02000000,
         /** The request should be marked as LRU. */
-        EVICT_NEXT                  = 0x04000000,
+        EVICT_NEXT = 0x04000000,
         /** The request should be marked with ACQUIRE. */
-        ACQUIRE                     = 0x00020000,
+        ACQUIRE = 0x00020000,
         /** The request should be marked with RELEASE. */
-        RELEASE                     = 0x00040000,
+        RELEASE = 0x00040000,
 
         /** The request is an atomic that returns data. */
-        ATOMIC_RETURN_OP            = 0x40000000,
+        ATOMIC_RETURN_OP = 0x40000000,
         /** The request is an atomic that does not return data. */
-        ATOMIC_NO_RETURN_OP         = 0x80000000,
+        ATOMIC_NO_RETURN_OP = 0x80000000,
 
         /** The request should be marked with KERNEL.
-          * Used to indicate the synchronization associated with a GPU kernel
-          * launch or completion.
-          */
-        KERNEL                      = 0x00001000,
+         * Used to indicate the synchronization associated with a GPU kernel
+         * launch or completion.
+         */
+        KERNEL = 0x00001000,
 
         /** The request targets the secure memory space. */
-        SECURE                      = 0x10000000,
+        SECURE = 0x10000000,
         /** The request is a page table walk */
-        PT_WALK                     = 0x20000000,
+        PT_WALK = 0x20000000,
 
         /** The request invalidates a memory location */
-        INVALIDATE                  = 0x0000000100000000,
+        INVALIDATE = 0x0000000100000000,
         /** The request cleans a memory location */
-        CLEAN                       = 0x0000000200000000,
+        CLEAN = 0x0000000200000000,
 
         /** The request targets the point of unification */
-        DST_POU                     = 0x0000001000000000,
+        DST_POU = 0x0000001000000000,
 
         /** The request targets the point of coherence */
-        DST_POC                     = 0x0000002000000000,
+        DST_POC = 0x0000002000000000,
 
         /** Bits to define the destination of a request */
-        DST_BITS                    = 0x0000003000000000,
+        DST_BITS = 0x0000003000000000,
 
         /** hardware transactional memory **/
 
         /** The request starts a HTM transaction */
-        HTM_START                   = 0x0000010000000000,
+        HTM_START = 0x0000010000000000,
 
         /** The request commits a HTM transaction */
-        HTM_COMMIT                  = 0x0000020000000000,
+        HTM_COMMIT = 0x0000020000000000,
 
         /** The request cancels a HTM transaction */
-        HTM_CANCEL                  = 0x0000040000000000,
+        HTM_CANCEL = 0x0000040000000000,
 
         /** The request aborts a HTM transaction */
-        HTM_ABORT                   = 0x0000080000000000,
+        HTM_ABORT = 0x0000080000000000,
 
         // What is the different between HTM cancel and abort?
         //
@@ -238,18 +238,18 @@ class Request : public Extensible<Request>
         // of the system work correctly together.
 
         /** The Request is a TLB shootdown */
-        TLBI                        = 0x0000100000000000,
+        TLBI = 0x0000100000000000,
 
         /** The Request is a TLB shootdown sync */
-        TLBI_SYNC                   = 0x0000200000000000,
+        TLBI_SYNC = 0x0000200000000000,
 
         /** The Request tells the CPU model that a
             remote TLB Sync has been requested */
-        TLBI_EXT_SYNC               = 0x0000400000000000,
+        TLBI_EXT_SYNC = 0x0000400000000000,
 
         /** The Request tells the interconnect that a
             remote TLB Sync request has completed */
-        TLBI_EXT_SYNC_COMP          = 0x0000800000000000,
+        TLBI_EXT_SYNC_COMP = 0x0000800000000000,
 
         /**
          * These flags are *not* cleared when a Request object is
@@ -257,14 +257,15 @@ class Request : public Extensible<Request>
          */
         STICKY_FLAGS = INST_FETCH
     };
-    static const FlagsType STORE_NO_DATA = CACHE_BLOCK_ZERO |
-        CLEAN | INVALIDATE;
 
-    static const FlagsType HTM_CMD = HTM_START | HTM_COMMIT |
-        HTM_CANCEL | HTM_ABORT;
+    static const FlagsType STORE_NO_DATA =
+        CACHE_BLOCK_ZERO | CLEAN | INVALIDATE;
 
-    static const FlagsType TLBI_CMD = TLBI | TLBI_SYNC |
-        TLBI_EXT_SYNC | TLBI_EXT_SYNC_COMP;
+    static const FlagsType HTM_CMD =
+        HTM_START | HTM_COMMIT | HTM_CANCEL | HTM_ABORT;
+
+    static const FlagsType TLBI_CMD =
+        TLBI | TLBI_SYNC | TLBI_EXT_SYNC | TLBI_EXT_SYNC_COMP;
 
     /** Requestor Ids that are statically allocated
      * @{*/
@@ -285,6 +286,7 @@ class Request : public Extensible<Request>
          */
         invldRequestorId = std::numeric_limits<RequestorID>::max()
     };
+
     /** @} */
 
     typedef uint64_t CacheCoherenceFlagsType;
@@ -320,22 +322,22 @@ class Request : public Extensible<Request>
     enum : CacheCoherenceFlagsType
     {
         /** mem_sync_op flags */
-        I_CACHE_INV             = 0x00000001,
-        INV_L1                  = I_CACHE_INV,
-        V_CACHE_INV             = 0x00000002,
-        K_CACHE_INV             = 0x00000004,
-        GL1_CACHE_INV           = 0x00000008,
-        K_CACHE_WB              = 0x00000010,
-        FLUSH_L2                = 0x00000020,
-        GL2_CACHE_INV           = 0x00000040,
+        I_CACHE_INV = 0x00000001,
+        INV_L1 = I_CACHE_INV,
+        V_CACHE_INV = 0x00000002,
+        K_CACHE_INV = 0x00000004,
+        GL1_CACHE_INV = 0x00000008,
+        K_CACHE_WB = 0x00000010,
+        FLUSH_L2 = 0x00000020,
+        GL2_CACHE_INV = 0x00000040,
         /** user-policy flags */
-        SLC_BIT                 = 0x00000080,
-        DLC_BIT                 = 0x00000100,
-        GLC_BIT                 = 0x00000200,
+        SLC_BIT = 0x00000080,
+        DLC_BIT = 0x00000100,
+        GLC_BIT = 0x00000200,
         /** mtype flags */
-        CACHED                  = 0x00000400,
-        READ_WRITE              = 0x00000800,
-        SHARED                  = 0x00001000,
+        CACHED = 0x00000400,
+        READ_WRITE = 0x00000800,
+        SHARED = 0x00001000,
 
     };
 
@@ -349,27 +351,27 @@ class Request : public Extensible<Request>
     enum : PrivateFlagsType
     {
         /** Whether or not the size is valid. */
-        VALID_SIZE           = 0x00000001,
+        VALID_SIZE = 0x00000001,
         /** Whether or not paddr is valid (has been written yet). */
-        VALID_PADDR          = 0x00000002,
+        VALID_PADDR = 0x00000002,
         /** Whether or not the vaddr is valid. */
-        VALID_VADDR          = 0x00000004,
+        VALID_VADDR = 0x00000004,
         /** Whether or not the instruction sequence number is valid. */
-        VALID_INST_SEQ_NUM   = 0x00000008,
+        VALID_INST_SEQ_NUM = 0x00000008,
         /** Whether or not the pc is valid. */
-        VALID_PC             = 0x00000010,
+        VALID_PC = 0x00000010,
         /** Whether or not the context ID is valid. */
-        VALID_CONTEXT_ID     = 0x00000020,
+        VALID_CONTEXT_ID = 0x00000020,
         /** Whether or not the sc result is valid. */
-        VALID_EXTRA_DATA     = 0x00000080,
+        VALID_EXTRA_DATA = 0x00000080,
         /** Whether or not the stream ID and substream ID is valid. */
-        VALID_STREAM_ID      = 0x00000100,
-        VALID_SUBSTREAM_ID   = 0x00000200,
+        VALID_STREAM_ID = 0x00000100,
+        VALID_SUBSTREAM_ID = 0x00000200,
         // hardware transactional memory
         /** Whether or not the abort cause is valid. */
         VALID_HTM_ABORT_CAUSE = 0x00000400,
         /** Whether or not the instruction count is valid. */
-        VALID_INST_COUNT      = 0x00000800,
+        VALID_INST_COUNT = 0x00000800,
         /**
          * These flags are *not* cleared when a Request object is reused
          * (assigned a new address).
@@ -378,7 +380,6 @@ class Request : public Extensible<Request>
     };
 
   private:
-
     /**
      * The physical address of the request. Valid only if validPaddr
      * is set.
@@ -471,7 +472,6 @@ class Request : public Extensible<Request>
     HtmFailureFaultCause _htmAbortCause = HtmFailureFaultCause::INVALID;
 
   public:
-
     /**
      * Minimal constructor. No fields are initialized. (Note that
      *  _flags and privateFlags are cleared by Flags default
@@ -484,41 +484,45 @@ class Request : public Extensible<Request>
      * just physical address, size, flags, and timestamp (to curTick()).
      * These fields are adequate to perform a request.
      */
-    Request(Addr paddr, unsigned size, Flags flags, RequestorID id) :
-        _paddr(paddr), _size(size), _requestorId(id), _time(curTick())
+    Request(Addr paddr, unsigned size, Flags flags, RequestorID id)
+        : _paddr(paddr), _size(size), _requestorId(id), _time(curTick())
     {
         _flags.set(flags);
-        privateFlags.set(VALID_PADDR|VALID_SIZE);
+        privateFlags.set(VALID_PADDR | VALID_SIZE);
         _byteEnable = std::vector<bool>(size, true);
     }
 
-    Request(Addr vaddr, unsigned size, Flags flags,
-            RequestorID id, Addr pc, ContextID cid,
-            AtomicOpFunctorPtr atomic_op=nullptr)
+    Request(Addr vaddr, unsigned size, Flags flags, RequestorID id, Addr pc,
+            ContextID cid, AtomicOpFunctorPtr atomic_op = nullptr)
     {
         setVirt(vaddr, size, flags, id, pc, std::move(atomic_op));
         setContext(cid);
         _byteEnable = std::vector<bool>(size, true);
     }
 
-    Request(const Request& other)
+    Request(const Request &other)
         : Extensible<Request>(other),
-          _paddr(other._paddr), _size(other._size),
+          _paddr(other._paddr),
+          _size(other._size),
           _byteEnable(other._byteEnable),
           _requestorId(other._requestorId),
           _flags(other._flags),
           _cacheCoherenceFlags(other._cacheCoherenceFlags),
           privateFlags(other.privateFlags),
           _time(other._time),
-          _taskId(other._taskId), _vaddr(other._vaddr),
-          _extraData(other._extraData), _contextId(other._contextId),
-          _pc(other._pc), _reqInstSeqNum(other._reqInstSeqNum),
+          _taskId(other._taskId),
+          _vaddr(other._vaddr),
+          _extraData(other._extraData),
+          _contextId(other._contextId),
+          _pc(other._pc),
+          _reqInstSeqNum(other._reqInstSeqNum),
           _localAccessor(other._localAccessor),
           translateDelta(other.translateDelta),
-          accessDelta(other.accessDelta), depth(other.depth)
+          accessDelta(other.accessDelta),
+          depth(other.depth)
     {
-        atomicOpFunctor.reset(other.atomicOpFunctor ?
-                                other.atomicOpFunctor->clone() : nullptr);
+        atomicOpFunctor.reset(
+            other.atomicOpFunctor ? other.atomicOpFunctor->clone() : nullptr);
     }
 
     ~Request() {}
@@ -570,7 +574,7 @@ class Request : public Extensible<Request>
      */
     void
     setVirt(Addr vaddr, unsigned size, Flags flags, RequestorID id, Addr pc,
-            AtomicOpFunctorPtr amo_op=nullptr)
+            AtomicOpFunctorPtr amo_op = nullptr)
     {
         _vaddr = vaddr;
         _size = size;
@@ -581,7 +585,7 @@ class Request : public Extensible<Request>
         _flags.clear(~STICKY_FLAGS);
         _flags.set(flags);
         privateFlags.clear(~STICKY_PRIVATE_FLAGS);
-        privateFlags.set(VALID_VADDR|VALID_SIZE|VALID_PC);
+        privateFlags.set(VALID_VADDR | VALID_SIZE | VALID_PC);
         depth = 0;
         accessDelta = 0;
         translateDelta = 0;
@@ -607,7 +611,8 @@ class Request : public Extensible<Request>
     // TODO: this function is still required by TimingSimpleCPU - should be
     // removed once TimingSimpleCPU will support arbitrarily long multi-line
     // mem. accesses
-    void splitOnVaddr(Addr split_addr, RequestPtr &req1, RequestPtr &req2)
+    void
+    splitOnVaddr(Addr split_addr, RequestPtr &req1, RequestPtr &req2)
     {
         assert(hasVaddr());
         assert(!hasPaddr());
@@ -618,11 +623,9 @@ class Request : public Extensible<Request>
         req2->_vaddr = split_addr;
         req2->_size = _size - req1->_size;
         req1->_byteEnable = std::vector<bool>(
-            _byteEnable.begin(),
-            _byteEnable.begin() + req1->_size);
+            _byteEnable.begin(), _byteEnable.begin() + req1->_size);
         req2->_byteEnable = std::vector<bool>(
-            _byteEnable.begin() + req1->_size,
-            _byteEnable.end());
+            _byteEnable.begin() + req1->_size, _byteEnable.end());
     }
 
     /**
@@ -647,16 +650,18 @@ class Request : public Extensible<Request>
     bool
     hasInstCount() const
     {
-      return privateFlags.isSet(VALID_INST_COUNT);
+        return privateFlags.isSet(VALID_INST_COUNT);
     }
 
-    Counter getInstCount() const
+    Counter
+    getInstCount() const
     {
         assert(hasInstCount());
         return _instCount;
     }
 
-    void setInstCount(Counter val)
+    void
+    setInstCount(Counter val)
     {
         privateFlags.set(VALID_INST_COUNT);
         _instCount = val;
@@ -695,14 +700,14 @@ class Request : public Extensible<Request>
         return _size;
     }
 
-    const std::vector<bool>&
+    const std::vector<bool> &
     getByteEnable() const
     {
         return _byteEnable;
     }
 
     void
-    setByteEnable(const std::vector<bool>& be)
+    setByteEnable(const std::vector<bool> &be)
     {
         assert(be.size() == _size);
         _byteEnable = be;
@@ -716,10 +721,8 @@ class Request : public Extensible<Request>
     bool
     isMasked() const
     {
-        return std::find(
-            _byteEnable.begin(),
-            _byteEnable.end(),
-            false) != _byteEnable.end();
+        return std::find(_byteEnable.begin(), _byteEnable.end(), false) !=
+               _byteEnable.end();
     }
 
     /** Accessor for time. */
@@ -731,9 +734,19 @@ class Request : public Extensible<Request>
     }
 
     /** Is this request for a local memory mapped resource/register? */
-    bool isLocalAccess() { return (bool)_localAccessor; }
+    bool
+    isLocalAccess()
+    {
+        return (bool)_localAccessor;
+    }
+
     /** Set the function which will enact that access. */
-    void setLocalAccessor(LocalAccessor acc) { _localAccessor = acc; }
+    void
+    setLocalAccessor(LocalAccessor acc)
+    {
+        _localAccessor = acc;
+    }
+
     /** Perform the installed local access. */
     Cycles
     localAccessor(ThreadContext *tc, Packet *pkt)
@@ -763,14 +776,13 @@ class Request : public Extensible<Request>
         atomicOpFunctor = std::move(amo_op);
     }
 
-
     /**
      * Accessor for hardware transactional memory abort cause.
      */
     bool
     hasHtmAbortCause() const
     {
-      return privateFlags.isSet(VALID_HTM_ABORT_CAUSE);
+        return privateFlags.isSet(VALID_HTM_ABORT_CAUSE);
     }
 
     HtmFailureFaultCause
@@ -864,7 +876,8 @@ class Request : public Extensible<Request>
     }
 
     void
-    taskId(uint32_t id) {
+    taskId(uint32_t id)
+    {
         _taskId = id;
     }
 
@@ -914,13 +927,22 @@ class Request : public Extensible<Request>
     }
 
     /* For GPU fullsystem mark this request is not to device memory. */
-    void setSystemReq(bool sysReq) { _systemReq = sysReq; }
-    bool systemReq() const { return _systemReq; }
+    void
+    setSystemReq(bool sysReq)
+    {
+        _systemReq = sysReq;
+    }
+
+    bool
+    systemReq() const
+    {
+        return _systemReq;
+    }
 
     bool
     hasStreamId() const
     {
-      return privateFlags.isSet(VALID_STREAM_ID);
+        return privateFlags.isSet(VALID_STREAM_ID);
     }
 
     uint32_t
@@ -968,21 +990,48 @@ class Request : public Extensible<Request>
      * Increment/Get the depth at which this request is responded to.
      * This currently happens when the request misses in any cache level.
      */
-    void incAccessDepth() const { depth++; }
-    int getAccessDepth() const { return depth; }
+    void
+    incAccessDepth() const
+    {
+        depth++;
+    }
+
+    int
+    getAccessDepth() const
+    {
+        return depth;
+    }
 
     /**
      * Set/Get the time taken for this request to be successfully translated.
      */
-    void setTranslateLatency() { translateDelta = curTick() - _time; }
-    Tick getTranslateLatency() const { return translateDelta; }
+    void
+    setTranslateLatency()
+    {
+        translateDelta = curTick() - _time;
+    }
+
+    Tick
+    getTranslateLatency() const
+    {
+        return translateDelta;
+    }
 
     /**
      * Set/Get the time taken to complete this request's access, not including
      *  the time to successfully translate the request.
      */
-    void setAccessLatency() { accessDelta = curTick() - _time - translateDelta; }
-    Tick getAccessLatency() const { return accessDelta; }
+    void
+    setAccessLatency()
+    {
+        accessDelta = curTick() - _time - translateDelta;
+    }
+
+    Tick
+    getAccessLatency() const
+    {
+        return accessDelta;
+    }
 
     /**
      * Accessor for the sequence number of instruction that creates the
@@ -1010,54 +1059,176 @@ class Request : public Extensible<Request>
 
     /** Accessor functions for flags. Note that these are for testing
         only; setting flags should be done via setFlags(). */
-    bool isUncacheable() const { return _flags.isSet(UNCACHEABLE); }
-    bool isStrictlyOrdered() const { return _flags.isSet(STRICT_ORDER); }
-    bool isInstFetch() const { return _flags.isSet(INST_FETCH); }
+    bool
+    isUncacheable() const
+    {
+        return _flags.isSet(UNCACHEABLE);
+    }
+
+    bool
+    isStrictlyOrdered() const
+    {
+        return _flags.isSet(STRICT_ORDER);
+    }
+
+    bool
+    isInstFetch() const
+    {
+        return _flags.isSet(INST_FETCH);
+    }
+
     bool
     isPrefetch() const
     {
         return (_flags.isSet(PREFETCH | PF_EXCLUSIVE));
     }
-    bool isPrefetchEx() const { return _flags.isSet(PF_EXCLUSIVE); }
-    bool isLLSC() const { return _flags.isSet(LLSC); }
-    bool isPriv() const { return _flags.isSet(PRIVILEGED); }
-    bool isLockedRMW() const { return _flags.isSet(LOCKED_RMW); }
-    bool isSwap() const { return _flags.isSet(MEM_SWAP | MEM_SWAP_COND); }
-    bool isCondSwap() const { return _flags.isSet(MEM_SWAP_COND); }
+
+    bool
+    isPrefetchEx() const
+    {
+        return _flags.isSet(PF_EXCLUSIVE);
+    }
+
+    bool
+    isLLSC() const
+    {
+        return _flags.isSet(LLSC);
+    }
+
+    bool
+    isPriv() const
+    {
+        return _flags.isSet(PRIVILEGED);
+    }
+
+    bool
+    isLockedRMW() const
+    {
+        return _flags.isSet(LOCKED_RMW);
+    }
+
+    bool
+    isSwap() const
+    {
+        return _flags.isSet(MEM_SWAP | MEM_SWAP_COND);
+    }
+
+    bool
+    isCondSwap() const
+    {
+        return _flags.isSet(MEM_SWAP_COND);
+    }
+
     bool
     isReadModifyWrite() const
     {
         return _flags.isSet(LOCKED_RMW | READ_MODIFY_WRITE);
     }
-    bool isSecure() const { return _flags.isSet(SECURE); }
-    bool isPTWalk() const { return _flags.isSet(PT_WALK); }
-    bool isRelease() const { return _flags.isSet(RELEASE); }
-    bool isKernel() const { return _flags.isSet(KERNEL); }
-    bool isAtomicReturn() const { return _flags.isSet(ATOMIC_RETURN_OP); }
-    bool isAtomicNoReturn() const { return _flags.isSet(ATOMIC_NO_RETURN_OP); }
+
+    bool
+    isSecure() const
+    {
+        return _flags.isSet(SECURE);
+    }
+
+    bool
+    isPTWalk() const
+    {
+        return _flags.isSet(PT_WALK);
+    }
+
+    bool
+    isRelease() const
+    {
+        return _flags.isSet(RELEASE);
+    }
+
+    bool
+    isKernel() const
+    {
+        return _flags.isSet(KERNEL);
+    }
+
+    bool
+    isAtomicReturn() const
+    {
+        return _flags.isSet(ATOMIC_RETURN_OP);
+    }
+
+    bool
+    isAtomicNoReturn() const
+    {
+        return _flags.isSet(ATOMIC_NO_RETURN_OP);
+    }
+
     // hardware transactional memory
-    bool isHTMStart() const { return _flags.isSet(HTM_START); }
-    bool isHTMCommit() const { return _flags.isSet(HTM_COMMIT); }
-    bool isHTMCancel() const { return _flags.isSet(HTM_CANCEL); }
-    bool isHTMAbort() const { return _flags.isSet(HTM_ABORT); }
+    bool
+    isHTMStart() const
+    {
+        return _flags.isSet(HTM_START);
+    }
+
+    bool
+    isHTMCommit() const
+    {
+        return _flags.isSet(HTM_COMMIT);
+    }
+
+    bool
+    isHTMCancel() const
+    {
+        return _flags.isSet(HTM_CANCEL);
+    }
+
+    bool
+    isHTMAbort() const
+    {
+        return _flags.isSet(HTM_ABORT);
+    }
+
     bool
     isHTMCmd() const
     {
-        return (isHTMStart() || isHTMCommit() ||
-                isHTMCancel() || isHTMAbort());
+        return (isHTMStart() || isHTMCommit() || isHTMCancel() ||
+                isHTMAbort());
     }
 
-    bool isTlbi() const { return _flags.isSet(TLBI); }
-    bool isTlbiSync() const { return _flags.isSet(TLBI_SYNC); }
-    bool isTlbiExtSync() const { return _flags.isSet(TLBI_EXT_SYNC); }
-    bool isTlbiExtSyncComp() const { return _flags.isSet(TLBI_EXT_SYNC_COMP); }
+    bool
+    isTlbi() const
+    {
+        return _flags.isSet(TLBI);
+    }
+
+    bool
+    isTlbiSync() const
+    {
+        return _flags.isSet(TLBI_SYNC);
+    }
+
+    bool
+    isTlbiExtSync() const
+    {
+        return _flags.isSet(TLBI_EXT_SYNC);
+    }
+
+    bool
+    isTlbiExtSyncComp() const
+    {
+        return _flags.isSet(TLBI_EXT_SYNC_COMP);
+    }
+
     bool
     isTlbiCmd() const
     {
-        return (isTlbi() || isTlbiSync() ||
-                isTlbiExtSync() || isTlbiExtSyncComp());
+        return (isTlbi() || isTlbiSync() || isTlbiExtSync() ||
+                isTlbiExtSyncComp());
     }
-    bool isMemMgmt() const { return isTlbiCmd() || isHTMCmd(); }
+
+    bool
+    isMemMgmt() const
+    {
+        return isTlbiCmd() || isHTMCmd();
+    }
 
     bool
     isAtomic() const
@@ -1073,12 +1244,29 @@ class Request : public Extensible<Request>
      * unification). At the moment the destination is only used by the
      * cache maintenance operations.
      */
-    bool isToPOU() const { return _flags.isSet(DST_POU); }
-    bool isToPOC() const { return _flags.isSet(DST_POC); }
-    Flags getDest() const { return _flags & DST_BITS; }
+    bool
+    isToPOU() const
+    {
+        return _flags.isSet(DST_POU);
+    }
 
-    bool isAcquire() const { return _cacheCoherenceFlags.isSet(ACQUIRE); }
+    bool
+    isToPOC() const
+    {
+        return _flags.isSet(DST_POC);
+    }
 
+    Flags
+    getDest() const
+    {
+        return _flags & DST_BITS;
+    }
+
+    bool
+    isAcquire() const
+    {
+        return _cacheCoherenceFlags.isSet(ACQUIRE);
+    }
 
     /**
      * Accessor functions for the cache bypass flags. The cache bypass
@@ -1087,15 +1275,28 @@ class Request : public Extensible<Request>
      * If SLC_BIT is set, then the requests are system level coherent
      * and bypass both TCP and TCC.
      */
-    bool isGLCSet() const {return _cacheCoherenceFlags.isSet(GLC_BIT); }
-    bool isSLCSet() const {return _cacheCoherenceFlags.isSet(SLC_BIT); }
+    bool
+    isGLCSet() const
+    {
+        return _cacheCoherenceFlags.isSet(GLC_BIT);
+    }
+
+    bool
+    isSLCSet() const
+    {
+        return _cacheCoherenceFlags.isSet(SLC_BIT);
+    }
 
     /**
      * Accessor functions for the memory space configuration flags and used by
      * GPU ISAs such as the Heterogeneous System Architecture (HSA). Note that
      * setting extraFlags should be done via setCacheCoherenceFlags().
      */
-    bool isInvL1() const { return _cacheCoherenceFlags.isSet(INV_L1); }
+    bool
+    isInvL1() const
+    {
+        return _cacheCoherenceFlags.isSet(INV_L1);
+    }
 
     bool
     isGL2CacheFlush() const
@@ -1115,9 +1316,24 @@ class Request : public Extensible<Request>
      * 3) A clean and invalidate operation is a combination of the two
      * operations.
      * @{ */
-    bool isCacheClean() const { return _flags.isSet(CLEAN); }
-    bool isCacheInvalidate() const { return _flags.isSet(INVALIDATE); }
-    bool isCacheMaintenance() const { return _flags.isSet(CLEAN|INVALIDATE); }
+    bool
+    isCacheClean() const
+    {
+        return _flags.isSet(CLEAN);
+    }
+
+    bool
+    isCacheInvalidate() const
+    {
+        return _flags.isSet(INVALIDATE);
+    }
+
+    bool
+    isCacheMaintenance() const
+    {
+        return _flags.isSet(CLEAN | INVALIDATE);
+    }
+
     /** @} */
 };
 

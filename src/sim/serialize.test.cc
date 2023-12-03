@@ -278,7 +278,7 @@ TEST_F(CheckpointInFixture, SCSCptInPathScoped)
 
         Serializable::ScopedCheckpointSection scs_3(*(cpt.get()), "Section3");
         ASSERT_EQ(Serializable::currentSection(),
-            "Section1.Section2.Section3");
+                  "Section1.Section2.Section3");
     }
 
     Serializable::ScopedCheckpointSection scs_4(*(cpt.get()), "Section4");
@@ -302,7 +302,7 @@ TEST_F(SerializeFixture, SCSCptOutPathScoped)
 
         Serializable::ScopedCheckpointSection scs_3(cpt, "Section3");
         ASSERT_EQ(Serializable::currentSection(),
-            "Section1.Section2.Section3");
+                  "Section1.Section2.Section3");
     }
 
     Serializable::ScopedCheckpointSection scs_4(cpt, "Section4");
@@ -360,7 +360,7 @@ getContents(std::ofstream &cpt, std::string filename)
     std::ifstream is(filename);
     assert(is.good());
     return std::string(std::istreambuf_iterator<char>(is),
-        std::istreambuf_iterator<char>());
+                       std::istreambuf_iterator<char>());
 }
 
 /**
@@ -370,8 +370,7 @@ getContents(std::ofstream &cpt, std::string filename)
 TEST_F(SerializableFixture, SCSChangeCptOutSingle)
 {
     Serializable::ScopedCheckpointSection scs(*cpt_out, "Section1");
-    ASSERT_EQ(getContents(*cpt_out, getCptPath()),
-        "\n[Section1]\n");
+    ASSERT_EQ(getContents(*cpt_out, getCptPath()), "\n[Section1]\n");
 }
 
 /**
@@ -419,8 +418,7 @@ TEST_F(SerializableFixture, SCSChangeCptOutLarge)
         {
             Serializable::ScopedCheckpointSection scs_3(*cpt_out, "Section3");
             expected += "\n[Section1.Section2.Section3]\n";
-            ASSERT_EQ(getContents(*cpt_out, getCptPath()),
-            expected);
+            ASSERT_EQ(getContents(*cpt_out, getCptPath()), expected);
         }
 
         Serializable::ScopedCheckpointSection scs_4(*cpt_out, "Section4");
@@ -451,12 +449,11 @@ TEST_F(SerializableFixture, SCSChangeCptOutLarge)
 TEST(SerializableDeathTest, GenerateCptOutFail)
 {
     std::ofstream cpt;
-    const std::string dir_name =
-        SerializeFixture::generateTempDirName();
+    const std::string dir_name = SerializeFixture::generateTempDirName();
     ASSERT_FALSE(dirExists(dir_name));
 
-    ASSERT_ANY_THROW(Serializable::generateCheckpointOut(
-        dir_name + "/b/a/n/a/n/a/", cpt));
+    ASSERT_ANY_THROW(
+        Serializable::generateCheckpointOut(dir_name + "/b/a/n/a/n/a/", cpt));
 }
 
 /** Test successful CheckpointOut generation with non-existent dir. */
@@ -471,8 +468,8 @@ TEST_F(SerializeFixture, GenerateCptOut)
 
     // Make sure the checkpoint was properly created. Using EXPECT to
     // force removing the directory at the end
-    EXPECT_NE(getContents(cpt, getCptPath()).find(
-        "## checkpoint generated: "), std::string::npos);
+    EXPECT_NE(getContents(cpt, getCptPath()).find("## checkpoint generated: "),
+              std::string::npos);
 }
 
 /** Test successful CheckpointOut generation with existing dir. */
@@ -496,8 +493,17 @@ class SerializableType : public Serializable
   public:
     SerializableType() : Serializable() {}
 
-    void serialize(CheckpointOut &cp) const override { _serialized = true; }
-    void unserialize(CheckpointIn &cp) override { _unserialized = true; }
+    void
+    serialize(CheckpointOut &cp) const override
+    {
+        _serialized = true;
+    }
+
+    void
+    unserialize(CheckpointIn &cp) override
+    {
+        _unserialized = true;
+    }
 
     /**
      * Checks if serialize() has been called and then marks it as not called.
@@ -539,20 +545,19 @@ TEST_F(SerializableFixture, SectionSerializationSimple)
     // Serialization
     {
         serializable.serializeSection(*cpt_out, "Section1");
-        ASSERT_EQ(getContents(*cpt_out, getCptPath()),
-            "\n[Section1]\n");
+        ASSERT_EQ(getContents(*cpt_out, getCptPath()), "\n[Section1]\n");
         ASSERT_TRUE(serializable.checkAndResetSerialized());
         ASSERT_FALSE(serializable.checkAndResetUnserialized());
 
         serializable.serializeSection(*cpt_out, "Section2");
         ASSERT_EQ(getContents(*cpt_out, getCptPath()),
-            "\n[Section1]\n\n[Section2]\n");
+                  "\n[Section1]\n\n[Section2]\n");
         ASSERT_TRUE(serializable.checkAndResetSerialized());
         ASSERT_FALSE(serializable.checkAndResetUnserialized());
 
         serializable.serializeSection(*cpt_out, "Section3");
         ASSERT_EQ(getContents(*cpt_out, getCptPath()),
-            "\n[Section1]\n\n[Section2]\n\n[Section3]\n");
+                  "\n[Section1]\n\n[Section2]\n\n[Section3]\n");
         ASSERT_TRUE(serializable.checkAndResetSerialized());
         ASSERT_FALSE(serializable.checkAndResetUnserialized());
     }
@@ -687,8 +692,7 @@ TEST_F(SerializableFixture, ParamOutInMultipleSections)
 
             paramOut(*cpt_out, "Param3", boolean);
             expected += "Param3=true\n";
-            ASSERT_EQ(getContents(*cpt_out, getCptPath()),
-                expected);
+            ASSERT_EQ(getContents(*cpt_out, getCptPath()), expected);
         }
 
         // Possibly unexpected behavior: Since scs_2 has gone out of scope
@@ -707,8 +711,7 @@ TEST_F(SerializableFixture, ParamOutInMultipleSections)
 
             paramOut(*cpt_out, "Param5", character);
             expected += "Param5=99\n";
-            ASSERT_EQ(getContents(*cpt_out, getCptPath()),
-                expected);
+            ASSERT_EQ(getContents(*cpt_out, getCptPath()), expected);
         }
     }
 
@@ -790,9 +793,10 @@ TEST_F(SerializeFixture, OptParamOutIn)
         // Optional with default request for warning
         gtestLogOutput.str("");
         ASSERT_FALSE(optParamIn(cpt, "Param3", unserialized_boolean));
-        ASSERT_THAT(gtestLogOutput.str(),
+        ASSERT_THAT(
+            gtestLogOutput.str(),
             ::testing::HasSubstr("warn: optional parameter Section1:Param3 "
-            "not present\n"));
+                                 "not present\n"));
 
         gtestLogOutput.str("");
         ASSERT_TRUE(optParamIn(cpt, "Param4", unserialized_str));
@@ -802,9 +806,10 @@ TEST_F(SerializeFixture, OptParamOutIn)
         // Explicit request for warning
         gtestLogOutput.str("");
         ASSERT_FALSE(optParamIn(cpt, "Param5", unserialized_boolean, true));
-        ASSERT_THAT(gtestLogOutput.str(),
+        ASSERT_THAT(
+            gtestLogOutput.str(),
             ::testing::HasSubstr("warn: optional parameter Section1:Param5 "
-            "not present\n"));
+                                 "not present\n"));
     }
 }
 
@@ -813,7 +818,7 @@ TEST_F(SerializableFixtureDeathTest, NoSectionParamIn)
 {
 #ifndef NDEBUG
     GTEST_SKIP() << "Skipping as assertions are "
-        "stripped out of fast builds";
+                    "stripped out of fast builds";
 #endif
 
     std::ofstream of(getCptPath());
@@ -825,12 +830,12 @@ TEST_F(SerializableFixtureDeathTest, NoSectionParamIn)
 /** Test arrayParamOut and arrayParamIn. */
 TEST_F(SerializeFixture, ArrayParamOutIn)
 {
-    const int integer[] = {5, 10, 15};
-    std::array<double, 4> real = {0.1, 1.345, 892.72, 1e+10};
-    std::list<bool> boolean = {true, false};
-    std::vector<std::string> str = {"a", "string", "test"};
-    std::set<uint64_t> uint64 = {12751928501, 13, 111111};
-    std::deque<uint8_t> uint8 = {17, 42, 255};
+    const int integer[] = { 5, 10, 15 };
+    std::array<double, 4> real = { 0.1, 1.345, 892.72, 1e+10 };
+    std::list<bool> boolean = { true, false };
+    std::vector<std::string> str = { "a", "string", "test" };
+    std::set<uint64_t> uint64 = { 12751928501, 13, 111111 };
+    std::deque<uint8_t> uint8 = { 17, 42, 255 };
 
     // Serialization
     {
@@ -880,7 +885,7 @@ TEST_F(SerializeFixture, ArrayParamOutIn)
         ASSERT_THAT(unserialized_integer, testing::ElementsAre(5, 10, 15));
 
         arrayParamIn(cpt, "Param2", unserialized_real.data(),
-            unserialized_real.size());
+                     unserialized_real.size());
         ASSERT_EQ(real, unserialized_real);
 
         arrayParamIn(cpt, "Param3", unserialized_boolean);
@@ -901,10 +906,11 @@ TEST_F(SerializeFixture, ArrayParamOutIn)
  * Test arrayParamOut and arrayParamIn for strings with spaces.
  * @todo This is broken because spaces are delimiters between array
  * entries; so, strings containing spaces are seen as multiple entries
-*/
+ */
 TEST_F(SerializeFixture, DISABLED_ArrayParamOutInSpacedStrings)
 {
-    std::vector<std::string> str = {"a string test", "for", "array param out"};
+    std::vector<std::string> str = { "a string test", "for",
+                                     "array param out" };
 
     // Serialization
     {
@@ -938,7 +944,7 @@ TEST_F(SerializeFixtureDeathTest, ArrayParamOutInSmaller)
 {
     // Serialization
     {
-        const int integer[] = {5, 10, 15};
+        const int integer[] = { 5, 10, 15 };
 
         std::ofstream cpt(getCptPath());
         Serializable::ScopedCheckpointSection scs(cpt, "Section1");
@@ -964,10 +970,10 @@ TEST_F(SerializeFixtureDeathTest, ArrayParamOutInSmaller)
 /** Test mappingParamOut and mappingParamIn with all keys. */
 TEST_F(SerializeFixture, MappingParamOutIn)
 {
-    const int integers[] = {10, 32, 100};
-    std::array<double, 4> reals = {0.1, 1.345, 892.72, 1e+10};
-    const char* const names_ints[] = {"ten", "thirty-two", "one hundred"};
-    const char* const names_reals[] = {"first", "second", "third", "fourth"};
+    const int integers[] = { 10, 32, 100 };
+    std::array<double, 4> reals = { 0.1, 1.345, 892.72, 1e+10 };
+    const char *const names_ints[] = { "ten", "thirty-two", "one hundred" };
+    const char *const names_reals[] = { "first", "second", "third", "fourth" };
 
     // Serialization
     {
@@ -977,12 +983,12 @@ TEST_F(SerializeFixture, MappingParamOutIn)
 
         mappingParamOut(cpt, "Integers", names_ints, integers, 3);
         expected += "\n[Section1.Integers]\nten=10\nthirty-two=32\n"
-            "one hundred=100\n";
+                    "one hundred=100\n";
         ASSERT_EQ(getContents(cpt, getCptPath()), expected);
 
         mappingParamOut(cpt, "Reals", names_reals, reals.data(), reals.size());
         expected += "\n[Section1.Reals]\nfirst=0.1\nsecond=1.345\n"
-            "third=892.72\nfourth=1e+10\n";
+                    "third=892.72\nfourth=1e+10\n";
         ASSERT_EQ(getContents(cpt, getCptPath()), expected);
     }
 
@@ -994,11 +1000,11 @@ TEST_F(SerializeFixture, MappingParamOutIn)
         std::array<double, 4> unserialized_reals;
 
         mappingParamIn(cpt, "Section1.Integers", names_ints,
-            unserialized_integers, 3);
+                       unserialized_integers, 3);
         ASSERT_THAT(unserialized_integers, testing::ElementsAre(10, 32, 100));
 
         mappingParamIn(cpt, "Section1.Reals", names_reals,
-            unserialized_reals.data(), unserialized_reals.size());
+                       unserialized_reals.data(), unserialized_reals.size());
         ASSERT_EQ(unserialized_reals, reals);
     }
 }
@@ -1006,14 +1012,15 @@ TEST_F(SerializeFixture, MappingParamOutIn)
 /** Test that missing keys are ignored on mappingParamIn. */
 TEST_F(SerializeFixture, MappingParamOutInMissing)
 {
-    const int integers[] = {10, 32, 100};
-    std::array<double, 4> reals = {0.1, 1.345, 892.72, 1e+10};
+    const int integers[] = { 10, 32, 100 };
+    std::array<double, 4> reals = { 0.1, 1.345, 892.72, 1e+10 };
 
     // Serialization
     {
-        const char* const names_ints[] = {"ten", "thirty-two", "one hundred"};
-        const char* const names_reals[] =
-            {"first", "second", "third", "fourth"};
+        const char *const names_ints[] = { "ten", "thirty-two",
+                                           "one hundred" };
+        const char *const names_reals[] = { "first", "second", "third",
+                                            "fourth" };
 
         std::ofstream cpt(getCptPath());
         Serializable::ScopedCheckpointSection scs(cpt, "Section1");
@@ -1021,20 +1028,20 @@ TEST_F(SerializeFixture, MappingParamOutInMissing)
 
         mappingParamOut(cpt, "Integers", names_ints, integers, 3);
         expected += "\n[Section1.Integers]\nten=10\nthirty-two=32\n"
-            "one hundred=100\n";
+                    "one hundred=100\n";
         ASSERT_EQ(getContents(cpt, getCptPath()), expected);
 
         mappingParamOut(cpt, "Reals", names_reals, reals.data(), reals.size());
         expected += "\n[Section1.Reals]\nfirst=0.1\nsecond=1.345\n"
-            "third=892.72\nfourth=1e+10\n";
+                    "third=892.72\nfourth=1e+10\n";
         ASSERT_EQ(getContents(cpt, getCptPath()), expected);
     }
 
     // Unserialization
     {
-        const char* const names_ints[] = {"one hundred"};
-        const char* const names_reals[] = {"first", "third"};
-        std::array<double, 2> expected_reals = {0.1, 892.72};
+        const char *const names_ints[] = { "one hundred" };
+        const char *const names_reals[] = { "first", "third" };
+        std::array<double, 2> expected_reals = { 0.1, 892.72 };
 
         CheckpointIn cpt(getDirName());
 
@@ -1044,23 +1051,27 @@ TEST_F(SerializeFixture, MappingParamOutInMissing)
 
         gtestLogOutput.str("");
         mappingParamIn(cpt, "Section1.Integers", names_ints,
-            unserialized_integers, 1);
+                       unserialized_integers, 1);
         ASSERT_THAT(unserialized_integers, testing::ElementsAre(100));
         err = gtestLogOutput.str();
-        ASSERT_THAT(err, ::testing::HasSubstr("warn: unknown entry found in "
-            "checkpoint: Section1.Integers thirty-two 32\n"));
-        ASSERT_THAT(err, ::testing::HasSubstr("warn: unknown entry found in "
-            "checkpoint: Section1.Integers ten 10\n"));
+        ASSERT_THAT(err, ::testing::HasSubstr(
+                             "warn: unknown entry found in "
+                             "checkpoint: Section1.Integers thirty-two 32\n"));
+        ASSERT_THAT(err, ::testing::HasSubstr(
+                             "warn: unknown entry found in "
+                             "checkpoint: Section1.Integers ten 10\n"));
 
         gtestLogOutput.str("");
         mappingParamIn(cpt, "Section1.Reals", names_reals,
-            unserialized_reals.data(), unserialized_reals.size());
+                       unserialized_reals.data(), unserialized_reals.size());
         ASSERT_EQ(unserialized_reals, expected_reals);
         err = gtestLogOutput.str();
-        ASSERT_THAT(err, ::testing::HasSubstr("warn: unknown entry found in "
-            "checkpoint: Section1.Reals fourth 1e+10\n"));
-        ASSERT_THAT(err, ::testing::HasSubstr("warn: unknown entry found in "
-            "checkpoint: Section1.Reals second 1.345\n"));
+        ASSERT_THAT(err, ::testing::HasSubstr(
+                             "warn: unknown entry found in "
+                             "checkpoint: Section1.Reals fourth 1e+10\n"));
+        ASSERT_THAT(err, ::testing::HasSubstr(
+                             "warn: unknown entry found in "
+                             "checkpoint: Section1.Reals second 1.345\n"));
     }
 }
 
@@ -1179,9 +1190,10 @@ TEST_F(SerializeFixture, SerializeEnum)
     enum Number
     {
         ZERO,
-        TEN=10,
-        THIRTY_TWO=32
+        TEN = 10,
+        THIRTY_TWO = 32
     };
+
     const Number expected_val = ZERO;
     const Number expected_val_2 = THIRTY_TWO;
 
@@ -1223,11 +1235,11 @@ TEST_F(SerializeFixture, SerializeEnum)
 /** Test SERIALIZE_ARRAY and UNSERIALIZE_ARRAY. */
 TEST_F(SerializeFixture, SerializeArray)
 {
-    std::array<double, 4> expected_real = {0.1, 1.345, 892.72, 1e+10};
+    std::array<double, 4> expected_real = { 0.1, 1.345, 892.72, 1e+10 };
 
     // Serialization
     {
-        const int integer[] = {5, 10, 15};
+        const int integer[] = { 5, 10, 15 };
         const double *real = expected_real.data();
 
         std::ofstream cp(getCptPath());
@@ -1264,10 +1276,10 @@ TEST_F(SerializeFixture, SerializeArray)
 /** Test SERIALIZE_CONTAINER and UNSERIALIZE_CONTAINER. */
 TEST_F(SerializeFixture, SerializeContainer)
 {
-    std::list<bool> expected_boolean = {true, false};
-    std::vector<std::string> expected_str = {"a", "string", "test"};
-    std::set<uint64_t> expected_uint64 = {12751928501, 13, 111111};
-    std::deque<uint8_t> expected_uint8 = {17, 42, 255};
+    std::list<bool> expected_boolean = { true, false };
+    std::vector<std::string> expected_str = { "a", "string", "test" };
+    std::set<uint64_t> expected_uint64 = { 12751928501, 13, 111111 };
+    std::deque<uint8_t> expected_uint8 = { 17, 42, 255 };
 
     // Serialization
     {
@@ -1325,10 +1337,10 @@ TEST_F(SerializeFixture, SerializeContainer)
 /** Test SERIALIZE_MAPPING and UNSERIALIZE_MAPPING with all keys. */
 TEST_F(SerializeFixture, SerializeMapping)
 {
-    const int expected_integers[] = {10, 32, 100};
-    std::array<double, 4> expected_reals = {0.1, 1.345, 892.72, 1e+10};
-    const char* const names_ints[] = {"ten", "thirty-two", "one hundred"};
-    const char* const names_reals[] = {"first", "second", "third", "fourth"};
+    const int expected_integers[] = { 10, 32, 100 };
+    std::array<double, 4> expected_reals = { 0.1, 1.345, 892.72, 1e+10 };
+    const char *const names_ints[] = { "ten", "thirty-two", "one hundred" };
+    const char *const names_reals[] = { "first", "second", "third", "fourth" };
 
     // Serialization
     {
@@ -1341,12 +1353,12 @@ TEST_F(SerializeFixture, SerializeMapping)
 
         SERIALIZE_MAPPING(integers, names_ints, 3);
         expected += "\n[Section1.integers]\nten=10\nthirty-two=32\n"
-            "one hundred=100\n";
+                    "one hundred=100\n";
         ASSERT_EQ(getContents(cp, getCptPath()), expected);
 
         SERIALIZE_MAPPING(reals, names_reals, expected_reals.size());
         expected += "\n[Section1.reals]\nfirst=0.1\nsecond=1.345\n"
-            "third=892.72\nfourth=1e+10\n";
+                    "third=892.72\nfourth=1e+10\n";
         ASSERT_EQ(getContents(cp, getCptPath()), expected);
     }
 

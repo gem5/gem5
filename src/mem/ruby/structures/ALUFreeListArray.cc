@@ -40,22 +40,22 @@ namespace ruby
 {
 
 /*
-*
-* Models num_ALUs pipelined atomic ALUs with a depth of access_latency ticks.
-* Rather than reserving ALUs, this class assumes multiple requests can go
-* through an ALU at the same time. As such, up to numALU new requests can
-* go through at once, with the caveat that a line already being processed
-* in an ALU can't start processing again until the previous request has exited
-* the pipeline.
-*
-* ALUs aren't mapped directly to cache lines. Rather, ALUs are treated as
-* a free list.
-*
-* Behavior:
-*   Requests will go through unless one/both of the following are met:
-*       - There have been more than [numALUs] requests in the current cycle
-*       - The same line has been accessed in the past accessLatency ticks
-*/
+ *
+ * Models num_ALUs pipelined atomic ALUs with a depth of access_latency ticks.
+ * Rather than reserving ALUs, this class assumes multiple requests can go
+ * through an ALU at the same time. As such, up to numALU new requests can
+ * go through at once, with the caveat that a line already being processed
+ * in an ALU can't start processing again until the previous request has exited
+ * the pipeline.
+ *
+ * ALUs aren't mapped directly to cache lines. Rather, ALUs are treated as
+ * a free list.
+ *
+ * Behavior:
+ *   Requests will go through unless one/both of the following are met:
+ *       - There have been more than [numALUs] requests in the current cycle
+ *       - The same line has been accessed in the past accessLatency ticks
+ */
 
 ALUFreeListArray::ALUFreeListArray(unsigned int num_ALUs, Tick access_latency)
 {
@@ -63,7 +63,8 @@ ALUFreeListArray::ALUFreeListArray(unsigned int num_ALUs, Tick access_latency)
     this->accessLatency = access_latency;
 }
 
-bool ALUFreeListArray::tryAccess(Addr addr)
+bool
+ALUFreeListArray::tryAccess(Addr addr)
 {
     uint32_t accesses_this_tick = 0;
 
@@ -72,11 +73,11 @@ bool ALUFreeListArray::tryAccess(Addr addr)
     Tick oldestValidRecordStart = curTick() - this->accessLatency;
 
     while (accessQueue.size() > 0 &&
-         (accessQueue.back().startTick < oldestValidRecordStart)) {
+           (accessQueue.back().startTick < oldestValidRecordStart)) {
         accessQueue.pop_back();
     }
 
-    for (AccessRecord& record : accessQueue) {
+    for (AccessRecord &record : accessQueue) {
         // Block access if we would be using more ALUs than we have in a
         // single tick
         if (record.startTick == curTick() &&
@@ -93,7 +94,8 @@ bool ALUFreeListArray::tryAccess(Addr addr)
     return true;
 }
 
-void ALUFreeListArray::reserve(Addr addr)
+void
+ALUFreeListArray::reserve(Addr addr)
 {
     // Only called after tryAccess, so we know queue is up to date and that
     // the access is valid

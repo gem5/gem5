@@ -51,15 +51,15 @@ Branch::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
     printMnemonic(response, mnemonic);
     printRegArray(response, &srcRegIdx(0), _numSrcRegs);
     if (_numDestRegs && _numSrcRegs)
-            response << ", ";
+        response << ", ";
     printDestReg(response, 0);
 
     return response.str();
 }
 
 std::string
-BranchImm13::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+BranchImm13::generateDisassembly(Addr pc,
+                                 const loader::SymbolTable *symtab) const
 {
     std::stringstream response;
 
@@ -76,8 +76,8 @@ BranchImm13::generateDisassembly(
 }
 
 std::string
-BranchDisp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+BranchDisp::generateDisassembly(Addr pc,
+                                const loader::SymbolTable *symtab) const
 {
     std::stringstream response;
 

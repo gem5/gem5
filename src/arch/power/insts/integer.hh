@@ -54,7 +54,6 @@ namespace PowerISA
 class IntOp : public PowerStaticInst
 {
   protected:
-
     bool rc;
     bool oe;
 
@@ -63,11 +62,10 @@ class IntOp : public PowerStaticInst
 
     /// Constructor
     IntOp(const char *mnem, MachInst _machInst, OpClass __opClass)
-      : PowerStaticInst(mnem, _machInst, __opClass),
-        rc(machInst.rc),
-        oe(machInst.oe)
-    {
-    }
+        : PowerStaticInst(mnem, _machInst, __opClass),
+          rc(machInst.rc),
+          oe(machInst.oe)
+    {}
 
     /* Compute the CR (condition register) field using signed comparison */
     inline uint32_t
@@ -75,10 +73,16 @@ class IntOp : public PowerStaticInst
     {
         Cr cr = 0;
 
-        if (a < b)      { cr.cr0.lt = 1; }
-        else if (a > b) { cr.cr0.gt = 1; }
-        else            { cr.cr0.eq = 1; }
-        if (so)         { cr.cr0.so = 1; }
+        if (a < b) {
+            cr.cr0.lt = 1;
+        } else if (a > b) {
+            cr.cr0.gt = 1;
+        } else {
+            cr.cr0.eq = 1;
+        }
+        if (so) {
+            cr.cr0.so = 1;
+        }
 
         return cr.cr0;
     }
@@ -89,18 +93,24 @@ class IntOp : public PowerStaticInst
     {
         Cr cr = 0;
 
-        if (a < b)      { cr.cr0.lt = 1; }
-        else if (a > b) { cr.cr0.gt = 1; }
-        else            { cr.cr0.eq = 1; }
-        if (so)         { cr.cr0.so = 1; }
+        if (a < b) {
+            cr.cr0.lt = 1;
+        } else if (a > b) {
+            cr.cr0.gt = 1;
+        } else {
+            cr.cr0.eq = 1;
+        }
+        if (so) {
+            cr.cr0.so = 1;
+        }
 
         return cr.cr0;
     }
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
-
 
 /**
  * Class for integer immediate (signed and unsigned) operations.
@@ -108,22 +118,20 @@ class IntOp : public PowerStaticInst
 class IntImmOp : public IntOp
 {
   protected:
-
     int32_t si;
     uint32_t ui;
 
     /// Constructor
     IntImmOp(const char *mnem, MachInst _machInst, OpClass __opClass)
-      : IntOp(mnem, _machInst, __opClass),
-        si(sext<16>(machInst.si)),
-        ui(machInst.si)
-    {
-    }
+        : IntOp(mnem, _machInst, __opClass),
+          si(sext<16>(machInst.si)),
+          ui(machInst.si)
+    {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
-
 
 /**
  * Class for integer arithmetic operations.
@@ -131,27 +139,25 @@ class IntImmOp : public IntOp
 class IntArithOp : public IntOp
 {
   protected:
-
     /// Constructor
     IntArithOp(const char *mnem, MachInst _machInst, OpClass __opClass)
-      : IntOp(mnem, _machInst, __opClass)
-    {
-    }
+        : IntOp(mnem, _machInst, __opClass)
+    {}
 
     /* Compute 128-bit sum of 128-bit to 64-bit unsigned integer addition */
     inline std::tuple<uint64_t, uint64_t>
     add(uint64_t ralo, uint64_t rahi, uint64_t rb) const
     {
         uint64_t slo, shi;
-    #if defined(__SIZEOF_INT128__)
+#if defined(__SIZEOF_INT128__)
         __uint128_t ra = ((__uint128_t)rahi << 64) | ralo;
         __uint128_t sum = ra + rb;
         slo = sum;
         shi = sum >> 64;
-    #else
+#else
         shi = rahi + ((ralo + rb) < ralo);
         slo = ralo + rb;
-    #endif
+#endif
         return std::make_tuple(slo, shi);
     }
 
@@ -161,12 +167,12 @@ class IntArithOp : public IntOp
     {
         uint64_t slo;
         int64_t shi;
-    #if defined(__SIZEOF_INT128__)
+#if defined(__SIZEOF_INT128__)
         __int128_t ra = ((__int128_t)rahi << 64) | ralo;
         __int128_t sum = (__int128_t)ra + rb;
         slo = sum;
         shi = sum >> 64;
-    #else
+#else
         if (rb < 0) {
             shi = rahi - 1;
             slo = ralo + rb;
@@ -180,7 +186,7 @@ class IntArithOp : public IntOp
                 shi++;
             }
         }
-    #endif
+#endif
         return std::make_tuple(slo, shi);
     }
 
@@ -192,11 +198,11 @@ class IntArithOp : public IntOp
     multiply(uint64_t ra, uint64_t rb) const
     {
         uint64_t plo, phi;
-    #if defined(__SIZEOF_INT128__)
+#if defined(__SIZEOF_INT128__)
         __uint128_t prod = (__uint128_t)ra * rb;
         plo = prod;
         phi = prod >> 64;
-    #else
+#else
         uint64_t ralo = (uint32_t)ra, rahi = ra >> 32;
         uint64_t rblo = (uint32_t)rb, rbhi = rb >> 32;
         uint64_t pp0 = ralo * rblo;
@@ -206,7 +212,7 @@ class IntArithOp : public IntOp
         uint64_t c = ((uint32_t)pp1) + ((uint32_t)pp2) + (pp0 >> 32);
         phi = pp3 + (pp2 >> 32) + (pp1 >> 32) + (c >> 32);
         plo = (c << 32) | ((uint32_t)pp0);
-    #endif
+#endif
         return std::make_tuple(plo, phi);
     }
 
@@ -215,15 +221,17 @@ class IntArithOp : public IntOp
     multiply(int64_t ra, int64_t rb) const
     {
         uint64_t plo, phi;
-    #if defined(__SIZEOF_INT128__)
+#if defined(__SIZEOF_INT128__)
         __int128_t prod = (__int128_t)ra * rb;
         plo = prod;
         phi = prod >> 64;
-    #else
+#else
         std::tie(plo, phi) = multiply((uint64_t)ra, (uint64_t)rb);
-        if (rb < 0) phi -= (uint64_t)ra;
-        if (ra < 0) phi -= (uint64_t)rb;
-    #endif
+        if (rb < 0)
+            phi -= (uint64_t)ra;
+        if (ra < 0)
+            phi -= (uint64_t)rb;
+#endif
         return std::make_tuple(plo, (int64_t)phi);
     }
 
@@ -235,15 +243,15 @@ class IntArithOp : public IntOp
     multiplyAdd(uint64_t ra, uint64_t rb, uint64_t rc) const
     {
         uint64_t rlo, rhi;
-    #if defined(__SIZEOF_INT128__)
+#if defined(__SIZEOF_INT128__)
         __uint128_t res = ((__uint128_t)ra * rb) + rc;
         rlo = res;
         rhi = res >> 64;
-    #else
+#else
         uint64_t plo, phi;
         std::tie(plo, phi) = multiply(ra, rb);
         std::tie(rlo, rhi) = add(plo, phi, rc);
-    #endif
+#endif
         return std::make_tuple(rlo, rhi);
     }
 
@@ -256,16 +264,16 @@ class IntArithOp : public IntOp
     {
         uint64_t rlo;
         int64_t rhi;
-    #if defined(__SIZEOF_INT128__)
+#if defined(__SIZEOF_INT128__)
         __int128_t res = (__int128_t)ra * rb + rc;
         rlo = res;
         rhi = res >> 64;
-    #else
+#else
         uint64_t plo;
         int64_t phi;
         std::tie(plo, phi) = multiply(ra, rb);
         std::tie(rlo, rhi) = add(plo, phi, rc);
-    #endif
+#endif
         return std::make_tuple(rlo, rhi);
     }
 
@@ -279,7 +287,7 @@ class IntArithOp : public IntOp
     {
         bool ov;
         uint64_t q, r;
-    #if defined(__SIZEOF_INT128__)
+#if defined(__SIZEOF_INT128__)
         if (rb == 0) {
             ov = true;
         } else {
@@ -289,13 +297,13 @@ class IntArithOp : public IntOp
             r = ra % rb;
             ov = res > UINT64_MAX;
         }
-    #else
+#else
         uint64_t c = 0;
 
         if (rb == 0) {
             ov = true;
         } else if (rahi == 0) {
-            q  = ralo / rb;
+            q = ralo / rb;
             r = ralo % rb;
             ov = false;
         } else if (rahi >= rb) {
@@ -316,7 +324,7 @@ class IntArithOp : public IntOp
             r = rahi;
             ov = false;
         }
-    #endif
+#endif
         return std::make_tuple(ov, q, r);
     }
 
@@ -329,7 +337,7 @@ class IntArithOp : public IntOp
     {
         bool ov;
         int64_t q, r;
-    #if defined(__SIZEOF_INT128__)
+#if defined(__SIZEOF_INT128__)
         if (rb == 0) {
             ov = true;
         } else {
@@ -339,7 +347,7 @@ class IntArithOp : public IntOp
             r = ra % rb;
             ov = res != q;
         }
-    #else
+#else
         bool raneg = rahi < 0;
         bool rbneg = rb < 0;
 
@@ -354,19 +362,23 @@ class IntArithOp : public IntOp
             }
         }
 
-        if (rbneg) rb = -rb;
+        if (rbneg)
+            rb = -rb;
         std::tie(ov, q, r) = divide(ralo, (uint64_t)rahi, (uint64_t)rb);
-        if (raneg ^ rbneg) q = -q;
-        if (raneg) r = -r;
-        if (!ov) ov = ((q < 0) ^ (raneg ^ rbneg));
-    #endif
+        if (raneg ^ rbneg)
+            q = -q;
+        if (raneg)
+            r = -r;
+        if (!ov)
+            ov = ((q < 0) ^ (raneg ^ rbneg));
+#endif
         return std::make_tuple(ov, q, r);
     }
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
-
 
 /**
  * Class for integer immediate arithmetic operations.
@@ -374,20 +386,17 @@ class IntArithOp : public IntOp
 class IntImmArithOp : public IntArithOp
 {
   protected:
-
     int32_t si;
 
     /// Constructor
     IntImmArithOp(const char *mnem, MachInst _machInst, OpClass __opClass)
-      : IntArithOp(mnem, _machInst, __opClass),
-        si(sext<16>(machInst.si))
-    {
-    }
+        : IntArithOp(mnem, _machInst, __opClass), si(sext<16>(machInst.si))
+    {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
-
 
 /**
  * Class for integer arithmetic operations with displacement.
@@ -395,20 +404,18 @@ class IntImmArithOp : public IntArithOp
 class IntDispArithOp : public IntArithOp
 {
   protected:
-
     int64_t d;
 
     /// Constructor
     IntDispArithOp(const char *mnem, MachInst _machInst, OpClass __opClass)
-      : IntArithOp(mnem, _machInst, __opClass),
-        d(sext<16>((machInst.d0 << 6) | (machInst.d1 << 1) | machInst.d2))
-    {
-    }
+        : IntArithOp(mnem, _machInst, __opClass),
+          d(sext<16>((machInst.d0 << 6) | (machInst.d1 << 1) | machInst.d2))
+    {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
-
 
 /**
  * Class for integer compare operations.
@@ -416,22 +423,18 @@ class IntDispArithOp : public IntArithOp
 class IntCompOp : public IntOp
 {
   protected:
-
     bool l;
     uint8_t bf;
 
     /// Constructor
     IntCompOp(const char *mnem, MachInst _machInst, OpClass __opClass)
-      : IntOp(mnem, _machInst, __opClass),
-        l(machInst.l),
-        bf(machInst.bf)
-    {
-    }
+        : IntOp(mnem, _machInst, __opClass), l(machInst.l), bf(machInst.bf)
+    {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
-
 
 /**
  * Class for integer immediate compare operations.
@@ -439,20 +442,17 @@ class IntCompOp : public IntOp
 class IntImmCompOp : public IntCompOp
 {
   protected:
-
     int32_t si;
 
     /// Constructor
     IntImmCompOp(const char *mnem, MachInst _machInst, OpClass __opClass)
-      : IntCompOp(mnem, _machInst, __opClass),
-        si(sext<16>(machInst.si))
-    {
-    }
+        : IntCompOp(mnem, _machInst, __opClass), si(sext<16>(machInst.si))
+    {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
-
 
 /**
  * Class for integer immediate compare logical operations.
@@ -460,20 +460,17 @@ class IntImmCompOp : public IntCompOp
 class IntImmCompLogicOp : public IntCompOp
 {
   protected:
-
     uint32_t ui;
 
     /// Constructor
     IntImmCompLogicOp(const char *mnem, MachInst _machInst, OpClass __opClass)
-      : IntCompOp(mnem, _machInst, __opClass),
-        ui(machInst.ui)
-    {
-    }
+        : IntCompOp(mnem, _machInst, __opClass), ui(machInst.ui)
+    {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
-
 
 /**
  * Class for integer logical operations.
@@ -481,12 +478,10 @@ class IntImmCompLogicOp : public IntCompOp
 class IntLogicOp : public IntOp
 {
   protected:
-
     /// Constructor
     IntLogicOp(const char *mnem, MachInst _machInst, OpClass __opClass)
-      : IntOp(mnem, _machInst, __opClass)
-    {
-    }
+        : IntOp(mnem, _machInst, __opClass)
+    {}
 
     /* Compute the number of consecutive zero bits starting from the
        leftmost bit and moving right in a 32-bit integer */
@@ -494,12 +489,11 @@ class IntLogicOp : public IntOp
     findLeadingZeros(uint32_t rs) const
     {
         if (rs) {
-    #if defined(__GNUC__) || (defined(__clang__) && \
-                              __has_builtin(__builtin_clz))
+#if defined(__GNUC__) || (defined(__clang__) && __has_builtin(__builtin_clz))
             return __builtin_clz(rs);
-    #else
+#else
             return 31 - findMsbSet(rs);
-    #endif
+#endif
         } else {
             return 32;
         }
@@ -511,12 +505,11 @@ class IntLogicOp : public IntOp
     findLeadingZeros(uint64_t rs) const
     {
         if (rs) {
-    #if defined(__GNUC__) || (defined(__clang__) && \
-                              __has_builtin(__builtin_clzll))
+#if defined(__GNUC__) || (defined(__clang__) && __has_builtin(__builtin_clzll))
             return __builtin_clzll(rs);
-    #else
+#else
             return 63 - findMsbSet(rs);
-    #endif
+#endif
         } else {
             return 64;
         }
@@ -528,12 +521,11 @@ class IntLogicOp : public IntOp
     findTrailingZeros(uint32_t rs) const
     {
         if (rs) {
-    #if defined(__GNUC__) || (defined(__clang__) && \
-                              __has_builtin(__builtin_ctz))
+#if defined(__GNUC__) || (defined(__clang__) && __has_builtin(__builtin_ctz))
             return __builtin_ctz(rs);
-    #else
+#else
             return findLsbSet(rs);
-    #endif
+#endif
         } else {
             return 32;
         }
@@ -545,21 +537,20 @@ class IntLogicOp : public IntOp
     findTrailingZeros(uint64_t rs) const
     {
         if (rs) {
-    #if defined(__GNUC__) || (defined(__clang__) && \
-                              __has_builtin(__builtin_ctzll))
+#if defined(__GNUC__) || (defined(__clang__) && __has_builtin(__builtin_ctzll))
             return __builtin_ctzll(rs);
-    #else
+#else
             return findLsbSet(rs);
-    #endif
+#endif
         } else {
             return 64;
         }
     }
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
-
 
 /**
  * Class for integer immediate logical operations.
@@ -567,20 +558,17 @@ class IntLogicOp : public IntOp
 class IntImmLogicOp : public IntLogicOp
 {
   protected:
-
     uint32_t ui;
 
     /// Constructor
     IntImmLogicOp(const char *mnem, MachInst _machInst, OpClass __opClass)
-      : IntLogicOp(mnem, _machInst, __opClass),
-        ui(machInst.ui)
-    {
-    }
+        : IntLogicOp(mnem, _machInst, __opClass), ui(machInst.ui)
+    {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
-
 
 /**
  * Class for integer operations with a shift value obtained from
@@ -589,20 +577,17 @@ class IntImmLogicOp : public IntLogicOp
 class IntShiftOp : public IntOp
 {
   protected:
-
     uint8_t sh;
 
     /// Constructor
     IntShiftOp(const char *mnem, MachInst _machInst, OpClass __opClass)
-      : IntOp(mnem, _machInst, __opClass),
-        sh(machInst.sh)
-    {
-    }
+        : IntOp(mnem, _machInst, __opClass), sh(machInst.sh)
+    {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
-
 
 /**
  * Class for integer shift operations with a shift value obtained from
@@ -611,20 +596,18 @@ class IntShiftOp : public IntOp
 class IntConcatShiftOp : public IntOp
 {
   protected:
-
     uint8_t sh;
 
     /// Constructor
     IntConcatShiftOp(const char *mnem, MachInst _machInst, OpClass __opClass)
-      : IntOp(mnem, _machInst, __opClass),
-        sh((machInst.shn << 5) | machInst.sh)
-    {
-    }
+        : IntOp(mnem, _machInst, __opClass),
+          sh((machInst.shn << 5) | machInst.sh)
+    {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
-
 
 /**
  * Class for integer rotate operations with a shift amount obtained
@@ -634,17 +617,15 @@ class IntConcatShiftOp : public IntOp
 class IntRotateOp : public IntShiftOp
 {
   protected:
-
     uint8_t mb;
     uint8_t me;
 
     /// Constructor
     IntRotateOp(const char *mnem, MachInst _machInst, OpClass __opClass)
-      : IntShiftOp(mnem, _machInst, __opClass),
-        mb(machInst.mb),
-        me(machInst.me)
-    {
-    }
+        : IntShiftOp(mnem, _machInst, __opClass),
+          mb(machInst.mb),
+          me(machInst.me)
+    {}
 
     inline uint64_t
     rotate(uint32_t value, uint32_t shift) const
@@ -669,10 +650,10 @@ class IntRotateOp : public IntShiftOp
         }
     }
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
-
 
 /**
  * Class for integer rotate operations with a shift amount obtained
@@ -682,17 +663,15 @@ class IntRotateOp : public IntShiftOp
 class IntConcatRotateOp : public IntConcatShiftOp
 {
   protected:
-
     uint8_t mb;
     uint8_t me;
 
     /// Constructor
     IntConcatRotateOp(const char *mnem, MachInst _machInst, OpClass __opClass)
-      : IntConcatShiftOp(mnem, _machInst, __opClass),
-        mb((machInst.mbn << 5) | machInst.mb),
-        me((machInst.men << 5) | machInst.mb)
-    {
-    }
+        : IntConcatShiftOp(mnem, _machInst, __opClass),
+          mb((machInst.mbn << 5) | machInst.mb),
+          me((machInst.men << 5) | machInst.mb)
+    {}
 
     inline uint64_t
     rotate(uint64_t value, uint32_t shift) const
@@ -713,10 +692,10 @@ class IntConcatRotateOp : public IntConcatShiftOp
         }
     }
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
-
 
 /**
  * Class for integer trap operations.
@@ -728,16 +707,13 @@ class IntTrapOp : public IntOp
 
     /// Constructor
     IntTrapOp(const char *mnem, MachInst _machInst, OpClass __opClass)
-      : IntOp(mnem, _machInst, __opClass),
-        to(machInst.to)
-    {
-    }
+        : IntOp(mnem, _machInst, __opClass), to(machInst.to)
+    {}
 
     inline bool
     checkTrap(int64_t a, int64_t b) const
     {
-        if (((to & 0x10) && (a < b))  ||
-            ((to & 0x08) && (a > b))  ||
+        if (((to & 0x10) && (a < b)) || ((to & 0x08) && (a > b)) ||
             ((to & 0x04) && (a == b)) ||
             ((to & 0x02) && ((uint64_t)a < (uint64_t)b)) ||
             ((to & 0x01) && ((uint64_t)a > (uint64_t)b))) {
@@ -753,26 +729,48 @@ class IntTrapOp : public IntOp
         std::string str;
 
         switch (to) {
-            case 1:  str = "lgt"; break;
-            case 2:  str = "llt"; break;
-            case 4:  str = "eq"; break;
-            case 5:  str = "lge"; break;
-            case 6:  str = "lle"; break;
-            case 8:  str = "gt"; break;
-            case 12: str = "ge"; break;
-            case 16: str = "lt"; break;
-            case 20: str = "le"; break;
-            case 24: str = "ne"; break;
-            case 31: str = "u"; break;
+        case 1:
+            str = "lgt";
+            break;
+        case 2:
+            str = "llt";
+            break;
+        case 4:
+            str = "eq";
+            break;
+        case 5:
+            str = "lge";
+            break;
+        case 6:
+            str = "lle";
+            break;
+        case 8:
+            str = "gt";
+            break;
+        case 12:
+            str = "ge";
+            break;
+        case 16:
+            str = "lt";
+            break;
+        case 20:
+            str = "le";
+            break;
+        case 24:
+            str = "ne";
+            break;
+        case 31:
+            str = "u";
+            break;
         }
 
         return str;
     }
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
-
 
 /**
  * Class for integer immediate trap operations.
@@ -782,15 +780,14 @@ class IntImmTrapOp : public IntTrapOp
   protected:
     int32_t si;
 
-   /// Constructor
-   IntImmTrapOp(const char *mnem, MachInst _machInst, OpClass __opClass)
-      : IntTrapOp(mnem, _machInst, __opClass),
-        si(sext<16>(machInst.si))
-    {
-    }
+    /// Constructor
+    IntImmTrapOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+        : IntTrapOp(mnem, _machInst, __opClass), si(sext<16>(machInst.si))
+    {}
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 } // namespace PowerISA

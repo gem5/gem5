@@ -53,11 +53,15 @@ class TlmInitiatorBaseWrapper : public gem5::Port
     typedef typename InitiatorSocket::base_target_socket_type TargetSocket;
     typedef TlmTargetBaseWrapper<BUSWIDTH, FW_IF, BW_IF, N, POL> TargetWrapper;
 
-    InitiatorSocket &initiator() { return _initiator; }
+    InitiatorSocket &
+    initiator()
+    {
+        return _initiator;
+    }
 
-    TlmInitiatorBaseWrapper(
-            InitiatorSocket &i, const std::string &_name, gem5::PortID _id) :
-        gem5::Port(_name, _id), _initiator(i)
+    TlmInitiatorBaseWrapper(InitiatorSocket &i, const std::string &_name,
+                            gem5::PortID _id)
+        : gem5::Port(_name, _id), _initiator(i)
     {}
 
     void
@@ -66,8 +70,10 @@ class TlmInitiatorBaseWrapper : public gem5::Port
         using namespace gem5;
 
         auto *target = dynamic_cast<TargetWrapper *>(&peer);
-        fatal_if(!target, "Attempt to bind TLM initiator socket %s to "
-                "incompatible port %s.", name(), peer.name());
+        fatal_if(!target,
+                 "Attempt to bind TLM initiator socket %s to "
+                 "incompatible port %s.",
+                 name(), peer.name());
 
         initiator().bind(target->target());
         gem5::Port::bind(peer);
@@ -93,11 +99,15 @@ class TlmTargetBaseWrapper : public gem5::Port
     typedef tlm::tlm_base_target_socket<BUSWIDTH, FW_IF, BW_IF, N, POL>
         TargetSocket;
 
-    TargetSocket &target() { return _target; }
+    TargetSocket &
+    target()
+    {
+        return _target;
+    }
 
     TlmTargetBaseWrapper(TargetSocket &t, const std::string &_name,
-                         gem5::PortID _id) :
-        gem5::Port(_name, _id), _target(t)
+                         gem5::PortID _id)
+        : gem5::Port(_name, _id), _target(t)
     {}
 
     void
@@ -120,20 +130,20 @@ class TlmTargetBaseWrapper : public gem5::Port
     TargetSocket &_target;
 };
 
-template <unsigned int BUSWIDTH=32,
-          typename TYPES=tlm::tlm_base_protocol_types, int N=1,
-          sc_core::sc_port_policy POL=sc_core::SC_ONE_OR_MORE_BOUND>
+template <unsigned int BUSWIDTH = 32,
+          typename TYPES = tlm::tlm_base_protocol_types, int N = 1,
+          sc_core::sc_port_policy POL = sc_core::SC_ONE_OR_MORE_BOUND>
 using TlmInitiatorWrapper =
     TlmInitiatorBaseWrapper<BUSWIDTH, tlm::tlm_fw_transport_if<TYPES>,
                             tlm::tlm_bw_transport_if<TYPES>, N, POL>;
 
-template <unsigned int BUSWIDTH=32,
-          typename TYPES=tlm::tlm_base_protocol_types, int N=1,
-          sc_core::sc_port_policy POL=sc_core::SC_ONE_OR_MORE_BOUND>
+template <unsigned int BUSWIDTH = 32,
+          typename TYPES = tlm::tlm_base_protocol_types, int N = 1,
+          sc_core::sc_port_policy POL = sc_core::SC_ONE_OR_MORE_BOUND>
 using TlmTargetWrapper =
     TlmTargetBaseWrapper<BUSWIDTH, tlm::tlm_fw_transport_if<TYPES>,
                          tlm::tlm_bw_transport_if<TYPES>, N, POL>;
 
 } // namespace sc_gem5
 
-#endif  //__SYSTEMC_TLM_PORT_WRAPPER_HH__
+#endif //__SYSTEMC_TLM_PORT_WRAPPER_HH__

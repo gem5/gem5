@@ -77,7 +77,6 @@ class PciVirtIO : public PciDevice
 
     static const Addr BAR0_SIZE_BASE = OFF_VIO_DEVICE;
 
-
     VirtIODeviceBase::QueueID queueNotify;
 
     bool interruptDeliveryPending;

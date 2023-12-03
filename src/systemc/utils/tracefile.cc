@@ -39,9 +39,12 @@
 namespace sc_gem5
 {
 
-TraceFile::TraceFile(const std::string &name) :
-    _os(gem5::simout.create(name, true, true)), timeUnitTicks(0),
-    timeUnitValue(0.0), timeUnitUnit(::sc_core::SC_PS), _traceDeltas(false)
+TraceFile::TraceFile(const std::string &name)
+    : _os(gem5::simout.create(name, true, true)),
+      timeUnitTicks(0),
+      timeUnitValue(0.0),
+      timeUnitUnit(::sc_core::SC_PS),
+      _traceDeltas(false)
 {
     ::sc_gem5::scheduler.registerTraceFile(this);
 }
@@ -52,7 +55,11 @@ TraceFile::~TraceFile()
     gem5::simout.close(_os);
 }
 
-std::ostream &TraceFile::stream() { return *_os->stream(); }
+std::ostream &
+TraceFile::stream()
+{
+    return *_os->stream();
+}
 
 void
 TraceFile::set_time_unit(double d, ::sc_core::sc_time_unit tu)
@@ -62,7 +69,7 @@ TraceFile::set_time_unit(double d, ::sc_core::sc_time_unit tu)
 
     double secs = d * TimeUnitScale[tu];
     for (tu = ::sc_core::SC_SEC; tu > ::sc_core::SC_FS;
-            tu = (::sc_core::sc_time_unit)(tu - 1)) {
+         tu = (::sc_core::sc_time_unit)(tu - 1)) {
         if (TimeUnitScale[tu] <= secs)
             break;
     }

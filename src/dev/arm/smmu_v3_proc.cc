@@ -46,16 +46,11 @@
 namespace gem5
 {
 
-SMMUProcess::SMMUProcess(const std::string &name, SMMUv3 &_smmu) :
-    coroutine(NULL),
-    myName(name),
-    smmu(_smmu)
+SMMUProcess::SMMUProcess(const std::string &name, SMMUv3 &_smmu)
+    : coroutine(NULL), myName(name), smmu(_smmu)
 {}
 
-SMMUProcess::~SMMUProcess()
-{
-    delete coroutine;
-}
+SMMUProcess::~SMMUProcess() { delete coroutine; }
 
 void
 SMMUProcess::wakeup()
@@ -81,8 +76,8 @@ SMMUProcess::doRead(Yield &yield, Addr addr, void *ptr, size_t size)
     SMMUAction a;
     a.type = ACTION_SEND_REQ;
 
-    RequestPtr req = std::make_shared<Request>(
-        addr, size, 0, smmu.requestorId);
+    RequestPtr req =
+        std::make_shared<Request>(addr, size, 0, smmu.requestorId);
 
     req->taskId(context_switch_task_id::DMA);
 
@@ -103,19 +98,18 @@ SMMUProcess::doRead(Yield &yield, Addr addr, void *ptr, size_t size)
 void
 SMMUProcess::doWrite(Yield &yield, Addr addr, const void *ptr, size_t size)
 {
-    unsigned nbeats = (size + (smmu.requestPortWidth-1))
-                            / smmu.requestPortWidth;
+    unsigned nbeats =
+        (size + (smmu.requestPortWidth - 1)) / smmu.requestPortWidth;
 
     doSemaphoreDown(yield, smmu.requestPortSem);
     doDelay(yield, Cycles(nbeats));
     doSemaphoreUp(smmu.requestPortSem);
 
-
     SMMUAction a;
     a.type = ACTION_SEND_REQ;
 
-    RequestPtr req = std::make_shared<Request>(
-        addr, size, 0, smmu.requestorId);
+    RequestPtr req =
+        std::make_shared<Request>(addr, size, 0, smmu.requestorId);
 
     req->taskId(context_switch_task_id::DMA);
 
@@ -199,7 +193,7 @@ SMMUProcess::doBroadcastSignal(SMMUSignal &sig)
 void
 SMMUProcess::scheduleWakeup(Tick when)
 {
-    auto *ep = new MemberEventWrapper<&SMMUProcess::wakeup> (*this, true);
+    auto *ep = new MemberEventWrapper<&SMMUProcess::wakeup>(*this, true);
 
     smmu.schedule(ep, when);
 }

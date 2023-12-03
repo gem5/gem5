@@ -52,18 +52,16 @@ namespace gem5
 namespace ruby
 {
 
-template<class ENTRY>
+template <class ENTRY>
 class TBETable
 {
   public:
-    TBETable(int number_of_TBEs)
-        : m_number_of_TBEs(number_of_TBEs)
-    {
-    }
+    TBETable(int number_of_TBEs) : m_number_of_TBEs(number_of_TBEs) {}
 
     bool isPresent(Addr address) const;
     void allocate(Addr address);
     void deallocate(Addr address);
+
     bool
     areNSlotsAvailable(int n, Tick current_time) const
     {
@@ -74,12 +72,12 @@ class TBETable
     ENTRY *lookup(Addr address);
 
     // Print cache contents
-    void print(std::ostream& out) const;
+    void print(std::ostream &out) const;
 
   protected:
     // Protected copy constructor and assignment operator
-    TBETable(const TBETable& obj);
-    TBETable& operator=(const TBETable& obj);
+    TBETable(const TBETable &obj);
+    TBETable &operator=(const TBETable &obj);
 
     // Data Members (m_prefix)
     std::unordered_map<Addr, ENTRY> m_map;
@@ -88,16 +86,16 @@ class TBETable
     int m_number_of_TBEs;
 };
 
-template<class ENTRY>
-inline std::ostream&
-operator<<(std::ostream& out, const TBETable<ENTRY>& obj)
+template <class ENTRY>
+inline std::ostream &
+operator<<(std::ostream &out, const TBETable<ENTRY> &obj)
 {
     obj.print(out);
     out << std::flush;
     return out;
 }
 
-template<class ENTRY>
+template <class ENTRY>
 inline bool
 TBETable<ENTRY>::isPresent(Addr address) const
 {
@@ -106,7 +104,7 @@ TBETable<ENTRY>::isPresent(Addr address) const
     return !!m_map.count(address);
 }
 
-template<class ENTRY>
+template <class ENTRY>
 inline void
 TBETable<ENTRY>::allocate(Addr address)
 {
@@ -115,7 +113,7 @@ TBETable<ENTRY>::allocate(Addr address)
     m_map[address] = ENTRY();
 }
 
-template<class ENTRY>
+template <class ENTRY>
 inline void
 TBETable<ENTRY>::deallocate(Addr address)
 {
@@ -124,28 +122,27 @@ TBETable<ENTRY>::deallocate(Addr address)
     m_map.erase(address);
 }
 
-template<class ENTRY>
-inline ENTRY*
+template <class ENTRY>
+inline ENTRY *
 TBETable<ENTRY>::getNullEntry()
 {
     return nullptr;
 }
 
 // looks an address up in the cache
-template<class ENTRY>
-inline ENTRY*
+template <class ENTRY>
+inline ENTRY *
 TBETable<ENTRY>::lookup(Addr address)
 {
-  if (m_map.find(address) != m_map.end()) return &(m_map.find(address)->second);
-  return NULL;
+    if (m_map.find(address) != m_map.end())
+        return &(m_map.find(address)->second);
+    return NULL;
 }
 
-
-template<class ENTRY>
+template <class ENTRY>
 inline void
-TBETable<ENTRY>::print(std::ostream& out) const
-{
-}
+TBETable<ENTRY>::print(std::ostream &out) const
+{}
 
 } // namespace ruby
 } // namespace gem5

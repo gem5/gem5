@@ -26,16 +26,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /**
-  * Implementation of the Signature Path Prefetcher
-  *
-  * References:
-  *     Lookahead prefetching with signature path
-  *     J Kim, PV Gratz, ALN Reddy
-  *     The 2nd Data Prefetching Championship (DPC2)
-  * The filter feature described in the paper is not implemented, as it
-  * redundant prefetches are dropped by the cache.
-  */
+/**
+ * Implementation of the Signature Path Prefetcher
+ *
+ * References:
+ *     Lookahead prefetching with signature path
+ *     J Kim, PV Gratz, ALN Reddy
+ *     The 2nd Data Prefetching Championship (DPC2)
+ * The filter feature described in the paper is not implemented, as it
+ * redundant prefetches are dropped by the cache.
+ */
 
 #ifndef __MEM_CACHE_PREFETCH_SIGNATURE_PATH_HH__
 #define __MEM_CACHE_PREFETCH_SIGNATURE_PATH_HH__
@@ -79,9 +79,10 @@ class SignaturePath : public Queued
         signature_t signature;
         /** Last accessed block within a page */
         stride_t lastBlock;
-        SignatureEntry() : signature(0), lastBlock(0)
-        {}
+
+        SignatureEntry() : signature(0), lastBlock(0) {}
     };
+
     /** Signature table */
     AssociativeSet<SignatureEntry> signatureTable;
 
@@ -92,9 +93,10 @@ class SignaturePath : public Queued
         stride_t stride;
         /** Saturating counter */
         SatCounter8 counter;
-        PatternStrideEntry(unsigned bits) : stride(0), counter(bits)
-        {}
+
+        PatternStrideEntry(unsigned bits) : stride(0), counter(bits) {}
     };
+
     /** Pattern entry data type, a set of stride and counter entries */
     struct PatternEntry : public TaggedEntry
     {
@@ -102,11 +104,12 @@ class SignaturePath : public Queued
         std::vector<PatternStrideEntry> strideEntries;
         /** use counter, used by SPPv2 */
         SatCounter8 counter;
+
         PatternEntry(size_t num_strides, unsigned counter_bits)
-          : TaggedEntry(), strideEntries(num_strides, counter_bits),
-            counter(counter_bits)
-        {
-        }
+            : TaggedEntry(),
+              strideEntries(num_strides, counter_bits),
+              counter(counter_bits)
+        {}
 
         /** Reset the entries to their initial values */
         void
@@ -126,7 +129,8 @@ class SignaturePath : public Queued
          * @result a pointer to the entry, if the stride was found, or nullptr,
          *         if the stride was not found
          */
-        PatternStrideEntry *findStride(stride_t stride)
+        PatternStrideEntry *
+        findStride(stride_t stride)
         {
             PatternStrideEntry *found_entry = nullptr;
             for (auto &entry : strideEntries) {
@@ -146,6 +150,7 @@ class SignaturePath : public Queued
          */
         PatternStrideEntry &getStrideEntry(stride_t stride);
     };
+
     /** Pattern table */
     AssociativeSet<PatternEntry> patternTable;
 
@@ -155,7 +160,9 @@ class SignaturePath : public Queued
      * @param str stride to add to the new signature
      * @result the new signature
      */
-    inline signature_t updateSignature(signature_t sig, stride_t str) const {
+    inline signature_t
+    updateSignature(signature_t sig, stride_t str) const
+    {
         sig <<= signatureShift;
         sig ^= str;
         sig &= mask(signatureBits);
@@ -177,9 +184,8 @@ class SignaturePath : public Queued
      * @param addresses addresses to prefetch will be added to this vector
      */
     void addPrefetch(Addr ppn, stride_t last_block, stride_t delta,
-                          double path_confidence, signature_t signature,
-                          bool is_secure,
-                          std::vector<AddrPriority> &addresses);
+                     double path_confidence, signature_t signature,
+                     bool is_secure, std::vector<AddrPriority> &addresses);
 
     /**
      * Obtains the SignatureEntry of the given page, if the page is not found,
@@ -195,14 +201,15 @@ class SignaturePath : public Queued
      * @result a reference to the SignatureEntry
      */
     SignatureEntry &getSignatureEntry(Addr ppn, bool is_secure, stride_t block,
-            bool &miss, stride_t &stride, double &initial_confidence);
+                                      bool &miss, stride_t &stride,
+                                      double &initial_confidence);
     /**
      * Obtains the PatternEntry of the given signature, if the signature is
      * not found, it allocates a new one, replacing an existing entry if needed
      * @param signature the signature of the desired entry
      * @result a reference to the PatternEntry
      */
-    PatternEntry& getPatternEntry(Addr signature);
+    PatternEntry &getPatternEntry(Addr signature);
 
     /**
      * Updates the pattern table with the provided signature and stride
@@ -218,8 +225,9 @@ class SignaturePath : public Queued
      * @param lookahead PatternStrideEntry within the provided PatternEntry
      * @return the computed confidence factor
      */
-    virtual double calculateLookaheadConfidence(PatternEntry const &sig,
-            PatternStrideEntry const &lookahead) const;
+    virtual double
+    calculateLookaheadConfidence(PatternEntry const &sig,
+                                 PatternStrideEntry const &lookahead) const;
 
     /**
      * Computes the prefetch confidence of the provided pattern entry
@@ -227,16 +235,18 @@ class SignaturePath : public Queued
      * @param entry PatternStrideEntry within the provided PatternEntry
      * @return the computed confidence factor
      */
-    virtual double calculatePrefetchConfidence(PatternEntry const &sig,
-            PatternStrideEntry const &entry) const;
+    virtual double
+    calculatePrefetchConfidence(PatternEntry const &sig,
+                                PatternStrideEntry const &entry) const;
 
     /**
      * Increases the counter of a given PatternEntry/PatternStrideEntry
      * @param pattern_entry the corresponding PatternEntry
      * @param pstride_entry the PatternStrideEntry within the PatternEntry
      */
-    virtual void increasePatternEntryCounter(PatternEntry &pattern_entry,
-            PatternStrideEntry &pstride_entry);
+    virtual void
+    increasePatternEntryCounter(PatternEntry &pattern_entry,
+                                PatternStrideEntry &pstride_entry);
 
     /**
      * Whenever a new SignatureEntry is allocated, it computes the new
@@ -249,8 +259,9 @@ class SignaturePath : public Queued
      * @param new_stride the resulting current stride
      */
     virtual void handleSignatureTableMiss(stride_t current_block,
-            signature_t &new_signature, double &new_conf,
-            stride_t &new_stride);
+                                          signature_t &new_signature,
+                                          double &new_conf,
+                                          stride_t &new_stride);
 
     /**
      * Auxiliar prefetch mechanism used at the end of calculatePrefetch.
@@ -264,7 +275,8 @@ class SignaturePath : public Queued
      *        their filter has been updated, if this call updates a new entry
      */
     virtual void auxiliaryPrefetcher(Addr ppn, stride_t current_block,
-            bool is_secure, std::vector<AddrPriority> &addresses);
+                                     bool is_secure,
+                                     std::vector<AddrPriority> &addresses);
 
     /**
      * Handles the situation when the lookahead process has crossed the
@@ -278,9 +290,10 @@ class SignaturePath : public Queued
      * @param last_offset the last accessed block within the page
      * @param path_confidence the path confidence at the moment of crossing
      */
-    virtual void handlePageCrossingLookahead(signature_t signature,
-            stride_t last_offset, stride_t delta, double path_confidence) {
-    }
+    virtual void
+    handlePageCrossingLookahead(signature_t signature, stride_t last_offset,
+                                stride_t delta, double path_confidence)
+    {}
 
   public:
     SignaturePath(const SignaturePathPrefetcherParams &p);
@@ -294,4 +307,4 @@ class SignaturePath : public Queued
 } // namespace prefetch
 } // namespace gem5
 
-#endif//__MEM_CACHE_PREFETCH_SIGNATURE_PATH_HH__
+#endif //__MEM_CACHE_PREFETCH_SIGNATURE_PATH_HH__

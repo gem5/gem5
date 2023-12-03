@@ -119,14 +119,13 @@ Interrupts::clearAll()
     setCauseIP(tc, intstatus);
 }
 
-
 bool
 Interrupts::checkInterrupts() const
 {
     if (!interruptsPending())
         return false;
 
-    //Check if there are any outstanding interrupts
+    // Check if there are any outstanding interrupts
     StatusReg status = tc->readMiscRegNoEffect(misc_reg::Status);
     // Interrupts must be enabled, error level must be 0 or interrupts
     // inhibited, and exception level must be 0 or interrupts inhibited
@@ -137,7 +136,6 @@ Interrupts::checkInterrupts() const
         CauseReg cause = tc->readMiscRegNoEffect(misc_reg::Cause);
         if (status.im && cause.ip)
             return true;
-
     }
 
     return false;
@@ -167,16 +165,18 @@ Interrupts::onCpuTimerInterrupt() const
     return false;
 }
 
-void Interrupts::updateIntrInfo() {} // Nothing needs to be done.
+void
+Interrupts::updateIntrInfo()
+{} // Nothing needs to be done.
 
 bool
 Interrupts::interruptsPending() const
 {
-    //if there is a on cpu timer interrupt (i.e. Compare == Count)
-    //update CauseIP before proceeding to interrupt
+    // if there is a on cpu timer interrupt (i.e. Compare == Count)
+    // update CauseIP before proceeding to interrupt
     if (onCpuTimerInterrupt()) {
         DPRINTF(Interrupt, "Interrupts OnCpuTimerInterrupt() == true\n");
-        //determine timer interrupt IP #
+        // determine timer interrupt IP #
         IntCtlReg intCtl = tc->readMiscRegNoEffect(misc_reg::Intctl);
         uint8_t intStatus = getCauseIP(tc);
         intStatus |= 1 << intCtl.ipti;
@@ -184,7 +184,6 @@ Interrupts::interruptsPending() const
     }
 
     return (getCauseIP(tc) != 0);
-
 }
 
 } // namespace MipsISA

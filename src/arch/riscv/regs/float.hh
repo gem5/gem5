@@ -90,22 +90,79 @@ unboxF32(uint64_t v)
         return defaultNaNF32UI;
 }
 
-static constexpr uint64_t boxF16(uint16_t v) { return mask(63, 16) | v; }
-static constexpr uint64_t boxF32(uint32_t v) { return mask(63, 32) | v; }
+static constexpr uint64_t
+boxF16(uint16_t v)
+{
+    return mask(63, 16) | v;
+}
+
+static constexpr uint64_t
+boxF32(uint32_t v)
+{
+    return mask(63, 32) | v;
+}
 
 // Create fixed size floats from raw bytes or generic floating point values.
-static constexpr float16_t f16(uint16_t v) { return {v}; }
-static constexpr float32_t f32(uint32_t v) { return {v}; }
-static constexpr float64_t f64(uint64_t v) { return {v}; }
-static constexpr float16_t f16(freg_t r) { return {unboxF16(r.v)}; }
-static constexpr float32_t f32(freg_t r) { return {unboxF32(r.v)}; }
-static constexpr float64_t f64(freg_t r) { return r; }
+static constexpr float16_t
+f16(uint16_t v)
+{
+    return { v };
+}
+
+static constexpr float32_t
+f32(uint32_t v)
+{
+    return { v };
+}
+
+static constexpr float64_t
+f64(uint64_t v)
+{
+    return { v };
+}
+
+static constexpr float16_t
+f16(freg_t r)
+{
+    return { unboxF16(r.v) };
+}
+
+static constexpr float32_t
+f32(freg_t r)
+{
+    return { unboxF32(r.v) };
+}
+
+static constexpr float64_t
+f64(freg_t r)
+{
+    return r;
+}
 
 // Create generic floating point values from fixed size floats.
-static constexpr freg_t freg(float16_t f) { return {boxF16(f.v)}; }
-static constexpr freg_t freg(float32_t f) { return {boxF32(f.v)}; }
-static constexpr freg_t freg(float64_t f) { return f; }
-static constexpr freg_t freg(uint_fast64_t f) { return {f}; }
+static constexpr freg_t
+freg(float16_t f)
+{
+    return { boxF16(f.v) };
+}
+
+static constexpr freg_t
+freg(float32_t f)
+{
+    return { boxF32(f.v) };
+}
+
+static constexpr freg_t
+freg(float64_t f)
+{
+    return f;
+}
+
+static constexpr freg_t
+freg(uint_fast64_t f)
+{
+    return { f };
+}
 
 namespace float_reg
 {
@@ -155,73 +212,60 @@ enum : RegIndex
 } // namespace float_reg
 
 inline constexpr RegClass floatRegClass(FloatRegClass, FloatRegClassName,
-        float_reg::NumRegs, debug::FloatRegs);
+                                        float_reg::NumRegs, debug::FloatRegs);
 
 namespace float_reg
 {
 
 inline constexpr RegId
     Ft0 = floatRegClass[_Ft0Idx],
-    Ft1 = floatRegClass[_Ft1Idx],
-    Ft2 = floatRegClass[_Ft2Idx],
-    Ft3 = floatRegClass[_Ft3Idx],
-    Ft4 = floatRegClass[_Ft4Idx],
-    Ft5 = floatRegClass[_Ft5Idx],
-    Ft6 = floatRegClass[_Ft6Idx],
+    Ft1 = floatRegClass[_Ft1Idx], Ft2 = floatRegClass[_Ft2Idx],
+    Ft3 = floatRegClass[_Ft3Idx], Ft4 = floatRegClass[_Ft4Idx],
+    Ft5 = floatRegClass[_Ft5Idx], Ft6 = floatRegClass[_Ft6Idx],
     Ft7 = floatRegClass[_Ft7Idx],
 
-    Fs0 = floatRegClass[_Fs0Idx],
-    Fs1 = floatRegClass[_Fs1Idx],
+    Fs0 = floatRegClass[_Fs0Idx], Fs1 = floatRegClass[_Fs1Idx],
 
-    Fa0 = floatRegClass[_Fa0Idx],
-    Fa1 = floatRegClass[_Fa1Idx],
-    Fa2 = floatRegClass[_Fa2Idx],
-    Fa3 = floatRegClass[_Fa3Idx],
-    Fa4 = floatRegClass[_Fa4Idx],
-    Fa5 = floatRegClass[_Fa5Idx],
-    Fa6 = floatRegClass[_Fa6Idx],
-    Fa7 = floatRegClass[_Fa7Idx],
+    Fa0 = floatRegClass[_Fa0Idx], Fa1 = floatRegClass[_Fa1Idx],
+    Fa2 = floatRegClass[_Fa2Idx], Fa3 = floatRegClass[_Fa3Idx],
+    Fa4 = floatRegClass[_Fa4Idx], Fa5 = floatRegClass[_Fa5Idx],
+    Fa6 = floatRegClass[_Fa6Idx], Fa7 = floatRegClass[_Fa7Idx],
 
-    Fs2 = floatRegClass[_Fs2Idx],
-    Fs3 = floatRegClass[_Fs3Idx],
-    Fs4 = floatRegClass[_Fs4Idx],
-    Fs5 = floatRegClass[_Fs5Idx],
-    Fs6 = floatRegClass[_Fs6Idx],
-    Fs7 = floatRegClass[_Fs7Idx],
-    Fs8 = floatRegClass[_Fs8Idx],
-    Fs9 = floatRegClass[_Fs9Idx],
-    Fs10 = floatRegClass[_Fs10Idx],
-    Fs11 = floatRegClass[_Fs11Idx],
+    Fs2 = floatRegClass[_Fs2Idx], Fs3 = floatRegClass[_Fs3Idx],
+    Fs4 = floatRegClass[_Fs4Idx], Fs5 = floatRegClass[_Fs5Idx],
+    Fs6 = floatRegClass[_Fs6Idx], Fs7 = floatRegClass[_Fs7Idx],
+    Fs8 = floatRegClass[_Fs8Idx], Fs9 = floatRegClass[_Fs9Idx],
+    Fs10 = floatRegClass[_Fs10Idx], Fs11 = floatRegClass[_Fs11Idx],
 
-    Ft8 = floatRegClass[_Ft8Idx],
-    Ft9 = floatRegClass[_Ft9Idx],
-    Ft10 = floatRegClass[_Ft10Idx],
-    Ft11 = floatRegClass[_Ft11Idx];
+    Ft8 = floatRegClass[_Ft8Idx], Ft9 = floatRegClass[_Ft9Idx],
+    Ft10 = floatRegClass[_Ft10Idx], Ft11 = floatRegClass[_Ft11Idx];
 
 const std::vector<std::string> RegNames = {
-    "ft0", "ft1", "ft2", "ft3",
-    "ft4", "ft5", "ft6", "ft7",
-    "fs0", "fs1", "fa0", "fa1",
-    "fa2", "fa3", "fa4", "fa5",
-    "fa6", "fa7", "fs2", "fs3",
-    "fs4", "fs5", "fs6", "fs7",
-    "fs8", "fs9", "fs10", "fs11",
-    "ft8", "ft9", "ft10", "ft11"
+    "ft0", "ft1", "ft2",  "ft3",  "ft4", "ft5", "ft6",  "ft7",
+    "fs0", "fs1", "fa0",  "fa1",  "fa2", "fa3", "fa4",  "fa5",
+    "fa6", "fa7", "fs2",  "fs3",  "fs4", "fs5", "fs6",  "fs7",
+    "fs8", "fs9", "fs10", "fs11", "ft8", "ft9", "ft10", "ft11"
 };
 
 } // namespace float_reg
 
 inline float32_t
-fsgnj32(float32_t a, float32_t b, bool n, bool x) {
-    if (n) b.v = ~b.v;
-    else if (x) b.v = a.v ^ b.v;
+fsgnj32(float32_t a, float32_t b, bool n, bool x)
+{
+    if (n)
+        b.v = ~b.v;
+    else if (x)
+        b.v = a.v ^ b.v;
     return f32(insertBits(b.v, 30, 0, a.v));
 }
 
 inline float64_t
-fsgnj64(float64_t a, float64_t b, bool n, bool x) {
-    if (n) b.v = ~b.v;
-    else if (x) b.v = a.v ^ b.v;
+fsgnj64(float64_t a, float64_t b, bool n, bool x)
+{
+    if (n)
+        b.v = ~b.v;
+    else if (x)
+        b.v = a.v ^ b.v;
     return f64(insertBits(b.v, 62, 0, a.v));
 }
 

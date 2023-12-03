@@ -35,7 +35,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 /** @file
  * Implementiation of the ARM HDLcd controller.
  *
@@ -91,7 +90,7 @@ class VncInput;
 struct HDLcdParams;
 class HDLcdPixelPump;
 
-class HDLcd: public AmbaDmaDevice
+class HDLcd : public AmbaDmaDevice
 {
   public:
     HDLcd(const HDLcdParams &p);
@@ -105,7 +104,11 @@ class HDLcd: public AmbaDmaDevice
     Tick read(PacketPtr pkt) override;
     Tick write(PacketPtr pkt) override;
 
-    AddrRangeList getAddrRanges() const override { return addrRanges; }
+    AddrRangeList
+    getAddrRanges() const override
+    {
+        return addrRanges;
+    }
 
   protected: // Parameters
     VncInput *vnc;
@@ -120,30 +123,30 @@ class HDLcd: public AmbaDmaDevice
     /** ARM HDLcd register offsets */
     enum RegisterOffset
     {
-        Version          = 0x0000,
-        Int_RawStat      = 0x0010,
-        Int_Clear        = 0x0014,
-        Int_Mask         = 0x0018,
-        Int_Status       = 0x001C,
-        Fb_Base          = 0x0100,
-        Fb_Line_Length   = 0x0104,
-        Fb_Line_Count    = 0x0108,
-        Fb_Line_Pitch    = 0x010C,
-        Bus_Options      = 0x0110,
-        V_Sync           = 0x0200,
-        V_Back_Porch     = 0x0204,
-        V_Data           = 0x0208,
-        V_Front_Porch    = 0x020C,
-        H_Sync           = 0x0210,
-        H_Back_Porch     = 0x0214,
-        H_Data           = 0x0218,
-        H_Front_Porch    = 0x021C,
-        Polarities       = 0x0220,
-        Command          = 0x0230,
-        Pixel_Format     = 0x0240,
-        Red_Select       = 0x0244,
-        Green_Select     = 0x0248,
-        Blue_Select      = 0x024C,
+        Version = 0x0000,
+        Int_RawStat = 0x0010,
+        Int_Clear = 0x0014,
+        Int_Mask = 0x0018,
+        Int_Status = 0x001C,
+        Fb_Base = 0x0100,
+        Fb_Line_Length = 0x0104,
+        Fb_Line_Count = 0x0108,
+        Fb_Line_Pitch = 0x010C,
+        Bus_Options = 0x0110,
+        V_Sync = 0x0200,
+        V_Back_Porch = 0x0204,
+        V_Data = 0x0208,
+        V_Front_Porch = 0x020C,
+        H_Sync = 0x0210,
+        H_Back_Porch = 0x0214,
+        H_Data = 0x0218,
+        H_Front_Porch = 0x021C,
+        Polarities = 0x0220,
+        Command = 0x0230,
+        Pixel_Format = 0x0240,
+        Red_Select = 0x0244,
+        Green_Select = 0x0248,
+        Blue_Select = 0x024C,
     };
 
     /** Reset value for Bus_Options register */
@@ -167,9 +170,9 @@ class HDLcd: public AmbaDmaDevice
      */
     /**@{*/
     BitUnion32(VersionReg)
-        Bitfield<7,0>   version_minor;
-        Bitfield<15,8>  version_major;
-        Bitfield<31,16> product_id;
+        Bitfield<7, 0> version_minor;
+        Bitfield<15, 8> version_major;
+        Bitfield<31, 16> product_id;
     EndBitUnion(VersionReg)
 
     static constexpr uint32_t INT_DMA_END = (1UL << 0);
@@ -178,50 +181,50 @@ class HDLcd: public AmbaDmaDevice
     static constexpr uint32_t INT_UNDERRUN = (1UL << 3);
 
     BitUnion32(FbLineCountReg)
-        Bitfield<11,0>  fb_line_count;
-        Bitfield<31,12> reserved_31_12;
+        Bitfield<11, 0> fb_line_count;
+        Bitfield<31, 12> reserved_31_12;
     EndBitUnion(FbLineCountReg)
 
     BitUnion32(BusOptsReg)
-        Bitfield<4,0>   burst_len;
-        Bitfield<7,5>   reserved_7_5;
-        Bitfield<11,8>  max_outstanding;
-        Bitfield<31,12> reserved_31_12;
+        Bitfield<4, 0> burst_len;
+        Bitfield<7, 5> reserved_7_5;
+        Bitfield<11, 8> max_outstanding;
+        Bitfield<31, 12> reserved_31_12;
     EndBitUnion(BusOptsReg)
 
     BitUnion32(TimingReg)
-        Bitfield<11,0>  val;
-        Bitfield<31,12> reserved_31_12;
+        Bitfield<11, 0> val;
+        Bitfield<31, 12> reserved_31_12;
     EndBitUnion(TimingReg)
 
     BitUnion32(PolaritiesReg)
-        Bitfield<0>    vsync_polarity;
-        Bitfield<1>    hsync_polarity;
-        Bitfield<2>    dataen_polarity;
-        Bitfield<3>    data_polarity;
-        Bitfield<4>    pxlclk_polarity;
-        Bitfield<31,5> reserved_31_5;
+        Bitfield<0> vsync_polarity;
+        Bitfield<1> hsync_polarity;
+        Bitfield<2> dataen_polarity;
+        Bitfield<3> data_polarity;
+        Bitfield<4> pxlclk_polarity;
+        Bitfield<31, 5> reserved_31_5;
     EndBitUnion(PolaritiesReg)
 
     BitUnion32(CommandReg)
-        Bitfield<0>    enable;
-        Bitfield<31,1> reserved_31_1;
+        Bitfield<0> enable;
+        Bitfield<31, 1> reserved_31_1;
     EndBitUnion(CommandReg)
 
     BitUnion32(PixelFormatReg)
-        Bitfield<2,0>  reserved_2_0;
-        Bitfield<4,3>  bytes_per_pixel;
-        Bitfield<30,5> reserved_30_5;
-        Bitfield<31>   big_endian;
+        Bitfield<2, 0> reserved_2_0;
+        Bitfield<4, 3> bytes_per_pixel;
+        Bitfield<30, 5> reserved_30_5;
+        Bitfield<31> big_endian;
     EndBitUnion(PixelFormatReg)
 
     BitUnion32(ColorSelectReg)
-        Bitfield<4,0>   offset;
-        Bitfield<7,5>   reserved_7_5;
-        Bitfield<11,8>  size;
-        Bitfield<15,12> reserved_15_12;
-        Bitfield<23,16> default_color;
-        Bitfield<31,24> reserved_31_24;
+        Bitfield<4, 0> offset;
+        Bitfield<7, 5> reserved_7_5;
+        Bitfield<11, 8> size;
+        Bitfield<15, 12> reserved_15_12;
+        Bitfield<23, 16> default_color;
+        Bitfield<31, 24> reserved_31_24;
     EndBitUnion(ColorSelectReg)
     /**@}*/
 
@@ -231,30 +234,30 @@ class HDLcd: public AmbaDmaDevice
      */
     /**@{*/
     const VersionReg version = VERSION_RESETV;
-                                    /**< Version register */
-    uint32_t int_rawstat = 0;       /**< Interrupt raw status register */
-    uint32_t int_mask = 0;          /**< Interrupt mask register */
-    uint32_t fb_base = 0;           /**< Frame buffer base address register */
-    uint32_t fb_line_length = 0;    /**< Frame buffer Line length register */
-                                    /**< Frame buffer Line count register */
+    /**< Version register */
+    uint32_t int_rawstat = 0;    /**< Interrupt raw status register */
+    uint32_t int_mask = 0;       /**< Interrupt mask register */
+    uint32_t fb_base = 0;        /**< Frame buffer base address register */
+    uint32_t fb_line_length = 0; /**< Frame buffer Line length register */
+                                 /**< Frame buffer Line count register */
     FbLineCountReg fb_line_count = 0;
-    int32_t fb_line_pitch = 0;      /**< Frame buffer Line pitch register */
+    int32_t fb_line_pitch = 0; /**< Frame buffer Line pitch register */
     BusOptsReg bus_options = BUS_OPTIONS_RESETV;
-                                    /**< Bus options register */
-    TimingReg v_sync = 0;           /**< Vertical sync width register */
-    TimingReg v_back_porch = 0;     /**< Vertical back porch width register */
-    TimingReg v_data = 0;           /**< Vertical data width register */
-    TimingReg v_front_porch = 0;    /**< Vertical front porch width register */
-    TimingReg h_sync = 0;           /**< Horizontal sync width register */
-    TimingReg h_back_porch = 0;     /**< Horizontal back porch width reg */
-    TimingReg h_data = 0;           /**< Horizontal data width register */
-    TimingReg h_front_porch = 0;    /**< Horizontal front porch width reg */
-    PolaritiesReg polarities = 0;   /**< Polarities register */
-    CommandReg command = 0;         /**< Command register */
-    PixelFormatReg pixel_format = 0;/**< Pixel format register */
-    ColorSelectReg red_select = 0;  /**< Red color select register */
-    ColorSelectReg green_select = 0;/**< Green color select register */
-    ColorSelectReg blue_select = 0; /**< Blue color select register */
+    /**< Bus options register */
+    TimingReg v_sync = 0;         /**< Vertical sync width register */
+    TimingReg v_back_porch = 0;   /**< Vertical back porch width register */
+    TimingReg v_data = 0;         /**< Vertical data width register */
+    TimingReg v_front_porch = 0;  /**< Vertical front porch width register */
+    TimingReg h_sync = 0;         /**< Horizontal sync width register */
+    TimingReg h_back_porch = 0;   /**< Horizontal back porch width reg */
+    TimingReg h_data = 0;         /**< Horizontal data width register */
+    TimingReg h_front_porch = 0;  /**< Horizontal front porch width reg */
+    PolaritiesReg polarities = 0; /**< Polarities register */
+    CommandReg command = 0;       /**< Command register */
+    PixelFormatReg pixel_format = 0; /**< Pixel format register */
+    ColorSelectReg red_select = 0;   /**< Red color select register */
+    ColorSelectReg green_select = 0; /**< Green color select register */
+    ColorSelectReg blue_select = 0;  /**< Blue color select register */
     /** @} */
 
     std::vector<uint8_t> lineBuffer;
@@ -270,7 +273,11 @@ class HDLcd: public AmbaDmaDevice
     void cmdEnable();
     void cmdDisable();
 
-    bool enabled() const { return command.enable; }
+    bool
+    enabled() const
+    {
+        return command.enable;
+    }
 
   public: // Pixel pump callbacks
     bool pxlNext(Pixel &p);
@@ -300,7 +307,11 @@ class HDLcd: public AmbaDmaDevice
      * @see setInterrupts
      * @param mask New interrupt mask
      */
-    void intMask(uint32_t mask) { setInterrupts(int_rawstat, mask); }
+    void
+    intMask(uint32_t mask)
+    {
+        setInterrupts(int_rawstat, mask);
+    }
 
     /**
      * Convenience function to raise a new interrupt
@@ -327,7 +338,11 @@ class HDLcd: public AmbaDmaDevice
     }
 
     /** Masked interrupt status register */
-    uint32_t intStatus() const { return int_rawstat & int_mask; }
+    uint32_t
+    intStatus() const
+    {
+        return int_rawstat & int_mask;
+    }
 
   protected: // Pixel output
     class PixelPump : public BasePixelPump
@@ -340,7 +355,12 @@ class HDLcd: public AmbaDmaDevice
         void dumpSettings();
 
       protected:
-        bool nextPixel(Pixel &p) override { return parent.pxlNext(p); }
+        bool
+        nextPixel(Pixel &p) override
+        {
+            return parent.pxlNext(p);
+        }
+
         size_t
         nextLine(std::vector<Pixel>::iterator pixel_it,
                  size_t line_length) override
@@ -348,8 +368,17 @@ class HDLcd: public AmbaDmaDevice
             return parent.lineNext(pixel_it, line_length);
         }
 
-        void onVSyncBegin() override { return parent.pxlVSyncBegin(); }
-        void onVSyncEnd() override { return parent.pxlVSyncEnd(); }
+        void
+        onVSyncBegin() override
+        {
+            return parent.pxlVSyncBegin();
+        }
+
+        void
+        onVSyncEnd() override
+        {
+            return parent.pxlVSyncEnd();
+        }
 
         void
         onUnderrun(unsigned x, unsigned y) override
@@ -357,7 +386,11 @@ class HDLcd: public AmbaDmaDevice
             parent.pxlUnderrun();
         }
 
-        void onFrameDone() override { parent.pxlFrameDone(); }
+        void
+        onFrameDone() override
+        {
+            parent.pxlFrameDone();
+        }
 
       protected:
         HDLcd &parent;
@@ -387,9 +420,9 @@ class HDLcd: public AmbaDmaDevice
     class DmaEngine : public DmaReadFifo
     {
       public:
-        DmaEngine(HDLcd &_parent, size_t size,
-                  unsigned request_size, unsigned max_pending,
-                  size_t line_size, ssize_t line_pitch, unsigned num_lines);
+        DmaEngine(HDLcd &_parent, size_t size, unsigned request_size,
+                  unsigned max_pending, size_t line_size, ssize_t line_pitch,
+                  unsigned num_lines);
 
         void startFrame(Addr fb_base);
         void abortFrame();
@@ -414,7 +447,7 @@ class HDLcd: public AmbaDmaDevice
     std::unique_ptr<DmaEngine> dmaEngine;
 
   protected: // Statistics
-    struct HDLcdStats: public statistics::Group
+    struct HDLcdStats : public statistics::Group
     {
         HDLcdStats(statistics::Group *parent);
         statistics::Scalar underruns;

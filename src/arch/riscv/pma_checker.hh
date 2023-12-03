@@ -62,11 +62,11 @@ namespace RiscvISA
 class BasePMAChecker : public SimObject
 {
   public:
-    BasePMAChecker(const BasePMACheckerParams &params) : SimObject(params) {};
-    virtual Fault check(
-        const RequestPtr &req, BaseMMU::Mode mode, Addr vaddr = 0) = 0;
-    virtual Fault checkVAddrAlignment(
-        const RequestPtr &req, BaseMMU::Mode mode) = 0;
+    BasePMAChecker(const BasePMACheckerParams &params) : SimObject(params){};
+    virtual Fault check(const RequestPtr &req, BaseMMU::Mode mode,
+                        Addr vaddr = 0) = 0;
+    virtual Fault checkVAddrAlignment(const RequestPtr &req,
+                                      BaseMMU::Mode mode) = 0;
     virtual void takeOverFrom(BasePMAChecker *old) = 0;
 };
 
@@ -79,7 +79,6 @@ class BasePMAChecker : public SimObject
 class PMAChecker : public BasePMAChecker
 {
   public:
-
     typedef PMACheckerParams Params;
 
     const Params &
@@ -87,19 +86,20 @@ class PMAChecker : public BasePMAChecker
     {
         return dynamic_cast<const Params &>(_params);
     }
+
     PMAChecker(const Params &params);
 
     /*
      * Check if any exception for given address
      */
-    Fault check(
-        const RequestPtr &req, BaseMMU::Mode mode, Addr vaddr = 0) override;
+    Fault check(const RequestPtr &req, BaseMMU::Mode mode,
+                Addr vaddr = 0) override;
 
     /*
      * Check alignment for virtual address
      */
-    Fault checkVAddrAlignment(
-        const RequestPtr &req, BaseMMU::Mode mode) override;
+    Fault checkVAddrAlignment(const RequestPtr &req,
+                              BaseMMU::Mode mode) override;
 
     bool isUncacheable(const AddrRange &range);
     bool isUncacheable(const Addr &addr, const unsigned size);
@@ -111,8 +111,8 @@ class PMAChecker : public BasePMAChecker
     /*
      * Check alignment for physical address
      */
-    Fault checkPAddrAlignment(
-        const RequestPtr &req, BaseMMU::Mode mode, Addr vaddr);
+    Fault checkPAddrAlignment(const RequestPtr &req, BaseMMU::Mode mode,
+                              Addr vaddr);
 
     /*
      * Create address-misaligned exception based on the MMU mode and

@@ -24,8 +24,8 @@
 namespace tlm
 {
 
-tlm_global_quantum::tlm_global_quantum() :
-    m_global_quantum(sc_core::SC_ZERO_TIME)
+tlm_global_quantum::tlm_global_quantum()
+    : m_global_quantum(sc_core::SC_ZERO_TIME)
 {}
 
 tlm_global_quantum &
@@ -42,7 +42,7 @@ tlm_global_quantum::compute_local_quantum()
         const sc_core::sc_time current = sc_core::sc_time_stamp();
         const sc_core::sc_time g_quant = m_global_quantum;
         return sc_core::sc_time::from_value(
-                g_quant.value() - (current.value() % g_quant.value()));
+            g_quant.value() - (current.value() % g_quant.value()));
     } else {
         return sc_core::SC_ZERO_TIME;
     }

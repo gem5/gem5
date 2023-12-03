@@ -64,57 +64,60 @@ class AbstractMemory;
 class BackingStoreEntry
 {
   public:
-
     /**
      * Create a backing store entry. Don't worry about managing the memory
      * pointers, because PhysicalMemory is responsible for that.
      */
-    BackingStoreEntry(AddrRange range, uint8_t* pmem,
-                      bool conf_table_reported, bool in_addr_map, bool kvm_map,
-                      int shm_fd=-1, off_t shm_offset=0)
-        : range(range), pmem(pmem), confTableReported(conf_table_reported),
-          inAddrMap(in_addr_map), kvmMap(kvm_map), shmFd(shm_fd),
+    BackingStoreEntry(AddrRange range, uint8_t *pmem, bool conf_table_reported,
+                      bool in_addr_map, bool kvm_map, int shm_fd = -1,
+                      off_t shm_offset = 0)
+        : range(range),
+          pmem(pmem),
+          confTableReported(conf_table_reported),
+          inAddrMap(in_addr_map),
+          kvmMap(kvm_map),
+          shmFd(shm_fd),
           shmOffset(shm_offset)
-        {}
+    {}
 
     /**
      * The address range covered in the guest.
      */
-     AddrRange range;
+    AddrRange range;
 
     /**
      * Pointer to the host memory this range maps to. This memory is the same
      * size as the range field.
      */
-     uint8_t* pmem;
+    uint8_t *pmem;
 
-     /**
-      * Whether this memory should be reported to the configuration table
-      */
-     bool confTableReported;
+    /**
+     * Whether this memory should be reported to the configuration table
+     */
+    bool confTableReported;
 
-     /**
-      * Whether this memory should appear in the global address map
-      */
-     bool inAddrMap;
+    /**
+     * Whether this memory should appear in the global address map
+     */
+    bool inAddrMap;
 
-     /**
-      * Whether KVM should map this memory into the guest address space during
-      * acceleration.
-      */
-     bool kvmMap;
+    /**
+     * Whether KVM should map this memory into the guest address space during
+     * acceleration.
+     */
+    bool kvmMap;
 
-     /**
-      * If this backing store is based on a shared memory, this is the fd to
-      * the shared memory. Otherwise, it should be -1.
-      */
-     int shmFd;
+    /**
+     * If this backing store is based on a shared memory, this is the fd to
+     * the shared memory. Otherwise, it should be -1.
+     */
+    int shmFd;
 
-     /**
-      * If this backing store is based on a shared memory, this is the offset
-      * of this backing store in the share memory. Otherwise, the value is 0.
-      */
-     off_t shmOffset;
+    /**
+     * If this backing store is based on a shared memory, this is the offset
+     * of this backing store in the share memory. Otherwise, the value is 0.
+     */
+    off_t shmOffset;
 };
 
 /**
@@ -135,17 +138,15 @@ class BackingStoreEntry
  */
 class PhysicalMemory : public Serializable
 {
-
   private:
-
     // Name for debugging
     std::string _name;
 
     // Global address map
-    AddrRangeMap<AbstractMemory*, 1> addrMap;
+    AddrRangeMap<AbstractMemory *, 1> addrMap;
 
     // All address-mapped memories
-    std::vector<AbstractMemory*> memories;
+    std::vector<AbstractMemory *> memories;
 
     // The total memory size
     uint64_t size;
@@ -163,10 +164,10 @@ class PhysicalMemory : public Serializable
     std::vector<BackingStoreEntry> backingStore;
 
     // Prevent copying
-    PhysicalMemory(const PhysicalMemory&);
+    PhysicalMemory(const PhysicalMemory &);
 
     // Prevent assignment
-    PhysicalMemory& operator=(const PhysicalMemory&);
+    PhysicalMemory &operator=(const PhysicalMemory &);
 
     /**
      * Create the memory region providing the backing store for a
@@ -178,19 +179,18 @@ class PhysicalMemory : public Serializable
      * @param kvm_map Should KVM map this memory for the guest
      */
     void createBackingStore(AddrRange range,
-                            const std::vector<AbstractMemory*>& _memories,
-                            bool conf_table_reported,
-                            bool in_addr_map, bool kvm_map);
+                            const std::vector<AbstractMemory *> &_memories,
+                            bool conf_table_reported, bool in_addr_map,
+                            bool kvm_map);
 
   public:
-
     /**
      * Create a physical memory object, wrapping a number of memories.
      */
-    PhysicalMemory(const std::string& _name,
-                   const std::vector<AbstractMemory*>& _memories,
+    PhysicalMemory(const std::string &_name,
+                   const std::vector<AbstractMemory *> &_memories,
                    bool mmap_using_noreserve,
-                   const std::string& shared_backstore,
+                   const std::string &shared_backstore,
                    bool auto_unlink_shared_backstore);
 
     /**
@@ -202,7 +202,11 @@ class PhysicalMemory : public Serializable
      * Return the name for debugging and for creation of sections for
      * checkpointing.
      */
-    const std::string name() const { return _name; }
+    const std::string
+    name() const
+    {
+        return _name;
+    }
 
     /**
      * Check if a physical address is within a range of a memory that
@@ -228,9 +232,13 @@ class PhysicalMemory : public Serializable
      *
      * @return The sum of all memory sizes
      */
-    uint64_t totalSize() const { return size; }
+    uint64_t
+    totalSize() const
+    {
+        return size;
+    }
 
-     /**
+    /**
      * Get the pointers to the backing store for external host
      * access. Note that memory in the guest should be accessed using
      * access() or functionalAccess(). This interface is primarily
@@ -242,8 +250,11 @@ class PhysicalMemory : public Serializable
      *
      * @return Pointers to the memory backing store
      */
-    std::vector<BackingStoreEntry> getBackingStore() const
-    { return backingStore; }
+    std::vector<BackingStoreEntry>
+    getBackingStore() const
+    {
+        return backingStore;
+    }
 
     /**
      * Perform an untimed memory access and update all the state
@@ -282,7 +293,7 @@ class PhysicalMemory : public Serializable
      * @param pmem The host pointer to this backing store
      */
     void serializeStore(CheckpointOut &cp, unsigned int store_id,
-                        AddrRange range, uint8_t* pmem) const;
+                        AddrRange range, uint8_t *pmem) const;
 
     /**
      * Unserialize the memories in the system. As with the
@@ -295,7 +306,6 @@ class PhysicalMemory : public Serializable
      * Unserialize a specific backing store, identified by a section.
      */
     void unserializeStore(CheckpointIn &cp);
-
 };
 
 } // namespace memory

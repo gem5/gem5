@@ -108,39 +108,42 @@ class Scoreboard : public Named
     std::vector<InstSeqNum> writingInst;
 
   public:
-    Scoreboard(const std::string &name,
-            const BaseISA::RegClasses& reg_classes) :
-        Named(name),
-        regClasses(reg_classes),
-        intRegOffset(0),
-        floatRegOffset(intRegOffset + reg_classes.at(IntRegClass)->numRegs()),
-        ccRegOffset(floatRegOffset + reg_classes.at(FloatRegClass)->numRegs()),
-        vecRegOffset(ccRegOffset + reg_classes.at(CCRegClass)->numRegs()),
-        vecRegElemOffset(vecRegOffset + reg_classes.at(VecRegClass)->numRegs()),
-        vecPredRegOffset(vecRegElemOffset +
-                reg_classes.at(VecElemClass)->numRegs()),
-        matRegOffset(vecPredRegOffset +
-                reg_classes.at(VecPredRegClass)->numRegs()),
-        numRegs(matRegOffset + reg_classes.at(MatRegClass)->numRegs()),
-        numResults(numRegs, 0),
-        numUnpredictableResults(numRegs, 0),
-        fuIndices(numRegs, invalidFUIndex),
-        returnCycle(numRegs, Cycles(0)),
-        writingInst(numRegs, 0)
-    { }
+    Scoreboard(const std::string &name, const BaseISA::RegClasses &reg_classes)
+        : Named(name),
+          regClasses(reg_classes),
+          intRegOffset(0),
+          floatRegOffset(intRegOffset +
+                         reg_classes.at(IntRegClass)->numRegs()),
+          ccRegOffset(floatRegOffset +
+                      reg_classes.at(FloatRegClass)->numRegs()),
+          vecRegOffset(ccRegOffset + reg_classes.at(CCRegClass)->numRegs()),
+          vecRegElemOffset(vecRegOffset +
+                           reg_classes.at(VecRegClass)->numRegs()),
+          vecPredRegOffset(vecRegElemOffset +
+                           reg_classes.at(VecElemClass)->numRegs()),
+          matRegOffset(vecPredRegOffset +
+                       reg_classes.at(VecPredRegClass)->numRegs()),
+          numRegs(matRegOffset + reg_classes.at(MatRegClass)->numRegs()),
+          numResults(numRegs, 0),
+          numUnpredictableResults(numRegs, 0),
+          fuIndices(numRegs, invalidFUIndex),
+          returnCycle(numRegs, Cycles(0)),
+          writingInst(numRegs, 0)
+    {}
 
   public:
     /** Sets scoreboard_index to the index into numResults of the
      *  given register index.  Returns true if the given register
      *  is in the scoreboard and false if it isn't */
-    bool findIndex(const RegId& reg, Index &scoreboard_index);
+    bool findIndex(const RegId &reg, Index &scoreboard_index);
 
     /** Mark up an instruction's effects by incrementing
      *  numResults counts.  If mark_unpredictable is true, the inst's
      *  destination registers are marked as being unpredictable without
      *  an estimated retire time */
     void markupInstDests(MinorDynInstPtr inst, Cycles retire_time,
-        ThreadContext *thread_context, bool mark_unpredictable);
+                         ThreadContext *thread_context,
+                         bool mark_unpredictable);
 
     /** Clear down the dependencies for this instruction.  clear_unpredictable
      *  must match mark_unpredictable for the same inst. */
@@ -151,14 +154,14 @@ class Scoreboard : public Named
      *  inst must actually be committed before a dependent inst
      *  can call initiateAcc */
     InstSeqNum execSeqNumToWaitFor(MinorDynInstPtr inst,
-        ThreadContext *thread_context);
+                                   ThreadContext *thread_context);
 
     /** Can this instruction be issued.  Are any of its source registers
      *  due to be written by other marked-up instructions in flight */
     bool canInstIssue(MinorDynInstPtr inst,
-        const std::vector<Cycles> *src_reg_relative_latencies,
-        const std::vector<bool> *cant_forward_from_fu_indices,
-        Cycles now, ThreadContext *thread_context);
+                      const std::vector<Cycles> *src_reg_relative_latencies,
+                      const std::vector<bool> *cant_forward_from_fu_indices,
+                      Cycles now, ThreadContext *thread_context);
 
     /** MinorTraceIF interface */
     void minorTrace() const;

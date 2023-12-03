@@ -51,11 +51,15 @@ class RiscvProcess : public Process
 {
   protected:
     RiscvProcess(const ProcessParams &params, loader::ObjectFile *objFile);
-    template<class IntType>
+    template <class IntType>
     void argsInit(int pageSize);
 
   public:
-    virtual bool mmapGrowsDown() const override { return false; }
+    virtual bool
+    mmapGrowsDown() const override
+    {
+        return false;
+    }
 };
 
 class RiscvProcess64 : public RiscvProcess

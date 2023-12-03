@@ -37,8 +37,8 @@ unsigned test_a, test_b, test_c, test_d, test_e, test_f;
 unsigned test_result;
 
 unsigned
-test_m5_sum(unsigned a, unsigned b, unsigned c,
-            unsigned d, unsigned e, unsigned f)
+test_m5_sum(unsigned a, unsigned b, unsigned c, unsigned d, unsigned e,
+            unsigned f)
 {
     test_a = a;
     test_b = b;
@@ -51,8 +51,8 @@ test_m5_sum(unsigned a, unsigned b, unsigned c,
 }
 
 void
-check_args(unsigned a, unsigned b, unsigned c,
-           unsigned d, unsigned e, unsigned f)
+check_args(unsigned a, unsigned b, unsigned c, unsigned d, unsigned e,
+           unsigned f)
 {
     EXPECT_EQ(test_a, a);
     EXPECT_EQ(test_b, b);
@@ -87,20 +87,20 @@ run(std::initializer_list<std::string> arg_args)
 TEST(Sum, Arguments)
 {
     // Called with no arguments.
-    EXPECT_FALSE(run({"sum"}));
+    EXPECT_FALSE(run({ "sum" }));
 
     // Called with one argument.
-    EXPECT_FALSE(run({"sum", "1"}));
+    EXPECT_FALSE(run({ "sum", "1" }));
 
     // Called with two arguments.
     test_result = 42;
-    EXPECT_TRUE(run({"sum", "1", "2"}));
+    EXPECT_TRUE(run({ "sum", "1", "2" }));
     check_args(1, 2, 0, 0, 0, 0);
     EXPECT_EQ(cout_output, "Sum is 42.\n");
 
     // Call with all arguments.
     test_result = 314159;
-    EXPECT_TRUE(run({"sum", "6", "5", "4", "3", "2", "1"}));
+    EXPECT_TRUE(run({ "sum", "6", "5", "4", "3", "2", "1" }));
     check_args(6, 5, 4, 3, 2, 1);
     EXPECT_EQ(cout_output, "Sum is 314159.\n");
 }

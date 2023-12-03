@@ -51,8 +51,7 @@ namespace gem5
 class ExtensionBase
 {
   public:
-    explicit ExtensionBase(const unsigned int id)
-        : extID(id) {}
+    explicit ExtensionBase(const unsigned int id) : extID(id) {}
 
     virtual ~ExtensionBase() = default;
 
@@ -65,7 +64,11 @@ class ExtensionBase
         return ++max_num;
     }
 
-    unsigned int getExtensionID() const { return extID; }
+    unsigned int
+    getExtensionID() const
+    {
+        return extID;
+    }
 
   private:
     const unsigned int extID;
@@ -113,22 +116,24 @@ class Extension : public ExtensionBase
 };
 
 template <typename Target, typename T>
-const unsigned int Extension<Target, T>::extensionID =
-        ExtensionBase::maxNumExtensions() - 1;
+const unsigned int
+    Extension<Target, T>::extensionID = ExtensionBase::maxNumExtensions() - 1;
 
 template <typename Target>
 class Extensible
 {
   public:
-     Extensible() = default;
-     Extensible(const Extensible& other)
-     {
+    Extensible() = default;
+
+    Extensible(const Extensible &other)
+    {
         // Clone every extension from other.
-        for (auto& ext : other.extensions) {
+        for (auto &ext : other.extensions) {
             extensions.emplace_back(ext->clone());
         }
-     }
-     virtual ~Extensible() = default;
+    }
+
+    virtual ~Extensible() = default;
 
     /**
      * Set a new extension to the packet and replace the old one, if there
@@ -190,7 +195,6 @@ class Extensible
     }
 
   protected:
-
     /**
      * Go through the extension list and return the iterator to the instance of
      * the type of extension. If there is no such an extension, return the end

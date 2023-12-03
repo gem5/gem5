@@ -50,12 +50,13 @@ class ClockTick : public ScEvent
     ProcessMemberFuncWrapper<::sc_core::sc_clock> funcWrapper;
 
   public:
-    ClockTick(::sc_core::sc_clock *clock, bool to,
-            ::sc_core::sc_time _period) :
-        ScEvent([this]() { tick(); }),
-        _period(_period), name(clock->name()), p(nullptr),
-        funcWrapper(clock, to ? &::sc_core::sc_clock::tickUp :
-                                &::sc_core::sc_clock::tickDown)
+    ClockTick(::sc_core::sc_clock *clock, bool to, ::sc_core::sc_time _period)
+        : ScEvent([this]() { tick(); }),
+          _period(_period),
+          name(clock->name()),
+          p(nullptr),
+          funcWrapper(clock, to ? &::sc_core::sc_clock::tickUp :
+                                  &::sc_core::sc_clock::tickDown)
     {
         name += std::string(to ? "_posedge_action" : "_negedge_action");
         name = ::sc_core::sc_gen_unique_name(name.c_str());
@@ -85,31 +86,32 @@ class ClockTick : public ScEvent
     }
 };
 
-};
+}; // namespace sc_gem5
 
 namespace sc_core
 {
 
-sc_clock::sc_clock() :
-    sc_clock(sc_gen_unique_name("clock"), sc_time(1.0, SC_NS),
-            0.5, SC_ZERO_TIME, true)
+sc_clock::sc_clock()
+    : sc_clock(sc_gen_unique_name("clock"), sc_time(1.0, SC_NS), 0.5,
+               SC_ZERO_TIME, true)
 {}
 
-sc_clock::sc_clock(const char *name) :
-    sc_clock(name, sc_time(1.0, SC_NS), 0.5, SC_ZERO_TIME, true)
+sc_clock::sc_clock(const char *name)
+    : sc_clock(name, sc_time(1.0, SC_NS), 0.5, SC_ZERO_TIME, true)
 {}
 
-sc_clock::sc_clock(const char *name, const sc_time &period,
-                   double duty_cycle, const sc_time &start_time,
-                   bool posedge_first) :
-    sc_interface(), sc_signal<bool>(name, posedge_first ? false : true),
-    _period(period), _dutyCycle(duty_cycle), _startTime(start_time),
-    _posedgeFirst(posedge_first)
+sc_clock::sc_clock(const char *name, const sc_time &period, double duty_cycle,
+                   const sc_time &start_time, bool posedge_first)
+    : sc_interface(),
+      sc_signal<bool>(name, posedge_first ? false : true),
+      _period(period),
+      _dutyCycle(duty_cycle),
+      _startTime(start_time),
+      _posedgeFirst(posedge_first)
 {
     if (period == SC_ZERO_TIME) {
         std::string msg =
-            "increase the period: clock '" +
-            std::string(name) + "'";
+            "increase the period: clock '" + std::string(name) + "'";
         SC_REPORT_ERROR(SC_ID_CLOCK_PERIOD_ZERO_, msg.c_str());
     }
 
@@ -132,22 +134,22 @@ sc_clock::sc_clock(const char *name, const sc_time &period,
 }
 
 sc_clock::sc_clock(const char *name, double period_v, sc_time_unit period_tu,
-                   double duty_cycle) :
-    sc_clock(name, sc_time(period_v, period_tu), duty_cycle, SC_ZERO_TIME,
-            true)
+                   double duty_cycle)
+    : sc_clock(name, sc_time(period_v, period_tu), duty_cycle, SC_ZERO_TIME,
+               true)
 {}
 
 sc_clock::sc_clock(const char *name, double period_v, sc_time_unit period_tu,
                    double duty_cycle, double start_time_v,
-                   sc_time_unit start_time_tu, bool posedge_first) :
-    sc_clock(name, sc_time(period_v, period_tu), duty_cycle,
-            sc_time(start_time_v, start_time_tu), posedge_first)
+                   sc_time_unit start_time_tu, bool posedge_first)
+    : sc_clock(name, sc_time(period_v, period_tu), duty_cycle,
+               sc_time(start_time_v, start_time_tu), posedge_first)
 {}
 
 sc_clock::sc_clock(const char *name, double period, double duty_cycle,
-                   double start_time, bool posedge_first) :
-    sc_clock(name, sc_time(period, true), duty_cycle,
-            sc_time(start_time, true), posedge_first)
+                   double start_time, bool posedge_first)
+    : sc_clock(name, sc_time(period, true), duty_cycle,
+               sc_time(start_time, true), posedge_first)
 {}
 
 sc_clock::~sc_clock()
@@ -166,10 +168,29 @@ sc_clock::write(const bool &)
     panic("write() called on sc_clock.");
 }
 
-const sc_time &sc_clock::period() const { return _period; }
-double sc_clock::duty_cycle() const { return _dutyCycle; }
-const sc_time &sc_clock::start_time() const { return _startTime; }
-bool sc_clock::posedge_first() const { return _posedgeFirst; }
+const sc_time &
+sc_clock::period() const
+{
+    return _period;
+}
+
+double
+sc_clock::duty_cycle() const
+{
+    return _dutyCycle;
+}
+
+const sc_time &
+sc_clock::start_time() const
+{
+    return _startTime;
+}
+
+bool
+sc_clock::posedge_first() const
+{
+    return _posedgeFirst;
+}
 
 const sc_time &
 sc_clock::time_stamp()
@@ -185,11 +206,11 @@ sc_clock::before_end_of_elaboration()
     if (_posedgeFirst) {
         ::sc_gem5::scheduler.schedule(_gem5UpEdge, _startTime);
         ::sc_gem5::scheduler.schedule(_gem5DownEdge,
-                _startTime + _period * _dutyCycle);
+                                      _startTime + _period * _dutyCycle);
     } else {
         ::sc_gem5::scheduler.schedule(_gem5DownEdge, _startTime);
-        ::sc_gem5::scheduler.schedule(_gem5UpEdge,
-                _startTime + _period * (1.0 - _dutyCycle));
+        ::sc_gem5::scheduler.schedule(
+            _gem5UpEdge, _startTime + _period * (1.0 - _dutyCycle));
     }
 }
 

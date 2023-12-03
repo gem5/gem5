@@ -102,7 +102,7 @@ void
 setInterpDir(const std::string &dirname)
 {
     fatal_if(!interpDir.empty(),
-        "Error: setInterpDir has already been called once\n");
+             "Error: setInterpDir has already been called once\n");
     interpDir = dirname;
 }
 
@@ -146,7 +146,7 @@ ElfObject::ElfObject(ImageFileDataPtr ifd) : ObjectFile(ifd)
             "No loadable segments in '%s'. ELF file corrupted?\n",
             imageData->filename());
 
-    for ([[maybe_unused]] auto &seg: image.segments())
+    for ([[maybe_unused]] auto &seg : image.segments())
         DPRINTFR(Loader, "%s\n", seg);
 
     // We will actually read the sections when we need to load them
@@ -181,45 +181,44 @@ ElfObject::ElfObject(ImageFileDataPtr ifd) : ObjectFile(ifd)
                 loader::Symbol::Binding binding =
                     loader::Symbol::Binding::Global;
                 switch (GELF_ST_BIND(sym.st_info)) {
-                  case STB_GLOBAL:
+                case STB_GLOBAL:
                     binding = loader::Symbol::Binding::Global;
                     break;
-                  case STB_LOCAL:
+                case STB_LOCAL:
                     binding = loader::Symbol::Binding::Local;
                     break;
-                  case STB_WEAK:
+                case STB_WEAK:
                     binding = loader::Symbol::Binding::Weak;
                     break;
-                  default:
+                default:
                     continue;
                 }
 
                 loader::Symbol::SymbolType symbol_type =
                     loader::Symbol::SymbolType::NoType;
                 switch (GELF_ST_TYPE(sym.st_info)) {
-                  case STT_NOTYPE:
+                case STT_NOTYPE:
                     symbol_type = loader::Symbol::SymbolType::NoType;
                     break;
-                  case STT_OBJECT:
+                case STT_OBJECT:
                     symbol_type = loader::Symbol::SymbolType::Object;
                     break;
-                  case STT_FUNC:
+                case STT_FUNC:
                     symbol_type = loader::Symbol::SymbolType::Function;
                     break;
-                  case STT_SECTION:
+                case STT_SECTION:
                     symbol_type = loader::Symbol::SymbolType::Section;
                     break;
-                  case STT_FILE:
+                case STT_FILE:
                     symbol_type = loader::Symbol::SymbolType::File;
                     break;
-                  default:
+                default:
                     symbol_type = loader::Symbol::SymbolType::Other;
                     break;
                 }
 
-                loader::Symbol symbol(
-                    binding, symbol_type, sym_name, sym.st_value,
-                    sym.st_size);
+                loader::Symbol symbol(binding, symbol_type, sym_name,
+                                      sym.st_value, sym.st_size);
 
                 if (_symtab.insert(symbol)) {
                     DPRINTF(Loader, "Symbol: %-40s value %#x.\n",
@@ -290,35 +289,39 @@ ElfObject::determineOpSys()
     // determine the ABI version used by the ELF object
     if (ehdr.e_machine == EM_PPC64) {
         switch (ehdr.e_flags & 0x3) {
-            case 0x1: opSys = LinuxPower64ABIv1; return;
-            case 0x2: opSys = LinuxPower64ABIv2; return;
-            default:
-                if (ehdr.e_ident[EI_DATA] == ELFDATA2MSB)
-                    opSys = LinuxPower64ABIv1;
-                if (ehdr.e_ident[EI_DATA] == ELFDATA2LSB)
-                    opSys = LinuxPower64ABIv2;
-                return;
+        case 0x1:
+            opSys = LinuxPower64ABIv1;
+            return;
+        case 0x2:
+            opSys = LinuxPower64ABIv2;
+            return;
+        default:
+            if (ehdr.e_ident[EI_DATA] == ELFDATA2MSB)
+                opSys = LinuxPower64ABIv1;
+            if (ehdr.e_ident[EI_DATA] == ELFDATA2LSB)
+                opSys = LinuxPower64ABIv2;
+            return;
         }
     }
 
     // Detect the operating system
     switch (ehdr.e_ident[EI_OSABI]) {
-      case ELFOSABI_LINUX:
+    case ELFOSABI_LINUX:
         opSys = Linux;
         return;
-      case ELFOSABI_SOLARIS:
+    case ELFOSABI_SOLARIS:
         opSys = Solaris;
         return;
-      case ELFOSABI_TRU64:
+    case ELFOSABI_TRU64:
         opSys = Tru64;
         return;
-      case ELFOSABI_ARM:
+    case ELFOSABI_ARM:
         opSys = LinuxArmOABI;
         return;
-      case ELFOSABI_FREEBSD:
+    case ELFOSABI_FREEBSD:
         opSys = FreeBSD;
         return;
-      default:
+    default:
         opSys = UnknownOpSys;
     }
 
@@ -340,15 +343,15 @@ ElfObject::determineOpSys()
             uint32_t os_abi = is_le ? htole(raw_abi) : htobe(raw_abi);
 
             switch (os_abi) {
-              case 0:
+            case 0:
                 opSys = Linux;
                 return;
-              case 1:
+            case 1:
                 fatal("gem5 does not support the HURD ABI.\n");
-              case 2:
+            case 2:
                 opSys = Solaris;
                 return;
-              case 3:
+            case 3:
                 opSys = FreeBSD;
                 return;
             }
@@ -380,8 +383,8 @@ ElfObject::handleLoadableSegment(GElf_Phdr phdr, int seg_num)
         return;
     }
 
-    image.addSegment({ name, phdr.p_paddr, imageData,
-                       phdr.p_offset, phdr.p_filesz });
+    image.addSegment(
+        { name, phdr.p_paddr, imageData, phdr.p_offset, phdr.p_filesz });
     Addr uninitialized = phdr.p_memsz - phdr.p_filesz;
     if (uninitialized) {
         // There may be parts of a segment which aren't included in the
@@ -403,10 +406,7 @@ ElfObject::handleLoadableSegment(GElf_Phdr phdr, int seg_num)
         _programHeaderTable = phdr.p_vaddr + (ehdr.e_phoff - file_start);
 }
 
-ElfObject::~ElfObject()
-{
-    elf_end(elf);
-}
+ElfObject::~ElfObject() { elf_end(elf); }
 
 void
 ElfObject::getSections()
@@ -418,14 +418,13 @@ ElfObject::getSections()
         panic("wrong elf version number!");
 
     // get a pointer to elf structure
-    Elf *elf =
-        elf_memory((char *)const_cast<uint8_t *>(imageData->data()),
-                imageData->len());
+    Elf *elf = elf_memory((char *)const_cast<uint8_t *>(imageData->data()),
+                          imageData->len());
     assert(elf != NULL);
 
     // Check that we actually have a elf file
     GElf_Ehdr ehdr;
-    if (gelf_getehdr(elf, &ehdr) ==0) {
+    if (gelf_getehdr(elf, &ehdr) == 0) {
         panic("Not ELF, shouldn't be here");
     }
 
@@ -452,7 +451,6 @@ ElfObject::sectionExists(std::string sec)
 
     return sectionNames.find(sec) != sectionNames.end();
 }
-
 
 void
 ElfObject::updateBias(Addr bias_addr)

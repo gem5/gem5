@@ -70,7 +70,13 @@ class CPack : public DictionaryCompressor<uint32_t>
      */
     enum PatternNumber
     {
-        ZZZZ, XXXX, MMMM, MMXX, ZZZX, MMMX, NUM_PATTERNS
+        ZZZZ,
+        XXXX,
+        MMMM,
+        MMXX,
+        ZZZX,
+        MMMX,
+        NUM_PATTERNS
     };
 
     /**
@@ -80,23 +86,26 @@ class CPack : public DictionaryCompressor<uint32_t>
     using PatternFactory = Factory<PatternZZZZ, PatternMMMM, PatternZZZX,
                                    PatternMMMX, PatternMMXX, PatternXXXX>;
 
-    uint64_t getNumPatterns() const override { return NUM_PATTERNS; }
+    uint64_t
+    getNumPatterns() const override
+    {
+        return NUM_PATTERNS;
+    }
 
     std::string
     getName(int number) const override
     {
         static std::map<int, std::string> patternNames = {
-            {ZZZZ, "ZZZZ"}, {XXXX, "XXXX"}, {MMMM, "MMMM"},
-            {MMXX, "MMXX"}, {ZZZX, "ZZZX"}, {MMMX, "MMMX"}
+            { ZZZZ, "ZZZZ" }, { XXXX, "XXXX" }, { MMMM, "MMMM" },
+            { MMXX, "MMXX" }, { ZZZX, "ZZZX" }, { MMMX, "MMMX" }
         };
 
         return patternNames[number];
     };
 
-    std::unique_ptr<Pattern> getPattern(
-        const DictionaryEntry& bytes,
-        const DictionaryEntry& dict_bytes,
-        const int match_location) const override
+    std::unique_ptr<Pattern>
+    getPattern(const DictionaryEntry &bytes, const DictionaryEntry &dict_bytes,
+               const int match_location) const override
     {
         return PatternFactory::getPattern(bytes, dict_bytes, match_location);
     }
@@ -105,7 +114,7 @@ class CPack : public DictionaryCompressor<uint32_t>
 
   public:
     /** Convenience typedef. */
-     typedef CPackParams Params;
+    typedef CPackParams Params;
 
     /**
      * Default constructor.
@@ -115,7 +124,7 @@ class CPack : public DictionaryCompressor<uint32_t>
     /**
      * Default destructor.
      */
-    ~CPack() {};
+    ~CPack(){};
 };
 
 class CPack::PatternZZZZ : public MaskedValuePattern<0, 0xFFFFFFFF>
@@ -123,9 +132,8 @@ class CPack::PatternZZZZ : public MaskedValuePattern<0, 0xFFFFFFFF>
   public:
     PatternZZZZ(const DictionaryEntry bytes, const int match_location)
         : MaskedValuePattern<0, 0xFFFFFFFF>(ZZZZ, 0x0, 2, match_location,
-          bytes)
-    {
-    }
+                                            bytes)
+    {}
 };
 
 class CPack::PatternXXXX : public UncompressedPattern
@@ -133,8 +141,7 @@ class CPack::PatternXXXX : public UncompressedPattern
   public:
     PatternXXXX(const DictionaryEntry bytes, const int match_location)
         : UncompressedPattern(XXXX, 0x1, 2, match_location, bytes)
-    {
-    }
+    {}
 };
 
 class CPack::PatternMMMM : public MaskedPattern<0xFFFFFFFF>
@@ -142,8 +149,7 @@ class CPack::PatternMMMM : public MaskedPattern<0xFFFFFFFF>
   public:
     PatternMMMM(const DictionaryEntry bytes, const int match_location)
         : MaskedPattern<0xFFFFFFFF>(MMMM, 0x2, 6, match_location, bytes, true)
-    {
-    }
+    {}
 };
 
 class CPack::PatternMMXX : public MaskedPattern<0xFFFF0000>
@@ -151,8 +157,7 @@ class CPack::PatternMMXX : public MaskedPattern<0xFFFF0000>
   public:
     PatternMMXX(const DictionaryEntry bytes, const int match_location)
         : MaskedPattern<0xFFFF0000>(MMXX, 0xC, 8, match_location, bytes, true)
-    {
-    }
+    {}
 };
 
 class CPack::PatternZZZX : public MaskedValuePattern<0, 0xFFFFFF00>
@@ -160,9 +165,8 @@ class CPack::PatternZZZX : public MaskedValuePattern<0, 0xFFFFFF00>
   public:
     PatternZZZX(const DictionaryEntry bytes, const int match_location)
         : MaskedValuePattern<0, 0xFFFFFF00>(ZZZX, 0xD, 4, match_location,
-          bytes)
-    {
-    }
+                                            bytes)
+    {}
 };
 
 class CPack::PatternMMMX : public MaskedPattern<0xFFFFFF00>
@@ -170,8 +174,7 @@ class CPack::PatternMMMX : public MaskedPattern<0xFFFFFF00>
   public:
     PatternMMMX(const DictionaryEntry bytes, const int match_location)
         : MaskedPattern<0xFFFFFF00>(MMMX, 0xE, 8, match_location, bytes, true)
-    {
-    }
+    {}
 };
 
 } // namespace compression

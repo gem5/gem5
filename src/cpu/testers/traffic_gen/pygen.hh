@@ -53,6 +53,7 @@ class GEM5_LOCAL PyTrafficGen : public BaseTrafficGen
 {
   public:
     PyTrafficGen(const PyTrafficGenParams &p);
+
     ~PyTrafficGen() {}
 
   public: // Python API

@@ -90,30 +90,60 @@ struct EthAddr : protected eth_addr
     EthAddr(const std::string &addr);
     const EthAddr &operator=(const eth_addr &ea);
     const EthAddr &operator=(const std::string &addr);
+
     /** @} */ // end of api_inet
 
     /**
      * @ingroup api_inet
      */
-    int size() const { return sizeof(eth_addr); }
-
+    int
+    size() const
+    {
+        return sizeof(eth_addr);
+    }
 
     /**
      * @ingroup api_inet
      * @{
      */
-    const uint8_t *bytes() const { return &data[0]; }
-    uint8_t *bytes() { return &data[0]; }
+    const uint8_t *
+    bytes() const
+    {
+        return &data[0];
+    }
+
+    uint8_t *
+    bytes()
+    {
+        return &data[0];
+    }
+
     /** @} */ // end of api_inet
 
     /**
      * @ingroup api_inet
      * @{
      */
-    const uint8_t *addr() const { return &data[0]; }
-    bool unicast() const { return !(data[0] & 0x01); }
-    bool multicast() const { return !unicast() && !broadcast(); }
-    bool broadcast() const
+    const uint8_t *
+    addr() const
+    {
+        return &data[0];
+    }
+
+    bool
+    unicast() const
+    {
+        return !(data[0] & 0x01);
+    }
+
+    bool
+    multicast() const
+    {
+        return !unicast() && !broadcast();
+    }
+
+    bool
+    broadcast() const
     {
         bool isBroadcast = true;
         for (int i = 0; i < ETH_ADDR_LEN; ++i) {
@@ -122,6 +152,7 @@ struct EthAddr : protected eth_addr
 
         return isBroadcast;
     }
+
     /** @} */ // end of api_inet
 
     /**
@@ -143,7 +174,6 @@ struct EthAddr : protected eth_addr
         reg |= ((uint64_t)data[5]) << 0;
         return reg;
     }
-
 };
 
 /**
@@ -152,40 +182,81 @@ struct EthAddr : protected eth_addr
  */
 std::ostream &operator<<(std::ostream &stream, const EthAddr &ea);
 bool operator==(const EthAddr &left, const EthAddr &right);
+
 /** @} */ // end of api_inet
 
 struct EthHdr : public eth_hdr
 {
-    bool isVlan() const { return (ntohs(eth_type) == ETH_TYPE_8021Q); }
-    uint16_t type() const {
+    bool
+    isVlan() const
+    {
+        return (ntohs(eth_type) == ETH_TYPE_8021Q);
+    }
+
+    uint16_t
+    type() const
+    {
         if (!isVlan())
             return ntohs(eth_type);
         else
             // L3 type is now 16 bytes into the hdr with 802.1Q
             // instead of 12.  dnet/eth.h only supports 802.1
-            return ntohs(*((uint16_t*)(((uint8_t *)this) + 16)));
+            return ntohs(*((uint16_t *)(((uint8_t *)this) + 16)));
     }
-    uint16_t vlanId() const {
+
+    uint16_t
+    vlanId() const
+    {
         if (isVlan())
-            return ntohs(*((uint16_t*)(((uint8_t *)this) + 14)));
+            return ntohs(*((uint16_t *)(((uint8_t *)this) + 14)));
         else
             return 0x0000;
     }
 
-    const EthAddr &src() const { return *(EthAddr *)&eth_src; }
-    const EthAddr &dst() const { return *(EthAddr *)&eth_dst; }
+    const EthAddr &
+    src() const
+    {
+        return *(EthAddr *)&eth_src;
+    }
 
-    int size() const {
+    const EthAddr &
+    dst() const
+    {
+        return *(EthAddr *)&eth_dst;
+    }
+
+    int
+    size() const
+    {
         if (!isVlan())
             return sizeof(eth_hdr);
         else
-            return (sizeof(eth_hdr)+4);
+            return (sizeof(eth_hdr) + 4);
     }
 
-    const uint8_t *bytes() const { return (const uint8_t *)this; }
-    const uint8_t *payload() const { return bytes() + size(); }
-    uint8_t *bytes() { return (uint8_t *)this; }
-    uint8_t *payload() { return bytes() + size(); }
+    const uint8_t *
+    bytes() const
+    {
+        return (const uint8_t *)this;
+    }
+
+    const uint8_t *
+    payload() const
+    {
+        return bytes() + size();
+    }
+
+    uint8_t *
+    bytes()
+    {
+        return (uint8_t *)this;
+    }
+
+    uint8_t *
+    payload()
+    {
+        return bytes() + size();
+    }
 };
 
 class EthPtr
@@ -201,32 +272,85 @@ class EthPtr
      * @{
      */
     EthPtr() {}
-    EthPtr(const EthPacketPtr &ptr) : p(ptr) { }
+
+    EthPtr(const EthPacketPtr &ptr) : p(ptr) {}
+
     /** @} */ // end of api_inet
 
-    EthHdr *operator->() { return (EthHdr *)p->data; }
-    EthHdr &operator*() { return *(EthHdr *)p->data; }
+    EthHdr *
+    operator->()
+    {
+        return (EthHdr *)p->data;
+    }
+
+    EthHdr &
+    operator*()
+    {
+        return *(EthHdr *)p->data;
+    }
+
     operator EthHdr *() { return (EthHdr *)p->data; }
 
-    const EthHdr *operator->() const { return (const EthHdr *)p->data; }
-    const EthHdr &operator*() const { return *(const EthHdr *)p->data; }
+    const EthHdr *
+    operator->() const
+    {
+        return (const EthHdr *)p->data;
+    }
+
+    const EthHdr &
+    operator*() const
+    {
+        return *(const EthHdr *)p->data;
+    }
+
     operator const EthHdr *() const { return (const EthHdr *)p->data; }
 
     /**
      * @ingroup api_inet
      */
-    const EthPtr &operator=(const EthPacketPtr &ptr) { p = ptr; return *this; }
+    const EthPtr &
+    operator=(const EthPacketPtr &ptr)
+    {
+        p = ptr;
+        return *this;
+    }
 
     /**
      * @ingroup api_inet
      * @{
      */
-    const EthPacketPtr packet() const { return p; }
-    EthPacketPtr packet() { return p; }
-    bool operator!() const { return !p; }
+    const EthPacketPtr
+    packet() const
+    {
+        return p;
+    }
+
+    EthPacketPtr
+    packet()
+    {
+        return p;
+    }
+
+    bool
+    operator!() const
+    {
+        return !p;
+    }
+
     operator bool() const { return (p != nullptr); }
-    int off() const { return 0; }
-    int pstart() const { return off() + ((const EthHdr*)p->data)->size(); }
+
+    int
+    off() const
+    {
+        return 0;
+    }
+
+    int
+    pstart() const
+    {
+        return off() + ((const EthHdr *)p->data)->size();
+    }
+
     /** @} */ // end of api_inet
 };
 
@@ -243,16 +367,20 @@ struct IpAddress
      * @ingroup api_inet
      * @{
      */
-    IpAddress() : _ip(0)
-    {}
-    IpAddress(const uint32_t __ip) : _ip(__ip)
-    {}
+    IpAddress() : _ip(0) {}
+
+    IpAddress(const uint32_t __ip) : _ip(__ip) {}
+
     /** @} */ // end of api_net
 
     /**
      * @ingroup api_inet
      */
-    uint32_t ip() const { return _ip; }
+    uint32_t
+    ip() const
+    {
+        return _ip;
+    }
 
     /**
      * @ingroup api_inet
@@ -266,6 +394,7 @@ struct IpAddress
  */
 std::ostream &operator<<(std::ostream &stream, const IpAddress &ia);
 bool operator==(const IpAddress &left, const IpAddress &right);
+
 /** @} */ // end of api_inet
 
 struct IpNetmask : public IpAddress
@@ -274,16 +403,20 @@ struct IpNetmask : public IpAddress
     uint8_t _netmask;
 
   public:
-    IpNetmask() : IpAddress(), _netmask(0)
-    {}
-    IpNetmask(const uint32_t __ip, const uint8_t __netmask) :
-        IpAddress(__ip), _netmask(__netmask)
+    IpNetmask() : IpAddress(), _netmask(0) {}
+
+    IpNetmask(const uint32_t __ip, const uint8_t __netmask)
+        : IpAddress(__ip), _netmask(__netmask)
     {}
 
     /**
      * @ingroup api_inet
      */
-    uint8_t netmask() const { return _netmask; }
+    uint8_t
+    netmask() const
+    {
+        return _netmask;
+    }
 
     std::string string() const;
 };
@@ -294,6 +427,7 @@ struct IpNetmask : public IpAddress
  */
 std::ostream &operator<<(std::ostream &stream, const IpNetmask &in);
 bool operator==(const IpNetmask &left, const IpNetmask &right);
+
 /** @} */ // end of api_inet
 
 struct IpWithPort : public IpAddress
@@ -302,16 +436,20 @@ struct IpWithPort : public IpAddress
     uint16_t _port;
 
   public:
-    IpWithPort() : IpAddress(), _port(0)
-    {}
-    IpWithPort(const uint32_t __ip, const uint16_t __port) :
-        IpAddress(__ip), _port(__port)
+    IpWithPort() : IpAddress(), _port(0) {}
+
+    IpWithPort(const uint32_t __ip, const uint16_t __port)
+        : IpAddress(__ip), _port(__port)
     {}
 
     /**
      * @ingroup api_inet
      */
-    uint8_t port() const { return _port; }
+    uint8_t
+    port() const
+    {
+        return _port;
+    }
 
     std::string string() const;
 };
@@ -325,32 +463,130 @@ bool operator==(const IpWithPort &left, const IpWithPort &right);
 /** @} */ // end of api_inet
 
 struct IpOpt;
+
 struct IpHdr : public ip_hdr
 {
-    uint8_t  version() const { return ip_v; }
-    uint8_t  hlen() const { return ip_hl * 4; }
-    uint8_t  tos() const { return ip_tos; }
-    uint16_t len() const { return ntohs(ip_len); }
-    uint16_t id() const { return ntohs(ip_id); }
-    uint16_t frag_flags() const { return ntohs(ip_off) >> 13; }
-    uint16_t frag_off() const { return ntohs(ip_off) & 0x1fff; }
-    uint8_t  ttl() const { return ip_ttl; }
-    uint8_t  proto() const { return ip_p; }
-    uint16_t sum() const { return ip_sum; }
-    uint32_t src() const { return ntohl(ip_src); }
-    uint32_t dst() const { return ntohl(ip_dst); }
+    uint8_t
+    version() const
+    {
+        return ip_v;
+    }
 
-    void sum(uint16_t sum) { ip_sum = sum; }
-    void id(uint16_t _id) { ip_id = htons(_id); }
-    void len(uint16_t _len) { ip_len = htons(_len); }
+    uint8_t
+    hlen() const
+    {
+        return ip_hl * 4;
+    }
+
+    uint8_t
+    tos() const
+    {
+        return ip_tos;
+    }
+
+    uint16_t
+    len() const
+    {
+        return ntohs(ip_len);
+    }
+
+    uint16_t
+    id() const
+    {
+        return ntohs(ip_id);
+    }
+
+    uint16_t
+    frag_flags() const
+    {
+        return ntohs(ip_off) >> 13;
+    }
+
+    uint16_t
+    frag_off() const
+    {
+        return ntohs(ip_off) & 0x1fff;
+    }
+
+    uint8_t
+    ttl() const
+    {
+        return ip_ttl;
+    }
+
+    uint8_t
+    proto() const
+    {
+        return ip_p;
+    }
+
+    uint16_t
+    sum() const
+    {
+        return ip_sum;
+    }
+
+    uint32_t
+    src() const
+    {
+        return ntohl(ip_src);
+    }
+
+    uint32_t
+    dst() const
+    {
+        return ntohl(ip_dst);
+    }
+
+    void
+    sum(uint16_t sum)
+    {
+        ip_sum = sum;
+    }
+
+    void
+    id(uint16_t _id)
+    {
+        ip_id = htons(_id);
+    }
+
+    void
+    len(uint16_t _len)
+    {
+        ip_len = htons(_len);
+    }
 
     bool options(std::vector<const IpOpt *> &vec) const;
 
-    int size() const { return hlen(); }
-    const uint8_t *bytes() const { return (const uint8_t *)this; }
-    const uint8_t *payload() const { return bytes() + size(); }
-    uint8_t *bytes() { return (uint8_t *)this; }
-    uint8_t *payload() { return bytes() + size(); }
+    int
+    size() const
+    {
+        return hlen();
+    }
+
+    const uint8_t *
+    bytes() const
+    {
+        return (const uint8_t *)this;
+    }
+
+    const uint8_t *
+    payload() const
+    {
+        return bytes() + size();
+    }
+
+    uint8_t *
+    bytes()
+    {
+        return (uint8_t *)this;
+    }
+
+    uint8_t *
+    payload()
+    {
+        return bytes() + size();
+    }
 };
 
 class IpPtr
@@ -361,7 +597,8 @@ class IpPtr
     EthPacketPtr p;
     bool eth_hdr_vlan;
 
-    void set(const EthPacketPtr &ptr)
+    void
+    set(const EthPacketPtr &ptr)
     {
         p = 0;
         eth_hdr_vlan = false;
@@ -381,41 +618,115 @@ class IpPtr
      * @{
      */
     IpPtr() : p(0), eth_hdr_vlan(false) {}
+
     IpPtr(const EthPacketPtr &ptr) : p(0), eth_hdr_vlan(false) { set(ptr); }
+
     IpPtr(const EthPtr &ptr) : p(0), eth_hdr_vlan(false) { set(ptr.p); }
-    IpPtr(const IpPtr &ptr) : p(ptr.p), eth_hdr_vlan(ptr.eth_hdr_vlan) { }
+
+    IpPtr(const IpPtr &ptr) : p(ptr.p), eth_hdr_vlan(ptr.eth_hdr_vlan) {}
+
     /** @} */ // end of api_inet
 
-    IpHdr *get() { return (IpHdr *)(p->data + sizeof(eth_hdr) +
-                                   ((eth_hdr_vlan) ? 4 : 0)); }
-    IpHdr *operator->() { return get(); }
-    IpHdr &operator*() { return *get(); }
+    IpHdr *
+    get()
+    {
+        return (IpHdr *)(p->data + sizeof(eth_hdr) + ((eth_hdr_vlan) ? 4 : 0));
+    }
+
+    IpHdr *
+    operator->()
+    {
+        return get();
+    }
+
+    IpHdr &
+    operator*()
+    {
+        return *get();
+    }
 
     /**
      * @ingroup api_inet
      * @{
      */
-    const IpHdr *get() const
-    { return (const IpHdr *)(p->data + sizeof(eth_hdr) +
-                            ((eth_hdr_vlan) ? 4 : 0)); }
-    const IpHdr *operator->() const { return get(); }
-    const IpHdr &operator*() const { return *get(); }
+    const IpHdr *
+    get() const
+    {
+        return (const IpHdr *)(p->data + sizeof(eth_hdr) +
+                               ((eth_hdr_vlan) ? 4 : 0));
+    }
+
+    const IpHdr *
+    operator->() const
+    {
+        return get();
+    }
+
+    const IpHdr &
+    operator*() const
+    {
+        return *get();
+    }
+
     /** @} */ // end of api_inet
 
-    const IpPtr &operator=(const EthPacketPtr &ptr) { set(ptr); return *this; }
-    const IpPtr &operator=(const EthPtr &ptr) { set(ptr.p); return *this; }
-    const IpPtr &operator=(const IpPtr &ptr) { p = ptr.p; return *this; }
+    const IpPtr &
+    operator=(const EthPacketPtr &ptr)
+    {
+        set(ptr);
+        return *this;
+    }
+
+    const IpPtr &
+    operator=(const EthPtr &ptr)
+    {
+        set(ptr.p);
+        return *this;
+    }
+
+    const IpPtr &
+    operator=(const IpPtr &ptr)
+    {
+        p = ptr.p;
+        return *this;
+    }
 
     /**
      * @ingroup api_inet
      * @{
      */
-    const EthPacketPtr packet() const { return p; }
-    EthPacketPtr packet() { return p; }
-    bool operator!() const { return !p; }
+    const EthPacketPtr
+    packet() const
+    {
+        return p;
+    }
+
+    EthPacketPtr
+    packet()
+    {
+        return p;
+    }
+
+    bool
+    operator!() const
+    {
+        return !p;
+    }
+
     operator bool() const { return (p != nullptr); }
-    int off() const { return (sizeof(eth_hdr) + ((eth_hdr_vlan) ? 4 : 0)); }
-    int pstart() const { return (off() + get()->size()); }
+
+    int
+    off() const
+    {
+        return (sizeof(eth_hdr) + ((eth_hdr_vlan) ? 4 : 0));
+    }
+
+    int
+    pstart() const
+    {
+        return (off() + get()->size());
+    }
+
     /** @} */ // end of api_inet
 };
 
@@ -426,26 +737,91 @@ uint16_t cksum(const IpPtr &ptr);
 
 struct IpOpt : public ip_opt
 {
-    uint8_t type() const { return opt_type; }
-    uint8_t typeNumber() const { return IP_OPT_NUMBER(opt_type); }
-    uint8_t typeClass() const { return IP_OPT_CLASS(opt_type); }
-    uint8_t typeCopied() const { return IP_OPT_COPIED(opt_type); }
-    uint8_t len() const { return IP_OPT_TYPEONLY(type()) ? 1 : opt_len; }
+    uint8_t
+    type() const
+    {
+        return opt_type;
+    }
 
-    bool isNumber(int num) const { return typeNumber() == IP_OPT_NUMBER(num); }
-    bool isClass(int cls) const { return typeClass() == IP_OPT_CLASS(cls); }
-    bool isCopied(int cpy) const { return typeCopied() == IP_OPT_COPIED(cpy); }
+    uint8_t
+    typeNumber() const
+    {
+        return IP_OPT_NUMBER(opt_type);
+    }
 
-    const uint8_t *data() const { return opt_data.data8; }
+    uint8_t
+    typeClass() const
+    {
+        return IP_OPT_CLASS(opt_type);
+    }
+
+    uint8_t
+    typeCopied() const
+    {
+        return IP_OPT_COPIED(opt_type);
+    }
+
+    uint8_t
+    len() const
+    {
+        return IP_OPT_TYPEONLY(type()) ? 1 : opt_len;
+    }
+
+    bool
+    isNumber(int num) const
+    {
+        return typeNumber() == IP_OPT_NUMBER(num);
+    }
+
+    bool
+    isClass(int cls) const
+    {
+        return typeClass() == IP_OPT_CLASS(cls);
+    }
+
+    bool
+    isCopied(int cpy) const
+    {
+        return typeCopied() == IP_OPT_COPIED(cpy);
+    }
+
+    const uint8_t *
+    data() const
+    {
+        return opt_data.data8;
+    }
+
     void sec(ip_opt_data_sec &sec) const;
     void lsrr(ip_opt_data_rr &rr) const;
     void ssrr(ip_opt_data_rr &rr) const;
     void ts(ip_opt_data_ts &ts) const;
-    uint16_t satid() const { return ntohs(opt_data.satid); }
-    uint16_t mtup() const { return ntohs(opt_data.mtu); }
-    uint16_t mtur() const { return ntohs(opt_data.mtu); }
+
+    uint16_t
+    satid() const
+    {
+        return ntohs(opt_data.satid);
+    }
+
+    uint16_t
+    mtup() const
+    {
+        return ntohs(opt_data.mtu);
+    }
+
+    uint16_t
+    mtur() const
+    {
+        return ntohs(opt_data.mtu);
+    }
+
     void tr(ip_opt_data_tr &tr) const;
-    uint16_t rtralt() const { return ntohs(opt_data.rtralt); }
+
+    uint16_t
+    rtralt() const
+    {
+        return ntohs(opt_data.rtralt);
+    }
+
     void sdb(std::vector<uint32_t> &vec) const;
 };
 
@@ -453,34 +829,115 @@ struct IpOpt : public ip_opt
  * Ip6 Classes
  */
 struct Ip6Opt;
+
 struct Ip6Hdr : public ip6_hdr
 {
-    uint8_t version() const { return ip6_vfc; }
-    uint32_t flow() const { return ntohl(ip6_flow); }
-    uint16_t plen() const { return ntohs(ip6_plen); }
-    uint16_t hlen() const { return IP6_HDR_LEN; }
-    uint8_t nxt() const { return ip6_nxt; }
-    uint8_t hlim() const { return ip6_hlim; }
+    uint8_t
+    version() const
+    {
+        return ip6_vfc;
+    }
 
-    const uint8_t* src() const { return ip6_src.data; }
-    const uint8_t* dst() const { return ip6_dst.data; }
+    uint32_t
+    flow() const
+    {
+        return ntohl(ip6_flow);
+    }
+
+    uint16_t
+    plen() const
+    {
+        return ntohs(ip6_plen);
+    }
+
+    uint16_t
+    hlen() const
+    {
+        return IP6_HDR_LEN;
+    }
+
+    uint8_t
+    nxt() const
+    {
+        return ip6_nxt;
+    }
+
+    uint8_t
+    hlim() const
+    {
+        return ip6_hlim;
+    }
+
+    const uint8_t *
+    src() const
+    {
+        return ip6_src.data;
+    }
+
+    const uint8_t *
+    dst() const
+    {
+        return ip6_dst.data;
+    }
 
     int extensionLength() const;
-    const Ip6Opt* getExt(uint8_t ext) const;
-    const Ip6Opt* fragmentExt() const { return getExt(IP_PROTO_FRAGMENT); }
-    const Ip6Opt* rtTypeExt() const { return getExt(IP_PROTO_ROUTING); }
-    const Ip6Opt* dstOptExt() const { return getExt(IP_PROTO_DSTOPTS); }
+    const Ip6Opt *getExt(uint8_t ext) const;
+
+    const Ip6Opt *
+    fragmentExt() const
+    {
+        return getExt(IP_PROTO_FRAGMENT);
+    }
+
+    const Ip6Opt *
+    rtTypeExt() const
+    {
+        return getExt(IP_PROTO_ROUTING);
+    }
+
+    const Ip6Opt *
+    dstOptExt() const
+    {
+        return getExt(IP_PROTO_DSTOPTS);
+    }
+
     uint8_t proto() const;
 
-    void plen(uint16_t _plen) { ip6_plen = htons(_plen); }
+    void
+    plen(uint16_t _plen)
+    {
+        ip6_plen = htons(_plen);
+    }
 
-    int size() const { return IP6_HDR_LEN + extensionLength(); }
-    const uint8_t *bytes() const { return (const uint8_t *)this; }
-    const uint8_t *payload() const { return bytes() + IP6_HDR_LEN
-                                            + extensionLength(); }
-    uint8_t *bytes() { return (uint8_t *)this; }
-    uint8_t *payload() { return bytes() + IP6_HDR_LEN
-                                + extensionLength(); }
+    int
+    size() const
+    {
+        return IP6_HDR_LEN + extensionLength();
+    }
+
+    const uint8_t *
+    bytes() const
+    {
+        return (const uint8_t *)this;
+    }
+
+    const uint8_t *
+    payload() const
+    {
+        return bytes() + IP6_HDR_LEN + extensionLength();
+    }
+
+    uint8_t *
+    bytes()
+    {
+        return (uint8_t *)this;
+    }
+
+    uint8_t *
+    payload()
+    {
+        return bytes() + IP6_HDR_LEN + extensionLength();
+    }
 };
 
 class Ip6Ptr
@@ -491,7 +948,8 @@ class Ip6Ptr
     EthPacketPtr p;
     bool eth_hdr_vlan;
 
-    void set(const EthPacketPtr &ptr)
+    void
+    set(const EthPacketPtr &ptr)
     {
         p = 0;
         eth_hdr_vlan = false;
@@ -511,44 +969,116 @@ class Ip6Ptr
      * @{
      */
     Ip6Ptr() : p(0), eth_hdr_vlan(false) {}
+
     Ip6Ptr(const EthPacketPtr &ptr) : p(0), eth_hdr_vlan(false) { set(ptr); }
+
     Ip6Ptr(const EthPtr &ptr) : p(0), eth_hdr_vlan(false) { set(ptr.p); }
-    Ip6Ptr(const Ip6Ptr &ptr) : p(ptr.p), eth_hdr_vlan(ptr.eth_hdr_vlan) { }
+
+    Ip6Ptr(const Ip6Ptr &ptr) : p(ptr.p), eth_hdr_vlan(ptr.eth_hdr_vlan) {}
+
     /** @} */ // end of api_inet
 
-    Ip6Hdr *get() { return (Ip6Hdr *)(p->data + sizeof(eth_hdr)
-                                      + ((eth_hdr_vlan) ? 4 : 0)); }
-    Ip6Hdr *operator->() { return get(); }
-    Ip6Hdr &operator*() { return *get(); }
+    Ip6Hdr *
+    get()
+    {
+        return (Ip6Hdr *)(p->data + sizeof(eth_hdr) +
+                          ((eth_hdr_vlan) ? 4 : 0));
+    }
 
-    const Ip6Hdr *get() const
-    { return (const Ip6Hdr *)(p->data + sizeof(eth_hdr)
-                              + ((eth_hdr_vlan) ? 4 : 0)); }
-    const Ip6Hdr *operator->() const { return get(); }
-    const Ip6Hdr &operator*() const { return *get(); }
+    Ip6Hdr *
+    operator->()
+    {
+        return get();
+    }
+
+    Ip6Hdr &
+    operator*()
+    {
+        return *get();
+    }
+
+    const Ip6Hdr *
+    get() const
+    {
+        return (const Ip6Hdr *)(p->data + sizeof(eth_hdr) +
+                                ((eth_hdr_vlan) ? 4 : 0));
+    }
+
+    const Ip6Hdr *
+    operator->() const
+    {
+        return get();
+    }
+
+    const Ip6Hdr &
+    operator*() const
+    {
+        return *get();
+    }
 
     /**
      * @ingroup api_inet
      * @{
      */
-    const Ip6Ptr &operator=(const EthPacketPtr &ptr)
-    { set(ptr); return *this; }
-    const Ip6Ptr &operator=(const EthPtr &ptr)
-    { set(ptr.p); return *this; }
-    const Ip6Ptr &operator=(const Ip6Ptr &ptr)
-    { p = ptr.p; return *this; }
+    const Ip6Ptr &
+    operator=(const EthPacketPtr &ptr)
+    {
+        set(ptr);
+        return *this;
+    }
+
+    const Ip6Ptr &
+    operator=(const EthPtr &ptr)
+    {
+        set(ptr.p);
+        return *this;
+    }
+
+    const Ip6Ptr &
+    operator=(const Ip6Ptr &ptr)
+    {
+        p = ptr.p;
+        return *this;
+    }
+
     /** @} */ // end of api_inet
 
     /**
      * @ingroup api_inet
      * @{
      */
-    const EthPacketPtr packet() const { return p; }
-    EthPacketPtr packet() { return p; }
-    bool operator!() const { return !p; }
+    const EthPacketPtr
+    packet() const
+    {
+        return p;
+    }
+
+    EthPacketPtr
+    packet()
+    {
+        return p;
+    }
+
+    bool
+    operator!() const
+    {
+        return !p;
+    }
+
     operator bool() const { return (p != nullptr); }
-    int off() const { return sizeof(eth_hdr) + ((eth_hdr_vlan) ? 4 : 0); }
-    int pstart() const { return off() + get()->size(); }
+
+    int
+    off() const
+    {
+        return sizeof(eth_hdr) + ((eth_hdr_vlan) ? 4 : 0);
+    }
+
+    int
+    pstart() const
+    {
+        return off() + get()->size();
+    }
+
     /** @} */ // end of api_inet
 };
 
@@ -580,6 +1110,7 @@ struct GEM5_PACKED ip6_opt_hdr
 {
     uint8_t ext_nxt;
     uint8_t ext_len;
+
     union
     {
         struct ip6_opt_fragment fragment;
@@ -590,56 +1121,189 @@ struct GEM5_PACKED ip6_opt_hdr
 
 struct Ip6Opt : public ip6_opt_hdr
 {
-    uint8_t nxt() const { return ext_nxt; }
-    uint8_t extlen() const { return ext_len; }
-    uint8_t len() const { return extlen() + 8; }
+    uint8_t
+    nxt() const
+    {
+        return ext_nxt;
+    }
+
+    uint8_t
+    extlen() const
+    {
+        return ext_len;
+    }
+
+    uint8_t
+    len() const
+    {
+        return extlen() + 8;
+    }
 
     // Supporting the types of header extensions likely to be encountered:
     // fragment, routing type 2 and dstopts.
 
     // Routing type 2
-    uint8_t  rtType2Type() const { return ext_data.rtType2.type; }
-    uint8_t  rtType2SegLft() const { return ext_data.rtType2.segleft; }
-    const uint8_t* rtType2Addr() const { return ext_data.rtType2.addr.data; }
+    uint8_t
+    rtType2Type() const
+    {
+        return ext_data.rtType2.type;
+    }
+
+    uint8_t
+    rtType2SegLft() const
+    {
+        return ext_data.rtType2.segleft;
+    }
+
+    const uint8_t *
+    rtType2Addr() const
+    {
+        return ext_data.rtType2.addr.data;
+    }
 
     // Fragment
-    uint16_t fragmentOfflg() const { return ntohs(ext_data.fragment.offlg); }
-    uint32_t fragmentIdent() const { return ntohl(ext_data.fragment.ident); }
+    uint16_t
+    fragmentOfflg() const
+    {
+        return ntohs(ext_data.fragment.offlg);
+    }
+
+    uint32_t
+    fragmentIdent() const
+    {
+        return ntohl(ext_data.fragment.ident);
+    }
 
     // Dst Options/Home Address Option
-    uint8_t dstOptType() const { return ext_data.dstOpts.type; }
-    uint8_t dstOptLength() const { return ext_data.dstOpts.length; }
-    const uint8_t* dstOptAddr() const { return ext_data.dstOpts.addr.data; }
-};
+    uint8_t
+    dstOptType() const
+    {
+        return ext_data.dstOpts.type;
+    }
 
+    uint8_t
+    dstOptLength() const
+    {
+        return ext_data.dstOpts.length;
+    }
+
+    const uint8_t *
+    dstOptAddr() const
+    {
+        return ext_data.dstOpts.addr.data;
+    }
+};
 
 /*
  * TCP Stuff
  */
 struct TcpOpt;
+
 struct TcpHdr : public tcp_hdr
 {
-    uint16_t sport() const { return ntohs(th_sport); }
-    uint16_t dport() const { return ntohs(th_dport); }
-    uint32_t seq() const { return ntohl(th_seq); }
-    uint32_t ack() const { return ntohl(th_ack); }
-    uint8_t  off() const { return th_off*4; }
-    uint8_t  flags() const { return th_flags & 0x3f; }
-    uint16_t win() const { return ntohs(th_win); }
-    uint16_t sum() const { return th_sum; }
-    uint16_t urp() const { return ntohs(th_urp); }
+    uint16_t
+    sport() const
+    {
+        return ntohs(th_sport);
+    }
 
-    void sum(uint16_t sum) { th_sum = sum; }
-    void seq(uint32_t _seq) { th_seq = htonl(_seq); }
-    void flags(uint8_t _flags) { th_flags  = _flags; }
+    uint16_t
+    dport() const
+    {
+        return ntohs(th_dport);
+    }
+
+    uint32_t
+    seq() const
+    {
+        return ntohl(th_seq);
+    }
+
+    uint32_t
+    ack() const
+    {
+        return ntohl(th_ack);
+    }
+
+    uint8_t
+    off() const
+    {
+        return th_off * 4;
+    }
+
+    uint8_t
+    flags() const
+    {
+        return th_flags & 0x3f;
+    }
+
+    uint16_t
+    win() const
+    {
+        return ntohs(th_win);
+    }
+
+    uint16_t
+    sum() const
+    {
+        return th_sum;
+    }
+
+    uint16_t
+    urp() const
+    {
+        return ntohs(th_urp);
+    }
+
+    void
+    sum(uint16_t sum)
+    {
+        th_sum = sum;
+    }
+
+    void
+    seq(uint32_t _seq)
+    {
+        th_seq = htonl(_seq);
+    }
+
+    void
+    flags(uint8_t _flags)
+    {
+        th_flags = _flags;
+    }
 
     bool options(std::vector<const TcpOpt *> &vec) const;
 
-    int size() const { return off(); }
-    const uint8_t *bytes() const { return (const uint8_t *)this; }
-    const uint8_t *payload() const { return bytes() + size(); }
-    uint8_t *bytes() { return (uint8_t *)this; }
-    uint8_t *payload() { return bytes() + size(); }
+    int
+    size() const
+    {
+        return off();
+    }
+
+    const uint8_t *
+    bytes() const
+    {
+        return (const uint8_t *)this;
+    }
+
+    const uint8_t *
+    payload() const
+    {
+        return bytes() + size();
+    }
+
+    uint8_t *
+    bytes()
+    {
+        return (uint8_t *)this;
+    }
+
+    uint8_t *
+    payload()
+    {
+        return bytes() + size();
+    }
 };
 
 class TcpPtr
@@ -648,15 +1312,24 @@ class TcpPtr
     EthPacketPtr p;
     int _off;
 
-    void set(const EthPacketPtr &ptr, int offset) { p = ptr; _off = offset; }
-    void set(const IpPtr &ptr)
+    void
+    set(const EthPacketPtr &ptr, int offset)
+    {
+        p = ptr;
+        _off = offset;
+    }
+
+    void
+    set(const IpPtr &ptr)
     {
         if (ptr && ptr->proto() == IP_PROTO_TCP)
             set(ptr.p, ptr.pstart());
         else
             set(0, 0);
     }
-    void set(const Ip6Ptr &ptr)
+
+    void
+    set(const Ip6Ptr &ptr)
     {
         if (ptr && ptr->proto() == IP_PROTO_TCP)
             set(ptr.p, ptr.pstart());
@@ -670,39 +1343,107 @@ class TcpPtr
      * @{
      */
     TcpPtr() : p(0), _off(0) {}
+
     TcpPtr(const IpPtr &ptr) : p(0), _off(0) { set(ptr); }
+
     TcpPtr(const Ip6Ptr &ptr) : p(0), _off(0) { set(ptr); }
+
     TcpPtr(const TcpPtr &ptr) : p(ptr.p), _off(ptr._off) {}
+
     /** @} */ // end of api_inet
 
-    TcpHdr *get() { return (TcpHdr *)(p->data + _off); }
-    TcpHdr *operator->() { return get(); }
-    TcpHdr &operator*() { return *get(); }
+    TcpHdr *
+    get()
+    {
+        return (TcpHdr *)(p->data + _off);
+    }
 
-    const TcpHdr *get() const { return (const TcpHdr *)(p->data + _off); }
-    const TcpHdr *operator->() const { return get(); }
-    const TcpHdr &operator*() const { return *get(); }
+    TcpHdr *
+    operator->()
+    {
+        return get();
+    }
+
+    TcpHdr &
+    operator*()
+    {
+        return *get();
+    }
+
+    const TcpHdr *
+    get() const
+    {
+        return (const TcpHdr *)(p->data + _off);
+    }
+
+    const TcpHdr *
+    operator->() const
+    {
+        return get();
+    }
+
+    const TcpHdr &
+    operator*() const
+    {
+        return *get();
+    }
 
     /**
      * @ingroup api_inet
      * @{
      */
-    const TcpPtr &operator=(const IpPtr &i)
-    { set(i); return *this; }
-    const TcpPtr &operator=(const TcpPtr &t)
-    { set(t.p, t._off); return *this; }
+    const TcpPtr &
+    operator=(const IpPtr &i)
+    {
+        set(i);
+        return *this;
+    }
+
+    const TcpPtr &
+    operator=(const TcpPtr &t)
+    {
+        set(t.p, t._off);
+        return *this;
+    }
+
     /** @} */ // end of api_inet
 
     /**
      * @ingroup api_inet
      * @{
      */
-    const EthPacketPtr packet() const { return p; }
-    EthPacketPtr packet() { return p; }
-    bool operator!() const { return !p; }
+    const EthPacketPtr
+    packet() const
+    {
+        return p;
+    }
+
+    EthPacketPtr
+    packet()
+    {
+        return p;
+    }
+
+    bool
+    operator!() const
+    {
+        return !p;
+    }
+
     operator bool() const { return (p != nullptr); }
-    int off() const { return _off; }
-    int pstart() const { return off() + get()->size(); }
+
+    int
+    off() const
+    {
+        return _off;
+    }
+
+    int
+    pstart() const
+    {
+        return off() + get()->size();
+    }
+
     /** @} */ // end of api_inet
 };
 
@@ -713,27 +1454,107 @@ uint16_t cksum(const TcpPtr &ptr);
 
 struct TcpOpt : public tcp_opt
 {
-    uint8_t type() const { return opt_type; }
-    uint8_t len() const { return TCP_OPT_TYPEONLY(type()) ? 1 : opt_len; }
+    uint8_t
+    type() const
+    {
+        return opt_type;
+    }
 
-    bool isopt(int opt) const { return type() == opt; }
+    uint8_t
+    len() const
+    {
+        return TCP_OPT_TYPEONLY(type()) ? 1 : opt_len;
+    }
 
-    const uint8_t *data() const { return opt_data.data8; }
+    bool
+    isopt(int opt) const
+    {
+        return type() == opt;
+    }
 
-    uint16_t mss() const { return ntohs(opt_data.mss); }
-    uint8_t wscale() const { return opt_data.wscale; }
-    uint32_t echo() const { return ntohl(opt_data.echo); }
-    uint32_t tsval() const { return ntohl(opt_data.timestamp[0]); }
-    uint32_t tsecr() const { return ntohl(opt_data.timestamp[1]); }
-    uint32_t cc() const { return ntohl(opt_data.cc); }
-    uint8_t cksum() const{ return opt_data.cksum; }
-    const uint8_t *md5() const { return opt_data.md5; }
+    const uint8_t *
+    data() const
+    {
+        return opt_data.data8;
+    }
 
-    int size() const { return len(); }
-    const uint8_t *bytes() const { return (const uint8_t *)this; }
-    const uint8_t *payload() const { return bytes() + size(); }
-    uint8_t *bytes() { return (uint8_t *)this; }
-    uint8_t *payload() { return bytes() + size(); }
+    uint16_t
+    mss() const
+    {
+        return ntohs(opt_data.mss);
+    }
+
+    uint8_t
+    wscale() const
+    {
+        return opt_data.wscale;
+    }
+
+    uint32_t
+    echo() const
+    {
+        return ntohl(opt_data.echo);
+    }
+
+    uint32_t
+    tsval() const
+    {
+        return ntohl(opt_data.timestamp[0]);
+    }
+
+    uint32_t
+    tsecr() const
+    {
+        return ntohl(opt_data.timestamp[1]);
+    }
+
+    uint32_t
+    cc() const
+    {
+        return ntohl(opt_data.cc);
+    }
+
+    uint8_t
+    cksum() const
+    {
+        return opt_data.cksum;
+    }
+
+    const uint8_t *
+    md5() const
+    {
+        return opt_data.md5;
+    }
+
+    int
+    size() const
+    {
+        return len();
+    }
+
+    const uint8_t *
+    bytes() const
+    {
+        return (const uint8_t *)this;
+    }
+
+    const uint8_t *
+    payload() const
+    {
+        return bytes() + size();
+    }
+
+    uint8_t *
+    bytes()
+    {
+        return (uint8_t *)this;
+    }
+
+    uint8_t *
+    payload()
+    {
+        return bytes() + size();
+    }
 };
 
 /*
@@ -741,19 +1562,71 @@ struct TcpOpt : public tcp_opt
  */
 struct UdpHdr : public udp_hdr
 {
-    uint16_t sport() const { return ntohs(uh_sport); }
-    uint16_t dport() const { return ntohs(uh_dport); }
-    uint16_t len() const { return ntohs(uh_ulen); }
-    uint16_t sum() const { return uh_sum; }
+    uint16_t
+    sport() const
+    {
+        return ntohs(uh_sport);
+    }
 
-    void sum(uint16_t sum) { uh_sum = sum; }
-    void len(uint16_t _len) { uh_ulen = htons(_len); }
+    uint16_t
+    dport() const
+    {
+        return ntohs(uh_dport);
+    }
 
-    int size() const { return sizeof(udp_hdr); }
-    const uint8_t *bytes() const { return (const uint8_t *)this; }
-    const uint8_t *payload() const { return bytes() + size(); }
-    uint8_t *bytes() { return (uint8_t *)this; }
-    uint8_t *payload() { return bytes() + size(); }
+    uint16_t
+    len() const
+    {
+        return ntohs(uh_ulen);
+    }
+
+    uint16_t
+    sum() const
+    {
+        return uh_sum;
+    }
+
+    void
+    sum(uint16_t sum)
+    {
+        uh_sum = sum;
+    }
+
+    void
+    len(uint16_t _len)
+    {
+        uh_ulen = htons(_len);
+    }
+
+    int
+    size() const
+    {
+        return sizeof(udp_hdr);
+    }
+
+    const uint8_t *
+    bytes() const
+    {
+        return (const uint8_t *)this;
+    }
+
+    const uint8_t *
+    payload() const
+    {
+        return bytes() + size();
+    }
+
+    uint8_t *
+    bytes()
+    {
+        return (uint8_t *)this;
+    }
+
+    uint8_t *
+    payload()
+    {
+        return bytes() + size();
+    }
 };
 
 class UdpPtr
@@ -762,15 +1635,24 @@ class UdpPtr
     EthPacketPtr p;
     int _off;
 
-    void set(const EthPacketPtr &ptr, int offset) { p = ptr; _off = offset; }
-    void set(const IpPtr &ptr)
+    void
+    set(const EthPacketPtr &ptr, int offset)
+    {
+        p = ptr;
+        _off = offset;
+    }
+
+    void
+    set(const IpPtr &ptr)
     {
         if (ptr && ptr->proto() == IP_PROTO_UDP)
             set(ptr.p, ptr.pstart());
         else
             set(0, 0);
     }
-    void set(const Ip6Ptr &ptr)
+
+    void
+    set(const Ip6Ptr &ptr)
     {
         if (ptr && ptr->proto() == IP_PROTO_UDP)
             set(ptr.p, ptr.pstart());
@@ -783,38 +1665,107 @@ class UdpPtr
      * @ingroup api_inet
      */
     UdpPtr() : p(0), _off(0) {}
+
     UdpPtr(const IpPtr &ptr) : p(0), _off(0) { set(ptr); }
+
     UdpPtr(const Ip6Ptr &ptr) : p(0), _off(0) { set(ptr); }
+
     UdpPtr(const UdpPtr &ptr) : p(ptr.p), _off(ptr._off) {}
+
     /** @} */ // end of api_inet
 
-    UdpHdr *get() { return (UdpHdr *)(p->data + _off); }
-    UdpHdr *operator->() { return get(); }
-    UdpHdr &operator*() { return *get(); }
+    UdpHdr *
+    get()
+    {
+        return (UdpHdr *)(p->data + _off);
+    }
 
-    const UdpHdr *get() const { return (const UdpHdr *)(p->data + _off); }
-    const UdpHdr *operator->() const { return get(); }
-    const UdpHdr &operator*() const { return *get(); }
+    UdpHdr *
+    operator->()
+    {
+        return get();
+    }
+
+    UdpHdr &
+    operator*()
+    {
+        return *get();
+    }
+
+    const UdpHdr *
+    get() const
+    {
+        return (const UdpHdr *)(p->data + _off);
+    }
+
+    const UdpHdr *
+    operator->() const
+    {
+        return get();
+    }
+
+    const UdpHdr &
+    operator*() const
+    {
+        return *get();
+    }
 
     /**
      * @ingroup api_inet
      * @{
      */
-    const UdpPtr &operator=(const IpPtr &i) { set(i); return *this; }
-    const UdpPtr &operator=(const UdpPtr &t)
-    { set(t.p, t._off); return *this; }
+    const UdpPtr &
+    operator=(const IpPtr &i)
+    {
+        set(i);
+        return *this;
+    }
+
+    const UdpPtr &
+    operator=(const UdpPtr &t)
+    {
+        set(t.p, t._off);
+        return *this;
+    }
+
     /** @} */ // end of api_inet
 
     /**
      * @ingroup api_inet
      * @{
      */
-    const EthPacketPtr packet() const { return p; }
-    EthPacketPtr packet() { return p; }
-    bool operator!() const { return !p; }
+    const EthPacketPtr
+    packet() const
+    {
+        return p;
+    }
+
+    EthPacketPtr
+    packet()
+    {
+        return p;
+    }
+
+    bool
+    operator!() const
+    {
+        return !p;
+    }
+
     operator bool() const { return (p != nullptr); }
-    int off() const { return _off; }
-    int pstart() const { return off() + get()->size(); }
+
+    int
+    off() const
+    {
+        return _off;
+    }
+
+    int
+    pstart() const
+    {
+        return off() + get()->size();
+    }
+
     /** @} */ // end of api_inet
 };
 

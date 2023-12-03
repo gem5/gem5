@@ -37,11 +37,8 @@ namespace gem5
 std::mutex BaseGlobalEvent::globalQMutex;
 
 BaseGlobalEvent::BaseGlobalEvent(Priority p, Flags f)
-    : barrier(numMainEventQueues),
-      barrierEvent(numMainEventQueues, NULL)
-{
-}
-
+    : barrier(numMainEventQueues), barrierEvent(numMainEventQueues, NULL)
+{}
 
 BaseGlobalEvent::~BaseGlobalEvent()
 {
@@ -52,8 +49,8 @@ BaseGlobalEvent::~BaseGlobalEvent()
     }
 }
 
-
-void BaseGlobalEvent::schedule(Tick when)
+void
+BaseGlobalEvent::schedule(Tick when)
 {
     // This function is scheduling a global event, which actually is a
     // set of local events, one event on each eventq. Global events need
@@ -84,7 +81,8 @@ void BaseGlobalEvent::schedule(Tick when)
     globalQMutex.unlock();
 }
 
-void BaseGlobalEvent::deschedule()
+void
+BaseGlobalEvent::deschedule()
 {
     EventQueue *q = curEventQueue();
     for (uint32_t i = 0; i < numMainEventQueues; ++i) {
@@ -97,7 +95,8 @@ void BaseGlobalEvent::deschedule()
     curEventQueue(q);
 }
 
-void BaseGlobalEvent::reschedule(Tick when)
+void
+BaseGlobalEvent::reschedule(Tick when)
 {
     // Read the comment in the schedule() function above.
     globalQMutex.lock();
@@ -125,7 +124,6 @@ BaseGlobalEvent::BarrierEvent::~BarrierEvent()
     }
 }
 
-
 void
 GlobalEvent::BarrierEvent::process()
 {
@@ -138,7 +136,6 @@ GlobalEvent::BarrierEvent::process()
     // to finish before continuing
     globalBarrier();
 }
-
 
 void
 GlobalSyncEvent::BarrierEvent::process()

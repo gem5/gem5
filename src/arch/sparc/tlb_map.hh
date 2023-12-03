@@ -42,7 +42,7 @@ namespace SparcISA
 class TlbMap
 {
   private:
-    typedef std::map<TlbRange, TlbEntry*> RangeMap;
+    typedef std::map<TlbRange, TlbEntry *> RangeMap;
     RangeMap tree;
 
   public:
@@ -59,7 +59,7 @@ class TlbMap
             if (r.real == i->first.real &&
                 r.partitionId == i->first.partitionId &&
                 i->first.va < r.va + r.size &&
-                i->first.va+i->first.size >= r.va &&
+                i->first.va + i->first.size >= r.va &&
                 (r.real || r.contextId == i->first.contextId))
                 return i;
             else
@@ -75,8 +75,8 @@ class TlbMap
             return tree.end();
         if (r.partitionId != i->first.partitionId)
             return tree.end();
-        if (i->first.va <= r.va+r.size &&
-            i->first.va+i->first.size >= r.va)
+        if (i->first.va <= r.va + r.size &&
+            i->first.va + i->first.size >= r.va)
             return i;
 
         return tree.end();
@@ -91,7 +91,6 @@ class TlbMap
             return true;
         return false;
     }
-
 
     iterator
     insert(TlbRange &r, TlbEntry *d)
@@ -117,7 +116,7 @@ class TlbMap
     void
     erase(iterator p, iterator q)
     {
-        tree.erase(p,q);
+        tree.erase(p, q);
     }
 
     void
@@ -156,13 +155,12 @@ class TlbMap
         iterator i;
         i = tree.begin();
         while (i != tree.end()) {
-           std::cout << std::hex << i->first.va << " " << i->first.size << " " <<
-                i->first.contextId << " " << i->first.partitionId << " " <<
-                i->first.real << " " << i->second << std::endl;
+            std::cout << std::hex << i->first.va << " " << i->first.size << " "
+                      << i->first.contextId << " " << i->first.partitionId
+                      << " " << i->first.real << " " << i->second << std::endl;
             i++;
         }
     }
-
 };
 
 } // namespace SparcISA

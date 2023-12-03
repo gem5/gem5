@@ -67,9 +67,9 @@ class LupioTMR : public BasicPioDevice
     {
         Event *tmrEvent = nullptr;
         uint64_t reload = 0;
-        bool ie = false;            // Control
+        bool ie = false; // Control
         bool pd = false;
-        bool expired = false;       // Status
+        bool expired = false; // Status
         Tick startTime = 0;
     };
 

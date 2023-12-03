@@ -48,8 +48,8 @@ std::string
 RegOp::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
-    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", " <<
-        registerName(srcRegIdx(0));
+    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", "
+       << registerName(srcRegIdx(0));
     if (_numSrcRegs >= 2)
         ss << ", " << registerName(srcRegIdx(1));
     if (_numSrcRegs >= 3)
@@ -79,8 +79,8 @@ SystemOp::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
 {
     if (strcmp(mnemonic, "fence_vma") == 0) {
         std::stringstream ss;
-        ss << mnemonic << ' ' << registerName(srcRegIdx(0)) << ", " <<
-            registerName(srcRegIdx(1));
+        ss << mnemonic << ' ' << registerName(srcRegIdx(0)) << ", "
+           << registerName(srcRegIdx(1));
         return ss.str();
     }
 

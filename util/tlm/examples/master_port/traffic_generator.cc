@@ -34,9 +34,9 @@
 #include "traffic_generator.hh"
 
 TrafficGenerator::TrafficGenerator(sc_core::sc_module_name name)
-  : sc_core::sc_module(name),
-    requestInProgress(0),
-    peq(this, &TrafficGenerator::peq_cb)
+    : sc_core::sc_module(name),
+      requestInProgress(0),
+      peq(this, &TrafficGenerator::peq_cb)
 {
     socket.register_nb_transport_bw(this, &TrafficGenerator::nb_transport_bw);
     SC_THREAD(process);
@@ -50,25 +50,24 @@ TrafficGenerator::process()
     unsigned const memSize = (1 << 10); // 512 MB
 
     while (true) {
-
-        wait(sc_core::sc_time((double)rnd.random(1,100), sc_core::SC_NS));
+        wait(sc_core::sc_time((double)rnd.random(1, 100), sc_core::SC_NS));
 
         auto trans = mm.allocate();
         trans->acquire();
 
         std::string cmdStr;
-        if (rnd.random(0,1)) // Generate a write request?
+        if (rnd.random(0, 1)) // Generate a write request?
         {
             cmdStr = "write";
             trans->set_command(tlm::TLM_WRITE_COMMAND);
-            dataBuffer = rnd.random(0,0xffff);
+            dataBuffer = rnd.random(0, 0xffff);
         } else {
             cmdStr = "read";
             trans->set_command(tlm::TLM_READ_COMMAND);
         }
 
-        trans->set_data_ptr(reinterpret_cast<unsigned char*>(&dataBuffer));
-        trans->set_address(rnd.random(0, (int)(memSize-1)));
+        trans->set_data_ptr(reinterpret_cast<unsigned char *>(&dataBuffer));
+        trans->set_address(rnd.random(0, (int)(memSize - 1)));
         trans->set_data_length(4);
         trans->set_streaming_width(4);
         trans->set_byte_enable_ptr(0);
@@ -104,8 +103,8 @@ TrafficGenerator::process()
 }
 
 void
-TrafficGenerator::peq_cb(tlm::tlm_generic_payload& trans,
-                         const tlm::tlm_phase& phase)
+TrafficGenerator::peq_cb(tlm::tlm_generic_payload &trans,
+                         const tlm::tlm_phase &phase)
 {
     if (phase == tlm::END_REQ ||
         (&trans == requestInProgress && phase == tlm::BEGIN_RESP)) {
@@ -131,7 +130,7 @@ TrafficGenerator::peq_cb(tlm::tlm_generic_payload& trans,
 }
 
 void
-TrafficGenerator::checkTransaction(tlm::tlm_generic_payload& trans)
+TrafficGenerator::checkTransaction(tlm::tlm_generic_payload &trans)
 {
     if (trans.is_response_error()) {
         std::stringstream ss;
@@ -142,9 +141,9 @@ TrafficGenerator::checkTransaction(tlm::tlm_generic_payload& trans)
 }
 
 tlm::tlm_sync_enum
-TrafficGenerator::nb_transport_bw(tlm::tlm_generic_payload& trans,
-                                  tlm::tlm_phase& phase,
-                                  sc_core::sc_time& delay)
+TrafficGenerator::nb_transport_bw(tlm::tlm_generic_payload &trans,
+                                  tlm::tlm_phase &phase,
+                                  sc_core::sc_time &delay)
 {
     trans.acquire();
     peq.notify(trans, phase, delay);

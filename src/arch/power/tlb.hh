@@ -45,7 +45,8 @@ namespace gem5
 
 class ThreadContext;
 
-namespace PowerISA {
+namespace PowerISA
+{
 
 // This is copied from the ARM ISA and has not been checked against the
 // Power at all.
@@ -53,12 +54,10 @@ struct TlbEntry
 {
     Addr _pageStart;
 
-    TlbEntry()
-    {
-    }
+    TlbEntry() {}
 
-    TlbEntry(Addr asn, Addr vaddr, Addr paddr,
-             bool uncacheable, bool read_only)
+    TlbEntry(Addr asn, Addr vaddr, Addr paddr, bool uncacheable,
+             bool read_only)
         : _pageStart(paddr)
     {
         if (uncacheable || read_only)
@@ -95,11 +94,11 @@ class TLB : public BaseTLB
 {
   protected:
     typedef std::multimap<Addr, int> PageTable;
-    PageTable lookupTable;      // Quick lookup into page table
+    PageTable lookupTable; // Quick lookup into page table
 
-    PowerISA::PTE *table;       // the Page Table
-    int size;                   // TLB Size
-    int nlu;                    // not last used entry (for replacement)
+    PowerISA::PTE *table; // the Page Table
+    int size;             // TLB Size
+    int nlu;              // not last used entry (for replacement)
 
     void
     nextnlu()
@@ -116,9 +115,11 @@ class TLB : public BaseTLB
     TLB(const Params &p);
     virtual ~TLB();
 
-    void takeOverFrom(BaseTLB *otlb) override {}
+    void
+    takeOverFrom(BaseTLB *otlb) override
+    {}
 
-    int probeEntry(Addr vpn,uint8_t) const;
+    int probeEntry(Addr vpn, uint8_t) const;
     PowerISA::PTE *getEntry(unsigned) const;
 
     int smallPages;
@@ -145,16 +146,15 @@ class TLB : public BaseTLB
     static Fault checkCacheability(const RequestPtr &req);
     Fault translateInst(const RequestPtr &req, ThreadContext *tc);
     Fault translateData(const RequestPtr &req, ThreadContext *tc, bool write);
-    Fault translateAtomic(
-        const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode) override;
-    void translateTiming(
-        const RequestPtr &req, ThreadContext *tc,
-        BaseMMU::Translation *translation, BaseMMU::Mode mode) override;
-    Fault translateFunctional(
-        const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode) override;
-    Fault finalizePhysical(
-        const RequestPtr &req,
-        ThreadContext *tc, BaseMMU::Mode mode) const override;
+    Fault translateAtomic(const RequestPtr &req, ThreadContext *tc,
+                          BaseMMU::Mode mode) override;
+    void translateTiming(const RequestPtr &req, ThreadContext *tc,
+                         BaseMMU::Translation *translation,
+                         BaseMMU::Mode mode) override;
+    Fault translateFunctional(const RequestPtr &req, ThreadContext *tc,
+                              BaseMMU::Mode mode) override;
+    Fault finalizePhysical(const RequestPtr &req, ThreadContext *tc,
+                           BaseMMU::Mode mode) const override;
 
     // Checkpointing
     void serialize(CheckpointOut &cp) const override;

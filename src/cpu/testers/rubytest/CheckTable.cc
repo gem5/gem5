@@ -38,8 +38,9 @@
 namespace gem5
 {
 
-CheckTable::CheckTable(int _num_writers, int _num_readers, RubyTester* _tester)
-    : m_num_writers(_num_writers), m_num_readers(_num_readers),
+CheckTable::CheckTable(int _num_writers, int _num_readers, RubyTester *_tester)
+    : m_num_writers(_num_writers),
+      m_num_readers(_num_readers),
       m_tester_ptr(_tester)
 {
     Addr physical = 0;
@@ -92,7 +93,7 @@ CheckTable::addCheck(Addr address)
     }
 
     for (int i = 0; i < CHECK_SIZE; i++) {
-        if (m_lookup_map.count(address+i)) {
+        if (m_lookup_map.count(address + i)) {
             // A mapping for this byte already existed, discard the
             // entire check
             return;
@@ -101,7 +102,7 @@ CheckTable::addCheck(Addr address)
 
     DPRINTF(RubyTest, "Adding check for address: %s\n", address);
 
-    Check* check_ptr = new Check(address, 100 + m_check_vector.size(),
+    Check *check_ptr = new Check(address, 100 + m_check_vector.size(),
                                  m_num_writers, m_num_readers, m_tester_ptr);
     for (int i = 0; i < CHECK_SIZE; i++) {
         // Insert it once per byte
@@ -110,14 +111,15 @@ CheckTable::addCheck(Addr address)
     m_check_vector.push_back(check_ptr);
 }
 
-Check*
+Check *
 CheckTable::getRandomCheck()
 {
     assert(m_check_vector.size() > 0);
-    return m_check_vector[random_mt.random<unsigned>(0, m_check_vector.size() - 1)];
+    return m_check_vector[random_mt.random<unsigned>(0, m_check_vector.size() -
+                                                            1)];
 }
 
-Check*
+Check *
 CheckTable::getCheck(const Addr address)
 {
     DPRINTF(RubyTest, "Looking for check by address: %s\n", address);
@@ -127,14 +129,13 @@ CheckTable::getCheck(const Addr address)
     if (i == m_lookup_map.end())
         return NULL;
 
-    Check* check = i->second;
+    Check *check = i->second;
     assert(check != NULL);
     return check;
 }
 
 void
-CheckTable::print(std::ostream& out) const
-{
-}
+CheckTable::print(std::ostream &out) const
+{}
 
 } // namespace gem5

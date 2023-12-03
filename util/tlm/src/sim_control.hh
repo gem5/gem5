@@ -59,7 +59,7 @@ namespace Gem5SystemC
 class Gem5SimControl : public Module, public Gem5SimControlInterface
 {
   protected:
-    gem5::CxxConfigManager* config_manager;
+    gem5::CxxConfigManager *config_manager;
     Gem5SystemC::Logger logger;
 
     gem5::Tick simulationEnd;
@@ -68,11 +68,11 @@ class Gem5SimControl : public Module, public Gem5SimControlInterface
      * Keep track of the slave and master ports that are created by gem5
      * according to the config file.
      */
-    std::map<const std::string, SCSlavePort*> slavePorts;
-    std::map<const std::string, SCMasterPort*> masterPorts;
+    std::map<const std::string, SCSlavePort *> slavePorts;
+    std::map<const std::string, SCMasterPort *> masterPorts;
 
     /// Pointer to a previously created instance.
-    static Gem5SimControl* instance;
+    static Gem5SimControl *instance;
 
     /** A callback that is called from the run thread before gem5 simulation is
      * started.
@@ -80,7 +80,9 @@ class Gem5SimControl : public Module, public Gem5SimControlInterface
      * A derived class may use this to perform any additional initializations
      * prior simulation.
      */
-    virtual void beforeSimulate() {}
+    virtual void
+    beforeSimulate()
+    {}
 
     /** A callback that is called from the run thread after gem5 simulation
      * completed.
@@ -88,7 +90,9 @@ class Gem5SimControl : public Module, public Gem5SimControlInterface
      * A derived class may use this to perform any additional tasks after gem5
      * exits. For instance, a derived class could use this to call sc_stop().
      */
-    virtual void afterSimulate() {}
+    virtual void
+    afterSimulate()
+    {}
 
   public:
     SC_HAS_PROCESS(Gem5SimControl);
@@ -106,21 +110,19 @@ class Gem5SimControl : public Module, public Gem5SimControlInterface
      * @param gem5DebugFlags a space separated list of gem5 debug flags to be
      *                       set, a prepended '-' clears the flag
      */
-    Gem5SimControl(sc_core::sc_module_name name,
-                   const std::string& configFile,
-                   uint64_t simulationEnd,
-                   const std::string& gem5DebugFlags);
+    Gem5SimControl(sc_core::sc_module_name name, const std::string &configFile,
+                   uint64_t simulationEnd, const std::string &gem5DebugFlags);
 
-    void registerSlavePort(const std::string& name, SCSlavePort* port);
-    void registerMasterPort(const std::string& name, SCMasterPort* port);
-    SCSlavePort* getSlavePort(const std::string& name) override;
-    SCMasterPort* getMasterPort(const std::string& name) override;
+    void registerSlavePort(const std::string &name, SCSlavePort *port);
+    void registerMasterPort(const std::string &name, SCMasterPort *port);
+    SCSlavePort *getSlavePort(const std::string &name) override;
+    SCMasterPort *getMasterPort(const std::string &name) override;
 
     void end_of_elaboration();
 
     void run();
 };
 
-}
+} // namespace Gem5SystemC
 
 #endif

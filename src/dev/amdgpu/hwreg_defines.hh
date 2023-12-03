@@ -32,6 +32,7 @@
 
 #ifndef __DEV_GPU_HWREG_DEFINES_H__
 #define __DEV_GPU_HWREG_DEFINES_H__
+
 /*
  * This enum is adapted from the offsets seen by LLVM:
  *

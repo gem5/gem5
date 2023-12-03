@@ -34,19 +34,23 @@
 #include "mem/packet_access.hh"
 #include "params/LupioTTY.hh"
 
-#define LUPIO_TTY_INVAL    0x80000000
+#define LUPIO_TTY_INVAL 0x80000000
 
 /* Same fields for CTRL and STAT registers */
-#define LUPIO_TTY_WBIT  (1 << 0)
-#define LUPIO_TTY_RBIT  (1 << 1)
+#define LUPIO_TTY_WBIT (1 << 0)
+#define LUPIO_TTY_RBIT (1 << 1)
 
 namespace gem5
 {
 
 LupioTTY::LupioTTY(const Params &params)
     : BasicPioDevice(params, params.pio_size),
-    writChar(-1), readChar(-1), writIntrEn(false), readIntrEn(false),
-    terminal(params.terminal), platform(params.platform)
+      writChar(-1),
+      readChar(-1),
+      writIntrEn(false),
+      readIntrEn(false),
+      terminal(params.terminal),
+      platform(params.platform)
 {
     // setup serial device callbacks
     terminal->regInterfaceCallback([this]() { dataAvailable(); });
@@ -57,8 +61,7 @@ LupioTTY::lupioTTYUpdateIRQ()
 {
     unsigned int irq;
 
-    irq = (writIntrEn && writChar != -1)
-        || (readIntrEn && readChar != -1);
+    irq = (writIntrEn && writChar != -1) || (readIntrEn && readChar != -1);
 
     if (irq) {
         DPRINTF(LupioTTY, "LupioTTY InterEvent, interrupting\n");
@@ -90,46 +93,45 @@ LupioTTY::lupioTTYRead(uint8_t addr)
     uint32_t ret = LUPIO_TTY_INVAL;
 
     switch (addr >> 2) {
-        case LUPIO_TTY_WRIT:
-            DPRINTF(LupioTTY, "Accessing LUPIO_TTY_WRIT\n");
-            if (writChar != -1) {
-                ret = writChar;
-                writChar = -1;
-                lupioTTYUpdateIRQ();
-            }
-            break;
-        case LUPIO_TTY_READ:
-            DPRINTF(LupioTTY, "Accessing LUPIO_TTY_READ\n");
-            if (readChar != -1) {
-                // return new character
-                ret = readChar;
-                readChar = -1;
-                lupioTTYUpdateIRQ();
-            }
-            break;
-        case LUPIO_TTY_CTRL:
-            DPRINTF(LupioTTY, "Accessing LUPIO_TTY_CTRL\n");
-            ret = 0;
-            if (writIntrEn) {
-                ret |= LUPIO_TTY_WBIT;
-            }
-            if (readIntrEn) {
-                ret |= LUPIO_TTY_RBIT;
-            }
-            break;
-        case LUPIO_TTY_STAT:
-            DPRINTF(LupioTTY, "Accessing LUPIO_TTY_STAT\n");
-            // always ready to write
-            ret = LUPIO_TTY_WBIT;
-            // ready to read if unread character available
-            if (readChar != -1) {
-                ret |= LUPIO_TTY_RBIT;
-            }
-            break;
-        default:
-            panic("Unexpected read to the LupioTTY device at address %d!",
-                    addr);
-            break;
+    case LUPIO_TTY_WRIT:
+        DPRINTF(LupioTTY, "Accessing LUPIO_TTY_WRIT\n");
+        if (writChar != -1) {
+            ret = writChar;
+            writChar = -1;
+            lupioTTYUpdateIRQ();
+        }
+        break;
+    case LUPIO_TTY_READ:
+        DPRINTF(LupioTTY, "Accessing LUPIO_TTY_READ\n");
+        if (readChar != -1) {
+            // return new character
+            ret = readChar;
+            readChar = -1;
+            lupioTTYUpdateIRQ();
+        }
+        break;
+    case LUPIO_TTY_CTRL:
+        DPRINTF(LupioTTY, "Accessing LUPIO_TTY_CTRL\n");
+        ret = 0;
+        if (writIntrEn) {
+            ret |= LUPIO_TTY_WBIT;
+        }
+        if (readIntrEn) {
+            ret |= LUPIO_TTY_RBIT;
+        }
+        break;
+    case LUPIO_TTY_STAT:
+        DPRINTF(LupioTTY, "Accessing LUPIO_TTY_STAT\n");
+        // always ready to write
+        ret = LUPIO_TTY_WBIT;
+        // ready to read if unread character available
+        if (readChar != -1) {
+            ret |= LUPIO_TTY_RBIT;
+        }
+        break;
+    default:
+        panic("Unexpected read to the LupioTTY device at address %d!", addr);
+        break;
     }
 
     return ret;
@@ -142,24 +144,23 @@ LupioTTY::lupioTTYWrite(uint8_t addr, uint64_t val64)
     uint8_t c = val;
 
     switch (addr >> 2) {
-        case LUPIO_TTY_WRIT:
-            DPRINTF(LupioTTY, "Accessing Write: LUPIO_TTY_WRIT: %d\n", c);
-            // write data to terminal
-            terminal->writeData(c);
-            writChar = c;
-            lupioTTYUpdateIRQ();
-            break;
-        case LUPIO_TTY_CTRL:
-            // set interrupt enable bits
-            DPRINTF(LupioTTY, "Accessing LUPIO_TTY_CTRL\n");
-            writIntrEn = val & LUPIO_TTY_WBIT;
-            readIntrEn = val & LUPIO_TTY_RBIT;
-            lupioTTYUpdateIRQ();
-            break;
-        default:
-            panic("Unexpected write to the LupioTTY device at address %d!",
-                    addr);
-            break;
+    case LUPIO_TTY_WRIT:
+        DPRINTF(LupioTTY, "Accessing Write: LUPIO_TTY_WRIT: %d\n", c);
+        // write data to terminal
+        terminal->writeData(c);
+        writChar = c;
+        lupioTTYUpdateIRQ();
+        break;
+    case LUPIO_TTY_CTRL:
+        // set interrupt enable bits
+        DPRINTF(LupioTTY, "Accessing LUPIO_TTY_CTRL\n");
+        writIntrEn = val & LUPIO_TTY_WBIT;
+        readIntrEn = val & LUPIO_TTY_RBIT;
+        lupioTTYUpdateIRQ();
+        break;
+    default:
+        panic("Unexpected write to the LupioTTY device at address %d!", addr);
+        break;
     }
 }
 
@@ -168,8 +169,8 @@ LupioTTY::read(PacketPtr pkt)
 {
     Addr tty_addr = pkt->getAddr() - pioAddr;
 
-    DPRINTF(LupioTTY,
-        "Read request - addr: %#x, size: %#x\n", tty_addr, pkt->getSize());
+    DPRINTF(LupioTTY, "Read request - addr: %#x, size: %#x\n", tty_addr,
+            pkt->getSize());
 
     uint64_t val = lupioTTYRead(tty_addr);
     pkt->setUintX(val, byteOrder);
@@ -183,9 +184,8 @@ Tick
 LupioTTY::write(PacketPtr pkt)
 {
     Addr tty_addr = pkt->getAddr() - pioAddr;
-    DPRINTF(LupioTTY,
-        "Write request - addr: %#x pktAddr: %#x value: %c\n", tty_addr,
-         pkt->getAddr(), pkt->getUintX(byteOrder));
+    DPRINTF(LupioTTY, "Write request - addr: %#x pktAddr: %#x value: %c\n",
+            tty_addr, pkt->getAddr(), pkt->getUintX(byteOrder));
 
     lupioTTYWrite(tty_addr, pkt->getUintX(byteOrder));
 

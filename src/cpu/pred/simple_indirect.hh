@@ -60,15 +60,13 @@ class SimpleIndirectPredictor : public IndirectPredictor
     /** Indirect predictor interface */
     void reset() override;
 
-    const PCStateBase * lookup(ThreadID tid, InstSeqNum sn,
-                                Addr pc, void * &iHistory) override;
-    void update(ThreadID tid, InstSeqNum sn, Addr pc, bool squash,
-                bool taken, const PCStateBase& target,
-                BranchType br_type, void * &iHistory) override;
-    void squash(ThreadID tid, InstSeqNum sn, void * &iHistory) override;
-    void commit(ThreadID tid, InstSeqNum sn, void * &iHistory) override;
-
-
+    const PCStateBase *lookup(ThreadID tid, InstSeqNum sn, Addr pc,
+                              void *&iHistory) override;
+    void update(ThreadID tid, InstSeqNum sn, Addr pc, bool squash, bool taken,
+                const PCStateBase &target, BranchType br_type,
+                void *&iHistory) override;
+    void squash(ThreadID tid, InstSeqNum sn, void *&iHistory) override;
+    void commit(ThreadID tid, InstSeqNum sn, void *&iHistory) override;
 
     /** ------------------
      * The actual predictor
@@ -94,13 +92,14 @@ class SimpleIndirectPredictor : public IndirectPredictor
 
     std::vector<std::vector<IPredEntry> > targetCache;
 
-
-
     struct HistoryEntry
     {
         HistoryEntry(Addr br_addr, Addr tgt_addr, InstSeqNum seq_num)
-            : pcAddr(br_addr), targetAddr(tgt_addr), seqNum(seq_num) { }
-        HistoryEntry() : pcAddr(0), targetAddr(0), seqNum(0) { }
+            : pcAddr(br_addr), targetAddr(tgt_addr), seqNum(seq_num)
+        {}
+
+        HistoryEntry() : pcAddr(0), targetAddr(0), seqNum(0) {}
+
         Addr pcAddr;
         Addr targetAddr;
         InstSeqNum seqNum;
@@ -125,9 +124,7 @@ class SimpleIndirectPredictor : public IndirectPredictor
         bool was_indirect;
 
         IndirectHistory()
-            : pcAddr(MaxAddr),
-              targetAddr(MaxAddr),
-              was_indirect(false)
+            : pcAddr(MaxAddr), targetAddr(MaxAddr), was_indirect(false)
         {}
     };
 
@@ -142,23 +139,24 @@ class SimpleIndirectPredictor : public IndirectPredictor
 
     std::vector<ThreadInfo> threadInfo;
 
-
     // ---- Internal functions ----- //
-    bool lookup(ThreadID tid, Addr br_addr,
-                PCStateBase * &target, IndirectHistory * &history);
-    void recordTarget(ThreadID tid, InstSeqNum sn,
-                      const PCStateBase& target, IndirectHistory * &history);
+    bool lookup(ThreadID tid, Addr br_addr, PCStateBase *&target,
+                IndirectHistory *&history);
+    void recordTarget(ThreadID tid, InstSeqNum sn, const PCStateBase &target,
+                      IndirectHistory *&history);
 
     // Helper functions to generate and modify the
     // direction info
-    void genIndirectInfo(ThreadID tid, void* &iHistory);
+    void genIndirectInfo(ThreadID tid, void *&iHistory);
     void updateDirectionInfo(ThreadID tid, bool taken, Addr pc, Addr target);
 
     // Helper to compute set and tag
     inline Addr getSetIndex(Addr br_addr, ThreadID tid);
     inline Addr getTag(Addr br_addr);
 
-    inline bool isIndirectNoReturn(BranchType type) {
+    inline bool
+    isIndirectNoReturn(BranchType type)
+    {
         return (type == BranchType::CallIndirect) ||
                (type == BranchType::IndirectUncond);
     }

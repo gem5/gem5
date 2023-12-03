@@ -28,17 +28,17 @@
 
 #include "mem/port_terminator.hh"
 
-namespace gem5 {
+namespace gem5
+{
 
-PortTerminator::PortTerminator(const PortTerminatorParams &params):
-    SimObject(params)
+PortTerminator::PortTerminator(const PortTerminatorParams &params)
+    : SimObject(params)
 {
     for (int i = 0; i < params.port_req_ports_connection_count; ++i) {
         reqPorts.emplace_back(name() + ".req_ports" + std::to_string(i));
     }
     for (int j = 0; j < params.port_resp_ports_connection_count; ++j) {
-        reqPorts.emplace_back(name() + ".resp_ports" +
-                                std::to_string(j));
+        reqPorts.emplace_back(name() + ".resp_ports" + std::to_string(j));
     }
 }
 
@@ -54,4 +54,4 @@ PortTerminator::getPort(const std::string &if_name, PortID idx)
     }
 }
 
-}
+} // namespace gem5

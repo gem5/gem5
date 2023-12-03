@@ -35,12 +35,12 @@
 namespace sc_core
 {
 
-sc_semaphore::sc_semaphore(int value) :
-    sc_semaphore(sc_gen_unique_name("semaphore"), value)
+sc_semaphore::sc_semaphore(int value)
+    : sc_semaphore(sc_gen_unique_name("semaphore"), value)
 {}
 
-sc_semaphore::sc_semaphore(const char *_name, int value) :
-        sc_interface(), sc_semaphore_if(), sc_object(_name), _value(value)
+sc_semaphore::sc_semaphore(const char *_name, int value)
+    : sc_interface(), sc_semaphore_if(), sc_object(_name), _value(value)
 {
     if (value < 0) {
         std::string msg = "semaphore '" + std::string(name()) + "'";
@@ -74,6 +74,10 @@ sc_semaphore::post()
     return 0;
 }
 
-int sc_semaphore::get_value() const { return _value; }
+int
+sc_semaphore::get_value() const
+{
+    return _value;
+}
 
 } // namespace sc_core

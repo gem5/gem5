@@ -42,8 +42,8 @@ namespace
 {
 
 void
-reportError(const char *id, const char *add_msg,
-        const char *name, const char *kind)
+reportError(const char *id, const char *add_msg, const char *name,
+            const char *kind)
 {
     std::string msg;
     if (add_msg)
@@ -54,18 +54,16 @@ reportError(const char *id, const char *add_msg,
     SC_REPORT_ERROR(id, msg.c_str());
 }
 
-}
+} // namespace
 
-sc_port_base::sc_port_base(const char *n, int max_size, sc_port_policy p) :
-    sc_object(n), _gem5Port(nullptr)
+sc_port_base::sc_port_base(const char *n, int max_size, sc_port_policy p)
+    : sc_object(n), _gem5Port(nullptr)
 {
     if (sc_is_running()) {
-        reportError(SC_ID_INSERT_PORT_, "simulation running",
-                name(), kind());
+        reportError(SC_ID_INSERT_PORT_, "simulation running", name(), kind());
     }
     if (::sc_gem5::scheduler.elaborationDone()) {
-        reportError(SC_ID_INSERT_PORT_, "elaboration done",
-                name(), kind());
+        reportError(SC_ID_INSERT_PORT_, "elaboration done", name(), kind());
     }
 
     auto m = sc_gem5::pickParentModule();
@@ -76,10 +74,7 @@ sc_port_base::sc_port_base(const char *n, int max_size, sc_port_policy p) :
     _gem5Port = new ::sc_gem5::Port(this, max_size);
 }
 
-sc_port_base::~sc_port_base()
-{
-    delete _gem5Port;
-}
+sc_port_base::~sc_port_base() { delete _gem5Port; }
 
 void
 sc_port_base::warn_port_constructor() const
@@ -87,8 +82,8 @@ sc_port_base::warn_port_constructor() const
     static bool warned = false;
     if (!warned) {
         SC_REPORT_INFO(SC_ID_IEEE_1666_DEPRECATION_,
-                "interface and/or port binding in port constructors "
-                "is deprecated");
+                       "interface and/or port binding in port constructors "
+                       "is deprecated");
         warned = true;
     }
 }
@@ -103,10 +98,28 @@ sc_port_base::report_error(const char *id, const char *add_msg) const
     SC_REPORT_ERROR(id, ss.str().c_str());
 }
 
-int sc_port_base::maxSize() const { return _gem5Port->maxSize(); }
-int sc_port_base::size() const { return _gem5Port->size(); }
+int
+sc_port_base::maxSize() const
+{
+    return _gem5Port->maxSize();
+}
 
-void sc_port_base::bind(sc_interface &i) { _gem5Port->bind(&i); }
-void sc_port_base::bind(sc_port_base &p) { _gem5Port->bind(&p); }
+int
+sc_port_base::size() const
+{
+    return _gem5Port->size();
+}
+
+void
+sc_port_base::bind(sc_interface &i)
+{
+    _gem5Port->bind(&i);
+}
+
+void
+sc_port_base::bind(sc_port_base &p)
+{
+    _gem5Port->bind(&p);
+}
 
 } // namespace sc_core

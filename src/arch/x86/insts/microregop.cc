@@ -50,13 +50,13 @@ namespace X86ISA
 {
 
 uint64_t
-RegOpBase::genFlags(uint64_t old_flags, uint64_t flag_mask,
-        uint64_t _dest, uint64_t _src1, uint64_t _src2, bool subtract) const
+RegOpBase::genFlags(uint64_t old_flags, uint64_t flag_mask, uint64_t _dest,
+                    uint64_t _src1, uint64_t _src2, bool subtract) const
 {
     DPRINTF(X86, "flag_mask = %#x\n", flag_mask);
     uint64_t flags = old_flags & ~flag_mask;
     if (flag_mask & (ECFBit | CFBit)) {
-        if (findCarry(dataSize*8, _dest, _src1, _src2))
+        if (findCarry(dataSize * 8, _dest, _src1, _src2))
             flags |= (flag_mask & (ECFBit | CFBit));
         if (subtract)
             flags ^= (flag_mask & (ECFBit | CFBit));

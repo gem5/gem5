@@ -40,47 +40,44 @@ namespace gem5
 namespace replacement_policy
 {
 
-FIFO::FIFO(const Params &p)
-  : Base(p)
-{
-}
+FIFO::FIFO(const Params &p) : Base(p) {}
 
 void
-FIFO::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
+FIFO::invalidate(const std::shared_ptr<ReplacementData> &replacement_data)
 {
     // Reset insertion tick
-    std::static_pointer_cast<FIFOReplData>(
-        replacement_data)->tickInserted = ++timeTicks;
+    std::static_pointer_cast<FIFOReplData>(replacement_data)->tickInserted =
+        ++timeTicks;
 }
 
 void
-FIFO::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
+FIFO::touch(const std::shared_ptr<ReplacementData> &replacement_data) const
 {
     // A touch does not modify the insertion tick
 }
 
 void
-FIFO::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
+FIFO::reset(const std::shared_ptr<ReplacementData> &replacement_data) const
 {
     // Set insertion tick
-    std::static_pointer_cast<FIFOReplData>(
-        replacement_data)->tickInserted = ++timeTicks;
+    std::static_pointer_cast<FIFOReplData>(replacement_data)->tickInserted =
+        ++timeTicks;
 }
 
-ReplaceableEntry*
-FIFO::getVictim(const ReplacementCandidates& candidates) const
+ReplaceableEntry *
+FIFO::getVictim(const ReplacementCandidates &candidates) const
 {
     // There must be at least one replacement candidate
     assert(candidates.size() > 0);
 
     // Visit all candidates to find victim
-    ReplaceableEntry* victim = candidates[0];
-    for (const auto& candidate : candidates) {
+    ReplaceableEntry *victim = candidates[0];
+    for (const auto &candidate : candidates) {
         // Update victim entry if necessary
-        if (std::static_pointer_cast<FIFOReplData>(
-                    candidate->replacementData)->tickInserted <
-                std::static_pointer_cast<FIFOReplData>(
-                    victim->replacementData)->tickInserted) {
+        if (std::static_pointer_cast<FIFOReplData>(candidate->replacementData)
+                ->tickInserted <
+            std::static_pointer_cast<FIFOReplData>(victim->replacementData)
+                ->tickInserted) {
             victim = candidate;
         }
     }

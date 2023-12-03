@@ -47,12 +47,22 @@ class ThreadContext;
 
 class BaseRemoteGDB
 {
-
   public:
+    bool
+    breakpoint()
+    {
+        return false;
+    }
 
-    bool breakpoint() { return false; }
-    void replaceThreadContext(ThreadContext *tc) {}
-    bool trap(ContextID id, int type) { return true; }
+    void
+    replaceThreadContext(ThreadContext *tc)
+    {}
+
+    bool
+    trap(ContextID id, int type)
+    {
+        return true;
+    }
 
     virtual ~BaseRemoteGDB() {}
 };

@@ -54,143 +54,147 @@ namespace prefetch
 
 class PIF : public Queued
 {
-    private:
-        /** Number of preceding and subsequent spatial addresses to compact */
-        const unsigned int precSize;
-        const unsigned int succSize;
-        /** Number of entries used for the temporal compactor */
-        const unsigned int maxCompactorEntries;
+  private:
+    /** Number of preceding and subsequent spatial addresses to compact */
+    const unsigned int precSize;
+    const unsigned int succSize;
+    /** Number of entries used for the temporal compactor */
+    const unsigned int maxCompactorEntries;
+
+    /**
+     * The compactor tracks retired instructions addresses, leveraging the
+     * spatial and temporal locality among instructions for compaction. It
+     *comprises the spatial and temporal compaction mechanisms.
+     *
+     * Taking advantage of the spatial locality across instruction blocks,
+     * the spatial compactor combines instruction-block addresses that fall
+     * within a 'spatial region', a group of adjacent instruction blocks.
+     * When an instruction outside the current spatial region retires, the
+     * existing spatial region is sent to the temporal compactor.
+     *
+     * The temporal compactor tracks a small number of the
+     * most-recently-observed spatial region records.
+     */
+    struct CompactorEntry
+    {
+        Addr trigger;
+        std::vector<bool> prec;
+        std::vector<bool> succ;
+
+        CompactorEntry() {}
+
+        CompactorEntry(Addr, unsigned int, unsigned int);
 
         /**
-         * The compactor tracks retired instructions addresses, leveraging the
-         * spatial and temporal locality among instructions for compaction. It
-         *comprises the spatial and temporal compaction mechanisms.
-         *
-         * Taking advantage of the spatial locality across instruction blocks,
-         * the spatial compactor combines instruction-block addresses that fall
-         * within a 'spatial region', a group of adjacent instruction blocks.
-         * When an instruction outside the current spatial region retires, the
-         * existing spatial region is sent to the temporal compactor.
-         *
-         * The temporal compactor tracks a small number of the
-         * most-recently-observed spatial region records.
+         * Checks if a given address is in the same defined spatial region
+         * as the compactor entry.
+         * @param addr Address to check if it's inside the spatial region
+         * @param log_blk_distance log_2(block size of the cache)
+         * @param update if true, set the corresponding succ/prec entry
+         * @return TRUE if they are in the same spatial region, FALSE
+         *   otherwise
          */
-        struct CompactorEntry
-        {
-            Addr trigger;
-            std::vector<bool> prec;
-            std::vector<bool> succ;
-            CompactorEntry() {}
-            CompactorEntry(Addr, unsigned int, unsigned int);
-
-            /**
-             * Checks if a given address is in the same defined spatial region
-             * as the compactor entry.
-             * @param addr Address to check if it's inside the spatial region
-             * @param log_blk_distance log_2(block size of the cache)
-             * @param update if true, set the corresponding succ/prec entry
-             * @return TRUE if they are in the same spatial region, FALSE
-             *   otherwise
-             */
-            bool inSameSpatialRegion(Addr addr, unsigned int log_blk_size,
-                                     bool update);
-            /**
-             * Checks if the provided address is contained in this spatial
-             * region and if its corresponding bit vector entry is set
-             * @param target address to check
-             * @param log_blk_distance log_2(block size of the cache)
-             * @return TRUE if target has its bit set
-             */
-            bool hasAddress(Addr target, unsigned int log_blk_size) const;
-
-            /**
-             * Fills the provided vector with the predicted addresses using the
-             * recorded bit vectors of the entry
-             * @param log_blk_distance log_2(block size of the cache)
-             * @param addresses reference to a vector to add the generated
-             * addresses
-             */
-            void getPredictedAddresses(unsigned int log_blk_size,
-                    std::vector<AddrPriority> &addresses) const;
-          private:
-            /**
-             * Computes the distance, in cache blocks, from an address to the
-             * trigger of the entry.
-             * @param addr address to compute the distance from the trigger
-             * @param log_blk_distance log_2(block size of the cache)
-             * @result distance in cache blocks from the address to the trigger
-             */
-            Addr distanceFromTrigger(Addr addr,
-                                     unsigned int log_blk_size) const;
-        };
-
-        CompactorEntry spatialCompactor;
-        std::deque<CompactorEntry> temporalCompactor;
+        bool inSameSpatialRegion(Addr addr, unsigned int log_blk_size,
+                                 bool update);
+        /**
+         * Checks if the provided address is contained in this spatial
+         * region and if its corresponding bit vector entry is set
+         * @param target address to check
+         * @param log_blk_distance log_2(block size of the cache)
+         * @return TRUE if target has its bit set
+         */
+        bool hasAddress(Addr target, unsigned int log_blk_size) const;
 
         /**
-         * History buffer is a circular buffer that stores the sequence of
-         * retired instructions in FIFO order.
+         * Fills the provided vector with the predicted addresses using the
+         * recorded bit vectors of the entry
+         * @param log_blk_distance log_2(block size of the cache)
+         * @param addresses reference to a vector to add the generated
+         * addresses
          */
-        using HistoryBuffer = CircularQueue<CompactorEntry>;
-        HistoryBuffer historyBuffer;
+        void getPredictedAddresses(unsigned int log_blk_size,
+                                   std::vector<AddrPriority> &addresses) const;
 
-        struct IndexEntry : public TaggedEntry
-        {
-            HistoryBuffer::iterator historyIt;
-        };
+      private:
         /**
-         * The index table is a small cache-like structure that facilitates
-         * fast search of the history buffer.
+         * Computes the distance, in cache blocks, from an address to the
+         * trigger of the entry.
+         * @param addr address to compute the distance from the trigger
+         * @param log_blk_distance log_2(block size of the cache)
+         * @result distance in cache blocks from the address to the trigger
          */
-        AssociativeSet<IndexEntry> index;
+        Addr distanceFromTrigger(Addr addr, unsigned int log_blk_size) const;
+    };
 
-        /**
-         * A Stream Address Buffer (SAB) tracks a window of consecutive
-         * spatial regions. The SAB mantains a pointer to the sequence in the
-         * history buffer, initiallly set to the pointer taken from the index
-         * table
-         */
-        CircularQueue<HistoryBuffer::iterator> streamAddressBuffer;
+    CompactorEntry spatialCompactor;
+    std::deque<CompactorEntry> temporalCompactor;
 
-        /**
-         * Updates the prefetcher structures upon an instruction retired
-         * @param pc PC of the instruction being retired
-         */
-        void notifyRetiredInst(const Addr pc);
+    /**
+     * History buffer is a circular buffer that stores the sequence of
+     * retired instructions in FIFO order.
+     */
+    using HistoryBuffer = CircularQueue<CompactorEntry>;
+    HistoryBuffer historyBuffer;
 
-        /**
-         * Probe Listener to handle probe events from the CPU
-         */
-        class PrefetchListenerPC : public ProbeListenerArgBase<Addr>
-        {
-          public:
-            PrefetchListenerPC(PIF &_parent, ProbeManager *pm,
-                             const std::string &name)
-                : ProbeListenerArgBase(pm, name),
-                  parent(_parent) {}
-            void notify(const Addr& pc) override;
-          protected:
-            PIF &parent;
-        };
+    struct IndexEntry : public TaggedEntry
+    {
+        HistoryBuffer::iterator historyIt;
+    };
 
-        /** Array of probe listeners */
-        std::vector<PrefetchListenerPC *> listenersPC;
+    /**
+     * The index table is a small cache-like structure that facilitates
+     * fast search of the history buffer.
+     */
+    AssociativeSet<IndexEntry> index;
 
+    /**
+     * A Stream Address Buffer (SAB) tracks a window of consecutive
+     * spatial regions. The SAB mantains a pointer to the sequence in the
+     * history buffer, initiallly set to the pointer taken from the index
+     * table
+     */
+    CircularQueue<HistoryBuffer::iterator> streamAddressBuffer;
 
-    public:
-        PIF(const PIFPrefetcherParams &p);
-        ~PIF() = default;
+    /**
+     * Updates the prefetcher structures upon an instruction retired
+     * @param pc PC of the instruction being retired
+     */
+    void notifyRetiredInst(const Addr pc);
 
-        void calculatePrefetch(const PrefetchInfo &pfi,
-                               std::vector<AddrPriority> &addresses,
-                               const CacheAccessor &cache);
+    /**
+     * Probe Listener to handle probe events from the CPU
+     */
+    class PrefetchListenerPC : public ProbeListenerArgBase<Addr>
+    {
+      public:
+        PrefetchListenerPC(PIF &_parent, ProbeManager *pm,
+                           const std::string &name)
+            : ProbeListenerArgBase(pm, name), parent(_parent)
+        {}
 
-        /**
-         * Add a SimObject and a probe name to monitor the retired instructions
-         * @param obj The SimObject pointer to listen from
-         * @param name The probe name
-         */
-        void addEventProbeRetiredInsts(SimObject *obj, const char *name);
+        void notify(const Addr &pc) override;
+
+      protected:
+        PIF &parent;
+    };
+
+    /** Array of probe listeners */
+    std::vector<PrefetchListenerPC *> listenersPC;
+
+  public:
+    PIF(const PIFPrefetcherParams &p);
+    ~PIF() = default;
+
+    void calculatePrefetch(const PrefetchInfo &pfi,
+                           std::vector<AddrPriority> &addresses,
+                           const CacheAccessor &cache);
+
+    /**
+     * Add a SimObject and a probe name to monitor the retired instructions
+     * @param obj The SimObject pointer to listen from
+     * @param name The probe name
+     */
+    void addEventProbeRetiredInsts(SimObject *obj, const char *name);
 };
 
 } // namespace prefetch

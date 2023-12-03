@@ -47,15 +47,17 @@ class FsWorkload : public Workload
 
   public:
     PARAMS(SparcFsWorkload);
+
     FsWorkload(const SparcFsWorkloadParams &params) : Workload(params) {}
+
     void initState() override;
 
     void
     setSystem(System *sys) override
     {
         Workload::setSystem(sys);
-        gdb = BaseRemoteGDB::build<RemoteGDB>(
-                params().remote_gdb_port, system);
+        gdb =
+            BaseRemoteGDB::build<RemoteGDB>(params().remote_gdb_port, system);
     }
 
     Addr
@@ -65,8 +67,18 @@ class FsWorkload : public Workload
         getREDVector(0x001, pc, npc);
         return pc;
     }
-    loader::Arch getArch() const override { return loader::SPARC64; }
-    ByteOrder byteOrder() const override { return ByteOrder::big; }
+
+    loader::Arch
+    getArch() const override
+    {
+        return loader::SPARC64;
+    }
+
+    ByteOrder
+    byteOrder() const override
+    {
+        return ByteOrder::big;
+    }
 
     const loader::SymbolTable &
     symtab(ThreadContext *tc) override

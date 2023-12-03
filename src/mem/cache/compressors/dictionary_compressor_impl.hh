@@ -47,10 +47,8 @@ namespace compression
 {
 
 template <class T>
-DictionaryCompressor<T>::CompData::CompData()
-    : CompressionData()
-{
-}
+DictionaryCompressor<T>::CompData::CompData() : CompressionData()
+{}
 
 template <class T>
 void
@@ -127,7 +125,7 @@ DictionaryCompressor<T>::compressValue(const T data)
 
 template <class T>
 std::unique_ptr<Base::CompressionData>
-DictionaryCompressor<T>::compress(const std::vector<Chunk>& chunks)
+DictionaryCompressor<T>::compress(const std::vector<Chunk> &chunks)
 {
     std::unique_ptr<Base::CompressionData> comp_data =
         instantiateDictionaryCompData();
@@ -136,11 +134,11 @@ DictionaryCompressor<T>::compress(const std::vector<Chunk>& chunks)
     resetDictionary();
 
     // Compress every value sequentially
-    CompData* const comp_data_ptr = static_cast<CompData*>(comp_data.get());
-    for (const auto& value : chunks) {
+    CompData *const comp_data_ptr = static_cast<CompData *>(comp_data.get());
+    for (const auto &value : chunks) {
         std::unique_ptr<Pattern> pattern = compressValue(value);
         DPRINTF(CacheComp, "Compressed %016x to %s\n", value,
-            pattern->print());
+                pattern->print());
         comp_data_ptr->addEntry(std::move(pattern));
     }
 
@@ -150,22 +148,21 @@ DictionaryCompressor<T>::compress(const std::vector<Chunk>& chunks)
 
 template <class T>
 std::unique_ptr<Base::CompressionData>
-DictionaryCompressor<T>::compress(const std::vector<Chunk>& chunks,
-    Cycles& comp_lat, Cycles& decomp_lat)
+DictionaryCompressor<T>::compress(const std::vector<Chunk> &chunks,
+                                  Cycles &comp_lat, Cycles &decomp_lat)
 {
     // Set latencies based on the degree of parallelization, and any extra
     // latencies due to shifting or packaging
-    comp_lat = Cycles(compExtraLatency +
-        (chunks.size() / compChunksPerCycle));
-    decomp_lat = Cycles(decompExtraLatency +
-        (chunks.size() / decompChunksPerCycle));
+    comp_lat = Cycles(compExtraLatency + (chunks.size() / compChunksPerCycle));
+    decomp_lat =
+        Cycles(decompExtraLatency + (chunks.size() / decompChunksPerCycle));
 
     return compress(chunks);
 }
 
 template <class T>
 T
-DictionaryCompressor<T>::decompressValue(const Pattern* pattern)
+DictionaryCompressor<T>::decompressValue(const Pattern *pattern)
 {
     // Search for matching entry
     auto entry_it = dictionary.begin();
@@ -184,30 +181,31 @@ DictionaryCompressor<T>::decompressValue(const Pattern* pattern)
 
 template <class T>
 void
-DictionaryCompressor<T>::decompress(const CompressionData* comp_data,
-    uint64_t* data)
+DictionaryCompressor<T>::decompress(const CompressionData *comp_data,
+                                    uint64_t *data)
 {
-    const CompData* casted_comp_data = static_cast<const CompData*>(comp_data);
+    const CompData *casted_comp_data =
+        static_cast<const CompData *>(comp_data);
 
     // Reset dictionary
     resetDictionary();
 
     // Decompress every entry sequentially
     std::vector<T> decomp_values;
-    for (const auto& entry : casted_comp_data->entries) {
+    for (const auto &entry : casted_comp_data->entries) {
         const T value = decompressValue(&*entry);
         decomp_values.push_back(value);
         DPRINTF(CacheComp, "Decompressed %s to %x\n", entry->print(), value);
     }
 
     // Concatenate the decompressed values to generate the original data
-    for (std::size_t i = 0; i < blkSize/8; i++) {
+    for (std::size_t i = 0; i < blkSize / 8; i++) {
         data[i] = 0;
-        const std::size_t values_per_entry = sizeof(uint64_t)/sizeof(T);
+        const std::size_t values_per_entry = sizeof(uint64_t) / sizeof(T);
         for (int j = values_per_entry - 1; j >= 0; j--) {
             data[i] |=
-                static_cast<uint64_t>(decomp_values[values_per_entry*i+j]) <<
-                (j*8*sizeof(T));
+                static_cast<uint64_t>(decomp_values[values_per_entry * i + j])
+                << (j * 8 * sizeof(T));
         }
     }
 }
@@ -226,7 +224,7 @@ DictionaryCompressor<T>::toDictionaryEntry(T value)
 
 template <class T>
 T
-DictionaryCompressor<T>::fromDictionaryEntry(const DictionaryEntry& entry)
+DictionaryCompressor<T>::fromDictionaryEntry(const DictionaryEntry &entry)
 {
     T value = 0;
     for (int i = sizeof(T) - 1; i >= 0; i--) {

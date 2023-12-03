@@ -133,7 +133,7 @@ TEST(PortDeathTest, TakeOverNoPort)
 {
 #ifdef NDEBUG
     GTEST_SKIP() << "Skipping as assertions are "
-        "stripped out of fast builds";
+                    "stripped out of fast builds";
 #endif
     TestPort port(0);
     ASSERT_DEATH(port.takeOverFrom(nullptr), "");
@@ -144,7 +144,7 @@ TEST(PortDeathTest, TakeOverDisconnected)
 {
 #ifdef NDEBUG
     GTEST_SKIP() << "Skipping as assertions are "
-        "stripped out of fast builds";
+                    "stripped out of fast builds";
 #endif
     TestPort port(0), port2(2);
     ASSERT_DEATH(port.takeOverFrom(&port2), "");
@@ -159,7 +159,7 @@ TEST(PortDeathTest, TakeOverConnected)
 {
 #ifdef NDEBUG
     GTEST_SKIP() << "Skipping as assertions are "
-        "stripped out of fast builds";
+                    "stripped out of fast builds";
 #endif
     TestPort port(0), port2(2);
     port.bind(port2);
@@ -175,7 +175,7 @@ TEST(PortDeathTest, TakeOverOneSided)
 {
 #ifdef NDEBUG
     GTEST_SKIP() << "Skipping as assertions are "
-        "stripped out of fast builds";
+                    "stripped out of fast builds";
 #endif
     TestPort port(0), port2(2), port3(6);
     port2.bind(port3);
@@ -209,7 +209,7 @@ TEST(PortTest, TakeOverOneSided)
  *
  * Before the take over the connections are: port2 <-> port3
  * After the take over the connections are: port <-> port3
-*/
+ */
 TEST(PortTest, TakeOver)
 {
     TestPort port(0), port2(2), port3(6);

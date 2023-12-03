@@ -73,7 +73,7 @@ PipeFDEntry::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(_closeOnExec);
     SERIALIZE_SCALAR(_flags);
-    //SERIALIZE_SCALAR(_pipeEndType);
+    // SERIALIZE_SCALAR(_pipeEndType);
 }
 
 void
@@ -81,14 +81,14 @@ PipeFDEntry::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(_closeOnExec);
     UNSERIALIZE_SCALAR(_flags);
-    //UNSERIALIZE_SCALAR(_pipeEndType);
+    // UNSERIALIZE_SCALAR(_pipeEndType);
 }
 
 void
 DeviceFDEntry::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(_closeOnExec);
-    //SERIALIZE_SCALAR(_driver);
+    // SERIALIZE_SCALAR(_driver);
     SERIALIZE_SCALAR(_fileName);
 }
 
@@ -96,7 +96,7 @@ void
 DeviceFDEntry::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(_closeOnExec);
-    //UNSERIALIZE_SCALAR(_driver);
+    // UNSERIALIZE_SCALAR(_driver);
     UNSERIALIZE_SCALAR(_fileName);
 }
 

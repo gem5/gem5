@@ -56,7 +56,6 @@ ChannelAddrRange::ChannelAddrRange(AddrRange ch_range, AddrRange range)
              "Only contiguous ranges can be mapped onto an interleaved range");
 }
 
-
 std::ostream &
 operator<<(std::ostream &out, const ChannelAddr &addr)
 {

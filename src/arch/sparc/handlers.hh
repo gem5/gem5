@@ -35,15 +35,15 @@
 namespace gem5
 {
 
-namespace SparcISA {
+namespace SparcISA
+{
 
 // We only use 19 instructions for the trap handlers, but there would be
 // space for 32 in a real SPARC trap table.
 const int numFillInsts = 32;
 const int numSpillInsts = 32;
 
-const MachInst fillHandler64[numFillInsts] =
-{
+const MachInst fillHandler64[numFillInsts] = {
     htobe<MachInst>(0x87802016), // wr %g0, ASI_AIUP, %asi
     htobe<MachInst>(0xe0dba7ff), // ldxa [%sp + BIAS + (0*8)] %asi, %l0
     htobe<MachInst>(0xe2dba807), // ldxa [%sp + BIAS + (1*8)] %asi, %l1
@@ -78,8 +78,7 @@ const MachInst fillHandler64[numFillInsts] =
     htobe<MachInst>(0x00000000)  // illtrap
 };
 
-const MachInst fillHandler32[numFillInsts] =
-{
+const MachInst fillHandler32[numFillInsts] = {
     htobe<MachInst>(0x87802016), // wr %g0, ASI_AIUP, %asi
     htobe<MachInst>(0xe083a000), // lduwa [%sp + (0*4)] %asi, %l0
     htobe<MachInst>(0xe283a004), // lduwa [%sp + (1*4)] %asi, %l1
@@ -114,8 +113,7 @@ const MachInst fillHandler32[numFillInsts] =
     htobe<MachInst>(0x00000000)  // illtrap
 };
 
-const MachInst spillHandler64[numSpillInsts] =
-{
+const MachInst spillHandler64[numSpillInsts] = {
     htobe<MachInst>(0x87802016), // wr %g0, ASI_AIUP, %asi
     htobe<MachInst>(0xe0f3a7ff), // stxa %l0, [%sp + BIAS + (0*8)] %asi
     htobe<MachInst>(0xe2f3a807), // stxa %l1, [%sp + BIAS + (1*8)] %asi
@@ -150,8 +148,7 @@ const MachInst spillHandler64[numSpillInsts] =
     htobe<MachInst>(0x00000000)  // illtrap
 };
 
-const MachInst spillHandler32[numSpillInsts] =
-{
+const MachInst spillHandler32[numSpillInsts] = {
     htobe<MachInst>(0x87802016), // wr %g0, ASI_AIUP, %asi
     htobe<MachInst>(0xe0a3a000), // stwa %l0, [%sp + (0*4)] %asi
     htobe<MachInst>(0xe2a3a004), // stwa %l1, [%sp + (1*4)] %asi

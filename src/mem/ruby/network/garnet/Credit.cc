@@ -57,7 +57,7 @@ Credit::serialize(int ser_id, int parts, uint32_t bWidth)
 {
     DPRINTF(RubyNetwork, "Serializing a credit\n");
     bool new_free = false;
-    if ((ser_id+1 == parts) && m_is_free_signal) {
+    if ((ser_id + 1 == parts) && m_is_free_signal) {
         new_free = true;
     }
     Credit *new_credit_flit = new Credit(m_vc, new_free, m_time);
@@ -67,8 +67,8 @@ Credit::serialize(int ser_id, int parts, uint32_t bWidth)
 flit *
 Credit::deserialize(int des_id, int num_flits, uint32_t bWidth)
 {
-    DPRINTF(RubyNetwork, "DeSerializing a credit vc:%d free:%d\n",
-    m_vc, m_is_free_signal);
+    DPRINTF(RubyNetwork, "DeSerializing a credit vc:%d free:%d\n", m_vc,
+            m_is_free_signal);
     if (m_is_free_signal) {
         // We are not going to get anymore credits for this vc
         // So send a credit in any case
@@ -79,7 +79,7 @@ Credit::deserialize(int des_id, int num_flits, uint32_t bWidth)
 }
 
 void
-Credit::print(std::ostream& out) const
+Credit::print(std::ostream &out) const
 {
     out << "[Credit:: ";
     out << "Type=" << m_type << " ";

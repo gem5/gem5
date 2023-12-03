@@ -56,7 +56,7 @@ class Decoder : public InstDecoder
     bool mid;
 
   protected:
-    //The extended machine instruction being generated
+    // The extended machine instruction being generated
     ExtMachInst emi;
     uint32_t machInst;
 
@@ -75,10 +75,14 @@ class Decoder : public InstDecoder
 
     void reset() override;
 
-    inline bool compressed(ExtMachInst inst) { return inst.quadRant < 0x3; }
+    inline bool
+    compressed(ExtMachInst inst)
+    {
+        return inst.quadRant < 0x3;
+    }
 
-    //Use this to give data to the decoder. This should be used
-    //when there is control flow.
+    // Use this to give data to the decoder. This should be used
+    // when there is control flow.
     void moreBytes(const PCStateBase &pc, Addr fetchPC) override;
 
     StaticInstPtr decode(PCStateBase &nextPC) override;

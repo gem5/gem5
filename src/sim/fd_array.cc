@@ -47,17 +47,18 @@
 namespace gem5
 {
 
-FDArray::FDArray(std::string const& input, std::string const& output,
-                 std::string const& errout)
-    :  _fdArray(), _input(input), _output(output), _errout(errout),
-      _imap {{"",       -1},
-             {"cin",    STDIN_FILENO},
-             {"stdin",  STDIN_FILENO}},
-      _oemap{{"",       -1},
-             {"cout",   STDOUT_FILENO},
-             {"stdout", STDOUT_FILENO},
-             {"cerr",   STDERR_FILENO},
-             {"stderr", STDERR_FILENO}}
+FDArray::FDArray(std::string const &input, std::string const &output,
+                 std::string const &errout)
+    : _fdArray(),
+      _input(input),
+      _output(output),
+      _errout(errout),
+      _imap{ { "", -1 }, { "cin", STDIN_FILENO }, { "stdin", STDIN_FILENO } },
+      _oemap{ { "", -1 },
+              { "cout", STDOUT_FILENO },
+              { "stdout", STDOUT_FILENO },
+              { "cerr", STDERR_FILENO },
+              { "stderr", STDERR_FILENO } }
 {
     int sim_fd;
     std::map<std::string, int>::iterator it;
@@ -102,7 +103,7 @@ FDArray::FDArray(std::string const& input, std::string const& output,
 void
 FDArray::updateFileOffsets()
 {
-    for (auto& fdp : _fdArray) {
+    for (auto &fdp : _fdArray) {
         /**
          * It only makes sense to check the offsets if the file descriptor
          * type is 'File' (which indicates that this file is backed by a
@@ -132,8 +133,7 @@ FDArray::restoreFileOffsets()
      * possible to guarantee that the simulation will proceed as it should
      * have in the same way that it would have proceeded sans checkpoints.
      */
-    auto seek = [] (std::shared_ptr<FileFDEntry> ffd)
-    {
+    auto seek = [](std::shared_ptr<FileFDEntry> ffd) {
         if (lseek(ffd->getSimFD(), ffd->getFileOffset(), SEEK_SET) < 0)
             fatal("Unable to seek to location in %s", ffd->getFileName());
     };
@@ -295,7 +295,7 @@ FDArray::allocFD(std::shared_ptr<FDEntry> in)
 }
 
 int
-FDArray::openFile(std::string const& filename, int flags, mode_t mode) const
+FDArray::openFile(std::string const &filename, int flags, mode_t mode) const
 {
     int sim_fd = open(filename.c_str(), flags, mode);
     if (sim_fd != -1)
@@ -304,16 +304,16 @@ FDArray::openFile(std::string const& filename, int flags, mode_t mode) const
 }
 
 int
-FDArray::openInputFile(std::string const& filename) const
+FDArray::openInputFile(std::string const &filename) const
 {
     return openFile(filename, O_RDONLY, 00);
 }
 
 int
-FDArray::openOutputFile(std::string const& filename) const
+FDArray::openOutputFile(std::string const &filename) const
 {
-    return openFile(simout.resolve(filename),
-                    O_WRONLY | O_CREAT | O_TRUNC, 0664);
+    return openFile(simout.resolve(filename), O_WRONLY | O_CREAT | O_TRUNC,
+                    0664);
 }
 
 std::shared_ptr<FDEntry>
@@ -352,7 +352,8 @@ FDArray::closeFDEntry(int tgt_fd)
 }
 
 void
-FDArray::serialize(CheckpointOut &cp) const {
+FDArray::serialize(CheckpointOut &cp) const
+{
     ScopedCheckpointSection sec(cp, "fdarray");
     paramOut(cp, "size", _fdArray.size());
     for (int tgt_fd = 0; tgt_fd < _fdArray.size(); tgt_fd++) {
@@ -368,16 +369,17 @@ FDArray::serialize(CheckpointOut &cp) const {
 }
 
 void
-FDArray::unserialize(CheckpointIn &cp, Process* process_ptr) {
+FDArray::unserialize(CheckpointIn &cp, Process *process_ptr)
+{
     ScopedCheckpointSection sec(cp, "fdarray");
     uint64_t size;
     paramIn(cp, "size", size);
     assert(_fdArray.size() == size &&
-            "FDArray sizes do not match at unserialize!");
+           "FDArray sizes do not match at unserialize!");
 
     for (int tgt_fd = 0; tgt_fd < _fdArray.size(); tgt_fd++) {
         if (tgt_fd == STDIN_FILENO || tgt_fd == STDOUT_FILENO ||
-                tgt_fd == STDERR_FILENO)
+            tgt_fd == STDERR_FILENO)
             continue;
         ScopedCheckpointSection sec(cp, csprintf("Entry%d", tgt_fd));
         FDEntry::FDClass fd_class;
@@ -385,30 +387,30 @@ FDArray::unserialize(CheckpointIn &cp, Process* process_ptr) {
         std::shared_ptr<FDEntry> fdep;
 
         switch (fd_class) {
-            case FDEntry::FDClass::fd_base:
-                panic("Abstract fd entry was serialized");
-                break;
-            case FDEntry::FDClass::fd_hb:
-                fdep = std::make_shared<HBFDEntry>(0, 0);
-                break;
-            case FDEntry::FDClass::fd_file:
-                fdep = std::make_shared<FileFDEntry>(0, 0, "", 0, 00);
-                break;
-            case FDEntry::FDClass::fd_device:
-                fdep = std::make_shared<DeviceFDEntry>(nullptr, "");
-                break;
-            case FDEntry::FDClass::fd_pipe:
-                fdep = std::make_shared<PipeFDEntry>(
-                        0, 0, PipeFDEntry::EndType::read);
-                break;
-            case FDEntry::FDClass::fd_socket:
-                fdep = std::make_shared<SocketFDEntry>(0, 0, 0, 0);
-                break;
-            case FDEntry::FDClass::fd_null:
-                continue;
-            default:
-                panic("Unrecognized fd class");
-                break;
+        case FDEntry::FDClass::fd_base:
+            panic("Abstract fd entry was serialized");
+            break;
+        case FDEntry::FDClass::fd_hb:
+            fdep = std::make_shared<HBFDEntry>(0, 0);
+            break;
+        case FDEntry::FDClass::fd_file:
+            fdep = std::make_shared<FileFDEntry>(0, 0, "", 0, 00);
+            break;
+        case FDEntry::FDClass::fd_device:
+            fdep = std::make_shared<DeviceFDEntry>(nullptr, "");
+            break;
+        case FDEntry::FDClass::fd_pipe:
+            fdep = std::make_shared<PipeFDEntry>(0, 0,
+                                                 PipeFDEntry::EndType::read);
+            break;
+        case FDEntry::FDClass::fd_socket:
+            fdep = std::make_shared<SocketFDEntry>(0, 0, 0, 0);
+            break;
+        case FDEntry::FDClass::fd_null:
+            continue;
+        default:
+            panic("Unrecognized fd class");
+            break;
         }
 
         fdep->unserialize(cp);
@@ -426,8 +428,7 @@ FDArray::unserialize(CheckpointIn &cp, Process* process_ptr) {
             // Check if it is needed to redirect the app path to another host
             // path
             path = process_ptr->checkPathRedirect(this_ffd->getFileName());
-        }
-        else {
+        } else {
             path = this_ffd->getFileName();
         }
 

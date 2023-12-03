@@ -58,14 +58,19 @@ class MinorActivityRecorder : public ActivityRecorder
 {
   public:
     /** Ticked interface */
-    void evaluate() { advance(); }
+    void
+    evaluate()
+    {
+        advance();
+    }
+
     void minorTrace() const;
 
   public:
     MinorActivityRecorder(const std::string &name, int num_stages,
-        int longest_latency) :
-        ActivityRecorder(name, num_stages, longest_latency, 0)
-    { }
+                          int longest_latency)
+        : ActivityRecorder(name, num_stages, longest_latency, 0)
+    {}
 };
 
 } // namespace minor

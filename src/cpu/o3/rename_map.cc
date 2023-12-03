@@ -53,10 +53,7 @@ namespace gem5
 namespace o3
 {
 
-SimpleRenameMap::SimpleRenameMap() : freeList(NULL)
-{
-}
-
+SimpleRenameMap::SimpleRenameMap() : freeList(NULL) {}
 
 void
 SimpleRenameMap::init(const RegClass &reg_class, SimpleFreeList *_freeList)
@@ -69,7 +66,7 @@ SimpleRenameMap::init(const RegClass &reg_class, SimpleFreeList *_freeList)
 }
 
 SimpleRenameMap::RenameInfo
-SimpleRenameMap::rename(const RegId& arch_reg)
+SimpleRenameMap::rename(const RegId &arch_reg)
 {
     PhysRegIdPtr renamed_reg;
     // Record the current physical register that is renamed to the
@@ -81,8 +78,8 @@ SimpleRenameMap::rename(const RegId& arch_reg)
         renamed_reg = prev_reg;
     } else if (prev_reg->getNumPinnedWrites() > 0) {
         // Do not rename if the register is pinned
-        assert(arch_reg.getNumPinnedWrites() == 0);  // Prevent pinning the
-                                                     // same register twice
+        assert(arch_reg.getNumPinnedWrites() == 0); // Prevent pinning the
+                                                    // same register twice
         DPRINTF(Rename, "Renaming pinned reg, numPinnedWrites %d\n",
                 prev_reg->getNumPinnedWrites());
         renamed_reg = prev_reg;
@@ -95,7 +92,8 @@ SimpleRenameMap::rename(const RegId& arch_reg)
             arch_reg.getNumPinnedWrites() + 1);
     }
 
-    DPRINTF(Rename, "Renamed reg %d to physical reg %d (%d) old mapping was"
+    DPRINTF(Rename,
+            "Renamed reg %d to physical reg %d (%d) old mapping was"
             " %d (%d)\n",
             arch_reg, renamed_reg->flatIndex(), renamed_reg->flatIndex(),
             prev_reg->flatIndex(), prev_reg->flatIndex());
@@ -103,12 +101,11 @@ SimpleRenameMap::rename(const RegId& arch_reg)
     return RenameInfo(renamed_reg, prev_reg);
 }
 
-
 /**** UnifiedRenameMap methods ****/
 
 void
 UnifiedRenameMap::init(const BaseISA::RegClasses &regClasses,
-        PhysRegFile *_regFile, UnifiedFreeList *freeList)
+                       PhysRegFile *_regFile, UnifiedFreeList *freeList)
 {
     regFile = _regFile;
 
@@ -121,7 +118,7 @@ UnifiedRenameMap::canRename(DynInstPtr inst) const
 {
     for (int i = 0; i < renameMaps.size(); i++) {
         if (inst->numDestRegs((RegClassType)i) >
-                renameMaps[i].numFreeEntries()) {
+            renameMaps[i].numFreeEntries()) {
             return false;
         }
     }

@@ -73,25 +73,24 @@ class OpDesc : public SimObject
     bool pipelined;
 
     OpDesc(const OpDescParams &p)
-        : SimObject(p), opClass(p.opClass), opLat(p.opLat),
-          pipelined(p.pipelined) {};
+        : SimObject(p),
+          opClass(p.opClass),
+          opLat(p.opLat),
+          pipelined(p.pipelined){};
 };
 
 class FUDesc : public SimObject
 {
   public:
     std::vector<OpDesc *> opDescList;
-    unsigned         number;
+    unsigned number;
 
     FUDesc(const FUDescParams &p)
-        : SimObject(p), opDescList(p.opList), number(p.count) {};
+        : SimObject(p), opDescList(p.opList), number(p.count){};
 };
 
 typedef std::vector<OpDesc *>::const_iterator OPDDiterator;
 typedef std::vector<FUDesc *>::const_iterator FUDDiterator;
-
-
-
 
 ////////////////////////////////////////////////////////////////////////////
 //

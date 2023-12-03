@@ -62,7 +62,11 @@ class GenericWatchdog : public PioDevice
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 
-    bool enabled() const { return controlStatus.enabled; }
+    bool
+    enabled() const
+    {
+        return controlStatus.enabled;
+    }
 
   protected:
     AddrRangeList getAddrRanges() const override;
@@ -88,16 +92,15 @@ class GenericWatchdog : public PioDevice
     class Listener : public SystemCounterListener
     {
       public:
-        explicit Listener(GenericWatchdog& _parent)
-          : parent(_parent)
-        {}
+        explicit Listener(GenericWatchdog &_parent) : parent(_parent) {}
 
-        void notify(void) override
+        void
+        notify(void) override
         {
             panic_if(parent.enabled(),
-                "The Generic Watchdog shall be disabled when "
-                "the System Counter is being updated, or "
-                "the results are unpredictable");
+                     "The Generic Watchdog shall be disabled when "
+                     "the System Counter is being updated, or "
+                     "the results are unpredictable");
         }
 
       protected:
@@ -112,22 +115,22 @@ class GenericWatchdog : public PioDevice
   private:
     enum class RefreshOffset : Addr
     {
-        WRR = 0x000, // Watchdog Refresh Register
+        WRR = 0x000,    // Watchdog Refresh Register
         W_IIDR = 0xfcc, // Watchdog Interface Identification Register
     };
 
     enum class ControlOffset : Addr
     {
-        WCS = 0x000, // Watchdog Control and Status Register
-        WOR = 0x008, // Watchdog Offset Register
+        WCS = 0x000,    // Watchdog Control and Status Register
+        WOR = 0x008,    // Watchdog Offset Register
         WCV_LO = 0x010, // Watchdog Compare Register [31:0]
         WCV_HI = 0x014, // Watchdog Compare Register [63:32]
         W_IIDR = 0xfcc, // Watchdog Interface Identification Register
     };
 
     BitUnion32(WCTRLS)
-        Bitfield<2> ws1; // Watchdog Signal 1 Status
-        Bitfield<1> ws0; // Watchdog Signal 0 Status
+        Bitfield<2> ws1;     // Watchdog Signal 1 Status
+        Bitfield<1> ws0;     // Watchdog Signal 0 Status
         Bitfield<0> enabled; // Watchdog Enable
     EndBitUnion(WCTRLS)
 
@@ -152,8 +155,8 @@ class GenericWatchdog : public PioDevice
     Listener cntListener;
 
     /** Watchdog Signals (IRQs) */
-    ArmInterruptPin * const ws0;
-    ArmInterruptPin * const ws1;
+    ArmInterruptPin *const ws0;
+    ArmInterruptPin *const ws1;
 };
 
 } // namespace gem5

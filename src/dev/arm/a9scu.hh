@@ -53,17 +53,17 @@ class A9SCU : public BasicPioDevice
   protected:
     enum
     {
-        Control     = 0x00,
-        Config      = 0x04,
+        Control = 0x00,
+        Config = 0x04,
     };
 
   public:
     typedef A9SCUParams Params;
 
     /**
-      * The constructor for RealView just registers itself with the MMU.
-      * @param p params structure
-      */
+     * The constructor for RealView just registers itself with the MMU.
+     * @param p params structure
+     */
     A9SCU(const Params &p);
 
     /**

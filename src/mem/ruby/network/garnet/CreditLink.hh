@@ -27,7 +27,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #ifndef __MEM_RUBY_NETWORK_GARNET_0_CREDITLINK_HH__
 #define __MEM_RUBY_NETWORK_GARNET_0_CREDITLINK_HH__
 
@@ -47,6 +46,7 @@ class CreditLink : public NetworkLink
 {
   public:
     typedef CreditLinkParams Params;
+
     CreditLink(const Params &p) : NetworkLink(p) {}
 };
 

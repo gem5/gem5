@@ -35,7 +35,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 /**
  * @file
  * Declaration of a wrapper for protobuf output streams and input streams.
@@ -57,9 +56,7 @@
  */
 class ProtoStream
 {
-
   protected:
-
     /// Use the ASCII characters gem5 as our magic number
     static const uint32_t magicNumber = 0x356d6567;
 
@@ -69,13 +66,12 @@ class ProtoStream
     ProtoStream() {}
 
   private:
-
     /**
      * Hide the copy constructor and assignment operator.
      * @{
      */
-    ProtoStream(const ProtoStream&);
-    ProtoStream& operator=(const ProtoStream&);
+    ProtoStream(const ProtoStream &);
+    ProtoStream &operator=(const ProtoStream &);
     /** @} */
 };
 
@@ -89,16 +85,14 @@ class ProtoStream
  */
 class ProtoOutputStream : public ProtoStream
 {
-
   public:
-
     /**
      * Create an output stream for a given file name. If the filename
      * ends with .gz then the file will be compressed accordinly.
      *
      * @param filename Path to the file to create or truncate
      */
-    ProtoOutputStream(const std::string& filename);
+    ProtoOutputStream(const std::string &filename);
 
     /**
      * Destruct the output stream, and also flush and close the
@@ -112,22 +106,20 @@ class ProtoOutputStream : public ProtoStream
      *
      * @param msg Message to write to the stream
      */
-    void write(const google::protobuf::Message& msg);
+    void write(const google::protobuf::Message &msg);
 
   private:
-
     /// Underlying file output stream
     std::ofstream fileStream;
 
     /// Zero Copy stream wrapping the STL output stream
-    google::protobuf::io::OstreamOutputStream* wrappedFileStream;
+    google::protobuf::io::OstreamOutputStream *wrappedFileStream;
 
     /// Optional Gzip stream to wrap the Zero Copy stream
-    google::protobuf::io::GzipOutputStream* gzipStream;
+    google::protobuf::io::GzipOutputStream *gzipStream;
 
     /// Top-level zero-copy stream, either with compression or not
-    google::protobuf::io::ZeroCopyOutputStream* zeroCopyStream;
-
+    google::protobuf::io::ZeroCopyOutputStream *zeroCopyStream;
 };
 
 /**
@@ -139,16 +131,14 @@ class ProtoOutputStream : public ProtoStream
  */
 class ProtoInputStream : public ProtoStream
 {
-
   public:
-
     /**
      * Create an input stream for a given file name. If the filename
      * ends with .gz then the file will be decompressed accordingly.
      *
      * @param filename Path to the file to read from
      */
-    ProtoInputStream(const std::string& filename);
+    ProtoInputStream(const std::string &filename);
 
     /**
      * Destruct the input stream, and also close the underlying file
@@ -162,7 +152,7 @@ class ProtoInputStream : public ProtoStream
      * @param msg Message read from the stream
      * @param return True if a message was read, false if reading fails
      */
-    bool read(google::protobuf::Message& msg);
+    bool read(google::protobuf::Message &msg);
 
     /**
      * Reset the input stream and seek to the beginning of the file.
@@ -170,7 +160,6 @@ class ProtoInputStream : public ProtoStream
     void reset();
 
   private:
-
     /**
      * Create the internal streams that are wrapping the input file.
      */
@@ -191,14 +180,13 @@ class ProtoInputStream : public ProtoStream
     bool useGzip;
 
     /// Zero Copy stream wrapping the STL input stream
-    google::protobuf::io::IstreamInputStream* wrappedFileStream;
+    google::protobuf::io::IstreamInputStream *wrappedFileStream;
 
     /// Optional Gzip stream to wrap the Zero Copy stream
-    google::protobuf::io::GzipInputStream* gzipStream;
+    google::protobuf::io::GzipInputStream *gzipStream;
 
     /// Top-level zero-copy stream, either with compression or not
-    google::protobuf::io::ZeroCopyInputStream* zeroCopyStream;
-
+    google::protobuf::io::ZeroCopyInputStream *zeroCopyStream;
 };
 
 #endif //__PROTO_PROTOIO_HH

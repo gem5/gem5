@@ -65,14 +65,26 @@ class GlobalSimLoopExitEvent : public GlobalEvent
                            Tick repeat = 0);
     GlobalSimLoopExitEvent(const std::string &_cause, int c, Tick repeat = 0);
 
-    const std::string getCause() const { return cause; }
-    int getCode() const { return code; }
+    const std::string
+    getCause() const
+    {
+        return cause;
+    }
 
-    virtual void process();// process event
-    virtual void clean(){};//cleaning event
-    ~GlobalSimLoopExitEvent (){
-      DPRINTF(Event,"GlobalSimLoopExitEvent destructed\n");
+    int
+    getCode() const
+    {
+        return code;
+    }
+
+    virtual void process(); // process event
+    virtual void clean(){}; // cleaning event
+
+    ~GlobalSimLoopExitEvent()
+    {
+        DPRINTF(Event, "GlobalSimLoopExitEvent destructed\n");
     };
+
     virtual const char *description() const;
 };
 
@@ -88,10 +100,19 @@ class LocalSimLoopExitEvent : public Event
     LocalSimLoopExitEvent();
     LocalSimLoopExitEvent(const std::string &_cause, int c, Tick repeat = 0);
 
-    const std::string getCause() const { return cause; }
-    int getCode() const { return code; }
+    const std::string
+    getCause() const
+    {
+        return cause;
+    }
 
-    void process() override;     // process event
+    int
+    getCode() const
+    {
+        return code;
+    }
+
+    void process() override; // process event
 
     const char *description() const override;
 
@@ -107,17 +128,17 @@ class LocalSimLoopExitEvent : public Event
 class CountedExitEvent : public Event
 {
   private:
-    std::string cause;  // string explaining why we're terminating
-    int &downCounter;   // decrement & terminate if zero
+    std::string cause; // string explaining why we're terminating
+    int &downCounter;  // decrement & terminate if zero
 
   public:
     CountedExitEvent(const std::string &_cause, int &_downCounter);
 
-    void process() override;     // process event
+    void process() override; // process event
 
     const char *description() const override;
 };
 
 } // namespace gem5
 
-#endif  // __SIM_SIM_EVENTS_HH__
+#endif // __SIM_SIM_EVENTS_HH__

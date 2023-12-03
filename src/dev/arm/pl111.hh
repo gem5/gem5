@@ -35,7 +35,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 /** @file
  * Implementiation of a PL111 CLCD controller
  */
@@ -58,47 +57,48 @@ namespace gem5
 
 class VncInput;
 
-class Pl111: public AmbaDmaDevice
+class Pl111 : public AmbaDmaDevice
 {
   protected:
-    static const uint64_t AMBA_ID       = 0xb105f00d00141111ULL;
+    static const uint64_t AMBA_ID = 0xb105f00d00141111ULL;
     /** ARM PL111 register map*/
-    static const int LcdTiming0       = 0x000;
-    static const int LcdTiming1       = 0x004;
-    static const int LcdTiming2       = 0x008;
-    static const int LcdTiming3       = 0x00C;
-    static const int LcdUpBase        = 0x010;
-    static const int LcdLpBase        = 0x014;
-    static const int LcdControl       = 0x018;
-    static const int LcdImsc          = 0x01C;
-    static const int LcdRis           = 0x020;
-    static const int LcdMis           = 0x024;
-    static const int LcdIcr           = 0x028;
-    static const int LcdUpCurr        = 0x02C;
-    static const int LcdLpCurr        = 0x030;
-    static const int LcdPalette       = 0x200;
-    static const int CrsrImage        = 0x800;
-    static const int ClcdCrsrCtrl     = 0xC00;
-    static const int ClcdCrsrConfig   = 0xC04;
+    static const int LcdTiming0 = 0x000;
+    static const int LcdTiming1 = 0x004;
+    static const int LcdTiming2 = 0x008;
+    static const int LcdTiming3 = 0x00C;
+    static const int LcdUpBase = 0x010;
+    static const int LcdLpBase = 0x014;
+    static const int LcdControl = 0x018;
+    static const int LcdImsc = 0x01C;
+    static const int LcdRis = 0x020;
+    static const int LcdMis = 0x024;
+    static const int LcdIcr = 0x028;
+    static const int LcdUpCurr = 0x02C;
+    static const int LcdLpCurr = 0x030;
+    static const int LcdPalette = 0x200;
+    static const int CrsrImage = 0x800;
+    static const int ClcdCrsrCtrl = 0xC00;
+    static const int ClcdCrsrConfig = 0xC04;
     static const int ClcdCrsrPalette0 = 0xC08;
     static const int ClcdCrsrPalette1 = 0xC0C;
-    static const int ClcdCrsrXY       = 0xC10;
-    static const int ClcdCrsrClip     = 0xC14;
-    static const int ClcdCrsrImsc     = 0xC20;
-    static const int ClcdCrsrIcr      = 0xC24;
-    static const int ClcdCrsrRis      = 0xC28;
-    static const int ClcdCrsrMis      = 0xC2C;
+    static const int ClcdCrsrXY = 0xC10;
+    static const int ClcdCrsrClip = 0xC14;
+    static const int ClcdCrsrImsc = 0xC20;
+    static const int ClcdCrsrIcr = 0xC24;
+    static const int ClcdCrsrRis = 0xC28;
+    static const int ClcdCrsrMis = 0xC2C;
 
-    static const int LcdPaletteSize   = 128;
-    static const int CrsrImageSize    = 256;
+    static const int LcdPaletteSize = 128;
+    static const int CrsrImageSize = 256;
 
-    static const int LcdMaxWidth      = 1024; // pixels per line
-    static const int LcdMaxHeight     = 768;  // lines per panel
+    static const int LcdMaxWidth = 1024; // pixels per line
+    static const int LcdMaxHeight = 768; // lines per panel
 
-    static const int dmaSize            = 8;    // 64 bits
-    static const int maxOutstandingDma  = 16;   // 16 deep FIFO of 64 bits
+    static const int dmaSize = 8;            // 64 bits
+    static const int maxOutstandingDma = 16; // 16 deep FIFO of 64 bits
 
-    static const int buffer_size = LcdMaxWidth * LcdMaxHeight * sizeof(uint32_t);
+    static const int buffer_size =
+        LcdMaxWidth * LcdMaxHeight * sizeof(uint32_t);
 
     enum LcdMode
     {
@@ -120,40 +120,40 @@ class Pl111: public AmbaDmaDevice
     EndBitUnion(InterruptReg)
 
     BitUnion32(TimingReg0)
-        Bitfield<7,2> ppl;
-        Bitfield<15,8> hsw;
-        Bitfield<23,16> hfp;
-        Bitfield<31,24> hbp;
+        Bitfield<7, 2> ppl;
+        Bitfield<15, 8> hsw;
+        Bitfield<23, 16> hfp;
+        Bitfield<31, 24> hbp;
     EndBitUnion(TimingReg0)
 
     BitUnion32(TimingReg1)
-        Bitfield<9,0> lpp;
-        Bitfield<15,10> vsw;
-        Bitfield<23,16> vfp;
-        Bitfield<31,24> vbp;
+        Bitfield<9, 0> lpp;
+        Bitfield<15, 10> vsw;
+        Bitfield<23, 16> vfp;
+        Bitfield<31, 24> vbp;
     EndBitUnion(TimingReg1)
 
     BitUnion32(TimingReg2)
-        Bitfield<4,0> pcdlo;
+        Bitfield<4, 0> pcdlo;
         Bitfield<5> clksel;
-        Bitfield<10,6> acb;
+        Bitfield<10, 6> acb;
         Bitfield<11> avs;
         Bitfield<12> ihs;
         Bitfield<13> ipc;
         Bitfield<14> ioe;
-        Bitfield<25,16> cpl;
+        Bitfield<25, 16> cpl;
         Bitfield<26> bcd;
-        Bitfield<31,27> pcdhi;
+        Bitfield<31, 27> pcdhi;
     EndBitUnion(TimingReg2)
 
     BitUnion32(TimingReg3)
-        Bitfield<6,0> led;
+        Bitfield<6, 0> led;
         Bitfield<16> lee;
     EndBitUnion(TimingReg3)
 
     BitUnion32(ControlReg)
         Bitfield<0> lcden;
-        Bitfield<3,1> lcdbpp;
+        Bitfield<3, 1> lcdbpp;
         Bitfield<4> lcdbw;
         Bitfield<5> lcdtft;
         Bitfield<6> lcdmono8;
@@ -162,7 +162,7 @@ class Pl111: public AmbaDmaDevice
         Bitfield<9> bebo;
         Bitfield<10> bepo;
         Bitfield<11> lcdpwr;
-        Bitfield<13,12> lcdvcomp;
+        Bitfield<13, 12> lcdvcomp;
         Bitfield<16> watermark;
     EndBitUnion(ControlReg)
 
@@ -178,15 +178,18 @@ class Pl111: public AmbaDmaDevice
         Pl111 &obj;
 
       public:
-        DmaDoneEvent(Pl111 *_obj)
-            : Event(), obj(*_obj) {}
+        DmaDoneEvent(Pl111 *_obj) : Event(), obj(*_obj) {}
 
-        void process() {
+        void
+        process()
+        {
             obj.dmaDoneEventFree.push_back(this);
             obj.dmaDone();
         }
 
-        const std::string name() const {
+        const std::string
+        name() const
+        {
             return obj.name() + ".DmaDoneEvent";
         }
     };
@@ -222,11 +225,13 @@ class Pl111: public AmbaDmaDevice
     InterruptReg lcdMis;
 
     /** 256x16-bit color palette registers
-     * 256 palette entries organized as 128 locations of two entries per word */
+     * 256 palette entries organized as 128 locations of two entries per word
+     */
     uint32_t lcdPalette[LcdPaletteSize];
 
     /** Cursor image RAM register
-     * 256-word wide values defining images overlaid by the hw cursor mechanism */
+     * 256-word wide values defining images overlaid by the hw cursor mechanism
+     */
     uint32_t cursorImage[CrsrImageSize];
 
     /** Cursor control register */

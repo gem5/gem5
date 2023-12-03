@@ -55,7 +55,7 @@
  * siginfo.h on x86, so we define it here as a workaround.
  */
 #ifndef sigev_notify_thread_id
-#define sigev_notify_thread_id     _sigev_un._tid
+#define sigev_notify_thread_id _sigev_un._tid
 #endif
 
 namespace gem5
@@ -76,10 +76,9 @@ sysGettid()
  */
 static const uint64_t MIN_HOST_CYCLES = 1000;
 
-PosixKvmTimer::PosixKvmTimer(int signo, clockid_t clockID,
-                             float hostFactor, Tick hostFreq)
-    : BaseKvmTimer(signo, hostFactor, hostFreq),
-      clockID(clockID)
+PosixKvmTimer::PosixKvmTimer(int signo, clockid_t clockID, float hostFactor,
+                             Tick hostFreq)
+    : BaseKvmTimer(signo, hostFactor, hostFreq), clockID(clockID)
 {
     struct sigevent sev;
 
@@ -94,10 +93,7 @@ PosixKvmTimer::PosixKvmTimer(int signo, clockid_t clockID,
     }
 }
 
-PosixKvmTimer::~PosixKvmTimer()
-{
-    timer_delete(timer);
-}
+PosixKvmTimer::~PosixKvmTimer() { timer_delete(timer); }
 
 void
 PosixKvmTimer::arm(Tick ticks)
@@ -112,8 +108,8 @@ PosixKvmTimer::arm(Tick ticks)
 
     assert(ts.it_value.tv_nsec > 0 || ts.it_value.tv_sec > 0);
 
-    DPRINTF(KvmTimer, "Arming POSIX timer: %i ticks (%is%ins)\n",
-            ticks, ts.it_value.tv_sec, ts.it_value.tv_nsec);
+    DPRINTF(KvmTimer, "Arming POSIX timer: %i ticks (%is%ins)\n", ticks,
+            ts.it_value.tv_sec, ts.it_value.tv_nsec);
 
     if (timer_settime(timer, 0, &ts, NULL) == -1)
         panic("PosixKvmTimer: Failed to arm timer\n");
@@ -129,8 +125,7 @@ PosixKvmTimer::disarm()
         panic("PosixKvmTimer: Failed to disarm timer\n");
 
     DPRINTF(KvmTimer, "Disarmed POSIX timer: %is%ins left\n",
-            prevTimerSpec.it_value.tv_sec,
-            prevTimerSpec.it_value.tv_nsec);
+            prevTimerSpec.it_value.tv_sec, prevTimerSpec.it_value.tv_nsec);
 }
 
 bool
@@ -167,18 +162,14 @@ PosixKvmTimer::calcResolution()
     return std::max(resolution, min_cycles);
 }
 
-
-PerfKvmTimer::PerfKvmTimer(PerfKvmCounter &ctr,
-                           int signo, float hostFactor, Tick hostFreq)
-    : BaseKvmTimer(signo, hostFactor, hostFreq),
-      hwOverflow(ctr)
+PerfKvmTimer::PerfKvmTimer(PerfKvmCounter &ctr, int signo, float hostFactor,
+                           Tick hostFreq)
+    : BaseKvmTimer(signo, hostFactor, hostFreq), hwOverflow(ctr)
 {
     hwOverflow.enableSignals(signo);
 }
 
-PerfKvmTimer::~PerfKvmTimer()
-{
-}
+PerfKvmTimer::~PerfKvmTimer() {}
 
 void
 PerfKvmTimer::arm(Tick ticks)

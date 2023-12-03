@@ -41,14 +41,13 @@
 namespace gem5
 {
 
-EtherSwitch::EtherSwitch(const Params &p)
-    : SimObject(p), ttl(p.time_to_live)
+EtherSwitch::EtherSwitch(const Params &p) : SimObject(p), ttl(p.time_to_live)
 {
     for (int i = 0; i < p.port_interface_connection_count; ++i) {
         std::string interfaceName = csprintf("%s.interface%d", name(), i);
-        Interface *interface = new Interface(interfaceName, this,
-                                        p.output_buffer_size, p.delay,
-                                        p.delay_var, p.fabric_speed, i);
+        Interface *interface =
+            new Interface(interfaceName, this, p.output_buffer_size, p.delay,
+                          p.delay_var, p.fabric_speed, i);
         interfaces.push_back(interface);
     }
 }
@@ -91,7 +90,8 @@ EtherSwitch::Interface::PortFifo::push(EthPacketPtr ptr, unsigned senderId)
 
     if (empty()) {
         warn("EtherSwitch: Packet length (%d) exceeds the maximum storage "
-             "capacity of port fifo (%d)", ptr->length, _maxsize);
+             "capacity of port fifo (%d)",
+             ptr->length, _maxsize);
     }
 
     // Return true if the newly pushed packet gets inserted
@@ -127,12 +127,15 @@ EtherSwitch::Interface::Interface(const std::string &name,
                                   EtherSwitch *etherSwitch,
                                   uint64_t outputBufferSize, Tick delay,
                                   Tick delay_var, double rate, unsigned id)
-    : EtherInt(name), ticksPerByte(rate), switchDelay(delay),
-      delayVar(delay_var), interfaceId(id), parent(etherSwitch),
+    : EtherInt(name),
+      ticksPerByte(rate),
+      switchDelay(delay),
+      delayVar(delay_var),
+      interfaceId(id),
+      parent(etherSwitch),
       outputFifo(name + ".outputFifo", outputBufferSize),
-      txEvent([this]{ transmit(); }, name)
-{
-}
+      txEvent([this] { transmit(); }, name)
+{}
 
 bool
 EtherSwitch::Interface::recvPacket(EthPacketPtr packet)
@@ -148,9 +151,11 @@ EtherSwitch::Interface::recvPacket(EthPacketPtr packet)
             if (it != this)
                 it->enqueue(packet, interfaceId);
     } else {
-        DPRINTF(Ethernet, "sending packet from MAC %x on port "
-                "%s to MAC %x on port %s\n", uint64_t(srcMacAddr),
-                this->name(), uint64_t(destMacAddr), receiver->name());
+        DPRINTF(Ethernet,
+                "sending packet from MAC %x on port "
+                "%s to MAC %x on port %s\n",
+                uint64_t(srcMacAddr), this->name(), uint64_t(destMacAddr),
+                receiver->name());
 
         receiver->enqueue(packet, interfaceId);
     }
@@ -201,22 +206,24 @@ EtherSwitch::Interface::transmit()
 Tick
 EtherSwitch::Interface::switchingDelay()
 {
-    Tick delay = (Tick)ceil(((double)outputFifo.front()->simLength
-                                     * ticksPerByte) + 1.0);
+    Tick delay = (Tick)ceil(
+        ((double)outputFifo.front()->simLength * ticksPerByte) + 1.0);
     if (delayVar != 0)
-                delay += random_mt.random<Tick>(0, delayVar);
+        delay += random_mt.random<Tick>(0, delayVar);
     delay += switchDelay;
     return delay;
 }
 
-EtherSwitch::Interface*
+EtherSwitch::Interface *
 EtherSwitch::Interface::lookupDestPort(networking::EthAddr destMacAddr)
 {
     auto it = parent->forwardingTable.find(uint64_t(destMacAddr));
 
     if (it == parent->forwardingTable.end()) {
-        DPRINTF(Ethernet, "no entry in forwaring table for MAC: "
-                "%x\n", uint64_t(destMacAddr));
+        DPRINTF(Ethernet,
+                "no entry in forwaring table for MAC: "
+                "%x\n",
+                uint64_t(destMacAddr));
         return nullptr;
     }
 
@@ -235,7 +242,7 @@ EtherSwitch::Interface::lookupDestPort(networking::EthAddr destMacAddr)
 
 void
 EtherSwitch::Interface::learnSenderAddr(networking::EthAddr srcMacAddr,
-                                          Interface *sender)
+                                        Interface *sender)
 {
     // learn the port for the sending MAC address
     auto it = parent->forwardingTable.find(uint64_t(srcMacAddr));
@@ -243,14 +250,15 @@ EtherSwitch::Interface::learnSenderAddr(networking::EthAddr srcMacAddr,
     // if the port for sender's MAC address is not cached,
     // cache it now, otherwise just update lastUseTime time
     if (it == parent->forwardingTable.end()) {
-        DPRINTF(Ethernet, "adding forwarding table entry for MAC "
-                " address %x on port %s\n", uint64_t(srcMacAddr),
-                sender->name());
+        DPRINTF(Ethernet,
+                "adding forwarding table entry for MAC "
+                " address %x on port %s\n",
+                uint64_t(srcMacAddr), sender->name());
         EtherSwitch::SwitchTableEntry forwardingTableEntry;
         forwardingTableEntry.interface = sender;
         forwardingTableEntry.lastUseTime = curTick();
-        parent->forwardingTable.insert(std::make_pair(uint64_t(srcMacAddr),
-            forwardingTableEntry));
+        parent->forwardingTable.insert(
+            std::make_pair(uint64_t(srcMacAddr), forwardingTableEntry));
     } else {
         it->second.lastUseTime = curTick();
     }
@@ -261,7 +269,6 @@ EtherSwitch::serialize(CheckpointOut &cp) const
 {
     for (auto it : interfaces)
         it->serializeSection(cp, it->name());
-
 }
 
 void
@@ -269,7 +276,6 @@ EtherSwitch::unserialize(CheckpointIn &cp)
 {
     for (auto it : interfaces)
         it->unserializeSection(cp, it->name());
-
 }
 
 void
@@ -344,7 +350,6 @@ EtherSwitch::Interface::PortFifo::unserialize(CheckpointIn &cp)
         entry.unserializeSection(cp, csprintf("entry%d", i));
 
         fifo.insert(entry);
-
     }
 }
 

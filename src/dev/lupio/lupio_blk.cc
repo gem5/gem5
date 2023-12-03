@@ -34,33 +34,33 @@
 #include "params/LupioBLK.hh"
 
 /* Shared fields for CTRL and STAT registers */
-#define LUPIO_BLK_TYPE  0x2
+#define LUPIO_BLK_TYPE 0x2
 
 /* Specific fields for CTRL */
-#define LUPIO_BLK_IRQE  0x1
+#define LUPIO_BLK_IRQE 0x1
 
 /* Specific fields for STAT */
-#define LUPIO_BLK_BUSY  0x1
-#define LUPIO_BLK_ERRR  0x4
+#define LUPIO_BLK_BUSY 0x1
+#define LUPIO_BLK_ERRR 0x4
 
 /* Fixed sector size of 512 bytes */
-#define SECTOR_BITS   9
-#define SECTOR_SIZE   (1ULL << SECTOR_BITS)
+#define SECTOR_BITS 9
+#define SECTOR_SIZE (1ULL << SECTOR_BITS)
 
 namespace gem5
 {
 
-LupioBLK::LupioBLK(const Params &params) :
-    DmaDevice(params),
-    platform(params.platform),
-    dmaEvent([this]{ dmaEventDone(); }, name()),
-    pioAddr(params.pio_addr),
-    pioSize(params.pio_size),
-    image(*params.image),
-    lupioBLKIntID(params.int_id)
+LupioBLK::LupioBLK(const Params &params)
+    : DmaDevice(params),
+      platform(params.platform),
+      dmaEvent([this] { dmaEventDone(); }, name()),
+      pioAddr(params.pio_addr),
+      pioSize(params.pio_size),
+      image(*params.image),
+      lupioBLKIntID(params.int_id)
 {
     static_assert(SECTOR_SIZE == SectorSize, "Sector size of disk image must"
-                    " match LupIO device\n");
+                                             " match LupIO device\n");
     nbBlocks = image.size();
     gem5_assert(isPowerOf2(nbBlocks));
     gem5_assert(ceilLog2(nbBlocks) <= 32, "Max number of blocks is 2^32\n");
@@ -90,42 +90,43 @@ LupioBLK::lupioBLKRead(const uint8_t addr)
     uint64_t r = 0;
 
     switch (addr >> 2) {
-        case LUPIO_BLK_CONF:
-            r = SECTOR_BITS << 16               // log2(512B / block)
-                | floorLog2(nbBlocks);
-            DPRINTF(LupioBLK, "Read LUPIO_BLK_CONF: %d\n", r);
-            break;
-        case LUPIO_BLK_NBLK:
-            r = nblk;
-            DPRINTF(LupioBLK, "Read LUPIO_BLK_NBLK: %d\n", r);
-            break;
-        case LUPIO_BLK_BLKA:
-            r = lba;
-            DPRINTF(LupioBLK, "Read LUPIO_BLK_BLKA: %d\n", r);
-            break;
-        case LUPIO_BLK_MEMA:
-            r = mem;
-            DPRINTF(LupioBLK, "Read LUPIO_BLK_MEMA: %d\n", r);
-            break;
+    case LUPIO_BLK_CONF:
+        r = SECTOR_BITS << 16 // log2(512B / block)
+            | floorLog2(nbBlocks);
+        DPRINTF(LupioBLK, "Read LUPIO_BLK_CONF: %d\n", r);
+        break;
+    case LUPIO_BLK_NBLK:
+        r = nblk;
+        DPRINTF(LupioBLK, "Read LUPIO_BLK_NBLK: %d\n", r);
+        break;
+    case LUPIO_BLK_BLKA:
+        r = lba;
+        DPRINTF(LupioBLK, "Read LUPIO_BLK_BLKA: %d\n", r);
+        break;
+    case LUPIO_BLK_MEMA:
+        r = mem;
+        DPRINTF(LupioBLK, "Read LUPIO_BLK_MEMA: %d\n", r);
+        break;
 
-        case LUPIO_BLK_STAT:
-            r = busy;
-            if (writeOp) {
-                r |= LUPIO_BLK_TYPE;    // Write command
-            }
-            if (err) {
-                r |= LUPIO_BLK_ERRR;    // Error
-            }
-            DPRINTF(LupioBLK, "Read LUPIO_BLK_STAT: %d\n", r);
+    case LUPIO_BLK_STAT:
+        r = busy;
+        if (writeOp) {
+            r |= LUPIO_BLK_TYPE; // Write command
+        }
+        if (err) {
+            r |= LUPIO_BLK_ERRR; // Error
+        }
+        DPRINTF(LupioBLK, "Read LUPIO_BLK_STAT: %d\n", r);
 
-            // Acknowledge IRQ
-            platform->clearPciInt(lupioBLKIntID);
-            break;
+        // Acknowledge IRQ
+        platform->clearPciInt(lupioBLKIntID);
+        break;
 
-        default:
-            panic("Unexpected read to the LupioBLK device at address"
-                   " %#llx!\n", addr);
-            break;
+    default:
+        panic("Unexpected read to the LupioBLK device at address"
+              " %#llx!\n",
+              addr);
+        break;
     }
     return r;
 }
@@ -136,35 +137,36 @@ LupioBLK::lupioBLKWrite(const uint8_t addr, uint64_t val64)
     uint32_t val = val64;
 
     switch (addr >> 2) {
-        case LUPIO_BLK_NBLK:
-            nblk = val;
-            DPRINTF(LupioBLK, "Write LUPIO_BLK_NBLK: %d\n", nblk);
-            break;
-        case LUPIO_BLK_BLKA:
-            lba = val;
-            DPRINTF(LupioBLK, "Write LUPIO_BLK_BLKA: %d\n", lba);
-            break;
-        case LUPIO_BLK_MEMA:
-            mem = val;
-            DPRINTF(LupioBLK, "Write LUPIO_BLK_MEMA: %d\n", mem);
-            break;
+    case LUPIO_BLK_NBLK:
+        nblk = val;
+        DPRINTF(LupioBLK, "Write LUPIO_BLK_NBLK: %d\n", nblk);
+        break;
+    case LUPIO_BLK_BLKA:
+        lba = val;
+        DPRINTF(LupioBLK, "Write LUPIO_BLK_BLKA: %d\n", lba);
+        break;
+    case LUPIO_BLK_MEMA:
+        mem = val;
+        DPRINTF(LupioBLK, "Write LUPIO_BLK_MEMA: %d\n", mem);
+        break;
 
-        case LUPIO_BLK_CTRL:
-            // Perform command
-            if (!busy) {
-                err = false;
-                writeOp = val & LUPIO_BLK_TYPE;
-                lupioBLKCmd();
-            } else {
-                panic("Attempting to write to LupioBLK device while transfer"
-                        " is ongoing!\n");
-            }
-            break;
+    case LUPIO_BLK_CTRL:
+        // Perform command
+        if (!busy) {
+            err = false;
+            writeOp = val & LUPIO_BLK_TYPE;
+            lupioBLKCmd();
+        } else {
+            panic("Attempting to write to LupioBLK device while transfer"
+                  " is ongoing!\n");
+        }
+        break;
 
-        default:
-            panic("Unexpected write to the LupioBLK device at address"
-                    " %#llx!\n", addr);
-            break;
+    default:
+        panic("Unexpected write to the LupioBLK device at address"
+              " %#llx!\n",
+              addr);
+        break;
     }
 }
 
@@ -208,8 +210,8 @@ LupioBLK::read(PacketPtr pkt)
 {
     Addr addr = pkt->getAddr() - pioAddr;
 
-    DPRINTF(LupioBLK,
-        "Read request - addr: %#x, size: %#x\n", addr, pkt->getSize());
+    DPRINTF(LupioBLK, "Read request - addr: %#x, size: %#x\n", addr,
+            pkt->getSize());
 
     uint64_t read_request = lupioBLKRead(addr);
     DPRINTF(LupioBLK, "Packet Read: %d\n", read_request);

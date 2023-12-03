@@ -44,8 +44,7 @@ namespace ArmISA
 {
 
 std::string
-SmeAddOp::generateDisassembly(Addr pc,
-                              const loader::SymbolTable *symtab) const
+SmeAddOp::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -139,8 +138,7 @@ SmeMovInsertOp::generateDisassembly(Addr pc,
 }
 
 std::string
-SmeOPOp::generateDisassembly(Addr pc,
-                             const loader::SymbolTable *symtab) const
+SmeOPOp::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);

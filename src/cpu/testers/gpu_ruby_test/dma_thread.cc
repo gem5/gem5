@@ -36,18 +36,14 @@
 namespace gem5
 {
 
-DmaThread::DmaThread(const Params& _params)
-    : TesterThread(_params)
+DmaThread::DmaThread(const Params &_params) : TesterThread(_params)
 {
     threadName = "DmaThread(Thread ID " + std::to_string(threadId) + ")";
     threadEvent.setDesc("DmaThread tick");
     assert(numLanes == 1);
 }
 
-DmaThread::~DmaThread()
-{
-
-}
+DmaThread::~DmaThread() {}
 
 void
 DmaThread::issueLoadOps()
@@ -77,14 +73,14 @@ DmaThread::issueLoadOps()
         // for now, assert address is 4-byte aligned
         assert(address % load_size == 0);
 
-        auto req = std::make_shared<Request>(address, load_size,
-                                             0, tester->requestorId(),
-                                             0, threadId, nullptr);
+        auto req = std::make_shared<Request>(address, load_size, 0,
+                                             tester->requestorId(), 0,
+                                             threadId, nullptr);
         req->setPaddr(address);
         req->setReqInstSeqNum(tester->getActionSeqNum());
 
         PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
-        uint8_t* data = new uint8_t[load_size];
+        uint8_t *data = new uint8_t[load_size];
         pkt->dataDynamic(data);
         pkt->senderState = new ProtocolTester::SenderState(this);
 
@@ -125,13 +121,14 @@ DmaThread::issueStoreOps()
         // must be aligned with store size
         assert(address % sizeof(Value) == 0);
 
-        DPRINTF(ProtocolTest, "%s Episode %d: Issuing Store - Addr %s - "
-                "Value %d\n", this->getName(),
-                curEpisode->getEpisodeId(), ruby::printAddress(address),
-                new_value);
+        DPRINTF(ProtocolTest,
+                "%s Episode %d: Issuing Store - Addr %s - "
+                "Value %d\n",
+                this->getName(), curEpisode->getEpisodeId(),
+                ruby::printAddress(address), new_value);
 
-        auto req = std::make_shared<Request>(address, sizeof(Value),
-                                             0, tester->requestorId(), 0,
+        auto req = std::make_shared<Request>(address, sizeof(Value), 0,
+                                             tester->requestorId(), 0,
                                              threadId, nullptr);
         req->setPaddr(address);
         req->setReqInstSeqNum(tester->getActionSeqNum());
@@ -139,7 +136,7 @@ DmaThread::issueStoreOps()
         PacketPtr pkt = new Packet(req, MemCmd::WriteReq);
         uint8_t *writeData = new uint8_t[sizeof(Value)];
         for (int j = 0; j < sizeof(Value); ++j) {
-            writeData[j] = ((uint8_t*)&new_value)[j];
+            writeData[j] = ((uint8_t *)&new_value)[j];
         }
         pkt->dataDynamic(writeData);
         pkt->senderState = new ProtocolTester::SenderState(this);
@@ -209,9 +206,11 @@ DmaThread::hitCallback(PacketPtr pkt)
     MemCmd resp_cmd = pkt->cmd;
     Addr addr = pkt->getAddr();
 
-    DPRINTF(ProtocolTest, "%s Episode %d: hitCallback - Command %s -"
-            " Addr %s\n", this->getName(), curEpisode->getEpisodeId(),
-            resp_cmd.toString(), ruby::printAddress(addr));
+    DPRINTF(ProtocolTest,
+            "%s Episode %d: hitCallback - Command %s -"
+            " Addr %s\n",
+            this->getName(), curEpisode->getEpisodeId(), resp_cmd.toString(),
+            ruby::printAddress(addr));
 
     if (resp_cmd == MemCmd::SwapResp) {
         // response to a pending atomic
@@ -230,8 +229,7 @@ DmaThread::hitCallback(PacketPtr pkt)
         // update log table
         addrManager->updateLogTable(req.origLoc, threadId,
                                     curEpisode->getEpisodeId(), value,
-                                    curTick(),
-                                    0);
+                                    curTick(), 0);
 
         // this Atomic is done
         pendingAtomicCount--;
@@ -266,9 +264,7 @@ DmaThread::hitCallback(PacketPtr pkt)
         // update log table
         addrManager->updateLogTable(req.origLoc, threadId,
                                     curEpisode->getEpisodeId(),
-                                    req.storedValue,
-                                    curTick(),
-                                    0);
+                                    req.storedValue, curTick(), 0);
 
         // the Write is now done
         pendingLdStCount--;

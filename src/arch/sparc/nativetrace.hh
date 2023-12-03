@@ -37,13 +37,13 @@ namespace gem5
 
 class ThreadContext;
 
-namespace trace {
+namespace trace
+{
 
 class SparcNativeTrace : public NativeTrace
 {
   public:
-    SparcNativeTrace(const Params &p) : NativeTrace(p)
-    {}
+    SparcNativeTrace(const Params &p) : NativeTrace(p) {}
 
     void check(NativeTraceRecord *record);
 };

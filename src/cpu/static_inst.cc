@@ -68,8 +68,7 @@ StaticInst::disassemble(Addr pc, const loader::SymbolTable *symtab) const
 }
 
 void
-StaticInst::printFlags(std::ostream &outs,
-    const std::string &separator) const
+StaticInst::printFlags(std::ostream &outs, const std::string &separator) const
 {
     bool printed_a_flag = false;
 

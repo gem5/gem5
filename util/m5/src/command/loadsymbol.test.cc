@@ -32,7 +32,12 @@
 #include "dispatch_table.hh"
 
 bool test_load_symbol_called;
-void test_m5_load_symbol() { test_load_symbol_called = true;}
+
+void
+test_m5_load_symbol()
+{
+    test_load_symbol_called = true;
+}
 
 DispatchTable dt = { .m5_load_symbol = &test_m5_load_symbol };
 
@@ -47,11 +52,11 @@ TEST(Fail, Arguments)
 {
     // Called with no arguments.
     test_load_symbol_called = false;
-    EXPECT_TRUE(run({"loadsymbol"}));
+    EXPECT_TRUE(run({ "loadsymbol" }));
     EXPECT_TRUE(test_load_symbol_called);
 
     // Call with one argument.
     test_load_symbol_called = false;
-    EXPECT_FALSE(run({"loadsymbol", "1"}));
+    EXPECT_FALSE(run({ "loadsymbol", "1" }));
     EXPECT_FALSE(test_load_symbol_called);
 }

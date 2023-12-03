@@ -73,12 +73,12 @@ Gicv2m::Gicv2m(const Params &p)
     // Assert SPI ranges start at 32
     for (int i = 0; i < frames.size(); i++) {
         if (frames[i]->spi_base < 32)
-            fatal("Gicv2m: Frame %d's SPI base (%d) is not in SPI space\n",
-                  i, frames[i]->spi_base);
+            fatal("Gicv2m: Frame %d's SPI base (%d) is not in SPI space\n", i,
+                  frames[i]->spi_base);
     }
     unsigned int x = frames.size();
     fatal_if(!isPowerOf2(x), "Gicv2m: The v2m shim must be configured with "
-              "a power-of-two number of frames\n");
+                             "a power-of-two number of frames\n");
     log2framenum = floorLog2(x);
 }
 
@@ -102,17 +102,18 @@ Gicv2m::read(PacketPtr pkt)
     Addr offset = pkt->getAddr() - frames[frame]->addr;
 
     switch (offset) {
-      case MSI_TYPER:
+    case MSI_TYPER:
         pkt->setLE<uint32_t>((frames[frame]->spi_base << 16) |
-                           frames[frame]->spi_len);
+                             frames[frame]->spi_len);
         break;
 
-      case PER_ID4:
-        pkt->setLE<uint32_t>(0x4 | ((4+log2framenum) << 4));
+    case PER_ID4:
+        pkt->setLE<uint32_t>(0x4 | ((4 + log2framenum) << 4));
         // Nr of 4KB blocks used by component.  This is messy as frames are 64K
-        // (16, ie 2^4) and we should assert we're given a Po2 number of frames.
+        // (16, ie 2^4) and we should assert we're given a Po2 number of
+        // frames.
         break;
-      default:
+    default:
         DPRINTF(GICV2M, "GICv2m: Read of unk reg %#x\n", offset);
         pkt->setLE<uint32_t>(0);
     };

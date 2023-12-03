@@ -56,8 +56,8 @@ class FDArray : public Serializable
      * @param output Used to initialize the stdout file descriptor
      * @param errout Used to initialize the stderr file descriptor
      */
-    FDArray(std::string const& input, std::string const& output,
-            std::string const& errout);
+    FDArray(std::string const &input, std::string const &output,
+            std::string const &errout);
 
     /**
      * Figure out the file offsets for all currently open files and save them
@@ -93,7 +93,11 @@ class FDArray : public Serializable
     /**
      * Return the size of the _fdArray field
      */
-    int getSize() const { return _fdArray.size(); }
+    int
+    getSize() const
+    {
+        return _fdArray.size();
+    }
 
     /**
      * Step through the file descriptor array and find the first available
@@ -119,11 +123,13 @@ class FDArray : public Serializable
      * Serialization methods for file descriptors
      */
     void serialize(CheckpointOut &cp) const override;
-    void unserialize(CheckpointIn &cp, Process* process_ptr );
-    void unserialize(CheckpointIn &cp) override {
-      unserialize(cp, nullptr);
-    };
+    void unserialize(CheckpointIn &cp, Process *process_ptr);
 
+    void
+    unserialize(CheckpointIn &cp) override
+    {
+        unserialize(cp, nullptr);
+    };
 
   private:
     /**
@@ -131,9 +137,9 @@ class FDArray : public Serializable
      * restoration code. These are helper functions which are not meant to
      * be exposed to other objects or files.
      */
-    int openFile(std::string const& file_name, int flags, mode_t mode) const;
-    int openInputFile(std::string const& file_name) const;
-    int openOutputFile(std::string const& file_name) const;
+    int openFile(std::string const &file_name, int flags, mode_t mode) const;
+    int openInputFile(std::string const &file_name) const;
+    int openOutputFile(std::string const &file_name) const;
 
     /**
      * Return the file descriptor entry object associated with the index
@@ -147,7 +153,7 @@ class FDArray : public Serializable
      * Hold pointers to the file descriptor entries. The array size is
      * statically defined by the operating system.
      */
-    static constexpr size_t _numFDs {1024};
+    static constexpr size_t _numFDs{ 1024 };
     std::array<std::shared_ptr<FDEntry>, _numFDs> _fdArray;
 
     /**

@@ -55,19 +55,19 @@ BaseMMU::init()
     auto traverse_hierarchy = [this](BaseTLB *starter) {
         for (BaseTLB *tlb = starter; tlb; tlb = tlb->nextLevel()) {
             switch (tlb->type()) {
-              case TypeTLB::instruction:
+            case TypeTLB::instruction:
                 if (instruction.find(tlb) == instruction.end())
                     instruction.insert(tlb);
                 break;
-              case TypeTLB::data:
+            case TypeTLB::data:
                 if (data.find(tlb) == data.end())
                     data.insert(tlb);
                 break;
-              case TypeTLB::unified:
+            case TypeTLB::unified:
                 if (unified.find(tlb) == unified.end())
                     unified.insert(tlb);
                 break;
-              default:
+            default:
                 panic("Invalid TLB type\n");
             }
         }
@@ -128,12 +128,16 @@ BaseMMU::finalizePhysical(const RequestPtr &req, ThreadContext *tc,
     return getTlb(mode)->finalizePhysical(req, tc, mode);
 }
 
-BaseMMU::MMUTranslationGen::MMUTranslationGen(Addr page_bytes,
-        Addr new_start, Addr new_size, ThreadContext *new_tc,
-        BaseMMU *new_mmu, BaseMMU::Mode new_mode, Request::Flags new_flags) :
-    TranslationGen(new_start, new_size), tc(new_tc), cid(tc->contextId()),
-    mmu(new_mmu), mode(new_mode), flags(new_flags),
-    pageBytes(page_bytes)
+BaseMMU::MMUTranslationGen::MMUTranslationGen(
+    Addr page_bytes, Addr new_start, Addr new_size, ThreadContext *new_tc,
+    BaseMMU *new_mmu, BaseMMU::Mode new_mode, Request::Flags new_flags)
+    : TranslationGen(new_start, new_size),
+      tc(new_tc),
+      cid(tc->contextId()),
+      mmu(new_mmu),
+      mode(new_mode),
+      flags(new_flags),
+      pageBytes(page_bytes)
 {}
 
 void
@@ -144,8 +148,8 @@ BaseMMU::MMUTranslationGen::translate(Range &range) const
         next += pageBytes;
     range.size = std::min(range.size, next - range.vaddr);
 
-    auto req = std::make_shared<Request>(
-            range.vaddr, range.size, flags, Request::funcRequestorId, 0, cid);
+    auto req = std::make_shared<Request>(range.vaddr, range.size, flags,
+                                         Request::funcRequestorId, 0, cid);
 
     range.fault = mmu->translateFunctional(req, tc, mode);
 

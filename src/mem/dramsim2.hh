@@ -59,7 +59,6 @@ namespace memory
 class DRAMSim2 : public AbstractMemory
 {
   private:
-
     /**
      * The memory port has to deal with its own flow control to avoid
      * having unbounded storage that is implicitly created in the port
@@ -67,17 +66,13 @@ class DRAMSim2 : public AbstractMemory
      */
     class MemoryPort : public ResponsePort
     {
-
       private:
-
-        DRAMSim2& mem;
+        DRAMSim2 &mem;
 
       public:
-
-        MemoryPort(const std::string& _name, DRAMSim2& _memory);
+        MemoryPort(const std::string &_name, DRAMSim2 &_memory);
 
       protected:
-
         Tick recvAtomic(PacketPtr pkt);
 
         void recvFunctional(PacketPtr pkt);
@@ -87,7 +82,6 @@ class DRAMSim2 : public AbstractMemory
         void recvRespRetry();
 
         AddrRangeList getAddrRanges() const;
-
     };
 
     MemoryPort port;
@@ -171,7 +165,6 @@ class DRAMSim2 : public AbstractMemory
     std::unique_ptr<Packet> pendingDelete;
 
   public:
-
     typedef DRAMSim2Params Params;
     DRAMSim2(const Params &p);
 
@@ -196,18 +189,16 @@ class DRAMSim2 : public AbstractMemory
     DrainState drain() override;
 
     Port &getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID) override;
+                  PortID idx = InvalidPortID) override;
 
     void init() override;
     void startup() override;
 
   protected:
-
     Tick recvAtomic(PacketPtr pkt);
     void recvFunctional(PacketPtr pkt);
     bool recvTimingReq(PacketPtr pkt);
     void recvRespRetry();
-
 };
 
 } // namespace memory

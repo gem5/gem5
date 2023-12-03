@@ -40,15 +40,17 @@
 namespace sc_gem5
 {
 
-Event::Event(sc_core::sc_event *_sc_event, bool internal) :
-    Event(_sc_event, nullptr, internal)
+Event::Event(sc_core::sc_event *_sc_event, bool internal)
+    : Event(_sc_event, nullptr, internal)
 {}
 
 Event::Event(sc_core::sc_event *_sc_event, const char *_basename_cstr,
-        bool internal) :
-    _sc_event(_sc_event), _basename(_basename_cstr ? _basename_cstr : ""),
-    _inHierarchy(!internal), delayedNotify([this]() { this->notify(); }),
-    _triggeredStamp(~0ULL)
+             bool internal)
+    : _sc_event(_sc_event),
+      _basename(_basename_cstr ? _basename_cstr : ""),
+      _inHierarchy(!internal),
+      delayedNotify([this]() { this->notify(); }),
+      _triggeredStamp(~0ULL)
 {
     if (_basename == "" && ::sc_core::sc_is_running())
         _basename = ::sc_core::sc_gen_unique_name("event");
@@ -73,10 +75,10 @@ Event::Event(sc_core::sc_event *_sc_event, const char *_basename_cstr,
 
         if (original_name != "" && _basename != original_name) {
             std::string message = path + original_name +
-                ". Latter declaration will be renamed to " +
-                path + _basename;
+                                  ". Latter declaration will be renamed to " +
+                                  path + _basename;
             SC_REPORT_WARNING(sc_core::SC_ID_INSTANCE_EXISTS_,
-                    message.c_str());
+                              message.c_str());
         }
 
         _name = path + _basename;
@@ -94,8 +96,8 @@ Event::~Event()
         Object *obj = Object::getFromScObject(parent);
         obj->delChildEvent(_sc_event);
     } else if (inHierarchy()) {
-        EventsIt it = find(topLevelEvents.begin(), topLevelEvents.end(),
-                           _sc_event);
+        EventsIt it =
+            find(topLevelEvents.begin(), topLevelEvents.end(), _sc_event);
         assert(it != topLevelEvents.end());
         std::swap(*it, topLevelEvents.back());
         topLevelEvents.pop_back();
@@ -136,7 +138,7 @@ Event::getParentObject() const
 void
 Event::notify(StaticSensitivities &senses)
 {
-    for (auto s: senses)
+    for (auto s : senses)
         s->notify(this);
 }
 

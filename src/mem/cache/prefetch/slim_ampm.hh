@@ -53,20 +53,21 @@ namespace prefetch
 
 class SlimAMPM : public Queued
 {
-   /** AMPM prefetcher object */
-   AccessMapPatternMatching &ampm;
-   /** DCPT prefetcher object */
-   DeltaCorrelatingPredictionTables &dcpt;
- public:
-   SlimAMPM(const SlimAMPMPrefetcherParams &p);
-   ~SlimAMPM() = default;
+    /** AMPM prefetcher object */
+    AccessMapPatternMatching &ampm;
+    /** DCPT prefetcher object */
+    DeltaCorrelatingPredictionTables &dcpt;
 
-   void calculatePrefetch(const PrefetchInfo &pfi,
-                          std::vector<AddrPriority> &addresses,
-                          const CacheAccessor &cache) override;
+  public:
+    SlimAMPM(const SlimAMPMPrefetcherParams &p);
+    ~SlimAMPM() = default;
+
+    void calculatePrefetch(const PrefetchInfo &pfi,
+                           std::vector<AddrPriority> &addresses,
+                           const CacheAccessor &cache) override;
 };
 
 } // namespace prefetch
 } // namespace gem5
 
-#endif//__MEM_CACHE_PREFETCH_SLIM_AMPM_HH__
+#endif //__MEM_CACHE_PREFETCH_SLIM_AMPM_HH__

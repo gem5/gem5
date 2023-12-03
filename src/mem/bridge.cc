@@ -53,38 +53,41 @@
 namespace gem5
 {
 
-Bridge::BridgeResponsePort::BridgeResponsePort(const std::string& _name,
-                                         Bridge& _bridge,
-                                         BridgeRequestPort& _memSidePort,
-                                         Cycles _delay, int _resp_limit,
-                                         std::vector<AddrRange> _ranges)
-    : ResponsePort(_name), bridge(_bridge),
-      memSidePort(_memSidePort), delay(_delay),
+Bridge::BridgeResponsePort::BridgeResponsePort(const std::string &_name,
+                                               Bridge &_bridge,
+                                               BridgeRequestPort &_memSidePort,
+                                               Cycles _delay, int _resp_limit,
+                                               std::vector<AddrRange> _ranges)
+    : ResponsePort(_name),
+      bridge(_bridge),
+      memSidePort(_memSidePort),
+      delay(_delay),
       ranges(_ranges.begin(), _ranges.end()),
-      outstandingResponses(0), retryReq(false), respQueueLimit(_resp_limit),
-      sendEvent([this]{ trySendTiming(); }, _name)
-{
-}
+      outstandingResponses(0),
+      retryReq(false),
+      respQueueLimit(_resp_limit),
+      sendEvent([this] { trySendTiming(); }, _name)
+{}
 
-Bridge::BridgeRequestPort::BridgeRequestPort(const std::string& _name,
-                                           Bridge& _bridge,
-                                           BridgeResponsePort& _cpuSidePort,
-                                           Cycles _delay, int _req_limit)
-    : RequestPort(_name), bridge(_bridge),
+Bridge::BridgeRequestPort::BridgeRequestPort(const std::string &_name,
+                                             Bridge &_bridge,
+                                             BridgeResponsePort &_cpuSidePort,
+                                             Cycles _delay, int _req_limit)
+    : RequestPort(_name),
+      bridge(_bridge),
       cpuSidePort(_cpuSidePort),
-      delay(_delay), reqQueueLimit(_req_limit),
-      sendEvent([this]{ trySendTiming(); }, _name)
-{
-}
+      delay(_delay),
+      reqQueueLimit(_req_limit),
+      sendEvent([this] { trySendTiming(); }, _name)
+{}
 
 Bridge::Bridge(const Params &p)
     : ClockedObject(p),
       cpuSidePort(p.name + ".cpu_side_port", *this, memSidePort,
-                ticksToCycles(p.delay), p.resp_size, p.ranges),
+                  ticksToCycles(p.delay), p.resp_size, p.ranges),
       memSidePort(p.name + ".mem_side_port", *this, cpuSidePort,
-                 ticksToCycles(p.delay), p.req_size)
-{
-}
+                  ticksToCycles(p.delay), p.req_size)
+{}
 
 Port &
 Bridge::getPort(const std::string &if_name, PortID idx)
@@ -126,8 +129,8 @@ Bridge::BridgeRequestPort::recvTimingResp(PacketPtr pkt)
 {
     // all checks are done when the request is accepted on the response
     // side, so we are guaranteed to have space for the response
-    DPRINTF(Bridge, "recvTimingResp: %s addr 0x%x\n",
-            pkt->cmdString(), pkt->getAddr());
+    DPRINTF(Bridge, "recvTimingResp: %s addr 0x%x\n", pkt->cmdString(),
+            pkt->getAddr());
 
     DPRINTF(Bridge, "Request queue size: %d\n", transmitList.size());
 
@@ -137,8 +140,7 @@ Bridge::BridgeRequestPort::recvTimingResp(PacketPtr pkt)
     Tick receive_delay = pkt->headerDelay + pkt->payloadDelay;
     pkt->headerDelay = pkt->payloadDelay = 0;
 
-    cpuSidePort.schedTimingResp(pkt, bridge.clockEdge(delay) +
-                              receive_delay);
+    cpuSidePort.schedTimingResp(pkt, bridge.clockEdge(delay) + receive_delay);
 
     return true;
 }
@@ -146,11 +148,11 @@ Bridge::BridgeRequestPort::recvTimingResp(PacketPtr pkt)
 bool
 Bridge::BridgeResponsePort::recvTimingReq(PacketPtr pkt)
 {
-    DPRINTF(Bridge, "recvTimingReq: %s addr 0x%x\n",
-            pkt->cmdString(), pkt->getAddr());
+    DPRINTF(Bridge, "recvTimingReq: %s addr 0x%x\n", pkt->cmdString(),
+            pkt->getAddr());
 
     panic_if(pkt->cacheResponding(), "Should not see packets where cache "
-             "is responding");
+                                     "is responding");
 
     // we should not get a new request after committing to retry the
     // current one, but unfortunately the CPU violates this rule, so
@@ -192,7 +194,7 @@ Bridge::BridgeResponsePort::recvTimingReq(PacketPtr pkt)
             pkt->headerDelay = pkt->payloadDelay = 0;
 
             memSidePort.schedTimingReq(pkt, bridge.clockEdge(delay) +
-                                      receive_delay);
+                                                receive_delay);
         }
     }
 
@@ -228,7 +230,6 @@ Bridge::BridgeRequestPort::schedTimingReq(PacketPtr pkt, Tick when)
 
     transmitList.emplace_back(pkt, when);
 }
-
 
 void
 Bridge::BridgeResponsePort::schedTimingResp(PacketPtr pkt, Tick when)
@@ -267,8 +268,8 @@ Bridge::BridgeRequestPort::trySendTiming()
         if (!transmitList.empty()) {
             DeferredPacket next_req = transmitList.front();
             DPRINTF(Bridge, "Scheduling next send\n");
-            bridge.schedule(sendEvent, std::max(next_req.tick,
-                                                bridge.clockEdge()));
+            bridge.schedule(sendEvent,
+                            std::max(next_req.tick, bridge.clockEdge()));
         }
 
         // if we have stalled a request due to a full request queue,
@@ -308,8 +309,8 @@ Bridge::BridgeResponsePort::trySendTiming()
         if (!transmitList.empty()) {
             DeferredPacket next_resp = transmitList.front();
             DPRINTF(Bridge, "Scheduling next send\n");
-            bridge.schedule(sendEvent, std::max(next_resp.tick,
-                                                bridge.clockEdge()));
+            bridge.schedule(sendEvent,
+                            std::max(next_resp.tick, bridge.clockEdge()));
         }
 
         // if there is space in the request queue and we were stalling
@@ -342,17 +343,17 @@ Tick
 Bridge::BridgeResponsePort::recvAtomic(PacketPtr pkt)
 {
     panic_if(pkt->cacheResponding(), "Should not see packets where cache "
-             "is responding");
+                                     "is responding");
 
     return delay * bridge.clockPeriod() + memSidePort.sendAtomic(pkt);
 }
 
 Tick
-Bridge::BridgeResponsePort::recvAtomicBackdoor(
-    PacketPtr pkt, MemBackdoorPtr &backdoor)
+Bridge::BridgeResponsePort::recvAtomicBackdoor(PacketPtr pkt,
+                                               MemBackdoorPtr &backdoor)
 {
-    return delay * bridge.clockPeriod() + memSidePort.sendAtomicBackdoor(
-        pkt, backdoor);
+    return delay * bridge.clockPeriod() +
+           memSidePort.sendAtomicBackdoor(pkt, backdoor);
 }
 
 void
@@ -361,7 +362,7 @@ Bridge::BridgeResponsePort::recvFunctional(PacketPtr pkt)
     pkt->pushLabel(name());
 
     // check the response queue
-    for (auto i = transmitList.begin();  i != transmitList.end(); ++i) {
+    for (auto i = transmitList.begin(); i != transmitList.end(); ++i) {
         if (pkt->trySatisfyFunctional((*i).pkt)) {
             pkt->makeResponse();
             return;
@@ -380,8 +381,8 @@ Bridge::BridgeResponsePort::recvFunctional(PacketPtr pkt)
 }
 
 void
-Bridge::BridgeResponsePort::recvMemBackdoorReq(
-    const MemBackdoorReq &req, MemBackdoorPtr &backdoor)
+Bridge::BridgeResponsePort::recvMemBackdoorReq(const MemBackdoorReq &req,
+                                               MemBackdoorPtr &backdoor)
 {
     memSidePort.sendMemBackdoorReq(req, backdoor);
 }

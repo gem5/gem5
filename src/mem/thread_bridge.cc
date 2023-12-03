@@ -35,14 +35,12 @@ namespace gem5
 
 ThreadBridge::ThreadBridge(const ThreadBridgeParams &p)
     : SimObject(p), in_port_("in_port", *this), out_port_("out_port", *this)
-{
-}
+{}
 
 ThreadBridge::IncomingPort::IncomingPort(const std::string &name,
                                          ThreadBridge &device)
     : ResponsePort(name), device_(device)
-{
-}
+{}
 
 AddrRangeList
 ThreadBridge::IncomingPort::getAddrRanges() const
@@ -56,6 +54,7 @@ ThreadBridge::IncomingPort::recvTimingReq(PacketPtr pkt)
 {
     panic("ThreadBridge only supports atomic/functional access.");
 }
+
 void
 ThreadBridge::IncomingPort::recvRespRetry()
 {
@@ -81,8 +80,7 @@ ThreadBridge::IncomingPort::recvFunctional(PacketPtr pkt)
 ThreadBridge::OutgoingPort::OutgoingPort(const std::string &name,
                                          ThreadBridge &device)
     : RequestPort(name), device_(device)
-{
-}
+{}
 
 void
 ThreadBridge::OutgoingPort::recvRangeChange()
@@ -96,6 +94,7 @@ ThreadBridge::OutgoingPort::recvTimingResp(PacketPtr pkt)
 {
     panic("ThreadBridge only supports atomic/functional access.");
 }
+
 void
 ThreadBridge::OutgoingPort::recvReqRetry()
 {
@@ -112,4 +111,4 @@ ThreadBridge::getPort(const std::string &if_name, PortID idx)
     return SimObject::getPort(if_name, idx);
 }
 
-}  // namespace gem5
+} // namespace gem5

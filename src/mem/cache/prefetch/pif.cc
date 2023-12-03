@@ -50,11 +50,10 @@ PIF::PIF(const PIFPrefetcherParams &p)
             p.index_replacement_policy),
       streamAddressBuffer(p.stream_address_buffer_entries),
       listenersPC()
-{
-}
+{}
 
-PIF::CompactorEntry::CompactorEntry(Addr addr,
-    unsigned int prec_size, unsigned int succ_size)
+PIF::CompactorEntry::CompactorEntry(Addr addr, unsigned int prec_size,
+                                    unsigned int succ_size)
 {
     trigger = addr;
     prec.resize(prec_size, false);
@@ -63,23 +62,23 @@ PIF::CompactorEntry::CompactorEntry(Addr addr,
 
 Addr
 PIF::CompactorEntry::distanceFromTrigger(Addr target,
-        unsigned int log_blk_size) const
+                                         unsigned int log_blk_size) const
 {
     const Addr target_blk = target >> log_blk_size;
     const Addr trigger_blk = trigger >> log_blk_size;
 
-    return target_blk > trigger_blk ?
-              target_blk - trigger_blk : trigger_blk - target_blk;
+    return target_blk > trigger_blk ? target_blk - trigger_blk :
+                                      trigger_blk - target_blk;
 }
 
 bool
-PIF::CompactorEntry::inSameSpatialRegion(Addr pc,
-        unsigned int log_blk_size, bool update)
+PIF::CompactorEntry::inSameSpatialRegion(Addr pc, unsigned int log_blk_size,
+                                         bool update)
 {
     Addr blk_distance = distanceFromTrigger(pc, log_blk_size);
 
-    bool hit = (pc > trigger) ?
-        (succ.size() > blk_distance) : (prec.size() > blk_distance);
+    bool hit = (pc > trigger) ? (succ.size() > blk_distance) :
+                                (prec.size() > blk_distance);
     if (hit && update) {
         if (pc > trigger) {
             succ[blk_distance] = true;
@@ -91,8 +90,7 @@ PIF::CompactorEntry::inSameSpatialRegion(Addr pc,
 }
 
 bool
-PIF::CompactorEntry::hasAddress(Addr target,
-                                          unsigned int log_blk_size) const
+PIF::CompactorEntry::hasAddress(Addr target, unsigned int log_blk_size) const
 {
     Addr blk_distance = distanceFromTrigger(target, log_blk_size);
     bool hit = false;
@@ -107,8 +105,8 @@ PIF::CompactorEntry::hasAddress(Addr target,
 }
 
 void
-PIF::CompactorEntry::getPredictedAddresses(unsigned int log_blk_size,
-    std::vector<AddrPriority> &addresses) const
+PIF::CompactorEntry::getPredictedAddresses(
+    unsigned int log_blk_size, std::vector<AddrPriority> &addresses) const
 {
     // Calculate the addresses of the instruction blocks that are encoded
     // by the bit vector and issue prefetch requests for these addresses.
@@ -116,17 +114,17 @@ PIF::CompactorEntry::getPredictedAddresses(unsigned int log_blk_size,
     // as this typically predicts the accesses in the order they will be
     // issued in the core.
     const Addr trigger_blk = trigger >> log_blk_size;
-    for (int i = prec.size()-1; i >= 0; i--) {
+    for (int i = prec.size() - 1; i >= 0; i--) {
         // Address from the preceding blocks to issue a prefetch
         if (prec[i]) {
-            const Addr prec_addr = (trigger_blk - (i+1)) << log_blk_size;
+            const Addr prec_addr = (trigger_blk - (i + 1)) << log_blk_size;
             addresses.push_back(AddrPriority(prec_addr, 0));
         }
     }
     for (int i = 0; i < succ.size(); i++) {
         // Address from the succeding blocks to issue a prefetch
         if (succ[i]) {
-            const Addr succ_addr = (trigger_blk + (i+1)) << log_blk_size;
+            const Addr succ_addr = (trigger_blk + (i + 1)) << log_blk_size;
             addresses.push_back(AddrPriority(succ_addr, 0));
         }
     }
@@ -144,16 +142,15 @@ PIF::notifyRetiredInst(const Addr pc)
         // than the last trigger address, update the bit vectors based on the
         // distance between them
         if (spatialCompactor.inSameSpatialRegion(pc, lBlkSize, true)) {
-        // If the PC of the instruction retired is outside the latest spatial
-        // region, check if it matches in any of the regions in the temporal
-        // compactor and update it to the MRU position
+            // If the PC of the instruction retired is outside the latest
+            // spatial region, check if it matches in any of the regions in the
+            // temporal compactor and update it to the MRU position
         } else {
             bool is_in_temporal_compactor = false;
 
             // Check if the PC is in the temporal compactor
             for (auto it = temporalCompactor.begin();
-                    it != temporalCompactor.end(); it++)
-            {
+                 it != temporalCompactor.end(); it++) {
                 if (it->inSameSpatialRegion(pc, lBlkSize, false)) {
                     spatialCompactor = (*it);
                     temporalCompactor.erase(it);
@@ -198,8 +195,8 @@ PIF::notifyRetiredInst(const Addr pc)
 
 void
 PIF::calculatePrefetch(const PrefetchInfo &pfi,
-    std::vector<AddrPriority> &addresses,
-    const CacheAccessor &cache)
+                       std::vector<AddrPriority> &addresses,
+                       const CacheAccessor &cache)
 {
     if (!pfi.hasPC()) {
         return;
@@ -236,7 +233,7 @@ PIF::calculatePrefetch(const PrefetchInfo &pfi,
 }
 
 void
-PIF::PrefetchListenerPC::notify(const Addr& pc)
+PIF::PrefetchListenerPC::notify(const Addr &pc)
 {
     parent.notifyRetiredInst(pc);
 }

@@ -59,19 +59,20 @@ namespace gem5
 using namespace ArmISA;
 
 TLB::TLB(const ArmTLBParams &p)
-    : BaseTLB(p), table(new TlbEntry[p.size]), size(p.size),
+    : BaseTLB(p),
+      table(new TlbEntry[p.size]),
+      size(p.size),
       isStage2(p.is_stage2),
       _walkCache(false),
       tableWalker(nullptr),
-      stats(*this), rangeMRU(1), vmid(0)
+      stats(*this),
+      rangeMRU(1),
+      vmid(0)
 {
-    for (int lvl = LookupLevel::L0;
-         lvl < LookupLevel::Num_ArmLookupLevel; lvl++) {
-
-        auto it = std::find(
-            p.partial_levels.begin(),
-            p.partial_levels.end(),
-            lvl);
+    for (int lvl = LookupLevel::L0; lvl < LookupLevel::Num_ArmLookupLevel;
+         lvl++) {
+        auto it =
+            std::find(p.partial_levels.begin(), p.partial_levels.end(), lvl);
 
         auto lookup_lvl = static_cast<LookupLevel>(lvl);
 
@@ -90,10 +91,7 @@ TLB::TLB(const ArmTLBParams &p)
     }
 }
 
-TLB::~TLB()
-{
-    delete[] table;
-}
+TLB::~TLB() { delete[] table; }
 
 void
 TLB::setTableWalker(TableWalker *table_walker)
@@ -102,7 +100,7 @@ TLB::setTableWalker(TableWalker *table_walker)
     tableWalker->setTlb(this);
 }
 
-TlbEntry*
+TlbEntry *
 TLB::match(const Lookup &lookup_data)
 {
     // Vector of TLB entry candidates.
@@ -110,8 +108,9 @@ TLB::match(const Lookup &lookup_data)
     // be returned to the MMU (in case of a hit)
     // The vector has one entry per lookup level as it stores
     // both complete and partial matches
-    std::vector<std::pair<int, const TlbEntry*>> hits{
-        LookupLevel::Num_ArmLookupLevel, {0, nullptr}};
+    std::vector<std::pair<int, const TlbEntry *>> hits{
+        LookupLevel::Num_ArmLookupLevel, { 0, nullptr }
+    };
 
     int x = 0;
     while (x < size) {
@@ -130,7 +129,7 @@ TLB::match(const Lookup &lookup_data)
     // request, starting from the highest lookup level (complete
     // translation) and iterating backwards (using reverse iterators)
     for (auto it = hits.rbegin(); it != hits.rend(); it++) {
-        const auto& [idx, entry] = *it;
+        const auto &[idx, entry] = *it;
         if (!entry) {
             // No match for the current LookupLevel
             continue;
@@ -153,24 +152,24 @@ TLB::match(const Lookup &lookup_data)
     return nullptr;
 }
 
-TlbEntry*
+TlbEntry *
 TLB::lookup(const Lookup &lookup_data)
 {
     const auto mode = lookup_data.mode;
 
     TlbEntry *retval = match(lookup_data);
 
-    DPRINTF(TLBVerbose, "Lookup %#x, asn %#x -> %s vmn 0x%x secure %d "
-            "ppn %#x size: %#x pa: %#x ap:%d ns:%d nstid:%d g:%d asid: %d "
-            "regime: %s\n",
-            lookup_data.va, lookup_data.asn, retval ? "hit" : "miss",
-            lookup_data.vmid, lookup_data.secure,
-            retval ? retval->pfn       : 0, retval ? retval->size  : 0,
-            retval ? retval->pAddr(lookup_data.va) : 0,
-            retval ? retval->ap        : 0,
-            retval ? retval->ns        : 0, retval ? retval->nstid : 0,
-            retval ? retval->global    : 0, retval ? retval->asid  : 0,
-            retval ? regimeToStr(retval->regime) : 0);
+    DPRINTF(
+        TLBVerbose,
+        "Lookup %#x, asn %#x -> %s vmn 0x%x secure %d "
+        "ppn %#x size: %#x pa: %#x ap:%d ns:%d nstid:%d g:%d asid: %d "
+        "regime: %s\n",
+        lookup_data.va, lookup_data.asn, retval ? "hit" : "miss",
+        lookup_data.vmid, lookup_data.secure, retval ? retval->pfn : 0,
+        retval ? retval->size : 0, retval ? retval->pAddr(lookup_data.va) : 0,
+        retval ? retval->ap : 0, retval ? retval->ns : 0,
+        retval ? retval->nstid : 0, retval ? retval->global : 0,
+        retval ? retval->asid : 0, retval ? regimeToStr(retval->regime) : 0);
 
     // Updating stats if this was not a functional lookup
     if (!lookup_data.functional) {
@@ -190,7 +189,7 @@ TLB::lookup(const Lookup &lookup_data)
             if (mode == BaseMMU::Execute) {
                 stats.instHits++;
             } else if (mode == BaseMMU::Write) {
-               stats.writeHits++;
+                stats.writeHits++;
             } else {
                 stats.readHits++;
             }
@@ -200,15 +199,15 @@ TLB::lookup(const Lookup &lookup_data)
     return retval;
 }
 
-TlbEntry*
+TlbEntry *
 TLB::multiLookup(const Lookup &lookup_data)
 {
-    TlbEntry* te = lookup(lookup_data);
+    TlbEntry *te = lookup(lookup_data);
 
     if (te) {
         checkPromotion(te, lookup_data.mode);
     } else {
-        if (auto tlb = static_cast<TLB*>(nextLevel())) {
+        if (auto tlb = static_cast<TLB *>(nextLevel())) {
             te = tlb->multiLookup(lookup_data);
             if (te && !lookup_data.functional &&
                 (!te->partial || partialLevels[te->lookupLevel])) {
@@ -226,40 +225,42 @@ TLB::multiLookup(const Lookup &lookup_data)
 void
 TLB::checkPromotion(TlbEntry *entry, BaseMMU::Mode mode)
 {
-    TypeTLB acc_type = (mode == BaseMMU::Execute) ?
-       TypeTLB::instruction : TypeTLB::data;
+    TypeTLB acc_type =
+        (mode == BaseMMU::Execute) ? TypeTLB::instruction : TypeTLB::data;
 
     // Hitting an instruction TLB entry on a data access or
     // a data TLB entry on an instruction access:
     // promoting the entry to unified
     if (!(entry->type & acc_type))
-       entry->type = TypeTLB::unified;
+        entry->type = TypeTLB::unified;
 }
 
 // insert a new TLB entry
 void
 TLB::insert(TlbEntry &entry)
 {
-    DPRINTF(TLB, "Inserting entry into TLB with pfn:%#x size:%#x vpn: %#x"
+    DPRINTF(TLB,
+            "Inserting entry into TLB with pfn:%#x size:%#x vpn: %#x"
             " asid:%d vmid:%d N:%d global:%d valid:%d nc:%d xn:%d"
-            " ap:%#x domain:%#x ns:%d nstid:%d, regime: %s\n", entry.pfn,
-            entry.size, entry.vpn, entry.asid, entry.vmid, entry.N,
-            entry.global, entry.valid, entry.nonCacheable, entry.xn,
-            entry.ap, static_cast<uint8_t>(entry.domain), entry.ns,
-            entry.nstid, regimeToStr(entry.regime));
+            " ap:%#x domain:%#x ns:%d nstid:%d, regime: %s\n",
+            entry.pfn, entry.size, entry.vpn, entry.asid, entry.vmid, entry.N,
+            entry.global, entry.valid, entry.nonCacheable, entry.xn, entry.ap,
+            static_cast<uint8_t>(entry.domain), entry.ns, entry.nstid,
+            regimeToStr(entry.regime));
 
     if (table[size - 1].valid)
-        DPRINTF(TLB, " - Replacing Valid entry %#x, asn %d vmn %d ppn %#x "
+        DPRINTF(TLB,
+                " - Replacing Valid entry %#x, asn %d vmn %d ppn %#x "
                 "size: %#x ap:%d ns:%d nstid:%d g:%d regime: %s\n",
-                table[size-1].vpn << table[size-1].N, table[size-1].asid,
-                table[size-1].vmid, table[size-1].pfn << table[size-1].N,
-                table[size-1].size, table[size-1].ap, table[size-1].ns,
-                table[size-1].nstid, table[size-1].global,
-                regimeToStr(table[size-1].regime));
+                table[size - 1].vpn << table[size - 1].N, table[size - 1].asid,
+                table[size - 1].vmid, table[size - 1].pfn << table[size - 1].N,
+                table[size - 1].size, table[size - 1].ap, table[size - 1].ns,
+                table[size - 1].nstid, table[size - 1].global,
+                regimeToStr(table[size - 1].regime));
 
     // inserting to MRU position and evicting the LRU one
     for (int i = size - 1; i > 0; --i)
-        table[i] = table[i-1];
+        table[i] = table[i - 1];
     table[0] = entry;
 
     stats.inserts++;
@@ -275,7 +276,7 @@ TLB::multiInsert(TlbEntry &entry)
         insert(entry);
     }
 
-    if (auto next_level = static_cast<TLB*>(nextLevel())) {
+    if (auto next_level = static_cast<TLB *>(nextLevel())) {
         next_level->multiInsert(entry);
     }
 }
@@ -315,7 +316,7 @@ TLB::flushAll()
 }
 
 void
-TLB::flush(const TLBIOp& tlbi_op)
+TLB::flush(const TLBIOp &tlbi_op)
 {
     int x = 0;
     TlbEntry *te;
@@ -334,40 +335,40 @@ TLB::flush(const TLBIOp& tlbi_op)
 
 void
 TLB::takeOverFrom(BaseTLB *_otlb)
-{
-}
+{}
 
 TLB::TlbStats::TlbStats(TLB &parent)
-  : statistics::Group(&parent), tlb(parent),
-    ADD_STAT(partialHits, statistics::units::Count::get(),
-             "partial translation hits"),
-    ADD_STAT(instHits, statistics::units::Count::get(), "Inst hits"),
-    ADD_STAT(instMisses, statistics::units::Count::get(), "Inst misses"),
-    ADD_STAT(readHits, statistics::units::Count::get(), "Read hits"),
-    ADD_STAT(readMisses, statistics::units::Count::get(),  "Read misses"),
-    ADD_STAT(writeHits, statistics::units::Count::get(), "Write hits"),
-    ADD_STAT(writeMisses, statistics::units::Count::get(), "Write misses"),
-    ADD_STAT(inserts, statistics::units::Count::get(),
-             "Number of times an entry is inserted into the TLB"),
-    ADD_STAT(flushTlb, statistics::units::Count::get(),
-             "Number of times a TLB invalidation was requested"),
-    ADD_STAT(flushedEntries, statistics::units::Count::get(),
-             "Number of entries that have been flushed from TLB"),
-    ADD_STAT(readAccesses, statistics::units::Count::get(), "Read accesses",
-             readHits + readMisses),
-    ADD_STAT(writeAccesses, statistics::units::Count::get(), "Write accesses",
-             writeHits + writeMisses),
-    ADD_STAT(instAccesses, statistics::units::Count::get(), "Inst accesses",
-             instHits + instMisses),
-    ADD_STAT(hits, statistics::units::Count::get(),
-             "Total TLB (inst and data) hits",
-             readHits + writeHits + instHits),
-    ADD_STAT(misses, statistics::units::Count::get(),
-             "Total TLB (inst and data) misses",
-             readMisses + writeMisses + instMisses),
-    ADD_STAT(accesses, statistics::units::Count::get(),
-             "Total TLB (inst and data) accesses",
-             readAccesses + writeAccesses + instAccesses)
+    : statistics::Group(&parent),
+      tlb(parent),
+      ADD_STAT(partialHits, statistics::units::Count::get(),
+               "partial translation hits"),
+      ADD_STAT(instHits, statistics::units::Count::get(), "Inst hits"),
+      ADD_STAT(instMisses, statistics::units::Count::get(), "Inst misses"),
+      ADD_STAT(readHits, statistics::units::Count::get(), "Read hits"),
+      ADD_STAT(readMisses, statistics::units::Count::get(), "Read misses"),
+      ADD_STAT(writeHits, statistics::units::Count::get(), "Write hits"),
+      ADD_STAT(writeMisses, statistics::units::Count::get(), "Write misses"),
+      ADD_STAT(inserts, statistics::units::Count::get(),
+               "Number of times an entry is inserted into the TLB"),
+      ADD_STAT(flushTlb, statistics::units::Count::get(),
+               "Number of times a TLB invalidation was requested"),
+      ADD_STAT(flushedEntries, statistics::units::Count::get(),
+               "Number of entries that have been flushed from TLB"),
+      ADD_STAT(readAccesses, statistics::units::Count::get(), "Read accesses",
+               readHits + readMisses),
+      ADD_STAT(writeAccesses, statistics::units::Count::get(),
+               "Write accesses", writeHits + writeMisses),
+      ADD_STAT(instAccesses, statistics::units::Count::get(), "Inst accesses",
+               instHits + instMisses),
+      ADD_STAT(hits, statistics::units::Count::get(),
+               "Total TLB (inst and data) hits",
+               readHits + writeHits + instHits),
+      ADD_STAT(misses, statistics::units::Count::get(),
+               "Total TLB (inst and data) misses",
+               readMisses + writeMisses + instMisses),
+      ADD_STAT(accesses, statistics::units::Count::get(),
+               "Total TLB (inst and data) accesses",
+               readAccesses + writeAccesses + instAccesses)
 {
     // If this is a pure Data TLB, mark the instruction
     // stats as nozero, so that they won't make it in

@@ -46,10 +46,10 @@ namespace gem5
  * initialize, then submits the request or requests depending on if the
  * original request is aligned or unaligned.
  */
-template<typename T, int N>
+template <typename T, int N>
 inline void
 initMemReqHelper(GPUDynInstPtr gpuDynInst, MemCmd mem_req_type,
-                 bool is_atomic=false)
+                 bool is_atomic = false)
 {
     // local variables
     int req_size = N * sizeof(T);
@@ -85,16 +85,18 @@ initMemReqHelper(GPUDynInstPtr gpuDynInst, MemCmd mem_req_type,
                 // a given lane's atomic can't cross cache lines
                 assert(!misaligned_acc);
 
-                req = std::make_shared<Request>(vaddr, sizeof(T), 0,
+                req = std::make_shared<Request>(
+                    vaddr, sizeof(T), 0,
                     gpuDynInst->computeUnit()->requestorId(), 0,
                     gpuDynInst->wfDynId,
                     gpuDynInst->makeAtomicOpFunctor<T>(
-                        &(reinterpret_cast<T*>(gpuDynInst->a_data))[lane],
-                        &(reinterpret_cast<T*>(gpuDynInst->x_data))[lane]));
+                        &(reinterpret_cast<T *>(gpuDynInst->a_data))[lane],
+                        &(reinterpret_cast<T *>(gpuDynInst->x_data))[lane]));
             } else {
-                req = std::make_shared<Request>(vaddr, req_size, 0,
-                                  gpuDynInst->computeUnit()->requestorId(), 0,
-                                  gpuDynInst->wfDynId);
+                req = std::make_shared<Request>(
+                    vaddr, req_size, 0,
+                    gpuDynInst->computeUnit()->requestorId(), 0,
+                    gpuDynInst->wfDynId);
             }
 
             if (misaligned_acc) {
@@ -104,23 +106,24 @@ initMemReqHelper(GPUDynInstPtr gpuDynInst, MemCmd mem_req_type,
                 gpuDynInst->setRequestFlags(req2);
                 pkt1 = new Packet(req1, mem_req_type);
                 pkt2 = new Packet(req2, mem_req_type);
-                pkt1->dataStatic(&(reinterpret_cast<T*>(
-                    gpuDynInst->d_data))[lane * N]);
-                pkt2->dataStatic(&(reinterpret_cast<T*>(
-                    gpuDynInst->d_data))[lane * N +
-                                         req1->getSize()/sizeof(T)]);
-                DPRINTF(GPUMem, "CU%d: WF[%d][%d]: index: %d unaligned memory "
-                        "request for %#x\n", gpuDynInst->cu_id,
-                        gpuDynInst->simdId, gpuDynInst->wfSlotId, lane,
-                        split_addr);
+                pkt1->dataStatic(
+                    &(reinterpret_cast<T *>(gpuDynInst->d_data))[lane * N]);
+                pkt2->dataStatic(&(reinterpret_cast<T *>(
+                    gpuDynInst
+                        ->d_data))[lane * N + req1->getSize() / sizeof(T)]);
+                DPRINTF(GPUMem,
+                        "CU%d: WF[%d][%d]: index: %d unaligned memory "
+                        "request for %#x\n",
+                        gpuDynInst->cu_id, gpuDynInst->simdId,
+                        gpuDynInst->wfSlotId, lane, split_addr);
                 gpuDynInst->computeUnit()->sendRequest(gpuDynInst, lane, pkt1);
                 gpuDynInst->computeUnit()->sendRequest(gpuDynInst, lane, pkt2);
             } else {
                 gpuDynInst->setStatusVector(lane, 1);
                 gpuDynInst->setRequestFlags(req);
                 pkt = new Packet(req, mem_req_type);
-                pkt->dataStatic(&(reinterpret_cast<T*>(
-                    gpuDynInst->d_data))[lane * N]);
+                pkt->dataStatic(
+                    &(reinterpret_cast<T *>(gpuDynInst->d_data))[lane * N]);
                 gpuDynInst->computeUnit()->sendRequest(gpuDynInst, lane, pkt);
             }
         } else { // if lane is not active, then no pending requests
@@ -135,7 +138,7 @@ initMemReqHelper(GPUDynInstPtr gpuDynInst, MemCmd mem_req_type,
  * trying to initialize, then submits the request or requests depending on if
  * the original request is aligned or unaligned.
  */
-template<typename T, int N>
+template <typename T, int N>
 inline void
 initMemReqScalarHelper(GPUDynInstPtr gpuDynInst, MemCmd mem_req_type)
 {
@@ -157,9 +160,9 @@ initMemReqScalarHelper(GPUDynInstPtr gpuDynInst, MemCmd mem_req_type)
      */
     bool misaligned_acc = split_addr > vaddr;
 
-    RequestPtr req = std::make_shared<Request>(vaddr, req_size, 0,
-                                 gpuDynInst->computeUnit()->requestorId(), 0,
-                                 gpuDynInst->wfDynId);
+    RequestPtr req = std::make_shared<Request>(
+        vaddr, req_size, 0, gpuDynInst->computeUnit()->requestorId(), 0,
+        gpuDynInst->wfDynId);
 
     if (misaligned_acc) {
         RequestPtr req1, req2;
@@ -171,9 +174,11 @@ initMemReqScalarHelper(GPUDynInstPtr gpuDynInst, MemCmd mem_req_type)
         PacketPtr pkt2 = new Packet(req2, mem_req_type);
         pkt1->dataStatic(gpuDynInst->scalar_data);
         pkt2->dataStatic(gpuDynInst->scalar_data + req1->getSize());
-        DPRINTF(GPUMem, "CU%d: WF[%d][%d]: unaligned scalar memory request for"
-                " %#x\n", gpuDynInst->cu_id, gpuDynInst->simdId,
-                gpuDynInst->wfSlotId, split_addr);
+        DPRINTF(GPUMem,
+                "CU%d: WF[%d][%d]: unaligned scalar memory request for"
+                " %#x\n",
+                gpuDynInst->cu_id, gpuDynInst->simdId, gpuDynInst->wfSlotId,
+                split_addr);
         gpuDynInst->computeUnit()->sendScalarRequest(gpuDynInst, pkt1);
         gpuDynInst->computeUnit()->sendScalarRequest(gpuDynInst, pkt2);
     } else {

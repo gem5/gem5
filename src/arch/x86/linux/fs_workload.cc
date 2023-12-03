@@ -51,8 +51,8 @@ namespace gem5
 namespace X86ISA
 {
 
-FsLinux::FsLinux(const Params &p) :
-    X86ISA::FsWorkload(p), e820Table(p.e820_table)
+FsLinux::FsLinux(const Params &p)
+    : X86ISA::FsWorkload(p), e820Table(p.e820_table)
 {}
 
 void
@@ -75,8 +75,8 @@ FsLinux::initState()
     const Addr commandLinePointer = realModeData + 0x228;
 
     panic_if(commandLine.length() + 1 > realModeData - commandLineBuff,
-             "Command line \"%s\" is longer than %d characters.",
-                commandLine, realModeData - commandLineBuff - 1);
+             "Command line \"%s\" is longer than %d characters.", commandLine,
+             realModeData - commandLineBuff - 1);
     phys_proxy.writeString(commandLineBuff, commandLine.c_str());
 
     // Generate a pointer of the right size and endianness to put into

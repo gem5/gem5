@@ -65,7 +65,7 @@ class CopyEngine : public PciDevice
       private:
         DmaPort cePort;
         CopyEngine *ce;
-        copy_engine_reg::ChanRegs  cr;
+        copy_engine_reg::ChanRegs cr;
         int channelId;
         copy_engine_reg::DmaDesc *curDmaDesc;
         uint8_t *copyBuffer;
@@ -105,10 +105,17 @@ class CopyEngine : public PciDevice
             return ce->name() + csprintf("-chan%d", channelId);
         }
 
-        virtual Tick read(PacketPtr pkt)
-                        { panic("CopyEngineChannel has no I/O access\n");}
-        virtual Tick write(PacketPtr pkt)
-                        { panic("CopyEngineChannel has no I/O access\n"); }
+        virtual Tick
+        read(PacketPtr pkt)
+        {
+            panic("CopyEngineChannel has no I/O access\n");
+        }
+
+        virtual Tick
+        write(PacketPtr pkt)
+        {
+            panic("CopyEngineChannel has no I/O access\n");
+        }
 
         void channelRead(PacketPtr pkt, Addr daddr, int size);
         void channelWrite(PacketPtr pkt, Addr daddr, int size);
@@ -140,7 +147,6 @@ class CopyEngine : public PciDevice
         void writeStatusComplete();
         EventFunctionWrapper statusCompleteEvent;
 
-
         void continueProcessing();
         void recvCommand();
         bool inDrain();
@@ -148,11 +154,10 @@ class CopyEngine : public PciDevice
     };
 
   private:
-
     struct CopyEngineStats : public statistics::Group
     {
         CopyEngineStats(statistics::Group *parent,
-            const uint8_t& channel_count);
+                        const uint8_t &channel_count);
 
         statistics::Vector bytesCopied;
         statistics::Vector copiesProcessed;
@@ -162,7 +167,7 @@ class CopyEngine : public PciDevice
     copy_engine_reg::Regs regs;
 
     // Array of channels each one with regs/dma port/etc
-    std::vector<CopyEngineChannel*> chan;
+    std::vector<CopyEngineChannel *> chan;
 
   public:
     PARAMS(CopyEngine);
@@ -170,7 +175,7 @@ class CopyEngine : public PciDevice
     ~CopyEngine();
 
     Port &getPort(const std::string &if_name,
-            PortID idx = InvalidPortID) override;
+                  PortID idx = InvalidPortID) override;
 
     Tick read(PacketPtr pkt) override;
     Tick write(PacketPtr pkt) override;

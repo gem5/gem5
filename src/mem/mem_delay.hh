@@ -64,7 +64,6 @@ struct SimpleMemDelayParams;
  */
 class MemDelay : public ClockedObject
 {
-
   public:
     MemDelay(const MemDelayParams &params);
 
@@ -72,7 +71,7 @@ class MemDelay : public ClockedObject
 
   protected: // Port interface
     Port &getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID) override;
+                  PortID idx = InvalidPortID) override;
 
     class RequestPort : public QueuedRequestPort
     {
@@ -88,16 +87,20 @@ class MemDelay : public ClockedObject
 
         void recvTimingSnoopReq(PacketPtr pkt) override;
 
-        void recvRangeChange() override {
+        void
+        recvRangeChange() override
+        {
             parent.responsePort.sendRangeChange();
         }
 
-        bool isSnooping() const override {
+        bool
+        isSnooping() const override
+        {
             return parent.responsePort.isSnooping();
         }
 
       private:
-        MemDelay& parent;
+        MemDelay &parent;
     };
 
     class ResponsePort : public QueuedResponsePort
@@ -111,16 +114,20 @@ class MemDelay : public ClockedObject
         void recvFunctional(PacketPtr pkt) override;
         bool recvTimingSnoopResp(PacketPtr pkt) override;
 
-        AddrRangeList getAddrRanges() const override {
+        AddrRangeList
+        getAddrRanges() const override
+        {
             return parent.requestPort.getAddrRanges();
         }
 
-        bool tryTiming(PacketPtr pkt) override { return true; }
+        bool
+        tryTiming(PacketPtr pkt) override
+        {
+            return true;
+        }
 
       private:
-
-        MemDelay& parent;
-
+        MemDelay &parent;
     };
 
     bool trySatisfyFunctional(PacketPtr pkt);
@@ -138,21 +145,33 @@ class MemDelay : public ClockedObject
      *
      * @return Ticks to delay packet.
      */
-    virtual Tick delayReq(PacketPtr pkt) { return 0; }
+    virtual Tick
+    delayReq(PacketPtr pkt)
+    {
+        return 0;
+    }
 
     /**
      * Delay a response by some number of ticks.
      *
      * @return Ticks to delay packet.
      */
-    virtual Tick delayResp(PacketPtr pkt) { return 0; }
+    virtual Tick
+    delayResp(PacketPtr pkt)
+    {
+        return 0;
+    }
 
     /**
      * Delay a snoop response by some number of ticks.
      *
      * @return Ticks to delay packet.
      */
-    virtual Tick delaySnoopResp(PacketPtr pkt) { return 0; }
+    virtual Tick
+    delaySnoopResp(PacketPtr pkt)
+    {
+        return 0;
+    }
 };
 
 /**

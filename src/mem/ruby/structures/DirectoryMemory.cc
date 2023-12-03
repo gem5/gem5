@@ -59,7 +59,7 @@ DirectoryMemory::DirectoryMemory(const Params &p)
     : SimObject(p), addrRanges(p.addr_ranges.begin(), p.addr_ranges.end())
 {
     m_size_bytes = 0;
-    for (const auto &r: addrRanges) {
+    for (const auto &r : addrRanges) {
         m_size_bytes += r.size();
     }
     m_size_bits = floorLog2(m_size_bytes);
@@ -70,7 +70,7 @@ void
 DirectoryMemory::init()
 {
     m_num_entries = m_size_bytes / RubySystem::getBlockSizeBytes();
-    m_entries = new AbstractCacheEntry*[m_num_entries];
+    m_entries = new AbstractCacheEntry *[m_num_entries];
     for (int i = 0; i < m_num_entries; i++)
         m_entries[i] = NULL;
 }
@@ -83,13 +83,13 @@ DirectoryMemory::~DirectoryMemory()
             delete m_entries[i];
         }
     }
-    delete [] m_entries;
+    delete[] m_entries;
 }
 
 bool
 DirectoryMemory::isPresent(Addr address)
 {
-    for (const auto& r: addrRanges) {
+    for (const auto &r : addrRanges) {
         if (r.contains(address)) {
             return true;
         }
@@ -101,7 +101,7 @@ uint64_t
 DirectoryMemory::mapAddressToLocalIdx(Addr address)
 {
     uint64_t ret = 0;
-    for (const auto& r: addrRanges) {
+    for (const auto &r : addrRanges) {
         if (r.contains(address)) {
             ret += r.getOffset(address);
             break;
@@ -111,7 +111,7 @@ DirectoryMemory::mapAddressToLocalIdx(Addr address)
     return ret >> RubySystem::getBlockSizeBits();
 }
 
-AbstractCacheEntry*
+AbstractCacheEntry *
 DirectoryMemory::lookup(Addr address)
 {
     assert(isPresent(address));
@@ -122,7 +122,7 @@ DirectoryMemory::lookup(Addr address)
     return m_entries[idx];
 }
 
-AbstractCacheEntry*
+AbstractCacheEntry *
 DirectoryMemory::allocate(Addr address, AbstractCacheEntry *entry)
 {
     assert(isPresent(address));
@@ -153,12 +153,12 @@ DirectoryMemory::deallocate(Addr address)
 }
 
 void
-DirectoryMemory::print(std::ostream& out) const
-{
-}
+DirectoryMemory::print(std::ostream &out) const
+{}
 
 void
-DirectoryMemory::recordRequestType(DirectoryRequestType requestType) {
+DirectoryMemory::recordRequestType(DirectoryRequestType requestType)
+{
     DPRINTF(RubyStats, "Recorded statistic: %s\n",
             DirectoryRequestType_to_string(requestType));
 }

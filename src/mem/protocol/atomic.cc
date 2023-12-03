@@ -56,7 +56,7 @@ AtomicRequestProtocol::send(AtomicResponseProtocol *peer, PacketPtr pkt)
 
 Tick
 AtomicRequestProtocol::sendBackdoor(AtomicResponseProtocol *peer,
-        PacketPtr pkt, MemBackdoorPtr &backdoor)
+                                    PacketPtr pkt, MemBackdoorPtr &backdoor)
 {
     assert(pkt->isRequest());
     return peer->recvAtomicBackdoor(pkt, backdoor);

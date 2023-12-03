@@ -82,19 +82,39 @@ class TBEStorage
     TBEStorage(statistics::Group *parent, int number_of_TBEs);
 
     // Returns the current number of slots allocated
-    int size() const { return m_slots_used.size(); }
+    int
+    size() const
+    {
+        return m_slots_used.size();
+    }
 
     // Returns the total capacity of this TBEStorage table
-    int capacity() const { return m_slots_used.size() + m_slots_avail.size(); }
+    int
+    capacity() const
+    {
+        return m_slots_used.size() + m_slots_avail.size();
+    }
 
     // Returns number of slots currently reserved
-    int reserved() const { return m_reserved; }
+    int
+    reserved() const
+    {
+        return m_reserved;
+    }
 
     // Returns the number of slots available
-    int slotsAvailable() const { return m_slots_avail.size() - m_reserved; }
+    int
+    slotsAvailable() const
+    {
+        return m_slots_avail.size() - m_reserved;
+    }
 
     // Returns the TBEStorage utilization
-    float utilization() const { return size() / (float)capacity(); }
+    float
+    utilization() const
+    {
+        return size() / (float)capacity();
+    }
 
     // Returns true if slotsAvailable() >= n; current_time is always ignored
     // This allows this class to be used with check_allocate in SLICC to

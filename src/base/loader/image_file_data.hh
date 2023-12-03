@@ -49,9 +49,23 @@ class ImageFileData
     size_t _len;
 
   public:
-    const std::string &filename() const { return _filename; }
-    uint8_t const *data() const { return _data; }
-    size_t len() const { return _len; }
+    const std::string &
+    filename() const
+    {
+        return _filename;
+    }
+
+    uint8_t const *
+    data() const
+    {
+        return _data;
+    }
+
+    size_t
+    len() const
+    {
+        return _len;
+    }
 
     ImageFileData(const std::string &f_name);
     virtual ~ImageFileData();

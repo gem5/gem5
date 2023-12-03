@@ -48,7 +48,6 @@ namespace gem5
 
 class SETranslatingPortProxy : public TranslatingPortProxy
 {
-
   public:
     enum AllocType
     {
@@ -62,11 +61,11 @@ class SETranslatingPortProxy : public TranslatingPortProxy
 
   protected:
     bool fixupRange(const TranslationGen::Range &range,
-            BaseMMU::Mode mode) const override;
+                    BaseMMU::Mode mode) const override;
 
   public:
-    SETranslatingPortProxy(ThreadContext *tc, AllocType alloc=NextPage,
-                           Request::Flags _flags=0);
+    SETranslatingPortProxy(ThreadContext *tc, AllocType alloc = NextPage,
+                           Request::Flags _flags = 0);
 };
 
 } // namespace gem5

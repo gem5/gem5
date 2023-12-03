@@ -53,8 +53,9 @@ using namespace free_bsd;
 namespace ArmISA
 {
 
-FsFreebsd::FsFreebsd(const Params &p) : ArmISA::FsWorkload(p),
-    enableContextSwitchStatsDump(p.enable_context_switch_stats_dump)
+FsFreebsd::FsFreebsd(const Params &p)
+    : ArmISA::FsWorkload(p),
+      enableContextSwitchStatsDump(p.enable_context_switch_stats_dump)
 {
     if (p.panic_on_panic) {
         kernelPanic = addKernelFuncEventOrPanic<PanicPCEvent>(
@@ -96,35 +97,29 @@ FsFreebsd::initState()
     // Kernel supports flattened device tree and dtb file specified.
     // Using Device Tree Blob to describe system configuration.
     inform("Loading DTB file: %s at address %#x\n", params().dtb_filename,
-            params().dtb_addr);
+           params().dtb_addr);
 
     auto *dtb_file = new loader::DtbFile(params().dtb_filename);
 
     warn_if(!dtb_file->addBootCmdLine(commandLine.c_str(), commandLine.size()),
-            "Couldn't append bootargs to DTB file: %s",
-            params().dtb_filename);
+            "Couldn't append bootargs to DTB file: %s", params().dtb_filename);
 
     Addr ra = dtb_file->findReleaseAddr();
     if (ra)
         bootReleaseAddr = ra & ~0x7FULL;
 
-    dtb_file->buildImage().
-        offset(params().dtb_addr).
-        write(system->physProxy);
+    dtb_file->buildImage().offset(params().dtb_addr).write(system->physProxy);
     delete dtb_file;
 
     // Kernel boot requirements to set up r0, r1 and r2 in ARMv7
-    for (auto *tc: system->threads) {
+    for (auto *tc : system->threads) {
         tc->setReg(int_reg::R0, (RegVal)0);
         tc->setReg(int_reg::R1, params().machine_type);
         tc->setReg(int_reg::R2, params().dtb_addr);
     }
 }
 
-FsFreebsd::~FsFreebsd()
-{
-    delete skipUDelay;
-}
+FsFreebsd::~FsFreebsd() { delete skipUDelay; }
 
 } // namespace ArmISA
 } // namespace gem5

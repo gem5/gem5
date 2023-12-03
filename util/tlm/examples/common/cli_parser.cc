@@ -37,25 +37,25 @@
 #include "sim/cxx_manager.hh"
 
 void
-CliParser::usage(const std::string& prog_name)
+CliParser::usage(const std::string &prog_name)
 {
     std::cerr
-      << "Usage: " << prog_name
-      << (" <config_file.ini> [ <option> ]\n\n"
-          "OPTIONS:\n"
+        << "Usage: " << prog_name
+        << (" <config_file.ini> [ <option> ]\n\n"
+            "OPTIONS:\n"
 
-          "    -o <offset>                  -- set memory offset\n"
-          "    -d <flag>                    -- set a gem5 debug flag\n"
-          "                                    (-<flag> clears a flag)\n"
-          "    -v                           -- verbose output\n"
-          "    -e <ticks>                   -- end of simulation after a \n"
-          "                                    given number of ticks\n"
-          "\n");
+            "    -o <offset>                  -- set memory offset\n"
+            "    -d <flag>                    -- set a gem5 debug flag\n"
+            "                                    (-<flag> clears a flag)\n"
+            "    -v                           -- verbose output\n"
+            "    -e <ticks>                   -- end of simulation after a \n"
+            "                                    given number of ticks\n"
+            "\n");
     std::exit(EXIT_FAILURE);
 }
 
 void
-CliParser::parse(int argc, char** argv)
+CliParser::parse(int argc, char **argv)
 {
     std::string prog_name(argv[0]);
 
@@ -117,7 +117,7 @@ std::string
 CliParser::getDebugFlags()
 {
     std::stringstream ss;
-    for (auto& flag : debugFlags) {
+    for (auto &flag : debugFlags) {
         ss << flag << ' ';
     }
     return ss.str();

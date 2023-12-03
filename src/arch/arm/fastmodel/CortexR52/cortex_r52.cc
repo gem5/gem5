@@ -58,11 +58,11 @@ CortexR52::setCluster(CortexR52Cluster *_cluster, int _num)
     set_evs_param("semihosting-A32_HLT", params().semihosting_A32_HLT);
     // Use uint32_t, since the model doesn't like setting these as uint8_t.
     set_evs_param<uint32_t>("semihosting-ARM_SVC",
-            params().semihosting_ARM_SVC);
+                            params().semihosting_ARM_SVC);
     set_evs_param<uint32_t>("semihosting-T32_HLT",
-            params().semihosting_T32_HLT);
+                            params().semihosting_T32_HLT);
     set_evs_param<uint32_t>("semihosting-Thumb_SVC",
-            params().semihosting_Thumb_SVC);
+                            params().semihosting_Thumb_SVC);
     set_evs_param("semihosting-cmd_line", params().semihosting_cmd_line);
     set_evs_param("semihosting-cwd", params().semihosting_cwd);
     set_evs_param("semihosting-enable", params().semihosting_enable);
@@ -107,8 +107,8 @@ CortexR52::getPort(const std::string &if_name, PortID idx)
     }
 }
 
-CortexR52Cluster::CortexR52Cluster(const Params &p) :
-    SimObject(p), cores(p.cores), evs(p.evs)
+CortexR52Cluster::CortexR52Cluster(const Params &p)
+    : SimObject(p), cores(p.cores), evs(p.evs)
 {
     for (int i = 0; i < p.cores.size(); i++)
         p.cores[i]->setCluster(this, i);
@@ -125,34 +125,34 @@ CortexR52Cluster::CortexR52Cluster(const Params &p) :
     set_evs_param("core.cpi_div", params().cpi_div);
     set_evs_param("core.cpi_mul", params().cpi_mul);
     set_evs_param("core.dcache-prefetch_enabled",
-            params().dcache_prefetch_enabled);
+                  params().dcache_prefetch_enabled);
     set_evs_param("core.dcache-read_access_latency",
-            params().dcache_read_access_latency);
+                  params().dcache_read_access_latency);
     set_evs_param("core.dcache-state_modelled",
-            params().dcache_state_modelled);
+                  params().dcache_state_modelled);
     set_evs_param("core.dcache-write_access_latency",
-            params().dcache_write_access_latency);
+                  params().dcache_write_access_latency);
     set_evs_param("core.flash_protection_enable_at_reset",
-            params().flash_protection_enable_at_reset);
+                  params().flash_protection_enable_at_reset);
     set_evs_param("core.has_flash_protection", params().has_flash_protection);
     set_evs_param("core.icache-prefetch_enabled",
-            params().icache_prefetch_enabled);
+                  params().icache_prefetch_enabled);
     set_evs_param("core.icache-read_access_latency",
-            params().icache_read_access_latency);
+                  params().icache_read_access_latency);
     set_evs_param("core.icache-state_modelled",
-            params().icache_state_modelled);
+                  params().icache_state_modelled);
     set_evs_param("core.memory.ext_slave_base",
-            params().memory_ext_slave_base);
+                  params().memory_ext_slave_base);
     set_evs_param("core.memory.flash_base", params().memory_flash_base);
     set_evs_param("core.memory.flash_size", params().memory_flash_size);
     // Use uint32_t, since the model doesn't like setting these as uint8_t.
     set_evs_param<uint32_t>("core.num_protection_regions_s1",
-            params().num_protection_regions_s1);
+                            params().num_protection_regions_s1);
     set_evs_param<uint32_t>("core.num_protection_regions_s2",
-            params().num_protection_regions_s2);
+                            params().num_protection_regions_s2);
     set_evs_param("core.num_spi", params().num_spi);
     set_evs_param("core.ram_protection_enable_at_reset",
-            params().ram_protection_enable_at_reset);
+                  params().ram_protection_enable_at_reset);
     set_evs_param("core.has_export_m_port", params().has_export_m_port);
 }
 

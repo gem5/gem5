@@ -45,9 +45,18 @@ class Channel : public ListNode
 
     void requestUpdate();
     void asyncRequestUpdate();
-    void update() { _sc_chan->update(); }
 
-    sc_core::sc_prim_channel *sc_chan() { return _sc_chan; }
+    void
+    update()
+    {
+        _sc_chan->update();
+    }
+
+    sc_core::sc_prim_channel *
+    sc_chan()
+    {
+        return _sc_chan;
+    }
 
   private:
     sc_core::sc_prim_channel *_sc_chan;
@@ -57,4 +66,4 @@ extern std::set<Channel *> allChannels;
 
 } // namespace sc_gem5
 
-#endif  //__SYSTEMC_CORE_CHANNEL_HH__
+#endif //__SYSTEMC_CORE_CHANNEL_HH__

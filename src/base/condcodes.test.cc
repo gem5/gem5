@@ -105,32 +105,28 @@ TEST(CondCodes, FindCarryWithNoCarryIn64Bit)
 {
     // Add 0x8000000000000000 + 0x8000000000000000 to get 0x10000000000000000,
     // (unrepresentable with uint64_t),  resulting in a carry
-    EXPECT_TRUE(findCarry(64, 0x0000000000000000,
-                              0x8000000000000000,
-                              0x8000000000000000));
+    EXPECT_TRUE(findCarry(64, 0x0000000000000000, 0x8000000000000000,
+                          0x8000000000000000));
     /*
      * Add 0x0000000000000000 + 0x0000000000000000 to get 0x0000000000000000
      * resulting in no carry
      * We get the same sum as above case due to unrepresentability,  but we
      * should still expect no carry
      */
-    EXPECT_FALSE(findCarry(64, 0x0000000000000000,
-                               0x0000000000000000,
-                               0x0000000000000000));
+    EXPECT_FALSE(findCarry(64, 0x0000000000000000, 0x0000000000000000,
+                           0x0000000000000000));
     /*
      * Add 0x8000000000000000 + 0x7fffffffffffffff to get 0xffffffffffffffff,
      * resulting in no carry
      */
-    EXPECT_FALSE(findCarry(64, 0xffffffffffffffff,
-                               0x8000000000000000,
-                               0x7fffffffffffffff));
+    EXPECT_FALSE(findCarry(64, 0xffffffffffffffff, 0x8000000000000000,
+                           0x7fffffffffffffff));
     /*
      * Add 0xffffffff00000000 + 0x00000000ffffffff to get 0xffffffffffffffff,
      * resulting in no carry
      */
-    EXPECT_FALSE(findCarry(64, 0xffffffffffffffff,
-                               0xffffffff00000000,
-                               0x00000000ffffffff));
+    EXPECT_FALSE(findCarry(64, 0xffffffffffffffff, 0xffffffff00000000,
+                           0x00000000ffffffff));
 }
 
 TEST(CondCodes, FindCarryWithCarryIn64Bit)
@@ -139,34 +135,30 @@ TEST(CondCodes, FindCarryWithCarryIn64Bit)
      * to get 0x1 000000000000001 (unrepresentable with uint64_t),
      * resulting in a carry
      */
-    EXPECT_TRUE(findCarry(64, 0x0000000000000000,
-                              0x8000000000000000,
-                              0x7fffffffffffffff));
+    EXPECT_TRUE(findCarry(64, 0x0000000000000000, 0x8000000000000000,
+                          0x7fffffffffffffff));
     /*
      * Add 0x0000000000000000 + 0x0000000000000000 + 0x0000000000000001
      * resulting in no carry
      * We get the same sum as the above case due to unrepresentability, but we
      * should still expect no carry
      */
-    EXPECT_FALSE(findCarry(64, 0x0000000000000001,
-                               0x0000000000000000,
-                               0x0000000000000000));
+    EXPECT_FALSE(findCarry(64, 0x0000000000000001, 0x0000000000000000,
+                           0x0000000000000000));
     /*
      * Add 0x8000000000000000 + 0x7fffffffffffffff + 0x0000000000000001
      * to get 0x1 0000000000000000 (unrepresentable with uint64_t),
      * resulting in a carry
      */
-    EXPECT_TRUE(findCarry(64, 0x0000000000000000,
-                              0x8000000000000000,
-                              0x7fffffffffffffff));
+    EXPECT_TRUE(findCarry(64, 0x0000000000000000, 0x8000000000000000,
+                          0x7fffffffffffffff));
     /*
      * Add 0xffffffff00000000 + 0x000000000000000 + 0x0000000000000001
      * to get 0x1 0000000000000000 (unrepresentable with uint64_t),
      * resulting in a carry
      */
-    EXPECT_TRUE(findCarry(64, 0x0000000000000000,
-                              0xffffffffffffffff,
-                              0x0000000000000001));
+    EXPECT_TRUE(findCarry(64, 0x0000000000000000, 0xffffffffffffffff,
+                          0x0000000000000001));
 }
 
 TEST(CondCodes, FindOverflow8Bit)
@@ -204,59 +196,30 @@ TEST(CondCodes, FindOverflow64Bit)
      * 0x8000000000000000, or -9,223,372,036,854,775,808 as signed two's
      * complement. Overflow occurs in this case
      */
-    EXPECT_TRUE(findOverflow(64, 0x8000000000000000,
-                                 0x7fffffffffffffff,
-                                 0x0000000000000001));
+    EXPECT_TRUE(findOverflow(64, 0x8000000000000000, 0x7fffffffffffffff,
+                             0x0000000000000001));
     /* Addition of 0x4000000000000000 + 0x3fffffffffffffff =
      * 0x7fffffffffffffff, or 9,223,372,036,854,775,807 as signed two's
      * complement. No overflow occurs
      */
-    EXPECT_FALSE(findOverflow(64, 0x7fffffffffffffff,
-                                  0x4000000000000000,
-                                  0x3fffffffffffffff));
+    EXPECT_FALSE(findOverflow(64, 0x7fffffffffffffff, 0x4000000000000000,
+                              0x3fffffffffffffff));
 }
 
-TEST(CondCodes, OddParity)
-{
-    EXPECT_EQ(1, findParity(8, 1));
-}
+TEST(CondCodes, OddParity) { EXPECT_EQ(1, findParity(8, 1)); }
 
-TEST(CondCodes, EvenParity)
-{
-    EXPECT_EQ(0, findParity(8, 3));
-}
+TEST(CondCodes, EvenParity) { EXPECT_EQ(0, findParity(8, 3)); }
 
-TEST(CondCodes, OddParityOverflow)
-{
-    EXPECT_EQ(1, findParity(8, 0x102));
-}
+TEST(CondCodes, OddParityOverflow) { EXPECT_EQ(1, findParity(8, 0x102)); }
 
-TEST(CondCodes, EvenParityOverflow)
-{
-    EXPECT_EQ(0, findParity(4,0x43));
-}
+TEST(CondCodes, EvenParityOverflow) { EXPECT_EQ(0, findParity(4, 0x43)); }
 
-TEST(CondCodes, IsNegative)
-{
-    EXPECT_EQ(1, findNegative(8, 128));
-}
+TEST(CondCodes, IsNegative) { EXPECT_EQ(1, findNegative(8, 128)); }
 
-TEST(CondCodes, IsNotNegative)
-{
-    EXPECT_EQ(0, findNegative(8, 127));
-}
+TEST(CondCodes, IsNotNegative) { EXPECT_EQ(0, findNegative(8, 127)); }
 
-TEST(CondCodes, IsZero)
-{
-    EXPECT_EQ(1, findZero(8, 0));
-}
+TEST(CondCodes, IsZero) { EXPECT_EQ(1, findZero(8, 0)); }
 
-TEST(CondCodes, IsNotZero)
-{
-    EXPECT_EQ(0, findZero(8, 1));
-}
+TEST(CondCodes, IsNotZero) { EXPECT_EQ(0, findZero(8, 1)); }
 
-TEST(CondCodes, IsZeroOverflow)
-{
-    EXPECT_EQ(1, findZero(8,0x100));
-}
+TEST(CondCodes, IsZeroOverflow) { EXPECT_EQ(1, findZero(8, 0x100)); }

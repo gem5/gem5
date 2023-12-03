@@ -46,7 +46,7 @@ class TrafficGenerator : public sc_core::sc_module
   private:
     Gem5SystemC::MemoryManager mm;
 
-    tlm::tlm_generic_payload* requestInProgress;
+    tlm::tlm_generic_payload *requestInProgress;
 
     uint32_t dataBuffer;
 
@@ -63,13 +63,13 @@ class TrafficGenerator : public sc_core::sc_module
 
     void process();
 
-    void peq_cb(tlm::tlm_generic_payload& trans, const tlm::tlm_phase& phase);
+    void peq_cb(tlm::tlm_generic_payload &trans, const tlm::tlm_phase &phase);
 
-    void checkTransaction(tlm::tlm_generic_payload& trans);
+    void checkTransaction(tlm::tlm_generic_payload &trans);
 
-    virtual tlm::tlm_sync_enum nb_transport_bw(tlm::tlm_generic_payload& trans,
-                                               tlm::tlm_phase& phase,
-                                               sc_core::sc_time& delay);
+    virtual tlm::tlm_sync_enum nb_transport_bw(tlm::tlm_generic_payload &trans,
+                                               tlm::tlm_phase &phase,
+                                               sc_core::sc_time &delay);
 };
 
 #endif

@@ -160,6 +160,7 @@ const uint8_t Crypto::aesINVSHIFT[16] = {
     0, 13, 10, 7,  4,  1, 14, 11,
     8, 5,  2,  15, 12, 9, 6,  3
 };
+
 /* clang-format on */
 
 uint8_t
@@ -167,11 +168,12 @@ Crypto::aesFFMul(uint8_t a, uint8_t b)
 {
     unsigned int log_prod;
 
-    if ((a ==0)|| (b == 0)) return 0;
+    if ((a == 0) || (b == 0))
+        return 0;
 
     log_prod = (aesFFLOG[a] + aesFFLOG[b]);
 
-    if(log_prod > 0xff)
+    if (log_prod > 0xff)
         log_prod = log_prod - 0xff;
 
     return aesFFEXP[log_prod];
@@ -210,8 +212,7 @@ Crypto::aesInvShiftRows(uint8_t *output, uint8_t *input)
 }
 
 void
-Crypto::aesAddRoundKey(uint8_t *output, uint8_t *input,
-                    uint8_t *key)
+Crypto::aesAddRoundKey(uint8_t *output, uint8_t *input, uint8_t *key)
 {
     for (int i = 0; i < 16; ++i) {
         output[i] = input[i] ^ key[i];
@@ -226,8 +227,7 @@ Crypto::aesMixColumns(uint8_t *output, uint8_t *input)
         int row1 = row0 + 1;
         int row2 = row0 + 2;
         int row3 = row0 + 3;
-        uint8_t t1 = input[row0] ^ input[row1] ^
-                           input[row2] ^ input[row3];
+        uint8_t t1 = input[row0] ^ input[row1] ^ input[row2] ^ input[row3];
 
         output[row1] = input[row1] ^ t1 ^ aesFFMul2(input[row1] ^ input[row2]);
         output[row2] = input[row2] ^ t1 ^ aesFFMul2(input[row2] ^ input[row3]);
@@ -245,16 +245,15 @@ Crypto::aesInvMixColumns(uint8_t *output, uint8_t *input)
             int index1 = (j * 4) + ((i + 1) % 4);
             int index2 = (j * 4) + ((i + 2) % 4);
             int index3 = (j * 4) + ((i + 3) % 4);
-            output [index0] =
+            output[index0] =
                 aesFFMul(0x0e, input[index0]) ^ aesFFMul(0x0b, input[index1]) ^
                 aesFFMul(0x0d, input[index2]) ^ aesFFMul(0x09, input[index3]);
-            }
+        }
     }
 }
 
 void
-Crypto::aesEncrypt(uint8_t *output, uint8_t *input,
-                    uint8_t *key)
+Crypto::aesEncrypt(uint8_t *output, uint8_t *input, uint8_t *key)
 {
     uint8_t temp1[16];
     uint8_t temp2[16];
@@ -264,8 +263,7 @@ Crypto::aesEncrypt(uint8_t *output, uint8_t *input,
 }
 
 void
-Crypto::aesDecrypt(uint8_t *output, uint8_t *input,
-                    uint8_t *key)
+Crypto::aesDecrypt(uint8_t *output, uint8_t *input, uint8_t *key)
 {
     uint8_t temp1[16];
     uint8_t temp2[16];
@@ -275,10 +273,7 @@ Crypto::aesDecrypt(uint8_t *output, uint8_t *input,
 }
 
 void
-Crypto::sha256Op(
-    uint32_t *X,
-    uint32_t *Y,
-    uint32_t *Z)
+Crypto::sha256Op(uint32_t *X, uint32_t *Y, uint32_t *Z)
 {
     uint32_t T0, T1, T2, T3;
     for (int i = 0; i < 4; ++i) {
@@ -289,40 +284,49 @@ Crypto::sha256Op(
         Y[3] = T2 + sigma0(X[0]) + T1;
         // Rotate
         T3 = Y[3];
-        Y[3] = Y[2]; Y[2] = Y[1]; Y[1] = Y[0]; Y[0] = X[3];
-        X[3] = X[2]; X[2] = X[1]; X[1] = X[0]; X[0] = T3;
+        Y[3] = Y[2];
+        Y[2] = Y[1];
+        Y[1] = Y[0];
+        Y[0] = X[3];
+        X[3] = X[2];
+        X[2] = X[1];
+        X[1] = X[0];
+        X[0] = T3;
     }
 }
 
 void
-Crypto::_sha1Op(
-    uint32_t *X,
-    uint32_t *Y,
-    uint32_t *Z,
-    SHAOp op)
+Crypto::_sha1Op(uint32_t *X, uint32_t *Y, uint32_t *Z, SHAOp op)
 {
     uint32_t T1, T2;
 
     for (int i = 0; i < 4; ++i) {
         switch (op) {
-          case CHOOSE:   T1 = choose(X[1], X[2], X[3]); break;
-          case PARITY:   T1 = parity(X[1], X[2], X[3]); break;
-          case MAJORITY: T1 = majority(X[1], X[2], X[3]); break;
-          default: return;
+        case CHOOSE:
+            T1 = choose(X[1], X[2], X[3]);
+            break;
+        case PARITY:
+            T1 = parity(X[1], X[2], X[3]);
+            break;
+        case MAJORITY:
+            T1 = majority(X[1], X[2], X[3]);
+            break;
+        default:
+            return;
         }
         Y[0] += ror(X[0], 27) + T1 + Z[i];
         X[1] = ror(X[1], 2);
         T2 = Y[0];
         Y[0] = X[3];
-        X[3] = X[2]; X[2] = X[1]; X[1] = X[0]; X[0] = T2;
+        X[3] = X[2];
+        X[2] = X[1];
+        X[1] = X[0];
+        X[0] = T2;
     }
 }
 
 void
-Crypto::sha256H(
-    uint8_t *output,
-    uint8_t *input,
-    uint8_t *input2)
+Crypto::sha256H(uint8_t *output, uint8_t *input, uint8_t *input2)
 {
     uint32_t X[4], Y[4], Z[4];
     load3Reg(&X[0], &Y[0], &Z[0], output, input, input2);
@@ -331,10 +335,7 @@ Crypto::sha256H(
 }
 
 void
-Crypto::sha256H2(
-    uint8_t *output,
-    uint8_t *input,
-    uint8_t *input2)
+Crypto::sha256H2(uint8_t *output, uint8_t *input, uint8_t *input2)
 {
     uint32_t X[4], Y[4], Z[4];
     load3Reg(&X[0], &Y[0], &Z[0], output, input, input2);
@@ -350,7 +351,10 @@ Crypto::sha256Su0(uint8_t *output, uint8_t *input)
 
     load2Reg(&X[0], &Y[0], output, input);
 
-    T[3] = Y[0]; T[2] = X[3]; T[1] = X[2]; T[0] = X[1];
+    T[3] = Y[0];
+    T[2] = X[3];
+    T[1] = X[2];
+    T[0] = X[1];
 
     T[3] = ror(T[3], 7) ^ ror(T[3], 18) ^ (T[3] >> 3);
     T[2] = ror(T[2], 7) ^ ror(T[2], 18) ^ (T[2] >> 3);
@@ -366,38 +370,39 @@ Crypto::sha256Su0(uint8_t *output, uint8_t *input)
 }
 
 void
-Crypto::sha256Su1(
-    uint8_t *output,
-    uint8_t *input,
-    uint8_t *input2)
+Crypto::sha256Su1(uint8_t *output, uint8_t *input, uint8_t *input2)
 {
     uint32_t X[4], Y[4], Z[4];
     uint32_t T0[4], T1[4], T2[4], T3[4];
 
     load3Reg(&X[0], &Y[0], &Z[0], output, input, input2);
 
-    T0[3] = Z[0]; T0[2] = Y[3]; T0[1] = Y[2]; T0[0] = Y[1];
-    T1[1] = Z[3]; T1[0] = Z[2];
+    T0[3] = Z[0];
+    T0[2] = Y[3];
+    T0[1] = Y[2];
+    T0[0] = Y[1];
+    T1[1] = Z[3];
+    T1[0] = Z[2];
     T1[1] = ror(T1[1], 17) ^ ror(T1[1], 19) ^ (T1[1] >> 10);
     T1[0] = ror(T1[0], 17) ^ ror(T1[0], 19) ^ (T1[0] >> 10);
-    T3[1] = X[1] + T0[1]; T3[0] = X[0] + T0[0];
-    T1[1] = T3[1] + T1[1]; T1[0] = T3[0] + T1[0];
+    T3[1] = X[1] + T0[1];
+    T3[0] = X[0] + T0[0];
+    T1[1] = T3[1] + T1[1];
+    T1[0] = T3[0] + T1[0];
     T2[1] = ror(T1[1], 17) ^ ror(T1[1], 19) ^ (T1[1] >> 10);
     T2[0] = ror(T1[0], 17) ^ ror(T1[0], 19) ^ (T1[0] >> 10);
-    T3[1] = X[3] + T0[3]; T3[0] = X[2] + T0[2];
+    T3[1] = X[3] + T0[3];
+    T3[0] = X[2] + T0[2];
     X[3] = T3[1] + T2[1];
     X[2] = T3[0] + T2[0];
-    X[1] = T1[1]; X[0] = T1[0];
+    X[1] = T1[1];
+    X[0] = T1[0];
 
     store1Reg(output, &X[0]);
 }
 
 void
-Crypto::sha1Op(
-    uint8_t *output,
-    uint8_t *input,
-    uint8_t *input2,
-    SHAOp op)
+Crypto::sha1Op(uint8_t *output, uint8_t *input, uint8_t *input2, SHAOp op)
 {
     uint32_t X[4], Y[4], Z[4];
     load3Reg(&X[0], &Y[0], &Z[0], output, input, input2);
@@ -406,28 +411,19 @@ Crypto::sha1Op(
 }
 
 void
-Crypto::sha1C(
-    uint8_t *output,
-    uint8_t *input,
-    uint8_t *input2)
+Crypto::sha1C(uint8_t *output, uint8_t *input, uint8_t *input2)
 {
     sha1Op(output, input, input2, CHOOSE);
 }
 
 void
-Crypto::sha1P(
-    uint8_t *output,
-    uint8_t *input,
-    uint8_t *input2)
+Crypto::sha1P(uint8_t *output, uint8_t *input, uint8_t *input2)
 {
     sha1Op(output, input, input2, PARITY);
 }
 
 void
-Crypto::sha1M(
-    uint8_t *output,
-    uint8_t *input,
-    uint8_t *input2)
+Crypto::sha1M(uint8_t *output, uint8_t *input, uint8_t *input2)
 {
     sha1Op(output, input, input2, MAJORITY);
 }
@@ -442,15 +438,15 @@ Crypto::sha1H(uint8_t *output, uint8_t *input)
 }
 
 void
-Crypto::sha1Su0(
-    uint8_t *output,
-    uint8_t *input,
-    uint8_t *input2)
+Crypto::sha1Su0(uint8_t *output, uint8_t *input, uint8_t *input2)
 {
     uint32_t X[4], Y[4], Z[4], T[4];
     load3Reg(&X[0], &Y[0], &Z[0], output, input, input2);
 
-    T[3] = Y[1]; T[2] = Y[0]; T[1] = X[3]; T[0] = X[2];
+    T[3] = Y[1];
+    T[2] = Y[0];
+    T[1] = X[3];
+    T[0] = X[2];
     X[3] = T[3] ^ X[3] ^ Z[3];
     X[2] = T[2] ^ X[2] ^ Z[2];
     X[1] = T[1] ^ X[1] ^ Z[1];
@@ -469,38 +465,31 @@ Crypto::sha1Su1(uint8_t *output, uint8_t *input)
     T[2] = X[2] ^ Y[3];
     T[1] = X[1] ^ Y[2];
     T[0] = X[0] ^ Y[1];
-    X[2] = ror(T[2], 31); X[1] = ror(T[1], 31); X[0] = ror(T[0], 31);
+    X[2] = ror(T[2], 31);
+    X[1] = ror(T[1], 31);
+    X[0] = ror(T[0], 31);
     X[3] = ror(T[3], 31) ^ ror(T[0], 30);
 
     store1Reg(output, &X[0]);
 }
 
 void
-Crypto::load2Reg(
-    uint32_t *X,
-    uint32_t *Y,
-    uint8_t *output,
-    uint8_t *input)
+Crypto::load2Reg(uint32_t *X, uint32_t *Y, uint8_t *output, uint8_t *input)
 {
     for (int i = 0; i < 4; ++i) {
-        X[i] = *((uint32_t *)&output[i*4]);
-        Y[i] = *((uint32_t *)&input[i*4]);
+        X[i] = *((uint32_t *)&output[i * 4]);
+        Y[i] = *((uint32_t *)&input[i * 4]);
     }
 }
 
 void
-Crypto::load3Reg(
-    uint32_t *X,
-    uint32_t *Y,
-    uint32_t *Z,
-    uint8_t *output,
-    uint8_t *input,
-    uint8_t *input2)
+Crypto::load3Reg(uint32_t *X, uint32_t *Y, uint32_t *Z, uint8_t *output,
+                 uint8_t *input, uint8_t *input2)
 {
     for (int i = 0; i < 4; ++i) {
-        X[i] = *((uint32_t *)&output[i*4]);
-        Y[i] = *((uint32_t *)&input[i*4]);
-        Z[i] = *((uint32_t *)&input2[i*4]);
+        X[i] = *((uint32_t *)&output[i * 4]);
+        Y[i] = *((uint32_t *)&input[i * 4]);
+        Z[i] = *((uint32_t *)&input2[i * 4]);
     }
 }
 
@@ -508,10 +497,10 @@ void
 Crypto::store1Reg(uint8_t *output, uint32_t *X)
 {
     for (int i = 0; i < 4; ++i) {
-        output[i*4] = (uint8_t)(X[i]);
-        output[i*4+1] = (uint8_t)(X[i] >> 8);
-        output[i*4+2] = (uint8_t)(X[i] >> 16);
-        output[i*4+3] = (uint8_t)(X[i] >> 24);
+        output[i * 4] = (uint8_t)(X[i]);
+        output[i * 4 + 1] = (uint8_t)(X[i] >> 8);
+        output[i * 4 + 2] = (uint8_t)(X[i] >> 16);
+        output[i * 4 + 3] = (uint8_t)(X[i] >> 24);
     }
 }
 

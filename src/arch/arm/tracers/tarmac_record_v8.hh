@@ -48,7 +48,8 @@
 namespace gem5
 {
 
-namespace trace {
+namespace trace
+{
 
 /**
  * TarmacTracer record for ARMv8 CPUs:
@@ -58,16 +59,13 @@ namespace trace {
 class TarmacTracerRecordV8 : public TarmacTracerRecord
 {
   public:
-
     /**
      * General data shared by all v8 entries
      */
     struct TraceEntryV8
     {
       public:
-        TraceEntryV8(std::string _cpuName)
-          : cpuName(_cpuName)
-        {}
+        TraceEntryV8(std::string _cpuName) : cpuName(_cpuName) {}
 
       protected:
         std::string cpuName;
@@ -76,13 +74,12 @@ class TarmacTracerRecordV8 : public TarmacTracerRecord
     /**
      * Instruction entry for v8 records
      */
-    struct TraceInstEntryV8: public TraceInstEntry, TraceEntryV8
+    struct TraceInstEntryV8 : public TraceInstEntry, TraceEntryV8
     {
       public:
-        TraceInstEntryV8(const TarmacContext& tarmCtx, bool predicate);
+        TraceInstEntryV8(const TarmacContext &tarmCtx, bool predicate);
 
-        virtual void print(std::ostream& outs,
-                           int verbosity = 0,
+        virtual void print(std::ostream &outs, int verbosity = 0,
                            const std::string &prefix = "") const override;
 
       protected:
@@ -93,20 +90,19 @@ class TarmacTracerRecordV8 : public TarmacTracerRecord
     /**
      * Register entry for v8 records
      */
-    struct TraceRegEntryV8: public TraceRegEntry, TraceEntryV8
+    struct TraceRegEntryV8 : public TraceRegEntry, TraceEntryV8
     {
       public:
-        TraceRegEntryV8(const TarmacContext& tarmCtx, const RegId& reg);
+        TraceRegEntryV8(const TarmacContext &tarmCtx, const RegId &reg);
 
-        virtual void print(std::ostream& outs,
-                           int verbosity = 0,
+        virtual void print(std::ostream &outs, int verbosity = 0,
                            const std::string &prefix = "") const override;
 
       protected:
-        void updateInt(const TarmacContext& tarmCtx) override;
-        void updateMisc(const TarmacContext& tarmCtx) override;
-        void updateVec(const TarmacContext& tarmCtx) override;
-        void updatePred(const TarmacContext& tarmCtx) override;
+        void updateInt(const TarmacContext &tarmCtx) override;
+        void updateMisc(const TarmacContext &tarmCtx) override;
+        void updateVec(const TarmacContext &tarmCtx) override;
+        void updatePred(const TarmacContext &tarmCtx) override;
 
         /**
          * Returning a string which contains the formatted
@@ -124,14 +120,13 @@ class TarmacTracerRecordV8 : public TarmacTracerRecord
     /**
      * Memory Entry for V8
      */
-    struct TraceMemEntryV8: public TraceMemEntry, TraceEntryV8
+    struct TraceMemEntryV8 : public TraceMemEntry, TraceEntryV8
     {
       public:
-        TraceMemEntryV8(const TarmacContext& tarmCtx,
-                        uint8_t _size, Addr _addr, uint64_t _data);
+        TraceMemEntryV8(const TarmacContext &tarmCtx, uint8_t _size,
+                        Addr _addr, uint64_t _data);
 
-        virtual void print(std::ostream& outs,
-                           int verbosity = 0,
+        virtual void print(std::ostream &outs, int verbosity = 0,
                            const std::string &prefix = "") const override;
 
       protected:
@@ -141,21 +136,21 @@ class TarmacTracerRecordV8 : public TarmacTracerRecord
   public:
     TarmacTracerRecordV8(Tick _when, ThreadContext *_thread,
                          const StaticInstPtr _staticInst,
-                         const PCStateBase &_pc, TarmacTracer& _parent,
+                         const PCStateBase &_pc, TarmacTracer &_parent,
                          const StaticInstPtr _macroStaticInst = NULL)
-      : TarmacTracerRecord(_when, _thread, _staticInst, _pc,
-                           _parent, _macroStaticInst)
+        : TarmacTracerRecord(_when, _thread, _staticInst, _pc, _parent,
+                             _macroStaticInst)
     {}
 
   protected:
     /** Generates an Entry for the executed instruction. */
-    void addInstEntry(std::vector<InstPtr>& queue, const TarmacContext& ptr);
+    void addInstEntry(std::vector<InstPtr> &queue, const TarmacContext &ptr);
 
     /** Generates an Entry for every memory access triggered */
-    void addMemEntry(std::vector<MemPtr>& queue, const TarmacContext& ptr);
+    void addMemEntry(std::vector<MemPtr> &queue, const TarmacContext &ptr);
 
     /** Generate a Record for every register being written */
-    void addRegEntry(std::vector<RegPtr>& queue, const TarmacContext& ptr);
+    void addRegEntry(std::vector<RegPtr> &queue, const TarmacContext &ptr);
 };
 
 } // namespace trace

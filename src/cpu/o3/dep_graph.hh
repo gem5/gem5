@@ -54,13 +54,11 @@ template <class DynInstPtr>
 class DependencyEntry
 {
   public:
-    DependencyEntry()
-        : inst(NULL), next(NULL)
-    { }
+    DependencyEntry() : inst(NULL), next(NULL) {}
 
     DynInstPtr inst;
-    //Might want to include data about what arch. register the
-    //dependence is waiting on.
+    // Might want to include data about what arch. register the
+    // dependence is waiting on.
     DependencyEntry<DynInstPtr> *next;
 };
 
@@ -72,7 +70,7 @@ class DependencyEntry
  * the producing instruction of that register.  Instructions are put
  * on the list upon reaching the IQ, and are removed from the list
  * either when the producer completes, or the instruction is squashed.
-*/
+ */
 template <class DynInstPtr>
 class DependencyGraph
 {
@@ -82,7 +80,7 @@ class DependencyGraph
     /** Default construction.  Must call resize() prior to use. */
     DependencyGraph()
         : numEntries(0), memAllocCounter(0), nodesTraversed(0), nodesRemoved(0)
-    { }
+    {}
 
     ~DependencyGraph();
 
@@ -96,12 +94,18 @@ class DependencyGraph
     void insert(RegIndex idx, const DynInstPtr &new_inst);
 
     /** Sets the producing instruction of a given register. */
-    void setInst(RegIndex idx, const DynInstPtr &new_inst)
-    { dependGraph[idx].inst = new_inst; }
+    void
+    setInst(RegIndex idx, const DynInstPtr &new_inst)
+    {
+        dependGraph[idx].inst = new_inst;
+    }
 
     /** Clears the producing instruction. */
-    void clearInst(RegIndex idx)
-    { dependGraph[idx].inst = NULL; }
+    void
+    clearInst(RegIndex idx)
+    {
+        dependGraph[idx].inst = NULL;
+    }
 
     /** Removes an instruction from a single linked list. */
     void remove(RegIndex idx, const DynInstPtr &inst_to_remove);
@@ -113,7 +117,11 @@ class DependencyGraph
     bool empty() const;
 
     /** Checks if there are any dependents on a specific register. */
-    bool empty(RegIndex idx) const { return !dependGraph[idx].next; }
+    bool
+    empty(RegIndex idx) const
+    {
+        return !dependGraph[idx].next;
+    }
 
     /** Debugging function to dump out the dependency graph.
      */
@@ -143,8 +151,7 @@ class DependencyGraph
 
 template <class DynInstPtr>
 DependencyGraph<DynInstPtr>::~DependencyGraph()
-{
-}
+{}
 
 template <class DynInstPtr>
 void
@@ -187,8 +194,8 @@ template <class DynInstPtr>
 void
 DependencyGraph<DynInstPtr>::insert(RegIndex idx, const DynInstPtr &new_inst)
 {
-    //Add this new, dependent instruction at the head of the dependency
-    //chain.
+    // Add this new, dependent instruction at the head of the dependency
+    // chain.
 
     // First create the entry that will be added to the head of the
     // dependency chain.
@@ -201,7 +208,6 @@ DependencyGraph<DynInstPtr>::insert(RegIndex idx, const DynInstPtr &new_inst)
 
     ++memAllocCounter;
 }
-
 
 template <class DynInstPtr>
 void
@@ -275,13 +281,12 @@ DependencyGraph<DynInstPtr>::dump()
 {
     DepEntry *curr;
 
-    for (int i = 0; i < numEntries; ++i)
-    {
+    for (int i = 0; i < numEntries; ++i) {
         curr = &dependGraph[i];
 
         if (curr->inst) {
-            cprintf("dependGraph[%i]: producer: %s [sn:%lli] consumer: ",
-                    i, curr->inst->pcState(), curr->inst->seqNum);
+            cprintf("dependGraph[%i]: producer: %s [sn:%lli] consumer: ", i,
+                    curr->inst->pcState(), curr->inst->seqNum);
         } else {
             cprintf("dependGraph[%i]: No producer. consumer: ", i);
         }
@@ -289,8 +294,8 @@ DependencyGraph<DynInstPtr>::dump()
         while (curr->next != NULL) {
             curr = curr->next;
 
-            cprintf("%s [sn:%lli] ",
-                    curr->inst->pcState(), curr->inst->seqNum);
+            cprintf("%s [sn:%lli] ", curr->inst->pcState(),
+                    curr->inst->seqNum);
         }
 
         cprintf("\n");

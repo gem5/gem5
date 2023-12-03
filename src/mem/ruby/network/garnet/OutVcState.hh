@@ -27,7 +27,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #ifndef __MEM_RUBY_NETWORK_GARNET_0_OUTVCSTATE_HH__
 #define __MEM_RUBY_NETWORK_GARNET_0_OUTVCSTATE_HH__
 
@@ -48,16 +47,27 @@ class OutVcState
   public:
     OutVcState(int id, GarnetNetwork *network_ptr, uint32_t consumerVcs);
 
-    int get_credit_count()          { return m_credit_count; }
-    inline bool has_credit()       { return (m_credit_count > 0); }
+    int
+    get_credit_count()
+    {
+        return m_credit_count;
+    }
+
+    inline bool
+    has_credit()
+    {
+        return (m_credit_count > 0);
+    }
+
     void increment_credit();
     void decrement_credit();
 
     inline bool
     isInState(VC_state_type state, Tick request_time)
     {
-        return ((m_vc_state == state) && (request_time >= m_time) );
+        return ((m_vc_state == state) && (request_time >= m_time));
     }
+
     inline void
     setState(VC_state_type state, Tick time)
     {
@@ -66,7 +76,7 @@ class OutVcState
     }
 
   private:
-    int m_id ;
+    int m_id;
     Tick m_time;
     VC_state_type m_vc_state;
     int m_credit_count;

@@ -61,9 +61,9 @@ class IsaFake : public BasicPioDevice
     PARAMS(IsaFake);
 
     /**
-      * The constructor for Isa Fake just registers itself with the MMU.
-      * @param p params structure
-      */
+     * The constructor for Isa Fake just registers itself with the MMU.
+     * @param p params structure
+     */
     IsaFake(const Params &p);
 
     /**

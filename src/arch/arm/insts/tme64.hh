@@ -45,14 +45,15 @@
 namespace gem5
 {
 
-namespace ArmISAInst {
+namespace ArmISAInst
+{
 
 class MicroTmeOp : public ArmISA::MicroOp
 {
   protected:
     MicroTmeOp(const char *mnem, ArmISA::ExtMachInst machInst,
                OpClass __opClass)
-      : ArmISA::MicroOp(mnem, machInst, __opClass)
+        : ArmISA::MicroOp(mnem, machInst, __opClass)
     {}
 };
 
@@ -60,8 +61,8 @@ class MicroTmeBasic64 : public MicroTmeOp
 {
   protected:
     MicroTmeBasic64(const char *mnem, ArmISA::ExtMachInst machInst,
-                    OpClass __opClass) :
-                    MicroTmeOp(mnem, machInst, __opClass)
+                    OpClass __opClass)
+        : MicroTmeOp(mnem, machInst, __opClass)
     {}
 
     std::string generateDisassembly(Addr pc,
@@ -75,8 +76,7 @@ class TmeImmOp64 : public ArmISA::ArmStaticInst
 
     TmeImmOp64(const char *mnem, ArmISA::ExtMachInst machInst,
                OpClass __opClass, uint64_t _imm)
-      : ArmISA::ArmStaticInst(mnem, machInst, __opClass),
-        imm(_imm)
+        : ArmISA::ArmStaticInst(mnem, machInst, __opClass), imm(_imm)
     {}
 
     std::string generateDisassembly(Addr pc,
@@ -90,8 +90,7 @@ class TmeRegNone64 : public ArmISA::ArmStaticInst
 
     TmeRegNone64(const char *mnem, ArmISA::ExtMachInst machInst,
                  OpClass __opClass, RegIndex _dest)
-      : ArmISA::ArmStaticInst(mnem, machInst, __opClass),
-        dest(_dest)
+        : ArmISA::ArmStaticInst(mnem, machInst, __opClass), dest(_dest)
     {}
 
     std::string generateDisassembly(Addr pc,
@@ -151,7 +150,6 @@ class MicroTcommit64 : public MicroTmeBasic64
     Fault initiateAcc(ExecContext *, trace::InstRecord *) const;
     Fault completeAcc(PacketPtr, ExecContext *, trace::InstRecord *) const;
 };
-
 
 class MacroTmeOp : public ArmISA::PredMacroOp
 {

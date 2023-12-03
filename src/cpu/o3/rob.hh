@@ -120,7 +120,7 @@ class ROB
      *  no guarantee as to the return value if the ROB is empty.
      *  @retval Pointer to the DynInst that is at the head of the ROB.
      */
-//    DynInstPtr readHeadInst();
+    //    DynInstPtr readHeadInst();
 
     /** Returns a pointer to the head instruction of a specific thread within
      *  the ROB.
@@ -137,7 +137,7 @@ class ROB
      *  no guarantee as to the return value if the ROB is empty.
      *  @retval Pointer to the DynInst that is at the tail of the ROB.
      */
-//    DynInstPtr readTailInst();
+    //    DynInstPtr readTailInst();
 
     /** Returns a pointer to the tail instruction of a specific thread within
      *  the ROB.
@@ -146,7 +146,7 @@ class ROB
     DynInstPtr readTailInst(ThreadID tid);
 
     /** Retires the head instruction, removing it from the ROB. */
-//    void retireHead();
+    //    void retireHead();
 
     /** Retires the head instruction of a specific thread, removing it from the
      *  ROB.
@@ -154,7 +154,7 @@ class ROB
     void retireHead(ThreadID tid);
 
     /** Is the oldest instruction across all threads ready. */
-//    bool isHeadReady();
+    //    bool isHeadReady();
 
     /** Is the oldest instruction across a particular thread ready. */
     bool isHeadReady(ThreadID tid);
@@ -175,28 +175,46 @@ class ROB
     unsigned numFreeEntries(ThreadID tid);
 
     /** Returns the maximum number of entries for a specific thread. */
-    unsigned getMaxEntries(ThreadID tid)
-    { return maxEntries[tid]; }
+    unsigned
+    getMaxEntries(ThreadID tid)
+    {
+        return maxEntries[tid];
+    }
 
     /** Returns the number of entries being used by a specific thread. */
-    unsigned getThreadEntries(ThreadID tid)
-    { return threadEntries[tid]; }
+    unsigned
+    getThreadEntries(ThreadID tid)
+    {
+        return threadEntries[tid];
+    }
 
     /** Returns if the ROB is full. */
-    bool isFull()
-    { return numInstsInROB == numEntries; }
+    bool
+    isFull()
+    {
+        return numInstsInROB == numEntries;
+    }
 
     /** Returns if a specific thread's partition is full. */
-    bool isFull(ThreadID tid)
-    { return threadEntries[tid] == numEntries; }
+    bool
+    isFull(ThreadID tid)
+    {
+        return threadEntries[tid] == numEntries;
+    }
 
     /** Returns if the ROB is empty. */
-    bool isEmpty() const
-    { return numInstsInROB == 0; }
+    bool
+    isEmpty() const
+    {
+        return numInstsInROB == 0;
+    }
 
     /** Returns if a specific thread's partition is empty. */
-    bool isEmpty(ThreadID tid) const
-    { return threadEntries[tid] == 0; }
+    bool
+    isEmpty(ThreadID tid) const
+    {
+        return threadEntries[tid] == 0;
+    }
 
     /** Executes the squash, marking squashed instructions. */
     void doSquash(ThreadID tid);
@@ -213,41 +231,44 @@ class ROB
     void updateTail();
 
     /** Reads the PC of the oldest head instruction. */
-//    uint64_t readHeadPC();
+    //    uint64_t readHeadPC();
 
     /** Reads the PC of the head instruction of a specific thread. */
-//    uint64_t readHeadPC(ThreadID tid);
+    //    uint64_t readHeadPC(ThreadID tid);
 
     /** Reads the next PC of the oldest head instruction. */
-//    uint64_t readHeadNextPC();
+    //    uint64_t readHeadNextPC();
 
     /** Reads the next PC of the head instruction of a specific thread. */
-//    uint64_t readHeadNextPC(ThreadID tid);
+    //    uint64_t readHeadNextPC(ThreadID tid);
 
     /** Reads the sequence number of the oldest head instruction. */
-//    InstSeqNum readHeadSeqNum();
+    //    InstSeqNum readHeadSeqNum();
 
     /** Reads the sequence number of the head instruction of a specific thread.
      */
-//    InstSeqNum readHeadSeqNum(ThreadID tid);
+    //    InstSeqNum readHeadSeqNum(ThreadID tid);
 
     /** Reads the PC of the youngest tail instruction. */
-//    uint64_t readTailPC();
+    //    uint64_t readTailPC();
 
     /** Reads the PC of the tail instruction of a specific thread. */
-//    uint64_t readTailPC(ThreadID tid);
+    //    uint64_t readTailPC(ThreadID tid);
 
     /** Reads the sequence number of the youngest tail instruction. */
-//    InstSeqNum readTailSeqNum();
+    //    InstSeqNum readTailSeqNum();
 
     /** Reads the sequence number of tail instruction of a specific thread. */
-//    InstSeqNum readTailSeqNum(ThreadID tid);
+    //    InstSeqNum readTailSeqNum(ThreadID tid);
 
     /** Checks if the ROB is still in the process of squashing instructions.
      *  @retval Whether or not the ROB is done squashing.
      */
-    bool isDoneSquashing(ThreadID tid) const
-    { return doneSquashing[tid]; }
+    bool
+    isDoneSquashing(ThreadID tid) const
+    {
+        return doneSquashing[tid];
+    }
 
     /** Checks if the ROB is still in the process of squashing instructions for
      *  any thread.
@@ -328,7 +349,6 @@ class ROB
 
     /** Number of active threads. */
     ThreadID numThreads;
-
 
     struct ROBStats : public statistics::Group
     {

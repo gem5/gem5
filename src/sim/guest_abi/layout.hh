@@ -45,7 +45,7 @@ namespace guest_abi
  * State may need to be initialized based on the ThreadContext, for instance
  * to find out where the stack pointer is initially.
  */
-template <typename ABI, typename Enabled=void>
+template <typename ABI, typename Enabled = void>
 struct StateInitializer
 {
     static typename ABI::State
@@ -56,8 +56,8 @@ struct StateInitializer
 };
 
 template <typename ABI>
-struct StateInitializer<ABI, typename std::enable_if_t<
-    std::is_constructible_v<typename ABI::State, const ThreadContext *>>>
+struct StateInitializer<ABI, typename std::enable_if_t<std::is_constructible_v<
+                                 typename ABI::State, const ThreadContext *>>>
 {
     static typename ABI::State
     init(const ThreadContext *tc)
@@ -79,8 +79,8 @@ initializeState(const ThreadContext *tc)
  * cases where the return or argument type doesn't affect where things are
  * stored.
  */
-template <typename ABI, template <class ...> class Role,
-          typename Type, typename Enabled=void>
+template <typename ABI, template <class...> class Role, typename Type,
+          typename Enabled = void>
 struct Preparer
 {
     static void
@@ -93,7 +93,7 @@ struct Preparer
  * are stored, the ABI can implement a prepare() method for the various
  * argument and/or return types, and this specialization will call into it.
  */
-template <typename ABI, template <class ...> class Role, typename Type>
+template <typename ABI, template <class...> class Role, typename Type>
 struct Preparer<ABI, Role, Type, decltype((void)&Role<ABI, Type>::prepare)>
 {
     static void
@@ -103,22 +103,23 @@ struct Preparer<ABI, Role, Type, decltype((void)&Role<ABI, Type>::prepare)>
     }
 };
 
-template <typename ABI, typename Ret, typename Enabled=void>
+template <typename ABI, typename Ret, typename Enabled = void>
 static inline void
 prepareForResult(ThreadContext *tc, typename ABI::State &state)
 {
     Preparer<ABI, Result, Ret>::prepare(tc, state);
 }
 
-template <typename ABI, typename ...Args>
+template <typename ABI, typename... Args>
 static inline void
 prepareForArguments([[maybe_unused]] ThreadContext *tc,
-        typename ABI::State &state)
+                    typename ABI::State &state)
 {
-    GEM5_FOR_EACH_IN_PACK(Preparer<ABI, Argument, Args>::prepare(tc, state));
+    GEM5_FOR_EACH_IN_PACK (Preparer<ABI, Argument, Args>::prepare(tc, state))
+        ;
 }
 
-template <typename ABI, typename Ret, typename ...Args>
+template <typename ABI, typename Ret, typename... Args>
 static inline void
 prepareForFunction(ThreadContext *tc, typename ABI::State &state)
 {
@@ -131,7 +132,7 @@ prepareForFunction(ThreadContext *tc, typename ABI::State &state)
  * optionally pass it the state.
  */
 
-template <typename ABI, typename Ret, typename Enabled=void>
+template <typename ABI, typename Ret, typename Enabled = void>
 struct ResultStorer
 {
     static void
@@ -142,10 +143,11 @@ struct ResultStorer
 };
 
 template <typename ABI, typename Ret>
-struct ResultStorer<ABI, Ret, typename std::enable_if_t<
-    std::is_same_v<void (*)(ThreadContext *, const Ret &,
-                            typename ABI::State &),
-                 decltype(&Result<ABI, Ret>::store)>>>
+struct ResultStorer<
+    ABI, Ret,
+    typename std::enable_if_t<std::is_same_v<
+        void (*)(ThreadContext *, const Ret &, typename ABI::State &),
+        decltype(&Result<ABI, Ret>::store)>>>
 {
     static void
     store(ThreadContext *tc, const Ret &ret, typename ABI::State &state)

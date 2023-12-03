@@ -46,8 +46,7 @@ namespace compression
 template <class BaseType, std::size_t DeltaSizeBits>
 BaseDelta<BaseType, DeltaSizeBits>::BaseDelta(const Params &p)
     : DictionaryCompressor<BaseType>(p)
-{
-}
+{}
 
 template <class BaseType, std::size_t DeltaSizeBits>
 void
@@ -64,16 +63,17 @@ void
 BaseDelta<BaseType, DeltaSizeBits>::addToDictionary(DictionaryEntry data)
 {
     assert(DictionaryCompressor<BaseType>::numEntries <
-        DictionaryCompressor<BaseType>::dictionarySize);
-    DictionaryCompressor<BaseType>::dictionary[
-        DictionaryCompressor<BaseType>::numEntries++] = data;
+           DictionaryCompressor<BaseType>::dictionarySize);
+    DictionaryCompressor<
+        BaseType>::dictionary[DictionaryCompressor<BaseType>::numEntries++] =
+        data;
 }
 
 template <class BaseType, std::size_t DeltaSizeBits>
 std::unique_ptr<Base::CompressionData>
 BaseDelta<BaseType, DeltaSizeBits>::compress(
-    const std::vector<Base::Chunk>& chunks, Cycles& comp_lat,
-    Cycles& decomp_lat)
+    const std::vector<Base::Chunk> &chunks, Cycles &comp_lat,
+    Cycles &decomp_lat)
 {
     std::unique_ptr<Base::CompressionData> comp_data =
         DictionaryCompressor<BaseType>::compress(chunks, comp_lat, decomp_lat);
@@ -82,15 +82,15 @@ BaseDelta<BaseType, DeltaSizeBits>::compress(
     // Otherwise, we have to take into account all bases that have not
     // been used, considering that there is an implicit zero base that
     // does not need to be added to the final size.
-    const int diff = DEFAULT_MAX_NUM_BASES -
-        DictionaryCompressor<BaseType>::numEntries;
+    const int diff =
+        DEFAULT_MAX_NUM_BASES - DictionaryCompressor<BaseType>::numEntries;
     if (diff < 0) {
         comp_data->setSizeBits(DictionaryCompressor<BaseType>::blkSize * 8);
         DPRINTF(CacheComp, "Base%dDelta%d compression failed\n",
-            8 * sizeof(BaseType), DeltaSizeBits);
+                8 * sizeof(BaseType), DeltaSizeBits);
     } else if (diff > 0) {
         comp_data->setSizeBits(comp_data->getSizeBits() +
-            8 * sizeof(BaseType) * diff);
+                               8 * sizeof(BaseType) * diff);
     }
 
     // Return compressed line

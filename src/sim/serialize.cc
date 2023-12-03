@@ -62,13 +62,9 @@ std::stack<std::string> Serializable::path;
 
 /////////////////////////////
 
-Serializable::Serializable()
-{
-}
+Serializable::Serializable() {}
 
-Serializable::~Serializable()
-{
-}
+Serializable::~Serializable() {}
 
 void
 Serializable::serializeSection(CheckpointOut &cp, const char *name) const
@@ -86,11 +82,11 @@ Serializable::unserializeSection(CheckpointIn &cp, const char *name)
 
 void
 Serializable::generateCheckpointOut(const std::string &cpt_dir,
-        std::ofstream &outstream)
+                                    std::ofstream &outstream)
 {
     std::string dir = CheckpointIn::setDir(cpt_dir);
     if (mkdir(dir.c_str(), 0775) == -1 && errno != EEXIST)
-            fatal("couldn't mkdir %s\n", dir);
+        fatal("couldn't mkdir %s\n", dir);
 
     std::string cpt_file = dir + CheckpointIn::baseFilename;
     outstream = std::ofstream(cpt_file.c_str());
@@ -144,7 +140,8 @@ CheckpointIn::setDir(const std::string &name)
     // use csprintf to insert curTick() into directory name if it
     // appears to have a format placeholder in it.
     currentDirectory = (name.find("%") != std::string::npos) ?
-        csprintf(name, curTick()) : name;
+                           csprintf(name, curTick()) :
+                           name;
     auto isEmptyPath = currentDirectory.empty();
     auto endsWithSlash = !isEmptyPath && currentDirectory.back() == '/';
     if (!endsWithSlash) {
@@ -182,6 +179,7 @@ CheckpointIn::entryExists(const std::string &section, const std::string &entry)
 {
     return db.entryExists(section, entry);
 }
+
 /**
  * @param section Here we mention the section we are looking for
  * (example: currentsection).
@@ -194,7 +192,7 @@ CheckpointIn::entryExists(const std::string &section, const std::string &entry)
  */
 bool
 CheckpointIn::find(const std::string &section, const std::string &entry,
-        std::string &value)
+                   std::string &value)
 {
     return db.find(section, entry, value);
 }
@@ -207,7 +205,7 @@ CheckpointIn::sectionExists(const std::string &section)
 
 void
 CheckpointIn::visitSection(const std::string &section,
-    IniFile::VisitSectionCallback cb)
+                           IniFile::VisitSectionCallback cb)
 {
     db.visitSection(section, cb);
 }

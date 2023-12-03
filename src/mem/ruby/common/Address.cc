@@ -73,15 +73,15 @@ Addr
 makeNextStrideAddress(Addr addr, int stride)
 {
     return makeLineAddress(addr) +
-        static_cast<int>(RubySystem::getBlockSizeBytes()) * stride;
+           static_cast<int>(RubySystem::getBlockSizeBytes()) * stride;
 }
 
 std::string
 printAddress(Addr addr)
 {
     std::stringstream out;
-    out << "[" << std::hex << "0x" << addr << "," << " line 0x"
-       << makeLineAddress(addr) << std::dec << "]";
+    out << "[" << std::hex << "0x" << addr << ","
+        << " line 0x" << makeLineAddress(addr) << std::dec << "]";
     return out.str();
 }
 

@@ -88,7 +88,11 @@ class DrainManager
 
   public:
     /** Get the singleton DrainManager instance */
-    static DrainManager &instance() { return _instance; }
+    static DrainManager &
+    instance()
+    {
+        return _instance;
+    }
 
     /**
      * Try to drain the system.
@@ -142,14 +146,22 @@ class DrainManager
      *
      * @ingroup api_drain
      */
-    bool isDrained() const { return _state == DrainState::Drained; }
+    bool
+    isDrained() const
+    {
+        return _state == DrainState::Drained;
+    }
 
     /**
      * Get the simulators global drain state
      *
      * @ingroup api_drain
      */
-    DrainState state() const { return _state; }
+    DrainState
+    state() const
+    {
+        return _state;
+    }
 
     /**
      * Notify the DrainManager that a Drainable object has finished
@@ -290,7 +302,7 @@ class Drainable
      *
      * @ingroup api_drain
      */
-    virtual void drainResume() {};
+    virtual void drainResume(){};
 
     /**
      * Signal that an object is drained
@@ -302,13 +314,15 @@ class Drainable
      *
      * @ingroup api_drain
      */
-    void signalDrainDone() const {
+    void
+    signalDrainDone() const
+    {
         switch (_drainState) {
-          case DrainState::Running:
-          case DrainState::Drained:
-          case DrainState::Resuming:
+        case DrainState::Running:
+        case DrainState::Drained:
+        case DrainState::Resuming:
             return;
-          case DrainState::Draining:
+        case DrainState::Draining:
             _drainState = DrainState::Drained;
             _drainManager.signalDrainDone();
             return;
@@ -321,7 +335,11 @@ class Drainable
      *
      * @ingroup api_drain
      */
-    DrainState drainState() const { return _drainState; }
+    DrainState
+    drainState() const
+    {
+        return _drainState;
+    }
 
     /**
      * Notify a child process of a fork. SimObjects are told that the
@@ -341,7 +359,7 @@ class Drainable
      *
      * @ingroup api_drain
      */
-    virtual void notifyFork() {};
+    virtual void notifyFork(){};
 
   private:
     /** DrainManager interface to request a drain operation */

@@ -56,15 +56,21 @@ namespace gem5
 namespace memory
 {
 
-AbstractMemory::AbstractMemory(const Params &p) :
-    ClockedObject(p), range(p.range), pmemAddr(NULL),
-    backdoor(params().range, nullptr,
-             (MemBackdoor::Flags)(p.writeable ?
-                 MemBackdoor::Readable | MemBackdoor::Writeable :
-                 MemBackdoor::Readable)),
-    confTableReported(p.conf_table_reported), inAddrMap(p.in_addr_map),
-    kvmMap(p.kvm_map), writeable(p.writeable), collectStats(p.collect_stats),
-    _system(NULL), stats(*this)
+AbstractMemory::AbstractMemory(const Params &p)
+    : ClockedObject(p),
+      range(p.range),
+      pmemAddr(NULL),
+      backdoor(params().range, nullptr,
+               (MemBackdoor::Flags)(p.writeable ? MemBackdoor::Readable |
+                                                      MemBackdoor::Writeable :
+                                                  MemBackdoor::Readable)),
+      confTableReported(p.conf_table_reported),
+      inAddrMap(p.in_addr_map),
+      kvmMap(p.kvm_map),
+      writeable(p.writeable),
+      collectStats(p.collect_stats),
+      _system(NULL),
+      stats(*this)
 {
     panic_if(!range.valid() || !range.size(),
              "Memory range %s must be valid with non-zero size.",
@@ -88,8 +94,8 @@ AbstractMemory::initState()
 
     AddrRange image_range(image.minAddr(), image.maxAddr());
     if (!range.contains(image_range.start())) {
-        warn("%s: Moving image from %s to memory address range %s.",
-                name(), image_range.to_string(), range.to_string());
+        warn("%s: Moving image from %s to memory address range %s.", name(),
+             image_range.to_string(), range.to_string());
         image = image.offset(range.start());
         image_range = AddrRange(image.minAddr(), image.maxAddr());
     }
@@ -103,7 +109,7 @@ AbstractMemory::initState()
 }
 
 void
-AbstractMemory::setBackingStore(uint8_t* pmem_addr)
+AbstractMemory::setBackingStore(uint8_t *pmem_addr)
 {
     // If there was an existing backdoor, let everybody know it's going away.
     if (backdoor.ptr())
@@ -116,34 +122,37 @@ AbstractMemory::setBackingStore(uint8_t* pmem_addr)
 }
 
 AbstractMemory::MemStats::MemStats(AbstractMemory &_mem)
-    : statistics::Group(&_mem), mem(_mem),
-    ADD_STAT(bytesRead, statistics::units::Byte::get(),
-             "Number of bytes read from this memory"),
-    ADD_STAT(bytesInstRead, statistics::units::Byte::get(),
-             "Number of instructions bytes read from this memory"),
-    ADD_STAT(bytesWritten, statistics::units::Byte::get(),
-             "Number of bytes written to this memory"),
-    ADD_STAT(numReads, statistics::units::Count::get(),
-             "Number of read requests responded to by this memory"),
-    ADD_STAT(numWrites, statistics::units::Count::get(),
-             "Number of write requests responded to by this memory"),
-    ADD_STAT(numOther, statistics::units::Count::get(),
-             "Number of other requests responded to by this memory"),
-    ADD_STAT(bwRead, statistics::units::Rate<
-                statistics::units::Byte, statistics::units::Second>::get(),
-             "Total read bandwidth from this memory"),
-    ADD_STAT(bwInstRead,
-             statistics::units::Rate<
-                statistics::units::Byte, statistics::units::Second>::get(),
-             "Instruction read bandwidth from this memory"),
-    ADD_STAT(bwWrite, statistics::units::Rate<
-                statistics::units::Byte, statistics::units::Second>::get(),
-             "Write bandwidth from this memory"),
-    ADD_STAT(bwTotal, statistics::units::Rate<
-                statistics::units::Byte, statistics::units::Second>::get(),
-             "Total bandwidth to/from this memory")
-{
-}
+    : statistics::Group(&_mem),
+      mem(_mem),
+      ADD_STAT(bytesRead, statistics::units::Byte::get(),
+               "Number of bytes read from this memory"),
+      ADD_STAT(bytesInstRead, statistics::units::Byte::get(),
+               "Number of instructions bytes read from this memory"),
+      ADD_STAT(bytesWritten, statistics::units::Byte::get(),
+               "Number of bytes written to this memory"),
+      ADD_STAT(numReads, statistics::units::Count::get(),
+               "Number of read requests responded to by this memory"),
+      ADD_STAT(numWrites, statistics::units::Count::get(),
+               "Number of write requests responded to by this memory"),
+      ADD_STAT(numOther, statistics::units::Count::get(),
+               "Number of other requests responded to by this memory"),
+      ADD_STAT(bwRead,
+               statistics::units::Rate<statistics::units::Byte,
+                                       statistics::units::Second>::get(),
+               "Total read bandwidth from this memory"),
+      ADD_STAT(bwInstRead,
+               statistics::units::Rate<statistics::units::Byte,
+                                       statistics::units::Second>::get(),
+               "Instruction read bandwidth from this memory"),
+      ADD_STAT(bwWrite,
+               statistics::units::Rate<statistics::units::Byte,
+                                       statistics::units::Second>::get(),
+               "Write bandwidth from this memory"),
+      ADD_STAT(bwTotal,
+               statistics::units::Rate<statistics::units::Byte,
+                                       statistics::units::Second>::get(),
+               "Total bandwidth to/from this memory")
+{}
 
 void
 AbstractMemory::MemStats::regStats()
@@ -156,86 +165,54 @@ AbstractMemory::MemStats::regStats()
     assert(sys);
     const auto max_requestors = sys->maxRequestors();
 
-    bytesRead
-        .init(max_requestors)
-        .flags(total | nozero | nonan)
-        ;
+    bytesRead.init(max_requestors).flags(total | nozero | nonan);
     for (int i = 0; i < max_requestors; i++) {
         bytesRead.subname(i, sys->getRequestorName(i));
     }
 
-    bytesInstRead
-        .init(max_requestors)
-        .flags(total | nozero | nonan)
-        ;
+    bytesInstRead.init(max_requestors).flags(total | nozero | nonan);
     for (int i = 0; i < max_requestors; i++) {
         bytesInstRead.subname(i, sys->getRequestorName(i));
     }
 
-    bytesWritten
-        .init(max_requestors)
-        .flags(total | nozero | nonan)
-        ;
+    bytesWritten.init(max_requestors).flags(total | nozero | nonan);
     for (int i = 0; i < max_requestors; i++) {
         bytesWritten.subname(i, sys->getRequestorName(i));
     }
 
-    numReads
-        .init(max_requestors)
-        .flags(total | nozero | nonan)
-        ;
+    numReads.init(max_requestors).flags(total | nozero | nonan);
     for (int i = 0; i < max_requestors; i++) {
         numReads.subname(i, sys->getRequestorName(i));
     }
 
-    numWrites
-        .init(max_requestors)
-        .flags(total | nozero | nonan)
-        ;
+    numWrites.init(max_requestors).flags(total | nozero | nonan);
     for (int i = 0; i < max_requestors; i++) {
         numWrites.subname(i, sys->getRequestorName(i));
     }
 
-    numOther
-        .init(max_requestors)
-        .flags(total | nozero | nonan)
-        ;
+    numOther.init(max_requestors).flags(total | nozero | nonan);
     for (int i = 0; i < max_requestors; i++) {
         numOther.subname(i, sys->getRequestorName(i));
     }
 
-    bwRead
-        .precision(0)
-        .prereq(bytesRead)
-        .flags(total | nozero | nonan)
-        ;
+    bwRead.precision(0).prereq(bytesRead).flags(total | nozero | nonan);
     for (int i = 0; i < max_requestors; i++) {
         bwRead.subname(i, sys->getRequestorName(i));
     }
 
-    bwInstRead
-        .precision(0)
+    bwInstRead.precision(0)
         .prereq(bytesInstRead)
-        .flags(total | nozero | nonan)
-        ;
+        .flags(total | nozero | nonan);
     for (int i = 0; i < max_requestors; i++) {
         bwInstRead.subname(i, sys->getRequestorName(i));
     }
 
-    bwWrite
-        .precision(0)
-        .prereq(bytesWritten)
-        .flags(total | nozero | nonan)
-        ;
+    bwWrite.precision(0).prereq(bytesWritten).flags(total | nozero | nonan);
     for (int i = 0; i < max_requestors; i++) {
         bwWrite.subname(i, sys->getRequestorName(i));
     }
 
-    bwTotal
-        .precision(0)
-        .prereq(bwTotal)
-        .flags(total | nozero | nonan)
-        ;
+    bwTotal.precision(0).prereq(bwTotal).flags(total | nozero | nonan);
     for (int i = 0; i < max_requestors; i++) {
         bwTotal.subname(i, sys->getRequestorName(i));
     }
@@ -281,7 +258,6 @@ AbstractMemory::trackLoadLocked(PacketPtr pkt)
     backdoor.invalidate();
 }
 
-
 // Called on *writes* only... both regular stores and
 // store-conditional operations.  Check for conventional stores which
 // conflict with locked addresses, and for success/failure of store
@@ -301,32 +277,32 @@ AbstractMemory::checkLockedAddrList(PacketPtr pkt)
     // Iterate over list.  Note that there could be multiple matching records,
     // as more than one context could have done a load locked to this location.
     // Only remove records when we succeed in finding a record for (xc, addr);
-    // then, remove all records with this address.  Failed store-conditionals do
-    // not blow unrelated reservations.
+    // then, remove all records with this address.  Failed store-conditionals
+    // do not blow unrelated reservations.
     std::list<LockedAddr>::iterator i = lockedAddrList.begin();
 
     if (isLLSC) {
         while (i != lockedAddrList.end()) {
             if (i->addr == paddr && i->matchesContext(req)) {
-                // it's a store conditional, and as far as the memory system can
-                // tell, the requesting context's lock is still valid.
+                // it's a store conditional, and as far as the memory system
+                // can tell, the requesting context's lock is still valid.
                 DPRINTF(LLSC, "StCond success: context %d addr %#x\n",
                         req->contextId(), paddr);
                 allowStore = true;
                 break;
             }
-            // If we didn't find a match, keep searching!  Someone else may well
-            // have a reservation on this line here but we may find ours in just
-            // a little while.
+            // If we didn't find a match, keep searching!  Someone else may
+            // well have a reservation on this line here but we may find ours
+            // in just a little while.
             i++;
         }
         req->setExtraData(allowStore ? 1 : 0);
     }
     // LLSCs that succeeded AND non-LLSC stores both fall into here:
     if (allowStore) {
-        // We write address paddr.  However, there may be several entries with a
-        // reservation on this address (for other contextIds) and they must all
-        // be removed.
+        // We write address paddr.  However, there may be several entries with
+        // a reservation on this address (for other contextIds) and they must
+        // all be removed.
         i = lockedAddrList.begin();
         while (i != lockedAddrList.end()) {
             if (i->addr == paddr) {
@@ -334,11 +310,10 @@ AbstractMemory::checkLockedAddrList(PacketPtr pkt)
                         i->contextId, paddr);
                 ContextID owner_cid = i->contextId;
                 assert(owner_cid != InvalidContextID);
-                ContextID requestor_cid = req->hasContextId() ?
-                                           req->contextId() :
-                                           InvalidContextID;
+                ContextID requestor_cid =
+                    req->hasContextId() ? req->contextId() : InvalidContextID;
                 if (owner_cid != requestor_cid) {
-                    ThreadContext* ctx = system()->threads[owner_cid];
+                    ThreadContext *ctx = system()->threads[owner_cid];
                     ctx->getIsaPtr()->globalClearExclusive();
                 }
                 i = lockedAddrList.erase(i);
@@ -358,22 +333,23 @@ tracePacket(System *sys, const char *label, PacketPtr pkt)
     int size = pkt->getSize();
     if (size == 1 || size == 2 || size == 4 || size == 8) {
         ByteOrder byte_order = sys->getGuestByteOrder();
-        DPRINTF(MemoryAccess, "%s from %s of size %i on address %#x data "
-                "%#x %c\n", label, sys->getRequestorName(pkt->req->
-                requestorId()), size, pkt->getAddr(),
-                pkt->getUintX(byte_order),
+        DPRINTF(MemoryAccess,
+                "%s from %s of size %i on address %#x data "
+                "%#x %c\n",
+                label, sys->getRequestorName(pkt->req->requestorId()), size,
+                pkt->getAddr(), pkt->getUintX(byte_order),
                 pkt->req->isUncacheable() ? 'U' : 'C');
         return;
     }
-    DPRINTF(MemoryAccess, "%s from %s of size %i on address %#x %c\n",
-            label, sys->getRequestorName(pkt->req->requestorId()),
-            size, pkt->getAddr(), pkt->req->isUncacheable() ? 'U' : 'C');
+    DPRINTF(MemoryAccess, "%s from %s of size %i on address %#x %c\n", label,
+            sys->getRequestorName(pkt->req->requestorId()), size,
+            pkt->getAddr(), pkt->req->isUncacheable() ? 'U' : 'C');
     DDUMP(MemoryAccess, pkt->getConstPtr<uint8_t>(), pkt->getSize());
 }
 
-#   define TRACE_PACKET(A) tracePacket(system(), A, pkt)
+#define TRACE_PACKET(A) tracePacket(system(), A, pkt)
 #else
-#   define TRACE_PACKET(A)
+#define TRACE_PACKET(A)
 #endif
 
 void
@@ -388,7 +364,7 @@ AbstractMemory::access(PacketPtr pkt)
     if (pkt->cmd == MemCmd::CleanEvict || pkt->cmd == MemCmd::WritebackClean) {
         DPRINTF(MemoryAccess, "CleanEvict  on 0x%x: not responding\n",
                 pkt->getAddr());
-      return;
+        return;
     }
 
     assert(pkt->getAddrRange().isSubset(range));
@@ -406,8 +382,8 @@ AbstractMemory::access(PacketPtr pkt)
             uint64_t condition_val64;
             uint32_t condition_val32;
 
-            panic_if(!pmemAddr, "Swap only works if there is real memory " \
-                     "(i.e. null=False)");
+            panic_if(!pmemAddr, "Swap only works if there is real memory "
+                                "(i.e. null=False)");
 
             bool overwrite_mem = true;
             // keep a copy of our possible write value, and copy what is at the
@@ -466,8 +442,8 @@ AbstractMemory::access(PacketPtr pkt)
         if (writeOK(pkt)) {
             if (pmemAddr) {
                 pkt->writeData(host_addr);
-                DPRINTF(MemoryAccess, "%s write due to %s\n",
-                        __func__, pkt->print());
+                DPRINTF(MemoryAccess, "%s write due to %s\n", __func__,
+                        pkt->print());
             }
             assert(!pkt->req->isInstFetch());
             TRACE_PACKET("Write");
@@ -506,7 +482,7 @@ AbstractMemory::functionalAccess(PacketPtr pkt)
         pkt->makeResponse();
     } else if (pkt->isPrint()) {
         Packet::PrintReqState *prs =
-            dynamic_cast<Packet::PrintReqState*>(pkt->senderState);
+            dynamic_cast<Packet::PrintReqState *>(pkt->senderState);
         assert(prs);
         // Need to call printLabels() explicitly since we're not going
         // through printObj().

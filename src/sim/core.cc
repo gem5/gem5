@@ -67,11 +67,12 @@ Tick ms;
 Tick us;
 Tick ns;
 Tick ps;
-} // namespace as_float
+} // namespace as_int
 
 } // namespace sim_clock
 
-namespace {
+namespace
+{
 
 bool _clockFrequencyFixed = false;
 
@@ -94,12 +95,12 @@ fixClockFrequency()
     as_float::ns = as_float::s / 1.0e9;
     as_float::ps = as_float::s / 1.0e12;
 
-    as_float::Hz  = 1.0 / as_float::s;
+    as_float::Hz = 1.0 / as_float::s;
     as_float::kHz = 1.0 / as_float::ms;
     as_float::MHz = 1.0 / as_float::us;
     as_float::GHz = 1.0 / as_float::ns;
 
-    as_int::s  = Frequency;
+    as_int::s = Frequency;
     as_int::ms = as_int::s / 1000;
     as_int::us = as_int::ms / 1000;
     as_int::ns = as_int::us / 1000;
@@ -109,16 +110,26 @@ fixClockFrequency()
 
     _clockFrequencyFixed = true;
 }
-bool clockFrequencyFixed() { return _clockFrequencyFixed; }
+
+bool
+clockFrequencyFixed()
+{
+    return _clockFrequencyFixed;
+}
 
 void
 setClockFrequency(Tick tps)
 {
     panic_if(_clockFrequencyFixed,
-            "Global frequency already fixed at %f ticks/s.", _ticksPerSecond);
+             "Global frequency already fixed at %f ticks/s.", _ticksPerSecond);
     _ticksPerSecond = tps;
 }
-Tick getClockFrequency() { return _ticksPerSecond; }
+
+Tick
+getClockFrequency()
+{
+    return _ticksPerSecond;
+}
 
 void
 setOutputDir(const std::string &dir)

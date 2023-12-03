@@ -42,10 +42,10 @@
 // __GNUC__ defined for both clang and gcc
 // -Wdeprecated-copy has been added in clang10.0.0 and gcc9.0
 #if defined(__GNUC__)
-#    if (defined(__clang__) && __GNUC__ >= 10) || \
-        (!defined(__clang__) && __GNUC__ >= 9)
-#        pragma GCC diagnostic ignored "-Wdeprecated-copy"
-#    endif
+#if (defined(__clang__) && __GNUC__ >= 10) ||                                 \
+    (!defined(__clang__) && __GNUC__ >= 9)
+#pragma GCC diagnostic ignored "-Wdeprecated-copy"
+#endif
 #endif
 
 #include <gmock/gmock.h>
@@ -1506,4 +1506,5 @@ TEST_F(RegisterBankTest, WriteFullPartial)
                 Access(PartialWrite, 0x0000aa99, 15, 0, 0)
                 ));
 }
+
 /* clang-format on */

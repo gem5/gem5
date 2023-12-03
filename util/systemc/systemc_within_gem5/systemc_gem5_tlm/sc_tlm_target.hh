@@ -60,27 +60,28 @@ SC_MODULE(Target)
     sc_gem5::TlmTargetWrapper<32> wrapper;
 
   private:
-    //unsigned char mem[512];
+    // unsigned char mem[512];
     unsigned char *mem;
 
   public:
     SC_HAS_PROCESS(Target);
-    Target(sc_module_name name) :
-         sc_module(name),
-         tSocket("tSocket"),
-         wrapper(tSocket, std::string(name) + ".tlm", InvalidPortID)
+    Target(sc_module_name name)
+        : sc_module(name),
+          tSocket("tSocket"),
+          wrapper(tSocket, std::string(name) + ".tlm", InvalidPortID)
     {
         tSocket.register_b_transport(this, &Target::b_transport);
-        mem = (unsigned char *)malloc(16*1024*1024);
+        mem = (unsigned char *)malloc(16 * 1024 * 1024);
         std::cout << "TLM Target Online" << std::endl;
     }
 
-    gem5::Port &gem5_getPort(const std::string &if_name, int idx=-1) override;
+    gem5::Port &gem5_getPort(const std::string &if_name, int idx = -1)
+        override;
 
-    virtual void b_transport(tlm::tlm_generic_payload& trans,
-                             sc_time& delay);
+    virtual void b_transport(tlm::tlm_generic_payload & trans,
+                             sc_time & delay);
 
-    void executeTransaction(tlm::tlm_generic_payload& trans);
+    void executeTransaction(tlm::tlm_generic_payload & trans);
 };
 
 #endif // __SYSTEC_TLM_GEM5_EXAMPLE__

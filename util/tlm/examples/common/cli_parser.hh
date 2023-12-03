@@ -41,7 +41,7 @@ class CliParser
 {
   private:
     int argc;
-    char** argv;
+    char **argv;
 
     bool parsed;
 
@@ -51,17 +51,41 @@ class CliParser
     std::vector<std::string> debugFlags;
     std::string configFile;
 
-    void usage(const std::string& prog_name);
-  public:
+    void usage(const std::string &prog_name);
 
+  public:
     CliParser() : parsed(false) {}
 
-    void parse(int argc, char** argv);
+    void parse(int argc, char **argv);
 
-    uint64_t getMemoryOffset()  { assert(parsed); return memoryOffset; }
-    uint64_t getSimulationEnd() { assert(parsed); return simulationEnd; }
-    bool getVerboseFlag()       { assert(parsed); return verboseFlag; }
-    std::string getConfigFile() { assert(parsed); return configFile; }
+    uint64_t
+    getMemoryOffset()
+    {
+        assert(parsed);
+        return memoryOffset;
+    }
+
+    uint64_t
+    getSimulationEnd()
+    {
+        assert(parsed);
+        return simulationEnd;
+    }
+
+    bool
+    getVerboseFlag()
+    {
+        assert(parsed);
+        return verboseFlag;
+    }
+
+    std::string
+    getConfigFile()
+    {
+        assert(parsed);
+        return configFile;
+    }
+
     std::string getDebugFlags();
 };
 

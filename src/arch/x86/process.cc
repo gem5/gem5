@@ -72,38 +72,34 @@ namespace gem5
 
 using namespace X86ISA;
 
-template class MultiLevelPageTable<LongModePTE<47, 39>,
-                                   LongModePTE<38, 30>,
-                                   LongModePTE<29, 21>,
-                                   LongModePTE<20, 12> >;
-typedef MultiLevelPageTable<LongModePTE<47, 39>,
-                            LongModePTE<38, 30>,
-                            LongModePTE<29, 21>,
-                            LongModePTE<20, 12> > ArchPageTable;
+template class MultiLevelPageTable<LongModePTE<47, 39>, LongModePTE<38, 30>,
+                                   LongModePTE<29, 21>, LongModePTE<20, 12>>;
+typedef MultiLevelPageTable<LongModePTE<47, 39>, LongModePTE<38, 30>,
+                            LongModePTE<29, 21>, LongModePTE<20, 12>>
+    ArchPageTable;
 
 X86Process::X86Process(const ProcessParams &params,
-                       loader::ObjectFile *objFile) :
-    Process(params, params.useArchPT ?
-                    static_cast<EmulationPageTable *>(
-                            new ArchPageTable(params.name, params.pid,
-                                              params.system, PageBytes)) :
-                    new EmulationPageTable(params.name, params.pid,
-                                           PageBytes),
-            objFile)
-{
-}
+                       loader::ObjectFile *objFile)
+    : Process(params,
+              params.useArchPT ?
+                  static_cast<EmulationPageTable *>(new ArchPageTable(
+                      params.name, params.pid, params.system, PageBytes)) :
+                  new EmulationPageTable(params.name, params.pid, PageBytes),
+              objFile)
+{}
 
-void X86Process::clone(ThreadContext *old_tc, ThreadContext *new_tc,
-                       Process *p, RegVal flags)
+void
+X86Process::clone(ThreadContext *old_tc, ThreadContext *new_tc, Process *p,
+                  RegVal flags)
 {
     Process::clone(old_tc, new_tc, p, flags);
-    X86Process *process = (X86Process*)p;
+    X86Process *process = (X86Process *)p;
     *process = *this;
 }
 
 X86_64Process::X86_64Process(const ProcessParams &params,
-                             loader::ObjectFile *objFile) :
-    X86Process(params, objFile)
+                             loader::ObjectFile *objFile)
+    : X86Process(params, objFile)
 {
     vsyscallPage.base = 0xffffffffff600000ULL;
     vsyscallPage.size = PageBytes;
@@ -116,15 +112,14 @@ X86_64Process::X86_64Process(const ProcessParams &params,
     Addr next_thread_stack_base = stack_base - max_stack_size;
     Addr mmap_end = 0x7FFFF7FFF000ULL;
 
-    memState = std::make_shared<MemState>(
-            this, brk_point, stack_base, max_stack_size,
-            next_thread_stack_base, mmap_end);
+    memState =
+        std::make_shared<MemState>(this, brk_point, stack_base, max_stack_size,
+                                   next_thread_stack_base, mmap_end);
 }
 
-
 I386Process::I386Process(const ProcessParams &params,
-                         loader::ObjectFile *objFile) :
-    X86Process(params, objFile)
+                         loader::ObjectFile *objFile)
+    : X86Process(params, objFile)
 {
     if (kvmInSE)
         panic("KVM CPU model does not support 32 bit processes");
@@ -143,9 +138,9 @@ I386Process::I386Process(const ProcessParams &params,
     Addr next_thread_stack_base = stack_base - max_stack_size;
     Addr mmap_end = 0xB7FFF000ULL;
 
-    memState = std::make_shared<MemState>(
-            this, brk_point, stack_base, max_stack_size,
-            next_thread_stack_base, mmap_end);
+    memState =
+        std::make_shared<MemState>(this, brk_point, stack_base, max_stack_size,
+                                   next_thread_stack_base, mmap_end);
 }
 
 void
@@ -161,21 +156,21 @@ X86_64Process::initState()
     // Set up the vsyscall page for this process.
     memState->mapRegion(vsyscallPage.base, vsyscallPage.size, "vsyscall");
     uint8_t vtimeBlob[] = {
-        0x48,0xc7,0xc0,0xc9,0x00,0x00,0x00,    // mov    $0xc9,%rax
-        0x0f,0x05,                             // syscall
-        0xc3                                   // retq
+        0x48, 0xc7, 0xc0, 0xc9, 0x00, 0x00, 0x00, // mov    $0xc9,%rax
+        0x0f, 0x05,                               // syscall
+        0xc3                                      // retq
     };
     initVirtMem->writeBlob(vsyscallPage.base + vsyscallPage.vtimeOffset,
-            vtimeBlob, sizeof(vtimeBlob));
+                           vtimeBlob, sizeof(vtimeBlob));
 
     uint8_t vgettimeofdayBlob[] = {
-        0x48,0xc7,0xc0,0x60,0x00,0x00,0x00,    // mov    $0x60,%rax
-        0x0f,0x05,                             // syscall
-        0xc3                                   // retq
+        0x48, 0xc7, 0xc0, 0x60, 0x00, 0x00, 0x00, // mov    $0x60,%rax
+        0x0f, 0x05,                               // syscall
+        0xc3                                      // retq
     };
-    initVirtMem->writeBlob(
-            vsyscallPage.base + vsyscallPage.vgettimeofdayOffset,
-            vgettimeofdayBlob, sizeof(vgettimeofdayBlob));
+    initVirtMem->writeBlob(vsyscallPage.base +
+                               vsyscallPage.vgettimeofdayOffset,
+                           vgettimeofdayBlob, sizeof(vgettimeofdayBlob));
 
     if (kvmInSE) {
         PortProxy physProxy = system->physProxy;
@@ -192,8 +187,8 @@ X86_64Process::initState()
          */
         uint8_t numGDTEntries = 0;
         uint64_t nullDescriptor = 0;
-        physProxy.writeBlob(gdtPhysAddr + numGDTEntries * 8,
-                            &nullDescriptor, 8);
+        physProxy.writeBlob(gdtPhysAddr + numGDTEntries * 8, &nullDescriptor,
+                            8);
         numGDTEntries++;
 
         SegDescriptor initDesc = 0;
@@ -205,17 +200,17 @@ X86_64Process::initState()
         initDesc.l = 1;               // longmode - 64 bit
         initDesc.d = 0;               // operand size
         initDesc.g = 1;
-        initDesc.s = 1;               // system segment
+        initDesc.s = 1; // system segment
         initDesc.limit = 0xFFFFFFFF;
         initDesc.base = 0;
 
-        //64 bit code segment
+        // 64 bit code segment
         SegDescriptor csLowPLDesc = initDesc;
         csLowPLDesc.type.codeOrData = 1;
         csLowPLDesc.dpl = 0;
         uint64_t csLowPLDescVal = csLowPLDesc;
-        physProxy.writeBlob(gdtPhysAddr + numGDTEntries * 8,
-                            &csLowPLDescVal, 8);
+        physProxy.writeBlob(gdtPhysAddr + numGDTEntries * 8, &csLowPLDescVal,
+                            8);
 
         numGDTEntries++;
 
@@ -223,13 +218,13 @@ X86_64Process::initState()
         csLowPL.si = numGDTEntries - 1;
         csLowPL.rpl = 0;
 
-        //64 bit data segment
+        // 64 bit data segment
         SegDescriptor dsLowPLDesc = initDesc;
         dsLowPLDesc.type.codeOrData = 0;
         dsLowPLDesc.dpl = 0;
         uint64_t dsLowPLDescVal = dsLowPLDesc;
-        physProxy.writeBlob(gdtPhysAddr + numGDTEntries * 8,
-                            &dsLowPLDescVal, 8);
+        physProxy.writeBlob(gdtPhysAddr + numGDTEntries * 8, &dsLowPLDescVal,
+                            8);
 
         numGDTEntries++;
 
@@ -237,13 +232,12 @@ X86_64Process::initState()
         dsLowPL.si = numGDTEntries - 1;
         dsLowPL.rpl = 0;
 
-        //64 bit data segment
+        // 64 bit data segment
         SegDescriptor dsDesc = initDesc;
         dsDesc.type.codeOrData = 0;
         dsDesc.dpl = 3;
         uint64_t dsDescVal = dsDesc;
-        physProxy.writeBlob(gdtPhysAddr + numGDTEntries * 8,
-                            &dsDescVal, 8);
+        physProxy.writeBlob(gdtPhysAddr + numGDTEntries * 8, &dsDescVal, 8);
 
         numGDTEntries++;
 
@@ -251,13 +245,12 @@ X86_64Process::initState()
         ds.si = numGDTEntries - 1;
         ds.rpl = 3;
 
-        //64 bit code segment
+        // 64 bit code segment
         SegDescriptor csDesc = initDesc;
         csDesc.type.codeOrData = 1;
         csDesc.dpl = 3;
         uint64_t csDescVal = csDesc;
-        physProxy.writeBlob(gdtPhysAddr + numGDTEntries * 8,
-                            &csDescVal, 8);
+        physProxy.writeBlob(gdtPhysAddr + numGDTEntries * 8, &csDescVal, 8);
 
         numGDTEntries++;
 
@@ -277,7 +270,7 @@ X86_64Process::initState()
         TSSlow TSSDescLow = 0;
         TSSDescLow.type = 0xB;
         TSSDescLow.dpl = 0; // Privelege level 0
-        TSSDescLow.p = 1; // Present
+        TSSDescLow.p = 1;   // Present
         TSSDescLow.limit = 0xFFFFFFFF;
         TSSDescLow.base = bits(TSSVirtAddr, 31, 0);
 
@@ -288,10 +281,10 @@ X86_64Process::initState()
         {
             uint64_t low;
             uint64_t high;
-        } tssDescVal = {TSSDescLow, TSSDescHigh};
+        } tssDescVal = { TSSDescLow, TSSDescHigh };
 
-        physProxy.writeBlob(gdtPhysAddr + numGDTEntries * 8,
-                            &tssDescVal, sizeof(tssDescVal));
+        physProxy.writeBlob(gdtPhysAddr + numGDTEntries * 8, &tssDescVal,
+                            sizeof(tssDescVal));
 
         numGDTEntries++;
 
@@ -336,7 +329,7 @@ X86_64Process::initState()
             tc->setMiscReg(misc_reg::TrLimit, tss_limit);
             tc->setMiscReg(misc_reg::TrAttr, tss_attr);
 
-            //Start using longmode segments.
+            // Start using longmode segments.
             installSegDesc(tc, segment_idx::Cs, csDesc, true);
             installSegDesc(tc, segment_idx::Ds, dsDesc, true);
             installSegDesc(tc, segment_idx::Es, dsDesc, true);
@@ -345,15 +338,15 @@ X86_64Process::initState()
             installSegDesc(tc, segment_idx::Ss, dsDesc, true);
 
             Efer efer = 0;
-            efer.sce = 1; // Enable system call extensions.
-            efer.lme = 1; // Enable long mode.
-            efer.lma = 1; // Activate long mode.
-            efer.nxe = 1; // Enable nx support.
-            efer.svme = 0; // Disable svm support for now.
+            efer.sce = 1;   // Enable system call extensions.
+            efer.lme = 1;   // Enable long mode.
+            efer.lma = 1;   // Activate long mode.
+            efer.nxe = 1;   // Enable nx support.
+            efer.svme = 0;  // Disable svm support for now.
             efer.ffxsr = 0; // Disable fast fxsave and fxrstor.
             tc->setMiscReg(misc_reg::Efer, efer);
 
-            //Set up the registers that describe the operating mode.
+            // Set up the registers that describe the operating mode.
             CR0 cr0 = 0;
             cr0.pg = 1; // Turn on paging.
             cr0.cd = 0; // Don't disable caching.
@@ -377,19 +370,19 @@ X86_64Process::initState()
             tc->setMiscReg(misc_reg::Cr3, cr3);
 
             CR4 cr4 = 0;
-            //Turn on pae.
-            cr4.osxsave = 0; // Disable XSAVE and Proc Extended States
+            // Turn on pae.
+            cr4.osxsave = 0;    // Disable XSAVE and Proc Extended States
             cr4.osxmmexcpt = 0; // Operating System Unmasked Exception
-            cr4.osfxsr = 1; // Operating System FXSave/FSRSTOR Support
-            cr4.pce = 0; // Performance-Monitoring Counter Enable
-            cr4.pge = 0; // Page-Global Enable
-            cr4.mce = 0; // Machine Check Enable
-            cr4.pae = 1; // Physical-Address Extension
-            cr4.pse = 0; // Page Size Extensions
-            cr4.de = 0; // Debugging Extensions
-            cr4.tsd = 0; // Time Stamp Disable
-            cr4.pvi = 0; // Protected-Mode Virtual Interrupts
-            cr4.vme = 0; // Virtual-8086 Mode Extensions
+            cr4.osfxsr = 1;     // Operating System FXSave/FSRSTOR Support
+            cr4.pce = 0;        // Performance-Monitoring Counter Enable
+            cr4.pge = 0;        // Page-Global Enable
+            cr4.mce = 0;        // Machine Check Enable
+            cr4.pae = 1;        // Physical-Address Extension
+            cr4.pse = 0;        // Page Size Extensions
+            cr4.de = 0;         // Debugging Extensions
+            cr4.tsd = 0;        // Time Stamp Disable
+            cr4.pvi = 0;        // Protected-Mode Virtual Interrupts
+            cr4.vme = 0;        // Virtual-8086 Mode Extensions
 
             tc->setMiscReg(misc_reg::Cr4, cr4);
 
@@ -421,44 +414,44 @@ X86_64Process::initState()
 
         struct
         {
-            uint32_t reserved0;        // +00h
-            uint32_t RSP0_low;         // +04h
-            uint32_t RSP0_high;        // +08h
-            uint32_t RSP1_low;         // +0Ch
-            uint32_t RSP1_high;        // +10h
-            uint32_t RSP2_low;         // +14h
-            uint32_t RSP2_high;        // +18h
-            uint32_t reserved1;        // +1Ch
-            uint32_t reserved2;        // +20h
-            uint32_t IST1_low;         // +24h
-            uint32_t IST1_high;        // +28h
-            uint32_t IST2_low;         // +2Ch
-            uint32_t IST2_high;        // +30h
-            uint32_t IST3_low;         // +34h
-            uint32_t IST3_high;        // +38h
-            uint32_t IST4_low;         // +3Ch
-            uint32_t IST4_high;        // +40h
-            uint32_t IST5_low;         // +44h
-            uint32_t IST5_high;        // +48h
-            uint32_t IST6_low;         // +4Ch
-            uint32_t IST6_high;        // +50h
-            uint32_t IST7_low;         // +54h
-            uint32_t IST7_high;        // +58h
-            uint32_t reserved3;        // +5Ch
-            uint32_t reserved4;        // +60h
-            uint16_t reserved5;        // +64h
-            uint16_t IO_MapBase;       // +66h
+            uint32_t reserved0;  // +00h
+            uint32_t RSP0_low;   // +04h
+            uint32_t RSP0_high;  // +08h
+            uint32_t RSP1_low;   // +0Ch
+            uint32_t RSP1_high;  // +10h
+            uint32_t RSP2_low;   // +14h
+            uint32_t RSP2_high;  // +18h
+            uint32_t reserved1;  // +1Ch
+            uint32_t reserved2;  // +20h
+            uint32_t IST1_low;   // +24h
+            uint32_t IST1_high;  // +28h
+            uint32_t IST2_low;   // +2Ch
+            uint32_t IST2_high;  // +30h
+            uint32_t IST3_low;   // +34h
+            uint32_t IST3_high;  // +38h
+            uint32_t IST4_low;   // +3Ch
+            uint32_t IST4_high;  // +40h
+            uint32_t IST5_low;   // +44h
+            uint32_t IST5_high;  // +48h
+            uint32_t IST6_low;   // +4Ch
+            uint32_t IST6_high;  // +50h
+            uint32_t IST7_low;   // +54h
+            uint32_t IST7_high;  // +58h
+            uint32_t reserved3;  // +5Ch
+            uint32_t reserved4;  // +60h
+            uint16_t reserved5;  // +64h
+            uint16_t IO_MapBase; // +66h
         } tss;
 
         /** setting Interrupt Stack Table */
         uint64_t IST_start = ISTVirtAddr + PageBytes;
-        tss.IST1_low  = IST_start;
+        tss.IST1_low = IST_start;
         tss.IST1_high = IST_start >> 32;
-        tss.RSP0_low  = tss.IST1_low;
+        tss.RSP0_low = tss.IST1_low;
         tss.RSP0_high = tss.IST1_high;
-        tss.RSP1_low  = tss.IST1_low;
+        tss.RSP1_low = tss.IST1_low;
         tss.RSP1_high = tss.IST1_high;
-        tss.RSP2_low  = tss.IST1_low;
+        tss.RSP2_low = tss.IST1_low;
         tss.RSP2_high = tss.IST1_high;
         physProxy.writeBlob(tssPhysAddr, &tss, sizeof(tss));
 
@@ -469,8 +462,8 @@ X86_64Process::initState()
         PFGateLow.selector = csLowPL;
         PFGateLow.p = 1;
         PFGateLow.dpl = 0;
-        PFGateLow.type = 0xe;      // gate interrupt type
-        PFGateLow.IST = 0;         // setting IST to 0 and using RSP0
+        PFGateLow.type = 0xe; // gate interrupt type
+        PFGateLow.IST = 0;    // setting IST to 0 and using RSP0
 
         GateDescriptorHigh PFGateHigh = 0;
         PFGateHigh.offset = bits(PFHandlerVirtAddr, 63, 32);
@@ -479,7 +472,7 @@ X86_64Process::initState()
         {
             uint64_t low;
             uint64_t high;
-        } PFGate = {PFGateLow, PFGateHigh};
+        } PFGate = { PFGateLow, PFGateHigh };
 
         physProxy.writeBlob(idtPhysAddr + 0xE0, &PFGate, sizeof(PFGate));
 
@@ -495,18 +488,15 @@ X86_64Process::initState()
         const Addr syscallDataBuf = syscallCodeVirtAddr + 0x100;
         uint8_t syscallBlob[] = {
             // mov    %rax, (0xffffc90000007000)
-            0x48, 0xa3, 0x00, 0x70, 0x00,
-            0x00, 0x00, 0xc9, 0xff, 0xff,
+            0x48, 0xa3, 0x00, 0x70, 0x00, 0x00, 0x00, 0xc9, 0xff, 0xff,
             // mov    %rax, (syscallDataBuf)
-            0x48, 0xa3, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00,
+            0x48, 0xa3, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             // mov    %cr3, %rax
             0x0f, 0x20, 0xd8,
             // mov    %rax, %cr3
             0x0f, 0x22, 0xd8,
             // mov    (syscallDataBuf), %rax
-            0x48, 0xa1, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00,
+            0x48, 0xa1, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             // sysret
             0x48, 0x0f, 0x07
         };
@@ -514,25 +504,24 @@ X86_64Process::initState()
         std::memcpy(&syscallBlob[12], &syscallDataBuf, sizeof syscallDataBuf);
         std::memcpy(&syscallBlob[28], &syscallDataBuf, sizeof syscallDataBuf);
 
-        physProxy.writeBlob(syscallCodePhysAddr,
-                            syscallBlob, sizeof(syscallBlob));
+        physProxy.writeBlob(syscallCodePhysAddr, syscallBlob,
+                            sizeof(syscallBlob));
 
         /** Page fault handler */
-        uint8_t faultBlob[] = {
-            // mov    %rax, (0xffffc90000007000)
-            0x48, 0xa3, 0x00, 0x70, 0x00,
-            0x00, 0x00, 0xc9, 0xff, 0xff,
-            // add    $0x8, %rsp # skip error
-            0x48, 0x83, 0xc4, 0x08,
-            // iretq
-            0x48, 0xcf
+        uint8_t faultBlob[] = { // mov    %rax, (0xffffc90000007000)
+                                0x48, 0xa3, 0x00, 0x70, 0x00, 0x00, 0x00, 0xc9,
+                                0xff, 0xff,
+                                // add    $0x8, %rsp # skip error
+                                0x48, 0x83, 0xc4, 0x08,
+                                // iretq
+                                0x48, 0xcf
         };
 
         physProxy.writeBlob(pfHandlerPhysAddr, faultBlob, sizeof(faultBlob));
 
         /* Syscall handler */
-        pTable->map(syscallCodeVirtAddr, syscallCodePhysAddr,
-                    PageBytes, false);
+        pTable->map(syscallCodeVirtAddr, syscallCodePhysAddr, PageBytes,
+                    false);
         /* GDT */
         pTable->map(GDTVirtAddr, gdtPhysAddr, PageBytes, false);
         /* IDT */
@@ -551,7 +540,7 @@ X86_64Process::initState()
         }
     } else {
         for (int i = 0; i < contextIds.size(); i++) {
-            ThreadContext * tc = system->threads[contextIds[i]];
+            ThreadContext *tc = system->threads[contextIds[i]];
 
             SegAttr dataAttr = 0;
             dataAttr.dpl = 3;
@@ -595,7 +584,8 @@ X86_64Process::initState()
             efer.lme = 1; // Enable long mode.
             efer.lma = 1; // Activate long mode.
             efer.nxe = 1; // Enable nx support.
-            efer.svme = 0; // Disable svm support for now. It isn't implemented.
+            efer.svme =
+                0; // Disable svm support for now. It isn't implemented.
             efer.ffxsr = 1; // Turn on fast fxsave and fxrstor.
             tc->setMiscReg(misc_reg::Efer, efer);
 
@@ -648,8 +638,8 @@ I386Process::initState()
     allocateMem(_gdtStart, _gdtSize);
     uint64_t zero = 0;
     assert(_gdtSize % sizeof(zero) == 0);
-    for (Addr gdtCurrent = _gdtStart;
-            gdtCurrent < _gdtStart + _gdtSize; gdtCurrent += sizeof(zero)) {
+    for (Addr gdtCurrent = _gdtStart; gdtCurrent < _gdtStart + _gdtSize;
+         gdtCurrent += sizeof(zero)) {
         initVirtMem->write(gdtCurrent, zero);
     }
 
@@ -663,19 +653,19 @@ I386Process::initState()
         0x0f, 0x34  // sysenter
     };
     initVirtMem->writeBlob(vsyscallPage.base + vsyscallPage.vsyscallOffset,
-            vsyscallBlob, sizeof(vsyscallBlob));
+                           vsyscallBlob, sizeof(vsyscallBlob));
 
     uint8_t vsysexitBlob[] = {
-        0x5d,       // pop %ebp
-        0x5a,       // pop %edx
-        0x59,       // pop %ecx
-        0xc3        // ret
+        0x5d, // pop %ebp
+        0x5a, // pop %edx
+        0x59, // pop %ecx
+        0xc3  // ret
     };
     initVirtMem->writeBlob(vsyscallPage.base + vsyscallPage.vsysexitOffset,
-            vsysexitBlob, sizeof(vsysexitBlob));
+                           vsysexitBlob, sizeof(vsysexitBlob));
 
     for (int i = 0; i < contextIds.size(); i++) {
-        ThreadContext * tc = system->threads[contextIds[i]];
+        ThreadContext *tc = system->threads[contextIds[i]];
 
         SegAttr dataAttr = 0;
         dataAttr.dpl = 3;
@@ -727,11 +717,11 @@ I386Process::initState()
         tc->setMiscRegNoEffect(misc_reg::TslAttr, attr);
 
         Efer efer = 0;
-        efer.sce = 1; // Enable system call extensions.
-        efer.lme = 1; // Enable long mode.
-        efer.lma = 0; // Deactivate long mode.
-        efer.nxe = 1; // Enable nx support.
-        efer.svme = 0; // Disable svm support for now. It isn't implemented.
+        efer.sce = 1;   // Enable system call extensions.
+        efer.lme = 1;   // Enable long mode.
+        efer.lma = 0;   // Deactivate long mode.
+        efer.nxe = 1;   // Enable nx support.
+        efer.svme = 0;  // Disable svm support for now. It isn't implemented.
         efer.ffxsr = 1; // Turn on fast fxsave and fxrstor.
         tc->setMiscReg(misc_reg::Efer, efer);
 
@@ -758,7 +748,7 @@ I386Process::initState()
     }
 }
 
-template<class IntType>
+template <class IntType>
 void
 X86Process::argsInit(int pageSize,
                      std::vector<gem5::auxv::AuxVector<IntType>> extraAuxvs)
@@ -823,35 +813,24 @@ X86Process::argsInit(int pageSize,
     auto *elfObject = dynamic_cast<loader::ElfObject *>(objFile);
     if (elfObject) {
         uint64_t features =
-            X86_OnboardFPU |
-            X86_VirtualModeExtensions |
-            X86_DebuggingExtensions |
-            X86_PageSizeExtensions |
-            X86_TimeStampCounter |
-            X86_ModelSpecificRegisters |
-            X86_PhysicalAddressExtensions |
-            X86_MachineCheckExtensions |
-            X86_CMPXCHG8Instruction |
-            X86_OnboardAPIC |
-            X86_SYSENTER_SYSEXIT |
-            X86_MemoryTypeRangeRegisters |
-            X86_PageGlobalEnable |
-            X86_MachineCheckArchitecture |
-            X86_CMOVInstruction |
-            X86_PageAttributeTable |
-            X86_36BitPSEs |
-//            X86_ProcessorSerialNumber |
+            X86_OnboardFPU | X86_VirtualModeExtensions |
+            X86_DebuggingExtensions | X86_PageSizeExtensions |
+            X86_TimeStampCounter | X86_ModelSpecificRegisters |
+            X86_PhysicalAddressExtensions | X86_MachineCheckExtensions |
+            X86_CMPXCHG8Instruction | X86_OnboardAPIC | X86_SYSENTER_SYSEXIT |
+            X86_MemoryTypeRangeRegisters | X86_PageGlobalEnable |
+            X86_MachineCheckArchitecture | X86_CMOVInstruction |
+            X86_PageAttributeTable | X86_36BitPSEs |
+            //            X86_ProcessorSerialNumber |
             X86_CLFLUSHInstruction |
-//            X86_DebugTraceStore |
-//            X86_ACPIViaMSR |
-            X86_MultimediaExtensions |
-            X86_FXSAVE_FXRSTOR |
-            X86_StreamingSIMDExtensions |
-            X86_StreamingSIMDExtensions2 |
-//            X86_CPUSelfSnoop |
-//            X86_HyperThreading |
-//            X86_AutomaticClockControl |
-//            X86_IA64Processor |
+            //            X86_DebugTraceStore |
+            //            X86_ACPIViaMSR |
+            X86_MultimediaExtensions | X86_FXSAVE_FXRSTOR |
+            X86_StreamingSIMDExtensions | X86_StreamingSIMDExtensions2 |
+            //            X86_CPUSelfSnoop |
+            //            X86_HyperThreading |
+            //            X86_AutomaticClockControl |
+            //            X86_IA64Processor |
             0;
 
         // Bits which describe the system hardware capabilities
@@ -935,10 +914,7 @@ X86Process::argsInit(int pageSize,
 
     // Figure out the size of the contents of the actual initial frame
     int frame_size =
-        aux_array_size +
-        envp_array_size +
-        argv_array_size +
-        argc_size;
+        aux_array_size + envp_array_size + argv_array_size + argc_size;
 
     // There needs to be padding after the auxiliary vector data so that the
     // very bottom of the stack is aligned properly.
@@ -947,10 +923,7 @@ X86Process::argsInit(int pageSize,
     int aux_padding = aligned_partial_size - partial_size;
 
     int space_needed =
-        info_block_size +
-        aux_data_size +
-        aux_padding +
-        frame_size;
+        info_block_size + aux_data_size + aux_padding + frame_size;
 
     Addr stack_base = memState->getStackBase();
 
@@ -1010,10 +983,9 @@ X86Process::argsInit(int pageSize,
     assert(auxv[auxv.size() - 1].type == gem5::auxv::Platform);
     auxv[auxv.size() - 1].val = aux_data_base + numRandomBytes;
 
-
     // Copy the aux stuff
     Addr auxv_array_end = auxv_array_base;
-    for (const auto &aux: auxv) {
+    for (const auto &aux : auxv) {
         initVirtMem->write(auxv_array_end, aux, ByteOrder::little);
         auxv_array_end += sizeof(aux);
     }
@@ -1022,13 +994,12 @@ X86Process::argsInit(int pageSize,
     initVirtMem->write(auxv_array_end, zero);
     auxv_array_end += sizeof(zero);
 
-    initVirtMem->writeString(aux_data_base + numRandomBytes,
-                             platform.c_str());
+    initVirtMem->writeString(aux_data_base + numRandomBytes, platform.c_str());
 
-    copyStringArray(envp, envp_array_base, env_data_base,
-                    ByteOrder::little, *initVirtMem);
-    copyStringArray(argv, argv_array_base, arg_data_base,
-                    ByteOrder::little, *initVirtMem);
+    copyStringArray(envp, envp_array_base, env_data_base, ByteOrder::little,
+                    *initVirtMem);
+    copyStringArray(argv, argv_array_base, arg_data_base, ByteOrder::little,
+                    *initVirtMem);
 
     initVirtMem->writeBlob(argc_base, &guestArgc, intSize);
 
@@ -1047,7 +1018,7 @@ X86Process::argsInit(int pageSize,
 void
 X86_64Process::argsInit(int pageSize)
 {
-    std::vector<gem5::auxv::AuxVector<uint64_t> > extraAuxvs;
+    std::vector<gem5::auxv::AuxVector<uint64_t>> extraAuxvs;
     extraAuxvs.emplace_back(auxv::SysinfoEhdr, vsyscallPage.base);
     X86Process::argsInit<uint64_t>(pageSize, extraAuxvs);
 }
@@ -1055,28 +1026,28 @@ X86_64Process::argsInit(int pageSize)
 void
 I386Process::argsInit(int pageSize)
 {
-    std::vector<gem5::auxv::AuxVector<uint32_t> > extraAuxvs;
-    //Tell the binary where the vsyscall part of the vsyscall page is.
+    std::vector<gem5::auxv::AuxVector<uint32_t>> extraAuxvs;
+    // Tell the binary where the vsyscall part of the vsyscall page is.
     extraAuxvs.emplace_back(auxv::Sysinfo,
-            vsyscallPage.base + vsyscallPage.vsyscallOffset);
+                            vsyscallPage.base + vsyscallPage.vsyscallOffset);
     extraAuxvs.emplace_back(auxv::SysinfoEhdr, vsyscallPage.base);
     X86Process::argsInit<uint32_t>(pageSize, extraAuxvs);
 }
 
 void
-X86_64Process::clone(ThreadContext *old_tc, ThreadContext *new_tc,
-                     Process *p, RegVal flags)
+X86_64Process::clone(ThreadContext *old_tc, ThreadContext *new_tc, Process *p,
+                     RegVal flags)
 {
     X86Process::clone(old_tc, new_tc, p, flags);
-    ((X86_64Process*)p)->vsyscallPage = vsyscallPage;
+    ((X86_64Process *)p)->vsyscallPage = vsyscallPage;
 }
 
 void
-I386Process::clone(ThreadContext *old_tc, ThreadContext *new_tc,
-                   Process *p, RegVal flags)
+I386Process::clone(ThreadContext *old_tc, ThreadContext *new_tc, Process *p,
+                   RegVal flags)
 {
     X86Process::clone(old_tc, new_tc, p, flags);
-    ((I386Process*)p)->vsyscallPage = vsyscallPage;
+    ((I386Process *)p)->vsyscallPage = vsyscallPage;
 }
 
 } // namespace gem5

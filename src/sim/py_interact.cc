@@ -43,8 +43,8 @@ py_interact()
     Py_INCREF(globals);
     locals = PyDict_New();
     PyRun_String("import code", Py_file_input, globals, locals);
-    PyRun_String("code.interact(local=globals())", Py_file_input,
-                 globals, locals);
+    PyRun_String("code.interact(local=globals())", Py_file_input, globals,
+                 locals);
     Py_DECREF(globals);
     Py_DECREF(locals);
 }

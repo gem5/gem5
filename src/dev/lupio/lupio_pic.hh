@@ -57,7 +57,7 @@ class LupioPIC : public BasicPioDevice
 
     const ByteOrder byteOrder = ByteOrder::little;
 
-  // Register map
+    // Register map
   private:
     enum
     {

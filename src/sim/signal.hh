@@ -68,23 +68,35 @@ class SignalSinkPort : public Port
     }
 
   public:
-    SignalSinkPort(const std::string &_name, PortID _id=InvalidPortID) :
-        Port(_name, _id)
+    SignalSinkPort(const std::string &_name, PortID _id = InvalidPortID)
+        : Port(_name, _id)
     {}
 
-    const State &state() const { return _state; }
-    void onChange(OnChangeFunc func) { _onChange = std::move(func); }
+    const State &
+    state() const
+    {
+        return _state;
+    }
+
+    void
+    onChange(OnChangeFunc func)
+    {
+        _onChange = std::move(func);
+    }
 
     void
     bind(Port &peer) override
     {
         _source = dynamic_cast<SignalSourcePort<State> *>(&peer);
-        fatal_if(!_source, "Attempt to bind signal pin %s to "
-                "incompatible pin %s", name(), peer.name());
+        fatal_if(!_source,
+                 "Attempt to bind signal pin %s to "
+                 "incompatible pin %s",
+                 name(), peer.name());
         // The state of sink has to match the state of source.
         _state = _source->state();
         Port::bind(peer);
     }
+
     void
     unbind() override
     {
@@ -124,16 +136,23 @@ class SignalSourcePort : public Port
         sink->set(new_state, bypass_on_change);
     }
 
-    const State &state() const { return _state; }
+    const State &
+    state() const
+    {
+        return _state;
+    }
 
     void
     bind(Port &peer) override
     {
         sink = dynamic_cast<SignalSinkPort<State> *>(&peer);
-        fatal_if(!sink, "Attempt to bind signal pin %s to "
-                "incompatible pin %s", name(), peer.name());
+        fatal_if(!sink,
+                 "Attempt to bind signal pin %s to "
+                 "incompatible pin %s",
+                 name(), peer.name());
         Port::bind(peer);
     }
+
     void
     unbind() override
     {
@@ -142,6 +161,6 @@ class SignalSourcePort : public Port
     }
 };
 
-}  // namespace gem5
+} // namespace gem5
 
-#endif  //__SIM_SIGNAL_HH__
+#endif //__SIM_SIGNAL_HH__

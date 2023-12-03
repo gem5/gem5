@@ -91,7 +91,7 @@ class I8259 : public BasicPioDevice
     I8259(const Params &p);
 
     Port &
-    getPort(const std::string &if_name, PortID idx=InvalidPortID) override
+    getPort(const std::string &if_name, PortID idx = InvalidPortID) override
     {
         if (if_name == "inputs")
             return *inputs.at(idx);

@@ -50,9 +50,12 @@ RoundingMode getFpRound();
 #else
 
 // Dummy definitions to allow code to compile w/o a real <fenv.h>.
-static inline void setFpRound(RoundingMode rm) {}
-static inline
-RoundingMode getFpRound()
+static inline void
+setFpRound(RoundingMode rm)
+{}
+
+static inline RoundingMode
+getFpRound()
 {
     return RoundingMode::Downward;
 }

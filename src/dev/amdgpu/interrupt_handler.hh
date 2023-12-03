@@ -55,27 +55,28 @@ namespace gem5
  */
 enum soc15_ih_clientid
 {
-    SOC15_IH_CLIENTID_RLC       = 0x07,
-    SOC15_IH_CLIENTID_SDMA0     = 0x08,
-    SOC15_IH_CLIENTID_SDMA1     = 0x09,
-    SOC15_IH_CLIENTID_SDMA2     = 0x01,
-    SOC15_IH_CLIENTID_SDMA3     = 0x04,
-    SOC15_IH_CLIENTID_SDMA4     = 0x05,
-    SOC15_IH_CLIENTID_SDMA5     = 0x11,
-    SOC15_IH_CLIENTID_SDMA6     = 0x13,
-    SOC15_IH_CLIENTID_SDMA7     = 0x18,
-    SOC15_IH_CLIENTID_GRBM_CP   = 0x14
+    SOC15_IH_CLIENTID_RLC = 0x07,
+    SOC15_IH_CLIENTID_SDMA0 = 0x08,
+    SOC15_IH_CLIENTID_SDMA1 = 0x09,
+    SOC15_IH_CLIENTID_SDMA2 = 0x01,
+    SOC15_IH_CLIENTID_SDMA3 = 0x04,
+    SOC15_IH_CLIENTID_SDMA4 = 0x05,
+    SOC15_IH_CLIENTID_SDMA5 = 0x11,
+    SOC15_IH_CLIENTID_SDMA6 = 0x13,
+    SOC15_IH_CLIENTID_SDMA7 = 0x18,
+    SOC15_IH_CLIENTID_GRBM_CP = 0x14
 };
 
 enum ihSourceId
 {
-    CP_EOP                      = 181,
-    TRAP_ID                     = 224
+    CP_EOP = 181,
+    TRAP_ID = 224
 };
 
 /**
  * MSI-style interrupts. Send a "cookie" response to clear interrupts.
- * From [1] we know the size of the struct is 8 dwords. Then we can look at the register shift offsets in [2] to guess the rest.
+ * From [1] we know the size of the struct is 8 dwords. Then we can look at the
+ register shift offsets in [2] to guess the rest.
  * Or we can also look at [3].
  *
  * [1] https://github.com/RadeonOpenCompute/ROCK-Kernel-Driver/blob/roc-4.3.x/
@@ -109,6 +110,7 @@ typedef struct
     uint32_t source_data_dw3;
     uint32_t source_data_dw4;
 } AMDGPUInterruptCookie;
+
 static_assert(sizeof(AMDGPUInterruptCookie) == INTR_COOKIE_SIZE);
 
 /**
@@ -143,36 +145,65 @@ class AMDGPUInterruptHandler : public DmaDevice
         {
             setFlags(Event::AutoDelete);
         }
+
         void process();
-        const char *description() const {
+
+        const char *
+        description() const
+        {
             return "AMDGPUInterruptHandler Dma";
         }
 
-        void setData(uint32_t _data) { data = _data; }
-        uint32_t getData() { return data; }
+        void
+        setData(uint32_t _data)
+        {
+            data = _data;
+        }
+
+        uint32_t
+        getData()
+        {
+            return data;
+        }
     };
 
     struct SenderState : public Packet::SenderState
     {
         SenderState(Packet::SenderState *sender_state, Addr addr)
             : saved(sender_state), _addr(addr)
-        {
-        }
+        {}
+
         Packet::SenderState *saved;
         Addr _addr;
     };
 
     AMDGPUInterruptHandler(const AMDGPUInterruptHandlerParams &p);
 
-    Tick write(PacketPtr pkt) override { return 0; }
-    Tick read(PacketPtr pkt) override { return 0; }
+    Tick
+    write(PacketPtr pkt) override
+    {
+        return 0;
+    }
+
+    Tick
+    read(PacketPtr pkt) override
+    {
+        return 0;
+    }
+
     AddrRangeList getAddrRanges() const override;
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 
-    void setGPUDevice(AMDGPUDevice *gpu_device) { gpuDevice = gpu_device; }
+    void
+    setGPUDevice(AMDGPUDevice *gpu_device)
+    {
+        gpuDevice = gpu_device;
+    }
+
     void prepareInterruptCookie(ContextID cntxtId, uint32_t ring_id,
-        uint32_t client_id, uint32_t source_id, unsigned node_id);
+                                uint32_t client_id, uint32_t source_id,
+                                unsigned node_id);
     void submitInterruptCookie();
     void submitWritePointer();
     void intrPost();
@@ -182,7 +213,12 @@ class AMDGPUInterruptHandler : public DmaDevice
      */
     void writeMMIO(PacketPtr pkt, Addr mmio_offset);
 
-    uint32_t getDoorbellOffset() const { return regs.IH_Doorbell; }
+    uint32_t
+    getDoorbellOffset() const
+    {
+        return regs.IH_Doorbell;
+    }
+
     void setCntl(const uint32_t &data);
     void setBase(const uint32_t &data);
     void setBaseHi(const uint32_t &data);
@@ -196,7 +232,7 @@ class AMDGPUInterruptHandler : public DmaDevice
   private:
     AMDGPUDevice *gpuDevice;
     AMDGPUIHRegs regs;
-    std::queue<AMDGPUInterruptCookie*> interruptQueue;
+    std::queue<AMDGPUInterruptCookie *> interruptQueue;
     AMDGPUInterruptHandler::DmaEvent *dmaEvent;
 };
 

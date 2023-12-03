@@ -54,7 +54,7 @@ class Perfect : public Base
     void set(Addr addr) override;
     void unset(Addr addr) override;
 
-    void merge(const Base* other) override;
+    void merge(const Base *other) override;
     int getCount(Addr addr) const override;
     int getTotalCount() const override;
 

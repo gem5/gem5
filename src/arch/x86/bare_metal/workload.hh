@@ -50,9 +50,24 @@ class BareMetalWorkload : public Workload
   public:
     void initState() override;
 
-    Addr getEntry() const override { return 0; }
-    ByteOrder byteOrder() const override { return ByteOrder::little; }
-    loader::Arch getArch() const override { return loader::UnknownArch; }
+    Addr
+    getEntry() const override
+    {
+        return 0;
+    }
+
+    ByteOrder
+    byteOrder() const override
+    {
+        return ByteOrder::little;
+    }
+
+    loader::Arch
+    getArch() const override
+    {
+        return loader::UnknownArch;
+    }
+
     const loader::SymbolTable &
     symtab(ThreadContext *tc) override
     {

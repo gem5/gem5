@@ -56,14 +56,13 @@ std::string filename = "m5out/stats-systemc.txt";
 namespace Gem5SystemC
 {
 
-Gem5SimControl* Gem5SimControl::instance = nullptr;
+Gem5SimControl *Gem5SimControl::instance = nullptr;
 
 Gem5SimControl::Gem5SimControl(sc_core::sc_module_name name,
-                               const std::string& configFile,
+                               const std::string &configFile,
                                uint64_t simulationEnd,
-                               const std::string& gem5DebugFlags)
-  : Gem5SystemC::Module(name),
-    simulationEnd(simulationEnd)
+                               const std::string &gem5DebugFlags)
+    : Gem5SystemC::Module(name), simulationEnd(simulationEnd)
 {
     SC_THREAD(run);
 
@@ -74,26 +73,26 @@ Gem5SimControl::Gem5SimControl(sc_core::sc_module_name name,
 
     // register the systemc slave and master port handler
     gem5::ExternalSlave::registerHandler("tlm_slave",
-        new SCSlavePortHandler(*this));
+                                         new SCSlavePortHandler(*this));
     gem5::ExternalMaster::registerHandler("tlm_master",
-        new SCMasterPortHandler(*this));
+                                          new SCMasterPortHandler(*this));
 
     gem5::trace::setDebugLogger(&logger);
 
     Gem5SystemC::setTickFrequency();
-    assert(sc_core::sc_get_time_resolution()
-                    == sc_core::sc_time(1,sc_core::SC_PS));
+    assert(sc_core::sc_get_time_resolution() ==
+           sc_core::sc_time(1, sc_core::SC_PS));
 
     Gem5SystemC::Module::setupEventQueues(*this);
     gem5::initSignals();
 
     gem5::statistics::initSimStats();
     gem5::statistics::registerHandlers(CxxConfig::statsReset,
-        CxxConfig::statsDump);
+                                       CxxConfig::statsDump);
 
     gem5::trace::enable();
 
-    gem5::CxxConfigFileBase* conf = new gem5::CxxIniFile();
+    gem5::CxxConfigFileBase *conf = new gem5::CxxIniFile();
 
     if (configFile.empty()) {
         std::cerr << "No gem5 config file specified!\n";
@@ -115,8 +114,7 @@ Gem5SimControl::Gem5SimControl(sc_core::sc_module_name name,
         if (flag.at(0) == '-') {
             flag.erase(0, 1); // remove the '-'
             gem5::clearDebugFlag(flag.c_str());
-        }
-        else {
+        } else {
             gem5::setDebugFlag(flag.c_str());
         }
     }
@@ -127,8 +125,8 @@ Gem5SimControl::Gem5SimControl(sc_core::sc_module_name name,
     try {
         config_manager->instantiate();
     } catch (gem5::CxxConfigManager::Exception &e) {
-        std::cerr << "Config problem in sim object "
-                  << e.name << ": " << e.message << "\n";
+        std::cerr << "Config problem in sim object " << e.name << ": "
+                  << e.message << "\n";
         std::exit(EXIT_FAILURE);
     }
 }
@@ -140,8 +138,8 @@ Gem5SimControl::end_of_elaboration()
         config_manager->initState();
         config_manager->startup();
     } catch (gem5::CxxConfigManager::Exception &e) {
-        std::cerr << "Config problem in sim object "
-            << e.name << ": " << e.message << "\n";
+        std::cerr << "Config problem in sim object " << e.name << ": "
+                  << e.message << "\n";
         std::exit(EXIT_FAILURE);
     }
 }
@@ -174,7 +172,7 @@ Gem5SimControl::run()
 }
 
 void
-Gem5SimControl::registerSlavePort(const std::string& name, SCSlavePort* port)
+Gem5SimControl::registerSlavePort(const std::string &name, SCSlavePort *port)
 {
     if (slavePorts.find(name) == slavePorts.end()) {
         slavePorts[name] = port;
@@ -185,7 +183,7 @@ Gem5SimControl::registerSlavePort(const std::string& name, SCSlavePort* port)
 }
 
 void
-Gem5SimControl::registerMasterPort(const std::string& name, SCMasterPort* port)
+Gem5SimControl::registerMasterPort(const std::string &name, SCMasterPort *port)
 {
     if (masterPorts.find(name) == masterPorts.end()) {
         masterPorts[name] = port;
@@ -195,8 +193,8 @@ Gem5SimControl::registerMasterPort(const std::string& name, SCMasterPort* port)
     }
 }
 
-SCSlavePort*
-Gem5SimControl::getSlavePort(const std::string& name)
+SCSlavePort *
+Gem5SimControl::getSlavePort(const std::string &name)
 {
     if (slavePorts.find(name) == slavePorts.end()) {
         std::cerr << "Slave Port " << name << " was not found!\n";
@@ -206,8 +204,8 @@ Gem5SimControl::getSlavePort(const std::string& name)
     return slavePorts.at(name);
 }
 
-SCMasterPort*
-Gem5SimControl::getMasterPort(const std::string& name)
+SCMasterPort *
+Gem5SimControl::getMasterPort(const std::string &name)
 {
     if (masterPorts.find(name) == masterPorts.end()) {
         std::cerr << "Master Port " << name << " was not found!\n";
@@ -217,4 +215,4 @@ Gem5SimControl::getMasterPort(const std::string& name)
     return masterPorts.at(name);
 }
 
-}
+} // namespace Gem5SystemC

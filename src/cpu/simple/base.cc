@@ -91,12 +91,11 @@ BaseSimpleCPU::BaseSimpleCPU(const BaseSimpleCPUParams &p)
 
     for (unsigned i = 0; i < numThreads; i++) {
         if (FullSystem) {
-            thread = new SimpleThread(
-                this, i, p.system, p.mmu, p.isa[i], p.decoder[i]);
+            thread = new SimpleThread(this, i, p.system, p.mmu, p.isa[i],
+                                      p.decoder[i]);
         } else {
-            thread = new SimpleThread(
-                this, i, p.system, p.workload[i], p.mmu, p.isa[i],
-                p.decoder[i]);
+            thread = new SimpleThread(this, i, p.system, p.workload[i], p.mmu,
+                                      p.isa[i], p.decoder[i]);
         }
         threadInfo.push_back(new SimpleExecContext(this, thread));
         ThreadContext *tc = thread->getTC();
@@ -112,8 +111,8 @@ BaseSimpleCPU::BaseSimpleCPU(const BaseSimpleCPUParams &p)
         checker->setSystem(p.system);
         // Manipulate thread context
         ThreadContext *cpu_tc = threadContexts[0];
-        threadContexts[0] = new CheckerThreadContext<ThreadContext>(
-                cpu_tc, this->checker);
+        threadContexts[0] =
+            new CheckerThreadContext<ThreadContext>(cpu_tc, this->checker);
     } else {
         checker = NULL;
     }
@@ -126,7 +125,7 @@ BaseSimpleCPU::checkPcEventQueue()
     do {
         oldpc = pc;
         threadInfo[curThread]->thread->pcEventQueue.service(
-                oldpc, threadContexts[curThread]);
+            oldpc, threadContexts[curThread]);
         pc = threadInfo[curThread]->thread->pcState().instAddr();
     } while (oldpc != pc);
 }
@@ -136,7 +135,7 @@ BaseSimpleCPU::swapActiveThread()
 {
     if (numThreads > 1) {
         if ((!curStaticInst || !curStaticInst->isDelayedCommit()) &&
-             !threadInfo[curThread]->stayAtPC) {
+            !threadInfo[curThread]->stayAtPC) {
             // Swap active threads
             if (!activeThreads.empty()) {
                 curThread = activeThreads.front();
@@ -150,7 +149,7 @@ BaseSimpleCPU::swapActiveThread()
 void
 BaseSimpleCPU::countInst()
 {
-    SimpleExecContext& t_info = *threadInfo[curThread];
+    SimpleExecContext &t_info = *threadInfo[curThread];
 
     if (!curStaticInst->isMicroop() || curStaticInst->isLastMicroop()) {
         t_info.numInst++;
@@ -161,7 +160,7 @@ BaseSimpleCPU::countInst()
 void
 BaseSimpleCPU::countFetchInst()
 {
-    SimpleExecContext& t_info = *threadInfo[curThread];
+    SimpleExecContext &t_info = *threadInfo[curThread];
 
     if (!curStaticInst->isMicroop() || curStaticInst->isLastMicroop()) {
         // increment thread level numInsts fetched count
@@ -174,7 +173,7 @@ BaseSimpleCPU::countFetchInst()
 void
 BaseSimpleCPU::countCommitInst()
 {
-    SimpleExecContext& t_info = *threadInfo[curThread];
+    SimpleExecContext &t_info = *threadInfo[curThread];
 
     if (!curStaticInst->isMicroop() || curStaticInst->isLastMicroop()) {
         // increment thread level and core level numInsts count
@@ -189,7 +188,7 @@ Counter
 BaseSimpleCPU::totalInsts() const
 {
     Counter total_inst = 0;
-    for (auto& t_info : threadInfo) {
+    for (auto &t_info : threadInfo) {
         total_inst += t_info->numInst;
     }
 
@@ -200,16 +199,14 @@ Counter
 BaseSimpleCPU::totalOps() const
 {
     Counter total_op = 0;
-    for (auto& t_info : threadInfo) {
+    for (auto &t_info : threadInfo) {
         total_op += t_info->numOp;
     }
 
     return total_op;
 }
 
-BaseSimpleCPU::~BaseSimpleCPU()
-{
-}
+BaseSimpleCPU::~BaseSimpleCPU() {}
 
 void
 BaseSimpleCPU::haltContext(ThreadID thread_num)
@@ -244,8 +241,7 @@ BaseSimpleCPU::unserializeThread(CheckpointIn &cp, ThreadID tid)
 
 void
 change_thread_state(ThreadID tid, int activate, int priority)
-{
-}
+{}
 
 void
 BaseSimpleCPU::wakeup(ThreadID tid)
@@ -253,7 +249,7 @@ BaseSimpleCPU::wakeup(ThreadID tid)
     getCpuAddrMonitor(tid)->gotWakeup = true;
 
     if (threadInfo[tid]->thread->status() == ThreadContext::Suspended) {
-        DPRINTF(Quiesce,"[tid:%d] Suspended Processor awoke\n", tid);
+        DPRINTF(Quiesce, "[tid:%d] Suspended Processor awoke\n", tid);
         threadInfo[tid]->thread->activate();
     }
 }
@@ -272,9 +268,9 @@ BaseSimpleCPU::traceFault()
 void
 BaseSimpleCPU::checkForInterrupts()
 {
-    SimpleExecContext&t_info = *threadInfo[curThread];
-    SimpleThread* thread = t_info.thread;
-    ThreadContext* tc = thread->getTC();
+    SimpleExecContext &t_info = *threadInfo[curThread];
+    SimpleThread *thread = t_info.thread;
+    ThreadContext *tc = thread->getTC();
 
     if (checkInterrupts(curThread)) {
         Fault interrupt = interrupts[curThread]->getInterrupt();
@@ -282,12 +278,13 @@ BaseSimpleCPU::checkForInterrupts()
         if (interrupt != NoFault) {
             // hardware transactional memory
             // Postpone taking interrupts while executing transactions.
-            assert(!std::dynamic_pointer_cast<GenericHtmFailureFault>(
-                interrupt));
+            assert(
+                !std::dynamic_pointer_cast<GenericHtmFailureFault>(interrupt));
             if (t_info.inHtmTransactionalState()) {
-                DPRINTF(HtmCpu, "Deferring pending interrupt - %s -"
-                    "due to transactional state\n",
-                    interrupt->name());
+                DPRINTF(HtmCpu,
+                        "Deferring pending interrupt - %s -"
+                        "due to transactional state\n",
+                        interrupt->name());
                 return;
             }
 
@@ -299,12 +296,11 @@ BaseSimpleCPU::checkForInterrupts()
     }
 }
 
-
 void
 BaseSimpleCPU::setupFetchRequest(const RequestPtr &req)
 {
     SimpleExecContext &t_info = *threadInfo[curThread];
-    SimpleThread* thread = t_info.thread;
+    SimpleThread *thread = t_info.thread;
 
     auto &decoder = thread->decoder;
     Addr instAddr = thread->pcState().instAddr();
@@ -328,7 +324,7 @@ void
 BaseSimpleCPU::preExecute()
 {
     SimpleExecContext &t_info = *threadInfo[curThread];
-    SimpleThread* thread = t_info.thread;
+    SimpleThread *thread = t_info.thread;
 
     // resets predicates
     t_info.setPredicate(true);
@@ -342,21 +338,21 @@ BaseSimpleCPU::preExecute()
 
     if (isRomMicroPC(pc_state.microPC())) {
         t_info.stayAtPC = false;
-        curStaticInst = decoder->fetchRomMicroop(
-                pc_state.microPC(), curMacroStaticInst);
+        curStaticInst =
+            decoder->fetchRomMicroop(pc_state.microPC(), curMacroStaticInst);
     } else if (!curMacroStaticInst) {
-        //We're not in the middle of a macro instruction
+        // We're not in the middle of a macro instruction
         StaticInstPtr instPtr = NULL;
 
-        //Predecode, ie bundle up an ExtMachInst
-        //If more fetch data is needed, pass it in.
+        // Predecode, ie bundle up an ExtMachInst
+        // If more fetch data is needed, pass it in.
         Addr fetch_pc =
             (pc_state.instAddr() & decoder->pcMask()) + t_info.fetchOffset;
 
         decoder->moreBytes(pc_state, fetch_pc);
 
-        //Decode an instruction if one is ready. Otherwise, we'll have to
-        //fetch beyond the MachInst at the current pc.
+        // Decode an instruction if one is ready. Otherwise, we'll have to
+        // fetch beyond the MachInst at the current pc.
         instPtr = decoder->decode(pc_state);
         if (instPtr) {
             t_info.stayAtPC = false;
@@ -366,8 +362,8 @@ BaseSimpleCPU::preExecute()
             t_info.fetchOffset += decoder->moreBytesSize();
         }
 
-        //If we decoded an instruction and it's microcoded, start pulling
-        //out micro ops
+        // If we decoded an instruction and it's microcoded, start pulling
+        // out micro ops
         if (instPtr && instPtr->isMacroop()) {
             curMacroStaticInst = instPtr;
             curStaticInst =
@@ -376,27 +372,26 @@ BaseSimpleCPU::preExecute()
             curStaticInst = instPtr;
         }
     } else {
-        //Read the next micro op from the macro op
+        // Read the next micro op from the macro op
         curStaticInst = curMacroStaticInst->fetchMicroop(pc_state.microPC());
     }
 
-    //If we decoded an instruction this "tick", record information about it.
+    // If we decoded an instruction this "tick", record information about it.
     if (curStaticInst) {
 #if TRACING_ON
-        traceData = tracer->getInstRecord(curTick(), thread->getTC(),
-                curStaticInst, thread->pcState(), curMacroStaticInst);
+        traceData =
+            tracer->getInstRecord(curTick(), thread->getTC(), curStaticInst,
+                                  thread->pcState(), curMacroStaticInst);
 #endif // TRACING_ON
     }
 
-    if (branchPred && curStaticInst &&
-        curStaticInst->isControl()) {
+    if (branchPred && curStaticInst && curStaticInst->isControl()) {
         // Use a fake sequence number since we only have one
         // instruction in flight at the same time.
         const InstSeqNum cur_sn(0);
         set(t_info.predPC, thread->pcState());
-        const bool predict_taken(
-            branchPred->predict(curStaticInst, cur_sn, *t_info.predPC,
-                curThread));
+        const bool predict_taken(branchPred->predict(
+            curStaticInst, cur_sn, *t_info.predPC, curThread));
 
         if (predict_taken)
             ++t_info.execContextStats.numPredictedBranches;
@@ -430,41 +425,41 @@ BaseSimpleCPU::postExecute()
     }
 
     /* Power model statistics */
-    //integer alu accesses
-    if (curStaticInst->isInteger()){
+    // integer alu accesses
+    if (curStaticInst->isInteger()) {
         executeStats[t_info.thread->threadId()]->numIntAluAccesses++;
         commitStats[t_info.thread->threadId()]->numIntInsts++;
     }
 
-    //float alu accesses
-    if (curStaticInst->isFloating()){
+    // float alu accesses
+    if (curStaticInst->isFloating()) {
         executeStats[t_info.thread->threadId()]->numFpAluAccesses++;
         commitStats[t_info.thread->threadId()]->numFpInsts++;
     }
 
-    //vector alu accesses
-    if (curStaticInst->isVector()){
+    // vector alu accesses
+    if (curStaticInst->isVector()) {
         executeStats[t_info.thread->threadId()]->numVecAluAccesses++;
         commitStats[t_info.thread->threadId()]->numVecInsts++;
     }
 
-    //Matrix alu accesses
-    if (curStaticInst->isMatrix()){
+    // Matrix alu accesses
+    if (curStaticInst->isMatrix()) {
         t_info.execContextStats.numMatAluAccesses++;
         t_info.execContextStats.numMatInsts++;
     }
 
-    //number of function calls/returns to get window accesses
-    if (curStaticInst->isCall() || curStaticInst->isReturn()){
+    // number of function calls/returns to get window accesses
+    if (curStaticInst->isCall() || curStaticInst->isReturn()) {
         t_info.execContextStats.numCallsReturns++;
     }
 
-    //result bus acceses
-    if (curStaticInst->isLoad()){
+    // result bus acceses
+    if (curStaticInst->isLoad()) {
         commitStats[t_info.thread->threadId()]->numLoadInsts++;
     }
 
-    if (curStaticInst->isStore() || curStaticInst->isAtomic()){
+    if (curStaticInst->isStore() || curStaticInst->isAtomic()) {
         commitStats[t_info.thread->threadId()]->numStoreInsts++;
     }
     /* End power model statistics */
@@ -493,11 +488,11 @@ void
 BaseSimpleCPU::advancePC(const Fault &fault)
 {
     SimpleExecContext &t_info = *threadInfo[curThread];
-    SimpleThread* thread = t_info.thread;
+    SimpleThread *thread = t_info.thread;
 
     const bool branching = thread->pcState().branching();
 
-    //Since we're moving to a new pc, zero out the offset
+    // Since we're moving to a new pc, zero out the offset
     t_info.fetchOffset = 0;
     if (fault != NoFault) {
         curMacroStaticInst = nullStaticInstPtr;
@@ -522,7 +517,7 @@ BaseSimpleCPU::advancePC(const Fault &fault)
         } else {
             // Mis-predicted branch
             branchPred->squash(cur_sn, thread->pcState(), branching,
-                    curThread);
+                               curThread);
             ++t_info.execContextStats.numBranchMispred;
         }
     }

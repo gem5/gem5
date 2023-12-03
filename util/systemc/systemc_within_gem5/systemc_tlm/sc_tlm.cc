@@ -52,154 +52,140 @@ using namespace gem5;
 
 SC_MODULE(Initiator)
 {
-    public:
+  public:
     tlm_utils::simple_initiator_socket<Initiator> iSocket;
 
-    protected:
+  protected:
     int data[16];
 
-    public:
-    SC_CTOR(Initiator): iSocket("iSocket")
+  public:
+    SC_CTOR(Initiator) : iSocket("iSocket")
     {
         SC_THREAD(process);
 
-        for (int i=0; i<16; i++) {
+        for (int i = 0; i < 16; i++) {
             data[i] = 0;
         }
     }
 
-    protected:
+  protected:
     void process()
     {
         sc_time delay;
 
-        for (int i = 0; i < N; i++)
-        {
+        for (int i = 0; i < N; i++) {
             tlm::tlm_generic_payload trans;
             data[i % 16] = i;
-            trans.set_address(rand()%N);
+            trans.set_address(rand() % N);
             trans.set_data_length(4);
             trans.set_streaming_width(4);
             trans.set_command(tlm::TLM_WRITE_COMMAND);
-            trans.set_data_ptr(reinterpret_cast<unsigned char*>(&data[i%16]));
-            trans.set_response_status( tlm::TLM_INCOMPLETE_RESPONSE );
+            trans.set_data_ptr(
+                reinterpret_cast<unsigned char *>(&data[i % 16]));
+            trans.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
 
             sc_time delay = sc_time(10, SC_NS);
 
             iSocket->b_transport(trans, delay);
 
-            if (trans.is_response_error())
-            {
+            if (trans.is_response_error()) {
                 SC_REPORT_FATAL(name(), "Response error");
             }
 
             wait(delay);
 
-            cout << "\033[1;31m("
-                 << name()
-                 << ")@"  << setfill(' ') << setw(12) << sc_time_stamp()
-                 << ": " << setw(12) << "Write to "
-                 << "Addr = " << setfill('0') << setw(8)
-                 << dec << trans.get_address()
-                 << " Data = " << "0x" << setfill('0') << setw(8)
-                 << hex << data[i%16] << "(b_transport) \033[0m" << endl;
+            cout << "\033[1;31m(" << name() << ")@" << setfill(' ') << setw(12)
+                 << sc_time_stamp() << ": " << setw(12) << "Write to "
+                 << "Addr = " << setfill('0') << setw(8) << dec
+                 << trans.get_address() << " Data = "
+                 << "0x" << setfill('0') << setw(8) << hex << data[i % 16]
+                 << "(b_transport) \033[0m" << endl;
         }
     }
 };
 
 SC_MODULE(Target)
 {
-    public:
+  public:
     tlm_utils::simple_target_socket<Target> tSocket;
 
-    private:
+  private:
     unsigned char mem[512];
 
-    public:
+  public:
     SC_HAS_PROCESS(Target);
-    Target(sc_module_name name, unsigned int bufferSize = 8) :
-         sc_module(name),
-         tSocket("tSocket")
+    Target(sc_module_name name, unsigned int bufferSize = 8)
+        : sc_module(name), tSocket("tSocket")
     {
         tSocket.register_b_transport(this, &Target::b_transport);
     }
 
-    virtual void b_transport(tlm::tlm_generic_payload& trans,
-                             sc_time& delay)
+    virtual void b_transport(tlm::tlm_generic_payload & trans, sc_time & delay)
     {
         executeTransaction(trans);
     }
 
-
     // Common to b_transport and nb_transport
-    void executeTransaction(tlm::tlm_generic_payload& trans)
+    void executeTransaction(tlm::tlm_generic_payload & trans)
     {
         tlm::tlm_command cmd = trans.get_command();
-        sc_dt::uint64    adr = trans.get_address();
-        unsigned char*   ptr = trans.get_data_ptr();
-        unsigned int     len = trans.get_data_length();
-        unsigned char*   byt = trans.get_byte_enable_ptr();
-        unsigned int     wid = trans.get_streaming_width();
-
+        sc_dt::uint64 adr = trans.get_address();
+        unsigned char *ptr = trans.get_data_ptr();
+        unsigned int len = trans.get_data_length();
+        unsigned char *byt = trans.get_byte_enable_ptr();
+        unsigned int wid = trans.get_streaming_width();
 
         if (trans.get_address() >= 512) {
-            trans.set_response_status( tlm::TLM_ADDRESS_ERROR_RESPONSE );
+            trans.set_response_status(tlm::TLM_ADDRESS_ERROR_RESPONSE);
             return;
         }
         if (byt != 0) {
-            trans.set_response_status( tlm::TLM_BYTE_ENABLE_ERROR_RESPONSE );
+            trans.set_response_status(tlm::TLM_BYTE_ENABLE_ERROR_RESPONSE);
             return;
         }
         if (len > 4 || wid < len) {
-            trans.set_response_status( tlm::TLM_BURST_ERROR_RESPONSE );
+            trans.set_response_status(tlm::TLM_BURST_ERROR_RESPONSE);
             return;
         }
 
-        if (cmd == tlm::TLM_READ_COMMAND)
-        {
+        if (cmd == tlm::TLM_READ_COMMAND) {
             memcpy(&mem[trans.get_address()], // destination
                    trans.get_data_ptr(),      // source
                    trans.get_data_length());  // size
-        }
-        else if (cmd == tlm::TLM_WRITE_COMMAND)
-        {
+        } else if (cmd == tlm::TLM_WRITE_COMMAND) {
             memcpy(trans.get_data_ptr(),      // destination
                    &mem[trans.get_address()], // source
                    trans.get_data_length());  // size
         }
 
-        cout << "\033[1;32m("
-             << name()
-             << ")@"  << setfill(' ') << setw(12) << sc_time_stamp()
-             << ": " << setw(12) << (cmd ? "Exec. Write " : "Exec. Read ")
+        cout << "\033[1;32m(" << name() << ")@" << setfill(' ') << setw(12)
+             << sc_time_stamp() << ": " << setw(12)
+             << (cmd ? "Exec. Write " : "Exec. Read ")
              << "Addr = " << setfill('0') << setw(8) << dec << adr
-             << " Data = " << "0x" << setfill('0') << setw(8) << hex
-             << *reinterpret_cast<int*>(ptr)
-             << "\033[0m" << endl;
+             << " Data = "
+             << "0x" << setfill('0') << setw(8) << hex
+             << *reinterpret_cast<int *>(ptr) << "\033[0m" << endl;
 
-        trans.set_response_status( tlm::TLM_OK_RESPONSE );
+        trans.set_response_status(tlm::TLM_OK_RESPONSE);
     }
-
 };
 
-template<unsigned int I, unsigned int T>
+template <unsigned int I, unsigned int T>
 SC_MODULE(Interconnect)
 {
-    public:
+  public:
     tlm_utils::simple_target_socket_tagged<Interconnect> tSocket[T];
     tlm_utils::simple_initiator_socket_tagged<Interconnect> iSocket[I];
 
     SC_CTOR(Interconnect)
     {
         for (unsigned int i = 0; i < T; i++) {
-            tSocket[i].register_b_transport(this,
-                                            &Interconnect::b_transport,
+            tSocket[i].register_b_transport(this, &Interconnect::b_transport,
                                             i);
         }
     }
 
-    private:
-
+  private:
     int routeFW(int inPort, tlm::tlm_generic_payload &trans)
     {
         int outPort = 0;
@@ -212,36 +198,32 @@ SC_MODULE(Interconnect)
             trans.set_address(trans.get_address() - 512);
             outPort = 1;
         } else {
-            trans.set_response_status( tlm::TLM_ADDRESS_ERROR_RESPONSE );
+            trans.set_response_status(tlm::TLM_ADDRESS_ERROR_RESPONSE);
         }
 
         return outPort;
     }
 
-    virtual void b_transport( int id,
-                              tlm::tlm_generic_payload& trans,
-                              sc_time& delay )
+    virtual void b_transport(int id, tlm::tlm_generic_payload &trans,
+                             sc_time &delay)
     {
         sc_assert(id < T);
         int outPort = routeFW(id, trans);
         iSocket[outPort]->b_transport(trans, delay);
     }
-
 };
 
-
 int
-sc_main (int __attribute__((unused)) sc_argc,
-             char __attribute__((unused)) *sc_argv[])
+sc_main(int __attribute__((unused)) sc_argc,
+        char __attribute__((unused)) * sc_argv[])
 {
+    Initiator *cpu1 = new Initiator("C1");
+    Initiator *cpu2 = new Initiator("C2");
 
-    Initiator * cpu1   = new Initiator("C1");
-    Initiator * cpu2   = new Initiator("C2");
+    Target *memory1 = new Target("M1");
+    Target *memory2 = new Target("M2");
 
-    Target * memory1   = new Target("M1");
-    Target * memory2   = new Target("M2");
-
-    Interconnect<2,2> * bus = new Interconnect<2,2>("B1");
+    Interconnect<2, 2> *bus = new Interconnect<2, 2>("B1");
 
     cpu1->iSocket.bind(bus->tSocket[0]);
     cpu2->iSocket.bind(bus->tSocket[1]);

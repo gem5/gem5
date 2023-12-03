@@ -55,13 +55,17 @@
 namespace sc_core
 {
 
-sc_vector_base::size_type sc_vector_base::size() const { return objs.size(); }
+sc_vector_base::size_type
+sc_vector_base::size() const
+{
+    return objs.size();
+}
 
 const std::vector<sc_object *> &
 sc_vector_base::get_elements() const
 {
     elements.clear();
-    for (auto ptr: objs) {
+    for (auto ptr : objs) {
         sc_object *obj_ptr = objectCast(ptr);
         if (obj_ptr)
             elements.push_back(obj_ptr);
@@ -97,7 +101,8 @@ sc_vector_base::reportEmpty(const char *kind_, bool empty_dest) const
 {
     std::ostringstream ss;
 
-    ss << "target `" << name() << "' " << "(" << kind_ << ") ";
+    ss << "target `" << name() << "' "
+       << "(" << kind_ << ") ";
 
     if (!size())
         ss << "not initialised yet";

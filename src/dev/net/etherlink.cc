@@ -66,18 +66,16 @@
 namespace gem5
 {
 
-EtherLink::EtherLink(const Params &p)
-    : SimObject(p)
+EtherLink::EtherLink(const Params &p) : SimObject(p)
 {
-    link[0] = new Link(name() + ".link0", this, 0, p.speed,
-                       p.delay, p.delay_var, p.dump);
-    link[1] = new Link(name() + ".link1", this, 1, p.speed,
-                       p.delay, p.delay_var, p.dump);
+    link[0] = new Link(name() + ".link0", this, 0, p.speed, p.delay,
+                       p.delay_var, p.dump);
+    link[1] = new Link(name() + ".link1", this, 1, p.speed, p.delay,
+                       p.delay_var, p.dump);
 
     interface[0] = new Interface(name() + ".int0", link[0], link[1]);
     interface[1] = new Interface(name() + ".int1", link[1], link[0]);
 }
-
 
 EtherLink::~EtherLink()
 {
@@ -98,7 +96,6 @@ EtherLink::getPort(const std::string &if_name, PortID idx)
     return SimObject::getPort(if_name, idx);
 }
 
-
 EtherLink::Interface::Interface(const std::string &name, Link *tx, Link *rx)
     : EtherInt(name), txlink(tx)
 {
@@ -108,11 +105,18 @@ EtherLink::Interface::Interface(const std::string &name, Link *tx, Link *rx)
 
 EtherLink::Link::Link(const std::string &name, EtherLink *p, int num,
                       double rate, Tick delay, Tick delay_var, EtherDump *d)
-    : objName(name), parent(p), number(num), txint(NULL), rxint(NULL),
-      ticksPerByte(rate), linkDelay(delay), delayVar(delay_var), dump(d),
-      doneEvent([this]{ txDone(); }, name),
-      txQueueEvent([this]{ processTxQueue(); }, name)
-{ }
+    : objName(name),
+      parent(p),
+      number(num),
+      txint(NULL),
+      rxint(NULL),
+      ticksPerByte(rate),
+      linkDelay(delay),
+      delayVar(delay_var),
+      dump(d),
+      doneEvent([this] { txDone(); }, name),
+      txQueueEvent([this] { processTxQueue(); }, name)
+{}
 
 void
 EtherLink::serialize(CheckpointOut &cp) const
@@ -191,8 +195,8 @@ EtherLink::Link::transmit(EthPacketPtr pkt)
     if (delayVar != 0)
         delay += random_mt.random<Tick>(0, delayVar);
 
-    DPRINTF(Ethernet, "scheduling packet: delay=%d, (rate=%f)\n",
-            delay, ticksPerByte);
+    DPRINTF(Ethernet, "scheduling packet: delay=%d, (rate=%f)\n", delay,
+            ticksPerByte);
     parent->schedule(doneEvent, curTick() + delay);
 
     return true;

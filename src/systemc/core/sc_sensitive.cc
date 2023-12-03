@@ -53,7 +53,7 @@ checkIfRunning()
 sc_sensitive::sc_sensitive() : currentProcess(nullptr) {}
 
 sc_sensitive &
-sc_sensitive::operator << (const sc_event &e)
+sc_sensitive::operator<<(const sc_event &e)
 {
     checkIfRunning();
     sc_gem5::newStaticSensitivityEvent(currentProcess, &e);
@@ -61,7 +61,7 @@ sc_sensitive::operator << (const sc_event &e)
 }
 
 sc_sensitive &
-sc_sensitive::operator << (const sc_interface &i)
+sc_sensitive::operator<<(const sc_interface &i)
 {
     checkIfRunning();
     sc_gem5::newStaticSensitivityInterface(currentProcess, &i);
@@ -69,7 +69,7 @@ sc_sensitive::operator << (const sc_interface &i)
 }
 
 sc_sensitive &
-sc_sensitive::operator << (const sc_port_base &b)
+sc_sensitive::operator<<(const sc_port_base &b)
 {
     checkIfRunning();
     sc_gem5::newStaticSensitivityPort(currentProcess, &b);
@@ -77,7 +77,7 @@ sc_sensitive::operator << (const sc_port_base &b)
 }
 
 sc_sensitive &
-sc_sensitive::operator << (sc_event_finder &f)
+sc_sensitive::operator<<(sc_event_finder &f)
 {
     checkIfRunning();
     sc_gem5::newStaticSensitivityFinder(currentProcess, &f);
@@ -85,61 +85,59 @@ sc_sensitive::operator << (sc_event_finder &f)
 }
 
 sc_sensitive &
-sc_sensitive::operator << (::sc_gem5::Process *p)
+sc_sensitive::operator<<(::sc_gem5::Process *p)
 {
     currentProcess = p;
     return *this;
 }
 
-
 void
-sc_sensitive::operator () (::sc_gem5::Process *p,
-                           const sc_signal_in_if<bool> &i)
+sc_sensitive::operator()(::sc_gem5::Process *p, const sc_signal_in_if<bool> &i)
 {
     checkIfRunning();
     sc_gem5::newStaticSensitivityEvent(p, &i.posedge_event());
 }
 
 void
-sc_sensitive::operator () (::sc_gem5::Process *p,
-                           const sc_signal_in_if<sc_dt::sc_logic> &i)
+sc_sensitive::operator()(::sc_gem5::Process *p,
+                         const sc_signal_in_if<sc_dt::sc_logic> &i)
 {
     checkIfRunning();
     sc_gem5::newStaticSensitivityEvent(p, &i.posedge_event());
 }
 
 void
-sc_sensitive::operator () (::sc_gem5::Process *p, const sc_in<bool> &port)
+sc_sensitive::operator()(::sc_gem5::Process *p, const sc_in<bool> &port)
 {
     checkIfRunning();
     sc_gem5::newStaticSensitivityFinder(p, &port.pos());
 }
 
 void
-sc_sensitive::operator () (::sc_gem5::Process *p,
-                           const sc_in<sc_dt::sc_logic> &port)
+sc_sensitive::operator()(::sc_gem5::Process *p,
+                         const sc_in<sc_dt::sc_logic> &port)
 {
     checkIfRunning();
     sc_gem5::newStaticSensitivityFinder(p, &port.pos());
 }
 
 void
-sc_sensitive::operator () (::sc_gem5::Process *p, const sc_inout<bool> &port)
+sc_sensitive::operator()(::sc_gem5::Process *p, const sc_inout<bool> &port)
 {
     checkIfRunning();
     sc_gem5::newStaticSensitivityFinder(p, &port.pos());
 }
 
 void
-sc_sensitive::operator () (::sc_gem5::Process *p,
-                           const sc_inout<sc_dt::sc_logic> &port)
+sc_sensitive::operator()(::sc_gem5::Process *p,
+                         const sc_inout<sc_dt::sc_logic> &port)
 {
     checkIfRunning();
     sc_gem5::newStaticSensitivityFinder(p, &port.pos());
 }
 
 void
-sc_sensitive::operator () (::sc_gem5::Process *p, sc_event_finder &f)
+sc_sensitive::operator()(::sc_gem5::Process *p, sc_event_finder &f)
 {
     checkIfRunning();
     sc_gem5::newStaticSensitivityFinder(p, &f);

@@ -58,7 +58,7 @@ namespace gem5
  * address decoding. The value stored is a template type and can be
  * e.g. a port identifier, or a pointer.
  */
-template <typename V, int max_cache_size=0>
+template <typename V, int max_cache_size = 0>
 class AddrRangeMap
 {
   private:
@@ -71,6 +71,7 @@ class AddrRangeMap
      */
     typedef typename RangeMap::iterator iterator;
     typedef typename RangeMap::const_iterator const_iterator;
+
     /** @} */ // end of api_addr_range
 
     /**
@@ -91,11 +92,13 @@ class AddrRangeMap
     {
         return find(r, [r](const AddrRange r1) { return r.isSubset(r1); });
     }
+
     iterator
     contains(const AddrRange &r)
     {
         return find(r, [r](const AddrRange r1) { return r.isSubset(r1); });
     }
+
     /** @} */ // end of api_addr_range
 
     /**
@@ -116,11 +119,13 @@ class AddrRangeMap
     {
         return contains(RangeSize(r, 1));
     }
+
     iterator
     contains(Addr r)
     {
         return contains(RangeSize(r, 1));
     }
+
     /** @} */ // end of api_addr_range
 
     /**
@@ -141,18 +146,20 @@ class AddrRangeMap
     {
         return find(r, [r](const AddrRange r1) { return r.intersects(r1); });
     }
+
     iterator
     intersects(const AddrRange &r)
     {
         return find(r, [r](const AddrRange r1) { return r.intersects(r1); });
     }
+
     /** @} */ // end of api_addr_range
 
     /**
      * @ingroup api_addr_range
      */
     iterator
-    insert(const AddrRange &r, const V& d)
+    insert(const AddrRange &r, const V &d)
     {
         if (intersects(r) != end())
             return tree.end();
@@ -179,7 +186,7 @@ class AddrRangeMap
         for (auto it = p; it != q; it++) {
             cache.remove(p);
         }
-        tree.erase(p,q);
+        tree.erase(p, q);
     }
 
     /**
@@ -314,8 +321,7 @@ class AddrRangeMap
                 return i;
             }
             // Keep looking if the next range merges with the current one.
-        } while (next != begin() &&
-                 (--next)->first.mergesWith(i->first));
+        } while (next != begin() && (--next)->first.mergesWith(i->first));
 
         return end();
     }

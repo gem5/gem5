@@ -35,8 +35,8 @@ namespace SparcISA
 {
 
 std::string
-SparcMacroInst::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+SparcMacroInst::generateDisassembly(Addr pc,
+                                    const loader::SymbolTable *symtab) const
 {
     std::stringstream response;
     printMnemonic(response, mnemonic);

@@ -55,22 +55,24 @@ namespace ruby
 {
 
 RubyPrefetcher::RubyPrefetcher(const Params &p)
-    : SimObject(p), m_num_streams(p.num_streams),
-    m_array(p.num_streams), m_train_misses(p.train_misses),
-    m_num_startup_pfs(p.num_startup_pfs),
-    unitFilter(p.unit_filter),
-    negativeFilter(p.unit_filter),
-    nonUnitFilter(p.nonunit_filter),
-    m_prefetch_cross_pages(p.cross_page),
-    pageShift(p.page_shift),
-    rubyPrefetcherStats(this)
+    : SimObject(p),
+      m_num_streams(p.num_streams),
+      m_array(p.num_streams),
+      m_train_misses(p.train_misses),
+      m_num_startup_pfs(p.num_startup_pfs),
+      unitFilter(p.unit_filter),
+      negativeFilter(p.unit_filter),
+      nonUnitFilter(p.nonunit_filter),
+      m_prefetch_cross_pages(p.cross_page),
+      pageShift(p.page_shift),
+      rubyPrefetcherStats(this)
 {
     assert(m_num_streams > 0);
     assert(m_num_startup_pfs <= MAX_PF_INFLIGHT);
 }
 
-RubyPrefetcher::
-RubyPrefetcherStats::RubyPrefetcherStats(statistics::Group *parent)
+RubyPrefetcher::RubyPrefetcherStats::RubyPrefetcherStats(
+    statistics::Group *parent)
     : statistics::Group(parent, "RubyPrefetcher"),
       ADD_STAT(numMissObserved, "Number of misses observed"),
       ADD_STAT(numAllocatedStreams, "Number of streams allocated for "
@@ -83,11 +85,10 @@ RubyPrefetcherStats::RubyPrefetcherStats(statistics::Group *parent)
       ADD_STAT(numPagesCrossed, "Number of prefetches across pages"),
       ADD_STAT(numMissedPrefetchedBlocks, "Number of misses for blocks that "
                                           "were prefetched, yet missed")
-{
-}
+{}
 
 void
-RubyPrefetcher::observeMiss(Addr address, const RubyRequestType& type)
+RubyPrefetcher::observeMiss(Addr address, const RubyRequestType &type)
 {
     DPRINTF(RubyPrefetcher, "Observed miss for %#x\n", address);
     Addr line_addr = makeLineAddress(address);
@@ -165,8 +166,8 @@ RubyPrefetcher::issueNextPrefetch(Addr address, PrefetchEntry *stream)
 
     // extend this prefetching stream by 1 (or more)
     Addr page_addr = pageAddress(stream->m_address);
-    Addr line_addr = makeNextStrideAddress(stream->m_address,
-                                         stream->m_stride);
+    Addr line_addr =
+        makeNextStrideAddress(stream->m_address, stream->m_stride);
 
     // possibly stop prefetching at page boundaries
     if (page_addr != pageAddress(line_addr)) {
@@ -207,8 +208,8 @@ RubyPrefetcher::getLRUindex(void)
 }
 
 void
-RubyPrefetcher::initializeStream(Addr address, int stride,
-     uint32_t index, const RubyRequestType& type)
+RubyPrefetcher::initializeStream(Addr address, int stride, uint32_t index,
+                                 const RubyRequestType &type)
 {
     rubyPrefetcherStats.numAllocatedStreams++;
 
@@ -256,7 +257,8 @@ RubyPrefetcher::getPrefetchEntry(Addr address, uint32_t &index)
         if (m_array[i].m_is_valid) {
             for (int j = 0; j < m_num_startup_pfs; j++) {
                 if (makeNextStrideAddress(m_array[i].m_address,
-                    -(m_array[i].m_stride*j)) == address) {
+                                          -(m_array[i].m_stride * j)) ==
+                    address) {
                     return &(m_array[i]);
                 }
             }
@@ -266,10 +268,11 @@ RubyPrefetcher::getPrefetchEntry(Addr address, uint32_t &index)
 }
 
 bool
-RubyPrefetcher::accessUnitFilter(CircularQueue<UnitFilterEntry>* const filter,
-    Addr line_addr, int stride, const RubyRequestType& type)
+RubyPrefetcher::accessUnitFilter(CircularQueue<UnitFilterEntry> *const filter,
+                                 Addr line_addr, int stride,
+                                 const RubyRequestType &type)
 {
-    for (auto& entry : *filter) {
+    for (auto &entry : *filter) {
         if (entry.addr == line_addr) {
             entry.addr = makeNextStrideAddress(entry.addr, stride);
             entry.hits++;
@@ -282,20 +285,20 @@ RubyPrefetcher::accessUnitFilter(CircularQueue<UnitFilterEntry>* const filter,
     }
 
     // Enter this address in the filter
-    filter->push_back(UnitFilterEntry(
-        makeNextStrideAddress(line_addr, stride)));
+    filter->push_back(
+        UnitFilterEntry(makeNextStrideAddress(line_addr, stride)));
 
     return false;
 }
 
 bool
 RubyPrefetcher::accessNonunitFilter(Addr line_addr,
-    const RubyRequestType& type)
+                                    const RubyRequestType &type)
 {
     /// look for non-unit strides based on a (user-defined) page size
     Addr page_addr = pageAddress(line_addr);
 
-    for (auto& entry : nonUnitFilter) {
+    for (auto &entry : nonUnitFilter) {
         if (pageAddress(entry.addr) == page_addr) {
             // hit in the non-unit filter
             // compute the actual stride (for this reference)
@@ -312,14 +315,14 @@ RubyPrefetcher::accessNonunitFilter(Addr line_addr,
                         // This stride HAS to be the multiplicative constant of
                         // dataBlockBytes (bc makeNextStrideAddress is
                         // calculated based on this multiplicative constant!)
-                        const int stride = entry.stride /
-                            RubySystem::getBlockSizeBytes();
+                        const int stride =
+                            entry.stride / RubySystem::getBlockSizeBytes();
 
                         // clear this filter entry
                         entry.clear();
 
                         initializeStream(line_addr, stride, getLRUindex(),
-                            type);
+                                         type);
                     }
                 } else {
                     // If delta didn't match reset entry's hit count
@@ -343,35 +346,33 @@ RubyPrefetcher::accessNonunitFilter(Addr line_addr,
 }
 
 void
-RubyPrefetcher::print(std::ostream& out) const
+RubyPrefetcher::print(std::ostream &out) const
 {
     out << name() << " Prefetcher State\n";
     // print out unit filter
     out << "unit table:\n";
-    for (const auto& entry : unitFilter) {
+    for (const auto &entry : unitFilter) {
         out << entry.addr << std::endl;
     }
 
     out << "negative table:\n";
-    for (const auto& entry : negativeFilter) {
+    for (const auto &entry : negativeFilter) {
         out << entry.addr << std::endl;
     }
 
     // print out non-unit stride filter
     out << "non-unit table:\n";
-    for (const auto& entry : nonUnitFilter) {
-        out << entry.addr << " "
-            << entry.stride << " "
-            << entry.hits << std::endl;
+    for (const auto &entry : nonUnitFilter) {
+        out << entry.addr << " " << entry.stride << " " << entry.hits
+            << std::endl;
     }
 
     // print out allocated stream buffers
     out << "streams:\n";
     for (int i = 0; i < m_num_streams; i++) {
-        out << m_array[i].m_address << " "
-            << m_array[i].m_stride << " "
-            << m_array[i].m_is_valid << " "
-            << m_array[i].m_use_time << std::endl;
+        out << m_array[i].m_address << " " << m_array[i].m_stride << " "
+            << m_array[i].m_is_valid << " " << m_array[i].m_use_time
+            << std::endl;
     }
 }
 

@@ -42,24 +42,24 @@ namespace prefetch
 
 SignaturePathV2::SignaturePathV2(const SignaturePathPrefetcherV2Params &p)
     : SignaturePath(p),
-      globalHistoryRegister(p.global_history_register_entries,
-                            p.global_history_register_entries,
-                            p.global_history_register_indexing_policy,
-                            p.global_history_register_replacement_policy,
-                            GlobalHistoryEntry())
-{
-}
+      globalHistoryRegister(
+          p.global_history_register_entries, p.global_history_register_entries,
+          p.global_history_register_indexing_policy,
+          p.global_history_register_replacement_policy, GlobalHistoryEntry())
+{}
 
 void
 SignaturePathV2::handleSignatureTableMiss(stride_t current_block,
-    signature_t &new_signature, double &new_conf, stride_t &new_stride)
+                                          signature_t &new_signature,
+                                          double &new_conf,
+                                          stride_t &new_stride)
 {
     bool found = false;
 
     // This should return all entries of the GHR, since it is a fully
     // associative table
     std::vector<GlobalHistoryEntry *> all_ghr_entries =
-             globalHistoryRegister.getPossibleEntries(0 /* any value works */);
+        globalHistoryRegister.getPossibleEntries(0 /* any value works */);
 
     for (auto gh_entry : all_ghr_entries) {
         if (gh_entry->lastBlock + gh_entry->delta == current_block) {
@@ -80,24 +80,26 @@ SignaturePathV2::handleSignatureTableMiss(stride_t current_block,
 
 double
 SignaturePathV2::calculateLookaheadConfidence(
-        PatternEntry const &sig, PatternStrideEntry const &lookahead) const
+    PatternEntry const &sig, PatternStrideEntry const &lookahead) const
 {
-    if (sig.counter == 0) return 0.0;
-    return (((double) usefulPrefetches) / issuedPrefetches) *
-            (((double) lookahead.counter) / sig.counter);
+    if (sig.counter == 0)
+        return 0.0;
+    return (((double)usefulPrefetches) / issuedPrefetches) *
+           (((double)lookahead.counter) / sig.counter);
 }
 
 double
-SignaturePathV2::calculatePrefetchConfidence(PatternEntry const &sig,
-        PatternStrideEntry const &entry) const
+SignaturePathV2::calculatePrefetchConfidence(
+    PatternEntry const &sig, PatternStrideEntry const &entry) const
 {
-    if (sig.counter == 0) return 0.0;
-    return ((double) entry.counter) / sig.counter;
+    if (sig.counter == 0)
+        return 0.0;
+    return ((double)entry.counter) / sig.counter;
 }
 
 void
-SignaturePathV2::increasePatternEntryCounter(
-        PatternEntry &pattern_entry, PatternStrideEntry &pstride_entry)
+SignaturePathV2::increasePatternEntryCounter(PatternEntry &pattern_entry,
+                                             PatternStrideEntry &pstride_entry)
 {
     if (pattern_entry.counter.isSaturated()) {
         pattern_entry.counter >>= 1;
@@ -117,7 +119,9 @@ SignaturePathV2::increasePatternEntryCounter(
 
 void
 SignaturePathV2::handlePageCrossingLookahead(signature_t signature,
-            stride_t last_offset, stride_t delta, double path_confidence)
+                                             stride_t last_offset,
+                                             stride_t delta,
+                                             double path_confidence)
 {
     // Always use the replacement policy to assign new entries, as all
     // of them are unique, there are never "hits" in the GHR

@@ -34,11 +34,11 @@ X86IdeController::X86IdeController(const Params &p) : IdeController(p)
 {
     for (int i = 0; i < p.port_int_primary_connection_count; i++) {
         intPrimary.push_back(new IntSourcePin<X86IdeController>(
-                    csprintf("%s.int_primary[%d]", name(), i), i, this));
+            csprintf("%s.int_primary[%d]", name(), i), i, this));
     }
     for (int i = 0; i < p.port_int_secondary_connection_count; i++) {
         intSecondary.push_back(new IntSourcePin<X86IdeController>(
-                    csprintf("%s.int_secondary[%d]", name(), i), i, this));
+            csprintf("%s.int_secondary[%d]", name(), i), i, this));
     }
 }
 
@@ -46,7 +46,7 @@ void
 X86IdeController::postInterrupt(bool is_primary)
 {
     auto &pin = is_primary ? intPrimary : intSecondary;
-    for (auto *wire: pin)
+    for (auto *wire : pin)
         wire->raise();
 }
 
@@ -54,7 +54,7 @@ void
 X86IdeController::clearInterrupt(bool is_primary)
 {
     auto &pin = is_primary ? intPrimary : intSecondary;
-    for (auto *wire: pin)
+    for (auto *wire : pin)
         wire->lower();
 }
 

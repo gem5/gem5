@@ -36,10 +36,9 @@ namespace gem5
 namespace ruby
 {
 
-TimerTable::TimerTable()
-    : m_next_time(0)
+TimerTable::TimerTable() : m_next_time(0)
 {
-    m_consumer_ptr  = NULL;
+    m_consumer_ptr = NULL;
     m_next_valid = false;
     m_next_address = 0;
 }
@@ -98,9 +97,8 @@ TimerTable::unset(Addr address)
 }
 
 void
-TimerTable::print(std::ostream& out) const
-{
-}
+TimerTable::print(std::ostream &out) const
+{}
 
 void
 TimerTable::updateNext() const

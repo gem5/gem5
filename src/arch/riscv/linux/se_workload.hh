@@ -45,7 +45,6 @@ namespace RiscvISA
 class EmuLinux : public SEWorkload
 {
   protected:
-
     /// 64 bit syscall descriptors, indexed by call number.
     static SyscallDescTable<SEWorkload::SyscallABI64> syscallDescs64;
 
@@ -57,7 +56,11 @@ class EmuLinux : public SEWorkload
 
     EmuLinux(const Params &p) : SEWorkload(p, PageShift) {}
 
-    ByteOrder byteOrder() const override { return ByteOrder::little; }
+    ByteOrder
+    byteOrder() const override
+    {
+        return ByteOrder::little;
+    }
 
     void syscall(ThreadContext *tc) override;
 };

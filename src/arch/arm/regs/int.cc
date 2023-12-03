@@ -59,31 +59,31 @@ IntRegClassOps::flatten(const BaseISA &isa, const RegId &id) const
     auto &arm_isa = static_cast<const ArmISA::ISA &>(isa);
 
     if (reg_idx < int_reg::NumArchRegs) {
-        return {flatIntRegClass, arm_isa.mapIntRegId(reg_idx)};
+        return { flatIntRegClass, arm_isa.mapIntRegId(reg_idx) };
     } else if (reg_idx < int_reg::NumRegs) {
-        return {flatIntRegClass, id};
+        return { flatIntRegClass, id };
     } else if (reg_idx == int_reg::Spx) {
         auto &arm_isa = static_cast<const ArmISA::ISA &>(isa);
         CPSR cpsr = arm_isa.readMiscRegNoEffect(MISCREG_CPSR);
         ExceptionLevel el = opModeToEL((OperatingMode)(uint8_t)cpsr.mode);
 
         if (!cpsr.sp && el != EL0)
-            return {flatIntRegClass, int_reg::Sp0};
+            return { flatIntRegClass, int_reg::Sp0 };
 
         switch (el) {
-          case EL3:
-            return {flatIntRegClass, int_reg::Sp3};
-          case EL2:
-            return {flatIntRegClass, int_reg::Sp2};
-          case EL1:
-            return {flatIntRegClass, int_reg::Sp1};
-          case EL0:
-            return {flatIntRegClass, int_reg::Sp0};
-          default:
+        case EL3:
+            return { flatIntRegClass, int_reg::Sp3 };
+        case EL2:
+            return { flatIntRegClass, int_reg::Sp2 };
+        case EL1:
+            return { flatIntRegClass, int_reg::Sp1 };
+        case EL0:
+            return { flatIntRegClass, int_reg::Sp0 };
+        default:
             panic("Invalid exception level");
         }
     } else {
-        return {flatIntRegClass, flattenIntRegModeIndex(reg_idx)};
+        return { flatIntRegClass, flattenIntRegModeIndex(reg_idx) };
     }
 }
 

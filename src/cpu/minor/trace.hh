@@ -61,26 +61,26 @@ namespace minor
 {
 
 /** DPRINTFN for MinorTrace reporting */
-template <class ...Args>
+template <class... Args>
 inline void
-minorTrace(const char *fmt, Args ...args)
+minorTrace(const char *fmt, Args... args)
 {
     DPRINTF(MinorTrace, (std::string("MinorTrace: ") + fmt).c_str(), args...);
 }
 
 /** DPRINTFN for MinorTrace MinorInst line reporting */
-template <class ...Args>
+template <class... Args>
 inline void
-minorInst(const Named &named, const char *fmt, Args ...args)
+minorInst(const Named &named, const char *fmt, Args... args)
 {
     DPRINTFS(MinorTrace, &named, (std::string("MinorInst: ") + fmt).c_str(),
              args...);
 }
 
 /** DPRINTFN for MinorTrace MinorLine line reporting */
-template <class ...Args>
+template <class... Args>
 inline void
-minorLine(const Named &named, const char *fmt, Args ...args)
+minorLine(const Named &named, const char *fmt, Args... args)
 {
     DPRINTFS(MinorTrace, &named, (std::string("MinorLine: ") + fmt).c_str(),
              args...);

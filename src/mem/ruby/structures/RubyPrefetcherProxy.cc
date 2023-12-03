@@ -46,27 +46,29 @@ namespace gem5
 namespace ruby
 {
 
-RubyPrefetcherProxy::RubyPrefetcherProxy(AbstractController* _parent,
-                          prefetch::Base* _prefetcher,
-                          MessageBuffer *_pf_queue)
-    :Named(_parent->name()),
-    prefetcher(_prefetcher),
-    cacheCntrl(_parent),
-    pfQueue(_pf_queue),
-    pfEvent([this]{ issuePrefetch(); }, name()),
-    ppHit(nullptr), ppMiss(nullptr),
-    ppFill(nullptr), ppDataUpdate(nullptr)
+RubyPrefetcherProxy::RubyPrefetcherProxy(AbstractController *_parent,
+                                         prefetch::Base *_prefetcher,
+                                         MessageBuffer *_pf_queue)
+    : Named(_parent->name()),
+      prefetcher(_prefetcher),
+      cacheCntrl(_parent),
+      pfQueue(_pf_queue),
+      pfEvent([this] { issuePrefetch(); }, name()),
+      ppHit(nullptr),
+      ppMiss(nullptr),
+      ppFill(nullptr),
+      ppDataUpdate(nullptr)
 {
     fatal_if(!cacheCntrl,
-            "initializing a RubyPrefetcherProxy without a parent");
+             "initializing a RubyPrefetcherProxy without a parent");
     if (prefetcher) {
-        fatal_if(!pfQueue,
+        fatal_if(
+            !pfQueue,
             "%s initializing a RubyPrefetcherProxy without a prefetch queue",
             name());
-        prefetcher->setParentInfo(
-            cacheCntrl->params().system,
-            cacheCntrl->getProbeManager(),
-            RubySystem::getBlockSizeBytes());
+        prefetcher->setParentInfo(cacheCntrl->params().system,
+                                  cacheCntrl->getProbeManager(),
+                                  RubySystem::getBlockSizeBytes());
     }
 }
 
@@ -116,27 +118,25 @@ RubyPrefetcherProxy::issuePrefetch()
             Addr line_addr = pkt->getBlockAddr(blk_size);
 
             if (issuedPfPkts.count(line_addr) == 0) {
-                DPRINTF(HWPrefetch, "Issued PF request for paddr=%#x, "
-                                    "line_addr=%#x, is_write=%d\n",
-                                    pkt->getAddr(), line_addr,
-                                    pkt->needsWritable());
+                DPRINTF(HWPrefetch,
+                        "Issued PF request for paddr=%#x, "
+                        "line_addr=%#x, is_write=%d\n",
+                        pkt->getAddr(), line_addr, pkt->needsWritable());
 
                 RubyRequestType req_type = pkt->needsWritable() ?
-                                    RubyRequestType_ST : RubyRequestType_LD;
+                                               RubyRequestType_ST :
+                                               RubyRequestType_LD;
 
                 std::shared_ptr<RubyRequest> msg =
-                    std::make_shared<RubyRequest>(cacheCntrl->clockEdge(),
-                                                  pkt->getAddr(),
-                                                  blk_size,
-                                                  0, // pc
-                                                  req_type,
-                                                  RubyAccessMode_Supervisor,
-                                                  pkt,
-                                                  PrefetchBit_Yes);
+                    std::make_shared<RubyRequest>(
+                        cacheCntrl->clockEdge(), pkt->getAddr(), blk_size,
+                        0, // pc
+                        req_type, RubyAccessMode_Supervisor, pkt,
+                        PrefetchBit_Yes);
 
                 // enqueue request into prefetch queue to the cache
                 pfQueue->enqueue(msg, cacheCntrl->clockEdge(),
-                                    cacheCntrl->cyclesToTicks(Cycles(1)));
+                                 cacheCntrl->cyclesToTicks(Cycles(1)));
 
                 // track all pending PF requests
                 issuedPfPkts[line_addr] = pkt;
@@ -154,41 +154,40 @@ RubyPrefetcherProxy::issuePrefetch()
 }
 
 void
-RubyPrefetcherProxy::notifyPfHit(const RequestPtr& req, bool is_read,
-                                const DataBlock& data_blk)
+RubyPrefetcherProxy::notifyPfHit(const RequestPtr &req, bool is_read,
+                                 const DataBlock &data_blk)
 {
     assert(ppHit);
     assert(req);
-    Packet pkt(req, is_read ? Packet::makeReadCmd(req) :
-                              Packet::makeWriteCmd(req));
+    Packet pkt(req,
+               is_read ? Packet::makeReadCmd(req) : Packet::makeWriteCmd(req));
     // NOTE: for now we only communicate physical address with prefetchers
-    pkt.dataStaticConst<uint8_t>(data_blk.getData(getOffset(req->getPaddr()),
-                                  pkt.getSize()));
+    pkt.dataStaticConst<uint8_t>(
+        data_blk.getData(getOffset(req->getPaddr()), pkt.getSize()));
     DPRINTF(HWPrefetch, "notify hit: %s\n", pkt.print());
     ppHit->notify(CacheAccessProbeArg(&pkt, *this));
     scheduleNextPrefetch();
 }
 
 void
-RubyPrefetcherProxy::notifyPfMiss(const RequestPtr& req, bool is_read,
-                                 const DataBlock& data_blk)
+RubyPrefetcherProxy::notifyPfMiss(const RequestPtr &req, bool is_read,
+                                  const DataBlock &data_blk)
 {
     assert(ppMiss);
     assert(req);
-    Packet pkt(req, is_read ? Packet::makeReadCmd(req) :
-                              Packet::makeWriteCmd(req));
+    Packet pkt(req,
+               is_read ? Packet::makeReadCmd(req) : Packet::makeWriteCmd(req));
     // NOTE: for now we only communicate physical address with prefetchers
-    pkt.dataStaticConst<uint8_t>(data_blk.getData(getOffset(req->getPaddr()),
-                                  pkt.getSize()));
+    pkt.dataStaticConst<uint8_t>(
+        data_blk.getData(getOffset(req->getPaddr()), pkt.getSize()));
     DPRINTF(HWPrefetch, "notify miss: %s\n", pkt.print());
     ppMiss->notify(CacheAccessProbeArg(&pkt, *this));
     scheduleNextPrefetch();
 }
 
 void
-RubyPrefetcherProxy::notifyPfFill(const RequestPtr& req,
-                                 const DataBlock& data_blk,
-                                 bool from_pf)
+RubyPrefetcherProxy::notifyPfFill(const RequestPtr &req,
+                                  const DataBlock &data_blk, bool from_pf)
 {
     assert(ppFill);
     assert(req);
@@ -196,8 +195,8 @@ RubyPrefetcherProxy::notifyPfFill(const RequestPtr& req,
     if (from_pf)
         pkt.cmd = Packet::Command::HardPFReq;
     // NOTE: for now we only communicate physical address with prefetchers
-    pkt.dataStaticConst<uint8_t>(data_blk.getData(getOffset(req->getPaddr()),
-                                  pkt.getSize()));
+    pkt.dataStaticConst<uint8_t>(
+        data_blk.getData(getOffset(req->getPaddr()), pkt.getSize()));
     DPRINTF(HWPrefetch, "notify fill: %s\n", pkt.print());
     ppFill->notify(CacheAccessProbeArg(&pkt, *this));
     scheduleNextPrefetch();
@@ -205,11 +204,10 @@ RubyPrefetcherProxy::notifyPfFill(const RequestPtr& req,
 
 void
 RubyPrefetcherProxy::notifyPfEvict(Addr blkAddr, bool hwPrefetched,
-                                  RequestorID requestorID)
+                                   RequestorID requestorID)
 {
     DPRINTF(HWPrefetch, "notify evict: %#x hw_pf=%d\n", blkAddr, hwPrefetched);
-    CacheDataUpdateProbeArg data_update(
-        blkAddr, false, requestorID, *this);
+    CacheDataUpdateProbeArg data_update(blkAddr, false, requestorID, *this);
     data_update.hwPrefetched = hwPrefetched;
     ppDataUpdate->notify(data_update);
     scheduleNextPrefetch();
@@ -225,9 +223,8 @@ RubyPrefetcherProxy::regProbePoints()
         cacheCntrl->getProbeManager(), "Miss");
     ppFill = new ProbePointArg<CacheAccessProbeArg>(
         cacheCntrl->getProbeManager(), "Fill");
-    ppDataUpdate =
-        new ProbePointArg<CacheDataUpdateProbeArg>(
-            cacheCntrl->getProbeManager(), "Data Update");
+    ppDataUpdate = new ProbePointArg<CacheDataUpdateProbeArg>(
+        cacheCntrl->getProbeManager(), "Data Update");
 }
 
 } // namespace ruby

@@ -38,38 +38,40 @@ using namespace tlm;
 namespace Gem5SystemC
 {
 
-Gem5Extension::Gem5Extension(gem5::PacketPtr packet)
-{
-    Packet = packet;
-}
+Gem5Extension::Gem5Extension(gem5::PacketPtr packet) { Packet = packet; }
 
-Gem5Extension& Gem5Extension::getExtension(const tlm_generic_payload *payload)
+Gem5Extension &
+Gem5Extension::getExtension(const tlm_generic_payload *payload)
 {
     Gem5Extension *result = NULL;
     payload->get_extension(result);
-    sc_assert(result!=NULL);
+    sc_assert(result != NULL);
     return *result;
 }
 
-Gem5Extension& Gem5Extension::getExtension(const tlm_generic_payload &payload)
+Gem5Extension &
+Gem5Extension::getExtension(const tlm_generic_payload &payload)
 {
     return Gem5Extension::getExtension(&payload);
 }
 
-gem5::PacketPtr Gem5Extension::getPacket()
+gem5::PacketPtr
+Gem5Extension::getPacket()
 {
     return Packet;
 }
 
-tlm_extension_base* Gem5Extension::clone() const
+tlm_extension_base *
+Gem5Extension::clone() const
 {
     return new Gem5Extension(Packet);
 }
 
-void Gem5Extension::copy_from(const tlm_extension_base& ext)
+void
+Gem5Extension::copy_from(const tlm_extension_base &ext)
 {
-    const Gem5Extension& cpyFrom = static_cast<const Gem5Extension&>(ext);
+    const Gem5Extension &cpyFrom = static_cast<const Gem5Extension &>(ext);
     Packet = cpyFrom.Packet;
 }
 
-}
+} // namespace Gem5SystemC

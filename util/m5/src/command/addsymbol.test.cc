@@ -55,16 +55,16 @@ run(std::initializer_list<std::string> arg_args)
 TEST(Exit, Arguments)
 {
     // Called with no arguments.
-    EXPECT_FALSE(run({"addsymbol"}));
+    EXPECT_FALSE(run({ "addsymbol" }));
 
     // Called with one argument.
-    EXPECT_FALSE(run({"addsymbol", "1"}));
+    EXPECT_FALSE(run({ "addsymbol", "1" }));
 
     // Called with two arguments.
-    EXPECT_TRUE(run({"addsymbol", "1234", "test_symbol_name"}));
+    EXPECT_TRUE(run({ "addsymbol", "1234", "test_symbol_name" }));
     EXPECT_EQ(test_addr, 1234);
     EXPECT_EQ(test_symbol, "test_symbol_name");
 
     // Called with three arguments.
-    EXPECT_FALSE(run({"addsymbol", "1", "2", "3"}));
+    EXPECT_FALSE(run({ "addsymbol", "1", "2", "3" }));
 }

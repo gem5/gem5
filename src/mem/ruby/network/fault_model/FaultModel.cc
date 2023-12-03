@@ -45,7 +45,7 @@
 #include "FaultModel.hh"
 #include "base/logging.hh"
 
-#define MAX(a,b) ((a > b) ? (a) : (b))
+#define MAX(a, b) ((a > b) ? (a) : (b))
 
 namespace gem5
 {
@@ -58,20 +58,22 @@ FaultModel::FaultModel(const Params &p) : SimObject(p)
     // read configurations into "configurations" vector
     // format: <buff/vc> <vcs> <10 fault types>
     bool more_records = true;
-    for (int i = 0; more_records; i += (fields_per_conf_record)){
+    for (int i = 0; more_records; i += (fields_per_conf_record)) {
         system_conf configuration;
         configuration.buff_per_vc =
             p.baseline_fault_vector_database[i + conf_record_buff_per_vc];
         configuration.vcs =
             p.baseline_fault_vector_database[i + conf_record_vcs];
         for (int fault_index = 0; fault_index < number_of_fault_types;
-            fault_index++){
+             fault_index++) {
             configuration.fault_type[fault_index] =
                 p.baseline_fault_vector_database[i +
-                   conf_record_first_fault_type + fault_index] / 100;
+                                                 conf_record_first_fault_type +
+                                                 fault_index] /
+                100;
         }
         configurations.push_back(configuration);
-        if (p.baseline_fault_vector_database[i+fields_per_conf_record] < 0){
+        if (p.baseline_fault_vector_database[i + fields_per_conf_record] < 0) {
             more_records = false;
         }
     }
@@ -79,23 +81,23 @@ FaultModel::FaultModel(const Params &p) : SimObject(p)
     // read temperature weights into "temperature_weights" vector
     // format: <temperature> <weight>
     more_records = true;
-    for (int i = 0; more_records; i += (fields_per_temperature_record)){
+    for (int i = 0; more_records; i += (fields_per_temperature_record)) {
         int record_temperature =
-               p.temperature_weights_database[i + temperature_record_temp];
+            p.temperature_weights_database[i + temperature_record_temp];
         int record_weight =
-               p.temperature_weights_database[i + temperature_record_weight];
+            p.temperature_weights_database[i + temperature_record_weight];
         static int first_record = true;
-        if (first_record){
+        if (first_record) {
             for (int temperature = 0; temperature < record_temperature;
-                 temperature++){
-                 temperature_weights.push_back(0);
+                 temperature++) {
+                temperature_weights.push_back(0);
             }
             first_record = false;
         }
         assert(record_temperature == temperature_weights.size());
         temperature_weights.push_back(record_weight);
-        if (p.temperature_weights_database[i +
-               fields_per_temperature_record] < 0){
+        if (p.temperature_weights_database[i + fields_per_temperature_record] <
+            0) {
             more_records = false;
         }
     }
@@ -104,37 +106,35 @@ FaultModel::FaultModel(const Params &p) : SimObject(p)
 std::string
 FaultModel::fault_type_to_string(int ft)
 {
-   if (ft == data_corruption__few_bits){
-       return "data_corruption__few_bits";
-   } else if (ft == data_corruption__all_bits){
-      return "data_corruption__all_bits";
-   } else if (ft == flit_conservation__flit_duplication){
-      return "flit_conservation__flit_duplication";
-   } else if (ft == flit_conservation__flit_loss_or_split){
-      return "flit_conservation__flit_loss_or_split";
-   } else if (ft == misrouting){
-      return "misrouting";
-   } else if (ft == credit_conservation__credit_generation){
-      return "credit_conservation__credit_generation";
-   } else if (ft == credit_conservation__credit_loss){
-      return "credit_conservation__credit_loss";
-   } else if (ft == erroneous_allocation__VC){
-      return "erroneous_allocation__VC";
-   } else if (ft == erroneous_allocation__switch){
-      return "erroneous_allocation__switch";
-   } else if (ft == unfair_arbitration){
-      return "unfair_arbitration";
-   } else if (ft == number_of_fault_types){
-      return "none";
-   } else {
-      return "none";
-   }
+    if (ft == data_corruption__few_bits) {
+        return "data_corruption__few_bits";
+    } else if (ft == data_corruption__all_bits) {
+        return "data_corruption__all_bits";
+    } else if (ft == flit_conservation__flit_duplication) {
+        return "flit_conservation__flit_duplication";
+    } else if (ft == flit_conservation__flit_loss_or_split) {
+        return "flit_conservation__flit_loss_or_split";
+    } else if (ft == misrouting) {
+        return "misrouting";
+    } else if (ft == credit_conservation__credit_generation) {
+        return "credit_conservation__credit_generation";
+    } else if (ft == credit_conservation__credit_loss) {
+        return "credit_conservation__credit_loss";
+    } else if (ft == erroneous_allocation__VC) {
+        return "erroneous_allocation__VC";
+    } else if (ft == erroneous_allocation__switch) {
+        return "erroneous_allocation__switch";
+    } else if (ft == unfair_arbitration) {
+        return "unfair_arbitration";
+    } else if (ft == number_of_fault_types) {
+        return "none";
+    } else {
+        return "none";
+    }
 }
 
-
 int
-FaultModel::declare_router(int number_of_inputs,
-                           int number_of_outputs,
+FaultModel::declare_router(int number_of_inputs, int number_of_outputs,
                            int number_of_vcs_per_input,
                            int number_of_buff_per_data_vc,
                            int number_of_buff_per_ctrl_vc)
@@ -142,28 +142,28 @@ FaultModel::declare_router(int number_of_inputs,
     // check inputs (are they legal?)
     if (number_of_inputs <= 0 || number_of_outputs <= 0 ||
         number_of_vcs_per_input <= 0 || number_of_buff_per_data_vc <= 0 ||
-        number_of_buff_per_ctrl_vc <= 0){
+        number_of_buff_per_ctrl_vc <= 0) {
         fatal("Fault Model: ERROR in argument of FaultModel_declare_router!");
     }
-    int number_of_buffers_per_vc = MAX(number_of_buff_per_data_vc,
-                                       number_of_buff_per_ctrl_vc);
+    int number_of_buffers_per_vc =
+        MAX(number_of_buff_per_data_vc, number_of_buff_per_ctrl_vc);
     int total_vcs = number_of_inputs * number_of_vcs_per_input;
-    if (total_vcs > MAX_VCs){
+    if (total_vcs > MAX_VCs) {
         fatal("Fault Model: ERROR! Number inputs*VCs (MAX_VCs) unsupported");
     }
-    if (number_of_buffers_per_vc > MAX_BUFFERS_per_VC){
+    if (number_of_buffers_per_vc > MAX_BUFFERS_per_VC) {
         fatal("Fault Model: ERROR! buffers/VC (MAX_BUFFERS_per_VC) too high");
     }
 
     // link the router to a DB record
     int record_hit = -1;
-    for (int record = 0; record < configurations.size(); record++){
-        if ((configurations[record].buff_per_vc == number_of_buffers_per_vc)&&
-            (configurations[record].vcs == total_vcs)){
+    for (int record = 0; record < configurations.size(); record++) {
+        if ((configurations[record].buff_per_vc == number_of_buffers_per_vc) &&
+            (configurations[record].vcs == total_vcs)) {
             record_hit = record;
         }
     }
-    if (record_hit == -1){
+    if (record_hit == -1) {
         panic("Fault Model: ERROR! configuration not found in DB. BUG?");
     }
 
@@ -174,26 +174,25 @@ FaultModel::declare_router(int number_of_inputs,
 }
 
 bool
-FaultModel::fault_vector(int routerID,
-                         int temperature_input,
+FaultModel::fault_vector(int routerID, int temperature_input,
                          float fault_vector[])
 {
     bool ok = true;
 
     // is the routerID recorded?
-    if (routerID < 0 || routerID >= ((int) routers.size())){
-         warn("Fault Model: ERROR! unknown router ID argument.");
+    if (routerID < 0 || routerID >= ((int)routers.size())) {
+        warn("Fault Model: ERROR! unknown router ID argument.");
         fatal("Fault Model: Did you enable the fault model flag)?");
     }
 
     // is the temperature too high/too low?
     int temperature = temperature_input;
-    if (temperature_input >= ((int) temperature_weights.size())){
+    if (temperature_input >= ((int)temperature_weights.size())) {
         ok = false;
         warn_once("Fault Model: Temperature exceeded simulated upper bound.");
         warn_once("Fault Model: The fault model is not accurate any more.");
         temperature = (temperature_weights.size() - 1);
-    } else if (temperature_input < 0){
+    } else if (temperature_input < 0) {
         ok = false;
         warn_once("Fault Model: Temperature exceeded simulated lower bound.");
         warn_once("Fault Model: The fault model is not accurate any more.");
@@ -201,7 +200,7 @@ FaultModel::fault_vector(int routerID,
     }
 
     // recover the router record and return its fault vector
-    for (int i = 0; i < number_of_fault_types; i++){
+    for (int i = 0; i < number_of_fault_types; i++) {
         fault_vector[i] = routers[routerID].fault_type[i] *
                           ((float)temperature_weights[temperature]);
     }
@@ -209,27 +208,26 @@ FaultModel::fault_vector(int routerID,
 }
 
 bool
-FaultModel::fault_prob(int routerID,
-                       int temperature_input,
+FaultModel::fault_prob(int routerID, int temperature_input,
                        float *aggregate_fault_prob)
 {
     *aggregate_fault_prob = 1.0;
     bool ok = true;
 
     // is the routerID recorded?
-    if (routerID < 0 || routerID >= ((int) routers.size())){
-         warn("Fault Model: ERROR! unknown router ID argument.");
+    if (routerID < 0 || routerID >= ((int)routers.size())) {
+        warn("Fault Model: ERROR! unknown router ID argument.");
         fatal("Fault Model: Did you enable the fault model flag)?");
     }
 
     // is the temperature too high/too low?
     int temperature = temperature_input;
-    if (temperature_input >= ((int) temperature_weights.size()) ){
+    if (temperature_input >= ((int)temperature_weights.size())) {
         ok = false;
         warn_once("Fault Model: Temperature exceeded simulated upper bound.");
         warn_once("Fault Model: The fault model is not accurate any more.");
-        temperature = (temperature_weights.size()-1);
-    } else if (temperature_input < 0){
+        temperature = (temperature_weights.size() - 1);
+    } else if (temperature_input < 0) {
         ok = false;
         warn_once("Fault Model: Temperature exceeded simulated lower bound.");
         warn_once("Fault Model: The fault model is not accurate any more.");
@@ -237,10 +235,11 @@ FaultModel::fault_prob(int routerID,
     }
 
     // recover the router record and return its aggregate fault probability
-    for (int i = 0; i < number_of_fault_types; i++){
-        *aggregate_fault_prob=  *aggregate_fault_prob *
-                               ( 1.0 - (routers[routerID].fault_type[i] *
-                                 ((float)temperature_weights[temperature])) );
+    for (int i = 0; i < number_of_fault_types; i++) {
+        *aggregate_fault_prob =
+            *aggregate_fault_prob *
+            (1.0 - (routers[routerID].fault_type[i] *
+                    ((float)temperature_weights[temperature])));
     }
     *aggregate_fault_prob = 1.0 - *aggregate_fault_prob;
     return ok;
@@ -251,21 +250,20 @@ void
 FaultModel::print(void)
 {
     std::cout << "--- PRINTING configurations ---\n";
-    for (int record = 0; record < configurations.size(); record++){
+    for (int record = 0; record < configurations.size(); record++) {
         std::cout << "(" << record << ") ";
         std::cout << "VCs=" << configurations[record].vcs << " ";
         std::cout << "Buff/VC=" << configurations[record].buff_per_vc << " [";
-        for (int fault_type_num = 0;
-             fault_type_num < number_of_fault_types;
-             fault_type_num++){
-            std::cout <<
-                (100 * configurations[record].fault_type[fault_type_num]);
+        for (int fault_type_num = 0; fault_type_num < number_of_fault_types;
+             fault_type_num++) {
+            std::cout << (100 *
+                          configurations[record].fault_type[fault_type_num]);
             std::cout << "% ";
         }
         std::cout << "]\n";
     }
     std::cout << "--- PRINTING temperature weights ---\n";
-    for (int record = 0; record < temperature_weights.size(); record++){
+    for (int record = 0; record < temperature_weights.size(); record++) {
         std::cout << "temperature=" << record << " => ";
         std::cout << "weight=" << temperature_weights[record];
         std::cout << "\n";

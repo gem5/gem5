@@ -38,14 +38,11 @@ namespace gem5
 namespace replacement_policy
 {
 
-SecondChance::SecondChance(const Params &p)
-  : FIFO(p)
-{
-}
+SecondChance::SecondChance(const Params &p) : FIFO(p) {}
 
 void
 SecondChance::useSecondChance(
-    const std::shared_ptr<SecondChanceReplData>& replacement_data) const
+    const std::shared_ptr<SecondChanceReplData> &replacement_data) const
 {
     // Reset FIFO data
     FIFO::reset(replacement_data);
@@ -56,45 +53,45 @@ SecondChance::useSecondChance(
 
 void
 SecondChance::invalidate(
-    const std::shared_ptr<ReplacementData>& replacement_data)
+    const std::shared_ptr<ReplacementData> &replacement_data)
 {
     FIFO::invalidate(replacement_data);
 
     // Do not give a second chance to invalid entries
-    std::static_pointer_cast<SecondChanceReplData>(
-        replacement_data)->hasSecondChance = false;
+    std::static_pointer_cast<SecondChanceReplData>(replacement_data)
+        ->hasSecondChance = false;
 }
 
 void
 SecondChance::touch(
-    const std::shared_ptr<ReplacementData>& replacement_data) const
+    const std::shared_ptr<ReplacementData> &replacement_data) const
 {
     FIFO::touch(replacement_data);
 
     // Whenever an entry is touched, it is given a second chance
-    std::static_pointer_cast<SecondChanceReplData>(
-        replacement_data)->hasSecondChance = true;
+    std::static_pointer_cast<SecondChanceReplData>(replacement_data)
+        ->hasSecondChance = true;
 }
 
 void
 SecondChance::reset(
-    const std::shared_ptr<ReplacementData>& replacement_data) const
+    const std::shared_ptr<ReplacementData> &replacement_data) const
 {
     FIFO::reset(replacement_data);
 
     // Entries are inserted with a second chance
-    std::static_pointer_cast<SecondChanceReplData>(
-        replacement_data)->hasSecondChance = false;
+    std::static_pointer_cast<SecondChanceReplData>(replacement_data)
+        ->hasSecondChance = false;
 }
 
-ReplaceableEntry*
-SecondChance::getVictim(const ReplacementCandidates& candidates) const
+ReplaceableEntry *
+SecondChance::getVictim(const ReplacementCandidates &candidates) const
 {
     // There must be at least one replacement candidate
     assert(candidates.size() > 0);
 
     // Search for invalid entries, as they have the eviction priority
-    for (const auto& candidate : candidates) {
+    for (const auto &candidate : candidates) {
         // Cast candidate's replacement data
         std::shared_ptr<SecondChanceReplData> candidate_replacement_data =
             std::static_pointer_cast<SecondChanceReplData>(
@@ -108,7 +105,7 @@ SecondChance::getVictim(const ReplacementCandidates& candidates) const
     }
 
     // Visit all candidates to find victim
-    ReplaceableEntry* victim = candidates[0];
+    ReplaceableEntry *victim = candidates[0];
     bool search_victim = true;
     while (search_victim) {
         // Do a FIFO victim search

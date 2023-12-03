@@ -32,8 +32,8 @@
 namespace sc_core
 {
 
-sc_event_queue::sc_event_queue(sc_module_name name) :
-        sc_interface(), sc_event_queue_if(), sc_module(name)
+sc_event_queue::sc_event_queue(sc_module_name name)
+    : sc_interface(), sc_event_queue_if(), sc_module(name)
 {
     SC_METHOD(_trigger);
     dont_initialize();
@@ -59,8 +59,8 @@ void
 sc_event_queue::cancel_all()
 {
     _defaultEvent.cancel();
-    _times = std::priority_queue<
-        sc_time, std::vector<sc_time>, std::greater<sc_time> >();
+    _times = std::priority_queue<sc_time, std::vector<sc_time>,
+                                 std::greater<sc_time> >();
 }
 
 const sc_event &

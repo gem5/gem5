@@ -59,7 +59,7 @@ namespace guest_abi
  * std::enable_if style conditional specializations.
  */
 
-template <typename ABI, typename Ret, typename Enabled=void>
+template <typename ABI, typename Ret, typename Enabled = void>
 struct Result
 {
     /*
@@ -92,9 +92,10 @@ struct Result
  */
 template <typename ABI>
 struct Result<ABI, void>
-{};
+{
+};
 
-template <typename ABI, typename Arg, typename Enabled=void>
+template <typename ABI, typename Arg, typename Enabled = void>
 struct Argument
 {
     /*

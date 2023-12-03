@@ -48,137 +48,135 @@ namespace gem5
 {
 
 /**
-  * The stack distance calculator is a passive object that merely
-  * observes the addresses pass to it. It calculates stack distances
-  * of incoming addresses based on the partial sum hierarchy tree
-  * algorithm described by Alamasi et al.
-  * http://doi.acm.org/10.1145/773039.773043.
-  *
-  * A tree structure is maintained and updated at each transaction
-  * (unique or non-unique). The tree is implemented as an STL vector
-  * with layers of the form <map> Each layer in this tree is an
-  * ordered map <uint64_t, Node*>. Nodes are structs which take form
-  * of leaf, intermediate and root nodes. For example, in a tree with 3
-  * layers, tree[0][5] gives a leaf node pointer for key=5 tree[1][1]
-  * gives an intermediate node pointer for key=1 tree[2][0] gives the
-  * root node in the tree.
-  *
-  * At every transaction a hash-map (aiMap) is looked up to check if
-  * the address was already encountered before. Based on this lookup a
-  * transaction can be termed as unique or non-unique.
-  *
-  * In addition to the normal stack distance calculation, a feature to
-  * mark an old node in the tree is added. This is useful if it is
-  * required to see the reuse pattern. For example, BackInvalidates
-  * from a lower level (e.g. membus to L2), can be marked (isMarked
-  * flag of Node set to True). Then later if this same address is
-  * accessed (by L1), the value of the isMarked flag would be
-  * True. This would give some insight on how the BackInvalidates
-  * policy of the lower level affect the read/write accesses in an
-  * application.
-  *
-  * There are two functions provided to interface with the calculator:
-  * 1. pair<uint64_t, bool> calcStackDistAndUpdate(Addr r_address,
-  *                                                bool addNewNode)
-  * At every unique transaction a new leaf node is added at tree[0](leaf layer)
-  * and linked to the layer above (if addNewNode is True). The sums of all
-  * the intermediate nodes is updated till the root. The stack-distance is
-  * returned as a Constant representing INFINITY.
-  *
-  * At every non-unique transaction the tree is traversed from the
-  * leaf at the returned index to the root, the old node is deleted
-  * from the tree, and the sums (to the right are collected) and
-  * decremented. The collected sum represets the stack distance of the
-  * found node. If this node was marked then a bool flag set to True
-  * is returned with the stack_distance. During this operation a node
-  * is discarded at the leaf layer always. Moreover during the
-  * traversal upwards using the updateSum() method, if an intermediate
-  * node is found with no children connected to it, then that is
-  * discarded too.
-  *
-  * The return value of this function is a pair representing the
-  * stack_distance and the value of the marked flag.
-  *
-  * 2. pair<uint64_t , bool> calcStackDist(Addr r_address, bool mark)
-  * This is a stripped down version of the above function which is used to
-  * just inspect the tree, and mark a leaf node (if mark flag is set). The
-  * functionality to add a new node is removed.
-  *
-  * At every unique transaction the stack-distance is returned as a constant
-  * representing INFINITY.
-  *
-  * At every non-unique transaction the tree is traversed from the
-  * leaf at the returned index to the root, and the sums (to the right)
-  * are collected. The collected sum represets the stack distance of
-  * the found node.
-  *
-  * This function does NOT Modify the stack. (No node is added or
-  * deleted).  It is just used to mark a node already created and get
-  * its stack distance.
-  *
-  * The return value of this function is a pair representing the stack
-  * distance and the value of the marked flag.
-  *
-  * The table below depicts the usage of the Algorithm using the functions:
-  * pair<uint64_t Stack_dist, bool isMarked> calcStackDistAndUpdate
-  *                                      (Addr r_address, bool addNewNode)
-  * pair<uint64_t Stack_dist, bool isMarked> calcStackDist
-  *                                              (Addr r_address, bool mark)
-  *
-  * |   Function           |   Arguments   |Return Val |Use For|
-  * |calcStackDistAndUpdate|r_address, True|I/SD,False |A,GD,GM|
-  * |calcStackDistAndUpdate|r_address,False|SD,prevMark|D,GD,GM|
-  * |calcStackDist         |r_address,False|SD,prevMark|  GD,GM|
-  * |calcStackDist         |r_address, True|SD,prevMark|  GD,GM|
-  *
-  * (*A: Allocate an address in stack, if old entry present then it is deleted,
-  *  *U: Delete old-address from stack, no new entry is added
-  *  *GD: Get-Stack distance of an address,
-  *  *GM: Get value of Mark flag, indicates if that address has been touched
-  *                                                                  before,
-  *  *I: stack-distance = infinity,
-  *  *SD: Stack Distance
-  *  *r_address: address to be added, *prevMark: value of isMarked flag
-  *                                                              of the Node)
-  *
-  * Invalidates refer to a type of packet that removes something from
-  * a cache, either autonoumously (due-to cache's own replacement
-  * policy), or snoops from other caches which invalidate something
-  * inside our cache.
-  *
-  * Usage            |   Function to use    |Typical Use           |
-  * Add new entry    |calcStackDistAndUpdate|Read/Write Allocate   |
-  * Delete Old Entry |calcStackDistAndUpdate|Writebacks/Cleanevicts|
-  * Dist.of Old entry|calcStackDist         |Cleanevicts/Invalidate|
-  *
-  * Node Balancing: The tree structure is maintained by an
-  * updateTree() operation called when an intermediate node is
-  * required. The update operation is roughly categorized as a root
-  * update or intermediate layer update. When number of leaf nodes
-  * grow over a power of 2 then a new layer is added at the top of the
-  * tree and a new root node is initialized. The old node at the lower
-  * layer is connected to this.  In an intermediate node update
-  * operation a new intermediate node is added to the required layer.
-  *
-  * Debugging: Debugging can be enabled by setting the verifyStack flag
-  * true. Debugging is implemented using a dummy stack that behaves in
-  * a naive way, using STL vectors (i.e each unique address is pushed
-  * on the top of an STL vector stack, and SD is returned as
-  * Infinity. If a non unique address is encountered then the previous
-  * entry in the STL vector is removed, all the entities above it are
-  * pushed down, and the address is pushed at the top of the stack).
-  *
-  * A printStack(int numOfEntitiesToPrint) is provided to print top n entities
-  * in both (tree and STL based dummy stack).
-  */
+ * The stack distance calculator is a passive object that merely
+ * observes the addresses pass to it. It calculates stack distances
+ * of incoming addresses based on the partial sum hierarchy tree
+ * algorithm described by Alamasi et al.
+ * http://doi.acm.org/10.1145/773039.773043.
+ *
+ * A tree structure is maintained and updated at each transaction
+ * (unique or non-unique). The tree is implemented as an STL vector
+ * with layers of the form <map> Each layer in this tree is an
+ * ordered map <uint64_t, Node*>. Nodes are structs which take form
+ * of leaf, intermediate and root nodes. For example, in a tree with 3
+ * layers, tree[0][5] gives a leaf node pointer for key=5 tree[1][1]
+ * gives an intermediate node pointer for key=1 tree[2][0] gives the
+ * root node in the tree.
+ *
+ * At every transaction a hash-map (aiMap) is looked up to check if
+ * the address was already encountered before. Based on this lookup a
+ * transaction can be termed as unique or non-unique.
+ *
+ * In addition to the normal stack distance calculation, a feature to
+ * mark an old node in the tree is added. This is useful if it is
+ * required to see the reuse pattern. For example, BackInvalidates
+ * from a lower level (e.g. membus to L2), can be marked (isMarked
+ * flag of Node set to True). Then later if this same address is
+ * accessed (by L1), the value of the isMarked flag would be
+ * True. This would give some insight on how the BackInvalidates
+ * policy of the lower level affect the read/write accesses in an
+ * application.
+ *
+ * There are two functions provided to interface with the calculator:
+ * 1. pair<uint64_t, bool> calcStackDistAndUpdate(Addr r_address,
+ *                                                bool addNewNode)
+ * At every unique transaction a new leaf node is added at tree[0](leaf layer)
+ * and linked to the layer above (if addNewNode is True). The sums of all
+ * the intermediate nodes is updated till the root. The stack-distance is
+ * returned as a Constant representing INFINITY.
+ *
+ * At every non-unique transaction the tree is traversed from the
+ * leaf at the returned index to the root, the old node is deleted
+ * from the tree, and the sums (to the right are collected) and
+ * decremented. The collected sum represets the stack distance of the
+ * found node. If this node was marked then a bool flag set to True
+ * is returned with the stack_distance. During this operation a node
+ * is discarded at the leaf layer always. Moreover during the
+ * traversal upwards using the updateSum() method, if an intermediate
+ * node is found with no children connected to it, then that is
+ * discarded too.
+ *
+ * The return value of this function is a pair representing the
+ * stack_distance and the value of the marked flag.
+ *
+ * 2. pair<uint64_t , bool> calcStackDist(Addr r_address, bool mark)
+ * This is a stripped down version of the above function which is used to
+ * just inspect the tree, and mark a leaf node (if mark flag is set). The
+ * functionality to add a new node is removed.
+ *
+ * At every unique transaction the stack-distance is returned as a constant
+ * representing INFINITY.
+ *
+ * At every non-unique transaction the tree is traversed from the
+ * leaf at the returned index to the root, and the sums (to the right)
+ * are collected. The collected sum represets the stack distance of
+ * the found node.
+ *
+ * This function does NOT Modify the stack. (No node is added or
+ * deleted).  It is just used to mark a node already created and get
+ * its stack distance.
+ *
+ * The return value of this function is a pair representing the stack
+ * distance and the value of the marked flag.
+ *
+ * The table below depicts the usage of the Algorithm using the functions:
+ * pair<uint64_t Stack_dist, bool isMarked> calcStackDistAndUpdate
+ *                                      (Addr r_address, bool addNewNode)
+ * pair<uint64_t Stack_dist, bool isMarked> calcStackDist
+ *                                              (Addr r_address, bool mark)
+ *
+ * |   Function           |   Arguments   |Return Val |Use For|
+ * |calcStackDistAndUpdate|r_address, True|I/SD,False |A,GD,GM|
+ * |calcStackDistAndUpdate|r_address,False|SD,prevMark|D,GD,GM|
+ * |calcStackDist         |r_address,False|SD,prevMark|  GD,GM|
+ * |calcStackDist         |r_address, True|SD,prevMark|  GD,GM|
+ *
+ * (*A: Allocate an address in stack, if old entry present then it is deleted,
+ *  *U: Delete old-address from stack, no new entry is added
+ *  *GD: Get-Stack distance of an address,
+ *  *GM: Get value of Mark flag, indicates if that address has been touched
+ *                                                                  before,
+ *  *I: stack-distance = infinity,
+ *  *SD: Stack Distance
+ *  *r_address: address to be added, *prevMark: value of isMarked flag
+ *                                                              of the Node)
+ *
+ * Invalidates refer to a type of packet that removes something from
+ * a cache, either autonoumously (due-to cache's own replacement
+ * policy), or snoops from other caches which invalidate something
+ * inside our cache.
+ *
+ * Usage            |   Function to use    |Typical Use           |
+ * Add new entry    |calcStackDistAndUpdate|Read/Write Allocate   |
+ * Delete Old Entry |calcStackDistAndUpdate|Writebacks/Cleanevicts|
+ * Dist.of Old entry|calcStackDist         |Cleanevicts/Invalidate|
+ *
+ * Node Balancing: The tree structure is maintained by an
+ * updateTree() operation called when an intermediate node is
+ * required. The update operation is roughly categorized as a root
+ * update or intermediate layer update. When number of leaf nodes
+ * grow over a power of 2 then a new layer is added at the top of the
+ * tree and a new root node is initialized. The old node at the lower
+ * layer is connected to this.  In an intermediate node update
+ * operation a new intermediate node is added to the required layer.
+ *
+ * Debugging: Debugging can be enabled by setting the verifyStack flag
+ * true. Debugging is implemented using a dummy stack that behaves in
+ * a naive way, using STL vectors (i.e each unique address is pushed
+ * on the top of an STL vector stack, and SD is returned as
+ * Infinity. If a non unique address is encountered then the previous
+ * entry in the STL vector is removed, all the entities above it are
+ * pushed down, and the address is pushed at the top of the stack).
+ *
+ * A printStack(int numOfEntitiesToPrint) is provided to print top n entities
+ * in both (tree and STL based dummy stack).
+ */
 class StackDistCalc
 {
-
   private:
-
     struct Node;
 
-    typedef std::map<uint64_t, Node*> IndexNodeMap;
+    typedef std::map<uint64_t, Node *> IndexNodeMap;
     typedef std::map<Addr, uint64_t> AddressIndexMap;
     typedef std::vector<IndexNodeMap> TreeType;
 
@@ -196,7 +194,7 @@ class StackDistCalc
      * @return The stack distance of the current address.
      *
      */
-    uint64_t getSum(Node* node, bool from_left, uint64_t sum_from_below,
+    uint64_t getSum(Node *node, bool from_left, uint64_t sum_from_below,
                     uint64_t stack_dist, uint64_t level) const;
 
     /**
@@ -207,7 +205,7 @@ class StackDistCalc
      * @return The stack distance of the current address.
      *
      */
-    uint64_t getSumsLeavesToRoot(Node* node) const;
+    uint64_t getSumsLeavesToRoot(Node *node) const;
 
     /**
      * Updates the nodes upwards recursively till the root.
@@ -224,9 +222,8 @@ class StackDistCalc
      * @return The stack distance of the current address.
      *
      */
-    uint64_t updateSum(Node* node,
-                       bool from_left, uint64_t sum_from_below, uint64_t level,
-                       uint64_t stack_dist, bool discard_node);
+    uint64_t updateSum(Node *node, bool from_left, uint64_t sum_from_below,
+                       uint64_t level, uint64_t stack_dist, bool discard_node);
 
     /**
      * Updates the leaf nodes and nodes above. This function is
@@ -237,7 +234,7 @@ class StackDistCalc
      * @return The stack distance of the current address.
      *
      */
-    uint64_t updateSumsLeavesToRoot(Node* node, bool is_new_leaf);
+    uint64_t updateSumsLeavesToRoot(Node *node, bool is_new_leaf);
 
     /**
      * updateTree is a tree balancing operation, which maintains the
@@ -261,7 +258,7 @@ class StackDistCalc
      * @param level the level at which this node is located in the tree
      *
      */
-    void sanityCheckTree(const Node* node, uint64_t level = 0) const;
+    void sanityCheckTree(const Node *node, uint64_t level = 0) const;
 
     /**
      * Return the counter for address accesses (unique and
@@ -270,7 +267,11 @@ class StackDistCalc
      *
      * @return The stack distance of the current address.
      */
-    uint64_t getIndex() const { return index; }
+    uint64_t
+    getIndex() const
+    {
+        return index;
+    }
 
     /**
      * Query depth of the tree (tree[0] represents leaf layer while
@@ -279,7 +280,11 @@ class StackDistCalc
      *
      * @return Tree depth
      */
-    uint64_t getTreeDepth() const { return tree.size() - 1; }
+    uint64_t
+    getTreeDepth() const
+    {
+        return tree.size() - 1;
+    }
 
     /**
      * Print the last n items on the stack.
@@ -301,8 +306,7 @@ class StackDistCalc
      * implementation
      *
      */
-    uint64_t verifyStackDist(const Addr r_address,
-                             bool update_stack = false);
+    uint64_t verifyStackDist(const Addr r_address, bool update_stack = false);
 
   public:
     StackDistCalc(bool verify_stack = false);
@@ -313,7 +317,6 @@ class StackDistCalc
      * A convenient way of refering to infinity.
      */
     static constexpr uint64_t Infinity = std::numeric_limits<uint64_t>::max();
-
 
     /**
      * Process the given address. If Mark is true then set the
@@ -344,7 +347,6 @@ class StackDistCalc
                                                      bool addNewNode = true);
 
   private:
-
     /**
      * Node which takes form of Leaf, INode or Root
      */
@@ -366,7 +368,7 @@ class StackDistCalc
         uint64_t nodeIndex;
 
         // Pointer to the parent
-        Node* parent;
+        Node *parent;
 
         // Flag to mark the node as the right/left child
         bool isLeftNode;
@@ -381,10 +383,16 @@ class StackDistCalc
          * The discard flags are false by default they become true if
          * the node is reached again in a future lookup.
          */
-        Node() : sumLeft(0), sumRight(0), discardLeft(false),
-                 discardRight(false), nodeIndex(0),
-                 parent(nullptr), isLeftNode(true), isMarked(false)
-        { }
+        Node()
+            : sumLeft(0),
+              sumRight(0),
+              discardLeft(false),
+              discardRight(false),
+              nodeIndex(0),
+              parent(nullptr),
+              isLeftNode(true),
+              isMarked(false)
+        {}
     };
 
     /**

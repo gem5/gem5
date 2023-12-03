@@ -63,10 +63,7 @@ PerfKvmCounterConfig::PerfKvmCounterConfig(uint32_t type, uint64_t config)
     attr.config = config;
 }
 
-PerfKvmCounterConfig::~PerfKvmCounterConfig()
-{
-}
-
+PerfKvmCounterConfig::~PerfKvmCounterConfig() {}
 
 PerfKvmCounter::PerfKvmCounter(PerfKvmCounterConfig &config, pid_t tid)
     : fd(-1), ringBuffer(NULL), pageSize(-1)
@@ -74,17 +71,14 @@ PerfKvmCounter::PerfKvmCounter(PerfKvmCounterConfig &config, pid_t tid)
     attach(config, tid, -1);
 }
 
-PerfKvmCounter::PerfKvmCounter(PerfKvmCounterConfig &config,
-                         pid_t tid, const PerfKvmCounter &parent)
+PerfKvmCounter::PerfKvmCounter(PerfKvmCounterConfig &config, pid_t tid,
+                               const PerfKvmCounter &parent)
     : fd(-1), ringBuffer(NULL), pageSize(-1)
 {
     attach(config, tid, parent);
 }
 
-PerfKvmCounter::PerfKvmCounter()
-    : fd(-1), ringBuffer(NULL), pageSize(-1)
-{
-}
+PerfKvmCounter::PerfKvmCounter() : fd(-1), ringBuffer(NULL), pageSize(-1) {}
 
 PerfKvmCounter::~PerfKvmCounter()
 {
@@ -98,8 +92,7 @@ PerfKvmCounter::detach()
     assert(attached());
 
     if (munmap(ringBuffer, ringNumPages * pageSize) == -1)
-        warn("PerfKvmCounter: Failed to unmap ring buffer (%i)\n",
-             errno);
+        warn("PerfKvmCounter: Failed to unmap ring buffer (%i)\n", errno);
     close(fd);
 
     fd = -1;
@@ -124,7 +117,8 @@ void
 PerfKvmCounter::period(uint64_t period)
 {
     if (ioctl(PERF_EVENT_IOC_PERIOD, &period) == -1)
-        panic("KVM: Failed to set period of performance counter (%i)\n", errno);
+        panic("KVM: Failed to set period of performance counter (%i)\n",
+              errno);
 }
 
 void
@@ -151,42 +145,41 @@ PerfKvmCounter::enableSignals(pid_t tid, int signal)
     sigowner.type = F_OWNER_TID;
     sigowner.pid = tid;
 
-    if (fcntl(F_SETOWN_EX, &sigowner) == -1 ||
-        fcntl(F_SETSIG, signal) == -1 ||
+    if (fcntl(F_SETOWN_EX, &sigowner) == -1 || fcntl(F_SETSIG, signal) == -1 ||
         fcntl(F_SETFL, O_ASYNC) == -1)
         panic("PerfKvmCounter: Failed to enable signals for counter (%i)\n",
               errno);
 }
 
 void
-PerfKvmCounter::attach(PerfKvmCounterConfig &config,
-                    pid_t tid, int group_fd)
+PerfKvmCounter::attach(PerfKvmCounterConfig &config, pid_t tid, int group_fd)
 {
     assert(!attached());
 
-    fd = syscall(__NR_perf_event_open,
-                 &config.attr, tid,
+    fd = syscall(__NR_perf_event_open, &config.attr, tid,
                  -1, // CPU (-1 => Any CPU that the task happens to run on)
                  group_fd,
                  0); // Flags
-    if (fd == -1)
-    {
-        if (errno == EACCES)
-        {
-            panic("PerfKvmCounter::attach received error EACCESS.\n"
-            "  This error may be caused by a too restrictive setting\n"
-            "  in the file '/proc/sys/kernel/perf_event_paranoid'.\n"
-            "  The default value was changed to 2 in kernel 4.6.\n"
-            "  A value greater than 1 prevents gem5 from making\n"
-            "  the syscall to perf_event_open.\n"
-            "    Alternatively, you can set the usePerf flag of the KVM\n"
-            "  CPU to False. Setting this flag to False will limit some\n"
-            "  functionalities of KVM CPU, such as counting the number of\n"
-            "  cycles and the number of instructions, as well as the\n"
-            "  ability of exiting to gem5 after a certain amount of cycles\n"
-            "  or instructions when using KVM CPU. An example can be found\n"
-            "  here, configs/example/gem5_library/"
-            "x86-ubuntu-run-with-kvm-no-perf.py.");
+    if (fd == -1) {
+        if (errno == EACCES) {
+            panic(
+                "PerfKvmCounter::attach received error EACCESS.\n"
+                "  This error may be caused by a too restrictive setting\n"
+                "  in the file '/proc/sys/kernel/perf_event_paranoid'.\n"
+                "  The default value was changed to 2 in kernel 4.6.\n"
+                "  A value greater than 1 prevents gem5 from making\n"
+                "  the syscall to perf_event_open.\n"
+                "    Alternatively, you can set the usePerf flag of the KVM\n"
+                "  CPU to False. Setting this flag to False will limit some\n"
+                "  functionalities of KVM CPU, such as counting the number "
+                "of\n"
+                "  cycles and the number of instructions, as well as the\n"
+                "  ability of exiting to gem5 after a certain amount of "
+                "cycles\n"
+                "  or instructions when using KVM CPU. An example can be "
+                "found\n"
+                "  here, configs/example/gem5_library/"
+                "x86-ubuntu-run-with-kvm-no-perf.py.");
         }
         panic("PerfKvmCounter::attach failed (%i)\n", errno);
     }
@@ -215,12 +208,9 @@ PerfKvmCounter::mmapPerf(int pages)
 
     ringNumPages = pages + 1;
     ringBuffer = (struct perf_event_mmap_page *)mmap(
-        NULL, ringNumPages * 4096,
-        PROT_READ | PROT_WRITE, MAP_SHARED,
-        fd, 0);
+        NULL, ringNumPages * 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (ringBuffer == MAP_FAILED)
-        panic("PerfKvmCounter: MMAP failed (%i)\n",
-              errno);
+        panic("PerfKvmCounter: MMAP failed (%i)\n", errno);
 }
 
 int
@@ -249,15 +239,15 @@ PerfKvmCounter::read(void *buf, size_t size) const
         ssize_t ret;
         ret = ::read(fd, _buf, _size);
         switch (ret) {
-          case -1:
+        case -1:
             if (errno != EAGAIN)
                 panic("PerfKvmCounter::read failed (%i)\n", errno);
             break;
 
-          case 0:
+        case 0:
             panic("PerfKvmCounter::read unexpected EOF.\n");
 
-          default:
+        default:
             _size -= ret;
             _buf += ret;
             break;

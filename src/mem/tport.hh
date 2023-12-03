@@ -61,9 +61,7 @@ class SimObject;
  */
 class SimpleTimingPort : public QueuedResponsePort
 {
-
   private:
-
     /**
      * The packet queue used to store outgoing responses. Note that
      * the queue is made private and that we avoid overloading the
@@ -73,7 +71,6 @@ class SimpleTimingPort : public QueuedResponsePort
     RespPacketQueue queueImpl;
 
   protected:
-
     /** Implemented using recvAtomic(). */
     void recvFunctional(PacketPtr pkt);
 
@@ -89,7 +86,6 @@ class SimpleTimingPort : public QueuedResponsePort
     std::unique_ptr<Packet> pendingDelete;
 
   public:
-
     /**
      * Create a new SimpleTimingPort that relies on a packet queue to
      * hold responses, and implements recvTimingReq and recvFunctional
@@ -101,10 +97,9 @@ class SimpleTimingPort : public QueuedResponsePort
      * @param name port name
      * @param owner structural owner
      */
-    SimpleTimingPort(const std::string& name, SimObject* owner);
+    SimpleTimingPort(const std::string &name, SimObject *owner);
 
-    virtual ~SimpleTimingPort() { }
-
+    virtual ~SimpleTimingPort() {}
 };
 
 } // namespace gem5

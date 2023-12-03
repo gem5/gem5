@@ -110,8 +110,8 @@ CortexA76::getPort(const std::string &if_name, PortID idx)
         return Base::getPort(if_name, idx);
 }
 
-CortexA76Cluster::CortexA76Cluster(const Params &p) :
-    SimObject(p), cores(p.cores), evs(p.evs)
+CortexA76Cluster::CortexA76Cluster(const Params &p)
+    : SimObject(p), cores(p.cores), evs(p.evs)
 {
     for (int i = 0; i < p.cores.size(); i++)
         p.cores[i]->setCluster(this, i);
@@ -132,8 +132,7 @@ CortexA76Cluster::CortexA76Cluster(const Params &p) :
     set_evs_param("core.dcache-maintenance_latency",
                   p.dcache_maintenance_latency);
     set_evs_param("core.dcache-miss_latency", p.dcache_miss_latency);
-    set_evs_param("core.dcache-prefetch_enabled",
-                  p.dcache_prefetch_enabled);
+    set_evs_param("core.dcache-prefetch_enabled", p.dcache_prefetch_enabled);
     set_evs_param("core.dcache-read_access_latency",
                   p.dcache_read_access_latency);
     set_evs_param("core.dcache-read_latency", p.dcache_read_latency);
@@ -164,8 +163,7 @@ CortexA76Cluster::CortexA76Cluster(const Params &p) :
     set_evs_param("core.icache-maintenance_latency",
                   p.icache_maintenance_latency);
     set_evs_param("core.icache-miss_latency", p.icache_miss_latency);
-    set_evs_param("core.icache-prefetch_enabled",
-                  p.icache_prefetch_enabled);
+    set_evs_param("core.icache-prefetch_enabled", p.icache_prefetch_enabled);
     set_evs_param("core.icache-read_access_latency",
                   p.icache_read_access_latency);
     set_evs_param("core.icache-read_latency", p.icache_read_latency);

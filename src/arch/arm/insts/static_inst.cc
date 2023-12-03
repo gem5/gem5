@@ -57,33 +57,32 @@ namespace ArmISA
 {
 // Shift Rm by an immediate value
 int32_t
-ArmStaticInst::shift_rm_imm(uint32_t base, uint32_t shamt,
-                                uint32_t type, uint32_t cfval) const
+ArmStaticInst::shift_rm_imm(uint32_t base, uint32_t shamt, uint32_t type,
+                            uint32_t cfval) const
 {
     assert(shamt < 32);
     ArmShiftType shiftType;
     shiftType = (ArmShiftType)type;
 
-    switch (shiftType)
-    {
-      case LSL:
+    switch (shiftType) {
+    case LSL:
         return base << shamt;
-      case LSR:
+    case LSR:
         if (shamt == 0)
             return 0;
         else
             return base >> shamt;
-      case ASR:
+    case ASR:
         if (shamt == 0)
             return (base >> 31) | -((base & (1 << 31)) >> 31);
         else
             return (base >> shamt) | -((base & (1 << 31)) >> shamt);
-      case ROR:
+    case ROR:
         if (shamt == 0)
             return (cfval << 31) | (base >> 1); // RRX
         else
             return (base << (32 - shamt)) | (base >> shamt);
-      default:
+    default:
         ccprintf(std::cerr, "Unhandled shift type\n");
         exit(1);
         break;
@@ -92,23 +91,22 @@ ArmStaticInst::shift_rm_imm(uint32_t base, uint32_t shamt,
 }
 
 int64_t
-ArmStaticInst::shiftReg64(uint64_t base, uint64_t shiftAmt,
-                          ArmShiftType type, uint8_t width) const
+ArmStaticInst::shiftReg64(uint64_t base, uint64_t shiftAmt, ArmShiftType type,
+                          uint8_t width) const
 {
     shiftAmt = shiftAmt % width;
     ArmShiftType shiftType;
     shiftType = (ArmShiftType)type;
 
-    switch (shiftType)
-    {
-      case LSL:
+    switch (shiftType) {
+    case LSL:
         return base << shiftAmt;
-      case LSR:
+    case LSR:
         if (shiftAmt == 0)
             return base;
         else
             return (base & mask(width)) >> shiftAmt;
-      case ASR:
+    case ASR:
         if (shiftAmt == 0) {
             return base;
         } else {
@@ -117,12 +115,12 @@ ArmStaticInst::shiftReg64(uint64_t base, uint64_t shiftAmt,
             base = sign_bit ? (base | ~mask(intWidth - shiftAmt)) : base;
             return base & mask(intWidth);
         }
-      case ROR:
+    case ROR:
         if (shiftAmt == 0)
             return base;
         else
             return (base << (width - shiftAmt)) | (base >> shiftAmt);
-      default:
+    default:
         ccprintf(std::cerr, "Unhandled shift type\n");
         exit(1);
         break;
@@ -137,37 +135,37 @@ ArmStaticInst::extendReg64(uint64_t base, ArmExtendType type,
     bool sign_extend = false;
     int len = 0;
     switch (type) {
-      case UXTB:
+    case UXTB:
         len = 8;
         break;
-      case UXTH:
+    case UXTH:
         len = 16;
         break;
-      case UXTW:
+    case UXTW:
         len = 32;
         break;
-      case UXTX:
+    case UXTX:
         len = 64;
         break;
-      case SXTB:
+    case SXTB:
         len = 8;
         sign_extend = true;
         break;
-      case SXTH:
+    case SXTH:
         len = 16;
         sign_extend = true;
         break;
-      case SXTW:
+    case SXTW:
         len = 32;
         sign_extend = true;
         break;
-      case SXTX:
+    case SXTX:
         len = 64;
         sign_extend = true;
         break;
     }
     len = len <= width - shiftAmt ? len : width - shiftAmt;
-    uint64_t tmp = (uint64_t) bits(base, len - 1, 0) << shiftAmt;
+    uint64_t tmp = (uint64_t)bits(base, len - 1, 0) << shiftAmt;
     if (sign_extend) {
         int sign_bit = bits(tmp, len + shiftAmt - 1);
         tmp = sign_bit ? (tmp | ~mask(len + shiftAmt)) : tmp;
@@ -177,36 +175,35 @@ ArmStaticInst::extendReg64(uint64_t base, ArmExtendType type,
 
 // Shift Rm by Rs
 int32_t
-ArmStaticInst::shift_rm_rs(uint32_t base, uint32_t shamt,
-                               uint32_t type, uint32_t cfval) const
+ArmStaticInst::shift_rm_rs(uint32_t base, uint32_t shamt, uint32_t type,
+                           uint32_t cfval) const
 {
     enum ArmShiftType shiftType;
-    shiftType = (enum ArmShiftType) type;
+    shiftType = (enum ArmShiftType)type;
 
-    switch (shiftType)
-    {
-      case LSL:
+    switch (shiftType) {
+    case LSL:
         if (shamt >= 32)
             return 0;
         else
             return base << shamt;
-      case LSR:
+    case LSR:
         if (shamt >= 32)
             return 0;
         else
             return base >> shamt;
-      case ASR:
+    case ASR:
         if (shamt >= 32)
             return (base >> 31) | -((base & (1 << 31)) >> 31);
         else
             return (base >> shamt) | -((base & (1 << 31)) >> shamt);
-      case ROR:
+    case ROR:
         shamt = shamt & 0x1f;
         if (shamt == 0)
             return base;
         else
             return (base << (32 - shamt)) | (base >> shamt);
-      default:
+    default:
         ccprintf(std::cerr, "Unhandled shift type\n");
         exit(1);
         break;
@@ -214,39 +211,37 @@ ArmStaticInst::shift_rm_rs(uint32_t base, uint32_t shamt,
     return 0;
 }
 
-
 // Generate C for a shift by immediate
 bool
-ArmStaticInst::shift_carry_imm(uint32_t base, uint32_t shamt,
-                                   uint32_t type, uint32_t cfval) const
+ArmStaticInst::shift_carry_imm(uint32_t base, uint32_t shamt, uint32_t type,
+                               uint32_t cfval) const
 {
     enum ArmShiftType shiftType;
-    shiftType = (enum ArmShiftType) type;
+    shiftType = (enum ArmShiftType)type;
 
-    switch (shiftType)
-    {
-      case LSL:
+    switch (shiftType) {
+    case LSL:
         if (shamt == 0)
             return cfval;
         else
             return (base >> (32 - shamt)) & 1;
-      case LSR:
+    case LSR:
         if (shamt == 0)
             return (base >> 31);
         else
             return (base >> (shamt - 1)) & 1;
-      case ASR:
+    case ASR:
         if (shamt == 0)
             return (base >> 31);
         else
             return (base >> (shamt - 1)) & 1;
-      case ROR:
+    case ROR:
         shamt = shamt & 0x1f;
         if (shamt == 0)
             return (base & 1); // RRX
         else
             return (base >> (shamt - 1)) & 1;
-      default:
+    default:
         ccprintf(std::cerr, "Unhandled shift type\n");
         exit(1);
         break;
@@ -254,40 +249,38 @@ ArmStaticInst::shift_carry_imm(uint32_t base, uint32_t shamt,
     return 0;
 }
 
-
 // Generate C for a shift by Rs
 bool
-ArmStaticInst::shift_carry_rs(uint32_t base, uint32_t shamt,
-                                  uint32_t type, uint32_t cfval) const
+ArmStaticInst::shift_carry_rs(uint32_t base, uint32_t shamt, uint32_t type,
+                              uint32_t cfval) const
 {
     enum ArmShiftType shiftType;
-    shiftType = (enum ArmShiftType) type;
+    shiftType = (enum ArmShiftType)type;
 
     if (shamt == 0)
         return cfval;
 
-    switch (shiftType)
-    {
-      case LSL:
+    switch (shiftType) {
+    case LSL:
         if (shamt > 32)
             return 0;
         else
             return (base >> (32 - shamt)) & 1;
-      case LSR:
+    case LSR:
         if (shamt > 32)
             return 0;
         else
             return (base >> (shamt - 1)) & 1;
-      case ASR:
+    case ASR:
         if (shamt > 32)
             shamt = 32;
         return (base >> (shamt - 1)) & 1;
-      case ROR:
+    case ROR:
         shamt = shamt & 0x1f;
         if (shamt == 0)
             shamt = 32;
         return (base >> (shamt - 1)) & 1;
-      default:
+    default:
         ccprintf(std::cerr, "Unhandled shift type\n");
         exit(1);
         break;
@@ -312,33 +305,34 @@ ArmStaticInst::printIntReg(std::ostream &os, RegIndex reg_idx,
             ccprintf(os, "%s%d", (opWidth == 32) ? "w" : "x", reg_idx);
     } else {
         switch (reg_idx) {
-          case int_reg::Pc:
+        case int_reg::Pc:
             ccprintf(os, "pc");
             break;
-          case StackPointerReg:
+        case StackPointerReg:
             ccprintf(os, "sp");
             break;
-          case FramePointerReg:
-             ccprintf(os, "fp");
-             break;
-          case ReturnAddressReg:
-             ccprintf(os, "lr");
-             break;
-          default:
-             ccprintf(os, "r%d", reg_idx);
-             break;
+        case FramePointerReg:
+            ccprintf(os, "fp");
+            break;
+        case ReturnAddressReg:
+            ccprintf(os, "lr");
+            break;
+        default:
+            ccprintf(os, "r%d", reg_idx);
+            break;
         }
     }
 }
 
-void ArmStaticInst::printPFflags(std::ostream &os, int flag) const
+void
+ArmStaticInst::printPFflags(std::ostream &os, int flag) const
 {
-    const char *flagtoprfop[]= { "PLD", "PLI", "PST", "Reserved"};
-    const char *flagtotarget[] = { "L1", "L2", "L3", "Reserved"};
-    const char *flagtopolicy[] = { "KEEP", "STRM"};
+    const char *flagtoprfop[] = { "PLD", "PLI", "PST", "Reserved" };
+    const char *flagtotarget[] = { "L1", "L2", "L3", "Reserved" };
+    const char *flagtopolicy[] = { "KEEP", "STRM" };
 
-    ccprintf(os, "%s%s%s", flagtoprfop[(flag>>3)&3],
-             flagtotarget[(flag>>1)&3], flagtopolicy[flag&1]);
+    ccprintf(os, "%s%s%s", flagtoprfop[(flag >> 3) & 3],
+             flagtotarget[(flag >> 1) & 3], flagtopolicy[flag & 1]);
 }
 
 void
@@ -374,10 +368,8 @@ ArmStaticInst::printMiscReg(std::ostream &os, RegIndex reg_idx) const
 }
 
 void
-ArmStaticInst::printMnemonic(std::ostream &os,
-                             const std::string &suffix,
-                             bool withPred,
-                             bool withCond64,
+ArmStaticInst::printMnemonic(std::ostream &os, const std::string &suffix,
+                             bool withPred, bool withCond64,
                              ConditionCode cond64) const
 {
     os << "  " << mnemonic;
@@ -414,64 +406,63 @@ ArmStaticInst::printTarget(std::ostream &os, Addr target,
 }
 
 void
-ArmStaticInst::printCondition(std::ostream &os,
-                              unsigned code,
+ArmStaticInst::printCondition(std::ostream &os, unsigned code,
                               bool noImplicit) const
 {
     switch (code) {
-      case COND_EQ:
+    case COND_EQ:
         os << "eq";
         break;
-      case COND_NE:
+    case COND_NE:
         os << "ne";
         break;
-      case COND_CS:
+    case COND_CS:
         os << "cs";
         break;
-      case COND_CC:
+    case COND_CC:
         os << "cc";
         break;
-      case COND_MI:
+    case COND_MI:
         os << "mi";
         break;
-      case COND_PL:
+    case COND_PL:
         os << "pl";
         break;
-      case COND_VS:
+    case COND_VS:
         os << "vs";
         break;
-      case COND_VC:
+    case COND_VC:
         os << "vc";
         break;
-      case COND_HI:
+    case COND_HI:
         os << "hi";
         break;
-      case COND_LS:
+    case COND_LS:
         os << "ls";
         break;
-      case COND_GE:
+    case COND_GE:
         os << "ge";
         break;
-      case COND_LT:
+    case COND_LT:
         os << "lt";
         break;
-      case COND_GT:
+    case COND_GT:
         os << "gt";
         break;
-      case COND_LE:
+    case COND_LE:
         os << "le";
         break;
-      case COND_AL:
+    case COND_AL:
         // This one is implicit.
         if (noImplicit)
             os << "al";
         break;
-      case COND_UC:
+    case COND_UC:
         // Unconditional.
         if (noImplicit)
             os << "uc";
         break;
-      default:
+    default:
         panic("Unrecognized condition code %d.\n", code);
     }
 }
@@ -479,8 +470,7 @@ ArmStaticInst::printCondition(std::ostream &os,
 void
 ArmStaticInst::printMemSymbol(std::ostream &os,
                               const loader::SymbolTable *symtab,
-                              const std::string &prefix,
-                              const Addr addr,
+                              const std::string &prefix, const Addr addr,
                               const std::string &suffix) const
 {
     if (symtab) {
@@ -495,12 +485,9 @@ ArmStaticInst::printMemSymbol(std::ostream &os,
 }
 
 void
-ArmStaticInst::printShiftOperand(std::ostream &os,
-                                     RegIndex rm,
-                                     bool immShift,
-                                     uint32_t shiftAmt,
-                                     RegIndex rs,
-                                     ArmShiftType type) const
+ArmStaticInst::printShiftOperand(std::ostream &os, RegIndex rm, bool immShift,
+                                 uint32_t shiftAmt, RegIndex rs,
+                                 ArmShiftType type) const
 {
     bool firstOp = false;
 
@@ -514,7 +501,7 @@ ArmStaticInst::printShiftOperand(std::ostream &os,
         shiftAmt = 32;
 
     switch (type) {
-      case LSL:
+    case LSL:
         if (immShift && shiftAmt == 0) {
             done = true;
             break;
@@ -523,17 +510,17 @@ ArmStaticInst::printShiftOperand(std::ostream &os,
             os << ", ";
         os << "LSL";
         break;
-      case LSR:
+    case LSR:
         if (!firstOp)
             os << ", ";
         os << "LSR";
         break;
-      case ASR:
+    case ASR:
         if (!firstOp)
             os << ", ";
         os << "ASR";
         break;
-      case ROR:
+    case ROR:
         if (immShift && shiftAmt == 0) {
             if (!firstOp)
                 os << ", ";
@@ -545,7 +532,7 @@ ArmStaticInst::printShiftOperand(std::ostream &os,
             os << ", ";
         os << "ROR";
         break;
-      default:
+    default:
         panic("Tried to disassemble unrecognized shift type.\n");
     }
     if (!done) {
@@ -569,21 +556,29 @@ ArmStaticInst::printExtendOperand(bool firstOperand, std::ostream &os,
     if (type == UXTX && shiftAmt == 0)
         return;
     switch (type) {
-      case UXTB: ccprintf(os, ", UXTB");
+    case UXTB:
+        ccprintf(os, ", UXTB");
         break;
-      case UXTH: ccprintf(os, ", UXTH");
+    case UXTH:
+        ccprintf(os, ", UXTH");
         break;
-      case UXTW: ccprintf(os, ", UXTW");
+    case UXTW:
+        ccprintf(os, ", UXTW");
         break;
-      case UXTX: ccprintf(os, ", LSL");
+    case UXTX:
+        ccprintf(os, ", LSL");
         break;
-      case SXTB: ccprintf(os, ", SXTB");
+    case SXTB:
+        ccprintf(os, ", SXTB");
         break;
-      case SXTH: ccprintf(os, ", SXTH");
+    case SXTH:
+        ccprintf(os, ", SXTH");
         break;
-      case SXTW: ccprintf(os, ", SXTW");
+    case SXTW:
+        ccprintf(os, ", SXTW");
         break;
-      case SXTX: ccprintf(os, ", SXTW");
+    case SXTX:
+        ccprintf(os, ", SXTW");
         break;
     }
     if (type == UXTX || shiftAmt)
@@ -591,10 +586,10 @@ ArmStaticInst::printExtendOperand(bool firstOperand, std::ostream &os,
 }
 
 void
-ArmStaticInst::printDataInst(std::ostream &os, bool withImm,
-        bool immShift, bool s, RegIndex rd, RegIndex rn,
-        RegIndex rm, RegIndex rs, uint32_t shiftAmt,
-        ArmShiftType type, uint64_t imm) const
+ArmStaticInst::printDataInst(std::ostream &os, bool withImm, bool immShift,
+                             bool s, RegIndex rd, RegIndex rn, RegIndex rm,
+                             RegIndex rs, uint32_t shiftAmt, ArmShiftType type,
+                             uint64_t imm) const
 {
     printMnemonic(os, s ? "s" : "");
     bool firstOp = true;
@@ -637,17 +632,15 @@ ArmStaticInst::softwareBreakpoint32(ExecContext *xc, uint16_t imm) const
     const auto tc = xc->tcBase();
     const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     const HDCR mdcr = tc->readMiscRegNoEffect(MISCREG_MDCR_EL2);
-    if ((EL2Enabled(tc) && !ELIs32(tc, EL2) &&
-         (hcr.tge || mdcr.tde)) || !ELIs32(tc, EL1)) {
+    if ((EL2Enabled(tc) && !ELIs32(tc, EL2) && (hcr.tge || mdcr.tde)) ||
+        !ELIs32(tc, EL1)) {
         // Route to AArch64 Software Breakpoint
         return std::make_shared<SoftwareBreakpoint>(machInst, imm);
     } else {
         // Execute AArch32 Software Breakpoint
-        return std::make_shared<PrefetchAbort>(readPC(xc),
-                                               ArmFault::DebugEvent,
-                                               false,
-                                               ArmFault::UnknownTran,
-                                               ArmFault::BRKPOINT);
+        return std::make_shared<PrefetchAbort>(
+            readPC(xc), ArmFault::DebugEvent, false, ArmFault::UnknownTran,
+            ArmFault::BRKPOINT);
     }
 }
 
@@ -655,21 +648,20 @@ Fault
 ArmStaticInst::advSIMDFPAccessTrap64(ExceptionLevel el) const
 {
     switch (el) {
-      case EL1:
+    case EL1:
         return std::make_shared<SupervisorTrap>(
             machInst, 0x1E00000, ExceptionClass::TRAPPED_SIMD_FP);
-      case EL2:
+    case EL2:
         return std::make_shared<HypervisorTrap>(
             machInst, 0x1E00000, ExceptionClass::TRAPPED_SIMD_FP);
-      case EL3:
+    case EL3:
         return std::make_shared<SecureMonitorTrap>(
             machInst, 0x1E00000, ExceptionClass::TRAPPED_SIMD_FP);
 
-      default:
+    default:
         panic("Illegal EL in advSIMDFPAccessTrap64\n");
     }
 }
-
 
 Fault
 ArmStaticInst::checkFPAdvSIMDTrap64(ThreadContext *tc, CPSR cpsr) const
@@ -680,14 +672,14 @@ ArmStaticInst::checkFPAdvSIMDTrap64(ThreadContext *tc, CPSR cpsr) const
         HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
         if (HaveExt(tc, ArmExtension::FEAT_VHE) && hcr.e2h == 0x1) {
             switch (cptr_en_check.fpen) {
-              case 0:
-              case 2:
+            case 0:
+            case 2:
                 trap_el2 = !(currEL(tc) == EL1 && hcr.tge == 1);
                 break;
-              case 1:
+            case 1:
                 trap_el2 = (currEL(tc) == EL0 && hcr.tge == 1);
                 break;
-              default:
+            default:
                 trap_el2 = false;
                 break;
             }
@@ -711,12 +703,12 @@ ArmStaticInst::checkFPAdvSIMDTrap64(ThreadContext *tc, CPSR cpsr) const
 }
 
 Fault
-ArmStaticInst::checkFPAdvSIMDEnabled64(ThreadContext *tc,
-                                       CPSR cpsr, CPACR cpacr) const
+ArmStaticInst::checkFPAdvSIMDEnabled64(ThreadContext *tc, CPSR cpsr,
+                                       CPACR cpacr) const
 {
     const ExceptionLevel el = currEL(tc);
     if (((el == EL0 && cpacr.fpen != 0x3) ||
-        (el == EL1 && !(cpacr.fpen & 0x1))) &&
+         (el == EL1 && !(cpacr.fpen & 0x1))) &&
         !ELIsInHost(tc, el))
         return advSIMDFPAccessTrap64(EL1);
 
@@ -724,9 +716,8 @@ ArmStaticInst::checkFPAdvSIMDEnabled64(ThreadContext *tc,
 }
 
 Fault
-ArmStaticInst::checkAdvSIMDOrFPEnabled32(ThreadContext *tc,
-                                         CPSR cpsr, CPACR cpacr,
-                                         NSACR nsacr, FPEXC fpexc,
+ArmStaticInst::checkAdvSIMDOrFPEnabled32(ThreadContext *tc, CPSR cpsr,
+                                         CPACR cpacr, NSACR nsacr, FPEXC fpexc,
                                          bool fpexc_check, bool advsimd) const
 {
     const bool have_virtualization = ArmSystem::haveEL(tc, EL2);
@@ -780,14 +771,11 @@ ArmStaticInst::checkAdvSIMDOrFPEnabled32(ThreadContext *tc,
             const uint32_t iss = advsimd ? (1 << 5) : 0xA;
             if (cur_el == EL2) {
                 return std::make_shared<UndefinedInstruction>(
-                    machInst, iss,
-                    ExceptionClass::TRAPPED_HCPTR, mnemonic);
+                    machInst, iss, ExceptionClass::TRAPPED_HCPTR, mnemonic);
             } else {
                 return std::make_shared<HypervisorTrap>(
-                    machInst, iss,
-                    ExceptionClass::TRAPPED_HCPTR);
+                    machInst, iss, ExceptionClass::TRAPPED_HCPTR);
             }
-
         }
     }
 
@@ -801,8 +789,7 @@ ArmStaticInst::checkAdvSIMDOrFPEnabled32(ThreadContext *tc,
 }
 
 inline bool
-ArmStaticInst::isWFxTrapping(ThreadContext *tc,
-                             ExceptionLevel tgtEl,
+ArmStaticInst::isWFxTrapping(ThreadContext *tc, ExceptionLevel tgtEl,
                              bool isWfe) const
 {
     bool trap = false;
@@ -811,16 +798,16 @@ ArmStaticInst::isWFxTrapping(ThreadContext *tc,
     SCR scr = ((SCR)tc->readMiscReg(MISCREG_SCR_EL3));
 
     switch (tgtEl) {
-      case EL1:
-        trap = isWfe? !sctlr.ntwe : !sctlr.ntwi;
+    case EL1:
+        trap = isWfe ? !sctlr.ntwe : !sctlr.ntwi;
         break;
-      case EL2:
-        trap = isWfe? hcr.twe : hcr.twi;
+    case EL2:
+        trap = isWfe ? hcr.twe : hcr.twi;
         break;
-      case EL3:
-        trap = isWfe? scr.twe : scr.twi;
+    case EL3:
+        trap = isWfe ? scr.twe : scr.twi;
         break;
-      default:
+    default:
         break;
     }
 
@@ -828,8 +815,7 @@ ArmStaticInst::isWFxTrapping(ThreadContext *tc,
 }
 
 Fault
-ArmStaticInst::checkForWFxTrap32(ThreadContext *tc,
-                                 ExceptionLevel targetEL,
+ArmStaticInst::checkForWFxTrap32(ThreadContext *tc, ExceptionLevel targetEL,
                                  bool isWfe) const
 {
     // Check if target exception level is implemented.
@@ -846,22 +832,19 @@ ArmStaticInst::checkForWFxTrap32(ThreadContext *tc,
     bool trap = isWFxTrapping(tc, targetEL, isWfe);
 
     if (trap) {
-        uint32_t iss = isWfe? 0x1E00001 : /* WFE Instruction syndrome */
-                              0x1E00000;  /* WFI Instruction syndrome */
+        uint32_t iss = isWfe ? 0x1E00001 : /* WFE Instruction syndrome */
+                               0x1E00000;      /* WFI Instruction syndrome */
         switch (targetEL) {
-          case EL1:
+        case EL1:
             return std::make_shared<UndefinedInstruction>(
-                machInst, iss,
-                ExceptionClass::TRAPPED_WFI_WFE, mnemonic);
-          case EL2:
+                machInst, iss, ExceptionClass::TRAPPED_WFI_WFE, mnemonic);
+        case EL2:
             return std::make_shared<HypervisorTrap>(
-                machInst, iss,
-                ExceptionClass::TRAPPED_WFI_WFE);
-          case EL3:
+                machInst, iss, ExceptionClass::TRAPPED_WFI_WFE);
+        case EL3:
             return std::make_shared<SecureMonitorTrap>(
-                machInst, iss,
-                ExceptionClass::TRAPPED_WFI_WFE);
-          default:
+                machInst, iss, ExceptionClass::TRAPPED_WFI_WFE);
+        default:
             panic("Unrecognized Exception Level: %d\n", targetEL);
         }
     }
@@ -870,8 +853,7 @@ ArmStaticInst::checkForWFxTrap32(ThreadContext *tc,
 }
 
 Fault
-ArmStaticInst::checkForWFxTrap64(ThreadContext *tc,
-                                 ExceptionLevel targetEL,
+ArmStaticInst::checkForWFxTrap64(ThreadContext *tc, ExceptionLevel targetEL,
                                  bool isWfe) const
 {
     // Check if target exception level is implemented.
@@ -881,22 +863,19 @@ ArmStaticInst::checkForWFxTrap64(ThreadContext *tc,
     bool trap = isWFxTrapping(tc, targetEL, isWfe);
 
     if (trap) {
-        uint32_t iss = isWfe? 0x1E00001 : /* WFE Instruction syndrome */
-                              0x1E00000;  /* WFI Instruction syndrome */
+        uint32_t iss = isWfe ? 0x1E00001 : /* WFE Instruction syndrome */
+                               0x1E00000;      /* WFI Instruction syndrome */
         switch (targetEL) {
-          case EL1:
+        case EL1:
             return std::make_shared<SupervisorTrap>(
-                machInst, iss,
-                ExceptionClass::TRAPPED_WFI_WFE);
-          case EL2:
+                machInst, iss, ExceptionClass::TRAPPED_WFI_WFE);
+        case EL2:
             return std::make_shared<HypervisorTrap>(
-                machInst, iss,
-                ExceptionClass::TRAPPED_WFI_WFE);
-          case EL3:
+                machInst, iss, ExceptionClass::TRAPPED_WFI_WFE);
+        case EL3:
             return std::make_shared<SecureMonitorTrap>(
-                machInst, iss,
-                ExceptionClass::TRAPPED_WFI_WFE);
-          default:
+                machInst, iss, ExceptionClass::TRAPPED_WFI_WFE);
+        default:
             panic("Unrecognized Exception Level: %d\n", targetEL);
         }
     }
@@ -905,9 +884,7 @@ ArmStaticInst::checkForWFxTrap64(ThreadContext *tc,
 }
 
 Fault
-ArmStaticInst::trapWFx(ThreadContext *tc,
-                       CPSR cpsr, SCR scr,
-                       bool isWfe) const
+ArmStaticInst::trapWFx(ThreadContext *tc, CPSR cpsr, SCR scr, bool isWfe) const
 {
     Fault fault = NoFault;
     ExceptionLevel curr_el = currEL(tc);
@@ -918,12 +895,10 @@ ArmStaticInst::trapWFx(ThreadContext *tc,
 
     if ((fault == NoFault) && EL2Enabled(tc) &&
         ((curr_el == EL0) || (curr_el == EL1))) {
-
         fault = checkForWFxTrap32(tc, EL2, isWfe);
     }
 
-    if ((fault == NoFault) &&
-        ArmSystem::haveEL(tc, EL3) && curr_el != EL3) {
+    if ((fault == NoFault) && ArmSystem::haveEL(tc, EL3) && curr_el != EL3) {
         fault = checkForWFxTrap32(tc, EL3, isWfe);
     }
 
@@ -937,7 +912,7 @@ ArmStaticInst::checkSETENDEnabled(ThreadContext *tc, CPSR cpsr) const
     ExceptionLevel pstate_el = currEL(tc);
 
     if (pstate_el == EL2) {
-       setend_disabled = ((SCTLR)tc->readMiscRegNoEffect(MISCREG_HSCTLR)).sed;
+        setend_disabled = ((SCTLR)tc->readMiscRegNoEffect(MISCREG_HSCTLR)).sed;
     } else {
         // Please note: in the armarm pseudocode there is a distinction
         // whether EL1 is aarch32 or aarch64:
@@ -951,15 +926,13 @@ ArmStaticInst::checkSETENDEnabled(ThreadContext *tc, CPSR cpsr) const
 
         // Get the index of the banked version of SCTLR:
         // SCTLR_s or SCTLR_ns.
-        auto banked_sctlr = snsBankedIndex(
-            MISCREG_SCTLR, tc, !isSecure(tc));
+        auto banked_sctlr = snsBankedIndex(MISCREG_SCTLR, tc, !isSecure(tc));
 
         // SCTLR.SED bit is enabling/disabling the ue of SETEND instruction.
         setend_disabled = ((SCTLR)tc->readMiscRegNoEffect(banked_sctlr)).sed;
     }
 
-    return setend_disabled ? undefinedFault32(tc, pstate_el) :
-                             NoFault;
+    return setend_disabled ? undefinedFault32(tc, pstate_el) : NoFault;
 }
 
 Fault
@@ -976,8 +949,7 @@ ArmStaticInst::undefinedFault32(ThreadContext *tc,
         // However this case is already handled by the routeToHyp method in
         // ArmFault class.
         return std::make_shared<UndefinedInstruction>(
-            machInst, 0,
-            ExceptionClass::UNKNOWN, mnemonic);
+            machInst, 0, ExceptionClass::UNKNOWN, mnemonic);
     }
 }
 
@@ -986,17 +958,17 @@ ArmStaticInst::undefinedFault64(ThreadContext *tc,
                                 ExceptionLevel pstateEL) const
 {
     switch (pstateEL) {
-      case EL0:
-      case EL1:
-        return std::make_shared<SupervisorTrap>(
-            machInst, 0, ExceptionClass::UNKNOWN);
-      case EL2:
-        return std::make_shared<HypervisorTrap>(
-            machInst, 0, ExceptionClass::UNKNOWN);
-      case EL3:
-        return std::make_shared<SecureMonitorTrap>(
-            machInst, 0, ExceptionClass::UNKNOWN);
-      default:
+    case EL0:
+    case EL1:
+        return std::make_shared<SupervisorTrap>(machInst, 0,
+                                                ExceptionClass::UNKNOWN);
+    case EL2:
+        return std::make_shared<HypervisorTrap>(machInst, 0,
+                                                ExceptionClass::UNKNOWN);
+    case EL3:
+        return std::make_shared<SecureMonitorTrap>(machInst, 0,
+                                                   ExceptionClass::UNKNOWN);
+    default:
         panic("Unrecognized Exception Level: %d\n", pstateEL);
         break;
     }
@@ -1008,17 +980,17 @@ Fault
 ArmStaticInst::sveAccessTrap(ExceptionLevel el) const
 {
     switch (el) {
-      case EL1:
-        return std::make_shared<SupervisorTrap>(
-            machInst, 0, ExceptionClass::TRAPPED_SVE);
-      case EL2:
-        return std::make_shared<HypervisorTrap>(
-            machInst, 0, ExceptionClass::TRAPPED_SVE);
-      case EL3:
+    case EL1:
+        return std::make_shared<SupervisorTrap>(machInst, 0,
+                                                ExceptionClass::TRAPPED_SVE);
+    case EL2:
+        return std::make_shared<HypervisorTrap>(machInst, 0,
+                                                ExceptionClass::TRAPPED_SVE);
+    case EL3:
         return std::make_shared<SecureMonitorTrap>(
             machInst, 0, ExceptionClass::TRAPPED_SVE);
 
-      default:
+    default:
         panic("Illegal EL in sveAccessTrap\n");
     }
 }
@@ -1033,15 +1005,13 @@ ArmStaticInst::checkSveEnabled(ThreadContext *tc, CPSR cpsr, CPACR cpacr) const
         return checkSmeEnabled(tc, cpsr, cpacr);
     }
 
-    const ExceptionLevel el = (ExceptionLevel) (uint8_t) cpsr.el;
+    const ExceptionLevel el = (ExceptionLevel)(uint8_t)cpsr.el;
     // Check if access disabled in CPACR_EL1
     if (el <= EL1 && !ELIsInHost(tc, el)) {
-        if ((el == EL0 && cpacr.zen == 0x1) ||
-            (!(cpacr.zen & 0x1)))
+        if ((el == EL0 && cpacr.zen == 0x1) || (!(cpacr.zen & 0x1)))
             return sveAccessTrap(EL1);
 
-        if ((el == EL0 && cpacr.fpen == 0x1) ||
-            (!(cpacr.fpen & 0x1)))
+        if ((el == EL0 && cpacr.fpen == 0x1) || (!(cpacr.fpen & 0x1)))
             return advSIMDFPAccessTrap64(EL1);
     }
 
@@ -1051,13 +1021,11 @@ ArmStaticInst::checkSveEnabled(ThreadContext *tc, CPSR cpsr, CPACR cpacr) const
         HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
         if (HaveExt(tc, ArmExtension::FEAT_VHE) && hcr.e2h) {
             if (((cptr_en_check.zen & 0x1) == 0x0) ||
-                (cptr_en_check.zen == 0x1 && el == EL0 &&
-                 hcr.tge == 0x1)) {
+                (cptr_en_check.zen == 0x1 && el == EL0 && hcr.tge == 0x1)) {
                 return sveAccessTrap(EL2);
             }
             if (((cptr_en_check.fpen & 0x1) == 0x0) ||
-                (cptr_en_check.fpen == 0x1 && el == EL0 &&
-                 hcr.tge == 0x1)) {
+                (cptr_en_check.fpen == 0x1 && el == EL0 && hcr.tge == 0x1)) {
                 return advSIMDFPAccessTrap64(EL2);
             }
         } else {
@@ -1084,17 +1052,17 @@ Fault
 ArmStaticInst::smeAccessTrap(ExceptionLevel el, uint32_t iss) const
 {
     switch (el) {
-      case EL1:
-        return std::make_shared<SupervisorTrap>(
-            machInst, iss, ExceptionClass::TRAPPED_SME);
-      case EL2:
-        return std::make_shared<HypervisorTrap>(
-            machInst, iss, ExceptionClass::TRAPPED_SME);
-      case EL3:
+    case EL1:
+        return std::make_shared<SupervisorTrap>(machInst, iss,
+                                                ExceptionClass::TRAPPED_SME);
+    case EL2:
+        return std::make_shared<HypervisorTrap>(machInst, iss,
+                                                ExceptionClass::TRAPPED_SME);
+    case EL3:
         return std::make_shared<SecureMonitorTrap>(
             machInst, iss, ExceptionClass::TRAPPED_SME);
 
-      default:
+    default:
         panic("Illegal EL in smeAccessTrap\n");
     }
 }
@@ -1102,15 +1070,13 @@ ArmStaticInst::smeAccessTrap(ExceptionLevel el, uint32_t iss) const
 Fault
 ArmStaticInst::checkSmeEnabled(ThreadContext *tc, CPSR cpsr, CPACR cpacr) const
 {
-    const ExceptionLevel el = (ExceptionLevel) (uint8_t) cpsr.el;
+    const ExceptionLevel el = (ExceptionLevel)(uint8_t)cpsr.el;
     // Check if access disabled in CPACR_EL1
     if (el <= EL1 && !ELIsInHost(tc, el)) {
-        if ((el == EL0 && cpacr.smen == 0x1) ||
-            (!(cpacr.smen & 0x1)))
+        if ((el == EL0 && cpacr.smen == 0x1) || (!(cpacr.smen & 0x1)))
             return smeAccessTrap(EL1);
 
-        if ((el == EL0 && cpacr.fpen == 0x1) ||
-            (!(cpacr.fpen & 0x1)))
+        if ((el == EL0 && cpacr.fpen == 0x1) || (!(cpacr.fpen & 0x1)))
             return advSIMDFPAccessTrap64(EL1);
     }
 
@@ -1120,13 +1086,11 @@ ArmStaticInst::checkSmeEnabled(ThreadContext *tc, CPSR cpsr, CPACR cpacr) const
         HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
         if (HaveExt(tc, ArmExtension::FEAT_VHE) && hcr.e2h) {
             if (((cptr_en_check.smen & 0x1) == 0x0) ||
-                (cptr_en_check.smen == 0x1 && el == EL0 &&
-                 hcr.tge == 0x1)) {
+                (cptr_en_check.smen == 0x1 && el == EL0 && hcr.tge == 0x1)) {
                 return smeAccessTrap(EL2);
             }
             if (((cptr_en_check.fpen & 0x1) == 0x0) ||
-                (cptr_en_check.fpen == 0x1 && el == EL0 &&
-                 hcr.tge == 0x1)) {
+                (cptr_en_check.fpen == 0x1 && el == EL0 && hcr.tge == 0x1)) {
                 return advSIMDFPAccessTrap64(EL2);
             }
         } else {
@@ -1152,7 +1116,7 @@ ArmStaticInst::checkSmeEnabled(ThreadContext *tc, CPSR cpsr, CPACR cpacr) const
 Fault
 ArmStaticInst::checkSmeAccess(ThreadContext *tc, CPSR cpsr, CPACR cpacr) const
 {
-    const ExceptionLevel el = (ExceptionLevel) (uint8_t) cpsr.el;
+    const ExceptionLevel el = (ExceptionLevel)(uint8_t)cpsr.el;
     // Check if access disabled in CPACR_EL1
     if (el <= EL1 && !ELIsInHost(tc, el)) {
         if ((el == EL0 && cpacr.smen == 0x1) || (!(cpacr.smen & 0x1))) {
@@ -1166,8 +1130,7 @@ ArmStaticInst::checkSmeAccess(ThreadContext *tc, CPSR cpsr, CPACR cpacr) const
         HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
         if (HaveExt(tc, ArmExtension::FEAT_VHE) && hcr.e2h) {
             if (((cptr_en_check.smen & 0x1) == 0x0) ||
-                (cptr_en_check.smen == 0x1 && el == EL0 &&
-                 hcr.tge == 0x1)) {
+                (cptr_en_check.smen == 0x1 && el == EL0 && hcr.tge == 0x1)) {
                 return smeAccessTrap(EL2);
             }
         } else {
@@ -1205,7 +1168,7 @@ getRestoredITBits(ThreadContext *tc, CPSR spsr)
 {
     // See: shared/functions/system/RestoredITBits in the ARM ARM
 
-    const ExceptionLevel el = opModeToEL((OperatingMode) (uint8_t)spsr.mode);
+    const ExceptionLevel el = opModeToEL((OperatingMode)(uint8_t)spsr.mode);
     const uint8_t it = itState(spsr);
 
     if (!spsr.t || spsr.il)
@@ -1216,9 +1179,8 @@ getRestoredITBits(ThreadContext *tc, CPSR spsr)
     if (bits(it, 7, 4) != 0 && bits(it, 3, 0) == 0)
         return 0;
 
-    const bool itd = el == EL2 ?
-        ((SCTLR)tc->readMiscReg(MISCREG_HSCTLR)).itd :
-        ((SCTLR)tc->readMiscReg(MISCREG_SCTLR)).itd;
+    const bool itd = el == EL2 ? ((SCTLR)tc->readMiscReg(MISCREG_HSCTLR)).itd :
+                                 ((SCTLR)tc->readMiscReg(MISCREG_SCTLR)).itd;
 
     // The IT bits are forced to zero when returning to A32 state, or
     // when returning to an EL with the ITD bit set to 1, and the IT
@@ -1232,14 +1194,14 @@ getRestoredITBits(ThreadContext *tc, CPSR spsr)
 static bool
 illegalExceptionReturn(ThreadContext *tc, CPSR cpsr, CPSR spsr)
 {
-    const OperatingMode mode = (OperatingMode) (uint8_t)spsr.mode;
+    const OperatingMode mode = (OperatingMode)(uint8_t)spsr.mode;
     if (unknownMode(mode))
         return true;
 
     SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
     HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
 
-    //ELFromSPSR
+    // ELFromSPSR
     bool valid;
     ExceptionLevel target_el = opModeToEL(mode);
     if (!spsr.width) {
@@ -1251,8 +1213,8 @@ illegalExceptionReturn(ThreadContext *tc, CPSR cpsr, CPSR spsr)
             valid = false;
         } else if (target_el == EL0 && spsr.sp) {
             valid = false;
-        } else if (target_el == EL2 && ArmSystem::haveEL(tc, EL3) &&
-                   !scr.ns && !IsSecureEL2Enabled(tc)) {
+        } else if (target_el == EL2 && ArmSystem::haveEL(tc, EL3) && !scr.ns &&
+                   !IsSecureEL2Enabled(tc)) {
             valid = false;
         } else {
             valid = true;
@@ -1274,7 +1236,7 @@ illegalExceptionReturn(ThreadContext *tc, CPSR cpsr, CPSR spsr)
         return true;
 
     if (target_el == EL1 && ArmSystem::haveEL(tc, EL2) && hcr.tge &&
-            (IsSecureEL2Enabled(tc) || !isSecureBelowEL3(tc))) {
+        (IsSecureEL2Enabled(tc) || !isSecureBelowEL3(tc))) {
         return true;
     }
 
@@ -1310,7 +1272,7 @@ ArmStaticInst::getPSTATEFromPSR(ThreadContext *tc, CPSR cpsr, CPSR spsr) const
             new_cpsr.el = spsr.el;
             new_cpsr.sp = spsr.sp;
         }
-        dest = (ExceptionLevel)(uint8_t) spsr.el;
+        dest = (ExceptionLevel)(uint8_t)spsr.el;
     }
 
     new_cpsr.nz = spsr.nz;
@@ -1349,8 +1311,8 @@ ArmStaticInst::generalExceptionsToAArch64(ThreadContext *tc,
     // AArch64 or TGE is in force and EL2 is using AArch64.
     HCR hcr = ((HCR)tc->readMiscReg(MISCREG_HCR_EL2));
     return (pstateEL == EL0 && !ELIs32(tc, EL1)) ||
-           (ArmSystem::haveEL(tc, EL2) && !isSecure(tc) &&
-               !ELIs32(tc, EL2) && hcr.tge);
+           (ArmSystem::haveEL(tc, EL2) && !isSecure(tc) && !ELIs32(tc, EL2) &&
+            hcr.tge);
 }
 
 unsigned
@@ -1366,7 +1328,6 @@ ArmStaticInst::getCurSmeVecLenInBits(ThreadContext *tc)
     auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
     return isa->getCurSmeVecLenInBits();
 }
-
 
 } // namespace ArmISA
 } // namespace gem5

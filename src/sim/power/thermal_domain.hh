@@ -51,7 +51,8 @@
 namespace gem5
 {
 
-template <class T> class ProbePointArg;
+template <class T>
+class ProbePointArg;
 
 /**
  * A ThermalDomain is used to group objects under that operate under
@@ -61,7 +62,6 @@ template <class T> class ProbePointArg;
 class ThermalDomain : public SimObject, public ThermalEntity
 {
   public:
-
     typedef ThermalDomainParams Params;
     ThermalDomain(const Params &p);
 
@@ -70,7 +70,11 @@ class ThermalDomain : public SimObject, public ThermalEntity
      *
      * @return Initial temperature of the domain
      */
-    Temperature initialTemperature() const { return _initTemperature; }
+    Temperature
+    initialTemperature() const
+    {
+        return _initTemperature;
+    }
 
     /**
      * Get the current temperature.
@@ -80,34 +84,42 @@ class ThermalDomain : public SimObject, public ThermalEntity
     Temperature currentTemperature() const;
 
     /** Set/Get circuit node associated with this domain */
-    void setNode(ThermalNode * n) { node = n; }
-    ThermalNode * getNode() const { return node; }
+    void
+    setNode(ThermalNode *n)
+    {
+        node = n;
+    }
+
+    ThermalNode *
+    getNode() const
+    {
+        return node;
+    }
 
     /** Get nodal equation imposed by this node */
-    LinearEquation getEquation(ThermalNode * tn, unsigned n,
+    LinearEquation getEquation(ThermalNode *tn, unsigned n,
                                double step) const override;
 
     /**
-      *  Emit a temperature update through probe points interface
-      */
+     *  Emit a temperature update through probe points interface
+     */
     void emitUpdate();
 
     /**
-      *  Set the SubSystem reference we belong to
-      */
-    void setSubSystem(SubSystem * ss);
+     *  Set the SubSystem reference we belong to
+     */
+    void setSubSystem(SubSystem *ss);
 
   private:
     const Temperature _initTemperature;
-    ThermalNode * node;
-    SubSystem * subsystem;
+    ThermalNode *node;
+    SubSystem *subsystem;
 
     /** Stat for reporting voltage of the domain */
     statistics::Value currentTemp;
 
     /** Probe to signal for temperature changes in this domain */
     ProbePointArg<Temperature> *ppThermalUpdate;
-
 };
 
 } // namespace gem5

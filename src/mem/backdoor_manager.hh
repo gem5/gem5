@@ -84,6 +84,6 @@ class BackdoorManager
      */
     std::vector<std::list<std::unique_ptr<MemBackdoor>>> backdoorLists;
 };
-}  // namespace gem5
+} // namespace gem5
 
-#endif  //__MEM_BACKDOOR_MANAGER_HH__
+#endif //__MEM_BACKDOOR_MANAGER_HH__

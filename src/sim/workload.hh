@@ -50,27 +50,31 @@ class ThreadContext;
 class Workload : public SimObject
 {
   protected:
-    virtual Addr fixFuncEventAddr(Addr addr) const { return addr; }
+    virtual Addr
+    fixFuncEventAddr(Addr addr) const
+    {
+        return addr;
+    }
 
     struct WorkloadStats : public statistics::Group
     {
-        struct InstStats: public statistics::Group
+        struct InstStats : public statistics::Group
         {
             statistics::Scalar arm;
             statistics::Scalar quiesce;
 
             InstStats(statistics::Group *parent)
-              : statistics::Group(parent, "inst"),
-                ADD_STAT(arm, statistics::units::Count::get(),
-                         "number of arm instructions executed"),
-                ADD_STAT(quiesce, statistics::units::Count::get(),
-                         "number of quiesce instructions executed")
+                : statistics::Group(parent, "inst"),
+                  ADD_STAT(arm, statistics::units::Count::get(),
+                           "number of arm instructions executed"),
+                  ADD_STAT(quiesce, statistics::units::Count::get(),
+                           "number of quiesce instructions executed")
             {}
 
         } instStats;
 
-        WorkloadStats(Workload *workload) : statistics::Group(workload),
-            instStats(workload)
+        WorkloadStats(Workload *workload)
+            : statistics::Group(workload), instStats(workload)
         {}
     } stats;
 
@@ -81,14 +85,29 @@ class Workload : public SimObject
     System *system = nullptr;
 
   public:
-    Workload(const WorkloadParams &params) : SimObject(params), stats(this),
-            waitForRemoteGDB(params.wait_for_remote_gdb)
+    Workload(const WorkloadParams &params)
+        : SimObject(params),
+          stats(this),
+          waitForRemoteGDB(params.wait_for_remote_gdb)
     {}
 
-    virtual void setSystem(System *sys) { system = sys; }
+    virtual void
+    setSystem(System *sys)
+    {
+        system = sys;
+    }
 
-    void recordQuiesce() { stats.instStats.quiesce++; }
-    void recordArm() { stats.instStats.arm++; }
+    void
+    recordQuiesce()
+    {
+        stats.instStats.quiesce++;
+    }
+
+    void
+    recordArm()
+    {
+        stats.instStats.arm++;
+    }
 
     // Once trapping into GDB is no longer a special case routed through the
     // system object, this helper can be removed.
@@ -142,7 +161,7 @@ class Workload : public SimObject
             return nullptr;
 
         return new T(system, desc, fixFuncEventAddr(it->address()),
-                      std::forward<Args>(args)...);
+                     std::forward<Args>(args)...);
     }
 
     template <class T>
@@ -161,6 +180,7 @@ class Workload : public SimObject
         panic_if(!e, "Failed to find symbol '%s'", lbl);
         return e;
     }
+
     /** @} */
 };
 
@@ -173,14 +193,30 @@ class StubWorkload : public Workload
   public:
     StubWorkload(const StubWorkloadParams &params) : Workload(params) {}
 
-    Addr getEntry() const override { return params().entry; }
-    ByteOrder byteOrder() const override { return params().byte_order; }
-    loader::Arch getArch() const override { return loader::UnknownArch; }
+    Addr
+    getEntry() const override
+    {
+        return params().entry;
+    }
+
+    ByteOrder
+    byteOrder() const override
+    {
+        return params().byte_order;
+    }
+
+    loader::Arch
+    getArch() const override
+    {
+        return loader::UnknownArch;
+    }
+
     const loader::SymbolTable &
     symtab(ThreadContext *tc) override
     {
         return _symtab;
     }
+
     bool
     insertSymbol(const loader::Symbol &symbol) override
     {

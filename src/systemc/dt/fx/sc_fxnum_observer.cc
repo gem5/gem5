@@ -35,7 +35,6 @@
 
  *****************************************************************************/
 
-
 // $Log: sc_fxnum_observer.cpp,v $
 // Revision 1.1.1.1  2006/12/15 20:20:04  acg
 // SystemC 2.3
@@ -56,8 +55,7 @@ namespace sc_dt
 //  Abstract base class for fixed-point types observers; arbitrary precision.
 // ----------------------------------------------------------------------------
 
-sc_fxnum_observer *(* sc_fxnum_observer::default_observer) () = 0;
-
+sc_fxnum_observer *(*sc_fxnum_observer::default_observer)() = 0;
 
 // ----------------------------------------------------------------------------
 //  CLASS : sc_fxnum_fast_observer
@@ -65,6 +63,6 @@ sc_fxnum_observer *(* sc_fxnum_observer::default_observer) () = 0;
 //  Abstract base class for fixed-point types observers; limited precision.
 // ----------------------------------------------------------------------------
 
-sc_fxnum_fast_observer *(* sc_fxnum_fast_observer::default_observer) () = 0;
+sc_fxnum_fast_observer *(*sc_fxnum_fast_observer::default_observer)() = 0;
 
 } // namespace sc_dt

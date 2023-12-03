@@ -55,11 +55,11 @@ class MMU : public BaseMMU
     MMU(const Params &p) : BaseMMU(p) {}
 
     TranslationGenPtr
-    translateFunctional(Addr start, Addr size, ThreadContext *tc,
-            Mode mode, Request::Flags flags) override
+    translateFunctional(Addr start, Addr size, ThreadContext *tc, Mode mode,
+                        Request::Flags flags) override
     {
         return TranslationGenPtr(new MMUTranslationGen(
-                    ArmISA::PageBytes, start, size, tc, this, mode, flags));
+            ArmISA::PageBytes, start, size, tc, this, mode, flags));
     }
 };
 

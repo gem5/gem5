@@ -40,31 +40,29 @@ namespace copy_engine_reg
 {
 
 // General Channel independant registers, 128 bytes starting at 0x00
-const uint32_t GEN_CHANCOUNT    = 0x00;
-const uint32_t GEN_XFERCAP      = 0x01;
-const uint32_t GEN_INTRCTRL     = 0x03;
-const uint32_t GEN_ATTNSTATUS   = 0x04;
-
+const uint32_t GEN_CHANCOUNT = 0x00;
+const uint32_t GEN_XFERCAP = 0x01;
+const uint32_t GEN_INTRCTRL = 0x03;
+const uint32_t GEN_ATTNSTATUS = 0x04;
 
 // Channel specific registers, each block is 128 bytes, starting at 0x80
-const uint32_t CHAN_CONTROL         = 0x00;
-const uint32_t CHAN_STATUS          = 0x04;
-const uint32_t CHAN_CHAINADDR       = 0x0C;
-const uint32_t CHAN_CHAINADDR_LOW   = 0x0C;
-const uint32_t CHAN_CHAINADDR_HIGH  = 0x10;
-const uint32_t CHAN_COMMAND         = 0x14;
-const uint32_t CHAN_CMPLNADDR       = 0x18;
-const uint32_t CHAN_CMPLNADDR_LOW   = 0x18;
-const uint32_t CHAN_CMPLNADDR_HIGH  = 0x1C;
-const uint32_t CHAN_ERROR           = 0x28;
+const uint32_t CHAN_CONTROL = 0x00;
+const uint32_t CHAN_STATUS = 0x04;
+const uint32_t CHAN_CHAINADDR = 0x0C;
+const uint32_t CHAN_CHAINADDR_LOW = 0x0C;
+const uint32_t CHAN_CHAINADDR_HIGH = 0x10;
+const uint32_t CHAN_COMMAND = 0x14;
+const uint32_t CHAN_CMPLNADDR = 0x18;
+const uint32_t CHAN_CMPLNADDR_LOW = 0x18;
+const uint32_t CHAN_CMPLNADDR_HIGH = 0x1C;
+const uint32_t CHAN_ERROR = 0x28;
 
-
-const uint32_t DESC_CTRL_INT_GEN    = 0x00000001;
-const uint32_t DESC_CTRL_SRC_SN     = 0x00000002;
-const uint32_t DESC_CTRL_DST_SN     = 0x00000004;
-const uint32_t DESC_CTRL_CP_STS     = 0x00000008;
-const uint32_t DESC_CTRL_FRAME      = 0x00000010;
-const uint32_t DESC_CTRL_NULL       = 0x00000020;
+const uint32_t DESC_CTRL_INT_GEN = 0x00000001;
+const uint32_t DESC_CTRL_SRC_SN = 0x00000002;
+const uint32_t DESC_CTRL_DST_SN = 0x00000004;
+const uint32_t DESC_CTRL_CP_STS = 0x00000008;
+const uint32_t DESC_CTRL_FRAME = 0x00000010;
+const uint32_t DESC_CTRL_NULL = 0x00000020;
 
 struct DmaDesc
 {
@@ -79,41 +77,78 @@ struct DmaDesc
     uint64_t user2;
 };
 
-#define ADD_FIELD8(NAME, OFFSET, BITS) \
-    inline uint8_t NAME() { return bits(_data, OFFSET+BITS-1, OFFSET); } \
-    inline void NAME(uint8_t d) { replaceBits(_data, OFFSET+BITS-1, OFFSET,d); }
+#define ADD_FIELD8(NAME, OFFSET, BITS)                                        \
+    inline uint8_t NAME() { return bits(_data, OFFSET + BITS - 1, OFFSET); }  \
+    inline void NAME(uint8_t d)                                               \
+    {                                                                         \
+        replaceBits(_data, OFFSET + BITS - 1, OFFSET, d);                     \
+    }
 
-#define ADD_FIELD16(NAME, OFFSET, BITS) \
-    inline uint16_t NAME() { return bits(_data, OFFSET+BITS-1, OFFSET); } \
-    inline void NAME(uint16_t d) { replaceBits(_data, OFFSET+BITS-1, OFFSET,d); }
+#define ADD_FIELD16(NAME, OFFSET, BITS)                                       \
+    inline uint16_t NAME() { return bits(_data, OFFSET + BITS - 1, OFFSET); } \
+    inline void NAME(uint16_t d)                                              \
+    {                                                                         \
+        replaceBits(_data, OFFSET + BITS - 1, OFFSET, d);                     \
+    }
 
-#define ADD_FIELD32(NAME, OFFSET, BITS) \
-    inline uint32_t NAME() { return bits(_data, OFFSET+BITS-1, OFFSET); } \
-    inline void NAME(uint32_t d) { replaceBits(_data, OFFSET+BITS-1, OFFSET,d); }
+#define ADD_FIELD32(NAME, OFFSET, BITS)                                       \
+    inline uint32_t NAME() { return bits(_data, OFFSET + BITS - 1, OFFSET); } \
+    inline void NAME(uint32_t d)                                              \
+    {                                                                         \
+        replaceBits(_data, OFFSET + BITS - 1, OFFSET, d);                     \
+    }
 
-#define ADD_FIELD64(NAME, OFFSET, BITS) \
-    inline uint64_t NAME() { return bits(_data, OFFSET+BITS-1, OFFSET); } \
-    inline void NAME(uint64_t d) { replaceBits(_data, OFFSET+BITS-1, OFFSET,d); }
+#define ADD_FIELD64(NAME, OFFSET, BITS)                                       \
+    inline uint64_t NAME() { return bits(_data, OFFSET + BITS - 1, OFFSET); } \
+    inline void NAME(uint64_t d)                                              \
+    {                                                                         \
+        replaceBits(_data, OFFSET + BITS - 1, OFFSET, d);                     \
+    }
 
-template<class T>
+template <class T>
 struct Reg
 {
     T _data;
-    T operator()() { return _data; }
-    const Reg<T> &operator=(T d) { _data = d; return *this;}
-    bool operator==(T d) { return d == _data; }
-    void operator()(T d) { _data = d; }
+
+    T
+    operator()()
+    {
+        return _data;
+    }
+
+    const Reg<T> &
+    operator=(T d)
+    {
+        _data = d;
+        return *this;
+    }
+
+    bool
+    operator==(T d)
+    {
+        return d == _data;
+    }
+
+    void
+    operator()(T d)
+    {
+        _data = d;
+    }
+
     Reg() { _data = 0; }
-    void serialize(CheckpointOut &cp) const
+
+    void
+    serialize(CheckpointOut &cp) const
     {
         SERIALIZE_SCALAR(_data);
     }
-    void unserialize(CheckpointIn &cp)
+
+    void
+    unserialize(CheckpointIn &cp)
     {
         UNSERIALIZE_SCALAR(_data);
     }
 };
-
 
 struct Regs : public Serializable
 {
@@ -123,16 +158,18 @@ struct Regs : public Serializable
     struct INTRCTRL : public Reg<uint8_t>
     {
         // 0x03
-        using Reg<uint8_t>::operator =;
-        ADD_FIELD8(master_int_enable,0,1);
-        ADD_FIELD8(interrupt_status,1,1);
-        ADD_FIELD8(interrupt,2,1);
+        using Reg<uint8_t>::operator=;
+        ADD_FIELD8(master_int_enable, 0, 1);
+        ADD_FIELD8(interrupt_status, 1, 1);
+        ADD_FIELD8(interrupt, 2, 1);
     };
+
     INTRCTRL intrctrl;
 
     uint32_t attnStatus; // Read clears
 
-    void serialize(CheckpointOut &cp) const override
+    void
+    serialize(CheckpointOut &cp) const override
     {
         SERIALIZE_SCALAR(chanCount);
         SERIALIZE_SCALAR(xferCap);
@@ -140,14 +177,14 @@ struct Regs : public Serializable
         SERIALIZE_SCALAR(attnStatus);
     }
 
-    void unserialize(CheckpointIn &cp) override
+    void
+    unserialize(CheckpointIn &cp) override
     {
         UNSERIALIZE_SCALAR(chanCount);
         UNSERIALIZE_SCALAR(xferCap);
         paramIn(cp, "intrctrl", intrctrl._data);
         UNSERIALIZE_SCALAR(attnStatus);
     }
-
 };
 
 struct ChanRegs : public Serializable
@@ -155,14 +192,15 @@ struct ChanRegs : public Serializable
     struct CHANCTRL : public Reg<uint16_t>
     {
         // channelX + 0x00
-        using Reg<uint16_t>::operator =;
-        ADD_FIELD16(interrupt_disable,0,1);
-        ADD_FIELD16(error_completion_enable, 2,1);
-        ADD_FIELD16(any_error_abort_enable,3,1);
-        ADD_FIELD16(error_int_enable,4,1);
-        ADD_FIELD16(desc_addr_snoop_control,5,1);
-        ADD_FIELD16(in_use, 8,1);
+        using Reg<uint16_t>::operator=;
+        ADD_FIELD16(interrupt_disable, 0, 1);
+        ADD_FIELD16(error_completion_enable, 2, 1);
+        ADD_FIELD16(any_error_abort_enable, 3, 1);
+        ADD_FIELD16(error_int_enable, 4, 1);
+        ADD_FIELD16(desc_addr_snoop_control, 5, 1);
+        ADD_FIELD16(in_use, 8, 1);
     };
+
     CHANCTRL ctrl;
 
     struct CHANSTS : public Reg<uint64_t>
@@ -173,6 +211,7 @@ struct ChanRegs : public Serializable
         ADD_FIELD64(soft_error, 4, 1);
         ADD_FIELD64(compl_desc_addr, 6, 58);
     };
+
     CHANSTS status;
 
     uint64_t descChainAddr;
@@ -180,13 +219,14 @@ struct ChanRegs : public Serializable
     struct CHANCMD : public Reg<uint8_t>
     {
         // channelX + 0x14
-        ADD_FIELD8(start_dma,0,1);
-        ADD_FIELD8(append_dma,1,1);
-        ADD_FIELD8(suspend_dma,2,1);
-        ADD_FIELD8(abort_dma,3,1);
-        ADD_FIELD8(resume_dma,4,1);
-        ADD_FIELD8(reset_dma,5,1);
+        ADD_FIELD8(start_dma, 0, 1);
+        ADD_FIELD8(append_dma, 1, 1);
+        ADD_FIELD8(suspend_dma, 2, 1);
+        ADD_FIELD8(abort_dma, 3, 1);
+        ADD_FIELD8(resume_dma, 4, 1);
+        ADD_FIELD8(reset_dma, 5, 1);
     };
+
     CHANCMD command;
 
     uint64_t completionAddr;
@@ -194,26 +234,28 @@ struct ChanRegs : public Serializable
     struct CHANERR : public Reg<uint32_t>
     {
         // channel X + 0x28
-        ADD_FIELD32(source_addr_error,0,1);
-        ADD_FIELD32(dest_addr_error,1,1);
-        ADD_FIELD32(ndesc_addr_error,2,1);
-        ADD_FIELD32(desc_error,3,1);
-        ADD_FIELD32(chain_addr_error,4,1);
-        ADD_FIELD32(chain_cmd_error,5,1);
-        ADD_FIELD32(chipset_parity_error,6,1);
-        ADD_FIELD32(dma_parity_error,7,1);
-        ADD_FIELD32(read_data_error,8,1);
-        ADD_FIELD32(write_data_error,9,1);
-        ADD_FIELD32(desc_control_error,10,1);
-        ADD_FIELD32(desc_len_error,11,1);
-        ADD_FIELD32(completion_addr_error,12,1);
-        ADD_FIELD32(interrupt_config_error,13,1);
-        ADD_FIELD32(soft_error,14,1);
-        ADD_FIELD32(unaffiliated_error,15,1);
+        ADD_FIELD32(source_addr_error, 0, 1);
+        ADD_FIELD32(dest_addr_error, 1, 1);
+        ADD_FIELD32(ndesc_addr_error, 2, 1);
+        ADD_FIELD32(desc_error, 3, 1);
+        ADD_FIELD32(chain_addr_error, 4, 1);
+        ADD_FIELD32(chain_cmd_error, 5, 1);
+        ADD_FIELD32(chipset_parity_error, 6, 1);
+        ADD_FIELD32(dma_parity_error, 7, 1);
+        ADD_FIELD32(read_data_error, 8, 1);
+        ADD_FIELD32(write_data_error, 9, 1);
+        ADD_FIELD32(desc_control_error, 10, 1);
+        ADD_FIELD32(desc_len_error, 11, 1);
+        ADD_FIELD32(completion_addr_error, 12, 1);
+        ADD_FIELD32(interrupt_config_error, 13, 1);
+        ADD_FIELD32(soft_error, 14, 1);
+        ADD_FIELD32(unaffiliated_error, 15, 1);
     };
+
     CHANERR error;
 
-    void serialize(CheckpointOut &cp) const override
+    void
+    serialize(CheckpointOut &cp) const override
     {
         paramOut(cp, "ctrl", ctrl._data);
         paramOut(cp, "status", status._data);
@@ -223,7 +265,8 @@ struct ChanRegs : public Serializable
         paramOut(cp, "error", error._data);
     }
 
-    void unserialize(CheckpointIn &cp) override
+    void
+    unserialize(CheckpointIn &cp) override
     {
         paramIn(cp, "ctrl", ctrl._data);
         paramIn(cp, "status", status._data);
@@ -232,8 +275,6 @@ struct ChanRegs : public Serializable
         UNSERIALIZE_SCALAR(completionAddr);
         paramIn(cp, "error", error._data);
     }
-
-
 };
 
 } // namespace copy_engine_reg

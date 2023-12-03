@@ -59,6 +59,7 @@ class Args
         for (int i = 0; i < argc; i++)
             args.push_back(argv[i]);
     }
+
     Args(std::initializer_list<std::string> strings) : args(strings) {}
 
     /*
@@ -167,9 +168,17 @@ class Args
         }
     }
 
-    size_t size() { return args.size() - offset; }
+    size_t
+    size()
+    {
+        return args.size() - offset;
+    }
 
-    const std::string &operator [] (size_t idx) { return args[offset + idx]; }
+    const std::string &
+    operator[](size_t idx)
+    {
+        return args[offset + idx];
+    }
 };
 
 #endif // __ARGS_HH__

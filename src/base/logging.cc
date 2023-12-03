@@ -47,7 +47,8 @@
 namespace gem5
 {
 
-namespace {
+namespace
+{
 
 class ExitLogger : public Logger
 {
@@ -70,7 +71,11 @@ class FatalLogger : public ExitLogger
     using ExitLogger::ExitLogger;
 
   protected:
-    void exit() override { ::exit(1); }
+    void
+    exit() override
+    {
+        ::exit(1);
+    }
 };
 
 } // anonymous namespace
@@ -81,33 +86,38 @@ class FatalLogger : public ExitLogger
 // veriables to ensure they are initialized ondemand, so it is also safe to use
 // them inside constructor of other global objects.
 
-Logger&
-Logger::getPanic() {
-    static ExitLogger* panic_logger = new ExitLogger("panic: ");
+Logger &
+Logger::getPanic()
+{
+    static ExitLogger *panic_logger = new ExitLogger("panic: ");
     return *panic_logger;
 }
 
-Logger&
-Logger::getFatal() {
-    static FatalLogger* fatal_logger = new FatalLogger("fatal: ");
+Logger &
+Logger::getFatal()
+{
+    static FatalLogger *fatal_logger = new FatalLogger("fatal: ");
     return *fatal_logger;
 }
 
-Logger&
-Logger::getWarn() {
-    static Logger* warn_logger = new Logger("warn: ");
+Logger &
+Logger::getWarn()
+{
+    static Logger *warn_logger = new Logger("warn: ");
     return *warn_logger;
 }
 
-Logger&
-Logger::getInfo() {
-    static Logger* info_logger = new Logger("info: ");
+Logger &
+Logger::getInfo()
+{
+    static Logger *info_logger = new Logger("info: ");
     return *info_logger;
 }
 
-Logger&
-Logger::getHack() {
-    static Logger* hack_logger = new Logger("hack: ");
+Logger &
+Logger::getHack()
+{
+    static Logger *hack_logger = new Logger("hack: ");
     return *hack_logger;
 }
 

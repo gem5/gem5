@@ -106,14 +106,19 @@ class Shader : public ClockedObject
 
   public:
     typedef ShaderParams Params;
-    enum hsail_mode_e {SIMT,VECTOR_SCALAR};
+
+    enum hsail_mode_e
+    {
+        SIMT,
+        VECTOR_SCALAR
+    };
 
     GPUDispatcher &dispatcher();
     void sampleLoad(const Tick accessTime);
     void sampleStore(const Tick accessTime);
     void sampleInstRoundTrip(std::vector<Tick> roundTripTime);
-    void sampleLineRoundTrip(const std::map<Addr,
-        std::vector<Tick>> &roundTripTime);
+    void sampleLineRoundTrip(
+        const std::map<Addr, std::vector<Tick>> &roundTripTime);
 
     SimpleThread *cpuThread;
     ThreadContext *gpuTc;
@@ -131,13 +136,13 @@ class Shader : public ClockedObject
         return hwRegs[regIdx];
     }
 
-    const ApertureRegister&
+    const ApertureRegister &
     gpuVmApe() const
     {
         return _gpuVmApe;
     }
 
-    const ApertureRegister&
+    const ApertureRegister &
     ldsApe() const
     {
         return _ldsApe;
@@ -150,7 +155,7 @@ class Shader : public ClockedObject
         _ldsApe.limit = limit;
     }
 
-    const ApertureRegister&
+    const ApertureRegister &
     scratchApe() const
     {
         return _scratchApe;
@@ -182,8 +187,8 @@ class Shader : public ClockedObject
     bool
     isScratchApe(Addr addr) const
     {
-        bool is_scratch
-            = addr >= _scratchApe.base && addr <= _scratchApe.limit;
+        bool is_scratch =
+            addr >= _scratchApe.base && addr <= _scratchApe.limit;
 
         return is_scratch;
     }
@@ -240,7 +245,7 @@ class Shader : public ClockedObject
     int n_cu;
     // Number of wavefront slots per SIMD per CU
     int n_wf;
-    //Number of cu units per sqc in the shader
+    // Number of cu units per sqc in the shader
     int n_cu_per_sqc;
 
     // The size of global memory
@@ -253,14 +258,14 @@ class Shader : public ClockedObject
     uint32_t sa_n;
 
     // Pointer to value to be increments
-    std::vector<int*> sa_val;
+    std::vector<int *> sa_val;
     // When to do the increment
     std::vector<uint64_t> sa_when;
     // Amount to increment by
     std::vector<int32_t> sa_x;
 
     // List of Compute Units (CU's)
-    std::vector<ComputeUnit*> cuList;
+    std::vector<ComputeUnit *> cuList;
 
     GPUCommandProcessor &gpuCmdProc;
     GPUDispatcher &_dispatcher;

@@ -49,19 +49,18 @@ namespace ruby
 {
 
 HtmCacheFailure
-HTMSequencer::htmRetCodeConversion(
-    const HtmFailedInCacheReason ruby_ret_code)
+HTMSequencer::htmRetCodeConversion(const HtmFailedInCacheReason ruby_ret_code)
 {
     switch (ruby_ret_code) {
-      case HtmFailedInCacheReason_NO_FAIL:
+    case HtmFailedInCacheReason_NO_FAIL:
         return HtmCacheFailure::NO_FAIL;
-      case HtmFailedInCacheReason_FAIL_SELF:
+    case HtmFailedInCacheReason_FAIL_SELF:
         return HtmCacheFailure::FAIL_SELF;
-      case HtmFailedInCacheReason_FAIL_REMOTE:
+    case HtmFailedInCacheReason_FAIL_REMOTE:
         return HtmCacheFailure::FAIL_REMOTE;
-      case HtmFailedInCacheReason_FAIL_OTHER:
+    case HtmFailedInCacheReason_FAIL_OTHER:
         return HtmCacheFailure::FAIL_OTHER;
-      default:
+    default:
         panic("Invalid htm return code\n");
     }
 }
@@ -78,46 +77,35 @@ HTMSequencer::HTMSequencer(const RubyHTMSequencerParams &p)
     m_htmstart_instruction = 0;
 
     // hardware transactional memory
-    m_htm_transaction_cycles
-        .init(10)
-        .flags(statistics::pdf | statistics::dist | statistics::nozero |
-            statistics::nonan)
-        ;
-    m_htm_transaction_instructions
-        .init(10)
-        .flags(statistics::pdf | statistics::dist | statistics::nozero |
-            statistics::nonan)
-        ;
+    m_htm_transaction_cycles.init(10).flags(
+        statistics::pdf | statistics::dist | statistics::nozero |
+        statistics::nonan);
+    m_htm_transaction_instructions.init(10).flags(
+        statistics::pdf | statistics::dist | statistics::nozero |
+        statistics::nonan);
     auto num_causes = static_cast<int>(HtmFailureFaultCause::NUM_CAUSES);
-    m_htm_transaction_abort_cause
-        .init(num_causes)
+    m_htm_transaction_abort_cause.init(num_causes)
         .flags(statistics::total | statistics::pdf | statistics::dist |
-            statistics::nozero)
-        ;
+               statistics::nozero);
 
     for (unsigned cause_idx = 0; cause_idx < num_causes; ++cause_idx) {
         m_htm_transaction_abort_cause.subname(
-            cause_idx,
-            htmFailureToStr(HtmFailureFaultCause(cause_idx)));
+            cause_idx, htmFailureToStr(HtmFailureFaultCause(cause_idx)));
     }
-
 }
 
-HTMSequencer::~HTMSequencer()
-{
-}
+HTMSequencer::~HTMSequencer() {}
 
 void
-HTMSequencer::htmCallback(Addr address,
-                       const HtmCallbackMode mode,
-                       const HtmFailedInCacheReason htm_return_code)
+HTMSequencer::htmCallback(Addr address, const HtmCallbackMode mode,
+                          const HtmFailedInCacheReason htm_return_code)
 {
     // mode=0: HTM command
     // mode=1: transaction failed - inform via LD
     // mode=2: transaction failed - inform via ST
 
     if (mode == HtmCallbackMode_HTM_CMD) {
-        SequencerRequest* request = nullptr;
+        SequencerRequest *request = nullptr;
 
         assert(m_htmCmdRequestTable.size() > 0);
 
@@ -130,9 +118,9 @@ HTMSequencer::htmCallback(Addr address,
         delete request;
 
         // valid responses have zero as the payload
-        uint8_t* dataptr = pkt->getPtr<uint8_t>();
+        uint8_t *dataptr = pkt->getPtr<uint8_t>();
         memset(dataptr, 0, pkt->getSize());
-        *dataptr = (uint8_t) htm_return_code;
+        *dataptr = (uint8_t)htm_return_code;
 
         // record stats
         if (htm_return_code == HtmFailedInCacheReason_NO_FAIL) {
@@ -149,7 +137,7 @@ HTMSequencer::htmCallback(Addr address,
                 Counter transaction_instructions =
                     pkt->req->getInstCount() - m_htmstart_instruction;
                 m_htm_transaction_instructions.sample(
-                  transaction_instructions);
+                    transaction_instructions);
                 m_htmstart_instruction = 0;
                 DPRINTF(HtmMem, "htmCommit - htmUid=%u\n",
                         pkt->getHtmTransactionUid());
@@ -159,12 +147,11 @@ HTMSequencer::htmCallback(Addr address,
                 auto cause_idx = static_cast<int>(cause);
                 m_htm_transaction_abort_cause[cause_idx]++;
                 DPRINTF(HtmMem, "htmAbort - reason=%s - htmUid=%u\n",
-                        htmFailureToStr(cause),
-                        pkt->getHtmTransactionUid());
+                        htmFailureToStr(cause), pkt->getHtmTransactionUid());
             }
         } else {
             DPRINTF(HtmMem, "HTM_CMD: fail - htmUid=%u\n",
-                pkt->getHtmTransactionUid());
+                    pkt->getHtmTransactionUid());
         }
 
         rubyHtmCallback(pkt, htm_return_code);
@@ -189,11 +176,11 @@ HTMSequencer::htmCallback(Addr address,
                 pkt->req->setExtraData(0);
             }
 
-            DPRINTF(HtmMem, "%s_FAIL: size=%d - "
-                            "addr=0x%lx - htmUid=%d\n",
-                            (mode == HtmCallbackMode_LD_FAIL) ? "LD" : "ST",
-                            pkt->getSize(),
-                            address, pkt->getHtmTransactionUid());
+            DPRINTF(HtmMem,
+                    "%s_FAIL: size=%d - "
+                    "addr=0x%lx - htmUid=%d\n",
+                    (mode == HtmCallbackMode_LD_FAIL) ? "LD" : "ST",
+                    pkt->getSize(), address, pkt->getHtmTransactionUid());
 
             rubyHtmCallback(pkt, htm_return_code);
             testDrainComplete();
@@ -211,7 +198,7 @@ HTMSequencer::htmCallback(Addr address,
 
 void
 HTMSequencer::rubyHtmCallback(PacketPtr pkt,
-                          const HtmFailedInCacheReason htm_return_code)
+                              const HtmFailedInCacheReason htm_return_code)
 {
     // The packet was destined for memory and has not yet been turned
     // into a response
@@ -222,13 +209,14 @@ HTMSequencer::rubyHtmCallback(PacketPtr pkt,
     RubyPort::SenderState *senderState =
         safe_cast<RubyPort::SenderState *>(pkt->popSenderState());
 
-    MemResponsePort *port = safe_cast<MemResponsePort*>(senderState->port);
+    MemResponsePort *port = safe_cast<MemResponsePort *>(senderState->port);
     assert(port != nullptr);
     delete senderState;
 
-    //port->htmCallback(pkt, htm_return_code);
-    DPRINTF(HtmMem, "HTM callback: start=%d, commit=%d, "
-                    "cancel=%d, rc=%d\n",
+    // port->htmCallback(pkt, htm_return_code);
+    DPRINTF(HtmMem,
+            "HTM callback: start=%d, commit=%d, "
+            "cancel=%d, rc=%d\n",
             pkt->req->isHTMStart(), pkt->req->isHTMCommit(),
             pkt->req->isHTMCancel(), htm_return_code);
 
@@ -254,13 +242,13 @@ HTMSequencer::wakeup()
     Cycles current_time = curCycle();
 
     // hardware transactional memory commands
-    std::deque<SequencerRequest*>::iterator htm =
-      m_htmCmdRequestTable.begin();
-    std::deque<SequencerRequest*>::iterator htm_end =
-      m_htmCmdRequestTable.end();
+    std::deque<SequencerRequest *>::iterator htm =
+        m_htmCmdRequestTable.begin();
+    std::deque<SequencerRequest *>::iterator htm_end =
+        m_htmCmdRequestTable.end();
 
     for (; htm != htm_end; ++htm) {
-        SequencerRequest* request = *htm;
+        SequencerRequest *request = *htm;
         if (current_time - request->issue_time < m_deadlock_threshold)
             continue;
 
@@ -271,7 +259,7 @@ HTMSequencer::wakeup()
               current_time * clockPeriod(),
               request->issue_time * clockPeriod(),
               (current_time * clockPeriod()) -
-              (request->issue_time * clockPeriod()));
+                  (request->issue_time * clockPeriod()));
     }
 }
 
@@ -297,13 +285,12 @@ operator<<(std::ostream &out, const std::deque<VALUE> &queue)
 }
 
 void
-HTMSequencer::print(std::ostream& out) const
+HTMSequencer::print(std::ostream &out) const
 {
     Sequencer::print(out);
 
     out << "+ [HTMSequencer: " << m_version
-        << ", htm cmd request table: " << m_htmCmdRequestTable
-        << "]";
+        << ", htm cmd request table: " << m_htmCmdRequestTable << "]";
 }
 
 // Insert the request in the request table. Return RequestStatus_Aliased
@@ -320,9 +307,8 @@ HTMSequencer::insertRequest(PacketPtr pkt, RubyRequestType primary_type,
             return RequestStatus_BufferFull;
 
         // insert request into HtmCmd queue
-        SequencerRequest* htmReq =
-            new SequencerRequest(pkt, primary_type, secondary_type,
-                curCycle());
+        SequencerRequest *htmReq = new SequencerRequest(
+            pkt, primary_type, secondary_type, curCycle());
         assert(htmReq);
         m_htmCmdRequestTable.push_back(htmReq);
         return RequestStatus_Ready;

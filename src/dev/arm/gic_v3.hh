@@ -64,32 +64,27 @@ class Gicv3Registers
                            ArmISA::MiscRegIndex misc_reg) = 0;
 
     virtual void writeDistributor(Addr daddr, uint32_t data) = 0;
-    virtual void writeRedistributor(const ArmISA::Affinity &aff,
-                                    Addr daddr, uint32_t data) = 0;
+    virtual void writeRedistributor(const ArmISA::Affinity &aff, Addr daddr,
+                                    uint32_t data) = 0;
     virtual void writeCpu(const ArmISA::Affinity &aff,
                           ArmISA::MiscRegIndex misc_reg, RegVal data) = 0;
 
   protected:
-    static void copyDistRegister(Gicv3Registers* from,
-                                 Gicv3Registers* to,
+    static void copyDistRegister(Gicv3Registers *from, Gicv3Registers *to,
                                  Addr daddr);
-    static void copyRedistRegister(Gicv3Registers* from,
-                                   Gicv3Registers* to,
+    static void copyRedistRegister(Gicv3Registers *from, Gicv3Registers *to,
                                    const ArmISA::Affinity &aff, Addr daddr);
-    static void copyCpuRegister(Gicv3Registers* from,
-                                Gicv3Registers* to,
+    static void copyCpuRegister(Gicv3Registers *from, Gicv3Registers *to,
                                 const ArmISA::Affinity &aff,
                                 ArmISA::MiscRegIndex misc_reg);
-    static void clearRedistRegister(Gicv3Registers* to,
+    static void clearRedistRegister(Gicv3Registers *to,
                                     const ArmISA::Affinity &aff, Addr daddr);
-    static void copyRedistRange(Gicv3Registers* from,
-                                Gicv3Registers* to,
-                                const ArmISA::Affinity &aff,
-                                Addr daddr, size_t size);
-    static void copyDistRange(Gicv3Registers* from,
-                              Gicv3Registers* to,
+    static void copyRedistRange(Gicv3Registers *from, Gicv3Registers *to,
+                                const ArmISA::Affinity &aff, Addr daddr,
+                                size_t size);
+    static void copyDistRange(Gicv3Registers *from, Gicv3Registers *to,
                               Addr daddr, size_t size);
-    static void clearDistRange(Gicv3Registers* to, Addr daddr, size_t size);
+    static void clearDistRange(Gicv3Registers *to, Addr daddr, size_t size);
 };
 
 class Gicv3 : public BaseGic, public Gicv3Registers
@@ -99,17 +94,16 @@ class Gicv3 : public BaseGic, public Gicv3Registers
     friend class Gicv3Redistributor;
     friend class Gicv3Distributor;
 
-    Gicv3Distributor * distributor;
+    Gicv3Distributor *distributor;
     std::vector<Gicv3Redistributor *> redistributors;
     std::vector<Gicv3CPUInterface *> cpuInterfaces;
-    Gicv3Its * its;
+    Gicv3Its *its;
     AddrRange distRange;
     AddrRange redistRange;
     AddrRangeList addrRanges;
     uint64_t redistSize;
 
   public:
-
     // Special interrupt IDs, as per SPEC 2.2.1 section
     static const int INTID_SECURE = 1020;
     static const int INTID_NONSECURE = 1021;
@@ -144,7 +138,6 @@ class Gicv3 : public BaseGic, public Gicv3Registers
     };
 
   protected:
-
     void clearInt(uint32_t int_id) override;
     void clearPPInt(uint32_t int_id, uint32_t cpu) override;
 
@@ -162,14 +155,14 @@ class Gicv3 : public BaseGic, public Gicv3Registers
     void reset();
     void sendInt(uint32_t int_id) override;
     void sendPPInt(uint32_t int_id, uint32_t cpu) override;
-    void serialize(CheckpointOut & cp) const override;
-    void unserialize(CheckpointIn & cp) override;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
     Tick write(PacketPtr pkt) override;
     bool supportsVersion(GicVersion version) override;
 
-    template<typename... Args>
+    template <typename... Args>
     void
-    reserved(const char* fmt, Args... args) const
+    reserved(const char *fmt, Args... args) const
     {
         if (params().reserved_is_res0) {
             warn(fmt, args...);
@@ -179,7 +172,6 @@ class Gicv3 : public BaseGic, public Gicv3Registers
     }
 
   public:
-
     Gicv3(const Params &p);
     void deassertInt(uint32_t cpu, ArmISA::InterruptTypes int_type);
     void deassertAll(uint32_t cpu);
@@ -212,15 +204,14 @@ class Gicv3 : public BaseGic, public Gicv3Registers
     Gicv3Redistributor *
     getRedistributorByAffinity(const ArmISA::Affinity &aff) const;
 
-    Gicv3Redistributor *
-    getRedistributorByAddr(Addr address) const;
+    Gicv3Redistributor *getRedistributorByAddr(Addr address) const;
 
     void postInt(uint32_t cpu, ArmISA::InterruptTypes int_type);
 
     void update();
 
   protected: // GIC state transfer
-    void copyGicState(Gicv3Registers* from, Gicv3Registers* to);
+    void copyGicState(Gicv3Registers *from, Gicv3Registers *to);
 
   public: // Gicv3Registers
     uint32_t readDistributor(Addr daddr) override;
@@ -230,10 +221,10 @@ class Gicv3 : public BaseGic, public Gicv3Registers
                    ArmISA::MiscRegIndex misc_reg) override;
 
     void writeDistributor(Addr daddr, uint32_t data) override;
-    void writeRedistributor(const ArmISA::Affinity &aff,
-                            Addr daddr, uint32_t data) override;
-    void writeCpu(const ArmISA::Affinity &aff,
-                  ArmISA::MiscRegIndex misc_reg, RegVal data) override;
+    void writeRedistributor(const ArmISA::Affinity &aff, Addr daddr,
+                            uint32_t data) override;
+    void writeCpu(const ArmISA::Affinity &aff, ArmISA::MiscRegIndex misc_reg,
+                  RegVal data) override;
 };
 
 } // namespace gem5

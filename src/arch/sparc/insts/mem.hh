@@ -50,8 +50,9 @@ class Mem : public SparcStaticInst
   protected:
     using SparcStaticInst::SparcStaticInst;
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -60,14 +61,14 @@ class Mem : public SparcStaticInst
 class MemImm : public Mem
 {
   protected:
-
     // Constructor
-    MemImm(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-        Mem(mnem, _machInst, __opClass), imm(szext<13>(_machInst))
+    MemImm(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+        : Mem(mnem, _machInst, __opClass), imm(szext<13>(_machInst))
     {}
 
-    std::string generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const override;
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 
     const int32_t imm;
 };

@@ -80,11 +80,11 @@ class CacheMemory : public SimObject
     // Public Methods
     // perform a cache access and see if we hit or not.  Return true on a hit.
     bool tryCacheAccess(Addr address, RubyRequestType type,
-                        DataBlock*& data_ptr);
+                        DataBlock *&data_ptr);
 
     // similar to above, but doesn't require full access check
     bool testCacheAccess(Addr address, RubyRequestType type,
-                         DataBlock*& data_ptr);
+                         DataBlock *&data_ptr);
 
     // tests to see if an address is present in the cache
     bool isTagPresent(Addr address) const;
@@ -95,15 +95,17 @@ class CacheMemory : public SimObject
     bool cacheAvail(Addr address) const;
 
     // Returns a NULL entry that acts as a placeholder for invalid lines
-    AbstractCacheEntry*
+    AbstractCacheEntry *
     getNullEntry() const
     {
         return nullptr;
     }
 
     // find an unused entry and sets the tag appropriate for the address
-    AbstractCacheEntry* allocate(Addr address, AbstractCacheEntry* new_entry);
-    void allocateVoid(Addr address, AbstractCacheEntry* new_entry)
+    AbstractCacheEntry *allocate(Addr address, AbstractCacheEntry *new_entry);
+
+    void
+    allocateVoid(Addr address, AbstractCacheEntry *new_entry)
     {
         allocate(address, new_entry);
     }
@@ -115,22 +117,31 @@ class CacheMemory : public SimObject
     Addr cacheProbe(Addr address) const;
 
     // looks an address up in the cache
-    AbstractCacheEntry* lookup(Addr address);
-    const AbstractCacheEntry* lookup(Addr address) const;
+    AbstractCacheEntry *lookup(Addr address);
+    const AbstractCacheEntry *lookup(Addr address) const;
 
-    Cycles getTagLatency() const { return tagArray.getLatency(); }
-    Cycles getDataLatency() const { return dataArray.getLatency(); }
+    Cycles
+    getTagLatency() const
+    {
+        return tagArray.getLatency();
+    }
+
+    Cycles
+    getDataLatency() const
+    {
+        return dataArray.getLatency();
+    }
 
     bool isBlockInvalid(int64_t cache_set, int64_t loc);
     bool isBlockNotBusy(int64_t cache_set, int64_t loc);
 
     // Hook for checkpointing the contents of the cache
-    void recordCacheContents(int cntrl, CacheRecorder* tr) const;
+    void recordCacheContents(int cntrl, CacheRecorder *tr) const;
 
     // Set this address to most recently used
     void setMRU(Addr address);
     void setMRU(Addr addr, int occupancy);
-    void setMRU(AbstractCacheEntry* entry);
+    void setMRU(AbstractCacheEntry *entry);
     int getReplacementWeight(int64_t set, int64_t loc);
 
     // Functions for locking and unlocking cache lines corresponding to the
@@ -138,14 +149,14 @@ class CacheMemory : public SimObject
     // accesses.  These are to be used when only the address of the cache entry
     // is available.  In case the entry itself is available. use the functions
     // provided by the AbstractCacheEntry class.
-    void setLocked (Addr addr, int context);
-    void clearLocked (Addr addr);
-    void clearLockedAll (int context);
-    bool isLocked (Addr addr, int context);
+    void setLocked(Addr addr, int context);
+    void clearLocked(Addr addr);
+    void clearLockedAll(int context);
+    bool isLocked(Addr addr, int context);
 
     // Print cache contents
-    void print(std::ostream& out) const;
-    void printData(std::ostream& out) const;
+    void print(std::ostream &out) const;
+    void printData(std::ostream &out) const;
 
     bool checkResourceAvailable(CacheResourceType res, Addr addr);
     void recordRequestType(CacheRequestType requestType, Addr addr);
@@ -155,9 +166,24 @@ class CacheMemory : public SimObject
     void htmCommitTransaction();
 
   public:
-    int getCacheSize() const { return m_cache_size; }
-    int getCacheAssoc() const { return m_cache_assoc; }
-    int getNumBlocks() const { return m_cache_num_sets * m_cache_assoc; }
+    int
+    getCacheSize() const
+    {
+        return m_cache_size;
+    }
+
+    int
+    getCacheAssoc() const
+    {
+        return m_cache_assoc;
+    }
+
+    int
+    getNumBlocks() const
+    {
+        return m_cache_num_sets * m_cache_assoc;
+    }
+
     Addr getAddressAtIdx(int idx) const;
 
   private:
@@ -170,8 +196,8 @@ class CacheMemory : public SimObject
     int findTagInSetIgnorePermissions(int64_t cacheSet, Addr tag) const;
 
     // Private copy constructor and assignment operator
-    CacheMemory(const CacheMemory& obj);
-    CacheMemory& operator=(const CacheMemory& obj);
+    CacheMemory(const CacheMemory &obj);
+    CacheMemory &operator=(const CacheMemory &obj);
 
   private:
     // Data Members (m_prefix)
@@ -180,7 +206,7 @@ class CacheMemory : public SimObject
     // The first index is the # of cache lines.
     // The second index is the the amount associativity.
     std::unordered_map<Addr, int> m_tag_index;
-    std::vector<std::vector<AbstractCacheEntry*> > m_cache;
+    std::vector<std::vector<AbstractCacheEntry *> > m_cache;
 
     /** We use the replacement policies from the Classic memory system. */
     replacement_policy::Base *m_replacementPolicy_ptr;
@@ -213,49 +239,49 @@ class CacheMemory : public SimObject
      */
     bool m_use_occupancy;
 
-    private:
-      struct CacheMemoryStats : public statistics::Group
-      {
-          CacheMemoryStats(statistics::Group *parent);
+  private:
+    struct CacheMemoryStats : public statistics::Group
+    {
+        CacheMemoryStats(statistics::Group *parent);
 
-          statistics::Scalar numDataArrayReads;
-          statistics::Scalar numDataArrayWrites;
-          statistics::Scalar numTagArrayReads;
-          statistics::Scalar numTagArrayWrites;
+        statistics::Scalar numDataArrayReads;
+        statistics::Scalar numDataArrayWrites;
+        statistics::Scalar numTagArrayReads;
+        statistics::Scalar numTagArrayWrites;
 
-          statistics::Scalar numTagArrayStalls;
-          statistics::Scalar numDataArrayStalls;
+        statistics::Scalar numTagArrayStalls;
+        statistics::Scalar numDataArrayStalls;
 
-          statistics::Scalar numAtomicALUOperations;
-          statistics::Scalar numAtomicALUArrayStalls;
+        statistics::Scalar numAtomicALUOperations;
+        statistics::Scalar numAtomicALUArrayStalls;
 
-          // hardware transactional memory
-          statistics::Histogram htmTransCommitReadSet;
-          statistics::Histogram htmTransCommitWriteSet;
-          statistics::Histogram htmTransAbortReadSet;
-          statistics::Histogram htmTransAbortWriteSet;
+        // hardware transactional memory
+        statistics::Histogram htmTransCommitReadSet;
+        statistics::Histogram htmTransCommitWriteSet;
+        statistics::Histogram htmTransAbortReadSet;
+        statistics::Histogram htmTransAbortWriteSet;
 
-          statistics::Scalar m_demand_hits;
-          statistics::Scalar m_demand_misses;
-          statistics::Formula m_demand_accesses;
+        statistics::Scalar m_demand_hits;
+        statistics::Scalar m_demand_misses;
+        statistics::Formula m_demand_accesses;
 
-          statistics::Scalar m_prefetch_hits;
-          statistics::Scalar m_prefetch_misses;
-          statistics::Formula m_prefetch_accesses;
+        statistics::Scalar m_prefetch_hits;
+        statistics::Scalar m_prefetch_misses;
+        statistics::Formula m_prefetch_accesses;
 
-          statistics::Vector m_accessModeType;
-      } cacheMemoryStats;
+        statistics::Vector m_accessModeType;
+    } cacheMemoryStats;
 
-    public:
-      // These function increment the number of demand hits/misses by one
-      // each time they are called
-      void profileDemandHit();
-      void profileDemandMiss();
-      void profilePrefetchHit();
-      void profilePrefetchMiss();
+  public:
+    // These function increment the number of demand hits/misses by one
+    // each time they are called
+    void profileDemandHit();
+    void profileDemandMiss();
+    void profilePrefetchHit();
+    void profilePrefetchMiss();
 };
 
-std::ostream& operator<<(std::ostream& out, const CacheMemory& obj);
+std::ostream &operator<<(std::ostream &out, const CacheMemory &obj);
 
 } // namespace ruby
 } // namespace gem5

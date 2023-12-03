@@ -59,8 +59,8 @@ enum STAT_STATUS
 enum DISPATCH_STATUS
 {
     EMPTY = 0, // no wave present in dispatchList slot
-    EXREADY, // wave ready for execution
-    SKIP, // extra memory resource needed, Shared Mem. only
+    EXREADY,   // wave ready for execution
+    SKIP,      // extra memory resource needed, Shared Mem. only
 };
 
 // Execution stage.
@@ -75,14 +75,20 @@ class ExecStage
   public:
     ExecStage(const ComputeUnitParams &p, ComputeUnit &cu,
               ScheduleToExecute &from_schedule);
-    ~ExecStage() { }
+
+    ~ExecStage() {}
+
     void init();
     void exec();
 
     std::string dispStatusToStr(int j);
     void dumpDispList();
 
-    const std::string& name() const { return _name; }
+    const std::string &
+    name() const
+    {
+        return _name;
+    }
 
   private:
     void collectStatistics(enum STAT_STATUS stage, int unitId);

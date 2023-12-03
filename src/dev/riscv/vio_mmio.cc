@@ -51,15 +51,16 @@ namespace RiscvISA
 
 MmioVirtIO::MmioVirtIO(const RiscvMmioVirtIOParams &params)
     : PlicIntDevice(params),
-      hostFeaturesSelect(0), guestFeaturesSelect(0), pageSize(0),
-      interruptStatus(0), vio(*params.vio)
+      hostFeaturesSelect(0),
+      guestFeaturesSelect(0),
+      pageSize(0),
+      interruptStatus(0),
+      vio(*params.vio)
 {
     vio.registerKickCallback([this]() { kick(); });
 }
 
-MmioVirtIO::~MmioVirtIO()
-{
-}
+MmioVirtIO::~MmioVirtIO() {}
 
 Tick
 MmioVirtIO::read(PacketPtr pkt)
@@ -87,73 +88,72 @@ MmioVirtIO::read(PacketPtr pkt)
 uint32_t
 MmioVirtIO::read(Addr offset)
 {
-    switch(offset) {
-      case OFF_MAGIC:
+    switch (offset) {
+    case OFF_MAGIC:
         return MAGIC;
 
-      case OFF_VERSION:
+    case OFF_VERSION:
         return VERSION;
 
-      case OFF_DEVICE_ID:
+    case OFF_DEVICE_ID:
         return vio.deviceId;
 
-      case OFF_VENDOR_ID:
+    case OFF_VENDOR_ID:
         return VENDOR_ID;
 
-      case OFF_HOST_FEATURES:
+    case OFF_HOST_FEATURES:
         // We only implement 32 bits of this register
         if (hostFeaturesSelect == 0)
             return vio.deviceFeatures;
         else
             return 0;
 
-      case OFF_HOST_FEATURES_SELECT:
+    case OFF_HOST_FEATURES_SELECT:
         return hostFeaturesSelect;
 
-      case OFF_GUEST_FEATURES:
+    case OFF_GUEST_FEATURES:
         // We only implement 32 bits of this register
         if (guestFeaturesSelect == 0)
             return vio.getGuestFeatures();
         else
             return 0;
 
-      case OFF_GUEST_FEATURES_SELECT:
+    case OFF_GUEST_FEATURES_SELECT:
         return hostFeaturesSelect;
 
-      case OFF_GUEST_PAGE_SIZE:
+    case OFF_GUEST_PAGE_SIZE:
         return pageSize;
 
-      case OFF_QUEUE_SELECT:
+    case OFF_QUEUE_SELECT:
         return vio.getQueueSelect();
 
-      case OFF_QUEUE_NUM_MAX:
+    case OFF_QUEUE_NUM_MAX:
         return vio.getQueueSize();
 
-      case OFF_QUEUE_NUM:
+    case OFF_QUEUE_NUM:
         // TODO: We don't support queue resizing, so ignore this for now.
         return vio.getQueueSize();
 
-      case OFF_QUEUE_ALIGN:
+    case OFF_QUEUE_ALIGN:
         // TODO: Implement this once we support other alignment sizes
         return VirtQueue::ALIGN_SIZE;
 
-      case OFF_QUEUE_PFN:
+    case OFF_QUEUE_PFN:
         return vio.getQueueAddress();
 
-      case OFF_INTERRUPT_STATUS:
+    case OFF_INTERRUPT_STATUS:
         return interruptStatus;
 
-      case OFF_STATUS:
+    case OFF_STATUS:
         return vio.getDeviceStatus();
 
         // Write-only registers
-      case OFF_QUEUE_NOTIFY:
-      case OFF_INTERRUPT_ACK:
-        warn("Guest is trying to read to write-only register 0x%\n",
-             offset);
+    case OFF_QUEUE_NOTIFY:
+    case OFF_INTERRUPT_ACK:
+        warn("Guest is trying to read to write-only register 0x%\n", offset);
         return 0;
 
-      default:
+    default:
         panic("Unhandled read offset (0x%x)\n", offset);
     }
 }
@@ -182,12 +182,12 @@ MmioVirtIO::write(PacketPtr pkt)
 void
 MmioVirtIO::write(Addr offset, uint32_t value)
 {
-    switch(offset) {
-      case OFF_HOST_FEATURES_SELECT:
+    switch (offset) {
+    case OFF_HOST_FEATURES_SELECT:
         hostFeaturesSelect = value;
         return;
 
-      case OFF_GUEST_FEATURES:
+    case OFF_GUEST_FEATURES:
         if (guestFeaturesSelect == 0) {
             vio.setGuestFeatures(value);
         } else if (value != 0) {
@@ -196,63 +196,62 @@ MmioVirtIO::write(Addr offset, uint32_t value)
         }
         return;
 
-      case OFF_GUEST_FEATURES_SELECT:
+    case OFF_GUEST_FEATURES_SELECT:
         guestFeaturesSelect = value;
         return;
 
-      case OFF_GUEST_PAGE_SIZE:
+    case OFF_GUEST_PAGE_SIZE:
         // TODO: We only support 4096 byte pages at the moment
         panic_if(value != VirtQueue::ALIGN_SIZE,
                  "Unhandled VirtIO page size: %u", value);
         pageSize = value;
         return;
 
-      case OFF_QUEUE_SELECT:
+    case OFF_QUEUE_SELECT:
         vio.setQueueSelect(value);
         return;
 
-      case OFF_QUEUE_NUM:
+    case OFF_QUEUE_NUM:
         // TODO: We don't support queue resizing, so ignore this for now.
         warn_once("Ignoring queue resize hint. Requested size: %u\n", value);
         return;
 
-      case OFF_QUEUE_ALIGN:
+    case OFF_QUEUE_ALIGN:
         // TODO: We currently only support the hard-coded 4k alignment used
         // in legacy VirtIO.
         panic_if(value != VirtQueue::ALIGN_SIZE,
                  "Unhandled VirtIO alignment size: %u", value);
         return;
 
-      case OFF_QUEUE_PFN:
+    case OFF_QUEUE_PFN:
         vio.setQueueAddress(value);
         return;
 
-      case OFF_QUEUE_NOTIFY:
+    case OFF_QUEUE_NOTIFY:
         vio.onNotify(value);
         return;
 
-      case OFF_INTERRUPT_ACK:
+    case OFF_INTERRUPT_ACK:
         setInterrupts(interruptStatus & (~value));
         return;
 
-      case OFF_STATUS:
+    case OFF_STATUS:
         panic_if(value > 0xff, "Unexpected status: 0x%x\n", value);
         vio.setDeviceStatus(value);
         return;
 
         /* Read-only registers */
-      case OFF_MAGIC:
-      case OFF_VERSION:
-      case OFF_DEVICE_ID:
-      case OFF_VENDOR_ID:
-      case OFF_HOST_FEATURES:
-      case OFF_QUEUE_NUM_MAX:
-      case OFF_INTERRUPT_STATUS:
-        warn("Guest is trying to write to read-only register 0x%\n",
-             offset);
+    case OFF_MAGIC:
+    case OFF_VERSION:
+    case OFF_DEVICE_ID:
+    case OFF_VENDOR_ID:
+    case OFF_HOST_FEATURES:
+    case OFF_QUEUE_NUM_MAX:
+    case OFF_INTERRUPT_STATUS:
+        warn("Guest is trying to write to read-only register 0x%\n", offset);
         return;
 
-      default:
+    default:
         panic("Unhandled read offset (0x%x)\n", offset);
     }
 }

@@ -67,13 +67,12 @@ class ThreadInfo
 
   public:
     ThreadInfo(ThreadContext *_tc)
-        : tc(_tc), sys(tc->getSystemPtr()),
-        byteOrder(tc->getSystemPtr()->getGuestByteOrder())
-    {
-
-    }
-    ~ThreadInfo()
+        : tc(_tc),
+          sys(tc->getSystemPtr()),
+          byteOrder(tc->getSystemPtr()->getGuestByteOrder())
     {}
+
+    ~ThreadInfo() {}
 
     virtual Addr
     curThreadInfo()
@@ -160,8 +159,8 @@ class ThreadInfo
             return "FailureIn_curTaskName";
 
         char buffer[size + 1];
-        TranslatingPortProxy(tc).readString(
-                buffer, task_struct + offset, size);
+        TranslatingPortProxy(tc).readString(buffer, task_struct + offset,
+                                            size);
 
         return buffer;
     }

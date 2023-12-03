@@ -26,17 +26,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /**
-  * Implementation of the Signature Path Prefetcher (v2)
-  *
-  * References:
-  *     Path confidence based lookahead prefetching
-  *     Jinchun Kim, Seth H. Pugsley, Paul V. Gratz, A. L. Narasimha Reddy,
-  *     Chris Wilkerson, and Zeshan Chishti. 2016.
-  *     In The 49th Annual IEEE/ACM International Symposium on
-  *     Microarchitecture (MICRO-49). IEEE Press, Piscataway, NJ, USA,
-  *     Article 60, 12 pages.
-  */
+/**
+ * Implementation of the Signature Path Prefetcher (v2)
+ *
+ * References:
+ *     Path confidence based lookahead prefetching
+ *     Jinchun Kim, Seth H. Pugsley, Paul V. Gratz, A. L. Narasimha Reddy,
+ *     Chris Wilkerson, and Zeshan Chishti. 2016.
+ *     In The 49th Annual IEEE/ACM International Symposium on
+ *     Microarchitecture (MICRO-49). IEEE Press, Piscataway, NJ, USA,
+ *     Article 60, 12 pages.
+ */
 
 #ifndef __MEM_CACHE_PREFETCH_SIGNATURE_PATH_V2_HH__
 #define __MEM_CACHE_PREFETCH_SIGNATURE_PATH_V2_HH__
@@ -62,36 +62,44 @@ class SignaturePathV2 : public SignaturePath
         double confidence;
         stride_t lastBlock;
         stride_t delta;
-        GlobalHistoryEntry() : signature(0), confidence(0.0), lastBlock(0),
-                               delta(0) {}
+
+        GlobalHistoryEntry()
+            : signature(0), confidence(0.0), lastBlock(0), delta(0)
+        {}
     };
+
     /** Global History Register */
     AssociativeSet<GlobalHistoryEntry> globalHistoryRegister;
 
-    double calculateLookaheadConfidence(PatternEntry const &sig,
-            PatternStrideEntry const &lookahead) const override;
+    double calculateLookaheadConfidence(
+        PatternEntry const &sig,
+        PatternStrideEntry const &lookahead) const override;
 
-    double calculatePrefetchConfidence(PatternEntry const &sig,
-            PatternStrideEntry const &lookahead) const override;
+    double calculatePrefetchConfidence(
+        PatternEntry const &sig,
+        PatternStrideEntry const &lookahead) const override;
 
-    void increasePatternEntryCounter(PatternEntry &pattern_entry,
-            PatternStrideEntry &pstride_entry) override;
+    void
+    increasePatternEntryCounter(PatternEntry &pattern_entry,
+                                PatternStrideEntry &pstride_entry) override;
 
     void handleSignatureTableMiss(stride_t current_block,
-            signature_t &new_signature, double &new_conf,
-            stride_t &new_stride) override;
+                                  signature_t &new_signature, double &new_conf,
+                                  stride_t &new_stride) override;
 
     /**
      * In this version of the Signature Path Prefetcher, there is no auxiliary
      * prefetcher, so this function does not perform any actions.
      */
-    void auxiliaryPrefetcher(Addr ppn, stride_t current_block, bool is_secure,
-            std::vector<AddrPriority> &addresses) override
+    void
+    auxiliaryPrefetcher(Addr ppn, stride_t current_block, bool is_secure,
+                        std::vector<AddrPriority> &addresses) override
     {}
 
     virtual void handlePageCrossingLookahead(signature_t signature,
-            stride_t last_offset, stride_t delta, double path_confidence)
-            override;
+                                             stride_t last_offset,
+                                             stride_t delta,
+                                             double path_confidence) override;
 
   public:
     SignaturePathV2(const SignaturePathPrefetcherV2Params &p);
@@ -101,4 +109,4 @@ class SignaturePathV2 : public SignaturePath
 } // namespace prefetch
 } // namespace gem5
 
-#endif//__MEM_CACHE_PREFETCH_SIGNATURE_PATH_V2_HH__
+#endif //__MEM_CACHE_PREFETCH_SIGNATURE_PATH_V2_HH__

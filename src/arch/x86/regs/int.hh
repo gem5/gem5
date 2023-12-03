@@ -51,14 +51,14 @@ namespace X86ISA
 {
 
 BitUnion64(X86IntReg)
-    Bitfield<63,0> R;
-    SignedBitfield<63,0> SR;
-    Bitfield<31,0> E;
-    SignedBitfield<31,0> SE;
-    Bitfield<15,0> X;
-    SignedBitfield<15,0> SX;
-    Bitfield<15,8> H;
-    SignedBitfield<15,8> SH;
+    Bitfield<63, 0> R;
+    SignedBitfield<63, 0> SR;
+    Bitfield<31, 0> E;
+    SignedBitfield<31, 0> SE;
+    Bitfield<15, 0> X;
+    SignedBitfield<15, 0> SX;
+    Bitfield<15, 8> H;
+    SignedBitfield<15, 8> SH;
     Bitfield<7, 0> L;
     SignedBitfield<7, 0> SL;
 EndBitUnion(X86IntReg)
@@ -110,8 +110,8 @@ class FlatIntRegClassOps : public RegClassOps
 inline constexpr FlatIntRegClassOps flatIntRegClassOps;
 
 inline constexpr RegClass flatIntRegClass =
-    RegClass(IntRegClass, IntRegClassName, int_reg::NumRegs, debug::IntRegs).
-    ops(flatIntRegClassOps);
+    RegClass(IntRegClass, IntRegClassName, int_reg::NumRegs, debug::IntRegs)
+        .ops(flatIntRegClassOps);
 
 class IntRegClassOps : public FlatIntRegClassOps
 {
@@ -121,56 +121,42 @@ class IntRegClassOps : public FlatIntRegClassOps
 inline constexpr IntRegClassOps intRegClassOps;
 
 inline constexpr RegClass intRegClass =
-    RegClass(IntRegClass, IntRegClassName, int_reg::NumRegs, debug::IntRegs).
-    ops(intRegClassOps).
-    needsFlattening();
+    RegClass(IntRegClass, IntRegClassName, int_reg::NumRegs, debug::IntRegs)
+        .ops(intRegClassOps)
+        .needsFlattening();
 
 namespace int_reg
 {
 
-inline constexpr RegId
-    Rax = intRegClass[_RaxIdx],
-    Rcx = intRegClass[_RcxIdx],
-    Rdx = intRegClass[_RdxIdx],
-    Rbx = intRegClass[_RbxIdx],
-    Rsp = intRegClass[_RspIdx],
-    Rbp = intRegClass[_RbpIdx],
-    Rsi = intRegClass[_RsiIdx],
-    Rdi = intRegClass[_RdiIdx],
-    R8 = intRegClass[_R8Idx],
-    R9 = intRegClass[_R9Idx],
-    R10 = intRegClass[_R10Idx],
-    R11 = intRegClass[_R11Idx],
-    R12 = intRegClass[_R12Idx],
-    R13 = intRegClass[_R13Idx],
-    R14 = intRegClass[_R14Idx],
-    R15 = intRegClass[_R15Idx],
-    T0 = intRegClass[_T0Idx],
-    Prodlow = intRegClass[_ProdlowIdx],
-    Prodhi = intRegClass[_ProdhiIdx],
-    Quotient = intRegClass[_QuotientIdx],
-    Remainder = intRegClass[_RemainderIdx],
-    Divisor = intRegClass[_DivisorIdx],
-    Doublebits = intRegClass[_DoublebitsIdx];
+inline constexpr RegId Rax = intRegClass[_RaxIdx], Rcx = intRegClass[_RcxIdx],
+                       Rdx = intRegClass[_RdxIdx], Rbx = intRegClass[_RbxIdx],
+                       Rsp = intRegClass[_RspIdx], Rbp = intRegClass[_RbpIdx],
+                       Rsi = intRegClass[_RsiIdx], Rdi = intRegClass[_RdiIdx],
+                       R8 = intRegClass[_R8Idx], R9 = intRegClass[_R9Idx],
+                       R10 = intRegClass[_R10Idx], R11 = intRegClass[_R11Idx],
+                       R12 = intRegClass[_R12Idx], R13 = intRegClass[_R13Idx],
+                       R14 = intRegClass[_R14Idx], R15 = intRegClass[_R15Idx],
+                       T0 = intRegClass[_T0Idx],
+                       Prodlow = intRegClass[_ProdlowIdx],
+                       Prodhi = intRegClass[_ProdhiIdx],
+                       Quotient = intRegClass[_QuotientIdx],
+                       Remainder = intRegClass[_RemainderIdx],
+                       Divisor = intRegClass[_DivisorIdx],
+                       Doublebits = intRegClass[_DoublebitsIdx];
 
 // Aliases for other register sizes.
-inline constexpr auto
-    &Eax = Rax, &Ax = Rax, &Al = Rax,
-    &Ecx = Rcx, &Cx = Rcx, &Cl = Rcx,
-    &Edx = Rdx, &Dx = Rdx, &Dl = Rdx,
-    &Ebx = Rbx, &Bx = Rbx, &Bl = Rbx,
-    &Esp = Rsp, &Sp = Rsp, &Spl = Rsp, &Ah = Rsp,
-    &Ebp = Rbp, &Bp = Rbp, &Bpl = Rbp, &Ch = Rbp,
-    &Esi = Rsi, &Si = Rsi, &Sil = Rsi, &Dh = Rsi,
-    &Edi = Rdi, &Di = Rdi, &Dil = Rdi, &Bh = Rdi,
-    &R8d = R8, &R8w = R8, &R8b = R8,
-    &R9d = R9, &R9w = R9, &R9b = R9,
-    &R10d = R10, &R10w = R10, &R10b = R10,
-    &R11d = R11, &R11w = R11, &R11b = R11,
-    &R12d = R12, &R12w = R12, &R12b = R12,
-    &R13d = R13, &R13w = R13, &R13b = R13,
-    &R14d = R14, &R14w = R14, &R14b = R14,
-    &R15d = R15, &R15w = R15, &R15b = R15;
+inline constexpr auto &Eax = Rax, &Ax = Rax, &Al = Rax, &Ecx = Rcx, &Cx = Rcx,
+                      &Cl = Rcx, &Edx = Rdx, &Dx = Rdx, &Dl = Rdx, &Ebx = Rbx,
+                      &Bx = Rbx, &Bl = Rbx, &Esp = Rsp, &Sp = Rsp, &Spl = Rsp,
+                      &Ah = Rsp, &Ebp = Rbp, &Bp = Rbp, &Bpl = Rbp, &Ch = Rbp,
+                      &Esi = Rsi, &Si = Rsi, &Sil = Rsi, &Dh = Rsi, &Edi = Rdi,
+                      &Di = Rdi, &Dil = Rdi, &Bh = Rdi, &R8d = R8, &R8w = R8,
+                      &R8b = R8, &R9d = R9, &R9w = R9, &R9b = R9, &R10d = R10,
+                      &R10w = R10, &R10b = R10, &R11d = R11, &R11w = R11,
+                      &R11b = R11, &R12d = R12, &R12w = R12, &R12b = R12,
+                      &R13d = R13, &R13w = R13, &R13b = R13, &R14d = R14,
+                      &R14w = R14, &R14b = R14, &R15d = R15, &R15w = R15,
+                      &R15b = R15;
 
 } // namespace int_reg
 

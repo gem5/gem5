@@ -35,22 +35,22 @@ namespace gem5
 {
 
 void
-DmaVirtDevice::dmaReadVirt(Addr host_addr, unsigned size,
-                                 DmaCallback *cb, void *data, Tick delay)
+DmaVirtDevice::dmaReadVirt(Addr host_addr, unsigned size, DmaCallback *cb,
+                           void *data, Tick delay)
 {
     dmaVirt(&DmaDevice::dmaRead, host_addr, size, cb, data, delay);
 }
 
 void
-DmaVirtDevice::dmaWriteVirt(Addr host_addr, unsigned size,
-                                  DmaCallback *cb, void *data, Tick delay)
+DmaVirtDevice::dmaWriteVirt(Addr host_addr, unsigned size, DmaCallback *cb,
+                            void *data, Tick delay)
 {
     dmaVirt(&DmaDevice::dmaWrite, host_addr, size, cb, data, delay);
 }
 
 void
 DmaVirtDevice::dmaVirt(DmaFnPtr dmaFn, Addr addr, unsigned size,
-                             DmaCallback *cb, void *data, Tick delay)
+                       DmaCallback *cb, void *data, Tick delay)
 {
     if (size == 0) {
         if (cb)
@@ -59,10 +59,10 @@ DmaVirtDevice::dmaVirt(DmaFnPtr dmaFn, Addr addr, unsigned size,
     }
 
     // move the buffer data pointer with the chunks
-    uint8_t *loc_data = (uint8_t*)data;
+    uint8_t *loc_data = (uint8_t *)data;
 
     TranslationGenPtr gen = translate(addr, size);
-    for (const auto &range: *gen) {
+    for (const auto &range : *gen) {
         fatal_if(range.fault, "Failed translation: vaddr 0x%x", range.vaddr);
 
         Event *event = cb ? cb->getChunkEvent() : nullptr;

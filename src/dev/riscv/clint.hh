@@ -69,7 +69,7 @@ using namespace RiscvISA;
  */
 class Clint : public BasicPioDevice
 {
-  // Params
+    // Params
   protected:
     System *system;
     int nThread;
@@ -79,7 +79,7 @@ class Clint : public BasicPioDevice
     typedef ClintParams Params;
     Clint(const Params &params);
 
-  // RTC Signal
+    // RTC Signal
   public:
     /**
      * Timer tick callback. Separated from RTC class
@@ -87,11 +87,13 @@ class Clint : public BasicPioDevice
      * PioDevice.
      */
     void raiseInterruptPin(int id);
-    void lowerInterruptPin(int id) {}
 
-  // Register bank
+    void
+    lowerInterruptPin(int id)
+    {}
+
+    // Register bank
   public:
-
     /**
      * MMIO Registers
      * 0x0000 - 0x3FFF: msip (write-through to misc reg file)
@@ -100,7 +102,7 @@ class Clint : public BasicPioDevice
      * ...:             reserved[1]
      * 0xBFF8:          mtime (read-only)
      */
-    class ClintRegisters: public RegisterBankLE
+    class ClintRegisters : public RegisterBankLE
     {
       public:
         const Addr mtimecmpStart = 0x4000;
@@ -109,12 +111,12 @@ class Clint : public BasicPioDevice
 
         std::vector<Register32> msip;
         std::vector<Register64> mtimecmp;
-        Register64 mtime = {"mtime", 0};
+        Register64 mtime = { "mtime", 0 };
         std::vector<RegisterRaz> reserved;
 
-        ClintRegisters(const std::string &name, Addr base, Clint* clint) :
-          RegisterBankLE(name, base),
-          clint(clint) {}
+        ClintRegisters(const std::string &name, Addr base, Clint *clint)
+            : RegisterBankLE(name, base), clint(clint)
+        {}
 
         Clint *clint;
 
@@ -124,10 +126,10 @@ class Clint : public BasicPioDevice
 
     using Register32 = ClintRegisters::Register32;
 
-    uint32_t readMSIP(Register32& reg, const int thread_id);
-    void writeMSIP(Register32& reg, const uint32_t& data, const int thread_id);
+    uint32_t readMSIP(Register32 &reg, const int thread_id);
+    void writeMSIP(Register32 &reg, const uint32_t &data, const int thread_id);
 
-  // External API
+    // External API
   public:
     /**
      * PioDevice interface functions
@@ -139,11 +141,10 @@ class Clint : public BasicPioDevice
      * SimObject functions
      */
     void init() override;
-    Port & getPort(const std::string &if_name,
-                   PortID idx=InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
-
 };
 
 } // namespace gem5

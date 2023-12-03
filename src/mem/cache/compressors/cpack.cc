@@ -41,10 +41,7 @@ namespace gem5
 namespace compression
 {
 
-CPack::CPack(const Params &p)
-    : DictionaryCompressor<uint32_t>(p)
-{
-}
+CPack::CPack(const Params &p) : DictionaryCompressor<uint32_t>(p) {}
 
 void
 CPack::addToDictionary(DictionaryEntry data)

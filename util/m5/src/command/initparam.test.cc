@@ -71,14 +71,14 @@ TEST(Fail, Arguments)
     // Called with no arguments.
     test_key_str1 = 0;
     test_key_str2 = 0;
-    EXPECT_FALSE(run({"initparam"}));
+    EXPECT_FALSE(run({ "initparam" }));
     EXPECT_EQ(cout_output, "");
 
     // Called with an empty argument.
     test_key_str1 = 1;
     test_key_str2 = 1;
     test_result = 5;
-    EXPECT_TRUE(run({"initparam", ""}));
+    EXPECT_TRUE(run({ "initparam", "" }));
     EXPECT_EQ(test_key_str1, 0);
     EXPECT_EQ(test_key_str2, 0);
     EXPECT_EQ(cout_output, "5");
@@ -87,9 +87,10 @@ TEST(Fail, Arguments)
     test_key_str1 = 1;
     test_key_str2 = 1;
     test_result = 4;
-    EXPECT_TRUE(run({"initparam", "shrt"}));
+    EXPECT_TRUE(run({ "initparam", "shrt" }));
     EXPECT_EQ(test_key_str1, ((uint64_t)'s' << 0) | ((uint64_t)'h' << 8) |
-                             ((uint64_t)'r' << 16) | ((uint64_t)'t' << 24));
+                                 ((uint64_t)'r' << 16) |
+                                 ((uint64_t)'t' << 24));
     EXPECT_EQ(test_key_str2, 0);
     EXPECT_EQ(cout_output, "4");
 
@@ -97,11 +98,12 @@ TEST(Fail, Arguments)
     test_key_str1 = 1;
     test_key_str2 = 1;
     test_result = 3;
-    EXPECT_TRUE(run({"initparam", "longer arg"}));
-    EXPECT_EQ(test_key_str1, ((uint64_t)'l' << 0) | ((uint64_t)'o' << 8) |
-                             ((uint64_t)'n' << 16) | ((uint64_t)'g' << 24) |
-                             ((uint64_t)'e' << 32) | ((uint64_t)'r' << 40) |
-                             ((uint64_t)' ' << 48) | ((uint64_t)'a' << 56));
+    EXPECT_TRUE(run({ "initparam", "longer arg" }));
+    EXPECT_EQ(test_key_str1,
+              ((uint64_t)'l' << 0) | ((uint64_t)'o' << 8) |
+                  ((uint64_t)'n' << 16) | ((uint64_t)'g' << 24) |
+                  ((uint64_t)'e' << 32) | ((uint64_t)'r' << 40) |
+                  ((uint64_t)' ' << 48) | ((uint64_t)'a' << 56));
     EXPECT_EQ(test_key_str2, ((uint64_t)'r' << 0) | ((uint64_t)'g' << 8));
     EXPECT_EQ(cout_output, "3");
 
@@ -109,22 +111,24 @@ TEST(Fail, Arguments)
     test_key_str1 = 1;
     test_key_str2 = 1;
     test_result = 2;
-    EXPECT_TRUE(run({"initparam", "1234567887654321"}));
-    EXPECT_EQ(test_key_str1, ((uint64_t)'1' << 0) | ((uint64_t)'2' << 8) |
-                             ((uint64_t)'3' << 16) | ((uint64_t)'4' << 24) |
-                             ((uint64_t)'5' << 32) | ((uint64_t)'6' << 40) |
-                             ((uint64_t)'7' << 48) | ((uint64_t)'8' << 56));
-    EXPECT_EQ(test_key_str2, ((uint64_t)'8' << 0) | ((uint64_t)'7' << 8) |
-                             ((uint64_t)'6' << 16) | ((uint64_t)'5' << 24) |
-                             ((uint64_t)'4' << 32) | ((uint64_t)'3' << 40) |
-                             ((uint64_t)'2' << 48) | ((uint64_t)'1' << 56));
+    EXPECT_TRUE(run({ "initparam", "1234567887654321" }));
+    EXPECT_EQ(test_key_str1,
+              ((uint64_t)'1' << 0) | ((uint64_t)'2' << 8) |
+                  ((uint64_t)'3' << 16) | ((uint64_t)'4' << 24) |
+                  ((uint64_t)'5' << 32) | ((uint64_t)'6' << 40) |
+                  ((uint64_t)'7' << 48) | ((uint64_t)'8' << 56));
+    EXPECT_EQ(test_key_str2,
+              ((uint64_t)'8' << 0) | ((uint64_t)'7' << 8) |
+                  ((uint64_t)'6' << 16) | ((uint64_t)'5' << 24) |
+                  ((uint64_t)'4' << 32) | ((uint64_t)'3' << 40) |
+                  ((uint64_t)'2' << 48) | ((uint64_t)'1' << 56));
     EXPECT_EQ(cout_output, "2");
 
     // Call with an argument that is too long.
-    EXPECT_FALSE(run({"initparam", "12345678876543210"}));
+    EXPECT_FALSE(run({ "initparam", "12345678876543210" }));
     EXPECT_EQ(cout_output, "");
 
     // Call with a valid argument and then one extra.
-    EXPECT_FALSE(run({"valid", "extra"}));
+    EXPECT_FALSE(run({ "valid", "extra" }));
     EXPECT_EQ(cout_output, "");
 }

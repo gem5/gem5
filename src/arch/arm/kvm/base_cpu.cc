@@ -52,18 +52,18 @@ namespace gem5
 
 using namespace ArmISA;
 
-#define INTERRUPT_ID(type, vcpu, irq) (                    \
-        ((type) << KVM_ARM_IRQ_TYPE_SHIFT) |               \
-        ((vcpu) << KVM_ARM_IRQ_VCPU_SHIFT) |               \
-        ((irq) << KVM_ARM_IRQ_NUM_SHIFT))
+#define INTERRUPT_ID(type, vcpu, irq)                                         \
+    (((type) << KVM_ARM_IRQ_TYPE_SHIFT) |                                     \
+     ((vcpu) << KVM_ARM_IRQ_VCPU_SHIFT) | ((irq) << KVM_ARM_IRQ_NUM_SHIFT))
 
-#define INTERRUPT_VCPU_IRQ(vcpu)                                \
+#define INTERRUPT_VCPU_IRQ(vcpu)                                              \
     INTERRUPT_ID(KVM_ARM_IRQ_TYPE_CPU, vcpu, KVM_ARM_IRQ_CPU_IRQ)
 
-#define INTERRUPT_VCPU_FIQ(vcpu)                                \
+#define INTERRUPT_VCPU_FIQ(vcpu)                                              \
     INTERRUPT_ID(KVM_ARM_IRQ_TYPE_CPU, vcpu, KVM_ARM_IRQ_CPU_FIQ)
 
-namespace {
+namespace
+{
 
 /**
  * When the simulator returns from KVM for simulating other models, the
@@ -77,18 +77,17 @@ uint64_t vtime = 0;
 uint64_t vtime_counter = 0;
 UncontendedMutex vtime_mutex;
 
-}  // namespace
+} // namespace
 
 BaseArmKvmCPU::BaseArmKvmCPU(const BaseArmKvmCPUParams &params)
     : BaseKvmCPU(params),
-      irqAsserted(false), fiqAsserted(false),
-      virtTimerPin(nullptr), prevDeviceIRQLevel(0)
-{
-}
+      irqAsserted(false),
+      fiqAsserted(false),
+      virtTimerPin(nullptr),
+      prevDeviceIRQLevel(0)
+{}
 
-BaseArmKvmCPU::~BaseArmKvmCPU()
-{
-}
+BaseArmKvmCPU::~BaseArmKvmCPU() {}
 
 void
 BaseArmKvmCPU::startup()
@@ -109,8 +108,10 @@ BaseArmKvmCPU::startup()
     kvmArmVCpuInit(target_config);
 
     if (!vm->hasKernelIRQChip())
-        virtTimerPin = static_cast<ArmSystem *>(system)\
-            ->getGenericTimer()->params().int_el1_virt->get(tc);
+        virtTimerPin = static_cast<ArmSystem *>(system)
+                           ->getGenericTimer()
+                           ->params()
+                           .int_el1_virt->get(tc);
 }
 
 Tick
@@ -131,11 +132,11 @@ BaseArmKvmCPU::kvmRun(Tick ticks)
         }
     } else {
         warn_if(simFIQ && !fiqAsserted,
-                "FIQ raised by the simulated interrupt controller " \
+                "FIQ raised by the simulated interrupt controller "
                 "despite in-kernel GIC emulation. This is probably a bug.");
 
         warn_if(simIRQ && !irqAsserted,
-                "IRQ raised by the simulated interrupt controller " \
+                "IRQ raised by the simulated interrupt controller "
                 "despite in-kernel GIC emulation. This is probably a bug.");
     }
 
@@ -145,19 +146,16 @@ BaseArmKvmCPU::kvmRun(Tick ticks)
     Tick kvmRunTicks = BaseKvmCPU::kvmRun(ticks);
 
     if (!vm->hasKernelIRQChip()) {
-        uint64_t device_irq_level =
-            getKvmRunState()->s.regs.device_irq_level;
+        uint64_t device_irq_level = getKvmRunState()->s.regs.device_irq_level;
 
         if (!(prevDeviceIRQLevel & KVM_ARM_DEV_EL1_VTIMER) &&
             (device_irq_level & KVM_ARM_DEV_EL1_VTIMER)) {
-
             DPRINTF(KvmInt, "In-kernel vtimer IRQ asserted\n");
             prevDeviceIRQLevel |= KVM_ARM_DEV_EL1_VTIMER;
             virtTimerPin->raise();
 
         } else if ((prevDeviceIRQLevel & KVM_ARM_DEV_EL1_VTIMER) &&
                    !(device_irq_level & KVM_ARM_DEV_EL1_VTIMER)) {
-
             DPRINTF(KvmInt, "In-kernel vtimer IRQ disasserted\n");
             prevDeviceIRQLevel &= ~KVM_ARM_DEV_EL1_VTIMER;
             virtTimerPin->clear();
@@ -201,8 +199,8 @@ BaseArmKvmCPU::getRegList() const
 
         // Request the actual register list now that we know how many
         // register we need to allocate space for.
-        std::unique_ptr<kvm_reg_list, void(*)(void *p)>
-            regs(nullptr, [](void *p) { operator delete(p); });
+        std::unique_ptr<kvm_reg_list, void (*)(void *p)> regs(
+            nullptr, [](void *p) { operator delete(p); });
         const size_t size(sizeof(kvm_reg_list) +
                           regs_probe.n * sizeof(uint64_t));
         regs.reset((kvm_reg_list *)operator new(size));
@@ -220,8 +218,8 @@ void
 BaseArmKvmCPU::kvmArmVCpuInit(const struct kvm_vcpu_init &init)
 {
     if (ioctl(KVM_ARM_VCPU_INIT, (void *)&init) == -1)
-        panic("KVM: Failed to initialize vCPU; errno %d (%s)\n",
-            errno, strerror(errno));
+        panic("KVM: Failed to initialize vCPU; errno %d (%s)\n", errno,
+              strerror(errno));
 }
 
 bool

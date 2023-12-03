@@ -82,8 +82,15 @@ class LoopPredictor : public SimObject
         uint8_t age;
         bool dir; // only for useDirectionBit
 
-        LoopEntry() : numIter(0), currentIter(0), currentIterSpec(0),
-                      confidence(0), tag(0), age(0), dir(0) { }
+        LoopEntry()
+            : numIter(0),
+              currentIter(0),
+              currentIterSpec(0),
+              confidence(0),
+              tag(0),
+              age(0),
+              dir(0)
+        {}
     };
 
     LoopEntry *ltable;
@@ -114,7 +121,8 @@ class LoopPredictor : public SimObject
      * If true it is incremented, if false it is decremented
      * @param nbits Counter width.
      */
-    static inline void unsignedCtrUpdate(uint8_t &ctr, bool up, unsigned nbits)
+    static inline void
+    unsignedCtrUpdate(uint8_t &ctr, bool up, unsigned nbits)
     {
         assert(nbits <= sizeof(uint8_t) << 3);
         if (up) {
@@ -125,7 +133,9 @@ class LoopPredictor : public SimObject
                 ctr--;
         }
     }
-    static inline void signedCtrUpdate(int8_t &ctr, bool up, unsigned nbits)
+
+    static inline void
+    signedCtrUpdate(int8_t &ctr, bool up, unsigned nbits)
     {
         if (up) {
             if (ctr < ((1 << (nbits - 1)) - 1))
@@ -135,6 +145,7 @@ class LoopPredictor : public SimObject
                 ctr--;
         }
     }
+
   public:
     // Primary branch history entry
     struct BranchInfo
@@ -145,15 +156,19 @@ class LoopPredictor : public SimObject
         bool loopPred;
         bool loopPredValid;
         bool loopPredUsed;
-        int  loopIndex;
-        int  loopIndexB;  // only for useHashing
+        int loopIndex;
+        int loopIndexB; // only for useHashing
         int loopHit;
         bool predTaken;
 
         BranchInfo()
-            : loopTag(0), currentIter(0),
+            : loopTag(0),
+              currentIter(0),
               loopPred(false),
-              loopPredValid(false), loopIndex(0), loopIndexB(0), loopHit(0),
+              loopPredValid(false),
+              loopIndex(0),
+              loopIndexB(0),
+              loopHit(0),
               predTaken(false)
         {}
     };
@@ -187,18 +202,18 @@ class LoopPredictor : public SimObject
      * used)
      * @result the result of the prediction, if it could be predicted
      */
-    bool getLoop(Addr pc, BranchInfo* bi, bool speculative,
+    bool getLoop(Addr pc, BranchInfo *bi, bool speculative,
                  unsigned instShiftAmt) const;
 
-   /**
-    * Updates the loop predictor.
-    * @param pc The unshifted branch PC.
-    * @param taken The actual branch outcome.
-    * @param bi Pointer to information on the
-    * prediction recorded at prediction time.
-    * @param tage_pred tage prediction of the branch
-    */
-    void loopUpdate(Addr pc, bool Taken, BranchInfo* bi, bool tage_pred);
+    /**
+     * Updates the loop predictor.
+     * @param pc The unshifted branch PC.
+     * @param taken The actual branch outcome.
+     * @param bi Pointer to information on the
+     * prediction recorded at prediction time.
+     * @param tage_pred tage prediction of the branch
+     */
+    void loopUpdate(Addr pc, bool Taken, BranchInfo *bi, bool tage_pred);
 
     /**
      * Speculatively updates the loop predictor
@@ -207,7 +222,7 @@ class LoopPredictor : public SimObject
      * @param bi Pointer to information on the prediction
      * recorded at prediction time.
      */
-    void specLoopUpdate(bool taken, BranchInfo* bi);
+    void specLoopUpdate(bool taken, BranchInfo *bi);
 
     /**
      * Update LTAGE for conditional branches.
@@ -219,7 +234,8 @@ class LoopPredictor : public SimObject
      * @param instShiftAmt Number of bits to shift instructions
      */
     void condBranchUpdate(ThreadID tid, Addr branch_pc, bool taken,
-        bool tage_pred, BranchInfo* bi, unsigned instShiftAmt);
+                          bool tage_pred, BranchInfo *bi,
+                          unsigned instShiftAmt);
 
     /**
      * Get the loop prediction
@@ -234,9 +250,9 @@ class LoopPredictor : public SimObject
      * @param instShiftAmt Shift the pc by as many bits
      * @result the prediction, true if taken
      */
-    bool loopPredict(
-        ThreadID tid, Addr branch_pc, bool cond_branch,
-        BranchInfo* bi, bool prev_pred_taken, unsigned instShiftAmt);
+    bool loopPredict(ThreadID tid, Addr branch_pc, bool cond_branch,
+                     BranchInfo *bi, bool prev_pred_taken,
+                     unsigned instShiftAmt);
 
     /**
      * Update the stats
@@ -244,9 +260,9 @@ class LoopPredictor : public SimObject
      * @param bi Pointer to information on the prediction
      * recorded at prediction time.
      */
-    void updateStats(bool taken, BranchInfo* bi);
+    void updateStats(bool taken, BranchInfo *bi);
 
-    void squashLoop(BranchInfo * bi);
+    void squashLoop(BranchInfo *bi);
 
     void squash(ThreadID tid, BranchInfo *bi);
 
@@ -260,7 +276,8 @@ class LoopPredictor : public SimObject
      * Gets the value of the loop use counter
      * @return the loop use counter value
      */
-    int8_t getLoopUseCounter() const
+    int8_t
+    getLoopUseCounter() const
     {
         return loopUseCounter;
     }
@@ -278,4 +295,4 @@ class LoopPredictor : public SimObject
 } // namespace branch_prediction
 } // namespace gem5
 
-#endif//__CPU_PRED_LOOP_PREDICTOR_HH__
+#endif //__CPU_PRED_LOOP_PREDICTOR_HH__

@@ -70,16 +70,13 @@ class SMBiosStructure : public SimObject
     typedef X86SMBiosSMBiosStructureParams Params;
 
   public:
-
-    virtual
-    ~SMBiosStructure()
-    {}
+    virtual ~SMBiosStructure() {}
 
     // Offset 00h, 1 byte
     uint8_t type;
 
     // Offset 01h, 1 byte
-    //Length: computed when written to memory.
+    // Length: computed when written to memory.
 
     // Offset 02h, 2 bytes
     uint16_t handle;
@@ -91,7 +88,7 @@ class SMBiosStructure : public SimObject
         return 4;
     }
 
-    virtual uint16_t writeOut(PortProxy& proxy, Addr addr);
+    virtual uint16_t writeOut(PortProxy &proxy, Addr addr);
 
   protected:
     bool stringFields;
@@ -100,12 +97,11 @@ class SMBiosStructure : public SimObject
 
     std::vector<std::string> strings;
 
-    void writeOutStrings(PortProxy& proxy, Addr addr);
+    void writeOutStrings(PortProxy &proxy, Addr addr);
 
     int getStringLength();
 
   public:
-
     int addString(const std::string &new_string);
     std::string readString(int n);
     void setString(int n, const std::string &new_string);
@@ -130,8 +126,8 @@ class BiosInformation : public SMBiosStructure
     // Offset 09h, 1 byte
     uint8_t romSize;
     // Offset 0Ah, 8 bytes
-    //See tables in 3.3.1 in the SMBios 2.5 spec from the DMTF for
-    //bit definitions.
+    // See tables in 3.3.1 in the SMBios 2.5 spec from the DMTF for
+    // bit definitions.
     uint64_t characteristics;
     // Offset 12h, 2 bytes
     uint16_t characteristicExtBytes;
@@ -146,8 +142,13 @@ class BiosInformation : public SMBiosStructure
 
     BiosInformation(const Params &p);
 
-    uint8_t getLength() { return 0x18; }
-    uint16_t writeOut(PortProxy& proxy, Addr addr);
+    uint8_t
+    getLength()
+    {
+        return 0x18;
+    }
+
+    uint16_t writeOut(PortProxy &proxy, Addr addr);
 };
 
 class SMBiosTable : public SimObject
@@ -157,14 +158,13 @@ class SMBiosTable : public SimObject
 
     struct SMBiosHeader
     {
-        SMBiosHeader()
-        {}
+        SMBiosHeader() {}
 
         // Offset 00h, 4 bytes
         static const char anchorString[];
 
         // Offset 04h, 1 byte
-        //Checksum: computed when written to memory.
+        // Checksum: computed when written to memory.
 
         // Offset 05h, 1 byte
         static const uint8_t entryPointLength;
@@ -176,7 +176,7 @@ class SMBiosTable : public SimObject
         uint8_t minorVersion;
 
         // Offset 08h, 2 bytes
-        //Maximum structure size: computed when written to memory.
+        // Maximum structure size: computed when written to memory.
 
         // Offset 0Ah, 1 byte
         static const uint8_t entryPointRevision;
@@ -187,23 +187,23 @@ class SMBiosTable : public SimObject
         // Offset 10h, 15 bytes
         struct IntermediateHeader
         {
-            IntermediateHeader() : tableAddr(0)
-            {}
+            IntermediateHeader() : tableAddr(0) {}
+
             // Offset 10h, 5 bytes
             static const char anchorString[];
 
             // Offset 15h, 1 byte
-            //Checksum: computed when written to memory.
+            // Checksum: computed when written to memory.
 
             // Offset 16h, 2 bytes
-            //Length of the structure table in bytes: computed when
-            //written to memory.
+            // Length of the structure table in bytes: computed when
+            // written to memory.
 
             // Offset 18h, 4 bytes
             uint32_t tableAddr;
 
             // Offset 1Ch, 2 bytes
-            //Number of structures: computed when written to memory
+            // Number of structures: computed when written to memory
 
             // Offset 1Eh, 1 byte
             uint8_t smbiosBCDRevision;
@@ -215,18 +215,20 @@ class SMBiosTable : public SimObject
   public:
     SMBiosTable(const Params &p);
 
-    Addr getTableAddr()
+    Addr
+    getTableAddr()
     {
         return smbiosHeader.intermediateHeader.tableAddr;
     }
 
-    void setTableAddr(Addr addr)
+    void
+    setTableAddr(Addr addr)
     {
         smbiosHeader.intermediateHeader.tableAddr = addr;
     }
 
-    void writeOut(PortProxy& proxy, Addr addr,
-            Addr &headerSize, Addr &structSize);
+    void writeOut(PortProxy &proxy, Addr addr, Addr &headerSize,
+                  Addr &structSize);
 };
 
 } // namespace smbios

@@ -40,6 +40,7 @@ class IdleStartEvent : public PCEvent
     IdleStartEvent(PCEventScope *s, const std::string &desc, Addr addr)
         : PCEvent(s, desc, addr)
     {}
+
     virtual void process(ThreadContext *tc);
 };
 

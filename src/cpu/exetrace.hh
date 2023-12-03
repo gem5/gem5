@@ -54,19 +54,19 @@ namespace gem5
 
 class ThreadContext;
 
-namespace trace {
+namespace trace
+{
 
 class ExeTracerRecord : public InstRecord
 {
   public:
     ExeTracerRecord(Tick _when, ThreadContext *_thread,
-               const StaticInstPtr _staticInst, const PCStateBase &_pc,
-               const ExeTracer &_tracer,
-               const StaticInstPtr _macroStaticInst = NULL)
+                    const StaticInstPtr _staticInst, const PCStateBase &_pc,
+                    const ExeTracer &_tracer,
+                    const StaticInstPtr _macroStaticInst = NULL)
         : InstRecord(_when, _thread, _staticInst, _pc, _macroStaticInst),
           tracer(_tracer)
-    {
-    }
+    {}
 
     void traceInst(const StaticInstPtr &inst, bool ran);
 
@@ -80,19 +80,19 @@ class ExeTracer : public InstTracer
 {
   public:
     typedef ExeTracerParams Params;
-    ExeTracer(const Params &params) : InstTracer(params)
-    {}
+
+    ExeTracer(const Params &params) : InstTracer(params) {}
 
     InstRecord *
-    getInstRecord(Tick when, ThreadContext *tc,
-            const StaticInstPtr staticInst, const PCStateBase &pc,
-            const StaticInstPtr macroStaticInst=nullptr) override
+    getInstRecord(Tick when, ThreadContext *tc, const StaticInstPtr staticInst,
+                  const PCStateBase &pc,
+                  const StaticInstPtr macroStaticInst = nullptr) override
     {
         if (!debug::ExecEnable)
             return NULL;
 
-        return new ExeTracerRecord(when, tc,
-                staticInst, pc, *this, macroStaticInst);
+        return new ExeTracerRecord(when, tc, staticInst, pc, *this,
+                                   macroStaticInst);
     }
 };
 

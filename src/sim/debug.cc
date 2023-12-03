@@ -50,7 +50,7 @@ namespace gem5
 struct DebugBreakEvent : public GlobalEvent
 {
     DebugBreakEvent(Tick when);
-    void process();     // process event
+    void process(); // process event
     virtual const char *description() const;
 };
 
@@ -59,8 +59,7 @@ struct DebugBreakEvent : public GlobalEvent
 //
 DebugBreakEvent::DebugBreakEvent(Tick when)
     : GlobalEvent(when, Debug_Break_Pri, AutoDelete)
-{
-}
+{}
 
 //
 // handle debug event: set debugger breakpoint on this function
@@ -70,7 +69,6 @@ DebugBreakEvent::process()
 {
     debug::breakpoint();
 }
-
 
 const char *
 DebugBreakEvent::description() const

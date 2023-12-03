@@ -72,23 +72,21 @@ BaseTrafficGen::BaseTrafficGen(const BaseTrafficGenParams &p)
       system(p.system),
       elasticReq(p.elastic_req),
       progressCheck(p.progress_check),
-      noProgressEvent([this]{ noProgress(); }, name()),
+      noProgressEvent([this] { noProgress(); }, name()),
       nextTransitionTick(0),
       nextPacketTick(0),
       maxOutstandingReqs(p.max_outstanding_reqs),
       port(name() + ".port", *this),
       retryPkt(NULL),
-      retryPktTick(0), blockedWaitingResp(false),
-      updateEvent([this]{ update(); }, name()),
+      retryPktTick(0),
+      blockedWaitingResp(false),
+      updateEvent([this] { update(); }, name()),
       stats(this),
       requestorId(system->getRequestorId(this)),
       streamGenerator(StreamGen::create(p))
-{
-}
+{}
 
-BaseTrafficGen::~BaseTrafficGen()
-{
-}
+BaseTrafficGen::~BaseTrafficGen() {}
 
 Port &
 BaseTrafficGen::getPort(const std::string &if_name, PortID idx)
@@ -132,7 +130,8 @@ void
 BaseTrafficGen::serialize(CheckpointOut &cp) const
 {
     warn("%s serialization does not keep all traffic generator"
-         " internal state\n", name());
+         " internal state\n",
+         name());
 
     DPRINTF(Checkpoint, "Serializing BaseTrafficGen\n");
 
@@ -152,7 +151,8 @@ void
 BaseTrafficGen::unserialize(CheckpointIn &cp)
 {
     warn("%s serialization does not restore all traffic generator"
-         " internal state\n", name());
+         " internal state\n",
+         name());
 
     // restore scheduled events
     Tick nextEvent;
@@ -259,8 +259,8 @@ BaseTrafficGen::scheduleUpdate()
 {
     // Has the generator run out of work? In that case, force a
     // transition if a transition period hasn't been configured.
-    while (activeGenerator &&
-           nextPacketTick == MaxTick && nextTransitionTick == MaxTick) {
+    while (activeGenerator && nextPacketTick == MaxTick &&
+           nextTransitionTick == MaxTick) {
         transition();
     }
 
@@ -313,8 +313,8 @@ BaseTrafficGen::retryReq()
 
         if (drainState() != DrainState::Draining) {
             // packet is sent, so find out when the next one is due
-            nextPacketTick = activeGenerator->nextPacketTick(elasticReq,
-                                                             delay);
+            nextPacketTick =
+                activeGenerator->nextPacketTick(elasticReq, delay);
             scheduleUpdate();
         } else {
             // shut things down
@@ -328,8 +328,8 @@ BaseTrafficGen::retryReq()
 void
 BaseTrafficGen::noProgress()
 {
-    fatal("BaseTrafficGen %s spent %llu ticks without making progress",
-          name(), progressCheck);
+    fatal("BaseTrafficGen %s spent %llu ticks without making progress", name(),
+          progressCheck);
 }
 
 BaseTrafficGen::StatGroup::StatGroup(statistics::Group *parent)
@@ -338,80 +338,78 @@ BaseTrafficGen::StatGroup::StatGroup(statistics::Group *parent)
                "Number of suppressed packets to non-memory space"),
       ADD_STAT(numPackets, statistics::units::Count::get(),
                "Number of packets generated"),
-      ADD_STAT(numRetries, statistics::units::Count::get(), "Number of retries"),
+      ADD_STAT(numRetries, statistics::units::Count::get(),
+               "Number of retries"),
       ADD_STAT(retryTicks, statistics::units::Tick::get(),
                "Time spent waiting due to back-pressure"),
-      ADD_STAT(bytesRead, statistics::units::Byte::get(), "Number of bytes read"),
+      ADD_STAT(bytesRead, statistics::units::Byte::get(),
+               "Number of bytes read"),
       ADD_STAT(bytesWritten, statistics::units::Byte::get(),
                "Number of bytes written"),
       ADD_STAT(totalReadLatency, statistics::units::Tick::get(),
                "Total latency of read requests"),
       ADD_STAT(totalWriteLatency, statistics::units::Tick::get(),
                "Total latency of write requests"),
-      ADD_STAT(totalReads, statistics::units::Count::get(), "Total num of reads"),
-      ADD_STAT(totalWrites, statistics::units::Count::get(), "Total num of writes"),
-      ADD_STAT(avgReadLatency, statistics::units::Rate<
-                    statistics::units::Tick, statistics::units::Count>::get(),
+      ADD_STAT(totalReads, statistics::units::Count::get(),
+               "Total num of reads"),
+      ADD_STAT(totalWrites, statistics::units::Count::get(),
+               "Total num of writes"),
+      ADD_STAT(avgReadLatency,
+               statistics::units::Rate<statistics::units::Tick,
+                                       statistics::units::Count>::get(),
                "Avg latency of read requests", totalReadLatency / totalReads),
-      ADD_STAT(avgWriteLatency, statistics::units::Rate<
-                    statistics::units::Tick, statistics::units::Count>::get(),
+      ADD_STAT(avgWriteLatency,
+               statistics::units::Rate<statistics::units::Tick,
+                                       statistics::units::Count>::get(),
                "Avg latency of write requests",
                totalWriteLatency / totalWrites),
-      ADD_STAT(readBW, statistics::units::Rate<
-                    statistics::units::Byte, statistics::units::Second>::get(),
+      ADD_STAT(readBW,
+               statistics::units::Rate<statistics::units::Byte,
+                                       statistics::units::Second>::get(),
                "Read bandwidth", bytesRead / simSeconds),
-      ADD_STAT(writeBW, statistics::units::Rate<
-                    statistics::units::Byte, statistics::units::Second>::get(),
+      ADD_STAT(writeBW,
+               statistics::units::Rate<statistics::units::Byte,
+                                       statistics::units::Second>::get(),
                "Write bandwidth", bytesWritten / simSeconds)
-{
-}
+{}
 
 std::shared_ptr<BaseGen>
 BaseTrafficGen::createIdle(Tick duration)
 {
-    return std::shared_ptr<BaseGen>(new IdleGen(*this, requestorId,
-                                                duration));
+    return std::shared_ptr<BaseGen>(new IdleGen(*this, requestorId, duration));
 }
 
 std::shared_ptr<BaseGen>
 BaseTrafficGen::createExit(Tick duration)
 {
-    return std::shared_ptr<BaseGen>(new ExitGen(*this, requestorId,
-                                                duration));
+    return std::shared_ptr<BaseGen>(new ExitGen(*this, requestorId, duration));
 }
 
 std::shared_ptr<BaseGen>
-BaseTrafficGen::createLinear(Tick duration,
-                             Addr start_addr, Addr end_addr, Addr blocksize,
-                             Tick min_period, Tick max_period,
+BaseTrafficGen::createLinear(Tick duration, Addr start_addr, Addr end_addr,
+                             Addr blocksize, Tick min_period, Tick max_period,
                              uint8_t read_percent, Addr data_limit)
 {
-    return std::shared_ptr<BaseGen>(new LinearGen(*this, requestorId,
-                                                  duration, start_addr,
-                                                  end_addr, blocksize,
-                                                  system->cacheLineSize(),
-                                                  min_period, max_period,
-                                                  read_percent, data_limit));
+    return std::shared_ptr<BaseGen>(
+        new LinearGen(*this, requestorId, duration, start_addr, end_addr,
+                      blocksize, system->cacheLineSize(), min_period,
+                      max_period, read_percent, data_limit));
 }
 
 std::shared_ptr<BaseGen>
-BaseTrafficGen::createRandom(Tick duration,
-                             Addr start_addr, Addr end_addr, Addr blocksize,
-                             Tick min_period, Tick max_period,
+BaseTrafficGen::createRandom(Tick duration, Addr start_addr, Addr end_addr,
+                             Addr blocksize, Tick min_period, Tick max_period,
                              uint8_t read_percent, Addr data_limit)
 {
-    return std::shared_ptr<BaseGen>(new RandomGen(*this, requestorId,
-                                                  duration, start_addr,
-                                                  end_addr, blocksize,
-                                                  system->cacheLineSize(),
-                                                  min_period, max_period,
-                                                  read_percent, data_limit));
+    return std::shared_ptr<BaseGen>(
+        new RandomGen(*this, requestorId, duration, start_addr, end_addr,
+                      blocksize, system->cacheLineSize(), min_period,
+                      max_period, read_percent, data_limit));
 }
 
 std::shared_ptr<BaseGen>
-BaseTrafficGen::createDram(Tick duration,
-                           Addr start_addr, Addr end_addr, Addr blocksize,
-                           Tick min_period, Tick max_period,
+BaseTrafficGen::createDram(Tick duration, Addr start_addr, Addr end_addr,
+                           Addr blocksize, Tick min_period, Tick max_period,
                            uint8_t read_percent, Addr data_limit,
                            unsigned int num_seq_pkts, unsigned int page_size,
                            unsigned int nbr_of_banks,
@@ -419,133 +417,85 @@ BaseTrafficGen::createDram(Tick duration,
                            enums::AddrMap addr_mapping,
                            unsigned int nbr_of_ranks)
 {
-    return std::shared_ptr<BaseGen>(new DramGen(*this, requestorId,
-                                                duration, start_addr,
-                                                end_addr, blocksize,
-                                                system->cacheLineSize(),
-                                                min_period, max_period,
-                                                read_percent, data_limit,
-                                                num_seq_pkts, page_size,
-                                                nbr_of_banks,
-                                                nbr_of_banks_util,
-                                                addr_mapping,
-                                                nbr_of_ranks));
+    return std::shared_ptr<BaseGen>(new DramGen(
+        *this, requestorId, duration, start_addr, end_addr, blocksize,
+        system->cacheLineSize(), min_period, max_period, read_percent,
+        data_limit, num_seq_pkts, page_size, nbr_of_banks, nbr_of_banks_util,
+        addr_mapping, nbr_of_ranks));
 }
 
 std::shared_ptr<BaseGen>
-BaseTrafficGen::createDramRot(Tick duration,
-                              Addr start_addr, Addr end_addr, Addr blocksize,
+BaseTrafficGen::createDramRot(
+    Tick duration, Addr start_addr, Addr end_addr, Addr blocksize,
+    Tick min_period, Tick max_period, uint8_t read_percent, Addr data_limit,
+    unsigned int num_seq_pkts, unsigned int page_size,
+    unsigned int nbr_of_banks, unsigned int nbr_of_banks_util,
+    enums::AddrMap addr_mapping, unsigned int nbr_of_ranks,
+    unsigned int max_seq_count_per_rank)
+{
+    return std::shared_ptr<BaseGen>(new DramRotGen(
+        *this, requestorId, duration, start_addr, end_addr, blocksize,
+        system->cacheLineSize(), min_period, max_period, read_percent,
+        data_limit, num_seq_pkts, page_size, nbr_of_banks, nbr_of_banks_util,
+        addr_mapping, nbr_of_ranks, max_seq_count_per_rank));
+}
+
+std::shared_ptr<BaseGen>
+BaseTrafficGen::createHybrid(
+    Tick duration, Addr start_addr_dram, Addr end_addr_dram,
+    Addr blocksize_dram, Addr start_addr_nvm, Addr end_addr_nvm,
+    Addr blocksize_nvm, Tick min_period, Tick max_period, uint8_t read_percent,
+    Addr data_limit, unsigned int num_seq_pkts_dram,
+    unsigned int page_size_dram, unsigned int nbr_of_banks_dram,
+    unsigned int nbr_of_banks_util_dram, unsigned int num_seq_pkts_nvm,
+    unsigned int buffer_size_nvm, unsigned int nbr_of_banks_nvm,
+    unsigned int nbr_of_banks_util_nvm, enums::AddrMap addr_mapping,
+    unsigned int nbr_of_ranks_dram, unsigned int nbr_of_ranks_nvm,
+    uint8_t nvm_percent)
+{
+    return std::shared_ptr<BaseGen>(new HybridGen(
+        *this, requestorId, duration, start_addr_dram, end_addr_dram,
+        blocksize_dram, start_addr_nvm, end_addr_nvm, blocksize_nvm,
+        system->cacheLineSize(), min_period, max_period, read_percent,
+        data_limit, num_seq_pkts_dram, page_size_dram, nbr_of_banks_dram,
+        nbr_of_banks_util_dram, num_seq_pkts_nvm, buffer_size_nvm,
+        nbr_of_banks_nvm, nbr_of_banks_util_nvm, addr_mapping,
+        nbr_of_ranks_dram, nbr_of_ranks_nvm, nvm_percent));
+}
+
+std::shared_ptr<BaseGen>
+BaseTrafficGen::createNvm(Tick duration, Addr start_addr, Addr end_addr,
+                          Addr blocksize, Tick min_period, Tick max_period,
+                          uint8_t read_percent, Addr data_limit,
+                          unsigned int num_seq_pkts, unsigned int buffer_size,
+                          unsigned int nbr_of_banks,
+                          unsigned int nbr_of_banks_util,
+                          enums::AddrMap addr_mapping,
+                          unsigned int nbr_of_ranks)
+{
+    return std::shared_ptr<BaseGen>(new NvmGen(
+        *this, requestorId, duration, start_addr, end_addr, blocksize,
+        system->cacheLineSize(), min_period, max_period, read_percent,
+        data_limit, num_seq_pkts, buffer_size, nbr_of_banks, nbr_of_banks_util,
+        addr_mapping, nbr_of_ranks));
+}
+
+std::shared_ptr<BaseGen>
+BaseTrafficGen::createStrided(Tick duration, Addr start_addr, Addr end_addr,
+                              Addr offset, Addr block_size,
+                              Addr superblock_size, Addr stride_size,
                               Tick min_period, Tick max_period,
-                              uint8_t read_percent, Addr data_limit,
-                              unsigned int num_seq_pkts,
-                              unsigned int page_size,
-                              unsigned int nbr_of_banks,
-                              unsigned int nbr_of_banks_util,
-                              enums::AddrMap addr_mapping,
-                              unsigned int nbr_of_ranks,
-                              unsigned int max_seq_count_per_rank)
-{
-    return std::shared_ptr<BaseGen>(new DramRotGen(*this, requestorId,
-                                                   duration, start_addr,
-                                                   end_addr, blocksize,
-                                                   system->cacheLineSize(),
-                                                   min_period, max_period,
-                                                   read_percent, data_limit,
-                                                   num_seq_pkts, page_size,
-                                                   nbr_of_banks,
-                                                   nbr_of_banks_util,
-                                                   addr_mapping,
-                                                   nbr_of_ranks,
-                                                   max_seq_count_per_rank));
-}
-
-std::shared_ptr<BaseGen>
-BaseTrafficGen::createHybrid(Tick duration,
-                           Addr start_addr_dram, Addr end_addr_dram,
-                           Addr blocksize_dram,
-                           Addr start_addr_nvm, Addr end_addr_nvm,
-                           Addr blocksize_nvm,
-                           Tick min_period, Tick max_period,
-                           uint8_t read_percent, Addr data_limit,
-                           unsigned int num_seq_pkts_dram,
-                           unsigned int page_size_dram,
-                           unsigned int nbr_of_banks_dram,
-                           unsigned int nbr_of_banks_util_dram,
-                           unsigned int num_seq_pkts_nvm,
-                           unsigned int buffer_size_nvm,
-                           unsigned int nbr_of_banks_nvm,
-                           unsigned int nbr_of_banks_util_nvm,
-                           enums::AddrMap addr_mapping,
-                           unsigned int nbr_of_ranks_dram,
-                           unsigned int nbr_of_ranks_nvm,
-                           uint8_t nvm_percent)
-{
-    return std::shared_ptr<BaseGen>(new HybridGen(*this, requestorId,
-                                                duration, start_addr_dram,
-                                                end_addr_dram, blocksize_dram,
-                                                start_addr_nvm,
-                                                end_addr_nvm, blocksize_nvm,
-                                                system->cacheLineSize(),
-                                                min_period, max_period,
-                                                read_percent, data_limit,
-                                                num_seq_pkts_dram,
-                                                page_size_dram,
-                                                nbr_of_banks_dram,
-                                                nbr_of_banks_util_dram,
-                                                num_seq_pkts_nvm,
-                                                buffer_size_nvm,
-                                                nbr_of_banks_nvm,
-                                                nbr_of_banks_util_nvm,
-                                                addr_mapping,
-                                                nbr_of_ranks_dram,
-                                                nbr_of_ranks_nvm,
-                                                nvm_percent));
-}
-
-std::shared_ptr<BaseGen>
-BaseTrafficGen::createNvm(Tick duration,
-                           Addr start_addr, Addr end_addr, Addr blocksize,
-                           Tick min_period, Tick max_period,
-                           uint8_t read_percent, Addr data_limit,
-                           unsigned int num_seq_pkts, unsigned int buffer_size,
-                           unsigned int nbr_of_banks,
-                           unsigned int nbr_of_banks_util,
-                           enums::AddrMap addr_mapping,
-                           unsigned int nbr_of_ranks)
-{
-    return std::shared_ptr<BaseGen>(new NvmGen(*this, requestorId,
-                                                duration, start_addr,
-                                                end_addr, blocksize,
-                                                system->cacheLineSize(),
-                                                min_period, max_period,
-                                                read_percent, data_limit,
-                                                num_seq_pkts, buffer_size,
-                                                nbr_of_banks,
-                                                nbr_of_banks_util,
-                                                addr_mapping,
-                                                nbr_of_ranks));
-}
-
-std::shared_ptr<BaseGen>
-BaseTrafficGen::createStrided(
-        Tick duration,
-        Addr start_addr, Addr end_addr, Addr offset,
-        Addr block_size, Addr superblock_size, Addr stride_size,
-        Tick min_period, Tick max_period,
-        uint8_t read_percent, Addr data_limit)
+                              uint8_t read_percent, Addr data_limit)
 {
     return std::shared_ptr<BaseGen>(new StridedGen(
-                                    *this, requestorId, duration,
-                                    system->cacheLineSize(),
-                                    start_addr, end_addr, offset,
-                                    block_size, superblock_size, stride_size,
-                                    min_period, max_period,
-                                    read_percent, data_limit));
+        *this, requestorId, duration, system->cacheLineSize(), start_addr,
+        end_addr, offset, block_size, superblock_size, stride_size, min_period,
+        max_period, read_percent, data_limit));
 }
 
 std::shared_ptr<BaseGen>
-BaseTrafficGen::createTrace(Tick duration,
-                            const std::string& trace_file, Addr addr_offset)
+BaseTrafficGen::createTrace(Tick duration, const std::string &trace_file,
+                            Addr addr_offset)
 {
 #if HAVE_PROTOBUF
     return std::shared_ptr<BaseGen>(
@@ -560,9 +510,10 @@ BaseTrafficGen::recvTimingResp(PacketPtr pkt)
 {
     auto iter = waitingResp.find(pkt->req);
 
-    panic_if(iter == waitingResp.end(), "%s: "
-            "Received unexpected response [%s reqPtr=%x]\n",
-               pkt->print(), pkt->req);
+    panic_if(iter == waitingResp.end(),
+             "%s: "
+             "Received unexpected response [%s reqPtr=%x]\n",
+             pkt->print(), pkt->req);
 
     assert(iter->second <= curTick());
 

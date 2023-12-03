@@ -46,22 +46,27 @@ namespace compression
 {
 
 FrequentValues::FrequentValues(const Params &p)
-  : Base(p), useHuffmanEncoding(p.max_code_length != 0),
-    indexEncoder(p.max_code_length), counterBits(p.counter_bits),
-    codeGenerationTicks(p.code_generation_ticks),
-    checkSaturation(p.check_saturation), numVFTEntries(p.vft_entries),
-    numSamples(p.num_samples), takenSamples(0), phase(SAMPLING),
-    VFT(p.vft_assoc, p.vft_entries, p.vft_indexing_policy,
-      p.vft_replacement_policy, VFTEntry(counterBits)),
-    codeGenerationEvent([this]{ phase = COMPRESSING; }, name())
+    : Base(p),
+      useHuffmanEncoding(p.max_code_length != 0),
+      indexEncoder(p.max_code_length),
+      counterBits(p.counter_bits),
+      codeGenerationTicks(p.code_generation_ticks),
+      checkSaturation(p.check_saturation),
+      numVFTEntries(p.vft_entries),
+      numSamples(p.num_samples),
+      takenSamples(0),
+      phase(SAMPLING),
+      VFT(p.vft_assoc, p.vft_entries, p.vft_indexing_policy,
+          p.vft_replacement_policy, VFTEntry(counterBits)),
+      codeGenerationEvent([this] { phase = COMPRESSING; }, name())
 {
     fatal_if((numVFTEntries - 1) > mask(chunkSizeBits),
-        "There are more VFT entries than possible values.");
+             "There are more VFT entries than possible values.");
 }
 
 std::unique_ptr<Base::CompressionData>
-FrequentValues::compress(const std::vector<Chunk>& chunks, Cycles& comp_lat,
-    Cycles& decomp_lat)
+FrequentValues::compress(const std::vector<Chunk> &chunks, Cycles &comp_lat,
+                         Cycles &decomp_lat)
 {
     std::unique_ptr<CompData> comp_data =
         std::unique_ptr<CompData>(new CompData());
@@ -71,11 +76,11 @@ FrequentValues::compress(const std::vector<Chunk>& chunks, Cycles& comp_lat,
 
     // Compress every value sequentially. The compressed values are then
     // added to the final compressed data.
-    for (const auto& chunk : chunks) {
+    for (const auto &chunk : chunks) {
         encoder::Code code;
         int length = 0;
         if (phase == COMPRESSING) {
-            VFTEntry* entry = VFT.findEntry(chunk, false);
+            VFTEntry *entry = VFT.findEntry(chunk, false);
 
             // Theoretically, the code would be the index of the entry;
             // however, there is no practical need to do so, and we simply
@@ -99,19 +104,21 @@ FrequentValues::compress(const std::vector<Chunk>& chunks, Cycles& comp_lat,
             } else {
                 const unsigned code_size = std::log2(numVFTEntries);
                 if (entry) {
-                    code = {index, code_size};
+                    code = { index, code_size };
                 } else {
-                    code = {uncompressed_index, code_size + chunkSizeBits};
+                    code = { uncompressed_index, code_size + chunkSizeBits };
                 }
             }
         } else {
             // Not compressing yet; simply copy the value over
-            code = {chunk, chunkSizeBits};
+            code = { chunk, chunkSizeBits };
         }
         length += code.length;
 
-        DPRINTF(CacheComp, "Compressed %016x to %016x (Size = %d) "
-            "(Phase: %d)\n", chunk, code.code, length, phase);
+        DPRINTF(CacheComp,
+                "Compressed %016x to %016x (Size = %d) "
+                "(Phase: %d)\n",
+                chunk, code.code, length, phase);
 
         comp_data->compressedValues.emplace_back(code, chunk);
 
@@ -123,23 +130,23 @@ FrequentValues::compress(const std::vector<Chunk>& chunks, Cycles& comp_lat,
 
     // Set latencies based on the degree of parallelization, and any extra
     // latencies due to shifting or packaging
-    comp_lat = Cycles(compExtraLatency +
-        (chunks.size() / compChunksPerCycle));
-    decomp_lat = Cycles(decompExtraLatency +
-        (chunks.size() / decompChunksPerCycle));
+    comp_lat = Cycles(compExtraLatency + (chunks.size() / compChunksPerCycle));
+    decomp_lat =
+        Cycles(decompExtraLatency + (chunks.size() / decompChunksPerCycle));
 
     // Return compressed line
     return comp_data;
 }
 
 void
-FrequentValues::decompress(const CompressionData* comp_data, uint64_t* data)
+FrequentValues::decompress(const CompressionData *comp_data, uint64_t *data)
 {
-    const CompData* casted_comp_data = static_cast<const CompData*>(comp_data);
+    const CompData *casted_comp_data =
+        static_cast<const CompData *>(comp_data);
 
     // Decompress every entry sequentially
     std::vector<Chunk> decomp_chunks;
-    for (const auto& comp_chunk : casted_comp_data->compressedValues) {
+    for (const auto &comp_chunk : casted_comp_data->compressedValues) {
         if (phase == COMPRESSING) {
             if (useHuffmanEncoding) {
                 // Although in theory we have the codeword and have to find
@@ -153,19 +160,19 @@ FrequentValues::decompress(const CompressionData* comp_data, uint64_t* data)
                 // value will not be found because it is an uncompressed entry
                 assert(((code.length <= 64) &&
                         (code.code == comp_chunk.code.code)) ||
-                    (comp_chunk.code.code ==
+                       (comp_chunk.code.code ==
                         indexEncoder.encode(uncompressedValue).code));
             } else {
                 // The value at the given VFT entry must match the one stored,
                 // if it is not the uncompressed value
                 assert((comp_chunk.code.code == uncompressedValue) ||
-                    VFT.findEntry(comp_chunk.value, false));
+                       VFT.findEntry(comp_chunk.value, false));
             }
         }
 
         decomp_chunks.push_back(comp_chunk.value);
         DPRINTF(CacheComp, "Decompressed %016x to %016x\n",
-            comp_chunk.code.code, comp_chunk.value);
+                comp_chunk.code.code, comp_chunk.value);
     }
 
     // Concatenate the decompressed words to generate the cache lines
@@ -174,11 +181,11 @@ FrequentValues::decompress(const CompressionData* comp_data, uint64_t* data)
 
 void
 FrequentValues::sampleValues(const std::vector<uint64_t> &data,
-    bool is_invalidation)
+                             bool is_invalidation)
 {
     const std::vector<Chunk> chunks = toChunks(data.data());
-    for (const Chunk& chunk : chunks) {
-        VFTEntry* entry = VFT.findEntry(chunk, false);
+    for (const Chunk &chunk : chunks) {
+        VFTEntry *entry = VFT.findEntry(chunk, false);
         bool saturated = false;
         if (!is_invalidation) {
             // If a VFT hit, increase new value's counter; otherwise, insert
@@ -204,7 +211,7 @@ FrequentValues::sampleValues(const std::vector<uint64_t> &data,
         // If any counter saturates, all counters are shifted right,
         // resulting in precision loss
         if (checkSaturation && saturated) {
-            for (auto& entry : VFT) {
+            for (auto &entry : VFT) {
                 entry.counter >>= 1;
             }
         }
@@ -220,11 +227,11 @@ FrequentValues::generateCodes()
     // For that we generate all possible values from 0 to 1 size larger
     // than the number of real values.
     std::set<uint64_t> uncompressed_values;
-    for (int i = 0; i < numVFTEntries+1; ++i) {
+    for (int i = 0; i < numVFTEntries + 1; ++i) {
         uncompressed_values.insert(uncompressed_values.end(), i);
     }
 
-    for (const auto& entry : VFT) {
+    for (const auto &entry : VFT) {
         // Remove the respective real value from the list of possible
         // pseudo values for the uncompressed value
         uncompressed_values.erase(entry.value);
@@ -240,7 +247,7 @@ FrequentValues::generateCodes()
         // Populate the queue, adding each entry as a tree with one node.
         // They are sorted such that the value with highest frequency is
         // the queue's top
-        for (const auto& entry : VFT) {
+        for (const auto &entry : VFT) {
             indexEncoder.sample(entry.value, entry.counter);
         }
 

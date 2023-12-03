@@ -41,19 +41,16 @@ namespace gem5
 
 namespace VegaISA
 {
-    VEGAGPUStaticInst::VEGAGPUStaticInst(const std::string &opcode)
-        : GPUStaticInst(opcode), _srcLiteral(0)
-    {
-    }
+VEGAGPUStaticInst::VEGAGPUStaticInst(const std::string &opcode)
+    : GPUStaticInst(opcode), _srcLiteral(0)
+{}
 
-    VEGAGPUStaticInst::~VEGAGPUStaticInst()
-    {
-    }
+VEGAGPUStaticInst::~VEGAGPUStaticInst() {}
 
-    void
-    VEGAGPUStaticInst::panicUnimplemented() const
-    {
-        fatal("Encountered unimplemented VEGA instruction: %s\n", _opcode);
-    }
+void
+VEGAGPUStaticInst::panicUnimplemented() const
+{
+    fatal("Encountered unimplemented VEGA instruction: %s\n", _opcode);
+}
 } // namespace VegaISA
 } // namespace gem5

@@ -38,9 +38,10 @@ namespace gem5
 {
 
 MemPool::MemPool(Addr page_shift, Addr ptr, Addr limit)
-        : pageShift(page_shift), startPageNum(ptr >> page_shift),
-        freePageNum(ptr >> page_shift),
-        _totalPages((limit - ptr) >> page_shift)
+    : pageShift(page_shift),
+      startPageNum(ptr >> page_shift),
+      freePageNum(ptr >> page_shift),
+      _totalPages((limit - ptr) >> page_shift)
 {
     gem5_assert(_totalPages > 0);
 }
@@ -118,7 +119,7 @@ MemPool::allocate(Addr npages)
     freePageNum += npages;
 
     fatal_if(freePages() <= 0,
-            "Out of memory, please increase size of physical memory.");
+             "Out of memory, please increase size of physical memory.");
 
     return return_addr;
 }

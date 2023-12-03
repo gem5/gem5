@@ -46,9 +46,7 @@ Histogram::Histogram(int binsize, uint32_t bins)
     clear(bins);
 }
 
-Histogram::~Histogram()
-{
-}
+Histogram::~Histogram() {}
 
 void
 Histogram::clear(int binsize, uint32_t bins)
@@ -79,10 +77,10 @@ Histogram::doubleBinSize()
     assert(m_binsize != -1);
     uint32_t t_bins = m_data.size();
 
-    for (uint32_t i = 0; i < t_bins/2; i++) {
-        m_data[i] = m_data[i*2] + m_data[i*2 + 1];
+    for (uint32_t i = 0; i < t_bins / 2; i++) {
+        m_data[i] = m_data[i * 2] + m_data[i * 2 + 1];
     }
-    for (uint32_t i = t_bins/2; i < t_bins; i++) {
+    for (uint32_t i = t_bins / 2; i < t_bins; i++) {
         m_data[i] = 0;
     }
 
@@ -97,7 +95,7 @@ Histogram::add(int64_t value)
     m_count++;
 
     m_sumSamples += value;
-    m_sumSquaredSamples += (value*value);
+    m_sumSquaredSamples += (value * value);
 
     uint32_t index;
 
@@ -115,8 +113,9 @@ Histogram::add(int64_t value)
         // This is a linear histogram
         uint32_t t_bins = m_data.size();
 
-        while (m_max >= (t_bins * m_binsize)) doubleBinSize();
-        index = value/m_binsize;
+        while (m_max >= (t_bins * m_binsize))
+            doubleBinSize();
+        index = value / m_binsize;
     }
 
     assert(index < m_data.size());
@@ -125,7 +124,7 @@ Histogram::add(int64_t value)
 }
 
 void
-Histogram::add(Histogram& hist)
+Histogram::add(Histogram &hist)
 {
     uint32_t t_bins = m_data.size();
 
@@ -151,7 +150,7 @@ Histogram::add(Histogram& hist)
 
         for (uint32_t i = 1; i < t_bins; i++) {
             for (int j = 0; j < hist.getData(i); j++) {
-                add(1<<(i-1));  // account for the + 1 index
+                add(1 << (i - 1)); // account for the + 1 index
             }
         }
     } else if (hist.getBinSize() >= 1 && m_binsize >= 1) {
@@ -159,15 +158,18 @@ Histogram::add(Histogram& hist)
         // We are assuming that the two histograms have the same
         // minimum value that they can store.
 
-        while (m_binsize > hist.getBinSize()) hist.doubleBinSize();
-        while (hist.getBinSize() > m_binsize) doubleBinSize();
+        while (m_binsize > hist.getBinSize())
+            hist.doubleBinSize();
+        while (hist.getBinSize() > m_binsize)
+            doubleBinSize();
 
         assert(m_binsize == hist.getBinSize());
 
         for (uint32_t i = 0; i < t_bins; i++) {
             m_data[i] += hist.getData(i);
 
-            if (m_data[i] > 0) m_largest_bin = i;
+            if (m_data[i] > 0)
+                m_largest_bin = i;
         }
     } else {
         fatal("Don't know how to combine log and linear histograms!");
@@ -184,19 +186,19 @@ Histogram::getStandardDeviation() const
         return 0.0;
 
     double variance =
-        (double)(m_sumSquaredSamples - m_sumSamples * m_sumSamples / m_count)
-        / (m_count - 1);
+        (double)(m_sumSquaredSamples - m_sumSamples * m_sumSamples / m_count) /
+        (m_count - 1);
     return sqrt(variance);
 }
 
 void
-Histogram::print(std::ostream& out) const
+Histogram::print(std::ostream &out) const
 {
     printWithMultiplier(out, 1.0);
 }
 
 void
-Histogram::printPercent(std::ostream& out) const
+Histogram::printPercent(std::ostream &out) const
 {
     if (m_count == 0) {
         printWithMultiplier(out, 0.0);
@@ -206,7 +208,7 @@ Histogram::printPercent(std::ostream& out) const
 }
 
 void
-Histogram::printWithMultiplier(std::ostream& out, double multiplier) const
+Histogram::printWithMultiplier(std::ostream &out, double multiplier) const
 {
     if (m_binsize == -1) {
         out << "[binsize: log2 ";
@@ -220,7 +222,7 @@ Histogram::printWithMultiplier(std::ostream& out, double multiplier) const
         out << "average: NaN |";
         out << "standard deviation: NaN |";
     } else {
-        out << "average: " << std::setw(5) << ((double) m_sumSamples)/m_count
+        out << "average: " << std::setw(5) << ((double)m_sumSamples) / m_count
             << " | ";
         out << "standard deviation: " << getStandardDeviation() << " |";
     }
@@ -236,7 +238,7 @@ Histogram::printWithMultiplier(std::ostream& out, double multiplier) const
 }
 
 bool
-node_less_then_eq(const Histogram* n1, const Histogram* n2)
+node_less_then_eq(const Histogram *n1, const Histogram *n2)
 {
     return (n1->size() > n2->size());
 }

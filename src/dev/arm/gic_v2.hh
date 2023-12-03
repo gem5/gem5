@@ -38,7 +38,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 /** @file
  * Implementation of a GICv2
  */
@@ -70,22 +69,18 @@ class GicV2Registers
     virtual void writeCpu(ContextID ctx, Addr daddr, uint32_t data) = 0;
 
   protected:
-    static void copyDistRegister(GicV2Registers* from,
-                                 GicV2Registers* to,
+    static void copyDistRegister(GicV2Registers *from, GicV2Registers *to,
                                  ContextID ctx, Addr daddr);
-    static void copyCpuRegister(GicV2Registers* from,
-                                GicV2Registers* to,
+    static void copyCpuRegister(GicV2Registers *from, GicV2Registers *to,
                                 ContextID ctx, Addr daddr);
-    static void copyBankedDistRange(System *sys,
-                                    GicV2Registers* from,
-                                    GicV2Registers* to,
-                                    Addr daddr, size_t size);
-    static void clearBankedDistRange(System *sys, GicV2Registers* to,
+    static void copyBankedDistRange(System *sys, GicV2Registers *from,
+                                    GicV2Registers *to, Addr daddr,
+                                    size_t size);
+    static void clearBankedDistRange(System *sys, GicV2Registers *to,
                                      Addr daddr, size_t size);
-    static void copyDistRange(GicV2Registers* from,
-                              GicV2Registers* to,
+    static void copyDistRange(GicV2Registers *from, GicV2Registers *to,
                               Addr daddr, size_t size);
-    static void clearDistRange(GicV2Registers* to, Addr daddr, size_t size);
+    static void clearDistRange(GicV2Registers *to, Addr daddr, size_t size);
 };
 
 class GicV2 : public BaseGic, public GicV2Registers
@@ -94,16 +89,16 @@ class GicV2 : public BaseGic, public GicV2Registers
     // distributor memory addresses
     enum
     {
-        GICD_CTLR          = 0x000, // control register
-        GICD_TYPER         = 0x004, // controller type
-        GICD_IIDR          = 0x008, // implementer id
-        GICD_SGIR          = 0xf00, // software generated interrupt
-        GICD_PIDR0         = 0xfe0, // distributor peripheral ID0
-        GICD_PIDR1         = 0xfe4, // distributor peripheral ID1
-        GICD_PIDR2         = 0xfe8, // distributor peripheral ID2
-        GICD_PIDR3         = 0xfec, // distributor peripheral ID3
+        GICD_CTLR = 0x000,  // control register
+        GICD_TYPER = 0x004, // controller type
+        GICD_IIDR = 0x008,  // implementer id
+        GICD_SGIR = 0xf00,  // software generated interrupt
+        GICD_PIDR0 = 0xfe0, // distributor peripheral ID0
+        GICD_PIDR1 = 0xfe4, // distributor peripheral ID1
+        GICD_PIDR2 = 0xfe8, // distributor peripheral ID2
+        GICD_PIDR3 = 0xfec, // distributor peripheral ID3
 
-        DIST_SIZE          = 0x1000,
+        DIST_SIZE = 0x1000,
     };
 
     const uint32_t gicdPIDR;
@@ -124,24 +119,24 @@ class GicV2 : public BaseGic, public GicV2Registers
     // cpu memory addresses
     enum
     {
-        GICC_CTLR  = 0x00, // CPU control register
-        GICC_PMR   = 0x04, // Interrupt priority mask
-        GICC_BPR   = 0x08, // binary point register
-        GICC_IAR   = 0x0C, // interrupt ack register
-        GICC_EOIR  = 0x10, // end of interrupt
-        GICC_RPR   = 0x14, // running priority
+        GICC_CTLR = 0x00,  // CPU control register
+        GICC_PMR = 0x04,   // Interrupt priority mask
+        GICC_BPR = 0x08,   // binary point register
+        GICC_IAR = 0x0C,   // interrupt ack register
+        GICC_EOIR = 0x10,  // end of interrupt
+        GICC_RPR = 0x14,   // running priority
         GICC_HPPIR = 0x18, // highest pending interrupt
-        GICC_ABPR  = 0x1c, // aliased binary point
-        GICC_APR0  = 0xd0, // active priority register 0
-        GICC_APR1  = 0xd4, // active priority register 1
-        GICC_APR2  = 0xd8, // active priority register 2
-        GICC_APR3  = 0xdc, // active priority register 3
-        GICC_IIDR  = 0xfc, // cpu interface id register
-        GICC_DIR   = 0x1000, // deactive interrupt register
+        GICC_ABPR = 0x1c,  // aliased binary point
+        GICC_APR0 = 0xd0,  // active priority register 0
+        GICC_APR1 = 0xd4,  // active priority register 1
+        GICC_APR2 = 0xd8,  // active priority register 2
+        GICC_APR3 = 0xdc,  // active priority register 3
+        GICC_IIDR = 0xfc,  // cpu interface id register
+        GICC_DIR = 0x1000, // deactive interrupt register
     };
 
-    static const int SGI_MAX = 16;  // Number of Software Gen Interrupts
-    static const int PPI_MAX = 16;  // Number of Private Peripheral Interrupts
+    static const int SGI_MAX = 16; // Number of Software Gen Interrupts
+    static const int PPI_MAX = 16; // Number of Private Peripheral Interrupts
 
     /** Mask off SGI's when setting/clearing pending bits */
     static const int SGI_MASK = 0xFFFF0000;
@@ -149,7 +144,7 @@ class GicV2 : public BaseGic, public GicV2Registers
     /** Mask for bits that config N:N mode in GICD_ICFGR's */
     static const int NN_CONFIG_MASK = 0x55555555;
 
-    static const int CPU_MAX = 256;   // Max number of supported CPU interfaces
+    static const int CPU_MAX = 256; // Max number of supported CPU interfaces
     static const int SPURIOUS_INT = 1023;
     static const int INT_BITS_MAX = 32;
     static const int INT_LINES_MAX = 1020;
@@ -160,14 +155,14 @@ class GicV2 : public BaseGic, public GicV2Registers
     static const int GICC_BPR_MINIMUM = 2;
 
     BitUnion32(SWI)
-        Bitfield<3,0> sgi_id;
-        Bitfield<23,16> cpu_list;
-        Bitfield<25,24> list_type;
+        Bitfield<3, 0> sgi_id;
+        Bitfield<23, 16> cpu_list;
+        Bitfield<25, 24> list_type;
     EndBitUnion(SWI)
 
     BitUnion32(IAR)
-        Bitfield<9,0> ack_id;
-        Bitfield<12,10> cpu_id;
+        Bitfield<9, 0> ack_id;
+        Bitfield<12, 10> cpu_id;
     EndBitUnion(IAR)
 
     BitUnion32(CTLR)
@@ -238,21 +233,26 @@ class GicV2 : public BaseGic, public GicV2Registers
         void serialize(CheckpointOut &cp) const override;
         void unserialize(CheckpointIn &cp) override;
 
-        BankedRegs() :
-            intEnabled(0), pendingInt(0), activeInt(0),
-            intGroup(0), intConfig {0}, intPriority {0}
-          {}
+        BankedRegs()
+            : intEnabled(0),
+              pendingInt(0),
+              activeInt(0),
+              intGroup(0),
+              intConfig{ 0 },
+              intPriority{ 0 }
+        {}
     };
-    std::vector<BankedRegs*> bankedRegs;
 
-    BankedRegs& getBankedRegs(ContextID);
+    std::vector<BankedRegs *> bankedRegs;
+
+    BankedRegs &getBankedRegs(ContextID);
 
     /** GICD_I{S,C}ENABLER{1..31}
      * interrupt enable bits for global interrupts
      * 1b per interrupt, 32 bits per word, 31 words */
-    uint32_t intEnabled[INT_BITS_MAX-1];
+    uint32_t intEnabled[INT_BITS_MAX - 1];
 
-    uint32_t&
+    uint32_t &
     getIntEnabled(ContextID ctx, uint32_t ix)
     {
         if (ix == 0) {
@@ -265,9 +265,9 @@ class GicV2 : public BaseGic, public GicV2Registers
     /** GICD_I{S,C}PENDR{1..31}
      * interrupt pending bits for global interrupts
      * 1b per interrupt, 32 bits per word, 31 words */
-    uint32_t pendingInt[INT_BITS_MAX-1];
+    uint32_t pendingInt[INT_BITS_MAX - 1];
 
-    uint32_t&
+    uint32_t &
     getPendingInt(ContextID ctx, uint32_t ix)
     {
         assert(ix < INT_BITS_MAX);
@@ -281,9 +281,9 @@ class GicV2 : public BaseGic, public GicV2Registers
     /** GICD_I{S,C}ACTIVER{1..31}
      * interrupt active bits for global interrupts
      * 1b per interrupt, 32 bits per word, 31 words */
-    uint32_t activeInt[INT_BITS_MAX-1];
+    uint32_t activeInt[INT_BITS_MAX - 1];
 
-    uint32_t&
+    uint32_t &
     getActiveInt(ContextID ctx, uint32_t ix)
     {
         assert(ix < INT_BITS_MAX);
@@ -297,9 +297,9 @@ class GicV2 : public BaseGic, public GicV2Registers
     /** GICD_IGROUPR{1..31}
      * interrupt group bits for global interrupts
      * 1b per interrupt, 32 bits per word, 31 words */
-    uint32_t intGroup[INT_BITS_MAX-1];
+    uint32_t intGroup[INT_BITS_MAX - 1];
 
-    uint32_t&
+    uint32_t &
     getIntGroup(ContextID ctx, uint32_t ix)
     {
         assert(ix < INT_BITS_MAX);
@@ -319,7 +319,7 @@ class GicV2 : public BaseGic, public GicV2Registers
      */
     uint8_t intPriority[GLOBAL_INT_LINES];
 
-    uint8_t&
+    uint8_t &
     getIntPriority(ContextID ctx, uint32_t ix)
     {
         assert(ix < INT_LINES_MAX);
@@ -334,7 +334,7 @@ class GicV2 : public BaseGic, public GicV2Registers
      * GICD_ICFGR{2...63}
      * 2 bit per interrupt signaling if it's level or edge sensitive
      * and if it is 1:N or N:N */
-    uint32_t intConfig[INT_BITS_MAX*2 - 2];
+    uint32_t intConfig[INT_BITS_MAX * 2 - 2];
 
     /**
      * Reads the GICD_ICFGRn register.
@@ -342,10 +342,10 @@ class GicV2 : public BaseGic, public GicV2Registers
      * @param ix interrupt word index
      * @returns the interrupt config word
      */
-    uint32_t&
+    uint32_t &
     getIntConfig(ContextID ctx, uint32_t ix)
     {
-        assert(ix < INT_BITS_MAX*2);
+        assert(ix < INT_BITS_MAX * 2);
         if (ix < 2) {
             /** SGIs and PPIs **/
             return getBankedRegs(ctx).intConfig[ix];
@@ -372,9 +372,11 @@ class GicV2 : public BaseGic, public GicV2Registers
             if (gem5ExtensionsEnabled) {
                 ctx_mask = ctx;
             } else {
-                fatal_if(ctx >= 8,
+                fatal_if(
+                    ctx >= 8,
                     "%s requires the gem5_extensions parameter to support "
-                    "more than 8 cores\n", name());
+                    "more than 8 cores\n",
+                    name());
                 // convert the CPU id number into a bit mask
                 ctx_mask = 1 << ctx;
             }
@@ -432,8 +434,7 @@ class GicV2 : public BaseGic, public GicV2Registers
     bool
     cpuEnabled(ContextID ctx) const
     {
-        return cpuControl[ctx].enableGrp0 ||
-               cpuControl[ctx].enableGrp1;
+        return cpuControl[ctx].enableGrp0 || cpuControl[ctx].enableGrp1;
     }
 
     /** GICC_CTLR:
@@ -486,8 +487,17 @@ class GicV2 : public BaseGic, public GicV2Registers
     /** generate a bit mask to check cpuSgi for an interrupt. */
     uint64_t genSwiMask(int cpu);
 
-    int intNumToWord(int num) const { return num >> 5; }
-    int intNumToBit(int num) const { return num % 32; }
+    int
+    intNumToWord(int num) const
+    {
+        return num >> 5;
+    }
+
+    int
+    intNumToBit(int num) const
+    {
+        return num % 32;
+    }
 
     /** Clears a cpu IRQ or FIQ signal */
     void clearInt(ContextID ctx, uint32_t int_num);
@@ -520,7 +530,11 @@ class GicV2 : public BaseGic, public GicV2Registers
     void unserialize(CheckpointIn &cp) override;
 
   public: /* PioDevice */
-    AddrRangeList getAddrRanges() const override { return addrRanges; }
+    AddrRangeList
+    getAddrRanges() const override
+    {
+        return addrRanges;
+    }
 
     /** A PIO read to the device, immediately split up into
      * readDistributor() or readCpu()
@@ -542,14 +556,14 @@ class GicV2 : public BaseGic, public GicV2Registers
     bool supportsVersion(GicVersion version) override;
 
   protected: /** GIC state transfer */
-    void copyGicState(GicV2Registers* from, GicV2Registers* to);
+    void copyGicState(GicV2Registers *from, GicV2Registers *to);
 
     /** Handle a read to the distributor portion of the GIC
      * @param pkt packet to respond to
      */
     Tick readDistributor(PacketPtr pkt);
-    uint32_t readDistributor(ContextID ctx, Addr daddr,
-                             size_t resp_sz);
+    uint32_t readDistributor(ContextID ctx, Addr daddr, size_t resp_sz);
+
     uint32_t
     readDistributor(ContextID ctx, Addr daddr) override
     {
@@ -566,8 +580,9 @@ class GicV2 : public BaseGic, public GicV2Registers
      * @param pkt packet to respond to
      */
     Tick writeDistributor(PacketPtr pkt);
-    void writeDistributor(ContextID ctx, Addr daddr,
-                          uint32_t data, size_t data_sz);
+    void writeDistributor(ContextID ctx, Addr daddr, uint32_t data,
+                          size_t data_sz);
+
     void
     writeDistributor(ContextID ctx, Addr daddr, uint32_t data) override
     {

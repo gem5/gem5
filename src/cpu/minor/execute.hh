@@ -67,7 +67,6 @@ namespace minor
 class Execute : public Named
 {
   protected:
-
     /** Input port carrying instructions from Decode */
     Latch<ForwardInstData>::Output inp;
 
@@ -143,38 +142,38 @@ class Execute : public Named
      *  Execute */
     enum DrainState
     {
-        NotDraining, /* Not draining, possibly running */
+        NotDraining,      /* Not draining, possibly running */
         DrainCurrentInst, /* Draining to end of inst/macroop */
-        DrainHaltFetch, /* Halting Fetch after completing current inst */
-        DrainAllInsts /* Discarding all remaining insts */
+        DrainHaltFetch,   /* Halting Fetch after completing current inst */
+        DrainAllInsts     /* Discarding all remaining insts */
     };
 
     struct ExecuteThreadInfo
     {
         /** Constructor */
-        ExecuteThreadInfo(unsigned int insts_committed) :
-            inputIndex(0),
-            lastCommitWasEndOfMacroop(true),
-            instsBeingCommitted(insts_committed),
-            streamSeqNum(InstId::firstStreamSeqNum),
-            lastPredictionSeqNum(InstId::firstPredictionSeqNum),
-            drainState(NotDraining)
-        { }
+        ExecuteThreadInfo(unsigned int insts_committed)
+            : inputIndex(0),
+              lastCommitWasEndOfMacroop(true),
+              instsBeingCommitted(insts_committed),
+              streamSeqNum(InstId::firstStreamSeqNum),
+              lastPredictionSeqNum(InstId::firstPredictionSeqNum),
+              drainState(NotDraining)
+        {}
 
-        ExecuteThreadInfo(const ExecuteThreadInfo& other) :
-            inputIndex(other.inputIndex),
-            lastCommitWasEndOfMacroop(other.lastCommitWasEndOfMacroop),
-            instsBeingCommitted(other.instsBeingCommitted),
-            streamSeqNum(other.streamSeqNum),
-            lastPredictionSeqNum(other.lastPredictionSeqNum),
-            drainState(other.drainState)
-        { }
+        ExecuteThreadInfo(const ExecuteThreadInfo &other)
+            : inputIndex(other.inputIndex),
+              lastCommitWasEndOfMacroop(other.lastCommitWasEndOfMacroop),
+              instsBeingCommitted(other.instsBeingCommitted),
+              streamSeqNum(other.streamSeqNum),
+              lastPredictionSeqNum(other.lastPredictionSeqNum),
+              drainState(other.drainState)
+        {}
 
         /** In-order instructions either in FUs or the LSQ */
-        Queue<QueuedInst, ReportTraitsAdaptor<QueuedInst> > *inFlightInsts;
+        Queue<QueuedInst, ReportTraitsAdaptor<QueuedInst>> *inFlightInsts;
 
         /** Memory ref instructions still in the FUs */
-        Queue<QueuedInst, ReportTraitsAdaptor<QueuedInst> > *inFUMemInsts;
+        Queue<QueuedInst, ReportTraitsAdaptor<QueuedInst>> *inFUMemInsts;
 
         /** Index that we've completed upto in getInput data.  We can say we're
          *  popInput when this equals getInput()->width() */
@@ -188,10 +187,10 @@ class Execute : public Named
          *  for MinorTrace */
         ForwardInstData instsBeingCommitted;
 
-        /** Source of sequence number for instuction streams.  Increment this and
-         *  pass to fetch whenever an instruction stream needs to be changed.
-         *  For any more complicated behaviour (e.g. speculation) there'll need
-         *  to be another plan. */
+        /** Source of sequence number for instuction streams.  Increment this
+         * and pass to fetch whenever an instruction stream needs to be
+         * changed. For any more complicated behaviour (e.g. speculation)
+         * there'll need to be another plan. */
         InstSeqNum streamSeqNum;
 
         /** A prediction number for use where one isn't available from an
@@ -200,7 +199,8 @@ class Execute : public Named
          *  a branch, but it minimises disruption in stream identification */
         InstSeqNum lastPredictionSeqNum;
 
-        /** State progression for draining NotDraining -> ... -> DrainAllInsts */
+        /** State progression for draining NotDraining -> ... -> DrainAllInsts
+         */
         DrainState drainState;
     };
 
@@ -211,7 +211,7 @@ class Execute : public Named
     ThreadID commitPriority;
 
   protected:
-    friend std::ostream &operator <<(std::ostream &os, DrainState state);
+    friend std::ostream &operator<<(std::ostream &os, DrainState state);
 
     /** Get a piece of data to work on from the inputBuffer, or 0 if there
      *  is no data. */
@@ -228,16 +228,16 @@ class Execute : public Named
     /** Actually create a branch to communicate to Fetch1/Fetch2 and,
      *  if that is a stream-changing branch update the streamSeqNum */
     void updateBranchData(ThreadID tid, BranchData::Reason reason,
-        MinorDynInstPtr inst, const PCStateBase &target, BranchData &branch);
+                          MinorDynInstPtr inst, const PCStateBase &target,
+                          BranchData &branch);
 
     /** Handle extracting mem ref responses from the memory queues and
      *  completing the associated instructions.
      *  Fault is an output and will contain any fault caused (and already
      *  invoked by the function)
      *  Sets branch to any branch generated by the instruction. */
-    void handleMemResponse(MinorDynInstPtr inst,
-        LSQ::LSQRequestPtr response, BranchData &branch,
-        Fault &fault);
+    void handleMemResponse(MinorDynInstPtr inst, LSQ::LSQRequestPtr response,
+                           BranchData &branch, Fault &fault);
 
     /** Execute a memory reference instruction.  This calls initiateAcc on
      *  the instruction which will then call writeMem or readMem to issue a
@@ -251,7 +251,7 @@ class Execute : public Named
      *  fault is set if any non-NoFault fault is raised.
      *  Any faults raised are actually invoke-d by this function. */
     bool executeMemRefInst(MinorDynInstPtr inst, BranchData &branch,
-        bool &failed_predicate, Fault &fault);
+                           bool &failed_predicate, Fault &fault);
 
     /** Has an interrupt been raised */
     bool isInterrupted(ThreadID thread_id) const;
@@ -277,7 +277,7 @@ class Execute : public Named
     /** Check all threads for possible interrupts. If interrupt is taken,
      *  returns the tid of the thread.  interrupted is set if any thread
      *  has an interrupt, irrespective of if it is taken */
-    ThreadID checkInterrupts(BranchData& branch, bool& interrupted);
+    ThreadID checkInterrupts(BranchData &branch, bool &interrupted);
 
     /** Checks if a specific thread has an interrupt.  No action is taken.
      *  this is used for determining if a thread should only commit microops */
@@ -298,8 +298,8 @@ class Execute : public Named
      *      completed_mem_issue is set if the instruction was a
      *          memory access that was issued */
     bool commitInst(MinorDynInstPtr inst, bool early_memory_issue,
-        BranchData &branch, Fault &fault, bool &committed,
-        bool &completed_mem_issue);
+                    BranchData &branch, Fault &fault, bool &committed,
+                    bool &completed_mem_issue);
 
     /** Try and commit instructions from the ends of the functional unit
      *  pipelines.
@@ -309,7 +309,7 @@ class Execute : public Named
      *  committing.
      *  branch is set to any branch raised during commit. */
     void commit(ThreadID thread_id, bool only_commit_microops, bool discard,
-        BranchData &branch);
+                BranchData &branch);
 
     /** Set the drain state (with useful debugging messages) */
     void setDrainState(ThreadID thread_id, DrainState state);
@@ -320,21 +320,23 @@ class Execute : public Named
     ThreadID getIssuingThread();
 
   public:
-    Execute(const std::string &name_,
-        MinorCPU &cpu_,
-        const BaseMinorCPUParams &params,
-        Latch<ForwardInstData>::Output inp_,
-        Latch<BranchData>::Input out_);
+    Execute(const std::string &name_, MinorCPU &cpu_,
+            const BaseMinorCPUParams &params,
+            Latch<ForwardInstData>::Output inp_,
+            Latch<BranchData>::Input out_);
 
     ~Execute();
 
   public:
-
     /** Returns the DcachePort owned by this Execute to pass upwards */
     MinorCPU::MinorCPUPort &getDcachePort();
 
     /** To allow ExecContext to find the LSQ */
-    LSQ &getLSQ() { return lsq; }
+    LSQ &
+    getLSQ()
+    {
+        return lsq;
+    }
 
     /** Does the given instruction have the right stream sequence number
      *  to be committed? */

@@ -74,7 +74,7 @@ PartitionFieldExtention::setPartitionMonitoringID(uint64_t id)
 }
 
 uint64_t
-readPacketPartitionID (PacketPtr pkt)
+readPacketPartitionID(PacketPtr pkt)
 {
     // get partition_id from PartitionFieldExtention
     std::shared_ptr<PartitionFieldExtention> ext =

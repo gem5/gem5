@@ -70,15 +70,15 @@ class IdeController : public PciDevice
     class ConfigSpaceRegs : public RegisterBankLE
     {
       public:
-        ConfigSpaceRegs(const std::string &name) :
-            RegisterBankLE(name, PCI_DEVICE_SPECIFIC)
+        ConfigSpaceRegs(const std::string &name)
+            : RegisterBankLE(name, PCI_DEVICE_SPECIFIC)
         {
             // None of these registers are actually hooked up to control
             // anything, so they have no specially defined behaviors. They
             // just store values for now, but should presumably do something
             // in a more accurate model.
-            addRegisters({primaryTiming, secondaryTiming, deviceTiming, raz0,
-                          udmaControl, raz1, udmaTiming, raz2});
+            addRegisters({ primaryTiming, secondaryTiming, deviceTiming, raz0,
+                           udmaControl, raz1, udmaTiming, raz2 });
         }
 
         enum
@@ -87,17 +87,19 @@ class IdeController : public PciDevice
         };
 
         /* Offset in config space */
-        /* 0x40-0x41 */ Register16 primaryTiming =
-                            {"primary timing", TimeRegWithDecodeEnabled};
-        /* 0x42-0x43 */ Register16 secondaryTiming =
-                            {"secondary timing", TimeRegWithDecodeEnabled};
-        /* 0x44      */ Register8 deviceTiming = {"device timing"};
-        /* 0x45-0x47 */ RegisterRaz raz0 = {"raz0", 3};
-        /* 0x48      */ Register8 udmaControl = {"udma control"};
-        /* 0x49      */ RegisterRaz raz1 = {"raz1", 1};
-        /* 0x4a-0x4b */ Register16 udmaTiming = {"udma timing"};
-        /* 0x4c-...  */ RegisterRaz raz2 =
-                            {"raz2", (PCI_CONFIG_SIZE + 1) - 0x4c};
+        /* 0x40-0x41 */ Register16 primaryTiming = {
+            "primary timing", TimeRegWithDecodeEnabled
+        };
+        /* 0x42-0x43 */ Register16 secondaryTiming = {
+            "secondary timing", TimeRegWithDecodeEnabled
+        };
+        /* 0x44      */ Register8 deviceTiming = { "device timing" };
+        /* 0x45-0x47 */ RegisterRaz raz0 = { "raz0", 3 };
+        /* 0x48      */ Register8 udmaControl = { "udma control" };
+        /* 0x49      */ RegisterRaz raz1 = { "raz1", 1 };
+        /* 0x4a-0x4b */ Register16 udmaTiming = { "udma timing" };
+        /* 0x4c-...  */ RegisterRaz raz2 = { "raz2",
+                                             (PCI_CONFIG_SIZE + 1) - 0x4c };
 
         void serialize(CheckpointOut &cp) const;
         void unserialize(CheckpointIn &cp);
@@ -116,7 +118,7 @@ class IdeController : public PciDevice
          * https://en.wikipedia.org/wiki/Parallel_ATA
          * #Multiple_devices_on_a_cable
          *
-        */
+         */
         IdeDisk *device0 = nullptr, *device1 = nullptr;
 
         /** Currently selected disk */
@@ -128,12 +130,29 @@ class IdeController : public PciDevice
         bool _pendingInterrupt = false;
 
       public:
-        bool isPrimary() const { return primary; }
+        bool
+        isPrimary() const
+        {
+            return primary;
+        }
 
-        bool pendingInterrupt() const { return _pendingInterrupt; }
+        bool
+        pendingInterrupt() const
+        {
+            return _pendingInterrupt;
+        }
 
-        IdeDisk *selected() const { return _selected; }
-        IdeController *controller() const { return ctrl; }
+        IdeDisk *
+        selected() const
+        {
+            return _selected;
+        }
+
+        IdeController *
+        controller() const
+        {
+            return ctrl;
+        }
 
         void
         setDevice0(IdeDisk *disk)

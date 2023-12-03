@@ -38,8 +38,8 @@ namespace gem5
 {
 namespace VegaISA
 {
-    const Addr PageShift = 12;
-    const Addr PageBytes = 1ULL << PageShift;
+const Addr PageShift = 12;
+const Addr PageBytes = 1ULL << PageShift;
 } // namespace VegaISA
 } // namespace gem5
 

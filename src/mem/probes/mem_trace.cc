@@ -70,8 +70,8 @@ MemTraceProbe::MemTraceProbe(const MemTraceProbeParams &p)
     } else {
         // Generate a filename from the name of the SimObject. Append .trc
         // and .gz if we want compression enabled.
-        filename = simout.resolve(name() + ".trc" +
-                                  (p.trace_compress ? ".gz" : ""));
+        filename =
+            simout.resolve(name() + ".trc" + (p.trace_compress ? ".gz" : ""));
     }
 
     traceStream = new ProtoOutputStream(filename);

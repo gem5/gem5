@@ -41,8 +41,7 @@
 
 #include "base/pngwriter.hh"
 
-extern "C"
-{
+extern "C" {
 #include <png.h>
 }
 
@@ -54,7 +53,7 @@ extern "C"
 namespace gem5
 {
 
-const char* PngWriter::_imgExtension = "png";
+const char *PngWriter::_imgExtension = "png";
 
 /**
  * Write callback to use with libpng APIs
@@ -68,9 +67,8 @@ writePng(png_structp pngPtr, png_bytep data, png_size_t length)
 {
     // Here we get our IO pointer back from the write struct
     // and we cast it into a ostream* type.
-    std::ostream* strmPtr = reinterpret_cast<std::ostream*>(
-        png_get_io_ptr(pngPtr)
-    );
+    std::ostream *strmPtr =
+        reinterpret_cast<std::ostream *>(png_get_io_ptr(pngPtr));
 
     // Write length bytes to data
     strmPtr->write(reinterpret_cast<const char *>(data), length);
@@ -80,17 +78,15 @@ struct PngWriter::PngStructHandle
 {
   private:
     // Make PngStructHandle uncopyable
-    PngStructHandle(const PngStructHandle&) = delete;
-    PngStructHandle& operator=(const PngStructHandle&) = delete;
-  public:
+    PngStructHandle(const PngStructHandle &) = delete;
+    PngStructHandle &operator=(const PngStructHandle &) = delete;
 
-    PngStructHandle() :
-        pngWriteP(NULL), pngInfoP(NULL)
+  public:
+    PngStructHandle() : pngWriteP(NULL), pngInfoP(NULL)
     {
         // Creating write structure
-        pngWriteP = png_create_write_struct(
-            PNG_LIBPNG_VER_STRING, NULL, NULL, NULL
-        );
+        pngWriteP =
+            png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 
         if (pngWriteP) {
             // Creating info structure
@@ -115,10 +111,9 @@ struct PngWriter::PngStructHandle
 void
 PngWriter::write(std::ostream &png) const
 {
-
     // Height of the frame buffer
     unsigned height = fb.height();
-    unsigned width  = fb.width();
+    unsigned width = fb.width();
 
     // Do not write if frame buffer is empty
     if (!fb.area()) {
@@ -130,8 +125,8 @@ PngWriter::write(std::ostream &png) const
     PngStructHandle handle;
 
     // Png info/write pointers.
-    png_structp pngPtr  = handle.pngWriteP;
-    png_infop   infoPtr = handle.pngInfoP;
+    png_structp pngPtr = handle.pngWriteP;
+    png_infop infoPtr = handle.pngInfoP;
 
     if (!pngPtr) {
         warn("Frame buffer dump aborted: Unable to create"
@@ -151,24 +146,20 @@ PngWriter::write(std::ostream &png) const
     // one provided by us (writePng)
     png_set_write_fn(pngPtr, (png_voidp)&png, writePng, NULL);
 
-    png_set_IHDR(pngPtr, infoPtr, width, height, 8,
-                 PNG_COLOR_TYPE_RGB,
-                 PNG_INTERLACE_NONE,
-                 PNG_COMPRESSION_TYPE_DEFAULT,
+    png_set_IHDR(pngPtr, infoPtr, width, height, 8, PNG_COLOR_TYPE_RGB,
+                 PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT,
                  PNG_FILTER_TYPE_DEFAULT);
 
     png_write_info(pngPtr, infoPtr);
 
     // libpng requires an array of pointers to the frame buffer's rows.
     std::vector<PixelType> rowPacked(width);
-    for (unsigned y=0; y < height; ++y) {
-        for (unsigned x=0; x < width; ++x) {
+    for (unsigned y = 0; y < height; ++y) {
+        for (unsigned x = 0; x < width; ++x) {
             rowPacked[x] = fb.pixel(x, y);
         }
 
-        png_write_row(pngPtr,
-            reinterpret_cast<png_bytep>(rowPacked.data())
-        );
+        png_write_row(pngPtr, reinterpret_cast<png_bytep>(rowPacked.data()));
     }
 
     // End of write

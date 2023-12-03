@@ -40,18 +40,17 @@
 namespace gem5
 {
 
-namespace trace {
+namespace trace
+{
 
 class IntelTraceRecord : public InstRecord
 {
   public:
     IntelTraceRecord(Tick _when, ThreadContext *_thread,
-               const StaticInstPtr _staticInst, const PCStateBase &_pc,
-               const StaticInstPtr _macroStaticInst = NULL)
-        : InstRecord(_when, _thread, _staticInst, _pc,
-                _macroStaticInst)
-    {
-    }
+                     const StaticInstPtr _staticInst, const PCStateBase &_pc,
+                     const StaticInstPtr _macroStaticInst = NULL)
+        : InstRecord(_when, _thread, _staticInst, _pc, _macroStaticInst)
+    {}
 
     void dump();
 };
@@ -59,14 +58,12 @@ class IntelTraceRecord : public InstRecord
 class IntelTrace : public InstTracer
 {
   public:
-
-    IntelTrace(const IntelTraceParams &p) : InstTracer(p)
-    {}
+    IntelTrace(const IntelTraceParams &p) : InstTracer(p) {}
 
     IntelTraceRecord *
-    getInstRecord(Tick when, ThreadContext *tc,
-            const StaticInstPtr staticInst, const PCStateBase &pc,
-            const StaticInstPtr macroStaticInst = NULL)
+    getInstRecord(Tick when, ThreadContext *tc, const StaticInstPtr staticInst,
+                  const PCStateBase &pc,
+                  const StaticInstPtr macroStaticInst = NULL)
     {
         if (!debug::ExecEnable)
             return NULL;

@@ -50,8 +50,7 @@ MemDelay::MemDelay(const MemDelayParams &p)
       reqQueue(*this, requestPort),
       respQueue(*this, responsePort),
       snoopRespQueue(*this, requestPort)
-{
-}
+{}
 
 void
 MemDelay::init()
@@ -59,7 +58,6 @@ MemDelay::init()
     if (!responsePort.isConnected() || !requestPort.isConnected())
         fatal("Memory delay is not connected on both sides.\n");
 }
-
 
 Port &
 MemDelay::getPort(const std::string &if_name, PortID idx)
@@ -77,14 +75,13 @@ bool
 MemDelay::trySatisfyFunctional(PacketPtr pkt)
 {
     return responsePort.trySatisfyFunctional(pkt) ||
-        requestPort.trySatisfyFunctional(pkt);
+           requestPort.trySatisfyFunctional(pkt);
 }
 
 MemDelay::RequestPort::RequestPort(const std::string &_name, MemDelay &_parent)
     : QueuedRequestPort(_name, _parent.reqQueue, _parent.snoopRespQueue),
       parent(_parent)
-{
-}
+{}
 
 bool
 MemDelay::RequestPort::recvTimingResp(PacketPtr pkt)
@@ -125,13 +122,10 @@ MemDelay::RequestPort::recvTimingSnoopReq(PacketPtr pkt)
     parent.responsePort.sendTimingSnoopReq(pkt);
 }
 
-
-MemDelay::ResponsePort::
-ResponsePort(const std::string &_name, MemDelay &_parent)
-    : QueuedResponsePort(_name, _parent.respQueue),
-      parent(_parent)
-{
-}
+MemDelay::ResponsePort::ResponsePort(const std::string &_name,
+                                     MemDelay &_parent)
+    : QueuedResponsePort(_name, _parent.respQueue), parent(_parent)
+{}
 
 Tick
 MemDelay::ResponsePort::recvAtomic(PacketPtr pkt)
@@ -177,16 +171,13 @@ MemDelay::ResponsePort::recvTimingSnoopResp(PacketPtr pkt)
     return true;
 }
 
-
-
 SimpleMemDelay::SimpleMemDelay(const SimpleMemDelayParams &p)
     : MemDelay(p),
       readReqDelay(p.read_req),
       readRespDelay(p.read_resp),
       writeReqDelay(p.write_req),
       writeRespDelay(p.write_resp)
-{
-}
+{}
 
 Tick
 SimpleMemDelay::delayReq(PacketPtr pkt)

@@ -69,7 +69,7 @@ namespace gem5
 
 class Packet;
 typedef Packet *PacketPtr;
-typedef uint8_t* PacketDataPtr;
+typedef uint8_t *PacketDataPtr;
 typedef std::list<PacketPtr> PacketList;
 typedef uint64_t PacketId;
 
@@ -92,7 +92,7 @@ class MemCmd
         WriteCompleteResp,
         WritebackDirty,
         WritebackClean,
-        WriteClean,            // writes dirty data below without evicting
+        WriteClean, // writes dirty data below without evicting
         CleanEvict,
         SoftPFReq,
         SoftPFExReq,
@@ -101,17 +101,17 @@ class MemCmd
         HardPFResp,
         WriteLineReq,
         UpgradeReq,
-        SCUpgradeReq,           // Special "weak" upgrade for StoreCond
+        SCUpgradeReq, // Special "weak" upgrade for StoreCond
         UpgradeResp,
-        SCUpgradeFailReq,       // Failed SCUpgradeReq in MSHR (never sent)
-        UpgradeFailResp,        // Valid for SCUpgradeReq only
+        SCUpgradeFailReq, // Failed SCUpgradeReq in MSHR (never sent)
+        UpgradeFailResp,  // Valid for SCUpgradeReq only
         ReadExReq,
         ReadExResp,
         ReadCleanReq,
         ReadSharedReq,
         LoadLockedReq,
         StoreCondReq,
-        StoreCondFailReq,       // Failed StoreCondReq in MSHR (never sent)
+        StoreCondFailReq, // Failed StoreCondReq in MSHR (never sent)
         StoreCondResp,
         LockedRMWReadReq,
         LockedRMWReadResp,
@@ -132,16 +132,16 @@ class MemCmd
         // @TODO these should be classified as responses rather than
         // requests; coding them as requests initially for backwards
         // compatibility
-        InvalidDestError,  // packet dest field invalid
-        BadAddressError,   // memory address invalid
-        ReadError,         // packet dest unable to fulfill read command
-        WriteError,        // packet dest unable to fulfill write command
-        FunctionalReadError, // unable to fulfill functional read
+        InvalidDestError,     // packet dest field invalid
+        BadAddressError,      // memory address invalid
+        ReadError,            // packet dest unable to fulfill read command
+        WriteError,           // packet dest unable to fulfill write command
+        FunctionalReadError,  // unable to fulfill functional read
         FunctionalWriteError, // unable to fulfill functional write
         // Fake simulator-only commands
-        PrintReq,       // Print state matching address
-        FlushReq,      //request for a cache flush
-        InvalidateReq,   // request for address to be invalidated
+        PrintReq,      // Print state matching address
+        FlushReq,      // request for a cache flush
+        InvalidateReq, // request for address to be invalidated
         InvalidateResp,
         // hardware transactional memory
         HTMReq,
@@ -158,25 +158,25 @@ class MemCmd
      */
     enum Attribute
     {
-        IsRead,         //!< Data flows from responder to requester
-        IsWrite,        //!< Data flows from requester to responder
+        IsRead,  //!< Data flows from responder to requester
+        IsWrite, //!< Data flows from requester to responder
         IsUpgrade,
         IsInvalidate,
-        IsClean,        //!< Cleans any existing dirty blocks
-        NeedsWritable,  //!< Requires writable copy to complete in-cache
-        IsRequest,      //!< Issued by requester
-        IsResponse,     //!< Issue by responder
-        NeedsResponse,  //!< Requester needs response from target
+        IsClean,       //!< Cleans any existing dirty blocks
+        NeedsWritable, //!< Requires writable copy to complete in-cache
+        IsRequest,     //!< Issued by requester
+        IsResponse,    //!< Issue by responder
+        NeedsResponse, //!< Requester needs response from target
         IsEviction,
         IsSWPrefetch,
         IsHWPrefetch,
-        IsLlsc,         //!< Alpha/MIPS LL or SC access
-        IsLockedRMW,    //!< x86 locked RMW access
-        HasData,        //!< There is an associated payload
-        IsError,        //!< Error response
-        IsPrint,        //!< Print state matching address (for debugging)
-        IsFlush,        //!< Flush the address from caches
-        FromCache,      //!< Request originated from a caching agent
+        IsLlsc,      //!< Alpha/MIPS LL or SC access
+        IsLockedRMW, //!< x86 locked RMW access
+        HasData,     //!< There is an associated payload
+        IsError,     //!< Error response
+        IsPrint,     //!< Print state matching address (for debugging)
+        IsFlush,     //!< Flush the address from caches
+        FromCache,   //!< Request originated from a caching agent
         NUM_COMMAND_ATTRIBUTES
     };
 
@@ -184,7 +184,7 @@ class MemCmd
     buildAttributes(std::initializer_list<Attribute> attrs)
     {
         unsigned long long ret = 0;
-        for (const auto &attr: attrs)
+        for (const auto &attr : attrs)
             ret |= (1ULL << attr);
         return ret;
     }
@@ -203,9 +203,11 @@ class MemCmd
         /// String representation (for printing)
         const std::string str;
 
-        CommandInfo(std::initializer_list<Attribute> attrs,
-                Command _response, const std::string &_str) :
-            attributes(buildAttributes(attrs)), response(_response), str(_str)
+        CommandInfo(std::initializer_list<Attribute> attrs, Command _response,
+                    const std::string &_str)
+            : attributes(buildAttributes(attrs)),
+              response(_response),
+              str(_str)
         {}
     };
 
@@ -213,7 +215,6 @@ class MemCmd
     static const CommandInfo commandInfo[];
 
   private:
-
     Command cmd;
 
     bool
@@ -223,47 +224,146 @@ class MemCmd
     }
 
   public:
+    bool
+    isRead() const
+    {
+        return testCmdAttrib(IsRead);
+    }
 
-    bool isRead() const            { return testCmdAttrib(IsRead); }
-    bool isWrite() const           { return testCmdAttrib(IsWrite); }
-    bool isUpgrade() const         { return testCmdAttrib(IsUpgrade); }
-    bool isRequest() const         { return testCmdAttrib(IsRequest); }
-    bool isResponse() const        { return testCmdAttrib(IsResponse); }
-    bool needsWritable() const     { return testCmdAttrib(NeedsWritable); }
-    bool needsResponse() const     { return testCmdAttrib(NeedsResponse); }
-    bool isInvalidate() const      { return testCmdAttrib(IsInvalidate); }
-    bool isEviction() const        { return testCmdAttrib(IsEviction); }
-    bool isClean() const           { return testCmdAttrib(IsClean); }
-    bool fromCache() const         { return testCmdAttrib(FromCache); }
+    bool
+    isWrite() const
+    {
+        return testCmdAttrib(IsWrite);
+    }
+
+    bool
+    isUpgrade() const
+    {
+        return testCmdAttrib(IsUpgrade);
+    }
+
+    bool
+    isRequest() const
+    {
+        return testCmdAttrib(IsRequest);
+    }
+
+    bool
+    isResponse() const
+    {
+        return testCmdAttrib(IsResponse);
+    }
+
+    bool
+    needsWritable() const
+    {
+        return testCmdAttrib(NeedsWritable);
+    }
+
+    bool
+    needsResponse() const
+    {
+        return testCmdAttrib(NeedsResponse);
+    }
+
+    bool
+    isInvalidate() const
+    {
+        return testCmdAttrib(IsInvalidate);
+    }
+
+    bool
+    isEviction() const
+    {
+        return testCmdAttrib(IsEviction);
+    }
+
+    bool
+    isClean() const
+    {
+        return testCmdAttrib(IsClean);
+    }
+
+    bool
+    fromCache() const
+    {
+        return testCmdAttrib(FromCache);
+    }
 
     /**
      * A writeback is an eviction that carries data.
      */
-    bool isWriteback() const       { return testCmdAttrib(IsEviction) &&
-                                            testCmdAttrib(HasData); }
+    bool
+    isWriteback() const
+    {
+        return testCmdAttrib(IsEviction) && testCmdAttrib(HasData);
+    }
 
     /**
      * Check if this particular packet type carries payload data. Note
      * that this does not reflect if the data pointer of the packet is
      * valid or not.
      */
-    bool hasData() const        { return testCmdAttrib(HasData); }
-    bool isLLSC() const         { return testCmdAttrib(IsLlsc); }
-    bool isLockedRMW() const    { return testCmdAttrib(IsLockedRMW); }
-    bool isSWPrefetch() const   { return testCmdAttrib(IsSWPrefetch); }
-    bool isHWPrefetch() const   { return testCmdAttrib(IsHWPrefetch); }
-    bool isPrefetch() const     { return testCmdAttrib(IsSWPrefetch) ||
-                                         testCmdAttrib(IsHWPrefetch); }
-    bool isError() const        { return testCmdAttrib(IsError); }
-    bool isPrint() const        { return testCmdAttrib(IsPrint); }
-    bool isFlush() const        { return testCmdAttrib(IsFlush); }
+    bool
+    hasData() const
+    {
+        return testCmdAttrib(HasData);
+    }
+
+    bool
+    isLLSC() const
+    {
+        return testCmdAttrib(IsLlsc);
+    }
+
+    bool
+    isLockedRMW() const
+    {
+        return testCmdAttrib(IsLockedRMW);
+    }
+
+    bool
+    isSWPrefetch() const
+    {
+        return testCmdAttrib(IsSWPrefetch);
+    }
+
+    bool
+    isHWPrefetch() const
+    {
+        return testCmdAttrib(IsHWPrefetch);
+    }
+
+    bool
+    isPrefetch() const
+    {
+        return testCmdAttrib(IsSWPrefetch) || testCmdAttrib(IsHWPrefetch);
+    }
+
+    bool
+    isError() const
+    {
+        return testCmdAttrib(IsError);
+    }
+
+    bool
+    isPrint() const
+    {
+        return testCmdAttrib(IsPrint);
+    }
+
+    bool
+    isFlush() const
+    {
+        return testCmdAttrib(IsFlush);
+    }
 
     bool
     isDemand() const
     {
-        return (cmd == ReadReq || cmd == WriteReq ||
-                cmd == WriteLineReq || cmd == ReadExReq ||
-                cmd == ReadCleanReq || cmd == ReadSharedReq);
+        return (cmd == ReadReq || cmd == WriteReq || cmd == WriteLineReq ||
+                cmd == ReadExReq || cmd == ReadCleanReq ||
+                cmd == ReadSharedReq);
     }
 
     Command
@@ -273,15 +373,35 @@ class MemCmd
     }
 
     /// Return the string to a cmd given by idx.
-    const std::string &toString() const { return commandInfo[cmd].str; }
-    int toInt() const { return (int)cmd; }
+    const std::string &
+    toString() const
+    {
+        return commandInfo[cmd].str;
+    }
 
-    MemCmd(Command _cmd) : cmd(_cmd) { }
-    MemCmd(int _cmd) : cmd((Command)_cmd) { }
-    MemCmd() : cmd(InvalidCmd) { }
+    int
+    toInt() const
+    {
+        return (int)cmd;
+    }
 
-    bool operator==(MemCmd c2) const { return (cmd == c2.cmd); }
-    bool operator!=(MemCmd c2) const { return (cmd != c2.cmd); }
+    MemCmd(Command _cmd) : cmd(_cmd) {}
+
+    MemCmd(int _cmd) : cmd((Command)_cmd) {}
+
+    MemCmd() : cmd(InvalidCmd) {}
+
+    bool
+    operator==(MemCmd c2) const
+    {
+        return (cmd == c2.cmd);
+    }
+
+    bool
+    operator!=(MemCmd c2) const
+    {
+        return (cmd != c2.cmd);
+    }
 };
 
 /**
@@ -301,18 +421,18 @@ class Packet : public Printable, public Extensible<Packet>
     enum : FlagsType
     {
         // Flags to transfer across when copying a packet
-        COPY_FLAGS             = 0x000000FF,
+        COPY_FLAGS = 0x000000FF,
 
         // Flags that are used to create reponse packets
-        RESPONDER_FLAGS        = 0x00000009,
+        RESPONDER_FLAGS = 0x00000009,
 
         // Does this packet have sharers (which means it should not be
         // considered writable) or not. See setHasSharers below.
-        HAS_SHARERS            = 0x00000001,
+        HAS_SHARERS = 0x00000001,
 
         // Special control flags
         /// Special timing-mode atomic snoop for multi-level coherence.
-        EXPRESS_SNOOP          = 0x00000002,
+        EXPRESS_SNOOP = 0x00000002,
 
         /// Allow a responding cache to inform the cache hierarchy
         /// that it had a writable copy before responding. See
@@ -321,46 +441,46 @@ class Packet : public Printable, public Extensible<Packet>
 
         // Snoop co-ordination flag to indicate that a cache is
         // responding to a snoop. See setCacheResponding below.
-        CACHE_RESPONDING       = 0x00000008,
+        CACHE_RESPONDING = 0x00000008,
 
         // The writeback/writeclean should be propagated further
         // downstream by the receiver
-        WRITE_THROUGH          = 0x00000010,
+        WRITE_THROUGH = 0x00000010,
 
         // Response co-ordination flag for cache maintenance
         // operations
-        SATISFIED              = 0x00000020,
+        SATISFIED = 0x00000020,
 
         // hardware transactional memory
 
         // Indicates that this packet/request has returned from the
         // cache hierarchy in a failed transaction. The core is
         // notified like this.
-        FAILS_TRANSACTION      = 0x00000040,
+        FAILS_TRANSACTION = 0x00000040,
 
         // Indicates that this packet/request originates in the CPU executing
         // in transactional mode, i.e. in a transaction.
-        FROM_TRANSACTION       = 0x00000080,
+        FROM_TRANSACTION = 0x00000080,
 
         /// Are the 'addr' and 'size' fields valid?
-        VALID_ADDR             = 0x00000100,
-        VALID_SIZE             = 0x00000200,
+        VALID_ADDR = 0x00000100,
+        VALID_SIZE = 0x00000200,
 
         /// Is the data pointer set to a value that shouldn't be freed
         /// when the packet is destroyed?
-        STATIC_DATA            = 0x00001000,
+        STATIC_DATA = 0x00001000,
         /// The data pointer points to a value that should be freed when
         /// the packet is destroyed. The pointer is assumed to be pointing
         /// to an array, and delete [] is consequently called
-        DYNAMIC_DATA           = 0x00002000,
+        DYNAMIC_DATA = 0x00002000,
 
         /// suppress the error if this packet encounters a functional
         /// access failure.
-        SUPPRESS_FUNC_ERROR    = 0x00008000,
+        SUPPRESS_FUNC_ERROR = 0x00008000,
 
         // Signal block present to squash prefetch and cache evict packets
         // through express snoop flag
-        BLOCK_CACHED          = 0x00010000
+        BLOCK_CACHED = 0x00010000
     };
 
     Flags flags;
@@ -377,13 +497,13 @@ class Packet : public Printable, public Extensible<Packet>
     RequestPtr req;
 
   private:
-   /**
-    * A pointer to the data being transferred. It can be different
-    * sizes at each level of the hierarchy so it belongs to the
-    * packet, not request. This may or may not be populated when a
-    * responder receives the packet. If not populated memory should
-    * be allocated.
-    */
+    /**
+     * A pointer to the data being transferred. It can be different
+     * sizes at each level of the hierarchy so it belongs to the
+     * packet, not request. This may or may not be populated when a
+     * responder receives the packet. If not populated memory should
+     * be allocated.
+     */
     PacketDataPtr data;
 
     /// The address of the request.  This address could be virtual or
@@ -420,7 +540,6 @@ class Packet : public Printable, public Extensible<Packet>
     uint64_t htmTransactionUid;
 
   public:
-
     /**
      * The extra delay from seeing the packet until the header is
      * transmitted. This delay is used to communicate the crossbar
@@ -467,8 +586,10 @@ class Packet : public Printable, public Extensible<Packet>
      */
     struct SenderState
     {
-        SenderState* predecessor;
+        SenderState *predecessor;
+
         SenderState() : predecessor(NULL) {}
+
         virtual ~SenderState() {}
     };
 
@@ -505,7 +626,11 @@ class Packet : public Printable, public Extensible<Packet>
         /**
          * Returns the current line prefix.
          */
-        const std::string &curPrefix() { return *curPrefixPtr; }
+        const std::string &
+        curPrefix()
+        {
+            return *curPrefixPtr;
+        }
 
         /**
          * Push a label onto the label stack, and prepend the given
@@ -572,12 +697,13 @@ class Packet : public Printable, public Extensible<Packet>
      * @return The topmost state of type T
      */
     template <typename T>
-    T * findNextSenderState() const
+    T *
+    findNextSenderState() const
     {
         T *t = NULL;
-        SenderState* sender_state = senderState;
+        SenderState *sender_state = senderState;
         while (t == NULL && sender_state != NULL) {
-            t = dynamic_cast<T*>(sender_state);
+            t = dynamic_cast<T *>(sender_state);
             sender_state = sender_state->predecessor;
         }
         return t;
@@ -585,18 +711,57 @@ class Packet : public Printable, public Extensible<Packet>
 
     /// Return the string name of the cmd field (for debugging and
     /// tracing).
-    const std::string &cmdString() const { return cmd.toString(); }
+    const std::string &
+    cmdString() const
+    {
+        return cmd.toString();
+    }
 
     /// Return the index of this command.
-    inline int cmdToIndex() const { return cmd.toInt(); }
+    inline int
+    cmdToIndex() const
+    {
+        return cmd.toInt();
+    }
 
-    bool isRead() const              { return cmd.isRead(); }
-    bool isWrite() const             { return cmd.isWrite(); }
-    bool isDemand() const            { return cmd.isDemand(); }
-    bool isUpgrade()  const          { return cmd.isUpgrade(); }
-    bool isRequest() const           { return cmd.isRequest(); }
-    bool isResponse() const          { return cmd.isResponse(); }
-    bool needsWritable() const
+    bool
+    isRead() const
+    {
+        return cmd.isRead();
+    }
+
+    bool
+    isWrite() const
+    {
+        return cmd.isWrite();
+    }
+
+    bool
+    isDemand() const
+    {
+        return cmd.isDemand();
+    }
+
+    bool
+    isUpgrade() const
+    {
+        return cmd.isUpgrade();
+    }
+
+    bool
+    isRequest() const
+    {
+        return cmd.isRequest();
+    }
+
+    bool
+    isResponse() const
+    {
+        return cmd.isResponse();
+    }
+
+    bool
+    needsWritable() const
     {
         // we should never check if a response needsWritable, the
         // request has this flag, and for a response we should rather
@@ -605,29 +770,92 @@ class Packet : public Printable, public Extensible<Packet>
         assert(isRequest());
         return cmd.needsWritable();
     }
-    bool needsResponse() const       { return cmd.needsResponse(); }
-    bool isInvalidate() const        { return cmd.isInvalidate(); }
-    bool isEviction() const          { return cmd.isEviction(); }
-    bool isClean() const             { return cmd.isClean(); }
-    bool fromCache() const           { return cmd.fromCache(); }
-    bool isWriteback() const         { return cmd.isWriteback(); }
-    bool hasData() const             { return cmd.hasData(); }
-    bool hasRespData() const
+
+    bool
+    needsResponse() const
+    {
+        return cmd.needsResponse();
+    }
+
+    bool
+    isInvalidate() const
+    {
+        return cmd.isInvalidate();
+    }
+
+    bool
+    isEviction() const
+    {
+        return cmd.isEviction();
+    }
+
+    bool
+    isClean() const
+    {
+        return cmd.isClean();
+    }
+
+    bool
+    fromCache() const
+    {
+        return cmd.fromCache();
+    }
+
+    bool
+    isWriteback() const
+    {
+        return cmd.isWriteback();
+    }
+
+    bool
+    hasData() const
+    {
+        return cmd.hasData();
+    }
+
+    bool
+    hasRespData() const
     {
         MemCmd resp_cmd = cmd.responseCommand();
         return resp_cmd.hasData();
     }
-    bool isLLSC() const              { return cmd.isLLSC(); }
-    bool isLockedRMW() const         { return cmd.isLockedRMW(); }
-    bool isError() const             { return cmd.isError(); }
-    bool isPrint() const             { return cmd.isPrint(); }
-    bool isFlush() const             { return cmd.isFlush(); }
 
-    bool isWholeLineWrite(unsigned blk_size)
+    bool
+    isLLSC() const
+    {
+        return cmd.isLLSC();
+    }
+
+    bool
+    isLockedRMW() const
+    {
+        return cmd.isLockedRMW();
+    }
+
+    bool
+    isError() const
+    {
+        return cmd.isError();
+    }
+
+    bool
+    isPrint() const
+    {
+        return cmd.isPrint();
+    }
+
+    bool
+    isFlush() const
+    {
+        return cmd.isFlush();
+    }
+
+    bool
+    isWholeLineWrite(unsigned blk_size)
     {
         return (cmd == MemCmd::WriteReq || cmd == MemCmd::WriteLineReq) &&
-            getOffset(blk_size) == 0 && getSize() == blk_size &&
-            !isMaskedWrite();
+               getOffset(blk_size) == 0 && getSize() == blk_size &&
+               !isMaskedWrite();
     }
 
     //@{
@@ -650,13 +878,20 @@ class Packet : public Printable, public Extensible<Packet>
      * false      false           Exclusive
      * false      true            Modified
      */
-    void setCacheResponding()
+    void
+    setCacheResponding()
     {
         assert(isRequest());
         assert(!flags.isSet(CACHE_RESPONDING));
         flags.set(CACHE_RESPONDING);
     }
-    bool cacheResponding() const { return flags.isSet(CACHE_RESPONDING); }
+
+    bool
+    cacheResponding() const
+    {
+        return flags.isSet(CACHE_RESPONDING);
+    }
+
     /**
      * On fills, the hasSharers flag is used by the caches in
      * combination with the cacheResponding flag, as clarified
@@ -682,8 +917,18 @@ class Packet : public Printable, public Extensible<Packet>
      * WritebackClean false      Exclusive
      * WritebackClean true       Shared
      */
-    void setHasSharers()    { flags.set(HAS_SHARERS); }
-    bool hasSharers() const { return flags.isSet(HAS_SHARERS); }
+    void
+    setHasSharers()
+    {
+        flags.set(HAS_SHARERS);
+    }
+
+    bool
+    hasSharers() const
+    {
+        return flags.isSet(HAS_SHARERS);
+    }
+
     //@}
 
     /**
@@ -698,8 +943,17 @@ class Packet : public Printable, public Extensible<Packet>
      * snoop packets that came from a downstream cache, rather than
      * snoop packets from neighbouring caches.
      */
-    void setExpressSnoop()      { flags.set(EXPRESS_SNOOP); }
-    bool isExpressSnoop() const { return flags.isSet(EXPRESS_SNOOP); }
+    void
+    setExpressSnoop()
+    {
+        flags.set(EXPRESS_SNOOP);
+    }
+
+    bool
+    isExpressSnoop() const
+    {
+        return flags.isSet(EXPRESS_SNOOP);
+    }
 
     /**
      * On responding to a snoop request (which only happens for
@@ -710,14 +964,19 @@ class Packet : public Printable, public Extensible<Packet>
      * cache helps in orchestrating the invalidation of these copies
      * by sending out the appropriate express snoops.
      */
-    void setResponderHadWritable()
+    void
+    setResponderHadWritable()
     {
         assert(cacheResponding());
         assert(!responderHadWritable());
         flags.set(RESPONDER_HAD_WRITABLE);
     }
-    bool responderHadWritable() const
-    { return flags.isSet(RESPONDER_HAD_WRITABLE); }
+
+    bool
+    responderHadWritable() const
+    {
+        return flags.isSet(RESPONDER_HAD_WRITABLE);
+    }
 
     /**
      * Copy the reponse flags from an input packet to this packet. The
@@ -732,33 +991,74 @@ class Packet : public Printable, public Extensible<Packet>
      * A writeback/writeclean cmd gets propagated further downstream
      * by the receiver when the flag is set.
      */
-    void setWriteThrough()
+    void
+    setWriteThrough()
     {
         assert(cmd.isWrite() &&
                (cmd.isEviction() || cmd == MemCmd::WriteClean));
         flags.set(WRITE_THROUGH);
     }
-    void clearWriteThrough() { flags.clear(WRITE_THROUGH); }
-    bool writeThrough() const { return flags.isSet(WRITE_THROUGH); }
+
+    void
+    clearWriteThrough()
+    {
+        flags.clear(WRITE_THROUGH);
+    }
+
+    bool
+    writeThrough() const
+    {
+        return flags.isSet(WRITE_THROUGH);
+    }
 
     /**
      * Set when a request hits in a cache and the cache is not going
      * to respond. This is used by the crossbar to coordinate
      * responses for cache maintenance operations.
      */
-    void setSatisfied()
+    void
+    setSatisfied()
     {
         assert(cmd.isClean());
         assert(!flags.isSet(SATISFIED));
         flags.set(SATISFIED);
     }
-    bool satisfied() const { return flags.isSet(SATISFIED); }
 
-    void setSuppressFuncError()     { flags.set(SUPPRESS_FUNC_ERROR); }
-    bool suppressFuncError() const  { return flags.isSet(SUPPRESS_FUNC_ERROR); }
-    void setBlockCached()          { flags.set(BLOCK_CACHED); }
-    bool isBlockCached() const     { return flags.isSet(BLOCK_CACHED); }
-    void clearBlockCached()        { flags.clear(BLOCK_CACHED); }
+    bool
+    satisfied() const
+    {
+        return flags.isSet(SATISFIED);
+    }
+
+    void
+    setSuppressFuncError()
+    {
+        flags.set(SUPPRESS_FUNC_ERROR);
+    }
+
+    bool
+    suppressFuncError() const
+    {
+        return flags.isSet(SUPPRESS_FUNC_ERROR);
+    }
+
+    void
+    setBlockCached()
+    {
+        flags.set(BLOCK_CACHED);
+    }
+
+    bool
+    isBlockCached() const
+    {
+        return flags.isSet(BLOCK_CACHED);
+    }
+
+    void
+    clearBlockCached()
+    {
+        flags.clear(BLOCK_CACHED);
+    }
 
     /**
      * QoS Value getter
@@ -766,7 +1066,11 @@ class Packet : public Printable, public Extensible<Packet>
      *
      * @return QoS priority value of the packet
      */
-    inline uint8_t qosValue() const { return _qosValue; }
+    inline uint8_t
+    qosValue() const
+    {
+        return _qosValue;
+    }
 
     /**
      * QoS Value setter
@@ -774,10 +1078,17 @@ class Packet : public Printable, public Extensible<Packet>
      *
      * @param qos_value QoS priority value
      */
-    inline void qosValue(const uint8_t qos_value)
-    { _qosValue = qos_value; }
+    inline void
+    qosValue(const uint8_t qos_value)
+    {
+        _qosValue = qos_value;
+    }
 
-    inline RequestorID requestorId() const { return req->requestorId(); }
+    inline RequestorID
+    requestorId() const
+    {
+        return req->requestorId();
+    }
 
     // Network error conditions... encapsulate them as methods since
     // their encoding keeps changing (from result field to command
@@ -802,9 +1113,20 @@ class Packet : public Printable, public Extensible<Packet>
         }
     }
 
-    void copyError(Packet *pkt) { assert(pkt->isError()); cmd = pkt->cmd; }
+    void
+    copyError(Packet *pkt)
+    {
+        assert(pkt->isError());
+        cmd = pkt->cmd;
+    }
 
-    Addr getAddr() const { assert(flags.isSet(VALID_ADDR)); return addr; }
+    Addr
+    getAddr() const
+    {
+        assert(flags.isSet(VALID_ADDR));
+        return addr;
+    }
+
     /**
      * Update the address of this packet mid-transaction. This is used
      * by the address mapper to change an already set address to a new
@@ -812,9 +1134,19 @@ class Packet : public Printable, public Extensible<Packet>
      * an existing address, so it asserts that the current address is
      * valid.
      */
-    void setAddr(Addr _addr) { assert(flags.isSet(VALID_ADDR)); addr = _addr; }
+    void
+    setAddr(Addr _addr)
+    {
+        assert(flags.isSet(VALID_ADDR));
+        addr = _addr;
+    }
 
-    unsigned getSize() const  { assert(flags.isSet(VALID_SIZE)); return size; }
+    unsigned
+    getSize() const
+    {
+        assert(flags.isSet(VALID_SIZE));
+        return size;
+    }
 
     /**
      * Get address range to which this packet belongs.
@@ -823,17 +1155,20 @@ class Packet : public Printable, public Extensible<Packet>
      */
     AddrRange getAddrRange() const;
 
-    Addr getOffset(unsigned int blk_size) const
+    Addr
+    getOffset(unsigned int blk_size) const
     {
         return getAddr() & Addr(blk_size - 1);
     }
 
-    Addr getBlockAddr(unsigned int blk_size) const
+    Addr
+    getBlockAddr(unsigned int blk_size) const
     {
         return getAddr() & ~(Addr(blk_size - 1));
     }
 
-    bool isSecure() const
+    bool
+    isSecure() const
     {
         assert(flags.isSet(VALID_ADDR));
         return _isSecure;
@@ -842,8 +1177,17 @@ class Packet : public Printable, public Extensible<Packet>
     /**
      * Accessor function to atomic op.
      */
-    AtomicOpFunctor *getAtomicOp() const { return req->getAtomicOpFunctor(); }
-    bool isAtomicOp() const { return req->isAtomic(); }
+    AtomicOpFunctor *
+    getAtomicOp() const
+    {
+        return req->getAtomicOpFunctor();
+    }
+
+    bool
+    isAtomicOp() const
+    {
+        return req->isAtomic();
+    }
 
     /**
      * It has been determined that the SC packet should successfully update
@@ -875,13 +1219,20 @@ class Packet : public Printable, public Extensible<Packet>
      * not be valid. The command must be supplied.
      */
     Packet(const RequestPtr &_req, MemCmd _cmd)
-        :  cmd(_cmd), id((PacketId)_req.get()), req(_req),
-           data(nullptr), addr(0), _isSecure(false), size(0),
-           _qosValue(0),
-           htmReturnReason(HtmCacheFailure::NO_FAIL),
-           htmTransactionUid(0),
-           headerDelay(0), snoopDelay(0),
-           payloadDelay(0), senderState(NULL)
+        : cmd(_cmd),
+          id((PacketId)_req.get()),
+          req(_req),
+          data(nullptr),
+          addr(0),
+          _isSecure(false),
+          size(0),
+          _qosValue(0),
+          htmReturnReason(HtmCacheFailure::NO_FAIL),
+          htmTransactionUid(0),
+          headerDelay(0),
+          snoopDelay(0),
+          payloadDelay(0),
+          senderState(NULL)
     {
         flags.clear();
         if (req->hasPaddr()) {
@@ -916,13 +1267,19 @@ class Packet : public Printable, public Extensible<Packet>
      * req.  this allows for overriding the size/addr of the req.
      */
     Packet(const RequestPtr &_req, MemCmd _cmd, int _blkSize, PacketId _id = 0)
-        :  cmd(_cmd), id(_id ? _id : (PacketId)_req.get()), req(_req),
-           data(nullptr), addr(0), _isSecure(false),
-           _qosValue(0),
-           htmReturnReason(HtmCacheFailure::NO_FAIL),
-           htmTransactionUid(0),
-           headerDelay(0),
-           snoopDelay(0), payloadDelay(0), senderState(NULL)
+        : cmd(_cmd),
+          id(_id ? _id : (PacketId)_req.get()),
+          req(_req),
+          data(nullptr),
+          addr(0),
+          _isSecure(false),
+          _qosValue(0),
+          htmReturnReason(HtmCacheFailure::NO_FAIL),
+          htmTransactionUid(0),
+          headerDelay(0),
+          snoopDelay(0),
+          payloadDelay(0),
+          senderState(NULL)
     {
         flags.clear();
         if (req->hasPaddr()) {
@@ -942,31 +1299,34 @@ class Packet : public Printable, public Extensible<Packet>
      * packet should allocate its own data.
      */
     Packet(const PacketPtr pkt, bool clear_flags, bool alloc_data)
-        :  Extensible<Packet>(*pkt),
-           cmd(pkt->cmd), id(pkt->id), req(pkt->req),
-           data(nullptr),
-           addr(pkt->addr), _isSecure(pkt->_isSecure), size(pkt->size),
-           bytesValid(pkt->bytesValid),
-           _qosValue(pkt->qosValue()),
-           htmReturnReason(HtmCacheFailure::NO_FAIL),
-           htmTransactionUid(0),
-           headerDelay(pkt->headerDelay),
-           snoopDelay(0),
-           payloadDelay(pkt->payloadDelay),
-           senderState(pkt->senderState)
+        : Extensible<Packet>(*pkt),
+          cmd(pkt->cmd),
+          id(pkt->id),
+          req(pkt->req),
+          data(nullptr),
+          addr(pkt->addr),
+          _isSecure(pkt->_isSecure),
+          size(pkt->size),
+          bytesValid(pkt->bytesValid),
+          _qosValue(pkt->qosValue()),
+          htmReturnReason(HtmCacheFailure::NO_FAIL),
+          htmTransactionUid(0),
+          headerDelay(pkt->headerDelay),
+          snoopDelay(0),
+          payloadDelay(pkt->payloadDelay),
+          senderState(pkt->senderState)
     {
         if (!clear_flags)
             flags.set(pkt->flags & COPY_FLAGS);
 
-        flags.set(pkt->flags & (VALID_ADDR|VALID_SIZE));
+        flags.set(pkt->flags & (VALID_ADDR | VALID_SIZE));
 
         if (pkt->isHtmTransactional())
             setHtmTransactional(pkt->getHtmTransactionUid());
 
         if (pkt->htmTransactionFailedInCache()) {
             setHtmTransactionFailedInCache(
-                pkt->getHtmTransactionFailedInCacheRC()
-            );
+                pkt->getHtmTransactionFailedInCacheRC());
         }
 
         // should we allocate space for data, or not, the express
@@ -1020,8 +1380,8 @@ class Packet : public Printable, public Extensible<Packet>
         else if (req->isSwap() || req->isAtomic())
             return MemCmd::SwapReq;
         else if (req->isCacheInvalidate()) {
-          return req->isCacheClean() ? MemCmd::CleanInvalidReq :
-              MemCmd::InvalidateReq;
+            return req->isCacheClean() ? MemCmd::CleanInvalidReq :
+                                         MemCmd::InvalidateReq;
         } else if (req->isCacheClean()) {
             return MemCmd::CleanSharedReq;
         } else if (req->isLockedRMW()) {
@@ -1049,10 +1409,7 @@ class Packet : public Printable, public Extensible<Packet>
     /**
      * clean up packet variables
      */
-    ~Packet()
-    {
-        deleteData();
-    }
+    ~Packet() { deleteData(); }
 
     /**
      * Take a request packet and modify it in place to be suitable for
@@ -1110,8 +1467,17 @@ class Packet : public Printable, public Extensible<Packet>
      * If SLC_BIT is set, then the requests are system level coherent
      * and bypass both TCP and TCC.
      */
-    bool isGLCSet() const { return req->isGLCSet();}
-    bool isSLCSet() const { return req->isSLCSet();}
+    bool
+    isGLCSet() const
+    {
+        return req->isGLCSet();
+    }
+
+    bool
+    isSLCSet() const
+    {
+        return req->isSLCSet();
+    }
 
     /**
      * Check if packet corresponds to a given block-aligned address and
@@ -1174,7 +1540,7 @@ class Packet : public Printable, public Extensible<Packet>
     void
     dataStatic(T *p)
     {
-        assert(flags.noneSet(STATIC_DATA|DYNAMIC_DATA));
+        assert(flags.noneSet(STATIC_DATA | DYNAMIC_DATA));
         data = (PacketDataPtr)p;
         flags.set(STATIC_DATA);
     }
@@ -1191,7 +1557,7 @@ class Packet : public Printable, public Extensible<Packet>
     void
     dataStaticConst(const T *p)
     {
-        assert(flags.noneSet(STATIC_DATA|DYNAMIC_DATA));
+        assert(flags.noneSet(STATIC_DATA | DYNAMIC_DATA));
         data = const_cast<PacketDataPtr>(p);
         flags.set(STATIC_DATA);
     }
@@ -1212,7 +1578,7 @@ class Packet : public Printable, public Extensible<Packet>
     void
     dataDynamic(T *p)
     {
-        assert(flags.noneSet(STATIC_DATA|DYNAMIC_DATA));
+        assert(flags.noneSet(STATIC_DATA | DYNAMIC_DATA));
         data = (PacketDataPtr)p;
         flags.set(DYNAMIC_DATA);
     }
@@ -1221,20 +1587,20 @@ class Packet : public Printable, public Extensible<Packet>
      * get a pointer to the data ptr.
      */
     template <typename T>
-    T*
+    T *
     getPtr()
     {
-        assert(flags.isSet(STATIC_DATA|DYNAMIC_DATA));
+        assert(flags.isSet(STATIC_DATA | DYNAMIC_DATA));
         assert(!isMaskedWrite());
-        return (T*)data;
+        return (T *)data;
     }
 
     template <typename T>
-    const T*
+    const T *
     getConstPtr() const
     {
-        assert(flags.isSet(STATIC_DATA|DYNAMIC_DATA));
-        return (const T*)data;
+        assert(flags.isSet(STATIC_DATA | DYNAMIC_DATA));
+        return (const T *)data;
     }
 
     /**
@@ -1356,9 +1722,9 @@ class Packet : public Printable, public Extensible<Packet>
     deleteData()
     {
         if (flags.isSet(DYNAMIC_DATA))
-            delete [] data;
+            delete[] data;
 
-        flags.clear(STATIC_DATA|DYNAMIC_DATA);
+        flags.clear(STATIC_DATA | DYNAMIC_DATA);
         data = NULL;
     }
 
@@ -1369,7 +1735,7 @@ class Packet : public Printable, public Extensible<Packet>
         // if either this command or the response command has a data
         // payload, actually allocate space
         if (hasData() || hasRespData()) {
-            assert(flags.noneSet(STATIC_DATA|DYNAMIC_DATA));
+            assert(flags.noneSet(STATIC_DATA | DYNAMIC_DATA));
             flags.set(DYNAMIC_DATA);
             data = new uint8_t[getSize()];
         }
@@ -1404,17 +1770,16 @@ class Packet : public Printable, public Extensible<Packet>
                 getAddr() <= (other->getAddr() + other->getSize() - 1) &&
                 other->getAddr() <= (getAddr() + getSize() - 1)) {
                 warn("Trying to check against a masked write, skipping."
-                     " (addr: 0x%x, other addr: 0x%x)", getAddr(),
-                     other->getAddr());
+                     " (addr: 0x%x, other addr: 0x%x)",
+                     getAddr(), other->getAddr());
             }
             return false;
         }
         // all packets that are carrying a payload should have a valid
         // data pointer
-        return trySatisfyFunctional(other, other->getAddr(), other->isSecure(),
-                                    other->getSize(),
-                                    other->hasData() ?
-                                    other->getPtr<uint8_t>() : NULL);
+        return trySatisfyFunctional(
+            other, other->getAddr(), other->isSecure(), other->getSize(),
+            other->hasData() ? other->getPtr<uint8_t>() : NULL);
     }
 
     /**
@@ -1459,9 +1824,8 @@ class Packet : public Printable, public Extensible<Packet>
      * value. If the current packet is a write, it may update the
      * memory value.
      */
-    bool
-    trySatisfyFunctional(Printable *obj, Addr base, bool is_secure, int size,
-                         uint8_t *_data);
+    bool trySatisfyFunctional(Printable *obj, Addr base, bool is_secure,
+                              int size, uint8_t *_data);
 
     /**
      * Push label for PrintReq (safe to call unconditionally).
@@ -1470,7 +1834,7 @@ class Packet : public Printable, public Extensible<Packet>
     pushLabel(const std::string &lbl)
     {
         if (isPrint())
-            safe_cast<PrintReqState*>(senderState)->pushLabel(lbl);
+            safe_cast<PrintReqState *>(senderState)->pushLabel(lbl);
     }
 
     /**
@@ -1480,7 +1844,7 @@ class Packet : public Printable, public Extensible<Packet>
     popLabel()
     {
         if (isPrint())
-            safe_cast<PrintReqState*>(senderState)->popLabel();
+            safe_cast<PrintReqState *>(senderState)->popLabel();
     }
 
     void print(std::ostream &o, int verbosity = 0,

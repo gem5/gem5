@@ -59,7 +59,7 @@ class FetchUnit
     ~FetchUnit();
     void init();
     void exec();
-    void bindWaveList(std::vector<Wavefront*> *list);
+    void bindWaveList(std::vector<Wavefront *> *list);
     void initiateFetch(Wavefront *wavefront);
     void fetch(PacketPtr pkt, Wavefront *wavefront);
     void processFetchReturn(PacketPtr pkt);
@@ -74,17 +74,20 @@ class FetchUnit
     class FetchBufDesc
     {
       public:
-        FetchBufDesc() : bufStart(nullptr), bufEnd(nullptr),
-            readPtr(nullptr), fetchDepth(0), maxIbSize(0), maxFbSize(0),
-            cacheLineSize(0), restartFromBranch(false), wavefront(nullptr),
-            _decoder(nullptr)
-        {
-        }
+        FetchBufDesc()
+            : bufStart(nullptr),
+              bufEnd(nullptr),
+              readPtr(nullptr),
+              fetchDepth(0),
+              maxIbSize(0),
+              maxFbSize(0),
+              cacheLineSize(0),
+              restartFromBranch(false),
+              wavefront(nullptr),
+              _decoder(nullptr)
+        {}
 
-        ~FetchBufDesc()
-        {
-            delete[] bufStart;
-        }
+        ~FetchBufDesc() { delete[] bufStart; }
 
         /**
          * allocate the fetch buffer space, and set the fetch depth
@@ -99,10 +102,30 @@ class FetchUnit
             return bufferedLines() + reservedLines();
         }
 
-        int bufferedLines() const { return bufferedPCs.size(); }
-        int bufferedBytes() const { return bufferedLines() * cacheLineSize; }
-        int reservedLines() const { return reservedPCs.size(); }
-        bool hasFreeSpace() const { return !freeList.empty(); }
+        int
+        bufferedLines() const
+        {
+            return bufferedPCs.size();
+        }
+
+        int
+        bufferedBytes() const
+        {
+            return bufferedLines() * cacheLineSize;
+        }
+
+        int
+        reservedLines() const
+        {
+            return reservedPCs.size();
+        }
+
+        bool
+        hasFreeSpace() const
+        {
+            return !freeList.empty();
+        }
+
         void flushBuf();
         Addr nextFetchAddr();
 
@@ -116,7 +139,7 @@ class FetchUnit
          * this allows the fetch pkt to use this data directly
          * to avoid unnecessary memcpy and malloc/new.
          */
-        uint8_t*
+        uint8_t *
         reservedBuf(Addr vaddr) const
         {
             auto reserved_pc = reservedPCs.find(vaddr);
@@ -173,8 +196,8 @@ class FetchUnit
         bool
         pcBuffered(Addr pc) const
         {
-            bool buffered = bufferedPCs.find(pc) != bufferedPCs.end()
-                            && reservedPCs.find(pc) != reservedPCs.end();
+            bool buffered = bufferedPCs.find(pc) != bufferedPCs.end() &&
+                            reservedPCs.find(pc) != reservedPCs.end();
 
             return buffered;
         }
@@ -201,8 +224,8 @@ class FetchUnit
          * waiting for their buffers to be filled with valid
          * fetch data.
          */
-        std::map<Addr, uint8_t*> bufferedPCs;
-        std::map<Addr, uint8_t*> reservedPCs;
+        std::map<Addr, uint8_t *> bufferedPCs;
+        std::map<Addr, uint8_t *> reservedPCs;
 
         /**
          * represents the fetch buffer free list. holds buffer space
@@ -212,7 +235,7 @@ class FetchUnit
          * point to addresses within bufStart that are aligned to the
          * cache line size.
          */
-        std::deque<uint8_t*> freeList;
+        std::deque<uint8_t *> freeList;
 
         /**
          * raw instruction buffer. holds cache line data associated with
@@ -241,8 +264,8 @@ class FetchUnit
 
     class SystemHubEvent : public Event
     {
-      FetchUnit *fetchUnit;
-      PacketPtr reqPkt;
+        FetchUnit *fetchUnit;
+        PacketPtr reqPkt;
 
       public:
         SystemHubEvent(PacketPtr pkt, FetchUnit *fetch_unit)
@@ -266,15 +289,15 @@ class FetchUnit
 
     // Stores the list of waves that are
     // ready to be fetched this cycle
-    std::vector<Wavefront*> fetchQueue;
+    std::vector<Wavefront *> fetchQueue;
 
     // Stores the fetch status of all waves dispatched to this SIMD.
     // TRUE implies the wave is ready to fetch and is already
     // moved to fetchQueue
-    std::vector<std::pair<Wavefront*, bool>> fetchStatusQueue;
+    std::vector<std::pair<Wavefront *, bool>> fetchStatusQueue;
 
     // Pointer to list of waves dispatched on to this SIMD unit
-    std::vector<Wavefront*> *waveList;
+    std::vector<Wavefront *> *waveList;
     // holds the fetch buffers. each wave has 1 entry.
     std::vector<FetchBufDesc> fetchBuf;
     /**

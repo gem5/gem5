@@ -48,7 +48,7 @@ namespace loader
 static bool
 hasGzipMagic(int fd)
 {
-    uint8_t buf[2] = {0};
+    uint8_t buf[2] = { 0 };
     size_t sz = pread(fd, buf, 2, 0);
     panic_if(sz != 2, "Couldn't read magic bytes from object file");
     return ((buf[0] == 0x1f) && (buf[1] == 0x8b));
@@ -65,9 +65,9 @@ doGzipLoad(int fd)
     }
 
     size_t tmp_len = strlen(P_tmpdir);
-    char *tmpnam = (char*) malloc(tmp_len + 20);
+    char *tmpnam = (char *)malloc(tmp_len + 20);
     strcpy(tmpnam, P_tmpdir);
-    strcpy(tmpnam+tmp_len, "/gem5-gz-obj-XXXXXX"); // 19 chars
+    strcpy(tmpnam + tmp_len, "/gem5-gz-obj-XXXXXX"); // 19 chars
     fd = mkstemp(tmpnam); // repurposing fd variable for output
     if (fd < 0) {
         free(tmpnam);
@@ -98,7 +98,7 @@ doGzipLoad(int fd)
         return -1;
     }
     assert(r == 0); // finished successfully
-    return fd; // return fd to decompressed temporary file for mmap()'ing
+    return fd;      // return fd to decompressed temporary file for mmap()'ing
 }
 
 ImageFileData::ImageFileData(const std::string &fname)
@@ -107,9 +107,11 @@ ImageFileData::ImageFileData(const std::string &fname)
 
     // Open the file.
     int fd = open(fname.c_str(), O_RDONLY);
-    fatal_if(fd < 0, "Failed to open file %s.\n"
-        "This error typically occurs when the file path specified is "
-        "incorrect.\n", fname);
+    fatal_if(fd < 0,
+             "Failed to open file %s.\n"
+             "This error typically occurs when the file path specified is "
+             "incorrect.\n",
+             fname);
 
     // Decompress GZ files.
     if (hasGzipMagic(fd)) {
@@ -129,10 +131,7 @@ ImageFileData::ImageFileData(const std::string &fname)
     panic_if(_data == MAP_FAILED, "Failed to mmap file %s.\n", fname);
 }
 
-ImageFileData::~ImageFileData()
-{
-    munmap((void *)_data, _len);
-}
+ImageFileData::~ImageFileData() { munmap((void *)_data, _len); }
 
 } // namespace loader
 } // namespace gem5

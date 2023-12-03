@@ -47,11 +47,35 @@ class ScMainFiber : public gem5::Fiber
   public:
     ScMainFiber() : gem5::Fiber(8 * 1024 * 1024) {}
 
-    int argc() { return _argc; }
-    const char *const *argv() { return _argv; }
-    std::string resultStr() { return _resultStr; }
-    int resultInt() { return _resultInt; }
-    bool called() { return _called; }
+    int
+    argc()
+    {
+        return _argc;
+    }
+
+    const char *const *
+    argv()
+    {
+        return _argv;
+    }
+
+    std::string
+    resultStr()
+    {
+        return _resultStr;
+    }
+
+    int
+    resultInt()
+    {
+        return _resultInt;
+    }
+
+    bool
+    called()
+    {
+        return _called;
+    }
 
     void
     setArgs(int new_argc, char **new_argv)

@@ -51,16 +51,17 @@
 namespace gem5
 {
 
-class OutgoingRequestBridge: public SimObject
+class OutgoingRequestBridge : public SimObject
 {
   public:
-    class OutgoingRequestPort: public ResponsePort
+    class OutgoingRequestPort : public ResponsePort
     {
       private:
-        OutgoingRequestBridge* owner;
+        OutgoingRequestBridge *owner;
+
       public:
         OutgoingRequestPort(const std::string &name_,
-                            OutgoingRequestBridge* owner_);
+                            OutgoingRequestBridge *owner_);
         ~OutgoingRequestPort();
         Tick recvAtomic(PacketPtr pkt);
         void recvFunctional(PacketPtr pkt);
@@ -73,7 +74,7 @@ class OutgoingRequestBridge: public SimObject
     // a gem5 ResponsePort
     OutgoingRequestPort outgoingPort;
     // pointer to the corresponding SST responder
-    SSTResponderInterface* sstResponder;
+    SSTResponderInterface *sstResponder;
     // this vector holds the initialization data sent by gem5
     std::vector<std::pair<Addr, std::vector<uint8_t>>> initData;
 
@@ -92,7 +93,7 @@ class OutgoingRequestBridge: public SimObject
     AddrRangeList getAddrRanges() const;
 
     // Required to return a port during gem5 instantiate phase.
-    Port & getPort(const std::string &if_name, PortID idx);
+    Port &getPort(const std::string &if_name, PortID idx);
 
     // Returns the buffered data for initialization. This is necessary as
     // when gem5 sends functional requests to memory for initialization,
@@ -103,7 +104,7 @@ class OutgoingRequestBridge: public SimObject
     // bridge's corresponding SSTResponderSubComponent (which implemented
     // SSTResponderInterface). I.e., this will connect this bridge to the
     // corresponding port in SST.
-    void setResponder(SSTResponderInterface* responder);
+    void setResponder(SSTResponderInterface *responder);
 
     // This function is called when SST wants to sent a timing response to gem5
     bool sendTimingResp(PacketPtr pkt);

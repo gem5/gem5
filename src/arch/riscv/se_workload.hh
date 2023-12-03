@@ -46,19 +46,23 @@ class SEWorkload : public gem5::SEWorkload
   public:
     PARAMS(RiscvSEWorkload);
 
-    SEWorkload(const Params &p, Addr page_shift) :
-        gem5::SEWorkload(p, page_shift)
+    SEWorkload(const Params &p, Addr page_shift)
+        : gem5::SEWorkload(p, page_shift)
     {}
 
     void
     setSystem(System *sys) override
     {
         gem5::SEWorkload::setSystem(sys);
-        gdb = BaseRemoteGDB::build<RemoteGDB>(
-                params().remote_gdb_port, system);
+        gdb =
+            BaseRemoteGDB::build<RemoteGDB>(params().remote_gdb_port, system);
     }
 
-    loader::Arch getArch() const override { return loader::Riscv64; }
+    loader::Arch
+    getArch() const override
+    {
+        return loader::Riscv64;
+    }
 
     using SyscallABI64 = RegABI64;
     using SyscallABI32 = RegABI32;

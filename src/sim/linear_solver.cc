@@ -40,11 +40,11 @@
 namespace gem5
 {
 
-std::vector <double>
+std::vector<double>
 LinearSystem::solve() const
 {
     // Solve using gauss elimination, not ideal for big matrices
-    std::vector < LinearEquation > smatrix = this->matrix;
+    std::vector<LinearEquation> smatrix = this->matrix;
 
     unsigned order = smatrix.size();
     for (unsigned row = 0; row < order - 1; row++) {
@@ -73,7 +73,7 @@ LinearSystem::solve() const
 
     // smatrix is now a triangular matrix with diagonal being 1
     // Just backproagate variable values from order-1 till 0
-    std::vector <double> ret(order, 0.0f);
+    std::vector<double> ret(order, 0.0f);
     for (int row = order - 1; row >= 0; row--) {
         // Unknown value
         ret[row] = -smatrix[row][smatrix[row].cnt()] / smatrix[row][row];

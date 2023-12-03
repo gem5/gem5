@@ -130,8 +130,8 @@ class VirtDescriptor
      * @param queue Queue owning this descriptor.
      * @param index Index within the queue.
      */
-    VirtDescriptor(PortProxy &memProxy, ByteOrder bo,
-            VirtQueue &queue, Index index);
+    VirtDescriptor(PortProxy &memProxy, ByteOrder bo, VirtQueue &queue,
+                   Index index);
     // WORKAROUND: The noexcept declaration works around a bug where
     // gcc 4.7 tries to call the wrong constructor when emplacing
     // something into a vector.
@@ -141,7 +141,11 @@ class VirtDescriptor
     VirtDescriptor &operator=(VirtDescriptor &&rhs) noexcept;
 
     /** Get the descriptor's index into the virtqueue. */
-    Index index() const { return _index; }
+    Index
+    index() const
+    {
+        return _index;
+    }
 
     /** Populate this descriptor with data from the guest. */
     void update();
@@ -163,7 +167,6 @@ class VirtDescriptor
      */
     void dumpChain() const;
     /** @} */
-
 
     /** @{
      * @name Device Model Interfaces
@@ -198,6 +201,7 @@ class VirtDescriptor
      * @param size Amount of data to read (in bytes).
      */
     void write(size_t offset, const uint8_t *src, size_t size);
+
     /**
      * Retrieve the size of this descriptor.
      *
@@ -210,14 +214,23 @@ class VirtDescriptor
      *
      * @return Size of descriptor in bytes.
      */
-    size_t size() const { return desc.len; }
+    size_t
+    size() const
+    {
+        return desc.len;
+    }
 
     /**
      * Is this descriptor chained to another descriptor?
      *
      * @return true if there is a next pointer, false otherwise.
      */
-    bool hasNext() const { return desc.flags & VRING_DESC_F_NEXT; }
+    bool
+    hasNext() const
+    {
+        return desc.flags & VRING_DESC_F_NEXT;
+    }
+
     /**
      * Get the pointer to the next descriptor in a chain.
      *
@@ -227,10 +240,18 @@ class VirtDescriptor
     VirtDescriptor *next() const;
 
     /** Check if this is a read-only descriptor (incoming data). */
-    bool isIncoming() const { return !isOutgoing(); }
-    /** Check if this is a write-only descriptor (outgoing data). */
-    bool isOutgoing() const { return desc.flags & VRING_DESC_F_WRITE; }
+    bool
+    isIncoming() const
+    {
+        return !isOutgoing();
+    }
 
+    /** Check if this is a write-only descriptor (outgoing data). */
+    bool
+    isOutgoing() const
+    {
+        return desc.flags & VRING_DESC_F_WRITE;
+    }
 
     /**
      * Read the contents of a descriptor chain.
@@ -302,7 +323,7 @@ class VirtDescriptor
 class VirtQueue : public Serializable
 {
   public:
-    virtual ~VirtQueue() {};
+    virtual ~VirtQueue(){};
 
     /** @{
      * @name Checkpointing Interface
@@ -327,19 +348,28 @@ class VirtQueue : public Serializable
      * @param address Guest physical base address of the queue.
      */
     void setAddress(Addr address);
+
     /**
      * Get the guest physical address of this queue.
      *
      * @return Physical address in guest where this queue resides.
      */
-    Addr getAddress() const { return _address; }
+    Addr
+    getAddress() const
+    {
+        return _address;
+    }
 
     /**
      * Get the number of descriptors available in this queue.
      *
      * @return Size of queue in descriptors.
      */
-     uint16_t getSize() const { return _size; }
+    uint16_t
+    getSize() const
+    {
+        return _size;
+    }
 
     /**
      * Get a pointer to a specific descriptor in the queue.
@@ -350,9 +380,12 @@ class VirtQueue : public Serializable
      *
      * @return Pointer to a VirtDescriptor.
      */
-    VirtDescriptor *getDescriptor(VirtDescriptor::Index index) {
+    VirtDescriptor *
+    getDescriptor(VirtDescriptor::Index index)
+    {
         return &descriptors[index];
     }
+
     /** @} */
 
     /** @{
@@ -412,7 +445,7 @@ class VirtQueue : public Serializable
      * Device models should normally overload one of onNotify() and
      * onNotifyDescriptor().
      */
-    virtual void onNotifyDescriptor(VirtDescriptor *desc) {};
+    virtual void onNotifyDescriptor(VirtDescriptor *desc){};
     /** @} */
 
     /** @{
@@ -464,7 +497,7 @@ class VirtQueue : public Serializable
      * is used to select the data type for the items in the ring (used
      * or available descriptors).
      */
-    template<typename T>
+    template <typename T>
     class VirtRing
     {
       public:
@@ -477,15 +510,19 @@ class VirtQueue : public Serializable
             Index index;
         };
 
-        VirtRing<T>(PortProxy &proxy, ByteOrder bo, uint16_t size) :
-            header{0, 0}, ring(size), _proxy(proxy), _base(0), byteOrder(bo)
+        VirtRing<T>(PortProxy &proxy, ByteOrder bo, uint16_t size)
+            : header{ 0, 0 },
+              ring(size),
+              _proxy(proxy),
+              _base(0),
+              byteOrder(bo)
         {}
 
         /** Reset any state in the ring buffer. */
         void
         reset()
         {
-            header = {0, 0};
+            header = { 0, 0 };
             _base = 0;
         };
 
@@ -494,7 +531,11 @@ class VirtQueue : public Serializable
          *
          * @param addr New host physical address
          */
-        void setAddress(Addr addr) { _base = addr; }
+        void
+        setAddress(Addr addr)
+        {
+            _base = addr;
+        }
 
         /** Update the ring buffer header with data from the guest. */
         void
@@ -523,8 +564,8 @@ class VirtQueue : public Serializable
 
             /* Read and byte-swap the elements in the ring */
             T temp[ring.size()];
-            _proxy.readBlob(_base + sizeof(header),
-                            temp, sizeof(T) * ring.size());
+            _proxy.readBlob(_base + sizeof(header), temp,
+                            sizeof(T) * ring.size());
             for (int i = 0; i < ring.size(); ++i)
                 ring[i] = gtoh(temp[i], byteOrder);
         }
@@ -538,8 +579,8 @@ class VirtQueue : public Serializable
             T temp[ring.size()];
             for (int i = 0; i < ring.size(); ++i)
                 temp[i] = htog(ring[i], byteOrder);
-            _proxy.writeBlob(_base + sizeof(header),
-                             temp, sizeof(T) * ring.size());
+            _proxy.writeBlob(_base + sizeof(header), temp,
+                             sizeof(T) * ring.size());
             writeHeader();
         }
 
@@ -618,7 +659,6 @@ class VirtIODeviceBase : public SimObject
     void unserialize(CheckpointIn &cp) override;
     /** @} */
 
-
   protected:
     /** @{
      * @name Device Model Interfaces
@@ -653,7 +693,6 @@ class VirtIODeviceBase : public SimObject
      * constructor.
      */
     void registerQueue(VirtQueue &queue);
-
 
     /**
      * Feature set accepted by the guest.
@@ -752,19 +791,18 @@ class VirtIODeviceBase : public SimObject
     /** @{
      * @name VirtIO Transport Interfaces
      */
-     /**
-      * Register a callback to kick the guest through the transport
-      * interface.
-      *
-      * @param callback Callback into transport interface.
-      */
+    /**
+     * Register a callback to kick the guest through the transport
+     * interface.
+     *
+     * @param callback Callback into transport interface.
+     */
     void
     registerKickCallback(const std::function<void()> &callback)
     {
         assert(!transKick);
         transKick = callback;
     }
-
 
     /**
      * Driver is requesting service.
@@ -777,7 +815,6 @@ class VirtIODeviceBase : public SimObject
      */
     void onNotify(QueueID index);
 
-
     /**
      * Change currently active queue.
      *
@@ -787,7 +824,12 @@ class VirtIODeviceBase : public SimObject
      *
      * @param idx ID of the queue to select.
      */
-    void setQueueSelect(QueueID idx) { _queueSelect = idx; }
+    void
+    setQueueSelect(QueueID idx)
+    {
+        _queueSelect = idx;
+    }
+
     /**
      * Get the currently active queue.
      *
@@ -797,7 +839,11 @@ class VirtIODeviceBase : public SimObject
      *
      * @return The ID of the currently active queue.
      */
-    QueueID getQueueSelect() const { return _queueSelect; }
+    QueueID
+    getQueueSelect() const
+    {
+        return _queueSelect;
+    }
 
     /**
      * Change the host physical address of the currently active queue.
@@ -835,7 +881,11 @@ class VirtIODeviceBase : public SimObject
      * @return Size of the currently active queue in number of
      * descriptors.
      */
-    uint16_t getQueueSize() const { return getCurrentQueue().getSize(); }
+    uint16_t
+    getQueueSize() const
+    {
+        return getCurrentQueue().getSize();
+    }
 
     /**
      * Update device status and optionally reset device.
@@ -852,7 +902,11 @@ class VirtIODeviceBase : public SimObject
      *
      * @return Device status.
      */
-    DeviceStatus getDeviceStatus() const { return _deviceStatus; }
+    DeviceStatus
+    getDeviceStatus() const
+    {
+        return _deviceStatus;
+    }
 
     /**
      * Set feature bits accepted by the guest driver.
@@ -867,7 +921,11 @@ class VirtIODeviceBase : public SimObject
      *
      * @return Currently active features.
      */
-    FeatureBits getGuestFeatures() const { return guestFeatures; }
+    FeatureBits
+    getGuestFeatures() const
+    {
+        return guestFeatures;
+    }
 
     /** Device ID (sometimes known as subsystem ID) */
     const DeviceId deviceId;

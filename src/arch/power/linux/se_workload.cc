@@ -64,8 +64,7 @@ class LinuxLoader : public Process::Loader
         }
 
         if ((arch == loader::Power && opsys != loader::Linux) ||
-            (arch == loader::Power64 &&
-             opsys != loader::LinuxPower64ABIv1 &&
+            (arch == loader::Power64 && opsys != loader::LinuxPower64ABIv1 &&
              opsys != loader::LinuxPower64ABIv2))
             return nullptr;
 
@@ -107,16 +106,16 @@ unameFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<Linux::utsname> name)
 }
 
 SyscallDescTable<PowerISA::SEWorkload::SyscallABI> EmuLinux::syscallDescs = {
-    {  0, "syscall" },
-    {  1, "exit", exitFunc },
-    {  2, "fork" },
-    {  3, "read", readFunc<PowerLinux> },
-    {  4, "write", writeFunc<PowerLinux> },
-    {  5, "open", openFunc<PowerLinux> },
-    {  6, "close", closeFunc },
-    {  7, "waitpid" }, //???
-    {  8, "creat" },
-    {  9, "link" },
+    { 0, "syscall" },
+    { 1, "exit", exitFunc },
+    { 2, "fork" },
+    { 3, "read", readFunc<PowerLinux> },
+    { 4, "write", writeFunc<PowerLinux> },
+    { 5, "open", openFunc<PowerLinux> },
+    { 6, "close", closeFunc },
+    { 7, "waitpid" }, //???
+    { 8, "creat" },
+    { 9, "link" },
     { 10, "unlink", unlinkFunc },
     { 11, "execve" },
     { 12, "chdir" },
@@ -125,7 +124,7 @@ SyscallDescTable<PowerISA::SEWorkload::SyscallABI> EmuLinux::syscallDescs = {
     { 15, "chmod", chmodFunc<PowerLinux> },
     { 16, "lchown", chownFunc },
     { 17, "break", brkFunc }, //???
-    { 18, "unused#18" }, //???
+    { 18, "unused#18" },      //???
     { 19, "lseek", lseekFunc },
     { 20, "getpid", getpidFunc },
     { 21, "mount" },
@@ -198,7 +197,7 @@ SyscallDescTable<PowerISA::SEWorkload::SyscallABI> EmuLinux::syscallDescs = {
     { 88, "reboot" },
     { 89, "readdir" },
     { 90, "mmap", mmapFunc<PowerLinux> },
-    { 91, "munmap",munmapFunc<PowerLinux> },
+    { 91, "munmap", munmapFunc<PowerLinux> },
     { 92, "truncate", truncateFunc<PowerLinux> },
     { 93, "ftruncate", ftruncateFunc<PowerLinux> },
     { 94, "fchmod" },
@@ -213,7 +212,7 @@ SyscallDescTable<PowerISA::SEWorkload::SyscallABI> EmuLinux::syscallDescs = {
     { 103, "syslog" },
     { 104, "setitimer" },
     { 105, "getitimer" },
-    { 106, "stat",  statFunc<PowerLinux> },
+    { 106, "stat", statFunc<PowerLinux> },
     { 107, "lstat" },
     { 108, "fstat", fstatFunc<PowerLinux> },
     { 109, "unused#109" },

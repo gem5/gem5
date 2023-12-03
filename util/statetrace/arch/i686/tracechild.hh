@@ -43,20 +43,31 @@ class I686TraceChild : public TraceChild
   public:
     enum RegNum
     {
-        //GPRs
-        EAX, EBX, ECX, EDX,
-        //Index registers
-        ESI, EDI,
-        //Base pointer and stack pointer
-        EBP, ESP,
-        //Segmentation registers
-        CS, DS, ES, FS, GS, SS,
-        //PC
+        // GPRs
+        EAX,
+        EBX,
+        ECX,
+        EDX,
+        // Index registers
+        ESI,
+        EDI,
+        // Base pointer and stack pointer
+        EBP,
+        ESP,
+        // Segmentation registers
+        CS,
+        DS,
+        ES,
+        FS,
+        GS,
+        SS,
+        // PC
         EIP,
         numregs
     };
+
   private:
-    int64_t getRegs(user_regs_struct & myregs, int num);
+    int64_t getRegs(user_regs_struct &myregs, int num);
     user_regs_struct regs;
     user_regs_struct oldregs;
     bool regDiffSinceUpdate[numregs];
@@ -65,16 +76,27 @@ class I686TraceChild : public TraceChild
     bool update(int pid);
 
   public:
-
     I686TraceChild();
 
     int64_t getRegVal(int num);
     int64_t getOldRegVal(int num);
-    uint64_t getPC() {return getRegVal(EIP);}
-    uint64_t getSP() {return getRegVal(ESP);}
+
+    uint64_t
+    getPC()
+    {
+        return getRegVal(EIP);
+    }
+
+    uint64_t
+    getSP()
+    {
+        return getRegVal(ESP);
+    }
+
     bool sendState(int socket);
+
     std::ostream &
-    outputStartState(std::ostream & output)
+    outputStartState(std::ostream &output)
     {
         output << "Printing i686 initial state not yet implemented"
                << std::endl;

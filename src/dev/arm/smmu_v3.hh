@@ -86,7 +86,6 @@ class SMMUTranslationProcess;
 class SMMUv3 : public ClockedObject
 {
   protected:
-
     friend class SMMUProcess;
     friend class SMMUTranslationProcess;
     friend class SMMUCommandExecProcess;
@@ -95,18 +94,18 @@ class SMMUv3 : public ClockedObject
     const System &system;
     const RequestorID requestorId;
 
-    SMMURequestPort    requestPort;
+    SMMURequestPort requestPort;
     SMMUTableWalkPort tableWalkPort;
-    SMMUControlPort   controlPort;
+    SMMUControlPort controlPort;
 
     // This could be nullptr if wired implementation of the
     // event queue interrupt is not supported
-    ArmInterruptPin * const eventqInterrupt;
+    ArmInterruptPin *const eventqInterrupt;
 
-    ARMArchTLB  tlb;
+    ARMArchTLB tlb;
     ConfigCache configCache;
-    IPACache    ipaCache;
-    WalkCache   walkCache;
+    IPACache ipaCache;
+    WalkCache walkCache;
 
     const bool tlbEnable;
     const bool configCacheEnable;
@@ -128,7 +127,7 @@ class SMMUv3 : public ClockedObject
     SMMUSemaphore requestPortSem;
 
     SMMUSemaphore transSem; // max N transactions in SMMU
-    SMMUSemaphore ptwSem; // max N concurrent PTWs
+    SMMUSemaphore ptwSem;   // max N concurrent PTWs
     SMMUSemaphore cycleSem; // max 1 table walk per cycle
 
     // Timing parameters
@@ -163,7 +162,6 @@ class SMMUv3 : public ClockedObject
     std::queue<SMMUAction> packetsToRetry;
     std::queue<SMMUAction> packetsTableWalkToRetry;
 
-
     void scheduleDeviceRetries();
 
     SMMUAction runProcess(SMMUProcess *proc, PacketPtr pkt);
@@ -177,6 +175,7 @@ class SMMUv3 : public ClockedObject
 
   public:
     SMMUv3(const SMMUv3Params &p);
+
     virtual ~SMMUv3() {}
 
     virtual void init() override;

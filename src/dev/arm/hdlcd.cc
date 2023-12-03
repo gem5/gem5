@@ -63,12 +63,12 @@ HDLcd::HDLcd(const HDLcdParams &p)
       vnc(p.vnc),
       workaroundSwapRB(p.workaround_swap_rb),
       workaroundDmaLineCount(p.workaround_dma_line_count),
-      addrRanges{RangeSize(pioAddr, pioSize)},
+      addrRanges{ RangeSize(pioAddr, pioSize) },
       enableCapture(p.enable_capture),
       pixelBufferSize(p.pixel_buffer_size),
       virtRefreshRate(p.virt_refresh_rate),
 
-      virtRefreshEvent([this]{ virtRefresh(); }, name()),
+      virtRefreshEvent([this] { virtRefresh(); }, name()),
       // Other
       imgFormat(p.frame_format),
       pixelPump(*this, *p.pxl_clk, p.pixel_chunk),
@@ -214,13 +214,12 @@ HDLcd::virtRefresh()
 Tick
 HDLcd::read(PacketPtr pkt)
 {
-    assert(pkt->getAddr() >= pioAddr &&
-           pkt->getAddr() < pioAddr + pioSize);
+    assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
 
     const Addr daddr = pkt->getAddr() - pioAddr;
     panic_if(pkt->getSize() != 4,
-             "Unhandled read size (address: 0x.4x, size: %u)",
-             daddr, pkt->getSize());
+             "Unhandled read size (address: 0x.4x, size: %u)", daddr,
+             pkt->getSize());
 
     const uint32_t data = readReg(daddr);
     DPRINTF(HDLcd, "read register 0x%04x: 0x%x\n", daddr, data);
@@ -234,13 +233,12 @@ HDLcd::read(PacketPtr pkt)
 Tick
 HDLcd::write(PacketPtr pkt)
 {
-    assert(pkt->getAddr() >= pioAddr &&
-           pkt->getAddr() < pioAddr + pioSize);
+    assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
 
     const Addr daddr = pkt->getAddr() - pioAddr;
     panic_if(pkt->getSize() != 4,
-             "Unhandled read size (address: 0x.4x, size: %u)",
-             daddr, pkt->getSize());
+             "Unhandled read size (address: 0x.4x, size: %u)", daddr,
+             pkt->getSize());
     const uint32_t data = pkt->getLE<uint32_t>();
     DPRINTF(HDLcd, "write register 0x%04x: 0x%x\n", daddr, data);
 
@@ -254,37 +252,60 @@ uint32_t
 HDLcd::readReg(Addr offset)
 {
     switch (offset) {
-      case Version: return version;
+    case Version:
+        return version;
 
-      case Int_RawStat: return int_rawstat;
-      case Int_Clear:
+    case Int_RawStat:
+        return int_rawstat;
+    case Int_Clear:
         panic("HDLCD INT_CLEAR register is Write-Only\n");
-      case Int_Mask: return int_mask;
-      case Int_Status: return intStatus();
+    case Int_Mask:
+        return int_mask;
+    case Int_Status:
+        return intStatus();
 
-      case Fb_Base: return fb_base;
-      case Fb_Line_Length: return fb_line_length;
-      case Fb_Line_Count: return fb_line_count;
-      case Fb_Line_Pitch: return fb_line_pitch;
-      case Bus_Options: return bus_options;
+    case Fb_Base:
+        return fb_base;
+    case Fb_Line_Length:
+        return fb_line_length;
+    case Fb_Line_Count:
+        return fb_line_count;
+    case Fb_Line_Pitch:
+        return fb_line_pitch;
+    case Bus_Options:
+        return bus_options;
 
-      case V_Sync: return v_sync;
-      case V_Back_Porch: return v_back_porch;
-      case V_Data: return v_data;
-      case V_Front_Porch: return v_front_porch;
-      case H_Sync: return h_sync;
-      case H_Back_Porch: return h_back_porch;
-      case H_Data: return h_data;
-      case H_Front_Porch: return h_front_porch;
-      case Polarities: return polarities;
+    case V_Sync:
+        return v_sync;
+    case V_Back_Porch:
+        return v_back_porch;
+    case V_Data:
+        return v_data;
+    case V_Front_Porch:
+        return v_front_porch;
+    case H_Sync:
+        return h_sync;
+    case H_Back_Porch:
+        return h_back_porch;
+    case H_Data:
+        return h_data;
+    case H_Front_Porch:
+        return h_front_porch;
+    case Polarities:
+        return polarities;
 
-      case Command: return command;
-      case Pixel_Format: return pixel_format;
-      case Red_Select: return red_select;
-      case Green_Select: return green_select;
-      case Blue_Select: return blue_select;
+    case Command:
+        return command;
+    case Pixel_Format:
+        return pixel_format;
+    case Red_Select:
+        return red_select;
+    case Green_Select:
+        return green_select;
+    case Blue_Select:
+        return blue_select;
 
-      default:
+    default:
         panic("Tried to read HDLCD register that doesn't  exist\n", offset);
     }
 }
@@ -293,118 +314,118 @@ void
 HDLcd::writeReg(Addr offset, uint32_t value)
 {
     switch (offset) {
-      case Version:
+    case Version:
         panic("HDLCD VERSION register is read-Only\n");
 
-      case Int_RawStat:
+    case Int_RawStat:
         intRaise(value);
         return;
-      case Int_Clear:
+    case Int_Clear:
         intClear(value);
         return;
-      case Int_Mask:
+    case Int_Mask:
         intMask(value);
         return;
-      case Int_Status:
+    case Int_Status:
         panic("HDLCD INT_STATUS register is read-Only\n");
         break;
 
-      case Fb_Base:
+    case Fb_Base:
         fb_base = value;
         return;
 
-      case Fb_Line_Length:
+    case Fb_Line_Length:
         fb_line_length = value;
         return;
 
-      case Fb_Line_Count:
+    case Fb_Line_Count:
         fb_line_count = value;
         return;
 
-      case Fb_Line_Pitch:
+    case Fb_Line_Pitch:
         fb_line_pitch = value;
         return;
 
-      case Bus_Options: {
-          const BusOptsReg old_bus_options(bus_options);
-          bus_options = value;
+    case Bus_Options: {
+        const BusOptsReg old_bus_options(bus_options);
+        bus_options = value;
 
-          if (bus_options.max_outstanding != old_bus_options.max_outstanding) {
-              DPRINTF(HDLcd,
-                      "Changing HDLcd outstanding DMA transactions: %d -> %d\n",
-                      old_bus_options.max_outstanding,
-                      bus_options.max_outstanding);
+        if (bus_options.max_outstanding != old_bus_options.max_outstanding) {
+            DPRINTF(HDLcd,
+                    "Changing HDLcd outstanding DMA transactions: %d -> %d\n",
+                    old_bus_options.max_outstanding,
+                    bus_options.max_outstanding);
+        }
 
-          }
+        if (bus_options.burst_len != old_bus_options.burst_len) {
+            DPRINTF(HDLcd, "Changing HDLcd DMA burst flags: 0x%x -> 0x%x\n",
+                    old_bus_options.burst_len, bus_options.burst_len);
+        }
+    }
+        return;
 
-          if (bus_options.burst_len != old_bus_options.burst_len) {
-              DPRINTF(HDLcd,
-                      "Changing HDLcd DMA burst flags: 0x%x -> 0x%x\n",
-                      old_bus_options.burst_len, bus_options.burst_len);
-          }
-      } return;
-
-      case V_Sync:
+    case V_Sync:
         v_sync = value;
         return;
-      case V_Back_Porch:
+    case V_Back_Porch:
         v_back_porch = value;
         return;
-      case V_Data:
+    case V_Data:
         v_data = value;
         return;
-      case V_Front_Porch:
+    case V_Front_Porch:
         v_front_porch = value;
         return;
 
-      case H_Sync:
+    case H_Sync:
         h_sync = value;
         return;
-      case H_Back_Porch:
+    case H_Back_Porch:
         h_back_porch = value;
         return;
-      case H_Data:
+    case H_Data:
         h_data = value;
         return;
-      case H_Front_Porch:
+    case H_Front_Porch:
         h_front_porch = value;
         return;
 
-      case Polarities:
+    case Polarities:
         polarities = value;
         return;
 
-      case Command: {
-          const CommandReg new_command(value);
+    case Command: {
+        const CommandReg new_command(value);
 
-          if (new_command.enable != command.enable) {
-              DPRINTF(HDLcd, "HDLCD switched %s\n",
-                      new_command.enable ? "on" : "off");
+        if (new_command.enable != command.enable) {
+            DPRINTF(HDLcd, "HDLCD switched %s\n",
+                    new_command.enable ? "on" : "off");
 
-              if (new_command.enable) {
-                  cmdEnable();
-              } else {
-                  cmdDisable();
-              }
-          }
-          command = new_command;
-      } return;
+            if (new_command.enable) {
+                cmdEnable();
+            } else {
+                cmdDisable();
+            }
+        }
+        command = new_command;
+    }
+        return;
 
-      case Pixel_Format:
+    case Pixel_Format:
         pixel_format = value;
         return;
 
-      case Red_Select:
+    case Red_Select:
         red_select = value;
         return;
-      case Green_Select:
+    case Green_Select:
         green_select = value;
         return;
-      case Blue_Select:
+    case Blue_Select:
         blue_select = value;
         return;
 
-      default:
+    default:
         panic("Tried to write HDLCD register that doesn't exist\n", offset);
         return;
     }
@@ -419,27 +440,25 @@ HDLcd::pixelConverter() const
     /* Some Linux kernels have a broken driver that swaps the red and
      * blue color select registers. */
     if (!workaroundSwapRB) {
-        return PixelConverter(
-            pixel_format.bytes_per_pixel + 1,
-            red_select.offset, green_select.offset, blue_select.offset,
-            red_select.size, green_select.size, blue_select.size,
-            byte_order);
+        return PixelConverter(pixel_format.bytes_per_pixel + 1,
+                              red_select.offset, green_select.offset,
+                              blue_select.offset, red_select.size,
+                              green_select.size, blue_select.size, byte_order);
     } else {
-        return PixelConverter(
-            pixel_format.bytes_per_pixel + 1,
-            blue_select.offset, green_select.offset, red_select.offset,
-            blue_select.size, green_select.size, red_select.size,
-            byte_order);
+        return PixelConverter(pixel_format.bytes_per_pixel + 1,
+                              blue_select.offset, green_select.offset,
+                              red_select.offset, blue_select.size,
+                              green_select.size, red_select.size, byte_order);
     }
 }
 
 DisplayTimings
 HDLcd::displayTimings() const
 {
-    return DisplayTimings(
-        h_data.val + 1, v_data.val + 1,
-        h_back_porch.val + 1, h_sync.val + 1, h_front_porch.val + 1,
-        v_back_porch.val + 1, v_sync.val + 1, v_front_porch.val + 1);
+    return DisplayTimings(h_data.val + 1, v_data.val + 1, h_back_porch.val + 1,
+                          h_sync.val + 1, h_front_porch.val + 1,
+                          v_back_porch.val + 1, v_sync.val + 1,
+                          v_front_porch.val + 1);
 }
 
 void
@@ -451,8 +470,9 @@ HDLcd::createDmaEngine()
     }
 
     const uint32_t dma_burst_flags = bus_options.burst_len;
-    const uint32_t dma_burst_len = dma_burst_flags ?
-        (1UL << (findMsbSet(dma_burst_flags) - 1)) : MAX_BURST_LEN;
+    const uint32_t dma_burst_len =
+        dma_burst_flags ? (1UL << (findMsbSet(dma_burst_flags) - 1)) :
+                          MAX_BURST_LEN;
     // Some drivers seem to set the DMA line count incorrectly. This
     // could either be a driver bug or a specification bug. Unlike for
     // timings, the specification does not require 1 to be added to
@@ -460,11 +480,10 @@ HDLcd::createDmaEngine()
     const uint32_t dma_lines =
         fb_line_count + (workaroundDmaLineCount ? 1 : 0);
 
-    dmaEngine.reset(new DmaEngine(
-                        *this, pixelBufferSize,
-                        AXI_PORT_WIDTH * dma_burst_len,
-                        bus_options.max_outstanding,
-                        fb_line_length, fb_line_pitch, dma_lines));
+    dmaEngine.reset(new DmaEngine(*this, pixelBufferSize,
+                                  AXI_PORT_WIDTH * dma_burst_len,
+                                  bus_options.max_outstanding, fb_line_length,
+                                  fb_line_pitch, dma_lines));
 }
 
 void
@@ -572,10 +591,9 @@ HDLcd::pxlFrameDone()
 
     if (enableCapture) {
         if (!pic) {
-            pic = simout.create(
-                csprintf("%s.framebuffer.%s",
-                         sys->name(), imgWriter->getImgExtension()),
-                true);
+            pic = simout.create(csprintf("%s.framebuffer.%s", sys->name(),
+                                         imgWriter->getImgExtension()),
+                                true);
         }
 
         assert(pic);
@@ -599,17 +617,17 @@ HDLcd::setInterrupts(uint32_t ints, uint32_t mask)
     }
 }
 
-HDLcd::DmaEngine::DmaEngine(HDLcd &_parent, size_t size,
-          unsigned request_size, unsigned max_pending,
-          size_t line_size, ssize_t line_pitch, unsigned num_lines)
-    : DmaReadFifo(
-        _parent.dmaPort, size, request_size, max_pending,
-        Request::UNCACHEABLE),
+HDLcd::DmaEngine::DmaEngine(HDLcd &_parent, size_t size, unsigned request_size,
+                            unsigned max_pending, size_t line_size,
+                            ssize_t line_pitch, unsigned num_lines)
+    : DmaReadFifo(_parent.dmaPort, size, request_size, max_pending,
+                  Request::UNCACHEABLE),
       parent(_parent),
-      lineSize(line_size), linePitch(line_pitch), numLines(num_lines),
+      lineSize(line_size),
+      linePitch(line_pitch),
+      numLines(num_lines),
       nextLineAddr(0)
-{
-}
+{}
 
 void
 HDLcd::DmaEngine::serialize(CheckpointOut &cp) const
@@ -645,7 +663,6 @@ HDLcd::DmaEngine::abortFrame()
     stopFill();
     flush();
 }
-
 
 void
 HDLcd::DmaEngine::dumpSettings()

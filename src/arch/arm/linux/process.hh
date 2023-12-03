@@ -52,9 +52,9 @@ namespace gem5
 class ArmLinuxProcess32 : public ArmProcess32
 {
   public:
-    ArmLinuxProcess32(const ProcessParams &params,
-                      loader::ObjectFile *objFile, loader::Arch _arch) :
-        ArmProcess32(params, objFile, _arch)
+    ArmLinuxProcess32(const ProcessParams &params, loader::ObjectFile *objFile,
+                      loader::Arch _arch)
+        : ArmProcess32(params, objFile, _arch)
     {}
 
     void initState() override;
@@ -67,9 +67,9 @@ class ArmLinuxProcess32 : public ArmProcess32
 class ArmLinuxProcess64 : public ArmProcess64
 {
   public:
-    ArmLinuxProcess64(const ProcessParams &params,
-                      loader::ObjectFile *objFile, loader::Arch _arch) :
-        ArmProcess64(params, objFile, _arch)
+    ArmLinuxProcess64(const ProcessParams &params, loader::ObjectFile *objFile,
+                      loader::Arch _arch)
+        : ArmProcess64(params, objFile, _arch)
     {}
 
     void initState() override;

@@ -47,26 +47,20 @@ static Pixel pixel_blue(0x00, 0x00, 0xff);
 
 TEST(FBTest, PixelConversionRGBA8888)
 {
-    EXPECT_EQ(PixelConverter::rgba8888_le.fromPixel(pixel_red),
-              0x000000ffU);
-    EXPECT_EQ(PixelConverter::rgba8888_le.fromPixel(pixel_green),
-              0x0000ff00U);
-    EXPECT_EQ(PixelConverter::rgba8888_le.fromPixel(pixel_blue),
-              0x00ff0000U);
+    EXPECT_EQ(PixelConverter::rgba8888_le.fromPixel(pixel_red), 0x000000ffU);
+    EXPECT_EQ(PixelConverter::rgba8888_le.fromPixel(pixel_green), 0x0000ff00U);
+    EXPECT_EQ(PixelConverter::rgba8888_le.fromPixel(pixel_blue), 0x00ff0000U);
 
-    EXPECT_EQ(PixelConverter::rgba8888_le.toPixel(0x000000ffU),
-              pixel_red);
-    EXPECT_EQ(PixelConverter::rgba8888_le.toPixel(0x0000ff00U),
-              pixel_green);
-    EXPECT_EQ(PixelConverter::rgba8888_le.toPixel(0x00ff0000U),
-              pixel_blue);
+    EXPECT_EQ(PixelConverter::rgba8888_le.toPixel(0x000000ffU), pixel_red);
+    EXPECT_EQ(PixelConverter::rgba8888_le.toPixel(0x0000ff00U), pixel_green);
+    EXPECT_EQ(PixelConverter::rgba8888_le.toPixel(0x00ff0000U), pixel_blue);
 }
 
 TEST(FBTest, PixelConversionRGB565)
 {
-    EXPECT_EQ(PixelConverter::rgb565_le.fromPixel(pixel_red),   0x001fU);
+    EXPECT_EQ(PixelConverter::rgb565_le.fromPixel(pixel_red), 0x001fU);
     EXPECT_EQ(PixelConverter::rgb565_le.fromPixel(pixel_green), 0x07e0U);
-    EXPECT_EQ(PixelConverter::rgb565_le.fromPixel(pixel_blue),  0xf800U);
+    EXPECT_EQ(PixelConverter::rgb565_le.fromPixel(pixel_blue), 0xf800U);
 
     EXPECT_EQ(PixelConverter::rgb565_le.toPixel(0x001fU), pixel_red);
     EXPECT_EQ(PixelConverter::rgb565_le.toPixel(0x07e0U), pixel_green);

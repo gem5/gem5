@@ -50,7 +50,8 @@
 /**
  * Forward declaration to avoid includes
  */
-namespace DRAMSim {
+namespace DRAMSim
+{
 
 class MultiChannelMemorySystem;
 
@@ -72,10 +73,8 @@ namespace memory
  */
 class DRAMSim2Wrapper
 {
-
   private:
-
-    DRAMSim::MultiChannelMemorySystem* dramsim;
+    DRAMSim::MultiChannelMemorySystem *dramsim;
 
     double _clockPeriod;
 
@@ -84,11 +83,10 @@ class DRAMSim2Wrapper
     unsigned int _burstSize;
 
     template <typename T>
-    T extractConfig(const std::string& field_name,
-                    const std::string& file_name) const;
+    T extractConfig(const std::string &field_name,
+                    const std::string &file_name) const;
 
   public:
-
     /**
      * Create an instance of the DRAMSim2 multi-channel memory
      * controller using a specific config and system description.
@@ -100,11 +98,10 @@ class DRAMSim2Wrapper
      * @param memory_size_mb Total memory size in MByte
      * @param enable_debug Enable debug output
      */
-    DRAMSim2Wrapper(const std::string& config_file,
-                    const std::string& system_file,
-                    const std::string& working_dir,
-                    const std::string& trace_file,
-                    unsigned int memory_size_mb,
+    DRAMSim2Wrapper(const std::string &config_file,
+                    const std::string &system_file,
+                    const std::string &working_dir,
+                    const std::string &trace_file, unsigned int memory_size_mb,
                     bool enable_debug);
     ~DRAMSim2Wrapper();
 
@@ -119,8 +116,8 @@ class DRAMSim2Wrapper
      * @param read_callback Callback used for read completions
      * @param write_callback Callback used for write completions
      */
-    void setCallbacks(DRAMSim::TransactionCompleteCB* read_callback,
-                      DRAMSim::TransactionCompleteCB* write_callback);
+    void setCallbacks(DRAMSim::TransactionCompleteCB *read_callback,
+                      DRAMSim::TransactionCompleteCB *write_callback);
 
     /**
      * Determine if the controller can accept a new packet or not.

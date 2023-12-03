@@ -41,17 +41,17 @@ namespace gem5
 // Extract an integer with a given endianness from a variably sized buffer.
 // Returns the value extraced (if any) and a bool indicating success.
 std::pair<std::uint64_t, bool> getUintX(const void *buf, std::size_t bytes,
-        ByteOrder endian);
+                                        ByteOrder endian);
 
 // Set a variably sized buffer to an integer value with a given endianness.
 // Returns whether the assignment was successful.
 bool setUintX(std::uint64_t val, void *buf, std::size_t bytes,
-        ByteOrder endian);
+              ByteOrder endian);
 
 // Print an integer with a given endianness into a string from a variably
 // sized buffer. Returns the string (if any) and a bool indicating success.
 std::pair<std::string, bool> printUintX(const void *buf, std::size_t bytes,
-        ByteOrder endian);
+                                        ByteOrder endian);
 
 // Print a buffer as "chunk_size" sized groups of bytes. The endianness
 // determines if the bytes are output in memory order (little) or inverse of
@@ -59,7 +59,8 @@ std::pair<std::string, bool> printUintX(const void *buf, std::size_t bytes,
 // a hexdump type utility. The return value is a string holding the printed
 // bytes.
 std::string printByteBuf(const void *buf, std::size_t bytes,
-        ByteOrder endian=ByteOrder::little, std::size_t chunk_size=4);
+                         ByteOrder endian = ByteOrder::little,
+                         std::size_t chunk_size = 4);
 
 } // namespace gem5
 

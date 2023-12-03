@@ -48,55 +48,55 @@ namespace gem5
 {
 
 // Hash filtering constants
-const uint16_t FHASH_ADDR  = 0x100;
-const uint16_t FHASH_SIZE  = 0x100;
+const uint16_t FHASH_ADDR = 0x100;
+const uint16_t FHASH_SIZE = 0x100;
 
 // EEPROM constants
-const uint8_t  EEPROM_READ = 0x2;
-const uint8_t  EEPROM_SIZE = 64; // Size in words of NSC93C46 EEPROM
-const uint8_t  EEPROM_PMATCH2_ADDR = 0xA; // EEPROM Address of PMATCH word 2
-const uint8_t  EEPROM_PMATCH1_ADDR = 0xB; // EEPROM Address of PMATCH word 1
-const uint8_t  EEPROM_PMATCH0_ADDR = 0xC; // EEPROM Address of PMATCH word 0
+const uint8_t EEPROM_READ = 0x2;
+const uint8_t EEPROM_SIZE = 64;          // Size in words of NSC93C46 EEPROM
+const uint8_t EEPROM_PMATCH2_ADDR = 0xA; // EEPROM Address of PMATCH word 2
+const uint8_t EEPROM_PMATCH1_ADDR = 0xB; // EEPROM Address of PMATCH word 1
+const uint8_t EEPROM_PMATCH0_ADDR = 0xC; // EEPROM Address of PMATCH word 0
 
 /**
  * Ethernet device registers
  */
 struct dp_regs
 {
-    uint32_t    command;
-    uint32_t    config;
-    uint32_t    mear;
-    uint32_t    ptscr;
-    uint32_t    isr;
-    uint32_t    imr;
-    uint32_t    ier;
-    uint32_t    ihr;
-    uint32_t    txdp;
-    uint32_t    txdp_hi;
-    uint32_t    txcfg;
-    uint32_t    gpior;
-    uint32_t    rxdp;
-    uint32_t    rxdp_hi;
-    uint32_t    rxcfg;
-    uint32_t    pqcr;
-    uint32_t    wcsr;
-    uint32_t    pcr;
-    uint32_t    rfcr;
-    uint32_t    rfdr;
-    uint32_t    brar;
-    uint32_t    brdr;
-    uint32_t    srr;
-    uint32_t    mibc;
-    uint32_t    vrcr;
-    uint32_t    vtcr;
-    uint32_t    vdr;
-    uint32_t    ccsr;
-    uint32_t    tbicr;
-    uint32_t    tbisr;
-    uint32_t    tanar;
-    uint32_t    tanlpar;
-    uint32_t    taner;
-    uint32_t    tesr;
+    uint32_t command;
+    uint32_t config;
+    uint32_t mear;
+    uint32_t ptscr;
+    uint32_t isr;
+    uint32_t imr;
+    uint32_t ier;
+    uint32_t ihr;
+    uint32_t txdp;
+    uint32_t txdp_hi;
+    uint32_t txcfg;
+    uint32_t gpior;
+    uint32_t rxdp;
+    uint32_t rxdp_hi;
+    uint32_t rxcfg;
+    uint32_t pqcr;
+    uint32_t wcsr;
+    uint32_t pcr;
+    uint32_t rfcr;
+    uint32_t rfdr;
+    uint32_t brar;
+    uint32_t brdr;
+    uint32_t srr;
+    uint32_t mibc;
+    uint32_t vrcr;
+    uint32_t vtcr;
+    uint32_t vdr;
+    uint32_t ccsr;
+    uint32_t tbicr;
+    uint32_t tbisr;
+    uint32_t tanar;
+    uint32_t tanlpar;
+    uint32_t taner;
+    uint32_t tesr;
 };
 
 struct dp_rom
@@ -242,16 +242,16 @@ class NSGigE : public EtherDevBase
     Tick dmaWriteFactor;
 
     void *rxDmaData;
-    Addr  rxDmaAddr;
-    int   rxDmaLen;
-    bool  doRxDmaRead();
-    bool  doRxDmaWrite();
+    Addr rxDmaAddr;
+    int rxDmaLen;
+    bool doRxDmaRead();
+    bool doRxDmaWrite();
 
     void *txDmaData;
-    Addr  txDmaAddr;
-    int   txDmaLen;
-    bool  doTxDmaRead();
-    bool  doTxDmaWrite();
+    Addr txDmaAddr;
+    int txDmaLen;
+    bool doTxDmaRead();
+    bool doTxDmaWrite();
 
     void rxDmaReadDone();
     EventFunctionWrapper rxDmaReadEvent;
@@ -290,12 +290,15 @@ class NSGigE : public EtherDevBase
      * Retransmit event
      */
     void transmit();
-    void txEventTransmit()
+
+    void
+    txEventTransmit()
     {
         transmit();
         if (txState == txFifoBlock)
             txKick();
     }
+
     EventFunctionWrapper txEvent;
 
     void txDump() const;
@@ -337,7 +340,7 @@ class NSGigE : public EtherDevBase
     ~NSGigE();
 
     Port &getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID) override;
+                  PortID idx = InvalidPortID) override;
 
     Tick writeConfig(PacketPtr pkt) override;
 
@@ -345,7 +348,12 @@ class NSGigE : public EtherDevBase
     Tick write(PacketPtr pkt) override;
 
     bool cpuIntrPending() const;
-    void cpuIntrAck() { cpuIntrClear(); }
+
+    void
+    cpuIntrAck()
+    {
+        cpuIntrClear();
+    }
 
     bool recvPacket(EthPacketPtr packet);
     void transferDone();
@@ -365,12 +373,19 @@ class NSGigEInt : public EtherInt
     NSGigE *dev;
 
   public:
-    NSGigEInt(const std::string &name, NSGigE *d)
-        : EtherInt(name), dev(d)
-    { }
+    NSGigEInt(const std::string &name, NSGigE *d) : EtherInt(name), dev(d) {}
 
-    virtual bool recvPacket(EthPacketPtr pkt) { return dev->recvPacket(pkt); }
-    virtual void sendDone() { dev->transferDone(); }
+    virtual bool
+    recvPacket(EthPacketPtr pkt)
+    {
+        return dev->recvPacket(pkt);
+    }
+
+    virtual void
+    sendDone()
+    {
+        dev->transferDone();
+    }
 };
 
 } // namespace gem5

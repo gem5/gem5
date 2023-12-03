@@ -84,13 +84,17 @@ class CxxConfigManager
         std::string message;
 
       public:
-        Exception(const std::string &name_, const std::string &message_) :
-            name(name_), message(message_)
-        { }
+        Exception(const std::string &name_, const std::string &message_)
+            : name(name_), message(message_)
+        {}
 
-        const char *what() const throw() { return message.c_str(); }
+        const char *
+        what() const throw()
+        {
+            return message.c_str();
+        }
 
-        ~Exception() throw() { }
+        ~Exception() throw() {}
     };
 
     /** Name substitution when instantiating any object whose name starts
@@ -103,11 +107,9 @@ class CxxConfigManager
         std::string fromPrefix;
         std::string toPrefix;
 
-        Renaming(const std::string &from_prefix,
-            const std::string &to_prefix) :
-            fromPrefix(from_prefix),
-            toPrefix(to_prefix)
-        { }
+        Renaming(const std::string &from_prefix, const std::string &to_prefix)
+            : fromPrefix(from_prefix), toPrefix(to_prefix)
+        {}
     };
 
   public:
@@ -130,15 +132,15 @@ class CxxConfigManager
 
     /** Bind a single connection between two objects' ports */
     void bindPort(SimObject *requestorObject, const std::string &requestPort,
-        PortID requestPortIndex, SimObject *responderObject,
-        const std::string &responsePort, PortID responsePortIndex);
+                  PortID requestPortIndex, SimObject *responderObject,
+                  const std::string &responsePort, PortID responsePortIndex);
 
     /** Bind a single (possibly vectored) request port to peers from the
      *  unparsed list peers with elements in the .ini connection format:
      *  path(.path)*.port[index] */
     void bindRequestPort(SimObject *object,
-        const CxxConfigDirectoryEntry::PortDesc &port,
-        const std::vector<std::string> &peers);
+                         const CxxConfigDirectoryEntry::PortDesc &port,
+                         const std::vector<std::string> &peers);
 
     /** Apply the first matching renaming in renamings to the given name */
     std::string rename(const std::string &from_name);
@@ -160,12 +162,15 @@ class CxxConfigManager
         CxxConfigManager &configManager;
 
       public:
-        SimObjectResolver(CxxConfigManager &configManager_) :
-            configManager(configManager_)
-        { }
+        SimObjectResolver(CxxConfigManager &configManager_)
+            : configManager(configManager_)
+        {}
 
-        SimObject *resolveSimObject(const std::string &name)
-        { return &(configManager.getObject<SimObject>(name)); }
+        SimObject *
+        resolveSimObject(const std::string &name)
+        {
+            return &(configManager.getObject<SimObject>(name));
+        }
     };
 
     /** Singleton instance of SimObjectResolver */
@@ -177,8 +182,8 @@ class CxxConfigManager
     /** Find the type field for a named object and return both the
      *  name of the type to object_type and the object's directory
      *  entry as the return value */
-    const CxxConfigDirectoryEntry &findObjectType(
-        const std::string &object_name, std::string &object_type);
+    const CxxConfigDirectoryEntry &
+    findObjectType(const std::string &object_name, std::string &object_type);
 
     /** Add a name prefix renaming to those currently applied.  Call this
      *  before trying to instantiate any object as the name mappings are
@@ -208,7 +213,7 @@ class CxxConfigManager
      *  After the first call, this function will return
      *  objectsByName[object_name] */
     SimObject *findObject(const std::string &object_name,
-        bool visit_children = false);
+                          bool visit_children = false);
 
     /** Find the parameters for the named object.  Returns NULL if the
      *  object isn't in the configuration.  For the first call with a
@@ -235,21 +240,22 @@ class CxxConfigManager
     /** Find an object from objectsByName with a type-checking cast.
      *  This function is provided for manipulating objects after
      *  instantiate as it assumes the named object exists. */
-    template<typename SimObjectType>
+    template <typename SimObjectType>
     SimObjectType &
     getObject(const std::string &object_name)
     {
         if (objectsByName.find(object_name) == objectsByName.end()) {
-            throw Exception("", csprintf("No sim object named: %s",
-                object_name));
+            throw Exception("",
+                            csprintf("No sim object named: %s", object_name));
         }
 
-        SimObjectType *object = dynamic_cast<SimObjectType *>(
-            objectsByName[object_name]);
+        SimObjectType *object =
+            dynamic_cast<SimObjectType *>(objectsByName[object_name]);
 
         if (!object) {
             throw Exception("", csprintf("Sim object: %s  has the wrong"
-                " type", object_name));
+                                         " type",
+                                         object_name));
         }
 
         return *object;
@@ -264,8 +270,8 @@ class CxxConfigManager
 
     /** Parse a port string of the form 'path(.path)*.port[index]' into
      *  path, port and index */
-    static void parsePort(const std::string &inp,
-        std::string &path, std::string &port, unsigned int &index);
+    static void parsePort(const std::string &inp, std::string &path,
+                          std::string &port, unsigned int &index);
 
     /** Build all objects (if build_all is true, otherwise objects must
      *  have been individually findObject-ed and added to the traversal
@@ -300,16 +306,21 @@ class CxxConfigManager
 
     /** Get the resolver used to map SimObject names to SimObjects for
      *  checkpoint restore */
-    SimObjectResolver &getSimObjectResolver() { return simObjectResolver; }
+    SimObjectResolver &
+    getSimObjectResolver()
+    {
+        return simObjectResolver;
+    }
 
     /** Convenience functions for calling set... member functions on a
      *  CxxConfigParams for an object.  These functions throw Exception
      *  rather than return a bool on failure */
     void setParam(const std::string &object_name,
-        const std::string &param_name, const std::string &param_value);
+                  const std::string &param_name,
+                  const std::string &param_value);
     void setParamVector(const std::string &object_name,
-        const std::string &param_name,
-        const std::vector<std::string> &param_values);
+                        const std::string &param_name,
+                        const std::vector<std::string> &param_values);
 };
 
 } // namespace gem5

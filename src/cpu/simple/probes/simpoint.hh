@@ -69,7 +69,8 @@ template <>
 struct hash<gem5::BasicBlockRange>
 {
   public:
-    size_t operator()(const gem5::BasicBlockRange &bb) const
+    size_t
+    operator()(const gem5::BasicBlockRange &bb) const
     {
         return hash<gem5::Addr>()(bb.first + bb.second);
     }
@@ -94,7 +95,7 @@ class SimPoint : public ProbeListenerObject
      * Called at every macro inst to increment basic block inst counts and
      * to profile block if end of block.
      */
-    void profile(const std::pair<SimpleThread*, StaticInstPtr>&);
+    void profile(const std::pair<SimpleThread *, StaticInstPtr> &);
 
   private:
     /** SimPoint profiling interval size in instructions */

@@ -100,82 +100,82 @@ union PCIConfig
 };
 
 // Common PCI offsets
-#define PCI_VENDOR_ID           0x00    // Vendor ID                    ro
-#define PCI_DEVICE_ID           0x02    // Device ID                    ro
-#define PCI_COMMAND             0x04    // Command                      rw
-#define PCI_STATUS              0x06    // Status                       rw
-#define PCI_REVISION_ID         0x08    // Revision ID                  ro
-#define PCI_CLASS_CODE          0x09    // Class Code                   ro
-#define PCI_SUB_CLASS_CODE      0x0A    // Sub Class Code               ro
-#define PCI_BASE_CLASS_CODE     0x0B    // Base Class Code              ro
-#define PCI_CACHE_LINE_SIZE     0x0C    // Cache Line Size              ro+
-#define PCI_LATENCY_TIMER       0x0D    // Latency Timer                ro+
-#define PCI_HEADER_TYPE         0x0E    // Header Type                  ro
-#define PCI_BIST                0x0F    // Built in self test           rw
+#define PCI_VENDOR_ID 0x00       // Vendor ID                    ro
+#define PCI_DEVICE_ID 0x02       // Device ID                    ro
+#define PCI_COMMAND 0x04         // Command                      rw
+#define PCI_STATUS 0x06          // Status                       rw
+#define PCI_REVISION_ID 0x08     // Revision ID                  ro
+#define PCI_CLASS_CODE 0x09      // Class Code                   ro
+#define PCI_SUB_CLASS_CODE 0x0A  // Sub Class Code               ro
+#define PCI_BASE_CLASS_CODE 0x0B // Base Class Code              ro
+#define PCI_CACHE_LINE_SIZE 0x0C // Cache Line Size              ro+
+#define PCI_LATENCY_TIMER 0x0D   // Latency Timer                ro+
+#define PCI_HEADER_TYPE 0x0E     // Header Type                  ro
+#define PCI_BIST 0x0F            // Built in self test           rw
 
 // some pci command reg bitfields
-#define PCI_CMD_BME     0x04 // Bus master function enable
-#define PCI_CMD_MSE     0x02 // Memory Space Access enable
-#define PCI_CMD_IOSE    0x01 // I/O space enable
+#define PCI_CMD_BME 0x04  // Bus master function enable
+#define PCI_CMD_MSE 0x02  // Memory Space Access enable
+#define PCI_CMD_IOSE 0x01 // I/O space enable
 
 // Type 0 PCI offsets
-#define PCI0_BASE_ADDR0         0x10    // Base Address 0               rw
-#define PCI0_BASE_ADDR1         0x14    // Base Address 1               rw
-#define PCI0_BASE_ADDR2         0x18    // Base Address 2               rw
-#define PCI0_BASE_ADDR3         0x1C    // Base Address 3               rw
-#define PCI0_BASE_ADDR4         0x20    // Base Address 4               rw
-#define PCI0_BASE_ADDR5         0x24    // Base Address 5               rw
-#define PCI0_CIS                0x28    // CardBus CIS Pointer          ro
-#define PCI0_SUB_VENDOR_ID      0x2C    // Sub-Vendor ID                ro
-#define PCI0_SUB_SYSTEM_ID      0x2E    // Sub-System ID                ro
-#define PCI0_ROM_BASE_ADDR      0x30    // Expansion ROM Base Address   rw
-#define PCI0_CAP_PTR            0x34    // Capability list pointer      ro
-#define PCI0_RESERVED           0x35
-#define PCI0_INTERRUPT_LINE     0x3C    // Interrupt Line               rw
-#define PCI0_INTERRUPT_PIN      0x3D    // Interrupt Pin                ro
-#define PCI0_MINIMUM_GRANT      0x3E    // Maximum Grant                ro
-#define PCI0_MAXIMUM_LATENCY    0x3F    // Maximum Latency              ro
+#define PCI0_BASE_ADDR0 0x10    // Base Address 0               rw
+#define PCI0_BASE_ADDR1 0x14    // Base Address 1               rw
+#define PCI0_BASE_ADDR2 0x18    // Base Address 2               rw
+#define PCI0_BASE_ADDR3 0x1C    // Base Address 3               rw
+#define PCI0_BASE_ADDR4 0x20    // Base Address 4               rw
+#define PCI0_BASE_ADDR5 0x24    // Base Address 5               rw
+#define PCI0_CIS 0x28           // CardBus CIS Pointer          ro
+#define PCI0_SUB_VENDOR_ID 0x2C // Sub-Vendor ID                ro
+#define PCI0_SUB_SYSTEM_ID 0x2E // Sub-System ID                ro
+#define PCI0_ROM_BASE_ADDR 0x30 // Expansion ROM Base Address   rw
+#define PCI0_CAP_PTR 0x34       // Capability list pointer      ro
+#define PCI0_RESERVED 0x35
+#define PCI0_INTERRUPT_LINE 0x3C  // Interrupt Line               rw
+#define PCI0_INTERRUPT_PIN 0x3D   // Interrupt Pin                ro
+#define PCI0_MINIMUM_GRANT 0x3E   // Maximum Grant                ro
+#define PCI0_MAXIMUM_LATENCY 0x3F // Maximum Latency              ro
 
 // Type 1 PCI offsets
-#define PCI1_BASE_ADDR0         0x10    // Base Address 0               rw
-#define PCI1_BASE_ADDR1         0x14    // Base Address 1               rw
-#define PCI1_PRI_BUS_NUM        0x18    // Primary Bus Number           rw
-#define PCI1_SEC_BUS_NUM        0x19    // Secondary Bus Number         rw
-#define PCI1_SUB_BUS_NUM        0x1A    // Subordinate Bus Number       rw
-#define PCI1_SEC_LAT_TIMER      0x1B    // Secondary Latency Timer      ro+
-#define PCI1_IO_BASE            0x1C    // I/O Base                     rw
-#define PCI1_IO_LIMIT           0x1D    // I/O Limit                    rw
-#define PCI1_SECONDARY_STATUS   0x1E    // Secondary Status             rw
-#define PCI1_MEM_BASE           0x20    // Memory Base                  rw
-#define PCI1_MEM_LIMIT          0x22    // Memory Limit                 rw
-#define PCI1_PRF_MEM_BASE       0x24    // Prefetchable Memory Base     rw
-#define PCI1_PRF_MEM_LIMIT      0x26    // Prefetchable Memory Limit    rw
-#define PCI1_PRF_BASE_UPPER     0x28    // Prefetchable Base Upper 32   rw
-#define PCI1_PRF_LIMIT_UPPER    0x2C    // Prefetchable Limit Upper 32  rw
-#define PCI1_IO_BASE_UPPER      0x30    // I/O Base Upper 16 bits       rw
-#define PCI1_IO_LIMIT_UPPER     0x32    // I/O Limit Upper 16 bits      rw
-#define PCI1_RESERVED           0x34    // Reserved                     ro
-#define PCI1_ROM_BASE_ADDR      0x38    // Expansion ROM Base Address   rw
-#define PCI1_INTR_LINE          0x3C    // Interrupt Line               rw
-#define PCI1_INTR_PIN           0x3D    // Interrupt Pin                ro
-#define PCI1_BRIDGE_CTRL        0x3E    // Bridge Control               rw
+#define PCI1_BASE_ADDR0 0x10       // Base Address 0               rw
+#define PCI1_BASE_ADDR1 0x14       // Base Address 1               rw
+#define PCI1_PRI_BUS_NUM 0x18      // Primary Bus Number           rw
+#define PCI1_SEC_BUS_NUM 0x19      // Secondary Bus Number         rw
+#define PCI1_SUB_BUS_NUM 0x1A      // Subordinate Bus Number       rw
+#define PCI1_SEC_LAT_TIMER 0x1B    // Secondary Latency Timer      ro+
+#define PCI1_IO_BASE 0x1C          // I/O Base                     rw
+#define PCI1_IO_LIMIT 0x1D         // I/O Limit                    rw
+#define PCI1_SECONDARY_STATUS 0x1E // Secondary Status             rw
+#define PCI1_MEM_BASE 0x20         // Memory Base                  rw
+#define PCI1_MEM_LIMIT 0x22        // Memory Limit                 rw
+#define PCI1_PRF_MEM_BASE 0x24     // Prefetchable Memory Base     rw
+#define PCI1_PRF_MEM_LIMIT 0x26    // Prefetchable Memory Limit    rw
+#define PCI1_PRF_BASE_UPPER 0x28   // Prefetchable Base Upper 32   rw
+#define PCI1_PRF_LIMIT_UPPER 0x2C  // Prefetchable Limit Upper 32  rw
+#define PCI1_IO_BASE_UPPER 0x30    // I/O Base Upper 16 bits       rw
+#define PCI1_IO_LIMIT_UPPER 0x32   // I/O Limit Upper 16 bits      rw
+#define PCI1_RESERVED 0x34         // Reserved                     ro
+#define PCI1_ROM_BASE_ADDR 0x38    // Expansion ROM Base Address   rw
+#define PCI1_INTR_LINE 0x3C        // Interrupt Line               rw
+#define PCI1_INTR_PIN 0x3D         // Interrupt Pin                ro
+#define PCI1_BRIDGE_CTRL 0x3E      // Bridge Control               rw
 
 // Device specific offsets
-#define PCI_DEVICE_SPECIFIC             0x40    // 192 bytes
-#define PCI_CONFIG_SIZE         0xFF
+#define PCI_DEVICE_SPECIFIC 0x40 // 192 bytes
+#define PCI_CONFIG_SIZE 0xFF
 
 // Some Vendor IDs
-#define PCI_VENDOR_DEC                  0x1011
-#define PCI_VENDOR_NCR                  0x101A
-#define PCI_VENDOR_QLOGIC               0x1077
-#define PCI_VENDOR_SIMOS                0x1291
+#define PCI_VENDOR_DEC 0x1011
+#define PCI_VENDOR_NCR 0x101A
+#define PCI_VENDOR_QLOGIC 0x1077
+#define PCI_VENDOR_SIMOS 0x1291
 
 // Some Product IDs
-#define PCI_PRODUCT_DEC_PZA             0x0008
-#define PCI_PRODUCT_NCR_810             0x0001
-#define PCI_PRODUCT_QLOGIC_ISP1020      0x1020
-#define PCI_PRODUCT_SIMOS_SIMOS         0x1291
-#define PCI_PRODUCT_SIMOS_ETHER         0x1292
+#define PCI_PRODUCT_DEC_PZA 0x0008
+#define PCI_PRODUCT_NCR_810 0x0001
+#define PCI_PRODUCT_QLOGIC_ISP1020 0x1020
+#define PCI_PRODUCT_SIMOS_SIMOS 0x1291
+#define PCI_PRODUCT_SIMOS_ETHER 0x1292
 
 /**
  * PCIe capability list offsets internal to the entry.
@@ -221,6 +221,7 @@ union PCIConfig
 union PMCAP
 {
     uint8_t data[6];
+
     struct
     {
         uint16_t pid;  /* 0:7  cid
@@ -256,26 +257,27 @@ union PMCAP
 union MSICAP
 {
     uint8_t data[24];
+
     struct
     {
-        uint16_t mid;  /* 0:7  cid
-                        *  8:15 next
-                        */
-        uint16_t mc;   /* 0     msie;
-                        * 1:3   mmc;
-                        * 4:6   mme;
-                        * 7     c64;
-                        * 8     pvm;
-                        * 9:15  reserved;
-                        */
-        uint32_t ma;   /* 0:1  reserved
-                        * 2:31 addr
-                        */
+        uint16_t mid; /* 0:7  cid
+                       *  8:15 next
+                       */
+        uint16_t mc;  /* 0     msie;
+                       * 1:3   mmc;
+                       * 4:6   mme;
+                       * 7     c64;
+                       * 8     pvm;
+                       * 9:15  reserved;
+                       */
+        uint32_t ma;  /* 0:1  reserved
+                       * 2:31 addr
+                       */
         uint32_t mua;
         uint16_t md;
         uint32_t mmask;
         uint32_t mpend;
-   };
+    };
 };
 
 /** @struct MSIX
@@ -285,6 +287,7 @@ union MSICAP
 union MSIXCAP
 {
     uint8_t data[12];
+
     struct
     {
         uint16_t mxid; /* 0:7  cid
@@ -313,10 +316,12 @@ union MSIXTable
         uint32_t msg_data;
         uint32_t vec_ctrl;
     } fields;
+
     uint32_t data[4];
 };
 
 #define MSIXVECS_PER_PBA 64
+
 struct MSIXPbaEntry
 {
     uint64_t bits;
@@ -329,17 +334,18 @@ struct MSIXPbaEntry
 union PXCAP
 {
     uint8_t data[48];
+
     struct
     {
-        uint16_t pxid; /* 0:7  cid
-                        *  8:15 next
-                        */
-        uint16_t pxcap; /* 0:3   ver;
-                         * 4:7   dpt;
-                         * 8     si;
-                         * 9:13  imn;
-                         * 14:15 reserved;
-                         */
+        uint16_t pxid;   /* 0:7  cid
+                          *  8:15 next
+                          */
+        uint16_t pxcap;  /* 0:3   ver;
+                          * 4:7   dpt;
+                          * 8     si;
+                          * 9:13  imn;
+                          * 14:15 reserved;
+                          */
         uint32_t pxdcap; /* 0:2   mps;
                           * 3:4   pfs;
                           * 5     etfs;
@@ -353,27 +359,27 @@ union PXCAP
                           * 28    flrc;
                           * 29:31 reserved;
                           */
-        uint16_t pxdc; /* 0     cere;
-                        * 1     nfere;
-                        * 2     fere;
-                        * 3     urre;
-                        * 4     ero;
-                        * 5:7   mps;
-                        * 8     ete;
-                        * 9     pfe;
-                        * 10    appme;
-                        * 11    ens;
-                        * 12:14 mrrs;
-                        * 15    func_reset;
-                        */
-        uint16_t pxds; /* 0     ced;
-                        * 1     nfed;
-                        * 2     fed;
-                        * 3     urd;
-                        * 4     apd;
-                        * 5     tp;
-                        * 6:15  reserved;
-                        */
+        uint16_t pxdc;   /* 0     cere;
+                          * 1     nfere;
+                          * 2     fere;
+                          * 3     urre;
+                          * 4     ero;
+                          * 5:7   mps;
+                          * 8     ete;
+                          * 9     pfe;
+                          * 10    appme;
+                          * 11    ens;
+                          * 12:14 mrrs;
+                          * 15    func_reset;
+                          */
+        uint16_t pxds;   /* 0     ced;
+                          * 1     nfed;
+                          * 2     fed;
+                          * 3     urd;
+                          * 4     apd;
+                          * 5     tp;
+                          * 6:15  reserved;
+                          */
         uint32_t pxlcap; /* 0:3   sls;
                           * 4:9   mlw;
                           * 10:11 aspms;
@@ -386,22 +392,22 @@ union PXCAP
                           * 22:23 reserved;
                           * 24:31 pn;
                           */
-        uint16_t pxlc; /* 0:1   aspmc;
-                        * 2     reserved;
-                        * 3     rcb;
-                        * 4:5   reserved;
-                        * 6     ccc;
-                        * 7     es;
-                        * 8     ecpm;
-                        * 9     hawd;
-                        * 10:15 reserved;
-                        */
-        uint16_t pxls; /* 0:3   cls;
-                        * 4:9   nlw;
-                        * 10:11 reserved;
-                        * 12    slot_clk_config;
-                        * 13:15 reserved;
-                        */
+        uint16_t pxlc;   /* 0:1   aspmc;
+                          * 2     reserved;
+                          * 3     rcb;
+                          * 4:5   reserved;
+                          * 6     ccc;
+                          * 7     es;
+                          * 8     ecpm;
+                          * 9     hawd;
+                          * 10:15 reserved;
+                          */
+        uint16_t pxls;   /* 0:3   cls;
+                          * 4:9   nlw;
+                          * 10:11 reserved;
+                          * 12    slot_clk_config;
+                          * 13:15 reserved;
+                          */
         uint8_t reserved[20];
         uint32_t pxdcap2; /* 0:3   ctrs;
                            * 4     ctds;
@@ -420,14 +426,14 @@ union PXCAP
                            * 22:23 meetp;
                            * 24:31 reserved;
                            */
-        uint32_t pxdc2; /* 0:3   ctv;
-                         * 4     ctd;
-                         * 5:9   reserved;
-                         * 10    ltrme;
-                         * 11:12 reserved;
-                         * 13:14 obffe;
-                         * 15:31 reserved;
-                         */
+        uint32_t pxdc2;   /* 0:3   ctv;
+                           * 4     ctd;
+                           * 5:9   reserved;
+                           * 10    ltrme;
+                           * 11:12 reserved;
+                           * 13:14 obffe;
+                           * 15:31 reserved;
+                           */
     };
 };
 #endif // __PCIREG_H__

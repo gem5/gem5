@@ -49,7 +49,9 @@ do_initparam(const DispatchTable &dt, Args &args)
 }
 
 Command init_param = {
-    "initparam", 1, 1, do_initparam, "[key]\n"
-        "        optional key may be at most 16 characters long" };
+    "initparam", 1, 1, do_initparam,
+    "[key]\n"
+    "        optional key may be at most 16 characters long"
+};
 
 } // anonymous namespace

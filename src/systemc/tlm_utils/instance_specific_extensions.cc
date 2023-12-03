@@ -75,6 +75,7 @@ class ispex_registry // Copied from tlm_gp.cpp.
   private:
     static ispex_registry *instance_;
     type_map ids_;
+
     ispex_registry() {}
 };
 
@@ -90,7 +91,7 @@ ispex_base::register_private_extension(const std::type_info &type)
 
 // Helper to do the numbering of private extension accessors.
 static unsigned int
-max_num_ispex_accessors(bool increment=false)
+max_num_ispex_accessors(bool increment = false)
 {
     static unsigned int max_num = 0;
     if (increment)
@@ -104,6 +105,7 @@ max_num_ispex_accessors(bool increment=false)
 class instance_specific_extension_container_pool
 {
     instance_specific_extension_container_pool() : unused(nullptr) {}
+
     ~instance_specific_extension_container_pool();
 
   public:
@@ -134,7 +136,7 @@ instance_specific_extension_container_pool::create()
 
 void
 instance_specific_extension_container_pool::free(
-        instance_specific_extension_container *cont)
+    instance_specific_extension_container *cont)
 {
     cont->next = unused;
     unused = cont;
@@ -158,17 +160,20 @@ instance_specific_extension_container::create()
     return instance_specific_extension_container_pool::instance().create();
 }
 
-instance_specific_extension_container::
-    instance_specific_extension_container() :
-    use_count(0), m_txn(NULL), m_release_fn(NULL), m_carrier(NULL), next(NULL)
+instance_specific_extension_container::instance_specific_extension_container()
+    : use_count(0),
+      m_txn(NULL),
+      m_release_fn(NULL),
+      m_carrier(NULL),
+      next(NULL)
 {
     resize();
 }
 
 void
-instance_specific_extension_container::
-    attach_carrier(instance_specific_extension_carrier *carrier,
-            void *txn, release_fn *rel_fn)
+instance_specific_extension_container::attach_carrier(
+    instance_specific_extension_carrier *carrier, void *txn,
+    release_fn *rel_fn)
 {
     m_txn = txn;
     m_release_fn = rel_fn;
@@ -187,8 +192,7 @@ instance_specific_extension_container::resize()
     }
 }
 
-instance_specific_extension_container::
-    ~instance_specific_extension_container()
+instance_specific_extension_container::~instance_specific_extension_container()
 {
     for (unsigned int i = 0; i < m_ispex_per_accessor.size(); ++i)
         delete m_ispex_per_accessor[i];
@@ -222,8 +226,8 @@ instance_specific_extension_container::get_accessor(unsigned int idx)
 
 // non-templatized version with manual index:
 ispex_base *
-instance_specific_extensions_per_accessor::set_extension(
-        unsigned int index, ispex_base *ext)
+instance_specific_extensions_per_accessor::set_extension(unsigned int index,
+                                                         ispex_base *ext)
 {
     resize_extensions();
     ispex_base *tmp = m_extensions[index];
@@ -235,7 +239,7 @@ instance_specific_extensions_per_accessor::set_extension(
 
 ispex_base *
 instance_specific_extensions_per_accessor::get_extension(
-        unsigned int index) const
+    unsigned int index) const
 {
     return (index < m_extensions.size()) ? m_extensions[index] : nullptr;
 }
@@ -258,8 +262,8 @@ instance_specific_extensions_per_accessor::resize_extensions()
 
 // ----------------------------------------------------------------------------
 
-instance_specific_extension_accessor::instance_specific_extension_accessor() :
-    m_index(max_num_ispex_accessors(true) - 1)
+instance_specific_extension_accessor::instance_specific_extension_accessor()
+    : m_index(max_num_ispex_accessors(true) - 1)
 {}
 
 } // namespace tlm_utils

@@ -67,31 +67,33 @@ class RubyPort : public ClockedObject
     class MemRequestPort : public QueuedRequestPort
     {
       private:
-        RubyPort& owner;
+        RubyPort &owner;
         ReqPacketQueue reqQueue;
         SnoopRespPacketQueue snoopRespQueue;
 
       public:
-        MemRequestPort(const std::string &_name, RubyPort& _port);
+        MemRequestPort(const std::string &_name, RubyPort &_port);
 
       protected:
         bool recvTimingResp(PacketPtr pkt);
-        void recvRangeChange() {}
+
+        void
+        recvRangeChange()
+        {}
     };
 
     class MemResponsePort : public QueuedResponsePort
     {
       private:
-        RubyPort& owner;
+        RubyPort &owner;
         RespPacketQueue queue;
         bool access_backing_store;
         bool no_retry_on_stall;
 
       public:
-        MemResponsePort(const std::string &_name,
-                        RubyPort& _port,
-                        bool _access_backing_store,
-                        PortID id, bool _no_retry_on_stall);
+        MemResponsePort(const std::string &_name, RubyPort &_port,
+                        bool _access_backing_store, PortID id,
+                        bool _no_retry_on_stall);
         void hitCallback(PacketPtr pkt);
         void evictionCallback(Addr address);
 
@@ -102,8 +104,12 @@ class RubyPort : public ClockedObject
 
         void recvFunctional(PacketPtr pkt);
 
-        AddrRangeList getAddrRanges() const
-        { AddrRangeList ranges; return ranges; }
+        AddrRangeList
+        getAddrRanges() const
+        {
+            AddrRangeList ranges;
+            return ranges;
+        }
 
         void addToRetryList();
 
@@ -115,12 +121,12 @@ class RubyPort : public ClockedObject
     class PioRequestPort : public QueuedRequestPort
     {
       private:
-        RubyPort& owner;
+        RubyPort &owner;
         ReqPacketQueue reqQueue;
         SnoopRespPacketQueue snoopRespQueue;
 
       public:
-        PioRequestPort(const std::string &_name, RubyPort& _port);
+        PioRequestPort(const std::string &_name, RubyPort &_port);
 
       protected:
         bool recvTimingResp(PacketPtr pkt);
@@ -130,20 +136,23 @@ class RubyPort : public ClockedObject
     class PioResponsePort : public QueuedResponsePort
     {
       private:
-        RubyPort& owner;
+        RubyPort &owner;
         RespPacketQueue queue;
 
       public:
-        PioResponsePort(const std::string &_name, RubyPort& _port);
+        PioResponsePort(const std::string &_name, RubyPort &_port);
 
       protected:
         bool recvTimingReq(PacketPtr pkt);
 
         Tick recvAtomic(PacketPtr pkt);
 
-        void recvFunctional(PacketPtr pkt)
-        { panic("recvFunctional should never be called on pio response "
-                "port!"); }
+        void
+        recvFunctional(PacketPtr pkt)
+        {
+            panic("recvFunctional should never be called on pio response "
+                  "port!");
+        }
 
         AddrRangeList getAddrRanges() const;
     };
@@ -151,18 +160,19 @@ class RubyPort : public ClockedObject
     struct SenderState : public Packet::SenderState
     {
         MemResponsePort *port;
-        SenderState(MemResponsePort * _port) : port(_port)
-        {}
-     };
+
+        SenderState(MemResponsePort *_port) : port(_port) {}
+    };
 
     typedef RubyPortParams Params;
     RubyPort(const Params &p);
+
     virtual ~RubyPort() {}
 
     void init() override;
 
     Port &getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID) override;
+                  PortID idx = InvalidPortID) override;
 
     virtual RequestStatus makeRequest(PacketPtr pkt) = 0;
     virtual int outstandingCount() const = 0;
@@ -173,11 +183,25 @@ class RubyPort : public ClockedObject
     // Called by the controller to give the sequencer a pointer.
     // A pointer to the controller is needed for atomic support.
     //
-    void setController(AbstractController* _cntrl) { m_controller = _cntrl; }
-    uint32_t getId() { return m_version; }
+    void
+    setController(AbstractController *_cntrl)
+    {
+        m_controller = _cntrl;
+    }
+
+    uint32_t
+    getId()
+    {
+        return m_version;
+    }
+
     DrainState drain() override;
 
-    bool isCPUSequencer() { return m_isCPUSequencer; }
+    bool
+    isCPUSequencer()
+    {
+        return m_isCPUSequencer;
+    }
 
     virtual int functionalWrite(Packet *func_pkt);
 
@@ -201,22 +225,26 @@ class RubyPort : public ClockedObject
 
     RubySystem *m_ruby_system;
     uint32_t m_version;
-    AbstractController* m_controller;
-    MessageBuffer* m_mandatory_q_ptr;
+    AbstractController *m_controller;
+    MessageBuffer *m_mandatory_q_ptr;
     bool m_usingRubyTester;
-    System* system;
+    System *system;
 
     std::vector<MemResponsePort *> response_ports;
 
   private:
-    bool onRetryList(MemResponsePort * port)
+    bool
+    onRetryList(MemResponsePort *port)
     {
         return (std::find(retryList.begin(), retryList.end(), port) !=
                 retryList.end());
     }
-    void addToRetryList(MemResponsePort * port)
+
+    void
+    addToRetryList(MemResponsePort *port)
     {
-        if (onRetryList(port)) return;
+        if (onRetryList(port))
+            return;
         retryList.push_back(port);
     }
 
@@ -232,7 +260,8 @@ class RubyPort : public ClockedObject
 
     //
     // Based on similar code in the M5 bus.  Stores pointers to those ports
-    // that should be called when the Sequencer becomes available after a stall.
+    // that should be called when the Sequencer becomes available after a
+    // stall.
     //
     std::vector<MemResponsePort *> retryList;
 

@@ -38,9 +38,8 @@ namespace compression
 {
 
 FPC::FPCCompData::FPCCompData(int zero_run_size_bits)
-  : CompData(), zeroRunSizeBits(zero_run_size_bits)
-{
-}
+    : CompData(), zeroRunSizeBits(zero_run_size_bits)
+{}
 
 void
 FPC::FPCCompData::addEntry(std::unique_ptr<Pattern> pattern)
@@ -51,25 +50,26 @@ FPC::FPCCompData::addEntry(std::unique_ptr<Pattern> pattern)
         // run's length
         if (!entries.size() ||
             (entries.back()->getPatternNumber() != ZERO_RUN)) {
-            static_cast<ZeroRun*>(pattern.get())->setRealSize(zeroRunSizeBits);
+            static_cast<ZeroRun *>(pattern.get())
+                ->setRealSize(zeroRunSizeBits);
         } else {
             // A zero run has a maximum length, given by the number of bits
             // used to represent it. When this limit is reached, a new run
             // must be created
             const int run_length =
-                static_cast<ZeroRun*>(entries.back().get())->getRunLength();
+                static_cast<ZeroRun *>(entries.back().get())->getRunLength();
             if (run_length == mask(zeroRunSizeBits)) {
                 // The limit for this zero run has been reached, so a new
                 // run must be started, with a sized pattern
-                static_cast<ZeroRun*>(pattern.get())->setRealSize(
-                    zeroRunSizeBits);
+                static_cast<ZeroRun *>(pattern.get())
+                    ->setRealSize(zeroRunSizeBits);
             } else {
                 // Increase the current run's length.
                 // Since the first zero entry of the run contains the size,
                 // and all the following ones are created just to simplify
                 // decompression, this fake pattern will have a size of 0 bits
-                static_cast<ZeroRun*>(pattern.get())->setRunLength(
-                    run_length + 1);
+                static_cast<ZeroRun *>(pattern.get())
+                    ->setRunLength(run_length + 1);
             }
         }
     }
@@ -78,9 +78,8 @@ FPC::FPCCompData::addEntry(std::unique_ptr<Pattern> pattern)
 }
 
 FPC::FPC(const Params &p)
-  : DictionaryCompressor<uint32_t>(p), zeroRunSizeBits(p.zero_run_bits)
-{
-}
+    : DictionaryCompressor<uint32_t>(p), zeroRunSizeBits(p.zero_run_bits)
+{}
 
 void
 FPC::addToDictionary(const DictionaryEntry data)

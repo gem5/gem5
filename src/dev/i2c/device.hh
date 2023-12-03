@@ -35,7 +35,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.*
  */
 
-
 /** @file
  * All i2c devices should derive from this class.
  */
@@ -52,18 +51,13 @@ namespace gem5
 
 class I2CDevice : public SimObject
 {
-
   protected:
-
     uint8_t _addr;
 
   public:
+    I2CDevice(const I2CDeviceParams &p) : SimObject(p), _addr(p.i2c_addr) {}
 
-    I2CDevice(const I2CDeviceParams &p)
-        : SimObject(p), _addr(p.i2c_addr)
-    { }
-
-    virtual ~I2CDevice() { }
+    virtual ~I2CDevice() {}
 
     /**
      * Return the next message that the device expects to send. This
@@ -90,8 +84,11 @@ class I2CDevice : public SimObject
      */
     virtual void i2cStart() = 0;
 
-    uint8_t i2cAddr() const { return _addr; }
-
+    uint8_t
+    i2cAddr() const
+    {
+        return _addr;
+    }
 };
 
 } // namespace gem5

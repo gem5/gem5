@@ -80,7 +80,9 @@ class KvmKernelGic
     KvmKernelGic &operator=(const KvmKernelGic &&rhs) = delete;
     KvmKernelGic &operator=(const KvmKernelGic &rhs) = delete;
 
-    virtual void init() {}
+    virtual void
+    init()
+    {}
 
   public:
     /**
@@ -149,15 +151,13 @@ class KvmKernelGicV2 : public KvmKernelGic, public GicV2Registers
      * @param vm KVM VM representing this system
      * @param params MuxingKvmGicV2 params
      */
-    KvmKernelGicV2(KvmVM &vm,
-                   const MuxingKvmGicV2Params &params);
+    KvmKernelGicV2(KvmVM &vm, const MuxingKvmGicV2Params &params);
 
   public: // GicV2Registers
     uint32_t readDistributor(ContextID ctx, Addr daddr) override;
     uint32_t readCpu(ContextID ctx, Addr daddr) override;
 
-    void writeDistributor(ContextID ctx, Addr daddr,
-                          uint32_t data) override;
+    void writeDistributor(ContextID ctx, Addr daddr, uint32_t data) override;
     void writeCpu(ContextID ctx, Addr daddr, uint32_t data) override;
 
   protected:
@@ -200,8 +200,7 @@ class KvmKernelGicV3 : public KvmKernelGic, public Gicv3Registers
      * @param vm KVM VM representing this system
      * @param params MuxingKvmGicV3 parameters
      */
-    KvmKernelGicV3(KvmVM &vm,
-                   const MuxingKvmGicV3Params &params);
+    KvmKernelGicV3(KvmVM &vm, const MuxingKvmGicV3Params &params);
 
     void init() override;
 
@@ -213,10 +212,10 @@ class KvmKernelGicV3 : public KvmKernelGic, public Gicv3Registers
                    ArmISA::MiscRegIndex misc_reg) override;
 
     void writeDistributor(Addr daddr, uint32_t data) override;
-    void writeRedistributor(const ArmISA::Affinity &aff,
-                            Addr daddr, uint32_t data) override;
-    void writeCpu(const ArmISA::Affinity &aff,
-                  ArmISA::MiscRegIndex misc_reg, RegVal data) override;
+    void writeRedistributor(const ArmISA::Affinity &aff, Addr daddr,
+                            uint32_t data) override;
+    void writeCpu(const ArmISA::Affinity &aff, ArmISA::MiscRegIndex misc_reg,
+                  RegVal data) override;
 
   protected:
     /**
@@ -238,8 +237,7 @@ class KvmKernelGicV3 : public KvmKernelGic, public Gicv3Registers
      * @param value value to set register to
      */
     template <typename Arg>
-    void setGicReg(unsigned group, unsigned mpidr, unsigned offset,
-                   Arg value);
+    void setGicReg(unsigned group, unsigned mpidr, unsigned offset, Arg value);
 
   private:
     /** Address range for the redistributor */

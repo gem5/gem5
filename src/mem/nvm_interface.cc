@@ -57,27 +57,35 @@ NVMInterface::NVMInterface(const NVMInterfaceParams &_p)
       maxPendingWrites(_p.max_pending_writes),
       maxPendingReads(_p.max_pending_reads),
       twoCycleRdWr(_p.two_cycle_rdwr),
-      tREAD(_p.tREAD), tWRITE(_p.tWRITE), tSEND(_p.tSEND),
+      tREAD(_p.tREAD),
+      tWRITE(_p.tWRITE),
+      tSEND(_p.tSEND),
       stats(*this),
-      writeRespondEvent([this]{ processWriteRespondEvent(); }, name()),
-      readReadyEvent([this]{ processReadReadyEvent(); }, name()),
-      nextReadAt(0), numPendingReads(0), numReadDataReady(0),
+      writeRespondEvent([this] { processWriteRespondEvent(); }, name()),
+      readReadyEvent([this] { processReadReadyEvent(); }, name()),
+      nextReadAt(0),
+      numPendingReads(0),
+      numReadDataReady(0),
       numReadsToIssue(0)
 {
     DPRINTF(NVM, "Setting up NVM Interface\n");
 
-    fatal_if(!isPowerOf2(burstSize), "NVM burst size %d is not allowed, "
-             "must be a power of two\n", burstSize);
+    fatal_if(!isPowerOf2(burstSize),
+             "NVM burst size %d is not allowed, "
+             "must be a power of two\n",
+             burstSize);
 
     // sanity check the ranks since we rely on bit slicing for the
     // address decoding
-    fatal_if(!isPowerOf2(ranksPerChannel), "NVM rank count of %d is "
-             "not allowed, must be a power of two\n", ranksPerChannel);
+    fatal_if(!isPowerOf2(ranksPerChannel),
+             "NVM rank count of %d is "
+             "not allowed, must be a power of two\n",
+             ranksPerChannel);
 
-    for (int i =0; i < ranksPerChannel; i++) {
+    for (int i = 0; i < ranksPerChannel; i++) {
         // Add NVM ranks to the system
         DPRINTF(NVM, "Creating NVM rank %d \n", i);
-        Rank* rank = new Rank(_p, i, *this);
+        Rank *rank = new Rank(_p, i, *this);
         ranks.push_back(rank);
     }
 
@@ -86,12 +94,11 @@ NVMInterface::NVMInterface(const NVMInterfaceParams &_p)
     DPRINTF(NVM, "NVM capacity %lld (%lld) bytes\n", capacity,
             AbstractMemory::size());
 
-    rowsPerBank = capacity / (rowBufferSize *
-                    banksPerRank * ranksPerChannel);
+    rowsPerBank = capacity / (rowBufferSize * banksPerRank * ranksPerChannel);
 }
 
-NVMInterface::Rank::Rank(const NVMInterfaceParams &_p,
-                         int _rank, NVMInterface& _nvm)
+NVMInterface::Rank::Rank(const NVMInterfaceParams &_p, int _rank,
+                         NVMInterface &_nvm)
     : EventManager(&_nvm), rank(_rank), banks(_p.banks_per_rank)
 {
     for (int b = 0; b < _p.banks_per_rank; b++) {
@@ -107,7 +114,8 @@ NVMInterface::init()
     AbstractMemory::init();
 }
 
-void NVMInterface::setupRank(const uint8_t rank, const bool is_read)
+void
+NVMInterface::setupRank(const uint8_t rank, const bool is_read)
 {
     if (is_read) {
         // increment count to trigger read and track number of reads in Q
@@ -118,9 +126,9 @@ void NVMInterface::setupRank(const uint8_t rank, const bool is_read)
     }
 }
 
-MemPacket*
-NVMInterface::decodePacket(const PacketPtr pkt, Addr pkt_addr,
-                       unsigned size, bool is_read, uint8_t pseudo_channel)
+MemPacket *
+NVMInterface::decodePacket(const PacketPtr pkt, Addr pkt_addr, unsigned size,
+                           bool is_read, uint8_t pseudo_channel)
 {
     // decode the address based on the address mapping scheme, with
     // Ro, Ra, Co, Ba and Ch denoting row, rank, column, bank and
@@ -192,8 +200,8 @@ NVMInterface::decodePacket(const PacketPtr pkt, Addr pkt_addr,
     assert(row < rowsPerBank);
     assert(row < Bank::NO_ROW);
 
-    DPRINTF(NVM, "Address: %#x Rank %d Bank %d Row %d\n",
-            pkt_addr, rank, bank, row);
+    DPRINTF(NVM, "Address: %#x Rank %d Bank %d Row %d\n", pkt_addr, rank, bank,
+            row);
 
     // create the corresponding memory packet with the entry time and
     // ready time set to the current tick, the latter will be updated
@@ -201,11 +209,11 @@ NVMInterface::decodePacket(const PacketPtr pkt, Addr pkt_addr,
     uint16_t bank_id = banksPerRank * rank + bank;
 
     return new MemPacket(pkt, is_read, false, pseudo_channel, rank, bank, row,
-                   bank_id, pkt_addr, size);
+                         bank_id, pkt_addr, size);
 }
 
 std::pair<MemPacketQueue::iterator, Tick>
-NVMInterface::chooseNextFRFCFS(MemPacketQueue& queue, Tick min_col_at) const
+NVMInterface::chooseNextFRFCFS(MemPacketQueue &queue, Tick min_col_at) const
 {
     // remember if we found a hit, but one that cannit issue seamlessly
     bool found_prepped_pkt = false;
@@ -213,14 +221,14 @@ NVMInterface::chooseNextFRFCFS(MemPacketQueue& queue, Tick min_col_at) const
     auto selected_pkt_it = queue.end();
     Tick selected_col_at = MaxTick;
 
-    for (auto i = queue.begin(); i != queue.end() ; ++i) {
-        MemPacket* pkt = *i;
+    for (auto i = queue.begin(); i != queue.end(); ++i) {
+        MemPacket *pkt = *i;
 
         // select optimal NVM packet in Q
         if (!pkt->isDram()) {
-            const Bank& bank = ranks[pkt->rank]->banks[pkt->bank];
-            const Tick col_allowed_at = pkt->isRead() ? bank.rdAllowedAt :
-                                                        bank.wrAllowedAt;
+            const Bank &bank = ranks[pkt->rank]->banks[pkt->bank];
+            const Tick col_allowed_at =
+                pkt->isRead() ? bank.rdAllowedAt : bank.wrAllowedAt;
 
             // check if rank is not doing a refresh and thus is available,
             // if not, jump to the next packet
@@ -261,7 +269,7 @@ NVMInterface::chooseNextFRFCFS(MemPacketQueue& queue, Tick min_col_at) const
 }
 
 void
-NVMInterface::chooseRead(MemPacketQueue& queue)
+NVMInterface::chooseRead(MemPacketQueue &queue)
 {
     Tick cmd_at = std::max(curTick(), nextReadAt);
 
@@ -275,13 +283,13 @@ NVMInterface::chooseRead(MemPacketQueue& queue)
     assert(numReadsToIssue > 0);
     numReadsToIssue--;
     // For simplicity, issue non-deterministic reads in order (fcfs)
-    for (auto i = queue.begin(); i != queue.end() ; ++i) {
-        MemPacket* pkt = *i;
+    for (auto i = queue.begin(); i != queue.end(); ++i) {
+        MemPacket *pkt = *i;
 
         // Find 1st NVM read packet that hasn't issued read command
         if (pkt->readyTime == MaxTick && !pkt->isDram() && pkt->isRead()) {
-           // get the bank
-           Bank& bank_ref = ranks[pkt->rank]->banks[pkt->bank];
+            // get the bank
+            Bank &bank_ref = ranks[pkt->rank]->banks[pkt->bank];
 
             // issueing a read, inc counter and verify we haven't overrun
             numPendingReads++;
@@ -295,11 +303,11 @@ NVMInterface::chooseRead(MemPacketQueue& queue)
             // to the NVM. The actual execution at the NVM may be delayed
             // due to busy resources
             if (twoCycleRdWr) {
-                cmd_at = ctrl->verifyMultiCmd(cmd_at,
-                                              maxCommandsPerWindow, tCK);
+                cmd_at =
+                    ctrl->verifyMultiCmd(cmd_at, maxCommandsPerWindow, tCK);
             } else {
-                cmd_at = ctrl->verifySingleCmd(cmd_at,
-                                              maxCommandsPerWindow, false);
+                cmd_at =
+                    ctrl->verifySingleCmd(cmd_at, maxCommandsPerWindow, false);
             }
 
             // Update delay to next read
@@ -324,17 +332,18 @@ NVMInterface::chooseRead(MemPacketQueue& queue)
                 // across the interface B2B, but will incur full access
                 // delay between data ready responses to different buffers
                 // in a bank
-                bank_ref.actAllowedAt = std::max(cmd_at,
-                                        bank_ref.actAllowedAt) + tREAD;
+                bank_ref.actAllowedAt =
+                    std::max(cmd_at, bank_ref.actAllowedAt) + tREAD;
             }
             // update per packet readyTime to holdoff burst read operation
             // overloading readyTime, which will be updated again when the
             // burst is issued
             pkt->readyTime = std::max(cmd_at, bank_ref.actAllowedAt);
 
-            DPRINTF(NVM, "Issuing NVM Read to bank %d at tick %d. "
-                         "Data ready at %d\n",
-                         bank_ref.bank, cmd_at, pkt->readyTime);
+            DPRINTF(NVM,
+                    "Issuing NVM Read to bank %d at tick %d. "
+                    "Data ready at %d\n",
+                    bank_ref.bank, cmd_at, pkt->readyTime);
 
             // Insert into read ready queue. It will be handled after
             // the media delay has been met
@@ -364,14 +373,14 @@ NVMInterface::processReadReadyEvent()
     DPRINTF(NVM,
             "processReadReadyEvent(): Data for an NVM read is ready. "
             "numReadDataReady is %d\t numPendingReads is %d\n",
-             numReadDataReady, numPendingReads);
+            numReadDataReady, numPendingReads);
 
     // Find lowest ready time and verify it is equal to curTick
     // also find the next lowest to schedule next event
     // Done with this response, erase entry
     auto ready_it = readReadyQueue.begin();
     Tick next_ready_at = MaxTick;
-    for (auto i = readReadyQueue.begin(); i != readReadyQueue.end() ; ++i) {
+    for (auto i = readReadyQueue.begin(); i != readReadyQueue.end(); ++i) {
         if (*ready_it > *i) {
             next_ready_at = *ready_it;
             ready_it = i;
@@ -401,27 +410,28 @@ NVMInterface::processReadReadyEvent()
 }
 
 bool
-NVMInterface::burstReady(MemPacket* pkt) const {
-    bool read_rdy =  pkt->isRead() && (ctrl->inReadBusState(true, this)) &&
-                (pkt->readyTime <= curTick()) && (numReadDataReady > 0);
-    bool write_rdy =  !pkt->isRead() && !ctrl->inReadBusState(true, this) &&
-                !writeRespQueueFull();
+NVMInterface::burstReady(MemPacket *pkt) const
+{
+    bool read_rdy = pkt->isRead() && (ctrl->inReadBusState(true, this)) &&
+                    (pkt->readyTime <= curTick()) && (numReadDataReady > 0);
+    bool write_rdy = !pkt->isRead() && !ctrl->inReadBusState(true, this) &&
+                     !writeRespQueueFull();
     return (read_rdy || write_rdy);
 }
 
-    std::pair<Tick, Tick>
-NVMInterface::doBurstAccess(MemPacket* pkt, Tick next_burst_at,
-                  const std::vector<MemPacketQueue>& queue)
+std::pair<Tick, Tick>
+NVMInterface::doBurstAccess(MemPacket *pkt, Tick next_burst_at,
+                            const std::vector<MemPacketQueue> &queue)
 {
     DPRINTF(NVM, "NVM Timing access to addr %#x, rank/bank/row %d %d %d\n",
             pkt->addr, pkt->rank, pkt->bank, pkt->row);
 
     // get the bank
-    Bank& bank_ref = ranks[pkt->rank]->banks[pkt->bank];
+    Bank &bank_ref = ranks[pkt->rank]->banks[pkt->bank];
 
     // respect any constraints on the command
-    const Tick bst_allowed_at = pkt->isRead() ?
-                                bank_ref.rdAllowedAt : bank_ref.wrAllowedAt;
+    const Tick bst_allowed_at =
+        pkt->isRead() ? bank_ref.rdAllowedAt : bank_ref.wrAllowedAt;
 
     // we need to wait until the bus is available before we can issue
     // the command; need minimum of tBURST between commands
@@ -458,16 +468,16 @@ NVMInterface::doBurstAccess(MemPacket* pkt, Tick next_burst_at,
                 dly_to_wr_cmd = rankToRankDelay();
                 dly_to_rd_cmd = rankToRankDelay();
             }
-            n->banks[i].rdAllowedAt = std::max(cmd_at + dly_to_rd_cmd,
-                                      n->banks[i].rdAllowedAt);
+            n->banks[i].rdAllowedAt =
+                std::max(cmd_at + dly_to_rd_cmd, n->banks[i].rdAllowedAt);
 
-            n->banks[i].wrAllowedAt = std::max(cmd_at + dly_to_wr_cmd,
-                                      n->banks[i].wrAllowedAt);
+            n->banks[i].wrAllowedAt =
+                std::max(cmd_at + dly_to_wr_cmd, n->banks[i].wrAllowedAt);
         }
     }
 
-    DPRINTF(NVM, "NVM Access to %#x, ready at %lld.\n",
-            pkt->addr, pkt->readyTime);
+    DPRINTF(NVM, "NVM Access to %#x, ready at %lld.\n", pkt->addr,
+            pkt->readyTime);
 
     if (pkt->isRead()) {
         // completed the read, decrement counters
@@ -488,16 +498,15 @@ NVMInterface::doBurstAccess(MemPacket* pkt, Tick next_burst_at,
 
         // Commands will be issued serially when accessing the same bank
         // Commands can issue in parallel to different banks
-        if ((bank_ref.bank == pkt->bank) &&
-            (bank_ref.openRow != pkt->row)) {
-           // update the open buffer, re-using row field
-           bank_ref.openRow = pkt->row;
+        if ((bank_ref.bank == pkt->bank) && (bank_ref.openRow != pkt->row)) {
+            // update the open buffer, re-using row field
+            bank_ref.openRow = pkt->row;
 
-           // sample the bytes accessed to a buffer in this bank
-           // here when we are re-buffering the data
-           stats.bytesPerBank.sample(bank_ref.bytesAccessed);
-           // start counting anew
-           bank_ref.bytesAccessed = 0;
+            // sample the bytes accessed to a buffer in this bank
+            // here when we are re-buffering the data
+            stats.bytesPerBank.sample(bank_ref.bytesAccessed);
+            // start counting anew
+            bank_ref.bytesAccessed = 0;
         }
 
         // Determine when write will actually complete, assuming it is
@@ -508,8 +517,8 @@ NVMInterface::doBurstAccess(MemPacket* pkt, Tick next_burst_at,
         // can issue immediately after actAllowedAt expires, without
         // waiting additional delay of tWRITE. Can revisit this
         // assumption/simplification in the future.
-        bank_ref.actAllowedAt = std::max(pkt->readyTime,
-                                bank_ref.actAllowedAt) + tWRITE;
+        bank_ref.actAllowedAt =
+            std::max(pkt->readyTime, bank_ref.actAllowedAt) + tWRITE;
 
         // Need to track number of outstanding writes to
         // ensure 'buffer' on media controller does not overflow
@@ -527,12 +536,11 @@ NVMInterface::doBurstAccess(MemPacket* pkt, Tick next_burst_at,
         writeRespQueue.sort();
         if (writeRespondEvent.when() > bank_ref.actAllowedAt) {
             DPRINTF(NVM, "Rescheduled respond event from %lld to %11d\n",
-                writeRespondEvent.when(), bank_ref.actAllowedAt);
+                    writeRespondEvent.when(), bank_ref.actAllowedAt);
             DPRINTF(NVM, "Front of response queue is %11d\n",
-                writeRespQueue.front());
+                    writeRespQueue.front());
             reschedule(writeRespondEvent, bank_ref.actAllowedAt);
         }
-
     }
 
     // Update the stats
@@ -560,7 +568,8 @@ NVMInterface::processWriteRespondEvent()
 {
     DPRINTF(NVM,
             "processWriteRespondEvent(): A NVM write reached its readyTime.  "
-            "%d remaining pending NVM writes\n", writeRespQueue.size());
+            "%d remaining pending NVM writes\n",
+            writeRespQueue.size());
 
     // Update stat to track histogram of pending writes
     stats.pendingWrites.sample(writeRespQueue.size());
@@ -593,10 +602,10 @@ NVMInterface::addRankToRankDelay(Tick cmd_at)
         for (int i = 0; i < banksPerRank; i++) {
             // different rank by default
             // Need to only account for rank-to-rank switching
-            n->banks[i].rdAllowedAt = std::max(cmd_at + rankToRankDelay(),
-                                             n->banks[i].rdAllowedAt);
-            n->banks[i].wrAllowedAt = std::max(cmd_at + rankToRankDelay(),
-                                             n->banks[i].wrAllowedAt);
+            n->banks[i].rdAllowedAt =
+                std::max(cmd_at + rankToRankDelay(), n->banks[i].rdAllowedAt);
+            n->banks[i].wrAllowedAt =
+                std::max(cmd_at + rankToRankDelay(), n->banks[i].wrAllowedAt);
         }
     }
 }
@@ -604,93 +613,97 @@ NVMInterface::addRankToRankDelay(Tick cmd_at)
 bool
 NVMInterface::isBusy(bool read_queue_empty, bool all_writes_nvm)
 {
-     DPRINTF(NVM,"isBusy: numReadDataReady = %d\n", numReadDataReady);
-     // Determine NVM is busy and cannot issue a burst
-     // A read burst cannot issue when data is not ready from the NVM
-     // Also check that we have reads queued to ensure we can change
-     // bus direction to service potential write commands.
-     // A write cannot issue once we've reached MAX pending writes
-     // Only assert busy for the write case when there are also
-     // no reads in Q and the write queue only contains NVM commands
-     // This allows the bus state to switch and service reads
-     return (ctrl->inReadBusState(true, this) ?
-                 (numReadDataReady == 0) && !read_queue_empty :
-                 writeRespQueueFull() && read_queue_empty &&
-                                         all_writes_nvm);
+    DPRINTF(NVM, "isBusy: numReadDataReady = %d\n", numReadDataReady);
+    // Determine NVM is busy and cannot issue a burst
+    // A read burst cannot issue when data is not ready from the NVM
+    // Also check that we have reads queued to ensure we can change
+    // bus direction to service potential write commands.
+    // A write cannot issue once we've reached MAX pending writes
+    // Only assert busy for the write case when there are also
+    // no reads in Q and the write queue only contains NVM commands
+    // This allows the bus state to switch and service reads
+    return (ctrl->inReadBusState(true, this) ?
+                (numReadDataReady == 0) && !read_queue_empty :
+                writeRespQueueFull() && read_queue_empty && all_writes_nvm);
 }
 
 NVMInterface::NVMStats::NVMStats(NVMInterface &_nvm)
     : statistics::Group(&_nvm),
-    nvm(_nvm),
+      nvm(_nvm),
 
-    ADD_STAT(readBursts, statistics::units::Count::get(),
-             "Number of NVM read bursts"),
-    ADD_STAT(writeBursts, statistics::units::Count::get(),
-             "Number of NVM write bursts"),
+      ADD_STAT(readBursts, statistics::units::Count::get(),
+               "Number of NVM read bursts"),
+      ADD_STAT(writeBursts, statistics::units::Count::get(),
+               "Number of NVM write bursts"),
 
-    ADD_STAT(perBankRdBursts, statistics::units::Count::get(),
-             "Per bank write bursts"),
-    ADD_STAT(perBankWrBursts, statistics::units::Count::get(),
-             "Per bank write bursts"),
+      ADD_STAT(perBankRdBursts, statistics::units::Count::get(),
+               "Per bank write bursts"),
+      ADD_STAT(perBankWrBursts, statistics::units::Count::get(),
+               "Per bank write bursts"),
 
-    ADD_STAT(totQLat, statistics::units::Tick::get(),
-             "Total ticks spent queuing"),
-    ADD_STAT(totBusLat, statistics::units::Tick::get(),
-             "Total ticks spent in databus transfers"),
-    ADD_STAT(totMemAccLat, statistics::units::Tick::get(),
-             "Total ticks spent from burst creation until serviced "
-             "by the NVM"),
-    ADD_STAT(avgQLat, statistics::units::Rate<
-                statistics::units::Tick, statistics::units::Count>::get(),
-             "Average queueing delay per NVM burst"),
-    ADD_STAT(avgBusLat, statistics::units::Rate<
-                statistics::units::Tick, statistics::units::Count>::get(),
-             "Average bus latency per NVM burst"),
-    ADD_STAT(avgMemAccLat, statistics::units::Rate<
-                statistics::units::Tick, statistics::units::Count>::get(),
-             "Average memory access latency per NVM burst"),
+      ADD_STAT(totQLat, statistics::units::Tick::get(),
+               "Total ticks spent queuing"),
+      ADD_STAT(totBusLat, statistics::units::Tick::get(),
+               "Total ticks spent in databus transfers"),
+      ADD_STAT(totMemAccLat, statistics::units::Tick::get(),
+               "Total ticks spent from burst creation until serviced "
+               "by the NVM"),
+      ADD_STAT(avgQLat,
+               statistics::units::Rate<statistics::units::Tick,
+                                       statistics::units::Count>::get(),
+               "Average queueing delay per NVM burst"),
+      ADD_STAT(avgBusLat,
+               statistics::units::Rate<statistics::units::Tick,
+                                       statistics::units::Count>::get(),
+               "Average bus latency per NVM burst"),
+      ADD_STAT(avgMemAccLat,
+               statistics::units::Rate<statistics::units::Tick,
+                                       statistics::units::Count>::get(),
+               "Average memory access latency per NVM burst"),
 
-    ADD_STAT(nvmBytesRead, statistics::units::Byte::get(),
-            "Total bytes read"),
-    ADD_STAT(nvmBytesWritten, statistics::units::Byte::get(),
-            "Total bytes written"),
+      ADD_STAT(nvmBytesRead, statistics::units::Byte::get(),
+               "Total bytes read"),
+      ADD_STAT(nvmBytesWritten, statistics::units::Byte::get(),
+               "Total bytes written"),
 
-    ADD_STAT(avgRdBW, statistics::units::Rate<
-                statistics::units::Byte, statistics::units::Second>::get(),
-             "Average DRAM read bandwidth in MiBytes/s"),
-    ADD_STAT(avgWrBW, statistics::units::Rate<
-                statistics::units::Byte, statistics::units::Second>::get(),
-             "Average DRAM write bandwidth in MiBytes/s"),
-    ADD_STAT(peakBW, statistics::units::Rate<
-                statistics::units::Byte, statistics::units::Second>::get(),
-             "Theoretical peak bandwidth in MiByte/s"),
-    ADD_STAT(busUtil, statistics::units::Ratio::get(),
-             "NVM Data bus utilization in percentage"),
-    ADD_STAT(busUtilRead, statistics::units::Ratio::get(),
-             "NVM Data bus read utilization in percentage"),
-    ADD_STAT(busUtilWrite, statistics::units::Ratio::get(),
-             "NVM Data bus write utilization in percentage"),
+      ADD_STAT(avgRdBW,
+               statistics::units::Rate<statistics::units::Byte,
+                                       statistics::units::Second>::get(),
+               "Average DRAM read bandwidth in MiBytes/s"),
+      ADD_STAT(avgWrBW,
+               statistics::units::Rate<statistics::units::Byte,
+                                       statistics::units::Second>::get(),
+               "Average DRAM write bandwidth in MiBytes/s"),
+      ADD_STAT(peakBW,
+               statistics::units::Rate<statistics::units::Byte,
+                                       statistics::units::Second>::get(),
+               "Theoretical peak bandwidth in MiByte/s"),
+      ADD_STAT(busUtil, statistics::units::Ratio::get(),
+               "NVM Data bus utilization in percentage"),
+      ADD_STAT(busUtilRead, statistics::units::Ratio::get(),
+               "NVM Data bus read utilization in percentage"),
+      ADD_STAT(busUtilWrite, statistics::units::Ratio::get(),
+               "NVM Data bus write utilization in percentage"),
 
-    ADD_STAT(pendingReads, statistics::units::Count::get(),
-             "Reads issued to NVM for which data has not been transferred"),
-    ADD_STAT(pendingWrites, statistics::units::Count::get(),
-             "Number of outstanding writes to NVM"),
-    ADD_STAT(bytesPerBank, statistics::units::Byte::get(),
-             "Bytes read within a bank before loading new bank")
+      ADD_STAT(pendingReads, statistics::units::Count::get(),
+               "Reads issued to NVM for which data has not been transferred"),
+      ADD_STAT(pendingWrites, statistics::units::Count::get(),
+               "Number of outstanding writes to NVM"),
+      ADD_STAT(bytesPerBank, statistics::units::Byte::get(),
+               "Bytes read within a bank before loading new bank")
 
-{
-}
+{}
 
 void
 NVMInterface::NVMStats::regStats()
 {
     using namespace statistics;
 
-    perBankRdBursts.init(nvm.ranksPerChannel == 0 ? 1 :
-              nvm.banksPerRank * nvm.ranksPerChannel);
+    perBankRdBursts.init(
+        nvm.ranksPerChannel == 0 ? 1 : nvm.banksPerRank * nvm.ranksPerChannel);
 
-    perBankWrBursts.init(nvm.ranksPerChannel == 0 ? 1 :
-              nvm.banksPerRank * nvm.ranksPerChannel);
+    perBankWrBursts.init(
+        nvm.ranksPerChannel == 0 ? 1 : nvm.banksPerRank * nvm.ranksPerChannel);
 
     avgQLat.precision(2);
     avgBusLat.precision(2);
@@ -704,17 +717,11 @@ NVMInterface::NVMStats::regStats()
     busUtilRead.precision(2);
     busUtilWrite.precision(2);
 
-    pendingReads
-        .init(nvm.maxPendingReads)
-        .flags(nozero);
+    pendingReads.init(nvm.maxPendingReads).flags(nozero);
 
-    pendingWrites
-        .init(nvm.maxPendingWrites)
-        .flags(nozero);
+    pendingWrites.init(nvm.maxPendingWrites).flags(nozero);
 
-    bytesPerBank
-        .init(nvm.rowBufferSize)
-        .flags(nozero);
+    bytesPerBank.init(nvm.rowBufferSize).flags(nozero);
 
     avgQLat = totQLat / readBursts;
     avgBusLat = totBusLat / readBursts;
@@ -722,8 +729,7 @@ NVMInterface::NVMStats::regStats()
 
     avgRdBW = (nvmBytesRead / 1000000) / simSeconds;
     avgWrBW = (nvmBytesWritten / 1000000) / simSeconds;
-    peakBW = (sim_clock::Frequency / nvm.tBURST) *
-              nvm.burstSize / 1000000;
+    peakBW = (sim_clock::Frequency / nvm.tBURST) * nvm.burstSize / 1000000;
 
     busUtil = (avgRdBW + avgWrBW) / peakBW * 100;
     busUtilRead = avgRdBW / peakBW * 100;

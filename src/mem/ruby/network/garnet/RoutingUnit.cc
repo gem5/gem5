@@ -27,7 +27,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #include "mem/ruby/network/garnet/RoutingUnit.hh"
 
 #include "base/cast.hh"
@@ -54,7 +53,7 @@ RoutingUnit::RoutingUnit(Router *router)
 }
 
 void
-RoutingUnit::addRoute(std::vector<NetDest>& routing_table_entry)
+RoutingUnit::addRoute(std::vector<NetDest> &routing_table_entry)
 {
     if (routing_table_entry.size() > m_routing_table.size()) {
         m_routing_table.resize(routing_table_entry.size());
@@ -111,18 +110,16 @@ RoutingUnit::lookupRoutingTable(int vnet, NetDest msg_destination)
     // Identify the minimum weight among the candidate output links
     for (int link = 0; link < m_routing_table[vnet].size(); link++) {
         if (msg_destination.intersectionIsNotEmpty(
-            m_routing_table[vnet][link])) {
-
-        if (m_weight_table[link] <= min_weight)
-            min_weight = m_weight_table[link];
+                m_routing_table[vnet][link])) {
+            if (m_weight_table[link] <= min_weight)
+                min_weight = m_weight_table[link];
         }
     }
 
     // Collect all candidate output links with this minimum weight
     for (int link = 0; link < m_routing_table[vnet].size(); link++) {
         if (msg_destination.intersectionIsNotEmpty(
-            m_routing_table[vnet][link])) {
-
+                m_routing_table[vnet][link])) {
             if (m_weight_table[link] == min_weight) {
                 num_candidates++;
                 output_link_candidates.push_back(link);
@@ -144,19 +141,18 @@ RoutingUnit::lookupRoutingTable(int vnet, NetDest msg_destination)
     return output_link;
 }
 
-
 void
 RoutingUnit::addInDirection(PortDirection inport_dirn, int inport_idx)
 {
     m_inports_dirn2idx[inport_dirn] = inport_idx;
-    m_inports_idx2dirn[inport_idx]  = inport_dirn;
+    m_inports_idx2dirn[inport_idx] = inport_dirn;
 }
 
 void
 RoutingUnit::addOutDirection(PortDirection outport_dirn, int outport_idx)
 {
     m_outports_dirn2idx[outport_dirn] = outport_idx;
-    m_outports_idx2dirn[outport_idx]  = outport_dirn;
+    m_outports_idx2dirn[outport_idx] = outport_dirn;
 }
 
 // outportCompute() is called by the InputUnit
@@ -172,7 +168,6 @@ RoutingUnit::outportCompute(RouteInfo route, int inport,
     int outport = -1;
 
     if (route.dest_router == m_router->get_id()) {
-
         // Multiple NIs may be connected to this router,
         // all with output port direction = "Local"
         // Get exact outport id from table
@@ -183,18 +178,22 @@ RoutingUnit::outportCompute(RouteInfo route, int inport,
     // Routing Algorithm set in GarnetNetwork.py
     // Can be over-ridden from command line using --routing-algorithm = 1
     RoutingAlgorithm routing_algorithm =
-        (RoutingAlgorithm) m_router->get_net_ptr()->getRoutingAlgorithm();
+        (RoutingAlgorithm)m_router->get_net_ptr()->getRoutingAlgorithm();
 
     switch (routing_algorithm) {
-        case TABLE_:  outport =
-            lookupRoutingTable(route.vnet, route.net_dest); break;
-        case XY_:     outport =
-            outportComputeXY(route, inport, inport_dirn); break;
-        // any custom algorithm
-        case CUSTOM_: outport =
-            outportComputeCustom(route, inport, inport_dirn); break;
-        default: outport =
-            lookupRoutingTable(route.vnet, route.net_dest); break;
+    case TABLE_:
+        outport = lookupRoutingTable(route.vnet, route.net_dest);
+        break;
+    case XY_:
+        outport = outportComputeXY(route, inport, inport_dirn);
+        break;
+    // any custom algorithm
+    case CUSTOM_:
+        outport = outportComputeCustom(route, inport, inport_dirn);
+        break;
+    default:
+        outport = lookupRoutingTable(route.vnet, route.net_dest);
+        break;
     }
 
     assert(outport != -1);
@@ -205,8 +204,7 @@ RoutingUnit::outportCompute(RouteInfo route, int inport,
 // Only for reference purpose in a Mesh
 // By default Garnet uses the routing table
 int
-RoutingUnit::outportComputeXY(RouteInfo route,
-                              int inport,
+RoutingUnit::outportComputeXY(RouteInfo route, int inport,
                               PortDirection inport_dirn)
 {
     PortDirection outport_dirn = "Unknown";
@@ -263,9 +261,8 @@ RoutingUnit::outportComputeXY(RouteInfo route,
 // Template for implementing custom routing algorithm
 // using port directions. (Example adaptive)
 int
-RoutingUnit::outportComputeCustom(RouteInfo route,
-                                 int inport,
-                                 PortDirection inport_dirn)
+RoutingUnit::outportComputeCustom(RouteInfo route, int inport,
+                                  PortDirection inport_dirn)
 {
     panic("%s placeholder executed", __FUNCTION__);
 }

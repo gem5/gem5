@@ -70,10 +70,10 @@ class ScxEvsCortexA76 : public Types::Base, public Iris::BaseCpuEvs
     ClockRateControlInitiatorSocket clockRateControl;
     ClockRateControlInitiatorSocket periphClockRateControl;
 
-    using TlmGicTarget = sc_gem5::TlmTargetBaseWrapper<
-        64, svp_gicv3_comms::gicv3_comms_fw_if,
-        svp_gicv3_comms::gicv3_comms_bw_if, 1,
-        sc_core::SC_ONE_OR_MORE_BOUND>;
+    using TlmGicTarget =
+        sc_gem5::TlmTargetBaseWrapper<64, svp_gicv3_comms::gicv3_comms_fw_if,
+                                      svp_gicv3_comms::gicv3_comms_bw_if, 1,
+                                      sc_core::SC_ONE_OR_MORE_BOUND>;
 
     template <typename T>
     using SignalInitiator = amba_pv::signal_master_port<T>;
@@ -106,6 +106,7 @@ class ScxEvsCortexA76 : public Types::Base, public Iris::BaseCpuEvs
 
   public:
     ScxEvsCortexA76(const Params &p) : ScxEvsCortexA76(p.name.c_str(), p) {}
+
     ScxEvsCortexA76(const sc_core::sc_module_name &mod_name, const Params &p);
 
     void before_end_of_elaboration() override;
@@ -117,7 +118,10 @@ class ScxEvsCortexA76 : public Types::Base, public Iris::BaseCpuEvs
         Base::end_of_elaboration();
         Base::start_of_simulation();
     }
-    void start_of_simulation() override {}
+
+    void
+    start_of_simulation() override
+    {}
 
     void setClkPeriod(Tick clk_period) override;
 
@@ -134,6 +138,7 @@ struct ScxEvsCortexA76x1Types
     using Params = FastModelScxEvsCortexA76x1Params;
     static const int CoreCount = 1;
 };
+
 using ScxEvsCortexA76x1 = ScxEvsCortexA76<ScxEvsCortexA76x1Types>;
 extern template class ScxEvsCortexA76<ScxEvsCortexA76x1Types>;
 
@@ -143,6 +148,7 @@ struct ScxEvsCortexA76x2Types
     using Params = FastModelScxEvsCortexA76x2Params;
     static const int CoreCount = 2;
 };
+
 using ScxEvsCortexA76x2 = ScxEvsCortexA76<ScxEvsCortexA76x2Types>;
 extern template class ScxEvsCortexA76<ScxEvsCortexA76x2Types>;
 
@@ -152,6 +158,7 @@ struct ScxEvsCortexA76x3Types
     using Params = FastModelScxEvsCortexA76x3Params;
     static const int CoreCount = 3;
 };
+
 using ScxEvsCortexA76x3 = ScxEvsCortexA76<ScxEvsCortexA76x3Types>;
 extern template class ScxEvsCortexA76<ScxEvsCortexA76x3Types>;
 
@@ -161,6 +168,7 @@ struct ScxEvsCortexA76x4Types
     using Params = FastModelScxEvsCortexA76x4Params;
     static const int CoreCount = 4;
 };
+
 using ScxEvsCortexA76x4 = ScxEvsCortexA76<ScxEvsCortexA76x4Types>;
 extern template class ScxEvsCortexA76<ScxEvsCortexA76x4Types>;
 

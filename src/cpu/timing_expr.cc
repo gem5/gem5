@@ -43,8 +43,9 @@ namespace gem5
 {
 
 TimingExprEvalContext::TimingExprEvalContext(const StaticInstPtr &inst_,
-    ThreadContext *thread_, TimingExprLet *let_) :
-    inst(inst_), thread(thread_), let(let_)
+                                             ThreadContext *thread_,
+                                             TimingExprLet *let_)
+    : inst(inst_), thread(thread_), let(let_)
 {
     /* Reserve space to hold the results of evaluating the
      *  let expressions */
@@ -90,29 +91,28 @@ TimingExprUn::eval(TimingExprEvalContext &context)
     uint64_t ret = 0;
 
     switch (op) {
-      case enums::timingExprSizeInBits:
+    case enums::timingExprSizeInBits:
         if (arg_value == 0)
             ret = 0;
         else
             ret = ceilLog2(arg_value);
         break;
-      case enums::timingExprNot:
+    case enums::timingExprNot:
         ret = arg_value != 0;
         break;
-      case enums::timingExprInvert:
+    case enums::timingExprInvert:
         ret = ~arg_value;
         break;
-      case enums::timingExprSignExtend32To64:
-        ret = static_cast<int64_t>(
-            static_cast<int32_t>(arg_value));
+    case enums::timingExprSignExtend32To64:
+        ret = static_cast<int64_t>(static_cast<int32_t>(arg_value));
         break;
-      case enums::timingExprAbs:
+    case enums::timingExprAbs:
         if (static_cast<int64_t>(arg_value) < 0)
             ret = -arg_value;
         else
             ret = arg_value;
         break;
-      default:
+    default:
         break;
     }
 
@@ -127,62 +127,62 @@ TimingExprBin::eval(TimingExprEvalContext &context)
     uint64_t ret = 0;
 
     switch (op) {
-      case enums::timingExprAdd:
+    case enums::timingExprAdd:
         ret = left_value + right_value;
         break;
-      case enums::timingExprSub:
+    case enums::timingExprSub:
         ret = left_value - right_value;
         break;
-      case enums::timingExprUMul:
+    case enums::timingExprUMul:
         ret = left_value * right_value;
         break;
-      case enums::timingExprUDiv:
+    case enums::timingExprUDiv:
         if (right_value != 0) {
             ret = left_value / right_value;
         }
         break;
-      case enums::timingExprUCeilDiv:
+    case enums::timingExprUCeilDiv:
         if (right_value != 0) {
             ret = (left_value + (right_value - 1)) / right_value;
         }
         break;
-      case enums::timingExprSMul:
+    case enums::timingExprSMul:
         ret = static_cast<int64_t>(left_value) *
-            static_cast<int64_t>(right_value);
+              static_cast<int64_t>(right_value);
         break;
-      case enums::timingExprSDiv:
+    case enums::timingExprSDiv:
         if (right_value != 0) {
             ret = static_cast<int64_t>(left_value) /
-                static_cast<int64_t>(right_value);
+                  static_cast<int64_t>(right_value);
         }
         break;
-      case enums::timingExprEqual:
+    case enums::timingExprEqual:
         ret = left_value == right_value;
         break;
-      case enums::timingExprNotEqual:
+    case enums::timingExprNotEqual:
         ret = left_value != right_value;
         break;
-      case enums::timingExprULessThan:
+    case enums::timingExprULessThan:
         ret = left_value < right_value;
         break;
-      case enums::timingExprUGreaterThan:
+    case enums::timingExprUGreaterThan:
         ret = left_value > right_value;
         break;
-      case enums::timingExprSLessThan:
+    case enums::timingExprSLessThan:
         ret = static_cast<int64_t>(left_value) <
-            static_cast<int64_t>(right_value);
+              static_cast<int64_t>(right_value);
         break;
-      case enums::timingExprSGreaterThan:
+    case enums::timingExprSGreaterThan:
         ret = static_cast<int64_t>(left_value) >
-            static_cast<int64_t>(right_value);
+              static_cast<int64_t>(right_value);
         break;
-      case enums::timingExprAnd:
+    case enums::timingExprAnd:
         ret = (left_value != 0) && (right_value != 0);
         break;
-      case enums::timingExprOr:
+    case enums::timingExprOr:
         ret = (left_value != 0) || (right_value != 0);
         break;
-      default:
+    default:
         break;
     }
 

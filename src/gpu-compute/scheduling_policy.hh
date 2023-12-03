@@ -45,8 +45,9 @@ class Wavefront;
 class SchedulingPolicy
 {
   public:
-    SchedulingPolicy() { }
-    virtual Wavefront *chooseWave(std::vector<Wavefront*> *sched_list) = 0;
+    SchedulingPolicy() {}
+
+    virtual Wavefront *chooseWave(std::vector<Wavefront *> *sched_list) = 0;
 };
 
 /**
@@ -57,14 +58,14 @@ class SchedulingPolicy
  * derived policies implement the scheduler arbitration logic using
  * the static member method called __chooseWave();
  */
-template<typename Policy>
+template <typename Policy>
 class __SchedulingPolicy : public SchedulingPolicy
 {
   public:
-    __SchedulingPolicy() { }
+    __SchedulingPolicy() {}
 
-    Wavefront*
-    chooseWave(std::vector<Wavefront*> *sched_list) override
+    Wavefront *
+    chooseWave(std::vector<Wavefront *> *sched_list) override
     {
         return Policy::__chooseWave(sched_list);
     }

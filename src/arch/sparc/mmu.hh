@@ -47,41 +47,40 @@
 namespace gem5
 {
 
-namespace SparcISA {
+namespace SparcISA
+{
 
 class MMU : public BaseMMU
 {
   public:
-    MMU(const SparcMMUParams &p)
-      : BaseMMU(p)
-    {}
+    MMU(const SparcMMUParams &p) : BaseMMU(p) {}
 
     TranslationGenPtr
-    translateFunctional(Addr start, Addr size, ThreadContext *tc,
-            Mode mode, Request::Flags flags) override
+    translateFunctional(Addr start, Addr size, ThreadContext *tc, Mode mode,
+                        Request::Flags flags) override
     {
-        return TranslationGenPtr(new MMUTranslationGen(
-                PageBytes, start, size, tc, this, mode, flags));
+        return TranslationGenPtr(new MMUTranslationGen(PageBytes, start, size,
+                                                       tc, this, mode, flags));
     }
 
     void
     insertItlbEntry(Addr vpn, int partition_id, int context_id, bool real,
-        const PageTableEntry& PTE, int entry=-1)
+                    const PageTableEntry &PTE, int entry = -1)
     {
-        static_cast<TLB*>(itb)->insert(vpn, partition_id,
-            context_id, real, PTE, entry);
+        static_cast<TLB *>(itb)->insert(vpn, partition_id, context_id, real,
+                                        PTE, entry);
     }
 
     void
     insertDtlbEntry(Addr vpn, int partition_id, int context_id, bool real,
-        const PageTableEntry& PTE, int entry=-1)
+                    const PageTableEntry &PTE, int entry = -1)
     {
-        static_cast<TLB*>(dtb)->insert(vpn, partition_id,
-            context_id, real, PTE, entry);
+        static_cast<TLB *>(dtb)->insert(vpn, partition_id, context_id, real,
+                                        PTE, entry);
     }
 };
 
 } // namespace SparcISA
 } // namespace gem5
 
-#endif  // __ARCH_SPARC_MMU_HH__
+#endif // __ARCH_SPARC_MMU_HH__

@@ -69,11 +69,11 @@ constexpr int MMIO_BAR = 5;
 
 /* By default the X86 kernel expects the vga ROM at 0xc0000. */
 constexpr uint32_t VGA_ROM_DEFAULT = 0xc0000;
-constexpr uint32_t ROM_SIZE = 0x20000;        // 128kB
+constexpr uint32_t ROM_SIZE = 0x20000; // 128kB
 
 /* Most MMIOs use DWORD addresses and thus need to be shifted. */
 static constexpr uint32_t IH_OFFSET_SHIFT = 2;
-static constexpr uint32_t GRBM_OFFSET_SHIFT  = 2;
+static constexpr uint32_t GRBM_OFFSET_SHIFT = 2;
 static constexpr uint32_t MMHUB_OFFSET_SHIFT = 2;
 
 } // namespace gem5

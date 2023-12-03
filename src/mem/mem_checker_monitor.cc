@@ -55,8 +55,7 @@ MemCheckerMonitor::MemCheckerMonitor(const Params &params)
       memchecker(params.memchecker)
 {}
 
-MemCheckerMonitor::~MemCheckerMonitor()
-{}
+MemCheckerMonitor::~MemCheckerMonitor() {}
 
 void
 MemCheckerMonitor::init()
@@ -92,8 +91,8 @@ MemCheckerMonitor::recvFunctional(PacketPtr pkt)
     memSidePort.sendFunctional(pkt);
 
     DPRINTF(MemCheckerMonitor,
-            "Forwarded functional access: addr = %#llx, size = %d\n",
-            addr, size);
+            "Forwarded functional access: addr = %#llx, size = %d\n", addr,
+            size);
 }
 
 void
@@ -108,8 +107,8 @@ MemCheckerMonitor::recvFunctionalSnoop(PacketPtr pkt)
     cpuSidePort.sendFunctionalSnoop(pkt);
 
     DPRINTF(MemCheckerMonitor,
-            "Received functional snoop: addr = %#llx, size = %d\n",
-            addr, size);
+            "Received functional snoop: addr = %#llx, size = %d\n", addr,
+            size);
 }
 
 Tick
@@ -141,7 +140,7 @@ MemCheckerMonitor::recvTimingReq(PacketPtr pkt)
     Addr addr = pkt->getAddr();
     bool expects_response = pkt->needsResponse() && !pkt->cacheResponding();
     std::unique_ptr<uint8_t[]> pkt_data;
-    MemCheckerMonitorSenderState* state = NULL;
+    MemCheckerMonitorSenderState *state = NULL;
 
     if (expects_response && is_write) {
         // On receipt of a request, only need to allocate pkt_data if this is a
@@ -170,9 +169,8 @@ MemCheckerMonitor::recvTimingReq(PacketPtr pkt)
 
     if (successful && expects_response) {
         if (is_read) {
-            MemChecker::Serial serial = memchecker->startRead(curTick(),
-                                                              addr,
-                                                              size);
+            MemChecker::Serial serial =
+                memchecker->startRead(curTick(), addr, size);
 
             // At the time where we push the sender-state, we do not yet know
             // the serial the MemChecker class will assign to this request. We
@@ -192,10 +190,8 @@ MemCheckerMonitor::recvTimingReq(PacketPtr pkt)
                     "size = %d\n",
                     serial, addr, size);
         } else if (is_write) {
-            MemChecker::Serial serial = memchecker->startWrite(curTick(),
-                                                               addr,
-                                                               size,
-                                                               pkt_data.get());
+            MemChecker::Serial serial =
+                memchecker->startWrite(curTick(), addr, size, pkt_data.get());
 
             state->serial = serial;
 
@@ -230,7 +226,7 @@ MemCheckerMonitor::recvTimingResp(PacketPtr pkt)
     unsigned size = pkt->getSize();
     Addr addr = pkt->getAddr();
     std::unique_ptr<uint8_t[]> pkt_data;
-    MemCheckerMonitorSenderState* received_state = NULL;
+    MemCheckerMonitorSenderState *received_state = NULL;
 
     if (is_read) {
         // On receipt of a response, only need to allocate pkt_data if this is
@@ -242,7 +238,7 @@ MemCheckerMonitor::recvTimingResp(PacketPtr pkt)
 
     if (is_read || is_write) {
         received_state =
-            dynamic_cast<MemCheckerMonitorSenderState*>(pkt->senderState);
+            dynamic_cast<MemCheckerMonitorSenderState *>(pkt->senderState);
 
         // Restore initial sender state
         panic_if(received_state == NULL,
@@ -264,17 +260,12 @@ MemCheckerMonitor::recvTimingResp(PacketPtr pkt)
                     "size = %d\n",
                     received_state->serial, addr, size);
 
-            bool result = memchecker->completeRead(received_state->serial,
-                                                   curTick(),
-                                                   addr,
-                                                   size,
-                                                   pkt_data.get());
+            bool result = memchecker->completeRead(
+                received_state->serial, curTick(), addr, size, pkt_data.get());
 
             if (!result) {
-                warn("%s: read of %#llx @ cycle %d failed:\n%s\n",
-                     name(),
-                     addr, curTick(),
-                     memchecker->getErrorMessage().c_str());
+                warn("%s: read of %#llx @ cycle %d failed:\n%s\n", name(),
+                     addr, curTick(), memchecker->getErrorMessage().c_str());
 
                 panic_if(!warnOnly, "MemChecker violation!");
             }
@@ -288,14 +279,10 @@ MemCheckerMonitor::recvTimingResp(PacketPtr pkt)
 
             if (is_failed_LLSC) {
                 // The write was not successful, let MemChecker know.
-                memchecker->abortWrite(received_state->serial,
-                                       addr,
-                                       size);
+                memchecker->abortWrite(received_state->serial, addr, size);
             } else {
-                memchecker->completeWrite(received_state->serial,
-                                          curTick(),
-                                          addr,
-                                          size);
+                memchecker->completeWrite(received_state->serial, curTick(),
+                                          addr, size);
             }
 
             delete received_state;

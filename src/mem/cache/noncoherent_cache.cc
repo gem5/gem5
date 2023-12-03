@@ -95,7 +95,7 @@ NoncoherentCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
 }
 
 void
-NoncoherentCache::doWritebacks(PacketList& writebacks, Tick forward_time)
+NoncoherentCache::doWritebacks(PacketList &writebacks, Tick forward_time)
 {
     while (!writebacks.empty()) {
         PacketPtr wb_pkt = writebacks.front();
@@ -105,7 +105,7 @@ NoncoherentCache::doWritebacks(PacketList& writebacks, Tick forward_time)
 }
 
 void
-NoncoherentCache::doWritebacksAtomic(PacketList& writebacks)
+NoncoherentCache::doWritebacksAtomic(PacketList &writebacks)
 {
     while (!writebacks.empty()) {
         PacketPtr wb_pkt = writebacks.front();
@@ -135,7 +135,7 @@ void
 NoncoherentCache::recvTimingReq(PacketPtr pkt)
 {
     panic_if(pkt->cacheResponding(), "Should not see packets where cache "
-             "is responding");
+                                     "is responding");
 
     panic_if(!(pkt->isRead() || pkt->isWrite()),
              "Should only see read and writes at non-coherent cache\n");
@@ -166,13 +166,12 @@ NoncoherentCache::createMissPacket(PacketPtr cpu_pkt, CacheBlk *blk,
     return pkt;
 }
 
-
 Cycles
 NoncoherentCache::handleAtomicReqMiss(PacketPtr pkt, CacheBlk *&blk,
                                       PacketList &writebacks)
 {
-    PacketPtr bus_pkt = createMissPacket(pkt, blk, true,
-                                         pkt->isWholeLineWrite(blkSize));
+    PacketPtr bus_pkt =
+        createMissPacket(pkt, blk, true, pkt->isWholeLineWrite(blkSize));
     DPRINTF(Cache, "Sending an atomic %s\n", bus_pkt->print());
 
     Cycles latency = ticksToCycles(memSidePort.sendAtomic(bus_pkt));
@@ -220,7 +219,7 @@ Tick
 NoncoherentCache::recvAtomic(PacketPtr pkt)
 {
     panic_if(pkt->cacheResponding(), "Should not see packets where cache "
-             "is responding");
+                                     "is responding");
 
     panic_if(!(pkt->isRead() || pkt->isWrite()),
              "Should only see read and writes at non-coherent cache\n");
@@ -228,12 +227,11 @@ NoncoherentCache::recvAtomic(PacketPtr pkt)
     return BaseCache::recvAtomic(pkt);
 }
 
-
 void
 NoncoherentCache::functionalAccess(PacketPtr pkt, bool from_cpu_side)
 {
     panic_if(!from_cpu_side, "Non-coherent cache received functional snoop"
-            " request\n");
+                             " request\n");
 
     BaseCache::functionalAccess(pkt, from_cpu_side);
 }
@@ -249,11 +247,11 @@ NoncoherentCache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt,
     bool from_pref = false;
 
     MSHR::TargetList targets = mshr->extractServiceableTargets(pkt);
-    for (auto &target: targets) {
+    for (auto &target : targets) {
         Packet *tgt_pkt = target.pkt;
 
         switch (target.source) {
-          case MSHR::Target::FromCPU:
+        case MSHR::Target::FromCPU:
             // handle deferred requests comming from a cache or core
             // above
 
@@ -277,7 +275,7 @@ NoncoherentCache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt,
             // from lower level caches/memory to an upper level cache or
             // the core.
             completion_time += clockEdge(responseLatency) +
-                (transfer_offset ? pkt->payloadDelay : 0);
+                               (transfer_offset ? pkt->payloadDelay : 0);
 
             assert(tgt_pkt->req->requestorId() < system->maxRequestors());
             stats.cmdStats(tgt_pkt).missLatency[tgt_pkt->req->requestorId()] +=
@@ -292,7 +290,7 @@ NoncoherentCache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt,
             cpuSidePort.schedTimingResp(tgt_pkt, completion_time);
             break;
 
-          case MSHR::Target::FromPrefetcher:
+        case MSHR::Target::FromPrefetcher:
             // handle deferred requests comming from a prefetcher
             // attached to this cache
             assert(tgt_pkt->cmd == MemCmd::HardPFReq);
@@ -304,7 +302,7 @@ NoncoherentCache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt,
             delete tgt_pkt;
             break;
 
-          default:
+        default:
             // we should never see FromSnoop Targets as this is a
             // non-coherent cache
             panic("Illegal target->source enum %d\n", target.source);
@@ -354,7 +352,8 @@ NoncoherentCache::evictBlock(CacheBlk *blk)
     // further action for evictions of clean blocks (i.e., CleanEvicts
     // are unnecessary).
     PacketPtr pkt = (blk->isSet(CacheBlk::DirtyBit) || writebackClean) ?
-        writebackBlk(blk) : nullptr;
+                        writebackBlk(blk) :
+                        nullptr;
 
     invalidateBlock(blk);
 

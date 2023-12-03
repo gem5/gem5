@@ -63,7 +63,6 @@ PacketFifo::copyout(void *dest, unsigned offset, unsigned len)
     return true;
 }
 
-
 void
 PacketFifoEntry::serialize(const std::string &base, CheckpointOut &cp) const
 {
@@ -100,7 +99,7 @@ void
 PacketFifo::unserialize(const std::string &base, CheckpointIn &cp)
 {
     paramIn(cp, base + ".size", _size);
-//  paramIn(cp, base + ".maxsize", _maxsize);
+    //  paramIn(cp, base + ".maxsize", _maxsize);
     paramIn(cp, base + ".reserved", _reserved);
     int fifosize;
     paramIn(cp, base + ".packets", fifosize);

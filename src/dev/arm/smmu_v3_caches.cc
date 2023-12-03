@@ -44,13 +44,12 @@
 #include "base/logging.hh"
 #include "sim/stats.hh"
 
-
 // taken from hex expansion of pi
-#define SMMUTLB_SEED     0xEA752DFE
-#define ARMARCHTLB_SEED  0x8B021FA1
-#define IPACACHE_SEED    0xE5A0CC0F
+#define SMMUTLB_SEED 0xEA752DFE
+#define ARMARCHTLB_SEED 0x8B021FA1
+#define IPACACHE_SEED 0xE5A0CC0F
 #define CONFIGCACHE_SEED 0xB56F74E8
-#define WALKCACHE_SEED   0x18ACF3D6
+#define WALKCACHE_SEED 0x18ACF3D6
 
 /*
  * BaseCache
@@ -62,12 +61,13 @@ namespace gem5
 {
 
 SMMUv3BaseCache::SMMUv3BaseCache(const std::string &policy_name, uint32_t seed,
-    statistics::Group *parent, const std::string &name)
-  : replacementPolicy(decodePolicyName(policy_name)),
-    nextToReplace(0),
-    random(seed),
-    useStamp(0),
-    baseCacheStats(parent, name)
+                                 statistics::Group *parent,
+                                 const std::string &name)
+    : replacementPolicy(decodePolicyName(policy_name)),
+      nextToReplace(0),
+      random(seed),
+      useStamp(0),
+      baseCacheStats(parent, name)
 {}
 
 int
@@ -84,66 +84,57 @@ SMMUv3BaseCache::decodePolicyName(const std::string &policy_name)
     }
 }
 
-SMMUv3BaseCache::
-SMMUv3BaseCacheStats::SMMUv3BaseCacheStats(
+SMMUv3BaseCache::SMMUv3BaseCacheStats::SMMUv3BaseCacheStats(
     statistics::Group *parent, const std::string &name)
     : statistics::Group(parent, name.c_str()),
-      ADD_STAT(averageLookups, statistics::units::Rate<
-                    statistics::units::Count, statistics::units::Second>::get(),
+      ADD_STAT(averageLookups,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Second>::get(),
                "Average number lookups per second"),
       ADD_STAT(totalLookups, statistics::units::Count::get(),
                "Total number of lookups"),
-      ADD_STAT(averageMisses, statistics::units::Rate<
-                    statistics::units::Count, statistics::units::Second>::get(),
+      ADD_STAT(averageMisses,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Second>::get(),
                "Average number misses per second"),
       ADD_STAT(totalMisses, statistics::units::Count::get(),
                "Total number of misses"),
-      ADD_STAT(averageUpdates, statistics::units::Rate<
-                    statistics::units::Count, statistics::units::Second>::get(),
+      ADD_STAT(averageUpdates,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Second>::get(),
                "Average number updates per second"),
       ADD_STAT(totalUpdates, statistics::units::Count::get(),
                "Total number of updates"),
-      ADD_STAT(averageHitRate, statistics::units::Ratio::get(), "Average hit rate"),
+      ADD_STAT(averageHitRate, statistics::units::Ratio::get(),
+               "Average hit rate"),
       ADD_STAT(insertions, statistics::units::Count::get(),
                "Number of insertions (not replacements)")
 {
     using namespace statistics;
 
+    averageLookups.flags(pdf);
 
-    averageLookups
-        .flags(pdf);
-
-    totalLookups
-        .flags(pdf);
+    totalLookups.flags(pdf);
 
     averageLookups = totalLookups / simSeconds;
 
+    averageMisses.flags(pdf);
 
-    averageMisses
-        .flags(pdf);
-
-    totalMisses
-        .flags(pdf);
+    totalMisses.flags(pdf);
 
     averageMisses = totalMisses / simSeconds;
 
+    averageUpdates.flags(pdf);
 
-    averageUpdates
-        .flags(pdf);
-
-    totalUpdates
-        .flags(pdf);
+    totalUpdates.flags(pdf);
 
     averageUpdates = totalUpdates / simSeconds;
 
-
-    averageHitRate
-        .flags(pdf);
+    averageHitRate.flags(pdf);
 
     averageHitRate = (totalLookups - totalMisses) / totalLookups;
 
-    insertions
-        .flags(pdf);
+    insertions.flags(pdf);
 }
 
 /*
@@ -153,9 +144,8 @@ SMMUv3BaseCacheStats::SMMUv3BaseCacheStats(
 SMMUTLB::SMMUTLB(unsigned numEntries, unsigned _associativity,
                  const std::string &policy, statistics::Group *parent,
                  const std::string &name)
-:
-    SMMUv3BaseCache(policy, SMMUTLB_SEED, parent, name),
-    associativity(_associativity)
+    : SMMUv3BaseCache(policy, SMMUTLB_SEED, parent, name),
+      associativity(_associativity)
 {
     if (associativity == 0)
         associativity = numEntries; // fully associative
@@ -169,7 +159,7 @@ SMMUTLB::SMMUTLB(unsigned numEntries, unsigned _associativity,
 
     unsigned num_sets = numEntries / associativity;
 
-    if (num_sets*associativity != numEntries)
+    if (num_sets * associativity != numEntries)
         fatal("Number of SMMUTLB entries must be divisible "
               "by its associativity\n");
 
@@ -180,9 +170,8 @@ SMMUTLB::SMMUTLB(unsigned numEntries, unsigned _associativity,
     sets.resize(num_sets, set);
 }
 
-const SMMUTLB::Entry*
-SMMUTLB::lookup(uint32_t sid, uint32_t ssid,
-                Addr va, bool updStats)
+const SMMUTLB::Entry *
+SMMUTLB::lookup(uint32_t sid, uint32_t ssid, Addr va, bool updStats)
 {
     const Entry *result = NULL;
 
@@ -191,9 +180,8 @@ SMMUTLB::lookup(uint32_t sid, uint32_t ssid,
     for (size_t i = 0; i < set.size(); i++) {
         const Entry &e = set[i];
 
-        if (e.valid && (e.va & e.vaMask) == (va & e.vaMask) &&
-            e.sid==sid && e.ssid==ssid)
-        {
+        if (e.valid && (e.va & e.vaMask) == (va & e.vaMask) && e.sid == sid &&
+            e.ssid == ssid) {
             if (result != NULL)
                 panic("SMMUTLB: duplicate entry found!\n");
 
@@ -214,7 +202,7 @@ SMMUTLB::lookup(uint32_t sid, uint32_t ssid,
     return result;
 }
 
-const SMMUTLB::Entry*
+const SMMUTLB::Entry *
 SMMUTLB::lookupAnyVA(uint32_t sid, uint32_t ssid, bool updStats)
 {
     const Entry *result = NULL;
@@ -225,7 +213,7 @@ SMMUTLB::lookupAnyVA(uint32_t sid, uint32_t ssid, bool updStats)
         for (size_t i = 0; i < set.size(); i++) {
             const Entry &e = set[i];
 
-            if (e.valid && e.sid==sid && e.ssid==ssid) {
+            if (e.valid && e.sid == sid && e.ssid == ssid) {
                 result = &e;
                 break;
             }
@@ -253,7 +241,7 @@ SMMUTLB::store(const Entry &incoming, AllocPolicy alloc)
         lookup(incoming.sid, incoming.ssid, incoming.va, false);
 
     if (existing) {
-        *const_cast<Entry *> (existing) = incoming;
+        *const_cast<Entry *>(existing) = incoming;
     } else {
         Set &set = sets[pickSetIdx(incoming.va)];
         set[pickEntryIdxToReplace(set, alloc)] = incoming;
@@ -298,9 +286,8 @@ SMMUTLB::invalidateVA(Addr va, uint16_t asid, uint16_t vmid)
     for (size_t i = 0; i < set.size(); i++) {
         Entry &e = set[i];
 
-        if ((e.va & e.vaMask) == (va & e.vaMask) &&
-            e.asid==asid && e.vmid==vmid)
-        {
+        if ((e.va & e.vaMask) == (va & e.vaMask) && e.asid == asid &&
+            e.vmid == vmid) {
             e.valid = false;
         }
     }
@@ -314,7 +301,7 @@ SMMUTLB::invalidateVAA(Addr va, uint16_t vmid)
     for (size_t i = 0; i < set.size(); i++) {
         Entry &e = set[i];
 
-        if ((e.va & e.vaMask) == (va & e.vaMask) && e.vmid==vmid)
+        if ((e.va & e.vaMask) == (va & e.vaMask) && e.vmid == vmid)
             e.valid = false;
     }
 }
@@ -328,7 +315,7 @@ SMMUTLB::invalidateASID(uint16_t asid, uint16_t vmid)
         for (size_t i = 0; i < set.size(); i++) {
             Entry &e = set[i];
 
-            if (e.asid==asid && e.vmid==vmid)
+            if (e.asid == asid && e.vmid == vmid)
                 e.valid = false;
         }
     }
@@ -369,7 +356,7 @@ SMMUTLB::pickSetIdx(Addr va) const
 size_t
 SMMUTLB::pickSetIdx(uint32_t sid, uint32_t ssid) const
 {
-    return (sid^ssid) % sets.size();
+    return (sid ^ ssid) % sets.size();
 }
 
 size_t
@@ -381,8 +368,7 @@ SMMUTLB::pickEntryIdxToReplace(const Set &set, AllocPolicy alloc)
     uint32_t lru_tick = UINT32_MAX;
     size_t lru_idx = 0;
     size_t max_idx =
-        alloc==ALLOC_ANY_BUT_LAST_WAY ?
-            set.size()-1 : set.size();
+        alloc == ALLOC_ANY_BUT_LAST_WAY ? set.size() - 1 : set.size();
 
     for (size_t i = 0; i < max_idx; i++) {
         if (!set[i].valid) {
@@ -400,9 +386,9 @@ SMMUTLB::pickEntryIdxToReplace(const Set &set, AllocPolicy alloc)
     case SMMU_CACHE_REPL_ROUND_ROBIN:
         switch (alloc) {
         case ALLOC_ANY_WAY:
-            return nextToReplace = ((nextToReplace+1) % associativity);
+            return nextToReplace = ((nextToReplace + 1) % associativity);
         case ALLOC_ANY_BUT_LAST_WAY:
-            return nextToReplace = ((nextToReplace+1) % (associativity-1));
+            return nextToReplace = ((nextToReplace + 1) % (associativity - 1));
         default:
             panic("Unknown allocation mode %d\n", alloc);
         }
@@ -410,9 +396,9 @@ SMMUTLB::pickEntryIdxToReplace(const Set &set, AllocPolicy alloc)
     case SMMU_CACHE_REPL_RANDOM:
         switch (alloc) {
         case ALLOC_ANY_WAY:
-            return random.random<size_t>(0, associativity-1);
+            return random.random<size_t>(0, associativity - 1);
         case ALLOC_ANY_BUT_LAST_WAY:
-            return random.random<size_t>(0, associativity-2);
+            return random.random<size_t>(0, associativity - 2);
         default:
             panic("Unknown allocation mode %d\n", alloc);
         }
@@ -425,17 +411,14 @@ SMMUTLB::pickEntryIdxToReplace(const Set &set, AllocPolicy alloc)
     }
 }
 
-
-
 /*
  * ARMArchTLB
  */
 
 ARMArchTLB::ARMArchTLB(unsigned numEntries, unsigned _associativity,
                        const std::string &policy, statistics::Group *parent)
-:
-    SMMUv3BaseCache(policy, ARMARCHTLB_SEED, parent, "tlb"),
-    associativity(_associativity)
+    : SMMUv3BaseCache(policy, ARMARCHTLB_SEED, parent, "tlb"),
+      associativity(_associativity)
 {
     if (associativity == 0)
         associativity = numEntries; // fully associative
@@ -449,7 +432,7 @@ ARMArchTLB::ARMArchTLB(unsigned numEntries, unsigned _associativity,
 
     unsigned num_sets = numEntries / associativity;
 
-    if (num_sets*associativity != numEntries)
+    if (num_sets * associativity != numEntries)
         fatal("Number of ARMArchTLB entries must be divisible "
               "by its associativity\n");
 
@@ -471,8 +454,7 @@ ARMArchTLB::lookup(Addr va, uint16_t asid, uint16_t vmid, bool updStats)
         const Entry &e = set[i];
 
         if (e.valid && (e.va & e.vaMask) == (va & e.vaMask) &&
-            e.asid==asid && e.vmid==vmid)
-        {
+            e.asid == asid && e.vmid == vmid) {
             if (result != NULL)
                 panic("ARMArchTLB: duplicate entry found!\n");
 
@@ -505,7 +487,7 @@ ARMArchTLB::store(const Entry &incoming)
         lookup(incoming.va, incoming.asid, incoming.vmid, false);
 
     if (existing) {
-        *const_cast<Entry *> (existing) = incoming;
+        *const_cast<Entry *>(existing) = incoming;
     } else {
         Set &set = sets[pickSetIdx(incoming.va, incoming.asid, incoming.vmid)];
         set[pickEntryIdxToReplace(set)] = incoming;
@@ -522,9 +504,8 @@ ARMArchTLB::invalidateVA(Addr va, uint16_t asid, uint16_t vmid)
     for (size_t i = 0; i < set.size(); i++) {
         Entry &e = set[i];
 
-        if ((e.va & e.vaMask) == (va & e.vaMask) &&
-            e.asid==asid && e.vmid==vmid)
-        {
+        if ((e.va & e.vaMask) == (va & e.vaMask) && e.asid == asid &&
+            e.vmid == vmid) {
             e.valid = false;
         }
     }
@@ -539,7 +520,7 @@ ARMArchTLB::invalidateVAA(Addr va, uint16_t vmid)
         for (size_t i = 0; i < set.size(); i++) {
             Entry &e = set[i];
 
-            if ((e.va & e.vaMask) == (va & e.vaMask) && e.vmid==vmid)
+            if ((e.va & e.vaMask) == (va & e.vaMask) && e.vmid == vmid)
                 e.valid = false;
         }
     }
@@ -554,7 +535,7 @@ ARMArchTLB::invalidateASID(uint16_t asid, uint16_t vmid)
         for (size_t i = 0; i < set.size(); i++) {
             Entry &e = set[i];
 
-            if (e.asid==asid && e.vmid==vmid)
+            if (e.asid == asid && e.vmid == vmid)
                 e.valid = false;
         }
     }
@@ -612,10 +593,10 @@ ARMArchTLB::pickEntryIdxToReplace(const Set &set)
 
     switch (replacementPolicy) {
     case SMMU_CACHE_REPL_ROUND_ROBIN:
-        return nextToReplace = ((nextToReplace+1) % associativity);
+        return nextToReplace = ((nextToReplace + 1) % associativity);
 
     case SMMU_CACHE_REPL_RANDOM:
-        return random.random<size_t>(0, associativity-1);
+        return random.random<size_t>(0, associativity - 1);
 
     case SMMU_CACHE_REPL_LRU:
         return lru_idx;
@@ -623,7 +604,6 @@ ARMArchTLB::pickEntryIdxToReplace(const Set &set)
     default:
         panic("Unknown replacement policy %d\n", replacementPolicy);
     }
-
 }
 
 /*
@@ -632,9 +612,8 @@ ARMArchTLB::pickEntryIdxToReplace(const Set &set)
 
 IPACache::IPACache(unsigned numEntries, unsigned _associativity,
                    const std::string &policy, statistics::Group *parent)
-:
-    SMMUv3BaseCache(policy, IPACACHE_SEED, parent, "ipa"),
-    associativity(_associativity)
+    : SMMUv3BaseCache(policy, IPACACHE_SEED, parent, "ipa"),
+      associativity(_associativity)
 {
     if (associativity == 0)
         associativity = numEntries; // fully associative
@@ -648,7 +627,7 @@ IPACache::IPACache(unsigned numEntries, unsigned _associativity,
 
     unsigned num_sets = numEntries / associativity;
 
-    if (num_sets*associativity != numEntries)
+    if (num_sets * associativity != numEntries)
         fatal("Number of IPACache entries must be divisible "
               "by its associativity\n");
 
@@ -659,7 +638,7 @@ IPACache::IPACache(unsigned numEntries, unsigned _associativity,
     sets.resize(num_sets, set);
 }
 
-const IPACache::Entry*
+const IPACache::Entry *
 IPACache::lookup(Addr ipa, uint16_t vmid, bool updStats)
 {
     const Entry *result = NULL;
@@ -670,8 +649,7 @@ IPACache::lookup(Addr ipa, uint16_t vmid, bool updStats)
         const Entry &e = set[i];
 
         if (e.valid && (e.ipa & e.ipaMask) == (ipa & e.ipaMask) &&
-            e.vmid==vmid)
-        {
+            e.vmid == vmid) {
             if (result != NULL)
                 panic("IPACache: duplicate entry found!\n");
 
@@ -703,7 +681,7 @@ IPACache::store(const Entry &incoming)
     const Entry *existing = lookup(incoming.ipa, incoming.vmid, false);
 
     if (existing) {
-        *const_cast<Entry *> (existing) = incoming;
+        *const_cast<Entry *>(existing) = incoming;
     } else {
         Set &set = sets[pickSetIdx(incoming.ipa, incoming.vmid)];
         set[pickEntryIdxToReplace(set)] = incoming;
@@ -720,7 +698,7 @@ IPACache::invalidateIPA(Addr ipa, uint16_t vmid)
     for (size_t i = 0; i < set.size(); i++) {
         Entry &e = set[i];
 
-        if ((e.ipa & e.ipaMask) == (ipa & e.ipaMask) && e.vmid==vmid)
+        if ((e.ipa & e.ipaMask) == (ipa & e.ipaMask) && e.vmid == vmid)
             e.valid = false;
     }
 }
@@ -792,10 +770,10 @@ IPACache::pickEntryIdxToReplace(const Set &set)
 
     switch (replacementPolicy) {
     case SMMU_CACHE_REPL_ROUND_ROBIN:
-        return nextToReplace = ((nextToReplace+1) % associativity);
+        return nextToReplace = ((nextToReplace + 1) % associativity);
 
     case SMMU_CACHE_REPL_RANDOM:
-        return random.random<size_t>(0, associativity-1);
+        return random.random<size_t>(0, associativity - 1);
 
     case SMMU_CACHE_REPL_LRU:
         return lru_idx;
@@ -803,7 +781,6 @@ IPACache::pickEntryIdxToReplace(const Set &set)
     default:
         panic("Unknown replacement policy %d\n", replacementPolicy);
     }
-
 }
 
 /*
@@ -812,9 +789,8 @@ IPACache::pickEntryIdxToReplace(const Set &set)
 
 ConfigCache::ConfigCache(unsigned numEntries, unsigned _associativity,
                          const std::string &policy, statistics::Group *parent)
-:
-    SMMUv3BaseCache(policy, CONFIGCACHE_SEED, parent, "cfg"),
-    associativity(_associativity)
+    : SMMUv3BaseCache(policy, CONFIGCACHE_SEED, parent, "cfg"),
+      associativity(_associativity)
 {
     if (associativity == 0)
         associativity = numEntries; // fully associative
@@ -828,7 +804,7 @@ ConfigCache::ConfigCache(unsigned numEntries, unsigned _associativity,
 
     unsigned num_sets = numEntries / associativity;
 
-    if (num_sets*associativity != numEntries)
+    if (num_sets * associativity != numEntries)
         fatal("Number of ConfigCache entries must be divisible "
               "by its associativity\n");
 
@@ -849,8 +825,7 @@ ConfigCache::lookup(uint32_t sid, uint32_t ssid, bool updStats)
     for (size_t i = 0; i < set.size(); i++) {
         const Entry &e = set[i];
 
-        if (e.valid && e.sid==sid && e.ssid==ssid)
-        {
+        if (e.valid && e.sid == sid && e.ssid == ssid) {
             if (result != NULL)
                 panic("ConfigCache: duplicate entry found!\n");
 
@@ -882,7 +857,7 @@ ConfigCache::store(const Entry &incoming)
     const Entry *existing = lookup(incoming.sid, incoming.ssid, false);
 
     if (existing) {
-        *const_cast<Entry *> (existing) = incoming;
+        *const_cast<Entry *>(existing) = incoming;
     } else {
         Set &set = sets[pickSetIdx(incoming.sid, incoming.ssid)];
         set[pickEntryIdxToReplace(set)] = incoming;
@@ -899,7 +874,7 @@ ConfigCache::invalidateSSID(uint32_t sid, uint32_t ssid)
     for (size_t i = 0; i < set.size(); i++) {
         Entry &e = set[i];
 
-        if (e.sid==sid && e.ssid==ssid)
+        if (e.sid == sid && e.ssid == ssid)
             e.valid = false;
     }
 }
@@ -933,7 +908,7 @@ ConfigCache::invalidateAll()
 size_t
 ConfigCache::pickSetIdx(uint32_t sid, uint32_t ssid) const
 {
-    return (sid^ssid) % sets.size();
+    return (sid ^ ssid) % sets.size();
 }
 
 size_t
@@ -956,10 +931,10 @@ ConfigCache::pickEntryIdxToReplace(const Set &set)
 
     switch (replacementPolicy) {
     case SMMU_CACHE_REPL_ROUND_ROBIN:
-        return nextToReplace = ((nextToReplace+1) % associativity);
+        return nextToReplace = ((nextToReplace + 1) % associativity);
 
     case SMMU_CACHE_REPL_RANDOM:
-        return random.random<size_t>(0, associativity-1);
+        return random.random<size_t>(0, associativity - 1);
 
     case SMMU_CACHE_REPL_LRU:
         return lru_idx;
@@ -967,23 +942,22 @@ ConfigCache::pickEntryIdxToReplace(const Set &set)
     default:
         panic("Unknown replacement policy %d\n", replacementPolicy);
     }
-
 }
 
 /*
  * WalkCache
  */
 
-WalkCache::WalkCache(const std::array<unsigned, 2*WALK_CACHE_LEVELS> &_sizes,
+WalkCache::WalkCache(const std::array<unsigned, 2 * WALK_CACHE_LEVELS> &_sizes,
                      unsigned _associativity, const std::string &policy,
-                     statistics::Group *parent) :
-    SMMUv3BaseCache(policy, WALKCACHE_SEED, parent, "walk"),
-    walkCacheStats(&(SMMUv3BaseCache::baseCacheStats)),
-    associativity(_associativity),
-    sizes()
+                     statistics::Group *parent)
+    : SMMUv3BaseCache(policy, WALKCACHE_SEED, parent, "walk"),
+      walkCacheStats(&(SMMUv3BaseCache::baseCacheStats)),
+      associativity(_associativity),
+      sizes()
 {
-    unsigned numEntries = std::accumulate(&_sizes[0],
-                                          &_sizes[2*WALK_CACHE_LEVELS], 0);
+    unsigned numEntries =
+        std::accumulate(&_sizes[0], &_sizes[2 * WALK_CACHE_LEVELS], 0);
 
     if (associativity == 0)
         associativity = numEntries; // fully associative
@@ -991,13 +965,13 @@ WalkCache::WalkCache(const std::array<unsigned, 2*WALK_CACHE_LEVELS> &_sizes,
     if (numEntries == 0)
         fatal("WalkCache must have at least one entry\n");
 
-    for (size_t i = 0; i < 2*WALK_CACHE_LEVELS; i++){
+    for (size_t i = 0; i < 2 * WALK_CACHE_LEVELS; i++) {
         if (_sizes[i] % associativity != 0)
-              fatal("Number of WalkCache entries at each level must be "
-                    "divisible by WalkCache associativity\n");
+            fatal("Number of WalkCache entries at each level must be "
+                  "divisible by WalkCache associativity\n");
 
-        sizes[i] = _sizes[i] /  associativity;
-        offsets[i] = i==0 ? 0 : offsets[i-1] + sizes[i-1];
+        sizes[i] = _sizes[i] / associativity;
+        offsets[i] = i == 0 ? 0 : offsets[i - 1] + sizes[i - 1];
     }
 
     if (associativity > numEntries)
@@ -1006,7 +980,7 @@ WalkCache::WalkCache(const std::array<unsigned, 2*WALK_CACHE_LEVELS> &_sizes,
 
     unsigned num_sets = numEntries / associativity;
 
-    if (num_sets*associativity != numEntries)
+    if (num_sets * associativity != numEntries)
         fatal("Number of WalkCache entries must be divisible "
               "by its associativity\n");
 
@@ -1017,11 +991,9 @@ WalkCache::WalkCache(const std::array<unsigned, 2*WALK_CACHE_LEVELS> &_sizes,
     sets.resize(num_sets, set);
 }
 
-const WalkCache::Entry*
-WalkCache::lookup(Addr va, Addr vaMask,
-                  uint16_t asid, uint16_t vmid,
-                  unsigned stage, unsigned level,
-                  bool updStats)
+const WalkCache::Entry *
+WalkCache::lookup(Addr va, Addr vaMask, uint16_t asid, uint16_t vmid,
+                  unsigned stage, unsigned level, bool updStats)
 {
     const Entry *result = NULL;
 
@@ -1031,8 +1003,8 @@ WalkCache::lookup(Addr va, Addr vaMask,
         const Entry &e = set[i];
 
         if (e.valid && (e.va & e.vaMask) == (va & e.vaMask) &&
-            e.asid==asid && e.vmid==vmid && e.stage==stage && e.level==level)
-        {
+            e.asid == asid && e.vmid == vmid && e.stage == stage &&
+            e.level == level) {
             if (result != NULL)
                 panic("WalkCache: duplicate entry found!\n");
 
@@ -1049,9 +1021,9 @@ WalkCache::lookup(Addr va, Addr vaMask,
         if (result == NULL)
             baseCacheStats.totalMisses++;
 
-        walkCacheStats.totalLookupsByStageLevel[stage-1][level]++;
+        walkCacheStats.totalLookupsByStageLevel[stage - 1][level]++;
         if (result == NULL) {
-            walkCacheStats.totalMissesByStageLevel[stage-1][level]++;
+            walkCacheStats.totalMissesByStageLevel[stage - 1][level]++;
         }
     }
 
@@ -1064,17 +1036,17 @@ WalkCache::store(const Entry &incoming)
     if (!incoming.valid)
         panic("Tried to store an invalid entry\n");
 
-    assert(incoming.stage==1 || incoming.stage==2);
-    assert(incoming.level<=WALK_CACHE_LEVELS);
+    assert(incoming.stage == 1 || incoming.stage == 2);
+    assert(incoming.level <= WALK_CACHE_LEVELS);
 
     incoming.lastUsed = 0;
 
-    const Entry *existing = lookup(incoming.va, incoming.vaMask,
-                                   incoming.asid, incoming.vmid,
-                                   incoming.stage, incoming.level, false);
+    const Entry *existing =
+        lookup(incoming.va, incoming.vaMask, incoming.asid, incoming.vmid,
+               incoming.stage, incoming.level, false);
 
     if (existing) {
-        *const_cast<Entry *> (existing) = incoming;
+        *const_cast<Entry *>(existing) = incoming;
     } else {
         Set &set = sets[pickSetIdx(incoming.va, incoming.vaMask,
                                    incoming.stage, incoming.level)];
@@ -1084,7 +1056,7 @@ WalkCache::store(const Entry &incoming)
 
     baseCacheStats.totalUpdates++;
     walkCacheStats
-             .totalUpdatesByStageLevel[incoming.stage-1][incoming.level]++;
+        .totalUpdatesByStageLevel[incoming.stage - 1][incoming.level]++;
 }
 
 void
@@ -1097,9 +1069,9 @@ WalkCache::invalidateVA(Addr va, uint16_t asid, uint16_t vmid,
         for (size_t i = 0; i < set.size(); i++) {
             Entry &e = set[i];
 
-            if ((!leaf_only || e.leaf) && (e.va & e.vaMask) == (va & e.vaMask)
-                && e.asid == asid && e.vmid == vmid)
-            {
+            if ((!leaf_only || e.leaf) &&
+                (e.va & e.vaMask) == (va & e.vaMask) && e.asid == asid &&
+                e.vmid == vmid) {
                 e.valid = false;
             }
         }
@@ -1115,9 +1087,8 @@ WalkCache::invalidateVAA(Addr va, uint16_t vmid, const bool leaf_only)
         for (size_t i = 0; i < set.size(); i++) {
             Entry &e = set[i];
 
-            if ((!leaf_only || e.leaf) && (e.va & e.vaMask) == (va & e.vaMask)
-                && e.vmid == vmid)
-            {
+            if ((!leaf_only || e.leaf) &&
+                (e.va & e.vaMask) == (va & e.vaMask) && e.vmid == vmid) {
                 e.valid = false;
             }
         }
@@ -1133,7 +1104,7 @@ WalkCache::invalidateASID(uint16_t asid, uint16_t vmid)
         for (size_t i = 0; i < set.size(); i++) {
             Entry &e = set[i];
 
-            if (e.asid==asid && e.vmid==vmid)
+            if (e.asid == asid && e.vmid == vmid)
                 e.valid = false;
         }
     }
@@ -1166,36 +1137,36 @@ WalkCache::invalidateAll()
 }
 
 size_t
-WalkCache::pickSetIdx(Addr va, Addr vaMask,
-                      unsigned stage, unsigned level) const
+WalkCache::pickSetIdx(Addr va, Addr vaMask, unsigned stage,
+                      unsigned level) const
 {
-    (void) stage;
+    (void)stage;
 
     int size, offset;
 
     switch (stage) {
-        case 1:
-            assert (level<=3);
-            size = sizes[0*WALK_CACHE_LEVELS + level];
-            offset = offsets[0*WALK_CACHE_LEVELS + level];
-            break;
+    case 1:
+        assert(level <= 3);
+        size = sizes[0 * WALK_CACHE_LEVELS + level];
+        offset = offsets[0 * WALK_CACHE_LEVELS + level];
+        break;
 
-        case 2:
-            assert (level<=3);
-            size = sizes[1*WALK_CACHE_LEVELS + level];
-            offset = offsets[1*WALK_CACHE_LEVELS + level];
-            break;
+    case 2:
+        assert(level <= 3);
+        size = sizes[1 * WALK_CACHE_LEVELS + level];
+        offset = offsets[1 * WALK_CACHE_LEVELS + level];
+        break;
 
-        default:
-            panic("bad stage");
+    default:
+        panic("bad stage");
     }
 
     return ((va >> findLsbSet(vaMask)) % size) + offset;
 }
 
 size_t
-WalkCache::pickEntryIdxToReplace(const Set &set,
-                                 unsigned stage, unsigned level)
+WalkCache::pickEntryIdxToReplace(const Set &set, unsigned stage,
+                                 unsigned level)
 {
     size_t lru_idx = 0;
     uint32_t lru_tick = UINT32_MAX;
@@ -1203,7 +1174,7 @@ WalkCache::pickEntryIdxToReplace(const Set &set,
     for (size_t i = 0; i < set.size(); i++) {
         if (!set[i].valid) {
             baseCacheStats.insertions++;
-            walkCacheStats.insertionsByStageLevel[stage-1][level]++;
+            walkCacheStats.insertionsByStageLevel[stage - 1][level]++;
             return i;
         }
 
@@ -1215,10 +1186,10 @@ WalkCache::pickEntryIdxToReplace(const Set &set,
 
     switch (replacementPolicy) {
     case SMMU_CACHE_REPL_ROUND_ROBIN:
-        return nextToReplace = ((nextToReplace+1) % associativity);
+        return nextToReplace = ((nextToReplace + 1) % associativity);
 
     case SMMU_CACHE_REPL_RANDOM:
-        return random.random<size_t>(0, associativity-1);
+        return random.random<size_t>(0, associativity - 1);
 
     case SMMU_CACHE_REPL_LRU:
         return lru_idx;
@@ -1226,34 +1197,25 @@ WalkCache::pickEntryIdxToReplace(const Set &set,
     default:
         panic("Unknown replacement policy %d\n", replacementPolicy);
     }
-
 }
 
 WalkCache::WalkCacheStats::WalkCacheStats(statistics::Group *parent)
     : statistics::Group(parent),
       ADD_STAT(totalLookupsByStageLevel, statistics::units::Count::get(),
-          "Total number of lookups"),
+               "Total number of lookups"),
       ADD_STAT(totalMissesByStageLevel, statistics::units::Count::get(),
-          "Total number of misses"),
+               "Total number of misses"),
       ADD_STAT(totalUpdatesByStageLevel, statistics::units::Count::get(),
-          "Total number of updates"),
+               "Total number of updates"),
       ADD_STAT(insertionsByStageLevel, statistics::units::Count::get(),
-          "Number of insertions (not replacements)")
+               "Number of insertions (not replacements)")
 {
     using namespace statistics;
 
-    totalLookupsByStageLevel
-        .init(2, WALK_CACHE_LEVELS)
-        .flags(pdf);
-    totalMissesByStageLevel
-        .init(2, WALK_CACHE_LEVELS)
-        .flags(pdf);
-    totalUpdatesByStageLevel
-        .init(2, WALK_CACHE_LEVELS)
-        .flags(pdf);
-    insertionsByStageLevel
-        .init(2, WALK_CACHE_LEVELS)
-        .flags(pdf);
+    totalLookupsByStageLevel.init(2, WALK_CACHE_LEVELS).flags(pdf);
+    totalMissesByStageLevel.init(2, WALK_CACHE_LEVELS).flags(pdf);
+    totalUpdatesByStageLevel.init(2, WALK_CACHE_LEVELS).flags(pdf);
+    insertionsByStageLevel.init(2, WALK_CACHE_LEVELS).flags(pdf);
 
     for (int s = 0; s < 2; s++) {
         totalLookupsByStageLevel.subname(s, csprintf("S%d", s + 1));
@@ -1268,53 +1230,44 @@ WalkCache::WalkCacheStats::WalkCacheStats(statistics::Group *parent)
             insertionsByStageLevel.ysubname(l, csprintf("L%d", l));
 
             auto avg_lookup = new statistics::Formula(
-                this,
-                csprintf("averageLookups_S%dL%d", s+1, l).c_str(),
+                this, csprintf("averageLookups_S%dL%d", s + 1, l).c_str(),
                 statistics::units::Rate<statistics::units::Count,
-                                   statistics::units::Second>::get(),
+                                        statistics::units::Second>::get(),
                 "Average number lookups per second");
             avg_lookup->flags(pdf);
             averageLookupsByStageLevel.push_back(avg_lookup);
 
-            *avg_lookup =
-                totalLookupsByStageLevel[s][l] / simSeconds;
+            *avg_lookup = totalLookupsByStageLevel[s][l] / simSeconds;
 
             auto avg_misses = new statistics::Formula(
-                this,
-                csprintf("averageMisses_S%dL%d", s+1, l).c_str(),
+                this, csprintf("averageMisses_S%dL%d", s + 1, l).c_str(),
                 statistics::units::Rate<statistics::units::Count,
-                                   statistics::units::Second>::get(),
+                                        statistics::units::Second>::get(),
                 "Average number misses per second");
             avg_misses->flags(pdf);
             averageMissesByStageLevel.push_back(avg_misses);
 
-            *avg_misses =
-                totalMissesByStageLevel[s][l] / simSeconds;
+            *avg_misses = totalMissesByStageLevel[s][l] / simSeconds;
 
             auto avg_updates = new statistics::Formula(
-                this,
-                csprintf("averageUpdates_S%dL%d", s+1, l).c_str(),
+                this, csprintf("averageUpdates_S%dL%d", s + 1, l).c_str(),
                 statistics::units::Rate<statistics::units::Count,
-                                   statistics::units::Second>::get(),
+                                        statistics::units::Second>::get(),
                 "Average number updates per second");
             avg_updates->flags(pdf);
             averageUpdatesByStageLevel.push_back(avg_updates);
 
-            *avg_updates =
-                totalUpdatesByStageLevel[s][l] / simSeconds;
+            *avg_updates = totalUpdatesByStageLevel[s][l] / simSeconds;
 
             auto avg_hitrate = new statistics::Formula(
-                this,
-                csprintf("averageHitRate_S%dL%d", s+1, l).c_str(),
+                this, csprintf("averageHitRate_S%dL%d", s + 1, l).c_str(),
                 statistics::units::Ratio::get(), "Average hit rate");
             avg_hitrate->flags(pdf);
             averageHitRateByStageLevel.push_back(avg_hitrate);
 
-            *avg_hitrate =
-                (totalLookupsByStageLevel[s][l] -
-                 totalMissesByStageLevel[s][l])
-                / totalLookupsByStageLevel[s][l];
-
+            *avg_hitrate = (totalLookupsByStageLevel[s][l] -
+                            totalMissesByStageLevel[s][l]) /
+                           totalLookupsByStageLevel[s][l];
         }
     }
 }

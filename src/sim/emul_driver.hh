@@ -63,13 +63,16 @@ class EmulatedDriver : public SimObject
   public:
     EmulatedDriver(const EmulatedDriverParams &p)
         : SimObject(p), filename(p.filename)
-    {
-    }
+    {}
 
     /**
      * Check for a match with this driver's filename.
      */
-    bool match(const std::string &s) const { return (s == filename); }
+    bool
+    match(const std::string &s) const
+    {
+        return (s == filename);
+    }
 
     /**
      * Abstract method, invoked when the user program calls open() on
@@ -95,9 +98,12 @@ class EmulatedDriver : public SimObject
      * @return The return ptr for the mmap, or the negation of the errno
      * (see the SyscallReturn class).
      */
-    virtual Addr mmap(ThreadContext *tc, Addr start, uint64_t length,
-                      int prot, int tgtFlags, int tgtFd, off_t offset)
-                      { return -EBADF; }
+    virtual Addr
+    mmap(ThreadContext *tc, Addr start, uint64_t length, int prot,
+         int tgtFlags, int tgtFd, off_t offset)
+    {
+        return -EBADF;
+    }
 };
 
 } // namespace gem5

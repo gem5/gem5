@@ -28,7 +28,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #include "mem/ruby/network/garnet/flitBuffer.hh"
 
 namespace gem5
@@ -40,15 +39,9 @@ namespace ruby
 namespace garnet
 {
 
-flitBuffer::flitBuffer()
-{
-    max_size = INFINITE_;
-}
+flitBuffer::flitBuffer() { max_size = INFINITE_; }
 
-flitBuffer::flitBuffer(int maximum_size)
-{
-    max_size = maximum_size;
-}
+flitBuffer::flitBuffer(int maximum_size) { max_size = maximum_size; }
 
 bool
 flitBuffer::isEmpty()
@@ -59,7 +52,7 @@ flitBuffer::isEmpty()
 bool
 flitBuffer::isReady(Tick curTime)
 {
-    if (m_buffer.size() != 0 ) {
+    if (m_buffer.size() != 0) {
         flit *t_flit = peekTopFlit();
         if (t_flit->get_time() <= curTime)
             return true;
@@ -68,7 +61,7 @@ flitBuffer::isReady(Tick curTime)
 }
 
 void
-flitBuffer::print(std::ostream& out) const
+flitBuffer::print(std::ostream &out) const
 {
     out << "[flitBuffer: " << m_buffer.size() << "] " << std::endl;
 }

@@ -38,7 +38,6 @@
 
  *****************************************************************************/
 
-
 // $Log: sc_nbexterns.cpp,v $
 // Revision 1.2  2011/02/18 20:19:15  acg
 //  Andy Goodrich: updating Copyright notice.
@@ -68,13 +67,13 @@ add_on_help(small_type &us, int /* unb */, int und, sc_digit *ud,
 {
     vnd = vec_skip_leading_zeros(vnd, vd);
 
-    if (us == vs) {  // case 3
+    if (us == vs) { // case 3
         if (und >= vnd)
             vec_add_on(und, ud, vnd, vd);
         else
             vec_add_on2(und, ud, vnd, vd);
 
-    } else {  // case 4
+    } else { // case 4
         // vec_cmp expects that und is the number of non-zero digits in ud.
         int new_und = vec_skip_leading_zeros(und, ud);
         int cmp_res = vec_cmp(new_und, ud, vnd, vd);
@@ -94,7 +93,6 @@ add_on_help(small_type &us, int /* unb */, int und, sc_digit *ud,
     }
 }
 
-
 // ----------------------------------------------------------------------------
 
 /*
@@ -112,14 +110,13 @@ vice versa.
 
 */
 
-
 // ----------------------------------------------------------------------------
 //  SECTION: External functions of MULTIPLICATION operators.
 // ----------------------------------------------------------------------------
 
 void
-mul_on_help_signed(small_type &us, int unb, int und, sc_digit *ud,
-                   int vnb, int vnd, const sc_digit *vd)
+mul_on_help_signed(small_type &us, int unb, int und, sc_digit *ud, int vnb,
+                   int vnd, const sc_digit *vd)
 {
 #define CONVERT_SM_to_2C_to_SM convert_signed_SM_to_2C_to_SM
 #define COPY_DIGITS copy_digits_signed
@@ -142,9 +139,8 @@ mul_on_help_signed(small_type &us, int unb, int und, sc_digit *ud,
             return;
         }
 
-        if ((und == 1) && (vnd == 1) &&
-            (ud0 < HALF_DIGIT_RADIX) && (vd0 < HALF_DIGIT_RADIX)) {
-
+        if ((und == 1) && (vnd == 1) && (ud0 < HALF_DIGIT_RADIX) &&
+            (vd0 < HALF_DIGIT_RADIX)) {
             sc_digit d = ud0 * vd0;
             COPY_DIGITS(us, unb, old_und, ud, unb + vnb, 1, &d);
             return;
@@ -172,17 +168,16 @@ mul_on_help_signed(small_type &us, int unb, int und, sc_digit *ud,
         COPY_DIGITS(us, unb, old_und, ud, unb + vnb, nd, d);
 
 #ifndef SC_MAX_NBITS
-        delete [] d;
+        delete[] d;
 #endif
     }
 #undef COPY_DIGITS
 #undef CONVERT_SM_to_2C_to_SM
 }
 
-
 void
-mul_on_help_unsigned(small_type &us, int unb, int und, sc_digit *ud,
-                     int vnb, int vnd, const sc_digit *vd)
+mul_on_help_unsigned(small_type &us, int unb, int und, sc_digit *ud, int vnb,
+                     int vnd, const sc_digit *vd)
 {
 #define CONVERT_SM_to_2C_to_SM convert_unsigned_SM_to_2C_to_SM
 #define COPY_DIGITS copy_digits_unsigned
@@ -205,9 +200,8 @@ mul_on_help_unsigned(small_type &us, int unb, int und, sc_digit *ud,
             return;
         }
 
-        if ((und == 1) && (vnd == 1) &&
-            (ud0 < HALF_DIGIT_RADIX) && (vd0 < HALF_DIGIT_RADIX)) {
-
+        if ((und == 1) && (vnd == 1) && (ud0 < HALF_DIGIT_RADIX) &&
+            (vd0 < HALF_DIGIT_RADIX)) {
             sc_digit d = ud0 * vd0;
             COPY_DIGITS(us, unb, old_und, ud, unb + vnb, 1, &d);
             return;
@@ -235,25 +229,24 @@ mul_on_help_unsigned(small_type &us, int unb, int und, sc_digit *ud,
         COPY_DIGITS(us, unb, old_und, ud, unb + vnb, nd, d);
 
 #ifndef SC_MAX_NBITS
-        delete [] d;
+        delete[] d;
 #endif
-      }
+    }
 #undef COPY_DIGITS
 #undef CONVERT_SM_to_2C_to_SM
 }
-
 
 // ----------------------------------------------------------------------------
 //  SECTION: External functions for DIVISION operators.
 // ----------------------------------------------------------------------------
 
 void
-div_on_help_signed(small_type &us, int unb, int und, sc_digit *ud,
-                   int vnb, int vnd, const sc_digit *vd)
+div_on_help_signed(small_type &us, int unb, int und, sc_digit *ud, int vnb,
+                   int vnd, const sc_digit *vd)
 {
 #define CONVERT_SM_to_2C_to_SM convert_signed_SM_to_2C_to_SM
 #define COPY_DIGITS copy_digits_signed
-    {  // Body of div_on_help
+    { // Body of div_on_help
         int old_und = und;
 
         und = vec_skip_leading_zeros(und, ud);
@@ -298,17 +291,16 @@ div_on_help_signed(small_type &us, int unb, int und, sc_digit *ud,
         COPY_DIGITS(us, unb, old_und, ud, sc_max(unb, vnb), nd - 1, d);
 
 #ifndef SC_MAX_NBITS
-        delete [] d;
+        delete[] d;
 #endif
     }
 #undef COPY_DIGITS
 #undef CONVERT_SM_to_2C_to_SM
 }
 
-
 void
-div_on_help_unsigned(small_type &us, int unb, int und, sc_digit *ud,
-                     int vnb, int vnd, const sc_digit *vd)
+div_on_help_unsigned(small_type &us, int unb, int und, sc_digit *ud, int vnb,
+                     int vnd, const sc_digit *vd)
 {
 #define CONVERT_SM_to_2C_to_SM convert_unsigned_SM_to_2C_to_SM
 #define COPY_DIGITS copy_digits_unsigned
@@ -328,7 +320,7 @@ div_on_help_unsigned(small_type &us, int unb, int und, sc_digit *ud,
 
         sc_digit vd0 = (*vd);
 
-        if ((cmp_res > 0) && (vnd == 1) && (vd0 == 1))  {
+        if ((cmp_res > 0) && (vnd == 1) && (vd0 == 1)) {
             us = CONVERT_SM_to_2C_to_SM(us, unb, old_und, ud);
             return;
         }
@@ -357,13 +349,12 @@ div_on_help_unsigned(small_type &us, int unb, int und, sc_digit *ud,
         COPY_DIGITS(us, unb, old_und, ud, sc_max(unb, vnb), nd - 1, d);
 
 #ifndef SC_MAX_NBITS
-        delete [] d;
+        delete[] d;
 #endif
-      }
+    }
 #undef COPY_DIGITS
 #undef CONVERT_SM_to_2C_to_SM
 }
-
 
 // ----------------------------------------------------------------------------
 //  SECTION: External functions for MOD operators.
@@ -428,12 +419,11 @@ mod_on_help_signed(small_type &us, int unb, int und, sc_digit *ud,
             COPY_DIGITS(us, unb, old_und, ud, sc_min(unb, vnd), nd - 1, d);
 
 #ifndef SC_MAX_NBITS
-        delete [] d;
+        delete[] d;
 #endif
     }
 #undef COPY_DIGITS
 }
-
 
 void
 mod_on_help_unsigned(small_type &us, int unb, int und, sc_digit *ud,
@@ -495,12 +485,11 @@ mod_on_help_unsigned(small_type &us, int unb, int und, sc_digit *ud,
             COPY_DIGITS(us, unb, old_und, ud, sc_min(unb, vnd), nd - 1, d);
 
 #ifndef SC_MAX_NBITS
-        delete [] d;
+        delete[] d;
 #endif
     }
 #undef COPY_DIGITS
 }
-
 
 // ----------------------------------------------------------------------------
 //  SECTION: External functions for AND operators.
@@ -508,8 +497,8 @@ mod_on_help_unsigned(small_type &us, int unb, int und, sc_digit *ud,
 
 // Handles the cases 2-5 and returns the result in u.
 void
-and_on_help(small_type us, int /* unb */, int und, sc_digit *ud,
-            small_type vs, int /* vnb */, int vnd, const sc_digit *vd)
+and_on_help(small_type us, int /* unb */, int und, sc_digit *ud, small_type vs,
+            int /* vnb */, int vnd, const sc_digit *vd)
 {
     sc_digit *x = ud;
     const sc_digit *y = vd;
@@ -549,7 +538,6 @@ and_on_help(small_type us, int /* unb */, int und, sc_digit *ud,
                 xcarry >>= BITS_PER_DIGIT;
                 ycarry >>= BITS_PER_DIGIT;
             }
-
         }
     } else {
         if (us > 0) { // case 4
@@ -577,15 +565,14 @@ and_on_help(small_type us, int /* unb */, int und, sc_digit *ud,
     }
 }
 
-
 // ----------------------------------------------------------------------------
 //  SECTION: External functions for OR operators.
 // ----------------------------------------------------------------------------
 
 // Handles the cases 3-5 and returns the result in u.
 void
-or_on_help(small_type us, int /* unb */, int und, sc_digit *ud,
-           small_type vs, int /* vnb */, int vnd, const sc_digit *vd)
+or_on_help(small_type us, int /* unb */, int und, sc_digit *ud, small_type vs,
+           int /* vnb */, int vnd, const sc_digit *vd)
 {
     sc_digit *x = ud;
     const sc_digit *y = vd;
@@ -655,15 +642,14 @@ or_on_help(small_type us, int /* unb */, int und, sc_digit *ud,
     }
 }
 
-
 // ----------------------------------------------------------------------------
 //  SECTION: External functions for XOR operators.
 // ----------------------------------------------------------------------------
 
 // Handles the cases 3-5 and returns the result in u.
 void
-xor_on_help(small_type us, int /* unb */, int und, sc_digit *ud,
-            small_type vs, int /* vnb */, int vnd, const sc_digit *vd)
+xor_on_help(small_type us, int /* unb */, int und, sc_digit *ud, small_type vs,
+            int /* vnb */, int vnd, const sc_digit *vd)
 {
     sc_digit *x = ud;
     const sc_digit *y = vd;

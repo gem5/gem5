@@ -70,7 +70,7 @@ class GpuTLB : public ClockedObject
     class Translation
     {
       public:
-        virtual ~Translation() { }
+        virtual ~Translation() {}
 
         /**
          * Signal that the translation has been delayed due to a hw page
@@ -83,8 +83,7 @@ class GpuTLB : public ClockedObject
          * may be responsible for cleaning itslef up which will happen in
          * this function. Once it's called the object is no longer valid.
          */
-        virtual void finish(Fault fault, const RequestPtr &req,
-                            Mode mode) = 0;
+        virtual void finish(Fault fault, const RequestPtr &req, Mode mode) = 0;
 
         /** This function is used by the page table walker to determine if
          * it should translate the a pending request or if the underlying
@@ -92,20 +91,24 @@ class GpuTLB : public ClockedObject
          * @ return Is the instruction that requested this translation
          * squashed?
          */
-        virtual bool squashed() const { return false; }
+        virtual bool
+        squashed() const
+        {
+            return false;
+        }
     };
 
     Addr pageAlign(Addr vaddr);
     void dumpAll();
-    VegaTlbEntry *lookup(Addr va, bool update_lru=true);
+    VegaTlbEntry *lookup(Addr va, bool update_lru = true);
 
     Walker *getWalker();
     void invalidateAll();
     void demapPage(Addr va, uint64_t asn);
 
   protected:
-    typedef std::list<VegaTlbEntry*> EntryList;
-    EntryList::iterator lookupIt(Addr va, bool update_lru=true);
+    typedef std::list<VegaTlbEntry *> EntryList;
+    EntryList::iterator lookupIt(Addr va, bool update_lru = true);
     Walker *walker;
     AMDGPUDevice *gpuDevice;
 
@@ -185,24 +188,30 @@ class GpuTLB : public ClockedObject
         statistics::Formula localLatency;
     } stats;
 
-
     VegaTlbEntry *insert(Addr vpn, VegaTlbEntry &entry);
 
     // Checkpointing
-    virtual void serialize(CheckpointOut& cp) const override;
-    virtual void unserialize(CheckpointIn& cp) override;
+    virtual void serialize(CheckpointOut &cp) const override;
+    virtual void unserialize(CheckpointIn &cp) override;
     void issueTranslation();
-    enum tlbOutcome {TLB_HIT, TLB_MISS, PAGE_WALK, MISS_RETURN};
+
+    enum tlbOutcome
+    {
+        TLB_HIT,
+        TLB_MISS,
+        PAGE_WALK,
+        MISS_RETURN
+    };
+
     VegaTlbEntry *tlbLookup(const RequestPtr &req, bool update_stats);
 
-    void walkerResponse(VegaTlbEntry& entry, PacketPtr pkt);
-    void handleTranslationReturn(Addr addr, tlbOutcome outcome,
-                                 PacketPtr pkt);
+    void walkerResponse(VegaTlbEntry &entry, PacketPtr pkt);
+    void handleTranslationReturn(Addr addr, tlbOutcome outcome, PacketPtr pkt);
 
     void handleFuncTranslationReturn(PacketPtr pkt, tlbOutcome outcome);
 
-    void pagingProtectionChecks(PacketPtr pkt,
-                                VegaTlbEntry *tlb_entry, Mode mode);
+    void pagingProtectionChecks(PacketPtr pkt, VegaTlbEntry *tlb_entry,
+                                Mode mode);
 
     void updatePhysAddresses(Addr virt_page_addr, VegaTlbEntry *tlb_entry,
                              Addr phys_page_addr);
@@ -213,20 +222,36 @@ class GpuTLB : public ClockedObject
     class CpuSidePort : public ResponsePort
     {
       public:
-        CpuSidePort(const std::string &_name, GpuTLB * gpu_TLB,
-                    PortID _index)
-            : ResponsePort(_name), tlb(gpu_TLB), index(_index) { }
+        CpuSidePort(const std::string &_name, GpuTLB *gpu_TLB, PortID _index)
+            : ResponsePort(_name), tlb(gpu_TLB), index(_index)
+        {}
 
       protected:
         GpuTLB *tlb;
         int index;
 
         virtual bool recvTimingReq(PacketPtr pkt);
-        virtual Tick recvAtomic(PacketPtr pkt) { return 0; }
+
+        virtual Tick
+        recvAtomic(PacketPtr pkt)
+        {
+            return 0;
+        }
+
         virtual void recvFunctional(PacketPtr pkt);
-        virtual void recvRangeChange() { }
+
+        virtual void
+        recvRangeChange()
+        {}
+
         virtual void recvReqRetry();
-        virtual void recvRespRetry() { panic("recvRespRetry called"); }
+
+        virtual void
+        recvRespRetry()
+        {
+            panic("recvRespRetry called");
+        }
+
         virtual AddrRangeList getAddrRanges() const;
     };
 
@@ -240,9 +265,9 @@ class GpuTLB : public ClockedObject
     class MemSidePort : public RequestPort
     {
       public:
-        MemSidePort(const std::string &_name, GpuTLB * gpu_TLB,
-                    PortID _index)
-            : RequestPort(_name), tlb(gpu_TLB), index(_index) { }
+        MemSidePort(const std::string &_name, GpuTLB *gpu_TLB, PortID _index)
+            : RequestPort(_name), tlb(gpu_TLB), index(_index)
+        {}
 
         std::deque<PacketPtr> retries;
 
@@ -251,19 +276,31 @@ class GpuTLB : public ClockedObject
         int index;
 
         virtual bool recvTimingResp(PacketPtr pkt);
-        virtual Tick recvAtomic(PacketPtr pkt) { return 0; }
-        virtual void recvFunctional(PacketPtr pkt) { }
-        virtual void recvRangeChange() { }
+
+        virtual Tick
+        recvAtomic(PacketPtr pkt)
+        {
+            return 0;
+        }
+
+        virtual void
+        recvFunctional(PacketPtr pkt)
+        {}
+
+        virtual void
+        recvRangeChange()
+        {}
+
         virtual void recvReqRetry();
     };
 
     // TLB ports on the cpu Side
-    std::vector<CpuSidePort*> cpuSidePort;
+    std::vector<CpuSidePort *> cpuSidePort;
     // TLB ports on the memory side
-    std::vector<MemSidePort*> memSidePort;
+    std::vector<MemSidePort *> memSidePort;
 
     Port &getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID) override;
+                  PortID idx = InvalidPortID) override;
 
     Fault createPagefault(Addr vaddr, Mode mode);
 
@@ -286,28 +323,27 @@ class GpuTLB : public ClockedObject
 
     class TLBEvent : public Event
     {
-        private:
-            GpuTLB *tlb;
-            Addr virtPageAddr;
-            /**
-             * outcome can be TLB_HIT, TLB_MISS, or PAGE_WALK
-             */
-            tlbOutcome outcome;
-            PacketPtr pkt;
+      private:
+        GpuTLB *tlb;
+        Addr virtPageAddr;
+        /**
+         * outcome can be TLB_HIT, TLB_MISS, or PAGE_WALK
+         */
+        tlbOutcome outcome;
+        PacketPtr pkt;
 
-        public:
-            TLBEvent(GpuTLB *_tlb, Addr _addr, tlbOutcome outcome,
-                    PacketPtr _pkt);
+      public:
+        TLBEvent(GpuTLB *_tlb, Addr _addr, tlbOutcome outcome, PacketPtr _pkt);
 
-            void process();
-            const char *description() const;
+        void process();
+        const char *description() const;
 
-            // updateOutcome updates the tlbOutcome of a TLBEvent
-            void updateOutcome(tlbOutcome _outcome);
-            Addr getTLBEventVaddr();
+        // updateOutcome updates the tlbOutcome of a TLBEvent
+        void updateOutcome(tlbOutcome _outcome);
+        Addr getTLBEventVaddr();
     };
 
-    std::unordered_map<Addr, TLBEvent*> translationReturnEvent;
+    std::unordered_map<Addr, TLBEvent *> translationReturnEvent;
 
     // this FIFO queue keeps track of the virt. page addresses
     // that are pending cleanup

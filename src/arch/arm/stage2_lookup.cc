@@ -56,8 +56,8 @@ using namespace ArmISA;
 Fault
 Stage2LookUp::getTe(ThreadContext *tc, TlbEntry *destTe)
 {
-    fault = mmu->getTE(&stage2Te, req, tc, mode, this, timing,
-        functional, secure, tranType, true);
+    fault = mmu->getTE(&stage2Te, req, tc, mode, this, timing, functional,
+                       secure, tranType, true);
 
     // Call finish if we're done already
     if ((fault != NoFault) || (stage2Te != NULL)) {
@@ -89,20 +89,20 @@ Stage2LookUp::mergeTe(BaseMMU::Mode mode)
         // merge them and insert the result into the stage 1 TLB. See
         // CombineS1S2Desc() in pseudocode
         stage1Te.nonCacheable |= stage2Te->nonCacheable;
-        stage1Te.xn           |= stage2Te->xn;
+        stage1Te.xn |= stage2Te->xn;
 
         if (stage1Te.size > stage2Te->size) {
             // Size mismatch also implies vpn mismatch (this is shifted by
             // sizebits!).
-            stage1Te.vpn  = s1Req->getVaddr() >> stage2Te->N;
-            stage1Te.pfn  = stage2Te->pfn;
+            stage1Te.vpn = s1Req->getVaddr() >> stage2Te->N;
+            stage1Te.pfn = stage2Te->pfn;
             stage1Te.size = stage2Te->size;
-            stage1Te.N    = stage2Te->N;
+            stage1Te.N = stage2Te->N;
         } else if (stage1Te.size < stage2Te->size) {
             // Guest 4K could well be section-backed by host hugepage!  In this
-            // case a 4K entry is added but pfn needs to be adjusted.  New PFN =
-            // offset into section PFN given by stage2 IPA treated as a stage1
-            // page size.
+            // case a 4K entry is added but pfn needs to be adjusted.  New PFN
+            // = offset into section PFN given by stage2 IPA treated as a
+            // stage1 page size.
             const Addr pa = (stage2Te->pfn << stage2Te->N);
             const Addr ipa = (stage1Te.pfn << stage1Te.N);
             stage1Te.pfn = (pa | (ipa & mask(stage2Te->N))) >> stage1Te.N;
@@ -113,23 +113,20 @@ Stage2LookUp::mergeTe(BaseMMU::Mode mode)
         }
 
         if (stage2Te->mtype == TlbEntry::MemoryType::StronglyOrdered ||
-            stage1Te.mtype  == TlbEntry::MemoryType::StronglyOrdered) {
-            stage1Te.mtype  =  TlbEntry::MemoryType::StronglyOrdered;
+            stage1Te.mtype == TlbEntry::MemoryType::StronglyOrdered) {
+            stage1Te.mtype = TlbEntry::MemoryType::StronglyOrdered;
         } else if (stage2Te->mtype == TlbEntry::MemoryType::Device ||
-                   stage1Te.mtype  == TlbEntry::MemoryType::Device) {
+                   stage1Te.mtype == TlbEntry::MemoryType::Device) {
             stage1Te.mtype = TlbEntry::MemoryType::Device;
         } else {
             stage1Te.mtype = TlbEntry::MemoryType::Normal;
         }
 
         if (stage1Te.mtype == TlbEntry::MemoryType::Normal) {
-
-            if (stage2Te->innerAttrs == 0 ||
-                stage1Te.innerAttrs  == 0) {
+            if (stage2Te->innerAttrs == 0 || stage1Te.innerAttrs == 0) {
                 // either encoding Non-cacheable
                 stage1Te.innerAttrs = 0;
-            } else if (stage2Te->innerAttrs == 2 ||
-                       stage1Te.innerAttrs  == 2) {
+            } else if (stage2Te->innerAttrs == 2 || stage1Te.innerAttrs == 2) {
                 // either encoding Write-Through cacheable
                 stage1Te.innerAttrs = 2;
             } else {
@@ -137,12 +134,10 @@ Stage2LookUp::mergeTe(BaseMMU::Mode mode)
                 stage1Te.innerAttrs = 3;
             }
 
-            if (stage2Te->outerAttrs == 0 ||
-                stage1Te.outerAttrs  == 0) {
+            if (stage2Te->outerAttrs == 0 || stage1Te.outerAttrs == 0) {
                 // either encoding Non-cacheable
                 stage1Te.outerAttrs = 0;
-            } else if (stage2Te->outerAttrs == 2 ||
-                       stage1Te.outerAttrs  == 2) {
+            } else if (stage2Te->outerAttrs == 2 || stage1Te.outerAttrs == 2) {
                 // either encoding Write-Through cacheable
                 stage1Te.outerAttrs = 2;
             } else {
@@ -150,16 +145,15 @@ Stage2LookUp::mergeTe(BaseMMU::Mode mode)
                 stage1Te.outerAttrs = 3;
             }
 
-            stage1Te.shareable       |= stage2Te->shareable;
+            stage1Te.shareable |= stage2Te->shareable;
             stage1Te.outerShareable |= stage2Te->outerShareable;
-            if (stage1Te.innerAttrs == 0 &&
-                stage1Te.outerAttrs == 0) {
+            if (stage1Te.innerAttrs == 0 && stage1Te.outerAttrs == 0) {
                 // something Non-cacheable at each level is outer shareable
-                stage1Te.shareable       = true;
+                stage1Te.shareable = true;
                 stage1Te.outerShareable = true;
             }
         } else {
-            stage1Te.shareable       = true;
+            stage1Te.shareable = true;
             stage1Te.outerShareable = true;
         }
         stage1Te.updateAttributes();
@@ -178,14 +172,14 @@ Stage2LookUp::mergeTe(BaseMMU::Mode mode)
 
 void
 Stage2LookUp::finish(const Fault &_fault, const RequestPtr &req,
-    ThreadContext *tc, BaseMMU::Mode mode)
+                     ThreadContext *tc, BaseMMU::Mode mode)
 {
     fault = _fault;
     // if we haven't got the table entry get it now
     if ((fault == NoFault) && (stage2Te == NULL)) {
         // OLD_LOOK: stage2Tlb
-        fault = mmu->getTE(&stage2Te, req, tc, mode, this,
-            timing, functional, secure, tranType, true);
+        fault = mmu->getTE(&stage2Te, req, tc, mode, this, timing, functional,
+                           secure, tranType, true);
     }
 
     // Now we have the stage 2 table entry we need to merge it with the stage
@@ -200,8 +194,7 @@ Stage2LookUp::finish(const Fault &_fault, const RequestPtr &req,
         // a result
         // tran_s1.callFromStage2 = true;
         // OLD_LOOK: stage1Tlb
-        mmu->translateComplete(
-            s1Req, tc, transState, mode, tranType, true);
+        mmu->translateComplete(s1Req, tc, transState, mode, tranType, true);
     }
     // if we have been asked to delete ourselfs do it now
     if (selfDelete) {

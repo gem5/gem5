@@ -43,7 +43,6 @@ namespace gem5
 
 class EmulatedDriver;
 
-
 /**
  * Holds a single file descriptor mapping and that mapping's data for
  * processes running in syscall emulation mode.
@@ -51,7 +50,6 @@ class EmulatedDriver;
 class FDEntry : public Serializable
 {
   public:
-
     enum FDClass
     {
         fd_base,
@@ -63,17 +61,30 @@ class FDEntry : public Serializable
         fd_null
     };
 
-    FDEntry(bool close_on_exec = false)
-        : _closeOnExec(close_on_exec)
-    { _class = FDClass::fd_base; }
+    FDEntry(bool close_on_exec = false) : _closeOnExec(close_on_exec)
+    {
+        _class = FDClass::fd_base;
+    }
 
     virtual std::shared_ptr<FDEntry> clone() const = 0;
 
-    bool getCOE() const { return _closeOnExec; }
+    bool
+    getCOE() const
+    {
+        return _closeOnExec;
+    }
 
-    FDClass getClass() const { return _class; }
+    FDClass
+    getClass() const
+    {
+        return _class;
+    }
 
-    void setCOE(bool close_on_exec) { _closeOnExec = close_on_exec; }
+    void
+    setCOE(bool close_on_exec)
+    {
+        _closeOnExec = close_on_exec;
+    }
 
     virtual void serialize(CheckpointOut &cp) const;
     virtual void unserialize(CheckpointIn &cp);
@@ -88,16 +99,20 @@ class FDEntry : public Serializable
  * that records the integer used to represent the file descriptor on the host
  * and the file's flags.
  */
-class HBFDEntry: public FDEntry
+class HBFDEntry : public FDEntry
 {
   public:
     HBFDEntry(int flags, int sim_fd, bool close_on_exec = false)
         : FDEntry(close_on_exec), _flags(flags), _simFD(sim_fd)
-    { _class = FDClass::fd_hb; }
+    {
+        _class = FDClass::fd_hb;
+    }
 
-    HBFDEntry(HBFDEntry const& reg, bool close_on_exec = false)
+    HBFDEntry(HBFDEntry const &reg, bool close_on_exec = false)
         : FDEntry(close_on_exec), _flags(reg._flags), _simFD(reg._simFD)
-    { _class = FDClass::fd_hb; }
+    {
+        _class = FDClass::fd_hb;
+    }
 
     std::shared_ptr<FDEntry>
     clone() const override
@@ -105,11 +120,29 @@ class HBFDEntry: public FDEntry
         return std::make_shared<HBFDEntry>(*this);
     }
 
-    int getFlags() const { return _flags; }
-    int getSimFD() const { return _simFD; }
+    int
+    getFlags() const
+    {
+        return _flags;
+    }
 
-    void setFlags(int flags) { _flags = flags; }
-    void setSimFD(int sim_fd) { _simFD = sim_fd; }
+    int
+    getSimFD() const
+    {
+        return _simFD;
+    }
+
+    void
+    setFlags(int flags)
+    {
+        _flags = flags;
+    }
+
+    void
+    setSimFD(int sim_fd)
+    {
+        _simFD = sim_fd;
+    }
 
   protected:
     int _flags;
@@ -124,19 +157,25 @@ class HBFDEntry: public FDEntry
  * starts at file descriptor '3' (not including stdin, stdout, stderr) and
  * then grows upward.
  */
-class FileFDEntry: public HBFDEntry
+class FileFDEntry : public HBFDEntry
 {
   public:
-    FileFDEntry(int sim_fd, int flags, std::string const& file_name,
+    FileFDEntry(int sim_fd, int flags, std::string const &file_name,
                 uint64_t file_offset, bool close_on_exec = false)
         : HBFDEntry(flags, sim_fd, close_on_exec),
-          _fileName(file_name), _fileOffset(file_offset)
-    { _class = FDClass::fd_file; }
+          _fileName(file_name),
+          _fileOffset(file_offset)
+    {
+        _class = FDClass::fd_file;
+    }
 
-    FileFDEntry(FileFDEntry const& reg, bool close_on_exec = false)
+    FileFDEntry(FileFDEntry const &reg, bool close_on_exec = false)
         : HBFDEntry(reg._flags, reg._simFD, close_on_exec),
-          _fileName(reg._fileName), _fileOffset(reg._fileOffset)
-    { _class = FDClass::fd_file; }
+          _fileName(reg._fileName),
+          _fileOffset(reg._fileOffset)
+    {
+        _class = FDClass::fd_file;
+    }
 
     std::shared_ptr<FDEntry>
     clone() const override
@@ -144,13 +183,41 @@ class FileFDEntry: public HBFDEntry
         return std::make_shared<FileFDEntry>(*this);
     }
 
-    std::string const& getFileName() const { return _fileName; }
-    uint64_t getFileOffset() const { return _fileOffset; }
-    mode_t getFileMode() const { return _mode; }
+    std::string const &
+    getFileName() const
+    {
+        return _fileName;
+    }
 
-    void setFileName(std::string const& file_name) { _fileName = file_name; }
-    void setFileOffset(uint64_t f_off) { _fileOffset = f_off; }
-    void setFileMode(mode_t mode) { _mode = mode; }
+    uint64_t
+    getFileOffset() const
+    {
+        return _fileOffset;
+    }
+
+    mode_t
+    getFileMode() const
+    {
+        return _mode;
+    }
+
+    void
+    setFileName(std::string const &file_name)
+    {
+        _fileName = file_name;
+    }
+
+    void
+    setFileOffset(uint64_t f_off)
+    {
+        _fileOffset = f_off;
+    }
+
+    void
+    setFileMode(mode_t mode)
+    {
+        _mode = mode;
+    }
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
@@ -165,7 +232,7 @@ class FileFDEntry: public HBFDEntry
  * Holds the metadata needed to maintain the mappings for file descriptors
  * allocated with the pipe() system calls and its variants.
  */
-class PipeFDEntry: public HBFDEntry
+class PipeFDEntry : public HBFDEntry
 {
   public:
     enum EndType
@@ -176,15 +243,20 @@ class PipeFDEntry: public HBFDEntry
 
     PipeFDEntry(int sim_fd, int flags, EndType pipe_end_type,
                 bool close_on_exec = false)
-        : HBFDEntry(flags, sim_fd, close_on_exec), _pipeReadSource(-1),
+        : HBFDEntry(flags, sim_fd, close_on_exec),
+          _pipeReadSource(-1),
           _pipeEndType(pipe_end_type)
-    { _class = FDClass::fd_pipe; }
+    {
+        _class = FDClass::fd_pipe;
+    }
 
-    PipeFDEntry(PipeFDEntry const& pipe, bool close_on_exec = false)
+    PipeFDEntry(PipeFDEntry const &pipe, bool close_on_exec = false)
         : HBFDEntry(pipe._flags, pipe._simFD, close_on_exec),
           _pipeReadSource(pipe._pipeReadSource),
           _pipeEndType(pipe._pipeEndType)
-    { _class = FDClass::fd_pipe; }
+    {
+        _class = FDClass::fd_pipe;
+    }
 
     std::shared_ptr<FDEntry>
     clone() const override
@@ -192,11 +264,29 @@ class PipeFDEntry: public HBFDEntry
         return std::make_shared<PipeFDEntry>(*this);
     }
 
-    EndType getEndType() const { return _pipeEndType; }
-    int getPipeReadSource() const { return _pipeReadSource; }
+    EndType
+    getEndType() const
+    {
+        return _pipeEndType;
+    }
 
-    void setPipeReadSource(int tgt_fd) { _pipeReadSource = tgt_fd; }
-    void setEndType(EndType type) { _pipeEndType = type; }
+    int
+    getPipeReadSource() const
+    {
+        return _pipeReadSource;
+    }
+
+    void
+    setPipeReadSource(int tgt_fd)
+    {
+        _pipeReadSource = tgt_fd;
+    }
+
+    void
+    setEndType(EndType type)
+    {
+        _pipeEndType = type;
+    }
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
@@ -213,15 +303,20 @@ class PipeFDEntry: public HBFDEntry
 class DeviceFDEntry : public FDEntry
 {
   public:
-    DeviceFDEntry(EmulatedDriver *driver, std::string const& file_name,
+    DeviceFDEntry(EmulatedDriver *driver, std::string const &file_name,
                   bool close_on_exec = false)
         : FDEntry(close_on_exec), _driver(driver), _fileName(file_name)
-    { _class = FDClass::fd_device; }
+    {
+        _class = FDClass::fd_device;
+    }
 
-    DeviceFDEntry(DeviceFDEntry const& dev, bool close_on_exec = false)
-        : FDEntry(close_on_exec), _driver(dev._driver),
+    DeviceFDEntry(DeviceFDEntry const &dev, bool close_on_exec = false)
+        : FDEntry(close_on_exec),
+          _driver(dev._driver),
           _fileName(dev._fileName)
-    { _class = FDClass::fd_device; }
+    {
+        _class = FDClass::fd_device;
+    }
 
     std::shared_ptr<FDEntry>
     clone() const override
@@ -229,8 +324,17 @@ class DeviceFDEntry : public FDEntry
         return std::make_shared<DeviceFDEntry>(*this);
     }
 
-    EmulatedDriver *getDriver() const { return _driver; }
-    std::string const& getFileName() const { return _fileName; }
+    EmulatedDriver *
+    getDriver() const
+    {
+        return _driver;
+    }
+
+    std::string const &
+    getFileName() const
+    {
+        return _fileName;
+    }
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
@@ -240,19 +344,27 @@ class DeviceFDEntry : public FDEntry
     std::string _fileName;
 };
 
-class SocketFDEntry: public HBFDEntry
+class SocketFDEntry : public HBFDEntry
 {
   public:
     SocketFDEntry(int sim_fd, int domain, int type, int protocol,
                   bool close_on_exec = false)
         : HBFDEntry(0, sim_fd, close_on_exec),
-          _domain(domain), _type(type), _protocol(protocol)
-    { _class = FDClass::fd_socket; }
+          _domain(domain),
+          _type(type),
+          _protocol(protocol)
+    {
+        _class = FDClass::fd_socket;
+    }
 
-    SocketFDEntry(SocketFDEntry const& reg, bool close_on_exec = false)
+    SocketFDEntry(SocketFDEntry const &reg, bool close_on_exec = false)
         : HBFDEntry(reg._flags, reg._simFD, close_on_exec),
-          _domain(reg._domain), _type(reg._type), _protocol(reg._protocol)
-    { _class = FDClass::fd_socket; }
+          _domain(reg._domain),
+          _type(reg._type),
+          _protocol(reg._protocol)
+    {
+        _class = FDClass::fd_socket;
+    }
 
     std::shared_ptr<FDEntry>
     clone() const override

@@ -159,6 +159,7 @@ typedef struct GEM5_PACKED
     uint32_t kernarg_preload_spec_offset : 9;
     uint8_t reserved2[4];
 } AMDKernelCode;
+
 static_assert(sizeof(AMDKernelCode) == 64);
 
 } // namespace gem5

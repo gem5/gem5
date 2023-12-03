@@ -35,16 +35,15 @@
 #include "params/LupioRNG.hh"
 
 /* CTRL fields */
-#define LUPIO_RNG_IRQE  0x1
+#define LUPIO_RNG_IRQE 0x1
 /* STAT fields */
-#define LUPIO_RNG_BUSY  0x1
+#define LUPIO_RNG_BUSY 0x1
 
 namespace gem5
 {
 
-LupioRNG::LupioRNG(const Params &params) :
-    BasicPioDevice(params, params.pio_size),
-    user_seed(params.seed)
+LupioRNG::LupioRNG(const Params &params)
+    : BasicPioDevice(params, params.pio_size), user_seed(params.seed)
 {
     mt.seed(user_seed);
     DPRINTF(LupioRNG, "LupioRNG initalized with seed: %d\n", user_seed);
@@ -57,26 +56,25 @@ LupioRNG::lupioRNGRead(uint8_t addr)
     std::uniform_int_distribution<uint32_t> distrib(0);
 
     switch (addr >> 2) {
-        // returns a random number
-        case LUPIO_RNG_RAND:
-            r = distrib(mt);
-            DPRINTF(LupioRNG, "Random number: %#x\n", r );
-            break;
-        // returns the current seed being used
-        case LUPIO_RNG_SEED:
-            r = user_seed;
-            DPRINTF(LupioRNG, "RNG_SEED Call: %d\n", r);
-            break;
-        // returns status of the device
-        case LUPIO_RNG_STAT:
-            r = 0;  /* Always ready */
-            DPRINTF(LupioRNG, "RNG_STAT Call: %d\n", r);
-            break;
-        default:
-            r = -1;
-            panic("Unexpected read to the LupioRTC device at address %d!",
-                    addr);
-            break;
+    // returns a random number
+    case LUPIO_RNG_RAND:
+        r = distrib(mt);
+        DPRINTF(LupioRNG, "Random number: %#x\n", r);
+        break;
+    // returns the current seed being used
+    case LUPIO_RNG_SEED:
+        r = user_seed;
+        DPRINTF(LupioRNG, "RNG_SEED Call: %d\n", r);
+        break;
+    // returns status of the device
+    case LUPIO_RNG_STAT:
+        r = 0; /* Always ready */
+        DPRINTF(LupioRNG, "RNG_STAT Call: %d\n", r);
+        break;
+    default:
+        r = -1;
+        panic("Unexpected read to the LupioRTC device at address %d!", addr);
+        break;
     }
     return r;
 }
@@ -85,21 +83,20 @@ void
 LupioRNG::lupioRNGWrite(uint8_t addr, uint64_t val64)
 {
     switch (addr >> 2) {
-        // allows the user to configure the seed value
-        case LUPIO_RNG_SEED:
-            user_seed = val64;
-            mt.seed(user_seed);
-            DPRINTF(LupioRNG, "RNG_SEED_WRITE: %d\n", user_seed);
-            break;
-        // configures the device using interrupts
-        case LUPIO_RNG_CTRL:
-            interrupt_enable = !!(val64 & LUPIO_RNG_IRQE);
-            DPRINTF(LupioRNG, "RNG_CTRL Call: %d\n", interrupt_enable);
-            break;
-        default:
-            panic("Unexpected write to the LupioRTC device at address %d!",
-                    addr);
-            break;
+    // allows the user to configure the seed value
+    case LUPIO_RNG_SEED:
+        user_seed = val64;
+        mt.seed(user_seed);
+        DPRINTF(LupioRNG, "RNG_SEED_WRITE: %d\n", user_seed);
+        break;
+    // configures the device using interrupts
+    case LUPIO_RNG_CTRL:
+        interrupt_enable = !!(val64 & LUPIO_RNG_IRQE);
+        DPRINTF(LupioRNG, "RNG_CTRL Call: %d\n", interrupt_enable);
+        break;
+    default:
+        panic("Unexpected write to the LupioRTC device at address %d!", addr);
+        break;
     }
 }
 
@@ -108,8 +105,8 @@ LupioRNG::read(PacketPtr pkt)
 {
     Addr rng_addr = pkt->getAddr() - pioAddr;
 
-    DPRINTF(LupioRNG,
-        "Read request - addr: %#x, size: %#x\n", rng_addr, pkt->getSize());
+    DPRINTF(LupioRNG, "Read request - addr: %#x, size: %#x\n", rng_addr,
+            pkt->getSize());
 
     uint64_t rand_read = lupioRNGRead(rng_addr);
     DPRINTF(LupioRNG, "Packet Read: %#x\n", rand_read);

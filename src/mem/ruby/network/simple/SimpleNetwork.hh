@@ -68,25 +68,37 @@ class SimpleNetwork : public Network
 
     void init();
 
-    int getBufferSize() { return m_buffer_size; }
-    int getEndpointBandwidth() { return m_endpoint_bandwidth; }
+    int
+    getBufferSize()
+    {
+        return m_buffer_size;
+    }
+
+    int
+    getEndpointBandwidth()
+    {
+        return m_endpoint_bandwidth;
+    }
 
     void collateStats();
     void regStats();
 
-    bool isVNetOrdered(int vnet) const { return m_ordered[vnet]; }
+    bool
+    isVNetOrdered(int vnet) const
+    {
+        return m_ordered[vnet];
+    }
 
     // Methods used by Topology to setup the network
-    void makeExtOutLink(SwitchID src, NodeID dest, BasicLink* link,
-                     std::vector<NetDest>& routing_table_entry);
-    void makeExtInLink(NodeID src, SwitchID dest, BasicLink* link,
-                    std::vector<NetDest>& routing_table_entry);
-    void makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
-                          std::vector<NetDest>& routing_table_entry,
-                          PortDirection src_outport,
-                          PortDirection dst_inport);
+    void makeExtOutLink(SwitchID src, NodeID dest, BasicLink *link,
+                        std::vector<NetDest> &routing_table_entry);
+    void makeExtInLink(NodeID src, SwitchID dest, BasicLink *link,
+                       std::vector<NetDest> &routing_table_entry);
+    void makeInternalLink(SwitchID src, SwitchID dest, BasicLink *link,
+                          std::vector<NetDest> &routing_table_entry,
+                          PortDirection src_outport, PortDirection dst_inport);
 
-    void print(std::ostream& out) const;
+    void print(std::ostream &out) const;
 
     bool functionalRead(Packet *pkt);
     bool functionalRead(Packet *pkt, WriteMask &mask);
@@ -95,31 +107,30 @@ class SimpleNetwork : public Network
   private:
     void addLink(SwitchID src, SwitchID dest, int link_latency);
     void makeLink(SwitchID src, SwitchID dest,
-        const NetDest& routing_table_entry, int link_latency);
+                  const NetDest &routing_table_entry, int link_latency);
     void makeTopology();
 
     // Private copy constructor and assignment operator
-    SimpleNetwork(const SimpleNetwork& obj);
-    SimpleNetwork& operator=(const SimpleNetwork& obj);
+    SimpleNetwork(const SimpleNetwork &obj);
+    SimpleNetwork &operator=(const SimpleNetwork &obj);
 
-    std::unordered_map<int, Switch*> m_switches;
-    std::vector<MessageBuffer*> m_int_link_buffers;
+    std::unordered_map<int, Switch *> m_switches;
+    std::vector<MessageBuffer *> m_int_link_buffers;
     const int m_buffer_size;
     const int m_endpoint_bandwidth;
-
 
     struct NetworkStats : public statistics::Group
     {
         NetworkStats(statistics::Group *parent);
 
-        //Statistical variables
-        statistics::Formula* m_msg_counts[MessageSizeType_NUM];
-        statistics::Formula* m_msg_bytes[MessageSizeType_NUM];
+        // Statistical variables
+        statistics::Formula *m_msg_counts[MessageSizeType_NUM];
+        statistics::Formula *m_msg_bytes[MessageSizeType_NUM];
     } networkStats;
 };
 
-inline std::ostream&
-operator<<(std::ostream& out, const SimpleNetwork& obj)
+inline std::ostream &
+operator<<(std::ostream &out, const SimpleNetwork &obj)
 {
     obj.print(out);
     out << std::flush;

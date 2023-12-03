@@ -45,7 +45,7 @@ namespace gem5
 
 GenericWatchdog::GenericWatchdog(const GenericWatchdogParams &p)
     : PioDevice(p),
-      timeoutEvent([this]{ timeout(); }, name()),
+      timeoutEvent([this] { timeout(); }, name()),
       controlStatus(0),
       offset(0),
       compare(0),
@@ -95,16 +95,15 @@ GenericWatchdog::read(PacketPtr pkt)
 uint32_t
 GenericWatchdog::readRefresh(Addr addr)
 {
-    const auto daddr = static_cast<RefreshOffset>(
-        addr - refreshFrame.start());
+    const auto daddr = static_cast<RefreshOffset>(addr - refreshFrame.start());
 
     switch (daddr) {
-      case RefreshOffset::WRR:
+    case RefreshOffset::WRR:
         // A read of the refresh register has no effect and returns 0
         return 0;
-      case RefreshOffset::W_IIDR:
+    case RefreshOffset::W_IIDR:
         return iidr;
-      default:
+    default:
         panic("%s unknown address %#x\n", __func__, addr);
     }
 }
@@ -112,21 +111,20 @@ GenericWatchdog::readRefresh(Addr addr)
 uint32_t
 GenericWatchdog::readControl(Addr addr)
 {
-    const auto daddr = static_cast<ControlOffset>(
-        addr - controlFrame.start());
+    const auto daddr = static_cast<ControlOffset>(addr - controlFrame.start());
 
     switch (daddr) {
-      case ControlOffset::WCS:
+    case ControlOffset::WCS:
         return controlStatus;
-      case ControlOffset::WOR:
+    case ControlOffset::WOR:
         return offset;
-      case ControlOffset::WCV_LO:
+    case ControlOffset::WCV_LO:
         return bits(compare, 31, 0);
-      case ControlOffset::WCV_HI:
+    case ControlOffset::WCV_HI:
         return bits(compare, 63, 32);
-      case ControlOffset::W_IIDR:
+    case ControlOffset::W_IIDR:
         return iidr;
-      default:
+    default:
         panic("%s unknown address %#x\n", __func__, addr);
     }
 }
@@ -155,14 +153,13 @@ GenericWatchdog::write(PacketPtr pkt)
 void
 GenericWatchdog::writeRefresh(Addr addr, uint32_t data)
 {
-    const auto daddr = static_cast<RefreshOffset>(
-        addr - refreshFrame.start());
+    const auto daddr = static_cast<RefreshOffset>(addr - refreshFrame.start());
 
     switch (daddr) {
-      case RefreshOffset::WRR:
+    case RefreshOffset::WRR:
         explicitRefresh();
         break;
-      default:
+    default:
         panic("%s unknown address %#x\n", __func__, addr);
     }
 }
@@ -170,25 +167,24 @@ GenericWatchdog::writeRefresh(Addr addr, uint32_t data)
 void
 GenericWatchdog::writeControl(Addr addr, uint32_t data)
 {
-    const auto daddr = static_cast<ControlOffset>(
-        addr - controlFrame.start());
+    const auto daddr = static_cast<ControlOffset>(addr - controlFrame.start());
 
     switch (daddr) {
-      case ControlOffset::WCS:
+    case ControlOffset::WCS:
         controlStatus = data & 0x1;
         explicitRefresh();
         break;
-      case ControlOffset::WOR:
+    case ControlOffset::WOR:
         offset = data;
         explicitRefresh();
         break;
-      case ControlOffset::WCV_LO:
+    case ControlOffset::WCV_LO:
         compare = insertBits(compare, 31, 0, data);
         break;
-      case ControlOffset::WCV_HI:
+    case ControlOffset::WCV_HI:
         compare = insertBits(compare, 63, 32, data);
         break;
-      default:
+    default:
         panic("%s unknown address %#x\n", __func__, addr);
     }
 }

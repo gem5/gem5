@@ -77,24 +77,24 @@ using namespace gem5;
 void
 usage(const std::string &prog_name)
 {
-    std::cerr << "Usage: " << prog_name << (
-        " <config-file.ini> [ <option> ]\n\n"
-        "OPTIONS:\n"
-        "    -p <object> <param> <value>  -- set a parameter\n"
-        "    -v <object> <param> <values> -- set a vector parameter from"
-        " a comma\n"
-        "                                    separated values string\n"
-        "    -d <flag>                    -- set a debug flag (-<flag>\n"
-        "                                    clear a flag)\n"
-        "    -s <dir> <ticks>             -- save checkpoint to dir after"
-        " the given\n"
-        "                                    number of ticks\n"
-        "    -r <dir>                     -- restore checkpoint from dir\n"
-        "    -c <from> <to> <ticks>       -- switch from cpu 'from' to cpu"
-        " 'to' after\n"
-        "                                    the given number of ticks\n"
-        "\n"
-        );
+    std::cerr
+        << "Usage: " << prog_name
+        << (" <config-file.ini> [ <option> ]\n\n"
+            "OPTIONS:\n"
+            "    -p <object> <param> <value>  -- set a parameter\n"
+            "    -v <object> <param> <values> -- set a vector parameter from"
+            " a comma\n"
+            "                                    separated values string\n"
+            "    -d <flag>                    -- set a debug flag (-<flag>\n"
+            "                                    clear a flag)\n"
+            "    -s <dir> <ticks>             -- save checkpoint to dir after"
+            " the given\n"
+            "                                    number of ticks\n"
+            "    -r <dir>                     -- restore checkpoint from dir\n"
+            "    -c <from> <to> <ticks>       -- switch from cpu 'from' to cpu"
+            " 'to' after\n"
+            "                                    the given number of ticks\n"
+            "\n");
 
     std::exit(EXIT_FAILURE);
 }
@@ -152,7 +152,7 @@ main(int argc, char **argv)
                 if (num_args < 3)
                     usage(prog_name);
                 config_manager->setParam(argv[arg_ptr], argv[arg_ptr + 1],
-                    argv[arg_ptr + 2]);
+                                         argv[arg_ptr + 2]);
                 arg_ptr += 3;
             } else if (option == "-v") {
                 std::vector<std::string> values;
@@ -161,7 +161,7 @@ main(int argc, char **argv)
                     usage(prog_name);
                 tokenize(values, argv[arg_ptr + 2], ',');
                 config_manager->setParamVector(argv[arg_ptr],
-                    argv[arg_ptr + 1], values);
+                                               argv[arg_ptr + 1], values);
                 arg_ptr += 3;
             } else if (option == "-d") {
                 if (num_args < 1)
@@ -203,7 +203,7 @@ main(int argc, char **argv)
 
     if (checkpoint_save && checkpoint_restore) {
         std::cerr << "Don't try and save and restore a checkpoint in the"
-            " same run\n";
+                     " same run\n";
         return EXIT_FAILURE;
     }
 
@@ -217,8 +217,8 @@ main(int argc, char **argv)
             config_manager->startup();
         }
     } catch (CxxConfigManager::Exception &e) {
-        std::cerr << "Config problem in sim object " << e.name
-            << ": " << e.message << "\n";
+        std::cerr << "Config problem in sim object " << e.name << ": "
+                  << e.message << "\n";
 
         return EXIT_FAILURE;
     }
@@ -240,7 +240,7 @@ main(int argc, char **argv)
         } while (drain_count > 0);
 
         std::cerr << "Simulation stop at tick " << curTick()
-            << ", cause: " << exit_event->getCause() << '\n';
+                  << ", cause: " << exit_event->getCause() << '\n';
 
         std::cerr << "Checkpointing\n";
 
@@ -302,7 +302,7 @@ main(int argc, char **argv)
     exit_event = simulate();
 
     std::cerr << "Exit at tick " << curTick()
-        << ", cause: " << exit_event->getCause() << '\n';
+              << ", cause: " << exit_event->getCause() << '\n';
 
     getEventQueue(0)->dump();
 

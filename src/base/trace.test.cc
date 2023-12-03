@@ -54,7 +54,7 @@ namespace debug
 {
 /** Debug flag used for the tests in this file. */
 SimpleFlag TraceTestDebugFlag("TraceTestDebugFlag",
-    "Exclusive debug flag for the trace tests");
+                              "Exclusive debug flag for the trace tests");
 } // namespace debug
 } // namespace gem5
 
@@ -329,24 +329,24 @@ TEST(TraceTest, DumpSimple)
     logger.dump(Tick(100), "Foo", message.c_str(), message.size(), "Bar");
 #if TRACING_ON
     ASSERT_EQ(getString(&logger),
-        // logMessage prefix
-        "    100: Bar: Foo: "
-        // Byte number + 2 spaces
-        "00000000  "
-        // 8 bytes + 1 space + 4 bytes + ((16 - 12) * 3) spaces
-        "54 65 73 74 20 6d 65 73  73 61 67 65              "
-        // 1 space + 12 chars + \n
-        " Test message\n");
+              // logMessage prefix
+              "    100: Bar: Foo: "
+              // Byte number + 2 spaces
+              "00000000  "
+              // 8 bytes + 1 space + 4 bytes + ((16 - 12) * 3) spaces
+              "54 65 73 74 20 6d 65 73  73 61 67 65              "
+              // 1 space + 12 chars + \n
+              " Test message\n");
 #else
     ASSERT_EQ(getString(&logger),
-        // logMessage prefix
-        "    100: Foo: "
-        // Byte number + 2 spaces
-        "00000000  "
-        // 8 bytes + 1 space + 4 bytes + ((16 - 12) * 3) spaces
-        "54 65 73 74 20 6d 65 73  73 61 67 65              "
-        // 1 space + 12 chars + \n
-        " Test message\n");
+              // logMessage prefix
+              "    100: Foo: "
+              // Byte number + 2 spaces
+              "00000000  "
+              // 8 bytes + 1 space + 4 bytes + ((16 - 12) * 3) spaces
+              "54 65 73 74 20 6d 65 73  73 61 67 65              "
+              // 1 space + 12 chars + \n
+              " Test message\n");
 #endif
     debug::changeFlag("FmtFlag", false);
     trace::disable();
@@ -364,7 +364,8 @@ TEST(TraceTest, DumpMultiLine)
     std::string message =
         "This is a very long line that will span over multiple lines";
     logger.dump(Tick(100), "Foo", message.c_str(), message.size(), "");
-    ASSERT_EQ(getString(&logger),
+    ASSERT_EQ(
+        getString(&logger),
         "    100: Foo: 00000000  "
         "54 68 69 73 20 69 73 20  61 20 76 65 72 79 20 6c   This is a very l\n"
         "    100: Foo: 00000010  "
@@ -449,8 +450,8 @@ TEST(TraceTest, DprintfFlagMultipleArgs)
     std::stringstream ss;
     trace::OstreamLogger logger(ss);
 
-    logger.dprintf_flag(Tick(100), "Foo", "", "Test %s %c %d %x",
-        "message", 'A', 217, 0x30);
+    logger.dprintf_flag(Tick(100), "Foo", "", "Test %s %c %d %x", "message",
+                        'A', 217, 0x30);
     ASSERT_EQ(getString(&logger), "    100: Foo: Test message A 217 30");
 }
 
@@ -505,10 +506,10 @@ TEST(TraceTest, DprintfWrapper)
     trace::OstreamLogger logger(ss);
     trace::OstreamLogger logger_flag(ss_flag);
 
-    logger.dprintf(Tick(100), "Foo", "Test %s %c %d %x",
-        "message", 'A', 217, 0x30);
+    logger.dprintf(Tick(100), "Foo", "Test %s %c %d %x", "message", 'A', 217,
+                   0x30);
     logger_flag.dprintf_flag(Tick(100), "Foo", "", "Test %s %c %d %x",
-        "message", 'A', 217, 0x30);
+                             "message", 'A', 217, 0x30);
     ASSERT_EQ(getString(&logger), getString(&logger_flag));
 }
 
@@ -524,7 +525,8 @@ TEST(TraceTest, MacroDDUMP)
     EXPECT_TRUE(debug::changeFlag("FmtFlag", true));
     DDUMP(TraceTestDebugFlag, message.c_str(), message.size());
 #if TRACING_ON
-    ASSERT_EQ(getString(trace::output()),
+    ASSERT_EQ(
+        getString(trace::output()),
         "      0: TraceTestDebugFlag: Foo: 00000000  "
         "54 65 73 74 20 6d 65 73  73 61 67 65               Test message\n");
 #else
@@ -550,7 +552,7 @@ TEST(TraceTest, MacroDPRINTF)
     DPRINTF(TraceTestDebugFlag, "Test message");
 #if TRACING_ON
     ASSERT_EQ(getString(trace::output()),
-        "      0: TraceTestDebugFlag: Foo: Test message");
+              "      0: TraceTestDebugFlag: Foo: Test message");
 #else
     ASSERT_EQ(getString(trace::output()), "");
 #endif
@@ -577,7 +579,7 @@ TEST(TraceTest, MacroDPRINTFS)
 #if TRACING_ON
     DPRINTFS(TraceTestDebugFlag, named_ptr, "Test message");
     ASSERT_EQ(getString(trace::output()),
-        "      0: TraceTestDebugFlag: Foo: Test message");
+              "      0: TraceTestDebugFlag: Foo: Test message");
 #endif
 
     // Flag disabled
@@ -645,7 +647,7 @@ TEST(TraceTest, MacroDPRINTF_UNCONDITIONAL)
     DPRINTF_UNCONDITIONAL(TraceTestDebugFlag, "Test message");
 #if TRACING_ON
     ASSERT_EQ(getString(trace::output()),
-        "      0: TraceTestDebugFlag: Foo: Test message");
+              "      0: TraceTestDebugFlag: Foo: Test message");
 #else
     ASSERT_EQ(getString(trace::output()), "");
 #endif
@@ -674,7 +676,7 @@ TEST(TraceTest, GlobalName)
     DPRINTF(TraceTestDebugFlag, "Test message");
 #if TRACING_ON
     ASSERT_EQ(getString(trace::output()),
-        "      0: TraceTestDebugFlag: global: Test message");
+              "      0: TraceTestDebugFlag: global: Test message");
 #else
     ASSERT_EQ(getString(trace::output()), "");
 #endif

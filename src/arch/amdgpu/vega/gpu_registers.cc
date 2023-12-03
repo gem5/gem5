@@ -36,227 +36,225 @@ namespace gem5
 
 namespace VegaISA
 {
-    std::string
-    opSelectorToRegSym(int idx, int numRegs)
-    {
-        std::string reg_sym;
+std::string
+opSelectorToRegSym(int idx, int numRegs)
+{
+    std::string reg_sym;
 
-        // we have an SGPR
-        if (idx <= REG_SGPR_MAX) {
-            if (numRegs > 1)
-                reg_sym = "s[" + std::to_string(idx) + ":" +
-                    std::to_string(idx + numRegs - 1) + "]";
-            else
-                reg_sym = "s" + std::to_string(idx);
-            return reg_sym;
-        } else if (idx >= REG_VGPR_MIN && idx <= REG_VGPR_MAX) {
-            if (numRegs > 1)
-                reg_sym = "v[" + std::to_string(idx - REG_VGPR_MIN) + ":" +
-                    std::to_string(idx - REG_VGPR_MIN + numRegs - 1) + "]";
-            else
-                reg_sym = "v" + std::to_string(idx - REG_VGPR_MIN);
-            return reg_sym;
-        } else if (idx >= REG_INT_CONST_POS_MIN &&
-                   idx <= REG_INT_CONST_POS_MAX) {
-            reg_sym = std::to_string(idx - REG_INT_CONST_POS_MIN + 1);
-            return reg_sym;
-        } else if (idx >= REG_INT_CONST_NEG_MIN &&
-                   idx <= REG_INT_CONST_NEG_MAX) {
-            int inline_val = -1 - (idx - REG_INT_CONST_NEG_MIN);
-            reg_sym = std::to_string(inline_val);
-            return reg_sym;
-        }
-
-        switch (idx) {
-          case REG_FLAT_SCRATCH_LO:
-            reg_sym = "flat_scratch_lo";
-            break;
-          case REG_FLAT_SCRATCH_HI:
-            reg_sym = "flat_scratch_hi";
-            break;
-          case REG_VCC_LO:
-            reg_sym = "vcc_lo";
-            break;
-          case REG_VCC_HI:
-            reg_sym = "vcc_hi";
-            break;
-          case REG_M0:
-            reg_sym = "m0";
-            break;
-          case REG_EXEC_LO:
-            reg_sym = "exec";
-            break;
-          case REG_ZERO:
-            reg_sym = "0";
-            break;
-          case REG_SHARED_BASE:
-            reg_sym = "src_shared_base";
-            break;
-          case REG_SHARED_LIMIT:
-            reg_sym = "src_shared_limit";
-            break;
-          case REG_PRIVATE_BASE:
-            reg_sym = "src_private_base";
-            break;
-          case REG_PRIVATE_LIMIT:
-            reg_sym = "src_private_limit";
-            break;
-          case REG_POS_HALF:
-            reg_sym = "0.5";
-            break;
-          case REG_NEG_HALF:
-            reg_sym = "-0.5";
-            break;
-          case REG_POS_ONE:
-            reg_sym = "1";
-            break;
-          case REG_NEG_ONE:
-            reg_sym = "-1";
-            break;
-          case REG_POS_TWO:
-            reg_sym = "2";
-            break;
-          case REG_NEG_TWO:
-            reg_sym = "-2";
-            break;
-          case REG_POS_FOUR:
-            reg_sym = "4";
-            break;
-          case REG_NEG_FOUR:
-            reg_sym = "-4";
-            break;
-          default:
-            fatal("VEGA ISA instruction has unknown register index %u\n", idx);
-            break;
-        }
-
+    // we have an SGPR
+    if (idx <= REG_SGPR_MAX) {
+        if (numRegs > 1)
+            reg_sym = "s[" + std::to_string(idx) + ":" +
+                      std::to_string(idx + numRegs - 1) + "]";
+        else
+            reg_sym = "s" + std::to_string(idx);
+        return reg_sym;
+    } else if (idx >= REG_VGPR_MIN && idx <= REG_VGPR_MAX) {
+        if (numRegs > 1)
+            reg_sym = "v[" + std::to_string(idx - REG_VGPR_MIN) + ":" +
+                      std::to_string(idx - REG_VGPR_MIN + numRegs - 1) + "]";
+        else
+            reg_sym = "v" + std::to_string(idx - REG_VGPR_MIN);
+        return reg_sym;
+    } else if (idx >= REG_INT_CONST_POS_MIN && idx <= REG_INT_CONST_POS_MAX) {
+        reg_sym = std::to_string(idx - REG_INT_CONST_POS_MIN + 1);
+        return reg_sym;
+    } else if (idx >= REG_INT_CONST_NEG_MIN && idx <= REG_INT_CONST_NEG_MAX) {
+        int inline_val = -1 - (idx - REG_INT_CONST_NEG_MIN);
+        reg_sym = std::to_string(inline_val);
         return reg_sym;
     }
 
-    int
-    opSelectorToRegIdx(int idx, int numScalarRegs)
-    {
-        int regIdx = -1;
-
-        if (idx <= REG_SGPR_MAX) {
-            regIdx = idx;
-        } else if (idx >= REG_VGPR_MIN && idx <= REG_VGPR_MAX) {
-            regIdx = idx - REG_VGPR_MIN;
-        } else if (idx == REG_VCC_LO) {
-            /**
-             * the VCC register occupies the two highest numbered
-             * SRF entries. VCC is typically indexed by specifying
-             * VCC_LO (simply called VCC) in the instruction encoding
-             * and reading it as a 64b value so we only return the
-             * index to the lower half of the VCC register.
-             *
-             * VCC_LO = s[NUM_SGPRS - 2]
-             * VCC_HI = s[NUM_SGPRS - 1]
-             *
-             */
-            regIdx = numScalarRegs - 2;
-        } else if (idx == REG_VCC_HI) {
-            regIdx = numScalarRegs - 1;
-        } else if (idx == REG_FLAT_SCRATCH_LO) {
-            /**
-             * the FLAT_SCRATCH register occupies the two SRF entries
-             * just below VCC. FLAT_SCRATCH is typically indexed by
-             * specifying FLAT_SCRATCH_LO (simply called FLAT_SCRATCH)
-             * in the instruction encoding and reading it as a 64b value
-             * so we only return the index to the lower half of the
-             * FLAT_SCRATCH register.
-             *
-             * FLAT_SCRATCH_LO = s[NUM_SGPRS - 4]
-             * FLAT_SCRATCH_HI = s[NUM_SGPRS - 3]
-             *
-             */
-            regIdx = numScalarRegs - 4;
-        } else if (idx == REG_FLAT_SCRATCH_HI) {
-            regIdx = numScalarRegs - 3;
-        } else if (idx == REG_EXEC_LO || idx == REG_EXEC_HI) {
-            /**
-             * If the operand is the EXEC mask we just return the op
-             * selector value indicating it is the EXEC mask, which is
-             * not part of any RF. Higher-level calls will understand
-             * that this resolves to a special system register, not an
-             * index into an RF.
-             */
-            return idx;
-        }
-
-        return regIdx;
+    switch (idx) {
+    case REG_FLAT_SCRATCH_LO:
+        reg_sym = "flat_scratch_lo";
+        break;
+    case REG_FLAT_SCRATCH_HI:
+        reg_sym = "flat_scratch_hi";
+        break;
+    case REG_VCC_LO:
+        reg_sym = "vcc_lo";
+        break;
+    case REG_VCC_HI:
+        reg_sym = "vcc_hi";
+        break;
+    case REG_M0:
+        reg_sym = "m0";
+        break;
+    case REG_EXEC_LO:
+        reg_sym = "exec";
+        break;
+    case REG_ZERO:
+        reg_sym = "0";
+        break;
+    case REG_SHARED_BASE:
+        reg_sym = "src_shared_base";
+        break;
+    case REG_SHARED_LIMIT:
+        reg_sym = "src_shared_limit";
+        break;
+    case REG_PRIVATE_BASE:
+        reg_sym = "src_private_base";
+        break;
+    case REG_PRIVATE_LIMIT:
+        reg_sym = "src_private_limit";
+        break;
+    case REG_POS_HALF:
+        reg_sym = "0.5";
+        break;
+    case REG_NEG_HALF:
+        reg_sym = "-0.5";
+        break;
+    case REG_POS_ONE:
+        reg_sym = "1";
+        break;
+    case REG_NEG_ONE:
+        reg_sym = "-1";
+        break;
+    case REG_POS_TWO:
+        reg_sym = "2";
+        break;
+    case REG_NEG_TWO:
+        reg_sym = "-2";
+        break;
+    case REG_POS_FOUR:
+        reg_sym = "4";
+        break;
+    case REG_NEG_FOUR:
+        reg_sym = "-4";
+        break;
+    default:
+        fatal("VEGA ISA instruction has unknown register index %u\n", idx);
+        break;
     }
 
-    bool
-    isPosConstVal(int opIdx)
-    {
-        bool is_pos_const_val = (opIdx >= REG_INT_CONST_POS_MIN
-            && opIdx <= REG_INT_CONST_POS_MAX);
+    return reg_sym;
+}
 
-        return is_pos_const_val;
+int
+opSelectorToRegIdx(int idx, int numScalarRegs)
+{
+    int regIdx = -1;
+
+    if (idx <= REG_SGPR_MAX) {
+        regIdx = idx;
+    } else if (idx >= REG_VGPR_MIN && idx <= REG_VGPR_MAX) {
+        regIdx = idx - REG_VGPR_MIN;
+    } else if (idx == REG_VCC_LO) {
+        /**
+         * the VCC register occupies the two highest numbered
+         * SRF entries. VCC is typically indexed by specifying
+         * VCC_LO (simply called VCC) in the instruction encoding
+         * and reading it as a 64b value so we only return the
+         * index to the lower half of the VCC register.
+         *
+         * VCC_LO = s[NUM_SGPRS - 2]
+         * VCC_HI = s[NUM_SGPRS - 1]
+         *
+         */
+        regIdx = numScalarRegs - 2;
+    } else if (idx == REG_VCC_HI) {
+        regIdx = numScalarRegs - 1;
+    } else if (idx == REG_FLAT_SCRATCH_LO) {
+        /**
+         * the FLAT_SCRATCH register occupies the two SRF entries
+         * just below VCC. FLAT_SCRATCH is typically indexed by
+         * specifying FLAT_SCRATCH_LO (simply called FLAT_SCRATCH)
+         * in the instruction encoding and reading it as a 64b value
+         * so we only return the index to the lower half of the
+         * FLAT_SCRATCH register.
+         *
+         * FLAT_SCRATCH_LO = s[NUM_SGPRS - 4]
+         * FLAT_SCRATCH_HI = s[NUM_SGPRS - 3]
+         *
+         */
+        regIdx = numScalarRegs - 4;
+    } else if (idx == REG_FLAT_SCRATCH_HI) {
+        regIdx = numScalarRegs - 3;
+    } else if (idx == REG_EXEC_LO || idx == REG_EXEC_HI) {
+        /**
+         * If the operand is the EXEC mask we just return the op
+         * selector value indicating it is the EXEC mask, which is
+         * not part of any RF. Higher-level calls will understand
+         * that this resolves to a special system register, not an
+         * index into an RF.
+         */
+        return idx;
     }
 
-    bool
-    isNegConstVal(int opIdx)
-    {
-        bool is_neg_const_val = (opIdx >= REG_INT_CONST_NEG_MIN
-            && opIdx <= REG_INT_CONST_NEG_MAX);
+    return regIdx;
+}
 
-        return is_neg_const_val;
+bool
+isPosConstVal(int opIdx)
+{
+    bool is_pos_const_val =
+        (opIdx >= REG_INT_CONST_POS_MIN && opIdx <= REG_INT_CONST_POS_MAX);
+
+    return is_pos_const_val;
+}
+
+bool
+isNegConstVal(int opIdx)
+{
+    bool is_neg_const_val =
+        (opIdx >= REG_INT_CONST_NEG_MIN && opIdx <= REG_INT_CONST_NEG_MAX);
+
+    return is_neg_const_val;
+}
+
+bool
+isConstVal(int opIdx)
+{
+    bool is_const_val = isPosConstVal(opIdx) || isNegConstVal(opIdx);
+    return is_const_val;
+}
+
+bool
+isLiteral(int opIdx)
+{
+    return opIdx == REG_SRC_LITERAL;
+}
+
+bool
+isExecMask(int opIdx)
+{
+    return opIdx == REG_EXEC_LO || opIdx == REG_EXEC_HI;
+}
+
+bool
+isVccReg(int opIdx)
+{
+    return opIdx == REG_VCC_LO || opIdx == REG_VCC_HI;
+}
+
+bool
+isFlatScratchReg(int opIdx)
+{
+    return opIdx == REG_FLAT_SCRATCH_LO || opIdx == REG_FLAT_SCRATCH_HI;
+}
+
+bool
+isScalarReg(int opIdx)
+{
+    // FLAT_SCRATCH and VCC are stored in an SGPR pair
+    if (opIdx <= REG_SGPR_MAX || opIdx == REG_FLAT_SCRATCH_LO ||
+        opIdx == REG_FLAT_SCRATCH_HI || opIdx == REG_VCC_LO ||
+        opIdx == REG_VCC_HI) {
+        return true;
     }
 
-    bool
-    isConstVal(int opIdx)
-    {
-        bool is_const_val = isPosConstVal(opIdx) || isNegConstVal(opIdx);
-        return is_const_val;
-    }
+    return false;
+}
 
-    bool
-    isLiteral(int opIdx)
-    {
-        return opIdx == REG_SRC_LITERAL;
-    }
+bool
+isVectorReg(int opIdx)
+{
+    if (opIdx >= REG_VGPR_MIN && opIdx <= REG_VGPR_MAX)
+        return true;
 
-    bool
-    isExecMask(int opIdx)
-    {
-        return opIdx == REG_EXEC_LO || opIdx == REG_EXEC_HI;
-    }
-
-    bool
-    isVccReg(int opIdx)
-    {
-        return opIdx == REG_VCC_LO || opIdx == REG_VCC_HI;
-    }
-
-    bool
-    isFlatScratchReg(int opIdx)
-    {
-        return opIdx == REG_FLAT_SCRATCH_LO || opIdx == REG_FLAT_SCRATCH_HI;
-    }
-
-    bool
-    isScalarReg(int opIdx)
-    {
-        // FLAT_SCRATCH and VCC are stored in an SGPR pair
-        if (opIdx <= REG_SGPR_MAX || opIdx == REG_FLAT_SCRATCH_LO ||
-            opIdx == REG_FLAT_SCRATCH_HI || opIdx == REG_VCC_LO ||
-            opIdx == REG_VCC_HI) {
-            return true;
-        }
-
-        return false;
-    }
-
-    bool
-    isVectorReg(int opIdx)
-    {
-        if (opIdx >= REG_VGPR_MIN && opIdx <= REG_VGPR_MAX)
-            return true;
-
-        return false;
-    }
+    return false;
+}
 
 } // namespace VegaISA
 } // namespace gem5

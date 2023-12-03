@@ -55,8 +55,8 @@ class ISA : public BaseISA
 {
   private:
     RegVal regVal[misc_reg::NumRegs];
-    void updateHandyM5Reg(Efer efer, CR0 cr0,
-            SegAttr csAttr, SegAttr ssAttr, RFLAGS rflags);
+    void updateHandyM5Reg(Efer efer, CR0 cr0, SegAttr csAttr, SegAttr ssAttr,
+                          RFLAGS rflags);
 
     std::string vendorString;
 
@@ -64,7 +64,7 @@ class ISA : public BaseISA
     void clear() override;
 
     PCStateBase *
-    newPCState(Addr new_inst_addr=0) const override
+    newPCState(Addr new_inst_addr = 0) const override
     {
         return new PCState(new_inst_addr);
     }

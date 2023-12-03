@@ -67,7 +67,6 @@ unimplementedFunc(SyscallDesc *desc, ThreadContext *tc)
     fatal("syscall %s (#%d) unimplemented.", desc->name(), desc->num());
 }
 
-
 SyscallReturn
 ignoreFunc(SyscallDesc *desc, ThreadContext *tc)
 {
@@ -83,7 +82,8 @@ ignoreWarnOnceFunc(SyscallDesc *desc, ThreadContext *tc)
     bool &warned = bool_map[desc];
     if (!warned) {
         warn("ignoring syscall %s(...)\n"
-             "      (further warnings will be suppressed)", desc->name());
+             "      (further warnings will be suppressed)",
+             desc->name());
         warned = true;
     }
 
@@ -135,8 +135,7 @@ exitImpl(SyscallDesc *desc, ThreadContext *tc, bool group, int status)
 
         auto *tc = sys->threads[i];
         if ((tc->status() != ThreadContext::Halted) &&
-            (tc->status() != ThreadContext::Halting) &&
-            (walk != p)) {
+            (tc->status() != ThreadContext::Halting) && (walk != p)) {
             /**
              * Check if we share thread group with the pointer; this denotes
              * that we are not the last thread active in the thread group.
@@ -211,7 +210,7 @@ exitImpl(SyscallDesc *desc, ThreadContext *tc, bool group, int status)
      * exit the simulation loop
      */
     int activeContexts = 0;
-    for (auto &system: sys->systemList)
+    for (auto &system : sys->systemList)
         activeContexts += system->threads.numRunning();
 
     if (activeContexts == 0) {
@@ -253,7 +252,6 @@ getpagesizeFunc(SyscallDesc *desc, ThreadContext *tc)
     return (int)tc->getProcessPtr()->pTable->pageSize();
 }
 
-
 SyscallReturn
 brkFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> new_brk)
 {
@@ -293,8 +291,8 @@ closeFunc(SyscallDesc *desc, ThreadContext *tc, int tgt_fd)
 }
 
 SyscallReturn
-lseekFunc(SyscallDesc *desc, ThreadContext *tc,
-          int tgt_fd, uint64_t offs, int whence)
+lseekFunc(SyscallDesc *desc, ThreadContext *tc, int tgt_fd, uint64_t offs,
+          int whence)
 {
     auto p = tc->getProcessPtr();
 
@@ -308,11 +306,10 @@ lseekFunc(SyscallDesc *desc, ThreadContext *tc,
     return (result == (off_t)-1) ? -errno : result;
 }
 
-
 SyscallReturn
-_llseekFunc(SyscallDesc *desc, ThreadContext *tc,
-            int tgt_fd, uint64_t offset_high, uint32_t offset_low,
-            VPtr<> result_ptr, int whence)
+_llseekFunc(SyscallDesc *desc, ThreadContext *tc, int tgt_fd,
+            uint64_t offset_high, uint32_t offset_low, VPtr<> result_ptr,
+            int whence)
 {
     auto p = tc->getProcessPtr();
 
@@ -335,12 +332,11 @@ _llseekFunc(SyscallDesc *desc, ThreadContext *tc,
     return 0;
 }
 
-
 const char *hostname = "m5.eecs.umich.edu";
 
 SyscallReturn
-gethostnameFunc(SyscallDesc *desc, ThreadContext *tc,
-                VPtr<> buf_ptr, int name_len)
+gethostnameFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> buf_ptr,
+                int name_len)
 {
     BufferArg name(buf_ptr, name_len);
     strncpy((char *)name.bufferPtr(), hostname, name_len);
@@ -349,8 +345,8 @@ gethostnameFunc(SyscallDesc *desc, ThreadContext *tc,
 }
 
 SyscallReturn
-getcwdFunc(SyscallDesc *desc, ThreadContext *tc,
-           VPtr<> buf_ptr, unsigned long size)
+getcwdFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> buf_ptr,
+           unsigned long size)
 {
     int result = 0;
     auto p = tc->getProcessPtr();
@@ -399,8 +395,8 @@ unlinkImpl(SyscallDesc *desc, ThreadContext *tc, std::string path)
 }
 
 SyscallReturn
-linkFunc(SyscallDesc *desc, ThreadContext *tc,
-         VPtr<> pathname, VPtr<> new_pathname)
+linkFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> pathname,
+         VPtr<> new_pathname)
 {
     std::string path;
     std::string new_path;
@@ -420,8 +416,8 @@ linkFunc(SyscallDesc *desc, ThreadContext *tc,
 }
 
 SyscallReturn
-symlinkFunc(SyscallDesc *desc, ThreadContext *tc,
-            VPtr<> pathname, VPtr<> new_pathname)
+symlinkFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> pathname,
+            VPtr<> new_pathname)
 {
     std::string path;
     std::string new_path;
@@ -477,8 +473,8 @@ renameFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> oldpath,
 }
 
 SyscallReturn
-renameImpl(SyscallDesc *desc, ThreadContext *tc,
-           std::string old_name, std::string new_name)
+renameImpl(SyscallDesc *desc, ThreadContext *tc, std::string old_name,
+           std::string new_name)
 {
     auto p = tc->getProcessPtr();
 
@@ -490,10 +486,9 @@ renameImpl(SyscallDesc *desc, ThreadContext *tc,
     return (result == -1) ? -errno : result;
 }
 
-
 SyscallReturn
-truncate64Func(SyscallDesc *desc, ThreadContext *tc,
-               VPtr<> pathname, int64_t length)
+truncate64Func(SyscallDesc *desc, ThreadContext *tc, VPtr<> pathname,
+               int64_t length)
 {
     auto process = tc->getProcessPtr();
     std::string path;
@@ -513,8 +508,8 @@ truncate64Func(SyscallDesc *desc, ThreadContext *tc,
 }
 
 SyscallReturn
-ftruncate64Func(SyscallDesc *desc, ThreadContext *tc,
-                int tgt_fd, int64_t length)
+ftruncate64Func(SyscallDesc *desc, ThreadContext *tc, int tgt_fd,
+                int64_t length)
 {
     auto p = tc->getProcessPtr();
 
@@ -543,8 +538,8 @@ umaskFunc(SyscallDesc *desc, ThreadContext *tc)
 }
 
 SyscallReturn
-chownFunc(SyscallDesc *desc, ThreadContext *tc,
-          VPtr<> pathname, uint32_t owner, uint32_t group)
+chownFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> pathname,
+          uint32_t owner, uint32_t group)
 {
     std::string path;
     if (!SETranslatingPortProxy(tc).tryReadString(path, pathname))
@@ -554,8 +549,8 @@ chownFunc(SyscallDesc *desc, ThreadContext *tc,
 }
 
 SyscallReturn
-chownImpl(SyscallDesc *desc, ThreadContext *tc,
-          std::string path, uint32_t owner, uint32_t group)
+chownImpl(SyscallDesc *desc, ThreadContext *tc, std::string path,
+          uint32_t owner, uint32_t group)
 {
     auto p = tc->getProcessPtr();
 
@@ -571,8 +566,8 @@ chownImpl(SyscallDesc *desc, ThreadContext *tc,
 }
 
 SyscallReturn
-fchownFunc(SyscallDesc *desc, ThreadContext *tc,
-           int tgt_fd, uint32_t owner, uint32_t group)
+fchownFunc(SyscallDesc *desc, ThreadContext *tc, int tgt_fd, uint32_t owner,
+           uint32_t group)
 {
     auto p = tc->getProcessPtr();
 
@@ -644,8 +639,8 @@ dup2Func(SyscallDesc *desc, ThreadContext *tc, int old_tgt_fd, int new_tgt_fd)
 }
 
 SyscallReturn
-fcntlFunc(SyscallDesc *desc, ThreadContext *tc,
-          int tgt_fd, int cmd, guest_abi::VarArgs<int> varargs)
+fcntlFunc(SyscallDesc *desc, ThreadContext *tc, int tgt_fd, int cmd,
+          guest_abi::VarArgs<int> varargs)
 {
     auto p = tc->getProcessPtr();
 
@@ -657,29 +652,29 @@ fcntlFunc(SyscallDesc *desc, ThreadContext *tc,
     int coe = hbfdp->getCOE();
 
     switch (cmd) {
-      case F_GETFD:
+    case F_GETFD:
         return coe & FD_CLOEXEC;
 
-      case F_SETFD: {
+    case F_SETFD: {
         int arg = varargs.get<int>();
         arg ? hbfdp->setCOE(true) : hbfdp->setCOE(false);
         return 0;
-      }
+    }
 
-      // Rely on the host to maintain the file status flags for this file
-      // description rather than maintain it ourselves. Admittedly, this
-      // is suboptimal (and possibly error prone), but it is difficult to
-      // maintain the flags by tracking them across the different descriptors
-      // (that refer to this file description) caused by clone, dup, and
-      // subsequent fcntls.
-      case F_GETFL:
-      case F_SETFL: {
+    // Rely on the host to maintain the file status flags for this file
+    // description rather than maintain it ourselves. Admittedly, this
+    // is suboptimal (and possibly error prone), but it is difficult to
+    // maintain the flags by tracking them across the different descriptors
+    // (that refer to this file description) caused by clone, dup, and
+    // subsequent fcntls.
+    case F_GETFL:
+    case F_SETFL: {
         int arg = varargs.get<int>();
         int rv = fcntl(sim_fd, cmd, arg);
         return (rv == -1) ? -errno : rv;
-      }
+    }
 
-      default:
+    default:
         warn("fcntl: unsupported command %d\n", cmd);
         return 0;
     }
@@ -696,17 +691,17 @@ fcntl64Func(SyscallDesc *desc, ThreadContext *tc, int tgt_fd, int cmd)
     int sim_fd = hbfdp->getSimFD();
 
     switch (cmd) {
-      case 33: //F_GETLK64
+    case 33: // F_GETLK64
         warn("fcntl64(%d, F_GETLK64) not supported, error returned\n", tgt_fd);
         return -EMFILE;
 
-      case 34: // F_SETLK64
-      case 35: // F_SETLKW64
+    case 34: // F_SETLK64
+    case 35: // F_SETLKW64
         warn("fcntl64(%d, F_SETLK(W)64) not supported, error returned\n",
              tgt_fd);
         return -EMFILE;
 
-      default:
+    default:
         // not sure if this is totally valid, but we'll pass it through
         // to the underlying OS
         warn("fcntl64(%d, %d) passed through to host\n", tgt_fd, cmd);
@@ -766,7 +761,7 @@ pipe2Func(SyscallDesc *desc, ThreadContext *tc, VPtr<> tgt_addr, int flags)
      * the buffer space back into the target address space.
      */
     BufferArg tgt_handle(tgt_addr, sizeof(int[2]));
-    int *buf_ptr = (int*)tgt_handle.bufferPtr();
+    int *buf_ptr = (int *)tgt_handle.bufferPtr();
     buf_ptr[0] = tgt_fds[0];
     buf_ptr[1] = tgt_fds[1];
     tgt_handle.copyOut(SETranslatingPortProxy(tc));
@@ -835,10 +830,10 @@ setpgidFunc(SyscallDesc *desc, ThreadContext *tc, int pid, int pgid)
     System *sysh = tc->getSystemPtr();
 
     // Retrieves process pointer from active/suspended thread contexts.
-    for (auto *tc: sysh->threads) {
+    for (auto *tc : sysh->threads) {
         if (tc->status() != ThreadContext::Halted) {
             Process *temp_h = tc->getProcessPtr();
-            Process *walk_ph = (Process*)temp_h;
+            Process *walk_ph = (Process *)temp_h;
 
             if (walk_ph && walk_ph->pid() == process->pid())
                 matched_ph = walk_ph;
@@ -850,7 +845,6 @@ setpgidFunc(SyscallDesc *desc, ThreadContext *tc, int pid, int pgid)
 
     return 0;
 }
-
 
 SyscallReturn
 getpidFunc(SyscallDesc *desc, ThreadContext *tc)
@@ -877,14 +871,14 @@ SyscallReturn
 getuidFunc(SyscallDesc *desc, ThreadContext *tc)
 {
     auto process = tc->getProcessPtr();
-    return process->uid();              // UID
+    return process->uid(); // UID
 }
 
 SyscallReturn
 geteuidFunc(SyscallDesc *desc, ThreadContext *tc)
 {
     auto process = tc->getProcessPtr();
-    return process->euid();             // UID
+    return process->euid(); // UID
 }
 
 SyscallReturn
@@ -902,8 +896,7 @@ getegidFunc(SyscallDesc *desc, ThreadContext *tc)
 }
 
 SyscallReturn
-accessFunc(SyscallDesc *desc, ThreadContext *tc,
-           VPtr<> pathname, mode_t mode)
+accessFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> pathname, mode_t mode)
 {
     std::string path;
     if (!SETranslatingPortProxy(tc).tryReadString(path, pathname))
@@ -913,8 +906,7 @@ accessFunc(SyscallDesc *desc, ThreadContext *tc,
 }
 
 SyscallReturn
-accessImpl(SyscallDesc *desc, ThreadContext *tc,
-           std::string path, mode_t mode)
+accessImpl(SyscallDesc *desc, ThreadContext *tc, std::string path, mode_t mode)
 {
     auto p = tc->getProcessPtr();
     // Adjust path for cwd and redirection
@@ -925,8 +917,8 @@ accessImpl(SyscallDesc *desc, ThreadContext *tc,
 }
 
 SyscallReturn
-mknodFunc(SyscallDesc *desc, ThreadContext *tc,
-          VPtr<> pathname, mode_t mode, dev_t dev)
+mknodFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> pathname, mode_t mode,
+          dev_t dev)
 {
     std::string path;
     if (!SETranslatingPortProxy(tc).tryReadString(path, pathname))
@@ -936,8 +928,8 @@ mknodFunc(SyscallDesc *desc, ThreadContext *tc,
 }
 
 SyscallReturn
-mknodImpl(SyscallDesc *desc, ThreadContext *tc,
-          std::string path, mode_t mode, dev_t dev)
+mknodImpl(SyscallDesc *desc, ThreadContext *tc, std::string path, mode_t mode,
+          dev_t dev)
 {
     auto p = tc->getProcessPtr();
     path = p->checkPathRedirect(path);
@@ -996,10 +988,10 @@ rmdirImpl(SyscallDesc *desc, ThreadContext *tc, std::string path)
 }
 
 #if defined(SYS_getdents) || defined(SYS_getdents64)
-template<typename DE, int SYS_NUM>
+template <typename DE, int SYS_NUM>
 static SyscallReturn
-getdentsImpl(SyscallDesc *desc, ThreadContext *tc,
-             int tgt_fd, VPtr<> buf_ptr, unsigned count)
+getdentsImpl(SyscallDesc *desc, ThreadContext *tc, int tgt_fd, VPtr<> buf_ptr,
+             unsigned count)
 {
     auto p = tc->getProcessPtr();
 
@@ -1016,7 +1008,7 @@ getdentsImpl(SyscallDesc *desc, ThreadContext *tc,
 
     unsigned traversed = 0;
     while (traversed < status) {
-        DE *buffer = (DE*)((Addr)buf_arg.bufferPtr() + traversed);
+        DE *buffer = (DE *)((Addr)buf_arg.bufferPtr() + traversed);
 
         auto host_reclen = buffer->d_reclen;
 
@@ -1040,8 +1032,8 @@ getdentsImpl(SyscallDesc *desc, ThreadContext *tc,
 
 #if defined(SYS_getdents)
 SyscallReturn
-getdentsFunc(SyscallDesc *desc, ThreadContext *tc,
-             int tgt_fd, VPtr<> buf_ptr, unsigned count)
+getdentsFunc(SyscallDesc *desc, ThreadContext *tc, int tgt_fd, VPtr<> buf_ptr,
+             unsigned count)
 {
     typedef struct linux_dirent
     {
@@ -1051,15 +1043,15 @@ getdentsFunc(SyscallDesc *desc, ThreadContext *tc,
         char dname[];
     } LinDent;
 
-    return getdentsImpl<LinDent, SYS_getdents>(desc, tc,
-                                               tgt_fd, buf_ptr, count);
+    return getdentsImpl<LinDent, SYS_getdents>(desc, tc, tgt_fd, buf_ptr,
+                                               count);
 }
 #endif
 
 #if defined(SYS_getdents64)
 SyscallReturn
-getdents64Func(SyscallDesc *desc, ThreadContext *tc,
-               int tgt_fd, VPtr<> buf_ptr, unsigned count)
+getdents64Func(SyscallDesc *desc, ThreadContext *tc, int tgt_fd,
+               VPtr<> buf_ptr, unsigned count)
 {
     typedef struct linux_dirent64
     {
@@ -1069,8 +1061,8 @@ getdents64Func(SyscallDesc *desc, ThreadContext *tc,
         char dname[];
     } LinDent64;
 
-    return getdentsImpl<LinDent64, SYS_getdents64>(desc, tc,
-                                                   tgt_fd, buf_ptr, count);
+    return getdentsImpl<LinDent64, SYS_getdents64>(desc, tc, tgt_fd, buf_ptr,
+                                                   count);
 }
 #endif
 
@@ -1090,8 +1082,8 @@ shutdownFunc(SyscallDesc *desc, ThreadContext *tc, int tgt_fd, int how)
 }
 
 SyscallReturn
-bindFunc(SyscallDesc *desc, ThreadContext *tc,
-         int tgt_fd, VPtr<> buf_ptr, int addrlen)
+bindFunc(SyscallDesc *desc, ThreadContext *tc, int tgt_fd, VPtr<> buf_ptr,
+         int addrlen)
 {
     auto p = tc->getProcessPtr();
 
@@ -1103,9 +1095,8 @@ bindFunc(SyscallDesc *desc, ThreadContext *tc,
         return -EBADF;
     int sim_fd = sfdp->getSimFD();
 
-    int status = ::bind(sim_fd,
-                        (struct sockaddr *)bufSock.bufferPtr(),
-                        addrlen);
+    int status =
+        ::bind(sim_fd, (struct sockaddr *)bufSock.bufferPtr(), addrlen);
 
     return (status == -1) ? -errno : status;
 }
@@ -1126,8 +1117,8 @@ listenFunc(SyscallDesc *desc, ThreadContext *tc, int tgt_fd, int backlog)
 }
 
 SyscallReturn
-connectFunc(SyscallDesc *desc, ThreadContext *tc,
-            int tgt_fd, VPtr<> buf_ptr, int addrlen)
+connectFunc(SyscallDesc *desc, ThreadContext *tc, int tgt_fd, VPtr<> buf_ptr,
+            int addrlen)
 {
     auto p = tc->getProcessPtr();
 
@@ -1139,17 +1130,15 @@ connectFunc(SyscallDesc *desc, ThreadContext *tc,
         return -EBADF;
     int sim_fd = sfdp->getSimFD();
 
-    int status = connect(sim_fd,
-                         (struct sockaddr *)addr.bufferPtr(),
+    int status = connect(sim_fd, (struct sockaddr *)addr.bufferPtr(),
                          (socklen_t)addrlen);
 
     return (status == -1) ? -errno : status;
 }
 
-
 SyscallReturn
-recvmsgFunc(SyscallDesc *desc, ThreadContext *tc,
-            int tgt_fd, VPtr<> msgPtr, int flags)
+recvmsgFunc(SyscallDesc *desc, ThreadContext *tc, int tgt_fd, VPtr<> msgPtr,
+            int flags)
 {
     auto p = tc->getProcessPtr();
 
@@ -1158,23 +1147,23 @@ recvmsgFunc(SyscallDesc *desc, ThreadContext *tc,
         return -EBADF;
     int sim_fd = sfdp->getSimFD();
 
-     /**
-      *  struct msghdr {
-      *     void         *msg_name;       // optional address
-      *    socklen_t     msg_namelen;    // size of address
-      *    struct iovec *msg_iov;        // iovec array
-      *    size_t        msg_iovlen;     // number entries in msg_iov
-      *    i                             // entries correspond to buffer
-      *    void         *msg_control;    // ancillary data
-      *    size_t        msg_controllen; // ancillary data buffer len
-      *    int           msg_flags;      // flags on received message
-      *  };
-      *
-      *  struct iovec {
-      *    void  *iov_base;              // starting address
-      *    size_t iov_len;               // number of bytes to transfer
-      *  };
-      */
+    /**
+     *  struct msghdr {
+     *     void         *msg_name;       // optional address
+     *    socklen_t     msg_namelen;    // size of address
+     *    struct iovec *msg_iov;        // iovec array
+     *    size_t        msg_iovlen;     // number entries in msg_iov
+     *    i                             // entries correspond to buffer
+     *    void         *msg_control;    // ancillary data
+     *    size_t        msg_controllen; // ancillary data buffer len
+     *    int           msg_flags;      // flags on received message
+     *  };
+     *
+     *  struct iovec {
+     *    void  *iov_base;              // starting address
+     *    size_t iov_len;               // number of bytes to transfer
+     *  };
+     */
 
     SETranslatingPortProxy proxy(tc);
 
@@ -1202,10 +1191,10 @@ recvmsgFunc(SyscallDesc *desc, ThreadContext *tc,
      */
     BufferArg *nameBuf = NULL;
     if (msgHdr->msg_name) {
-        /*1*/msg_name_phold = (Addr)msgHdr->msg_name;
-        /*2*/nameBuf = new BufferArg(msg_name_phold, msgHdr->msg_namelen);
-        /*3*/nameBuf->copyIn(proxy);
-        /*4*/msgHdr->msg_name = nameBuf->bufferPtr();
+        /*1*/ msg_name_phold = (Addr)msgHdr->msg_name;
+        /*2*/ nameBuf = new BufferArg(msg_name_phold, msgHdr->msg_namelen);
+        /*3*/ nameBuf->copyIn(proxy);
+        /*4*/ msgHdr->msg_name = nameBuf->bufferPtr();
     }
 
     /**
@@ -1221,22 +1210,23 @@ recvmsgFunc(SyscallDesc *desc, ThreadContext *tc,
     }
 
     if (msgHdr->msg_iov) {
-        /*1*/msg_iov_phold = (Addr)msgHdr->msg_iov;
-        /*2*/iovBuf = new BufferArg(msg_iov_phold, msgHdr->msg_iovlen *
-                                    sizeof(struct iovec));
-        /*3*/iovBuf->copyIn(proxy);
+        /*1*/ msg_iov_phold = (Addr)msgHdr->msg_iov;
+        /*2*/ iovBuf = new BufferArg(msg_iov_phold, msgHdr->msg_iovlen *
+                                                        sizeof(struct iovec));
+        /*3*/ iovBuf->copyIn(proxy);
         for (int i = 0; i < msgHdr->msg_iovlen; i++) {
             if (((struct iovec *)iovBuf->bufferPtr())[i].iov_base) {
-                /*1*/iovec_base_phold[i] =
-                     (Addr)((struct iovec *)iovBuf->bufferPtr())[i].iov_base;
-                /*2*/iovecBuf[i] = new BufferArg(iovec_base_phold[i],
-                     ((struct iovec *)iovBuf->bufferPtr())[i].iov_len);
-                /*3*/iovecBuf[i]->copyIn(proxy);
-                /*4*/((struct iovec *)iovBuf->bufferPtr())[i].iov_base =
-                     iovecBuf[i]->bufferPtr();
+                /*1*/ iovec_base_phold[i] =
+                    (Addr)((struct iovec *)iovBuf->bufferPtr())[i].iov_base;
+                /*2*/ iovecBuf[i] = new BufferArg(
+                    iovec_base_phold[i],
+                    ((struct iovec *)iovBuf->bufferPtr())[i].iov_len);
+                /*3*/ iovecBuf[i]->copyIn(proxy);
+                /*4*/ ((struct iovec *)iovBuf->bufferPtr())[i].iov_base =
+                    iovecBuf[i]->bufferPtr();
             }
         }
-        /*4*/msgHdr->msg_iov = (struct iovec *)iovBuf->bufferPtr();
+        /*4*/ msgHdr->msg_iov = (struct iovec *)iovBuf->bufferPtr();
     }
 
     /**
@@ -1244,11 +1234,11 @@ recvmsgFunc(SyscallDesc *desc, ThreadContext *tc,
      */
     BufferArg *controlBuf = NULL;
     if (msgHdr->msg_control) {
-        /*1*/msg_control_phold = (Addr)msgHdr->msg_control;
-        /*2*/controlBuf = new BufferArg(msg_control_phold,
-                                        CMSG_ALIGN(msgHdr->msg_controllen));
-        /*3*/controlBuf->copyIn(proxy);
-        /*4*/msgHdr->msg_control = controlBuf->bufferPtr();
+        /*1*/ msg_control_phold = (Addr)msgHdr->msg_control;
+        /*2*/ controlBuf = new BufferArg(msg_control_phold,
+                                         CMSG_ALIGN(msgHdr->msg_controllen));
+        /*3*/ controlBuf->copyIn(proxy);
+        /*4*/ msgHdr->msg_control = controlBuf->bufferPtr();
     }
 
     ssize_t recvd_size = recvmsg(sim_fd, msgHdr, flags);
@@ -1258,17 +1248,17 @@ recvmsgFunc(SyscallDesc *desc, ThreadContext *tc,
 
     if (msgHdr->msg_name) {
         nameBuf->copyOut(proxy);
-        delete(nameBuf);
+        delete (nameBuf);
         msgHdr->msg_name = (void *)msg_name_phold;
     }
 
     if (msgHdr->msg_iov) {
-        for (int i = 0; i< msgHdr->msg_iovlen; i++) {
+        for (int i = 0; i < msgHdr->msg_iovlen; i++) {
             if (((struct iovec *)iovBuf->bufferPtr())[i].iov_base) {
                 iovecBuf[i]->copyOut(proxy);
                 delete iovecBuf[i];
                 ((struct iovec *)iovBuf->bufferPtr())[i].iov_base =
-                (void *)iovec_base_phold[i];
+                    (void *)iovec_base_phold[i];
             }
         }
         iovBuf->copyOut(proxy);
@@ -1278,7 +1268,7 @@ recvmsgFunc(SyscallDesc *desc, ThreadContext *tc,
 
     if (msgHdr->msg_control) {
         controlBuf->copyOut(proxy);
-        delete(controlBuf);
+        delete (controlBuf);
         msgHdr->msg_control = (void *)msg_control_phold;
     }
 
@@ -1288,8 +1278,8 @@ recvmsgFunc(SyscallDesc *desc, ThreadContext *tc,
 }
 
 SyscallReturn
-sendmsgFunc(SyscallDesc *desc, ThreadContext *tc,
-            int tgt_fd, VPtr<> msgPtr, int flags)
+sendmsgFunc(SyscallDesc *desc, ThreadContext *tc, int tgt_fd, VPtr<> msgPtr,
+            int flags)
 {
     auto p = tc->getProcessPtr();
 
@@ -1322,16 +1312,16 @@ sendmsgFunc(SyscallDesc *desc, ThreadContext *tc,
      * Create array to hold buffer addresses, to be used during copyIn of
      * send data.
      */
-    BufferArg **bufferArray = (BufferArg **)malloc(msgHdr.msg_iovlen
-                                                   * sizeof(BufferArg *));
+    BufferArg **bufferArray =
+        (BufferArg **)malloc(msgHdr.msg_iovlen * sizeof(BufferArg *));
 
     /**
      * Iterate through the iovec structures:
      * Get the base buffer addreses, reserve iov_len amount of space for each.
      * Put the buf address into the bufferArray for later retrieval.
      */
-    for (int iovIndex = 0 ; iovIndex < msgHdr.msg_iovlen; iovIndex++) {
-        Addr basePtr = (Addr) iov[iovIndex].iov_base;
+    for (int iovIndex = 0; iovIndex < msgHdr.msg_iovlen; iovIndex++) {
+        Addr basePtr = (Addr)iov[iovIndex].iov_base;
         bufferArray[iovIndex] = new BufferArg(basePtr, iov[iovIndex].iov_len);
         bufferArray[iovIndex]->copyIn(proxy);
         iov[iovIndex].iov_base = bufferArray[iovIndex]->bufferPtr();
@@ -1343,9 +1333,9 @@ sendmsgFunc(SyscallDesc *desc, ThreadContext *tc,
     /**
      * Free dynamically allocated memory.
      */
-    for (int iovIndex = 0 ; iovIndex < msgHdr.msg_iovlen; iovIndex++) {
-        BufferArg *baseBuf = ( BufferArg *)bufferArray[iovIndex];
-        delete(baseBuf);
+    for (int iovIndex = 0; iovIndex < msgHdr.msg_iovlen; iovIndex++) {
+        BufferArg *baseBuf = (BufferArg *)bufferArray[iovIndex];
+        delete (baseBuf);
     }
 
     /**
@@ -1357,9 +1347,8 @@ sendmsgFunc(SyscallDesc *desc, ThreadContext *tc,
 }
 
 SyscallReturn
-getsockoptFunc(SyscallDesc *desc, ThreadContext *tc,
-               int tgt_fd, int level, int optname, VPtr<> valPtr,
-               VPtr<> lenPtr)
+getsockoptFunc(SyscallDesc *desc, ThreadContext *tc, int tgt_fd, int level,
+               int optname, VPtr<> valPtr, VPtr<> lenPtr)
 {
     // union of all possible return value types from getsockopt
     union val
@@ -1399,8 +1388,8 @@ getsockoptFunc(SyscallDesc *desc, ThreadContext *tc,
 }
 
 SyscallReturn
-getsocknameFunc(SyscallDesc *desc, ThreadContext *tc,
-                int tgt_fd, VPtr<> addrPtr, VPtr<> lenPtr)
+getsocknameFunc(SyscallDesc *desc, ThreadContext *tc, int tgt_fd,
+                VPtr<> addrPtr, VPtr<> lenPtr)
 {
     auto p = tc->getProcessPtr();
 
@@ -1438,8 +1427,8 @@ getsocknameFunc(SyscallDesc *desc, ThreadContext *tc,
 }
 
 SyscallReturn
-getpeernameFunc(SyscallDesc *desc, ThreadContext *tc,
-                int tgt_fd, VPtr<> sockAddrPtr, VPtr<> addrlenPtr)
+getpeernameFunc(SyscallDesc *desc, ThreadContext *tc, int tgt_fd,
+                VPtr<> sockAddrPtr, VPtr<> addrlenPtr)
 {
     auto p = tc->getProcessPtr();
 
@@ -1454,8 +1443,7 @@ getpeernameFunc(SyscallDesc *desc, ThreadContext *tc,
     bufAddrlen.copyIn(proxy);
     BufferArg bufSock(sockAddrPtr, *(unsigned *)bufAddrlen.bufferPtr());
 
-    int retval = getpeername(sim_fd,
-                             (struct sockaddr *)bufSock.bufferPtr(),
+    int retval = getpeername(sim_fd, (struct sockaddr *)bufSock.bufferPtr(),
                              (unsigned *)bufAddrlen.bufferPtr());
 
     if (retval != -1) {
@@ -1467,9 +1455,8 @@ getpeernameFunc(SyscallDesc *desc, ThreadContext *tc,
 }
 
 SyscallReturn
-setsockoptFunc(SyscallDesc *desc, ThreadContext *tc,
-               int tgt_fd, int level, int optname, VPtr<> valPtr,
-               socklen_t len)
+setsockoptFunc(SyscallDesc *desc, ThreadContext *tc, int tgt_fd, int level,
+               int optname, VPtr<> valPtr, socklen_t len)
 {
     auto p = tc->getProcessPtr();
 
@@ -1488,8 +1475,8 @@ setsockoptFunc(SyscallDesc *desc, ThreadContext *tc,
 }
 
 SyscallReturn
-getcpuFunc(SyscallDesc *desc, ThreadContext *tc,
-           VPtr<uint32_t> cpu, VPtr<uint32_t> node, VPtr<uint32_t> tcache)
+getcpuFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<uint32_t> cpu,
+           VPtr<uint32_t> node, VPtr<uint32_t> tcache)
 {
     // unsigned is the same size (4) on all Linux supported ISAs.
     if (cpu)

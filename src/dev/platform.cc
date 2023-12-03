@@ -38,13 +38,13 @@ Platform::Platform(const Params &p) : SimObject(p), system(p.system) {}
 void
 Platform::postPciInt(int line)
 {
-   panic("No PCI interrupt support in platform.");
+    panic("No PCI interrupt support in platform.");
 }
 
 void
 Platform::clearPciInt(int line)
 {
-   panic("No PCI interrupt support in platform.");
+    panic("No PCI interrupt support in platform.");
 }
 
 } // namespace gem5

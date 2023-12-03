@@ -94,7 +94,9 @@ class IGbE : public EtherDevice
     Tick rxWriteDelay, txReadDelay;
 
     // Event and function to deal with RDTR timer expiring
-    void rdtrProcess() {
+    void
+    rdtrProcess()
+    {
         rxDescCache.writeback(0);
         DPRINTF(EthernetIntr,
                 "Posting RXT interrupt because RDTR timer expired\n");
@@ -104,7 +106,9 @@ class IGbE : public EtherDevice
     EventFunctionWrapper rdtrEvent;
 
     // Event and function to deal with RADV timer expiring
-    void radvProcess() {
+    void
+    radvProcess()
+    {
         rxDescCache.writeback(0);
         DPRINTF(EthernetIntr,
                 "Posting RXT interrupt because RADV timer expired\n");
@@ -114,7 +118,9 @@ class IGbE : public EtherDevice
     EventFunctionWrapper radvEvent;
 
     // Event and function to deal with TADV timer expiring
-    void tadvProcess() {
+    void
+    tadvProcess()
+    {
         txDescCache.writeback(0);
         DPRINTF(EthernetIntr,
                 "Posting TXDW interrupt because TADV timer expired\n");
@@ -124,18 +130,20 @@ class IGbE : public EtherDevice
     EventFunctionWrapper tadvEvent;
 
     // Event and function to deal with TIDV timer expiring
-    void tidvProcess() {
+    void
+    tidvProcess()
+    {
         txDescCache.writeback(0);
         DPRINTF(EthernetIntr,
                 "Posting TXDW interrupt because TIDV timer expired\n");
         postInterrupt(igbreg::IT_TXDW);
     }
+
     EventFunctionWrapper tidvEvent;
 
     // Main event to tick the device
     void tick();
     EventFunctionWrapper tickEvent;
-
 
     uint64_t macAddr;
 
@@ -166,7 +174,11 @@ class IGbE : public EtherDevice
      */
     void cpuClearInt();
 
-    Tick intClock() { return sim_clock::as_int::ns * 1024; }
+    Tick
+    intClock()
+    {
+        return sim_clock::as_int::ns * 1024;
+    }
 
     /** This function is used to restart the clock so it can handle things like
      * draining and resume in one place. */
@@ -177,7 +189,7 @@ class IGbE : public EtherDevice
      */
     void checkDrain();
 
-    template<class T>
+    template <class T>
     class DescCache : public Serializable
     {
       protected:
@@ -187,7 +199,11 @@ class IGbE : public EtherDevice
         virtual long descLen() const = 0;
         virtual void updateHead(long h) = 0;
         virtual void enableSm() = 0;
-        virtual void actionAfterWb() {}
+
+        virtual void
+        actionAfterWb()
+        {}
+
         virtual void fetchAfterWb() = 0;
 
         typedef std::deque<T *> CacheType;
@@ -226,7 +242,11 @@ class IGbE : public EtherDevice
         EthPacketPtr pktPtr;
 
         /** Shortcut for DMA address translation */
-        Addr pciToDma(Addr a) { return igbe->pciToDma(a); }
+        Addr
+        pciToDma(Addr a)
+        {
+            return igbe->pciToDma(a);
+        }
 
       public:
         /** Annotate sm*/
@@ -236,7 +256,11 @@ class IGbE : public EtherDevice
         DescCache(IGbE *i, const std::string n, int s);
         virtual ~DescCache();
 
-        std::string name() { return _name; }
+        std::string
+        name()
+        {
+            return _name;
+        }
 
         /** If the address/len/head change when we've got descriptors that are
          * dirty that is very bad. This function checks that we don't and if we
@@ -282,36 +306,71 @@ class IGbE : public EtherDevice
 
         /* Return the number of descriptors used and not written back.
          */
-        unsigned descUsed() const { return usedCache.size(); }
+        unsigned
+        descUsed() const
+        {
+            return usedCache.size();
+        }
 
         /* Return the number of cache unused descriptors we have. */
-        unsigned descUnused() const { return unusedCache.size(); }
+        unsigned
+        descUnused() const
+        {
+            return unusedCache.size();
+        }
 
         /* Get into a state where the descriptor address/head/etc colud be
          * changed */
         void reset();
 
-
         void serialize(CheckpointOut &cp) const override;
         void unserialize(CheckpointIn &cp) override;
 
-        virtual bool hasOutstandingEvents() {
+        virtual bool
+        hasOutstandingEvents()
+        {
             return wbEvent.scheduled() || fetchEvent.scheduled();
         }
-
     };
-
 
     class RxDescCache : public DescCache<igbreg::RxDesc>
     {
       protected:
-        Addr descBase() const override { return igbe->regs.rdba(); }
-        long descHead() const override { return igbe->regs.rdh(); }
-        long descLen() const override { return igbe->regs.rdlen() >> 4; }
-        long descTail() const override { return igbe->regs.rdt(); }
-        void updateHead(long h) override { igbe->regs.rdh(h); }
+        Addr
+        descBase() const override
+        {
+            return igbe->regs.rdba();
+        }
+
+        long
+        descHead() const override
+        {
+            return igbe->regs.rdh();
+        }
+
+        long
+        descLen() const override
+        {
+            return igbe->regs.rdlen() >> 4;
+        }
+
+        long
+        descTail() const override
+        {
+            return igbe->regs.rdt();
+        }
+
+        void
+        updateHead(long h) override
+        {
+            igbe->regs.rdh(h);
+        }
+
         void enableSm() override;
-        void fetchAfterWb() override {
+
+        void
+        fetchAfterWb() override
+        {
             if (!igbe->rxTick && igbe->drainState() == DrainState::Running)
                 fetchDescriptors();
         }
@@ -363,22 +422,48 @@ class IGbE : public EtherDevice
 
     RxDescCache rxDescCache;
 
-    class TxDescCache  : public DescCache<igbreg::TxDesc>
+    class TxDescCache : public DescCache<igbreg::TxDesc>
     {
       protected:
-        Addr descBase() const override { return igbe->regs.tdba(); }
-        long descHead() const override { return igbe->regs.tdh(); }
-        long descTail() const override { return igbe->regs.tdt(); }
-        long descLen() const override { return igbe->regs.tdlen() >> 4; }
-        void updateHead(long h) override { igbe->regs.tdh(h); }
+        Addr
+        descBase() const override
+        {
+            return igbe->regs.tdba();
+        }
+
+        long
+        descHead() const override
+        {
+            return igbe->regs.tdh();
+        }
+
+        long
+        descTail() const override
+        {
+            return igbe->regs.tdt();
+        }
+
+        long
+        descLen() const override
+        {
+            return igbe->regs.tdlen() >> 4;
+        }
+
+        void
+        updateHead(long h) override
+        {
+            igbe->regs.tdh(h);
+        }
+
         void enableSm() override;
         void actionAfterWb() override;
-        void fetchAfterWb() override {
+
+        void
+        fetchAfterWb() override
+        {
             if (!igbe->txTick && igbe->drainState() == DrainState::Running)
                 fetchDescriptors();
         }
-
-
 
         bool pktDone;
         bool isTcp;
@@ -387,7 +472,6 @@ class IGbE : public EtherDevice
         Addr completionAddress;
         bool completionEnabled;
         uint32_t descEnd;
-
 
         // tso variables
         bool useTso;
@@ -433,7 +517,11 @@ class IGbE : public EtherDevice
         /** Ask if we are still waiting for the packet to be transfered.
          * @return packet still in transit.
          */
-        bool packetWaiting() { return pktWaiting; }
+        bool
+        packetWaiting()
+        {
+            return pktWaiting;
+        }
 
         /** Ask if this packet is composed of multiple descriptors
          * so even if we've got data, we need to wait for more before
@@ -441,7 +529,11 @@ class IGbE : public EtherDevice
          * @return packet can't be sent out because it's a multi-descriptor
          * packet
          */
-        bool packetMultiDesc() { return pktMultiDesc;}
+        bool
+        packetMultiDesc()
+        {
+            return pktMultiDesc;
+        }
 
         /** Called by event when dma to write packet is completed
          */
@@ -451,20 +543,24 @@ class IGbE : public EtherDevice
         void headerComplete();
         EventFunctionWrapper headerEvent;
 
-
-        void completionWriteback(Addr a, bool enabled) {
+        void
+        completionWriteback(Addr a, bool enabled)
+        {
             DPRINTF(EthernetDesc,
-                    "Completion writeback Addr: %#x enabled: %d\n",
-                    a, enabled);
+                    "Completion writeback Addr: %#x enabled: %d\n", a,
+                    enabled);
             completionAddress = a;
             completionEnabled = enabled;
         }
 
         bool hasOutstandingEvents() override;
 
-        void nullCallback() {
+        void
+        nullCallback()
+        {
             DPRINTF(EthernetDesc, "Completion writeback complete\n");
         }
+
         EventFunctionWrapper nullEvent;
 
         void serialize(CheckpointOut &cp) const override;
@@ -483,7 +579,7 @@ class IGbE : public EtherDevice
     void init() override;
 
     Port &getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID) override;
+                  PortID idx = InvalidPortID) override;
 
     Tick lastInterrupt;
 
@@ -500,7 +596,6 @@ class IGbE : public EtherDevice
 
     DrainState drain() override;
     void drainResume() override;
-
 };
 
 class IGbEInt : public EtherInt
@@ -509,12 +604,19 @@ class IGbEInt : public EtherInt
     IGbE *dev;
 
   public:
-    IGbEInt(const std::string &name, IGbE *d)
-        : EtherInt(name), dev(d)
-    { }
+    IGbEInt(const std::string &name, IGbE *d) : EtherInt(name), dev(d) {}
 
-    virtual bool recvPacket(EthPacketPtr pkt) { return dev->ethRxPkt(pkt); }
-    virtual void sendDone() { dev->ethTxDone(); }
+    virtual bool
+    recvPacket(EthPacketPtr pkt)
+    {
+        return dev->ethRxPkt(pkt);
+    }
+
+    virtual void
+    sendDone()
+    {
+        dev->ethTxDone();
+    }
 };
 
 } // namespace gem5

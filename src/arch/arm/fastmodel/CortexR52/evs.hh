@@ -134,6 +134,7 @@ class ScxEvsCortexR52 : public Types::Base, public Iris::BaseCpuEvs
 
   public:
     ScxEvsCortexR52(const Params &p) : ScxEvsCortexR52(p.name.c_str(), p) {}
+
     ScxEvsCortexR52(const sc_core::sc_module_name &mod_name, const Params &p);
 
     void
@@ -156,7 +157,10 @@ class ScxEvsCortexR52 : public Types::Base, public Iris::BaseCpuEvs
         Base::end_of_elaboration();
         Base::start_of_simulation();
     }
-    void start_of_simulation() override {}
+
+    void
+    start_of_simulation() override
+    {}
 
     void setClkPeriod(Tick clk_period) override;
 
@@ -173,6 +177,7 @@ struct ScxEvsCortexR52x1Types
     using Params = FastModelScxEvsCortexR52x1Params;
     static const int CoreCount = 1;
 };
+
 using ScxEvsCortexR52x1 = ScxEvsCortexR52<ScxEvsCortexR52x1Types>;
 extern template class ScxEvsCortexR52<ScxEvsCortexR52x1Types>;
 
@@ -182,6 +187,7 @@ struct ScxEvsCortexR52x2Types
     using Params = FastModelScxEvsCortexR52x2Params;
     static const int CoreCount = 2;
 };
+
 using ScxEvsCortexR52x2 = ScxEvsCortexR52<ScxEvsCortexR52x2Types>;
 extern template class ScxEvsCortexR52<ScxEvsCortexR52x2Types>;
 
@@ -191,6 +197,7 @@ struct ScxEvsCortexR52x3Types
     using Params = FastModelScxEvsCortexR52x3Params;
     static const int CoreCount = 3;
 };
+
 using ScxEvsCortexR52x3 = ScxEvsCortexR52<ScxEvsCortexR52x3Types>;
 extern template class ScxEvsCortexR52<ScxEvsCortexR52x3Types>;
 
@@ -200,6 +207,7 @@ struct ScxEvsCortexR52x4Types
     using Params = FastModelScxEvsCortexR52x4Params;
     static const int CoreCount = 4;
 };
+
 using ScxEvsCortexR52x4 = ScxEvsCortexR52<ScxEvsCortexR52x4Types>;
 extern template class ScxEvsCortexR52<ScxEvsCortexR52x4Types>;
 

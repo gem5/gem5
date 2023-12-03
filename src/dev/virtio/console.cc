@@ -59,10 +59,8 @@ VirtIOConsole::VirtIOConsole(const Params &params)
     device.regInterfaceCallback([this]() { qRecv.trySend(); });
 }
 
+VirtIOConsole::~VirtIOConsole() {}
 
-VirtIOConsole::~VirtIOConsole()
-{
-}
 void
 VirtIOConsole::readConfig(PacketPtr pkt, Addr cfgOffset)
 {
@@ -100,8 +98,7 @@ VirtIOConsole::TermRecvQueue::trySend()
 void
 VirtIOConsole::TermTransQueue::onNotifyDescriptor(VirtDescriptor *desc)
 {
-    DPRINTF(VIOConsole, "Got input data descriptor (len: %i)\n",
-            desc->size());
+    DPRINTF(VIOConsole, "Got input data descriptor (len: %i)\n", desc->size());
 
     // Copy the data from the guest and forward it to the
     // terminal.

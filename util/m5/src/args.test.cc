@@ -75,20 +75,20 @@ TEST(ArgsTest, Pack)
     // Success with two registers.
     EXPECT_TRUE(Args::pack("A longer string", regs, 2));
     EXPECT_EQ(regs[0], ((uint64_t)'A' << 0) | ((uint64_t)' ' << 8) |
-                       ((uint64_t)'l' << 16) | ((uint64_t)'o' << 24) |
-                       ((uint64_t)'n' << 32) | ((uint64_t)'g' << 40) |
-                       ((uint64_t)'e' << 48) | ((uint64_t)'r' << 56));
+                           ((uint64_t)'l' << 16) | ((uint64_t)'o' << 24) |
+                           ((uint64_t)'n' << 32) | ((uint64_t)'g' << 40) |
+                           ((uint64_t)'e' << 48) | ((uint64_t)'r' << 56));
     EXPECT_EQ(regs[1], ((uint64_t)' ' << 0) | ((uint64_t)'s' << 8) |
-                       ((uint64_t)'t' << 16) | ((uint64_t)'r' << 24) |
-                       ((uint64_t)'i' << 32) | ((uint64_t)'n' << 40) |
-                       ((uint64_t)'g' << 48));
+                           ((uint64_t)'t' << 16) | ((uint64_t)'r' << 24) |
+                           ((uint64_t)'i' << 32) | ((uint64_t)'n' << 40) |
+                           ((uint64_t)'g' << 48));
 
     // Success with exactly the right number of characters.
     EXPECT_TRUE(Args::pack("12345678", regs, 1));
     EXPECT_EQ(regs[0], ((uint64_t)'1' << 0) | ((uint64_t)'2' << 8) |
-                       ((uint64_t)'3' << 16) | ((uint64_t)'4' << 24) |
-                       ((uint64_t)'5' << 32) | ((uint64_t)'6' << 40) |
-                       ((uint64_t)'7' << 48) | ((uint64_t)'8' << 56));
+                           ((uint64_t)'3' << 16) | ((uint64_t)'4' << 24) |
+                           ((uint64_t)'5' << 32) | ((uint64_t)'6' << 40) |
+                           ((uint64_t)'7' << 48) | ((uint64_t)'8' << 56));
 
     // Failure with exactly one too many characters.
     EXPECT_FALSE(Args::pack("123456789", regs, 1));
@@ -177,8 +177,8 @@ TEST(ArgsTest, Pop)
     EXPECT_TRUE(short_args.pop(regs, 1));
     EXPECT_EQ(short_args.size(), 0);
     EXPECT_EQ(regs[0], ((uint64_t)'s' << 0) | ((uint64_t)'h' << 8) |
-                       ((uint64_t)'o' << 16) | ((uint64_t)'r' << 24) |
-                       ((uint64_t)'t' << 32));
+                           ((uint64_t)'o' << 16) | ((uint64_t)'r' << 24) |
+                           ((uint64_t)'t' << 32));
 
     // Pop into a list of register and fail.
     EXPECT_EQ(long_args.size(), 1);

@@ -79,8 +79,8 @@ WrPriv::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
 }
 
 std::string
-WrPrivImm::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+WrPrivImm::generateDisassembly(Addr pc,
+                               const loader::SymbolTable *symtab) const
 {
     std::stringstream response;
 

@@ -64,7 +64,8 @@ namespace gem5
 
 using namespace ArmISA;
 
-namespace trace {
+namespace trace
+{
 
 // TARMAC Parser static variables
 const int TarmacParserRecord::MaxLineLength;
@@ -755,11 +756,11 @@ TarmacParserRecord::TarmacParserRecordEvent::process()
     for (; it != end; ++it) {
         values.clear();
         switch (it->type) {
-          case REG_R:
-          case REG_X:
+        case REG_R:
+        case REG_X:
             values.push_back(thread->getReg(intRegClass[it->index]));
             break;
-          case REG_S:
+        case REG_S:
             if (instRecord.isetstate == ISET_A64) {
                 ArmISA::VecRegContainer vc;
                 thread->getReg(vecRegClass[it->index], &vc);
@@ -770,7 +771,7 @@ TarmacParserRecord::TarmacParserRecordEvent::process()
                 values.push_back(elem);
             }
             break;
-          case REG_D:
+        case REG_D:
             if (instRecord.isetstate == ISET_A64) {
                 ArmISA::VecRegContainer vc;
                 thread->getReg(vecRegClass[it->index], &vc);
@@ -783,19 +784,17 @@ TarmacParserRecord::TarmacParserRecordEvent::process()
                 values.push_back((uint64_t)(w1) << 32 | w0);
             }
             break;
-          case REG_P:
-            {
-                ArmISA::VecPredRegContainer pc;
-                thread->getReg(vecPredRegClass[it->index], &pc);
-                auto pv = pc.as<uint8_t>();
-                uint64_t p = 0;
-                for (int i = maxVectorLength * 8; i > 0; ) {
-                    p = (p << 1) | pv[--i];
-                }
-                values.push_back(p);
+        case REG_P: {
+            ArmISA::VecPredRegContainer pc;
+            thread->getReg(vecPredRegClass[it->index], &pc);
+            auto pv = pc.as<uint8_t>();
+            uint64_t p = 0;
+            for (int i = maxVectorLength * 8; i > 0;) {
+                p = (p << 1) | pv[--i];
             }
-            break;
-          case REG_Q:
+            values.push_back(p);
+        } break;
+        case REG_Q:
             if (instRecord.isetstate == ISET_A64) {
                 ArmISA::VecRegContainer vc;
                 thread->getReg(vecRegClass[it->index], &vc);
@@ -812,18 +811,16 @@ TarmacParserRecord::TarmacParserRecordEvent::process()
                 values.push_back((uint64_t)(w3) << 32 | w2);
             }
             break;
-          case REG_Z:
-            {
-                int8_t i = maxVectorLength;
-                ArmISA::VecRegContainer vc;
-                thread->getReg(vecRegClass[it->index], &vc);
-                auto vv = vc.as<uint64_t>();
-                while (i > 0) {
-                    values.push_back(vv[--i]);
-                }
+        case REG_Z: {
+            int8_t i = maxVectorLength;
+            ArmISA::VecRegContainer vc;
+            thread->getReg(vecRegClass[it->index], &vc);
+            auto vv = vc.as<uint64_t>();
+            while (i > 0) {
+                values.push_back(vv[--i]);
             }
-            break;
-          case REG_MISC:
+        } break;
+        case REG_MISC:
             if (it->index == MISCREG_CPSR) {
                 // Read condition codes from aliased integer regs
                 CPSR cpsr = thread->readMiscRegNoEffect(it->index);
@@ -842,25 +839,25 @@ TarmacParserRecord::TarmacParserRecordEvent::process()
                 // Read FPSCR and extract FPCR value
                 FPSCR fpscr = thread->readMiscRegNoEffect(MISCREG_FPSCR);
                 const uint32_t ones = (uint32_t)(-1);
-                FPSCR fpcrMask  = 0;
+                FPSCR fpcrMask = 0;
                 fpcrMask.ioe = ones;
                 fpcrMask.dze = ones;
                 fpcrMask.ofe = ones;
                 fpcrMask.ufe = ones;
                 fpcrMask.ixe = ones;
                 fpcrMask.ide = ones;
-                fpcrMask.len    = ones;
+                fpcrMask.len = ones;
                 fpcrMask.stride = ones;
-                fpcrMask.rMode  = ones;
-                fpcrMask.fz     = ones;
-                fpcrMask.dn     = ones;
-                fpcrMask.ahp    = ones;
+                fpcrMask.rMode = ones;
+                fpcrMask.fz = ones;
+                fpcrMask.dn = ones;
+                fpcrMask.ahp = ones;
                 values.push_back(fpscr & fpcrMask);
             } else if (it->index == MISCREG_FPSR) {
                 // Read FPSCR and extract FPSR value
                 FPSCR fpscr = thread->readMiscRegNoEffect(MISCREG_FPSCR);
                 const uint32_t ones = (uint32_t)(-1);
-                FPSCR fpsrMask  = 0;
+                FPSCR fpsrMask = 0;
                 fpsrMask.ioc = ones;
                 fpsrMask.dzc = ones;
                 fpsrMask.ofc = ones;
@@ -877,12 +874,13 @@ TarmacParserRecord::TarmacParserRecordEvent::process()
                 values.push_back(thread->readMiscRegNoEffect(it->index));
             }
             break;
-          default:
+        default:
             panic("Unknown TARMAC trace record type!");
         }
 
         bool same = true;
-        if (values.size() != it->values.size()) same = false;
+        if (values.size() != it->values.size())
+            same = false;
 
         uint32_t size = values.size();
         if (size > it->values.size())
@@ -914,13 +912,14 @@ TarmacParserRecord::TarmacParserRecordEvent::process()
     }
     destRegRecords.clear();
 
-    if (mismatchOnPcOrOpcode && (parent.exitOnDiff ||
-                                 parent.exitOnInsnDiff))
+    if (mismatchOnPcOrOpcode && (parent.exitOnDiff || parent.exitOnInsnDiff))
         exitSimLoop("a mismatch with the TARMAC trace has been detected "
-                    "on PC or opcode", 1);
+                    "on PC or opcode",
+                    1);
     if (mismatch && parent.exitOnDiff)
         exitSimLoop("a mismatch with the TARMAC trace has been detected "
-                    "on data value", 1);
+                    "on data value",
+                    1);
 }
 
 const char *
@@ -929,7 +928,6 @@ TarmacParserRecord::TarmacParserRecordEvent::description() const
     return "TARMAC parser record event";
 }
 
-
 void
 TarmacParserRecord::printMismatchHeader(const StaticInstPtr staticInst,
                                         const PCStateBase &pc)
@@ -937,22 +935,23 @@ TarmacParserRecord::printMismatchHeader(const StaticInstPtr staticInst,
     std::ostream &outs = trace::output();
     outs << "\nMismatch between gem5 and TARMAC trace @ " << std::dec
          << curTick() << " ticks\n"
-         << "[seq_num: " << std::dec << instRecord.seq_num
-         << ", opcode: 0x" << std::hex << (staticInst->getEMI() & 0xffffffff)
-         << ", PC: 0x" << pc.instAddr()
-         << ", disasm: " <<  staticInst->disassemble(pc.instAddr()) << "]"
+         << "[seq_num: " << std::dec << instRecord.seq_num << ", opcode: 0x"
+         << std::hex << (staticInst->getEMI() & 0xffffffff) << ", PC: 0x"
+         << pc.instAddr()
+         << ", disasm: " << staticInst->disassemble(pc.instAddr()) << "]"
          << std::endl;
 }
 
 TarmacParserRecord::TarmacParserRecord(Tick _when, ThreadContext *_thread,
                                        const StaticInstPtr _staticInst,
                                        const PCStateBase &_pc,
-                                       TarmacParser& _parent,
+                                       TarmacParser &_parent,
                                        const StaticInstPtr _macroStaticInst)
-    : TarmacBaseRecord(_when, _thread, _staticInst,
-                       _pc, _macroStaticInst),
-      parsingStarted(false), mismatch(false),
-      mismatchOnPcOrOpcode(false), parent(_parent)
+    : TarmacBaseRecord(_when, _thread, _staticInst, _pc, _macroStaticInst),
+      parsingStarted(false),
+      mismatch(false),
+      mismatchOnPcOrOpcode(false),
+      parent(_parent)
 {
     memReq = std::make_shared<Request>();
     if (maxVectorLength == 0) {
@@ -971,7 +970,6 @@ TarmacParserRecord::dump()
     ISetState isetstate;
 
     if (!staticInst->isMicroop() || staticInst->isLastMicroop()) {
-
         if (parent.macroopInProgress && !staticInst->isLastMicroop()) {
             // A microop faulted and it was not the last microop -> advance
             // TARMAC trace to next instruction
@@ -980,14 +978,11 @@ TarmacParserRecord::dump()
 
         parent.macroopInProgress = false;
 
-        auto arm_inst = static_cast<const ArmStaticInst*>(
-            staticInst.get()
-        );
+        auto arm_inst = static_cast<const ArmStaticInst *>(staticInst.get());
 
         while (advanceTrace()) {
             switch (currRecordType) {
-
-              case TARMAC_INST:
+            case TARMAC_INST:
                 parsingStarted = true;
                 if (pc->instAddr() != instRecord.addr) {
                     if (!mismatch)
@@ -1002,8 +997,8 @@ TarmacParserRecord::dump()
                     if (!mismatch)
                         printMismatchHeader(staticInst, *pc);
                     outs << "diff> [opcode] gem5: 0x" << std::hex
-                         << arm_inst->encoding()
-                         << ", TARMAC: 0x" << instRecord.opcode << std::endl;
+                         << arm_inst->encoding() << ", TARMAC: 0x"
+                         << instRecord.opcode << std::endl;
                     mismatch = true;
                     mismatchOnPcOrOpcode = true;
                 }
@@ -1016,8 +1011,7 @@ TarmacParserRecord::dump()
                     if (!mismatch)
                         printMismatchHeader(staticInst, *pc);
                     outs << "diff> [iset_state] gem5: "
-                         << iSetStateToStr(isetstate)
-                         << ", TARMAC: "
+                         << iSetStateToStr(isetstate) << ", TARMAC: "
                          << iSetStateToStr(instRecord.isetstate);
                     mismatch = true;
                 }
@@ -1025,42 +1019,42 @@ TarmacParserRecord::dump()
                 // TODO(Giacomo): add support for predicate and mode checking
                 break;
 
-              case TARMAC_REG:
+            case TARMAC_REG:
                 destRegRecords.push_back(regRecord);
                 break;
 
-              case TARMAC_MEM:
-                if (!readMemNoEffect(memRecord.addr, (uint8_t*) &written_data,
+            case TARMAC_MEM:
+                if (!readMemNoEffect(memRecord.addr, (uint8_t *)&written_data,
                                      memRecord.size, mem_flags))
                     break;
                 if (written_data != memRecord.data) {
                     if (!mismatch)
                         printMismatchHeader(staticInst, *pc);
                     outs << "diff> [mem(0x" << std::hex << memRecord.addr
-                         << ")] gem5: 0x" << written_data
-                         << ", TARMAC: 0x" << memRecord.data
-                         << std::endl;
+                         << ")] gem5: 0x" << written_data << ", TARMAC: 0x"
+                         << memRecord.data << std::endl;
                 }
                 break;
 
-              case TARMAC_UNSUPPORTED:
+            case TARMAC_UNSUPPORTED:
                 break;
 
-              default:
+            default:
                 panic("Unknown TARMAC trace record type!");
             }
         }
         // We are done with the current instruction, i.e. all the corresponding
         // entries in the TARMAC trace have been parsed
         if (destRegRecords.size()) {
-            TarmacParserRecordEvent *event = new TarmacParserRecordEvent(
-                parent, thread, staticInst, *pc, mismatch,
-                mismatchOnPcOrOpcode);
+            TarmacParserRecordEvent *event =
+                new TarmacParserRecordEvent(parent, thread, staticInst, *pc,
+                                            mismatch, mismatchOnPcOrOpcode);
             mainEventQueue[0]->schedule(event, curTick());
-        } else if (mismatchOnPcOrOpcode && (parent.exitOnDiff ||
-                                            parent.exitOnInsnDiff)) {
+        } else if (mismatchOnPcOrOpcode &&
+                   (parent.exitOnDiff || parent.exitOnInsnDiff)) {
             exitSimLoop("a mismatch with the TARMAC trace has been detected "
-                        "on PC or opcode", 1);
+                        "on PC or opcode",
+                        1);
         }
     } else {
         parent.macroopInProgress = true;
@@ -1070,8 +1064,8 @@ TarmacParserRecord::dump()
 bool
 TarmacParserRecord::advanceTrace()
 {
-    std::ifstream& trace = parent.trace;
-    trace >> std::hex;  // All integer values are in hex base
+    std::ifstream &trace = parent.trace;
+    trace >> std::hex; // All integer values are in hex base
 
     if (buf[0] != 'I') {
         trace >> buf;
@@ -1104,16 +1098,16 @@ TarmacParserRecord::advanceTrace()
         trace >> instRecord.opcode;
         trace >> buf;
         switch (buf[0]) {
-          case 'A':
+        case 'A':
             instRecord.isetstate = ISET_ARM;
             break;
-          case 'T':
+        case 'T':
             instRecord.isetstate = ISET_THUMB;
             break;
-          case 'O':
+        case 'O':
             instRecord.isetstate = ISET_A64;
             break;
-          default:
+        default:
             warn("Invalid TARMAC trace record (seq_num: %lld)",
                  instRecord.seq_num);
             instRecord.isetstate = ISET_UNSUPPORTED;
@@ -1132,7 +1126,7 @@ TarmacParserRecord::advanceTrace()
             // R register
             regRecord.type = REG_R;
             int base_index = atoi(&buf[1]);
-            char* pch = strchr(buf, '_');
+            char *pch = strchr(buf, '_');
             if (pch == NULL) {
                 regRecord.index = int_reg::usr(base_index);
             } else {
@@ -1222,7 +1216,8 @@ TarmacParserRecord::advanceTrace()
                 uint64_t lsw = 0;
                 trace >> lsw;
                 v = (v << 32) | lsw;
-                if (i < maxVectorLength - 1) trace >> c;
+                if (i < maxVectorLength - 1)
+                    trace >> c;
                 regRecord.values[i] = v;
             }
         } else {
@@ -1275,7 +1270,7 @@ TarmacParserRecord::readMemNoEffect(Addr addr, uint8_t *data, unsigned size,
                                     unsigned flags)
 {
     const RequestPtr &req = memReq;
-    auto mmu = static_cast<MMU*>(thread->getMMUPtr());
+    auto mmu = static_cast<MMU *>(thread->getMMUPtr());
 
     req->setVirt(addr, size, flags, thread->pcState().instAddr(),
                  Request::funcRequestorId);
@@ -1288,8 +1283,7 @@ TarmacParserRecord::readMemNoEffect(Addr addr, uint8_t *data, unsigned size,
         return false;
 
     // Now do the access
-    if (fault == NoFault &&
-        !req->getFlags().isSet(Request::NO_ACCESS)) {
+    if (fault == NoFault && !req->getFlags().isSet(Request::NO_ACCESS)) {
         if (req->isLLSC() || req->isLocalAccess())
             // LLSCs and local accesses are ignored
             return false;
@@ -1318,7 +1312,7 @@ TarmacParser::advanceTraceToStartPc()
     Addr pc;
     int saved_offset;
 
-    trace >> std::hex;  // All integer values are in hex base
+    trace >> std::hex; // All integer values are in hex base
 
     while (true) {
         saved_offset = trace.tellg();
@@ -1342,17 +1336,17 @@ TarmacParser::advanceTraceToStartPc()
     }
 }
 
-const char*
+const char *
 TarmacParserRecord::iSetStateToStr(ISetState isetstate) const
 {
     switch (isetstate) {
-      case ISET_ARM:
+    case ISET_ARM:
         return "ARM (A32)";
-      case ISET_THUMB:
+    case ISET_THUMB:
         return "Thumb (A32)";
-      case ISET_A64:
+    case ISET_A64:
         return "A64";
-      default:
+    default:
         return "UNSUPPORTED";
     }
 }

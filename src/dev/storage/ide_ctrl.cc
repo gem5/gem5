@@ -62,8 +62,8 @@ enum BMIRegOffset
 };
 
 IdeController::Channel::Channel(std::string new_name, IdeController *new_ctrl,
-        bool new_primary) :
-    Named(new_name), ctrl(new_ctrl), primary(new_primary)
+                                bool new_primary)
+    : Named(new_name), ctrl(new_ctrl), primary(new_primary)
 {
     bmiRegs.reset();
     bmiRegs.status.dmaCap0 = 1;
@@ -71,13 +71,15 @@ IdeController::Channel::Channel(std::string new_name, IdeController *new_ctrl,
 }
 
 IdeController::IdeController(const Params &p)
-    : PciDevice(p), configSpaceRegs(name() + ".config_space_regs"),
-    primary(name() + ".primary", this, true),
-    secondary(name() + ".secondary", this, false),
-    ioShift(p.io_shift), ctrlOffset(p.ctrl_offset)
+    : PciDevice(p),
+      configSpaceRegs(name() + ".config_space_regs"),
+      primary(name() + ".primary", this, true),
+      secondary(name() + ".secondary", this, false),
+      ioShift(p.io_shift),
+      ctrlOffset(p.ctrl_offset)
 {
     panic_if(params().disks.size() > 4,
-            "IDE controllers support a maximum of 4 devices attached!");
+             "IDE controllers support a maximum of 4 devices attached!");
 
     // Assign the disks to channels
     for (int i = 0; i < params().disks.size(); i++) {
@@ -172,7 +174,6 @@ IdeController::readConfig(PacketPtr pkt)
     return configDelay;
 }
 
-
 Tick
 IdeController::writeConfig(PacketPtr pkt)
 {
@@ -183,8 +184,8 @@ IdeController::writeConfig(PacketPtr pkt)
 
     size_t size = pkt->getSize();
 
-    DPRINTF(IdeCtrl, "PCI write offset: %#x size: %d data: %#x\n",
-            offset, size, pkt->getUintX(ByteOrder::little));
+    DPRINTF(IdeCtrl, "PCI write offset: %#x size: %d data: %#x\n", offset,
+            size, pkt->getUintX(ByteOrder::little));
 
     configSpaceRegs.write(offset, pkt->getConstPtr<void>(), size);
 
@@ -193,8 +194,8 @@ IdeController::writeConfig(PacketPtr pkt)
 }
 
 void
-IdeController::Channel::accessCommand(Addr offset,
-        int size, uint8_t *data, bool read)
+IdeController::Channel::accessCommand(Addr offset, int size, uint8_t *data,
+                                      bool read)
 {
     const Addr SelectOffset = 6;
     const uint8_t SelectDevBit = 0x10;
@@ -213,8 +214,8 @@ IdeController::Channel::accessCommand(Addr offset,
 }
 
 void
-IdeController::Channel::accessControl(Addr offset,
-        int size, uint8_t *data, bool read)
+IdeController::Channel::accessControl(Addr offset, int size, uint8_t *data,
+                                      bool read)
 {
     if (selected() == NULL) {
         assert(size == sizeof(uint8_t));
@@ -227,85 +228,81 @@ IdeController::Channel::accessControl(Addr offset,
 }
 
 void
-IdeController::Channel::accessBMI(Addr offset,
-        int size, uint8_t *data, bool read)
+IdeController::Channel::accessBMI(Addr offset, int size, uint8_t *data,
+                                  bool read)
 {
     assert(offset + size <= sizeof(BMIRegs));
     if (read) {
         memcpy(data, (uint8_t *)&bmiRegs + offset, size);
     } else {
         switch (offset) {
-          case BMICommand:
-            {
-                if (size != sizeof(uint8_t))
-                    panic("Invalid BMIC write size: %x\n", size);
+        case BMICommand: {
+            if (size != sizeof(uint8_t))
+                panic("Invalid BMIC write size: %x\n", size);
 
-                BMICommandReg oldVal = bmiRegs.command;
-                BMICommandReg newVal = *data;
+            BMICommandReg oldVal = bmiRegs.command;
+            BMICommandReg newVal = *data;
 
-                // if a DMA transfer is in progress, R/W control cannot change
-                if (oldVal.startStop && oldVal.rw != newVal.rw)
-                    oldVal.rw = newVal.rw;
+            // if a DMA transfer is in progress, R/W control cannot change
+            if (oldVal.startStop && oldVal.rw != newVal.rw)
+                oldVal.rw = newVal.rw;
 
-                if (oldVal.startStop != newVal.startStop) {
-                    if (selected() == NULL)
-                        panic("DMA start for disk which does not exist\n");
+            if (oldVal.startStop != newVal.startStop) {
+                if (selected() == NULL)
+                    panic("DMA start for disk which does not exist\n");
 
-                    if (oldVal.startStop) {
-                        DPRINTF(IdeCtrl, "Stopping DMA transfer\n");
-                        bmiRegs.status.active = 0;
+                if (oldVal.startStop) {
+                    DPRINTF(IdeCtrl, "Stopping DMA transfer\n");
+                    bmiRegs.status.active = 0;
 
-                        selected()->abortDma();
-                    } else {
-                        DPRINTF(IdeCtrl, "Starting DMA transfer\n");
-                        bmiRegs.status.active = 1;
-
-                        selected()->startDma(letoh(bmiRegs.bmidtp));
-                    }
-                }
-
-                bmiRegs.command = newVal;
-            }
-            break;
-          case BMIStatus:
-            {
-                if (size != sizeof(uint8_t))
-                    panic("Invalid BMIS write size: %x\n", size);
-
-                BMIStatusReg oldVal = bmiRegs.status;
-                BMIStatusReg newVal = *data;
-
-                // the BMIDEA bit is read only
-                newVal.active = oldVal.active;
-
-                // to reset (set 0) IDEINTS and IDEDMAE, write 1 to each
-                if ((oldVal.intStatus == 1) && (newVal.intStatus == 1)) {
-                    newVal.intStatus = 0; // clear the interrupt?
+                    selected()->abortDma();
                 } else {
-                    // Assigning two bitunion fields to each other does not
-                    // work as intended, so we need to use this temporary
-                    // variable to get around the bug.
-                    uint8_t tmp = oldVal.intStatus;
-                    newVal.intStatus = tmp;
-                }
-                if ((oldVal.dmaError == 1) && (newVal.dmaError == 1)) {
-                    newVal.dmaError = 0;
-                } else {
-                    uint8_t tmp = oldVal.dmaError;
-                    newVal.dmaError = tmp;
-                }
+                    DPRINTF(IdeCtrl, "Starting DMA transfer\n");
+                    bmiRegs.status.active = 1;
 
-                bmiRegs.status = newVal;
+                    selected()->startDma(letoh(bmiRegs.bmidtp));
+                }
             }
-            break;
-          case BMIDescTablePtr:
+
+            bmiRegs.command = newVal;
+        } break;
+        case BMIStatus: {
+            if (size != sizeof(uint8_t))
+                panic("Invalid BMIS write size: %x\n", size);
+
+            BMIStatusReg oldVal = bmiRegs.status;
+            BMIStatusReg newVal = *data;
+
+            // the BMIDEA bit is read only
+            newVal.active = oldVal.active;
+
+            // to reset (set 0) IDEINTS and IDEDMAE, write 1 to each
+            if ((oldVal.intStatus == 1) && (newVal.intStatus == 1)) {
+                newVal.intStatus = 0; // clear the interrupt?
+            } else {
+                // Assigning two bitunion fields to each other does not
+                // work as intended, so we need to use this temporary
+                // variable to get around the bug.
+                uint8_t tmp = oldVal.intStatus;
+                newVal.intStatus = tmp;
+            }
+            if ((oldVal.dmaError == 1) && (newVal.dmaError == 1)) {
+                newVal.dmaError = 0;
+            } else {
+                uint8_t tmp = oldVal.dmaError;
+                newVal.dmaError = tmp;
+            }
+
+            bmiRegs.status = newVal;
+        } break;
+        case BMIDescTablePtr:
             if (size != sizeof(uint32_t))
                 panic("Invalid BMIDTP write size: %x\n", size);
             bmiRegs.bmidtp = htole(*(uint32_t *)data & ~0x3);
             break;
-          default:
+        default:
             if (size != sizeof(uint8_t) && size != sizeof(uint16_t) &&
-                    size != sizeof(uint32_t)) {
+                size != sizeof(uint32_t)) {
                 panic("IDE controller write of invalid size: %x\n", size);
             }
             memcpy((uint8_t *)&bmiRegs + offset, data, size);
@@ -316,8 +313,8 @@ IdeController::Channel::accessBMI(Addr offset,
 void
 IdeController::dispatchAccess(PacketPtr pkt, bool read)
 {
-    if (pkt->getSize() != 1 && pkt->getSize() != 2 && pkt->getSize() !=4)
-         panic("Bad IDE read size: %d\n", pkt->getSize());
+    if (pkt->getSize() != 1 && pkt->getSize() != 2 && pkt->getSize() != 4)
+        panic("Bad IDE read size: %d\n", pkt->getSize());
 
     Addr addr = pkt->getAddr();
     int size = pkt->getSize();
@@ -326,38 +323,37 @@ IdeController::dispatchAccess(PacketPtr pkt, bool read)
     int bar_num;
     Addr offset;
     panic_if(!getBAR(addr, bar_num, offset),
-        "IDE controller access to invalid address: %#x.", addr);
+             "IDE controller access to invalid address: %#x.", addr);
 
     switch (bar_num) {
-      case 0:
+    case 0:
         // linux may have shifted the address by ioShift,
         // here we shift it back, similarly for ctrlOffset.
         offset >>= ioShift;
         primary.accessCommand(offset, size, dataPtr, read);
         break;
-      case 1:
+    case 1:
         offset += ctrlOffset;
         primary.accessControl(offset, size, dataPtr, read);
         break;
-      case 2:
+    case 2:
         secondary.accessCommand(offset, size, dataPtr, read);
         break;
-      case 3:
+    case 3:
         secondary.accessControl(offset, size, dataPtr, read);
         break;
-      case 4:
-        {
-            PciCommandRegister command = letoh(config.command);
-            if (!read && !command.busMaster)
-                return;
+    case 4: {
+        PciCommandRegister command = letoh(config.command);
+        if (!read && !command.busMaster)
+            return;
 
-            if (offset < sizeof(Channel::BMIRegs)) {
-                primary.accessBMI(offset, size, dataPtr, read);
-            } else {
-                offset -= sizeof(Channel::BMIRegs);
-                secondary.accessBMI(offset, size, dataPtr, read);
-            }
+        if (offset < sizeof(Channel::BMIRegs)) {
+            primary.accessBMI(offset, size, dataPtr, read);
+        } else {
+            offset -= sizeof(Channel::BMIRegs);
+            secondary.accessBMI(offset, size, dataPtr, read);
         }
+    }
     }
 
 #ifndef NDEBUG
@@ -443,7 +439,7 @@ void
 IdeController::Channel::unserialize(const std::string &base, CheckpointIn &cp)
 {
     uint8_t command;
-    paramIn(cp, base +".bmiRegs.command", command);
+    paramIn(cp, base + ".bmiRegs.command", command);
     bmiRegs.command = command;
     paramIn(cp, base + ".bmiRegs.reserved0", bmiRegs.reserved0);
     uint8_t status;

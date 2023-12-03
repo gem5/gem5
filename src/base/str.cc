@@ -65,8 +65,8 @@ split_last(const std::string &s, std::string &lhs, std::string &rhs, char c)
 }
 
 void
-tokenize(std::vector<std::string>& v, const std::string &s, char token,
-        bool ignore)
+tokenize(std::vector<std::string> &v, const std::string &s, char token,
+         bool ignore)
 {
     std::string::size_type first = 0;
     std::string::size_type last = s.find_first_of(token);

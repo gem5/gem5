@@ -96,70 +96,46 @@ enum : RegIndex
 } // namespace int_reg
 
 inline constexpr RegClass intRegClass(IntRegClass, IntRegClassName,
-        int_reg::NumRegs, debug::IntRegs);
+                                      int_reg::NumRegs, debug::IntRegs);
 
 namespace int_reg
 {
 
-inline constexpr RegId
-    R0 = intRegClass[_R0Idx],
-    R1 = intRegClass[_R1Idx],
-    R2 = intRegClass[_R2Idx],
-    R3 = intRegClass[_R3Idx],
-    R4 = intRegClass[_R4Idx],
-    R5 = intRegClass[_R5Idx],
-    R6 = intRegClass[_R6Idx],
-    R7 = intRegClass[_R7Idx],
-    R8 = intRegClass[_R8Idx],
-    R9 = intRegClass[_R9Idx],
-    R10 = intRegClass[_R10Idx],
-    R11 = intRegClass[_R11Idx],
-    R12 = intRegClass[_R12Idx],
-    R13 = intRegClass[_R13Idx],
-    R14 = intRegClass[_R14Idx],
-    R15 = intRegClass[_R15Idx],
-    R16 = intRegClass[_R16Idx],
-    R17 = intRegClass[_R17Idx],
-    R18 = intRegClass[_R18Idx],
-    R19 = intRegClass[_R19Idx],
-    R20 = intRegClass[_R20Idx],
-    R21 = intRegClass[_R21Idx],
-    R22 = intRegClass[_R22Idx],
-    R23 = intRegClass[_R23Idx],
-    R24 = intRegClass[_R24Idx],
-    R25 = intRegClass[_R25Idx],
-    R26 = intRegClass[_R26Idx],
-    R27 = intRegClass[_R27Idx],
-    R28 = intRegClass[_R28Idx],
-    R29 = intRegClass[_R29Idx],
-    R30 = intRegClass[_R30Idx],
-    R31 = intRegClass[_R31Idx],
+inline constexpr RegId R0 = intRegClass[_R0Idx], R1 = intRegClass[_R1Idx],
+                       R2 = intRegClass[_R2Idx], R3 = intRegClass[_R3Idx],
+                       R4 = intRegClass[_R4Idx], R5 = intRegClass[_R5Idx],
+                       R6 = intRegClass[_R6Idx], R7 = intRegClass[_R7Idx],
+                       R8 = intRegClass[_R8Idx], R9 = intRegClass[_R9Idx],
+                       R10 = intRegClass[_R10Idx], R11 = intRegClass[_R11Idx],
+                       R12 = intRegClass[_R12Idx], R13 = intRegClass[_R13Idx],
+                       R14 = intRegClass[_R14Idx], R15 = intRegClass[_R15Idx],
+                       R16 = intRegClass[_R16Idx], R17 = intRegClass[_R17Idx],
+                       R18 = intRegClass[_R18Idx], R19 = intRegClass[_R19Idx],
+                       R20 = intRegClass[_R20Idx], R21 = intRegClass[_R21Idx],
+                       R22 = intRegClass[_R22Idx], R23 = intRegClass[_R23Idx],
+                       R24 = intRegClass[_R24Idx], R25 = intRegClass[_R25Idx],
+                       R26 = intRegClass[_R26Idx], R27 = intRegClass[_R27Idx],
+                       R28 = intRegClass[_R28Idx], R29 = intRegClass[_R29Idx],
+                       R30 = intRegClass[_R30Idx], R31 = intRegClass[_R31Idx],
 
-    Cr = intRegClass[_CrIdx],
-    Xer = intRegClass[_XerIdx],
-    Lr = intRegClass[_LrIdx],
-    Ctr = intRegClass[_CtrIdx],
-    Tar = intRegClass[_TarIdx],
-    Fpscr = intRegClass[_FpscrIdx],
-    Msr = intRegClass[_MsrIdx],
-    Rsv = intRegClass[_RsvIdx],
-    RsvLen = intRegClass[_RsvLenIdx],
-    RsvAddr = intRegClass[_RsvAddrIdx];
+                       Cr = intRegClass[_CrIdx], Xer = intRegClass[_XerIdx],
+                       Lr = intRegClass[_LrIdx], Ctr = intRegClass[_CtrIdx],
+                       Tar = intRegClass[_TarIdx],
+                       Fpscr = intRegClass[_FpscrIdx],
+                       Msr = intRegClass[_MsrIdx], Rsv = intRegClass[_RsvIdx],
+                       RsvLen = intRegClass[_RsvLenIdx],
+                       RsvAddr = intRegClass[_RsvAddrIdx];
 
 } // namespace int_reg
 
 // Semantically meaningful register indices
-inline constexpr auto
-    &ReturnValueReg = int_reg::R3,
-    &ArgumentReg0 = int_reg::R3,
-    &ArgumentReg1 = int_reg::R4,
-    &ArgumentReg2 = int_reg::R5,
-    &ArgumentReg3 = int_reg::R6,
-    &ArgumentReg4 = int_reg::R7,
-    &ArgumentReg5 = int_reg::R8,
-    &StackPointerReg = int_reg::R1,
-    &TOCPointerReg = int_reg::R2,
-    &ThreadPointerReg = int_reg::R13;
+inline constexpr auto &ReturnValueReg = int_reg::R3,
+                      &ArgumentReg0 = int_reg::R3, &ArgumentReg1 = int_reg::R4,
+                      &ArgumentReg2 = int_reg::R5, &ArgumentReg3 = int_reg::R6,
+                      &ArgumentReg4 = int_reg::R7, &ArgumentReg5 = int_reg::R8,
+                      &StackPointerReg = int_reg::R1,
+                      &TOCPointerReg = int_reg::R2,
+                      &ThreadPointerReg = int_reg::R13;
 
 } // namespace PowerISA
 } // namespace gem5

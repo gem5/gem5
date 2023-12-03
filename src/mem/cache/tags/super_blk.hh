@@ -82,9 +82,9 @@ class CompressionBlk : public SectorSubBlk
     };
 
     CompressionBlk();
-    CompressionBlk(const CompressionBlk&) = delete;
-    CompressionBlk& operator=(const CompressionBlk&) = delete;
-    CompressionBlk(CompressionBlk&&) = delete;
+    CompressionBlk(const CompressionBlk &) = delete;
+    CompressionBlk &operator=(const CompressionBlk &) = delete;
+    CompressionBlk(CompressionBlk &&) = delete;
     /**
      * Move assignment operator.
      * This should only be used to move an existing valid entry into an
@@ -92,8 +92,8 @@ class CompressionBlk : public SectorSubBlk
      * will become invalid, and the invalid, valid. All location related
      * variables will remain the same.
      */
-    CompressionBlk& operator=(CompressionBlk&& other);
-    CacheBlk& operator=(CacheBlk&& other) override;
+    CompressionBlk &operator=(CompressionBlk &&other);
+    CacheBlk &operator=(CacheBlk &&other) override;
     ~CompressionBlk() = default;
 
     /**
@@ -182,9 +182,9 @@ class SuperBlk : public SectorBlk
 
   public:
     SuperBlk();
-    SuperBlk(const SuperBlk&) = delete;
-    SuperBlk& operator=(const SuperBlk&) = delete;
-    ~SuperBlk() {};
+    SuperBlk(const SuperBlk &) = delete;
+    SuperBlk &operator=(const SuperBlk &) = delete;
+    ~SuperBlk(){};
 
     /**
      * Returns whether the superblock contains compressed blocks or not. By
@@ -193,7 +193,7 @@ class SuperBlk : public SectorBlk
      * @param ignored_blk If provided don't consider the given block.
      * @return The compressibility state of the superblock.
      */
-    bool isCompressed(const CompressionBlk* ignored_blk = nullptr) const;
+    bool isCompressed(const CompressionBlk *ignored_blk = nullptr) const;
 
     /**
      * Checks whether a superblock can co-allocate given compressed data block.

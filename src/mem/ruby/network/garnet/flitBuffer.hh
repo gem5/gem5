@@ -27,7 +27,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #ifndef __MEM_RUBY_NETWORK_GARNET_0_FLITBUFFER_HH__
 #define __MEM_RUBY_NETWORK_GARNET_0_FLITBUFFER_HH__
 
@@ -55,10 +54,15 @@ class flitBuffer
 
     bool isReady(Tick curTime);
     bool isEmpty();
-    void print(std::ostream& out) const;
+    void print(std::ostream &out) const;
     bool isFull();
     void setMaxSize(int maximum);
-    int getSize() const { return m_buffer.size(); }
+
+    int
+    getSize() const
+    {
+        return m_buffer.size();
+    }
 
     flit *
     getTopFlit()
@@ -88,8 +92,8 @@ class flitBuffer
     int max_size;
 };
 
-inline std::ostream&
-operator<<(std::ostream& out, const flitBuffer& obj)
+inline std::ostream &
+operator<<(std::ostream &out, const flitBuffer &obj)
 {
     obj.print(out);
     out << std::flush;

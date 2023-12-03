@@ -32,17 +32,17 @@ namespace gem5
 
 namespace linux
 {
-    struct pcb_struct
-    {
-        uint64_ta rpb_ksp;
-        uint64_ta rpb_usp;
-        uint64_ta rpb_ptbr;
-        uint32_t rpb_cc;
-        uint32_t rpb_psn;
-        uint64_ta rpb_unique;
-        uint64_ta rpb_fen;
-        uint64_ta res1, res2;
-    };
+struct pcb_struct
+{
+    uint64_ta rpb_ksp;
+    uint64_ta rpb_usp;
+    uint64_ta rpb_ptbr;
+    uint32_t rpb_cc;
+    uint32_t rpb_psn;
+    uint64_ta rpb_unique;
+    uint64_ta rpb_fen;
+    uint64_ta res1, res2;
+};
 } // namespace linux
 } // namespace gem5
 

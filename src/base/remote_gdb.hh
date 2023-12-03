@@ -42,7 +42,6 @@
 #ifndef __REMOTE_GDB_HH__
 #define __REMOTE_GDB_HH__
 
-
 #include <cstdint>
 #include <exception>
 #include <map>
@@ -85,7 +84,6 @@ class HardBreakpoint;
 class BaseGdbRegCache
 {
   public:
-
     /**
      * Return the pointer to the raw bytes buffer containing the
      * register values.  Each byte of this buffer is literally
@@ -108,7 +106,7 @@ class BaseGdbRegCache
      *
      * @ingroup api_remote_gdb
      */
-    virtual void getRegs(ThreadContext*) = 0;
+    virtual void getRegs(ThreadContext *) = 0;
 
     /**
      * Set the ThreadContext's registers from the values
@@ -116,7 +114,7 @@ class BaseGdbRegCache
      *
      * @ingroup api_remote_gdb
      */
-    virtual void setRegs(ThreadContext*) const = 0;
+    virtual void setRegs(ThreadContext *) const = 0;
 
     /**
      * Return the name to use in places like DPRINTF.
@@ -131,10 +129,9 @@ class BaseGdbRegCache
     /**
      * @ingroup api_remote_gdb
      */
-    BaseGdbRegCache(BaseRemoteGDB *g) : gdb(g)
-    {}
-    virtual ~BaseGdbRegCache()
-    {}
+    BaseGdbRegCache(BaseRemoteGDB *g) : gdb(g) {}
+
+    virtual ~BaseGdbRegCache() {}
 
   protected:
     BaseRemoteGDB *gdb;
@@ -143,8 +140,8 @@ class BaseGdbRegCache
 class BaseRemoteGDB
 {
     friend class HardBreakpoint;
-  public:
 
+  public:
     /**
      * @ingroup api_remote_gdb
      * @{
@@ -165,20 +162,26 @@ class BaseRemoteGDB
 
     void attach(int fd);
     void detach();
-    bool isAttached() { return attached; }
+
+    bool
+    isAttached()
+    {
+        return attached;
+    }
 
     void addThreadContext(ThreadContext *_tc);
     void replaceThreadContext(ThreadContext *_tc);
     bool selectThreadContext(ContextID id);
 
-    void trap(ContextID id, GDBSignal sig,const std::string& stopReason="");
+    void trap(ContextID id, GDBSignal sig, const std::string &stopReason = "");
     bool sendMessage(std::string message);
-    //schedule a trap event with these properties
-    void scheduleTrapEvent(ContextID id,GDBSignal type, int delta,
-      std::string stopReason);
+    // schedule a trap event with these properties
+    void scheduleTrapEvent(ContextID id, GDBSignal type, int delta,
+                           std::string stopReason);
+
     /** @} */ // end of api_remote_gdb
 
-    template <class GDBStub, class ...Args>
+    template <class GDBStub, class... Args>
     static BaseRemoteGDB *
     build(ListenSocketConfig listen_config, Args... args)
     {
@@ -213,17 +216,20 @@ class BaseRemoteGDB
         BaseRemoteGDB *gdb;
 
       public:
-        SocketEvent(BaseRemoteGDB *gdb, int fd, int e) :
-            PollEvent(fd, e), gdb(gdb)
+        SocketEvent(BaseRemoteGDB *gdb, int fd, int e)
+            : PollEvent(fd, e), gdb(gdb)
         {}
 
-        void process(int revent) { (gdb->*F)(revent); }
+        void
+        process(int revent)
+        {
+            (gdb->*F)(revent);
+        }
     };
 
     typedef SocketEvent<&BaseRemoteGDB::incomingConnection>
         IncomingConnectionEvent;
-    typedef SocketEvent<&BaseRemoteGDB::incomingData>
-        IncomingDataEvent;
+    typedef SocketEvent<&BaseRemoteGDB::incomingData> IncomingDataEvent;
 
     friend IncomingConnectionEvent;
     friend IncomingDataEvent;
@@ -238,14 +244,20 @@ class BaseRemoteGDB
 
     // Transfer data to/from GDB.
     uint8_t getbyte();
-    bool try_getbyte(uint8_t* c,int timeout=-1);//return true if successful
+    bool try_getbyte(uint8_t *c, int timeout = -1); // return true if
+                                                    // successful
     void putbyte(uint8_t b);
 
     void recv(std::vector<char> &bp);
     void send(const char *data);
-    void send(const std::string &data) { send(data.c_str()); }
 
-    template <typename ...Args>
+    void
+    send(const std::string &data)
+    {
+        send(data.c_str());
+    }
+
+    template <typename... Args>
     void
     send(const char *format, const Args &...args)
     {
@@ -258,7 +270,7 @@ class BaseRemoteGDB
      * or SW trap), 'signum' is the signal value reported back to GDB
      * in "S" packet (this is done in trap()).
      */
-    void processCommands(GDBSignal sig=GDBSignal::ZERO);
+    void processCommands(GDBSignal sig = GDBSignal::ZERO);
 
     /*
      * Simulator side debugger state.
@@ -274,7 +286,7 @@ class BaseRemoteGDB
     BaseGdbRegCache *regCachePtr = nullptr;
 
     MemberEventWrapper<&BaseRemoteGDB::connect> connectEvent;
-    MemberEventWrapper<&BaseRemoteGDB::detach>  disconnectEvent;
+    MemberEventWrapper<&BaseRemoteGDB::detach> disconnectEvent;
 
     class TrapEvent : public Event
     {
@@ -285,13 +297,31 @@ class BaseRemoteGDB
         BaseRemoteGDB *gdb;
 
       public:
-        TrapEvent(BaseRemoteGDB *g) : gdb(g)
-        {}
+        TrapEvent(BaseRemoteGDB *g) : gdb(g) {}
 
-        void type(GDBSignal t) { _type = t; }
-        void stopReason(std::string s) {_stopReason = s; }
-        void id(ContextID id) { _id = id; }
-         void process() { gdb->trap(_id, _type,_stopReason); }
+        void
+        type(GDBSignal t)
+        {
+            _type = t;
+        }
+
+        void
+        stopReason(std::string s)
+        {
+            _stopReason = s;
+        }
+
+        void
+        id(ContextID id)
+        {
+            _id = id;
+        }
+
+        void
+        process()
+        {
+            gdb->trap(_id, _type, _stopReason);
+        }
     } trapEvent;
 
     /*
@@ -302,8 +332,10 @@ class BaseRemoteGDB
     bool read(Addr vaddr, size_t size, char *data);
     bool write(Addr vaddr, size_t size, const char *data);
 
-    template <class T> T read(Addr addr);
-    template <class T> void write(Addr addr, T data);
+    template <class T>
+    T read(Addr addr);
+    template <class T>
+    void write(Addr addr, T data);
 
     // Single step.
     void singleStep();
@@ -313,10 +345,14 @@ class BaseRemoteGDB
     void setSingleStep();
 
     /// Schedule an event which will be triggered "delta" instructions later.
-    void scheduleInstCommitEvent(Event *ev, int delta,ThreadContext* _tc);
-    void scheduleInstCommitEvent(Event *ev, int delta){
-       scheduleInstCommitEvent(ev, delta,tc);
+    void scheduleInstCommitEvent(Event *ev, int delta, ThreadContext *_tc);
+
+    void
+    scheduleInstCommitEvent(Event *ev, int delta)
+    {
+        scheduleInstCommitEvent(ev, delta, tc);
     };
+
     /// Deschedule an instruction count based event.
     void descheduleInstCommitEvent(Event *ev);
 
@@ -327,10 +363,11 @@ class BaseRemoteGDB
     void removeHardBreak(Addr addr, size_t kind);
 
     void sendTPacket(GDBSignal sig, ContextID id,
-      const std::string& stopReason);
+                     const std::string &stopReason);
     void sendSPacket(GDBSignal sig);
-    //The OPacket allow to send string to be displayed by the remote GDB
+    // The OPacket allow to send string to be displayed by the remote GDB
     void sendOPacket(const std::string message);
+
     /*
      * GDB commands.
      */
@@ -348,7 +385,7 @@ class BaseRemoteGDB
 
         typedef bool (BaseRemoteGDB::*Func)(Context &ctx);
 
-        const char * const name;
+        const char *const name;
         const Func func;
 
         GdbCommand(const char *_name, Func _func) : name(_name), func(_func) {}
@@ -370,13 +407,13 @@ class BaseRemoteGDB
 
         typedef bool (BaseRemoteGDB::*Func)(Context &ctx);
 
-        const char * const name;
+        const char *const name;
         const Func func;
 
-        GdbMultiLetterCommand(const char *_name, Func _func) :
-          name(_name), func(_func) {}
+        GdbMultiLetterCommand(const char *_name, Func _func)
+            : name(_name), func(_func)
+        {}
     };
-
 
     static std::map<std::string, GdbMultiLetterCommand> multiLetterMap;
 
@@ -400,7 +437,7 @@ class BaseRemoteGDB
     bool cmdDumpPageTable(GdbCommand::Context &ctx);
     bool cmdMultiLetter(GdbCommand::Context &ctx);
 
-    //Multi letter command
+    // Multi letter command
     bool cmdMultiUnsupported(GdbMultiLetterCommand::Context &ctx);
 
     bool cmdReplyEmpty(GdbMultiLetterCommand::Context &ctx);
@@ -418,11 +455,11 @@ class BaseRemoteGDB
 
         using Func = bool (BaseRemoteGDB::*)(Context &ctx);
 
-        const char * const argSep;
+        const char *const argSep;
         const Func func;
 
-        QuerySetCommand(Func _func, const char *_argSep=nullptr) :
-            argSep(_argSep), func(_func)
+        QuerySetCommand(Func _func, const char *_argSep = nullptr)
+            : argSep(_argSep), func(_func)
         {}
     };
 
@@ -440,18 +477,27 @@ class BaseRemoteGDB
     bool querySThreadInfo(QuerySetCommand::Context &ctx);
 
   protected:
-    ThreadContext *context() { return tc; }
-    System *system() { return sys; }
+    ThreadContext *
+    context()
+    {
+        return tc;
+    }
+
+    System *
+    system()
+    {
+        return sys;
+    }
 
     void encodeBinaryData(const std::string &unencoded,
-            std::string &encoded) const;
+                          std::string &encoded) const;
 
-    void encodeXferResponse(const std::string &unencoded,
-        std::string &encoded, size_t offset, size_t unencoded_length) const;
+    void encodeXferResponse(const std::string &unencoded, std::string &encoded,
+                            size_t offset, size_t unencoded_length) const;
 
-    // checkBpKind checks if a kind of breakpoint is legal. This function should
-    // be implemented by subclasses by arch. The "kind" is considered to be
-    // breakpoint size in some arch.
+    // checkBpKind checks if a kind of breakpoint is legal. This function
+    // should be implemented by subclasses by arch. The "kind" is considered to
+    // be breakpoint size in some arch.
     virtual bool checkBpKind(size_t kind);
 
     virtual BaseGdbRegCache *gdbRegs() = 0;
@@ -468,7 +514,7 @@ class BaseRemoteGDB
      * @return true if the given annex was found
      */
     virtual bool getXferFeaturesRead(const std::string &annex,
-            std::string &output);
+                                     std::string &output);
 };
 
 template <class T>

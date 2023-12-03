@@ -45,35 +45,17 @@ using namespace gem5;
  * The following tests the "mask(N)" function. It is assumed that the mask
  * returned is a 64 bit value with the N LSBs set to one.
  */
-TEST(BitfieldTest, Mask0Bits)
-{
-    EXPECT_EQ(0x0, mask(0));
-}
+TEST(BitfieldTest, Mask0Bits) { EXPECT_EQ(0x0, mask(0)); }
 
-TEST(BitfieldTest, Mask1Bit)
-{
-    EXPECT_EQ(0x1, mask(1));
-}
+TEST(BitfieldTest, Mask1Bit) { EXPECT_EQ(0x1, mask(1)); }
 
-TEST(BitfieldTest, Mask8Bits)
-{
-    EXPECT_EQ(0xFF, mask(8));
-}
+TEST(BitfieldTest, Mask8Bits) { EXPECT_EQ(0xFF, mask(8)); }
 
-TEST(BitfieldTest, Mask16Bits)
-{
-    EXPECT_EQ(0xFFFF, mask(16));
-}
+TEST(BitfieldTest, Mask16Bits) { EXPECT_EQ(0xFFFF, mask(16)); }
 
-TEST(BitfieldTest, Mask32Bits)
-{
-    EXPECT_EQ(0xFFFFFFFF, mask(32));
-}
+TEST(BitfieldTest, Mask32Bits) { EXPECT_EQ(0xFFFFFFFF, mask(32)); }
 
-TEST(BitfieldTest, MaskAllBits)
-{
-    EXPECT_EQ(0xFFFFFFFFFFFFFFFF, mask(64));
-}
+TEST(BitfieldTest, MaskAllBits) { EXPECT_EQ(0xFFFFFFFFFFFFFFFF, mask(64)); }
 
 TEST(BitfieldTest, MaskAllBitsGreaterThan64)
 {
@@ -87,15 +69,9 @@ TEST(BitfieldTest, MaskAllBitsGreaterThan64)
  * The following tests "mask(X, Y)". mask will create a 64 bit value with bits
  * X to Y (inclusive) set to one.
  */
-TEST(BitfieldTest, MaskOneBit)
-{
-    EXPECT_EQ(1, mask(0, 0));
-}
+TEST(BitfieldTest, MaskOneBit) { EXPECT_EQ(1, mask(0, 0)); }
 
-TEST(BitfieldTest, MaskTwoBits)
-{
-    EXPECT_EQ((1 << 1) + 1, mask(1, 0));
-}
+TEST(BitfieldTest, MaskTwoBits) { EXPECT_EQ((1 << 1) + 1, mask(1, 0)); }
 
 TEST(BitfieldTest, MaskThreeBits)
 {
@@ -147,7 +123,6 @@ TEST(BitfieldTest, ExtractThreeBits)
     EXPECT_EQ((1 << 2), bits(x, 31, 29));
 }
 
-
 /*
  * The following tests "mbits(X, Y, Z)". mbits returns a value with bits Y to
  * Z from X (in position Y to Z).
@@ -194,6 +169,7 @@ TEST(BitfieldTest, SignExtendNegativeInputOutsideRange)
     uint64_t output = 0xF800000010000008;
     EXPECT_EQ(output, sext<60>(val));
 }
+
 /*
  * The following tests the "szext<N>(X)" function. szext carries out a sign
  * extention from N bits to 64 bits on value X. Will zero bits past the sign
@@ -306,11 +282,7 @@ TEST(BitfieldTest, FindMsb63)
     EXPECT_EQ(63, findMsbSet(val));
 }
 
-
-TEST(BitfieldTest, FindMsbZero)
-{
-    EXPECT_EQ(0, findMsbSet(0));
-}
+TEST(BitfieldTest, FindMsbZero) { EXPECT_EQ(0, findMsbSet(0)); }
 
 TEST(BitfieldTest, FindLsb)
 {
@@ -319,24 +291,21 @@ TEST(BitfieldTest, FindLsb)
     EXPECT_EQ(1, findLsbSetFallback(val));
 }
 
-TEST(BitfieldTest, FindLsbZero)
-{
-    EXPECT_EQ(64, findLsbSet(0));
-}
+TEST(BitfieldTest, FindLsbZero) { EXPECT_EQ(64, findLsbSet(0)); }
 
 TEST(BitfieldTest, FindLsbGeneralized)
 {
-    static constexpr size_t N{1000};
-    std::bitset<N> bs{0};
+    static constexpr size_t N{ 1000 };
+    std::bitset<N> bs{ 0 };
     EXPECT_EQ(findLsbSet(bs), N);
-    for (size_t i{0}; i < N ; ++i) {
-        bs = std::bitset<N>{1} << i;
+    for (size_t i{ 0 }; i < N; ++i) {
+        bs = std::bitset<N>{ 1 } << i;
         ASSERT_EQ(findLsbSet(bs), i);
     }
 
-    const auto leadingOne = std::bitset<N>{1} << (N-1);
-    for (size_t i{0}; i < N ; ++i) {
-        bs = leadingOne | (std::bitset<N>{1} << i);
+    const auto leadingOne = std::bitset<N>{ 1 } << (N - 1);
+    for (size_t i{ 0 }; i < N; ++i) {
+        bs = leadingOne | (std::bitset<N>{ 1 } << i);
         ASSERT_EQ(findLsbSet(bs), i);
     }
 }
@@ -345,10 +314,7 @@ TEST(BitfieldTest, FindLsbGeneralized)
  * The following tests "popCount(X)". popCount counts the number of bits set to
  * one.
  */
-TEST(BitfieldTest, PopCountNoBits)
-{
-    EXPECT_EQ(0, popCount(0));
-}
+TEST(BitfieldTest, PopCountNoBits) { EXPECT_EQ(0, popCount(0)); }
 
 TEST(BitfieldTest, PopCountOneBit)
 {
@@ -373,20 +339,11 @@ TEST(BitfieldTest, PopCountAllOnes)
  * uint64_t x up to the nearest power of two. If x is already a power
  * of two, that power is returned.
  */
-TEST(BitfieldTest, AlignToPowerOfTwo0)
-{
-    EXPECT_EQ(0, alignToPowerOfTwo(0));
-}
+TEST(BitfieldTest, AlignToPowerOfTwo0) { EXPECT_EQ(0, alignToPowerOfTwo(0)); }
 
-TEST(BitfieldTest, AlignToPowerOfTwo3)
-{
-    EXPECT_EQ(4, alignToPowerOfTwo(3));
-}
+TEST(BitfieldTest, AlignToPowerOfTwo3) { EXPECT_EQ(4, alignToPowerOfTwo(3)); }
 
-TEST(BitfieldTest, AlignToPowerOfTwo5)
-{
-    EXPECT_EQ(8, alignToPowerOfTwo(5));
-}
+TEST(BitfieldTest, AlignToPowerOfTwo5) { EXPECT_EQ(8, alignToPowerOfTwo(5)); }
 
 TEST(BitfieldTest, AlignToPowerOfTwo10)
 {

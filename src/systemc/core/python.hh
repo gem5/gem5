@@ -35,7 +35,7 @@ namespace sc_gem5
 
 struct PythonInitFunc
 {
-    using Callback = void(*)(pybind11::module_ &systemc);
+    using Callback = void (*)(pybind11::module_ &systemc);
     Callback callback;
 
     PythonInitFunc *next;
@@ -45,4 +45,4 @@ struct PythonInitFunc
 
 } // namespace sc_gem5
 
-#endif  //__SYSTEMC_CORE_PYTHON_HH__
+#endif //__SYSTEMC_CORE_PYTHON_HH__

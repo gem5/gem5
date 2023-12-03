@@ -60,7 +60,7 @@ class EtherSwitch : public SimObject
     ~EtherSwitch();
 
     Port &getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID) override;
+                  PortID idx = InvalidPortID) override;
 
   protected:
     /**
@@ -81,11 +81,16 @@ class EtherSwitch : public SimObject
          * enqueue packet to the outputFifo
          */
         void enqueue(EthPacketPtr packet, unsigned senderId);
-        void sendDone() {}
+
+        void
+        sendDone()
+        {}
+
         Tick switchingDelay();
 
-        Interface* lookupDestPort(networking::EthAddr destAddr);
-        void learnSenderAddr(networking::EthAddr srcMacAddr, Interface *sender);
+        Interface *lookupDestPort(networking::EthAddr destAddr);
+        void learnSenderAddr(networking::EthAddr srcMacAddr,
+                             Interface *sender);
 
         void serialize(CheckpointOut &cp) const;
         void unserialize(CheckpointIn &cp);
@@ -97,22 +102,26 @@ class EtherSwitch : public SimObject
         const unsigned interfaceId;
 
         EtherSwitch *parent;
+
       protected:
         struct PortFifoEntry : public Serializable
         {
             PortFifoEntry(EthPacketPtr pkt, Tick recv_tick, unsigned id)
-                : packet(pkt), recvTick(recv_tick), srcId(id) {}
+                : packet(pkt), recvTick(recv_tick), srcId(id)
+            {}
 
             EthPacketPtr packet;
             Tick recvTick;
             // id of the port that the packet has been received from
             unsigned srcId;
+
             ~PortFifoEntry()
             {
                 packet = nullptr;
                 recvTick = 0;
                 srcId = 0;
             }
+
             void serialize(CheckpointOut &cp) const;
             void unserialize(CheckpointIn &cp);
         };
@@ -122,8 +131,9 @@ class EtherSwitch : public SimObject
           protected:
             struct EntryOrder
             {
-                bool operator() (const PortFifoEntry& lhs,
-                                 const PortFifoEntry& rhs) const
+                bool
+                operator()(const PortFifoEntry &lhs,
+                           const PortFifoEntry &rhs) const
                 {
                     if (lhs.recvTick == rhs.recvTick)
                         return lhs.srcId < rhs.srcId;
@@ -131,6 +141,7 @@ class EtherSwitch : public SimObject
                         return lhs.recvTick < rhs.recvTick;
                 }
             };
+
             std::set<PortFifoEntry, EntryOrder> fifo;
 
             const std::string objName;
@@ -139,20 +150,45 @@ class EtherSwitch : public SimObject
 
           public:
             PortFifo(const std::string &name, int max)
-                :objName(name), _maxsize(max), _size(0) {}
+                : objName(name), _maxsize(max), _size(0)
+            {}
+
             ~PortFifo() {}
 
-            const std::string name() { return objName; }
+            const std::string
+            name()
+            {
+                return objName;
+            }
+
             // Returns the available capacity of the fifo.
             // It can return a negative value because in "push" function
             // we first push the received packet into the fifo and then
             // check if we exceed the available capacity (if avail() < 0)
             // and remove packets from the end of fifo
-            int avail() const { return _maxsize - _size; }
+            int
+            avail() const
+            {
+                return _maxsize - _size;
+            }
 
-            EthPacketPtr front() { return fifo.begin()->packet; }
-            bool empty() const { return _size == 0; }
-            unsigned size() const { return _size; }
+            EthPacketPtr
+            front()
+            {
+                return fifo.begin()->packet;
+            }
+
+            bool
+            empty() const
+            {
+                return _size == 0;
+            }
+
+            unsigned
+            size() const
+            {
+                return _size;
+            }
 
             /**
              * Push a packet into the fifo
@@ -167,6 +203,7 @@ class EtherSwitch : public SimObject
             void serialize(CheckpointOut &cp) const;
             void unserialize(CheckpointIn &cp);
         };
+
         /**
          * output fifo at each interface
          */
@@ -177,15 +214,15 @@ class EtherSwitch : public SimObject
 
     struct SwitchTableEntry
     {
-            Interface *interface;
-            Tick lastUseTime;
-        };
+        Interface *interface;
+        Tick lastUseTime;
+    };
 
   private:
     // time to live for MAC address mappings
     const double ttl;
     // all interfaces of the switch
-    std::vector<Interface*> interfaces;
+    std::vector<Interface *> interfaces;
     // table that maps MAC address to interfaces
     std::map<uint64_t, SwitchTableEntry> forwardingTable;
 

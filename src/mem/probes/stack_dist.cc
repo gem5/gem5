@@ -75,24 +75,19 @@ StackDistProbe::StackDistProbeStats::StackDistProbeStats(
     const StackDistProbeParams &p =
         dynamic_cast<const StackDistProbeParams &>(parent->params());
 
-    readLinearHist
-        .init(p.linear_hist_bins)
+    readLinearHist.init(p.linear_hist_bins)
         .flags(parent->disableLinearHists ? nozero : pdf);
 
-    readLogHist
-        .init(p.log_hist_bins)
+    readLogHist.init(p.log_hist_bins)
         .flags(parent->disableLogHists ? nozero : pdf);
 
-    writeLinearHist
-        .init(p.linear_hist_bins)
+    writeLinearHist.init(p.linear_hist_bins)
         .flags(parent->disableLinearHists ? nozero : pdf);
 
-    writeLogHist
-        .init(p.log_hist_bins)
+    writeLogHist.init(p.log_hist_bins)
         .flags(parent->disableLogHists ? nozero : pdf);
 
-    infiniteSD
-        .flags(nozero);
+    infiniteSD.flags(nozero);
 }
 
 void

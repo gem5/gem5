@@ -62,16 +62,16 @@ class MemOp : public X86MicroopBase
   protected:
     const Request::FlagsType memFlags;
 
-    //Constructor
+    // Constructor
     MemOp(ExtMachInst mach_inst, const char *mnem, const char *inst_mnem,
-            uint64_t set_flags, OpClass op_class,
-            uint8_t data_size, uint8_t address_size,
-            Request::FlagsType mem_flags) :
-    X86MicroopBase(mach_inst, mnem, inst_mnem, set_flags, op_class),
-            memFlags(mem_flags),
-            dataSize(data_size), addressSize(address_size),
-            foldOBit((dataSize == 1 && !mach_inst.rex.present) ? 1 << 6 : 0),
-            foldABit((addressSize == 1 && !mach_inst.rex.present) ? 1 << 6 : 0)
+          uint64_t set_flags, OpClass op_class, uint8_t data_size,
+          uint8_t address_size, Request::FlagsType mem_flags)
+        : X86MicroopBase(mach_inst, mnem, inst_mnem, set_flags, op_class),
+          memFlags(mem_flags),
+          dataSize(data_size),
+          addressSize(address_size),
+          foldOBit((dataSize == 1 && !mach_inst.rex.present) ? 1 << 6 : 0),
+          foldABit((addressSize == 1 && !mach_inst.rex.present) ? 1 << 6 : 0)
     {}
 
   public:
@@ -87,15 +87,14 @@ class LdStOp : public InstOperands<MemOp, FoldedDataOp, AddrOp>
 {
   protected:
     LdStOp(ExtMachInst mach_inst, const char *mnem, const char *inst_mnem,
-            uint64_t set_flags, GpRegIndex _data,
-            uint8_t _scale, GpRegIndex _index, GpRegIndex _base,
-            uint64_t _disp, SegRegIndex _segment,
-            uint8_t data_size, uint8_t address_size,
-            Request::FlagsType mem_flags, OpClass op_class) :
-    InstOperands<MemOp, FoldedDataOp, AddrOp>(
-            mach_inst, mnem, inst_mnem, set_flags, op_class,
-            { _data, { _scale, _index, _base, _disp, _segment } },
-            data_size, address_size, mem_flags | _segment.index)
+           uint64_t set_flags, GpRegIndex _data, uint8_t _scale,
+           GpRegIndex _index, GpRegIndex _base, uint64_t _disp,
+           SegRegIndex _segment, uint8_t data_size, uint8_t address_size,
+           Request::FlagsType mem_flags, OpClass op_class)
+        : InstOperands<MemOp, FoldedDataOp, AddrOp>(
+              mach_inst, mnem, inst_mnem, set_flags, op_class,
+              { _data, { _scale, _index, _base, _disp, _segment } }, data_size,
+              address_size, mem_flags | _segment.index)
     {}
 };
 
@@ -106,15 +105,14 @@ class LdStFpOp : public InstOperands<MemOp, FloatDataOp, AddrOp>
 {
   protected:
     LdStFpOp(ExtMachInst mach_inst, const char *mnem, const char *inst_mnem,
-            uint64_t set_flags, FpRegIndex _data,
-            uint8_t _scale, GpRegIndex _index, GpRegIndex _base,
-            uint64_t _disp, SegRegIndex _segment,
-            uint8_t data_size, uint8_t address_size,
-            Request::FlagsType mem_flags, OpClass op_class) :
-    InstOperands<MemOp, FloatDataOp, AddrOp>(
-            mach_inst, mnem, inst_mnem, set_flags, op_class,
-            { _data, { _scale, _index, _base, _disp, _segment } },
-            data_size, address_size, mem_flags | _segment.index)
+             uint64_t set_flags, FpRegIndex _data, uint8_t _scale,
+             GpRegIndex _index, GpRegIndex _base, uint64_t _disp,
+             SegRegIndex _segment, uint8_t data_size, uint8_t address_size,
+             Request::FlagsType mem_flags, OpClass op_class)
+        : InstOperands<MemOp, FloatDataOp, AddrOp>(
+              mach_inst, mnem, inst_mnem, set_flags, op_class,
+              { _data, { _scale, _index, _base, _disp, _segment } }, data_size,
+              address_size, mem_flags | _segment.index)
     {}
 };
 
@@ -125,14 +123,14 @@ class MemNoDataOp : public InstOperands<MemOp, AddrOp>
 {
   protected:
     MemNoDataOp(ExtMachInst mach_inst, const char *mnem, const char *inst_mnem,
-            uint64_t set_flags, uint8_t _scale, GpRegIndex _index,
-            GpRegIndex _base, uint64_t _disp, SegRegIndex _segment,
-            uint8_t data_size, uint8_t address_size,
-            Request::FlagsType mem_flags, OpClass op_class) :
-    InstOperands<MemOp, AddrOp>(
-            mach_inst, mnem, inst_mnem, set_flags, op_class,
-            { { _scale, _index, _base, _disp, _segment } },
-            data_size, address_size, mem_flags | _segment.index)
+                uint64_t set_flags, uint8_t _scale, GpRegIndex _index,
+                GpRegIndex _base, uint64_t _disp, SegRegIndex _segment,
+                uint8_t data_size, uint8_t address_size,
+                Request::FlagsType mem_flags, OpClass op_class)
+        : InstOperands<MemOp, AddrOp>(
+              mach_inst, mnem, inst_mnem, set_flags, op_class,
+              { { _scale, _index, _base, _disp, _segment } }, data_size,
+              address_size, mem_flags | _segment.index)
     {}
 };
 
@@ -146,15 +144,17 @@ class LdStSplitOp :
 {
   protected:
     LdStSplitOp(ExtMachInst mach_inst, const char *mnem, const char *inst_mnem,
-            uint64_t set_flags, GpRegIndex data_low, GpRegIndex data_hi,
-            uint8_t _scale, GpRegIndex _index, GpRegIndex _base,
-            uint64_t _disp, SegRegIndex _segment,
-            uint8_t data_size, uint8_t address_size,
-            Request::FlagsType mem_flags, OpClass op_class) :
-    InstOperands<MemOp, FoldedDataLowOp, FoldedDataHiOp, AddrOp>(
-            mach_inst, mnem, inst_mnem, set_flags, op_class,
-            { data_low, data_hi, { _scale, _index, _base, _disp, _segment } },
-            data_size, address_size, mem_flags | _segment.index)
+                uint64_t set_flags, GpRegIndex data_low, GpRegIndex data_hi,
+                uint8_t _scale, GpRegIndex _index, GpRegIndex _base,
+                uint64_t _disp, SegRegIndex _segment, uint8_t data_size,
+                uint8_t address_size, Request::FlagsType mem_flags,
+                OpClass op_class)
+        : InstOperands<MemOp, FoldedDataLowOp, FoldedDataHiOp, AddrOp>(
+              mach_inst, mnem, inst_mnem, set_flags, op_class,
+              { data_low,
+                data_hi,
+                { _scale, _index, _base, _disp, _segment } },
+              data_size, address_size, mem_flags | _segment.index)
     {}
 };
 

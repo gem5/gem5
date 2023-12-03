@@ -56,42 +56,90 @@ struct ThreadState : public Serializable
 
     void unserialize(CheckpointIn &cp) override;
 
-    int cpuId() const { return baseCpu->cpuId(); }
+    int
+    cpuId() const
+    {
+        return baseCpu->cpuId();
+    }
 
-    uint32_t socketId() const { return baseCpu->socketId(); }
+    uint32_t
+    socketId() const
+    {
+        return baseCpu->socketId();
+    }
 
-    ContextID contextId() const { return _contextId; }
+    ContextID
+    contextId() const
+    {
+        return _contextId;
+    }
 
-    void setContextId(ContextID id) { _contextId = id; }
+    void
+    setContextId(ContextID id)
+    {
+        _contextId = id;
+    }
 
-    void setThreadId(ThreadID id) { _threadId = id; }
+    void
+    setThreadId(ThreadID id)
+    {
+        _threadId = id;
+    }
 
-    ThreadID threadId() const { return _threadId; }
+    ThreadID
+    threadId() const
+    {
+        return _threadId;
+    }
 
-    Tick readLastActivate() const { return lastActivate; }
+    Tick
+    readLastActivate() const
+    {
+        return lastActivate;
+    }
 
-    Tick readLastSuspend() const { return lastSuspend; }
+    Tick
+    readLastSuspend() const
+    {
+        return lastSuspend;
+    }
 
-    Process *getProcessPtr() { return process; }
+    Process *
+    getProcessPtr()
+    {
+        return process;
+    }
 
-    void setProcessPtr(Process *p) { process = p; }
+    void
+    setProcessPtr(Process *p)
+    {
+        process = p;
+    }
 
     /** Returns the status of this thread. */
-    Status status() const { return _status; }
+    Status
+    status() const
+    {
+        return _status;
+    }
 
     /** Sets the status of this thread. */
-    void setStatus(Status new_status) { _status = new_status; }
+    void
+    setStatus(Status new_status)
+    {
+        _status = new_status;
+    }
 
   public:
-
     /** Number of instructions committed. */
     Counter numInst;
-     /** Number of ops (including micro ops) committed. */
+    /** Number of ops (including micro ops) committed. */
     Counter numOp;
+
     // Defining the stat group
     struct ThreadStateStats : public statistics::Group
     {
-        ThreadStateStats(BaseCPU *cpu, const ThreadID& thread);
+        ThreadStateStats(BaseCPU *cpu, const ThreadID &thread);
         /** Stat for number instructions committed. */
         statistics::Scalar numInsts;
         /** Stat for number ops (including micro ops) committed. */
@@ -131,7 +179,6 @@ struct ThreadState : public Serializable
     Process *process;
 
   public:
-
     //
     // Count failed store conditionals so we can warn of apparent
     // application deadlock situations.

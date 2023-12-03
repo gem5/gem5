@@ -44,10 +44,10 @@
 namespace gem5
 {
 
-#define SAFE_MSG(m)                                             \
-    do {                                                        \
-        static const char msg[] = m;                            \
-        atomic_write(STDERR_FILENO, msg, sizeof(msg) - 1);      \
+#define SAFE_MSG(m)                                                           \
+    do {                                                                      \
+        static const char msg[] = m;                                          \
+        atomic_write(STDERR_FILENO, msg, sizeof(msg) - 1);                    \
     } while (0)
 
 void

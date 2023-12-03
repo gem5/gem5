@@ -84,8 +84,8 @@ class Fiber
      * @ingroup api_fiber
      * @{
      */
-    Fiber(size_t stack_size=DefaultStackSize);
-    Fiber(Fiber *link, size_t stack_size=DefaultStackSize);
+    Fiber(size_t stack_size = DefaultStackSize);
+    Fiber(Fiber *link, size_t stack_size = DefaultStackSize);
     /** @} */ // end of api_fiber
 
     /**
@@ -106,14 +106,22 @@ class Fiber
      *
      * @ingroup api_fiber
      */
-    bool finished() const { return _finished; };
+    bool
+    finished() const
+    {
+        return _finished;
+    };
 
     /**
      * Returns whether the "main" function of this fiber has started.
      *
      * @ingroup api_fiber
      */
-    bool started() const { return _started; };
+    bool
+    started() const
+    {
+        return _started;
+    };
 
     /**
      * Get a pointer to the current running Fiber.
@@ -139,7 +147,11 @@ class Fiber
      */
     virtual void main() = 0;
 
-    void setStarted() { _started = true; }
+    void
+    setStarted()
+    {
+        _started = true;
+    }
 
   private:
     static void entryTrampoline();

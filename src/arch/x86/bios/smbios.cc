@@ -51,14 +51,15 @@ namespace gem5
 {
 
 const char X86ISA::smbios::SMBiosTable::SMBiosHeader::anchorString[] = "_SM_";
-const uint8_t X86ISA::smbios::SMBiosTable::
-        SMBiosHeader::formattedArea[] = {0,0,0,0,0};
-const uint8_t X86ISA::smbios::SMBiosTable::
-        SMBiosHeader::entryPointLength = 0x1F;
-const uint8_t X86ISA::smbios::SMBiosTable::
-        SMBiosHeader::entryPointRevision = 0;
-const char X86ISA::smbios::SMBiosTable::
-        SMBiosHeader::IntermediateHeader::anchorString[] = "_DMI_";
+const uint8_t X86ISA::smbios::SMBiosTable::SMBiosHeader::formattedArea[] = {
+    0, 0, 0, 0, 0
+};
+const uint8_t X86ISA::smbios::SMBiosTable::SMBiosHeader::entryPointLength =
+    0x1F;
+const uint8_t X86ISA::smbios::SMBiosTable::SMBiosHeader::entryPointRevision =
+    0;
+const char X86ISA::smbios::SMBiosTable::SMBiosHeader::IntermediateHeader::
+    anchorString[] = "_DMI_";
 
 template <class T>
 uint64_t
@@ -73,7 +74,7 @@ composeBitVector(T vec)
 }
 
 uint16_t
-X86ISA::smbios::SMBiosStructure::writeOut(PortProxy& proxy, Addr addr)
+X86ISA::smbios::SMBiosStructure::writeOut(PortProxy &proxy, Addr addr)
 {
     proxy.writeBlob(addr, &type, 1);
 
@@ -86,14 +87,13 @@ X86ISA::smbios::SMBiosStructure::writeOut(PortProxy& proxy, Addr addr)
     return length + getStringLength();
 }
 
-X86ISA::smbios::SMBiosStructure::SMBiosStructure(
-        const Params &p, uint8_t _type) :
-    SimObject(p), type(_type), handle(0), stringFields(false)
+X86ISA::smbios::SMBiosStructure::SMBiosStructure(const Params &p,
+                                                 uint8_t _type)
+    : SimObject(p), type(_type), handle(0), stringFields(false)
 {}
 
 void
-X86ISA::smbios::SMBiosStructure::writeOutStrings(
-        PortProxy& proxy, Addr addr)
+X86ISA::smbios::SMBiosStructure::writeOutStrings(PortProxy &proxy, Addr addr)
 {
     std::vector<std::string>::iterator it;
     Addr offset = 0;
@@ -147,32 +147,32 @@ X86ISA::smbios::SMBiosStructure::readString(int n)
 }
 
 void
-X86ISA::smbios::SMBiosStructure::setString(
-        int n, const std::string &new_string)
+X86ISA::smbios::SMBiosStructure::setString(int n,
+                                           const std::string &new_string)
 {
     assert(n > 0 && n <= strings.size());
     strings[n - 1] = new_string;
 }
 
-X86ISA::smbios::BiosInformation::BiosInformation(const Params &p) :
-        SMBiosStructure(p, Type),
-        startingAddrSegment(p.starting_addr_segment),
-        romSize(p.rom_size),
-        majorVer(p.major), minorVer(p.minor),
-        embContFirmwareMajor(p.emb_cont_firmware_major),
-        embContFirmwareMinor(p.emb_cont_firmware_minor)
-    {
-        vendor = addString(p.vendor);
-        version = addString(p.version);
-        releaseDate = addString(p.release_date);
+X86ISA::smbios::BiosInformation::BiosInformation(const Params &p)
+    : SMBiosStructure(p, Type),
+      startingAddrSegment(p.starting_addr_segment),
+      romSize(p.rom_size),
+      majorVer(p.major),
+      minorVer(p.minor),
+      embContFirmwareMajor(p.emb_cont_firmware_major),
+      embContFirmwareMinor(p.emb_cont_firmware_minor)
+{
+    vendor = addString(p.vendor);
+    version = addString(p.version);
+    releaseDate = addString(p.release_date);
 
-        characteristics = composeBitVector(p.characteristics);
-        characteristicExtBytes =
-            composeBitVector(p.characteristic_ext_bytes);
-    }
+    characteristics = composeBitVector(p.characteristics);
+    characteristicExtBytes = composeBitVector(p.characteristic_ext_bytes);
+}
 
 uint16_t
-X86ISA::smbios::BiosInformation::writeOut(PortProxy& proxy, Addr addr)
+X86ISA::smbios::BiosInformation::writeOut(PortProxy &proxy, Addr addr)
 {
     uint8_t size = SMBiosStructure::writeOut(proxy, addr);
 
@@ -188,8 +188,7 @@ X86ISA::smbios::BiosInformation::writeOut(PortProxy& proxy, Addr addr)
     uint64_t characteristicsGuest = htole(characteristics);
     proxy.writeBlob(addr + 0xA, &characteristicsGuest, 8);
 
-    uint16_t characteristicExtBytesGuest =
-        htole(characteristicExtBytes);
+    uint16_t characteristicExtBytesGuest = htole(characteristicExtBytes);
     proxy.writeBlob(addr + 0x12, &characteristicExtBytesGuest, 2);
 
     proxy.writeBlob(addr + 0x14, &majorVer, 1);
@@ -202,8 +201,8 @@ X86ISA::smbios::BiosInformation::writeOut(PortProxy& proxy, Addr addr)
     return size;
 }
 
-X86ISA::smbios::SMBiosTable::SMBiosTable(const Params &p) :
-    SimObject(p), structures(p.structures)
+X86ISA::smbios::SMBiosTable::SMBiosTable(const Params &p)
+    : SimObject(p), structures(p.structures)
 {
     smbiosHeader.majorVersion = p.major_version;
     smbiosHeader.minorVersion = p.minor_version;
@@ -214,8 +213,8 @@ X86ISA::smbios::SMBiosTable::SMBiosTable(const Params &p) :
 }
 
 void
-X86ISA::smbios::SMBiosTable::writeOut(PortProxy& proxy, Addr addr,
-        Addr &headerSize, Addr &structSize)
+X86ISA::smbios::SMBiosTable::writeOut(PortProxy &proxy, Addr addr,
+                                      Addr &headerSize, Addr &structSize)
 {
     headerSize = 0x1F;
 
@@ -248,16 +247,15 @@ X86ISA::smbios::SMBiosTable::writeOut(PortProxy& proxy, Addr addr,
      */
     uint8_t intChecksum = 0;
 
-    proxy.writeBlob(addr + 0x10,
-            smbiosHeader.intermediateHeader.anchorString, 5);
+    proxy.writeBlob(addr + 0x10, smbiosHeader.intermediateHeader.anchorString,
+                    5);
     for (int i = 0; i < 5; i++)
         intChecksum += smbiosHeader.intermediateHeader.anchorString[i];
 
     // The checksum goes here, but we're figuring it out as we go.
     // Then the length of the structure table which we'll find later
 
-    uint32_t tableAddrGuest =
-        htole(smbiosHeader.intermediateHeader.tableAddr);
+    uint32_t tableAddrGuest = htole(smbiosHeader.intermediateHeader.tableAddr);
     proxy.writeBlob(addr + 0x18, &tableAddrGuest, 4);
     for (int i = 0; i < 4; i++) {
         intChecksum += tableAddrGuest;
@@ -272,7 +270,7 @@ X86ISA::smbios::SMBiosTable::writeOut(PortProxy& proxy, Addr addr,
     }
 
     proxy.writeBlob(addr + 0x1E,
-            &smbiosHeader.intermediateHeader.smbiosBCDRevision, 1);
+                    &smbiosHeader.intermediateHeader.smbiosBCDRevision, 1);
     intChecksum += smbiosHeader.intermediateHeader.smbiosBCDRevision;
 
     /*

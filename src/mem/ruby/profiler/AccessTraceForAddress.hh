@@ -48,25 +48,52 @@ class AccessTraceForAddress
 {
   public:
     AccessTraceForAddress()
-        : m_loads(0), m_stores(0), m_atomics(0), m_total(0), m_user(0),
-          m_sharing(0), m_histogram_ptr(NULL)
-    { }
+        : m_loads(0),
+          m_stores(0),
+          m_atomics(0),
+          m_total(0),
+          m_user(0),
+          m_sharing(0),
+          m_histogram_ptr(NULL)
+    {}
+
     ~AccessTraceForAddress();
 
-    void setAddress(Addr addr) { m_addr = addr; }
+    void
+    setAddress(Addr addr)
+    {
+        m_addr = addr;
+    }
+
     void update(RubyRequestType type, RubyAccessMode access_mode, NodeID cpu,
                 bool sharing_miss);
     int getTotal() const;
-    int getSharing() const { return m_sharing; }
-    int getTouchedBy() const { return m_touched_by.count(); }
-    Addr getAddress() const { return m_addr; }
+
+    int
+    getSharing() const
+    {
+        return m_sharing;
+    }
+
+    int
+    getTouchedBy() const
+    {
+        return m_touched_by.count();
+    }
+
+    Addr
+    getAddress() const
+    {
+        return m_addr;
+    }
+
     void addSample(int value);
 
-    void print(std::ostream& out) const;
+    void print(std::ostream &out) const;
 
     static inline bool
-    less_equal(const AccessTraceForAddress* n1,
-        const AccessTraceForAddress* n2)
+    less_equal(const AccessTraceForAddress *n1,
+               const AccessTraceForAddress *n2)
     {
         return n1->getTotal() <= n2->getTotal();
     }
@@ -80,11 +107,11 @@ class AccessTraceForAddress
     uint64_t m_user;
     uint64_t m_sharing;
     Set m_touched_by;
-    Histogram* m_histogram_ptr;
+    Histogram *m_histogram_ptr;
 };
 
-inline std::ostream&
-operator<<(std::ostream& out, const AccessTraceForAddress& obj)
+inline std::ostream &
+operator<<(std::ostream &out, const AccessTraceForAddress &obj)
 {
     obj.print(out);
     out << std::flush;

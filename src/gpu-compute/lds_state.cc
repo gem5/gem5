@@ -45,14 +45,14 @@ namespace gem5
 /**
  * the default constructor that works with SWIG
  */
-LdsState::LdsState(const Params &params) :
-    ClockedObject(params),
-    tickEvent(this),
-    cuPort(name() + ".port", this),
-    maximumSize(params.size),
-    range(params.range),
-    bankConflictPenalty(params.bankConflictPenalty),
-    banks(params.banks)
+LdsState::LdsState(const Params &params)
+    : ClockedObject(params),
+      tickEvent(this),
+      cuPort(name() + ".port", this),
+      maximumSize(params.size),
+      range(params.range),
+      bankConflictPenalty(params.bankConflictPenalty),
+      banks(params.banks)
 {
     fatal_if(params.banks <= 0,
              "Number of LDS banks should be positive number");
@@ -60,8 +60,7 @@ LdsState::LdsState(const Params &params) :
              "Number of LDS banks should be a power of 2");
     fatal_if(params.size <= 0,
              "cannot allocate an LDS with a size less than 1");
-    fatal_if(params.size % 2,
-          "the LDS should be an even number");
+    fatal_if(params.size % 2, "the LDS should be an even number");
 }
 
 /**
@@ -72,8 +71,7 @@ LdsState::setParent(ComputeUnit *x_parent)
 {
     // check that this gets assigned to the same thing each time
     fatal_if(!x_parent, "x_parent should not be nullptr");
-    fatal_if(x_parent == parent,
-             "should not be setting the parent twice");
+    fatal_if(x_parent == parent, "should not be setting the parent twice");
 
     parent = x_parent;
     _name = x_parent->name() + ".LdsState";
@@ -90,10 +88,9 @@ LdsState::countBankConflicts(PacketPtr packet, unsigned *bankAccesses)
         baseSenderState = baseSenderState->predecessor;
     }
     const ComputeUnit::LDSPort::SenderState *senderState =
-            dynamic_cast<ComputeUnit::LDSPort::SenderState *>(baseSenderState);
+        dynamic_cast<ComputeUnit::LDSPort::SenderState *>(baseSenderState);
 
-    fatal_if(!senderState,
-             "did not get the right sort of sender state");
+    fatal_if(!senderState, "did not get the right sort of sender state");
 
     GPUDynInstPtr gpuDynInst = senderState->getMemInst();
 
@@ -112,8 +109,8 @@ LdsState::countBankConflicts(GPUDynInstPtr gpuDynInst,
     // if the wavefront size is larger than the number of LDS banks, we
     // need to iterate over all work items to calculate the total
     // number of bank conflicts
-    int groups = (parent->wfSize() > numBanks) ?
-        (parent->wfSize() / numBanks) : 1;
+    int groups =
+        (parent->wfSize() > numBanks) ? (parent->wfSize() / numBanks) : 1;
     for (int i = 0; i < groups; i++) {
         // Address Array holding all the work item addresses of an instruction
         std::vector<Addr> addr_array;
@@ -124,8 +121,8 @@ LdsState::countBankConflicts(GPUDynInstPtr gpuDynInst,
 
         // populate the address array for all active work items
         for (int j = 0; j < numBanks; j++) {
-            if (gpuDynInst->exec_mask[(i*numBanks)+j]) {
-                addr_array[j] = gpuDynInst->addr[(i*numBanks)+j];
+            if (gpuDynInst->exec_mask[(i * numBanks) + j]) {
+                addr_array[j] = gpuDynInst->addr[(i * numBanks) + j];
             } else {
                 addr_array[j] = std::numeric_limits<Addr>::max();
             }
@@ -135,8 +132,8 @@ LdsState::countBankConflicts(GPUDynInstPtr gpuDynInst,
             // mask identical addresses
             for (int j = 0; j < numBanks; ++j) {
                 for (int j0 = 0; j0 < j; j0++) {
-                    if (addr_array[j] != std::numeric_limits<Addr>::max()
-                                    && addr_array[j] == addr_array[j0]) {
+                    if (addr_array[j] != std::numeric_limits<Addr>::max() &&
+                        addr_array[j] == addr_array[j0]) {
                         addr_array[j] = std::numeric_limits<Addr>::max();
                     }
                 }
@@ -175,8 +172,7 @@ GPUDynInstPtr
 LdsState::getDynInstr(PacketPtr packet)
 {
     ComputeUnit::LDSPort::SenderState *ss =
-        dynamic_cast<ComputeUnit::LDSPort::SenderState *>(
-                     packet->senderState);
+        dynamic_cast<ComputeUnit::LDSPort::SenderState *>(packet->senderState);
     return ss->getMemInst();
 }
 
@@ -193,13 +189,13 @@ LdsState::processPacket(PacketPtr packet)
     parent->stats.ldsBankAccesses += bankAccesses;
     // count the LDS bank conflicts. A number set to 1 indicates one
     // access per bank maximum so there are no bank conflicts
-    parent->stats.ldsBankConflictDist.sample(bankConflicts-1);
+    parent->stats.ldsBankConflictDist.sample(bankConflicts - 1);
 
     GPUDynInstPtr dynInst = getDynInstr(packet);
     // account for the LDS bank conflict overhead
-    int busLength = (dynInst->isLoad()) ? parent->loadBusLength() :
-        (dynInst->isStore()) ? parent->storeBusLength() :
-        parent->loadBusLength();
+    int busLength = (dynInst->isLoad())  ? parent->loadBusLength() :
+                    (dynInst->isStore()) ? parent->storeBusLength() :
+                                           parent->loadBusLength();
     // delay for accessing the LDS
     Tick processingTime =
         parent->cyclesToTicks(Cycles(bankConflicts * bankConflictPenalty)) +
@@ -273,7 +269,7 @@ LdsState::process()
 
         ComputeUnit::LDSPort::SenderState *ss =
             dynamic_cast<ComputeUnit::LDSPort::SenderState *>(
-                            packet->senderState);
+                packet->senderState);
 
         GPUDynInstPtr gpuDynInst = ss->getMemInst();
 
@@ -288,19 +284,16 @@ LdsState::process()
         if (!success) {
             retryResp = true;
             panic("have not handled timing responses being NACK'd when sent"
-                            "back");
+                  "back");
         }
     }
 
     // determine the next wakeup time
     if (!returnQueue.empty()) {
-
         Tick next = returnQueue.front().first;
 
         if (tickEvent.scheduled()) {
-
             if (next < tickEvent.when()) {
-
                 tickEvent.deschedule();
                 tickEvent.schedule(next);
             }

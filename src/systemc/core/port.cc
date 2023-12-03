@@ -97,7 +97,7 @@ Port::finalize()
         return;
     finalized = true;
 
-    for (auto &b: bindings) {
+    for (auto &b : bindings) {
         if (b->interface) {
             addInterface(b->interface);
         } else {
@@ -109,7 +109,7 @@ Port::finalize()
 
     bindings.clear();
 
-    for (auto &s: sensitivities) {
+    for (auto &s : sensitivities) {
         if (s->port)
             finalizePort(s->port);
         else
@@ -119,37 +119,37 @@ Port::finalize()
 
     sensitivities.clear();
 
-    for (auto &r: resets)
+    for (auto &r : resets)
         finalizeReset(r);
 
     resets.clear();
 
     if (size() > maxSize()) {
         std::ostringstream ss;
-        ss << size() << " binds exceeds maximum of " << maxSize() <<
-            " allowed";
+        ss << size() << " binds exceeds maximum of " << maxSize()
+           << " allowed";
         portBase->report_error(sc_core::SC_ID_COMPLETE_BINDING_,
-                ss.str().c_str());
+                               ss.str().c_str());
     }
 
     switch (portBase->_portPolicy()) {
-      case sc_core::SC_ONE_OR_MORE_BOUND:
+    case sc_core::SC_ONE_OR_MORE_BOUND:
         if (size() == 0)
             portBase->report_error(sc_core::SC_ID_COMPLETE_BINDING_,
-                    "port not bound");
+                                   "port not bound");
         break;
-      case sc_core::SC_ALL_BOUND:
+    case sc_core::SC_ALL_BOUND:
         if (size() < maxSize() || size() < 1) {
             std::stringstream ss;
-            ss << size() << " actual binds is less than required " <<
-                maxSize();
+            ss << size() << " actual binds is less than required "
+               << maxSize();
             portBase->report_error(sc_core::SC_ID_COMPLETE_BINDING_,
-                    ss.str().c_str());
+                                   ss.str().c_str());
         }
         break;
-      case sc_core::SC_ZERO_OR_MORE_BOUND:
+    case sc_core::SC_ZERO_OR_MORE_BOUND:
         break;
-      default:
+    default:
         panic("Unrecognized port policy %d.", portBase->_portPolicy());
     }
 }

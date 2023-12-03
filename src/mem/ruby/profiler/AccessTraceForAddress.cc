@@ -45,7 +45,7 @@ AccessTraceForAddress::~AccessTraceForAddress()
 }
 
 void
-AccessTraceForAddress::print(std::ostream& out) const
+AccessTraceForAddress::print(std::ostream &out) const
 {
     out << m_addr;
 
@@ -55,7 +55,7 @@ AccessTraceForAddress::print(std::ostream& out) const
         out << " " << m_stores;
         out << " " << m_atomics;
         out << " | " << m_user;
-        out << " " << m_total-m_user;
+        out << " " << m_total - m_user;
         out << " | " << m_sharing;
         out << " | " << m_touched_by.count();
     } else {
@@ -65,17 +65,16 @@ AccessTraceForAddress::print(std::ostream& out) const
 }
 
 void
-AccessTraceForAddress::update(RubyRequestType type,
-                              RubyAccessMode access_mode, NodeID cpu,
-                              bool sharing_miss)
+AccessTraceForAddress::update(RubyRequestType type, RubyAccessMode access_mode,
+                              NodeID cpu, bool sharing_miss)
 {
     m_touched_by.add(cpu);
     m_total++;
     if (type == RubyRequestType_ATOMIC) {
         m_atomics++;
-    } else if (type == RubyRequestType_LD){
+    } else if (type == RubyRequestType_LD) {
         m_loads++;
-    } else if (type == RubyRequestType_ST){
+    } else if (type == RubyRequestType_ST) {
         m_stores++;
     } else {
         //  ERROR_MSG("Trying to add invalid access to trace");

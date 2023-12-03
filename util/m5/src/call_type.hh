@@ -39,7 +39,8 @@ class DispatchTable;
 class CallType
 {
   public:
-    enum class CheckArgsResult {
+    enum class CheckArgsResult
+    {
         Match,
         NoMatch,
         Usage
@@ -50,11 +51,19 @@ class CallType
 
     virtual bool isDefault() const = 0;
     virtual CheckArgsResult checkArgs(Args &args);
-    virtual void init() {}
+
+    virtual void
+    init()
+    {}
 
     static std::map<std::string, CallType &> &map();
 
-    virtual void printBrief(std::ostream &os) const { os << "--" << name; }
+    virtual void
+    printBrief(std::ostream &os) const
+    {
+        os << "--" << name;
+    }
+
     virtual void printDesc(std::ostream &os) const = 0;
     std::string formattedUsage() const;
 
@@ -62,20 +71,16 @@ class CallType
     CallType(const std::string &_name) : name(_name)
     {
         map().emplace(std::piecewise_construct,
-            std::forward_as_tuple(std::string(_name)),
-            std::forward_as_tuple(*this));
+                      std::forward_as_tuple(std::string(_name)),
+                      std::forward_as_tuple(*this));
     }
 
-    ~CallType()
-    {
-        map().erase(name);
-    }
+    ~CallType() { map().erase(name); }
 
     static CallType *detect(Args &args);
     static std::string usageSummary();
 
     virtual const DispatchTable &getDispatch() const = 0;
 };
-
 
 #endif // __CALL_TYPE_HH__

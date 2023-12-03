@@ -30,10 +30,9 @@
 namespace gem5
 {
 
-RequestPortWrapper::RequestPortWrapper(const std::string& name, PortID id)
+RequestPortWrapper::RequestPortWrapper(const std::string &name, PortID id)
     : RequestPort(name, id)
-{
-}
+{}
 
 void
 RequestPortWrapper::recvRangeChange()
@@ -73,10 +72,9 @@ RequestPortWrapper::setTimingCallbacks(RecvTimingRespCallback resp_cb,
     recvReqRetryCb = std::move(retry_cb);
 }
 
-ResponsePortWrapper::ResponsePortWrapper(const std::string& name, PortID id)
+ResponsePortWrapper::ResponsePortWrapper(const std::string &name, PortID id)
     : ResponsePort(name, id)
-{
-}
+{}
 
 AddrRangeList
 ResponsePortWrapper::getAddrRanges() const
@@ -108,7 +106,7 @@ ResponsePortWrapper::recvAtomic(PacketPtr packet)
 
 Tick
 ResponsePortWrapper::recvAtomicBackdoor(PacketPtr packet,
-                                        MemBackdoorPtr& backdoor)
+                                        MemBackdoorPtr &backdoor)
 {
     if (!recvAtomicBackdoorCb) {
         return ResponsePort::recvAtomicBackdoor(packet, backdoor);
@@ -124,8 +122,8 @@ ResponsePortWrapper::recvFunctional(PacketPtr packet)
 }
 
 void
-ResponsePortWrapper::recvMemBackdoorReq(const MemBackdoorReq& req,
-                                        MemBackdoorPtr& backdoor)
+ResponsePortWrapper::recvMemBackdoorReq(const MemBackdoorReq &req,
+                                        MemBackdoorPtr &backdoor)
 {
     if (!recvMemBackdoorReqCb) {
         ResponsePort::recvMemBackdoorReq(req, backdoor);
@@ -164,4 +162,4 @@ ResponsePortWrapper::setFunctionalCallbacks(
     recvMemBackdoorReqCb = std::move(backdoor_cb);
 }
 
-}  // namespace gem5
+} // namespace gem5

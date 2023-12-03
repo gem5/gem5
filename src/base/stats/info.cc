@@ -68,19 +68,16 @@ nameMap()
     return the_map;
 }
 
-Info::Info()
-    : flags(none), precision(-1), prereq(0), storageParams()
+Info::Info() : flags(none), precision(-1), prereq(0), storageParams()
 {
     id = id_count++;
     if (debug_break_id >= 0 and debug_break_id == id)
         debug::breakpoint();
 }
 
-Info::~Info()
-{
-}
+Info::~Info() {}
 
-StorageParams const*
+StorageParams const *
 Info::getStorageParams() const
 {
     return storageParams.get();
@@ -190,8 +187,7 @@ Info::baseCheck() const
 
 void
 Info::enable()
-{
-}
+{}
 
 void
 VectorInfo::enable()

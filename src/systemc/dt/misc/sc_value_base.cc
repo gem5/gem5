@@ -35,7 +35,6 @@
 
  *****************************************************************************/
 
-
 // $Log: sc_value_base.cpp,v $
 // Revision 1.2  2011/08/15 16:43:24  acg
 //  Torsten Maehne: changes to remove unused argument warnings.
@@ -112,7 +111,7 @@ sc_value_base::concat_set(int64 /*src*/, int /*low_i*/)
 }
 
 void
-sc_value_base::concat_set(const sc_signed &/*src*/, int /*low_i*/)
+sc_value_base::concat_set(const sc_signed & /*src*/, int /*low_i*/)
 {
     static const char error_message[] =
         "concat_set(sc_signed) method not supported by this type";
@@ -120,7 +119,7 @@ sc_value_base::concat_set(const sc_signed &/*src*/, int /*low_i*/)
 }
 
 void
-sc_value_base::concat_set(const sc_unsigned &/*src*/, int /*low_i*/)
+sc_value_base::concat_set(const sc_unsigned & /*src*/, int /*low_i*/)
 {
     static const char error_message[] =
         "concat_set(sc_unsigned) method not supported by this type";

@@ -57,9 +57,7 @@ namespace ruby
 
 class RubyPortProxy : public RubyPort
 {
-
   public:
-
     /**
      * Create a new RubyPortProxy.
      *
@@ -95,7 +93,11 @@ class RubyPortProxy : public RubyPort
      *
      * @returns always 0
      */
-    int outstandingCount() const { return 0; }
+    int
+    outstandingCount() const
+    {
+        return 0;
+    }
 
     /**
      * Pure virtual member in the super class that we are forced to
@@ -104,15 +106,20 @@ class RubyPortProxy : public RubyPort
      *
      * @returns always false
      */
-    bool isDeadlockEventScheduled() const { return false; }
+    bool
+    isDeadlockEventScheduled() const
+    {
+        return false;
+    }
 
     /**
      * Pure virtual member in the super class that we are forced to
      * implement even if it is never used (since there are only
      * functional accesses).
      */
-    void descheduleDeadlockEvent() { }
-
+    void
+    descheduleDeadlockEvent()
+    {}
 };
 
 } // namespace ruby

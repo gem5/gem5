@@ -86,11 +86,12 @@ transferNeedsBurst(Addr addr, unsigned int size, unsigned int block_size)
  * Test if there is any active element in an enablement range.
  */
 inline bool
-isAnyActiveElement(const std::vector<bool>::const_iterator& it_start,
-                   const std::vector<bool>::const_iterator& it_end)
+isAnyActiveElement(const std::vector<bool>::const_iterator &it_start,
+                   const std::vector<bool>::const_iterator &it_end)
 {
     auto it_tmp = it_start;
-    for (;it_tmp != it_end && !(*it_tmp); ++it_tmp);
+    for (; it_tmp != it_end && !(*it_tmp); ++it_tmp)
+        ;
     return (it_tmp != it_end);
 }
 

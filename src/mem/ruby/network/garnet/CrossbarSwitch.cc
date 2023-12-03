@@ -28,7 +28,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #include "mem/ruby/network/garnet/CrossbarSwitch.hh"
 
 #include "debug/RubyNetwork.hh"
@@ -45,10 +44,12 @@ namespace garnet
 {
 
 CrossbarSwitch::CrossbarSwitch(Router *router)
-  : Consumer(router), m_router(router), m_num_vcs(m_router->get_num_vcs()),
-    m_crossbar_activity(0), switchBuffers(0)
-{
-}
+    : Consumer(router),
+      m_router(router),
+      m_num_vcs(m_router->get_num_vcs()),
+      m_crossbar_activity(0),
+      switchBuffers(0)
+{}
 
 void
 CrossbarSwitch::init()
@@ -65,11 +66,12 @@ CrossbarSwitch::init()
 void
 CrossbarSwitch::wakeup()
 {
-    DPRINTF(RubyNetwork, "CrossbarSwitch at Router %d woke up "
+    DPRINTF(RubyNetwork,
+            "CrossbarSwitch at Router %d woke up "
             "at time: %lld\n",
             m_router->get_id(), m_router->curCycle());
 
-    for (auto& switch_buffer : switchBuffers) {
+    for (auto &switch_buffer : switchBuffers) {
         if (!switch_buffer.isReady(curTick())) {
             continue;
         }
@@ -95,23 +97,23 @@ bool
 CrossbarSwitch::functionalRead(Packet *pkt, WriteMask &mask)
 {
     bool read = false;
-    for (auto& switch_buffer : switchBuffers) {
+    for (auto &switch_buffer : switchBuffers) {
         if (switch_buffer.functionalRead(pkt, mask))
             read = true;
-   }
-   return read;
+    }
+    return read;
 }
 
 uint32_t
 CrossbarSwitch::functionalWrite(Packet *pkt)
 {
-   uint32_t num_functional_writes = 0;
+    uint32_t num_functional_writes = 0;
 
-   for (auto& switch_buffer : switchBuffers) {
-       num_functional_writes += switch_buffer.functionalWrite(pkt);
-   }
+    for (auto &switch_buffer : switchBuffers) {
+        num_functional_writes += switch_buffer.functionalWrite(pkt);
+    }
 
-   return num_functional_writes;
+    return num_functional_writes;
 }
 
 void

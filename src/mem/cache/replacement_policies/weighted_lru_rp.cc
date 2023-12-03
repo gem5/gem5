@@ -42,44 +42,41 @@ namespace gem5
 namespace replacement_policy
 {
 
-WeightedLRU::WeightedLRU(const Params &p)
-  : LRU(p)
-{
-}
+WeightedLRU::WeightedLRU(const Params &p) : LRU(p) {}
 
 void
-WeightedLRU::touch(const std::shared_ptr<ReplacementData>& replacement_data,
-    int occupancy) const
+WeightedLRU::touch(const std::shared_ptr<ReplacementData> &replacement_data,
+                   int occupancy) const
 {
     LRU::touch(replacement_data);
-    std::static_pointer_cast<WeightedLRUReplData>(replacement_data)->
-                                                  last_occ_ptr = occupancy;
+    std::static_pointer_cast<WeightedLRUReplData>(replacement_data)
+        ->last_occ_ptr = occupancy;
 }
 
-ReplaceableEntry*
-WeightedLRU::getVictim(const ReplacementCandidates& candidates) const
+ReplaceableEntry *
+WeightedLRU::getVictim(const ReplacementCandidates &candidates) const
 {
     assert(candidates.size() > 0);
 
-    ReplaceableEntry* victim = candidates[0];
+    ReplaceableEntry *victim = candidates[0];
     // Use weight (last_occ_ptr) to find victim.
     // Evict the block that has the smallest weight.
     // If two blocks have the same weight, evict the oldest one.
-    for (const auto& candidate : candidates) {
+    for (const auto &candidate : candidates) {
         // candidate's replacement_data
         std::shared_ptr<WeightedLRUReplData> candidate_replacement_data =
             std::static_pointer_cast<WeightedLRUReplData>(
-                                             candidate->replacementData);
+                candidate->replacementData);
         // victim's replacement_data
         std::shared_ptr<WeightedLRUReplData> victim_replacement_data =
             std::static_pointer_cast<WeightedLRUReplData>(
-                                             victim->replacementData);
+                victim->replacementData);
 
         if (candidate_replacement_data->last_occ_ptr <
-                    victim_replacement_data->last_occ_ptr) {
+            victim_replacement_data->last_occ_ptr) {
             victim = candidate;
         } else if (candidate_replacement_data->last_occ_ptr ==
-                    victim_replacement_data->last_occ_ptr) {
+                   victim_replacement_data->last_occ_ptr) {
             // Evict the block with a smaller tick.
             Tick time = candidate_replacement_data->lastTouchTick;
             if (time < victim_replacement_data->lastTouchTick) {

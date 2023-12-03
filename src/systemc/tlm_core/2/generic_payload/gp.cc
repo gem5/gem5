@@ -17,7 +17,7 @@
 
  *****************************************************************************/
 
-#include <cstring>  // std::memcpy et.al.
+#include <cstring> // std::memcpy et.al.
 #include <map>
 #include <typeindex>
 
@@ -39,6 +39,7 @@ class tlm_extension_registry
 {
     typedef unsigned int key_type;
     typedef std::map<std::type_index, key_type> type_map;
+
   public:
     static tlm_extension_registry &
     instance()
@@ -73,8 +74,8 @@ class tlm_extension_registry
   private:
     static tlm_extension_registry *instance_;
     type_map ids_;
-    tlm_extension_registry() {}
 
+    tlm_extension_registry() {}
 };
 
 tlm_extension_registry *tlm_extension_registry::instance_ = NULL;
@@ -97,20 +98,36 @@ tlm_extension_base::register_extension(const std::type_info &type)
 // The generic payload class:
 //---------------------------------------------------------------------------
 
-tlm_generic_payload::tlm_generic_payload() : m_address(0),
-    m_command(TLM_IGNORE_COMMAND), m_data(0), m_length(0),
-    m_response_status(TLM_INCOMPLETE_RESPONSE), m_dmi(false), m_byte_enable(0),
-    m_byte_enable_length(0), m_streaming_width(0),
-    m_gp_option(TLM_MIN_PAYLOAD), m_extensions(max_num_extensions()), m_mm(0),
-    m_ref_count(0)
+tlm_generic_payload::tlm_generic_payload()
+    : m_address(0),
+      m_command(TLM_IGNORE_COMMAND),
+      m_data(0),
+      m_length(0),
+      m_response_status(TLM_INCOMPLETE_RESPONSE),
+      m_dmi(false),
+      m_byte_enable(0),
+      m_byte_enable_length(0),
+      m_streaming_width(0),
+      m_gp_option(TLM_MIN_PAYLOAD),
+      m_extensions(max_num_extensions()),
+      m_mm(0),
+      m_ref_count(0)
 {}
 
-tlm_generic_payload::tlm_generic_payload(tlm_mm_interface *mm): m_address(0),
-    m_command(TLM_IGNORE_COMMAND), m_data(0), m_length(0),
-    m_response_status(TLM_INCOMPLETE_RESPONSE), m_dmi(false), m_byte_enable(0),
-    m_byte_enable_length(0), m_streaming_width(0),
-    m_gp_option(TLM_MIN_PAYLOAD), m_extensions(max_num_extensions()), m_mm(mm),
-    m_ref_count(0)
+tlm_generic_payload::tlm_generic_payload(tlm_mm_interface *mm)
+    : m_address(0),
+      m_command(TLM_IGNORE_COMMAND),
+      m_data(0),
+      m_length(0),
+      m_response_status(TLM_INCOMPLETE_RESPONSE),
+      m_dmi(false),
+      m_byte_enable(0),
+      m_byte_enable_length(0),
+      m_streaming_width(0),
+      m_gp_option(TLM_MIN_PAYLOAD),
+      m_extensions(max_num_extensions()),
+      m_mm(mm),
+      m_ref_count(0)
 {}
 
 void
@@ -177,8 +194,8 @@ tlm_generic_payload::deep_copy_from(const tlm_generic_payload &other)
 // or ignores byte enables when copying back the data array on a read command.
 
 void
-tlm_generic_payload::update_original_from(
-        const tlm_generic_payload &other, bool use_byte_enable_on_read)
+tlm_generic_payload::update_original_from(const tlm_generic_payload &other,
+                                          bool use_byte_enable_on_read)
 {
     // Copy back extensions that are present on the original.
     update_extensions_from(other);
@@ -275,19 +292,19 @@ std::string
 tlm_generic_payload::get_response_string() const
 {
     switch (m_response_status) {
-      case TLM_OK_RESPONSE:
+    case TLM_OK_RESPONSE:
         return "TLM_OK_RESPONSE";
-      case TLM_INCOMPLETE_RESPONSE:
+    case TLM_INCOMPLETE_RESPONSE:
         return "TLM_INCOMPLETE_RESPONSE";
-      case TLM_GENERIC_ERROR_RESPONSE:
+    case TLM_GENERIC_ERROR_RESPONSE:
         return "TLM_GENERIC_ERROR_RESPONSE";
-      case TLM_ADDRESS_ERROR_RESPONSE:
+    case TLM_ADDRESS_ERROR_RESPONSE:
         return "TLM_ADDRESS_ERROR_RESPONSE";
-      case TLM_COMMAND_ERROR_RESPONSE:
+    case TLM_COMMAND_ERROR_RESPONSE:
         return "TLM_COMMAND_ERROR_RESPONSE";
-      case TLM_BURST_ERROR_RESPONSE:
+    case TLM_BURST_ERROR_RESPONSE:
         return "TLM_BURST_ERROR_RESPONSE";
-      case TLM_BYTE_ENABLE_ERROR_RESPONSE:
+    case TLM_BYTE_ENABLE_ERROR_RESPONSE:
         return "TLM_BYTE_ENABLE_ERROR_RESPONSE";
     }
     return "TLM_UNKNOWN_RESPONSE";
@@ -307,8 +324,8 @@ tlm_generic_payload::set_extension(unsigned int index, tlm_extension_base *ext)
 }
 
 tlm_extension_base *
-tlm_generic_payload::set_auto_extension(
-        unsigned int index, tlm_extension_base *ext)
+tlm_generic_payload::set_auto_extension(unsigned int index,
+                                        tlm_extension_base *ext)
 {
     sc_assert(index < m_extensions.size());
     tlm_extension_base *tmp = m_extensions[index];

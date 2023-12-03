@@ -58,24 +58,27 @@ GenericISA::BasicDecodeCache<Decoder, ExtMachInst> Decoder::defaultCache;
 Decoder::Decoder(const ArmDecoderParams &params)
     : InstDecoder(params, &data),
       dvmEnabled(params.dvm_enabled),
-      data(0), fpscrLen(0), fpscrStride(0),
+      data(0),
+      fpscrLen(0),
+      fpscrStride(0),
       decoderFlavor(safe_cast<ISA *>(params.isa)->decoderFlavor())
 {
     reset();
 
     // Initialize SVE vector length
-    sveLen = (safe_cast<ISA *>(params.isa)->
-            getCurSveVecLenInBitsAtReset() >> 7) - 1;
+    sveLen =
+        (safe_cast<ISA *>(params.isa)->getCurSveVecLenInBitsAtReset() >> 7) -
+        1;
 
     // Initialize SME vector length
-    smeLen = (safe_cast<ISA *>(params.isa)
-            ->getCurSmeVecLenInBitsAtReset() >> 7) - 1;
+    smeLen =
+        (safe_cast<ISA *>(params.isa)->getCurSmeVecLenInBitsAtReset() >> 7) -
+        1;
 
     if (dvmEnabled) {
-        warn_once(
-            "DVM Ops instructions are micro-architecturally "
-            "modelled as loads. This will tamper the effective "
-            "number of loads stat\n");
+        warn_once("DVM Ops instructions are micro-architecturally "
+                  "modelled as loads. This will tamper the effective "
+                  "number of loads stat\n");
     }
 }
 
@@ -99,8 +102,7 @@ Decoder::process()
         emi.instBits = data;
         if (!emi.aarch64) {
             emi.sevenAndFour = bits(data, 7) && bits(data, 4);
-            emi.isMisc = (bits(data, 24, 23) == 0x2 &&
-                          bits(data, 20) == 0);
+            emi.isMisc = (bits(data, 24, 23) == 0x2 && bits(data, 20) == 0);
         }
         consumeBytes(4);
         DPRINTF(Decoder, "Arm inst: %#x.\n", (uint64_t)emi);
@@ -116,7 +118,7 @@ Decoder::process()
         } else {
             uint16_t highBits = word & 0xF800;
             if (highBits == 0xE800 || highBits == 0xF000 ||
-                    highBits == 0xF800) {
+                highBits == 0xF800) {
                 // The start of a 32 bit thumb inst.
                 emi.bigThumb = 1;
                 if (offset == 0) {
@@ -127,8 +129,7 @@ Decoder::process()
                     consumeBytes(4);
                 } else {
                     // We only have the first half word.
-                    DPRINTF(Decoder,
-                            "First half of 32 bit Thumb.\n");
+                    DPRINTF(Decoder, "First half of 32 bit Thumb.\n");
                     emi.instBits = (uint32_t)word << 16;
                     bigThumb = true;
                     consumeBytes(2);
@@ -141,14 +142,11 @@ Decoder::process()
                 emi.instBits = word;
                 // Set the condition code field artificially.
                 emi.condCode = COND_UC;
-                DPRINTF(Decoder, "16 bit Thumb: %#x.\n",
-                        emi.instBits);
-                if (bits(word, 15, 8) == 0xbf &&
-                        bits(word, 3, 0) != 0x0) {
+                DPRINTF(Decoder, "16 bit Thumb: %#x.\n", emi.instBits);
+                if (bits(word, 15, 8) == 0xbf && bits(word, 3, 0) != 0x0) {
                     foundIt = true;
                     itBits = bits(word, 7, 0);
-                    DPRINTF(Decoder,
-                            "IT detected, cond = %#x, mask = %#x\n",
+                    DPRINTF(Decoder, "IT detected, cond = %#x, mask = %#x\n",
                             itBits.cond, itBits.mask);
                 }
             }
@@ -178,8 +176,9 @@ Decoder::moreBytes(const PCStateBase &_pc, Addr fetchPC)
     emi.sveLen = sveLen;
 
     const Addr alignment(pc.thumb() ? 0x1 : 0x3);
-    emi.decoderFault = static_cast<uint8_t>(
-        pc.instAddr() & alignment ? DecoderFault::UNALIGNED : DecoderFault::OK);
+    emi.decoderFault = static_cast<uint8_t>(pc.instAddr() & alignment ?
+                                                DecoderFault::UNALIGNED :
+                                                DecoderFault::OK);
 
     outOfBytes = false;
     process();

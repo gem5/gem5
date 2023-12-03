@@ -36,8 +36,7 @@
 namespace gem5
 {
 
-CpuThread::CpuThread(const Params &p)
-    : TesterThread(p)
+CpuThread::CpuThread(const Params &p) : TesterThread(p)
 {
     threadName = "CpuThread(Thread ID " + std::to_string(threadId) + ")";
     threadEvent.setDesc("CpuThread tick");

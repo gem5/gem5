@@ -56,27 +56,27 @@ class RealViewCtrl : public BasicPioDevice
   public:
     enum DeviceFunc
     {
-        FUNC_OSC      = 1,
-        FUNC_VOLT     = 2,
-        FUNC_AMP      = 3,
-        FUNC_TEMP     = 4,
-        FUNC_RESET    = 5,
-        FUNC_SCC      = 6,
-        FUNC_MUXFPGA  = 7,
+        FUNC_OSC = 1,
+        FUNC_VOLT = 2,
+        FUNC_AMP = 3,
+        FUNC_TEMP = 4,
+        FUNC_RESET = 5,
+        FUNC_SCC = 6,
+        FUNC_MUXFPGA = 7,
         FUNC_SHUTDOWN = 8,
-        FUNC_REBOOT   = 9,
-        FUNC_DVIMODE  = 11,
-        FUNC_POWER    = 12,
-        FUNC_ENERGY   = 13,
+        FUNC_REBOOT = 9,
+        FUNC_DVIMODE = 11,
+        FUNC_POWER = 12,
+        FUNC_ENERGY = 13,
     };
 
     class Device
     {
       public:
-        Device(RealViewCtrl &parent, DeviceFunc func,
-               uint8_t site, uint8_t pos, uint8_t dcc, uint16_t dev)
+        Device(RealViewCtrl &parent, DeviceFunc func, uint8_t site,
+               uint8_t pos, uint8_t dcc, uint16_t dev)
         {
-            parent.registerDevice(func, site, pos, dcc, dev,  this);
+            parent.registerDevice(func, site, pos, dcc, dev, this);
         }
 
         virtual ~Device() {}
@@ -88,47 +88,47 @@ class RealViewCtrl : public BasicPioDevice
   protected:
     enum
     {
-        IdReg      = 0x00,
-        SwReg      = 0x04,
-        Led        = 0x08,
-        Osc0       = 0x0C,
-        Osc1       = 0x10,
-        Osc2       = 0x14,
-        Osc3       = 0x18,
-        Osc4       = 0x1C,
-        Lock       = 0x20,
-        Clock100   = 0x24,
-        CfgData1   = 0x28,
-        CfgData2   = 0x2C,
-        Flags      = 0x30,
-        FlagsClr   = 0x34,
-        NvFlags    = 0x38,
+        IdReg = 0x00,
+        SwReg = 0x04,
+        Led = 0x08,
+        Osc0 = 0x0C,
+        Osc1 = 0x10,
+        Osc2 = 0x14,
+        Osc3 = 0x18,
+        Osc4 = 0x1C,
+        Lock = 0x20,
+        Clock100 = 0x24,
+        CfgData1 = 0x28,
+        CfgData2 = 0x2C,
+        Flags = 0x30,
+        FlagsClr = 0x34,
+        NvFlags = 0x38,
         NvFlagsClr = 0x3C,
-        ResetCtl   = 0x40,
-        PciCtl     = 0x44,
-        MciCtl     = 0x48,
-        Flash      = 0x4C,
-        Clcd       = 0x50,
-        ClcdSer    = 0x54,
-        Bootcs     = 0x58,
-        Clock24    = 0x5C,
-        Misc       = 0x60,
-        IoSel      = 0x70,
-        ProcId0    = 0x84,
-        ProcId1    = 0x88,
-        CfgData    = 0xA0,
-        CfgCtrl    = 0xA4,
-        CfgStat    = 0xA8,
-        TestOsc0   = 0xC0,
-        TestOsc1   = 0xC4,
-        TestOsc2   = 0xC8,
-        TestOsc3   = 0xCC,
-        TestOsc4   = 0xD0
+        ResetCtl = 0x40,
+        PciCtl = 0x44,
+        MciCtl = 0x48,
+        Flash = 0x4C,
+        Clcd = 0x50,
+        ClcdSer = 0x54,
+        Bootcs = 0x58,
+        Clock24 = 0x5C,
+        Misc = 0x60,
+        IoSel = 0x70,
+        ProcId0 = 0x84,
+        ProcId1 = 0x88,
+        CfgData = 0xA0,
+        CfgCtrl = 0xA4,
+        CfgStat = 0xA8,
+        TestOsc0 = 0xC0,
+        TestOsc1 = 0xC4,
+        TestOsc2 = 0xC8,
+        TestOsc3 = 0xCC,
+        TestOsc4 = 0xD0
     };
 
     // system lock value
     BitUnion32(SysLockReg)
-        Bitfield<15,0> lockVal;
+        Bitfield<15, 0> lockVal;
         Bitfield<16> locked;
     EndBitUnion(SysLockReg)
 
@@ -161,9 +161,9 @@ class RealViewCtrl : public BasicPioDevice
     PARAMS(RealViewCtrl);
 
     /**
-      * The constructor for RealView just registers itself with the MMU.
-      * @param p params structure
-      */
+     * The constructor for RealView just registers itself with the MMU.
+     * @param p params structure
+     */
     RealViewCtrl(const Params &p);
 
     /**
@@ -185,8 +185,7 @@ class RealViewCtrl : public BasicPioDevice
 
   public:
     void registerDevice(DeviceFunc func, uint8_t site, uint8_t pos,
-                        uint8_t dcc, uint16_t dev,
-                        Device *handler);
+                        uint8_t dcc, uint16_t dev, Device *handler);
 
   protected:
     std::map<uint32_t, Device *> devices;
@@ -199,12 +198,11 @@ class RealViewCtrl : public BasicPioDevice
  *
  * See ARM DUI 0447J (ARM  Motherboard Express uATX -- V2M-P1).
  */
-class RealViewOsc
-    : public ClockDomain, RealViewCtrl::Device
+class RealViewOsc : public ClockDomain, RealViewCtrl::Device
 {
   public:
     RealViewOsc(const RealViewOscParams &p);
-    virtual ~RealViewOsc() {};
+    virtual ~RealViewOsc(){};
 
     void startup() override;
 
@@ -225,25 +223,28 @@ class RealViewOsc
  *
  * See ARM DUI 0447J (ARM  Motherboard Express uATX -- V2M-P1).
  */
-class RealViewTemperatureSensor
-    : public SimObject, RealViewCtrl::Device
+class RealViewTemperatureSensor : public SimObject, RealViewCtrl::Device
 {
   public:
     RealViewTemperatureSensor(const RealViewTemperatureSensorParams &p)
-    : SimObject(p),
-      RealViewCtrl::Device(*p.parent, RealViewCtrl::FUNC_TEMP,
-                           p.site, p.position, p.dcc, p.device),
-      system(p.system)
+        : SimObject(p),
+          RealViewCtrl::Device(*p.parent, RealViewCtrl::FUNC_TEMP, p.site,
+                               p.position, p.dcc, p.device),
+          system(p.system)
     {}
-    virtual ~RealViewTemperatureSensor() {};
+
+    virtual ~RealViewTemperatureSensor(){};
 
   public: // RealViewCtrl::Device interface
     uint32_t read() const override;
-    void write(uint32_t temp) override {}
+
+    void
+    write(uint32_t temp) override
+    {}
 
   protected:
     /** The system this RV device belongs to */
-    System * system;
+    System *system;
 };
 
 } // namespace gem5

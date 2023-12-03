@@ -140,7 +140,7 @@ class SkewedAssociative : public BaseIndexingPolicy
 
   public:
     /** Convenience typedef. */
-     typedef SkewedAssociativeParams Params;
+    typedef SkewedAssociativeParams Params;
 
     /**
      * Construct and initialize this policy.
@@ -150,7 +150,7 @@ class SkewedAssociative : public BaseIndexingPolicy
     /**
      * Destructor.
      */
-    ~SkewedAssociative() {};
+    ~SkewedAssociative(){};
 
     /**
      * Find all possible entries for insertion and replacement of an address.
@@ -160,8 +160,8 @@ class SkewedAssociative : public BaseIndexingPolicy
      * @param addr The addr to a find possible entries for.
      * @return The possible entries.
      */
-    std::vector<ReplaceableEntry*> getPossibleEntries(const Addr addr) const
-                                                                   override;
+    std::vector<ReplaceableEntry *>
+    getPossibleEntries(const Addr addr) const override;
 
     /**
      * Regenerate an entry's address from its tag and assigned set and way.
@@ -171,8 +171,8 @@ class SkewedAssociative : public BaseIndexingPolicy
      * @param entry The entry.
      * @return the entry's address.
      */
-    Addr regenerateAddr(const Addr tag, const ReplaceableEntry* entry) const
-                                                                   override;
+    Addr regenerateAddr(const Addr tag,
+                        const ReplaceableEntry *entry) const override;
 };
 
 } // namespace gem5

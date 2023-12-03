@@ -42,15 +42,15 @@ namespace gem5
 
 class VMA
 {
-  class MappedFileBuffer;
+    class MappedFileBuffer;
 
   public:
-    VMA(AddrRange r, Addr page_bytes, const std::string& vma_name="anon",
-        int fd=-1, off_t off=0)
+    VMA(AddrRange r, Addr page_bytes, const std::string &vma_name = "anon",
+        int fd = -1, off_t off = 0)
         : _addrRange(r), _pageBytes(page_bytes), _vmaName(vma_name)
     {
-        DPRINTF(Vma, "Creating vma start %#x len %llu end %#x\n",
-                r.start(), r.size(), r.end());
+        DPRINTF(Vma, "Creating vma start %#x len %llu end %#x\n", r.start(),
+                r.size(), r.end());
 
         if (fd != -1) {
             _origHostBuf =
@@ -80,7 +80,11 @@ class VMA
      * Check if the virtual memory area has an equivalent buffer on the
      * host machine.
      */
-    bool hasHostBuf() const { return _origHostBuf != nullptr; }
+    bool
+    hasHostBuf() const
+    {
+        return _origHostBuf != nullptr;
+    }
 
     /**
      * Copy memory from a buffer which resides on the host machine into a
@@ -104,8 +108,14 @@ class VMA
      */
     void sliceRegionLeft(Addr slice_addr);
 
-    const std::string& getName() { return _vmaName; }
-    off_t getFileMappingOffset() const
+    const std::string &
+    getName()
+    {
+        return _vmaName;
+    }
+
+    off_t
+    getFileMappingOffset() const
     {
         return hasHostBuf() ? _origHostBuf->getOffset() : 0;
     }
@@ -113,30 +123,44 @@ class VMA
     /**
      * Defer AddrRange related calls to the AddrRange.
      */
-    Addr size() { return _addrRange.size(); }
-    Addr start() { return _addrRange.start(); }
-    Addr end() { return _addrRange.end(); }
+    Addr
+    size()
+    {
+        return _addrRange.size();
+    }
+
+    Addr
+    start()
+    {
+        return _addrRange.start();
+    }
+
+    Addr
+    end()
+    {
+        return _addrRange.end();
+    }
 
     bool
-    mergesWith(const AddrRange& r) const
+    mergesWith(const AddrRange &r) const
     {
         return _addrRange.mergesWith(r);
     }
 
     bool
-    intersects(const AddrRange& r) const
+    intersects(const AddrRange &r) const
     {
         return _addrRange.intersects(r);
     }
 
     bool
-    isSubset(const AddrRange& r) const
+    isSubset(const AddrRange &r) const
     {
         return _addrRange.isSubset(r);
     }
 
     bool
-    contains(const Addr& a) const
+    contains(const Addr &a) const
     {
         return _addrRange.contains(a);
     }
@@ -193,14 +217,28 @@ class VMA
         MappedFileBuffer(int fd, size_t length, off_t offset);
         ~MappedFileBuffer();
 
-        void *getBuffer() const { return _buffer; }
-        uint64_t getLength() const { return _length; }
-        off_t getOffset() const { return _offset; }
+        void *
+        getBuffer() const
+        {
+            return _buffer;
+        }
+
+        uint64_t
+        getLength() const
+        {
+            return _length;
+        }
+
+        off_t
+        getOffset() const
+        {
+            return _offset;
+        }
 
       private:
-        void *_buffer;       // Host buffer ptr
-        size_t _length;       // Length of host ptr
-        off_t _offset;       // Offset in file at which mapping starts
+        void *_buffer;  // Host buffer ptr
+        size_t _length; // Length of host ptr
+        off_t _offset;  // Offset in file at which mapping starts
     };
 };
 

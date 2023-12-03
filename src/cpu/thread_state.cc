@@ -42,13 +42,20 @@ namespace gem5
 {
 
 ThreadState::ThreadState(BaseCPU *cpu, ThreadID _tid, Process *_process)
-    : numInst(0), numOp(0), threadStats(cpu, _tid),
-      numLoad(0), startNumLoad(0),
-      _status(ThreadContext::Halted), baseCpu(cpu),
-      _contextId(0), _threadId(_tid), lastActivate(0), lastSuspend(0),
-      process(_process), storeCondFailures(0)
-{
-}
+    : numInst(0),
+      numOp(0),
+      threadStats(cpu, _tid),
+      numLoad(0),
+      startNumLoad(0),
+      _status(ThreadContext::Halted),
+      baseCpu(cpu),
+      _contextId(0),
+      _threadId(_tid),
+      lastActivate(0),
+      lastSuspend(0),
+      process(_process),
+      storeCondFailures(0)
+{}
 
 void
 ThreadState::serialize(CheckpointOut &cp) const
@@ -63,15 +70,14 @@ ThreadState::unserialize(CheckpointIn &cp)
 }
 
 ThreadState::ThreadStateStats::ThreadStateStats(BaseCPU *cpu,
-                                                const ThreadID& tid)
-      : statistics::Group(cpu, csprintf("thread_%i", tid).c_str()),
+                                                const ThreadID &tid)
+    : statistics::Group(cpu, csprintf("thread_%i", tid).c_str()),
       ADD_STAT(numInsts, statistics::units::Count::get(),
                "Number of Instructions committed"),
       ADD_STAT(numOps, statistics::units::Count::get(),
-        "Number of Ops committed"),
+               "Number of Ops committed"),
       ADD_STAT(numMemRefs, statistics::units::Count::get(),
                "Number of Memory References")
-{
-}
+{}
 
 } // namespace gem5

@@ -53,12 +53,10 @@ namespace gem5
 class EmbeddedPyBind
 {
   public:
-    EmbeddedPyBind(const char *_name,
-                   void (*init_func)(pybind11::module_ &),
+    EmbeddedPyBind(const char *_name, void (*init_func)(pybind11::module_ &),
                    const char *_base);
 
-    EmbeddedPyBind(const char *_name,
-                   void (*init_func)(pybind11::module_ &));
+    EmbeddedPyBind(const char *_name, void (*init_func)(pybind11::module_ &));
 
     static void initAll(pybind11::module_ &_m5);
 

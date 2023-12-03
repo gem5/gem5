@@ -41,10 +41,10 @@ namespace encoder
 {
 
 Huffman::Huffman(uint64_t max_code_length)
-  : Base(), maxCodeLength(max_code_length)
+    : Base(), maxCodeLength(max_code_length)
 {
     fatal_if(maxCodeLength > 64,
-        "Code length cannot surpass its underlying container");
+             "Code length cannot surpass its underlying container");
 }
 
 void
@@ -61,19 +61,19 @@ Huffman::buildTree()
     // Construct tree by assigning left and right nodes. The left path leads
     // to the most frequent values
     while (trees.size() > 1) {
-        Node* left = trees.top();
+        Node *left = trees.top();
         trees.pop();
 
-        Node* right = trees.top();
+        Node *right = trees.top();
         trees.pop();
 
-        Node* parent = new Node(left, right);
+        Node *parent = new Node(left, right);
         trees.push(parent);
     }
 
     // All queue entries have been merged into a single entry containing
     // the tree
-    Node* root = trees.top();
+    Node *root = trees.top();
     trees.pop();
     return std::unique_ptr<Node>(root);
 }
@@ -87,7 +87,7 @@ Huffman::generateCodeMaps()
 }
 
 void
-Huffman::generateCodes(const Node* node, const Code& current_code)
+Huffman::generateCodes(const Node *node, const Code &current_code)
 {
     // Drop all entries with length greater than maxCodeLength
     if (current_code.length > maxCodeLength) {

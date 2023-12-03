@@ -31,13 +31,13 @@
 #ifndef __ARCH_RISCV_FP_INST_HH__
 #define __ARCH_RISCV_FP_INST_HH__
 
-#define RM_REQUIRED                                                         \
-        uint_fast8_t rm = ROUND_MODE;                                       \
-        uint_fast8_t frm = xc->readMiscReg(MISCREG_FRM);                    \
-        if (rm == 7)                                                        \
-            rm = frm;                                                       \
-        if (rm > 4)                                                         \
-            return std::make_shared<IllegalInstFault>("RM fault", machInst);\
-        softfloat_roundingMode = rm;                                        \
+#define RM_REQUIRED                                                           \
+    uint_fast8_t rm = ROUND_MODE;                                             \
+    uint_fast8_t frm = xc->readMiscReg(MISCREG_FRM);                          \
+    if (rm == 7)                                                              \
+        rm = frm;                                                             \
+    if (rm > 4)                                                               \
+        return std::make_shared<IllegalInstFault>("RM fault", machInst);      \
+    softfloat_roundingMode = rm;
 
 #endif // __ARCH_RISCV_FP_INST_HH__

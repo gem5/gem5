@@ -56,9 +56,7 @@ namespace ps2
 {
 
 PS2Keyboard::PS2Keyboard(const PS2KeyboardParams &p)
-    : Device(p),
-      shiftDown(false),
-      enabled(false)
+    : Device(p), shiftDown(false), enabled(false)
 {
     if (p.vnc)
         p.vnc->setKeyboard(this);
@@ -84,42 +82,43 @@ bool
 PS2Keyboard::recv(const std::vector<uint8_t> &data)
 {
     switch (data[0]) {
-      case ReadID:
+    case ReadID:
         DPRINTF(PS2, "Got keyboard read ID command.\n");
         sendAck();
         send(keyboard::ID);
         return true;
-      case Enable:
+    case Enable:
         DPRINTF(PS2, "Enabling the keyboard.\n");
         enabled = true;
         sendAck();
         return true;
-      case Disable:
+    case Disable:
         DPRINTF(PS2, "Disabling the keyboard.\n");
         enabled = false;
         sendAck();
         return true;
-      case DefaultsAndDisable:
+    case DefaultsAndDisable:
         DPRINTF(PS2, "Disabling and resetting the keyboard.\n");
         enabled = false;
         sendAck();
         return true;
-      case Reset:
+    case Reset:
         DPRINTF(PS2, "Resetting keyboard.\n");
         enabled = true;
         sendAck();
         send(SelfTestPass);
         return true;
-      case Resend:
+    case Resend:
         panic("Keyboard resend unimplemented.\n");
 
-      case keyboard::LEDWrite:
+    case keyboard::LEDWrite:
         if (data.size() == 1) {
             DPRINTF(PS2, "Got LED write command.\n");
             sendAck();
             return false;
         } else {
-            DPRINTF(PS2, "Setting LEDs: "
+            DPRINTF(PS2,
+                    "Setting LEDs: "
                     "caps lock %s, num lock %s, scroll lock %s\n",
                     bits(data[1], 2) ? "on" : "off",
                     bits(data[1], 1) ? "on" : "off",
@@ -127,10 +126,10 @@ PS2Keyboard::recv(const std::vector<uint8_t> &data)
             sendAck();
             return true;
         }
-      case keyboard::DiagnosticEcho:
+    case keyboard::DiagnosticEcho:
         send(keyboard::DiagnosticEcho);
         return true;
-      case keyboard::AlternateScanCodes:
+    case keyboard::AlternateScanCodes:
         if (data.size() == 1) {
             DPRINTF(PS2, "Got scan code set command.\n");
             sendAck();
@@ -144,11 +143,11 @@ PS2Keyboard::recv(const std::vector<uint8_t> &data)
             } else {
                 DPRINTF(PS2, "Setting scan code set to %d.\n", scan_code);
                 panic_if(scan_code != 0x2,
-                        "PS/2 scan code set %d not supported.", scan_code);
+                         "PS/2 scan code set %d not supported.", scan_code);
             }
         }
         return true;
-      case keyboard::TypematicInfo:
+    case keyboard::TypematicInfo:
         if (data.size() == 1) {
             DPRINTF(PS2, "Setting typematic info.\n");
             sendAck();
@@ -158,22 +157,22 @@ PS2Keyboard::recv(const std::vector<uint8_t> &data)
             sendAck();
             return true;
         }
-      case keyboard::AllKeysToTypematic:
+    case keyboard::AllKeysToTypematic:
         panic("Setting all keys to typemantic unimplemented.\n");
-      case keyboard::AllKeysToMakeRelease:
+    case keyboard::AllKeysToMakeRelease:
         panic("Setting all keys to make/release unimplemented.\n");
-      case keyboard::AllKeysToMake:
+    case keyboard::AllKeysToMake:
         panic("Setting all keys to make unimplemented.\n");
-      case keyboard::AllKeysToTypematicMakeRelease:
+    case keyboard::AllKeysToTypematicMakeRelease:
         panic("Setting all keys to "
-                "typematic/make/release unimplemented.\n");
-      case keyboard::KeyToTypematic:
+              "typematic/make/release unimplemented.\n");
+    case keyboard::KeyToTypematic:
         panic("Setting a key to typematic unimplemented.\n");
-      case keyboard::KeyToMakeRelease:
+    case keyboard::KeyToMakeRelease:
         panic("Setting a key to make/release unimplemented.\n");
-      case keyboard::KeyToMakeOnly:
+    case keyboard::KeyToMakeOnly:
         panic("Setting key to make only unimplemented.\n");
-      default:
+    default:
         panic("Unknown keyboard command %#02x.\n", data[0]);
     }
 }

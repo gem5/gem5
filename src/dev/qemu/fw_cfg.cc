@@ -76,19 +76,19 @@ FwCfgItemFixed::read(void *buf, uint64_t offset, uint32_t to_read)
     std::memcpy(buf, (uint8_t *)data + offset, to_read);
 }
 
-FwCfg::FwCfg(const Params &p, const AddrRangeList &addr_ranges) :
-    PioDevice(p),
-    signature(".[FW_CFG_SIGNATURE]", false, "QEMU CFG", 0),
-    // The ID says we support the traditional interface but not DMA. To enable
-    // DMA, this should be equal to 3.
-    id(".[FW_CFG_ID]", false, "\x1", 1),
-    addrRanges(addr_ranges)
+FwCfg::FwCfg(const Params &p, const AddrRangeList &addr_ranges)
+    : PioDevice(p),
+      signature(".[FW_CFG_SIGNATURE]", false, "QEMU CFG", 0),
+      // The ID says we support the traditional interface but not DMA. To
+      // enable DMA, this should be equal to 3.
+      id(".[FW_CFG_ID]", false, "\x1", 1),
+      addrRanges(addr_ranges)
 {
     // Add the unnamed, fixed items.
     addItem(&signature);
     addItem(&id);
 
-    for (auto factory: p.items) {
+    for (auto factory : p.items) {
         // Process named items and add them to the index.
         auto &item = factory->item();
 
@@ -102,8 +102,8 @@ FwCfg::FwCfg(const Params &p, const AddrRangeList &addr_ranges) :
             item.index(next_index++);
 
         panic_if(item.index() >= max_index,
-                "Firmware config device out of %s indexes.",
-                item.archSpecific() ? "arch" : "generic");
+                 "Firmware config device out of %s indexes.",
+                 item.archSpecific() ? "arch" : "generic");
 
         addItem(&item);
     }
@@ -118,9 +118,10 @@ FwCfg::addItem(FwCfgItem *item)
     const auto [kit, ksuccess] =
         numbers.insert(std::make_pair(item->index(), item));
 
-    panic_if(!ksuccess, "Duplicate firmware config item key %#x, "
-            "paths %s and %s.",
-            item->index(), item->path(), kit->second->path());
+    panic_if(!ksuccess,
+             "Duplicate firmware config item key %#x, "
+             "paths %s and %s.",
+             item->index(), item->path(), kit->second->path());
 
     const std::string &path = item->path();
     if (path.empty() || path[0] != '.') {
@@ -128,7 +129,7 @@ FwCfg::addItem(FwCfgItem *item)
             names.insert(std::make_pair(item->path(), item->index()));
 
         panic_if(!res.second, "Duplicate firmware config item path %s.",
-                item->path());
+                 item->path());
     }
 }
 
@@ -173,21 +174,20 @@ FwCfg::readItem(void *buf, uint32_t length)
         for (int idx = 0; idx < length; idx++)
             ccprintf(data_str, " %02x", ((uint8_t *)buf)[idx]);
 
-        DPRINTF(QemuFwCfgVerbose, "Read [%#x-%#x) =>%s.\n",
-                offset, offset + length, data_str.str());
+        DPRINTF(QemuFwCfgVerbose, "Read [%#x-%#x) =>%s.\n", offset,
+                offset + length, data_str.str());
     }
 
     offset += length;
 }
 
-FwCfg::Directory::Directory() :
-    FwCfgItemFixed(".[FW_CFG_FILE_DIR]", false, 0x19)
+FwCfg::Directory::Directory()
+    : FwCfgItemFixed(".[FW_CFG_FILE_DIR]", false, 0x19)
 {}
 
 void
-FwCfg::Directory::update(
-        const std::map<std::string, uint16_t> &names,
-        const std::map<uint16_t, FwCfgItem *> &numbers)
+FwCfg::Directory::update(const std::map<std::string, uint16_t> &names,
+                         const std::map<uint16_t, FwCfgItem *> &numbers)
 {
     uint32_t count = names.size();
 
@@ -208,9 +208,9 @@ FwCfg::Directory::update(
     std::memcpy(ptr, &be_count, sizeof(be_count));
     ptr += sizeof(be_count);
 
-    for (auto &[name, index]: names) {
+    for (auto &[name, index] : names) {
         // Fill in the entry.
-        File file{(uint32_t)numbers.at(index)->length(), index, 0, {}};
+        File file{ (uint32_t)numbers.at(index)->length(), index, 0, {} };
         std::memset(file.name, 0, sizeof(file.name));
         std::strncpy(file.name, name.c_str(), sizeof(file.name) - 1);
 
@@ -224,11 +224,14 @@ FwCfg::Directory::update(
     }
 }
 
-FwCfgIo::FwCfgIo(const Params &p) : FwCfg(p, {
-        // This covers both the 16 bit selector, and the 8 bit data reg which
-        // overlaps it.
-        {p.selector_addr, p.selector_addr + 2}}),
-    selectorAddr(p.selector_addr), dataAddr(p.selector_addr + 1)
+FwCfgIo::FwCfgIo(const Params &p)
+    : FwCfg(p,
+            { // This covers both the 16 bit selector, and the 8 bit data reg
+              // which
+              // overlaps it.
+              { p.selector_addr, p.selector_addr + 2 } }),
+      selectorAddr(p.selector_addr),
+      dataAddr(p.selector_addr + 1)
 {}
 
 Tick
@@ -248,11 +251,12 @@ FwCfgIo::read(PacketPtr pkt)
             readItem(pkt->getPtr<void>(), size);
         } else {
             warn("Read from firmware config data register with width %d not "
-                    "supported.", size);
+                 "supported.",
+                 size);
         }
     } else {
-        panic("Unregognized firmware config read [%#x-%#x).",
-                addr, addr + size);
+        panic("Unregognized firmware config read [%#x-%#x).", addr,
+              addr + size);
     }
 
     return 0;
@@ -269,7 +273,8 @@ FwCfgIo::write(PacketPtr pkt)
     if (addr == selectorAddr) {
         if (size != 2) {
             warn("Write to firmware config selector register with width %d "
-                    "not supported.", size);
+                 "not supported.",
+                 size);
         } else {
             auto key = pkt->getLE<uint16_t>();
             select(key);
@@ -279,18 +284,19 @@ FwCfgIo::write(PacketPtr pkt)
         // DMA interface.
         warn("Write to firmware config data register not supported.");
     } else {
-        panic("Unrecognized firmware config write [%#x-%#x).",
-                addr, addr + size);
+        panic("Unrecognized firmware config write [%#x-%#x).", addr,
+              addr + size);
     }
 
     return 0;
 }
 
-FwCfgMmio::FwCfgMmio(const Params &p) : FwCfg(p, {
-        {p.selector_addr, p.selector_addr + 2},
-        {p.data_addr_range}}),
-    selectorAddr(p.selector_addr),
-    dataAddr(p.data_addr_range.start()), dataSize(p.data_addr_range.size())
+FwCfgMmio::FwCfgMmio(const Params &p)
+    : FwCfg(p, { { p.selector_addr, p.selector_addr + 2 },
+                 { p.data_addr_range } }),
+      selectorAddr(p.selector_addr),
+      dataAddr(p.data_addr_range.start()),
+      dataSize(p.data_addr_range.size())
 {}
 
 Tick
@@ -310,11 +316,12 @@ FwCfgMmio::read(PacketPtr pkt)
             readItem(pkt->getPtr<void>(), size);
         } else {
             warn("Read from firmware config data register with width %d not "
-                    "supported.", size);
+                 "supported.",
+                 size);
         }
     } else {
-        panic("Unregognized firmware config read [%#x-%#x).",
-                addr, addr + size);
+        panic("Unregognized firmware config read [%#x-%#x).", addr,
+              addr + size);
     }
 
     return 0;
@@ -331,7 +338,8 @@ FwCfgMmio::write(PacketPtr pkt)
     if (addr == selectorAddr) {
         if (size != 2) {
             warn("Write to firmware config selector register with width %d "
-                    "not supported.", size);
+                 "not supported.",
+                 size);
         } else {
             auto key = pkt->getBE<uint16_t>();
             select(key);
@@ -341,8 +349,8 @@ FwCfgMmio::write(PacketPtr pkt)
         // DMA interface.
         warn("Write to firmware config data register not supported.");
     } else {
-        panic("Unrecognized firmware config write [%#x-%#x).",
-                addr, addr + size);
+        panic("Unrecognized firmware config write [%#x-%#x).", addr,
+              addr + size);
     }
 
     return 0;

@@ -57,8 +57,8 @@ namespace gem5
 void
 FaultBase::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
-    panic_if(!FullSystem, "fault (%s) detected @ PC %s",
-             name(), tc->pcState());
+    panic_if(!FullSystem, "fault (%s) detected @ PC %s", name(),
+             tc->pcState());
     DPRINTF(Faults, "Fault %s at PC: %s\n", name(), tc->pcState());
 }
 
@@ -99,8 +99,8 @@ GenericPageTableFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         Process *p = tc->getProcessPtr();
         handled = p->fixupFault(vaddr);
     }
-    panic_if(!handled &&
-            !tc->getSystemPtr()->trapToGdb(GDBSignal::SEGV, tc->contextId()),
+    panic_if(!handled && !tc->getSystemPtr()->trapToGdb(GDBSignal::SEGV,
+                                                        tc->contextId()),
              "Page table fault when accessing virtual address %#x\n", vaddr);
 }
 
@@ -111,15 +111,15 @@ GenericAlignmentFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
              "Alignment fault when accessing virtual address %#x\n", vaddr);
 }
 
-void GenericHtmFailureFault::invoke(ThreadContext *tc,
-                                    const StaticInstPtr &inst)
+void
+GenericHtmFailureFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     // reset decoder
-    InstDecoder* dcdr = tc->getDecoderPtr();
+    InstDecoder *dcdr = tc->getDecoderPtr();
     dcdr->reset();
 
     // restore transaction checkpoint
-    const auto& checkpoint = tc->getHtmCheckpointPtr();
+    const auto &checkpoint = tc->getHtmCheckpointPtr();
     assert(checkpoint);
     assert(checkpoint->valid());
 

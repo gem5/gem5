@@ -39,16 +39,16 @@ namespace gem5
 #define KFD_GPU_ID_HASH_WIDTH 16
 
 #define PAGE_SHIFT 12
-#define KFD_MMAP_TYPE_SHIFT     (62 - PAGE_SHIFT)
-#define KFD_MMAP_TYPE_MASK      (0x3ULL << KFD_MMAP_TYPE_SHIFT)
-#define KFD_MMAP_TYPE_DOORBELL  (0x3ULL << KFD_MMAP_TYPE_SHIFT)
-#define KFD_MMAP_TYPE_EVENTS    (0x2ULL << KFD_MMAP_TYPE_SHIFT)
+#define KFD_MMAP_TYPE_SHIFT (62 - PAGE_SHIFT)
+#define KFD_MMAP_TYPE_MASK (0x3ULL << KFD_MMAP_TYPE_SHIFT)
+#define KFD_MMAP_TYPE_DOORBELL (0x3ULL << KFD_MMAP_TYPE_SHIFT)
+#define KFD_MMAP_TYPE_EVENTS (0x2ULL << KFD_MMAP_TYPE_SHIFT)
 #define SLOTS_PER_PAGE KFD_SIGNAL_EVENT_LIMIT
 
 #define KFD_MMAP_GPU_ID_SHIFT (46 - PAGE_SHIFT)
-#define KFD_MMAP_GPU_ID_MASK (((1ULL << KFD_GPU_ID_HASH_WIDTH) - 1) \
-    << KFD_MMAP_GPU_ID_SHIFT)
-#define KFD_MMAP_GPU_ID(gpu_id) \
+#define KFD_MMAP_GPU_ID_MASK                                                  \
+    (((1ULL << KFD_GPU_ID_HASH_WIDTH) - 1) << KFD_MMAP_GPU_ID_SHIFT)
+#define KFD_MMAP_GPU_ID(gpu_id)                                               \
     ((((uint64_t)gpu_id) << KFD_MMAP_GPU_ID_SHIFT) & KFD_MMAP_GPU_ID_MASK)
 
 } // namespace gem5

@@ -46,7 +46,7 @@ VMA::fillMemPages(Addr start, Addr size, PortProxy &port) const
      */
     if (offset < _hostBufLen) {
         auto size = std::min(_hostBufLen - offset, _pageBytes);
-        port.writeBlob(start, (uint8_t*)_hostBuf + offset, size);
+        port.writeBlob(start, (uint8_t *)_hostBuf + offset, size);
     }
 }
 
@@ -118,8 +118,7 @@ VMA::sanityCheck()
     assert((_addrRange.end() % _pageBytes) == 0);
 }
 
-VMA::MappedFileBuffer::MappedFileBuffer(int fd, size_t length,
-                                        off_t offset)
+VMA::MappedFileBuffer::MappedFileBuffer(int fd, size_t length, off_t offset)
     : _buffer(nullptr), _length(length), _offset(offset)
 {
     panic_if(_length == 0, "Tried to mmap file of length zero");
@@ -136,8 +135,7 @@ VMA::MappedFileBuffer::MappedFileBuffer(int fd, size_t length,
 
     // cannot call mmap with _length == 0
     if (_length) {
-        _buffer = mmap(NULL, _length, PROT_READ,
-                                 MAP_PRIVATE, fd, offset);
+        _buffer = mmap(NULL, _length, PROT_READ, MAP_PRIVATE, fd, offset);
         if (_buffer == MAP_FAILED) {
             panic("Failed to map file into host address space: %s",
                   strerror(errno));

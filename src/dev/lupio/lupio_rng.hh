@@ -49,7 +49,7 @@ class LupioRNG : public BasicPioDevice
   protected:
     const ByteOrder byteOrder = ByteOrder::little;
 
-  // Register map
+    // Register map
   private:
     enum
     {

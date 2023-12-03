@@ -29,7 +29,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #include "mem/token_port.hh"
 
 #include "base/trace.hh"
@@ -84,13 +83,13 @@ TokenResponsePort::sendTokens(int num_tokens)
 }
 
 void
-TokenResponsePort::bind(Port& peer)
+TokenResponsePort::bind(Port &peer)
 {
     // TokenResponsePort is allowed to bind to either TokenRequestPort or a
     // RequestPort as fallback. If the type is a RequestPort, tokenRequestPort
     // is set to nullptr to indicate tokens should not be exchanged.
-    auto *token_request_port = dynamic_cast<TokenRequestPort*>(&peer);
-    auto *request_port = dynamic_cast<RequestPort*>(&peer);
+    auto *token_request_port = dynamic_cast<TokenRequestPort *>(&peer);
+    auto *request_port = dynamic_cast<RequestPort *>(&peer);
     if (!token_request_port && !request_port) {
         fatal("Attempt to bind port %s to unsupported response port %s.",
               name(), peer.name());
@@ -156,8 +155,8 @@ TokenManager::recvTokens(int num_tokens)
 {
     availableTokens += num_tokens;
 
-    DPRINTF(TokenPort, "Received %d tokens, have %d\n",
-                       num_tokens, availableTokens);
+    DPRINTF(TokenPort, "Received %d tokens, have %d\n", num_tokens,
+            availableTokens);
 
     panic_if(availableTokens > maxTokens,
              "More tokens available than the maximum after recvTokens!\n");
@@ -177,8 +176,8 @@ TokenManager::acquireTokens(int num_tokens)
 
     availableTokens -= num_tokens;
 
-    DPRINTF(TokenPort, "Acquired %d tokens, have %d\n",
-                       num_tokens, availableTokens);
+    DPRINTF(TokenPort, "Acquired %d tokens, have %d\n", num_tokens,
+            availableTokens);
 }
 
 } // namespace gem5

@@ -66,8 +66,7 @@ packet2payload(gem5::PacketPtr packet, tlm::tlm_generic_payload &trans)
 
     if (packet->isRead()) {
         trans.set_command(tlm::TLM_READ_COMMAND);
-    }
-    else if (packet->isInvalidate()) {
+    } else if (packet->isInvalidate()) {
         /* Do nothing */
     } else if (packet->isWrite()) {
         trans.set_command(tlm::TLM_WRITE_COMMAND);
@@ -86,22 +85,20 @@ SCSlavePort::recvAtomic(gem5::PacketPtr packet)
     SC_REPORT_INFO("SCSlavePort", "recvAtomic hasn't been tested much");
 
     panic_if(packet->cacheResponding(), "Should not see packets where cache "
-             "is responding");
+                                        "is responding");
 
     panic_if(!(packet->isRead() || packet->isWrite()),
              "Should only see read and writes at TLM memory\n");
 
-
     sc_core::sc_time delay = sc_core::SC_ZERO_TIME;
 
-
     /* Prepare the transaction */
-    tlm::tlm_generic_payload * trans = mm.allocate();
+    tlm::tlm_generic_payload *trans = mm.allocate();
     trans->acquire();
     packet2payload(packet, *trans);
 
     /* Attach the packet pointer to the TLM transaction to keep track */
-    Gem5Extension* extension = new Gem5Extension(packet);
+    Gem5Extension *extension = new Gem5Extension(packet);
     trans->set_auto_extension(extension);
 
     /* Execute b_transport: */
@@ -133,18 +130,18 @@ void
 SCSlavePort::recvFunctional(gem5::PacketPtr packet)
 {
     /* Prepare the transaction */
-    tlm::tlm_generic_payload * trans = mm.allocate();
+    tlm::tlm_generic_payload *trans = mm.allocate();
     trans->acquire();
     packet2payload(packet, *trans);
 
     /* Attach the packet pointer to the TLM transaction to keep track */
-    Gem5Extension* extension = new Gem5Extension(packet);
+    Gem5Extension *extension = new Gem5Extension(packet);
     trans->set_auto_extension(extension);
 
     /* Execute Debug Transport: */
     unsigned int bytes = transactor->socket->transport_dbg(*trans);
     if (bytes != trans->get_data_length()) {
-        SC_REPORT_FATAL("SCSlavePort","debug transport was not completed");
+        SC_REPORT_FATAL("SCSlavePort", "debug transport was not completed");
     }
 
     trans->release();
@@ -154,7 +151,7 @@ bool
 SCSlavePort::recvTimingSnoopResp(gem5::PacketPtr packet)
 {
     /* Snooping should be implemented with tlm_dbg_transport */
-    SC_REPORT_FATAL("SCSlavePort","unimplemented func.: recvTimingSnoopResp");
+    SC_REPORT_FATAL("SCSlavePort", "unimplemented func.: recvTimingSnoopResp");
     return false;
 }
 
@@ -162,7 +159,7 @@ void
 SCSlavePort::recvFunctionalSnoop(gem5::PacketPtr packet)
 {
     /* Snooping should be implemented with tlm_dbg_transport */
-    SC_REPORT_FATAL("SCSlavePort","unimplemented func.: recvFunctionalSnoop");
+    SC_REPORT_FATAL("SCSlavePort", "unimplemented func.: recvFunctionalSnoop");
 }
 
 /**
@@ -174,11 +171,10 @@ SCSlavePort::recvTimingReq(gem5::PacketPtr packet)
     CAUGHT_UP;
 
     panic_if(packet->cacheResponding(), "Should not see packets where cache "
-             "is responding");
+                                        "is responding");
 
     panic_if(!(packet->isRead() || packet->isWrite()),
              "Should only see read and writes at TLM memory\n");
-
 
     /* We should never get a second request after noting that a retry is
      * required */
@@ -199,15 +195,15 @@ SCSlavePort::recvTimingReq(gem5::PacketPtr packet)
      *      wait(endRequestEvent);
      *  }
      *  requestInProgress = trans;
-    */
+     */
 
     /* Prepare the transaction */
-    tlm::tlm_generic_payload * trans = mm.allocate();
+    tlm::tlm_generic_payload *trans = mm.allocate();
     trans->acquire();
     packet2payload(packet, *trans);
 
     /* Attach the packet pointer to the TLM transaction to keep track */
-    Gem5Extension* extension = new Gem5Extension(packet);
+    Gem5Extension *extension = new Gem5Extension(packet);
     trans->set_auto_extension(extension);
 
     /*
@@ -250,9 +246,8 @@ SCSlavePort::recvTimingReq(gem5::PacketPtr packet)
         /* The Timing annotation must be honored: */
         sc_assert(phase == tlm::END_REQ || phase == tlm::BEGIN_RESP);
 
-        PayloadEvent<SCSlavePort> * pe;
-        pe = new PayloadEvent<SCSlavePort>(*this,
-            &SCSlavePort::pec, "PEQ");
+        PayloadEvent<SCSlavePort> *pe;
+        pe = new PayloadEvent<SCSlavePort>(*this, &SCSlavePort::pec, "PEQ");
         pe->notify(*trans, phase, delay);
     } else if (status == tlm::TLM_COMPLETED) {
         /* Transaction is over nothing has do be done. */
@@ -264,15 +259,13 @@ SCSlavePort::recvTimingReq(gem5::PacketPtr packet)
 }
 
 void
-SCSlavePort::pec(
-    PayloadEvent<SCSlavePort> * pe,
-    tlm::tlm_generic_payload& trans,
-    const tlm::tlm_phase& phase)
+SCSlavePort::pec(PayloadEvent<SCSlavePort> *pe,
+                 tlm::tlm_generic_payload &trans, const tlm::tlm_phase &phase)
 {
     sc_time delay;
 
     if (phase == tlm::END_REQ ||
-            &trans == blockingRequest && phase == tlm::BEGIN_RESP) {
+        &trans == blockingRequest && phase == tlm::BEGIN_RESP) {
         sc_assert(&trans == blockingRequest);
         blockingRequest = NULL;
 
@@ -282,11 +275,10 @@ SCSlavePort::pec(
             sendRetryReq();
         }
     }
-    if (phase == tlm::BEGIN_RESP)
-    {
+    if (phase == tlm::BEGIN_RESP) {
         CAUGHT_UP;
 
-        auto& extension = Gem5Extension::getExtension(trans);
+        auto &extension = Gem5Extension::getExtension(trans);
         auto packet = extension.getPacket();
 
         sc_assert(!blockingResponse);
@@ -344,29 +336,27 @@ SCSlavePort::recvRespRetry()
 }
 
 tlm::tlm_sync_enum
-SCSlavePort::nb_transport_bw(tlm::tlm_generic_payload& trans,
-    tlm::tlm_phase& phase,
-    sc_core::sc_time& delay)
+SCSlavePort::nb_transport_bw(tlm::tlm_generic_payload &trans,
+                             tlm::tlm_phase &phase, sc_core::sc_time &delay)
 {
-    PayloadEvent<SCSlavePort> * pe;
+    PayloadEvent<SCSlavePort> *pe;
     pe = new PayloadEvent<SCSlavePort>(*this, &SCSlavePort::pec, "PE");
     pe->notify(trans, phase, delay);
     return tlm::TLM_ACCEPTED;
 }
 
 SCSlavePort::SCSlavePort(const std::string &name_,
-    const std::string &systemc_name,
-    gem5::ExternalSlave &owner_) :
-    gem5::ExternalSlave::ExternalPort(name_, owner_),
-    blockingRequest(NULL),
-    needToSendRequestRetry(false),
-    blockingResponse(NULL),
-    transactor(nullptr)
-{
-}
+                         const std::string &systemc_name,
+                         gem5::ExternalSlave &owner_)
+    : gem5::ExternalSlave::ExternalPort(name_, owner_),
+      blockingRequest(NULL),
+      needToSendRequestRetry(false),
+      blockingResponse(NULL),
+      transactor(nullptr)
+{}
 
 void
-SCSlavePort::bindToTransactor(Gem5SlaveTransactor* transactor)
+SCSlavePort::bindToTransactor(Gem5SlaveTransactor *transactor)
 {
     sc_assert(this->transactor == nullptr);
 
@@ -376,17 +366,17 @@ SCSlavePort::bindToTransactor(Gem5SlaveTransactor* transactor)
                                                 &SCSlavePort::nb_transport_bw);
 }
 
-gem5::ExternalSlave::ExternalPort*
+gem5::ExternalSlave::ExternalPort *
 SCSlavePortHandler::getExternalPort(const std::string &name,
                                     gem5::ExternalSlave &owner,
                                     const std::string &port_data)
 {
     // Create and register a new SystemC slave port
-    auto* port = new SCSlavePort(name, port_data, owner);
+    auto *port = new SCSlavePort(name, port_data, owner);
 
     control.registerSlavePort(port_data, port);
 
     return port;
 }
 
-}
+} // namespace Gem5SystemC

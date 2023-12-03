@@ -88,7 +88,7 @@ class FixedPriorityPolicy : public Policy
      * @param requestor requestor's SimObject pointer to lookup.
      * @param priority priority value for the requestor
      */
-    void initRequestorObj(const SimObject* requestor, uint8_t priority);
+    void initRequestorObj(const SimObject *requestor, uint8_t priority);
 
     /**
      * Schedules a packet based on fixed priority configuration

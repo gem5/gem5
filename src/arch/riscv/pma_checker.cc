@@ -52,11 +52,11 @@ namespace gem5
 namespace RiscvISA
 {
 
-PMAChecker::PMAChecker(const Params &params) :
-BasePMAChecker(params),
-uncacheable(params.uncacheable.begin(), params.uncacheable.end())
+PMAChecker::PMAChecker(const Params &params)
+    : BasePMAChecker(params),
+      uncacheable(params.uncacheable.begin(), params.uncacheable.end())
 {
-    for (auto& range: params.misaligned) {
+    for (auto &range : params.misaligned) {
         misaligned.insert(range, true);
     }
 }
@@ -72,8 +72,7 @@ PMAChecker::check(const RequestPtr &req, BaseMMU::Mode mode, Addr vaddr)
 }
 
 Fault
-PMAChecker::checkVAddrAlignment(
-    const RequestPtr &req, BaseMMU::Mode mode)
+PMAChecker::checkVAddrAlignment(const RequestPtr &req, BaseMMU::Mode mode)
 {
     // We need to translate address before alignment check
     // if there are some memory ranges support misaligned load/store
@@ -96,7 +95,7 @@ PMAChecker::checkVAddrAlignment(
 bool
 PMAChecker::isUncacheable(const AddrRange &range)
 {
-    for (auto const &uncacheable_range: uncacheable) {
+    for (auto const &uncacheable_range : uncacheable) {
         if (range.isSubset(uncacheable_range)) {
             return true;
         }
@@ -120,15 +119,15 @@ PMAChecker::isUncacheable(PacketPtr pkt)
 void
 PMAChecker::takeOverFrom(BasePMAChecker *old)
 {
-    PMAChecker* derived_old = dynamic_cast<PMAChecker*>(old);
+    PMAChecker *derived_old = dynamic_cast<PMAChecker *>(old);
     assert(derived_old != nullptr);
     uncacheable = derived_old->uncacheable;
     misaligned = derived_old->misaligned;
 }
 
 Fault
-PMAChecker::checkPAddrAlignment(
-    const RequestPtr &req, BaseMMU::Mode mode, Addr vaddr)
+PMAChecker::checkPAddrAlignment(const RequestPtr &req, BaseMMU::Mode mode,
+                                Addr vaddr)
 {
     Addr paddr = 0;
     // Ingore alignment check for instruction fetching
@@ -141,11 +140,11 @@ PMAChecker::checkPAddrAlignment(
     if (addressAlign(paddr, alignSize)) {
         return NoFault;
     }
-    if (misalignedSupport(RangeSize(paddr, req->getSize()))){
+    if (misalignedSupport(RangeSize(paddr, req->getSize()))) {
         return NoFault;
     }
-    return createMisalignFault(
-        (req->hasVaddr() ? req->getVaddr() : vaddr), mode);
+    return createMisalignFault((req->hasVaddr() ? req->getVaddr() : vaddr),
+                               mode);
 }
 
 Fault
@@ -153,20 +152,21 @@ PMAChecker::createMisalignFault(Addr vaddr, BaseMMU::Mode mode)
 {
     RiscvISA::ExceptionCode code;
     switch (mode) {
-      case BaseMMU::Read:
+    case BaseMMU::Read:
         code = ExceptionCode::LOAD_ADDR_MISALIGNED;
         break;
-      case BaseMMU::Write:
+    case BaseMMU::Write:
         code = ExceptionCode::STORE_ADDR_MISALIGNED;
         break;
-      default:
+    default:
         panic("Execute mode request should not reach here.");
     }
     return std::make_shared<AddressFault>(vaddr, code);
 }
 
 bool
-PMAChecker::addressAlign(const Addr addr, const Addr size) {
+PMAChecker::addressAlign(const Addr addr, const Addr size)
+{
     return (addr & (size - 1)) == 0;
 }
 

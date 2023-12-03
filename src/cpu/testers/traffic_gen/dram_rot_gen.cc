@@ -57,42 +57,41 @@ DramRotGen::getNextPacket()
 
         // choose if we generate a read or a write here
         if (readPercent == 50) {
-           if ((nextSeqCount % nbrOfBanksUtil) == 0) {
-               // Change type after all banks have been rotated
-               // Otherwise, keep current value
-               isRead = !isRead;
-           }
+            if ((nextSeqCount % nbrOfBanksUtil) == 0) {
+                // Change type after all banks have been rotated
+                // Otherwise, keep current value
+                isRead = !isRead;
+            }
         } else {
-           // Set randomly based on percentage
-           isRead = readPercent != 0;
+            // Set randomly based on percentage
+            isRead = readPercent != 0;
         }
 
         assert((readPercent == 0 && !isRead) ||
-               (readPercent == 100 && isRead) ||
-               readPercent != 100);
+               (readPercent == 100 && isRead) || readPercent != 100);
 
-         // Overwrite random bank value
-         // Rotate across banks
-         unsigned int new_bank = nextSeqCount % nbrOfBanksUtil;
+        // Overwrite random bank value
+        // Rotate across banks
+        unsigned int new_bank = nextSeqCount % nbrOfBanksUtil;
 
-         // Overwrite random rank value
-         // Will rotate to the next rank after rotating through all banks,
-         // for each specified command type.
+        // Overwrite random rank value
+        // Will rotate to the next rank after rotating through all banks,
+        // for each specified command type.
 
-         // Use modular function to ensure that calculated rank is within
-         // system limits after state transition
-         unsigned int new_rank = (nextSeqCount / maxSeqCountPerRank) %
-             nbrOfRanks;
+        // Use modular function to ensure that calculated rank is within
+        // system limits after state transition
+        unsigned int new_rank =
+            (nextSeqCount / maxSeqCountPerRank) % nbrOfRanks;
 
-         // Increment nextSeqCount
-         // Roll back to 0 after completing a full rotation across
-         // banks, command type, and ranks
-         nextSeqCount = (nextSeqCount + 1) %
-             (nbrOfRanks * maxSeqCountPerRank);
+        // Increment nextSeqCount
+        // Roll back to 0 after completing a full rotation across
+        // banks, command type, and ranks
+        nextSeqCount = (nextSeqCount + 1) % (nbrOfRanks * maxSeqCountPerRank);
 
-         DPRINTF(TrafficGen, "DramRotGen::getNextPacket nextSeqCount: %d "
-                 "new_rank: %d  new_bank: %d\n",
-                 nextSeqCount, new_rank, new_bank);
+        DPRINTF(TrafficGen,
+                "DramRotGen::getNextPacket nextSeqCount: %d "
+                "new_rank: %d  new_bank: %d\n",
+                nextSeqCount, new_rank, new_bank);
 
         // Generate the start address of the command series
         // routine will update addr variable with bank, rank, and col
@@ -107,18 +106,20 @@ DramRotGen::getNextPacket()
             // increment the column by one
             addr += blocksize;
 
-        else if (addrMapping ==  enums::RoCoRaBaCh) {
+        else if (addrMapping == enums::RoCoRaBaCh) {
             // Explicity increment the column bits
 
-                    unsigned int new_col = ((addr / blocksize /
-                                      nbrOfBanksDRAM / nbrOfRanks) %
-                                      (pageSize / blocksize)) + 1;
+            unsigned int new_col =
+                ((addr / blocksize / nbrOfBanksDRAM / nbrOfRanks) %
+                 (pageSize / blocksize)) +
+                1;
             replaceBits(addr, blockBits + bankBits + rankBits + pageBits - 1,
                         blockBits + bankBits + rankBits, new_col);
         }
     }
 
-    DPRINTF(TrafficGen, "DramRotGen::getNextPacket: %c to addr %x, "
+    DPRINTF(TrafficGen,
+            "DramRotGen::getNextPacket: %c to addr %x, "
             "size %d, countNumSeqPkts: %d, numSeqPkts: %d\n",
             isRead ? 'r' : 'w', addr, blocksize, countNumSeqPkts, numSeqPkts);
 

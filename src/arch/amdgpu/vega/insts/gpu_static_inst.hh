@@ -44,49 +44,71 @@ namespace gem5
 
 namespace VegaISA
 {
-    class VEGAGPUStaticInst : public GPUStaticInst
+class VEGAGPUStaticInst : public GPUStaticInst
+{
+  public:
+    VEGAGPUStaticInst(const std::string &opcode);
+    ~VEGAGPUStaticInst();
+
+    void
+    generateDisassembly() override
     {
-      public:
-        VEGAGPUStaticInst(const std::string &opcode);
-        ~VEGAGPUStaticInst();
+        disassembly = _opcode;
+    }
 
-        void generateDisassembly() override { disassembly = _opcode; }
+    bool
+    isFlatScratchRegister(int opIdx) override
+    {
+        return isFlatScratchReg(opIdx);
+    }
 
-        bool
-        isFlatScratchRegister(int opIdx) override
-        {
-            return isFlatScratchReg(opIdx);
-        }
+    bool
+    isExecMaskRegister(int opIdx) override
+    {
+        return isExecMask(opIdx);
+    }
 
-        bool
-        isExecMaskRegister(int opIdx) override
-        {
-            return isExecMask(opIdx);
-        }
+    void
+    initOperandInfo() override
+    {
+        return;
+    }
 
-        void initOperandInfo() override { return; }
-        int getOperandSize(int opIdx) override { return 0; }
+    int
+    getOperandSize(int opIdx) override
+    {
+        return 0;
+    }
 
-        /**
-          * Return the number of tokens needed by the coalescer. In VEGA there
-          * is generally one packet per memory request per lane generated. In
-          * HSAIL, the number of dest operands is used for loads and src
-          * operands for stores. This method should be overriden on a per-inst
-          * basis when this value differs.
-          */
-        int coalescerTokenCount() const override { return 1; }
-        ScalarRegU32 srcLiteral() const override { return _srcLiteral; }
+    /**
+     * Return the number of tokens needed by the coalescer. In VEGA there
+     * is generally one packet per memory request per lane generated. In
+     * HSAIL, the number of dest operands is used for loads and src
+     * operands for stores. This method should be overriden on a per-inst
+     * basis when this value differs.
+     */
+    int
+    coalescerTokenCount() const override
+    {
+        return 1;
+    }
 
-      protected:
-        void panicUnimplemented() const;
+    ScalarRegU32
+    srcLiteral() const override
+    {
+        return _srcLiteral;
+    }
 
-        /**
-         * if the instruction has a src literal - an immediate
-         * value that is part of the instruction stream - we
-         * store that here
-         */
-        ScalarRegU32 _srcLiteral;
-    }; // class VEGAGPUStaticInst
+  protected:
+    void panicUnimplemented() const;
+
+    /**
+     * if the instruction has a src literal - an immediate
+     * value that is part of the instruction stream - we
+     * store that here
+     */
+    ScalarRegU32 _srcLiteral;
+}; // class VEGAGPUStaticInst
 
 } // namespace VegaISA
 } // namespace gem5

@@ -36,10 +36,7 @@ namespace gem5
 namespace ruby
 {
 
-NetDest::NetDest()
-{
-  resize();
-}
+NetDest::NetDest() { resize(); }
 
 void
 NetDest::add(MachineID newElement)
@@ -49,7 +46,7 @@ NetDest::add(MachineID newElement)
 }
 
 void
-NetDest::addNetDest(const NetDest& netDest)
+NetDest::addNetDest(const NetDest &netDest)
 {
     assert(m_bits.size() == netDest.getSize());
     for (int i = 0; i < m_bits.size(); i++) {
@@ -58,11 +55,12 @@ NetDest::addNetDest(const NetDest& netDest)
 }
 
 void
-NetDest::setNetDest(MachineType machine, const Set& set)
+NetDest::setNetDest(MachineType machine, const Set &set)
 {
     // assure that there is only one set of destinations for this machine
     assert(MachineType_base_level((MachineType)(machine + 1)) -
-           MachineType_base_level(machine) == 1);
+               MachineType_base_level(machine) ==
+           1);
     m_bits[MachineType_base_level(machine)] = set;
 }
 
@@ -73,7 +71,7 @@ NetDest::remove(MachineID oldElement)
 }
 
 void
-NetDest::removeNetDest(const NetDest& netDest)
+NetDest::removeNetDest(const NetDest &netDest)
 {
     assert(m_bits.size() == netDest.getSize());
     for (int i = 0; i < m_bits.size(); i++) {
@@ -92,8 +90,8 @@ NetDest::clear()
 void
 NetDest::broadcast()
 {
-    for (MachineType machine = MachineType_FIRST;
-         machine < MachineType_NUM; ++machine) {
+    for (MachineType machine = MachineType_FIRST; machine < MachineType_NUM;
+         ++machine) {
         broadcast(machine);
     }
 }
@@ -102,12 +100,12 @@ void
 NetDest::broadcast(MachineType machineType)
 {
     for (NodeID i = 0; i < MachineType_base_count(machineType); i++) {
-        MachineID mach = {machineType, i};
+        MachineID mach = { machineType, i };
         add(mach);
     }
 }
 
-//For Princeton Network
+// For Princeton Network
 std::vector<NodeID>
 NetDest::getAllDest()
 {
@@ -147,7 +145,7 @@ NetDest::smallestElement() const
     for (int i = 0; i < m_bits.size(); i++) {
         for (NodeID j = 0; j < m_bits[i].getSize(); j++) {
             if (m_bits[i].isElement(j)) {
-                MachineID mach = {MachineType_from_base_level(i), j};
+                MachineID mach = { MachineType_from_base_level(i), j };
                 return mach;
             }
         }
@@ -161,7 +159,7 @@ NetDest::smallestElement(MachineType machine) const
     int size = m_bits[MachineType_base_level(machine)].getSize();
     for (NodeID j = 0; j < size; j++) {
         if (m_bits[MachineType_base_level(machine)].isElement(j)) {
-            MachineID mach = {machine, j};
+            MachineID mach = { machine, j };
             return mach;
         }
     }
@@ -195,7 +193,7 @@ NetDest::isEmpty() const
 
 // returns the logical OR of "this" set and orNetDest
 NetDest
-NetDest::OR(const NetDest& orNetDest) const
+NetDest::OR(const NetDest &orNetDest) const
 {
     assert(m_bits.size() == orNetDest.getSize());
     NetDest result;
@@ -207,7 +205,7 @@ NetDest::OR(const NetDest& orNetDest) const
 
 // returns the logical AND of "this" set and andNetDest
 NetDest
-NetDest::AND(const NetDest& andNetDest) const
+NetDest::AND(const NetDest &andNetDest) const
 {
     assert(m_bits.size() == andNetDest.getSize());
     NetDest result;
@@ -219,7 +217,7 @@ NetDest::AND(const NetDest& andNetDest) const
 
 // Returns true if the intersection of the two sets is non-empty
 bool
-NetDest::intersectionIsNotEmpty(const NetDest& other_netDest) const
+NetDest::intersectionIsNotEmpty(const NetDest &other_netDest) const
 {
     assert(m_bits.size() == other_netDest.getSize());
     for (int i = 0; i < m_bits.size(); i++) {
@@ -231,7 +229,7 @@ NetDest::intersectionIsNotEmpty(const NetDest& other_netDest) const
 }
 
 bool
-NetDest::isSuperset(const NetDest& test) const
+NetDest::isSuperset(const NetDest &test) const
 {
     assert(m_bits.size() == test.getSize());
 
@@ -261,13 +259,13 @@ NetDest::resize()
 }
 
 void
-NetDest::print(std::ostream& out) const
+NetDest::print(std::ostream &out) const
 {
     out << "[NetDest (" << m_bits.size() << ") ";
 
     for (int i = 0; i < m_bits.size(); i++) {
         for (int j = 0; j < m_bits[i].getSize(); j++) {
-            out << (bool) m_bits[i].isElement(j) << " ";
+            out << (bool)m_bits[i].isElement(j) << " ";
         }
         out << " - ";
     }
@@ -275,7 +273,7 @@ NetDest::print(std::ostream& out) const
 }
 
 bool
-NetDest::isEqual(const NetDest& n) const
+NetDest::isEqual(const NetDest &n) const
 {
     assert(m_bits.size() == n.m_bits.size());
     for (unsigned int i = 0; i < m_bits.size(); ++i) {

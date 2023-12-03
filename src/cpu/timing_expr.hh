@@ -81,18 +81,16 @@ class TimingExprEvalContext
      *  are true when a result has actually been evaluated */
     TimingExprLet *let;
     std::vector<uint64_t> results;
-    std::vector<bool > resultAvailable;
+    std::vector<bool> resultAvailable;
 
-    TimingExprEvalContext(const StaticInstPtr &inst_,
-        ThreadContext *thread_, TimingExprLet *let_);
+    TimingExprEvalContext(const StaticInstPtr &inst_, ThreadContext *thread_,
+                          TimingExprLet *let_);
 };
 
 class TimingExpr : public SimObject
 {
   public:
-    TimingExpr(const TimingExprParams &params) :
-        SimObject(params)
-    { }
+    TimingExpr(const TimingExprParams &params) : SimObject(params) {}
 
     virtual uint64_t eval(TimingExprEvalContext &context) = 0;
 };
@@ -102,12 +100,15 @@ class TimingExprLiteral : public TimingExpr
   public:
     uint64_t value;
 
-    TimingExprLiteral(const TimingExprLiteralParams &params) :
-        TimingExpr(params),
-        value(params.value)
-    { }
+    TimingExprLiteral(const TimingExprLiteralParams &params)
+        : TimingExpr(params), value(params.value)
+    {}
 
-    uint64_t eval(TimingExprEvalContext &context) { return value; }
+    uint64_t
+    eval(TimingExprEvalContext &context)
+    {
+        return value;
+    }
 };
 
 class TimingExprSrcReg : public TimingExpr
@@ -115,10 +116,9 @@ class TimingExprSrcReg : public TimingExpr
   public:
     unsigned int index;
 
-    TimingExprSrcReg(const TimingExprSrcRegParams &params) :
-        TimingExpr(params),
-        index(params.index)
-    { }
+    TimingExprSrcReg(const TimingExprSrcRegParams &params)
+        : TimingExpr(params), index(params.index)
+    {}
 
     uint64_t eval(TimingExprEvalContext &context);
 };
@@ -129,11 +129,9 @@ class TimingExprLet : public TimingExpr
     std::vector<TimingExpr *> defns;
     TimingExpr *expr;
 
-    TimingExprLet(const TimingExprLetParams &params) :
-        TimingExpr(params),
-        defns(params.defns),
-        expr(params.expr)
-    { }
+    TimingExprLet(const TimingExprLetParams &params)
+        : TimingExpr(params), defns(params.defns), expr(params.expr)
+    {}
 
     uint64_t eval(TimingExprEvalContext &context);
 };
@@ -143,10 +141,9 @@ class TimingExprRef : public TimingExpr
   public:
     unsigned int index;
 
-    TimingExprRef(const TimingExprRefParams &params) :
-        TimingExpr(params),
-        index(params.index)
-    { }
+    TimingExprRef(const TimingExprRefParams &params)
+        : TimingExpr(params), index(params.index)
+    {}
 
     uint64_t eval(TimingExprEvalContext &context);
 };
@@ -157,11 +154,9 @@ class TimingExprUn : public TimingExpr
     enums::TimingExprOp op;
     TimingExpr *arg;
 
-    TimingExprUn(const TimingExprUnParams &params) :
-        TimingExpr(params),
-        op(params.op),
-        arg(params.arg)
-    { }
+    TimingExprUn(const TimingExprUnParams &params)
+        : TimingExpr(params), op(params.op), arg(params.arg)
+    {}
 
     uint64_t eval(TimingExprEvalContext &context);
 };
@@ -173,12 +168,12 @@ class TimingExprBin : public TimingExpr
     TimingExpr *left;
     TimingExpr *right;
 
-    TimingExprBin(const TimingExprBinParams &params) :
-        TimingExpr(params),
-        op(params.op),
-        left(params.left),
-        right(params.right)
-    { }
+    TimingExprBin(const TimingExprBinParams &params)
+        : TimingExpr(params),
+          op(params.op),
+          left(params.left),
+          right(params.right)
+    {}
 
     uint64_t eval(TimingExprEvalContext &context);
 };
@@ -190,12 +185,12 @@ class TimingExprIf : public TimingExpr
     TimingExpr *trueExpr;
     TimingExpr *falseExpr;
 
-    TimingExprIf(const TimingExprIfParams &params) :
-        TimingExpr(params),
-        cond(params.cond),
-        trueExpr(params.trueExpr),
-        falseExpr(params.falseExpr)
-    { }
+    TimingExprIf(const TimingExprIfParams &params)
+        : TimingExpr(params),
+          cond(params.cond),
+          trueExpr(params.trueExpr),
+          falseExpr(params.falseExpr)
+    {}
 
     uint64_t eval(TimingExprEvalContext &context);
 };

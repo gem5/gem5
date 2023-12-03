@@ -53,9 +53,13 @@ namespace gem5
 {
 
 AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
-    : PciDevice(p), gpuMemMgr(p.memory_manager), deviceIH(p.device_ih),
-      cp(p.cp), checkpoint_before_mmios(p.checkpoint_before_mmios),
-      init_interrupt_count(0), _lastVMID(0),
+    : PciDevice(p),
+      gpuMemMgr(p.memory_manager),
+      deviceIH(p.device_ih),
+      cp(p.cp),
+      checkpoint_before_mmios(p.checkpoint_before_mmios),
+      init_interrupt_count(0),
+      _lastVMID(0),
       deviceMem(name() + ".deviceMem", p.memories, false, "", false)
 {
     // Loading the rom binary dumped from hardware.
@@ -67,7 +71,7 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
     // System pointer needs to be explicitly set for device memory since
     // DRAMCtrl uses it to get (1) cache line size and (2) the mem mode.
     // Note this means the cache line size is system wide.
-    for (auto& m : p.memories) {
+    for (auto &m : p.memories) {
         m->system(p.system);
 
         // Add to system's device memory map.
@@ -95,56 +99,56 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
     }
 
     int sdma_id = 0;
-    for (auto& s : p.sdmas) {
+    for (auto &s : p.sdmas) {
         s->setGPUDevice(this);
         s->setId(sdma_id);
-        sdmaIds.insert({sdma_id, s});
-        sdmaMmios.insert({sdma_id,
-                          RangeSize(s->getMmioBase(), s->getMmioSize())});
+        sdmaIds.insert({ sdma_id, s });
+        sdmaMmios.insert(
+            { sdma_id, RangeSize(s->getMmioBase(), s->getMmioSize()) });
         DPRINTF(AMDGPUDevice, "SDMA%d has MMIO range %s\n", sdma_id,
                 sdmaMmios[sdma_id].to_string().c_str());
         sdma_id++;
     }
 
     // Map SDMA MMIO addresses to functions
-    sdmaFunc.insert({0x81, &SDMAEngine::setGfxBaseLo});
-    sdmaFunc.insert({0x82, &SDMAEngine::setGfxBaseHi});
-    sdmaFunc.insert({0x88, &SDMAEngine::setGfxRptrHi});
-    sdmaFunc.insert({0x89, &SDMAEngine::setGfxRptrLo});
-    sdmaFunc.insert({0x92, &SDMAEngine::setGfxDoorbellLo});
-    sdmaFunc.insert({0xab, &SDMAEngine::setGfxDoorbellOffsetLo});
-    sdmaFunc.insert({0x80, &SDMAEngine::setGfxSize});
-    sdmaFunc.insert({0xb2, &SDMAEngine::setGfxWptrLo});
-    sdmaFunc.insert({0xb3, &SDMAEngine::setGfxWptrHi});
+    sdmaFunc.insert({ 0x81, &SDMAEngine::setGfxBaseLo });
+    sdmaFunc.insert({ 0x82, &SDMAEngine::setGfxBaseHi });
+    sdmaFunc.insert({ 0x88, &SDMAEngine::setGfxRptrHi });
+    sdmaFunc.insert({ 0x89, &SDMAEngine::setGfxRptrLo });
+    sdmaFunc.insert({ 0x92, &SDMAEngine::setGfxDoorbellLo });
+    sdmaFunc.insert({ 0xab, &SDMAEngine::setGfxDoorbellOffsetLo });
+    sdmaFunc.insert({ 0x80, &SDMAEngine::setGfxSize });
+    sdmaFunc.insert({ 0xb2, &SDMAEngine::setGfxWptrLo });
+    sdmaFunc.insert({ 0xb3, &SDMAEngine::setGfxWptrHi });
     if (p.device_name == "Vega10") {
-        sdmaFunc.insert({0xe1, &SDMAEngine::setPageBaseLo});
-        sdmaFunc.insert({0xe9, &SDMAEngine::setPageRptrLo});
-        sdmaFunc.insert({0xe8, &SDMAEngine::setPageRptrHi});
-        sdmaFunc.insert({0xf2, &SDMAEngine::setPageDoorbellLo});
-        sdmaFunc.insert({0x10b, &SDMAEngine::setPageDoorbellOffsetLo});
-        sdmaFunc.insert({0xe0, &SDMAEngine::setPageSize});
-        sdmaFunc.insert({0x113, &SDMAEngine::setPageWptrLo});
+        sdmaFunc.insert({ 0xe1, &SDMAEngine::setPageBaseLo });
+        sdmaFunc.insert({ 0xe9, &SDMAEngine::setPageRptrLo });
+        sdmaFunc.insert({ 0xe8, &SDMAEngine::setPageRptrHi });
+        sdmaFunc.insert({ 0xf2, &SDMAEngine::setPageDoorbellLo });
+        sdmaFunc.insert({ 0x10b, &SDMAEngine::setPageDoorbellOffsetLo });
+        sdmaFunc.insert({ 0xe0, &SDMAEngine::setPageSize });
+        sdmaFunc.insert({ 0x113, &SDMAEngine::setPageWptrLo });
     } else if (p.device_name == "MI100" || p.device_name == "MI200") {
-        sdmaFunc.insert({0xd9, &SDMAEngine::setPageBaseLo});
-        sdmaFunc.insert({0xe1, &SDMAEngine::setPageRptrLo});
-        sdmaFunc.insert({0xe0, &SDMAEngine::setPageRptrHi});
-        sdmaFunc.insert({0xea, &SDMAEngine::setPageDoorbellLo});
-        sdmaFunc.insert({0xd8, &SDMAEngine::setPageDoorbellOffsetLo});
-        sdmaFunc.insert({0x10b, &SDMAEngine::setPageWptrLo});
+        sdmaFunc.insert({ 0xd9, &SDMAEngine::setPageBaseLo });
+        sdmaFunc.insert({ 0xe1, &SDMAEngine::setPageRptrLo });
+        sdmaFunc.insert({ 0xe0, &SDMAEngine::setPageRptrHi });
+        sdmaFunc.insert({ 0xea, &SDMAEngine::setPageDoorbellLo });
+        sdmaFunc.insert({ 0xd8, &SDMAEngine::setPageDoorbellOffsetLo });
+        sdmaFunc.insert({ 0x10b, &SDMAEngine::setPageWptrLo });
     } else {
         panic("Unknown GPU device %s\n", p.device_name);
     }
 
     // Setup PM4 packet processors and sanity check IDs
     std::set<int> pm4_ids;
-    for (auto& pm4 : p.pm4_pkt_procs) {
+    for (auto &pm4 : p.pm4_pkt_procs) {
         pm4->setGPUDevice(this);
         fatal_if(pm4_ids.count(pm4->getIpId()),
-                "Two PM4s with same IP IDs is not allowed");
+                 "Two PM4s with same IP IDs is not allowed");
         pm4_ids.insert(pm4->getIpId());
-        pm4PktProcs.insert({pm4->getIpId(), pm4});
+        pm4PktProcs.insert({ pm4->getIpId(), pm4 });
 
-        pm4Ranges.insert({pm4->getMMIORange(), pm4});
+        pm4Ranges.insert({ pm4->getMMIORange(), pm4 });
     }
 
     // There should be at least one PM4 packet processor with ID 0
@@ -172,10 +176,10 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
     // GFX                0x28000 - 0x3F000
     // MMHUB              0x68000 - 0x6a120
     gpuvm.setMMIOAperture(NBIO_MMIO_RANGE, AddrRange(0x0, 0x4280));
-    gpuvm.setMMIOAperture(IH_MMIO_RANGE,   AddrRange(0x4280, 0x4980));
+    gpuvm.setMMIOAperture(IH_MMIO_RANGE, AddrRange(0x4280, 0x4980));
     gpuvm.setMMIOAperture(GRBM_MMIO_RANGE, AddrRange(0x8000, 0xC000));
-    gpuvm.setMMIOAperture(GFX_MMIO_RANGE,  AddrRange(0x28000, 0x3F000));
-    gpuvm.setMMIOAperture(MMHUB_MMIO_RANGE,  AddrRange(0x68000, 0x6A120));
+    gpuvm.setMMIOAperture(GFX_MMIO_RANGE, AddrRange(0x28000, 0x3F000));
+    gpuvm.setMMIOAperture(MMHUB_MMIO_RANGE, AddrRange(0x68000, 0x6A120));
 
     // These are hardcoded register values to return what the driver expects
     setRegVal(AMDGPU_MP0_SMN_C2PMSG_33, 0x80000000);
@@ -237,7 +241,7 @@ AMDGPUDevice::getAddrRanges() const
     // If the range starts at zero assume OS hasn't assigned it yet. Do not
     // return ranges starting with zero as they will surely overlap with
     // another range causing the I/O crossbar to fatal.
-    for (auto & r : ranges) {
+    for (auto &r : ranges) {
         if (r.start() != 0) {
             ret_ranges.push_back(r);
         }
@@ -258,32 +262,33 @@ AMDGPUDevice::readConfig(PacketPtr pkt)
             int pxcap_offset = offset - PXCAP_BASE;
 
             switch (pkt->getSize()) {
-                case sizeof(uint8_t):
-                    pkt->setLE<uint8_t>(pxcap.data[pxcap_offset]);
-                    DPRINTF(AMDGPUDevice,
+            case sizeof(uint8_t):
+                pkt->setLE<uint8_t>(pxcap.data[pxcap_offset]);
+                DPRINTF(AMDGPUDevice,
                         "Read PXCAP:  dev %#x func %#x reg %#x 1 bytes: data "
-                        "= %#x\n", _busAddr.dev, _busAddr.func, pxcap_offset,
+                        "= %#x\n",
+                        _busAddr.dev, _busAddr.func, pxcap_offset,
                         (uint32_t)pkt->getLE<uint8_t>());
-                    break;
-                case sizeof(uint16_t):
-                    pkt->setLE<uint16_t>(
-                        *(uint16_t*)&pxcap.data[pxcap_offset]);
-                    DPRINTF(AMDGPUDevice,
+                break;
+            case sizeof(uint16_t):
+                pkt->setLE<uint16_t>(*(uint16_t *)&pxcap.data[pxcap_offset]);
+                DPRINTF(AMDGPUDevice,
                         "Read PXCAP:  dev %#x func %#x reg %#x 2 bytes: data "
-                        "= %#x\n", _busAddr.dev, _busAddr.func, pxcap_offset,
+                        "= %#x\n",
+                        _busAddr.dev, _busAddr.func, pxcap_offset,
                         (uint32_t)pkt->getLE<uint16_t>());
-                    break;
-                case sizeof(uint32_t):
-                    pkt->setLE<uint32_t>(
-                        *(uint32_t*)&pxcap.data[pxcap_offset]);
-                    DPRINTF(AMDGPUDevice,
+                break;
+            case sizeof(uint32_t):
+                pkt->setLE<uint32_t>(*(uint32_t *)&pxcap.data[pxcap_offset]);
+                DPRINTF(AMDGPUDevice,
                         "Read PXCAP:  dev %#x func %#x reg %#x 4 bytes: data "
-                        "= %#x\n",_busAddr.dev, _busAddr.func, pxcap_offset,
+                        "= %#x\n",
+                        _busAddr.dev, _busAddr.func, pxcap_offset,
                         (uint32_t)pkt->getLE<uint32_t>());
-                    break;
-                default:
-                    panic("Invalid access size (%d) for amdgpu PXCAP %#x\n",
-                          pkt->getSize(), pxcap_offset);
+                break;
+            default:
+                panic("Invalid access size (%d) for amdgpu PXCAP %#x\n",
+                      pkt->getSize(), pxcap_offset);
             }
             pkt->makeAtomicResponse();
         } else {
@@ -314,13 +319,13 @@ Tick
 AMDGPUDevice::writeConfig(PacketPtr pkt)
 {
     [[maybe_unused]] int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
-    DPRINTF(AMDGPUDevice, "Write Config: from offset: %#x size: %#x "
-            "data: %#x\n", offset, pkt->getSize(),
-            pkt->getUintX(ByteOrder::little));
+    DPRINTF(AMDGPUDevice,
+            "Write Config: from offset: %#x size: %#x "
+            "data: %#x\n",
+            offset, pkt->getSize(), pkt->getUintX(ByteOrder::little));
 
     if (offset < PCI_DEVICE_SPECIFIC)
         return PciDevice::writeConfig(pkt);
-
 
     if (offset >= PXCAP_BASE && offset < (PXCAP_BASE + sizeof(PXCAP))) {
         uint8_t *pxcap_data = &(pxcap.data[0]);
@@ -457,44 +462,43 @@ AMDGPUDevice::writeDoorbell(PacketPtr pkt, Addr offset)
     if (doorbells.find(offset) != doorbells.end()) {
         QueueType q_type = doorbells[offset].qtype;
         int ip_id = doorbells[offset].ip_id;
-        DPRINTF(AMDGPUDevice, "Doorbell offset %p queue: %d\n",
-                              offset, q_type);
+        DPRINTF(AMDGPUDevice, "Doorbell offset %p queue: %d\n", offset,
+                q_type);
         switch (q_type) {
-          case Compute:
+        case Compute:
             assert(pm4PktProcs.count(ip_id));
-            pm4PktProcs[ip_id]->process(
-                pm4PktProcs[ip_id]->getQueue(offset),
-                pkt->getLE<uint64_t>());
-          break;
-          case Gfx:
+            pm4PktProcs[ip_id]->process(pm4PktProcs[ip_id]->getQueue(offset),
+                                        pkt->getLE<uint64_t>());
+            break;
+        case Gfx:
             assert(pm4PktProcs.count(ip_id));
             pm4PktProcs[ip_id]->process(
                 pm4PktProcs[ip_id]->getQueue(offset, true),
                 pkt->getLE<uint64_t>());
-          break;
-          case SDMAGfx: {
+            break;
+        case SDMAGfx: {
             SDMAEngine *sdmaEng = getSDMAEngine(offset);
             sdmaEng->processGfx(pkt->getLE<uint64_t>());
-          } break;
-          case SDMAPage: {
+        } break;
+        case SDMAPage: {
             SDMAEngine *sdmaEng = getSDMAEngine(offset);
             sdmaEng->processPage(pkt->getLE<uint64_t>());
-          } break;
-          case ComputeAQL: {
+        } break;
+        case ComputeAQL: {
             assert(pm4PktProcs.count(ip_id));
-            cp->hsaPacketProc().hwScheduler()->write(offset,
-                pkt->getLE<uint64_t>() + 1);
+            cp->hsaPacketProc().hwScheduler()->write(
+                offset, pkt->getLE<uint64_t>() + 1);
             pm4PktProcs[ip_id]->updateReadIndex(offset,
-                pkt->getLE<uint64_t>() + 1);
-          } break;
-          case InterruptHandler:
+                                                pkt->getLE<uint64_t>() + 1);
+        } break;
+        case InterruptHandler:
             deviceIH->updateRptr(pkt->getLE<uint32_t>());
             break;
-          case RLC: {
+        case RLC: {
             SDMAEngine *sdmaEng = getSDMAEngine(offset);
             sdmaEng->processRLC(offset, pkt->getLE<uint64_t>());
-          } break;
-          default:
+        } break;
+        default:
             panic("Write to unkown queue type!");
         }
     } else {
@@ -539,7 +543,7 @@ AMDGPUDevice::writeMMIO(PacketPtr pkt, Addr offset)
     }
 
     // Check PM4s next, returning to avoid duplicate writes.
-    for (auto& [range, pm4_proc] : pm4Ranges) {
+    for (auto &[range, pm4_proc] : pm4Ranges) {
         if (range.contains(offset)) {
             // PM4 MMIOs are offset based on the MMIO range start
             Addr ip_offset = offset - range.start();
@@ -577,16 +581,16 @@ AMDGPUDevice::read(PacketPtr pkt)
         getBAR(pkt->getAddr(), barnum, offset);
 
         switch (barnum) {
-          case FRAMEBUFFER_BAR:
-              readFrame(pkt, offset);
-              break;
-          case DOORBELL_BAR:
-              readDoorbell(pkt, offset);
-              break;
-          case MMIO_BAR:
-              readMMIO(pkt, offset);
-              break;
-          default:
+        case FRAMEBUFFER_BAR:
+            readFrame(pkt, offset);
+            break;
+        case DOORBELL_BAR:
+            readDoorbell(pkt, offset);
+            break;
+        case MMIO_BAR:
+            readMMIO(pkt, offset);
+            break;
+        default:
             panic("Request with address out of mapped range!");
         }
     }
@@ -611,16 +615,16 @@ AMDGPUDevice::write(PacketPtr pkt)
     getBAR(pkt->getAddr(), barnum, offset);
 
     switch (barnum) {
-      case FRAMEBUFFER_BAR:
-          writeFrame(pkt, offset);
-          break;
-      case DOORBELL_BAR:
-          writeDoorbell(pkt, offset);
-          break;
-      case MMIO_BAR:
-          writeMMIO(pkt, offset);
-          break;
-      default:
+    case FRAMEBUFFER_BAR:
+        writeFrame(pkt, offset);
+        break;
+    case DOORBELL_BAR:
+        writeDoorbell(pkt, offset);
+        break;
+    case MMIO_BAR:
+        writeMMIO(pkt, offset);
+        break;
+    default:
         panic("Request with address out of mapped range!");
     }
 
@@ -628,8 +632,8 @@ AMDGPUDevice::write(PacketPtr pkt)
     // Reads return 0 by default.
     uint64_t data = pkt->getUintX(ByteOrder::little);
 
-    DPRINTF(AMDGPUDevice, "PCI Write to %#lx data %#lx\n",
-                            pkt->getAddr(), data);
+    DPRINTF(AMDGPUDevice, "PCI Write to %#lx data %#lx\n", pkt->getAddr(),
+            data);
 
     dispatchAccess(pkt, false);
 
@@ -657,13 +661,13 @@ AMDGPUDevice::getRegVal(uint64_t addr)
     Addr fixup_addr = bits(addr, 31, 31) ? addr : addr & 0x7fffffff;
 
     uint32_t pkt_data = 0;
-    RequestPtr request = std::make_shared<Request>(fixup_addr,
-            sizeof(uint32_t), 0 /* flags */, vramRequestorId());
+    RequestPtr request = std::make_shared<Request>(
+        fixup_addr, sizeof(uint32_t), 0 /* flags */, vramRequestorId());
     PacketPtr pkt = Packet::createRead(request);
     pkt->dataStatic((uint8_t *)&pkt_data);
     readMMIO(pkt, addr);
-    DPRINTF(AMDGPUDevice, "Getting register 0x%lx = %x\n",
-            fixup_addr, pkt->getLE<uint32_t>());
+    DPRINTF(AMDGPUDevice, "Getting register 0x%lx = %x\n", fixup_addr,
+            pkt->getLE<uint32_t>());
 
     return pkt->getLE<uint32_t>();
 }
@@ -671,12 +675,11 @@ AMDGPUDevice::getRegVal(uint64_t addr)
 void
 AMDGPUDevice::setRegVal(uint64_t addr, uint32_t value)
 {
-    DPRINTF(AMDGPUDevice, "Setting register 0x%lx to %x\n",
-            addr, value);
+    DPRINTF(AMDGPUDevice, "Setting register 0x%lx to %x\n", addr, value);
 
     uint32_t pkt_data = value;
-    RequestPtr request = std::make_shared<Request>(addr,
-            sizeof(uint32_t), 0 /* flags */, vramRequestorId());
+    RequestPtr request = std::make_shared<Request>(
+        addr, sizeof(uint32_t), 0 /* flags */, vramRequestorId());
     PacketPtr pkt = Packet::createWrite(request);
     pkt->dataStatic((uint8_t *)&pkt_data);
     writeMMIO(pkt, addr);
@@ -696,7 +699,7 @@ AMDGPUDevice::setSDMAEngine(Addr offset, SDMAEngine *eng)
     sdmaEngs[offset] = eng;
 }
 
-SDMAEngine*
+SDMAEngine *
 AMDGPUDevice::getSDMAById(int id)
 {
     /**
@@ -708,7 +711,7 @@ AMDGPUDevice::getSDMAById(int id)
     return sdmaIds[id];
 }
 
-SDMAEngine*
+SDMAEngine *
 AMDGPUDevice::getSDMAEngine(Addr offset)
 {
     return sdmaEngs[offset];
@@ -746,7 +749,7 @@ AMDGPUDevice::serialize(CheckpointOut &cp) const
     std::vector<int> used_vmid_sets;
 
     int idx = 0;
-    for (auto & it : doorbells) {
+    for (auto &it : doorbells) {
         doorbells_offset[idx] = it.first;
         doorbells_queues[idx] = it.second.qtype;
         doorbells_ip_ids[idx] = it.second.ip_id;
@@ -754,40 +757,40 @@ AMDGPUDevice::serialize(CheckpointOut &cp) const
     }
 
     idx = 0;
-    for (auto & it : sdmaEngs) {
+    for (auto &it : sdmaEngs) {
         sdma_engs_offset[idx] = it.first;
         sdma_engs[idx] = it.second->getId();
         ++idx;
     }
 
     idx = 0;
-    for (auto & it : usedVMIDs) {
+    for (auto &it : usedVMIDs) {
         used_vmids[idx] = it.first;
         used_queue_id_sizes[idx] = it.second.size();
         std::vector<int> set_vector(it.second.begin(), it.second.end());
-        used_vmid_sets.insert(used_vmid_sets.end(),
-                set_vector.begin(), set_vector.end());
+        used_vmid_sets.insert(used_vmid_sets.end(), set_vector.begin(),
+                              set_vector.end());
         ++idx;
     }
 
     int num_queue_id = used_vmid_sets.size();
-    int* vmid_array = new int[num_queue_id];
+    int *vmid_array = new int[num_queue_id];
     std::copy(used_vmid_sets.begin(), used_vmid_sets.end(), vmid_array);
 
-    SERIALIZE_ARRAY(doorbells_offset, sizeof(doorbells_offset)/
-        sizeof(doorbells_offset[0]));
-    SERIALIZE_ARRAY(doorbells_queues, sizeof(doorbells_queues)/
-        sizeof(doorbells_queues[0]));
-    SERIALIZE_ARRAY(doorbells_ip_ids, sizeof(doorbells_ip_ids)/
-        sizeof(doorbells_ip_ids[0]));
-    SERIALIZE_ARRAY(sdma_engs_offset, sizeof(sdma_engs_offset)/
-        sizeof(sdma_engs_offset[0]));
-    SERIALIZE_ARRAY(sdma_engs, sizeof(sdma_engs)/sizeof(sdma_engs[0]));
+    SERIALIZE_ARRAY(doorbells_offset,
+                    sizeof(doorbells_offset) / sizeof(doorbells_offset[0]));
+    SERIALIZE_ARRAY(doorbells_queues,
+                    sizeof(doorbells_queues) / sizeof(doorbells_queues[0]));
+    SERIALIZE_ARRAY(doorbells_ip_ids,
+                    sizeof(doorbells_ip_ids) / sizeof(doorbells_ip_ids[0]));
+    SERIALIZE_ARRAY(sdma_engs_offset,
+                    sizeof(sdma_engs_offset) / sizeof(sdma_engs_offset[0]));
+    SERIALIZE_ARRAY(sdma_engs, sizeof(sdma_engs) / sizeof(sdma_engs[0]));
     // Save the vmids used in an array
-    SERIALIZE_ARRAY(used_vmids, sizeof(used_vmids)/sizeof(used_vmids[0]));
+    SERIALIZE_ARRAY(used_vmids, sizeof(used_vmids) / sizeof(used_vmids[0]));
     // Save the size of the set of queue ids mapped to each vmid
-    SERIALIZE_ARRAY(used_queue_id_sizes,
-            sizeof(used_queue_id_sizes)/sizeof(used_queue_id_sizes[0]));
+    SERIALIZE_ARRAY(used_queue_id_sizes, sizeof(used_queue_id_sizes) /
+                                             sizeof(used_queue_id_sizes[0]));
     // Save all the queue ids used for all the vmids
     SERIALIZE_ARRAY(vmid_array, num_queue_id);
     // Save the total number of queue idsused
@@ -814,18 +817,17 @@ AMDGPUDevice::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(sdma_engs_size);
     UNSERIALIZE_SCALAR(used_vmid_map_size);
 
-
     if (doorbells_size > 0) {
         uint32_t doorbells_offset[doorbells_size];
         QueueType doorbells_queues[doorbells_size];
         int doorbells_ip_ids[doorbells_size];
 
-        UNSERIALIZE_ARRAY(doorbells_offset, sizeof(doorbells_offset)/
-                sizeof(doorbells_offset[0]));
-        UNSERIALIZE_ARRAY(doorbells_queues, sizeof(doorbells_queues)/
-                sizeof(doorbells_queues[0]));
-        UNSERIALIZE_ARRAY(doorbells_ip_ids, sizeof(doorbells_ip_ids)/
-                sizeof(doorbells_ip_ids[0]));
+        UNSERIALIZE_ARRAY(doorbells_offset, sizeof(doorbells_offset) /
+                                                sizeof(doorbells_offset[0]));
+        UNSERIALIZE_ARRAY(doorbells_queues, sizeof(doorbells_queues) /
+                                                sizeof(doorbells_queues[0]));
+        UNSERIALIZE_ARRAY(doorbells_ip_ids, sizeof(doorbells_ip_ids) /
+                                                sizeof(doorbells_ip_ids[0]));
 
         for (int idx = 0; idx < doorbells_size; ++idx) {
             doorbells[doorbells_offset[idx]].qtype = doorbells_queues[idx];
@@ -837,9 +839,9 @@ AMDGPUDevice::unserialize(CheckpointIn &cp)
         uint32_t sdma_engs_offset[sdma_engs_size];
         int sdma_engs[sdma_engs_size];
 
-        UNSERIALIZE_ARRAY(sdma_engs_offset, sizeof(sdma_engs_offset)/
-            sizeof(sdma_engs_offset[0]));
-        UNSERIALIZE_ARRAY(sdma_engs, sizeof(sdma_engs)/sizeof(sdma_engs[0]));
+        UNSERIALIZE_ARRAY(sdma_engs_offset, sizeof(sdma_engs_offset) /
+                                                sizeof(sdma_engs_offset[0]));
+        UNSERIALIZE_ARRAY(sdma_engs, sizeof(sdma_engs) / sizeof(sdma_engs[0]));
 
         for (int idx = 0; idx < sdma_engs_size; ++idx) {
             int sdma_id = sdma_engs[idx];
@@ -856,7 +858,7 @@ AMDGPUDevice::unserialize(CheckpointIn &cp)
         std::vector<int> used_vmid_sets;
         // Extract the total number of queue ids used
         UNSERIALIZE_SCALAR(num_queue_id);
-        int* vmid_array = new int[num_queue_id];
+        int *vmid_array = new int[num_queue_id];
         // Extract the number of vmids used
         UNSERIALIZE_ARRAY(used_vmids, used_vmid_map_size);
         // Extract the size of the queue id set for each vmid
@@ -907,7 +909,8 @@ AMDGPUDevice::deallocatePasid(uint16_t pasid)
 {
     auto result = idMap.find(pasid);
     assert(result != idMap.end());
-    if (result == idMap.end()) return;
+    if (result == idMap.end())
+        return;
     uint16_t vmid = result->second;
 
     idMap.erase(result);
@@ -920,7 +923,7 @@ AMDGPUDevice::deallocateAllQueues()
     idMap.erase(idMap.begin(), idMap.end());
     usedVMIDs.erase(usedVMIDs.begin(), usedVMIDs.end());
 
-    for (auto& it : sdmaEngs) {
+    for (auto &it : sdmaEngs) {
         it.second->deallocateRLCQueues();
     }
 
@@ -939,7 +942,7 @@ AMDGPUDevice::mapDoorbellToVMID(Addr doorbell, uint16_t vmid)
     doorbellVMIDMap[doorbell] = vmid;
 }
 
-std::unordered_map<uint16_t, std::set<int>>&
+std::unordered_map<uint16_t, std::set<int>> &
 AMDGPUDevice::getUsedVMIDs()
 {
     return usedVMIDs;

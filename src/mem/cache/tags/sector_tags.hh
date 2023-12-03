@@ -60,7 +60,7 @@ namespace gem5
 
 namespace replacement_policy
 {
-    class Base;
+class Base;
 }
 class ReplaceableEntry;
 
@@ -106,9 +106,9 @@ class SectorTags : public BaseTags
 
     struct SectorTagsStats : public statistics::Group
     {
-        const SectorTags& tags;
+        const SectorTags &tags;
 
-        SectorTagsStats(BaseTagStats &base_group, SectorTags& _tags);
+        SectorTagsStats(BaseTagStats &base_group, SectorTags &_tags);
 
         void regStats() override;
 
@@ -118,7 +118,7 @@ class SectorTags : public BaseTags
 
   public:
     /** Convenience typedef. */
-     typedef SectorTagsParams Params;
+    typedef SectorTagsParams Params;
 
     /**
      * Construct and initialize this tag store.
@@ -128,7 +128,7 @@ class SectorTags : public BaseTags
     /**
      * Destructor.
      */
-    virtual ~SectorTags() {};
+    virtual ~SectorTags(){};
 
     /**
      * Initialize blocks as SectorBlk and SectorSubBlk instances.
@@ -153,7 +153,7 @@ class SectorTags : public BaseTags
      * @param lat The latency of the tag lookup.
      * @return Pointer to the cache block if found.
      */
-    CacheBlk* accessBlock(const PacketPtr pkt, Cycles &lat) override;
+    CacheBlk *accessBlock(const PacketPtr pkt, Cycles &lat) override;
 
     /**
      * Insert the new block into the cache and update replacement data.
@@ -173,7 +173,7 @@ class SectorTags : public BaseTags
      * @param is_secure True if the target memory space is secure.
      * @return Pointer to the cache block if found.
      */
-    CacheBlk* findBlock(Addr addr, bool is_secure) const override;
+    CacheBlk *findBlock(Addr addr, bool is_secure) const override;
 
     /**
      * Find replacement victim based on address.
@@ -185,9 +185,9 @@ class SectorTags : public BaseTags
      * @param partition_id Partition ID for resource management.
      * @return Cache block to be replaced.
      */
-    CacheBlk* findVictim(Addr addr, const bool is_secure,
+    CacheBlk *findVictim(Addr addr, const bool is_secure,
                          const std::size_t size,
-                         std::vector<CacheBlk*>& evict_blks,
+                         std::vector<CacheBlk *> &evict_blks,
                          const uint64_t partition_id) override;
 
     /**
@@ -204,7 +204,7 @@ class SectorTags : public BaseTags
      * @param block The block.
      * @return the block address.
      */
-    Addr regenerateBlkAddr(const CacheBlk* blk) const override;
+    Addr regenerateBlkAddr(const CacheBlk *blk) const override;
 
     /**
      * Find if any of the sub-blocks satisfies a condition.

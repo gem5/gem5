@@ -40,10 +40,10 @@ namespace
 {
 
 sc_gem5::DefaultReportMessages predefinedMessages{
-    {400, SC_ID_INIT_FAILED_},
-    {401, SC_ID_ASSIGNMENT_FAILED_},
-    {402, SC_ID_OPERATION_FAILED_},
-    {403, SC_ID_CONVERSION_FAILED_}
+    { 400, SC_ID_INIT_FAILED_ },
+    { 401, SC_ID_ASSIGNMENT_FAILED_ },
+    { 402, SC_ID_OPERATION_FAILED_ },
+    { 403, SC_ID_CONVERSION_FAILED_ }
 };
 
 } // anonymous namespace

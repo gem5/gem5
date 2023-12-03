@@ -130,4 +130,4 @@ readVecElem(VReg src, int index, int eSize)
 } // namespace ArmISA
 } // namespace gem5
 
-#endif  // __ARCH_ARM_INSTS_NEON64_MEM_HH__
+#endif // __ARCH_ARM_INSTS_NEON64_MEM_HH__

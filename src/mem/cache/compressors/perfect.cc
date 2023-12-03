@@ -45,13 +45,12 @@ namespace compression
 {
 
 Perfect::Perfect(const Params &p)
-  : Base(p), compressedSize(8 * blkSize / p.max_compression_ratio)
-{
-}
+    : Base(p), compressedSize(8 * blkSize / p.max_compression_ratio)
+{}
 
 std::unique_ptr<Base::CompressionData>
-Perfect::compress(const std::vector<Chunk>& chunks,
-    Cycles& comp_lat, Cycles& decomp_lat)
+Perfect::compress(const std::vector<Chunk> &chunks, Cycles &comp_lat,
+                  Cycles &decomp_lat)
 {
     // Compress every word sequentially
     std::unique_ptr<Base::CompressionData> comp_data(new CompData(chunks));
@@ -62,18 +61,17 @@ Perfect::compress(const std::vector<Chunk>& chunks,
     // Set latencies based on the degree of parallelization, and any extra
     // latencies due to shifting or packaging
     comp_lat = Cycles((chunks.size() / compChunksPerCycle) + compExtraLatency);
-    decomp_lat = Cycles((chunks.size() / decompChunksPerCycle) +
-        decompExtraLatency);
+    decomp_lat =
+        Cycles((chunks.size() / decompChunksPerCycle) + decompExtraLatency);
 
     return comp_data;
 }
 
 void
-Perfect::decompress(const CompressionData* comp_data,
-    uint64_t* data)
+Perfect::decompress(const CompressionData *comp_data, uint64_t *data)
 {
     // Decompress every entry sequentially
-    fromChunks(static_cast<const CompData*>(comp_data)->chunks, data);
+    fromChunks(static_cast<const CompData *>(comp_data)->chunks, data);
 }
 
 } // namespace compression

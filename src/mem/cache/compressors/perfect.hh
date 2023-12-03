@@ -63,11 +63,11 @@ class Perfect : public Base
     /** Number of cycles needed to perform decompression. */
     const Cycles decompressionLatency;
 
-    std::unique_ptr<CompressionData> compress(
-        const std::vector<Chunk>& chunks, Cycles& comp_lat,
-        Cycles& decomp_lat) override;
+    std::unique_ptr<CompressionData> compress(const std::vector<Chunk> &chunks,
+                                              Cycles &comp_lat,
+                                              Cycles &decomp_lat) override;
 
-    void decompress(const CompressionData* comp_data, uint64_t* data) override;
+    void decompress(const CompressionData *comp_data, uint64_t *data) override;
 
   public:
     typedef PerfectCompressorParams Params;
@@ -86,10 +86,10 @@ class Perfect::CompData : public CompressionData
      *
      * @param chunks The data to be compressed.
      */
-    CompData(const std::vector<Chunk>& chunks)
-      : CompressionData(), chunks(chunks)
-    {
-    }
+    CompData(const std::vector<Chunk> &chunks)
+        : CompressionData(), chunks(chunks)
+    {}
+
     ~CompData() = default;
 };
 

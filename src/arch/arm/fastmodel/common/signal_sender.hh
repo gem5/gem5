@@ -46,8 +46,8 @@ class SignalSender : public SignalSinkPort<bool>
   public:
     amba_pv::signal_master_port<bool> signal_out;
 
-    SignalSender(const std::string &_name, PortID _id) :
-        SignalSinkPort(_name, _id), signal_out((_name + ".sig").c_str())
+    SignalSender(const std::string &_name, PortID _id)
+        : SignalSinkPort(_name, _id), signal_out((_name + ".sig").c_str())
     {
         onChange([this](const bool &new_val) {
             signal_out.set_state(id, new_val);
@@ -58,4 +58,4 @@ class SignalSender : public SignalSinkPort<bool>
 } // namespace fastmodel
 } // namespace gem5
 
-#endif  // __ARCH_ARM_FASTMODEL_COMMON_SIGNAL_SENDER_HH__
+#endif // __ARCH_ARM_FASTMODEL_COMMON_SIGNAL_SENDER_HH__

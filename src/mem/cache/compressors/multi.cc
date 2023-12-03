@@ -48,8 +48,8 @@ namespace gem5
 namespace compression
 {
 
-Multi::MultiCompData::MultiCompData(unsigned index,
-    std::unique_ptr<Base::CompressionData> comp_data)
+Multi::MultiCompData::MultiCompData(
+    unsigned index, std::unique_ptr<Base::CompressionData> comp_data)
     : CompressionData(), index(index), compData(std::move(comp_data))
 {
     setSizeBits(compData->getSizeBits());
@@ -62,17 +62,19 @@ Multi::MultiCompData::getIndex() const
 }
 
 Multi::Multi(const Params &p)
-  : Base(p), compressors(p.compressors),
-    numEncodingBits(p.encoding_in_tags ? 0 :
-        std::log2(alignToPowerOfTwo(compressors.size()))),
-    multiStats(stats, *this)
+    : Base(p),
+      compressors(p.compressors),
+      numEncodingBits(p.encoding_in_tags ?
+                          0 :
+                          std::log2(alignToPowerOfTwo(compressors.size()))),
+      multiStats(stats, *this)
 {
     fatal_if(compressors.size() == 0, "There must be at least one compressor");
 }
 
 Multi::~Multi()
 {
-    for (auto& compressor : compressors) {
+    for (auto &compressor : compressors) {
         delete compressor;
     }
 }
@@ -81,14 +83,14 @@ void
 Multi::setCache(BaseCache *_cache)
 {
     Base::setCache(_cache);
-    for (auto& compressor : compressors) {
+    for (auto &compressor : compressors) {
         compressor->setCache(_cache);
     }
 }
 
 std::unique_ptr<Base::CompressionData>
-Multi::compress(const std::vector<Chunk>& chunks, Cycles& comp_lat,
-    Cycles& decomp_lat)
+Multi::compress(const std::vector<Chunk> &chunks, Cycles &comp_lat,
+                Cycles &decomp_lat)
 {
     struct Results
     {
@@ -98,9 +100,10 @@ Multi::compress(const std::vector<Chunk>& chunks, Cycles& comp_lat,
         uint8_t compressionFactor;
 
         Results(unsigned index,
-            std::unique_ptr<Base::CompressionData> comp_data,
-            Cycles decomp_lat, std::size_t blk_size)
-            : index(index), compData(std::move(comp_data)),
+                std::unique_ptr<Base::CompressionData> comp_data,
+                Cycles decomp_lat, std::size_t blk_size)
+            : index(index),
+              compData(std::move(comp_data)),
               decompLat(decomp_lat)
         {
             const std::size_t size = compData->getSize();
@@ -113,16 +116,20 @@ Multi::compress(const std::vector<Chunk>& chunks, Cycles& comp_lat,
             // another compression layer. Their size can be 0, so it is
             // assigned the highest possible compression factor (the original
             // block's size).
-            compressionFactor = (size > blk_size) ? 1 :
-                ((size == 0) ? blk_size :
-                alignToPowerOfTwo(std::floor(blk_size / (double) size)));
+            compressionFactor =
+                (size > blk_size) ?
+                    1 :
+                    ((size == 0) ? blk_size :
+                                   alignToPowerOfTwo(
+                                       std::floor(blk_size / (double)size)));
         }
     };
+
     struct ResultsComparator
     {
         bool
-        operator()(const std::shared_ptr<Results>& lhs,
-            const std::shared_ptr<Results>& rhs) const
+        operator()(const std::shared_ptr<Results> &lhs,
+                   const std::shared_ptr<Results> &rhs) const
         {
             const std::size_t lhs_cf = lhs->compressionFactor;
             const std::size_t rhs_cf = rhs->compressionFactor;
@@ -144,16 +151,18 @@ Multi::compress(const std::vector<Chunk>& chunks, Cycles& comp_lat,
 
     // Find the ranking of the compressor outputs
     std::priority_queue<std::shared_ptr<Results>,
-        std::vector<std::shared_ptr<Results>>, ResultsComparator> results;
+                        std::vector<std::shared_ptr<Results>>,
+                        ResultsComparator>
+        results;
     Cycles max_comp_lat;
     for (unsigned i = 0; i < compressors.size(); i++) {
         Cycles temp_decomp_lat;
         auto temp_comp_data =
             compressors[i]->compress(data, comp_lat, temp_decomp_lat);
         temp_comp_data->setSizeBits(temp_comp_data->getSizeBits() +
-            numEncodingBits);
+                                    numEncodingBits);
         results.push(std::make_shared<Results>(i, std::move(temp_comp_data),
-            temp_decomp_lat, blkSize));
+                                               temp_decomp_lat, blkSize));
         max_comp_lat = std::max(max_comp_lat, comp_lat);
     }
 
@@ -181,21 +190,20 @@ Multi::compress(const std::vector<Chunk>& chunks, Cycles& comp_lat,
 }
 
 void
-Multi::decompress(const CompressionData* comp_data,
-    uint64_t* cache_line)
+Multi::decompress(const CompressionData *comp_data, uint64_t *cache_line)
 {
-    const MultiCompData* casted_comp_data =
-        static_cast<const MultiCompData*>(comp_data);
+    const MultiCompData *casted_comp_data =
+        static_cast<const MultiCompData *>(comp_data);
     compressors[casted_comp_data->getIndex()]->decompress(
         casted_comp_data->compData.get(), cache_line);
 }
 
-Multi::MultiStats::MultiStats(BaseStats& base_group, Multi& _compressor)
-  : statistics::Group(&base_group), compressor(_compressor),
-    ADD_STAT(ranks, statistics::units::Count::get(),
-             "Number of times each compressor had the nth best compression")
-{
-}
+Multi::MultiStats::MultiStats(BaseStats &base_group, Multi &_compressor)
+    : statistics::Group(&base_group),
+      compressor(_compressor),
+      ADD_STAT(ranks, statistics::units::Count::get(),
+               "Number of times each compressor had the nth best compression")
+{}
 
 void
 Multi::MultiStats::regStats()
@@ -207,7 +215,8 @@ Multi::MultiStats::regStats()
     for (unsigned compressor = 0; compressor < num_compressors; compressor++) {
         ranks.subname(compressor, std::to_string(compressor));
         ranks.subdesc(compressor, "Number of times compressor " +
-            std::to_string(compressor) + " had the nth best compression.");
+                                      std::to_string(compressor) +
+                                      " had the nth best compression.");
         for (unsigned rank = 0; rank < num_compressors; rank++) {
             ranks.ysubname(rank, std::to_string(rank));
         }

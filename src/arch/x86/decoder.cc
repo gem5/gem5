@@ -97,48 +97,48 @@ Decoder::process()
     while (!instDone && !outOfBytes) {
         uint8_t nextByte = getNextByte();
         switch (state) {
-          case PrefixState:
+        case PrefixState:
             state = doPrefixState(nextByte);
             break;
-          case Vex2Of2State:
+        case Vex2Of2State:
             state = doVex2Of2State(nextByte);
             break;
-          case Vex2Of3State:
+        case Vex2Of3State:
             state = doVex2Of3State(nextByte);
             break;
-          case Vex3Of3State:
+        case Vex3Of3State:
             state = doVex3Of3State(nextByte);
             break;
-          case VexOpcodeState:
+        case VexOpcodeState:
             state = doVexOpcodeState(nextByte);
             break;
-          case OneByteOpcodeState:
+        case OneByteOpcodeState:
             state = doOneByteOpcodeState(nextByte);
             break;
-          case TwoByteOpcodeState:
+        case TwoByteOpcodeState:
             state = doTwoByteOpcodeState(nextByte);
             break;
-          case ThreeByte0F38OpcodeState:
+        case ThreeByte0F38OpcodeState:
             state = doThreeByte0F38OpcodeState(nextByte);
             break;
-          case ThreeByte0F3AOpcodeState:
+        case ThreeByte0F3AOpcodeState:
             state = doThreeByte0F3AOpcodeState(nextByte);
             break;
-          case ModRMState:
+        case ModRMState:
             state = doModRMState(nextByte);
             break;
-          case SIBState:
+        case SIBState:
             state = doSIBState(nextByte);
             break;
-          case DisplacementState:
+        case DisplacementState:
             state = doDisplacementState();
             break;
-          case ImmediateState:
+        case ImmediateState:
             state = doImmediateState();
             break;
-          case ErrorState:
+        case ErrorState:
             panic("Went to the error state in the decoder.\n");
-          default:
+        default:
             panic("Unrecognized state! %d\n", state);
         }
     }
@@ -149,7 +149,7 @@ Decoder::doFromCacheState()
 {
     DPRINTF(Decoder, "Looking at cache state.\n");
     if ((fetchChunk & instBytes->masks[chunkIdx]) !=
-            instBytes->chunks[chunkIdx]) {
+        instBytes->chunks[chunkIdx]) {
         DPRINTF(Decoder, "Decode cache miss.\n");
         // The chached chunks didn't match what was fetched. Fall back to the
         // predecoder.
@@ -188,57 +188,57 @@ Decoder::doPrefixState(uint8_t nextByte)
     State nextState = PrefixState;
     if (prefix)
         consumeByte();
-    switch(prefix) {
+    switch (prefix) {
         // Operand size override prefixes
-      case OperandSizeOverride:
+    case OperandSizeOverride:
         DPRINTF(Decoder, "Found operand size override prefix.\n");
         emi.legacy.op = true;
         break;
-      case AddressSizeOverride:
+    case AddressSizeOverride:
         DPRINTF(Decoder, "Found address size override prefix.\n");
         emi.legacy.addr = true;
         break;
         // Segment override prefixes
-      case CSOverride:
-      case DSOverride:
-      case ESOverride:
-      case FSOverride:
-      case GSOverride:
-      case SSOverride:
+    case CSOverride:
+    case DSOverride:
+    case ESOverride:
+    case FSOverride:
+    case GSOverride:
+    case SSOverride:
         DPRINTF(Decoder, "Found segment override.\n");
         emi.legacy.seg = prefix;
         break;
-      case Lock:
+    case Lock:
         DPRINTF(Decoder, "Found lock prefix.\n");
         emi.legacy.lock = true;
         break;
-      case Rep:
+    case Rep:
         DPRINTF(Decoder, "Found rep prefix.\n");
         emi.legacy.rep = true;
         break;
-      case Repne:
+    case Repne:
         DPRINTF(Decoder, "Found repne prefix.\n");
         emi.legacy.repne = true;
         break;
-      case RexPrefix:
+    case RexPrefix:
         DPRINTF(Decoder, "Found Rex prefix %#x.\n", nextByte);
         emi.rex = nextByte;
         break;
-      case Vex2Prefix:
+    case Vex2Prefix:
         DPRINTF(Decoder, "Found VEX two-byte prefix %#x.\n", nextByte);
         emi.vex.present = 1;
         nextState = Vex2Of2State;
         break;
-      case Vex3Prefix:
+    case Vex3Prefix:
         DPRINTF(Decoder, "Found VEX three-byte prefix %#x.\n", nextByte);
         emi.vex.present = 1;
         nextState = Vex2Of3State;
         break;
-      case 0:
+    case 0:
         nextState = OneByteOpcodeState;
         break;
 
-      default:
+    default:
         panic("Unrecognized prefix %#x\n", nextByte);
     }
     return nextState;
@@ -256,15 +256,15 @@ Decoder::doVex2Of2State(uint8_t nextByte)
     emi.vex.v = ~vex.v;
 
     switch (vex.p) {
-      case 0:
+    case 0:
         break;
-      case 1:
+    case 1:
         emi.legacy.op = 1;
         break;
-      case 2:
+    case 2:
         emi.legacy.rep = 1;
         break;
-      case 3:
+    case 3:
         emi.legacy.repne = 1;
         break;
     }
@@ -294,16 +294,16 @@ Decoder::doVex2Of3State(uint8_t nextByte)
     emi.rex.b = !vex.b;
 
     switch (vex.m) {
-      case 1:
+    case 1:
         emi.opcode.type = TwoByteOpcode;
         break;
-      case 2:
+    case 2:
         emi.opcode.type = ThreeByte0F38Opcode;
         break;
-      case 3:
+    case 3:
         emi.opcode.type = ThreeByte0F3AOpcode;
         break;
-      default:
+    default:
         // These encodings are reserved. Pretend this was an undefined
         // instruction so the main decoder will behave correctly, and stop
         // trying to interpret bytes.
@@ -336,15 +336,15 @@ Decoder::doVex3Of3State(uint8_t nextByte)
     emi.vex.v = ~vex.v;
 
     switch (vex.p) {
-      case 0:
+    case 0:
         break;
-      case 1:
+    case 1:
         emi.legacy.op = 1;
         break;
-      case 2:
+    case 2:
         emi.legacy.rep = 1;
         break;
-      case 3:
+    case 3:
         emi.legacy.repne = 1;
         break;
     }
@@ -361,15 +361,15 @@ Decoder::doVexOpcodeState(uint8_t nextByte)
     consumeByte();
 
     switch (emi.opcode.type) {
-      case TwoByteOpcode:
+    case TwoByteOpcode:
         return processOpcode(ImmediateTypeTwoByte, UsesModRMTwoByte);
-      case ThreeByte0F38Opcode:
+    case ThreeByte0F38Opcode:
         return processOpcode(ImmediateTypeThreeByte0F38,
                              UsesModRMThreeByte0F38);
-      case ThreeByte0F3AOpcode:
+    case ThreeByte0F3AOpcode:
         return processOpcode(ImmediateTypeThreeByte0F3A,
                              UsesModRMThreeByte0F3A);
-      default:
+    default:
         panic("Unrecognized opcode type %d.\n", emi.opcode.type);
     }
 }
@@ -536,10 +536,10 @@ Decoder::doModRMState(uint8_t nextByte)
     // The "test" instruction in group 3 needs an immediate, even though
     // the other instructions with the same actual opcode don't.
     if (emi.opcode.type == OneByteOpcode && (modRM.reg & 0x6) == 0) {
-       if (emi.opcode.op == 0xF6)
-           immediateSize = 1;
-       else if (emi.opcode.op == 0xF7)
-           immediateSize = (emi.opSize == 8) ? 4 : emi.opSize;
+        if (emi.opcode.op == 0xF6)
+            immediateSize = 1;
+        else if (emi.opcode.op == 0xF7)
+            immediateSize = (emi.opSize == 8) ? 4 : emi.opSize;
     }
 
     // If there's an SIB, get that next.
@@ -589,9 +589,7 @@ Decoder::doDisplacementState()
 {
     State nextState = ErrorState;
 
-    getImmediate(immediateCollected,
-            emi.displacement,
-            displacementSize);
+    getImmediate(immediateCollected, emi.displacement, displacementSize);
 
     DPRINTF(Decoder, "Collecting %d byte displacement, got %d bytes.\n",
             displacementSize, immediateCollected);
@@ -600,22 +598,20 @@ Decoder::doDisplacementState()
         // Reset this for other immediates.
         immediateCollected = 0;
         // Sign extend the displacement.
-        switch(displacementSize)
-        {
-          case 1:
+        switch (displacementSize) {
+        case 1:
             emi.displacement = sext<8>(emi.displacement);
             break;
-          case 2:
+        case 2:
             emi.displacement = sext<16>(emi.displacement);
             break;
-          case 4:
+        case 4:
             emi.displacement = sext<32>(emi.displacement);
             break;
-          default:
+        default:
             panic("Undefined displacement size!\n");
         }
-        DPRINTF(Decoder, "Collected displacement %#x.\n",
-                emi.displacement);
+        DPRINTF(Decoder, "Collected displacement %#x.\n", emi.displacement);
         if (immediateSize) {
             nextState = ImmediateState;
         } else {
@@ -624,8 +620,7 @@ Decoder::doDisplacementState()
         }
 
         emi.dispSize = displacementSize;
-    }
-    else
+    } else
         nextState = DisplacementState;
     return nextState;
 }
@@ -645,24 +640,23 @@ Decoder::doImmediateState()
         // Reset this for other immediates.
         immediateCollected = 0;
 
-        //XXX Warning! The following is an observed pattern and might
-        // not always be true!
+        // XXX Warning! The following is an observed pattern and might
+        //  not always be true!
 
         // Instructions which use 64 bit operands but 32 bit immediates
         // need to have the immediate sign extended to 64 bits.
         // Instructions which use true 64 bit immediates won't be
         // affected, and instructions that use true 32 bit immediates
         // won't notice.
-        switch(immediateSize) {
-          case 4:
+        switch (immediateSize) {
+        case 4:
             emi.immediate = sext<32>(emi.immediate);
             break;
-          case 1:
+        case 1:
             emi.immediate = sext<8>(emi.immediate);
         }
 
-        DPRINTF(Decoder, "Collected immediate %#x.\n",
-                emi.immediate);
+        DPRINTF(Decoder, "Collected immediate %#x.\n", emi.immediate);
         instDone = true;
         nextState = ResetState;
     } else {
@@ -689,8 +683,8 @@ Decoder::decode(ExtMachInst mach_inst, Addr addr)
 
     si->size(basePC + offset - origPC);
 
-    DPRINTF(Decode, "Decode: Decoded %s instruction: %#x\n",
-            si->getName(), mach_inst);
+    DPRINTF(Decode, "Decode: Decoded %s instruction: %#x\n", si->getName(),
+            mach_inst);
     return si;
 }
 
@@ -715,7 +709,7 @@ Decoder::decode(PCStateBase &next_pc)
     Addr firstBasePC = basePC - (instBytes->chunks.size() - 1) * chunkSize;
     Addr firstOffset = origPC - firstBasePC;
     Addr totalSize = instBytes->lastOffset - firstOffset +
-        (instBytes->chunks.size() - 1) * chunkSize;
+                     (instBytes->chunks.size() - 1) * chunkSize;
     int start = firstOffset;
     instBytes->masks.clear();
 

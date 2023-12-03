@@ -94,12 +94,11 @@ LinuxLoader linuxLoader;
 namespace X86ISA
 {
 
-EmuLinux::EmuLinux(const Params &p) : SEWorkload(p, PageShift)
-{}
+EmuLinux::EmuLinux(const Params &p) : SEWorkload(p, PageShift) {}
 
 const std::vector<RegId> EmuLinux::SyscallABI64::ArgumentRegs = {
     int_reg::Rdi, int_reg::Rsi, int_reg::Rdx,
-    int_reg::R10, int_reg::R8, int_reg::R9
+    int_reg::R10, int_reg::R8,  int_reg::R9
 };
 
 const std::vector<RegId> EmuLinux::SyscallABI32::ArgumentRegs = {
@@ -161,18 +160,18 @@ EmuLinux::pageFault(ThreadContext *tc)
         int size = 6;
         uint64_t is[size];
         // reading the interrupt handler stack
-        proxy.readBlob(ISTVirtAddr + PageBytes - size * sizeof(uint64_t),
-                       &is, sizeof(is));
+        proxy.readBlob(ISTVirtAddr + PageBytes - size * sizeof(uint64_t), &is,
+                       sizeof(is));
         panic("Page fault at addr %#x\n\tInterrupt handler stack:\n"
-                "\tss: %#x\n"
-                "\trsp: %#x\n"
-                "\trflags: %#x\n"
-                "\tcs: %#x\n"
-                "\trip: %#x\n"
-                "\terr_code: %#x\n",
-                tc->readMiscReg(misc_reg::Cr2),
-                is[5], is[4], is[3], is[2], is[1], is[0]);
-   }
+              "\tss: %#x\n"
+              "\trsp: %#x\n"
+              "\trflags: %#x\n"
+              "\tcs: %#x\n"
+              "\trip: %#x\n"
+              "\terr_code: %#x\n",
+              tc->readMiscReg(misc_reg::Cr2), is[5], is[4], is[3], is[2],
+              is[1], is[0]);
+    }
 }
 
 } // namespace X86ISA

@@ -67,16 +67,19 @@ DVFSHandler::DVFSHandler(const Params &p)
         SrcClockDomain *d = *dit;
         DomainID domain_id = d->domainID();
 
-        fatal_if(sysClkDomain == d, "DVFS: Domain config list has a "\
-                 "system clk domain entry");
+        fatal_if(sysClkDomain == d, "DVFS: Domain config list has a "
+                                    "system clk domain entry");
         fatal_if(domain_id == SrcClockDomain::emptyDomainID,
-                 "DVFS: Controlled domain %s needs to have a properly "\
-                 " assigned ID.\n", d->name());
+                 "DVFS: Controlled domain %s needs to have a properly "
+                 " assigned ID.\n",
+                 d->name());
 
         auto entry = std::make_pair(domain_id, d);
         bool new_elem = domains.insert(entry).second;
-        fatal_if(!new_elem, "DVFS: Domain %s with ID %d does not have a "\
-                 "unique ID.\n", d->name(), domain_id);
+        fatal_if(!new_elem,
+                 "DVFS: Domain %s with ID %d does not have a "
+                 "unique ID.\n",
+                 d->name(), domain_id);
 
         // Create a dedicated event slot per known domain ID
         UpdateEvent *event = &updatePerfLevelEvents[domain_id];
@@ -93,8 +96,10 @@ DVFSHandler *DVFSHandler::UpdateEvent::dvfsHandler;
 DVFSHandler::DomainID
 DVFSHandler::domainID(uint32_t index) const
 {
-    fatal_if(index >= numDomains(), "DVFS: Requested index out of "\
-             "bound, max value %d\n", (domainIDList.size() - 1));
+    fatal_if(index >= numDomains(),
+             "DVFS: Requested index out of "
+             "bound, max value %d\n",
+             (domainIDList.size() - 1));
 
     assert(domains.find(domainIDList[index]) != domains.end());
 
@@ -109,8 +114,9 @@ DVFSHandler::validDomainID(DomainID domain_id) const
     // availabe in the handler.
     if (domains.find(domain_id) != domains.end())
         return true;
-    warn("DVFS: invalid domain ID %d, the DVFS handler does not handle this "\
-         "domain\n", domain_id);
+    warn("DVFS: invalid domain ID %d, the DVFS handler does not handle this "
+         "domain\n",
+         domain_id);
     return false;
 }
 
@@ -119,12 +125,14 @@ DVFSHandler::perfLevel(DomainID domain_id, PerfLevel perf_level)
 {
     assert(isEnabled());
 
-    DPRINTF(DVFS, "DVFS: setPerfLevel domain %d -> %d\n", domain_id, perf_level);
+    DPRINTF(DVFS, "DVFS: setPerfLevel domain %d -> %d\n", domain_id,
+            perf_level);
 
     auto d = findDomain(domain_id);
     if (!d->validPerfLevel(perf_level)) {
-        warn("DVFS: invalid performance level %d for domain ID %d, request "\
-             "ignored\n", perf_level, domain_id);
+        warn("DVFS: invalid performance level %d for domain ID %d, request "
+             "ignored\n",
+             perf_level, domain_id);
         return false;
     }
 
@@ -138,11 +146,13 @@ DVFSHandler::perfLevel(DomainID domain_id, PerfLevel perf_level)
 
     update_event->perfLevelToSet = perf_level;
 
-    // State changes that restore to the current state (and / or overwrite a not
-    // yet completed in-flight request) will be squashed
+    // State changes that restore to the current state (and / or overwrite a
+    // not yet completed in-flight request) will be squashed
     if (d->perfLevel() == perf_level) {
-        DPRINTF(DVFS, "DVFS: Ignoring ineffective performance level change "\
-                "%d -> %d\n", d->perfLevel(), perf_level);
+        DPRINTF(DVFS,
+                "DVFS: Ignoring ineffective performance level change "
+                "%d -> %d\n",
+                d->perfLevel(), perf_level);
         return false;
     }
 
@@ -180,25 +190,28 @@ DVFSHandler::voltageAtPerfLevel(DomainID domain_id, PerfLevel perf_level) const
 
     // Request outside of the range of the voltage domain
     if (n == 1) {
-        DPRINTF(DVFS, "DVFS: Request for perf-level %i for single-point "\
-                "voltage domain %s.  Returning voltage at level 0: %.2f "\
-                "V\n", perf_level, d->name(), d->voltage(0));
+        DPRINTF(DVFS,
+                "DVFS: Request for perf-level %i for single-point "
+                "voltage domain %s.  Returning voltage at level 0: %.2f "
+                "V\n",
+                perf_level, d->name(), d->voltage(0));
         // Special case for single point voltage domain -> same voltage for
         // all points
         return d->voltage(0);
     }
 
-    warn("DVFSHandler %s reads illegal voltage level %u from "\
-         "VoltageDomain %s. Returning 0 V\n", name(), perf_level, d->name());
+    warn("DVFSHandler %s reads illegal voltage level %u from "
+         "VoltageDomain %s. Returning 0 V\n",
+         name(), perf_level, d->name());
     return 0.;
 }
 
 void
 DVFSHandler::serialize(CheckpointOut &cp) const
 {
-    //This is to ensure that the handler status is maintained during the
-    //entire simulation run and not changed from command line during checkpoint
-    //and restore
+    // This is to ensure that the handler status is maintained during the
+    // entire simulation run and not changed from command line during
+    // checkpoint and restore
     SERIALIZE_SCALAR(enableHandler);
 
     // Pull out the hashed data structure into easy-to-serialise arrays;
@@ -240,7 +253,8 @@ DVFSHandler::unserialize(CheckpointIn &cp)
     UNSERIALIZE_CONTAINER(perf_levels);
     UNSERIALIZE_CONTAINER(whens);
 
-    for (size_t i = 0; i < domain_ids.size(); ++i) {;
+    for (size_t i = 0; i < domain_ids.size(); ++i) {
+        ;
         UpdateEvent *event = &updatePerfLevelEvents[domain_ids[i]];
 
         event->domainIDToSet = domain_ids[i];

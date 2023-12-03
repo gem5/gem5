@@ -54,7 +54,8 @@
 namespace gem5
 {
 
-namespace trace {
+namespace trace
+{
 
 class TarmacContext;
 
@@ -68,8 +69,7 @@ class TarmacTracer;
  *                   instruction set.
  * @return instruction set in string format.
  */
-std::string
-iSetStateToStr(TarmacBaseRecord::ISetState isetstate);
+std::string iSetStateToStr(TarmacBaseRecord::ISetState isetstate);
 
 /**
  * Returns the string representation of the ARM Operating Mode
@@ -78,8 +78,7 @@ iSetStateToStr(TarmacBaseRecord::ISetState isetstate);
  * @param opMode: ARM operating mode.
  * @return operating mode in string format.
  */
-std::string
-opModeToStr(ArmISA::OperatingMode opMode);
+std::string opModeToStr(ArmISA::OperatingMode opMode);
 
 /**
  * TarmacTracer Record:
@@ -95,12 +94,11 @@ class TarmacTracerRecord : public TarmacBaseRecord
 {
   public:
     /** Instruction Entry */
-    struct TraceInstEntry: public InstEntry, Printable
+    struct TraceInstEntry : public InstEntry, Printable
     {
-        TraceInstEntry(const TarmacContext& tarmCtx, bool predicate);
+        TraceInstEntry(const TarmacContext &tarmCtx, bool predicate);
 
-        virtual void print(std::ostream& outs,
-                           int verbosity = 0,
+        virtual void print(std::ostream &outs, int verbosity = 0,
                            const std::string &prefix = "") const override;
 
       protected:
@@ -121,10 +119,10 @@ class TarmacTracerRecord : public TarmacBaseRecord
     };
 
     /** Register Entry */
-    struct TraceRegEntry: public RegEntry, Printable
+    struct TraceRegEntry : public RegEntry, Printable
     {
       public:
-        TraceRegEntry(const TarmacContext& tarmCtx, const RegId& reg);
+        TraceRegEntry(const TarmacContext &tarmCtx, const RegId &reg);
 
         /**
          * This updates the register entry using the update table. It is
@@ -135,20 +133,19 @@ class TarmacTracerRecord : public TarmacBaseRecord
          * Tracer versions (like V8), and virtual functions should
          * be avoided during construction.
          */
-        void update(const TarmacContext& tarmCtx);
+        void update(const TarmacContext &tarmCtx);
 
-        virtual void print(std::ostream& outs,
-                           int verbosity = 0,
+        virtual void print(std::ostream &outs, int verbosity = 0,
                            const std::string &prefix = "") const override;
 
       protected:
         /** Register update functions. */
-        virtual void updateMisc(const TarmacContext& tarmCtx);
-        virtual void updateCC(const TarmacContext& tarmCtx);
-        virtual void updateFloat(const TarmacContext& tarmCtx);
-        virtual void updateInt(const TarmacContext& tarmCtx);
-        virtual void updateVec(const TarmacContext& tarmCtx) {};
-        virtual void updatePred(const TarmacContext& tarmCtx) {};
+        virtual void updateMisc(const TarmacContext &tarmCtx);
+        virtual void updateCC(const TarmacContext &tarmCtx);
+        virtual void updateFloat(const TarmacContext &tarmCtx);
+        virtual void updateInt(const TarmacContext &tarmCtx);
+        virtual void updateVec(const TarmacContext &tarmCtx){};
+        virtual void updatePred(const TarmacContext &tarmCtx){};
 
       public:
         /** True if register entry is valid */
@@ -160,14 +157,13 @@ class TarmacTracerRecord : public TarmacBaseRecord
     };
 
     /** Memory Entry */
-    struct TraceMemEntry: public MemEntry, Printable
+    struct TraceMemEntry : public MemEntry, Printable
     {
       public:
-        TraceMemEntry(const TarmacContext& tarmCtx,
-                      uint8_t _size, Addr _addr, uint64_t _data);
+        TraceMemEntry(const TarmacContext &tarmCtx, uint8_t _size, Addr _addr,
+                      uint64_t _data);
 
-        virtual void print(std::ostream& outs,
-                           int verbosity = 0,
+        virtual void print(std::ostream &outs, int verbosity = 0,
                            const std::string &prefix = "") const override;
 
       protected:
@@ -178,7 +174,7 @@ class TarmacTracerRecord : public TarmacBaseRecord
   public:
     TarmacTracerRecord(Tick _when, ThreadContext *_thread,
                        const StaticInstPtr _staticInst, const PCStateBase &_pc,
-                       TarmacTracer& _tracer,
+                       TarmacTracer &_tracer,
                        const StaticInstPtr _macroStaticInst = NULL);
 
     virtual void dump() override;
@@ -189,22 +185,22 @@ class TarmacTracerRecord : public TarmacBaseRecord
 
   protected:
     /** Generates an Entry for the executed instruction. */
-    virtual void addInstEntry(std::vector<InstPtr>& queue,
-                              const TarmacContext& ptr);
+    virtual void addInstEntry(std::vector<InstPtr> &queue,
+                              const TarmacContext &ptr);
 
     /** Generates an Entry for every triggered memory access */
-    virtual void addMemEntry(std::vector<MemPtr>& queue,
-                             const TarmacContext& ptr);
+    virtual void addMemEntry(std::vector<MemPtr> &queue,
+                             const TarmacContext &ptr);
 
     /** Generate an Entry for every register being written. */
-    virtual void addRegEntry(std::vector<RegPtr>& queue,
-                             const TarmacContext& ptr);
+    virtual void addRegEntry(std::vector<RegPtr> &queue,
+                             const TarmacContext &ptr);
 
   protected:
     /** Generate and update a register entry. */
-    template<typename RegEntry>
+    template <typename RegEntry>
     RegEntry
-    genRegister(const TarmacContext& tarmCtx, const RegId& reg)
+    genRegister(const TarmacContext &tarmCtx, const RegId &reg)
     {
         RegEntry single_reg(tarmCtx, reg);
         single_reg.update(tarmCtx);
@@ -212,53 +208,46 @@ class TarmacTracerRecord : public TarmacBaseRecord
         return single_reg;
     }
 
-    template<typename RegEntry>
+    template <typename RegEntry>
     void
-    mergeCCEntry(std::vector<RegPtr>& queue, const TarmacContext& tarmCtx)
+    mergeCCEntry(std::vector<RegPtr> &queue, const TarmacContext &tarmCtx)
     {
         // Find all CC Entries and move them at the end of the queue
         auto it = std::remove_if(
-            queue.begin(), queue.end(),
-            [] (RegPtr& reg) ->bool {
+            queue.begin(), queue.end(), [](RegPtr &reg) -> bool {
                 return (reg->regId.classValue() == CCRegClass);
-            }
-        );
+            });
 
         if (it != queue.end()) {
             // Remove all CC Entries.
             queue.erase(it, queue.end());
 
-            auto is_cpsr = [] (RegPtr& reg) ->bool
-            {
-                return (reg->regId.classValue()== MiscRegClass) &&
+            auto is_cpsr = [](RegPtr &reg) -> bool {
+                return (reg->regId.classValue() == MiscRegClass) &&
                        (reg->regId.index() == ArmISA::MISCREG_CPSR);
             };
 
             // Looking for the presence of a CPSR register entry.
-            auto cpsr_it = std::find_if(
-                queue.begin(), queue.end(), is_cpsr
-            );
+            auto cpsr_it = std::find_if(queue.begin(), queue.end(), is_cpsr);
 
             // If CPSR entry not present, generate one
             if (cpsr_it == queue.end()) {
                 RegId reg = ArmISA::miscRegClass[ArmISA::MISCREG_CPSR];
-                queue.push_back(
-                    std::make_unique<RegEntry>(
-                        genRegister<RegEntry>(tarmCtx, reg))
-                );
+                queue.push_back(std::make_unique<RegEntry>(
+                    genRegister<RegEntry>(tarmCtx, reg)));
             }
         }
     }
 
     /** Flush queues to the trace output */
-    template<typename Queue>
-    void flushQueues(Queue& queue);
-    template<typename Queue, typename... Args>
-    void flushQueues(Queue& queue, Args & ... args);
+    template <typename Queue>
+    void flushQueues(Queue &queue);
+    template <typename Queue, typename... Args>
+    void flushQueues(Queue &queue, Args &...args);
 
   protected:
     /** Reference to tracer */
-    TarmacTracer& tracer;
+    TarmacTracer &tracer;
 };
 
 } // namespace trace

@@ -74,11 +74,11 @@ class AbstractCacheEntry : public ReplaceableEntry
     void changePermission(AccessPermission new_perm);
 
     using ReplaceableEntry::print;
-    virtual void print(std::ostream& out) const = 0;
+    virtual void print(std::ostream &out) const = 0;
 
     // The methods below are those called by ruby runtime, add when it
     // is absolutely necessary and should all be virtual function.
-    virtual DataBlock&
+    virtual DataBlock &
     getDataBlk()
     {
         panic("getDataBlk() not implemented!");
@@ -89,7 +89,9 @@ class AbstractCacheEntry : public ReplaceableEntry
     }
 
     int validBlocks;
-    virtual int& getNumValidBlocks()
+
+    virtual int &
+    getNumValidBlocks()
     {
         return validBlocks;
     }
@@ -110,17 +112,28 @@ class AbstractCacheEntry : public ReplaceableEntry
                                    // block, required by CacheMemory
 
     // Get the last access Tick.
-    Tick getLastAccess() { return m_last_touch_tick; }
+    Tick
+    getLastAccess()
+    {
+        return m_last_touch_tick;
+    }
 
     // Set the last access Tick.
-    void setLastAccess(Tick tick) { m_last_touch_tick = tick; }
+    void
+    setLastAccess(Tick tick)
+    {
+        m_last_touch_tick = tick;
+    }
 
     // hardware transactional memory
     void setInHtmReadSet(bool val);
     void setInHtmWriteSet(bool val);
     bool getInHtmReadSet() const;
     bool getInHtmWriteSet() const;
-    virtual void invalidateEntry() {}
+
+    virtual void
+    invalidateEntry()
+    {}
 
   private:
     // hardware transactional memory
@@ -128,8 +141,8 @@ class AbstractCacheEntry : public ReplaceableEntry
     bool m_htmInWriteSet;
 };
 
-inline std::ostream&
-operator<<(std::ostream& out, const AbstractCacheEntry& obj)
+inline std::ostream &
+operator<<(std::ostream &out, const AbstractCacheEntry &obj)
 {
     obj.print(out);
     out << std::flush;

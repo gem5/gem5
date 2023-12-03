@@ -57,17 +57,14 @@ sc_main(int argc, char **argv)
 
     sc_core::sc_report_handler::set_handler(reportHandler);
 
-    Gem5SystemC::Gem5SimControl sim_control("gem5",
-                                           parser.getConfigFile(),
-                                           parser.getSimulationEnd(),
-                                           parser.getDebugFlags());
+    Gem5SystemC::Gem5SimControl sim_control("gem5", parser.getConfigFile(),
+                                            parser.getSimulationEnd(),
+                                            parser.getDebugFlags());
 
-    unsigned long long int memorySize = 512*1024*1024ULL;
+    unsigned long long int memorySize = 512 * 1024 * 1024ULL;
 
     Gem5SystemC::Gem5SlaveTransactor transactor("transactor", "transactor");
-    Target memory("memory",
-                  parser.getVerboseFlag(),
-                  memorySize,
+    Target memory("memory", parser.getVerboseFlag(), memorySize,
                   parser.getMemoryOffset());
 
     memory.socket.bind(transactor.socket);

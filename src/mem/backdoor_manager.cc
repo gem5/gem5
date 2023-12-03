@@ -48,8 +48,7 @@ BackdoorManager::BackdoorManager(const std::vector<AddrRange> &original_ranges,
     : originalRanges(original_ranges),
       remappedRanges(remapped_ranges),
       backdoorLists(original_ranges.size())
-{
-}
+{}
 
 MemBackdoorPtr
 BackdoorManager::getRevertedBackdoor(MemBackdoorPtr backdoor,
@@ -66,7 +65,8 @@ MemBackdoorPtr
 BackdoorManager::createRevertedBackdoor(MemBackdoorPtr backdoor,
                                         const AddrRange &pkt_range)
 {
-    std::unique_ptr<MemBackdoor> reverted_backdoor = std::make_unique<MemBackdoor>();
+    std::unique_ptr<MemBackdoor> reverted_backdoor =
+        std::make_unique<MemBackdoor>();
     reverted_backdoor->flags(backdoor->flags());
     reverted_backdoor->ptr(backdoor->ptr());
 
@@ -110,7 +110,7 @@ BackdoorManager::createRevertedBackdoor(MemBackdoorPtr backdoor,
                                               std::move(reverted_backdoor));
             backdoor->addInvalidationCallback(
                 [this, i, it](const MemBackdoor &backdoor) {
-                    (*it)->invalidate();  // *it is unique_ptr reverted_backdoor
+                    (*it)->invalidate(); // *it is unique_ptr reverted_backdoor
                     this->backdoorLists[i].erase(it);
                 });
             return reverted_backdoor_raw_ptr;
@@ -145,4 +145,4 @@ BackdoorManager::findBackdoor(const AddrRange &pkt_range) const
     return nullptr;
 }
 
-}  // namespace gem5
+} // namespace gem5

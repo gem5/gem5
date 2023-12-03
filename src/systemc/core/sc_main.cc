@@ -175,50 +175,50 @@ sc_get_status()
 }
 
 std::ostream &
-operator << (std::ostream &os, sc_status s)
+operator<<(std::ostream &os, sc_status s)
 {
     switch (s) {
-      case SC_ELABORATION:
+    case SC_ELABORATION:
         os << "SC_ELABORATION";
         break;
-      case SC_BEFORE_END_OF_ELABORATION:
+    case SC_BEFORE_END_OF_ELABORATION:
         os << "SC_BEFORE_END_OF_ELABORATION";
         break;
-      case SC_END_OF_ELABORATION:
+    case SC_END_OF_ELABORATION:
         os << "SC_END_OF_ELABORATION";
         break;
-      case SC_START_OF_SIMULATION:
+    case SC_START_OF_SIMULATION:
         os << "SC_START_OF_SIMULATION";
         break;
-      case SC_RUNNING:
+    case SC_RUNNING:
         os << "SC_RUNNING";
         break;
-      case SC_PAUSED:
+    case SC_PAUSED:
         os << "SC_PAUSED";
         break;
-      case SC_STOPPED:
+    case SC_STOPPED:
         os << "SC_STOPPED";
         break;
-      case SC_END_OF_SIMULATION:
+    case SC_END_OF_SIMULATION:
         os << "SC_END_OF_SIMULATION";
         break;
 
         // Nonstandard
-      case SC_END_OF_INITIALIZATION:
+    case SC_END_OF_INITIALIZATION:
         os << "SC_END_OF_INITIALIZATION";
         break;
-      case SC_END_OF_UPDATE:
+    case SC_END_OF_UPDATE:
         os << "SC_END_OF_UPDATE";
         break;
-      case SC_BEFORE_TIMESTEP:
+    case SC_BEFORE_TIMESTEP:
         os << "SC_BEFORE_TIMESTEP";
         break;
 
-      default:
+    default:
         if (s & SC_STATUS_ANY) {
             const char *prefix = "(";
-            for (sc_status m = (sc_status)0x1;
-                    m < SC_STATUS_ANY; m = (sc_status)(m << 1)) {
+            for (sc_status m = (sc_status)0x1; m < SC_STATUS_ANY;
+                 m = (sc_status)(m << 1)) {
                 if (m & s) {
                     os << prefix;
                     prefix = "|";

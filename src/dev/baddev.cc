@@ -43,8 +43,7 @@ namespace gem5
 
 BadDevice::BadDevice(const Params &p)
     : BasicPioDevice(p, 0x10), devname(p.devicename)
-{
-}
+{}
 
 Tick
 BadDevice::read(PacketPtr pkt)

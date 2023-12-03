@@ -92,7 +92,7 @@ unameFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<Linux::utsname> name)
     auto process = tc->getProcessPtr();
 
     strcpy(name->sysname, "Linux");
-    strcpy(name->nodename,"sim.gem5.org");
+    strcpy(name->nodename, "sim.gem5.org");
     strcpy(name->release, process->release.c_str());
     strcpy(name->version, "#1 Mon Aug 18 11:32:15 EDT 2003");
     strcpy(name->machine, "mips");
@@ -108,15 +108,14 @@ sys_getsysinfoFunc(SyscallDesc *desc, ThreadContext *tc, unsigned op,
                    unsigned bufPtr, unsigned nbytes)
 {
     switch (op) {
-      case 45:
-        {
-            // GSI_IEEE_FP_CONTROL
-            VPtr<uint64_t> fpcr(bufPtr, tc);
-            // I don't think this exactly matches the HW FPCR
-            *fpcr = 0;
-            return 0;
-        }
-      default:
+    case 45: {
+        // GSI_IEEE_FP_CONTROL
+        VPtr<uint64_t> fpcr(bufPtr, tc);
+        // I don't think this exactly matches the HW FPCR
+        *fpcr = 0;
+        return 0;
+    }
+    default:
         std::cerr << "sys_getsysinfo: unknown op " << op << std::endl;
         abort();
         break;
@@ -131,17 +130,17 @@ sys_setsysinfoFunc(SyscallDesc *desc, ThreadContext *tc, unsigned op,
                    VPtr<> bufPtr, unsigned nbytes)
 {
     switch (op) {
-
-      case 14:
-        {
-            // SSI_IEEE_FP_CONTROL
-            ConstVPtr<uint64_t> fpcr(bufPtr, tc);
-            // I don't think this exactly matches the HW FPCR
-            DPRINTFR(SyscallVerbose, "sys_setsysinfo(SSI_IEEE_FP_CONTROL): "
-                   " setting FPCR to 0x%x\n", letoh(*fpcr));
-            return 0;
-        }
-      default:
+    case 14: {
+        // SSI_IEEE_FP_CONTROL
+        ConstVPtr<uint64_t> fpcr(bufPtr, tc);
+        // I don't think this exactly matches the HW FPCR
+        DPRINTFR(SyscallVerbose,
+                 "sys_setsysinfo(SSI_IEEE_FP_CONTROL): "
+                 " setting FPCR to 0x%x\n",
+                 letoh(*fpcr));
+        return 0;
+    }
+    default:
         std::cerr << "sys_setsysinfo: unknown op " << op << std::endl;
         abort();
         break;
@@ -249,7 +248,7 @@ SyscallDescTable<MipsISA::SEWorkload::SyscallABI> EmuLinux::syscallDescs = {
     { 4088, "reboot" },
     { 4089, "readdir" },
     { 4090, "mmap", mmapFunc<MipsLinux> },
-    { 4091, "munmap",munmapFunc<MipsLinux> },
+    { 4091, "munmap", munmapFunc<MipsLinux> },
     { 4092, "truncate", truncateFunc<MipsLinux> },
     { 4093, "ftruncate", ftruncateFunc<MipsLinux> },
     { 4094, "fchmod", fchmodFunc<MipsLinux> },
@@ -264,7 +263,7 @@ SyscallDescTable<MipsISA::SEWorkload::SyscallABI> EmuLinux::syscallDescs = {
     { 4103, "syslog" },
     { 4104, "setitimer" },
     { 4105, "getitimer" },
-    { 4106, "stat",  statFunc<MipsLinux> },
+    { 4106, "stat", statFunc<MipsLinux> },
     { 4107, "lstat" },
     { 4108, "fstat", fstatFunc<MipsLinux> },
     { 4109, "unused#109" },

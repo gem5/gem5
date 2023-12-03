@@ -36,8 +36,8 @@
 namespace gem5
 {
 
-LupioSYS::LupioSYS(const Params &params) :
-    BasicPioDevice(params, params.pio_size)
+LupioSYS::LupioSYS(const Params &params)
+    : BasicPioDevice(params, params.pio_size)
 {
     DPRINTF(LupioSYS, "LupioSYS initalized\n");
 }
@@ -52,19 +52,18 @@ void
 LupioSYS::lupioSYSWrite(uint8_t addr, uint64_t val64)
 {
     switch (addr >> 2) {
-        case LUPIO_SYS_HALT:
-            DPRINTF(LupioSYS, "Trying to halt\n");
-            exitSimLoopNow("LUPIO_SYS_HALT called, exiting", val64, 0, false);
-            break;
-        case LUPIO_SYS_REBT:
-            DPRINTF(LupioSYS, "Trying to reboot\n");
-            exitSimLoopNow("LUPIO_SYS_REBT called, exiting", val64, 0, false);
-            break;
+    case LUPIO_SYS_HALT:
+        DPRINTF(LupioSYS, "Trying to halt\n");
+        exitSimLoopNow("LUPIO_SYS_HALT called, exiting", val64, 0, false);
+        break;
+    case LUPIO_SYS_REBT:
+        DPRINTF(LupioSYS, "Trying to reboot\n");
+        exitSimLoopNow("LUPIO_SYS_REBT called, exiting", val64, 0, false);
+        break;
 
-        default:
-            panic("Unexpected write to the LupioRTC device at address %d!",
-                    addr);
-            break;
+    default:
+        panic("Unexpected write to the LupioRTC device at address %d!", addr);
+        break;
     }
 }
 
@@ -73,8 +72,8 @@ LupioSYS::read(PacketPtr pkt)
 {
     Addr daddr = pkt->getAddr() - pioAddr;
 
-    DPRINTF(LupioSYS,
-        "Read request - addr: %#x, size: %#x\n", daddr, pkt->getSize());
+    DPRINTF(LupioSYS, "Read request - addr: %#x, size: %#x\n", daddr,
+            pkt->getSize());
 
     uint64_t sys_read = lupioSYSRead(daddr);
     DPRINTF(LupioSYS, "Packet Read: %#x\n", sys_read);

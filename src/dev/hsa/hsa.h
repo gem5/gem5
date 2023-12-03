@@ -43,12 +43,12 @@
 #ifndef HSA_RUNTIME_INC_HSA_H_
 #define HSA_RUNTIME_INC_HSA_H_
 
-#include <stddef.h>   /* size_t */
-#include <stdint.h>   /* uintXX_t */
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uintXX_t */
 
 #ifndef __cplusplus
-#include <stdbool.h>  /* bool */
-#endif /* __cplusplus */
+#include <stdbool.h> /* bool */
+#endif               /* __cplusplus */
 
 // Placeholder for calling convention and import/export macros
 #ifndef HSA_CALL
@@ -57,7 +57,7 @@
 
 #ifndef HSA_EXPORT_DECORATOR
 #ifdef __GNUC__
-#define HSA_EXPORT_DECORATOR __attribute__ ((visibility ("default")))
+#define HSA_EXPORT_DECORATOR __attribute__((visibility("default")))
 #else
 #define HSA_EXPORT_DECORATOR
 #endif
@@ -79,7 +79,7 @@
 
 // Try to detect CPU endianness
 #if !defined(LITTLEENDIAN_CPU) && !defined(BIGENDIAN_CPU)
-#if defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) || \
+#if defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) ||           \
     defined(_M_X64) || defined(__aarch64__)
 #define LITTLEENDIAN_CPU
 #endif
@@ -102,14 +102,14 @@
 //#endif
 #endif
 
-#define HSA_VERSION_1_0                              1
+#define HSA_VERSION_1_0 1
 
 #ifdef __cplusplus
 namespace gem5
 {
 
 extern "C" {
-#endif  /* __cplusplus */
+#endif /* __cplusplus */
 
 /** \defgroup status Runtime Notifications
  *  @{
@@ -280,9 +280,8 @@ typedef enum
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p status is an invalid
  * status code, or @p status_string is NULL.
  */
-hsa_status_t HSA_API hsa_status_string(
-    hsa_status_t status,
-    const char ** status_string);
+hsa_status_t HSA_API hsa_status_string(hsa_status_t status,
+                                       const char **status_string);
 
 /** @} */
 
@@ -295,20 +294,20 @@ hsa_status_t HSA_API hsa_status_string(
  */
 typedef struct hsa_dim3_s
 {
-  /**
-   * X dimension.
-   */
-   uint32_t x;
+    /**
+     * X dimension.
+     */
+    uint32_t x;
 
-  /**
-   * Y dimension.
-   */
-   uint32_t y;
+    /**
+     * Y dimension.
+     */
+    uint32_t y;
 
-   /**
-    * Z dimension.
-    */
-   uint32_t z;
+    /**
+     * Z dimension.
+     */
+    uint32_t z;
 } hsa_dim3_t;
 
 /**
@@ -316,18 +315,18 @@ typedef struct hsa_dim3_s
  */
 typedef enum
 {
-  /**
-   * Read-only access.
-   */
-  HSA_ACCESS_PERMISSION_RO = 1,
-  /**
-   * Write-only access.
-   */
-  HSA_ACCESS_PERMISSION_WO = 2,
-  /**
-   * Read and write access.
-   */
-  HSA_ACCESS_PERMISSION_RW = 3
+    /**
+     * Read-only access.
+     */
+    HSA_ACCESS_PERMISSION_RO = 1,
+    /**
+     * Write-only access.
+     */
+    HSA_ACCESS_PERMISSION_WO = 2,
+    /**
+     * Read and write access.
+     */
+    HSA_ACCESS_PERMISSION_RW = 3
 } hsa_access_permission_t;
 
 /**
@@ -336,7 +335,6 @@ typedef enum
 typedef int hsa_file_t;
 
 /** @} **/
-
 
 /** \defgroup initshutdown Initialization and Shut Down
  *  @{
@@ -347,14 +345,14 @@ typedef int hsa_file_t;
  *
  * @details Initializes the HSA runtime if it is not already initialized, and
  * increases the reference counter associated with the HSA runtime for the
- * current process. Invocation of any HSA function other than ::hsa_init results
- * in undefined behavior if the current HSA runtime reference counter is less
- * than one.
+ * current process. Invocation of any HSA function other than ::hsa_init
+ * results in undefined behavior if the current HSA runtime reference counter
+ * is less than one.
  *
  * @retval ::HSA_STATUS_SUCCESS The function has been executed successfully.
  *
- * @retval ::HSA_STATUS_ERROR_OUT_OF_RESOURCES The HSA runtime failed to allocate
- * the required resources.
+ * @retval ::HSA_STATUS_ERROR_OUT_OF_RESOURCES The HSA runtime failed to
+ * allocate the required resources.
  *
  * @retval ::HSA_STATUS_ERROR_REFCOUNT_OVERFLOW The HSA runtime reference
  * count reaches INT32_MAX.
@@ -424,8 +422,8 @@ typedef enum
 /**
  * @brief Profile. A profile indicates a particular level of feature
  * support. For example, in the base profile the application must use the HSA
- * runtime allocator to reserve shared virtual memory, while in the full profile
- * any host pointer can be shared across all the agents.
+ * runtime allocator to reserve shared virtual memory, while in the full
+ * profile any host pointer can be shared across all the agents.
  */
 typedef enum
 {
@@ -444,46 +442,48 @@ typedef enum
  */
 typedef enum
 {
-  /**
-   * Major version of the HSA runtime specification supported by the
-   * implementation. The type of this attribute is uint16_t.
-   */
-  HSA_SYSTEM_INFO_VERSION_MAJOR = 0,
-  /**
-   * Minor version of the HSA runtime specification supported by the
-   * implementation. The type of this attribute is uint16_t.
-   */
-  HSA_SYSTEM_INFO_VERSION_MINOR = 1,
-  /**
-   * Current timestamp. The value of this attribute monotonically increases at a
-   * constant rate. The type of this attribute is uint64_t.
-   */
-  HSA_SYSTEM_INFO_TIMESTAMP = 2,
-  /**
-   * Timestamp value increase rate, in Hz. The timestamp (clock) frequency is
-   * in the range 1-400MHz. The type of this attribute is uint64_t.
-   */
-  HSA_SYSTEM_INFO_TIMESTAMP_FREQUENCY = 3,
-  /**
-   * Maximum duration of a signal wait operation. Expressed as a count based on
-   * the timestamp frequency. The type of this attribute is uint64_t.
-   */
-  HSA_SYSTEM_INFO_SIGNAL_MAX_WAIT = 4,
-  /**
-   * Endianness of the system. The type of this attribute is ::hsa_endianness_t.
-   */
-  HSA_SYSTEM_INFO_ENDIANNESS = 5,
-  /**
-   * Machine model supported by the HSA runtime. The type of this attribute is
-   * ::hsa_machine_model_t.
-   */
-  HSA_SYSTEM_INFO_MACHINE_MODEL = 6,
-  /**
-   * Bit-mask indicating which extensions are supported by the
-   * implementation. An extension with an ID of @p i is supported if the bit at
-   * position @p i is set. The type of this attribute is uint8_t[128].
-   */
-  HSA_SYSTEM_INFO_EXTENSIONS = 7
+    /**
+     * Major version of the HSA runtime specification supported by the
+     * implementation. The type of this attribute is uint16_t.
+     */
+    HSA_SYSTEM_INFO_VERSION_MAJOR = 0,
+    /**
+     * Minor version of the HSA runtime specification supported by the
+     * implementation. The type of this attribute is uint16_t.
+     */
+    HSA_SYSTEM_INFO_VERSION_MINOR = 1,
+    /**
+     * Current timestamp. The value of this attribute monotonically increases
+     * at a constant rate. The type of this attribute is uint64_t.
+     */
+    HSA_SYSTEM_INFO_TIMESTAMP = 2,
+    /**
+     * Timestamp value increase rate, in Hz. The timestamp (clock) frequency is
+     * in the range 1-400MHz. The type of this attribute is uint64_t.
+     */
+    HSA_SYSTEM_INFO_TIMESTAMP_FREQUENCY = 3,
+    /**
+     * Maximum duration of a signal wait operation. Expressed as a count based
+     * on the timestamp frequency. The type of this attribute is uint64_t.
+     */
+    HSA_SYSTEM_INFO_SIGNAL_MAX_WAIT = 4,
+    /**
+     * Endianness of the system. The type of this attribute is
+     * ::hsa_endianness_t.
+     */
+    HSA_SYSTEM_INFO_ENDIANNESS = 5,
+    /**
+     * Machine model supported by the HSA runtime. The type of this attribute
+     * is
+     * ::hsa_machine_model_t.
+     */
+    HSA_SYSTEM_INFO_MACHINE_MODEL = 6,
+    /**
+     * Bit-mask indicating which extensions are supported by the
+     * implementation. An extension with an ID of @p i is supported if the bit
+     * at position @p i is set. The type of this attribute is uint8_t[128].
+     */
+    HSA_SYSTEM_INFO_EXTENSIONS = 7
 } hsa_system_info_t;
 
 /**
@@ -503,53 +503,52 @@ typedef enum
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p attribute is an invalid
  * system attribute, or @p value is NULL.
  */
-hsa_status_t HSA_API hsa_system_get_info(
-    hsa_system_info_t attribute,
-    void* value);
+hsa_status_t HSA_API hsa_system_get_info(hsa_system_info_t attribute,
+                                         void *value);
 
 /**
  * @brief HSA extensions.
  */
 typedef enum
 {
-  /**
-   * Finalizer extension.
-   */
-  HSA_EXTENSION_FINALIZER = 0,
-  /**
-   * Images extension.
-   */
-  HSA_EXTENSION_IMAGES = 1,
+    /**
+     * Finalizer extension.
+     */
+    HSA_EXTENSION_FINALIZER = 0,
+    /**
+     * Images extension.
+     */
+    HSA_EXTENSION_IMAGES = 1,
 
-  /**
-   * Performance counter extension.
-   */
-  HSA_EXTENSION_PERFORMANCE_COUNTERS = 2,
+    /**
+     * Performance counter extension.
+     */
+    HSA_EXTENSION_PERFORMANCE_COUNTERS = 2,
 
-  /**
-   * Profiling events extension.
-   */
-  HSA_EXTENSION_PROFILING_EVENTS = 3,
-  /**
-   * Extension count.
-   */
-  HSA_EXTENSION_STD_LAST = 3,
-  /**
-   * First AMD extension number.
-   */
-  HSA_AMD_FIRST_EXTENSION = 0x200,
-  /**
-   * Profiler extension.
-   */
-  HSA_EXTENSION_AMD_PROFILER = 0x200,
-  /**
-   * Loader extension.
-   */
-  HSA_EXTENSION_AMD_LOADER = 0x201,
-  /**
-   * Last AMD extension.
-   */
-  HSA_AMD_LAST_EXTENSION = 0x201
+    /**
+     * Profiling events extension.
+     */
+    HSA_EXTENSION_PROFILING_EVENTS = 3,
+    /**
+     * Extension count.
+     */
+    HSA_EXTENSION_STD_LAST = 3,
+    /**
+     * First AMD extension number.
+     */
+    HSA_AMD_FIRST_EXTENSION = 0x200,
+    /**
+     * Profiler extension.
+     */
+    HSA_EXTENSION_AMD_PROFILER = 0x200,
+    /**
+     * Loader extension.
+     */
+    HSA_EXTENSION_AMD_LOADER = 0x201,
+    /**
+     * Last AMD extension.
+     */
+    HSA_AMD_LAST_EXTENSION = 0x201
 } hsa_extension_t;
 
 /**
@@ -570,9 +569,8 @@ typedef enum
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p extension is not a valid
  * extension, or @p name is NULL.
  */
-hsa_status_t HSA_API hsa_extension_get_name(
-    uint16_t extension,
-    const char **name);
+hsa_status_t HSA_API hsa_extension_get_name(uint16_t extension,
+                                            const char **name);
 
 /**
  * @deprecated
@@ -598,16 +596,14 @@ hsa_status_t HSA_API hsa_extension_get_name(
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p extension is not a valid
  * extension, or @p result is NULL.
  */
-hsa_status_t HSA_API HSA_DEPRECATED hsa_system_extension_supported(
-    uint16_t extension,
-    uint16_t version_major,
-    uint16_t version_minor,
-    bool* result);
+hsa_status_t HSA_API HSA_DEPRECATED
+hsa_system_extension_supported(uint16_t extension, uint16_t version_major,
+                               uint16_t version_minor, bool *result);
 
 /**
  * @brief Query if a given version of an extension is supported by the HSA
- * implementation. All minor versions from 0 up to the returned @p version_minor
- * must be supported by the implementation.
+ * implementation. All minor versions from 0 up to the returned @p
+ * version_minor must be supported by the implementation.
  *
  * @param[in] extension Extension identifier.
  *
@@ -628,11 +624,8 @@ hsa_status_t HSA_API HSA_DEPRECATED hsa_system_extension_supported(
  * extension, or @p version_minor is NULL, or @p result is NULL.
  */
 hsa_status_t HSA_API hsa_system_major_extension_supported(
-    uint16_t extension,
-    uint16_t version_major,
-    uint16_t *version_minor,
-    bool* result);
-
+    uint16_t extension, uint16_t version_major, uint16_t *version_minor,
+    bool *result);
 
 /**
  * @deprecated
@@ -656,8 +649,8 @@ hsa_status_t HSA_API hsa_system_major_extension_supported(
  * function pointer table.
  *
  * @param[out] table Pointer to an application-allocated function pointer table
- * that is populated by the HSA runtime. Must not be NULL. The memory associated
- * with table can be reused or freed after the function returns.
+ * that is populated by the HSA runtime. Must not be NULL. The memory
+ * associated with table can be reused or freed after the function returns.
  *
  * @retval ::HSA_STATUS_SUCCESS The function has been executed successfully.
  *
@@ -667,11 +660,9 @@ hsa_status_t HSA_API hsa_system_major_extension_supported(
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p extension is not a valid
  * extension, or @p table is NULL.
  */
-hsa_status_t HSA_API HSA_DEPRECATED hsa_system_get_extension_table(
-    uint16_t extension,
-    uint16_t version_major,
-    uint16_t version_minor,
-    void *table);
+hsa_status_t HSA_API HSA_DEPRECATED
+hsa_system_get_extension_table(uint16_t extension, uint16_t version_major,
+                               uint16_t version_minor, void *table);
 
 /**
  * @brief Retrieve the function pointers corresponding to a given major version
@@ -680,11 +671,11 @@ hsa_status_t HSA_API HSA_DEPRECATED hsa_system_get_extension_table(
  *
  * @details The application is responsible for verifying that the given major
  * version of the extension is supported by the HSA implementation (see
- * ::hsa_system_major_extension_supported). If the given combination of extension
- * and major version is not supported by the implementation, the behavior is
- * undefined. Additionally if the length doesn't allow space for a full minor
- * version, it is implementation defined if only some of the function pointers for
- * that minor version get written.
+ * ::hsa_system_major_extension_supported). If the given combination of
+ * extension and major version is not supported by the implementation, the
+ * behavior is undefined. Additionally if the length doesn't allow space for a
+ * full minor version, it is implementation defined if only some of the
+ * function pointers for that minor version get written.
  *
  * @param[in] extension Extension identifier.
  *
@@ -692,12 +683,12 @@ hsa_status_t HSA_API HSA_DEPRECATED hsa_system_get_extension_table(
  * function pointer table.
  *
  * @param[in] table_length Size in bytes of the function pointer table to be
- * populated. The implementation will not write more than this many bytes to the
- * table.
+ * populated. The implementation will not write more than this many bytes to
+ * the table.
  *
  * @param[out] table Pointer to an application-allocated function pointer table
- * that is populated by the HSA runtime. Must not be NULL. The memory associated
- * with table can be reused or freed after the function returns.
+ * that is populated by the HSA runtime. Must not be NULL. The memory
+ * associated with table can be reused or freed after the function returns.
  *
  * @retval ::HSA_STATUS_SUCCESS The function has been executed successfully.
  *
@@ -708,24 +699,22 @@ hsa_status_t HSA_API HSA_DEPRECATED hsa_system_get_extension_table(
  * extension, or @p table is NULL.
  */
 hsa_status_t HSA_API hsa_system_get_major_extension_table(
-    uint16_t extension,
-    uint16_t version_major,
-    size_t table_length,
+    uint16_t extension, uint16_t version_major, size_t table_length,
     void *table);
 
 /**
- * @brief Struct containing an opaque handle to an agent, a device that participates in
- * the HSA memory model. An agent can submit AQL packets for execution, and
- * may also accept AQL packets for execution (agent dispatch packets or kernel
- * dispatch packets launching HSAIL-derived binaries).
+ * @brief Struct containing an opaque handle to an agent, a device that
+ * participates in the HSA memory model. An agent can submit AQL packets for
+ * execution, and may also accept AQL packets for execution (agent dispatch
+ * packets or kernel dispatch packets launching HSAIL-derived binaries).
  */
 typedef struct hsa_agent_s
 {
-  /**
-   * Opaque handle. Two handles reference the same object of the enclosing type
-   * if and only if they are equal.
-   */
-  uint64_t handle;
+    /**
+     * Opaque handle. Two handles reference the same object of the enclosing
+     * type if and only if they are equal.
+     */
+    uint64_t handle;
 } hsa_agent_t;
 
 /**
@@ -768,21 +757,21 @@ typedef enum
  */
 typedef enum
 {
-  /**
-   * Use a default floating-point rounding mode specified elsewhere.
-   */
-  HSA_DEFAULT_FLOAT_ROUNDING_MODE_DEFAULT = 0,
-  /**
-   * Operations that specify the default floating-point mode are rounded to zero
-   * by default.
-   */
-  HSA_DEFAULT_FLOAT_ROUNDING_MODE_ZERO = 1,
-  /**
-   * Operations that specify the default floating-point mode are rounded to the
-   * nearest representable number and that ties should be broken by selecting
-   * the value with an even least significant bit.
-   */
-  HSA_DEFAULT_FLOAT_ROUNDING_MODE_NEAR = 2
+    /**
+     * Use a default floating-point rounding mode specified elsewhere.
+     */
+    HSA_DEFAULT_FLOAT_ROUNDING_MODE_DEFAULT = 0,
+    /**
+     * Operations that specify the default floating-point mode are rounded to
+     * zero by default.
+     */
+    HSA_DEFAULT_FLOAT_ROUNDING_MODE_ZERO = 1,
+    /**
+     * Operations that specify the default floating-point mode are rounded to
+     * the nearest representable number and that ties should be broken by
+     * selecting the value with an even least significant bit.
+     */
+    HSA_DEFAULT_FLOAT_ROUNDING_MODE_NEAR = 2
 } hsa_default_float_rounding_mode_t;
 
 /**
@@ -790,220 +779,222 @@ typedef enum
  */
 typedef enum
 {
-  /**
-   * Agent name. The type of this attribute is a NUL-terminated char[64]. The
-   * name must be at most 63 characters long (not including the NUL terminator)
-   * and all array elements not used for the name must be NUL.
-   */
-  HSA_AGENT_INFO_NAME = 0,
-  /**
-   * Name of vendor. The type of this attribute is a NUL-terminated char[64].
-   * The name must be at most 63 characters long (not including the NUL
-   * terminator) and all array elements not used for the name must be NUL.
-   */
-  HSA_AGENT_INFO_VENDOR_NAME = 1,
-  /**
-   * Agent capability. The type of this attribute is ::hsa_agent_feature_t.
-   */
-  HSA_AGENT_INFO_FEATURE = 2,
-  /**
-   * @deprecated Query ::HSA_ISA_INFO_MACHINE_MODELS for a given intruction set
-   * architecture supported by the agent instead.  If more than one ISA is
-   * supported by the agent, the returned value corresponds to the first ISA
-   * enumerated by ::hsa_agent_iterate_isas.
-   *
-   * Machine model supported by the agent. The type of this attribute is
-   * ::hsa_machine_model_t.
-   */
-  HSA_AGENT_INFO_MACHINE_MODEL = 3,
-  /**
-   * @deprecated Query ::HSA_ISA_INFO_PROFILES for a given intruction set
-   * architecture supported by the agent instead.  If more than one ISA is
-   * supported by the agent, the returned value corresponds to the first ISA
-   * enumerated by ::hsa_agent_iterate_isas.
-   *
-   * Profile supported by the agent. The type of this attribute is
-   * ::hsa_profile_t.
-   */
-  HSA_AGENT_INFO_PROFILE = 4,
-  /**
-   * @deprecated Query ::HSA_ISA_INFO_DEFAULT_FLOAT_ROUNDING_MODES for a given
-   * intruction set architecture supported by the agent instead.  If more than
-   * one ISA is supported by the agent, the returned value corresponds to the
-   * first ISA enumerated by ::hsa_agent_iterate_isas.
-   *
-   * Default floating-point rounding mode. The type of this attribute is
-   * ::hsa_default_float_rounding_mode_t, but the value
-   * ::HSA_DEFAULT_FLOAT_ROUNDING_MODE_DEFAULT is not allowed.
-   */
-  HSA_AGENT_INFO_DEFAULT_FLOAT_ROUNDING_MODE = 5,
-  /**
-   * @deprecated Query ::HSA_ISA_INFO_BASE_PROFILE_DEFAULT_FLOAT_ROUNDING_MODES
-   * for a given intruction set architecture supported by the agent instead.  If
-   * more than one ISA is supported by the agent, the returned value corresponds
-   * to the first ISA enumerated by ::hsa_agent_iterate_isas.
-   *
-   * A bit-mask of ::hsa_default_float_rounding_mode_t values, representing the
-   * default floating-point rounding modes supported by the agent in the Base
-   * profile. The type of this attribute is uint32_t. The default floating-point
-   * rounding mode (::HSA_AGENT_INFO_DEFAULT_FLOAT_ROUNDING_MODE) bit must not
-   * be set.
-   */
-  HSA_AGENT_INFO_BASE_PROFILE_DEFAULT_FLOAT_ROUNDING_MODES = 23,
-  /**
-   * @deprecated Query ::HSA_ISA_INFO_FAST_F16_OPERATION for a given intruction
-   * set architecture supported by the agent instead.  If more than one ISA is
-   * supported by the agent, the returned value corresponds to the first ISA
-   * enumerated by ::hsa_agent_iterate_isas.
-   *
-   * Flag indicating that the f16 HSAIL operation is at least as fast as the
-   * f32 operation in the current agent. The value of this attribute is
-   * undefined if the agent is not a kernel agent. The type of this
-   * attribute is bool.
-   */
-  HSA_AGENT_INFO_FAST_F16_OPERATION = 24,
-  /**
-   * @deprecated Query ::HSA_WAVEFRONT_INFO_SIZE for a given wavefront and
-   * intruction set architecture supported by the agent instead.  If more than
-   * one ISA is supported by the agent, the returned value corresponds to the
-   * first ISA enumerated by ::hsa_agent_iterate_isas and the first wavefront
-   * enumerated by ::hsa_isa_iterate_wavefronts for that ISA.
-   *
-   * Number of work-items in a wavefront. Must be a power of 2 in the range
-   * [1,256]. The value of this attribute is undefined if the agent is not
-   * a kernel agent. The type of this attribute is uint32_t.
-   */
-  HSA_AGENT_INFO_WAVEFRONT_SIZE = 6,
-  /**
-   * @deprecated Query ::HSA_ISA_INFO_WORKGROUP_MAX_DIM for a given intruction
-   * set architecture supported by the agent instead.  If more than one ISA is
-   * supported by the agent, the returned value corresponds to the first ISA
-   * enumerated by ::hsa_agent_iterate_isas.
-   *
-   * Maximum number of work-items of each dimension of a work-group.  Each
-   * maximum must be greater than 0. No maximum can exceed the value of
-   * ::HSA_AGENT_INFO_WORKGROUP_MAX_SIZE. The value of this attribute is
-   * undefined if the agent is not a kernel agent. The type of this
-   * attribute is uint16_t[3].
-   */
-  HSA_AGENT_INFO_WORKGROUP_MAX_DIM = 7,
-  /**
-   * @deprecated Query ::HSA_ISA_INFO_WORKGROUP_MAX_SIZE for a given intruction
-   * set architecture supported by the agent instead.  If more than one ISA is
-   * supported by the agent, the returned value corresponds to the first ISA
-   * enumerated by ::hsa_agent_iterate_isas.
-   *
-   * Maximum total number of work-items in a work-group. The value of this
-   * attribute is undefined if the agent is not a kernel agent. The type
-   * of this attribute is uint32_t.
-   */
-  HSA_AGENT_INFO_WORKGROUP_MAX_SIZE = 8,
-  /**
-   * @deprecated Query ::HSA_ISA_INFO_GRID_MAX_DIM for a given intruction set
-   * architecture supported by the agent instead.
-   *
-   * Maximum number of work-items of each dimension of a grid. Each maximum must
-   * be greater than 0, and must not be smaller than the corresponding value in
-   * ::HSA_AGENT_INFO_WORKGROUP_MAX_DIM. No maximum can exceed the value of
-   * ::HSA_AGENT_INFO_GRID_MAX_SIZE. The value of this attribute is undefined
-   * if the agent is not a kernel agent. The type of this attribute is
-   * ::hsa_dim3_t.
-   */
-  HSA_AGENT_INFO_GRID_MAX_DIM = 9,
-  /**
-   * @deprecated Query ::HSA_ISA_INFO_GRID_MAX_SIZE for a given intruction set
-   * architecture supported by the agent instead.  If more than one ISA is
-   * supported by the agent, the returned value corresponds to the first ISA
-   * enumerated by ::hsa_agent_iterate_isas.
-   *
-   * Maximum total number of work-items in a grid. The value of this attribute
-   * is undefined if the agent is not a kernel agent. The type of this
-   * attribute is uint32_t.
-   */
-  HSA_AGENT_INFO_GRID_MAX_SIZE = 10,
-  /**
-   * @deprecated Query ::HSA_ISA_INFO_FBARRIER_MAX_SIZE for a given intruction
-   * set architecture supported by the agent instead.  If more than one ISA is
-   * supported by the agent, the returned value corresponds to the first ISA
-   * enumerated by ::hsa_agent_iterate_isas.
-   *
-   * Maximum number of fbarriers per work-group. Must be at least 32. The value
-   * of this attribute is undefined if the agent is not a kernel agent. The
-   * type of this attribute is uint32_t.
-   */
-  HSA_AGENT_INFO_FBARRIER_MAX_SIZE = 11,
-  /**
-   * @deprecated The maximum number of queues is not statically determined.
-   *
-   * Maximum number of queues that can be active (created but not destroyed) at
-   * one time in the agent. The type of this attribute is uint32_t.
-   */
-  HSA_AGENT_INFO_QUEUES_MAX = 12,
-  /**
-   * Minimum number of packets that a queue created in the agent
-   * can hold. Must be a power of 2 greater than 0. Must not exceed
-   * the value of ::HSA_AGENT_INFO_QUEUE_MAX_SIZE. The type of this
-   * attribute is uint32_t.
-   */
-  HSA_AGENT_INFO_QUEUE_MIN_SIZE = 13,
-  /**
-   * Maximum number of packets that a queue created in the agent can
-   * hold. Must be a power of 2 greater than 0. The type of this attribute
-   * is uint32_t.
-   */
-  HSA_AGENT_INFO_QUEUE_MAX_SIZE = 14,
-  /**
-   * Type of a queue created in the agent. The type of this attribute is
-   * ::hsa_queue_type32_t.
-   */
-  HSA_AGENT_INFO_QUEUE_TYPE = 15,
-  /**
-   * @deprecated NUMA information is not exposed anywhere else in the API.
-   *
-   * Identifier of the NUMA node associated with the agent. The type of this
-   * attribute is uint32_t.
-   */
-  HSA_AGENT_INFO_NODE = 16,
-  /**
-   * Type of hardware device associated with the agent. The type of this
-   * attribute is ::hsa_device_type_t.
-   */
-  HSA_AGENT_INFO_DEVICE = 17,
-  /**
-   * @deprecated Query ::hsa_agent_iterate_caches to retrieve information about
-   * the caches present in a given agent.
-   *
-   * Array of data cache sizes (L1..L4). Each size is expressed in bytes. A size
-   * of 0 for a particular level indicates that there is no cache information
-   * for that level. The type of this attribute is uint32_t[4].
-   */
-  HSA_AGENT_INFO_CACHE_SIZE = 18,
-  /**
-   * @deprecated An agent may support multiple instruction set
-   * architectures. See ::hsa_agent_iterate_isas.  If more than one ISA is
-   * supported by the agent, the returned value corresponds to the first ISA
-   * enumerated by ::hsa_agent_iterate_isas.
-   *
-   * Instruction set architecture of the agent. The type of this attribute
-   * is ::hsa_isa_t.
-   */
-  HSA_AGENT_INFO_ISA = 19,
-  /**
-   * Bit-mask indicating which extensions are supported by the agent. An
-   * extension with an ID of @p i is supported if the bit at position @p i is
-   * set. The type of this attribute is uint8_t[128].
-   */
-  HSA_AGENT_INFO_EXTENSIONS = 20,
-  /**
-   * Major version of the HSA runtime specification supported by the
-   * agent. The type of this attribute is uint16_t.
-   */
-  HSA_AGENT_INFO_VERSION_MAJOR = 21,
-  /**
-   * Minor version of the HSA runtime specification supported by the
-   * agent. The type of this attribute is uint16_t.
-   */
-  HSA_AGENT_INFO_VERSION_MINOR = 22
+    /**
+     * Agent name. The type of this attribute is a NUL-terminated char[64]. The
+     * name must be at most 63 characters long (not including the NUL
+     * terminator) and all array elements not used for the name must be NUL.
+     */
+    HSA_AGENT_INFO_NAME = 0,
+    /**
+     * Name of vendor. The type of this attribute is a NUL-terminated char[64].
+     * The name must be at most 63 characters long (not including the NUL
+     * terminator) and all array elements not used for the name must be NUL.
+     */
+    HSA_AGENT_INFO_VENDOR_NAME = 1,
+    /**
+     * Agent capability. The type of this attribute is ::hsa_agent_feature_t.
+     */
+    HSA_AGENT_INFO_FEATURE = 2,
+    /**
+     * @deprecated Query ::HSA_ISA_INFO_MACHINE_MODELS for a given intruction
+     * set architecture supported by the agent instead.  If more than one ISA
+     * is supported by the agent, the returned value corresponds to the first
+     * ISA enumerated by ::hsa_agent_iterate_isas.
+     *
+     * Machine model supported by the agent. The type of this attribute is
+     * ::hsa_machine_model_t.
+     */
+    HSA_AGENT_INFO_MACHINE_MODEL = 3,
+    /**
+     * @deprecated Query ::HSA_ISA_INFO_PROFILES for a given intruction set
+     * architecture supported by the agent instead.  If more than one ISA is
+     * supported by the agent, the returned value corresponds to the first ISA
+     * enumerated by ::hsa_agent_iterate_isas.
+     *
+     * Profile supported by the agent. The type of this attribute is
+     * ::hsa_profile_t.
+     */
+    HSA_AGENT_INFO_PROFILE = 4,
+    /**
+     * @deprecated Query ::HSA_ISA_INFO_DEFAULT_FLOAT_ROUNDING_MODES for a
+     * given intruction set architecture supported by the agent instead.  If
+     * more than one ISA is supported by the agent, the returned value
+     * corresponds to the first ISA enumerated by ::hsa_agent_iterate_isas.
+     *
+     * Default floating-point rounding mode. The type of this attribute is
+     * ::hsa_default_float_rounding_mode_t, but the value
+     * ::HSA_DEFAULT_FLOAT_ROUNDING_MODE_DEFAULT is not allowed.
+     */
+    HSA_AGENT_INFO_DEFAULT_FLOAT_ROUNDING_MODE = 5,
+    /**
+     * @deprecated Query
+     * ::HSA_ISA_INFO_BASE_PROFILE_DEFAULT_FLOAT_ROUNDING_MODES for a given
+     * intruction set architecture supported by the agent instead.  If more
+     * than one ISA is supported by the agent, the returned value corresponds
+     * to the first ISA enumerated by ::hsa_agent_iterate_isas.
+     *
+     * A bit-mask of ::hsa_default_float_rounding_mode_t values, representing
+     * the default floating-point rounding modes supported by the agent in the
+     * Base profile. The type of this attribute is uint32_t. The default
+     * floating-point rounding mode
+     * (::HSA_AGENT_INFO_DEFAULT_FLOAT_ROUNDING_MODE) bit must not be set.
+     */
+    HSA_AGENT_INFO_BASE_PROFILE_DEFAULT_FLOAT_ROUNDING_MODES = 23,
+    /**
+     * @deprecated Query ::HSA_ISA_INFO_FAST_F16_OPERATION for a given
+     * intruction set architecture supported by the agent instead.  If more
+     * than one ISA is supported by the agent, the returned value corresponds
+     * to the first ISA enumerated by ::hsa_agent_iterate_isas.
+     *
+     * Flag indicating that the f16 HSAIL operation is at least as fast as the
+     * f32 operation in the current agent. The value of this attribute is
+     * undefined if the agent is not a kernel agent. The type of this
+     * attribute is bool.
+     */
+    HSA_AGENT_INFO_FAST_F16_OPERATION = 24,
+    /**
+     * @deprecated Query ::HSA_WAVEFRONT_INFO_SIZE for a given wavefront and
+     * intruction set architecture supported by the agent instead.  If more
+     * than one ISA is supported by the agent, the returned value corresponds
+     * to the first ISA enumerated by ::hsa_agent_iterate_isas and the first
+     * wavefront enumerated by ::hsa_isa_iterate_wavefronts for that ISA.
+     *
+     * Number of work-items in a wavefront. Must be a power of 2 in the range
+     * [1,256]. The value of this attribute is undefined if the agent is not
+     * a kernel agent. The type of this attribute is uint32_t.
+     */
+    HSA_AGENT_INFO_WAVEFRONT_SIZE = 6,
+    /**
+     * @deprecated Query ::HSA_ISA_INFO_WORKGROUP_MAX_DIM for a given
+     * intruction set architecture supported by the agent instead.  If more
+     * than one ISA is supported by the agent, the returned value corresponds
+     * to the first ISA enumerated by ::hsa_agent_iterate_isas.
+     *
+     * Maximum number of work-items of each dimension of a work-group.  Each
+     * maximum must be greater than 0. No maximum can exceed the value of
+     * ::HSA_AGENT_INFO_WORKGROUP_MAX_SIZE. The value of this attribute is
+     * undefined if the agent is not a kernel agent. The type of this
+     * attribute is uint16_t[3].
+     */
+    HSA_AGENT_INFO_WORKGROUP_MAX_DIM = 7,
+    /**
+     * @deprecated Query ::HSA_ISA_INFO_WORKGROUP_MAX_SIZE for a given
+     * intruction set architecture supported by the agent instead.  If more
+     * than one ISA is supported by the agent, the returned value corresponds
+     * to the first ISA enumerated by ::hsa_agent_iterate_isas.
+     *
+     * Maximum total number of work-items in a work-group. The value of this
+     * attribute is undefined if the agent is not a kernel agent. The type
+     * of this attribute is uint32_t.
+     */
+    HSA_AGENT_INFO_WORKGROUP_MAX_SIZE = 8,
+    /**
+     * @deprecated Query ::HSA_ISA_INFO_GRID_MAX_DIM for a given intruction set
+     * architecture supported by the agent instead.
+     *
+     * Maximum number of work-items of each dimension of a grid. Each maximum
+     * must be greater than 0, and must not be smaller than the corresponding
+     * value in
+     * ::HSA_AGENT_INFO_WORKGROUP_MAX_DIM. No maximum can exceed the value of
+     * ::HSA_AGENT_INFO_GRID_MAX_SIZE. The value of this attribute is undefined
+     * if the agent is not a kernel agent. The type of this attribute is
+     * ::hsa_dim3_t.
+     */
+    HSA_AGENT_INFO_GRID_MAX_DIM = 9,
+    /**
+     * @deprecated Query ::HSA_ISA_INFO_GRID_MAX_SIZE for a given intruction
+     * set architecture supported by the agent instead.  If more than one ISA
+     * is supported by the agent, the returned value corresponds to the first
+     * ISA enumerated by ::hsa_agent_iterate_isas.
+     *
+     * Maximum total number of work-items in a grid. The value of this
+     * attribute is undefined if the agent is not a kernel agent. The type of
+     * this attribute is uint32_t.
+     */
+    HSA_AGENT_INFO_GRID_MAX_SIZE = 10,
+    /**
+     * @deprecated Query ::HSA_ISA_INFO_FBARRIER_MAX_SIZE for a given
+     * intruction set architecture supported by the agent instead.  If more
+     * than one ISA is supported by the agent, the returned value corresponds
+     * to the first ISA enumerated by ::hsa_agent_iterate_isas.
+     *
+     * Maximum number of fbarriers per work-group. Must be at least 32. The
+     * value of this attribute is undefined if the agent is not a kernel agent.
+     * The type of this attribute is uint32_t.
+     */
+    HSA_AGENT_INFO_FBARRIER_MAX_SIZE = 11,
+    /**
+     * @deprecated The maximum number of queues is not statically determined.
+     *
+     * Maximum number of queues that can be active (created but not destroyed)
+     * at one time in the agent. The type of this attribute is uint32_t.
+     */
+    HSA_AGENT_INFO_QUEUES_MAX = 12,
+    /**
+     * Minimum number of packets that a queue created in the agent
+     * can hold. Must be a power of 2 greater than 0. Must not exceed
+     * the value of ::HSA_AGENT_INFO_QUEUE_MAX_SIZE. The type of this
+     * attribute is uint32_t.
+     */
+    HSA_AGENT_INFO_QUEUE_MIN_SIZE = 13,
+    /**
+     * Maximum number of packets that a queue created in the agent can
+     * hold. Must be a power of 2 greater than 0. The type of this attribute
+     * is uint32_t.
+     */
+    HSA_AGENT_INFO_QUEUE_MAX_SIZE = 14,
+    /**
+     * Type of a queue created in the agent. The type of this attribute is
+     * ::hsa_queue_type32_t.
+     */
+    HSA_AGENT_INFO_QUEUE_TYPE = 15,
+    /**
+     * @deprecated NUMA information is not exposed anywhere else in the API.
+     *
+     * Identifier of the NUMA node associated with the agent. The type of this
+     * attribute is uint32_t.
+     */
+    HSA_AGENT_INFO_NODE = 16,
+    /**
+     * Type of hardware device associated with the agent. The type of this
+     * attribute is ::hsa_device_type_t.
+     */
+    HSA_AGENT_INFO_DEVICE = 17,
+    /**
+     * @deprecated Query ::hsa_agent_iterate_caches to retrieve information
+     * about the caches present in a given agent.
+     *
+     * Array of data cache sizes (L1..L4). Each size is expressed in bytes. A
+     * size of 0 for a particular level indicates that there is no cache
+     * information for that level. The type of this attribute is uint32_t[4].
+     */
+    HSA_AGENT_INFO_CACHE_SIZE = 18,
+    /**
+     * @deprecated An agent may support multiple instruction set
+     * architectures. See ::hsa_agent_iterate_isas.  If more than one ISA is
+     * supported by the agent, the returned value corresponds to the first ISA
+     * enumerated by ::hsa_agent_iterate_isas.
+     *
+     * Instruction set architecture of the agent. The type of this attribute
+     * is ::hsa_isa_t.
+     */
+    HSA_AGENT_INFO_ISA = 19,
+    /**
+     * Bit-mask indicating which extensions are supported by the agent. An
+     * extension with an ID of @p i is supported if the bit at position @p i is
+     * set. The type of this attribute is uint8_t[128].
+     */
+    HSA_AGENT_INFO_EXTENSIONS = 20,
+    /**
+     * Major version of the HSA runtime specification supported by the
+     * agent. The type of this attribute is uint16_t.
+     */
+    HSA_AGENT_INFO_VERSION_MAJOR = 21,
+    /**
+     * Minor version of the HSA runtime specification supported by the
+     * agent. The type of this attribute is uint16_t.
+     */
+    HSA_AGENT_INFO_VERSION_MINOR = 22
 
 } hsa_agent_info_t;
 
@@ -1028,10 +1019,9 @@ typedef enum
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p attribute is an invalid
  * agent attribute, or @p value is NULL.
  */
-hsa_status_t HSA_API hsa_agent_get_info(
-    hsa_agent_t agent,
-    hsa_agent_info_t attribute,
-    void* value);
+hsa_status_t HSA_API hsa_agent_get_info(hsa_agent_t agent,
+                                        hsa_agent_info_t attribute,
+                                        void *value);
 
 /**
  * @brief Iterate over the available agents, and invoke an
@@ -1052,10 +1042,9 @@ hsa_status_t HSA_API hsa_agent_get_info(
  * initialized.
  *
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p callback is NULL.
-*/
+ */
 hsa_status_t HSA_API hsa_iterate_agents(
-    hsa_status_t (*callback)(hsa_agent_t agent, void* data),
-    void* data);
+    hsa_status_t (*callback)(hsa_agent_t agent, void *data), void *data);
 
 /*
 
@@ -1118,20 +1107,18 @@ typedef enum
  *
  */
 hsa_status_t HSA_API HSA_DEPRECATED hsa_agent_get_exception_policies(
-    hsa_agent_t agent,
-    hsa_profile_t profile,
-    uint16_t *mask);
+    hsa_agent_t agent, hsa_profile_t profile, uint16_t *mask);
 
 /**
  * @brief Cache handle.
  */
 typedef struct hsa_cache_s
 {
-  /**
-   * Opaque handle. Two handles reference the same object of the enclosing type
-   * if and only if they are equal.
-   */
-  uint64_t handle;
+    /**
+     * Opaque handle. Two handles reference the same object of the enclosing
+     * type if and only if they are equal.
+     */
+    uint64_t handle;
 } hsa_cache_t;
 
 /**
@@ -1139,27 +1126,27 @@ typedef struct hsa_cache_s
  */
 typedef enum
 {
-  /**
-   * The length of the cache name in bytes, not including the NUL terminator.
-   * The type of this attribute is uint32_t.
-   */
-  HSA_CACHE_INFO_NAME_LENGTH = 0,
-  /**
-   * Human-readable description.  The type of this attribute is a NUL-terminated
-   * character array with the length equal to the value of
-   * ::HSA_CACHE_INFO_NAME_LENGTH attribute.
-   */
-  HSA_CACHE_INFO_NAME = 1,
-  /**
-   * Cache level. A L1 cache must return a value of 1, a L2 must return a value
-   * of 2, and so on.  The type of this attribute is uint8_t.
-   */
-  HSA_CACHE_INFO_LEVEL = 2,
-  /**
-   * Cache size, in bytes. A value of 0 indicates that there is no size
-   * information available. The type of this attribute is uint32_t.
-   */
-  HSA_CACHE_INFO_SIZE = 3
+    /**
+     * The length of the cache name in bytes, not including the NUL terminator.
+     * The type of this attribute is uint32_t.
+     */
+    HSA_CACHE_INFO_NAME_LENGTH = 0,
+    /**
+     * Human-readable description.  The type of this attribute is a
+     * NUL-terminated character array with the length equal to the value of
+     * ::HSA_CACHE_INFO_NAME_LENGTH attribute.
+     */
+    HSA_CACHE_INFO_NAME = 1,
+    /**
+     * Cache level. A L1 cache must return a value of 1, a L2 must return a
+     * value of 2, and so on.  The type of this attribute is uint8_t.
+     */
+    HSA_CACHE_INFO_LEVEL = 2,
+    /**
+     * Cache size, in bytes. A value of 0 indicates that there is no size
+     * information available. The type of this attribute is uint32_t.
+     */
+    HSA_CACHE_INFO_SIZE = 3
 } hsa_cache_info_t;
 
 /**
@@ -1184,10 +1171,9 @@ typedef enum
  * instruction set architecture attribute, or @p value is
  * NULL.
  */
-hsa_status_t HSA_API hsa_cache_get_info(
-    hsa_cache_t cache,
-    hsa_cache_info_t attribute,
-    void* value);
+hsa_status_t HSA_API hsa_cache_get_info(hsa_cache_t cache,
+                                        hsa_cache_info_t attribute,
+                                        void *value);
 
 /**
  * @brief Iterate over the memory caches of a given agent, and
@@ -1217,9 +1203,8 @@ hsa_status_t HSA_API hsa_cache_get_info(
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p callback is NULL.
  */
 hsa_status_t HSA_API hsa_agent_iterate_caches(
-    hsa_agent_t agent,
-    hsa_status_t (*callback)(hsa_cache_t cache, void* data),
-    void* data);
+    hsa_agent_t agent, hsa_status_t (*callback)(hsa_cache_t cache, void *data),
+    void *data);
 
 /**
  * @deprecated
@@ -1251,15 +1236,13 @@ hsa_status_t HSA_API hsa_agent_iterate_caches(
  * extension, or @p result is NULL.
  */
 hsa_status_t HSA_API HSA_DEPRECATED hsa_agent_extension_supported(
-    uint16_t extension,
-    hsa_agent_t agent,
-    uint16_t version_major,
-    uint16_t version_minor,
-    bool* result);
+    uint16_t extension, hsa_agent_t agent, uint16_t version_major,
+    uint16_t version_minor, bool *result);
 
 /**
- * @brief Query if a given version of an extension is supported by an agent. All
- * minor versions from 0 up to the returned @p version_minor must be supported.
+ * @brief Query if a given version of an extension is supported by an agent.
+ * All minor versions from 0 up to the returned @p version_minor must be
+ * supported.
  *
  * @param[in] extension Extension identifier.
  *
@@ -1286,15 +1269,10 @@ hsa_status_t HSA_API HSA_DEPRECATED hsa_agent_extension_supported(
  * extension, or @p version_minor is NULL, or @p result is NULL.
  */
 hsa_status_t HSA_API hsa_agent_major_extension_supported(
-    uint16_t extension,
-    hsa_agent_t agent,
-    uint16_t version_major,
-    uint16_t *version_minor,
-    bool* result);
-
+    uint16_t extension, hsa_agent_t agent, uint16_t version_major,
+    uint16_t *version_minor, bool *result);
 
 /** @} */
-
 
 /** \defgroup signals Signals
  *  @{
@@ -1305,21 +1283,21 @@ hsa_status_t HSA_API hsa_agent_major_extension_supported(
  */
 typedef struct hsa_signal_s
 {
-  /**
-   * Opaque handle. Two handles reference the same object of the enclosing type
-   * if and only if they are equal. The value 0 is reserved.
-   */
-  uint64_t handle;
+    /**
+     * Opaque handle. Two handles reference the same object of the enclosing
+     * type if and only if they are equal. The value 0 is reserved.
+     */
+    uint64_t handle;
 } hsa_signal_t;
 
 /**
- * @brief Signal value. The value occupies 32 bits in small machine mode, and 64
- * bits in large machine mode.
+ * @brief Signal value. The value occupies 32 bits in small machine mode, and
+ * 64 bits in large machine mode.
  */
 #ifdef HSA_LARGE_MODEL
-  typedef int64_t hsa_signal_value_t;
+typedef int64_t hsa_signal_value_t;
 #else
-  typedef int32_t hsa_signal_value_t;
+typedef int32_t hsa_signal_value_t;
 #endif
 
 /**
@@ -1345,18 +1323,17 @@ typedef struct hsa_signal_s
  * @retval ::HSA_STATUS_ERROR_NOT_INITIALIZED The HSA runtime has not been
  * initialized.
  *
- * @retval ::HSA_STATUS_ERROR_OUT_OF_RESOURCES The HSA runtime failed to allocate
- * the required resources.
+ * @retval ::HSA_STATUS_ERROR_OUT_OF_RESOURCES The HSA runtime failed to
+ * allocate the required resources.
  *
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p signal is NULL, @p
  * num_consumers is greater than 0 but @p consumers is NULL, or @p consumers
  * contains duplicates.
  */
-hsa_status_t HSA_API hsa_signal_create(
-    hsa_signal_value_t initial_value,
-    uint32_t num_consumers,
-    const hsa_agent_t *consumers,
-    hsa_signal_t *signal);
+hsa_status_t HSA_API hsa_signal_create(hsa_signal_value_t initial_value,
+                                       uint32_t num_consumers,
+                                       const hsa_agent_t *consumers,
+                                       hsa_signal_t *signal);
 
 /**
  * @brief Destroy a signal previous created by ::hsa_signal_create.
@@ -1372,8 +1349,7 @@ hsa_status_t HSA_API hsa_signal_create(
  *
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT The handle in @p signal is 0.
  */
-hsa_status_t HSA_API hsa_signal_destroy(
-    hsa_signal_t signal);
+hsa_status_t HSA_API hsa_signal_destroy(hsa_signal_t signal);
 
 /**
  * @brief Atomically read the current value of a signal.
@@ -1381,23 +1357,21 @@ hsa_status_t HSA_API hsa_signal_destroy(
  * @param[in] signal Signal.
  *
  * @return Value of the signal.
-*/
-hsa_signal_value_t HSA_API hsa_signal_load_scacquire(
-    hsa_signal_t signal);
+ */
+hsa_signal_value_t HSA_API hsa_signal_load_scacquire(hsa_signal_t signal);
 
 /**
  * @copydoc hsa_signal_load_scacquire
  */
-hsa_signal_value_t HSA_API hsa_signal_load_relaxed(
-    hsa_signal_t signal);
+hsa_signal_value_t HSA_API hsa_signal_load_relaxed(hsa_signal_t signal);
 
 /**
  * @deprecated Renamed as ::hsa_signal_load_scacquire.
  *
  * @copydoc hsa_signal_load_scacquire
-*/
-hsa_signal_value_t HSA_API HSA_DEPRECATED hsa_signal_load_acquire(
-    hsa_signal_t signal);
+ */
+hsa_signal_value_t HSA_API HSA_DEPRECATED
+hsa_signal_load_acquire(hsa_signal_t signal);
 
 /**
  * @brief Atomically set the value of a signal.
@@ -1409,29 +1383,26 @@ hsa_signal_value_t HSA_API HSA_DEPRECATED hsa_signal_load_acquire(
  *
  * @param[in] value New signal value.
  */
-void HSA_API hsa_signal_store_relaxed(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+void HSA_API hsa_signal_store_relaxed(hsa_signal_t signal,
+                                      hsa_signal_value_t value);
 
 /**
  * @copydoc hsa_signal_store_relaxed
  */
-void HSA_API hsa_signal_store_screlease(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+void HSA_API hsa_signal_store_screlease(hsa_signal_t signal,
+                                        hsa_signal_value_t value);
 
 /**
  * @deprecated Renamed as ::hsa_signal_store_screlease.
  *
  * @copydoc hsa_signal_store_screlease
  */
-void HSA_API HSA_DEPRECATED hsa_signal_store_release(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+void HSA_API HSA_DEPRECATED hsa_signal_store_release(hsa_signal_t signal,
+                                                     hsa_signal_value_t value);
 
 /**
- * @brief Atomically set the value of a signal without necessarily notifying the
- * the agents waiting on it.
+ * @brief Atomically set the value of a signal without necessarily notifying
+ * the the agents waiting on it.
  *
  * @details The agents waiting on @p signal may not wake up even when the new
  * value satisfies their wait condition. If the application wants to update the
@@ -1442,16 +1413,14 @@ void HSA_API HSA_DEPRECATED hsa_signal_store_release(
  *
  * @param[in] value New signal value.
  */
-void HSA_API hsa_signal_silent_store_relaxed(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+void HSA_API hsa_signal_silent_store_relaxed(hsa_signal_t signal,
+                                             hsa_signal_value_t value);
 
 /**
  * @copydoc hsa_signal_silent_store_relaxed
  */
-void HSA_API hsa_signal_silent_store_screlease(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+void HSA_API hsa_signal_silent_store_screlease(hsa_signal_t signal,
+                                               hsa_signal_value_t value);
 
 /**
  * @brief Atomically set the value of a signal and return its previous value.
@@ -1467,61 +1436,54 @@ void HSA_API hsa_signal_silent_store_screlease(
  * @return Value of the signal prior to the exchange.
  *
  */
-hsa_signal_value_t HSA_API hsa_signal_exchange_scacq_screl(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+hsa_signal_value_t HSA_API
+hsa_signal_exchange_scacq_screl(hsa_signal_t signal, hsa_signal_value_t value);
 
 /**
  * @deprecated Renamed as ::hsa_signal_exchange_scacq_screl.
  *
  * @copydoc hsa_signal_exchange_scacq_screl
  */
-hsa_signal_value_t HSA_API HSA_DEPRECATED hsa_signal_exchange_acq_rel(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+hsa_signal_value_t HSA_API HSA_DEPRECATED
+hsa_signal_exchange_acq_rel(hsa_signal_t signal, hsa_signal_value_t value);
 
 /**
  * @copydoc hsa_signal_exchange_scacq_screl
  */
-hsa_signal_value_t HSA_API hsa_signal_exchange_scacquire(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+hsa_signal_value_t HSA_API
+hsa_signal_exchange_scacquire(hsa_signal_t signal, hsa_signal_value_t value);
 
 /**
  * @deprecated Renamed as ::hsa_signal_exchange_scacquire.
  *
  * @copydoc hsa_signal_exchange_scacquire
  */
-hsa_signal_value_t HSA_API HSA_DEPRECATED hsa_signal_exchange_acquire(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+hsa_signal_value_t HSA_API HSA_DEPRECATED
+hsa_signal_exchange_acquire(hsa_signal_t signal, hsa_signal_value_t value);
 
 /**
  * @copydoc hsa_signal_exchange_scacq_screl
  */
-hsa_signal_value_t HSA_API hsa_signal_exchange_relaxed(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+hsa_signal_value_t HSA_API
+hsa_signal_exchange_relaxed(hsa_signal_t signal, hsa_signal_value_t value);
 /**
  * @copydoc hsa_signal_exchange_scacq_screl
  */
-hsa_signal_value_t HSA_API hsa_signal_exchange_screlease(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+hsa_signal_value_t HSA_API
+hsa_signal_exchange_screlease(hsa_signal_t signal, hsa_signal_value_t value);
 
 /**
  * @deprecated Renamed as ::hsa_signal_exchange_screlease.
  *
  * @copydoc hsa_signal_exchange_screlease
  */
-hsa_signal_value_t HSA_API HSA_DEPRECATED hsa_signal_exchange_release(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+hsa_signal_value_t HSA_API HSA_DEPRECATED
+hsa_signal_exchange_release(hsa_signal_t signal, hsa_signal_value_t value);
 
 /**
- * @brief Atomically set the value of a signal if the observed value is equal to
- * the expected value. The observed value is returned regardless of whether the
- * replacement was done.
+ * @brief Atomically set the value of a signal if the observed value is equal
+ * to the expected value. The observed value is returned regardless of whether
+ * the replacement was done.
  *
  * @details If the value of the signal is changed, all the agents waiting
  * on @p signal for which @p value satisfies their wait condition are awakened.
@@ -1536,65 +1498,57 @@ hsa_signal_value_t HSA_API HSA_DEPRECATED hsa_signal_exchange_release(
  * @return Observed value of the signal.
  *
  */
-hsa_signal_value_t HSA_API hsa_signal_cas_scacq_screl(
-    hsa_signal_t signal,
-    hsa_signal_value_t expected,
-    hsa_signal_value_t value);
-
+hsa_signal_value_t HSA_API
+hsa_signal_cas_scacq_screl(hsa_signal_t signal, hsa_signal_value_t expected,
+                           hsa_signal_value_t value);
 
 /**
  * @deprecated Renamed as ::hsa_signal_cas_scacq_screl.
  *
  * @copydoc hsa_signal_cas_scacq_screl
  */
-hsa_signal_value_t HSA_API HSA_DEPRECATED hsa_signal_cas_acq_rel(
-    hsa_signal_t signal,
-    hsa_signal_value_t expected,
-    hsa_signal_value_t value);
+hsa_signal_value_t HSA_API HSA_DEPRECATED
+hsa_signal_cas_acq_rel(hsa_signal_t signal, hsa_signal_value_t expected,
+                       hsa_signal_value_t value);
 
 /**
  * @copydoc hsa_signal_cas_scacq_screl
  */
-hsa_signal_value_t HSA_API hsa_signal_cas_scacquire(
-    hsa_signal_t signal,
-    hsa_signal_value_t expected,
-    hsa_signal_value_t value);
+hsa_signal_value_t HSA_API
+hsa_signal_cas_scacquire(hsa_signal_t signal, hsa_signal_value_t expected,
+                         hsa_signal_value_t value);
 
 /**
  * @deprecated Renamed as ::hsa_signal_cas_scacquire.
  *
  * @copydoc hsa_signal_cas_scacquire
  */
-hsa_signal_value_t HSA_API HSA_DEPRECATED hsa_signal_cas_acquire(
-    hsa_signal_t signal,
-    hsa_signal_value_t expected,
-    hsa_signal_value_t value);
+hsa_signal_value_t HSA_API HSA_DEPRECATED
+hsa_signal_cas_acquire(hsa_signal_t signal, hsa_signal_value_t expected,
+                       hsa_signal_value_t value);
 
 /**
  * @copydoc hsa_signal_cas_scacq_screl
  */
-hsa_signal_value_t HSA_API hsa_signal_cas_relaxed(
-    hsa_signal_t signal,
-    hsa_signal_value_t expected,
-    hsa_signal_value_t value);
+hsa_signal_value_t HSA_API hsa_signal_cas_relaxed(hsa_signal_t signal,
+                                                  hsa_signal_value_t expected,
+                                                  hsa_signal_value_t value);
 
 /**
  * @copydoc hsa_signal_cas_scacq_screl
  */
-hsa_signal_value_t HSA_API hsa_signal_cas_screlease(
-    hsa_signal_t signal,
-    hsa_signal_value_t expected,
-    hsa_signal_value_t value);
+hsa_signal_value_t HSA_API
+hsa_signal_cas_screlease(hsa_signal_t signal, hsa_signal_value_t expected,
+                         hsa_signal_value_t value);
 
 /**
  * @deprecated Renamed as ::hsa_signal_cas_screlease.
  *
  * @copydoc hsa_signal_cas_screlease
  */
-hsa_signal_value_t HSA_API HSA_DEPRECATED hsa_signal_cas_release(
-    hsa_signal_t signal,
-    hsa_signal_value_t expected,
-    hsa_signal_value_t value);
+hsa_signal_value_t HSA_API HSA_DEPRECATED
+hsa_signal_cas_release(hsa_signal_t signal, hsa_signal_value_t expected,
+                       hsa_signal_value_t value);
 
 /**
  * @brief Atomically increment the value of a signal by a given amount.
@@ -1608,58 +1562,50 @@ hsa_signal_value_t HSA_API HSA_DEPRECATED hsa_signal_cas_release(
  * @param[in] value Value to add to the value of the signal.
  *
  */
-void HSA_API hsa_signal_add_scacq_screl(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+void HSA_API hsa_signal_add_scacq_screl(hsa_signal_t signal,
+                                        hsa_signal_value_t value);
 
 /**
  * @deprecated Renamed as ::hsa_signal_add_scacq_screl.
  *
  * @copydoc hsa_signal_add_scacq_screl
  */
-void HSA_API HSA_DEPRECATED hsa_signal_add_acq_rel(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+void HSA_API HSA_DEPRECATED hsa_signal_add_acq_rel(hsa_signal_t signal,
+                                                   hsa_signal_value_t value);
 
 /**
  * @copydoc hsa_signal_add_scacq_screl
  */
-void HSA_API hsa_signal_add_scacquire(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+void HSA_API hsa_signal_add_scacquire(hsa_signal_t signal,
+                                      hsa_signal_value_t value);
 
 /**
  * @deprecated Renamed as ::hsa_signal_add_scacquire.
  *
  * @copydoc hsa_signal_add_scacquire
  */
-void HSA_API HSA_DEPRECATED hsa_signal_add_acquire(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+void HSA_API HSA_DEPRECATED hsa_signal_add_acquire(hsa_signal_t signal,
+                                                   hsa_signal_value_t value);
 
 /**
  * @copydoc hsa_signal_add_scacq_screl
  */
-void HSA_API hsa_signal_add_relaxed(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+void HSA_API hsa_signal_add_relaxed(hsa_signal_t signal,
+                                    hsa_signal_value_t value);
 
 /**
  * @copydoc hsa_signal_add_scacq_screl
  */
-void HSA_API hsa_signal_add_screlease(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
-
+void HSA_API hsa_signal_add_screlease(hsa_signal_t signal,
+                                      hsa_signal_value_t value);
 
 /**
  * @deprecated Renamed as ::hsa_signal_add_screlease.
  *
  * @copydoc hsa_signal_add_screlease
  */
-void HSA_API HSA_DEPRECATED hsa_signal_add_release(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+void HSA_API HSA_DEPRECATED hsa_signal_add_release(hsa_signal_t signal,
+                                                   hsa_signal_value_t value);
 
 /**
  * @brief Atomically decrement the value of a signal by a given amount.
@@ -1673,59 +1619,50 @@ void HSA_API HSA_DEPRECATED hsa_signal_add_release(
  * @param[in] value Value to subtract from the value of the signal.
  *
  */
-void HSA_API hsa_signal_subtract_scacq_screl(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
-
+void HSA_API hsa_signal_subtract_scacq_screl(hsa_signal_t signal,
+                                             hsa_signal_value_t value);
 
 /**
  * @deprecated Renamed as ::hsa_signal_subtract_scacq_screl.
  *
  * @copydoc hsa_signal_subtract_scacq_screl
  */
-void HSA_API HSA_DEPRECATED hsa_signal_subtract_acq_rel(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+void HSA_API HSA_DEPRECATED
+hsa_signal_subtract_acq_rel(hsa_signal_t signal, hsa_signal_value_t value);
 
 /**
  * @copydoc hsa_signal_subtract_scacq_screl
  */
-void HSA_API hsa_signal_subtract_scacquire(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+void HSA_API hsa_signal_subtract_scacquire(hsa_signal_t signal,
+                                           hsa_signal_value_t value);
 
 /**
  * @deprecated Renamed as ::hsa_signal_subtract_scacquire.
  *
  * @copydoc hsa_signal_subtract_scacquire
  */
-void HSA_API HSA_DEPRECATED hsa_signal_subtract_acquire(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+void HSA_API HSA_DEPRECATED
+hsa_signal_subtract_acquire(hsa_signal_t signal, hsa_signal_value_t value);
 
 /**
  * @copydoc hsa_signal_subtract_scacq_screl
  */
-void HSA_API hsa_signal_subtract_relaxed(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+void HSA_API hsa_signal_subtract_relaxed(hsa_signal_t signal,
+                                         hsa_signal_value_t value);
 
 /**
  * @copydoc hsa_signal_subtract_scacq_screl
  */
-void HSA_API hsa_signal_subtract_screlease(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
-
+void HSA_API hsa_signal_subtract_screlease(hsa_signal_t signal,
+                                           hsa_signal_value_t value);
 
 /**
  * @deprecated Renamed as ::hsa_signal_subtract_screlease.
  *
  * @copydoc hsa_signal_subtract_screlease
  */
-void HSA_API HSA_DEPRECATED hsa_signal_subtract_release(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+void HSA_API HSA_DEPRECATED
+hsa_signal_subtract_release(hsa_signal_t signal, hsa_signal_value_t value);
 
 /**
  * @brief Atomically perform a bitwise AND operation between the value of a
@@ -1740,58 +1677,50 @@ void HSA_API HSA_DEPRECATED hsa_signal_subtract_release(
  * @param[in] value Value to AND with the value of the signal.
  *
  */
-void HSA_API hsa_signal_and_scacq_screl(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+void HSA_API hsa_signal_and_scacq_screl(hsa_signal_t signal,
+                                        hsa_signal_value_t value);
 
 /**
  * @deprecated Renamed as ::hsa_signal_and_scacq_screl.
  *
  * @copydoc hsa_signal_and_scacq_screl
  */
-void HSA_API HSA_DEPRECATED hsa_signal_and_acq_rel(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+void HSA_API HSA_DEPRECATED hsa_signal_and_acq_rel(hsa_signal_t signal,
+                                                   hsa_signal_value_t value);
 
 /**
  * @copydoc hsa_signal_and_scacq_screl
  */
-void HSA_API hsa_signal_and_scacquire(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+void HSA_API hsa_signal_and_scacquire(hsa_signal_t signal,
+                                      hsa_signal_value_t value);
 
 /**
  * @deprecated Renamed as ::hsa_signal_and_scacquire.
  *
  * @copydoc hsa_signal_and_scacquire
  */
-void HSA_API HSA_DEPRECATED hsa_signal_and_acquire(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+void HSA_API HSA_DEPRECATED hsa_signal_and_acquire(hsa_signal_t signal,
+                                                   hsa_signal_value_t value);
 
 /**
  * @copydoc hsa_signal_and_scacq_screl
  */
-void HSA_API hsa_signal_and_relaxed(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+void HSA_API hsa_signal_and_relaxed(hsa_signal_t signal,
+                                    hsa_signal_value_t value);
 
 /**
  * @copydoc hsa_signal_and_scacq_screl
  */
-void HSA_API hsa_signal_and_screlease(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
-
+void HSA_API hsa_signal_and_screlease(hsa_signal_t signal,
+                                      hsa_signal_value_t value);
 
 /**
  * @deprecated Renamed as ::hsa_signal_and_screlease.
  *
  * @copydoc hsa_signal_and_screlease
  */
-void HSA_API HSA_DEPRECATED hsa_signal_and_release(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+void HSA_API HSA_DEPRECATED hsa_signal_and_release(hsa_signal_t signal,
+                                                   hsa_signal_value_t value);
 
 /**
  * @brief Atomically perform a bitwise OR operation between the value of a
@@ -1805,58 +1734,50 @@ void HSA_API HSA_DEPRECATED hsa_signal_and_release(
  *
  * @param[in] value Value to OR with the value of the signal.
  */
-void HSA_API hsa_signal_or_scacq_screl(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
-
+void HSA_API hsa_signal_or_scacq_screl(hsa_signal_t signal,
+                                       hsa_signal_value_t value);
 
 /**
  * @deprecated Renamed as ::hsa_signal_or_scacq_screl.
  *
  * @copydoc hsa_signal_or_scacq_screl
  */
-void HSA_API HSA_DEPRECATED hsa_signal_or_acq_rel(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+void HSA_API HSA_DEPRECATED hsa_signal_or_acq_rel(hsa_signal_t signal,
+                                                  hsa_signal_value_t value);
 
 /**
  * @copydoc hsa_signal_or_scacq_screl
  */
-void HSA_API hsa_signal_or_scacquire(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+void HSA_API hsa_signal_or_scacquire(hsa_signal_t signal,
+                                     hsa_signal_value_t value);
 
 /**
  * @deprecated Renamed as ::hsa_signal_or_scacquire.
  *
  * @copydoc hsa_signal_or_scacquire
  */
-void HSA_API HSA_DEPRECATED hsa_signal_or_acquire(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+void HSA_API HSA_DEPRECATED hsa_signal_or_acquire(hsa_signal_t signal,
+                                                  hsa_signal_value_t value);
 
 /**
  * @copydoc hsa_signal_or_scacq_screl
  */
-void HSA_API hsa_signal_or_relaxed(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+void HSA_API hsa_signal_or_relaxed(hsa_signal_t signal,
+                                   hsa_signal_value_t value);
 
 /**
  * @copydoc hsa_signal_or_scacq_screl
  */
-void HSA_API hsa_signal_or_screlease(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+void HSA_API hsa_signal_or_screlease(hsa_signal_t signal,
+                                     hsa_signal_value_t value);
 
 /**
  * @deprecated Renamed as ::hsa_signal_or_screlease.
  *
  * @copydoc hsa_signal_or_screlease
  */
-void HSA_API HSA_DEPRECATED hsa_signal_or_release(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+void HSA_API HSA_DEPRECATED hsa_signal_or_release(hsa_signal_t signal,
+                                                  hsa_signal_value_t value);
 
 /**
  * @brief Atomically perform a bitwise XOR operation between the value of a
@@ -1871,58 +1792,50 @@ void HSA_API HSA_DEPRECATED hsa_signal_or_release(
  * @param[in] value Value to XOR with the value of the signal.
  *
  */
-void HSA_API hsa_signal_xor_scacq_screl(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
-
+void HSA_API hsa_signal_xor_scacq_screl(hsa_signal_t signal,
+                                        hsa_signal_value_t value);
 
 /**
  * @deprecated Renamed as ::hsa_signal_xor_scacq_screl.
  *
  * @copydoc hsa_signal_xor_scacq_screl
  */
-void HSA_API HSA_DEPRECATED hsa_signal_xor_acq_rel(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+void HSA_API HSA_DEPRECATED hsa_signal_xor_acq_rel(hsa_signal_t signal,
+                                                   hsa_signal_value_t value);
 
 /**
  * @copydoc hsa_signal_xor_scacq_screl
  */
-void HSA_API hsa_signal_xor_scacquire(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+void HSA_API hsa_signal_xor_scacquire(hsa_signal_t signal,
+                                      hsa_signal_value_t value);
 
 /**
  * @deprecated Renamed as ::hsa_signal_xor_scacquire.
  *
  * @copydoc hsa_signal_xor_scacquire
  */
-void HSA_API HSA_DEPRECATED hsa_signal_xor_acquire(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+void HSA_API HSA_DEPRECATED hsa_signal_xor_acquire(hsa_signal_t signal,
+                                                   hsa_signal_value_t value);
 
 /**
  * @copydoc hsa_signal_xor_scacq_screl
  */
-void HSA_API hsa_signal_xor_relaxed(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+void HSA_API hsa_signal_xor_relaxed(hsa_signal_t signal,
+                                    hsa_signal_value_t value);
 
 /**
  * @copydoc hsa_signal_xor_scacq_screl
  */
-void HSA_API hsa_signal_xor_screlease(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+void HSA_API hsa_signal_xor_screlease(hsa_signal_t signal,
+                                      hsa_signal_value_t value);
 
 /**
  * @deprecated Renamed as ::hsa_signal_xor_screlease.
  *
  * @copydoc hsa_signal_xor_screlease
  */
-void HSA_API HSA_DEPRECATED hsa_signal_xor_release(
-    hsa_signal_t signal,
-    hsa_signal_value_t value);
+void HSA_API HSA_DEPRECATED hsa_signal_xor_release(hsa_signal_t signal,
+                                                   hsa_signal_value_t value);
 
 /**
  * @brief Wait condition operator.
@@ -1962,7 +1875,6 @@ typedef enum
     HSA_WAIT_STATE_ACTIVE = 1
 } hsa_wait_state_t;
 
-
 /**
  * @brief Wait until a signal value satisfies a specified condition, or a
  * certain amount of time has elapsed.
@@ -1989,8 +1901,8 @@ typedef enum
  *
  * @param[in] timeout_hint Maximum duration of the wait.  Specified in the same
  * unit as the system timestamp. The operation might block for a shorter or
- * longer time even if the condition is not met. A value of UINT64_MAX indicates
- * no maximum.
+ * longer time even if the condition is not met. A value of UINT64_MAX
+ * indicates no maximum.
  *
  * @param[in] wait_state_hint Hint used by the application to indicate the
  * preferred waiting state. The actual waiting state is ultimately decided by
@@ -2001,22 +1913,18 @@ typedef enum
  * @return Observed value of the signal, which might not satisfy the specified
  * condition.
  *
-*/
+ */
 hsa_signal_value_t HSA_API hsa_signal_wait_scacquire(
-    hsa_signal_t signal,
-    hsa_signal_condition_t condition,
-    hsa_signal_value_t compare_value,
-    uint64_t timeout_hint,
+    hsa_signal_t signal, hsa_signal_condition_t condition,
+    hsa_signal_value_t compare_value, uint64_t timeout_hint,
     hsa_wait_state_t wait_state_hint);
 
 /**
  * @copydoc hsa_signal_wait_scacquire
  */
 hsa_signal_value_t HSA_API hsa_signal_wait_relaxed(
-    hsa_signal_t signal,
-    hsa_signal_condition_t condition,
-    hsa_signal_value_t compare_value,
-    uint64_t timeout_hint,
+    hsa_signal_t signal, hsa_signal_condition_t condition,
+    hsa_signal_value_t compare_value, uint64_t timeout_hint,
     hsa_wait_state_t wait_state_hint);
 
 /**
@@ -2025,10 +1933,8 @@ hsa_signal_value_t HSA_API hsa_signal_wait_relaxed(
  * @copydoc hsa_signal_wait_scacquire
  */
 hsa_signal_value_t HSA_API HSA_DEPRECATED hsa_signal_wait_acquire(
-    hsa_signal_t signal,
-    hsa_signal_condition_t condition,
-    hsa_signal_value_t compare_value,
-    uint64_t timeout_hint,
+    hsa_signal_t signal, hsa_signal_condition_t condition,
+    hsa_signal_value_t compare_value, uint64_t timeout_hint,
     hsa_wait_state_t wait_state_hint);
 
 /**
@@ -2036,11 +1942,11 @@ hsa_signal_value_t HSA_API HSA_DEPRECATED hsa_signal_wait_acquire(
  */
 typedef struct hsa_signal_group_s
 {
-  /**
-   * Opaque handle. Two handles reference the same object of the enclosing type
-   * if and only if they are equal.
-   */
-  uint64_t handle;
+    /**
+     * Opaque handle. Two handles reference the same object of the enclosing
+     * type if and only if they are equal.
+     */
+    uint64_t handle;
 } hsa_signal_group_t;
 
 /**
@@ -2068,19 +1974,18 @@ typedef struct hsa_signal_group_s
  * @retval ::HSA_STATUS_ERROR_NOT_INITIALIZED The HSA runtime has not been
  * initialized.
  *
- * @retval ::HSA_STATUS_ERROR_OUT_OF_RESOURCES The HSA runtime failed to allocate
- * the required resources.
+ * @retval ::HSA_STATUS_ERROR_OUT_OF_RESOURCES The HSA runtime failed to
+ * allocate the required resources.
  *
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p num_signals is 0, @p signals
  * is NULL, @p num_consumers is 0, @p consumers is NULL, or @p signal_group is
  * NULL.
  */
-hsa_status_t HSA_API hsa_signal_group_create(
-    uint32_t num_signals,
-    const hsa_signal_t *signals,
-    uint32_t num_consumers,
-    const hsa_agent_t *consumers,
-    hsa_signal_group_t *signal_group);
+hsa_status_t HSA_API hsa_signal_group_create(uint32_t num_signals,
+                                             const hsa_signal_t *signals,
+                                             uint32_t num_consumers,
+                                             const hsa_agent_t *consumers,
+                                             hsa_signal_group_t *signal_group);
 
 /**
  * @brief Destroy a signal group previous created by ::hsa_signal_group_create.
@@ -2094,19 +1999,18 @@ hsa_status_t HSA_API hsa_signal_group_create(
  *
  * @retval ::HSA_STATUS_ERROR_INVALID_SIGNAL_GROUP @p signal_group is invalid.
  */
-hsa_status_t HSA_API hsa_signal_group_destroy(
-    hsa_signal_group_t signal_group);
+hsa_status_t HSA_API hsa_signal_group_destroy(hsa_signal_group_t signal_group);
 
 /**
  * @brief Wait until the value of at least one of the signals in a signal group
  * satisfies its associated condition.
  *
- * @details The function is guaranteed to return if the value of at least one of
- * the signals in the group satisfies its associated condition at some point in
- * time during the wait, but the signal value returned to the application may no
- * longer satisfy the condition. The application must ensure that signals in the
- * group are used in such way that wait wakeup conditions are not invalidated
- * before dependent threads have woken up.
+ * @details The function is guaranteed to return if the value of at least one
+ * of the signals in the group satisfies its associated condition at some point
+ * in time during the wait, but the signal value returned to the application
+ * may no longer satisfy the condition. The application must ensure that
+ * signals in the group are used in such way that wait wakeup conditions are
+ * not invalidated before dependent threads have woken up.
  *
  * When this operation internally loads the value of the passed signal, it uses
  * the memory order indicated in the function name.
@@ -2115,27 +2019,27 @@ hsa_status_t HSA_API hsa_signal_group_destroy(
  *
  * @param[in] conditions List of conditions. Each condition, and the value at
  * the same index in @p compare_values, is used to compare the value of the
- * signal at that index in @p signal_group (the signal passed by the application
- * to ::hsa_signal_group_create at that particular index). The size of @p
- * conditions must not be smaller than the number of signals in @p signal_group;
- * any extra elements are ignored. Must not be NULL.
+ * signal at that index in @p signal_group (the signal passed by the
+ * application to ::hsa_signal_group_create at that particular index). The size
+ * of @p conditions must not be smaller than the number of signals in @p
+ * signal_group; any extra elements are ignored. Must not be NULL.
  *
  * @param[in] compare_values List of comparison values.  The size of @p
  * compare_values must not be smaller than the number of signals in @p
  * signal_group; any extra elements are ignored. Must not be NULL.
  *
  * @param[in] wait_state_hint Hint used by the application to indicate the
- * preferred waiting state. The actual waiting state is decided by the HSA runtime
- * and may not match the provided hint. A value of ::HSA_WAIT_STATE_ACTIVE may
- * improve the latency of response to a signal update by avoiding rescheduling
- * overhead.
+ * preferred waiting state. The actual waiting state is decided by the HSA
+ * runtime and may not match the provided hint. A value of
+ * ::HSA_WAIT_STATE_ACTIVE may improve the latency of response to a signal
+ * update by avoiding rescheduling overhead.
  *
  * @param[out] signal Signal in the group that satisfied the associated
  * condition. If several signals satisfied their condition, the function can
  * return any of those signals. Must not be NULL.
  *
- * @param[out] value Observed value for @p signal, which might no longer satisfy
- * the specified condition. Must not be NULL.
+ * @param[out] value Observed value for @p signal, which might no longer
+ * satisfy the specified condition. Must not be NULL.
  *
  * @retval ::HSA_STATUS_SUCCESS The function has been executed successfully.
  *
@@ -2145,23 +2049,17 @@ hsa_status_t HSA_API hsa_signal_group_destroy(
  * compare_values is NULL, @p signal is NULL, or @p value is NULL.
  */
 hsa_status_t HSA_API hsa_signal_group_wait_any_scacquire(
-    hsa_signal_group_t signal_group,
-    const hsa_signal_condition_t *conditions,
-    const hsa_signal_value_t *compare_values,
-    hsa_wait_state_t wait_state_hint,
-    hsa_signal_t *signal,
-    hsa_signal_value_t *value);
+    hsa_signal_group_t signal_group, const hsa_signal_condition_t *conditions,
+    const hsa_signal_value_t *compare_values, hsa_wait_state_t wait_state_hint,
+    hsa_signal_t *signal, hsa_signal_value_t *value);
 
 /**
  * @copydoc hsa_signal_group_wait_any_scacquire
  */
 hsa_status_t HSA_API hsa_signal_group_wait_any_relaxed(
-    hsa_signal_group_t signal_group,
-    const hsa_signal_condition_t *conditions,
-    const hsa_signal_value_t *compare_values,
-    hsa_wait_state_t wait_state_hint,
-    hsa_signal_t *signal,
-    hsa_signal_value_t *value);
+    hsa_signal_group_t signal_group, const hsa_signal_condition_t *conditions,
+    const hsa_signal_value_t *compare_values, hsa_wait_state_t wait_state_hint,
+    hsa_signal_t *signal, hsa_signal_value_t *value);
 
 /** @} */
 
@@ -2177,15 +2075,14 @@ hsa_status_t HSA_API hsa_signal_group_wait_any_relaxed(
  */
 typedef struct hsa_region_s
 {
-  /**
-   * Opaque handle. Two handles reference the same object of the enclosing type
-   * if and only if they are equal.
-   */
-  uint64_t handle;
+    /**
+     * Opaque handle. Two handles reference the same object of the enclosing
+     * type if and only if they are equal.
+     */
+    uint64_t handle;
 } hsa_region_t;
 
 /** @} */
-
 
 /** \defgroup queue Queues
  *  @{
@@ -2197,17 +2094,17 @@ typedef struct hsa_region_s
  */
 typedef enum
 {
-  /**
-   * Queue supports multiple producers.
-   */
-  HSA_QUEUE_TYPE_MULTI = 0,
-  /**
-   * Queue only supports a single producer. In some scenarios, the application
-   * may want to limit the submission of AQL packets to a single agent. Queues
-   * that support a single producer may be more efficient than queues supporting
-   * multiple producers.
-   */
-  HSA_QUEUE_TYPE_SINGLE = 1
+    /**
+     * Queue supports multiple producers.
+     */
+    HSA_QUEUE_TYPE_MULTI = 0,
+    /**
+     * Queue only supports a single producer. In some scenarios, the
+     * application may want to limit the submission of AQL packets to a single
+     * agent. Queues that support a single producer may be more efficient than
+     * queues supporting multiple producers.
+     */
+    HSA_QUEUE_TYPE_SINGLE = 1
 } hsa_queue_type_t;
 
 /**
@@ -2220,15 +2117,15 @@ typedef uint32_t hsa_queue_type32_t;
  */
 typedef enum
 {
-  /**
-   * Queue supports kernel dispatch packets.
-   */
-  HSA_QUEUE_FEATURE_KERNEL_DISPATCH = 1,
+    /**
+     * Queue supports kernel dispatch packets.
+     */
+    HSA_QUEUE_FEATURE_KERNEL_DISPATCH = 1,
 
-  /**
-   * Queue supports agent dispatch packets.
-   */
-  HSA_QUEUE_FEATURE_AGENT_DISPATCH = 2
+    /**
+     * Queue supports agent dispatch packets.
+     */
+    HSA_QUEUE_FEATURE_AGENT_DISPATCH = 2
 } hsa_queue_feature_t;
 
 /**
@@ -2241,59 +2138,59 @@ typedef enum
  */
 typedef struct hsa_queue_s
 {
-  /**
-   * Queue type.
-   */
-  hsa_queue_type32_t type;
+    /**
+     * Queue type.
+     */
+    hsa_queue_type32_t type;
 
-  /**
-   * Queue features mask. This is a bit-field of ::hsa_queue_feature_t
-   * values. Applications should ignore any unknown set bits.
-   */
-  uint32_t features;
+    /**
+     * Queue features mask. This is a bit-field of ::hsa_queue_feature_t
+     * values. Applications should ignore any unknown set bits.
+     */
+    uint32_t features;
 
 #ifdef HSA_LARGE_MODEL
-  void* base_address;
+    void *base_address;
 #elif defined HSA_LITTLE_ENDIAN
-  /**
-   * Starting address of the HSA runtime-allocated buffer used to store the AQL
-   * packets. Must be aligned to the size of an AQL packet.
-   */
-  void* base_address;
-  /**
-   * Reserved. Must be 0.
-   */
-  uint32_t reserved0;
+    /**
+     * Starting address of the HSA runtime-allocated buffer used to store the
+     * AQL packets. Must be aligned to the size of an AQL packet.
+     */
+    void *base_address;
+    /**
+     * Reserved. Must be 0.
+     */
+    uint32_t reserved0;
 #else
-  uint32_t reserved0;
-  void* base_address;
+    uint32_t reserved0;
+    void *base_address;
 #endif
 
-  /**
-   * Signal object used by the application to indicate the ID of a packet that
-   * is ready to be processed. The HSA runtime manages the doorbell signal. If
-   * the application tries to replace or destroy this signal, the behavior is
-   * undefined.
-   *
-   * If @a type is ::HSA_QUEUE_TYPE_SINGLE, the doorbell signal value must be
-   * updated in a monotonically increasing fashion. If @a type is
-   * ::HSA_QUEUE_TYPE_MULTI, the doorbell signal value can be updated with any
-   * value.
-   */
-  hsa_signal_t doorbell_signal;
+    /**
+     * Signal object used by the application to indicate the ID of a packet
+     * that is ready to be processed. The HSA runtime manages the doorbell
+     * signal. If the application tries to replace or destroy this signal, the
+     * behavior is undefined.
+     *
+     * If @a type is ::HSA_QUEUE_TYPE_SINGLE, the doorbell signal value must be
+     * updated in a monotonically increasing fashion. If @a type is
+     * ::HSA_QUEUE_TYPE_MULTI, the doorbell signal value can be updated with
+     * any value.
+     */
+    hsa_signal_t doorbell_signal;
 
-  /**
-   * Maximum number of packets the queue can hold. Must be a power of 2.
-   */
-  uint32_t size;
-  /**
-   * Reserved. Must be 0.
-   */
-  uint32_t reserved1;
-  /**
-   * Queue identifier, which is unique over the lifetime of the application.
-   */
-  uint64_t id;
+    /**
+     * Maximum number of packets the queue can hold. Must be a power of 2.
+     */
+    uint32_t size;
+    /**
+     * Reserved. Must be 0.
+     */
+    uint32_t reserved1;
+    /**
+     * Queue identifier, which is unique over the lifetime of the application.
+     */
+    uint64_t id;
 
 } hsa_queue_t;
 
@@ -2355,8 +2252,8 @@ typedef struct hsa_queue_s
  * @retval ::HSA_STATUS_ERROR_NOT_INITIALIZED The HSA runtime has not been
  * initialized.
  *
- * @retval ::HSA_STATUS_ERROR_OUT_OF_RESOURCES The HSA runtime failed to allocate
- * the required resources.
+ * @retval ::HSA_STATUS_ERROR_OUT_OF_RESOURCES The HSA runtime failed to
+ * allocate the required resources.
  *
  * @retval ::HSA_STATUS_ERROR_INVALID_AGENT The agent is invalid.
  *
@@ -2368,13 +2265,9 @@ typedef struct hsa_queue_s
  *
  */
 hsa_status_t HSA_API hsa_queue_create(
-    hsa_agent_t agent,
-    uint32_t size,
-    hsa_queue_type32_t type,
+    hsa_agent_t agent, uint32_t size, hsa_queue_type32_t type,
     void (*callback)(hsa_status_t status, hsa_queue_t *source, void *data),
-    void *data,
-    uint32_t private_segment_size,
-    uint32_t group_segment_size,
+    void *data, uint32_t private_segment_size, uint32_t group_segment_size,
     hsa_queue_t **queue);
 
 /**
@@ -2393,11 +2286,11 @@ hsa_status_t HSA_API hsa_queue_create(
  * features (AQL packet types).
  *
  * When the queue is created, the HSA runtime allocates the packet buffer using
- * @p region, and the write and read indexes. The initial value of the write and
- * read indexes is 0, and the type of every packet in the buffer is initialized
- * to ::HSA_PACKET_TYPE_INVALID. The value of the @e size, @e type, @e features,
- * and @e doorbell_signal fields in the returned queue match the values passed
- * by the application.
+ * @p region, and the write and read indexes. The initial value of the write
+ * and read indexes is 0, and the type of every packet in the buffer is
+ * initialized to ::HSA_PACKET_TYPE_INVALID. The value of the @e size, @e type,
+ * @e features, and @e doorbell_signal fields in the returned queue match the
+ * values passed by the application.
  *
  * @param[in] region Memory region that the HSA runtime should use to allocate
  * the AQL packet buffer and any other queue metadata.
@@ -2423,29 +2316,28 @@ hsa_status_t HSA_API hsa_queue_create(
  * @retval ::HSA_STATUS_ERROR_NOT_INITIALIZED The HSA runtime has not been
  * initialized.
  *
- * @retval ::HSA_STATUS_ERROR_OUT_OF_RESOURCES The HSA runtime failed to allocate
- * the required resources.
+ * @retval ::HSA_STATUS_ERROR_OUT_OF_RESOURCES The HSA runtime failed to
+ * allocate the required resources.
  *
- * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p size is not a power of two, @p
- * size is 0, @p type is an invalid queue type, the doorbell signal handle is
- * 0, or @p queue is NULL.
+ * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p size is not a power of two,
+ * @p size is 0, @p type is an invalid queue type, the doorbell signal handle
+ * is 0, or @p queue is NULL.
  *
  */
-hsa_status_t HSA_API hsa_soft_queue_create(
-    hsa_region_t region,
-    uint32_t size,
-    hsa_queue_type32_t type,
-    uint32_t features,
-    hsa_signal_t doorbell_signal,
-    hsa_queue_t **queue);
+hsa_status_t HSA_API hsa_soft_queue_create(hsa_region_t region, uint32_t size,
+                                           hsa_queue_type32_t type,
+                                           uint32_t features,
+                                           hsa_signal_t doorbell_signal,
+                                           hsa_queue_t **queue);
 
 /**
  * @brief Destroy a user mode queue.
  *
  * @details When a queue is destroyed, the state of the AQL packets that have
  * not been yet fully processed (their completion phase has not finished)
- * becomes undefined. It is the responsibility of the application to ensure that
- * all pending queue operations are finished if their results are required.
+ * becomes undefined. It is the responsibility of the application to ensure
+ * that all pending queue operations are finished if their results are
+ * required.
  *
  * The resources allocated by the HSA runtime during queue creation (queue
  * structure, ring buffer, doorbell signal) are released.  The queue should not
@@ -2462,15 +2354,14 @@ hsa_status_t HSA_API hsa_soft_queue_create(
  *
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p queue is NULL.
  */
-hsa_status_t HSA_API hsa_queue_destroy(
-    hsa_queue_t *queue);
+hsa_status_t HSA_API hsa_queue_destroy(hsa_queue_t *queue);
 
 /**
  * @brief Inactivate a queue.
  *
- * @details Inactivating the queue aborts any pending executions and prevent any
- * new packets from being processed. Any more packets written to the queue once
- * it is inactivated will be ignored by the packet processor.
+ * @details Inactivating the queue aborts any pending executions and prevent
+ * any new packets from being processed. Any more packets written to the queue
+ * once it is inactivated will be ignored by the packet processor.
  *
  * @param[in] queue Pointer to a queue.
  *
@@ -2483,16 +2374,15 @@ hsa_status_t HSA_API hsa_queue_destroy(
  *
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p queue is NULL.
  */
-hsa_status_t HSA_API hsa_queue_inactivate(
-    hsa_queue_t *queue);
+hsa_status_t HSA_API hsa_queue_inactivate(hsa_queue_t *queue);
 
 /**
  * @deprecated Renamed as ::hsa_queue_load_read_index_scacquire.
  *
  * @copydoc hsa_queue_load_read_index_scacquire
  */
-uint64_t HSA_API HSA_DEPRECATED hsa_queue_load_read_index_acquire(
-    const hsa_queue_t *queue);
+uint64_t HSA_API HSA_DEPRECATED
+hsa_queue_load_read_index_acquire(const hsa_queue_t *queue);
 
 /**
  * @brief Atomically load the read index of a queue.
@@ -2501,22 +2391,20 @@ uint64_t HSA_API HSA_DEPRECATED hsa_queue_load_read_index_acquire(
  *
  * @return Read index of the queue pointed by @p queue.
  */
-uint64_t HSA_API hsa_queue_load_read_index_scacquire(
-    const hsa_queue_t *queue);
+uint64_t HSA_API hsa_queue_load_read_index_scacquire(const hsa_queue_t *queue);
 
 /**
  * @copydoc hsa_queue_load_read_index_scacquire
  */
-uint64_t HSA_API hsa_queue_load_read_index_relaxed(
-    const hsa_queue_t *queue);
+uint64_t HSA_API hsa_queue_load_read_index_relaxed(const hsa_queue_t *queue);
 
 /**
  * @deprecated Renamed as ::hsa_queue_load_write_index_scacquire.
  *
  * @copydoc hsa_queue_load_write_index_scacquire
  */
-uint64_t HSA_API HSA_DEPRECATED hsa_queue_load_write_index_acquire(
-    const hsa_queue_t *queue);
+uint64_t HSA_API HSA_DEPRECATED
+hsa_queue_load_write_index_acquire(const hsa_queue_t *queue);
 
 /**
  * @brief Atomically load the write index of a queue.
@@ -2525,14 +2413,13 @@ uint64_t HSA_API HSA_DEPRECATED hsa_queue_load_write_index_acquire(
  *
  * @return Write index of the queue pointed by @p queue.
  */
-uint64_t HSA_API hsa_queue_load_write_index_scacquire(
-    const hsa_queue_t *queue);
+uint64_t HSA_API
+hsa_queue_load_write_index_scacquire(const hsa_queue_t *queue);
 
 /**
  * @copydoc hsa_queue_load_write_index_scacquire
  */
-uint64_t HSA_API hsa_queue_load_write_index_relaxed(
-    const hsa_queue_t *queue);
+uint64_t HSA_API hsa_queue_load_write_index_relaxed(const hsa_queue_t *queue);
 
 /**
  * @brief Atomically set the write index of a queue.
@@ -2546,25 +2433,22 @@ uint64_t HSA_API hsa_queue_load_write_index_relaxed(
  * @param[in] value Value to assign to the write index.
  *
  */
-void HSA_API hsa_queue_store_write_index_relaxed(
-    const hsa_queue_t *queue,
-    uint64_t value);
+void HSA_API hsa_queue_store_write_index_relaxed(const hsa_queue_t *queue,
+                                                 uint64_t value);
 
 /**
  * @deprecated Renamed as ::hsa_queue_store_write_index_screlease.
  *
  * @copydoc hsa_queue_store_write_index_screlease
  */
-void HSA_API HSA_DEPRECATED hsa_queue_store_write_index_release(
-    const hsa_queue_t *queue,
-    uint64_t value);
+void HSA_API HSA_DEPRECATED
+hsa_queue_store_write_index_release(const hsa_queue_t *queue, uint64_t value);
 
 /**
  * @copydoc hsa_queue_store_write_index_relaxed
  */
-void HSA_API hsa_queue_store_write_index_screlease(
-    const hsa_queue_t *queue,
-    uint64_t value);
+void HSA_API hsa_queue_store_write_index_screlease(const hsa_queue_t *queue,
+                                                   uint64_t value);
 
 /**
  * @deprecated Renamed as ::hsa_queue_cas_write_index_scacq_screl.
@@ -2572,9 +2456,7 @@ void HSA_API hsa_queue_store_write_index_screlease(
  * @copydoc hsa_queue_cas_write_index_scacq_screl
  */
 uint64_t HSA_API HSA_DEPRECATED hsa_queue_cas_write_index_acq_rel(
-    const hsa_queue_t *queue,
-    uint64_t expected,
-    uint64_t value);
+    const hsa_queue_t *queue, uint64_t expected, uint64_t value);
 
 /**
  * @brief Atomically set the write index of a queue if the observed value is
@@ -2591,9 +2473,7 @@ uint64_t HSA_API HSA_DEPRECATED hsa_queue_cas_write_index_acq_rel(
  * @return Previous value of the write index.
  */
 uint64_t HSA_API hsa_queue_cas_write_index_scacq_screl(
-    const hsa_queue_t *queue,
-    uint64_t expected,
-    uint64_t value);
+    const hsa_queue_t *queue, uint64_t expected, uint64_t value);
 
 /**
  * @deprecated Renamed as ::hsa_queue_cas_write_index_scacquire.
@@ -2601,25 +2481,21 @@ uint64_t HSA_API hsa_queue_cas_write_index_scacq_screl(
  * @copydoc hsa_queue_cas_write_index_scacquire
  */
 uint64_t HSA_API HSA_DEPRECATED hsa_queue_cas_write_index_acquire(
-    const hsa_queue_t *queue,
-    uint64_t expected,
-    uint64_t value);
+    const hsa_queue_t *queue, uint64_t expected, uint64_t value);
 
 /**
  * @copydoc hsa_queue_cas_write_index_scacq_screl
  */
-uint64_t HSA_API hsa_queue_cas_write_index_scacquire(
-    const hsa_queue_t *queue,
-    uint64_t expected,
-    uint64_t value);
+uint64_t HSA_API hsa_queue_cas_write_index_scacquire(const hsa_queue_t *queue,
+                                                     uint64_t expected,
+                                                     uint64_t value);
 
 /**
  * @copydoc hsa_queue_cas_write_index_scacq_screl
  */
-uint64_t HSA_API hsa_queue_cas_write_index_relaxed(
-    const hsa_queue_t *queue,
-    uint64_t expected,
-    uint64_t value);
+uint64_t HSA_API hsa_queue_cas_write_index_relaxed(const hsa_queue_t *queue,
+                                                   uint64_t expected,
+                                                   uint64_t value);
 
 /**
  * @deprecated Renamed as ::hsa_queue_cas_write_index_screlease.
@@ -2627,26 +2503,22 @@ uint64_t HSA_API hsa_queue_cas_write_index_relaxed(
  * @copydoc hsa_queue_cas_write_index_screlease
  */
 uint64_t HSA_API HSA_DEPRECATED hsa_queue_cas_write_index_release(
-    const hsa_queue_t *queue,
-    uint64_t expected,
-    uint64_t value);
+    const hsa_queue_t *queue, uint64_t expected, uint64_t value);
 
 /**
  * @copydoc hsa_queue_cas_write_index_scacq_screl
  */
-uint64_t HSA_API hsa_queue_cas_write_index_screlease(
-    const hsa_queue_t *queue,
-    uint64_t expected,
-    uint64_t value);
+uint64_t HSA_API hsa_queue_cas_write_index_screlease(const hsa_queue_t *queue,
+                                                     uint64_t expected,
+                                                     uint64_t value);
 
 /**
  * @deprecated Renamed as ::hsa_queue_add_write_index_scacq_screl.
  *
  * @copydoc hsa_queue_add_write_index_scacq_screl
  */
-uint64_t HSA_API HSA_DEPRECATED hsa_queue_add_write_index_acq_rel(
-    const hsa_queue_t *queue,
-    uint64_t value);
+uint64_t HSA_API HSA_DEPRECATED
+hsa_queue_add_write_index_acq_rel(const hsa_queue_t *queue, uint64_t value);
 
 /**
  * @brief Atomically increment the write index of a queue by an offset.
@@ -2658,47 +2530,41 @@ uint64_t HSA_API HSA_DEPRECATED hsa_queue_add_write_index_acq_rel(
  * @return Previous value of the write index.
  */
 uint64_t HSA_API hsa_queue_add_write_index_scacq_screl(
-    const hsa_queue_t *queue,
-    uint64_t value);
+    const hsa_queue_t *queue, uint64_t value);
 
 /**
  * @deprecated Renamed as ::hsa_queue_add_write_index_scacquire.
  *
  * @copydoc hsa_queue_add_write_index_scacquire
  */
-uint64_t HSA_API HSA_DEPRECATED hsa_queue_add_write_index_acquire(
-    const hsa_queue_t *queue,
-    uint64_t value);
+uint64_t HSA_API HSA_DEPRECATED
+hsa_queue_add_write_index_acquire(const hsa_queue_t *queue, uint64_t value);
 
 /**
  * @copydoc hsa_queue_add_write_index_scacq_screl
  */
-uint64_t HSA_API hsa_queue_add_write_index_scacquire(
-    const hsa_queue_t *queue,
-    uint64_t value);
+uint64_t HSA_API hsa_queue_add_write_index_scacquire(const hsa_queue_t *queue,
+                                                     uint64_t value);
 
 /**
  * @copydoc hsa_queue_add_write_index_scacq_screl
  */
-uint64_t HSA_API hsa_queue_add_write_index_relaxed(
-    const hsa_queue_t *queue,
-    uint64_t value);
+uint64_t HSA_API hsa_queue_add_write_index_relaxed(const hsa_queue_t *queue,
+                                                   uint64_t value);
 
 /**
  * @deprecated Renamed as ::hsa_queue_add_write_index_screlease.
  *
  * @copydoc hsa_queue_add_write_index_screlease
  */
-uint64_t HSA_API HSA_DEPRECATED hsa_queue_add_write_index_release(
-    const hsa_queue_t *queue,
-    uint64_t value);
+uint64_t HSA_API HSA_DEPRECATED
+hsa_queue_add_write_index_release(const hsa_queue_t *queue, uint64_t value);
 
 /**
  * @copydoc hsa_queue_add_write_index_scacq_screl
  */
-uint64_t HSA_API hsa_queue_add_write_index_screlease(
-    const hsa_queue_t *queue,
-    uint64_t value);
+uint64_t HSA_API hsa_queue_add_write_index_screlease(const hsa_queue_t *queue,
+                                                     uint64_t value);
 
 /**
  * @brief Atomically set the read index of a queue.
@@ -2713,27 +2579,24 @@ uint64_t HSA_API hsa_queue_add_write_index_screlease(
  * @param[in] value Value to assign to the read index.
  *
  */
-void HSA_API hsa_queue_store_read_index_relaxed(
-    const hsa_queue_t *queue,
-    uint64_t value);
+void HSA_API hsa_queue_store_read_index_relaxed(const hsa_queue_t *queue,
+                                                uint64_t value);
 
 /**
  * @deprecated Renamed as ::hsa_queue_store_read_index_screlease.
  *
  * @copydoc hsa_queue_store_read_index_screlease
  */
-void HSA_API HSA_DEPRECATED hsa_queue_store_read_index_release(
-    const hsa_queue_t *queue,
-    uint64_t value);
+void HSA_API HSA_DEPRECATED
+hsa_queue_store_read_index_release(const hsa_queue_t *queue, uint64_t value);
 
 /**
  * @copydoc hsa_queue_store_read_index_relaxed
  */
-void HSA_API hsa_queue_store_read_index_screlease(
-   const hsa_queue_t *queue,
-   uint64_t value);
-/** @} */
+void HSA_API hsa_queue_store_read_index_screlease(const hsa_queue_t *queue,
+                                                  uint64_t value);
 
+/** @} */
 
 /** \defgroup aql Architected Queuing Language
  *  @{
@@ -2744,38 +2607,38 @@ void HSA_API hsa_queue_store_read_index_screlease(
  */
 typedef enum
 {
-  /**
-   * Vendor-specific packet.
-   */
-  HSA_PACKET_TYPE_VENDOR_SPECIFIC = 0,
-  /**
-   * The packet has been processed in the past, but has not been reassigned to
-   * the packet processor. A packet processor must not process a packet of this
-   * type. All queues support this packet type.
-   */
-  HSA_PACKET_TYPE_INVALID = 1,
-  /**
-   * Packet used by agents for dispatching jobs to kernel agents. Not all
-   * queues support packets of this type (see ::hsa_queue_feature_t).
-   */
-  HSA_PACKET_TYPE_KERNEL_DISPATCH = 2,
-  /**
-   * Packet used by agents to delay processing of subsequent packets, and to
-   * express complex dependencies between multiple packets. All queues support
-   * this packet type.
-   */
-  HSA_PACKET_TYPE_BARRIER_AND = 3,
-  /**
-   * Packet used by agents for dispatching jobs to agents.  Not all
-   * queues support packets of this type (see ::hsa_queue_feature_t).
-   */
-  HSA_PACKET_TYPE_AGENT_DISPATCH = 4,
-  /**
-   * Packet used by agents to delay processing of subsequent packets, and to
-   * express complex dependencies between multiple packets. All queues support
-   * this packet type.
-   */
-  HSA_PACKET_TYPE_BARRIER_OR = 5
+    /**
+     * Vendor-specific packet.
+     */
+    HSA_PACKET_TYPE_VENDOR_SPECIFIC = 0,
+    /**
+     * The packet has been processed in the past, but has not been reassigned
+     * to the packet processor. A packet processor must not process a packet of
+     * this type. All queues support this packet type.
+     */
+    HSA_PACKET_TYPE_INVALID = 1,
+    /**
+     * Packet used by agents for dispatching jobs to kernel agents. Not all
+     * queues support packets of this type (see ::hsa_queue_feature_t).
+     */
+    HSA_PACKET_TYPE_KERNEL_DISPATCH = 2,
+    /**
+     * Packet used by agents to delay processing of subsequent packets, and to
+     * express complex dependencies between multiple packets. All queues
+     * support this packet type.
+     */
+    HSA_PACKET_TYPE_BARRIER_AND = 3,
+    /**
+     * Packet used by agents for dispatching jobs to agents.  Not all
+     * queues support packets of this type (see ::hsa_queue_feature_t).
+     */
+    HSA_PACKET_TYPE_AGENT_DISPATCH = 4,
+    /**
+     * Packet used by agents to delay processing of subsequent packets, and to
+     * express complex dependencies between multiple packets. All queues
+     * support this packet type.
+     */
+    HSA_PACKET_TYPE_BARRIER_OR = 5
 } hsa_packet_type_t;
 
 /**
@@ -2783,20 +2646,20 @@ typedef enum
  */
 typedef enum
 {
-  /**
-   * No scope (no fence is applied). The packet relies on external fences to
-   * ensure visibility of memory updates.
-   */
-  HSA_FENCE_SCOPE_NONE = 0,
-  /**
-   * The fence is applied with agent scope for the global segment.
-   */
-  HSA_FENCE_SCOPE_AGENT = 1,
-  /**
-   * The fence is applied across both agent and system scope for the global
-   * segment.
-   */
-  HSA_FENCE_SCOPE_SYSTEM = 2
+    /**
+     * No scope (no fence is applied). The packet relies on external fences to
+     * ensure visibility of memory updates.
+     */
+    HSA_FENCE_SCOPE_NONE = 0,
+    /**
+     * The fence is applied with agent scope for the global segment.
+     */
+    HSA_FENCE_SCOPE_AGENT = 1,
+    /**
+     * The fence is applied across both agent and system scope for the global
+     * segment.
+     */
+    HSA_FENCE_SCOPE_SYSTEM = 2
 } hsa_fence_scope_t;
 
 /**
@@ -2808,46 +2671,48 @@ typedef enum
  */
 typedef enum
 {
-  /**
-   * Packet type. The value of this sub-field must be one of
-   * ::hsa_packet_type_t. If the type is ::HSA_PACKET_TYPE_VENDOR_SPECIFIC, the
-   * packet layout is vendor-specific.
-   */
-   HSA_PACKET_HEADER_TYPE = 0,
-  /**
-   * Barrier bit. If the barrier bit is set, the processing of the current
-   * packet only launches when all preceding packets (within the same queue) are
-   * complete.
-   */
-   HSA_PACKET_HEADER_BARRIER = 8,
-  /**
-   * Acquire fence scope. The value of this sub-field determines the scope and
-   * type of the memory fence operation applied before the packet enters the
-   * active phase. An acquire fence ensures that any subsequent global segment
-   * or image loads by any unit of execution that belongs to a dispatch that has
-   * not yet entered the active phase on any queue of the same kernel agent,
-   * sees any data previously released at the scopes specified by the acquire
-   * fence. The value of this sub-field must be one of ::hsa_fence_scope_t.
-   */
-   HSA_PACKET_HEADER_SCACQUIRE_FENCE_SCOPE = 9,
-   /**
-    * @deprecated Renamed as ::HSA_PACKET_HEADER_SCACQUIRE_FENCE_SCOPE.
-    */
-   HSA_PACKET_HEADER_ACQUIRE_FENCE_SCOPE = 9,
-  /**
-   * Release fence scope, The value of this sub-field determines the scope and
-   * type of the memory fence operation applied after kernel completion but
-   * before the packet is completed. A release fence makes any global segment or
-   * image data that was stored by any unit of execution that belonged to a
-   * dispatch that has completed the active phase on any queue of the same
-   * kernel agent visible in all the scopes specified by the release fence. The
-   * value of this sub-field must be one of ::hsa_fence_scope_t.
-   */
-   HSA_PACKET_HEADER_SCRELEASE_FENCE_SCOPE = 11,
-   /**
-    * @deprecated Renamed as ::HSA_PACKET_HEADER_SCRELEASE_FENCE_SCOPE.
-    */
-   HSA_PACKET_HEADER_RELEASE_FENCE_SCOPE = 11
+    /**
+     * Packet type. The value of this sub-field must be one of
+     * ::hsa_packet_type_t. If the type is ::HSA_PACKET_TYPE_VENDOR_SPECIFIC,
+     * the packet layout is vendor-specific.
+     */
+    HSA_PACKET_HEADER_TYPE = 0,
+    /**
+     * Barrier bit. If the barrier bit is set, the processing of the current
+     * packet only launches when all preceding packets (within the same queue)
+     * are complete.
+     */
+    HSA_PACKET_HEADER_BARRIER = 8,
+    /**
+     * Acquire fence scope. The value of this sub-field determines the scope
+     * and type of the memory fence operation applied before the packet enters
+     * the active phase. An acquire fence ensures that any subsequent global
+     * segment or image loads by any unit of execution that belongs to a
+     * dispatch that has not yet entered the active phase on any queue of the
+     * same kernel agent, sees any data previously released at the scopes
+     * specified by the acquire fence. The value of this sub-field must be one
+     * of ::hsa_fence_scope_t.
+     */
+    HSA_PACKET_HEADER_SCACQUIRE_FENCE_SCOPE = 9,
+    /**
+     * @deprecated Renamed as ::HSA_PACKET_HEADER_SCACQUIRE_FENCE_SCOPE.
+     */
+    HSA_PACKET_HEADER_ACQUIRE_FENCE_SCOPE = 9,
+    /**
+     * Release fence scope, The value of this sub-field determines the scope
+     * and type of the memory fence operation applied after kernel completion
+     * but before the packet is completed. A release fence makes any global
+     * segment or image data that was stored by any unit of execution that
+     * belonged to a dispatch that has completed the active phase on any queue
+     * of the same kernel agent visible in all the scopes specified by the
+     * release fence. The value of this sub-field must be one of
+     * ::hsa_fence_scope_t.
+     */
+    HSA_PACKET_HEADER_SCRELEASE_FENCE_SCOPE = 11,
+    /**
+     * @deprecated Renamed as ::HSA_PACKET_HEADER_SCRELEASE_FENCE_SCOPE.
+     */
+    HSA_PACKET_HEADER_RELEASE_FENCE_SCOPE = 11
 } hsa_packet_header_t;
 
 /**
@@ -2855,18 +2720,18 @@ typedef enum
  */
 typedef enum
 {
-   HSA_PACKET_HEADER_WIDTH_TYPE = 8,
-   HSA_PACKET_HEADER_WIDTH_BARRIER = 1,
-   HSA_PACKET_HEADER_WIDTH_SCACQUIRE_FENCE_SCOPE = 2,
-   /**
-    * @deprecated Use HSA_PACKET_HEADER_WIDTH_SCACQUIRE_FENCE_SCOPE.
-    */
-   HSA_PACKET_HEADER_WIDTH_ACQUIRE_FENCE_SCOPE = 2,
-   HSA_PACKET_HEADER_WIDTH_SCRELEASE_FENCE_SCOPE = 2,
-   /**
-    * @deprecated Use HSA_PACKET_HEADER_WIDTH_SCRELEASE_FENCE_SCOPE.
-    */
-   HSA_PACKET_HEADER_WIDTH_RELEASE_FENCE_SCOPE = 2
+    HSA_PACKET_HEADER_WIDTH_TYPE = 8,
+    HSA_PACKET_HEADER_WIDTH_BARRIER = 1,
+    HSA_PACKET_HEADER_WIDTH_SCACQUIRE_FENCE_SCOPE = 2,
+    /**
+     * @deprecated Use HSA_PACKET_HEADER_WIDTH_SCACQUIRE_FENCE_SCOPE.
+     */
+    HSA_PACKET_HEADER_WIDTH_ACQUIRE_FENCE_SCOPE = 2,
+    HSA_PACKET_HEADER_WIDTH_SCRELEASE_FENCE_SCOPE = 2,
+    /**
+     * @deprecated Use HSA_PACKET_HEADER_WIDTH_SCRELEASE_FENCE_SCOPE.
+     */
+    HSA_PACKET_HEADER_WIDTH_RELEASE_FENCE_SCOPE = 2
 } hsa_packet_header_width_t;
 
 /**
@@ -2878,11 +2743,11 @@ typedef enum
  */
 typedef enum
 {
-  /**
-   * Number of dimensions of the grid. Valid values are 1, 2, or 3.
-   *
-   */
-   HSA_KERNEL_DISPATCH_PACKET_SETUP_DIMENSIONS = 0
+    /**
+     * Number of dimensions of the grid. Valid values are 1, 2, or 3.
+     *
+     */
+    HSA_KERNEL_DISPATCH_PACKET_SETUP_DIMENSIONS = 0
 } hsa_kernel_dispatch_packet_setup_t;
 
 /**
@@ -2891,7 +2756,7 @@ typedef enum
  */
 typedef enum
 {
-   HSA_KERNEL_DISPATCH_PACKET_SETUP_WIDTH_DIMENSIONS = 2
+    HSA_KERNEL_DISPATCH_PACKET_SETUP_WIDTH_DIMENSIONS = 2
 } hsa_kernel_dispatch_packet_setup_width_t;
 
 /**
@@ -2899,110 +2764,110 @@ typedef enum
  */
 typedef struct hsa_kernel_dispatch_packet_s
 {
-  /**
-   * Packet header. Used to configure multiple packet parameters such as the
-   * packet type. The parameters are described by ::hsa_packet_header_t.
-   */
-  uint16_t header;
+    /**
+     * Packet header. Used to configure multiple packet parameters such as the
+     * packet type. The parameters are described by ::hsa_packet_header_t.
+     */
+    uint16_t header;
 
-  /**
-   * Dispatch setup parameters. Used to configure kernel dispatch parameters
-   * such as the number of dimensions in the grid. The parameters are described
-   * by ::hsa_kernel_dispatch_packet_setup_t.
-   */
-  uint16_t setup;
+    /**
+     * Dispatch setup parameters. Used to configure kernel dispatch parameters
+     * such as the number of dimensions in the grid. The parameters are
+     * described by ::hsa_kernel_dispatch_packet_setup_t.
+     */
+    uint16_t setup;
 
-  /**
-   * X dimension of work-group, in work-items. Must be greater than 0.
-   */
-  uint16_t workgroup_size_x;
+    /**
+     * X dimension of work-group, in work-items. Must be greater than 0.
+     */
+    uint16_t workgroup_size_x;
 
-  /**
-   * Y dimension of work-group, in work-items. Must be greater than
-   * 0. If the grid has 1 dimension, the only valid value is 1.
-   */
-  uint16_t workgroup_size_y;
+    /**
+     * Y dimension of work-group, in work-items. Must be greater than
+     * 0. If the grid has 1 dimension, the only valid value is 1.
+     */
+    uint16_t workgroup_size_y;
 
-  /**
-   * Z dimension of work-group, in work-items. Must be greater than
-   * 0. If the grid has 1 or 2 dimensions, the only valid value is 1.
-   */
-  uint16_t workgroup_size_z;
+    /**
+     * Z dimension of work-group, in work-items. Must be greater than
+     * 0. If the grid has 1 or 2 dimensions, the only valid value is 1.
+     */
+    uint16_t workgroup_size_z;
 
-  /**
-   * Reserved. Must be 0.
-   */
-  uint16_t reserved0;
+    /**
+     * Reserved. Must be 0.
+     */
+    uint16_t reserved0;
 
-  /**
-   * X dimension of grid, in work-items. Must be greater than 0. Must
-   * not be smaller than @a workgroup_size_x.
-   */
-  uint32_t grid_size_x;
+    /**
+     * X dimension of grid, in work-items. Must be greater than 0. Must
+     * not be smaller than @a workgroup_size_x.
+     */
+    uint32_t grid_size_x;
 
-  /**
-   * Y dimension of grid, in work-items. Must be greater than 0. If the grid has
-   * 1 dimension, the only valid value is 1. Must not be smaller than @a
-   * workgroup_size_y.
-   */
-  uint32_t grid_size_y;
+    /**
+     * Y dimension of grid, in work-items. Must be greater than 0. If the grid
+     * has 1 dimension, the only valid value is 1. Must not be smaller than @a
+     * workgroup_size_y.
+     */
+    uint32_t grid_size_y;
 
-  /**
-   * Z dimension of grid, in work-items. Must be greater than 0. If the grid has
-   * 1 or 2 dimensions, the only valid value is 1. Must not be smaller than @a
-   * workgroup_size_z.
-   */
-  uint32_t grid_size_z;
+    /**
+     * Z dimension of grid, in work-items. Must be greater than 0. If the grid
+     * has 1 or 2 dimensions, the only valid value is 1. Must not be smaller
+     * than @a workgroup_size_z.
+     */
+    uint32_t grid_size_z;
 
-  /**
-   * Size in bytes of private memory allocation request (per work-item).
-   */
-  uint32_t private_segment_size;
+    /**
+     * Size in bytes of private memory allocation request (per work-item).
+     */
+    uint32_t private_segment_size;
 
-  /**
-   * Size in bytes of group memory allocation request (per work-group). Must not
-   * be less than the sum of the group memory used by the kernel (and the
-   * functions it calls directly or indirectly) and the dynamically allocated
-   * group segment variables.
-   */
-  uint32_t group_segment_size;
+    /**
+     * Size in bytes of group memory allocation request (per work-group). Must
+     * not be less than the sum of the group memory used by the kernel (and the
+     * functions it calls directly or indirectly) and the dynamically allocated
+     * group segment variables.
+     */
+    uint32_t group_segment_size;
 
-  /**
-   * Opaque handle to a code object that includes an implementation-defined
-   * executable code for the kernel.
-   */
-  uint64_t kernel_object;
+    /**
+     * Opaque handle to a code object that includes an implementation-defined
+     * executable code for the kernel.
+     */
+    uint64_t kernel_object;
 
 #ifdef HSA_LARGE_MODEL
-  void* kernarg_address;
+    void *kernarg_address;
 #elif defined HSA_LITTLE_ENDIAN
-  /**
-   * Pointer to a buffer containing the kernel arguments. May be NULL.
-   *
-   * The buffer must be allocated using ::hsa_memory_allocate, and must not be
-   * modified once the kernel dispatch packet is enqueued until the dispatch has
-   * completed execution.
-   */
-  void* kernarg_address;
-  /**
-   * Reserved. Must be 0.
-   */
-  uint32_t reserved1;
+    /**
+     * Pointer to a buffer containing the kernel arguments. May be NULL.
+     *
+     * The buffer must be allocated using ::hsa_memory_allocate, and must not
+     * be modified once the kernel dispatch packet is enqueued until the
+     * dispatch has completed execution.
+     */
+    void *kernarg_address;
+    /**
+     * Reserved. Must be 0.
+     */
+    uint32_t reserved1;
 #else
-  uint32_t reserved1;
-  void* kernarg_address;
+    uint32_t reserved1;
+    void *kernarg_address;
 #endif
 
-  /**
-   * Reserved. Must be 0.
-   */
-  uint64_t reserved2;
+    /**
+     * Reserved. Must be 0.
+     */
+    uint64_t reserved2;
 
-  /**
-   * Signal used to indicate completion of the job. The application can use the
-   * special signal handle 0 to indicate that no signal is used.
-   */
-  hsa_signal_t completion_signal;
+    /**
+     * Signal used to indicate completion of the job. The application can use
+     * the special signal handle 0 to indicate that no signal is used.
+     */
+    hsa_signal_t completion_signal;
 
 } hsa_kernel_dispatch_packet_t;
 
@@ -3011,53 +2876,53 @@ typedef struct hsa_kernel_dispatch_packet_s
  */
 typedef struct hsa_agent_dispatch_packet_s
 {
-  /**
-   * Packet header. Used to configure multiple packet parameters such as the
-   * packet type. The parameters are described by ::hsa_packet_header_t.
-   */
-  uint16_t header;
+    /**
+     * Packet header. Used to configure multiple packet parameters such as the
+     * packet type. The parameters are described by ::hsa_packet_header_t.
+     */
+    uint16_t header;
 
-  /**
-   * Application-defined function to be performed by the destination agent.
-   */
-  uint16_t type;
+    /**
+     * Application-defined function to be performed by the destination agent.
+     */
+    uint16_t type;
 
-  /**
-   * Reserved. Must be 0.
-   */
-  uint32_t reserved0;
+    /**
+     * Reserved. Must be 0.
+     */
+    uint32_t reserved0;
 
 #ifdef HSA_LARGE_MODEL
-  void* return_address;
+    void *return_address;
 #elif defined HSA_LITTLE_ENDIAN
-  /**
-   * Address where to store the function return values, if any.
-   */
-  void* return_address;
-  /**
-   * Reserved. Must be 0.
-   */
-  uint32_t reserved1;
+    /**
+     * Address where to store the function return values, if any.
+     */
+    void *return_address;
+    /**
+     * Reserved. Must be 0.
+     */
+    uint32_t reserved1;
 #else
-  uint32_t reserved1;
-  void* return_address;
+    uint32_t reserved1;
+    void *return_address;
 #endif
 
-  /**
-   * Function arguments.
-   */
-  uint64_t arg[4];
+    /**
+     * Function arguments.
+     */
+    uint64_t arg[4];
 
-  /**
-   * Reserved. Must be 0.
-   */
-  uint64_t reserved2;
+    /**
+     * Reserved. Must be 0.
+     */
+    uint64_t reserved2;
 
-  /**
-   * Signal used to indicate completion of the job. The application can use the
-   * special signal handle 0 to indicate that no signal is used.
-   */
-  hsa_signal_t completion_signal;
+    /**
+     * Signal used to indicate completion of the job. The application can use
+     * the special signal handle 0 to indicate that no signal is used.
+     */
+    hsa_signal_t completion_signal;
 
 } hsa_agent_dispatch_packet_t;
 
@@ -3066,39 +2931,39 @@ typedef struct hsa_agent_dispatch_packet_s
  */
 typedef struct hsa_barrier_and_packet_s
 {
-  /**
-   * Packet header. Used to configure multiple packet parameters such as the
-   * packet type. The parameters are described by ::hsa_packet_header_t.
-   */
-  uint16_t header;
+    /**
+     * Packet header. Used to configure multiple packet parameters such as the
+     * packet type. The parameters are described by ::hsa_packet_header_t.
+     */
+    uint16_t header;
 
-  /**
-   * Reserved. Must be 0.
-   */
-  uint16_t reserved0;
+    /**
+     * Reserved. Must be 0.
+     */
+    uint16_t reserved0;
 
-  /**
-   * Reserved. Must be 0.
-   */
-  uint32_t reserved1;
+    /**
+     * Reserved. Must be 0.
+     */
+    uint32_t reserved1;
 
-  /**
-   * Array of dependent signal objects. Signals with a handle value of 0 are
-   * allowed and are interpreted by the packet processor as satisfied
-   * dependencies.
-   */
-  hsa_signal_t dep_signal[5];
+    /**
+     * Array of dependent signal objects. Signals with a handle value of 0 are
+     * allowed and are interpreted by the packet processor as satisfied
+     * dependencies.
+     */
+    hsa_signal_t dep_signal[5];
 
-  /**
-   * Reserved. Must be 0.
-   */
-  uint64_t reserved2;
+    /**
+     * Reserved. Must be 0.
+     */
+    uint64_t reserved2;
 
-  /**
-   * Signal used to indicate completion of the job. The application can use the
-   * special signal handle 0 to indicate that no signal is used.
-   */
-  hsa_signal_t completion_signal;
+    /**
+     * Signal used to indicate completion of the job. The application can use
+     * the special signal handle 0 to indicate that no signal is used.
+     */
+    hsa_signal_t completion_signal;
 
 } hsa_barrier_and_packet_t;
 
@@ -3107,39 +2972,39 @@ typedef struct hsa_barrier_and_packet_s
  */
 typedef struct hsa_barrier_or_packet_s
 {
-  /**
-   * Packet header. Used to configure multiple packet parameters such as the
-   * packet type. The parameters are described by ::hsa_packet_header_t.
-   */
-  uint16_t header;
+    /**
+     * Packet header. Used to configure multiple packet parameters such as the
+     * packet type. The parameters are described by ::hsa_packet_header_t.
+     */
+    uint16_t header;
 
-  /**
-   * Reserved. Must be 0.
-   */
-  uint16_t reserved0;
+    /**
+     * Reserved. Must be 0.
+     */
+    uint16_t reserved0;
 
-  /**
-   * Reserved. Must be 0.
-   */
-  uint32_t reserved1;
+    /**
+     * Reserved. Must be 0.
+     */
+    uint32_t reserved1;
 
-  /**
-   * Array of dependent signal objects. Signals with a handle value of 0 are
-   * allowed and are interpreted by the packet processor as dependencies not
-   * satisfied.
-   */
-  hsa_signal_t dep_signal[5];
+    /**
+     * Array of dependent signal objects. Signals with a handle value of 0 are
+     * allowed and are interpreted by the packet processor as dependencies not
+     * satisfied.
+     */
+    hsa_signal_t dep_signal[5];
 
-  /**
-   * Reserved. Must be 0.
-   */
-  uint64_t reserved2;
+    /**
+     * Reserved. Must be 0.
+     */
+    uint64_t reserved2;
 
-  /**
-   * Signal used to indicate completion of the job. The application can use the
-   * special signal handle 0 to indicate that no signal is used.
-   */
-  hsa_signal_t completion_signal;
+    /**
+     * Signal used to indicate completion of the job. The application can use
+     * the special signal handle 0 to indicate that no signal is used.
+     */
+    hsa_signal_t completion_signal;
 
 } hsa_barrier_or_packet_t;
 
@@ -3154,28 +3019,28 @@ typedef struct hsa_barrier_or_packet_s
  */
 typedef enum
 {
-  /**
-   * Global segment. Used to hold data that is shared by all agents.
-   */
-  HSA_REGION_SEGMENT_GLOBAL = 0,
-  /**
-   * Read-only segment. Used to hold data that remains constant during the
-   * execution of a kernel.
-   */
-  HSA_REGION_SEGMENT_READONLY = 1,
-  /**
-   * Private segment. Used to hold data that is local to a single work-item.
-   */
-  HSA_REGION_SEGMENT_PRIVATE = 2,
-  /**
-   * Group segment. Used to hold data that is shared by the work-items of a
-   * work-group.
-  */
-  HSA_REGION_SEGMENT_GROUP = 3,
-  /**
-   * Kernarg segment. Used to store kernel arguments.
-  */
-  HSA_REGION_SEGMENT_KERNARG = 4
+    /**
+     * Global segment. Used to hold data that is shared by all agents.
+     */
+    HSA_REGION_SEGMENT_GLOBAL = 0,
+    /**
+     * Read-only segment. Used to hold data that remains constant during the
+     * execution of a kernel.
+     */
+    HSA_REGION_SEGMENT_READONLY = 1,
+    /**
+     * Private segment. Used to hold data that is local to a single work-item.
+     */
+    HSA_REGION_SEGMENT_PRIVATE = 2,
+    /**
+     * Group segment. Used to hold data that is shared by the work-items of a
+     * work-group.
+     */
+    HSA_REGION_SEGMENT_GROUP = 3,
+    /**
+     * Kernarg segment. Used to store kernel arguments.
+     */
+    HSA_REGION_SEGMENT_KERNARG = 4
 } hsa_region_segment_t;
 
 /**
@@ -3183,25 +3048,28 @@ typedef enum
  */
 typedef enum
 {
-  /**
-   * The application can use memory in the region to store kernel arguments, and
-   * provide the values for the kernarg segment of a kernel dispatch. If this
-   * flag is set, then ::HSA_REGION_GLOBAL_FLAG_FINE_GRAINED must be set.
-   */
-  HSA_REGION_GLOBAL_FLAG_KERNARG = 1,
-  /**
-   * Updates to memory in this region are immediately visible to all the
-   * agents under the terms of the HSA memory model. If this
-   * flag is set, then ::HSA_REGION_GLOBAL_FLAG_COARSE_GRAINED must not be set.
-   */
-  HSA_REGION_GLOBAL_FLAG_FINE_GRAINED = 2,
-  /**
-   * Updates to memory in this region can be performed by a single agent at
-   * a time. If a different agent in the system is allowed to access the
-   * region, the application must explicitely invoke ::hsa_memory_assign_agent
-   * in order to transfer ownership to that agent for a particular buffer.
-   */
-  HSA_REGION_GLOBAL_FLAG_COARSE_GRAINED = 4
+    /**
+     * The application can use memory in the region to store kernel arguments,
+     * and provide the values for the kernarg segment of a kernel dispatch. If
+     * this flag is set, then ::HSA_REGION_GLOBAL_FLAG_FINE_GRAINED must be
+     * set.
+     */
+    HSA_REGION_GLOBAL_FLAG_KERNARG = 1,
+    /**
+     * Updates to memory in this region are immediately visible to all the
+     * agents under the terms of the HSA memory model. If this
+     * flag is set, then ::HSA_REGION_GLOBAL_FLAG_COARSE_GRAINED must not be
+     * set.
+     */
+    HSA_REGION_GLOBAL_FLAG_FINE_GRAINED = 2,
+    /**
+     * Updates to memory in this region can be performed by a single agent at
+     * a time. If a different agent in the system is allowed to access the
+     * region, the application must explicitely invoke
+     * ::hsa_memory_assign_agent in order to transfer ownership to that agent
+     * for a particular buffer.
+     */
+    HSA_REGION_GLOBAL_FLAG_COARSE_GRAINED = 4
 } hsa_region_global_flag_t;
 
 /**
@@ -3209,66 +3077,67 @@ typedef enum
  */
 typedef enum
 {
-  /**
-   * Segment where memory in the region can be used. The type of this
-   * attribute is ::hsa_region_segment_t.
-   */
-  HSA_REGION_INFO_SEGMENT = 0,
-  /**
-   * Flag mask. The value of this attribute is undefined if the value of
-   * ::HSA_REGION_INFO_SEGMENT is not ::HSA_REGION_SEGMENT_GLOBAL. The type of
-   * this attribute is uint32_t, a bit-field of ::hsa_region_global_flag_t
-   * values.
-   */
-  HSA_REGION_INFO_GLOBAL_FLAGS = 1,
-  /**
-   * Size of this region, in bytes. The type of this attribute is size_t.
-   */
-  HSA_REGION_INFO_SIZE = 2,
-  /**
-   * Maximum allocation size in this region, in bytes. Must not exceed the value
-   * of ::HSA_REGION_INFO_SIZE. The type of this attribute is size_t.
-   *
-   * If the region is in the global or readonly segments, this is the maximum
-   * size that the application can pass to ::hsa_memory_allocate.
-   *
-   * If the region is in the group segment, this is the maximum size (per
-   * work-group) that can be requested for a given kernel dispatch. If the
-   * region is in the private segment, this is the maximum size (per work-item)
-   * that can be requested for a specific kernel dispatch, and must be at least
-   * 256 bytes.
-   */
-  HSA_REGION_INFO_ALLOC_MAX_SIZE = 4,
-  /**
-   * Maximum size (per work-group) of private memory that can be requested for a
-   * specific kernel dispatch. Must be at least 65536 bytes. The type of this
-   * attribute is uint32_t. The value of this attribute is undefined if the
-   * region is not in the private segment.
-   */
-  HSA_REGION_INFO_ALLOC_MAX_PRIVATE_WORKGROUP_SIZE = 8,
-  /**
-   * Indicates whether memory in this region can be allocated using
-   * ::hsa_memory_allocate. The type of this attribute is bool.
-   *
-   * The value of this flag is always false for regions in the group and private
-   * segments.
-   */
-  HSA_REGION_INFO_RUNTIME_ALLOC_ALLOWED = 5,
-  /**
-   * Allocation granularity of buffers allocated by ::hsa_memory_allocate in
-   * this region. The size of a buffer allocated in this region is a multiple of
-   * the value of this attribute. The value of this attribute is only defined if
-   * ::HSA_REGION_INFO_RUNTIME_ALLOC_ALLOWED is true for this region. The type
-   * of this attribute is size_t.
-   */
-  HSA_REGION_INFO_RUNTIME_ALLOC_GRANULE = 6,
-  /**
-   * Alignment of buffers allocated by ::hsa_memory_allocate in this region. The
-   * value of this attribute is only defined if
-   * ::HSA_REGION_INFO_RUNTIME_ALLOC_ALLOWED is true for this region, and must be
-   * a power of 2. The type of this attribute is size_t.
-   */
-  HSA_REGION_INFO_RUNTIME_ALLOC_ALIGNMENT = 7
+    /**
+     * Segment where memory in the region can be used. The type of this
+     * attribute is ::hsa_region_segment_t.
+     */
+    HSA_REGION_INFO_SEGMENT = 0,
+    /**
+     * Flag mask. The value of this attribute is undefined if the value of
+     * ::HSA_REGION_INFO_SEGMENT is not ::HSA_REGION_SEGMENT_GLOBAL. The type
+     * of this attribute is uint32_t, a bit-field of ::hsa_region_global_flag_t
+     * values.
+     */
+    HSA_REGION_INFO_GLOBAL_FLAGS = 1,
+    /**
+     * Size of this region, in bytes. The type of this attribute is size_t.
+     */
+    HSA_REGION_INFO_SIZE = 2,
+    /**
+     * Maximum allocation size in this region, in bytes. Must not exceed the
+     * value of ::HSA_REGION_INFO_SIZE. The type of this attribute is size_t.
+     *
+     * If the region is in the global or readonly segments, this is the maximum
+     * size that the application can pass to ::hsa_memory_allocate.
+     *
+     * If the region is in the group segment, this is the maximum size (per
+     * work-group) that can be requested for a given kernel dispatch. If the
+     * region is in the private segment, this is the maximum size (per
+     * work-item) that can be requested for a specific kernel dispatch, and
+     * must be at least 256 bytes.
+     */
+    HSA_REGION_INFO_ALLOC_MAX_SIZE = 4,
+    /**
+     * Maximum size (per work-group) of private memory that can be requested
+     * for a specific kernel dispatch. Must be at least 65536 bytes. The type
+     * of this attribute is uint32_t. The value of this attribute is undefined
+     * if the region is not in the private segment.
+     */
+    HSA_REGION_INFO_ALLOC_MAX_PRIVATE_WORKGROUP_SIZE = 8,
+    /**
+     * Indicates whether memory in this region can be allocated using
+     * ::hsa_memory_allocate. The type of this attribute is bool.
+     *
+     * The value of this flag is always false for regions in the group and
+     * private segments.
+     */
+    HSA_REGION_INFO_RUNTIME_ALLOC_ALLOWED = 5,
+    /**
+     * Allocation granularity of buffers allocated by ::hsa_memory_allocate in
+     * this region. The size of a buffer allocated in this region is a multiple
+     * of the value of this attribute. The value of this attribute is only
+     * defined if
+     * ::HSA_REGION_INFO_RUNTIME_ALLOC_ALLOWED is true for this region. The
+     * type of this attribute is size_t.
+     */
+    HSA_REGION_INFO_RUNTIME_ALLOC_GRANULE = 6,
+    /**
+     * Alignment of buffers allocated by ::hsa_memory_allocate in this region.
+     * The value of this attribute is only defined if
+     * ::HSA_REGION_INFO_RUNTIME_ALLOC_ALLOWED is true for this region, and
+     * must be a power of 2. The type of this attribute is size_t.
+     */
+    HSA_REGION_INFO_RUNTIME_ALLOC_ALIGNMENT = 7
 } hsa_region_info_t;
 
 /**
@@ -3292,10 +3161,9 @@ typedef enum
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p attribute is an invalid
  * region attribute, or @p value is NULL.
  */
-hsa_status_t HSA_API hsa_region_get_info(
-    hsa_region_t region,
-    hsa_region_info_t attribute,
-    void* value);
+hsa_status_t HSA_API hsa_region_get_info(hsa_region_t region,
+                                         hsa_region_info_t attribute,
+                                         void *value);
 
 /**
  * @brief Iterate over the memory regions associated with a given agent, and
@@ -3323,8 +3191,7 @@ hsa_status_t HSA_API hsa_region_get_info(
  */
 hsa_status_t HSA_API hsa_agent_iterate_regions(
     hsa_agent_t agent,
-    hsa_status_t (*callback)(hsa_region_t region, void* data),
-    void* data);
+    hsa_status_t (*callback)(hsa_region_t region, void *data), void *data);
 
 /**
  * @brief Allocate a block of memory in a given region.
@@ -3333,8 +3200,8 @@ hsa_status_t HSA_API hsa_agent_iterate_regions(
  * the ::HSA_REGION_INFO_RUNTIME_ALLOC_ALLOWED flag set.
  *
  * @param[in] size Allocation size, in bytes. Must not be zero. This value is
- * rounded up to the nearest multiple of ::HSA_REGION_INFO_RUNTIME_ALLOC_GRANULE
- * in @p region.
+ * rounded up to the nearest multiple of
+ * ::HSA_REGION_INFO_RUNTIME_ALLOC_GRANULE in @p region.
  *
  * @param[out] ptr Pointer to the location where to store the base address of
  * the allocated block. The returned base address is aligned to the value of
@@ -3346,8 +3213,8 @@ hsa_status_t HSA_API hsa_agent_iterate_regions(
  * @retval ::HSA_STATUS_ERROR_NOT_INITIALIZED The HSA runtime has not been
  * initialized.
  *
- * @retval ::HSA_STATUS_ERROR_OUT_OF_RESOURCES The HSA runtime failed to allocate
- * the required resources.
+ * @retval ::HSA_STATUS_ERROR_OUT_OF_RESOURCES The HSA runtime failed to
+ * allocate the required resources.
  *
  * @retval ::HSA_STATUS_ERROR_INVALID_REGION The region is invalid.
  *
@@ -3357,9 +3224,8 @@ hsa_status_t HSA_API hsa_agent_iterate_regions(
  *
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p ptr is NULL, or @p size is 0.
  */
-hsa_status_t HSA_API hsa_memory_allocate(hsa_region_t region,
-    size_t size,
-    void** ptr);
+hsa_status_t HSA_API hsa_memory_allocate(hsa_region_t region, size_t size,
+                                         void **ptr);
 
 /**
  * @brief Deallocate a block of memory previously allocated using
@@ -3373,25 +3239,25 @@ hsa_status_t HSA_API hsa_memory_allocate(hsa_region_t region,
  * @retval ::HSA_STATUS_ERROR_NOT_INITIALIZED The HSA runtime has not been
  * initialized.
  */
-hsa_status_t HSA_API hsa_memory_free(void* ptr);
+hsa_status_t HSA_API hsa_memory_free(void *ptr);
 
 /**
  * @brief Copy a block of memory from the location pointed to by @p src to the
  * memory block pointed to by @p dst.
  *
  * @param[out] dst Buffer where the content is to be copied. If @p dst is in
- * coarse-grained memory, the copied data is only visible to the agent currently
- * assigned (::hsa_memory_assign_agent) to @p dst.
+ * coarse-grained memory, the copied data is only visible to the agent
+ * currently assigned (::hsa_memory_assign_agent) to @p dst.
  *
- * @param[in] src A valid pointer to the source of data to be copied. The source
- * buffer must not overlap with the destination buffer. If the source buffer is
- * in coarse-grained memory then it must be assigned to an agent, from which the
- * data will be retrieved.
+ * @param[in] src A valid pointer to the source of data to be copied. The
+ * source buffer must not overlap with the destination buffer. If the source
+ * buffer is in coarse-grained memory then it must be assigned to an agent,
+ * from which the data will be retrieved.
  *
  * @param[in] size Number of bytes to copy. If @p size is 0, no copy is
  * performed and the function returns success. Copying a number of bytes larger
- * than the size of the buffers pointed by @p dst or @p src results in undefined
- * behavior.
+ * than the size of the buffers pointed by @p dst or @p src results in
+ * undefined behavior.
  *
  * @retval ::HSA_STATUS_SUCCESS The function has been executed successfully.
  *
@@ -3401,18 +3267,15 @@ hsa_status_t HSA_API hsa_memory_free(void* ptr);
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT The source or destination
  * pointers are NULL.
  */
-hsa_status_t HSA_API hsa_memory_copy(
-    void *dst,
-    const void *src,
-    size_t size);
+hsa_status_t HSA_API hsa_memory_copy(void *dst, const void *src, size_t size);
 
 /**
  * @brief Change the ownership of a global, coarse-grained buffer.
  *
  * @details The contents of a coarse-grained buffer are visible to an agent
- * only after ownership has been explicitely transferred to that agent. Once the
- * operation completes, the previous owner cannot longer access the data in the
- * buffer.
+ * only after ownership has been explicitely transferred to that agent. Once
+ * the operation completes, the previous owner cannot longer access the data in
+ * the buffer.
  *
  * An implementation of the HSA runtime is allowed, but not required, to change
  * the physical location of the buffer when ownership is transferred to a
@@ -3423,8 +3286,8 @@ hsa_status_t HSA_API hsa_memory_copy(
  * @param[in] ptr Base address of a global buffer. The pointer must match an
  * address previously returned by ::hsa_memory_allocate. The size of the buffer
  * affected by the ownership change is identical to the size of that previous
- * allocation. If @p ptr points to a fine-grained global buffer, no operation is
- * performed and the function returns success. If @p ptr does not point to
+ * allocation. If @p ptr points to a fine-grained global buffer, no operation
+ * is performed and the function returns success. If @p ptr does not point to
  * global memory, the behavior is undefined.
  *
  * @param[in] agent Agent that becomes the owner of the buffer. The
@@ -3442,31 +3305,29 @@ hsa_status_t HSA_API hsa_memory_copy(
  *
  * @retval ::HSA_STATUS_ERROR_INVALID_AGENT The agent is invalid.
  *
- * @retval ::HSA_STATUS_ERROR_OUT_OF_RESOURCES The HSA runtime failed to allocate
- * the required resources.
+ * @retval ::HSA_STATUS_ERROR_OUT_OF_RESOURCES The HSA runtime failed to
+ * allocate the required resources.
  *
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p ptr is NULL, or @p access is
  * not a valid access value.
  */
-hsa_status_t HSA_API hsa_memory_assign_agent(
-    void *ptr,
-    hsa_agent_t agent,
-    hsa_access_permission_t access);
+hsa_status_t HSA_API hsa_memory_assign_agent(void *ptr, hsa_agent_t agent,
+                                             hsa_access_permission_t access);
 
 /**
  *
  * @brief Register a global, fine-grained buffer.
  *
- * @details Registering a buffer serves as an indication to the HSA runtime that
- * the memory might be accessed from a kernel agent other than the
- * host. Registration is a performance hint that allows the HSA runtime
+ * @details Registering a buffer serves as an indication to the HSA runtime
+ * that the memory might be accessed from a kernel agent other than the host.
+ * Registration is a performance hint that allows the HSA runtime
  * implementation to know which buffers will be accessed by some of the kernel
  * agents ahead of time.
  *
  * Registration is only recommended for buffers in the global segment that have
- * not been allocated using the HSA allocator (::hsa_memory_allocate), but an OS
- * allocator instead. Registering an OS-allocated buffer in the base profile is
- * equivalent to a no-op.
+ * not been allocated using the HSA allocator (::hsa_memory_allocate), but an
+ * OS allocator instead. Registering an OS-allocated buffer in the base profile
+ * is equivalent to a no-op.
  *
  * Registrations should not overlap.
  *
@@ -3483,15 +3344,13 @@ hsa_status_t HSA_API hsa_memory_assign_agent(
  * @retval ::HSA_STATUS_ERROR_NOT_INITIALIZED The HSA runtime has not been
  * initialized.
  *
- * @retval ::HSA_STATUS_ERROR_OUT_OF_RESOURCES The HSA runtime failed to allocate
- * the required resources.
+ * @retval ::HSA_STATUS_ERROR_OUT_OF_RESOURCES The HSA runtime failed to
+ * allocate the required resources.
  *
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p size is 0 but @p ptr
  * is not NULL.
  */
-hsa_status_t HSA_API hsa_memory_register(
-    void *ptr,
-    size_t size);
+hsa_status_t HSA_API hsa_memory_register(void *ptr, size_t size);
 
 /**
  *
@@ -3511,12 +3370,9 @@ hsa_status_t HSA_API hsa_memory_register(
  * initialized.
  *
  */
-hsa_status_t HSA_API hsa_memory_deregister(
-    void *ptr,
-    size_t size);
+hsa_status_t HSA_API hsa_memory_deregister(void *ptr, size_t size);
 
 /** @} */
-
 
 /** \defgroup instruction-set-architecture Instruction Set Architecture.
  *  @{
@@ -3527,11 +3383,11 @@ hsa_status_t HSA_API hsa_memory_deregister(
  */
 typedef struct hsa_isa_s
 {
-  /**
-   * Opaque handle. Two handles reference the same object of the enclosing type
-   * if and only if they are equal.
-   */
-  uint64_t handle;
+    /**
+     * Opaque handle. Two handles reference the same object of the enclosing
+     * type if and only if they are equal.
+     */
+    uint64_t handle;
 } hsa_isa_t;
 
 /**
@@ -3540,8 +3396,8 @@ typedef struct hsa_isa_s
  *
  * @param[in] name Vendor-specific name associated with a a particular
  * instruction set architecture. @p name must start with the vendor name and a
- * colon (for example, "AMD:"). The rest of the name is vendor-specific. Must be
- * a NUL-terminated string.
+ * colon (for example, "AMD:"). The rest of the name is vendor-specific. Must
+ * be a NUL-terminated string.
  *
  * @param[out] isa Memory location where the HSA runtime stores the ISA handle
  * corresponding to the given name. Must not be NULL.
@@ -3560,9 +3416,7 @@ typedef struct hsa_isa_s
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p name is NULL, or @p isa is
  * NULL.
  */
-hsa_status_t HSA_API hsa_isa_from_name(
-    const char *name,
-    hsa_isa_t *isa);
+hsa_status_t HSA_API hsa_isa_from_name(const char *name, hsa_isa_t *isa);
 
 /**
  * @brief Iterate over the instruction sets supported by the given agent, and
@@ -3591,8 +3445,7 @@ hsa_status_t HSA_API hsa_isa_from_name(
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p callback is NULL.
  */
 hsa_status_t HSA_API hsa_agent_iterate_isas(
-    hsa_agent_t agent,
-    hsa_status_t (*callback)(hsa_isa_t isa, void *data),
+    hsa_agent_t agent, hsa_status_t (*callback)(hsa_isa_t isa, void *data),
     void *data);
 
 /**
@@ -3600,111 +3453,117 @@ hsa_status_t HSA_API hsa_agent_iterate_isas(
  */
 typedef enum
 {
-  /**
-   * The length of the ISA name in bytes, not including the NUL terminator. The
-   * type of this attribute is uint32_t.
-   */
-  HSA_ISA_INFO_NAME_LENGTH = 0,
-  /**
-   * Human-readable description.  The type of this attribute is character array
-   * with the length equal to the value of ::HSA_ISA_INFO_NAME_LENGTH attribute.
-   */
-  HSA_ISA_INFO_NAME = 1,
-  /**
-   * @deprecated
-   *
-   * Number of call conventions supported by the instruction set architecture.
-   * Must be greater than zero. The type of this attribute is uint32_t.
-   */
-  HSA_ISA_INFO_CALL_CONVENTION_COUNT = 2,
-  /**
-   * @deprecated
-   *
-   * Number of work-items in a wavefront for a given call convention. Must be a
-   * power of 2 in the range [1,256]. The type of this attribute is uint32_t.
-   */
-  HSA_ISA_INFO_CALL_CONVENTION_INFO_WAVEFRONT_SIZE = 3,
-  /**
-   * @deprecated
-   *
-   * Number of wavefronts per compute unit for a given call convention. In
-   * practice, other factors (for example, the amount of group memory used by a
-   * work-group) may further limit the number of wavefronts per compute
-   * unit. The type of this attribute is uint32_t.
-   */
-  HSA_ISA_INFO_CALL_CONVENTION_INFO_WAVEFRONTS_PER_COMPUTE_UNIT = 4,
-  /**
-   * Machine models supported by the instruction set architecture. The type of
-   * this attribute is a bool[2]. If the ISA supports the small machine model,
-   * the element at index ::HSA_MACHINE_MODEL_SMALL is true. If the ISA supports
-   * the large model, the element at index ::HSA_MACHINE_MODEL_LARGE is true.
-   */
-  HSA_ISA_INFO_MACHINE_MODELS = 5,
-  /**
-   * Profiles supported by the instruction set architecture. The type of this
-   * attribute is a bool[2]. If the ISA supports the base profile, the element
-   * at index ::HSA_PROFILE_BASE is true. If the ISA supports the full profile,
-   * the element at index ::HSA_PROFILE_FULL is true.
-   */
-  HSA_ISA_INFO_PROFILES = 6,
-  /**
-   * Default floating-point rounding modes supported by the instruction set
-   * architecture. The type of this attribute is a bool[3]. The value at a given
-   * index is true if the corresponding rounding mode in
-   * ::hsa_default_float_rounding_mode_t is supported. At least one default mode
-   * has to be supported.
-   *
-   * If the default mode is supported, then
-   * ::HSA_ISA_INFO_BASE_PROFILE_DEFAULT_FLOAT_ROUNDING_MODES must report that
-   * both the zero and the near roundings modes are supported.
-   */
-  HSA_ISA_INFO_DEFAULT_FLOAT_ROUNDING_MODES = 7,
-  /**
-   * Default floating-point rounding modes supported by the instruction set
-   * architecture in the Base profile. The type of this attribute is a
-   * bool[3]. The value at a given index is true if the corresponding rounding
-   * mode in ::hsa_default_float_rounding_mode_t is supported. The value at
-   * index HSA_DEFAULT_FLOAT_ROUNDING_MODE_DEFAULT must be false.  At least one
-   * of the values at indexes ::HSA_DEFAULT_FLOAT_ROUNDING_MODE_ZERO or
-   * HSA_DEFAULT_FLOAT_ROUNDING_MODE_NEAR must be true.
-   */
-  HSA_ISA_INFO_BASE_PROFILE_DEFAULT_FLOAT_ROUNDING_MODES = 8,
-  /**
-   * Flag indicating that the f16 HSAIL operation is at least as fast as the
-   * f32 operation in the instruction set architecture. The type of this
-   * attribute is bool.
-   */
-  HSA_ISA_INFO_FAST_F16_OPERATION = 9,
-  /**
-   * Maximum number of work-items of each dimension of a work-group.  Each
-   * maximum must be greater than 0. No maximum can exceed the value of
-   * ::HSA_ISA_INFO_WORKGROUP_MAX_SIZE. The type of this attribute is
-   * uint16_t[3].
-   */
-  HSA_ISA_INFO_WORKGROUP_MAX_DIM = 12,
-  /**
-   * Maximum total number of work-items in a work-group. The type
-   * of this attribute is uint32_t.
-   */
-  HSA_ISA_INFO_WORKGROUP_MAX_SIZE = 13,
-  /**
-   * Maximum number of work-items of each dimension of a grid. Each maximum must
-   * be greater than 0, and must not be smaller than the corresponding value in
-   * ::HSA_ISA_INFO_WORKGROUP_MAX_DIM. No maximum can exceed the value of
-   * ::HSA_ISA_INFO_GRID_MAX_SIZE. The type of this attribute is
-   * ::hsa_dim3_t.
-   */
-  HSA_ISA_INFO_GRID_MAX_DIM = 14,
-  /**
-   * Maximum total number of work-items in a grid. The type of this
-   * attribute is uint64_t.
-   */
-  HSA_ISA_INFO_GRID_MAX_SIZE = 16,
-  /**
-   * Maximum number of fbarriers per work-group. Must be at least 32. The
-   * type of this attribute is uint32_t.
-   */
-  HSA_ISA_INFO_FBARRIER_MAX_SIZE = 17
+    /**
+     * The length of the ISA name in bytes, not including the NUL terminator.
+     * The type of this attribute is uint32_t.
+     */
+    HSA_ISA_INFO_NAME_LENGTH = 0,
+    /**
+     * Human-readable description.  The type of this attribute is character
+     * array with the length equal to the value of ::HSA_ISA_INFO_NAME_LENGTH
+     * attribute.
+     */
+    HSA_ISA_INFO_NAME = 1,
+    /**
+     * @deprecated
+     *
+     * Number of call conventions supported by the instruction set
+     * architecture. Must be greater than zero. The type of this attribute is
+     * uint32_t.
+     */
+    HSA_ISA_INFO_CALL_CONVENTION_COUNT = 2,
+    /**
+     * @deprecated
+     *
+     * Number of work-items in a wavefront for a given call convention. Must be
+     * a power of 2 in the range [1,256]. The type of this attribute is
+     * uint32_t.
+     */
+    HSA_ISA_INFO_CALL_CONVENTION_INFO_WAVEFRONT_SIZE = 3,
+    /**
+     * @deprecated
+     *
+     * Number of wavefronts per compute unit for a given call convention. In
+     * practice, other factors (for example, the amount of group memory used by
+     * a work-group) may further limit the number of wavefronts per compute
+     * unit. The type of this attribute is uint32_t.
+     */
+    HSA_ISA_INFO_CALL_CONVENTION_INFO_WAVEFRONTS_PER_COMPUTE_UNIT = 4,
+    /**
+     * Machine models supported by the instruction set architecture. The type
+     * of this attribute is a bool[2]. If the ISA supports the small machine
+     * model, the element at index ::HSA_MACHINE_MODEL_SMALL is true. If the
+     * ISA supports the large model, the element at index
+     * ::HSA_MACHINE_MODEL_LARGE is true.
+     */
+    HSA_ISA_INFO_MACHINE_MODELS = 5,
+    /**
+     * Profiles supported by the instruction set architecture. The type of this
+     * attribute is a bool[2]. If the ISA supports the base profile, the
+     * element at index ::HSA_PROFILE_BASE is true. If the ISA supports the
+     * full profile, the element at index ::HSA_PROFILE_FULL is true.
+     */
+    HSA_ISA_INFO_PROFILES = 6,
+    /**
+     * Default floating-point rounding modes supported by the instruction set
+     * architecture. The type of this attribute is a bool[3]. The value at a
+     * given index is true if the corresponding rounding mode in
+     * ::hsa_default_float_rounding_mode_t is supported. At least one default
+     * mode has to be supported.
+     *
+     * If the default mode is supported, then
+     * ::HSA_ISA_INFO_BASE_PROFILE_DEFAULT_FLOAT_ROUNDING_MODES must report
+     * that both the zero and the near roundings modes are supported.
+     */
+    HSA_ISA_INFO_DEFAULT_FLOAT_ROUNDING_MODES = 7,
+    /**
+     * Default floating-point rounding modes supported by the instruction set
+     * architecture in the Base profile. The type of this attribute is a
+     * bool[3]. The value at a given index is true if the corresponding
+     * rounding mode in ::hsa_default_float_rounding_mode_t is supported. The
+     * value at index HSA_DEFAULT_FLOAT_ROUNDING_MODE_DEFAULT must be false. At
+     * least one of the values at indexes
+     * ::HSA_DEFAULT_FLOAT_ROUNDING_MODE_ZERO or
+     * HSA_DEFAULT_FLOAT_ROUNDING_MODE_NEAR must be true.
+     */
+    HSA_ISA_INFO_BASE_PROFILE_DEFAULT_FLOAT_ROUNDING_MODES = 8,
+    /**
+     * Flag indicating that the f16 HSAIL operation is at least as fast as the
+     * f32 operation in the instruction set architecture. The type of this
+     * attribute is bool.
+     */
+    HSA_ISA_INFO_FAST_F16_OPERATION = 9,
+    /**
+     * Maximum number of work-items of each dimension of a work-group.  Each
+     * maximum must be greater than 0. No maximum can exceed the value of
+     * ::HSA_ISA_INFO_WORKGROUP_MAX_SIZE. The type of this attribute is
+     * uint16_t[3].
+     */
+    HSA_ISA_INFO_WORKGROUP_MAX_DIM = 12,
+    /**
+     * Maximum total number of work-items in a work-group. The type
+     * of this attribute is uint32_t.
+     */
+    HSA_ISA_INFO_WORKGROUP_MAX_SIZE = 13,
+    /**
+     * Maximum number of work-items of each dimension of a grid. Each maximum
+     * must be greater than 0, and must not be smaller than the corresponding
+     * value in
+     * ::HSA_ISA_INFO_WORKGROUP_MAX_DIM. No maximum can exceed the value of
+     * ::HSA_ISA_INFO_GRID_MAX_SIZE. The type of this attribute is
+     * ::hsa_dim3_t.
+     */
+    HSA_ISA_INFO_GRID_MAX_DIM = 14,
+    /**
+     * Maximum total number of work-items in a grid. The type of this
+     * attribute is uint64_t.
+     */
+    HSA_ISA_INFO_GRID_MAX_SIZE = 16,
+    /**
+     * Maximum number of fbarriers per work-group. Must be at least 32. The
+     * type of this attribute is uint32_t.
+     */
+    HSA_ISA_INFO_FBARRIER_MAX_SIZE = 17
 } hsa_isa_info_t;
 
 /**
@@ -3744,11 +3603,10 @@ typedef enum
  * instruction set architecture attribute, or @p value is
  * NULL.
  */
-hsa_status_t HSA_API HSA_DEPRECATED hsa_isa_get_info(
-    hsa_isa_t isa,
-    hsa_isa_info_t attribute,
-    uint32_t index,
-    void *value);
+hsa_status_t HSA_API HSA_DEPRECATED hsa_isa_get_info(hsa_isa_t isa,
+                                                     hsa_isa_info_t attribute,
+                                                     uint32_t index,
+                                                     void *value);
 
 /**
  * @brief Get the current value of an attribute for a given instruction set
@@ -3774,10 +3632,9 @@ hsa_status_t HSA_API HSA_DEPRECATED hsa_isa_get_info(
  * instruction set architecture attribute, or @p value is
  * NULL.
  */
-hsa_status_t HSA_API hsa_isa_get_info_alt(
-    hsa_isa_t isa,
-    hsa_isa_info_t attribute,
-    void *value);
+hsa_status_t HSA_API hsa_isa_get_info_alt(hsa_isa_t isa,
+                                          hsa_isa_info_t attribute,
+                                          void *value);
 
 /**
  * @brief Retrieve the exception policy support for a given combination of
@@ -3801,28 +3658,27 @@ hsa_status_t HSA_API hsa_isa_get_info_alt(
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p profile is not a valid
  * profile, or @p mask is NULL.
  */
-hsa_status_t HSA_API hsa_isa_get_exception_policies(
-    hsa_isa_t isa,
-    hsa_profile_t profile,
-    uint16_t *mask);
+hsa_status_t HSA_API hsa_isa_get_exception_policies(hsa_isa_t isa,
+                                                    hsa_profile_t profile,
+                                                    uint16_t *mask);
 
 /**
  * @brief Floating-point types.
  */
 typedef enum
 {
-  /**
-   * 16-bit floating-point type.
-   */
-  HSA_FP_TYPE_16 = 1,
-  /**
-   * 32-bit floating-point type.
-   */
-  HSA_FP_TYPE_32 = 2,
-  /**
-   * 64-bit floating-point type.
-   */
-  HSA_FP_TYPE_64 = 4
+    /**
+     * 16-bit floating-point type.
+     */
+    HSA_FP_TYPE_16 = 1,
+    /**
+     * 32-bit floating-point type.
+     */
+    HSA_FP_TYPE_32 = 2,
+    /**
+     * 64-bit floating-point type.
+     */
+    HSA_FP_TYPE_64 = 4
 } hsa_fp_type_t;
 
 /**
@@ -3830,14 +3686,14 @@ typedef enum
  */
 typedef enum
 {
-  /**
-   * Flush to zero.
-   */
-  HSA_FLUSH_MODE_FTZ = 1,
-  /**
-   * Do not flush to zero.
-   */
-  HSA_FLUSH_MODE_NON_FTZ = 2
+    /**
+     * Flush to zero.
+     */
+    HSA_FLUSH_MODE_FTZ = 1,
+    /**
+     * Do not flush to zero.
+     */
+    HSA_FLUSH_MODE_NON_FTZ = 2
 } hsa_flush_mode_t;
 
 /**
@@ -3845,14 +3701,14 @@ typedef enum
  */
 typedef enum
 {
-  /**
-   * Single round method.
-   */
-  HSA_ROUND_METHOD_SINGLE = 1,
-  /**
-   * Double round method.
-   */
-  HSA_ROUND_METHOD_DOUBLE = 2
+    /**
+     * Single round method.
+     */
+    HSA_ROUND_METHOD_SINGLE = 1,
+    /**
+     * Double round method.
+     */
+    HSA_ROUND_METHOD_DOUBLE = 2
 } hsa_round_method_t;
 
 /**
@@ -3868,7 +3724,8 @@ typedef enum
  * @param[in] flush_mode Flush to zero modifier.
  *
  * @param[out] round_method Pointer to a memory location where the HSA
- * runtime stores the round method used by the implementation. Must not be NULL.
+ * runtime stores the round method used by the implementation. Must not be
+ * NULL.
  *
  * @retval ::HSA_STATUS_SUCCESS The function has been executed successfully.
  *
@@ -3883,9 +3740,7 @@ typedef enum
  * or @p round_method is NULL.
  */
 hsa_status_t HSA_API hsa_isa_get_round_method(
-    hsa_isa_t isa,
-    hsa_fp_type_t fp_type,
-    hsa_flush_mode_t flush_mode,
+    hsa_isa_t isa, hsa_fp_type_t fp_type, hsa_flush_mode_t flush_mode,
     hsa_round_method_t *round_method);
 
 /**
@@ -3893,11 +3748,11 @@ hsa_status_t HSA_API hsa_isa_get_round_method(
  */
 typedef struct hsa_wavefront_s
 {
-  /**
-   * Opaque handle. Two handles reference the same object of the enclosing type
-   * if and only if they are equal.
-   */
-  uint64_t handle;
+    /**
+     * Opaque handle. Two handles reference the same object of the enclosing
+     * type if and only if they are equal.
+     */
+    uint64_t handle;
 } hsa_wavefront_t;
 
 /**
@@ -3905,11 +3760,11 @@ typedef struct hsa_wavefront_s
  */
 typedef enum
 {
-  /**
-   * Number of work-items in the wavefront. Must be a power of 2 in the range
-   * [1,256]. The type of this attribute is uint32_t.
-   */
-  HSA_WAVEFRONT_INFO_SIZE = 0
+    /**
+     * Number of work-items in the wavefront. Must be a power of 2 in the range
+     * [1,256]. The type of this attribute is uint32_t.
+     */
+    HSA_WAVEFRONT_INFO_SIZE = 0
 } hsa_wavefront_info_t;
 
 /**
@@ -3933,10 +3788,9 @@ typedef enum
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p attribute is an invalid
  * wavefront attribute, or @p value is NULL.
  */
-hsa_status_t HSA_API hsa_wavefront_get_info(
-    hsa_wavefront_t wavefront,
-    hsa_wavefront_info_t attribute,
-    void *value);
+hsa_status_t HSA_API hsa_wavefront_get_info(hsa_wavefront_t wavefront,
+                                            hsa_wavefront_info_t attribute,
+                                            void *value);
 
 /**
  * @brief Iterate over the different wavefronts supported by an instruction set
@@ -3945,10 +3799,10 @@ hsa_status_t HSA_API hsa_wavefront_get_info(
  * @param[in] isa Instruction set architecture.
  *
  * @param[in] callback Callback to be invoked once per wavefront that is
- * supported by the agent. The HSA runtime passes two arguments to the callback:
- * the wavefront handle and the application data.  If @p callback returns a
- * status other than ::HSA_STATUS_SUCCESS for a particular iteration, the
- * traversal stops and that value is returned.
+ * supported by the agent. The HSA runtime passes two arguments to the
+ * callback: the wavefront handle and the application data.  If @p callback
+ * returns a status other than ::HSA_STATUS_SUCCESS for a particular iteration,
+ * the traversal stops and that value is returned.
  *
  * @param[in] data Application data that is passed to @p callback on every
  * iteration. May be NULL.
@@ -3989,18 +3843,15 @@ hsa_status_t HSA_API hsa_isa_iterate_wavefronts(
  * @retval ::HSA_STATUS_ERROR_NOT_INITIALIZED The HSA runtime has not been
  * initialized.
  *
- * @retval ::HSA_STATUS_ERROR_INVALID_ISA @p code_object_isa or @p agent_isa are
- * invalid.
+ * @retval ::HSA_STATUS_ERROR_INVALID_ISA @p code_object_isa or @p agent_isa
+ * are invalid.
  *
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p result is NULL.
  */
 hsa_status_t HSA_API HSA_DEPRECATED hsa_isa_compatible(
-    hsa_isa_t code_object_isa,
-    hsa_isa_t agent_isa,
-    bool *result);
+    hsa_isa_t code_object_isa, hsa_isa_t agent_isa, bool *result);
 
 /** @} */
-
 
 /** \defgroup executable Executable
  *  @{
@@ -4014,11 +3865,11 @@ hsa_status_t HSA_API HSA_DEPRECATED hsa_isa_compatible(
  */
 typedef struct hsa_code_object_reader_s
 {
-  /**
-   * Opaque handle. Two handles reference the same object of the enclosing type
-   * if and only if they are equal.
-   */
-  uint64_t handle;
+    /**
+     * Opaque handle. Two handles reference the same object of the enclosing
+     * type if and only if they are equal.
+     */
+    uint64_t handle;
 } hsa_code_object_reader_t;
 
 /**
@@ -4047,8 +3898,7 @@ typedef struct hsa_code_object_reader_s
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p code_object_reader is NULL.
  */
 hsa_status_t HSA_API hsa_code_object_reader_create_from_file(
-    hsa_file_t file,
-    hsa_code_object_reader_t *code_object_reader);
+    hsa_file_t file, hsa_code_object_reader_t *code_object_reader);
 
 /**
  * @brief Create a code object reader to operate on memory.
@@ -4075,8 +3925,7 @@ hsa_status_t HSA_API hsa_code_object_reader_create_from_file(
  * is zero, or @p code_object_reader is NULL.
  */
 hsa_status_t HSA_API hsa_code_object_reader_create_from_memory(
-    const void *code_object,
-    size_t size,
+    const void *code_object, size_t size,
     hsa_code_object_reader_t *code_object_reader);
 
 /**
@@ -4096,8 +3945,8 @@ hsa_status_t HSA_API hsa_code_object_reader_create_from_memory(
  * @retval ::HSA_STATUS_ERROR_INVALID_CODE_OBJECT_READER @p code_object_reader
  * is invalid.
  */
-hsa_status_t HSA_API hsa_code_object_reader_destroy(
-    hsa_code_object_reader_t code_object_reader);
+hsa_status_t HSA_API
+hsa_code_object_reader_destroy(hsa_code_object_reader_t code_object_reader);
 
 /**
  * @brief Struct containing an opaque handle to an executable, which contains
@@ -4106,11 +3955,11 @@ hsa_status_t HSA_API hsa_code_object_reader_destroy(
  */
 typedef struct hsa_executable_s
 {
-  /**
-   * Opaque handle. Two handles reference the same object of the enclosing type
-   * if and only if they are equal.
-   */
-  uint64_t handle;
+    /**
+     * Opaque handle. Two handles reference the same object of the enclosing
+     * type if and only if they are equal.
+     */
+    uint64_t handle;
 } hsa_executable_t;
 
 /**
@@ -4118,20 +3967,20 @@ typedef struct hsa_executable_s
  */
 typedef enum
 {
-  /**
-   * Executable state, which allows the user to load code objects and define
-   * external variables. Variable addresses, kernel code handles, and
-   * indirect function code handles are not available in query operations until
-   * the executable is frozen (zero always returned).
-   */
-  HSA_EXECUTABLE_STATE_UNFROZEN = 0,
-  /**
-   * Executable state, which allows the user to query variable addresses,
-   * kernel code handles, and indirect function code handles using query
-   * operations. Loading new code objects, as well as defining external
-   * variables, is not allowed in this state.
-   */
-  HSA_EXECUTABLE_STATE_FROZEN = 1
+    /**
+     * Executable state, which allows the user to load code objects and define
+     * external variables. Variable addresses, kernel code handles, and
+     * indirect function code handles are not available in query operations
+     * until the executable is frozen (zero always returned).
+     */
+    HSA_EXECUTABLE_STATE_UNFROZEN = 0,
+    /**
+     * Executable state, which allows the user to query variable addresses,
+     * kernel code handles, and indirect function code handles using query
+     * operations. Loading new code objects, as well as defining external
+     * variables, is not allowed in this state.
+     */
+    HSA_EXECUTABLE_STATE_FROZEN = 1
 } hsa_executable_state_t;
 
 /**
@@ -4144,8 +3993,8 @@ typedef enum
  * @param[in] profile Profile used in the executable.
  *
  * @param[in] executable_state Executable state. If the state is
- * ::HSA_EXECUTABLE_STATE_FROZEN, the resulting executable is useless because no
- * code objects can be loaded, and no variables can be defined.
+ * ::HSA_EXECUTABLE_STATE_FROZEN, the resulting executable is useless because
+ * no code objects can be loaded, and no variables can be defined.
  *
  * @param[in] options Standard and vendor-specific options. Unknown options are
  * ignored. A standard option begins with the "-hsa_" prefix. Options beginning
@@ -4153,8 +4002,8 @@ typedef enum
  * vendor-specific option begins with the "-<vendor_name>_" prefix. Must be a
  * NUL-terminated string. May be NULL.
  *
- * @param[out] executable Memory location where the HSA runtime stores the newly
- * created executable handle.
+ * @param[out] executable Memory location where the HSA runtime stores the
+ * newly created executable handle.
  *
  * @retval ::HSA_STATUS_SUCCESS The function has been executed successfully.
  *
@@ -4168,10 +4017,8 @@ typedef enum
  * @p executable is NULL.
  */
 hsa_status_t HSA_API HSA_DEPRECATED hsa_executable_create(
-    hsa_profile_t profile,
-    hsa_executable_state_t executable_state,
-    const char *options,
-    hsa_executable_t *executable);
+    hsa_profile_t profile, hsa_executable_state_t executable_state,
+    const char *options, hsa_executable_t *executable);
 
 /**
  * @brief Create an empty executable.
@@ -4206,8 +4053,7 @@ hsa_status_t HSA_API HSA_DEPRECATED hsa_executable_create(
 hsa_status_t HSA_API hsa_executable_create_alt(
     hsa_profile_t profile,
     hsa_default_float_rounding_mode_t default_float_rounding_mode,
-    const char *options,
-    hsa_executable_t *executable);
+    const char *options, hsa_executable_t *executable);
 
 /**
  * @brief Destroy an executable.
@@ -4230,19 +4076,18 @@ hsa_status_t HSA_API hsa_executable_create_alt(
  *
  * @retval ::HSA_STATUS_ERROR_INVALID_EXECUTABLE The executable is invalid.
  */
-hsa_status_t HSA_API hsa_executable_destroy(
-    hsa_executable_t executable);
+hsa_status_t HSA_API hsa_executable_destroy(hsa_executable_t executable);
 
 /**
  * @brief Loaded code object handle.
  */
 typedef struct hsa_loaded_code_object_s
 {
-  /**
-   * Opaque handle. Two handles reference the same object of the enclosing type
-   * if and only if they are equal.
-   */
-  uint64_t handle;
+    /**
+     * Opaque handle. Two handles reference the same object of the enclosing
+     * type if and only if they are equal.
+     */
+    uint64_t handle;
 } hsa_loaded_code_object_t;
 
 /**
@@ -4290,10 +4135,8 @@ typedef struct hsa_loaded_code_object_s
  * code object uses an extension that is not supported by the implementation).
  */
 hsa_status_t HSA_API hsa_executable_load_program_code_object(
-    hsa_executable_t executable,
-    hsa_code_object_reader_t code_object_reader,
-    const char *options,
-    hsa_loaded_code_object_t *loaded_code_object);
+    hsa_executable_t executable, hsa_code_object_reader_t code_object_reader,
+    const char *options, hsa_loaded_code_object_t *loaded_code_object);
 
 /**
  * @brief Load an agent code object into an executable.
@@ -4309,9 +4152,9 @@ hsa_status_t HSA_API hsa_executable_load_program_code_object(
  * The default floating-point rounding mode of the code object associated with
  * @p code_object_reader must match that of the executable
  * (::HSA_EXECUTABLE_INFO_DEFAULT_FLOAT_ROUNDING_MODE), or be default (in which
- * case the value of ::HSA_EXECUTABLE_INFO_DEFAULT_FLOAT_ROUNDING_MODE is used).
- * If the agent code object uses extensions, the implementation and the agent
- * must support them for this operation to return successfully.
+ * case the value of ::HSA_EXECUTABLE_INFO_DEFAULT_FLOAT_ROUNDING_MODE is
+ * used). If the agent code object uses extensions, the implementation and the
+ * agent must support them for this operation to return successfully.
  *
  * @param[in] executable Executable.
  *
@@ -4319,9 +4162,9 @@ hsa_status_t HSA_API hsa_executable_load_program_code_object(
  * into an executable at most once for a given agent. The instruction set
  * architecture of the code object must be supported by the agent.
  *
- * @param[in] code_object_reader A code object reader that holds the code object
- * to load. If a code object reader is destroyed before all the associated
- * executables are destroyed, the behavior is undefined.
+ * @param[in] code_object_reader A code object reader that holds the code
+ * object to load. If a code object reader is destroyed before all the
+ * associated executables are destroyed, the behavior is undefined.
  *
  * @param[in] options Standard and vendor-specific options. Unknown options are
  * ignored. A standard option begins with the "-hsa_" prefix. Options beginning
@@ -4356,10 +4199,8 @@ hsa_status_t HSA_API hsa_executable_load_program_code_object(
  * between the two), or the implementation.
  */
 hsa_status_t HSA_API hsa_executable_load_agent_code_object(
-    hsa_executable_t executable,
-    hsa_agent_t agent,
-    hsa_code_object_reader_t code_object_reader,
-    const char *options,
+    hsa_executable_t executable, hsa_agent_t agent,
+    hsa_code_object_reader_t code_object_reader, const char *options,
     hsa_loaded_code_object_t *loaded_code_object);
 
 /**
@@ -4389,31 +4230,33 @@ hsa_status_t HSA_API hsa_executable_load_agent_code_object(
  * @retval ::HSA_STATUS_ERROR_VARIABLE_UNDEFINED One or more variables are
  * undefined in the executable.
  *
- * @retval ::HSA_STATUS_ERROR_FROZEN_EXECUTABLE @p executable is already frozen.
+ * @retval ::HSA_STATUS_ERROR_FROZEN_EXECUTABLE @p executable is already
+ * frozen.
  */
-hsa_status_t HSA_API hsa_executable_freeze(
-    hsa_executable_t executable,
-    const char *options);
+hsa_status_t HSA_API hsa_executable_freeze(hsa_executable_t executable,
+                                           const char *options);
 
 /**
  * @brief Executable attributes.
  */
 typedef enum
 {
-  /**
-   * Profile this executable is created for. The type of this attribute is
-   * ::hsa_profile_t.
-   */
-  HSA_EXECUTABLE_INFO_PROFILE = 1,
-  /**
-   * Executable state. The type of this attribute is ::hsa_executable_state_t.
-   */
-  HSA_EXECUTABLE_INFO_STATE = 2,
-  /**
-   * Default floating-point rounding mode specified when executable was created.
-   * The type of this attribute is ::hsa_default_float_rounding_mode_t.
-   */
-  HSA_EXECUTABLE_INFO_DEFAULT_FLOAT_ROUNDING_MODE = 3
+    /**
+     * Profile this executable is created for. The type of this attribute is
+     * ::hsa_profile_t.
+     */
+    HSA_EXECUTABLE_INFO_PROFILE = 1,
+    /**
+     * Executable state. The type of this attribute is
+     * ::hsa_executable_state_t.
+     */
+    HSA_EXECUTABLE_INFO_STATE = 2,
+    /**
+     * Default floating-point rounding mode specified when executable was
+     * created. The type of this attribute is
+     * ::hsa_default_float_rounding_mode_t.
+     */
+    HSA_EXECUTABLE_INFO_DEFAULT_FLOAT_ROUNDING_MODE = 3
 } hsa_executable_info_t;
 
 /**
@@ -4437,10 +4280,9 @@ typedef enum
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p attribute is an invalid
  * executable attribute, or @p value is NULL.
  */
-hsa_status_t HSA_API hsa_executable_get_info(
-    hsa_executable_t executable,
-    hsa_executable_info_t attribute,
-    void *value);
+hsa_status_t HSA_API hsa_executable_get_info(hsa_executable_t executable,
+                                             hsa_executable_info_t attribute,
+                                             void *value);
 
 /**
  * @brief Define an external global variable with program allocation.
@@ -4481,9 +4323,7 @@ hsa_status_t HSA_API hsa_executable_get_info(
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p variable_name is NULL.
  */
 hsa_status_t HSA_API hsa_executable_global_variable_define(
-    hsa_executable_t executable,
-    const char *variable_name,
-    void *address);
+    hsa_executable_t executable, const char *variable_name, void *address);
 
 /**
  * @brief Define an external global variable with agent allocation.
@@ -4501,9 +4341,9 @@ hsa_status_t HSA_API hsa_executable_global_variable_define(
  * Manual describes the standard name mangling scheme.
  *
  * @param[in] address Address where the variable is defined. This address must
- * have been previously allocated using ::hsa_memory_allocate in a global region
- * that is only visible to @p agent. The application cannot deallocate the
- * buffer pointed by @p address before @p executable is destroyed.
+ * have been previously allocated using ::hsa_memory_allocate in a global
+ * region that is only visible to @p agent. The application cannot deallocate
+ * the buffer pointed by @p address before @p executable is destroyed.
  *
  * @retval ::HSA_STATUS_SUCCESS The function has been executed successfully.
  *
@@ -4528,9 +4368,7 @@ hsa_status_t HSA_API hsa_executable_global_variable_define(
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p variable_name is NULL.
  */
 hsa_status_t HSA_API hsa_executable_agent_global_variable_define(
-    hsa_executable_t executable,
-    hsa_agent_t agent,
-    const char *variable_name,
+    hsa_executable_t executable, hsa_agent_t agent, const char *variable_name,
     void *address);
 
 /**
@@ -4550,8 +4388,8 @@ hsa_status_t HSA_API hsa_executable_agent_global_variable_define(
  *
  * @param[in] address Address where the variable is defined. This address must
  * have been previously allocated using ::hsa_memory_allocate in a readonly
- * region associated with @p agent. The application cannot deallocate the buffer
- * pointed by @p address before @p executable is destroyed.
+ * region associated with @p agent. The application cannot deallocate the
+ * buffer pointed by @p address before @p executable is destroyed.
  *
  * @param[in] address Address where the variable is defined. The buffer pointed
  * by @p address is owned by the application, and cannot be deallocated before
@@ -4580,15 +4418,13 @@ hsa_status_t HSA_API hsa_executable_agent_global_variable_define(
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p variable_name is NULL.
  */
 hsa_status_t HSA_API hsa_executable_readonly_variable_define(
-    hsa_executable_t executable,
-    hsa_agent_t agent,
-    const char *variable_name,
+    hsa_executable_t executable, hsa_agent_t agent, const char *variable_name,
     void *address);
 
 /**
  * @brief Validate an executable. Checks that all code objects have matching
- * machine model, profile, and default floating-point rounding mode. Checks that
- * all declarations have definitions. Checks declaration-definition
+ * machine model, profile, and default floating-point rounding mode. Checks
+ * that all declarations have definitions. Checks declaration-definition
  * compatibility (see the HSA Programming Reference Manual for compatibility
  * rules). Invoking this function is equivalent to invoking
  * ::hsa_executable_validate_alt with no options.
@@ -4607,14 +4443,13 @@ hsa_status_t HSA_API hsa_executable_readonly_variable_define(
  *
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p result is NULL.
  */
-hsa_status_t HSA_API hsa_executable_validate(
-    hsa_executable_t executable,
-    uint32_t *result);
+hsa_status_t HSA_API hsa_executable_validate(hsa_executable_t executable,
+                                             uint32_t *result);
 
 /**
  * @brief Validate an executable. Checks that all code objects have matching
- * machine model, profile, and default floating-point rounding mode. Checks that
- * all declarations have definitions. Checks declaration-definition
+ * machine model, profile, and default floating-point rounding mode. Checks
+ * that all declarations have definitions. Checks declaration-definition
  * compatibility (see the HSA Programming Reference Manual for compatibility
  * rules).
  *
@@ -4638,10 +4473,9 @@ hsa_status_t HSA_API hsa_executable_validate(
  *
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p result is NULL.
  */
-hsa_status_t HSA_API hsa_executable_validate_alt(
-    hsa_executable_t executable,
-    const char *options,
-    uint32_t *result);
+hsa_status_t HSA_API hsa_executable_validate_alt(hsa_executable_t executable,
+                                                 const char *options,
+                                                 uint32_t *result);
 
 /**
  * @brief Executable symbol handle.
@@ -4652,11 +4486,11 @@ hsa_status_t HSA_API hsa_executable_validate_alt(
  */
 typedef struct hsa_executable_symbol_s
 {
-  /**
-   * Opaque handle. Two handles reference the same object of the enclosing type
-   * if and only if they are equal.
-   */
-  uint64_t handle;
+    /**
+     * Opaque handle. Two handles reference the same object of the enclosing
+     * type if and only if they are equal.
+     */
+    uint64_t handle;
 } hsa_executable_symbol_t;
 
 /**
@@ -4675,8 +4509,9 @@ typedef struct hsa_executable_symbol_s
  * independent of any agent (for example, a variable with program
  * allocation), this argument is ignored.
  *
- * @param[in] call_convention Call convention associated with the symbol. If the
- * symbol does not correspond to an indirect function, this argument is ignored.
+ * @param[in] call_convention Call convention associated with the symbol. If
+ * the symbol does not correspond to an indirect function, this argument is
+ * ignored.
  *
  * @param[out] symbol Memory location where the HSA runtime stores the symbol
  * handle.
@@ -4688,18 +4523,15 @@ typedef struct hsa_executable_symbol_s
  *
  * @retval ::HSA_STATUS_ERROR_INVALID_EXECUTABLE The executable is invalid.
  *
- * @retval ::HSA_STATUS_ERROR_INVALID_SYMBOL_NAME There is no symbol with a name
- * that matches @p symbol_name.
+ * @retval ::HSA_STATUS_ERROR_INVALID_SYMBOL_NAME There is no symbol with a
+ * name that matches @p symbol_name.
  *
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p symbol_name is NULL, or
  * @p symbol is NULL.
  */
 hsa_status_t HSA_API HSA_DEPRECATED hsa_executable_get_symbol(
-    hsa_executable_t executable,
-    const char *module_name,
-    const char *symbol_name,
-    hsa_agent_t agent,
-    int32_t call_convention,
+    hsa_executable_t executable, const char *module_name,
+    const char *symbol_name, hsa_agent_t agent, int32_t call_convention,
     hsa_executable_symbol_t *symbol);
 
 /**
@@ -4708,8 +4540,8 @@ hsa_status_t HSA_API HSA_DEPRECATED hsa_executable_get_symbol(
  * @param[in] executable Executable.
  *
  * @param[in] symbol_name Symbol name. Must be a NUL-terminated character
- * array. The Programmer's Reference Manual describes the standard name mangling
- * scheme.
+ * array. The Programmer's Reference Manual describes the standard name
+ * mangling scheme.
  *
  * @param[in] agent Pointer to the agent for which the symbol with the given
  * name is defined. If the symbol corresponding to the given name has program
@@ -4725,35 +4557,33 @@ hsa_status_t HSA_API HSA_DEPRECATED hsa_executable_get_symbol(
  *
  * @retval ::HSA_STATUS_ERROR_INVALID_EXECUTABLE The executable is invalid.
  *
- * @retval ::HSA_STATUS_ERROR_INVALID_SYMBOL_NAME There is no symbol with a name
- * that matches @p symbol_name.
+ * @retval ::HSA_STATUS_ERROR_INVALID_SYMBOL_NAME There is no symbol with a
+ * name that matches @p symbol_name.
  *
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p symbol_name is NULL, or @p
  * symbol is NULL.
  */
 hsa_status_t HSA_API hsa_executable_get_symbol_by_name(
-    hsa_executable_t executable,
-    const char *symbol_name,
-    const hsa_agent_t *agent,
-    hsa_executable_symbol_t *symbol);
+    hsa_executable_t executable, const char *symbol_name,
+    const hsa_agent_t *agent, hsa_executable_symbol_t *symbol);
 
 /**
  * @brief Symbol type.
  */
 typedef enum
 {
-  /**
-   * Variable.
-   */
-  HSA_SYMBOL_KIND_VARIABLE = 0,
-  /**
-   * Kernel.
-   */
-  HSA_SYMBOL_KIND_KERNEL = 1,
-  /**
-   * Indirect function.
-   */
-  HSA_SYMBOL_KIND_INDIRECT_FUNCTION = 2
+    /**
+     * Variable.
+     */
+    HSA_SYMBOL_KIND_VARIABLE = 0,
+    /**
+     * Kernel.
+     */
+    HSA_SYMBOL_KIND_KERNEL = 1,
+    /**
+     * Indirect function.
+     */
+    HSA_SYMBOL_KIND_INDIRECT_FUNCTION = 2
 } hsa_symbol_kind_t;
 
 /**
@@ -4761,14 +4591,14 @@ typedef enum
  */
 typedef enum
 {
-  /**
-   * Module linkage.
-   */
-  HSA_SYMBOL_LINKAGE_MODULE = 0,
-  /**
-   * Program linkage.
-   */
-  HSA_SYMBOL_LINKAGE_PROGRAM = 1
+    /**
+     * Module linkage.
+     */
+    HSA_SYMBOL_LINKAGE_MODULE = 0,
+    /**
+     * Program linkage.
+     */
+    HSA_SYMBOL_LINKAGE_PROGRAM = 1
 } hsa_symbol_linkage_t;
 
 /**
@@ -4776,14 +4606,14 @@ typedef enum
  */
 typedef enum
 {
-  /**
-   * Agent allocation.
-   */
-  HSA_VARIABLE_ALLOCATION_AGENT = 0,
-  /**
-   * Program allocation.
-   */
-  HSA_VARIABLE_ALLOCATION_PROGRAM = 1
+    /**
+     * Agent allocation.
+     */
+    HSA_VARIABLE_ALLOCATION_AGENT = 0,
+    /**
+     * Program allocation.
+     */
+    HSA_VARIABLE_ALLOCATION_PROGRAM = 1
 } hsa_variable_allocation_t;
 
 /**
@@ -4791,14 +4621,14 @@ typedef enum
  */
 typedef enum
 {
-  /**
-   * Global memory segment.
-   */
-  HSA_VARIABLE_SEGMENT_GLOBAL = 0,
-  /**
-   * Readonly memory segment.
-   */
-  HSA_VARIABLE_SEGMENT_READONLY = 1
+    /**
+     * Global memory segment.
+     */
+    HSA_VARIABLE_SEGMENT_GLOBAL = 0,
+    /**
+     * Readonly memory segment.
+     */
+    HSA_VARIABLE_SEGMENT_READONLY = 1
 } hsa_variable_segment_t;
 
 /**
@@ -4806,190 +4636,195 @@ typedef enum
  */
 typedef enum
 {
-  /**
-   * The kind of the symbol. The type of this attribute is ::hsa_symbol_kind_t.
-   */
-  HSA_EXECUTABLE_SYMBOL_INFO_TYPE = 0,
-  /**
-   * The length of the symbol name in bytes, not including the NUL terminator.
-   * The type of this attribute is uint32_t.
-   */
-  HSA_EXECUTABLE_SYMBOL_INFO_NAME_LENGTH = 1,
-  /**
-   * The name of the symbol. The type of this attribute is character array with
-   * the length equal to the value of ::HSA_EXECUTABLE_SYMBOL_INFO_NAME_LENGTH
-   * attribute.
-   */
-  HSA_EXECUTABLE_SYMBOL_INFO_NAME = 2,
-  /**
-   * @deprecated
-   *
-   * The length of the module name in bytes (not including the NUL terminator)
-   * to which this symbol belongs if this symbol has module linkage, otherwise 0
-   * is returned. The type of this attribute is uint32_t.
-   */
-  HSA_EXECUTABLE_SYMBOL_INFO_MODULE_NAME_LENGTH = 3,
-  /**
-   * @deprecated
-   *
-   * The module name to which this symbol belongs if this symbol has module
-   * linkage, otherwise an empty string is returned. The type of this attribute
-   * is character array with the length equal to the value of
-   * ::HSA_EXECUTABLE_SYMBOL_INFO_MODULE_NAME_LENGTH attribute.
-   */
-  HSA_EXECUTABLE_SYMBOL_INFO_MODULE_NAME = 4,
-  /**
-   * @deprecated
-   *
-   * Agent associated with this symbol. If the symbol is a variable, the
-   * value of this attribute is only defined if
-   * ::HSA_EXECUTABLE_SYMBOL_INFO_VARIABLE_ALLOCATION is
-   * ::HSA_VARIABLE_ALLOCATION_AGENT. The type of this attribute is hsa_agent_t.
-   */
-  HSA_EXECUTABLE_SYMBOL_INFO_AGENT = 20,
-  /**
-   * The address of the variable. The value of this attribute is undefined if
-   * the symbol is not a variable. The type of this attribute is uint64_t.
-   *
-   * If executable's state is ::HSA_EXECUTABLE_STATE_UNFROZEN, then 0 is
-   * returned.
-   */
-  HSA_EXECUTABLE_SYMBOL_INFO_VARIABLE_ADDRESS = 21,
-  /**
-   * The linkage kind of the symbol. The type of this attribute is
-   * ::hsa_symbol_linkage_t.
-   */
-  HSA_EXECUTABLE_SYMBOL_INFO_LINKAGE = 5,
-  /**
-   * Indicates whether the symbol corresponds to a definition. The type of this
-   * attribute is bool.
-   */
-  HSA_EXECUTABLE_SYMBOL_INFO_IS_DEFINITION = 17,
-  /**
-   * @deprecated
-   *
-   * The allocation kind of the variable. The value of this attribute is
-   * undefined if the symbol is not a variable.  The type of this attribute is
-   * ::hsa_variable_allocation_t.
-   */
-  HSA_EXECUTABLE_SYMBOL_INFO_VARIABLE_ALLOCATION = 6,
-  /**
-   * @deprecated
-   *
-   * The segment kind of the variable. The value of this attribute is undefined
-   * if the symbol is not a variable. The type of this attribute is
-   * ::hsa_variable_segment_t.
-   */
-  HSA_EXECUTABLE_SYMBOL_INFO_VARIABLE_SEGMENT = 7,
-  /**
-   * @deprecated
-   *
-   * Alignment of the symbol in memory. The value of this attribute is undefined
-   * if the symbol is not a variable. The type of this attribute is uint32_t.
-   *
-   * The current alignment of the variable in memory may be greater than the
-   * value specified in the source program variable declaration.
-   */
-  HSA_EXECUTABLE_SYMBOL_INFO_VARIABLE_ALIGNMENT = 8,
-  /**
-   * @deprecated
-   *
-   * Size of the variable. The value of this attribute is undefined if
-   * the symbol is not a variable. The type of this attribute is uint32_t.
-   *
-   * A value of 0 is returned if the variable is an external variable and has an
-   * unknown dimension.
-   */
-  HSA_EXECUTABLE_SYMBOL_INFO_VARIABLE_SIZE = 9,
-  /**
-   * @deprecated
-   *
-   * Indicates whether the variable is constant. The value of this attribute is
-   * undefined if the symbol is not a variable. The type of this attribute is
-   * bool.
-   */
-  HSA_EXECUTABLE_SYMBOL_INFO_VARIABLE_IS_CONST = 10,
-  /**
-   * Kernel object handle, used in the kernel dispatch packet. The value of this
-   * attribute is undefined if the symbol is not a kernel. The type of this
-   * attribute is uint64_t.
-   *
-   * If the state of the executable is ::HSA_EXECUTABLE_STATE_UNFROZEN, then 0
-   * is returned.
-   */
-  HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_OBJECT = 22,
-  /**
-   * Size of kernarg segment memory that is required to hold the values of the
-   * kernel arguments, in bytes. Must be a multiple of 16. The value of this
-   * attribute is undefined if the symbol is not a kernel. The type of this
-   * attribute is uint32_t.
-   */
-  HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_KERNARG_SEGMENT_SIZE = 11,
-  /**
-   * Alignment (in bytes) of the buffer used to pass arguments to the kernel,
-   * which is the maximum of 16 and the maximum alignment of any of the kernel
-   * arguments. The value of this attribute is undefined if the symbol is not a
-   * kernel. The type of this attribute is uint32_t.
-   */
-  HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_KERNARG_SEGMENT_ALIGNMENT = 12,
-  /**
-   * Size of static group segment memory required by the kernel (per
-   * work-group), in bytes. The value of this attribute is undefined
-   * if the symbol is not a kernel. The type of this attribute is uint32_t.
-   *
-   * The reported amount does not include any dynamically allocated group
-   * segment memory that may be requested by the application when a kernel is
-   * dispatched.
-   */
-  HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_GROUP_SEGMENT_SIZE = 13,
-  /**
-   * Size of static private, spill, and arg segment memory required by
-   * this kernel (per work-item), in bytes. The value of this attribute is
-   * undefined if the symbol is not a kernel. The type of this attribute is
-   * uint32_t.
-   *
-   * If the value of ::HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_DYNAMIC_CALLSTACK is
-   * true, the kernel may use more private memory than the reported value, and
-   * the application must add the dynamic call stack usage to @a
-   * private_segment_size when populating a kernel dispatch packet.
-   */
-  HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_PRIVATE_SEGMENT_SIZE = 14,
-  /**
-   * Dynamic callstack flag. The value of this attribute is undefined if the
-   * symbol is not a kernel. The type of this attribute is bool.
-   *
-   * If this flag is set (the value is true), the kernel uses a dynamically
-   * sized call stack. This can happen if recursive calls, calls to indirect
-   * functions, or the HSAIL alloca instruction are present in the kernel.
-   */
-  HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_DYNAMIC_CALLSTACK = 15,
-  /**
-   * @deprecated
-   *
-   * Call convention of the kernel. The value of this attribute is undefined if
-   * the symbol is not a kernel. The type of this attribute is uint32_t.
-   */
-  HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_CALL_CONVENTION = 18,
-  /**
-   * Indirect function object handle. The value of this attribute is undefined
-   * if the symbol is not an indirect function, or the associated agent does
-   * not support the Full Profile. The type of this attribute depends on the
-   * machine model: the type is uint32_t for small machine model, and uint64_t
-   * for large model.
-   *
-   * If the state of the executable is ::HSA_EXECUTABLE_STATE_UNFROZEN, then 0
-   * is returned.
-   */
-  HSA_EXECUTABLE_SYMBOL_INFO_INDIRECT_FUNCTION_OBJECT = 23,
-  /**
-   * @deprecated
-   *
-   * Call convention of the indirect function. The value of this attribute is
-   * undefined if the symbol is not an indirect function, or the associated
-   * agent does not support the Full Profile. The type of this attribute is
-   * uint32_t.
-   */
-  HSA_EXECUTABLE_SYMBOL_INFO_INDIRECT_FUNCTION_CALL_CONVENTION = 16
+    /**
+     * The kind of the symbol. The type of this attribute is
+     * ::hsa_symbol_kind_t.
+     */
+    HSA_EXECUTABLE_SYMBOL_INFO_TYPE = 0,
+    /**
+     * The length of the symbol name in bytes, not including the NUL
+     * terminator. The type of this attribute is uint32_t.
+     */
+    HSA_EXECUTABLE_SYMBOL_INFO_NAME_LENGTH = 1,
+    /**
+     * The name of the symbol. The type of this attribute is character array
+     * with the length equal to the value of
+     * ::HSA_EXECUTABLE_SYMBOL_INFO_NAME_LENGTH attribute.
+     */
+    HSA_EXECUTABLE_SYMBOL_INFO_NAME = 2,
+    /**
+     * @deprecated
+     *
+     * The length of the module name in bytes (not including the NUL
+     * terminator) to which this symbol belongs if this symbol has module
+     * linkage, otherwise 0 is returned. The type of this attribute is
+     * uint32_t.
+     */
+    HSA_EXECUTABLE_SYMBOL_INFO_MODULE_NAME_LENGTH = 3,
+    /**
+     * @deprecated
+     *
+     * The module name to which this symbol belongs if this symbol has module
+     * linkage, otherwise an empty string is returned. The type of this
+     * attribute is character array with the length equal to the value of
+     * ::HSA_EXECUTABLE_SYMBOL_INFO_MODULE_NAME_LENGTH attribute.
+     */
+    HSA_EXECUTABLE_SYMBOL_INFO_MODULE_NAME = 4,
+    /**
+     * @deprecated
+     *
+     * Agent associated with this symbol. If the symbol is a variable, the
+     * value of this attribute is only defined if
+     * ::HSA_EXECUTABLE_SYMBOL_INFO_VARIABLE_ALLOCATION is
+     * ::HSA_VARIABLE_ALLOCATION_AGENT. The type of this attribute is
+     * hsa_agent_t.
+     */
+    HSA_EXECUTABLE_SYMBOL_INFO_AGENT = 20,
+    /**
+     * The address of the variable. The value of this attribute is undefined if
+     * the symbol is not a variable. The type of this attribute is uint64_t.
+     *
+     * If executable's state is ::HSA_EXECUTABLE_STATE_UNFROZEN, then 0 is
+     * returned.
+     */
+    HSA_EXECUTABLE_SYMBOL_INFO_VARIABLE_ADDRESS = 21,
+    /**
+     * The linkage kind of the symbol. The type of this attribute is
+     * ::hsa_symbol_linkage_t.
+     */
+    HSA_EXECUTABLE_SYMBOL_INFO_LINKAGE = 5,
+    /**
+     * Indicates whether the symbol corresponds to a definition. The type of
+     * this attribute is bool.
+     */
+    HSA_EXECUTABLE_SYMBOL_INFO_IS_DEFINITION = 17,
+    /**
+     * @deprecated
+     *
+     * The allocation kind of the variable. The value of this attribute is
+     * undefined if the symbol is not a variable.  The type of this attribute
+     * is
+     * ::hsa_variable_allocation_t.
+     */
+    HSA_EXECUTABLE_SYMBOL_INFO_VARIABLE_ALLOCATION = 6,
+    /**
+     * @deprecated
+     *
+     * The segment kind of the variable. The value of this attribute is
+     * undefined if the symbol is not a variable. The type of this attribute is
+     * ::hsa_variable_segment_t.
+     */
+    HSA_EXECUTABLE_SYMBOL_INFO_VARIABLE_SEGMENT = 7,
+    /**
+     * @deprecated
+     *
+     * Alignment of the symbol in memory. The value of this attribute is
+     * undefined if the symbol is not a variable. The type of this attribute is
+     * uint32_t.
+     *
+     * The current alignment of the variable in memory may be greater than the
+     * value specified in the source program variable declaration.
+     */
+    HSA_EXECUTABLE_SYMBOL_INFO_VARIABLE_ALIGNMENT = 8,
+    /**
+     * @deprecated
+     *
+     * Size of the variable. The value of this attribute is undefined if
+     * the symbol is not a variable. The type of this attribute is uint32_t.
+     *
+     * A value of 0 is returned if the variable is an external variable and has
+     * an unknown dimension.
+     */
+    HSA_EXECUTABLE_SYMBOL_INFO_VARIABLE_SIZE = 9,
+    /**
+     * @deprecated
+     *
+     * Indicates whether the variable is constant. The value of this attribute
+     * is undefined if the symbol is not a variable. The type of this attribute
+     * is bool.
+     */
+    HSA_EXECUTABLE_SYMBOL_INFO_VARIABLE_IS_CONST = 10,
+    /**
+     * Kernel object handle, used in the kernel dispatch packet. The value of
+     * this attribute is undefined if the symbol is not a kernel. The type of
+     * this attribute is uint64_t.
+     *
+     * If the state of the executable is ::HSA_EXECUTABLE_STATE_UNFROZEN, then
+     * 0 is returned.
+     */
+    HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_OBJECT = 22,
+    /**
+     * Size of kernarg segment memory that is required to hold the values of
+     * the kernel arguments, in bytes. Must be a multiple of 16. The value of
+     * this attribute is undefined if the symbol is not a kernel. The type of
+     * this attribute is uint32_t.
+     */
+    HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_KERNARG_SEGMENT_SIZE = 11,
+    /**
+     * Alignment (in bytes) of the buffer used to pass arguments to the kernel,
+     * which is the maximum of 16 and the maximum alignment of any of the
+     * kernel arguments. The value of this attribute is undefined if the symbol
+     * is not a kernel. The type of this attribute is uint32_t.
+     */
+    HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_KERNARG_SEGMENT_ALIGNMENT = 12,
+    /**
+     * Size of static group segment memory required by the kernel (per
+     * work-group), in bytes. The value of this attribute is undefined
+     * if the symbol is not a kernel. The type of this attribute is uint32_t.
+     *
+     * The reported amount does not include any dynamically allocated group
+     * segment memory that may be requested by the application when a kernel is
+     * dispatched.
+     */
+    HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_GROUP_SEGMENT_SIZE = 13,
+    /**
+     * Size of static private, spill, and arg segment memory required by
+     * this kernel (per work-item), in bytes. The value of this attribute is
+     * undefined if the symbol is not a kernel. The type of this attribute is
+     * uint32_t.
+     *
+     * If the value of ::HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_DYNAMIC_CALLSTACK is
+     * true, the kernel may use more private memory than the reported value,
+     * and the application must add the dynamic call stack usage to @a
+     * private_segment_size when populating a kernel dispatch packet.
+     */
+    HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_PRIVATE_SEGMENT_SIZE = 14,
+    /**
+     * Dynamic callstack flag. The value of this attribute is undefined if the
+     * symbol is not a kernel. The type of this attribute is bool.
+     *
+     * If this flag is set (the value is true), the kernel uses a dynamically
+     * sized call stack. This can happen if recursive calls, calls to indirect
+     * functions, or the HSAIL alloca instruction are present in the kernel.
+     */
+    HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_DYNAMIC_CALLSTACK = 15,
+    /**
+     * @deprecated
+     *
+     * Call convention of the kernel. The value of this attribute is undefined
+     * if the symbol is not a kernel. The type of this attribute is uint32_t.
+     */
+    HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_CALL_CONVENTION = 18,
+    /**
+     * Indirect function object handle. The value of this attribute is
+     * undefined if the symbol is not an indirect function, or the associated
+     * agent does not support the Full Profile. The type of this attribute
+     * depends on the machine model: the type is uint32_t for small machine
+     * model, and uint64_t for large model.
+     *
+     * If the state of the executable is ::HSA_EXECUTABLE_STATE_UNFROZEN, then
+     * 0 is returned.
+     */
+    HSA_EXECUTABLE_SYMBOL_INFO_INDIRECT_FUNCTION_OBJECT = 23,
+    /**
+     * @deprecated
+     *
+     * Call convention of the indirect function. The value of this attribute is
+     * undefined if the symbol is not an indirect function, or the associated
+     * agent does not support the Full Profile. The type of this attribute is
+     * uint32_t.
+     */
+    HSA_EXECUTABLE_SYMBOL_INFO_INDIRECT_FUNCTION_CALL_CONVENTION = 16
 } hsa_executable_symbol_info_t;
 
 /**
@@ -5008,16 +4843,15 @@ typedef enum
  * @retval ::HSA_STATUS_ERROR_NOT_INITIALIZED The HSA runtime has not been
  * initialized.
  *
- * @retval ::HSA_STATUS_ERROR_INVALID_EXECUTABLE_SYMBOL The executable symbol is
- * invalid.
+ * @retval ::HSA_STATUS_ERROR_INVALID_EXECUTABLE_SYMBOL The executable symbol
+ * is invalid.
  *
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p attribute is an invalid
  * executable symbol attribute, or @p value is NULL.
  */
 hsa_status_t HSA_API hsa_executable_symbol_get_info(
     hsa_executable_symbol_t executable_symbol,
-    hsa_executable_symbol_info_t attribute,
-    void *value);
+    hsa_executable_symbol_info_t attribute, void *value);
 
 /**
  * @deprecated
@@ -5028,8 +4862,9 @@ hsa_status_t HSA_API hsa_executable_symbol_get_info(
  * @param[in] executable Executable.
  *
  * @param[in] callback Callback to be invoked once per executable symbol. The
- * HSA runtime passes three arguments to the callback: the executable, a symbol,
- * and the application data.  If @p callback returns a status other than
+ * HSA runtime passes three arguments to the callback: the executable, a
+ * symbol, and the application data.  If @p callback returns a status other
+ * than
  * ::HSA_STATUS_SUCCESS for a particular iteration, the traversal stops and
  * ::hsa_executable_iterate_symbols returns that status value.
  *
@@ -5048,8 +4883,7 @@ hsa_status_t HSA_API hsa_executable_symbol_get_info(
 hsa_status_t HSA_API HSA_DEPRECATED hsa_executable_iterate_symbols(
     hsa_executable_t executable,
     hsa_status_t (*callback)(hsa_executable_t exec,
-                             hsa_executable_symbol_t symbol,
-                             void *data),
+                             hsa_executable_symbol_t symbol, void *data),
     void *data);
 
 /**
@@ -5062,8 +4896,9 @@ hsa_status_t HSA_API HSA_DEPRECATED hsa_executable_iterate_symbols(
  * @param[in] agent Agent.
  *
  * @param[in] callback Callback to be invoked once per executable symbol. The
- * HSA runtime passes three arguments to the callback: the executable, a symbol,
- * and the application data.  If @p callback returns a status other than
+ * HSA runtime passes three arguments to the callback: the executable, a
+ * symbol, and the application data.  If @p callback returns a status other
+ * than
  * ::HSA_STATUS_SUCCESS for a particular iteration, the traversal stops and
  * ::hsa_executable_iterate_symbols returns that status value.
  *
@@ -5080,12 +4915,9 @@ hsa_status_t HSA_API HSA_DEPRECATED hsa_executable_iterate_symbols(
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p callback is NULL.
  */
 hsa_status_t HSA_API hsa_executable_iterate_agent_symbols(
-    hsa_executable_t executable,
-    hsa_agent_t agent,
-    hsa_status_t (*callback)(hsa_executable_t exec,
-                             hsa_agent_t agent,
-                             hsa_executable_symbol_t symbol,
-                             void *data),
+    hsa_executable_t executable, hsa_agent_t agent,
+    hsa_status_t (*callback)(hsa_executable_t exec, hsa_agent_t agent,
+                             hsa_executable_symbol_t symbol, void *data),
     void *data);
 
 /**
@@ -5095,8 +4927,9 @@ hsa_status_t HSA_API hsa_executable_iterate_agent_symbols(
  * @param[in] executable Executable.
  *
  * @param[in] callback Callback to be invoked once per executable symbol. The
- * HSA runtime passes three arguments to the callback: the executable, a symbol,
- * and the application data.  If @p callback returns a status other than
+ * HSA runtime passes three arguments to the callback: the executable, a
+ * symbol, and the application data.  If @p callback returns a status other
+ * than
  * ::HSA_STATUS_SUCCESS for a particular iteration, the traversal stops and
  * ::hsa_executable_iterate_symbols returns that status value.
  *
@@ -5115,12 +4948,10 @@ hsa_status_t HSA_API hsa_executable_iterate_agent_symbols(
 hsa_status_t HSA_API hsa_executable_iterate_program_symbols(
     hsa_executable_t executable,
     hsa_status_t (*callback)(hsa_executable_t exec,
-                             hsa_executable_symbol_t symbol,
-                             void *data),
+                             hsa_executable_symbol_t symbol, void *data),
     void *data);
 
 /** @} */
-
 
 /** \defgroup code-object Code Objects (deprecated).
  *  @{
@@ -5135,11 +4966,11 @@ hsa_status_t HSA_API hsa_executable_iterate_program_symbols(
  */
 typedef struct hsa_code_object_s
 {
-  /**
-   * Opaque handle. Two handles reference the same object of the enclosing type
-   * if and only if they are equal.
-   */
-  uint64_t handle;
+    /**
+     * Opaque handle. Two handles reference the same object of the enclosing
+     * type if and only if they are equal.
+     */
+    uint64_t handle;
 } hsa_code_object_t;
 
 /**
@@ -5150,10 +4981,10 @@ typedef struct hsa_code_object_s
  */
 typedef struct hsa_callback_data_s
 {
-  /**
-   * Opaque handle.
-   */
-  uint64_t handle;
+    /**
+     * Opaque handle.
+     */
+    uint64_t handle;
 } hsa_callback_data_t;
 
 /**
@@ -5184,9 +5015,9 @@ typedef struct hsa_callback_data_s
  * @param[out] serialized_code_object Memory location where the HSA runtime
  * stores a pointer to the serialized code object. Must not be NULL.
  *
- * @param[out] serialized_code_object_size Memory location where the HSA runtime
- * stores the size (in bytes) of @p serialized_code_object. The returned value
- * matches the allocation size passed by the HSA runtime to @p
+ * @param[out] serialized_code_object_size Memory location where the HSA
+ * runtime stores the size (in bytes) of @p serialized_code_object. The
+ * returned value matches the allocation size passed by the HSA runtime to @p
  * alloc_callback. Must not be NULL.
  *
  * @retval ::HSA_STATUS_SUCCESS The function has been executed successfully.
@@ -5204,20 +5035,18 @@ typedef struct hsa_callback_data_s
  */
 hsa_status_t HSA_API HSA_DEPRECATED hsa_code_object_serialize(
     hsa_code_object_t code_object,
-    hsa_status_t (*alloc_callback)(size_t size,
-                                   hsa_callback_data_t data,
+    hsa_status_t (*alloc_callback)(size_t size, hsa_callback_data_t data,
                                    void **address),
-    hsa_callback_data_t callback_data,
-    const char *options,
-    void **serialized_code_object,
-    size_t *serialized_code_object_size);
+    hsa_callback_data_t callback_data, const char *options,
+    void **serialized_code_object, size_t *serialized_code_object_size);
 
 /**
  * @deprecated
  *
  * @brief Deserialize a code object.
  *
- * @param[in] serialized_code_object A serialized code object. Must not be NULL.
+ * @param[in] serialized_code_object A serialized code object. Must not be
+ * NULL.
  *
  * @param[in] serialized_code_object_size The size (in bytes) of @p
  * serialized_code_object. Must not be 0.
@@ -5243,10 +5072,8 @@ hsa_status_t HSA_API HSA_DEPRECATED hsa_code_object_serialize(
  * code_object are NULL, or @p serialized_code_object_size is 0.
  */
 hsa_status_t HSA_API HSA_DEPRECATED hsa_code_object_deserialize(
-    void *serialized_code_object,
-    size_t serialized_code_object_size,
-    const char *options,
-    hsa_code_object_t *code_object);
+    void *serialized_code_object, size_t serialized_code_object_size,
+    const char *options, hsa_code_object_t *code_object);
 
 /**
  * @deprecated
@@ -5254,8 +5081,8 @@ hsa_status_t HSA_API HSA_DEPRECATED hsa_code_object_deserialize(
  * @brief Destroy a code object.
  *
  * @details The lifetime of a code object must exceed that of any executable
- * where it has been loaded. If an executable that loaded @p code_object has not
- * been destroyed, the behavior is undefined.
+ * where it has been loaded. If an executable that loaded @p code_object has
+ * not been destroyed, the behavior is undefined.
  *
  * @param[in] code_object Code object. The handle becomes invalid after it has
  * been destroyed.
@@ -5267,8 +5094,8 @@ hsa_status_t HSA_API HSA_DEPRECATED hsa_code_object_deserialize(
  *
  * @retval ::HSA_STATUS_ERROR_INVALID_CODE_OBJECT @p code_object is invalid.
  */
-hsa_status_t HSA_API HSA_DEPRECATED hsa_code_object_destroy(
-    hsa_code_object_t code_object);
+hsa_status_t HSA_API HSA_DEPRECATED
+hsa_code_object_destroy(hsa_code_object_t code_object);
 
 /**
  * @deprecated
@@ -5277,11 +5104,11 @@ hsa_status_t HSA_API HSA_DEPRECATED hsa_code_object_destroy(
  */
 typedef enum
 {
-  /**
-   * Produces code object that contains ISA for all kernels and indirect
-   * functions in HSA source.
-   */
-  HSA_CODE_OBJECT_TYPE_PROGRAM = 0
+    /**
+     * Produces code object that contains ISA for all kernels and indirect
+     * functions in HSA source.
+     */
+    HSA_CODE_OBJECT_TYPE_PROGRAM = 0
 } hsa_code_object_type_t;
 
 /**
@@ -5291,39 +5118,39 @@ typedef enum
  */
 typedef enum
 {
-  /**
-   * The version of the code object. The type of this attribute is a
-   * NUL-terminated char[64]. The name must be at most 63 characters long (not
-   * including the NUL terminator) and all array elements not used for the name
-   * must be NUL.
-   */
-  HSA_CODE_OBJECT_INFO_VERSION = 0,
-  /**
-   * Type of code object. The type of this attribute is
-   * ::hsa_code_object_type_t.
-   */
-  HSA_CODE_OBJECT_INFO_TYPE = 1,
-  /**
-   * Instruction set architecture this code object is produced for. The type of
-   * this attribute is ::hsa_isa_t.
-   */
-  HSA_CODE_OBJECT_INFO_ISA = 2,
-  /**
-   * Machine model this code object is produced for. The type of this attribute
-   * is ::hsa_machine_model_t.
-   */
-  HSA_CODE_OBJECT_INFO_MACHINE_MODEL = 3,
-  /**
-   * Profile this code object is produced for. The type of this attribute is
-   * ::hsa_profile_t.
-   */
-  HSA_CODE_OBJECT_INFO_PROFILE = 4,
-  /**
-   * Default floating-point rounding mode used when the code object is
-   * produced. The type of this attribute is
-   * ::hsa_default_float_rounding_mode_t.
-   */
-  HSA_CODE_OBJECT_INFO_DEFAULT_FLOAT_ROUNDING_MODE = 5
+    /**
+     * The version of the code object. The type of this attribute is a
+     * NUL-terminated char[64]. The name must be at most 63 characters long
+     * (not including the NUL terminator) and all array elements not used for
+     * the name must be NUL.
+     */
+    HSA_CODE_OBJECT_INFO_VERSION = 0,
+    /**
+     * Type of code object. The type of this attribute is
+     * ::hsa_code_object_type_t.
+     */
+    HSA_CODE_OBJECT_INFO_TYPE = 1,
+    /**
+     * Instruction set architecture this code object is produced for. The type
+     * of this attribute is ::hsa_isa_t.
+     */
+    HSA_CODE_OBJECT_INFO_ISA = 2,
+    /**
+     * Machine model this code object is produced for. The type of this
+     * attribute is ::hsa_machine_model_t.
+     */
+    HSA_CODE_OBJECT_INFO_MACHINE_MODEL = 3,
+    /**
+     * Profile this code object is produced for. The type of this attribute is
+     * ::hsa_profile_t.
+     */
+    HSA_CODE_OBJECT_INFO_PROFILE = 4,
+    /**
+     * Default floating-point rounding mode used when the code object is
+     * produced. The type of this attribute is
+     * ::hsa_default_float_rounding_mode_t.
+     */
+    HSA_CODE_OBJECT_INFO_DEFAULT_FLOAT_ROUNDING_MODE = 5
 } hsa_code_object_info_t;
 
 /**
@@ -5349,10 +5176,9 @@ typedef enum
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p attribute is an invalid
  * code object attribute, or @p value is NULL.
  */
-hsa_status_t HSA_API HSA_DEPRECATED hsa_code_object_get_info(
-    hsa_code_object_t code_object,
-    hsa_code_object_info_t attribute,
-    void *value);
+hsa_status_t HSA_API HSA_DEPRECATED
+hsa_code_object_get_info(hsa_code_object_t code_object,
+                         hsa_code_object_info_t attribute, void *value);
 
 /**
  * @deprecated
@@ -5406,10 +5232,8 @@ hsa_status_t HSA_API HSA_DEPRECATED hsa_code_object_get_info(
  * @retval ::HSA_STATUS_ERROR_FROZEN_EXECUTABLE @p executable is frozen.
  */
 hsa_status_t HSA_API HSA_DEPRECATED hsa_executable_load_code_object(
-    hsa_executable_t executable,
-    hsa_agent_t agent,
-    hsa_code_object_t code_object,
-    const char *options);
+    hsa_executable_t executable, hsa_agent_t agent,
+    hsa_code_object_t code_object, const char *options);
 
 /**
  * @deprecated
@@ -5417,16 +5241,16 @@ hsa_status_t HSA_API HSA_DEPRECATED hsa_executable_load_code_object(
  * @brief Code object symbol handle.
  *
  * The lifetime of a code object symbol matches that of the code object
- * associated with it. An operation on a symbol whose associated code object has
- * been destroyed results in undefined behavior.
+ * associated with it. An operation on a symbol whose associated code object
+ * has been destroyed results in undefined behavior.
  */
 typedef struct hsa_code_symbol_s
 {
-  /**
-   * Opaque handle. Two handles reference the same object of the enclosing type
-   * if and only if they are equal.
-   */
-  uint64_t handle;
+    /**
+     * Opaque handle. Two handles reference the same object of the enclosing
+     * type if and only if they are equal.
+     */
+    uint64_t handle;
 } hsa_code_symbol_t;
 
 /**
@@ -5448,16 +5272,15 @@ typedef struct hsa_code_symbol_s
  *
  * @retval ::HSA_STATUS_ERROR_INVALID_CODE_OBJECT @p code_object is invalid.
  *
- * @retval ::HSA_STATUS_ERROR_INVALID_SYMBOL_NAME There is no symbol with a name
- * that matches @p symbol_name.
+ * @retval ::HSA_STATUS_ERROR_INVALID_SYMBOL_NAME There is no symbol with a
+ * name that matches @p symbol_name.
  *
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p symbol_name is NULL, or
  * @p symbol is NULL.
  */
-hsa_status_t HSA_API HSA_DEPRECATED hsa_code_object_get_symbol(
-    hsa_code_object_t code_object,
-    const char *symbol_name,
-    hsa_code_symbol_t *symbol);
+hsa_status_t HSA_API HSA_DEPRECATED
+hsa_code_object_get_symbol(hsa_code_object_t code_object,
+                           const char *symbol_name, hsa_code_symbol_t *symbol);
 
 /**
  * @deprecated
@@ -5481,17 +5304,15 @@ hsa_status_t HSA_API HSA_DEPRECATED hsa_code_object_get_symbol(
  *
  * @retval ::HSA_STATUS_ERROR_INVALID_CODE_OBJECT @p code_object is invalid.
  *
- * @retval ::HSA_STATUS_ERROR_INVALID_SYMBOL_NAME There is no symbol with a name
- * that matches @p symbol_name.
+ * @retval ::HSA_STATUS_ERROR_INVALID_SYMBOL_NAME There is no symbol with a
+ * name that matches @p symbol_name.
  *
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p symbol_name is NULL, or
  * @p symbol is NULL.
  */
 hsa_status_t HSA_API HSA_DEPRECATED hsa_code_object_get_symbol_from_name(
-    hsa_code_object_t code_object,
-    const char *module_name,
-    const char *symbol_name,
-    hsa_code_symbol_t *symbol);
+    hsa_code_object_t code_object, const char *module_name,
+    const char *symbol_name, hsa_code_symbol_t *symbol);
 
 /**
  * @deprecated
@@ -5500,134 +5321,137 @@ hsa_status_t HSA_API HSA_DEPRECATED hsa_code_object_get_symbol_from_name(
  */
 typedef enum
 {
-  /**
-   * The type of the symbol. The type of this attribute is ::hsa_symbol_kind_t.
-   */
-  HSA_CODE_SYMBOL_INFO_TYPE = 0,
-  /**
-   * The length of the symbol name in bytes, not including the NUL terminator.
-   * The type of this attribute is uint32_t.
-   */
-  HSA_CODE_SYMBOL_INFO_NAME_LENGTH = 1,
-  /**
-   * The name of the symbol. The type of this attribute is character array with
-   * the length equal to the value of ::HSA_CODE_SYMBOL_INFO_NAME_LENGTH
-   * attribute.
-   */
-  HSA_CODE_SYMBOL_INFO_NAME = 2,
-  /**
-   * The length of the module name in bytes (not including the NUL terminator)
-   * to which this symbol belongs if this symbol has module linkage, otherwise 0
-   * is returned. The type of this attribute is uint32_t.
-   */
-  HSA_CODE_SYMBOL_INFO_MODULE_NAME_LENGTH = 3,
-  /**
-   * The module name to which this symbol belongs if this symbol has module
-   * linkage, otherwise an empty string is returned. The type of this attribute
-   * is character array with the length equal to the value of
-   * ::HSA_CODE_SYMBOL_INFO_MODULE_NAME_LENGTH attribute.
-   */
-  HSA_CODE_SYMBOL_INFO_MODULE_NAME = 4,
-  /**
-   * The linkage kind of the symbol. The type of this attribute is
-   * ::hsa_symbol_linkage_t.
-   */
-  HSA_CODE_SYMBOL_INFO_LINKAGE = 5,
-  /**
-   * Indicates whether the symbol corresponds to a definition. The type of this
-   * attribute is bool.
-   */
-  HSA_CODE_SYMBOL_INFO_IS_DEFINITION = 17,
-  /**
-   * The allocation kind of the variable. The value of this attribute is
-   * undefined if the symbol is not a variable. The type of this attribute is
-   * ::hsa_variable_allocation_t.
-   */
-  HSA_CODE_SYMBOL_INFO_VARIABLE_ALLOCATION = 6,
-  /**
-   * The segment kind of the variable. The value of this attribute is
-   * undefined if the symbol is not a variable. The type of this attribute is
-   * ::hsa_variable_segment_t.
-   */
-  HSA_CODE_SYMBOL_INFO_VARIABLE_SEGMENT = 7,
-  /**
-   * Alignment of the symbol in memory. The value of this attribute is undefined
-   * if the symbol is not a variable. The type of this attribute is uint32_t.
-   *
-   * The current alignment of the variable in memory may be greater than the
-   * value specified in the source program variable declaration.
-   */
-  HSA_CODE_SYMBOL_INFO_VARIABLE_ALIGNMENT = 8,
-  /**
-   * Size of the variable. The value of this attribute is undefined if the
-   * symbol is not a variable. The type of this attribute is uint32_t.
-   *
-   * A size of 0 is returned if the variable is an external variable and has an
-   * unknown dimension.
-   */
-  HSA_CODE_SYMBOL_INFO_VARIABLE_SIZE = 9,
-  /**
-   * Indicates whether the variable is constant. The value of this attribute is
-   * undefined if the symbol is not a variable. The type of this attribute is
-   * bool.
-   */
-  HSA_CODE_SYMBOL_INFO_VARIABLE_IS_CONST = 10,
-  /**
-   * Size of kernarg segment memory that is required to hold the values of the
-   * kernel arguments, in bytes. Must be a multiple of 16. The value of this
-   * attribute is undefined if the symbol is not a kernel. The type of this
-   * attribute is uint32_t.
-   */
-  HSA_CODE_SYMBOL_INFO_KERNEL_KERNARG_SEGMENT_SIZE = 11,
-  /**
-   * Alignment (in bytes) of the buffer used to pass arguments to the kernel,
-   * which is the maximum of 16 and the maximum alignment of any of the kernel
-   * arguments. The value of this attribute is undefined if the symbol is not a
-   * kernel. The type of this attribute is uint32_t.
-   */
-  HSA_CODE_SYMBOL_INFO_KERNEL_KERNARG_SEGMENT_ALIGNMENT = 12,
-  /**
-   * Size of static group segment memory required by the kernel (per
-   * work-group), in bytes. The value of this attribute is undefined
-   * if the symbol is not a kernel. The type of this attribute is uint32_t.
-   *
-   * The reported amount does not include any dynamically allocated group
-   * segment memory that may be requested by the application when a kernel is
-   * dispatched.
-   */
-  HSA_CODE_SYMBOL_INFO_KERNEL_GROUP_SEGMENT_SIZE = 13,
-  /**
-   * Size of static private, spill, and arg segment memory required by
-   * this kernel (per work-item), in bytes. The value of this attribute is
-   * undefined if the symbol is not a kernel. The type of this attribute is
-   * uint32_t.
-   *
-   * If the value of ::HSA_CODE_SYMBOL_INFO_KERNEL_DYNAMIC_CALLSTACK is true,
-   * the kernel may use more private memory than the reported value, and the
-   * application must add the dynamic call stack usage to @a
-   * private_segment_size when populating a kernel dispatch packet.
-   */
-  HSA_CODE_SYMBOL_INFO_KERNEL_PRIVATE_SEGMENT_SIZE = 14,
-  /**
-   * Dynamic callstack flag. The value of this attribute is undefined if the
-   * symbol is not a kernel. The type of this attribute is bool.
-   *
-   * If this flag is set (the value is true), the kernel uses a dynamically
-   * sized call stack. This can happen if recursive calls, calls to indirect
-   * functions, or the HSAIL alloca instruction are present in the kernel.
-   */
-  HSA_CODE_SYMBOL_INFO_KERNEL_DYNAMIC_CALLSTACK = 15,
-  /**
-   * Call convention of the kernel. The value of this attribute is undefined if
-   * the symbol is not a kernel. The type of this attribute is uint32_t.
-   */
-  HSA_CODE_SYMBOL_INFO_KERNEL_CALL_CONVENTION = 18,
-  /**
-   * Call convention of the indirect function. The value of this attribute is
-   * undefined if the symbol is not an indirect function. The type of this
-   * attribute is uint32_t.
-   */
-  HSA_CODE_SYMBOL_INFO_INDIRECT_FUNCTION_CALL_CONVENTION = 16
+    /**
+     * The type of the symbol. The type of this attribute is
+     * ::hsa_symbol_kind_t.
+     */
+    HSA_CODE_SYMBOL_INFO_TYPE = 0,
+    /**
+     * The length of the symbol name in bytes, not including the NUL
+     * terminator. The type of this attribute is uint32_t.
+     */
+    HSA_CODE_SYMBOL_INFO_NAME_LENGTH = 1,
+    /**
+     * The name of the symbol. The type of this attribute is character array
+     * with the length equal to the value of ::HSA_CODE_SYMBOL_INFO_NAME_LENGTH
+     * attribute.
+     */
+    HSA_CODE_SYMBOL_INFO_NAME = 2,
+    /**
+     * The length of the module name in bytes (not including the NUL
+     * terminator) to which this symbol belongs if this symbol has module
+     * linkage, otherwise 0 is returned. The type of this attribute is
+     * uint32_t.
+     */
+    HSA_CODE_SYMBOL_INFO_MODULE_NAME_LENGTH = 3,
+    /**
+     * The module name to which this symbol belongs if this symbol has module
+     * linkage, otherwise an empty string is returned. The type of this
+     * attribute is character array with the length equal to the value of
+     * ::HSA_CODE_SYMBOL_INFO_MODULE_NAME_LENGTH attribute.
+     */
+    HSA_CODE_SYMBOL_INFO_MODULE_NAME = 4,
+    /**
+     * The linkage kind of the symbol. The type of this attribute is
+     * ::hsa_symbol_linkage_t.
+     */
+    HSA_CODE_SYMBOL_INFO_LINKAGE = 5,
+    /**
+     * Indicates whether the symbol corresponds to a definition. The type of
+     * this attribute is bool.
+     */
+    HSA_CODE_SYMBOL_INFO_IS_DEFINITION = 17,
+    /**
+     * The allocation kind of the variable. The value of this attribute is
+     * undefined if the symbol is not a variable. The type of this attribute is
+     * ::hsa_variable_allocation_t.
+     */
+    HSA_CODE_SYMBOL_INFO_VARIABLE_ALLOCATION = 6,
+    /**
+     * The segment kind of the variable. The value of this attribute is
+     * undefined if the symbol is not a variable. The type of this attribute is
+     * ::hsa_variable_segment_t.
+     */
+    HSA_CODE_SYMBOL_INFO_VARIABLE_SEGMENT = 7,
+    /**
+     * Alignment of the symbol in memory. The value of this attribute is
+     * undefined if the symbol is not a variable. The type of this attribute is
+     * uint32_t.
+     *
+     * The current alignment of the variable in memory may be greater than the
+     * value specified in the source program variable declaration.
+     */
+    HSA_CODE_SYMBOL_INFO_VARIABLE_ALIGNMENT = 8,
+    /**
+     * Size of the variable. The value of this attribute is undefined if the
+     * symbol is not a variable. The type of this attribute is uint32_t.
+     *
+     * A size of 0 is returned if the variable is an external variable and has
+     * an unknown dimension.
+     */
+    HSA_CODE_SYMBOL_INFO_VARIABLE_SIZE = 9,
+    /**
+     * Indicates whether the variable is constant. The value of this attribute
+     * is undefined if the symbol is not a variable. The type of this attribute
+     * is bool.
+     */
+    HSA_CODE_SYMBOL_INFO_VARIABLE_IS_CONST = 10,
+    /**
+     * Size of kernarg segment memory that is required to hold the values of
+     * the kernel arguments, in bytes. Must be a multiple of 16. The value of
+     * this attribute is undefined if the symbol is not a kernel. The type of
+     * this attribute is uint32_t.
+     */
+    HSA_CODE_SYMBOL_INFO_KERNEL_KERNARG_SEGMENT_SIZE = 11,
+    /**
+     * Alignment (in bytes) of the buffer used to pass arguments to the kernel,
+     * which is the maximum of 16 and the maximum alignment of any of the
+     * kernel arguments. The value of this attribute is undefined if the symbol
+     * is not a kernel. The type of this attribute is uint32_t.
+     */
+    HSA_CODE_SYMBOL_INFO_KERNEL_KERNARG_SEGMENT_ALIGNMENT = 12,
+    /**
+     * Size of static group segment memory required by the kernel (per
+     * work-group), in bytes. The value of this attribute is undefined
+     * if the symbol is not a kernel. The type of this attribute is uint32_t.
+     *
+     * The reported amount does not include any dynamically allocated group
+     * segment memory that may be requested by the application when a kernel is
+     * dispatched.
+     */
+    HSA_CODE_SYMBOL_INFO_KERNEL_GROUP_SEGMENT_SIZE = 13,
+    /**
+     * Size of static private, spill, and arg segment memory required by
+     * this kernel (per work-item), in bytes. The value of this attribute is
+     * undefined if the symbol is not a kernel. The type of this attribute is
+     * uint32_t.
+     *
+     * If the value of ::HSA_CODE_SYMBOL_INFO_KERNEL_DYNAMIC_CALLSTACK is true,
+     * the kernel may use more private memory than the reported value, and the
+     * application must add the dynamic call stack usage to @a
+     * private_segment_size when populating a kernel dispatch packet.
+     */
+    HSA_CODE_SYMBOL_INFO_KERNEL_PRIVATE_SEGMENT_SIZE = 14,
+    /**
+     * Dynamic callstack flag. The value of this attribute is undefined if the
+     * symbol is not a kernel. The type of this attribute is bool.
+     *
+     * If this flag is set (the value is true), the kernel uses a dynamically
+     * sized call stack. This can happen if recursive calls, calls to indirect
+     * functions, or the HSAIL alloca instruction are present in the kernel.
+     */
+    HSA_CODE_SYMBOL_INFO_KERNEL_DYNAMIC_CALLSTACK = 15,
+    /**
+     * Call convention of the kernel. The value of this attribute is undefined
+     * if the symbol is not a kernel. The type of this attribute is uint32_t.
+     */
+    HSA_CODE_SYMBOL_INFO_KERNEL_CALL_CONVENTION = 18,
+    /**
+     * Call convention of the indirect function. The value of this attribute is
+     * undefined if the symbol is not an indirect function. The type of this
+     * attribute is uint32_t.
+     */
+    HSA_CODE_SYMBOL_INFO_INDIRECT_FUNCTION_CALL_CONVENTION = 16
 } hsa_code_symbol_info_t;
 
 /**
@@ -5653,10 +5477,9 @@ typedef enum
  * @retval ::HSA_STATUS_ERROR_INVALID_ARGUMENT @p attribute is an invalid
  * code symbol attribute, or @p value is NULL.
  */
-hsa_status_t HSA_API HSA_DEPRECATED hsa_code_symbol_get_info(
-    hsa_code_symbol_t code_symbol,
-    hsa_code_symbol_info_t attribute,
-    void *value);
+hsa_status_t HSA_API HSA_DEPRECATED
+hsa_code_symbol_get_info(hsa_code_symbol_t code_symbol,
+                         hsa_code_symbol_info_t attribute, void *value);
 
 /**
  * @deprecated
@@ -5668,7 +5491,8 @@ hsa_status_t HSA_API HSA_DEPRECATED hsa_code_symbol_get_info(
  *
  * @param[in] callback Callback to be invoked once per code object symbol. The
  * HSA runtime passes three arguments to the callback: the code object, a
- * symbol, and the application data.  If @p callback returns a status other than
+ * symbol, and the application data.  If @p callback returns a status other
+ * than
  * ::HSA_STATUS_SUCCESS for a particular iteration, the traversal stops and
  * ::hsa_code_object_iterate_symbols returns that status value.
  *
@@ -5687,15 +5511,14 @@ hsa_status_t HSA_API HSA_DEPRECATED hsa_code_symbol_get_info(
 hsa_status_t HSA_API HSA_DEPRECATED hsa_code_object_iterate_symbols(
     hsa_code_object_t code_object,
     hsa_status_t (*callback)(hsa_code_object_t code_object,
-                             hsa_code_symbol_t symbol,
-                             void *data),
+                             hsa_code_symbol_t symbol, void *data),
     void *data);
 
 /** @} */
 
 #ifdef __cplusplus
-}  // end extern "C" block
+} // end extern "C" block
 } // namespace gem5
 #endif
 
-#endif  // header guard
+#endif // header guard

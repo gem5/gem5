@@ -35,34 +35,39 @@
 namespace gem5
 {
 
-template<class Entry>
+template <class Entry>
 AssociativeSet<Entry>::AssociativeSet(int assoc, int num_entries,
-        BaseIndexingPolicy *idx_policy, replacement_policy::Base *rpl_policy,
-        Entry const &init_value)
-  : associativity(assoc), numEntries(num_entries), indexingPolicy(idx_policy),
-    replacementPolicy(rpl_policy), entries(numEntries, init_value)
+                                      BaseIndexingPolicy *idx_policy,
+                                      replacement_policy::Base *rpl_policy,
+                                      Entry const &init_value)
+    : associativity(assoc),
+      numEntries(num_entries),
+      indexingPolicy(idx_policy),
+      replacementPolicy(rpl_policy),
+      entries(numEntries, init_value)
 {
-    fatal_if(!isPowerOf2(num_entries), "The number of entries of an "
+    fatal_if(!isPowerOf2(num_entries),
+             "The number of entries of an "
              "AssociativeSet<> must be a power of 2");
     fatal_if(!isPowerOf2(assoc), "The associativity of an AssociativeSet<> "
-             "must be a power of 2");
+                                 "must be a power of 2");
     for (unsigned int entry_idx = 0; entry_idx < numEntries; entry_idx += 1) {
-        Entry* entry = &entries[entry_idx];
+        Entry *entry = &entries[entry_idx];
         indexingPolicy->setEntry(entry, entry_idx);
         entry->replacementData = replacementPolicy->instantiateEntry();
     }
 }
 
-template<class Entry>
-Entry*
+template <class Entry>
+Entry *
 AssociativeSet<Entry>::findEntry(Addr addr, bool is_secure) const
 {
     Addr tag = indexingPolicy->extractTag(addr);
-    const std::vector<ReplaceableEntry*> selected_entries =
+    const std::vector<ReplaceableEntry *> selected_entries =
         indexingPolicy->getPossibleEntries(addr);
 
-    for (const auto& location : selected_entries) {
-        Entry* entry = static_cast<Entry *>(location);
+    for (const auto &location : selected_entries) {
+        Entry *entry = static_cast<Entry *>(location);
         if ((entry->getTag() == tag) && entry->isValid() &&
             entry->isSecure() == is_secure) {
             return entry;
@@ -71,29 +76,28 @@ AssociativeSet<Entry>::findEntry(Addr addr, bool is_secure) const
     return nullptr;
 }
 
-template<class Entry>
+template <class Entry>
 void
 AssociativeSet<Entry>::accessEntry(Entry *entry)
 {
     replacementPolicy->touch(entry->replacementData);
 }
 
-template<class Entry>
-Entry*
+template <class Entry>
+Entry *
 AssociativeSet<Entry>::findVictim(Addr addr)
 {
     // Get possible entries to be victimized
-    const std::vector<ReplaceableEntry*> selected_entries =
+    const std::vector<ReplaceableEntry *> selected_entries =
         indexingPolicy->getPossibleEntries(addr);
-    Entry* victim = static_cast<Entry*>(replacementPolicy->getVictim(
-                            selected_entries));
+    Entry *victim =
+        static_cast<Entry *>(replacementPolicy->getVictim(selected_entries));
     // There is only one eviction for this replacement
     invalidate(victim);
     return victim;
 }
 
-
-template<class Entry>
+template <class Entry>
 std::vector<Entry *>
 AssociativeSet<Entry>::getPossibleEntries(const Addr addr) const
 {
@@ -108,17 +112,17 @@ AssociativeSet<Entry>::getPossibleEntries(const Addr addr) const
     return entries;
 }
 
-template<class Entry>
+template <class Entry>
 void
-AssociativeSet<Entry>::insertEntry(Addr addr, bool is_secure, Entry* entry)
+AssociativeSet<Entry>::insertEntry(Addr addr, bool is_secure, Entry *entry)
 {
-   entry->insert(indexingPolicy->extractTag(addr), is_secure);
-   replacementPolicy->reset(entry->replacementData);
+    entry->insert(indexingPolicy->extractTag(addr), is_secure);
+    replacementPolicy->reset(entry->replacementData);
 }
 
-template<class Entry>
+template <class Entry>
 void
-AssociativeSet<Entry>::invalidate(Entry* entry)
+AssociativeSet<Entry>::invalidate(Entry *entry)
 {
     entry->invalidate();
     replacementPolicy->invalidate(entry->replacementData);
@@ -126,4 +130,4 @@ AssociativeSet<Entry>::invalidate(Entry* entry)
 
 } // namespace gem5
 
-#endif//__CACHE_PREFETCH_ASSOCIATIVE_SET_IMPL_HH__
+#endif //__CACHE_PREFETCH_ASSOCIATIVE_SET_IMPL_HH__

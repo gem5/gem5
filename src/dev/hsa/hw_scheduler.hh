@@ -42,7 +42,7 @@
 
 // We allocate one PIO page for doorbells and each
 // address is 8 bytes
-#define MAX_ACTIVE_QUEUES (PAGE_SIZE/8)
+#define MAX_ACTIVE_QUEUES (PAGE_SIZE / 8)
 
 namespace gem5
 {
@@ -50,39 +50,45 @@ namespace gem5
 class HWScheduler
 {
   public:
-    HWScheduler(HSAPacketProcessor* hsa_pp, Tick wakeup_delay)
-               : hsaPP(hsa_pp), nextALId(0), nextRLId(0),
-                 wakeupDelay(wakeup_delay), schedWakeupEvent(this)
+    HWScheduler(HSAPacketProcessor *hsa_pp, Tick wakeup_delay)
+        : hsaPP(hsa_pp),
+          nextALId(0),
+          nextRLId(0),
+          wakeupDelay(wakeup_delay),
+          schedWakeupEvent(this)
     {}
+
     void write(Addr db_addr, uint64_t doorbell_reg);
-    void registerNewQueue(uint64_t hostReadIndexPointer,
-                          uint64_t basePointer,
-                          uint64_t queue_id,
-                          uint32_t size, int doorbellSize,
-                          GfxVersion gfxVersion,
-                          Addr offset = 0, uint64_t rd_idx = 0);
+    void registerNewQueue(uint64_t hostReadIndexPointer, uint64_t basePointer,
+                          uint64_t queue_id, uint32_t size, int doorbellSize,
+                          GfxVersion gfxVersion, Addr offset = 0,
+                          uint64_t rd_idx = 0);
     void unregisterQueue(uint64_t queue_id, int doorbellSize);
     void wakeup();
     void schedWakeup();
+
     class SchedulerWakeupEvent : public Event
     {
       private:
         HWScheduler *hwSchdlr;
+
       public:
         SchedulerWakeupEvent(HWScheduler *hw_schdlr) : hwSchdlr(hw_schdlr) {}
+
         virtual void process();
         virtual const char *description() const;
     };
+
     bool isRLQIdle(uint32_t rl_idx);
     bool findNextActiveALQ();
     bool findNextIdleRLQ();
     bool unmapQFromRQ();
     bool contextSwitchQ();
     bool findEmptyHWQ();
-    bool mapQIfSlotAvlbl(uint32_t al_idx, AQLRingBuffer* aql_buf,
-                         HSAQueueDescriptor* q_desc);
-    void addQCntxt(uint32_t al_idx, AQLRingBuffer* aql_buf,
-                   HSAQueueDescriptor* q_desc);
+    bool mapQIfSlotAvlbl(uint32_t al_idx, AQLRingBuffer *aql_buf,
+                         HSAQueueDescriptor *q_desc);
+    void addQCntxt(uint32_t al_idx, AQLRingBuffer *aql_buf,
+                   HSAQueueDescriptor *q_desc);
     void removeQCntxt();
     void scheduleAndWakeupMappedQ();
     void updateRRVars(uint32_t al_idx, uint32_t rl_idx);
@@ -90,8 +96,8 @@ class HWScheduler
   private:
     // Active list keeps track of all queues created
     std::map<uint32_t, QCntxt> activeList;
-    //TODO: Modify this to support multi-process in the future.
-    // doorbell map, maps doorbell offsets to queue ID
+    // TODO: Modify this to support multi-process in the future.
+    //  doorbell map, maps doorbell offsets to queue ID
     std::map<Addr, uint32_t> dbMap;
     // Reverse of doorbell map, maps queue ID to doorbell offset
     std::map<uint64_t, Addr> qidMap;
@@ -99,7 +105,7 @@ class HWScheduler
     // registered list. regdListMap is indexed with active
     // list index (which is same as queue ID)
     std::map<uint32_t, uint32_t> regdListMap;
-    HSAPacketProcessor* hsaPP;
+    HSAPacketProcessor *hsaPP;
 
     // Scheduling information.
     // For now, this is simple round robin but

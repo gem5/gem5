@@ -43,7 +43,11 @@ extern __thread Tick *_curTickPtr;
 } // namespace Gem5Internal
 
 /// The universal simulation clock.
-inline Tick curTick() { return *Gem5Internal::_curTickPtr; }
+inline Tick
+curTick()
+{
+    return *Gem5Internal::_curTickPtr;
+}
 
 } // namespace gem5
 

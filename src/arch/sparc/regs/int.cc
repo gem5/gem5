@@ -40,7 +40,7 @@ RegId
 IntRegClassOps::flatten(const BaseISA &isa, const RegId &id) const
 {
     auto &sparc_isa = static_cast<const SparcISA::ISA &>(isa);
-    return {flatIntRegClass, sparc_isa.mapIntRegId(id.index())};
+    return { flatIntRegClass, sparc_isa.mapIntRegId(id.index()) };
 }
 
 } // namespace SparcISA

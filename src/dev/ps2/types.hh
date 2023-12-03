@@ -58,15 +58,15 @@ namespace ps2
 
 enum
 {
-    SelfTestPass       = 0xAA,
-    ReadID             = 0xF2,
-    Enable             = 0xF4,
-    Disable            = 0xF5,
+    SelfTestPass = 0xAA,
+    ReadID = 0xF2,
+    Enable = 0xF4,
+    Disable = 0xF5,
     DefaultsAndDisable = 0xF6,
-    SelfTestFail       = 0xFC,
-    Ack                = 0xFA,
-    Resend             = 0xFE,
-    Reset              = 0xFF,
+    SelfTestFail = 0xFC,
+    Ack = 0xFA,
+    Resend = 0xFE,
+    Reset = 0xFF,
 };
 
 namespace keyboard
@@ -131,7 +131,7 @@ EndBitUnion(Ps2MouseMovement)
  * @param keys list of keys command to send to emulate the x11 key symbol
  */
 void keySymToPs2(uint32_t key, bool down, bool &cur_shift,
-        std::list<uint8_t> &keys);
+                 std::list<uint8_t> &keys);
 
 } // namespace ps2
 } // namespace gem5

@@ -60,60 +60,90 @@ class StatStor
     Counter data;
 
   public:
-    struct Params : public StorageParams {};
+    struct Params : public StorageParams
+    {
+    };
 
     /**
      * Builds this storage element and calls the base constructor of the
      * datatype.
      */
-    StatStor(const StorageParams* const storage_params)
-        : data(Counter())
-    { }
+    StatStor(const StorageParams *const storage_params) : data(Counter()) {}
 
     /**
      * The the stat to the given value.
      * @param val The new value.
      */
-    void set(Counter val) { data = val; }
+    void
+    set(Counter val)
+    {
+        data = val;
+    }
 
     /**
      * Increment the stat by the given value.
      * @param val The new value.
      */
-    void inc(Counter val) { data += val; }
+    void
+    inc(Counter val)
+    {
+        data += val;
+    }
 
     /**
      * Decrement the stat by the given value.
      * @param val The new value.
      */
-    void dec(Counter val) { data -= val; }
+    void
+    dec(Counter val)
+    {
+        data -= val;
+    }
 
     /**
      * Return the value of this stat as its base type.
      * @return The value of this stat.
      */
-    Counter value() const { return data; }
+    Counter
+    value() const
+    {
+        return data;
+    }
 
     /**
      * Return the value of this stat as a result type.
      * @return The value of this stat.
      */
-    Result result() const { return (Result)data; }
+    Result
+    result() const
+    {
+        return (Result)data;
+    }
 
     /**
      * Prepare stat data for dumping or serialization
      */
-    void prepare(const StorageParams* const storage_params) { }
+    void
+    prepare(const StorageParams *const storage_params)
+    {}
 
     /**
      * Reset stat value to default
      */
-    void reset(const StorageParams* const storage_params) { data = Counter(); }
+    void
+    reset(const StorageParams *const storage_params)
+    {
+        data = Counter();
+    }
 
     /**
      * @return true if zero value
      */
-    bool zero() const { return data == Counter(); }
+    bool
+    zero() const
+    {
+        return data == Counter();
+    }
 };
 
 /**
@@ -136,14 +166,16 @@ class AvgStor
     mutable Tick last;
 
   public:
-    struct Params : public StorageParams {};
+    struct Params : public StorageParams
+    {
+    };
 
     /**
      * Build and initializes this stat storage.
      */
-    AvgStor(const StorageParams* const storage_params)
+    AvgStor(const StorageParams *const storage_params)
         : current(0), lastReset(0), total(0), last(0)
-    { }
+    {}
 
     /**
      * Set the current count to the one provided, update the total and last
@@ -162,19 +194,31 @@ class AvgStor
      * Increment the current count by the provided value, calls set.
      * @param val The amount to increment.
      */
-    void inc(Counter val) { set(current + val); }
+    void
+    inc(Counter val)
+    {
+        set(current + val);
+    }
 
     /**
      * Deccrement the current count by the provided value, calls set.
      * @param val The amount to decrement.
      */
-    void dec(Counter val) { set(current - val); }
+    void
+    dec(Counter val)
+    {
+        set(current - val);
+    }
 
     /**
      * Return the current count.
      * @return The current count.
      */
-    Counter value() const { return current; }
+    Counter
+    value() const
+    {
+        return current;
+    }
 
     /**
      * Return the current average.
@@ -190,13 +234,17 @@ class AvgStor
     /**
      * @return true if zero value
      */
-    bool zero() const { return total == 0.0; }
+    bool
+    zero() const
+    {
+        return total == 0.0;
+    }
 
     /**
      * Prepare stat data for dumping or serialization
      */
     void
-    prepare(const StorageParams* const storage_params)
+    prepare(const StorageParams *const storage_params)
     {
         total += current * (curTick() - last);
         last = curTick();
@@ -206,19 +254,19 @@ class AvgStor
      * Reset stat value to default
      */
     void
-    reset(const StorageParams* const storage_params)
+    reset(const StorageParams *const storage_params)
     {
         total = 0.0;
         last = curTick();
         lastReset = curTick();
     }
-
 };
 
 /** The parameters for a distribution stat. */
 struct DistParams : public StorageParams
 {
     const DistType type;
+
     DistParams(DistType t) : type(t) {}
 };
 
@@ -270,21 +318,27 @@ class DistStor
         size_type buckets;
 
         Params(Counter _min, Counter _max, Counter _bucket_size)
-          : DistParams(Dist), min(_min), max(_max), bucket_size(_bucket_size),
-            buckets(0)
+            : DistParams(Dist),
+              min(_min),
+              max(_max),
+              bucket_size(_bucket_size),
+              buckets(0)
         {
             fatal_if(bucket_size <= 0,
-                "Bucket size (%f) must be greater than zero", bucket_size);
-            warn_if(std::floor((max - min + 1.0) / bucket_size) !=
-                std::ceil((max - min + 1.0) / bucket_size),
-                "Bucket size (%f) does not divide range [%f:%f] into equal-" \
-                "sized buckets. Rounding up.", bucket_size, min + 1.0, max);
+                     "Bucket size (%f) must be greater than zero",
+                     bucket_size);
+            warn_if(
+                std::floor((max - min + 1.0) / bucket_size) !=
+                    std::ceil((max - min + 1.0) / bucket_size),
+                "Bucket size (%f) does not divide range [%f:%f] into equal-"
+                "sized buckets. Rounding up.",
+                bucket_size, min + 1.0, max);
 
             buckets = std::ceil((max - min + 1.0) / bucket_size);
         }
     };
 
-    DistStor(const StorageParams* const storage_params)
+    DistStor(const StorageParams *const storage_params)
         : cvec(safe_cast<const Params *>(storage_params)->buckets)
     {
         reset(storage_params);
@@ -301,7 +355,11 @@ class DistStor
      * Return the number of buckets in this distribution.
      * @return the number of buckets.
      */
-    size_type size() const { return cvec.size(); }
+    size_type
+    size() const
+    {
+        return cvec.size();
+    }
 
     /**
      * Returns true if any calls to sample have been made.
@@ -314,7 +372,7 @@ class DistStor
     }
 
     void
-    prepare(const StorageParams* const storage_params, DistData &data)
+    prepare(const StorageParams *const storage_params, DistData &data)
     {
         const Params *params = safe_cast<const Params *>(storage_params);
 
@@ -342,7 +400,7 @@ class DistStor
      * Reset stat value to default
      */
     void
-    reset(const StorageParams* const storage_params)
+    reset(const StorageParams *const storage_params)
     {
         const Params *params = safe_cast<const Params *>(storage_params);
         min_track = params->min;
@@ -461,16 +519,15 @@ class HistStor
         /** The number of buckets. */
         size_type buckets;
 
-        Params(size_type _buckets)
-          : DistParams(Hist)
+        Params(size_type _buckets) : DistParams(Hist)
         {
             fatal_if(_buckets < 2,
-                "There must be at least two buckets in a histogram");
+                     "There must be at least two buckets in a histogram");
             buckets = _buckets;
         }
     };
 
-    HistStor(const StorageParams* const storage_params)
+    HistStor(const StorageParams *const storage_params)
         : cvec(safe_cast<const Params *>(storage_params)->buckets)
     {
         reset(storage_params);
@@ -493,7 +550,11 @@ class HistStor
      * Return the number of buckets in this distribution.
      * @return the number of buckets.
      */
-    size_type size() const { return cvec.size(); }
+    size_type
+    size() const
+    {
+        return cvec.size();
+    }
 
     /**
      * Returns true if any calls to sample have been made.
@@ -506,7 +567,7 @@ class HistStor
     }
 
     void
-    prepare(const StorageParams* const storage_params, DistData &data)
+    prepare(const StorageParams *const storage_params, DistData &data)
     {
         const Params *params = safe_cast<const Params *>(storage_params);
 
@@ -534,7 +595,7 @@ class HistStor
      * Reset stat value to default
      */
     void
-    reset(const StorageParams* const storage_params)
+    reset(const StorageParams *const storage_params)
     {
         const Params *params = safe_cast<const Params *>(storage_params);
         min_bucket = 0;
@@ -575,9 +636,9 @@ class SampleStor
     /**
      * Create and initialize this storage.
      */
-    SampleStor(const StorageParams* const storage_params)
+    SampleStor(const StorageParams *const storage_params)
         : sum(Counter()), squares(Counter()), samples(Counter())
-    { }
+    {}
 
     /**
      * Add a value the given number of times to this running average.
@@ -598,16 +659,24 @@ class SampleStor
      * Return the number of entries in this stat, 1
      * @return 1.
      */
-    size_type size() const { return 1; }
+    size_type
+    size() const
+    {
+        return 1;
+    }
 
     /**
      * Return true if no samples have been added.
      * @return True if no samples have been added.
      */
-    bool zero() const { return samples == Counter(); }
+    bool
+    zero() const
+    {
+        return samples == Counter();
+    }
 
     void
-    prepare(const StorageParams* const storage_params, DistData &data)
+    prepare(const StorageParams *const storage_params, DistData &data)
     {
         const Params *params = safe_cast<const Params *>(storage_params);
 
@@ -622,7 +691,7 @@ class SampleStor
      * Reset stat value to default
      */
     void
-    reset(const StorageParams* const storage_params)
+    reset(const StorageParams *const storage_params)
     {
         sum = Counter();
         squares = Counter();
@@ -651,7 +720,7 @@ class AvgSampleStor
     /**
      * Create and initialize this storage.
      */
-    AvgSampleStor(const StorageParams* const storage_params)
+    AvgSampleStor(const StorageParams *const storage_params)
         : sum(Counter()), squares(Counter())
     {}
 
@@ -672,16 +741,24 @@ class AvgSampleStor
      * Return the number of entries, in this case 1.
      * @return 1.
      */
-    size_type size() const { return 1; }
+    size_type
+    size() const
+    {
+        return 1;
+    }
 
     /**
      * Return true if no samples have been added.
      * @return True if the sum is zero.
      */
-    bool zero() const { return sum == Counter(); }
+    bool
+    zero() const
+    {
+        return sum == Counter();
+    }
 
     void
-    prepare(const StorageParams* const storage_params, DistData &data)
+    prepare(const StorageParams *const storage_params, DistData &data)
     {
         const Params *params = safe_cast<const Params *>(storage_params);
 
@@ -696,7 +773,7 @@ class AvgSampleStor
      * Reset stat value to default
      */
     void
-    reset(const StorageParams* const storage_params)
+    reset(const StorageParams *const storage_params)
     {
         sum = Counter();
         squares = Counter();
@@ -725,7 +802,7 @@ class SparseHistStor
         Params() : DistParams(Hist) {}
     };
 
-    SparseHistStor(const StorageParams* const storage_params)
+    SparseHistStor(const StorageParams *const storage_params)
     {
         reset(storage_params);
     }
@@ -746,7 +823,11 @@ class SparseHistStor
      * Return the number of buckets in this distribution.
      * @return the number of buckets.
      */
-    size_type size() const { return cmap.size(); }
+    size_type
+    size() const
+    {
+        return cmap.size();
+    }
 
     /**
      * Returns true if any calls to sample have been made.
@@ -759,7 +840,7 @@ class SparseHistStor
     }
 
     void
-    prepare(const StorageParams* const storage_params, SparseHistData &data)
+    prepare(const StorageParams *const storage_params, SparseHistData &data)
     {
         MCounter::iterator it;
         data.cmap.clear();
@@ -774,7 +855,7 @@ class SparseHistStor
      * Reset stat value to default
      */
     void
-    reset(const StorageParams* const storage_params)
+    reset(const StorageParams *const storage_params)
     {
         cmap.clear();
         samples = 0;

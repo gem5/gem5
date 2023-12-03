@@ -40,7 +40,8 @@
 // gem5 includes
 #include <sim/eventq.hh>
 
-namespace Gem5SystemC {
+namespace Gem5SystemC
+{
 /**
  * A 'Fake Payload Event Queue', similar to the TLM PEQs. This helps the
  * transactors to schedule events in gem5.
@@ -49,35 +50,41 @@ template <typename OWNER>
 class PayloadEvent : public gem5::Event
 {
   public:
-    OWNER& port;
+    OWNER &port;
     const std::string eventName;
-    void (OWNER::*handler)(PayloadEvent<OWNER>* pe,
-                           tlm::tlm_generic_payload& trans,
-                           const tlm::tlm_phase& phase);
+    void (OWNER::*handler)(PayloadEvent<OWNER> *pe,
+                           tlm::tlm_generic_payload &trans,
+                           const tlm::tlm_phase &phase);
 
   protected:
-    tlm::tlm_generic_payload* t;
+    tlm::tlm_generic_payload *t;
     tlm::tlm_phase p;
 
-    void process() { (port.*handler)(this, *t, p); }
-
-  public:
-    const std::string name() const { return eventName; }
-
-    PayloadEvent(OWNER& port_,
-                 void (OWNER::*handler_)(PayloadEvent<OWNER>* pe,
-                                         tlm::tlm_generic_payload& trans,
-                                         const tlm::tlm_phase& phase),
-                 const std::string& event_name)
-      : port(port_)
-      , eventName(event_name)
-      , handler(handler_)
+    void
+    process()
     {
+        (port.*handler)(this, *t, p);
     }
 
+  public:
+    const std::string
+    name() const
+    {
+        return eventName;
+    }
+
+    PayloadEvent(OWNER &port_,
+                 void (OWNER::*handler_)(PayloadEvent<OWNER> *pe,
+                                         tlm::tlm_generic_payload &trans,
+                                         const tlm::tlm_phase &phase),
+                 const std::string &event_name)
+        : port(port_), eventName(event_name), handler(handler_)
+    {}
+
     /// Schedule an event into gem5
-    void notify(tlm::tlm_generic_payload& trans, const tlm::tlm_phase& phase,
-                const sc_core::sc_time& delay)
+    void
+    notify(tlm::tlm_generic_payload &trans, const tlm::tlm_phase &phase,
+           const sc_core::sc_time &delay)
     {
         assert(!scheduled());
 
@@ -95,6 +102,6 @@ class PayloadEvent : public gem5::Event
         port.owner.schedule(this, nextEventTick);
     }
 };
-}
+} // namespace Gem5SystemC
 
 #endif

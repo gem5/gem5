@@ -28,7 +28,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #ifndef __MEM_RUBY_NETWORK_GARNET_0_OUTPUTUNIT_HH__
 #define __MEM_RUBY_NETWORK_GARNET_0_OUTPUTUNIT_HH__
 
@@ -62,15 +61,19 @@ class OutputUnit : public Consumer
     void set_out_link(NetworkLink *link);
     void set_credit_link(CreditLink *credit_link);
     void wakeup();
-    flitBuffer* getOutQueue();
-    void print(std::ostream& out) const {};
+    flitBuffer *getOutQueue();
+    void print(std::ostream &out) const {};
     void decrement_credit(int out_vc);
     void increment_credit(int out_vc);
     bool has_credit(int out_vc);
     bool has_free_vc(int vnet);
     int select_free_vc(int vnet);
 
-    inline PortDirection get_direction() { return m_direction; }
+    inline PortDirection
+    get_direction()
+    {
+        return m_direction;
+    }
 
     int
     get_credit_count(int vc)
@@ -87,7 +90,7 @@ class OutputUnit : public Consumer
     inline void
     set_vc_state(VC_state_type state, int vc, Tick curTime)
     {
-      outVcState[vc].setState(state, curTime);
+        outVcState[vc].setState(state, curTime);
     }
 
     inline bool

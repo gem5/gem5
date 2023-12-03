@@ -51,15 +51,15 @@
 namespace gem5
 {
 
-WriteQueue::WriteQueue(const std::string &_label,
-                       int num_entries, int reserve, const std::string &name)
+WriteQueue::WriteQueue(const std::string &_label, int num_entries, int reserve,
+                       const std::string &name)
     : Queue<WriteQueueEntry>(_label, num_entries, reserve,
-            name + ".write_queue")
+                             name + ".write_queue")
 {}
 
 WriteQueueEntry *
 WriteQueue::allocate(Addr blk_addr, unsigned blk_size, PacketPtr pkt,
-                    Tick when_ready, Counter order)
+                     Tick when_ready, Counter order)
 {
     assert(!freeList.empty());
     WriteQueueEntry *entry = freeList.front();

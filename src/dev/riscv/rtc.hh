@@ -54,8 +54,7 @@ namespace gem5
 class RiscvRTC : public SimObject
 {
   public:
-
-    class RTC: public MC146818
+    class RTC : public MC146818
     {
       public:
         using IntSource = IntSourcePin<RTC>;
@@ -63,7 +62,7 @@ class RiscvRTC : public SimObject
         std::vector<std::unique_ptr<IntSource>> intPin;
 
         RTC(EventManager *em, const std::string &n, const struct tm time,
-                bool bcd, Tick frequency, int int_pin_count);
+            bool bcd, Tick frequency, int int_pin_count);
 
       protected:
         void handleEvent();
@@ -73,8 +72,8 @@ class RiscvRTC : public SimObject
 
     RiscvRTC(const Params &params);
 
-    Port & getPort(const std::string &if_name,
-                   PortID idx=InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx = InvalidPortID) override;
 
     void startup() override;
 

@@ -47,32 +47,33 @@ ArmISA::Interrupts::takeInt32(InterruptTypes int_type) const
 {
     InterruptMask mask;
     CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
-    SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);;
+    SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+    ;
     HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     ExceptionLevel el = currEL(tc);
     bool cpsr_mask_bit, scr_routing_bit, scr_fwaw_bit, hcr_mask_override_bit;
     bool is_secure = isSecure(tc);
 
-    switch(int_type) {
-      case INT_FIQ:
+    switch (int_type) {
+    case INT_FIQ:
         cpsr_mask_bit = cpsr.f;
         scr_routing_bit = scr.fiq;
         scr_fwaw_bit = scr.fw;
         hcr_mask_override_bit = hcr.fmo;
         break;
-      case INT_IRQ:
+    case INT_IRQ:
         cpsr_mask_bit = cpsr.i;
         scr_routing_bit = scr.irq;
         scr_fwaw_bit = 1;
         hcr_mask_override_bit = hcr.imo;
         break;
-      case INT_ABT:
+    case INT_ABT:
         cpsr_mask_bit = cpsr.a;
         scr_routing_bit = scr.ea;
         scr_fwaw_bit = scr.aw;
         hcr_mask_override_bit = hcr.amo;
         break;
-      default:
+    default:
         panic("Unhandled interrupt type!");
     }
 
@@ -91,47 +92,46 @@ ArmISA::Interrupts::takeInt32(InterruptTypes int_type) const
         }
     } else {
         // SCR IRQ == 1
-        if ((!is_secure) &&
-            (hcr_mask_override_bit ||
-                (!scr_fwaw_bit && !hcr_mask_override_bit)))
+        if ((!is_secure) && (hcr_mask_override_bit ||
+                             (!scr_fwaw_bit && !hcr_mask_override_bit)))
             mask = INT_MASK_T;
         else
             mask = INT_MASK_M;
     }
     return ((mask == INT_MASK_T) ||
             ((mask == INT_MASK_M) && !cpsr_mask_bit)) &&
-            (mask != INT_MASK_P);
+           (mask != INT_MASK_P);
 }
-
 
 bool
 ArmISA::Interrupts::takeInt64(InterruptTypes int_type) const
 {
     InterruptMask mask;
     CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
-    SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);;
+    SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+    ;
     HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     ExceptionLevel el = currEL(tc);
     bool cpsr_mask_bit, scr_routing_bit, hcr_mask_override_bit;
     bool is_secure = isSecureBelowEL3(tc);
 
-    switch(int_type) {
-      case INT_FIQ:
+    switch (int_type) {
+    case INT_FIQ:
         cpsr_mask_bit = cpsr.f;
         scr_routing_bit = scr.fiq;
         hcr_mask_override_bit = hcr.fmo;
         break;
-      case INT_IRQ:
+    case INT_IRQ:
         cpsr_mask_bit = cpsr.i;
         scr_routing_bit = scr.irq;
         hcr_mask_override_bit = hcr.imo;
         break;
-      case INT_ABT:
+    case INT_ABT:
         cpsr_mask_bit = cpsr.a;
         scr_routing_bit = scr.ea;
         hcr_mask_override_bit = hcr.amo;
         break;
-      default:
+    default:
         panic("Unhandled interrupt type!");
     }
 
@@ -273,7 +273,7 @@ ArmISA::Interrupts::takeInt64(InterruptTypes int_type) const
     }
     return ((mask == INT_MASK_T) ||
             ((mask == INT_MASK_M) && !cpsr_mask_bit)) &&
-            (mask != INT_MASK_P);
+           (mask != INT_MASK_P);
 }
 
 bool
@@ -282,7 +282,6 @@ ArmISA::Interrupts::takeInt(InterruptTypes int_type) const
     // Table G1-17~19 of ARM V8 ARM
     return ArmSystem::highestELIs64(tc) ? takeInt64(int_type) :
                                           takeInt32(int_type);
-
 }
 
 bool
@@ -290,7 +289,6 @@ ArmISA::Interrupts::takeVirtualInt(InterruptTypes int_type) const
 {
     return ArmSystem::highestELIs64(tc) ? takeVirtualInt64(int_type) :
                                           takeVirtualInt32(int_type);
-
 }
 
 bool
@@ -303,37 +301,37 @@ ArmISA::Interrupts::takeVirtualInt32(InterruptTypes int_type) const
     bool amo, fmo, imo;
     bool cpsr_mask_bit, hcr_mask_override_bit;
 
-    if (hcr.tge == 1){
-        amo =  (no_vhe || hcr.e2h == 0);
-        fmo =  (no_vhe || hcr.e2h == 0);
-        imo =  (no_vhe || hcr.e2h == 0);
+    if (hcr.tge == 1) {
+        amo = (no_vhe || hcr.e2h == 0);
+        fmo = (no_vhe || hcr.e2h == 0);
+        imo = (no_vhe || hcr.e2h == 0);
     } else {
         amo = hcr.amo;
         fmo = hcr.fmo;
         imo = hcr.imo;
     }
 
-    bool is_hyp_mode   = currEL(tc) == EL2;
-    bool is_secure     = ArmISA::isSecure(tc);
+    bool is_hyp_mode = currEL(tc) == EL2;
+    bool is_secure = ArmISA::isSecure(tc);
 
-    switch(int_type) {
-      case INT_VIRT_FIQ:
+    switch (int_type) {
+    case INT_VIRT_FIQ:
         cpsr_mask_bit = cpsr.f;
         hcr_mask_override_bit = fmo;
         break;
-      case INT_VIRT_IRQ:
+    case INT_VIRT_IRQ:
         cpsr_mask_bit = cpsr.i;
         hcr_mask_override_bit = imo;
         break;
-      case INT_VIRT_ABT:
+    case INT_VIRT_ABT:
         cpsr_mask_bit = cpsr.a;
         hcr_mask_override_bit = amo;
         break;
-      default:
+    default:
         panic("Unhandled interrupt type!");
     }
-    return !cpsr_mask_bit && hcr_mask_override_bit &&
-        !is_secure && !is_hyp_mode;
+    return !cpsr_mask_bit && hcr_mask_override_bit && !is_secure &&
+           !is_hyp_mode;
 }
 
 bool
@@ -348,20 +346,20 @@ ArmISA::Interrupts::takeVirtualInt64(InterruptTypes int_type) const
     bool cpsr_mask_bit, hcr_mask_override_bit;
     bool is_secure = ArmISA::isSecureBelowEL3(tc);
 
-    switch(int_type) {
-      case INT_VIRT_FIQ:
+    switch (int_type) {
+    case INT_VIRT_FIQ:
         cpsr_mask_bit = cpsr.f;
         hcr_mask_override_bit = hcr.fmo;
         break;
-      case INT_VIRT_IRQ:
+    case INT_VIRT_IRQ:
         cpsr_mask_bit = cpsr.i;
         hcr_mask_override_bit = hcr.imo;
         break;
-      case INT_VIRT_ABT:
+    case INT_VIRT_ABT:
         cpsr_mask_bit = cpsr.a;
         hcr_mask_override_bit = hcr.amo;
         break;
-      default:
+    default:
         panic("Unhandled interrupt type!");
     }
 
@@ -406,7 +404,7 @@ ArmISA::Interrupts::takeVirtualInt64(InterruptTypes int_type) const
 
     return ((mask == INT_MASK_T) ||
             ((mask == INT_MASK_M) && !cpsr_mask_bit)) &&
-            (mask != INT_MASK_P);
+           (mask != INT_MASK_P);
 }
 
 } // namespace gem5

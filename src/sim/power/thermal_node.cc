@@ -35,7 +35,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #include "sim/power/thermal_node.hh"
 
 #include "params/ThermalNode.hh"
@@ -48,7 +47,6 @@ namespace gem5
  */
 ThermalNode::ThermalNode(const ThermalNodeParams &p)
     : SimObject(p), id(-1), isref(false), temp(0.0f)
-{
-}
+{}
 
 } // namespace gem5

@@ -48,10 +48,10 @@ class Printable
 {
   public:
     Printable() {}
+
     virtual ~Printable() {}
 
-    virtual void print(std::ostream &os,
-                       int verbosity = 0,
+    virtual void print(std::ostream &os, int verbosity = 0,
                        const std::string &prefix = "") const = 0;
 };
 

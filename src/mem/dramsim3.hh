@@ -61,7 +61,6 @@ namespace memory
 class DRAMsim3 : public AbstractMemory
 {
   private:
-
     /**
      * The memory port has to deal with its own flow control to avoid
      * having unbounded storage that is implicitly created in the port
@@ -69,17 +68,13 @@ class DRAMsim3 : public AbstractMemory
      */
     class MemoryPort : public ResponsePort
     {
-
       private:
-
-        DRAMsim3& mem;
+        DRAMsim3 &mem;
 
       public:
-
-        MemoryPort(const std::string& _name, DRAMsim3& _memory);
+        MemoryPort(const std::string &_name, DRAMsim3 &_memory);
 
       protected:
-
         Tick recvAtomic(PacketPtr pkt);
 
         void recvFunctional(PacketPtr pkt);
@@ -89,7 +84,6 @@ class DRAMsim3 : public AbstractMemory
         void recvRespRetry();
 
         AddrRangeList getAddrRanges() const;
-
     };
 
     MemoryPort port;
@@ -144,7 +138,6 @@ class DRAMsim3 : public AbstractMemory
      */
     std::deque<PacketPtr> responseQueue;
 
-
     unsigned int nbrOutstanding() const;
 
     /**
@@ -180,7 +173,6 @@ class DRAMsim3 : public AbstractMemory
     std::unique_ptr<Packet> pendingDelete;
 
   public:
-
     typedef DRAMsim3Params Params;
     DRAMsim3(const Params &p);
 
@@ -204,7 +196,7 @@ class DRAMsim3 : public AbstractMemory
 
     DrainState drain() override;
 
-    virtual Port& getPort(const std::string& if_name,
+    virtual Port &getPort(const std::string &if_name,
                           PortID idx = InvalidPortID) override;
 
     void init() override;
@@ -213,12 +205,10 @@ class DRAMsim3 : public AbstractMemory
     void resetStats() override;
 
   protected:
-
     Tick recvAtomic(PacketPtr pkt);
     void recvFunctional(PacketPtr pkt);
     bool recvTimingReq(PacketPtr pkt);
     void recvRespRetry();
-
 };
 
 } // namespace memory

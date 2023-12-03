@@ -51,20 +51,19 @@ template <typename T>
 inline T
 Packet::getRaw() const
 {
-    assert(flags.isSet(STATIC_DATA|DYNAMIC_DATA));
+    assert(flags.isSet(STATIC_DATA | DYNAMIC_DATA));
     assert(sizeof(T) <= size);
-    return *(T*)data;
+    return *(T *)data;
 }
 
 template <typename T>
 inline void
 Packet::setRaw(T v)
 {
-    assert(flags.isSet(STATIC_DATA|DYNAMIC_DATA));
+    assert(flags.isSet(STATIC_DATA | DYNAMIC_DATA));
     assert(sizeof(T) <= size);
-    *(T*)data = v;
+    *(T *)data = v;
 }
-
 
 template <typename T>
 inline T
@@ -85,13 +84,13 @@ inline T
 Packet::get(ByteOrder endian) const
 {
     switch (endian) {
-      case ByteOrder::big:
+    case ByteOrder::big:
         return getBE<T>();
 
-      case ByteOrder::little:
+    case ByteOrder::little:
         return getLE<T>();
 
-      default:
+    default:
         panic("Illegal byte order in Packet::get()\n");
     };
 }
@@ -115,13 +114,13 @@ inline void
 Packet::set(T v, ByteOrder endian)
 {
     switch (endian) {
-      case ByteOrder::big:
+    case ByteOrder::big:
         return setBE<T>(v);
 
-      case ByteOrder::little:
+    case ByteOrder::little:
         return setLE<T>(v);
 
-      default:
+    default:
         panic("Illegal byte order in Packet::set()\n");
     };
 }

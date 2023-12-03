@@ -49,13 +49,9 @@ class ThreadInfo
     System *sys;
 
   public:
-    ThreadInfo(ThreadContext *_tc)
-        : tc(_tc), sys(tc->getSystemPtr())
-    {
+    ThreadInfo(ThreadContext *_tc) : tc(_tc), sys(tc->getSystemPtr()) {}
 
-    }
-    ~ThreadInfo()
-    {}
+    ~ThreadInfo() {}
 };
 
 } // namespace free_bsd

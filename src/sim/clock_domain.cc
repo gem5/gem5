@@ -56,7 +56,7 @@ namespace gem5
 
 ClockDomain::ClockDomainStats::ClockDomainStats(ClockDomain &cd)
     : statistics::Group(&cd),
-    ADD_STAT(clock, statistics::units::Tick::get(), "Clock period in ticks")
+      ADD_STAT(clock, statistics::units::Tick::get(), "Clock period in ticks")
 {
     // Expose the current clock period as a stat for observability in
     // the dumps
@@ -68,8 +68,7 @@ ClockDomain::ClockDomain(const Params &p, VoltageDomain *voltage_domain)
       _clockPeriod(0),
       _voltageDomain(voltage_domain),
       stats(*this)
-{
-}
+{}
 
 double
 ClockDomain::voltage() const
@@ -77,34 +76,41 @@ ClockDomain::voltage() const
     return _voltageDomain->voltage();
 }
 
-SrcClockDomain::SrcClockDomain(const Params &p) :
-    ClockDomain(p, p.voltage_domain),
-    freqOpPoints(p.clock),
-    _domainID(p.domain_id),
-    _perfLevel(p.init_perf_level)
+SrcClockDomain::SrcClockDomain(const Params &p)
+    : ClockDomain(p, p.voltage_domain),
+      freqOpPoints(p.clock),
+      _domainID(p.domain_id),
+      _perfLevel(p.init_perf_level)
 {
     VoltageDomain *vdom = p.voltage_domain;
 
-    fatal_if(freqOpPoints.empty(), "DVFS: Empty set of frequencies for "\
-             "domain %d %s\n", _domainID, name());
+    fatal_if(freqOpPoints.empty(),
+             "DVFS: Empty set of frequencies for "
+             "domain %d %s\n",
+             _domainID, name());
 
-    fatal_if(!vdom, "DVFS: Empty voltage domain specified for "\
-             "domain %d %s\n", _domainID, name());
+    fatal_if(!vdom,
+             "DVFS: Empty voltage domain specified for "
+             "domain %d %s\n",
+             _domainID, name());
 
     fatal_if((vdom->numVoltages() > 1) &&
-             (vdom->numVoltages() != freqOpPoints.size()),
-             "DVFS: Number of frequency and voltage scaling points do "\
-             "not match: %d:%d ID: %d %s.\n", vdom->numVoltages(),
-             freqOpPoints.size(), _domainID, name());
+                 (vdom->numVoltages() != freqOpPoints.size()),
+             "DVFS: Number of frequency and voltage scaling points do "
+             "not match: %d:%d ID: %d %s.\n",
+             vdom->numVoltages(), freqOpPoints.size(), _domainID, name());
 
     // Frequency (& voltage) points should be declared in descending order,
     // NOTE: Frequency is inverted to ticks, so checking for ascending ticks
     fatal_if(!std::is_sorted(freqOpPoints.begin(), freqOpPoints.end()),
-             "DVFS: Frequency operation points not in descending order for "\
-             "domain with ID %d\n", _domainID);
+             "DVFS: Frequency operation points not in descending order for "
+             "domain with ID %d\n",
+             _domainID);
 
-    fatal_if(_perfLevel >= freqOpPoints.size(), "DVFS: Initial DVFS point %d "\
-             "is outside of list for Domain ID: %d\n", _perfLevel, _domainID);
+    fatal_if(_perfLevel >= freqOpPoints.size(),
+             "DVFS: Initial DVFS point %d "
+             "is outside of list for Domain ID: %d\n",
+             _perfLevel, _domainID);
 
     clockPeriod(freqOpPoints[_perfLevel]);
 
@@ -145,19 +151,21 @@ SrcClockDomain::perfLevel(PerfLevel perf_level)
         return;
     }
 
-    DPRINTF(ClockDomain, "DVFS: Switching performance level of domain %s "\
-            "(id: %d) from  %d to %d\n", name(), domainID(), _perfLevel,
-            perf_level);
+    DPRINTF(ClockDomain,
+            "DVFS: Switching performance level of domain %s "
+            "(id: %d) from  %d to %d\n",
+            name(), domainID(), _perfLevel, perf_level);
 
     _perfLevel = perf_level;
 
     signalPerfLevelUpdate();
 }
 
-void SrcClockDomain::signalPerfLevelUpdate()
+void
+SrcClockDomain::signalPerfLevelUpdate()
 {
-    // Signal the voltage domain that we have changed our perf level so that the
-    // voltage domain can recompute its performance level
+    // Signal the voltage domain that we have changed our perf level so that
+    // the voltage domain can recompute its performance level
     voltageDomain()->sanitiseVoltages();
 
     // Integrated switching of the actual clock value, too
@@ -186,15 +194,15 @@ SrcClockDomain::startup()
     signalPerfLevelUpdate();
 }
 
-DerivedClockDomain::DerivedClockDomain(const Params &p) :
-    ClockDomain(p, p.clk_domain->voltageDomain()),
-    parent(*p.clk_domain),
-    clockDivider(p.clk_divider)
+DerivedClockDomain::DerivedClockDomain(const Params &p)
+    : ClockDomain(p, p.clk_domain->voltageDomain()),
+      parent(*p.clk_domain),
+      clockDivider(p.clk_divider)
 {
     // Ensure that clock divider setting works as frequency divider and never
     // work as frequency multiplier
     if (clockDivider < 1) {
-       fatal("Clock divider param cannot be less than 1");
+        fatal("Clock divider param cannot be less than 1");
     }
 
     // let the parent keep track of this derived domain so that it can

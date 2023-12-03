@@ -44,13 +44,13 @@ TEST(SatCounterDeathTest, BitCountExceeds)
 {
 #ifdef NDEBUG
     GTEST_SKIP() << "Skipping as assertions are "
-        "stripped out of fast builds";
+                    "stripped out of fast builds";
 #endif
 
     gtestLogOutput.str("");
     EXPECT_ANY_THROW(SatCounter8 counter(9));
     ASSERT_NE(gtestLogOutput.str().find("Number of bits exceeds counter size"),
-        std::string::npos);
+              std::string::npos);
 }
 
 /**
@@ -61,13 +61,13 @@ TEST(SatCounterDeathTest, InitialValueExceeds)
 {
 #ifdef NDEBUG
     GTEST_SKIP() << "Skipping as assertions are "
-        "stripped out of fast builds";
+                    "stripped out of fast builds";
 #endif
 
     gtestLogOutput.str("");
     EXPECT_ANY_THROW(SatCounter8 counter(7, 128));
     ASSERT_NE(gtestLogOutput.str().find("initial value exceeds max value"),
-        std::string::npos);
+              std::string::npos);
 }
 
 /**
@@ -79,7 +79,7 @@ TEST(SatCounterTest, MaximumValue)
     const unsigned max_value = (1 << bits) - 1;
     SatCounter8 counter(bits);
 
-    for (int i = 0; i < 2*max_value; i++) {
+    for (int i = 0; i < 2 * max_value; i++) {
         counter++;
     }
 
@@ -244,7 +244,7 @@ TEST(SatCounterDeathTest, RightShiftNegative)
 {
 #ifdef NDEBUG
     GTEST_SKIP() << "Skipping as assertions are "
-        "stripped out of fast builds";
+                    "stripped out of fast builds";
 #endif
 
     SatCounter8 counter(8);
@@ -259,7 +259,7 @@ TEST(SatCounterDeathTest, LeftShiftNegative)
 {
 #ifdef NDEBUG
     GTEST_SKIP() << "Skipping as assertions are "
-        "stripped out of fast builds";
+                    "stripped out of fast builds";
 #endif
 
     SatCounter8 counter(8);
@@ -276,7 +276,7 @@ TEST(SatCounterTest, PrePostOperators)
     SatCounter8 counter_pre(bits);
     SatCounter8 counter_post(bits);
 
-    for (int i = 0; i < 2*max_value; i++) {
+    for (int i = 0; i < 2 * max_value; i++) {
         counter_post++;
         SatCounter8 value_pre = ++counter_pre;
         ASSERT_EQ(counter_post, value_pre);
@@ -285,7 +285,7 @@ TEST(SatCounterTest, PrePostOperators)
     ASSERT_EQ(counter_pre, max_value);
     ASSERT_EQ(counter_post, max_value);
 
-    for (int i = 0; i < 2*max_value; i++) {
+    for (int i = 0; i < 2 * max_value; i++) {
         counter_post--;
         SatCounter8 value_pre = --counter_pre;
         ASSERT_EQ(counter_post, value_pre);
@@ -320,7 +320,7 @@ TEST(SatCounterTest, CopyMove)
 
     // Make sure max value is the same for all of them, and that modifying
     // the copies does not modify the original
-    for (int i = 0; i < 2*max_value; i++) {
+    for (int i = 0; i < 2 * max_value; i++) {
         counter_copy_constructor++;
         counter_copy++;
         deep_copy++;

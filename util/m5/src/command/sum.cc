@@ -40,8 +40,8 @@ bool
 do_sum(const DispatchTable &dt, Args &args)
 {
     uint64_t a, b, c, d, e, f;
-    if (!args.pop(a) || !args.pop(b) || !args.pop(c, 0) ||
-            !args.pop(d, 0) || !args.pop(e, 0) || !args.pop(f, 0))
+    if (!args.pop(a) || !args.pop(b) || !args.pop(c, 0) || !args.pop(d, 0) ||
+        !args.pop(e, 0) || !args.pop(f, 0))
         return false;
 
     unsigned sum = (*dt.m5_sum)(a, b, c, d, e, f);
@@ -50,8 +50,8 @@ do_sum(const DispatchTable &dt, Args &args)
     return true;
 }
 
-Command sum = {
-    "sum", 2, 6, do_sum, "<a> <b> [c [d [e [f]]]]\n"
-        "        Sum a-f (defaults are 0), for testing purposes" };
+Command sum = { "sum", 2, 6, do_sum,
+                "<a> <b> [c [d [e [f]]]]\n"
+                "        Sum a-f (defaults are 0), for testing purposes" };
 
 } // anonymous namespace

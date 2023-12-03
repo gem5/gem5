@@ -53,20 +53,20 @@ CallType::detect(Args &args)
 {
     CallType *def = nullptr;
 
-    for (auto p: map()) {
+    for (auto p : map()) {
         auto &ct = p.second;
         if (ct.isDefault())
             def = &ct;
         auto result = ct.checkArgs(args);
         switch (result) {
-          case CheckArgsResult::Match:
+        case CheckArgsResult::Match:
             ct.init();
             return &ct;
-          case CheckArgsResult::NoMatch:
+        case CheckArgsResult::NoMatch:
             continue;
-          case CheckArgsResult::Usage:
+        case CheckArgsResult::Usage:
             return nullptr;
-          default:
+        default:
             assert(!"Bad checkArgs result");
         }
     }
@@ -80,7 +80,7 @@ std::string
 CallType::usageSummary()
 {
     std::string summary = "";
-    for (auto p: map())
+    for (auto p : map())
         summary += p.second.formattedUsage();
     return summary;
 }

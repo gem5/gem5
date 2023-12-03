@@ -50,16 +50,18 @@ namespace gem5
 namespace partitioning_policy
 {
 
-MaxCapacityPartitioningPolicy::MaxCapacityPartitioningPolicy
-    (const MaxCapacityPartitioningPolicyParams &params):
-    BasePartitioningPolicy(params), cacheSize(params.cache_size),
-    blkSize(params.blk_size), partitionIDs(params.partition_ids),
-    capacities(params.capacities)
+MaxCapacityPartitioningPolicy::MaxCapacityPartitioningPolicy(
+    const MaxCapacityPartitioningPolicyParams &params)
+    : BasePartitioningPolicy(params),
+      cacheSize(params.cache_size),
+      blkSize(params.blk_size),
+      partitionIDs(params.partition_ids),
+      capacities(params.capacities)
 {
     // check if ids and capacities vectors are the same length
     if (this->partitionIDs.size() != this->capacities.size()) {
         fatal("MaxCapacity Partitioning Policy configuration invalid: ids and "
-            "capacities arrays are not equal lengths");
+              "capacities arrays are not equal lengths");
     }
 
     // calculate total cache block count to use when creating allocation maps
@@ -73,27 +75,27 @@ MaxCapacityPartitioningPolicy::MaxCapacityPartitioningPolicy
         // check Capacity Fraction (cap_frac) is actually a fraction in [0,1]
         if (!(cap_frac >= 0 && cap_frac <= 1)) {
             fatal("MaxCapacity Partitioning Policy for PartitionID %d has "
-                "Capacity Fraction %f outside of [0,1] range", partition_id,
-                cap_frac);
+                  "Capacity Fraction %f outside of [0,1] range",
+                  partition_id, cap_frac);
         }
 
         const uint64_t allocated_block_cnt = cap_frac * total_block_cnt;
         partitionIdMaxCapacity.emplace(partition_id, allocated_block_cnt);
 
-        DPRINTF(PartitionPolicy, "Configured MaxCapacity Partitioning Policy "
+        DPRINTF(
+            PartitionPolicy,
+            "Configured MaxCapacity Partitioning Policy "
             "for PartitionID: %d to use portion of size %f (%d cache blocks "
-            "of %d total)\n", partition_id, cap_frac, allocated_block_cnt,
-            total_block_cnt);
-
+            "of %d total)\n",
+            partition_id, cap_frac, allocated_block_cnt, total_block_cnt);
     }
 }
 
 void
 MaxCapacityPartitioningPolicy::filterByPartition(
-    std::vector<ReplaceableEntry *> &entries,
-    const uint64_t id) const
+    std::vector<ReplaceableEntry *> &entries, const uint64_t id) const
 {
-    if (// No entries to filter
+    if ( // No entries to filter
         entries.empty() ||
         // This partition_id is not policed
         partitionIdMaxCapacity.find(id) == partitionIdMaxCapacity.end() ||
@@ -106,10 +108,12 @@ MaxCapacityPartitioningPolicy::filterByPartition(
     // Limit reached, restrict allocation only to blocks owned by
     // the Partition ID
     entries.erase(std::remove_if(entries.begin(), entries.end(),
-        [id](ReplaceableEntry *entry) {
-            CacheBlk *blk = static_cast<CacheBlk *>(entry);
-            return blk->getPartitionId() != id;
-        }), entries.end());
+                                 [id](ReplaceableEntry *entry) {
+                                     CacheBlk *blk =
+                                         static_cast<CacheBlk *>(entry);
+                                     return blk->getPartitionId() != id;
+                                 }),
+                  entries.end());
 }
 
 void
@@ -117,7 +121,7 @@ MaxCapacityPartitioningPolicy::notifyAcquire(const uint64_t partition_id)
 {
     // sanity check current allocation does not exceed its configured maximum
     assert(partitionIdCurCapacity[partition_id] <=
-        partitionIdMaxCapacity[partition_id]);
+           partitionIdMaxCapacity[partition_id]);
 
     partitionIdCurCapacity[partition_id] += 1;
 }

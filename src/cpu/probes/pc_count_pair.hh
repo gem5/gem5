@@ -36,38 +36,45 @@ namespace gem5
 
 class PcCountPair
 {
-
   private:
-
     /** The Program Counter address */
     Addr pc;
     /** The count of the Program Counter address */
     int count;
 
   public:
-
     /** Explicit constructor assigning the pc and count values */
-    explicit constexpr PcCountPair(Addr _pc, int _count) :
-        pc(_pc), count(_count) {}
+    explicit constexpr PcCountPair(Addr _pc, int _count)
+        : pc(_pc), count(_count)
+    {}
 
     /** Default constructor for parameter classes */
     PcCountPair() : pc(0), count(0) {}
 
     /** Returns the Program Counter address */
-    constexpr Addr getPC() const { return pc; }
+    constexpr Addr
+    getPC() const
+    {
+        return pc;
+    }
+
     /** Returns the count of the Program */
-    constexpr int getCount() const { return count; }
+    constexpr int
+    getCount() const
+    {
+        return count;
+    }
 
     /** Greater than comparison */
     constexpr bool
-    operator>(const PcCountPair& cc) const
+    operator>(const PcCountPair &cc) const
     {
         return count > cc.getCount();
     }
 
     /** Equal comparison */
     constexpr bool
-    operator==(const PcCountPair& cc) const
+    operator==(const PcCountPair &cc) const
     {
         return (pc == cc.getPC() && count == cc.getCount());
     }
@@ -76,22 +83,22 @@ class PcCountPair
     std::string
     to_string() const
     {
-        std::string s = "(" + std::to_string(pc)
-                                    + "," + std::to_string(count) + ")";
+        std::string s =
+            "(" + std::to_string(pc) + "," + std::to_string(count) + ")";
         return s;
     }
 
     /** Enable hashing for this parameter */
     struct HashFunction
     {
-        size_t operator()(const PcCountPair& item) const
+        size_t
+        operator()(const PcCountPair &item) const
         {
             size_t xHash = std::hash<int>()(item.pc);
             size_t yHash = std::hash<int>()(item.count);
             return xHash * 2 + yHash;
         }
     };
-
 };
 
 } // namespace gem5

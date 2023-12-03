@@ -68,20 +68,44 @@ class ScEvent
         _events->erase(_it);
         _events = nullptr;
     }
+
   public:
-    ScEvent(std::function<void()> work) :
-        work(work), _when(gem5::MaxTick), _events(nullptr)
+    ScEvent(std::function<void()> work)
+        : work(work), _when(gem5::MaxTick), _events(nullptr)
     {}
 
     ~ScEvent();
 
-    bool scheduled() { return _events != nullptr; }
-    ScEvents *scheduledOn() { return _events; }
+    bool
+    scheduled()
+    {
+        return _events != nullptr;
+    }
 
-    void when(gem5::Tick w) { _when = w; }
-    gem5::Tick when() { return _when; }
+    ScEvents *
+    scheduledOn()
+    {
+        return _events;
+    }
 
-    void run() { deschedule(); work(); }
+    void
+    when(gem5::Tick w)
+    {
+        _when = w;
+    }
+
+    gem5::Tick
+    when()
+    {
+        return _when;
+    }
+
+    void
+    run()
+    {
+        deschedule();
+        work();
+    }
 };
 
 } // namespace sc_gem5

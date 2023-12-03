@@ -64,12 +64,17 @@ class PollEvent : public Serializable
     void disable();
     void enable();
     virtual void process(int revent) = 0;
+
     /** @} */ // end of api_poll_event
 
     /**
      * @ingroup api_poll_event
      */
-    bool queued() { return queue != 0; }
+    bool
+    queued()
+    {
+        return queue != 0;
+    }
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
@@ -101,7 +106,6 @@ class PollQueue
     void schedule(PollEvent *event);
     void service();
     /** @} */ // end of api_poll_queue
-
 
   public:
     static void setupAsyncIO(int fd, bool set);

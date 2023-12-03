@@ -28,7 +28,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #include "mem/ruby/network/garnet/VirtualChannel.hh"
 
 namespace gem5
@@ -41,10 +40,12 @@ namespace garnet
 {
 
 VirtualChannel::VirtualChannel()
-  : inputBuffer(), m_vc_state(IDLE_, Tick(0)), m_output_port(-1),
-    m_enqueue_time(INFINITE_), m_output_vc(-1)
-{
-}
+    : inputBuffer(),
+      m_vc_state(IDLE_, Tick(0)),
+      m_output_port(-1),
+      m_enqueue_time(INFINITE_),
+      m_output_vc(-1)
+{}
 
 void
 VirtualChannel::set_idle(Tick curTime)
@@ -70,7 +71,7 @@ VirtualChannel::need_stage(flit_stage stage, Tick time)
     if (inputBuffer.isReady(time)) {
         assert(m_vc_state.first == ACTIVE_ && m_vc_state.second <= time);
         flit *t_flit = inputBuffer.peekTopFlit();
-        return(t_flit->is_stage(stage, time));
+        return (t_flit->is_stage(stage, time));
     }
     return false;
 }

@@ -47,10 +47,12 @@ namespace gem5
 void
 ExitGen::enter()
 {
-    DPRINTF(TrafficGen, "%s has encountered the exit state and will "
-            "terminate the simulation.\n", name());
+    DPRINTF(TrafficGen,
+            "%s has encountered the exit state and will "
+            "terminate the simulation.\n",
+            name());
     exitSimLoop(name() + " has encountered the exit state and will "
-                "terminate the simulation.\n");
+                         "terminate the simulation.\n");
 }
 
 PacketPtr

@@ -57,7 +57,6 @@ namespace gem5
 class FlashDevice : public AbstractNVM
 {
   public:
-
     /** Initialize functions*/
     FlashDevice(const FlashDeviceParams &);
     ~FlashDevice();

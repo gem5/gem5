@@ -57,8 +57,8 @@ PacketPtr
 RandomGen::getNextPacket()
 {
     // choose if we generate a read or a write here
-    bool isRead = readPercent != 0 &&
-        (readPercent == 100 || random_mt.random(0, 100) < readPercent);
+    bool isRead = readPercent != 0 && (readPercent == 100 ||
+                                       random_mt.random(0, 100) < readPercent);
 
     assert((readPercent == 0 && !isRead) || (readPercent == 100 && isRead) ||
            readPercent != 100);
@@ -86,8 +86,7 @@ RandomGen::nextPacketTick(bool elastic, Tick delay) const
     // Check to see if we have reached the data limit. If dataLimit is
     // zero we do not have a data limit and therefore we will keep
     // generating requests for the entire residency in this state.
-    if (dataLimit && dataManipulated >= dataLimit)
-    {
+    if (dataLimit && dataManipulated >= dataLimit) {
         DPRINTF(TrafficGen, "Data limit for RandomGen reached.\n");
         // No more requests. Return MaxTick.
         return MaxTick;

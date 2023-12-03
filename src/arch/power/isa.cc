@@ -56,7 +56,7 @@ namespace
 RegClass vecRegClass(VecRegClass, VecRegClassName, 1, debug::IntRegs);
 RegClass vecElemClass(VecElemClass, VecElemClassName, 2, debug::IntRegs);
 RegClass vecPredRegClass(VecPredRegClass, VecPredRegClassName, 1,
-        debug::IntRegs);
+                         debug::IntRegs);
 RegClass matRegClass(MatRegClass, MatRegClassName, 0, debug::MatRegs);
 RegClass ccRegClass(CCRegClass, CCRegClassName, 0, debug::IntRegs);
 
@@ -79,14 +79,14 @@ void
 ISA::copyRegsFrom(ThreadContext *src)
 {
     // First loop through the integer registers.
-    for (auto &id: intRegClass)
+    for (auto &id : intRegClass)
         tc->setReg(id, src->getReg(id));
 
     // Then loop through the floating point registers.
-    for (auto &id: floatRegClass)
+    for (auto &id : floatRegClass)
         tc->setReg(id, src->getReg(id));
 
-    //TODO Copy misc. registers
+    // TODO Copy misc. registers
 
     // Lastly copy PC/NPC
     tc->pcState(src->pcState());

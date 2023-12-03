@@ -49,8 +49,7 @@ namespace gem5
 {
 
 KvmKernelGic::KvmKernelGic(KvmVM &_vm, uint32_t dev, unsigned it_lines)
-    : vm(_vm),
-      kdev(vm.createDevice(dev))
+    : vm(_vm), kdev(vm.createDevice(dev))
 {
     // Tell the VM that we will emulate the GIC in the kernel. This
     // disables IRQ and FIQ handling in the KVM CPU model.
@@ -59,9 +58,7 @@ KvmKernelGic::KvmKernelGic(KvmVM &_vm, uint32_t dev, unsigned it_lines)
     kdev.setAttr<uint32_t>(KVM_DEV_ARM_VGIC_GRP_NR_IRQS, 0, it_lines);
 }
 
-KvmKernelGic::~KvmKernelGic()
-{
-}
+KvmKernelGic::~KvmKernelGic() {}
 
 void
 KvmKernelGic::setSPI(unsigned spi)
@@ -103,28 +100,25 @@ KvmKernelGic::setIntState(unsigned type, unsigned vcpu, unsigned irq,
 #endif
 
     panic_if((!vcpu2_enabled && vcpu2_index) || kvm_vcpu > 0xffff,
-              "VCPU out of range");
+             "VCPU out of range");
 
     assert(type <= KVM_ARM_IRQ_TYPE_MASK);
     assert(irq <= KVM_ARM_IRQ_NUM_MASK);
-    const uint32_t line(
-        kvm_vcpu |
-        (type << KVM_ARM_IRQ_TYPE_SHIFT) |
-        (irq << KVM_ARM_IRQ_NUM_SHIFT));
+    const uint32_t line(kvm_vcpu | (type << KVM_ARM_IRQ_TYPE_SHIFT) |
+                        (irq << KVM_ARM_IRQ_NUM_SHIFT));
 
     vm.setIRQLine(line, high);
 }
 
-KvmKernelGicV2::KvmKernelGicV2(KvmVM &_vm,
-                               const MuxingKvmGicV2Params &p)
+KvmKernelGicV2::KvmKernelGicV2(KvmVM &_vm, const MuxingKvmGicV2Params &p)
     : KvmKernelGic(_vm, KVM_DEV_TYPE_ARM_VGIC_V2, p.it_lines),
       cpuRange(RangeSize(p.cpu_addr, KVM_VGIC_V2_CPU_SIZE)),
       distRange(RangeSize(p.dist_addr, KVM_VGIC_V2_DIST_SIZE))
 {
-    kdev.setAttr<uint64_t>(
-        KVM_DEV_ARM_VGIC_GRP_ADDR, KVM_VGIC_V2_ADDR_TYPE_DIST, p.dist_addr);
-    kdev.setAttr<uint64_t>(
-        KVM_DEV_ARM_VGIC_GRP_ADDR, KVM_VGIC_V2_ADDR_TYPE_CPU, p.cpu_addr);
+    kdev.setAttr<uint64_t>(KVM_DEV_ARM_VGIC_GRP_ADDR,
+                           KVM_VGIC_V2_ADDR_TYPE_DIST, p.dist_addr);
+    kdev.setAttr<uint64_t>(KVM_DEV_ARM_VGIC_GRP_ADDR,
+                           KVM_VGIC_V2_ADDR_TYPE_CPU, p.cpu_addr);
 }
 
 uint32_t
@@ -133,12 +127,11 @@ KvmKernelGicV2::getGicReg(unsigned group, unsigned vcpu, unsigned offset)
     uint64_t reg;
 
     assert(vcpu <= KVM_ARM_IRQ_VCPU_MASK);
-    const uint64_t attr(
-        ((uint64_t)vcpu << KVM_DEV_ARM_VGIC_CPUID_SHIFT) |
-        (offset << KVM_DEV_ARM_VGIC_OFFSET_SHIFT));
+    const uint64_t attr(((uint64_t)vcpu << KVM_DEV_ARM_VGIC_CPUID_SHIFT) |
+                        (offset << KVM_DEV_ARM_VGIC_OFFSET_SHIFT));
 
     kdev.getAttrPtr(group, attr, &reg);
-    return (uint32_t) reg;
+    return (uint32_t)reg;
 }
 
 void
@@ -148,9 +141,8 @@ KvmKernelGicV2::setGicReg(unsigned group, unsigned vcpu, unsigned offset,
     uint64_t reg = value;
 
     assert(vcpu <= KVM_ARM_IRQ_VCPU_MASK);
-    const uint64_t attr(
-        ((uint64_t)vcpu << KVM_DEV_ARM_VGIC_CPUID_SHIFT) |
-        (offset << KVM_DEV_ARM_VGIC_OFFSET_SHIFT));
+    const uint64_t attr(((uint64_t)vcpu << KVM_DEV_ARM_VGIC_CPUID_SHIFT) |
+                        (offset << KVM_DEV_ARM_VGIC_OFFSET_SHIFT));
 
     kdev.setAttrPtr(group, attr, &reg);
 }
@@ -187,23 +179,22 @@ KvmKernelGicV2::writeCpu(ContextID ctx, Addr daddr, uint32_t data)
 #define SZ_64K 0x00000040
 #endif
 
-KvmKernelGicV3::KvmKernelGicV3(KvmVM &_vm,
-                               const MuxingKvmGicV3Params &p)
+KvmKernelGicV3::KvmKernelGicV3(KvmVM &_vm, const MuxingKvmGicV3Params &p)
     : KvmKernelGic(_vm, KVM_DEV_TYPE_ARM_VGIC_V3, p.it_lines),
       redistRange(RangeSize(p.redist_addr, KVM_VGIC_V3_REDIST_SIZE)),
       distRange(RangeSize(p.dist_addr, KVM_VGIC_V3_DIST_SIZE))
 {
-    kdev.setAttr<uint64_t>(
-        KVM_DEV_ARM_VGIC_GRP_ADDR, KVM_VGIC_V3_ADDR_TYPE_DIST, p.dist_addr);
-    kdev.setAttr<uint64_t>(
-        KVM_DEV_ARM_VGIC_GRP_ADDR, KVM_VGIC_V3_ADDR_TYPE_REDIST, p.redist_addr);
+    kdev.setAttr<uint64_t>(KVM_DEV_ARM_VGIC_GRP_ADDR,
+                           KVM_VGIC_V3_ADDR_TYPE_DIST, p.dist_addr);
+    kdev.setAttr<uint64_t>(KVM_DEV_ARM_VGIC_GRP_ADDR,
+                           KVM_VGIC_V3_ADDR_TYPE_REDIST, p.redist_addr);
 }
 
 void
 KvmKernelGicV3::init()
 {
-    kdev.setAttr<uint64_t>(
-        KVM_DEV_ARM_VGIC_GRP_CTRL, KVM_DEV_ARM_VGIC_CTRL_INIT, 0);
+    kdev.setAttr<uint64_t>(KVM_DEV_ARM_VGIC_GRP_CTRL,
+                           KVM_DEV_ARM_VGIC_CTRL_INIT, 0);
 }
 
 template <typename Ret>
@@ -213,9 +204,8 @@ KvmKernelGicV3::getGicReg(unsigned group, unsigned mpidr, unsigned offset)
     Ret reg;
 
     assert(mpidr <= KVM_DEV_ARM_VGIC_V3_MPIDR_MASK);
-    const uint64_t attr(
-        ((uint64_t)mpidr << KVM_DEV_ARM_VGIC_V3_MPIDR_SHIFT) |
-        (offset << KVM_DEV_ARM_VGIC_OFFSET_SHIFT));
+    const uint64_t attr(((uint64_t)mpidr << KVM_DEV_ARM_VGIC_V3_MPIDR_SHIFT) |
+                        (offset << KVM_DEV_ARM_VGIC_OFFSET_SHIFT));
 
     kdev.getAttrPtr(group, attr, &reg);
     return reg;
@@ -229,9 +219,8 @@ KvmKernelGicV3::setGicReg(unsigned group, unsigned mpidr, unsigned offset,
     Arg reg = value;
 
     assert(mpidr <= KVM_DEV_ARM_VGIC_V3_MPIDR_MASK);
-    const uint64_t attr(
-        ((uint64_t)mpidr << KVM_DEV_ARM_VGIC_V3_MPIDR_SHIFT) |
-        (offset << KVM_DEV_ARM_VGIC_OFFSET_SHIFT));
+    const uint64_t attr(((uint64_t)mpidr << KVM_DEV_ARM_VGIC_V3_MPIDR_SHIFT) |
+                        (offset << KVM_DEV_ARM_VGIC_OFFSET_SHIFT));
 
     kdev.setAttrPtr(group, attr, &reg);
 }
@@ -274,8 +263,7 @@ KvmKernelGicV3::writeRedistributor(const ArmISA::Affinity &aff, Addr daddr,
 
 void
 KvmKernelGicV3::writeCpu(const ArmISA::Affinity &aff,
-                         ArmISA::MiscRegIndex misc_reg,
-                         RegVal data)
+                         ArmISA::MiscRegIndex misc_reg, RegVal data)
 {
     std::optional<ArmISA::MiscRegNum64> sys_reg =
         ArmISA::encodeAArch64SysReg(misc_reg);
@@ -286,10 +274,7 @@ KvmKernelGicV3::writeCpu(const ArmISA::Affinity &aff,
 
 template <class Types>
 MuxingKvmGic<Types>::MuxingKvmGic(const Params &p)
-  : SimGic(p),
-    system(*p.system),
-    kernelGic(nullptr),
-    usingKvm(false)
+    : SimGic(p), system(*p.system), kernelGic(nullptr), usingKvm(false)
 {
     auto vm = system.getKvmVM();
     if (vm && !p.simulate_gic) {
@@ -419,25 +404,25 @@ template <class Types>
 void
 MuxingKvmGic<Types>::fromGicToKvm()
 {
-    this->copyGicState(static_cast<SimGic*>(this),
-                       static_cast<KvmGic*>(kernelGic));
+    this->copyGicState(static_cast<SimGic *>(this),
+                       static_cast<KvmGic *>(kernelGic));
 }
 
 template <class Types>
 void
 MuxingKvmGic<Types>::fromKvmToGic()
 {
-    this->copyGicState(static_cast<KvmGic*>(kernelGic),
-                       static_cast<SimGic*>(this));
+    this->copyGicState(static_cast<KvmGic *>(kernelGic),
+                       static_cast<SimGic *>(this));
 
     // the values read for the Interrupt Priority Mask Register (PMR)
     // have been shifted by three bits due to its having been emulated by
     // a VGIC with only 5 PMR bits in its VMCR register.  Presently the
     // Linux kernel does not repair this inaccuracy, so we correct it here.
-    if constexpr(std::is_same<SimGic, GicV2>::value) {
+    if constexpr (std::is_same<SimGic, GicV2>::value) {
         for (int cpu = 0; cpu < system.threads.size(); ++cpu) {
-           this->cpuPriority[cpu] <<= 3;
-           assert((this->cpuPriority[cpu] & ~0xff) == 0);
+            this->cpuPriority[cpu] <<= 3;
+            assert((this->cpuPriority[cpu] & ~0xff) == 0);
         }
     }
 }

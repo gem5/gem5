@@ -52,7 +52,8 @@ class ScalarRegisterFile : public RegisterFile
     using ScalarRegU32 = TheGpuISA::ScalarRegU32;
 
     ScalarRegisterFile(const ScalarRegisterFileParams &p);
-    ~ScalarRegisterFile() { }
+
+    ~ScalarRegisterFile() {}
 
     virtual bool operandsReady(Wavefront *w, GPUDynInstPtr ii) const override;
     virtual void scheduleWriteOperands(Wavefront *w,
@@ -68,7 +69,7 @@ class ScalarRegisterFile : public RegisterFile
     }
 
     // Read a register that is writeable (e.g., a DST operand)
-    ScalarRegU32&
+    ScalarRegU32 &
     readWriteable(int regIdx)
     {
         return regFile[regIdx];
@@ -92,7 +93,7 @@ class ScalarRegisterFile : public RegisterFile
     printReg(Wavefront *wf, int regIdx) const
     {
         DPRINTF(GPUSRF, "WF[%d][%d]: Id%d s[%d] = %#x\n", wf->simdId,
-            wf->wfSlotId, wf->wfDynId, regIdx, regFile[regIdx]);
+                wf->wfSlotId, wf->wfDynId, regIdx, regFile[regIdx]);
     }
 
   private:

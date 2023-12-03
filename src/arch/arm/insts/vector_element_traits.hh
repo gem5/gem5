@@ -40,22 +40,23 @@
 
 #include <type_traits>
 
-namespace gem5 {
-namespace ArmISA {
-namespace vector_element_traits {
-
+namespace gem5
+{
+namespace ArmISA
+{
+namespace vector_element_traits
+{
 
 // Make an integral type with the size of IntDestElemType but the
 // signed-ness of IntSrcElemType. The size of IntDestElemType must be
 // greater than or equal to the size of IntSrcElemType.
-template<typename IntDestElemType,
-         typename IntSrcElemType>
+template <typename IntDestElemType, typename IntSrcElemType>
 class extend_element
 {
   public:
-    static_assert(std::is_integral<IntDestElemType>::value
-                  && std::is_integral<IntSrcElemType>::value
-                  && sizeof(IntDestElemType) >= sizeof(IntSrcElemType),
+    static_assert(std::is_integral<IntDestElemType>::value &&
+                      std::is_integral<IntSrcElemType>::value &&
+                      sizeof(IntDestElemType) >= sizeof(IntSrcElemType),
                   "Extended Element Dest and Src types must both be "
                   "integer types, and Dest must be at least as large "
                   "as Src.");
@@ -64,7 +65,6 @@ class extend_element
         typename std::make_signed<IntDestElemType>::type,
         typename std::make_unsigned<IntDestElemType>::type>::type;
 };
-
 
 } // namespace vector_element_traits
 } // namespace ArmISA

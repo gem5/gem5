@@ -78,6 +78,7 @@ Checker<DynInstPtr>::advancePC(const Fault &fault)
         }
     }
 }
+
 //////////////////////////////////////////////////
 
 template <class DynInstPtr>
@@ -85,7 +86,7 @@ void
 Checker<DynInstPtr>::handlePendingInt()
 {
     DPRINTF(Checker, "IRQ detected at PC: %s with %d insts in buffer\n",
-                     thread->pcState(), instList.size());
+            thread->pcState(), instList.size());
     DynInstPtr boundaryInst = NULL;
     if (!instList.empty()) {
         // Set the instructions as completed and verify as much as possible.
@@ -102,12 +103,13 @@ Checker<DynInstPtr>::handlePendingInt()
         inst = NULL;
     }
     if ((!boundaryInst && curMacroStaticInst &&
-          curStaticInst->isDelayedCommit() &&
-          !curStaticInst->isLastMicroop()) ||
+         curStaticInst->isDelayedCommit() &&
+         !curStaticInst->isLastMicroop()) ||
         (boundaryInst && boundaryInst->isDelayedCommit() &&
          !boundaryInst->isLastMicroop())) {
         panic("%lli: Trying to take an interrupt in middle of "
-              "a non-interuptable instruction!", curTick());
+              "a non-interuptable instruction!",
+              curTick());
     }
     boundaryInst = NULL;
     thread->decoder->reset();
@@ -124,12 +126,13 @@ Checker<DynInstPtr>::verify(const DynInstPtr &completed_inst)
     // seen as serializing to commit. instList should be
     // empty in these cases.
     if ((completed_inst->isSerializing() ||
-        completed_inst->isSerializeBefore()) &&
+         completed_inst->isSerializeBefore()) &&
         (!instList.empty() ?
-         (instList.front()->seqNum != completed_inst->seqNum) : 0)) {
+             (instList.front()->seqNum != completed_inst->seqNum) :
+             0)) {
         panic("%lli: Instruction sn:%lli at PC %s is serializing before but is"
-              " entering instList with other instructions\n", curTick(),
-              completed_inst->seqNum, completed_inst->pcState());
+              " entering instList with other instructions\n",
+              curTick(), completed_inst->seqNum, completed_inst->pcState());
     }
 
     // Either check this instruction, or add it to a list of
@@ -154,7 +157,8 @@ Checker<DynInstPtr>::verify(const DynInstPtr &completed_inst)
     } else {
         if (!completed_inst->isCompleted()) {
             if (youngestSN < completed_inst->seqNum) {
-                DPRINTF(Checker, "Adding instruction [sn:%lli] PC:%s to list\n",
+                DPRINTF(Checker,
+                        "Adding instruction [sn:%lli] PC:%s to list\n",
                         completed_inst->seqNum, completed_inst->pcState());
                 instList.push_back(completed_inst);
                 youngestSN = completed_inst->seqNum;
@@ -174,8 +178,8 @@ Checker<DynInstPtr>::verify(const DynInstPtr &completed_inst)
     // serializing. instList should be empty here
     if (inst->isSerializeAfter() && !instList.empty()) {
         panic("%lli: Instruction sn:%lli at PC %s is serializing after but is"
-             " exiting instList with other instructions\n", curTick(),
-             completed_inst->seqNum, completed_inst->pcState());
+              " exiting instList with other instructions\n",
+              curTick(), completed_inst->seqNum, completed_inst->pcState());
     }
     unverifiedInst = inst;
     inst = NULL;
@@ -204,8 +208,7 @@ Checker<DynInstPtr>::verify(const DynInstPtr &completed_inst)
         // expect to happen.  This is mostly to check if traps or
         // PC-based events have occurred in both the checker and CPU.
         if (changedPC) {
-            DPRINTF(Checker, "Changed PC recently to %s\n",
-                    thread->pcState());
+            DPRINTF(Checker, "Changed PC recently to %s\n", thread->pcState());
             if (willChangePC) {
                 if (*newPCState == thread->pcState()) {
                     DPRINTF(Checker, "Changed PC matches expected PC\n");
@@ -238,8 +241,8 @@ Checker<DynInstPtr>::verify(const DynInstPtr &completed_inst)
                                  Request::INST_FETCH, requestorId,
                                  thread->pcState().instAddr());
 
-                fault = mmu->translateFunctional(
-                    mem_req, tc, BaseMMU::Execute);
+                fault =
+                    mmu->translateFunctional(mem_req, tc, BaseMMU::Execute);
 
                 if (fault != NoFault) {
                     if (unverifiedInst->getFault() == NoFault) {
@@ -249,7 +252,8 @@ Checker<DynInstPtr>::verify(const DynInstPtr &completed_inst)
                         // translate this instruction; in the SMT case it's
                         // possible that its ITB entry was kicked out.
                         warn("%lli: Instruction PC %s was not found in the "
-                             "ITB!", curTick(), thread->pcState());
+                             "ITB!",
+                             curTick(), thread->pcState());
                         handleError(unverifiedInst);
 
                         // go to the next instruction
@@ -277,25 +281,25 @@ Checker<DynInstPtr>::verify(const DynInstPtr &completed_inst)
 
             if (fault == NoFault) {
                 std::unique_ptr<PCStateBase> pc_state(
-                        thread->pcState().clone());
+                    thread->pcState().clone());
 
                 if (isRomMicroPC(pc_state->microPC())) {
                     fetchDone = true;
-                    curStaticInst = decoder->fetchRomMicroop(
-                            pc_state->microPC(), nullptr);
+                    curStaticInst =
+                        decoder->fetchRomMicroop(pc_state->microPC(), nullptr);
                 } else if (!curMacroStaticInst) {
-                    //We're not in the middle of a macro instruction
+                    // We're not in the middle of a macro instruction
                     StaticInstPtr instPtr = nullptr;
 
-                    //Predecode, ie bundle up an ExtMachInst
-                    //If more fetch data is needed, pass it in.
+                    // Predecode, ie bundle up an ExtMachInst
+                    // If more fetch data is needed, pass it in.
                     Addr fetch_pc =
                         (pc_state->instAddr() & pc_mask) + fetchOffset;
                     decoder->moreBytes(*pc_state, fetch_pc);
 
-                    //If an instruction is ready, decode it.
-                    //Otherwise, we'll have to fetch beyond the
-                    //memory chunk at the current pc.
+                    // If an instruction is ready, decode it.
+                    // Otherwise, we'll have to fetch beyond the
+                    // memory chunk at the current pc.
                     if (decoder->instReady()) {
                         fetchDone = true;
                         instPtr = decoder->decode(*pc_state);
@@ -305,8 +309,8 @@ Checker<DynInstPtr>::verify(const DynInstPtr &completed_inst)
                         fetchOffset += decoder->moreBytesSize();
                     }
 
-                    //If we decoded an instruction and it's microcoded,
-                    //start pulling out micro ops
+                    // If we decoded an instruction and it's microcoded,
+                    // start pulling out micro ops
                     if (instPtr && instPtr->isMacroop()) {
                         curMacroStaticInst = instPtr;
                         curStaticInst =
@@ -339,18 +343,15 @@ Checker<DynInstPtr>::verify(const DynInstPtr &completed_inst)
         // keep an instruction count
         numInst++;
 
-
         // Either the instruction was a fault and we should process the fault,
         // or we should just go ahead execute the instruction.  This assumes
         // that the instruction is properly marked as a fault.
         if (fault == NoFault) {
             // Execute Checker instruction and trace
             if (!unverifiedInst->isUnverifiable()) {
-                trace::InstRecord *traceData = tracer->getInstRecord(curTick(),
-                                                           tc,
-                                                           curStaticInst,
-                                                           pcState(),
-                                                           curMacroStaticInst);
+                trace::InstRecord *traceData =
+                    tracer->getInstRecord(curTick(), tc, curStaticInst,
+                                          pcState(), curMacroStaticInst);
                 fault = curStaticInst->execute(this, traceData);
                 if (traceData) {
                     traceData->dump();
@@ -367,12 +368,14 @@ Checker<DynInstPtr>::verify(const DynInstPtr &completed_inst)
                 }
             } else if (fault != NoFault && unverifiedFault == NoFault) {
                 panic("%lli: sn: %lli at PC: %s took a fault in checker "
-                      "but not in driver CPU\n", curTick(),
-                      unverifiedInst->seqNum, unverifiedInst->pcState());
+                      "but not in driver CPU\n",
+                      curTick(), unverifiedInst->seqNum,
+                      unverifiedInst->pcState());
             } else if (fault == NoFault && unverifiedFault != NoFault) {
                 panic("%lli: sn: %lli at PC: %s took a fault in driver "
-                      "CPU but not in checker\n", curTick(),
-                      unverifiedInst->seqNum, unverifiedInst->pcState());
+                      "CPU but not in checker\n",
+                      curTick(), unverifiedInst->seqNum,
+                      unverifiedInst->pcState());
             }
         }
 
@@ -386,7 +389,7 @@ Checker<DynInstPtr>::verify(const DynInstPtr &completed_inst)
                 curMacroStaticInst = nullStaticInstPtr;
             }
         } else {
-           advancePC(fault);
+            advancePC(fault);
         }
 
         if (FullSystem) {
@@ -434,18 +437,19 @@ Checker<DynInstPtr>::switchOut()
 }
 
 template <class DynInstPtr>
-void Checker<DynInstPtr>::takeOverFrom(BaseCPU *oldCPU) {}
+void
+Checker<DynInstPtr>::takeOverFrom(BaseCPU *oldCPU)
+{}
 
 template <class DynInstPtr>
 void
 Checker<DynInstPtr>::validateInst(const DynInstPtr &inst)
 {
     if (inst->pcState().instAddr() != thread->pcState().instAddr()) {
-        warn("%lli: PCs do not match! Inst: %s, checker: %s",
-             curTick(), inst->pcState(), thread->pcState());
+        warn("%lli: PCs do not match! Inst: %s, checker: %s", curTick(),
+             inst->pcState(), thread->pcState());
         if (changedPC) {
-            warn("%lli: Changed PCs recently, may not be an error",
-                 curTick());
+            warn("%lli: Changed PCs recently, may not be an error", curTick());
         } else {
             handleError(inst);
         }
@@ -453,7 +457,7 @@ Checker<DynInstPtr>::validateInst(const DynInstPtr &inst)
 
     if (curStaticInst != inst->staticInst) {
         warn("%lli: StaticInstPtrs don't match. (%s, %s).\n", curTick(),
-                curStaticInst->getName(), inst->staticInst->getName());
+             curStaticInst->getName(), inst->staticInst->getName());
     }
 }
 
@@ -473,7 +477,7 @@ Checker<DynInstPtr>::validateExecution(const DynInstPtr &inst)
         copyResult(inst, InstResult(), idx);
     } else if (inst->numDestRegs() > 0 && !result.empty()) {
         DPRINTF(Checker, "Dest regs %d, number of checker dest regs %d\n",
-                         inst->numDestRegs(), result.size());
+                inst->numDestRegs(), result.size());
         for (int i = 0; i < inst->numDestRegs() && !result.empty(); i++) {
             checker_val = result.front();
             result.pop();
@@ -535,7 +539,6 @@ Checker<DynInstPtr>::validateExecution(const DynInstPtr &inst)
     }
 }
 
-
 // This function is weird, if it is called it means the Checker and
 // O3 have diverged, so panic is called for now.  It may be useful
 // to resynch states and continue if the divergence is a false positive
@@ -546,8 +549,8 @@ Checker<DynInstPtr>::validateState()
     if (updateThisCycle) {
         // Change this back to warn if divergences end up being false positives
         panic("%lli: Instruction PC %#x results didn't match up, copying all "
-             "registers from main CPU", curTick(),
-             unverifiedInst->pcState().instAddr());
+              "registers from main CPU",
+              curTick(), unverifiedInst->pcState().instAddr());
 
         // Terribly convoluted way to make sure O3 model does not implode
         bool no_squash_from_TC = unverifiedInst->thread->noSquashFromTC;
@@ -567,13 +570,13 @@ Checker<DynInstPtr>::validateState()
 
 template <class DynInstPtr>
 void
-Checker<DynInstPtr>::copyResult(
-        const DynInstPtr &inst, const InstResult& mismatch_val, int start_idx)
+Checker<DynInstPtr>::copyResult(const DynInstPtr &inst,
+                                const InstResult &mismatch_val, int start_idx)
 {
     // We've already popped one dest off the queue,
     // so do the fix-up then start with the next dest reg;
     if (start_idx >= 0) {
-        const RegId& idx = inst->destRegIdx(start_idx);
+        const RegId &idx = inst->destRegIdx(start_idx);
 
         if (idx.classValue() == InvalidRegClass)
             ; // Do nothing.
@@ -587,7 +590,7 @@ Checker<DynInstPtr>::copyResult(
     start_idx++;
     InstResult res;
     for (int i = start_idx; i < inst->numDestRegs(); i++) {
-        const RegId& idx = inst->destRegIdx(i);
+        const RegId &idx = inst->destRegIdx(i);
         res = inst->popResult();
 
         if (idx.classValue() == InvalidRegClass)
@@ -608,9 +611,7 @@ Checker<DynInstPtr>::dumpAndExit(const DynInstPtr &inst)
     cprintf("Error detected, instruction information:\n");
     cprintf("PC:%s\n[sn:%lli]\n[tid:%i]\n"
             "Completed:%i\n",
-            inst->pcState(),
-            inst->seqNum,
-            inst->threadNumber,
+            inst->pcState(), inst->seqNum, inst->threadNumber,
             inst->isCompleted());
     inst->dump();
     CheckerCPU::dumpAndExit();
@@ -626,26 +627,21 @@ Checker<DynInstPtr>::dumpInsts()
 
     cprintf("Inst list size: %i\n", instList.size());
 
-    while (inst_list_it != instList.end())
-    {
-        cprintf("Instruction:%i\n",
-                num);
+    while (inst_list_it != instList.end()) {
+        cprintf("Instruction:%i\n", num);
 
         cprintf("PC:%s\n[sn:%lli]\n[tid:%i]\n"
                 "Completed:%i\n",
-                (*inst_list_it)->pcState(),
-                (*inst_list_it)->seqNum,
-                (*inst_list_it)->threadNumber,
-                (*inst_list_it)->isCompleted());
+                (*inst_list_it)->pcState(), (*inst_list_it)->seqNum,
+                (*inst_list_it)->threadNumber, (*inst_list_it)->isCompleted());
 
         cprintf("\n");
 
         inst_list_it--;
         ++num;
     }
-
 }
 
 } // namespace gem5
 
-#endif//__CPU_CHECKER_CPU_IMPL_HH__
+#endif //__CPU_CHECKER_CPU_IMPL_HH__

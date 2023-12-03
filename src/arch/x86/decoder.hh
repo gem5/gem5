@@ -84,8 +84,7 @@ class Decoder : public InstDecoder
         std::vector<MachInst> masks;
         int lastOffset;
 
-        InstBytes() : lastOffset(0)
-        {}
+        InstBytes() : lastOffset(0) {}
     };
 
     static InstBytes dummy;
@@ -242,8 +241,8 @@ class Decoder : public InstDecoder
     AddrCacheMap addrCacheMap;
 
     decode_cache::InstMap<ExtMachInst> *instMap = nullptr;
-    typedef std::unordered_map<
-            CacheKey, decode_cache::InstMap<ExtMachInst> *> InstCacheMap;
+    typedef std::unordered_map<CacheKey, decode_cache::InstMap<ExtMachInst> *>
+        InstCacheMap;
     static InstCacheMap instCacheMap;
 
     StaticInstPtr decodeInst(ExtMachInst mach_inst);
@@ -354,8 +353,8 @@ class Decoder : public InstDecoder
   public:
     StaticInstPtr decode(PCStateBase &next_pc) override;
 
-    StaticInstPtr fetchRomMicroop(
-            MicroPC micropc, StaticInstPtr curMacroop) override;
+    StaticInstPtr fetchRomMicroop(MicroPC micropc,
+                                  StaticInstPtr curMacroop) override;
 };
 
 } // namespace X86ISA

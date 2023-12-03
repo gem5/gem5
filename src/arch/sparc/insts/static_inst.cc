@@ -40,25 +40,22 @@ namespace gem5
 namespace SparcISA
 {
 
-const char *CondTestAbbrev[] =
-{
-    [Never] = "nev",
-    [Equal] = "e",
-    [LessOrEqual] = "le",
-    [Less] = "l",
-    [LessOrEqualUnsigned] = "leu",
-    [CarrySet] = "c",
-    [Negative] = "n",
-    [OverflowSet] = "o",
-    [Always] = "a",
-    [NotEqual] = "ne",
-    [Greater] = "g",
-    [GreaterOrEqual] = "ge",
-    [GreaterUnsigned] = "gu",
-    [CarryClear] = "cc",
-    [Positive] = "p",
-    [OverflowClear] = "oc"
-};
+const char *CondTestAbbrev[] = { [Never] = "nev",
+                                 [Equal] = "e",
+                                 [LessOrEqual] = "le",
+                                 [Less] = "l",
+                                 [LessOrEqualUnsigned] = "leu",
+                                 [CarrySet] = "c",
+                                 [Negative] = "n",
+                                 [OverflowSet] = "o",
+                                 [Always] = "a",
+                                 [NotEqual] = "ne",
+                                 [Greater] = "g",
+                                 [GreaterOrEqual] = "ge",
+                                 [GreaterUnsigned] = "gu",
+                                 [CarryClear] = "cc",
+                                 [Positive] = "p",
+                                 [OverflowClear] = "oc" };
 
 void
 SparcStaticInst::printMnemonic(std::ostream &os, const char *mnemonic)
@@ -138,25 +135,25 @@ SparcStaticInst::printReg(std::ostream &os, RegId reg)
         // The fake int regs that are really control regs
         else {
             switch (reg_idx - MaxMicroReg) {
-              case 1:
+            case 1:
                 ccprintf(os, "%%y");
                 break;
-              case 2:
+            case 2:
                 ccprintf(os, "%%ccr");
                 break;
-              case 3:
+            case 3:
                 ccprintf(os, "%%cansave");
                 break;
-              case 4:
+            case 4:
                 ccprintf(os, "%%canrestore");
                 break;
-              case 5:
+            case 5:
                 ccprintf(os, "%%cleanwin");
                 break;
-              case 6:
+            case 6:
                 ccprintf(os, "%%otherwin");
                 break;
-              case 7:
+            case 7:
                 ccprintf(os, "%%wstate");
                 break;
             }
@@ -165,105 +162,105 @@ SparcStaticInst::printReg(std::ostream &os, RegId reg)
         ccprintf(os, "%%f%d", reg_idx);
     } else {
         switch (reg_idx) {
-          case MISCREG_ASI:
+        case MISCREG_ASI:
             ccprintf(os, "%%asi");
             break;
-          case MISCREG_FPRS:
+        case MISCREG_FPRS:
             ccprintf(os, "%%fprs");
             break;
-          case MISCREG_PCR:
+        case MISCREG_PCR:
             ccprintf(os, "%%pcr");
             break;
-          case MISCREG_PIC:
+        case MISCREG_PIC:
             ccprintf(os, "%%pic");
             break;
-          case MISCREG_GSR:
+        case MISCREG_GSR:
             ccprintf(os, "%%gsr");
             break;
-          case MISCREG_SOFTINT:
+        case MISCREG_SOFTINT:
             ccprintf(os, "%%softint");
             break;
-          case MISCREG_SOFTINT_SET:
+        case MISCREG_SOFTINT_SET:
             ccprintf(os, "%%softint_set");
             break;
-          case MISCREG_SOFTINT_CLR:
+        case MISCREG_SOFTINT_CLR:
             ccprintf(os, "%%softint_clr");
             break;
-          case MISCREG_TICK_CMPR:
+        case MISCREG_TICK_CMPR:
             ccprintf(os, "%%tick_cmpr");
             break;
-          case MISCREG_STICK:
+        case MISCREG_STICK:
             ccprintf(os, "%%stick");
             break;
-          case MISCREG_STICK_CMPR:
+        case MISCREG_STICK_CMPR:
             ccprintf(os, "%%stick_cmpr");
             break;
-          case MISCREG_TPC:
+        case MISCREG_TPC:
             ccprintf(os, "%%tpc");
             break;
-          case MISCREG_TNPC:
+        case MISCREG_TNPC:
             ccprintf(os, "%%tnpc");
             break;
-          case MISCREG_TSTATE:
+        case MISCREG_TSTATE:
             ccprintf(os, "%%tstate");
             break;
-          case MISCREG_TT:
+        case MISCREG_TT:
             ccprintf(os, "%%tt");
             break;
-          case MISCREG_TICK:
+        case MISCREG_TICK:
             ccprintf(os, "%%tick");
             break;
-          case MISCREG_TBA:
+        case MISCREG_TBA:
             ccprintf(os, "%%tba");
             break;
-          case MISCREG_PSTATE:
+        case MISCREG_PSTATE:
             ccprintf(os, "%%pstate");
             break;
-          case MISCREG_TL:
+        case MISCREG_TL:
             ccprintf(os, "%%tl");
             break;
-          case MISCREG_PIL:
+        case MISCREG_PIL:
             ccprintf(os, "%%pil");
             break;
-          case MISCREG_CWP:
+        case MISCREG_CWP:
             ccprintf(os, "%%cwp");
             break;
-          case MISCREG_GL:
+        case MISCREG_GL:
             ccprintf(os, "%%gl");
             break;
-          case MISCREG_HPSTATE:
+        case MISCREG_HPSTATE:
             ccprintf(os, "%%hpstate");
             break;
-          case MISCREG_HTSTATE:
+        case MISCREG_HTSTATE:
             ccprintf(os, "%%htstate");
             break;
-          case MISCREG_HINTP:
+        case MISCREG_HINTP:
             ccprintf(os, "%%hintp");
             break;
-          case MISCREG_HTBA:
+        case MISCREG_HTBA:
             ccprintf(os, "%%htba");
             break;
-          case MISCREG_HSTICK_CMPR:
+        case MISCREG_HSTICK_CMPR:
             ccprintf(os, "%%hstick_cmpr");
             break;
-          case MISCREG_HVER:
+        case MISCREG_HVER:
             ccprintf(os, "%%hver");
             break;
-          case MISCREG_STRAND_STS_REG:
+        case MISCREG_STRAND_STS_REG:
             ccprintf(os, "%%strand_sts_reg");
             break;
-          case MISCREG_FSR:
+        case MISCREG_FSR:
             ccprintf(os, "%%fsr");
             break;
-          default:
+        default:
             ccprintf(os, "%%ctrl%d", reg_idx);
         }
     }
 }
 
 std::string
-SparcStaticInst::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+SparcStaticInst::generateDisassembly(Addr pc,
+                                     const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
 
@@ -299,37 +296,37 @@ SparcStaticInst::passesFpCondition(uint32_t fcc, uint32_t condition)
     bool e = (fcc == 0);
 
     switch (condition) {
-      case FAlways:
+    case FAlways:
         return 1;
-      case FNever:
+    case FNever:
         return 0;
-      case FUnordered:
+    case FUnordered:
         return u;
-      case FGreater:
+    case FGreater:
         return g;
-      case FUnorderedOrGreater:
+    case FUnorderedOrGreater:
         return u || g;
-      case FLess:
+    case FLess:
         return l;
-      case FUnorderedOrLess:
+    case FUnorderedOrLess:
         return u || l;
-      case FLessOrGreater:
+    case FLessOrGreater:
         return l || g;
-      case FNotEqual:
+    case FNotEqual:
         return l || g || u;
-      case FEqual:
+    case FEqual:
         return e;
-      case FUnorderedOrEqual:
+    case FUnorderedOrEqual:
         return u || e;
-      case FGreaterOrEqual:
+    case FGreaterOrEqual:
         return g || e;
-      case FUnorderedOrGreaterOrEqual:
+    case FUnorderedOrGreaterOrEqual:
         return u || g || e;
-      case FLessOrEqual:
+    case FLessOrEqual:
         return l || e;
-      case FUnorderedOrLessOrEqual:
+    case FUnorderedOrLessOrEqual:
         return u || l || e;
-      case FOrdered:
+    case FOrdered:
         return e || l || g;
     }
     panic("Tried testing condition nonexistant condition code %d", condition);
@@ -347,41 +344,42 @@ SparcStaticInst::passesCondition(uint32_t codes, uint32_t condition)
     CondCodes condCodes = codes;
 
     switch (condition) {
-      case Always:
+    case Always:
         return true;
-      case Never:
+    case Never:
         return false;
-      case NotEqual:
+    case NotEqual:
         return !condCodes.z;
-      case Equal:
+    case Equal:
         return condCodes.z;
-      case Greater:
+    case Greater:
         return !(condCodes.z | (condCodes.n ^ condCodes.v));
-      case LessOrEqual:
+    case LessOrEqual:
         return condCodes.z | (condCodes.n ^ condCodes.v);
-      case GreaterOrEqual:
+    case GreaterOrEqual:
         return !(condCodes.n ^ condCodes.v);
-      case Less:
+    case Less:
         return (condCodes.n ^ condCodes.v);
-      case GreaterUnsigned:
+    case GreaterUnsigned:
         return !(condCodes.c | condCodes.z);
-      case LessOrEqualUnsigned:
+    case LessOrEqualUnsigned:
         return (condCodes.c | condCodes.z);
-      case CarryClear:
+    case CarryClear:
         return !condCodes.c;
-      case CarrySet:
+    case CarrySet:
         return condCodes.c;
-      case Positive:
+    case Positive:
         return !condCodes.n;
-      case Negative:
+    case Negative:
         return condCodes.n;
-      case OverflowClear:
+    case OverflowClear:
         return !condCodes.v;
-      case OverflowSet:
+    case OverflowSet:
         return condCodes.v;
     }
     panic("Tried testing condition nonexistant "
-            "condition code %d", condition);
+          "condition code %d",
+          condition);
 }
 
 } // namespace SparcISA

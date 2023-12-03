@@ -61,41 +61,41 @@ class ArmFreebsd32 : public ArmFreebsd, public OpenFlagTable<ArmFreebsd32>
 
     //@{
     /// open(2) flag values.
-    static constexpr int TGT_O_RDONLY    = 0x00000000; //!< O_RDONLY
-    static constexpr int TGT_O_WRONLY    = 0x00000001; //!< O_WRONLY
-    static constexpr int TGT_O_RDWR      = 0x00000002; //!< O_RDWR
-    static constexpr int TGT_O_CREAT     = 0x00000200; //!< O_CREAT
-    static constexpr int TGT_O_EXCL      = 0x00000800; //!< O_EXCL
-    static constexpr int TGT_O_NOCTTY    = 0x00008000; //!< O_NOCTTY
-    static constexpr int TGT_O_TRUNC     = 0x00000400; //!< O_TRUNC
-    static constexpr int TGT_O_APPEND    = 0x00000008; //!< O_APPEND
-    static constexpr int TGT_O_NONBLOCK  = 0x00000004; //!< O_NONBLOCK
-    static constexpr int TGT_O_SYNC      = 0x00000080; //!< O_SYNC
-    static constexpr int TGT_FASYNC      = 0x00000040; //!< FASYNC
-    static constexpr int TGT_O_DIRECT    = 0x00010000; //!< O_DIRECT
+    static constexpr int TGT_O_RDONLY = 0x00000000;    //!< O_RDONLY
+    static constexpr int TGT_O_WRONLY = 0x00000001;    //!< O_WRONLY
+    static constexpr int TGT_O_RDWR = 0x00000002;      //!< O_RDWR
+    static constexpr int TGT_O_CREAT = 0x00000200;     //!< O_CREAT
+    static constexpr int TGT_O_EXCL = 0x00000800;      //!< O_EXCL
+    static constexpr int TGT_O_NOCTTY = 0x00008000;    //!< O_NOCTTY
+    static constexpr int TGT_O_TRUNC = 0x00000400;     //!< O_TRUNC
+    static constexpr int TGT_O_APPEND = 0x00000008;    //!< O_APPEND
+    static constexpr int TGT_O_NONBLOCK = 0x00000004;  //!< O_NONBLOCK
+    static constexpr int TGT_O_SYNC = 0x00000080;      //!< O_SYNC
+    static constexpr int TGT_FASYNC = 0x00000040;      //!< FASYNC
+    static constexpr int TGT_O_DIRECT = 0x00010000;    //!< O_DIRECT
     static constexpr int TGT_O_DIRECTORY = 0x00020000; //!< O_DIRECTORY
-    static constexpr int TGT_O_NOFOLLOW  = 0x00000100; //!< O_NOFOLLOW
-    static constexpr int TGT_O_CLOEXEC   = 0x00100000; //!< O_CLOEXEC
+    static constexpr int TGT_O_NOFOLLOW = 0x00000100;  //!< O_NOFOLLOW
+    static constexpr int TGT_O_CLOEXEC = 0x00100000;   //!< O_CLOEXEC
     //@}
 
     /// For mmap().
-    static constexpr unsigned TGT_MAP_SHARED    = 0x0001;
-    static constexpr unsigned TGT_MAP_PRIVATE   = 0x0002;
+    static constexpr unsigned TGT_MAP_SHARED = 0x0001;
+    static constexpr unsigned TGT_MAP_PRIVATE = 0x0002;
     static constexpr unsigned TGT_MAP_ANONYMOUS = 0x1000;
-    static constexpr unsigned TGT_MAP_FIXED     = 0x0010;
+    static constexpr unsigned TGT_MAP_FIXED = 0x0010;
 
     /// Limit struct for getrlimit/setrlimit.
     struct rlimit
     {
-        uint32_t  rlim_cur;     //!< soft limit
-        uint32_t  rlim_max;     //!< hard limit
+        uint32_t rlim_cur; //!< soft limit
+        uint32_t rlim_max; //!< hard limit
     };
 
     /// For gettimeofday().
     struct timeval
     {
-        int32_t tv_sec;         //!< seconds
-        int32_t tv_usec;        //!< microseconds
+        int32_t tv_sec;  //!< seconds
+        int32_t tv_usec; //!< microseconds
     };
 
     // For writev/readv
@@ -125,89 +125,88 @@ class ArmFreebsd32 : public ArmFreebsd, public OpenFlagTable<ArmFreebsd32>
 
     struct tgt_stat
     {
-        uint32_t   st_dev;
-        uint32_t   st_ino;
-        uint16_t   st_mode;
-        uint16_t   st_nlink;
-        uint32_t   st_uid;
-        uint32_t   st_gid;
-        uint32_t   st_rdev;
-        uint64_t   st_atimeX;
-        uint64_t   st_atime_nsec;
-        uint64_t   st_mtimeX;
-        uint64_t   st_mtime_nsec;
-        uint64_t   st_ctimeX;
-        uint64_t   st_ctime_nsec;
-        uint64_t   st_size;
-        uint64_t   st_blocks;
-        uint32_t   st_blksize;
-        uint32_t   st_flags;
-        uint32_t   st_gen;
-        uint32_t   st_lspare;
-        uint64_t   st_birthtimX;
-        uint64_t   st_birthtim;
+        uint32_t st_dev;
+        uint32_t st_ino;
+        uint16_t st_mode;
+        uint16_t st_nlink;
+        uint32_t st_uid;
+        uint32_t st_gid;
+        uint32_t st_rdev;
+        uint64_t st_atimeX;
+        uint64_t st_atime_nsec;
+        uint64_t st_mtimeX;
+        uint64_t st_mtime_nsec;
+        uint64_t st_ctimeX;
+        uint64_t st_ctime_nsec;
+        uint64_t st_size;
+        uint64_t st_blocks;
+        uint32_t st_blksize;
+        uint32_t st_flags;
+        uint32_t st_gen;
+        uint32_t st_lspare;
+        uint64_t st_birthtimX;
+        uint64_t st_birthtim;
     };
 
     struct tgt_stat64
     {
-        uint32_t   st_dev;
-        uint32_t   st_ino;
-        uint16_t   st_mode;
-        uint16_t   st_nlink;
-        uint32_t   st_uid;
-        uint32_t   st_gid;
-        uint32_t   st_rdev;
-        uint64_t   st_atimeX;
-        uint64_t   st_atime_nsec;
-        uint64_t   st_mtimeX;
-        uint64_t   st_mtime_nsec;
-        uint64_t   st_ctimeX;
-        uint64_t   st_ctime_nsec;
-        uint64_t   st_size;
-        uint64_t   st_blocks;
-        uint32_t   st_blksize;
-        uint32_t   st_flags;
-        uint32_t   st_gen;
-        uint32_t   st_lspare;
-        uint64_t   st_birthtimX;
-        uint64_t   st_birthtim;
+        uint32_t st_dev;
+        uint32_t st_ino;
+        uint16_t st_mode;
+        uint16_t st_nlink;
+        uint32_t st_uid;
+        uint32_t st_gid;
+        uint32_t st_rdev;
+        uint64_t st_atimeX;
+        uint64_t st_atime_nsec;
+        uint64_t st_mtimeX;
+        uint64_t st_mtime_nsec;
+        uint64_t st_ctimeX;
+        uint64_t st_ctime_nsec;
+        uint64_t st_size;
+        uint64_t st_blocks;
+        uint32_t st_blksize;
+        uint32_t st_flags;
+        uint32_t st_gen;
+        uint32_t st_lspare;
+        uint64_t st_birthtimX;
+        uint64_t st_birthtim;
     };
 
     /// For getrusage().
     struct rusage
     {
-        struct timeval ru_utime;        //!< user time used
-        struct timeval ru_stime;        //!< system time used
-        int32_t ru_maxrss;              //!< max rss
-        int32_t ru_ixrss;               //!< integral shared memory size
-        int32_t ru_idrss;               //!< integral unshared data "
-        int32_t ru_isrss;               //!< integral unshared stack "
-        int32_t ru_minflt;              //!< page reclaims - total vmfaults
-        int32_t ru_majflt;              //!< page faults
-        int32_t ru_nswap;               //!< swaps
-        int32_t ru_inblock;             //!< block input operations
-        int32_t ru_oublock;             //!< block output operations
-        int32_t ru_msgsnd;              //!< messages sent
-        int32_t ru_msgrcv;              //!< messages received
-        int32_t ru_nsignals;            //!< signals received
-        int32_t ru_nvcsw;               //!< voluntary context switches
-        int32_t ru_nivcsw;              //!< involuntary "
+        struct timeval ru_utime; //!< user time used
+        struct timeval ru_stime; //!< system time used
+        int32_t ru_maxrss;       //!< max rss
+        int32_t ru_ixrss;        //!< integral shared memory size
+        int32_t ru_idrss;        //!< integral unshared data "
+        int32_t ru_isrss;        //!< integral unshared stack "
+        int32_t ru_minflt;       //!< page reclaims - total vmfaults
+        int32_t ru_majflt;       //!< page faults
+        int32_t ru_nswap;        //!< swaps
+        int32_t ru_inblock;      //!< block input operations
+        int32_t ru_oublock;      //!< block output operations
+        int32_t ru_msgsnd;       //!< messages sent
+        int32_t ru_msgrcv;       //!< messages received
+        int32_t ru_nsignals;     //!< signals received
+        int32_t ru_nvcsw;        //!< voluntary context switches
+        int32_t ru_nivcsw;       //!< involuntary "
     };
 
     /// For times().
     struct tms
     {
-        int32_t tms_utime;      //!< user time
-        int32_t tms_stime;      //!< system time
-        int32_t tms_cutime;     //!< user time of children
-        int32_t tms_cstime;     //!< system time of children
+        int32_t tms_utime;  //!< user time
+        int32_t tms_stime;  //!< system time
+        int32_t tms_cutime; //!< user time of children
+        int32_t tms_cstime; //!< system time of children
     };
 };
 
 class ArmFreebsd64 : public ArmFreebsd, public OpenFlagTable<ArmFreebsd64>
 {
   public:
-
     //@{
     /// Basic ARM FreeBSD types
     typedef uint64_t size_t;
@@ -218,34 +217,35 @@ class ArmFreebsd64 : public ArmFreebsd, public OpenFlagTable<ArmFreebsd64>
 
     //@{
     /// open(2) flag values.
-    static constexpr int TGT_O_RDONLY    = 0x00000000; //!< O_RDONLY
-    static constexpr int TGT_O_WRONLY    = 0x00000001; //!< O_WRONLY
-    static constexpr int TGT_O_RDWR      = 0x00000002; //!< O_RDWR
-    static constexpr int TGT_O_CREAT     = 0x00000200; //!< O_CREAT
-    static constexpr int TGT_O_EXCL      = 0x00000800; //!< O_EXCL
-    static constexpr int TGT_O_NOCTTY    = 0x00008000; //!< O_NOCTTY
-    static constexpr int TGT_O_TRUNC     = 0x00000400; //!< O_TRUNC
-    static constexpr int TGT_O_APPEND    = 0x00000008; //!< O_APPEND
-    static constexpr int TGT_O_NONBLOCK  = 0x00000004; //!< O_NONBLOCK
-    static constexpr int TGT_O_SYNC      = 0x00000080; //!< O_SYNC
-    static constexpr int TGT_FASYNC      = 0x00000040; //!< FASYNC
-    static constexpr int TGT_O_DIRECT    = 0x00010000; //!< O_DIRECT
+    static constexpr int TGT_O_RDONLY = 0x00000000;    //!< O_RDONLY
+    static constexpr int TGT_O_WRONLY = 0x00000001;    //!< O_WRONLY
+    static constexpr int TGT_O_RDWR = 0x00000002;      //!< O_RDWR
+    static constexpr int TGT_O_CREAT = 0x00000200;     //!< O_CREAT
+    static constexpr int TGT_O_EXCL = 0x00000800;      //!< O_EXCL
+    static constexpr int TGT_O_NOCTTY = 0x00008000;    //!< O_NOCTTY
+    static constexpr int TGT_O_TRUNC = 0x00000400;     //!< O_TRUNC
+    static constexpr int TGT_O_APPEND = 0x00000008;    //!< O_APPEND
+    static constexpr int TGT_O_NONBLOCK = 0x00000004;  //!< O_NONBLOCK
+    static constexpr int TGT_O_SYNC = 0x00000080;      //!< O_SYNC
+    static constexpr int TGT_FASYNC = 0x00000040;      //!< FASYNC
+    static constexpr int TGT_O_DIRECT = 0x00010000;    //!< O_DIRECT
     static constexpr int TGT_O_DIRECTORY = 0x00020000; //!< O_DIRECTORY
-    static constexpr int TGT_O_NOFOLLOW  = 0x00000100; //!< O_NOFOLLOW
-    static constexpr int TGT_O_CLOEXEC   = 0x00100000; //!< O_CLOEXEC
+    static constexpr int TGT_O_NOFOLLOW = 0x00000100;  //!< O_NOFOLLOW
+    static constexpr int TGT_O_CLOEXEC = 0x00100000;   //!< O_CLOEXEC
     //@}
 
     /// For mmap().
-    static constexpr unsigned TGT_MAP_SHARED    = 0x0001;
-    static constexpr unsigned TGT_MAP_PRIVATE   = 0x0002;
+    static constexpr unsigned TGT_MAP_SHARED = 0x0001;
+    static constexpr unsigned TGT_MAP_PRIVATE = 0x0002;
     static constexpr unsigned TGT_MAP_ANONYMOUS = 0x1000;
-    static constexpr unsigned TGT_MAP_FIXED     = 0x0010;
+    static constexpr unsigned TGT_MAP_FIXED = 0x0010;
 
     //@{
     /// For getrusage().
     static const int TGT_RUSAGE_SELF = 0;
     static const int TGT_RUSAGE_CHILDREN = -1;
     static const int TGT_RUSAGE_THREAD = 1;
+
     //@}
 
     /// Resource enumeration for getrlimit().
@@ -271,15 +271,15 @@ class ArmFreebsd64 : public ArmFreebsd, public OpenFlagTable<ArmFreebsd64>
     /// Limit struct for getrlimit/setrlimit.
     struct rlimit
     {
-        uint64_t  rlim_cur;     //!< soft limit
-        uint64_t  rlim_max;     //!< hard limit
+        uint64_t rlim_cur; //!< soft limit
+        uint64_t rlim_max; //!< hard limit
     };
 
     /// For gettimeofday().
     struct timeval
     {
-        int64_t tv_sec;         //!< seconds
-        int64_t tv_usec;        //!< microseconds
+        int64_t tv_sec;  //!< seconds
+        int64_t tv_usec; //!< microseconds
     };
 
     // For writev/readv
@@ -291,82 +291,82 @@ class ArmFreebsd64 : public ArmFreebsd, public OpenFlagTable<ArmFreebsd64>
 
     struct tgt_stat
     {
-        uint32_t   st_dev;
-        uint32_t   st_ino;
-        uint16_t   st_mode;
-        uint16_t   st_nlink;
-        uint32_t   st_uid;
-        uint32_t   st_gid;
-        uint32_t   st_rdev;
-        uint64_t   st_atimeX;
-        uint64_t   st_atime_nsec;
-        uint64_t   st_mtimeX;
-        uint64_t   st_mtime_nsec;
-        uint64_t   st_ctimeX;
-        uint64_t   st_ctime_nsec;
-        uint64_t   st_size;
-        uint64_t   st_blocks;
-        uint32_t   st_blksize;
-        uint32_t   st_flags;
-        uint32_t   st_gen;
-        uint32_t   st_lspare;
-        uint64_t   st_birthtimX;
-        uint64_t   st_birthtim;
+        uint32_t st_dev;
+        uint32_t st_ino;
+        uint16_t st_mode;
+        uint16_t st_nlink;
+        uint32_t st_uid;
+        uint32_t st_gid;
+        uint32_t st_rdev;
+        uint64_t st_atimeX;
+        uint64_t st_atime_nsec;
+        uint64_t st_mtimeX;
+        uint64_t st_mtime_nsec;
+        uint64_t st_ctimeX;
+        uint64_t st_ctime_nsec;
+        uint64_t st_size;
+        uint64_t st_blocks;
+        uint32_t st_blksize;
+        uint32_t st_flags;
+        uint32_t st_gen;
+        uint32_t st_lspare;
+        uint64_t st_birthtimX;
+        uint64_t st_birthtim;
     };
 
     struct tgt_stat64
     {
-        uint32_t   st_dev;
-        uint32_t   st_ino;
-        uint16_t   st_mode;
-        uint16_t   st_nlink;
-        uint32_t   st_uid;
-        uint32_t   st_gid;
-        uint32_t   st_rdev;
-        uint64_t   st_atimeX;
-        uint64_t   st_atime_nsec;
-        uint64_t   st_mtimeX;
-        uint64_t   st_mtime_nsec;
-        uint64_t   st_ctimeX;
-        uint64_t   st_ctime_nsec;
-        uint64_t   st_size;
-        uint64_t   st_blocks;
-        uint32_t   st_blksize;
-        uint32_t   st_flags;
-        uint32_t   st_gen;
-        uint32_t   st_lspare;
-        uint64_t   st_birthtimX;
-        uint64_t   st_birthtim;
+        uint32_t st_dev;
+        uint32_t st_ino;
+        uint16_t st_mode;
+        uint16_t st_nlink;
+        uint32_t st_uid;
+        uint32_t st_gid;
+        uint32_t st_rdev;
+        uint64_t st_atimeX;
+        uint64_t st_atime_nsec;
+        uint64_t st_mtimeX;
+        uint64_t st_mtime_nsec;
+        uint64_t st_ctimeX;
+        uint64_t st_ctime_nsec;
+        uint64_t st_size;
+        uint64_t st_blocks;
+        uint32_t st_blksize;
+        uint32_t st_flags;
+        uint32_t st_gen;
+        uint32_t st_lspare;
+        uint64_t st_birthtimX;
+        uint64_t st_birthtim;
     };
 
     /// For getrusage().
     struct rusage
     {
-        struct timeval ru_utime;        //!< user time used
-        struct timeval ru_stime;        //!< system time used
-        int64_t ru_maxrss;              //!< max rss
-        int64_t ru_ixrss;               //!< integral shared memory size
-        int64_t ru_idrss;               //!< integral unshared data "
-        int64_t ru_isrss;               //!< integral unshared stack "
-        int64_t ru_minflt;              //!< page reclaims - total vmfaults
-        int64_t ru_majflt;              //!< page faults
-        int64_t ru_nswap;               //!< swaps
-        int64_t ru_inblock;             //!< block input operations
-        int64_t ru_oublock;             //!< block output operations
-        int64_t ru_msgsnd;              //!< messages sent
-        int64_t ru_msgrcv;              //!< messages received
-        int64_t ru_nsignals;            //!< signals received
-        int64_t ru_nvcsw;               //!< voluntary context switches
-        int64_t ru_nivcsw;              //!< involuntary "
+        struct timeval ru_utime; //!< user time used
+        struct timeval ru_stime; //!< system time used
+        int64_t ru_maxrss;       //!< max rss
+        int64_t ru_ixrss;        //!< integral shared memory size
+        int64_t ru_idrss;        //!< integral unshared data "
+        int64_t ru_isrss;        //!< integral unshared stack "
+        int64_t ru_minflt;       //!< page reclaims - total vmfaults
+        int64_t ru_majflt;       //!< page faults
+        int64_t ru_nswap;        //!< swaps
+        int64_t ru_inblock;      //!< block input operations
+        int64_t ru_oublock;      //!< block output operations
+        int64_t ru_msgsnd;       //!< messages sent
+        int64_t ru_msgrcv;       //!< messages received
+        int64_t ru_nsignals;     //!< signals received
+        int64_t ru_nvcsw;        //!< voluntary context switches
+        int64_t ru_nivcsw;       //!< involuntary "
     };
 
     /// For times().
     struct tms
     {
-        int64_t tms_utime;      //!< user time
-        int64_t tms_stime;      //!< system time
-        int64_t tms_cutime;     //!< user time of children
-        int64_t tms_cstime;     //!< system time of children
+        int64_t tms_utime;  //!< user time
+        int64_t tms_stime;  //!< system time
+        int64_t tms_cutime; //!< user time of children
+        int64_t tms_cstime; //!< system time of children
     };
 };
 

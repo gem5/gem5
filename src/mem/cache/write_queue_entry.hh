@@ -66,21 +66,19 @@ class BaseCache;
  */
 class WriteQueueEntry : public QueueEntry, public Printable
 {
-
     /**
      * Consider the queues friends to avoid making everything public.
      */
-    template<typename Entry>
+    template <typename Entry>
     friend class Queue;
     friend class WriteQueue;
 
   public:
     class TargetList : public std::list<Target>
     {
-
       public:
-
         TargetList() {}
+
         void add(PacketPtr pkt, Tick readyTime, Counter order);
         bool trySatisfyFunctional(PacketPtr pkt);
         void print(std::ostream &os, int verbosity,
@@ -95,7 +93,6 @@ class WriteQueueEntry : public QueueEntry, public Printable
     bool sendPacket(BaseCache &cache) override;
 
   private:
-
     /**
      * Pointer to this entry on the ready list.
      * @sa MissQueue, WriteQueue::readyList
@@ -112,11 +109,8 @@ class WriteQueueEntry : public QueueEntry, public Printable
     TargetList targets;
 
   public:
-
     /** A simple constructor. */
-    WriteQueueEntry(const std::string &name)
-        :   QueueEntry(name)
-    {}
+    WriteQueueEntry(const std::string &name) : QueueEntry(name) {}
 
     /**
      * Allocate a miss to this entry.
@@ -129,7 +123,6 @@ class WriteQueueEntry : public QueueEntry, public Printable
     void allocate(Addr blk_addr, unsigned blk_size, PacketPtr pkt,
                   Tick when_ready, Counter _order);
 
-
     /**
      * Mark this entry as free.
      */
@@ -139,20 +132,28 @@ class WriteQueueEntry : public QueueEntry, public Printable
      * Returns the current number of allocated targets.
      * @return The current number of allocated targets.
      */
-    int getNumTargets() const
-    { return targets.size(); }
+    int
+    getNumTargets() const
+    {
+        return targets.size();
+    }
 
     /**
      * Returns true if there are targets left.
      * @return true if there are targets
      */
-    bool hasTargets() const { return !targets.empty(); }
+    bool
+    hasTargets() const
+    {
+        return !targets.empty();
+    }
 
     /**
      * Returns a reference to the first target.
      * @return A pointer to the first target.
      */
-    Target *getTarget() override
+    Target *
+    getTarget() override
     {
         assert(hasTargets());
         return &targets.front();
@@ -161,7 +162,8 @@ class WriteQueueEntry : public QueueEntry, public Printable
     /**
      * Pop first target.
      */
-    void popTarget()
+    void
+    popTarget()
     {
         targets.pop_front();
     }
@@ -171,8 +173,7 @@ class WriteQueueEntry : public QueueEntry, public Printable
     /**
      * Prints the contents of this MSHR for debugging.
      */
-    void print(std::ostream &os,
-               int verbosity = 0,
+    void print(std::ostream &os, int verbosity = 0,
                const std::string &prefix = "") const override;
     /**
      * A no-args wrapper of print(std::ostream...)  meant to be
@@ -184,7 +185,7 @@ class WriteQueueEntry : public QueueEntry, public Printable
 
     bool matchBlockAddr(const Addr addr, const bool is_secure) const override;
     bool matchBlockAddr(const PacketPtr pkt) const override;
-    bool conflictAddr(const QueueEntry* entry) const override;
+    bool conflictAddr(const QueueEntry *entry) const override;
 };
 
 } // namespace gem5

@@ -104,8 +104,8 @@
  * be corrected on branch mispredictions. This is done in iew_impl.hh.
  */
 
- #ifndef __ARCH_GENERIC_HTM_HH__
- #define __ARCH_GENERIC_HTM_HH__
+#ifndef __ARCH_GENERIC_HTM_HH__
+#define __ARCH_GENERIC_HTM_HH__
 
 #include <cstdint>
 #include <memory>
@@ -136,10 +136,8 @@ class BaseHTMCheckpoint
     uint64_t localHtmUid;
 
   public:
-    BaseHTMCheckpoint() : localHtmUid(0), _valid(false)
-    {
-        reset();
-    }
+    BaseHTMCheckpoint() : localHtmUid(0), _valid(false) { reset(); }
+
     virtual ~BaseHTMCheckpoint() {}
 
     /**
@@ -171,7 +169,11 @@ class BaseHTMCheckpoint
         reset();
     }
 
-    bool valid() const { return _valid; }
+    bool
+    valid() const
+    {
+        return _valid;
+    }
 
     /**
      * Generates a new HTM identifier (used when starting a new transaction)
@@ -179,7 +181,7 @@ class BaseHTMCheckpoint
     uint64_t
     newHtmUid()
     {
-        localHtmUid = ++ globalHtmUid;
+        localHtmUid = ++globalHtmUid;
         return localHtmUid;
     }
 
@@ -210,7 +212,12 @@ class BaseHTMCheckpoint
      * override this method so that they can reset their own
      * ISA specific state.
      */
-    virtual void reset() { _valid = false; }
+    virtual void
+    reset()
+    {
+        _valid = false;
+    }
+
     bool _valid;
 };
 

@@ -66,12 +66,29 @@ floorLog2(T x)
     int y = 0;
     constexpr auto ts = sizeof(T);
 
-    if (ts >= 8 && (ux & 0xffffffff00000000ULL)) { y += 32; ux >>= 32; }
-    if (ts >= 4 && (ux & 0x00000000ffff0000ULL)) { y += 16; ux >>= 16; }
-    if (ts >= 2 && (ux & 0x000000000000ff00ULL)) { y +=  8; ux >>=  8; }
-    if (ux & 0x00000000000000f0ULL) { y +=  4; ux >>=  4; }
-    if (ux & 0x000000000000000cULL) { y +=  2; ux >>=  2; }
-    if (ux & 0x0000000000000002ULL) { y +=  1; }
+    if (ts >= 8 && (ux & 0xffffffff00000000ULL)) {
+        y += 32;
+        ux >>= 32;
+    }
+    if (ts >= 4 && (ux & 0x00000000ffff0000ULL)) {
+        y += 16;
+        ux >>= 16;
+    }
+    if (ts >= 2 && (ux & 0x000000000000ff00ULL)) {
+        y += 8;
+        ux >>= 8;
+    }
+    if (ux & 0x00000000000000f0ULL) {
+        y += 4;
+        ux >>= 4;
+    }
+    if (ux & 0x000000000000000cULL) {
+        y += 2;
+        ux >>= 2;
+    }
+    if (ux & 0x0000000000000002ULL) {
+        y += 1;
+    }
 
     return y;
 }
@@ -81,7 +98,7 @@ floorLog2(T x)
  */
 template <class T>
 static constexpr int
-ceilLog2(const T& n)
+ceilLog2(const T &n)
 {
     assert(n > 0);
     if (n == 1)
@@ -95,7 +112,7 @@ ceilLog2(const T& n)
  */
 template <class T>
 static constexpr bool
-isPowerOf2(const T& n)
+isPowerOf2(const T &n)
 {
     // If n is non-zero, and subtracting one borrows all the way to the MSB
     // and flips all bits, then this is a power of 2.
@@ -107,7 +124,7 @@ isPowerOf2(const T& n)
  */
 template <class T, class U>
 static constexpr T
-divCeil(const T& a, const U& b)
+divCeil(const T &a, const U &b)
 {
     return (a + b - 1) / b;
 }
@@ -233,7 +250,7 @@ mulUnsigned(std::make_unsigned_t<T> val_a, std::make_unsigned_t<T> val_b)
 {
     std::make_unsigned_t<T> hi{}, low{};
     mulUnsigned<T>(hi, low, val_a, val_b);
-    return {hi, low};
+    return { hi, low };
 };
 
 template <typename T>
@@ -242,7 +259,7 @@ mulSigned(std::make_signed_t<T> val_a, std::make_signed_t<T> val_b)
 {
     std::make_signed_t<T> hi{}, low{};
     mulSigned<T>(hi, low, val_a, val_b);
-    return {hi, low};
+    return { hi, low };
 };
 
 /**
@@ -257,7 +274,7 @@ mulSigned(std::make_signed_t<T> val_a, std::make_signed_t<T> val_b)
  */
 template <class T, class U>
 static constexpr T
-roundUp(const T& val, const U& align)
+roundUp(const T &val, const U &align)
 {
     assert(isPowerOf2(align));
     T mask = (T)align - 1;
@@ -276,7 +293,7 @@ roundUp(const T& val, const U& align)
  */
 template <class T, class U>
 static constexpr T
-roundDown(const T& val, const U& align)
+roundDown(const T &val, const U &align)
 {
     assert(isPowerOf2(align));
     T mask = (T)align - 1;

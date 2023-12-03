@@ -61,7 +61,7 @@ class LupioBLK : public DmaDevice
 
     void dmaEventDone();
 
-  // Register map
+    // Register map
   private:
     enum
     {

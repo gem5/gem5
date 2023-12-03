@@ -56,6 +56,7 @@ class BankedArray
     {
       public:
         AccessRecord() : idx(0), startAccess(0), endAccess(0) {}
+
         int64_t idx;
         Tick startAccess;
         Tick endAccess;
@@ -77,7 +78,11 @@ class BankedArray
 
     void reserve(int64_t idx);
 
-    Cycles getLatency() const { return accessLatency; }
+    Cycles
+    getLatency() const
+    {
+        return accessLatency;
+    }
 };
 
 } // namespace ruby

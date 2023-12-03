@@ -57,40 +57,44 @@ SEWorkload::handleTrap(ThreadContext *tc, int trapNum)
 {
     auto &pc = tc->pcState().as<PCState>();
     switch (trapNum) {
-      case 0x01: // Software breakpoint
+    case 0x01: // Software breakpoint
         warn("Software breakpoint encountered at pc %#x.", pc.pc());
         break;
-      case 0x02: // Division by zero
+    case 0x02: // Division by zero
         warn("Software signaled a division by zero at pc %#x.", pc.pc());
         break;
-      case 0x03: // Flush window trap
+    case 0x03: // Flush window trap
         flushWindows(tc);
         break;
-      case 0x04: // Clean windows
+    case 0x04: // Clean windows
         warn("Ignoring process request for clean register "
-                "windows at pc %#x.", pc.pc());
+             "windows at pc %#x.",
+             pc.pc());
         break;
-      case 0x05: // Range check
+    case 0x05: // Range check
         warn("Software signaled a range check at pc %#x.", pc.pc());
         break;
-      case 0x06: // Fix alignment
+    case 0x06: // Fix alignment
         warn("Ignoring process request for os assisted unaligned accesses "
-                "at pc %#x.", pc.pc());
+             "at pc %#x.",
+             pc.pc());
         break;
-      case 0x07: // Integer overflow
+    case 0x07: // Integer overflow
         warn("Software signaled an integer overflow at pc %#x.", pc.pc());
         break;
-      case 0x32: // Get integer condition codes
+    case 0x32: // Get integer condition codes
         warn("Ignoring process request to get the integer condition codes "
-                "at pc %#x.", pc.pc());
+             "at pc %#x.",
+             pc.pc());
         break;
-      case 0x33: // Set integer condition codes
+    case 0x33: // Set integer condition codes
         warn("Ignoring process request to set the integer condition codes "
-                "at pc %#x.", pc.pc());
+             "at pc %#x.",
+             pc.pc());
         break;
-      default:
+    default:
         panic("Unimplemented trap to operating system: trap number %#x.",
-                trapNum);
+              trapNum);
     }
 }
 
@@ -129,7 +133,7 @@ SEWorkload::flushWindows(ThreadContext *tc)
             }
             if (!proxy.tryWriteBlob(addr, bytes, reg_bytes)) {
                 warn("Failed to save register to the stack when "
-                        "flushing windows.");
+                     "flushing windows.");
             }
             addr += reg_bytes;
         }

@@ -112,8 +112,8 @@ class AtomicResponseProtocol
      * Receive an atomic request packet from the peer, and optionally
      * provide a backdoor to the data being accessed.
      */
-    virtual Tick recvAtomicBackdoor(
-            PacketPtr pkt, MemBackdoorPtr &backdoor) = 0;
+    virtual Tick recvAtomicBackdoor(PacketPtr pkt,
+                                    MemBackdoorPtr &backdoor) = 0;
 };
 
 } // namespace gem5

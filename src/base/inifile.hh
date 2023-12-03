@@ -55,37 +55,46 @@ namespace gem5
 class IniFile
 {
   protected:
-
     ///
     /// A single key/value pair.
     ///
     class Entry
     {
-        std::string     value;          ///< The entry value.
-        mutable bool    referenced;     ///< Has this entry been used?
+        std::string value;       ///< The entry value.
+        mutable bool referenced; ///< Has this entry been used?
 
       public:
         /// Constructor.
-        Entry(const std::string &v)
-            : value(v), referenced(false)
-        {
-        }
+        Entry(const std::string &v) : value(v), referenced(false) {}
 
         /// Has this entry been used?
-        bool isReferenced() const { return referenced; }
+        bool
+        isReferenced() const
+        {
+            return referenced;
+        }
 
         /// Fetch the value.
         const std::string &getValue() const;
 
         /// Set the value.
-        void setValue(const std::string &v) { value = v; }
+        void
+        setValue(const std::string &v)
+        {
+            value = v;
+        }
 
         /// Append the given string to the value.  A space is inserted
         /// between the existing value and the new value.  Since this
         /// operation is typically used with values that are
         /// space-separated lists of tokens, this keeps the tokens
         /// separate.
-        void appendValue(const std::string &v) { value += " "; value += v; }
+        void
+        appendValue(const std::string &v)
+        {
+            value += " ";
+            value += v;
+        }
     };
 
     ///
@@ -96,18 +105,19 @@ class IniFile
         /// EntryTable type.  Map of strings to Entry object pointers.
         typedef std::unordered_map<std::string, Entry> EntryTable;
 
-        EntryTable      table;          ///< Table of entries.
-        mutable bool    referenced;     ///< Has this section been used?
+        EntryTable table;        ///< Table of entries.
+        mutable bool referenced; ///< Has this section been used?
 
       public:
         /// Constructor.
-        Section()
-            : table(), referenced(false)
-        {
-        }
+        Section() : table(), referenced(false) {}
 
         /// Has this section been used?
-        bool isReferenced() const { return referenced; }
+        bool
+        isReferenced() const
+        {
+            return referenced;
+        }
 
         /// Add an entry to the table.  If an entry with the same name
         /// already exists, the 'append' parameter is checked If true,
@@ -211,8 +221,8 @@ class IniFile
     void dump();
 
     /// Visitor callback that receives key/value pairs.
-    using VisitSectionCallback = std::function<void(
-        const std::string&, const std::string&)>;
+    using VisitSectionCallback =
+        std::function<void(const std::string &, const std::string &)>;
 
     /// Iterate over key/value pairs of the given section.
     void visitSection(const std::string &sectionName, VisitSectionCallback cb);

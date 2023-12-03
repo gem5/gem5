@@ -50,228 +50,262 @@ namespace gem5
 namespace SparcISA
 {
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<PowerOnReset>::vals
-("power_on_reset", 0x001, 0, {{H, H, H}});
+template <>
+SparcFaultBase::FaultVals SparcFault<PowerOnReset>::vals("power_on_reset",
+                                                         0x001, 0,
+                                                         { { H, H, H } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<WatchDogReset>::vals
-("watch_dog_reset", 0x002, 120, {{H, H, H}});
+template <>
+SparcFaultBase::FaultVals SparcFault<WatchDogReset>::vals("watch_dog_reset",
+                                                          0x002, 120,
+                                                          { { H, H, H } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<ExternallyInitiatedReset>::vals
-("externally_initiated_reset", 0x003, 110, {{H, H, H}});
+template <>
+SparcFaultBase::FaultVals
+    SparcFault<ExternallyInitiatedReset>::vals("externally_initiated_reset",
+                                               0x003, 110, { { H, H, H } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<SoftwareInitiatedReset>::vals
-("software_initiated_reset", 0x004, 130, {{SH, SH, H}});
+template <>
+SparcFaultBase::FaultVals
+    SparcFault<SoftwareInitiatedReset>::vals("software_initiated_reset", 0x004,
+                                             130, { { SH, SH, H } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<REDStateException>::vals
-("RED_state_exception", 0x005, 1, {{H, H, H}});
+template <>
+SparcFaultBase::FaultVals
+    SparcFault<REDStateException>::vals("RED_state_exception", 0x005, 1,
+                                        { { H, H, H } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<StoreError>::vals
-("store_error", 0x007, 201, {{H, H, H}});
+template <>
+SparcFaultBase::FaultVals SparcFault<StoreError>::vals("store_error", 0x007,
+                                                       201, { { H, H, H } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<InstructionAccessException>::vals
-("instruction_access_exception", 0x008, 300, {{H, H, H}});
+template <>
+SparcFaultBase::FaultVals SparcFault<InstructionAccessException>::vals(
+    "instruction_access_exception", 0x008, 300, { { H, H, H } });
 
-//XXX This trap is apparently dropped from ua2005
+// XXX This trap is apparently dropped from ua2005
 /*template<> SparcFaultBase::FaultVals
     SparcFault<InstructionAccessMMUMiss>::vals
     ("inst_mmu", 0x009, 2, {{H, H, H}});*/
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<InstructionAccessError>::vals
-("instruction_access_error", 0x00A, 400, {{H, H, H}});
+template <>
+SparcFaultBase::FaultVals
+    SparcFault<InstructionAccessError>::vals("instruction_access_error", 0x00A,
+                                             400, { { H, H, H } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<IllegalInstruction>::vals
-("illegal_instruction", 0x010, 620, {{H, H, H}});
+template <>
+SparcFaultBase::FaultVals
+    SparcFault<IllegalInstruction>::vals("illegal_instruction", 0x010, 620,
+                                         { { H, H, H } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<PrivilegedOpcode>::vals
-("privileged_opcode", 0x011, 700, {{P, SH, SH}});
+template <>
+SparcFaultBase::FaultVals
+    SparcFault<PrivilegedOpcode>::vals("privileged_opcode", 0x011, 700,
+                                       { { P, SH, SH } });
 
-//XXX This trap is apparently dropped from ua2005
+// XXX This trap is apparently dropped from ua2005
 /*template<> SparcFaultBase::FaultVals
     SparcFault<UnimplementedLDD>::vals
     ("unimp_ldd", 0x012, 6, {{H, H, H}});*/
 
-//XXX This trap is apparently dropped from ua2005
+// XXX This trap is apparently dropped from ua2005
 /*template<> SparcFaultBase::FaultVals
     SparcFault<UnimplementedSTD>::vals
     ("unimp_std", 0x013, 6, {{H, H, H}});*/
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<FpDisabled>::vals
-("fp_disabled", 0x020, 800, {{P, P, H}});
+template <>
+SparcFaultBase::FaultVals SparcFault<FpDisabled>::vals("fp_disabled", 0x020,
+                                                       800, { { P, P, H } });
 
 /* SPARCv8 and SPARCv9 define just fp_disabled trap. SIMD is not contemplated
  * as a separate part. Therefore, we use the same code and TT */
-template<> SparcFaultBase::FaultVals
-    SparcFault<VecDisabled>::vals
-("fp_disabled", 0x020, 800, {{P, P, H}});
+template <>
+SparcFaultBase::FaultVals SparcFault<VecDisabled>::vals("fp_disabled", 0x020,
+                                                        800, { { P, P, H } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<FpExceptionIEEE754>::vals
-("fp_exception_ieee_754", 0x021, 1110, {{P, P, H}});
+template <>
+SparcFaultBase::FaultVals
+    SparcFault<FpExceptionIEEE754>::vals("fp_exception_ieee_754", 0x021, 1110,
+                                         { { P, P, H } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<FpExceptionOther>::vals
-("fp_exception_other", 0x022, 1110, {{P, P, H}});
+template <>
+SparcFaultBase::FaultVals
+    SparcFault<FpExceptionOther>::vals("fp_exception_other", 0x022, 1110,
+                                       { { P, P, H } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<TagOverflow>::vals
-("tag_overflow", 0x023, 1400, {{P, P, H}});
+template <>
+SparcFaultBase::FaultVals SparcFault<TagOverflow>::vals("tag_overflow", 0x023,
+                                                        1400, { { P, P, H } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<CleanWindow>::vals
-("clean_window", 0x024, 1010, {{P, P, H}});
+template <>
+SparcFaultBase::FaultVals SparcFault<CleanWindow>::vals("clean_window", 0x024,
+                                                        1010, { { P, P, H } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<DivisionByZero>::vals
-("division_by_zero", 0x028, 1500, {{P, P, H}});
+template <>
+SparcFaultBase::FaultVals SparcFault<DivisionByZero>::vals("division_by_zero",
+                                                           0x028, 1500,
+                                                           { { P, P, H } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<InternalProcessorError>::vals
-("internal_processor_error", 0x029, 4, {{H, H, H}});
+template <>
+SparcFaultBase::FaultVals
+    SparcFault<InternalProcessorError>::vals("internal_processor_error", 0x029,
+                                             4, { { H, H, H } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<InstructionInvalidTSBEntry>::vals
-("instruction_invalid_tsb_entry", 0x02A, 210, {{H, H, SH}});
+template <>
+SparcFaultBase::FaultVals SparcFault<InstructionInvalidTSBEntry>::vals(
+    "instruction_invalid_tsb_entry", 0x02A, 210, { { H, H, SH } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<DataInvalidTSBEntry>::vals
-("data_invalid_tsb_entry", 0x02B, 1203, {{H, H, H}});
+template <>
+SparcFaultBase::FaultVals
+    SparcFault<DataInvalidTSBEntry>::vals("data_invalid_tsb_entry", 0x02B,
+                                          1203, { { H, H, H } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<DataAccessException>::vals
-("data_access_exception", 0x030, 1201, {{H, H, H}});
+template <>
+SparcFaultBase::FaultVals
+    SparcFault<DataAccessException>::vals("data_access_exception", 0x030, 1201,
+                                          { { H, H, H } });
 
-//XXX This trap is apparently dropped from ua2005
+// XXX This trap is apparently dropped from ua2005
 /*template<> SparcFaultBase::FaultVals
     SparcFault<DataAccessMMUMiss>::vals
     ("data_mmu", 0x031, 12, {{H, H, H}});*/
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<DataAccessError>::vals
-("data_access_error", 0x032, 1210, {{H, H, H}});
+template <>
+SparcFaultBase::FaultVals
+    SparcFault<DataAccessError>::vals("data_access_error", 0x032, 1210,
+                                      { { H, H, H } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<DataAccessProtection>::vals
-("data_access_protection", 0x033, 1207, {{H, H, H}});
+template <>
+SparcFaultBase::FaultVals
+    SparcFault<DataAccessProtection>::vals("data_access_protection", 0x033,
+                                           1207, { { H, H, H } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<MemAddressNotAligned>::vals
-("mem_address_not_aligned", 0x034, 1020, {{H, H, H}});
+template <>
+SparcFaultBase::FaultVals
+    SparcFault<MemAddressNotAligned>::vals("mem_address_not_aligned", 0x034,
+                                           1020, { { H, H, H } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<LDDFMemAddressNotAligned>::vals
-("LDDF_mem_address_not_aligned", 0x035, 1010, {{H, H, H}});
+template <>
+SparcFaultBase::FaultVals
+    SparcFault<LDDFMemAddressNotAligned>::vals("LDDF_mem_address_not_aligned",
+                                               0x035, 1010, { { H, H, H } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<STDFMemAddressNotAligned>::vals
-("STDF_mem_address_not_aligned", 0x036, 1010, {{H, H, H}});
+template <>
+SparcFaultBase::FaultVals
+    SparcFault<STDFMemAddressNotAligned>::vals("STDF_mem_address_not_aligned",
+                                               0x036, 1010, { { H, H, H } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<PrivilegedAction>::vals
-("privileged_action", 0x037, 1110, {{H, H, SH}});
+template <>
+SparcFaultBase::FaultVals
+    SparcFault<PrivilegedAction>::vals("privileged_action", 0x037, 1110,
+                                       { { H, H, SH } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<LDQFMemAddressNotAligned>::vals
-("LDQF_mem_address_not_aligned", 0x038, 1010, {{H, H, H}});
+template <>
+SparcFaultBase::FaultVals
+    SparcFault<LDQFMemAddressNotAligned>::vals("LDQF_mem_address_not_aligned",
+                                               0x038, 1010, { { H, H, H } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<STQFMemAddressNotAligned>::vals
-("STQF_mem_address_not_aligned", 0x039, 1010, {{H, H, H}});
+template <>
+SparcFaultBase::FaultVals
+    SparcFault<STQFMemAddressNotAligned>::vals("STQF_mem_address_not_aligned",
+                                               0x039, 1010, { { H, H, H } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<InstructionRealTranslationMiss>::vals
-("instruction_real_translation_miss", 0x03E, 208, {{H, H, SH}});
+template <>
+SparcFaultBase::FaultVals SparcFault<InstructionRealTranslationMiss>::vals(
+    "instruction_real_translation_miss", 0x03E, 208, { { H, H, SH } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<DataRealTranslationMiss>::vals
-("data_real_translation_miss", 0x03F, 1203, {{H, H, H}});
+template <>
+SparcFaultBase::FaultVals
+    SparcFault<DataRealTranslationMiss>::vals("data_real_translation_miss",
+                                              0x03F, 1203, { { H, H, H } });
 
-//XXX This trap is apparently dropped from ua2005
+// XXX This trap is apparently dropped from ua2005
 /*template<> SparcFaultBase::FaultVals
     SparcFault<AsyncDataError>::vals
     ("async_data", 0x040, 2, {{H, H, H}});*/
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<InterruptLevelN>::vals
-("interrupt_level_n", 0x040, 0, {{P, P, SH}});
+template <>
+SparcFaultBase::FaultVals
+    SparcFault<InterruptLevelN>::vals("interrupt_level_n", 0x040, 0,
+                                      { { P, P, SH } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<HstickMatch>::vals
-("hstick_match", 0x05E, 1601, {{H, H, H}});
+template <>
+SparcFaultBase::FaultVals SparcFault<HstickMatch>::vals("hstick_match", 0x05E,
+                                                        1601, { { H, H, H } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<TrapLevelZero>::vals
-("trap_level_zero", 0x05F, 202, {{H, H, SH}});
+template <>
+SparcFaultBase::FaultVals SparcFault<TrapLevelZero>::vals("trap_level_zero",
+                                                          0x05F, 202,
+                                                          { { H, H, SH } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<InterruptVector>::vals
-("interrupt_vector", 0x060, 2630, {{H, H, H}});
+template <>
+SparcFaultBase::FaultVals SparcFault<InterruptVector>::vals("interrupt_vector",
+                                                            0x060, 2630,
+                                                            { { H, H, H } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<PAWatchpoint>::vals
-("PA_watchpoint", 0x061, 1209, {{H, H, H}});
+template <>
+SparcFaultBase::FaultVals SparcFault<PAWatchpoint>::vals("PA_watchpoint",
+                                                         0x061, 1209,
+                                                         { { H, H, H } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<VAWatchpoint>::vals
-("VA_watchpoint", 0x062, 1120, {{P, P, SH}});
+template <>
+SparcFaultBase::FaultVals SparcFault<VAWatchpoint>::vals("VA_watchpoint",
+                                                         0x062, 1120,
+                                                         { { P, P, SH } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<FastInstructionAccessMMUMiss>::vals
-("fast_instruction_access_MMU_miss", 0x064, 208, {{H, H, SH}});
+template <>
+SparcFaultBase::FaultVals SparcFault<FastInstructionAccessMMUMiss>::vals(
+    "fast_instruction_access_MMU_miss", 0x064, 208, { { H, H, SH } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<FastDataAccessMMUMiss>::vals
-("fast_data_access_MMU_miss", 0x068, 1203, {{H, H, H}});
+template <>
+SparcFaultBase::FaultVals
+    SparcFault<FastDataAccessMMUMiss>::vals("fast_data_access_MMU_miss", 0x068,
+                                            1203, { { H, H, H } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<FastDataAccessProtection>::vals
-("fast_data_access_protection", 0x06C, 1207, {{H, H, H}});
+template <>
+SparcFaultBase::FaultVals
+    SparcFault<FastDataAccessProtection>::vals("fast_data_access_protection",
+                                               0x06C, 1207, { { H, H, H } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<InstructionBreakpoint>::vals
-("instruction_break", 0x076, 610, {{H, H, H}});
+template <>
+SparcFaultBase::FaultVals
+    SparcFault<InstructionBreakpoint>::vals("instruction_break", 0x076, 610,
+                                            { { H, H, H } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<CpuMondo>::vals
-("cpu_mondo", 0x07C, 1608, {{P, P, SH}});
+template <>
+SparcFaultBase::FaultVals SparcFault<CpuMondo>::vals("cpu_mondo", 0x07C, 1608,
+                                                     { { P, P, SH } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<DevMondo>::vals
-("dev_mondo", 0x07D, 1611, {{P, P, SH}});
+template <>
+SparcFaultBase::FaultVals SparcFault<DevMondo>::vals("dev_mondo", 0x07D, 1611,
+                                                     { { P, P, SH } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<ResumableError>::vals
-("resume_error", 0x07E, 3330, {{P, P, SH}});
+template <>
+SparcFaultBase::FaultVals SparcFault<ResumableError>::vals("resume_error",
+                                                           0x07E, 3330,
+                                                           { { P, P, SH } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<SpillNNormal>::vals
-("spill_n_normal", 0x080, 900, {{P, P, H}});
+template <>
+SparcFaultBase::FaultVals SparcFault<SpillNNormal>::vals("spill_n_normal",
+                                                         0x080, 900,
+                                                         { { P, P, H } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<SpillNOther>::vals
-("spill_n_other", 0x0A0, 900, {{P, P, H}});
+template <>
+SparcFaultBase::FaultVals SparcFault<SpillNOther>::vals("spill_n_other", 0x0A0,
+                                                        900, { { P, P, H } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<FillNNormal>::vals
-("fill_n_normal", 0x0C0, 900, {{P, P, H}});
+template <>
+SparcFaultBase::FaultVals SparcFault<FillNNormal>::vals("fill_n_normal", 0x0C0,
+                                                        900, { { P, P, H } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<FillNOther>::vals
-("fill_n_other", 0x0E0, 900, {{P, P, H}});
+template <>
+SparcFaultBase::FaultVals SparcFault<FillNOther>::vals("fill_n_other", 0x0E0,
+                                                       900, { { P, P, H } });
 
-template<> SparcFaultBase::FaultVals
-    SparcFault<TrapInstruction>::vals
-("trap_instruction", 0x100, 1602, {{P, P, H}});
+template <>
+SparcFaultBase::FaultVals SparcFault<TrapInstruction>::vals("trap_instruction",
+                                                            0x100, 1602,
+                                                            { { P, P, H } });
 
 /**
  * This causes the thread context to enter RED state. This causes the side
@@ -283,7 +317,7 @@ enterREDState(ThreadContext *tc)
 {
     //@todo Disable the mmu?
     //@todo Disable watchpoints?
-    HPSTATE hpstate= tc->readMiscRegNoEffect(MISCREG_HPSTATE);
+    HPSTATE hpstate = tc->readMiscRegNoEffect(MISCREG_HPSTATE);
     hpstate.red = 1;
     hpstate.hpriv = 1;
     tc->setMiscReg(MISCREG_HPSTATE, hpstate);
@@ -340,7 +374,7 @@ doREDFault(ThreadContext *tc, TrapType tt)
     tc->setMiscRegNoEffect(MISCREG_TT, tt);
 
     // Update GL
-    tc->setMiscReg(MISCREG_GL, std::min<int>(GL+1, MaxGL));
+    tc->setMiscReg(MISCREG_GL, std::min<int>(GL + 1, MaxGL));
 
     bool priv = pstate.priv; // just save the priv bit
     pstate = 0;
@@ -449,7 +483,6 @@ doNormalFault(ThreadContext *tc, TrapType tt, bool gotoHpriv)
     }
     tc->setMiscRegNoEffect(MISCREG_PSTATE, pstate);
 
-
     bool changedCWP = true;
     if (tt == 0x24)
         CWP++;
@@ -469,14 +502,14 @@ doNormalFault(ThreadContext *tc, TrapType tt, bool gotoHpriv)
 void
 getREDVector(RegVal TT, Addr &PC, Addr &NPC)
 {
-    //XXX The following constant might belong in a header file.
+    // XXX The following constant might belong in a header file.
     const Addr RSTVAddr = 0xFFF0000000ULL;
     PC = RSTVAddr | ((TT << 5) & 0xFF);
     NPC = PC + sizeof(MachInst);
 }
 
 void
-getHyperVector(ThreadContext * tc, Addr &PC, Addr &NPC, RegVal TT)
+getHyperVector(ThreadContext *tc, Addr &PC, Addr &NPC, RegVal TT)
 {
     Addr HTBA = tc->readMiscRegNoEffect(MISCREG_HTBA);
     PC = (HTBA & ~mask(14)) | ((TT << 5) & mask(14));
@@ -487,19 +520,16 @@ void
 getPrivVector(ThreadContext *tc, Addr &PC, Addr &NPC, RegVal TT, RegVal TL)
 {
     Addr TBA = tc->readMiscRegNoEffect(MISCREG_TBA);
-    PC = (TBA & ~mask(15)) |
-        (TL > 1 ? (1 << 14) : 0) |
-        ((TT << 5) & mask(14));
+    PC = (TBA & ~mask(15)) | (TL > 1 ? (1 << 14) : 0) | ((TT << 5) & mask(14));
     NPC = PC + sizeof(MachInst);
 }
 
 void
-SparcFaultBase::invoke(ThreadContext * tc, const StaticInstPtr &inst)
+SparcFaultBase::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     FaultBase::invoke(tc);
     if (!FullSystem)
         return;
-
 
     // We can refer to this to see what the trap level -was-, but something
     // in the middle could change it in the regfile out from under us.
@@ -668,9 +698,9 @@ FastInstructionAccessMMUMiss::invoke(ThreadContext *tc,
     // false for syscall emulation mode regardless of whether the
     // address is real in preceding code. Not sure sure that this is
     // correct, but also not sure if it matters at all.
-    static_cast<MMU *>(tc->getMMUPtr())->insertItlbEntry(
-        alignedvaddr, partition_id, context_id,
-        false, entry.pte);
+    static_cast<MMU *>(tc->getMMUPtr())
+        ->insertItlbEntry(alignedvaddr, partition_id, context_id, false,
+                          entry.pte);
 }
 
 void
@@ -739,10 +769,10 @@ FastDataAccessMMUMiss::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 
     // Given the assumptions in the translateData code in the SPARC DTLB,
     // the logic works out to the following for the context.
-    int context_id = ((!hpriv && !red && is_real_address) ||
-                      asiIsReal(asi) ||
-                      (trapped && asi == ASI_IMPLICIT))
-                     ? 0 : primary_context;
+    int context_id = ((!hpriv && !red && is_real_address) || asiIsReal(asi) ||
+                      (trapped && asi == ASI_IMPLICIT)) ?
+                         0 :
+                         primary_context;
 
     // The partition id distinguishes between virtualized environments.
     int const partition_id = 0;
@@ -756,9 +786,9 @@ FastDataAccessMMUMiss::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     // false for syscall emulation mode regardless of whether the
     // address is real in preceding code. Not sure sure that this is
     // correct, but also not sure if it matters at all.
-    static_cast<MMU *>(tc->getMMUPtr())->insertDtlbEntry(
-        alignedvaddr, partition_id, context_id,
-        false, entry.pte);
+    static_cast<MMU *>(tc->getMMUPtr())
+        ->insertDtlbEntry(alignedvaddr, partition_id, context_id, false,
+                          entry.pte);
 }
 
 void

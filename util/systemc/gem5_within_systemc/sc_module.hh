@@ -108,9 +108,9 @@ class Module : public sc_core::sc_channel
         Module &module;
 
       public:
-        SCEventQueue(const std::string &name,
-            Module &module_) : gem5::EventQueue(name), module(module_)
-        { }
+        SCEventQueue(const std::string &name, Module &module_)
+            : gem5::EventQueue(name), module(module_)
+        {}
 
         /** Signal module to wakeup */
         void wakeup(gem5::Tick when);

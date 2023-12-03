@@ -40,30 +40,39 @@ void
 PowerStaticInst::printReg(std::ostream &os, RegId reg) const
 {
     switch (reg.classValue()) {
-      case IntRegClass:
+    case IntRegClass:
         ccprintf(os, "r%d", reg.index());
         break;
-      case FloatRegClass:
+    case FloatRegClass:
         ccprintf(os, "f%d", reg.index());
         break;
-      case MiscRegClass:
+    case MiscRegClass:
         switch (reg.index()) {
-          case 0: ccprintf(os, "cr"); break;
-          case 1: ccprintf(os, "xer"); break;
-          case 2: ccprintf(os, "lr"); break;
-          case 3: ccprintf(os, "ctr"); break;
-          default: ccprintf(os, "unknown_reg");
+        case 0:
+            ccprintf(os, "cr");
+            break;
+        case 1:
+            ccprintf(os, "xer");
+            break;
+        case 2:
+            ccprintf(os, "lr");
+            break;
+        case 3:
+            ccprintf(os, "ctr");
+            break;
+        default:
+            ccprintf(os, "unknown_reg");
             break;
         }
         break;
-      default:
+    default:
         panic("printReg: Unrecognized register class.");
     }
 }
 
 std::string
-PowerStaticInst::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+PowerStaticInst::generateDisassembly(Addr pc,
+                                     const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
 

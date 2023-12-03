@@ -32,6 +32,6 @@
 #define __VERIFY_SEMI_HH__
 
 void abi_verify_semi(const siginfo_t &info, int func,
-        const std::vector<uint64_t> &args);
+                     const std::vector<uint64_t> &args);
 
 #endif // __VERIFY_SEMI_HH__

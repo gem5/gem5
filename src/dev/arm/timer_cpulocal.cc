@@ -52,44 +52,45 @@
 namespace gem5
 {
 
-CpuLocalTimer::CpuLocalTimer(const Params &p)
-    : BasicPioDevice(p, 0x38)
-{
-}
+CpuLocalTimer::CpuLocalTimer(const Params &p) : BasicPioDevice(p, 0x38) {}
 
 void
 CpuLocalTimer::init()
 {
-   const auto &p = params();
-   // Initialize the timer registers for each per cpu timer
-   for (int i = 0; i < sys->threads.size(); i++) {
-        ThreadContext* tc = sys->threads[i];
+    const auto &p = params();
+    // Initialize the timer registers for each per cpu timer
+    for (int i = 0; i < sys->threads.size(); i++) {
+        ThreadContext *tc = sys->threads[i];
         std::stringstream oss;
         oss << name() << ".timer" << i;
 
-        localTimer.emplace_back(
-            new Timer(oss.str(), this,
-                      p.int_timer->get(tc),
-                      p.int_watchdog->get(tc)));
+        localTimer.emplace_back(new Timer(
+            oss.str(), this, p.int_timer->get(tc), p.int_watchdog->get(tc)));
     }
 
     BasicPioDevice::init();
 }
 
 CpuLocalTimer::Timer::Timer(const std::string &timer_name,
-                            CpuLocalTimer* _parent,
-                            ArmInterruptPin* int_timer,
-                            ArmInterruptPin* int_watchdog)
-    : _name(timer_name), parent(_parent), intTimer(int_timer),
-      intWatchdog(int_watchdog), timerControl(0x0), watchdogControl(0x0),
-      rawIntTimer(false), rawIntWatchdog(false),
-      rawResetWatchdog(false), watchdogDisableReg(0x0),
-      pendingIntTimer(false), pendingIntWatchdog(false),
-      timerLoadValue(0x0), watchdogLoadValue(0x0),
-      timerZeroEvent([this]{ timerAtZero(); }, name()),
-      watchdogZeroEvent([this]{ watchdogAtZero(); }, name())
-{
-}
+                            CpuLocalTimer *_parent, ArmInterruptPin *int_timer,
+                            ArmInterruptPin *int_watchdog)
+    : _name(timer_name),
+      parent(_parent),
+      intTimer(int_timer),
+      intWatchdog(int_watchdog),
+      timerControl(0x0),
+      watchdogControl(0x0),
+      rawIntTimer(false),
+      rawIntWatchdog(false),
+      rawResetWatchdog(false),
+      watchdogDisableReg(0x0),
+      pendingIntTimer(false),
+      pendingIntWatchdog(false),
+      timerLoadValue(0x0),
+      watchdogLoadValue(0x0),
+      timerZeroEvent([this] { timerAtZero(); }, name()),
+      watchdogZeroEvent([this] { watchdogAtZero(); }, name())
+{}
 
 Tick
 CpuLocalTimer::read(PacketPtr pkt)
@@ -105,11 +106,11 @@ CpuLocalTimer::read(PacketPtr pkt)
     if (daddr < Timer::Size)
         localTimer[cpu_id]->read(pkt, daddr);
     else
-        panic("Tried to read CpuLocalTimer at offset %#x that doesn't exist\n", daddr);
+        panic("Tried to read CpuLocalTimer at offset %#x that doesn't exist\n",
+              daddr);
     pkt->makeAtomicResponse();
     return pioDelay;
 }
-
 
 void
 CpuLocalTimer::Timer::read(PacketPtr pkt, Addr daddr)
@@ -117,11 +118,11 @@ CpuLocalTimer::Timer::read(PacketPtr pkt, Addr daddr)
     DPRINTF(Timer, "Reading from CpuLocalTimer at offset: %#x\n", daddr);
     Tick time;
 
-    switch(daddr) {
-      case TimerLoadReg:
+    switch (daddr) {
+    case TimerLoadReg:
         pkt->setLE<uint32_t>(timerLoadValue);
         break;
-      case TimerCounterReg:
+    case TimerCounterReg:
         DPRINTF(Timer, "Event schedule for timer %d, clock=%d, prescale=%d\n",
                 timerZeroEvent.when(), parent->clockPeriod(),
                 timerControl.prescalar);
@@ -130,39 +131,39 @@ CpuLocalTimer::Timer::read(PacketPtr pkt, Addr daddr)
         DPRINTF(Timer, "-- returning counter at %d\n", time);
         pkt->setLE<uint32_t>(time);
         break;
-      case TimerControlReg:
+    case TimerControlReg:
         pkt->setLE<uint32_t>(timerControl);
         break;
-      case TimerIntStatusReg:
+    case TimerIntStatusReg:
         pkt->setLE<uint32_t>(rawIntTimer);
         break;
-      case WatchdogLoadReg:
+    case WatchdogLoadReg:
         pkt->setLE<uint32_t>(watchdogLoadValue);
         break;
-      case WatchdogCounterReg:
+    case WatchdogCounterReg:
         DPRINTF(Timer,
                 "Event schedule for watchdog %d, clock=%d, prescale=%d\n",
                 watchdogZeroEvent.when(), parent->clockPeriod(),
                 watchdogControl.prescalar);
         time = watchdogZeroEvent.when() - curTick();
-        time = (time / parent->clockPeriod()) >>
-            (4 * watchdogControl.prescalar);
+        time =
+            (time / parent->clockPeriod()) >> (4 * watchdogControl.prescalar);
         DPRINTF(Timer, "-- returning counter at %d\n", time);
         pkt->setLE<uint32_t>(time);
         break;
-      case WatchdogControlReg:
+    case WatchdogControlReg:
         pkt->setLE<uint32_t>(watchdogControl);
         break;
-      case WatchdogIntStatusReg:
+    case WatchdogIntStatusReg:
         pkt->setLE<uint32_t>(rawIntWatchdog);
         break;
-      case WatchdogResetStatusReg:
+    case WatchdogResetStatusReg:
         pkt->setLE<uint32_t>(rawResetWatchdog);
         break;
-      case WatchdogDisableReg:
+    case WatchdogDisableReg:
         panic("Tried to read from WatchdogDisableRegister\n");
         break;
-      default:
+    default:
         panic("Tried to read CpuLocalTimer at offset %#x\n", daddr);
         break;
     }
@@ -182,7 +183,9 @@ CpuLocalTimer::write(PacketPtr pkt)
     if (daddr < Timer::Size)
         localTimer[cpu_id]->write(pkt, daddr);
     else
-        panic("Tried to write CpuLocalTimer at offset %#x that doesn't exist\n", daddr);
+        panic(
+            "Tried to write CpuLocalTimer at offset %#x that doesn't exist\n",
+            daddr);
     pkt->makeAtomicResponse();
     return pioDelay;
 }
@@ -196,40 +199,40 @@ CpuLocalTimer::Timer::write(PacketPtr pkt, Addr daddr)
     uint32_t old_val;
 
     switch (daddr) {
-      case TimerLoadReg:
+    case TimerLoadReg:
         // Writing to this register also resets the counter register and
         // starts decrementing if the counter is enabled.
         timerLoadValue = pkt->getLE<uint32_t>();
         restartTimerCounter(timerLoadValue);
         break;
-      case TimerCounterReg:
+    case TimerCounterReg:
         // Can be written, doesn't start counting unless the timer is enabled
         restartTimerCounter(pkt->getLE<uint32_t>());
         break;
-      case TimerControlReg:
+    case TimerControlReg:
         old_enable = timerControl.enable;
         timerControl = pkt->getLE<uint32_t>();
         if ((old_enable == 0) && timerControl.enable)
             restartTimerCounter(timerLoadValue);
         break;
-      case TimerIntStatusReg:
+    case TimerIntStatusReg:
         rawIntTimer = false;
         if (pendingIntTimer) {
             pendingIntTimer = false;
             DPRINTF(Timer, "Clearing interrupt\n");
         }
         break;
-      case WatchdogLoadReg:
+    case WatchdogLoadReg:
         watchdogLoadValue = pkt->getLE<uint32_t>();
         restartWatchdogCounter(watchdogLoadValue);
         break;
-      case WatchdogCounterReg:
+    case WatchdogCounterReg:
         // Can't be written when in watchdog mode, but can in timer mode
         if (!watchdogControl.watchdogMode) {
             restartWatchdogCounter(pkt->getLE<uint32_t>());
         }
         break;
-      case WatchdogControlReg:
+    case WatchdogControlReg:
         old_enable = watchdogControl.enable;
         old_wd_mode = watchdogControl.watchdogMode;
         watchdogControl = pkt->getLE<uint32_t>();
@@ -239,31 +242,32 @@ CpuLocalTimer::Timer::write(PacketPtr pkt, Addr daddr)
         if ((old_wd_mode == 1) && watchdogControl.watchdogMode == 0)
             watchdogControl.watchdogMode = 1;
         break;
-      case WatchdogIntStatusReg:
+    case WatchdogIntStatusReg:
         rawIntWatchdog = false;
         if (pendingIntWatchdog) {
             pendingIntWatchdog = false;
             DPRINTF(Timer, "Clearing watchdog interrupt\n");
         }
         break;
-      case WatchdogResetStatusReg:
+    case WatchdogResetStatusReg:
         rawResetWatchdog = false;
         DPRINTF(Timer, "Clearing watchdog reset flag\n");
         break;
-      case WatchdogDisableReg:
+    case WatchdogDisableReg:
         old_val = watchdogDisableReg;
         watchdogDisableReg = pkt->getLE<uint32_t>();
         // if this sequence is observed, turn off watchdog mode
         if (old_val == 0x12345678 && watchdogDisableReg == 0x87654321)
             watchdogControl.watchdogMode = 0;
         break;
-      default:
+    default:
         panic("Tried to write CpuLocalTimer timer at offset %#x\n", daddr);
         break;
     }
 }
 
-//XXX: Two functions are needed because the control registers are different types
+// XXX: Two functions are needed because the control registers are different
+// types
 void
 CpuLocalTimer::Timer::restartTimerCounter(uint32_t val)
 {
@@ -299,6 +303,7 @@ CpuLocalTimer::Timer::restartWatchdogCounter(uint32_t val)
     parent->schedule(watchdogZeroEvent, curTick() + time);
     DPRINTF(Timer, "-- Scheduling new event for: %d\n", curTick() + time);
 }
+
 //////
 
 void
@@ -341,7 +346,7 @@ CpuLocalTimer::Timer::watchdogAtZero()
     else if (watchdogControl.watchdogMode) {
         rawResetWatchdog = true;
         fatal("gem5 ARM Model does not support true watchdog operation!\n");
-        //XXX: Should we ever support a true watchdog reset?
+        // XXX: Should we ever support a true watchdog reset?
     }
 
     if (pendingIntWatchdog && !old_pending) {
@@ -380,12 +385,12 @@ CpuLocalTimer::Timer::serialize(CheckpointOut &cp) const
     SERIALIZE_SCALAR(watchdog_is_in_event);
 
     Tick timer_event_time;
-    if (timer_is_in_event){
+    if (timer_is_in_event) {
         timer_event_time = timerZeroEvent.when();
         SERIALIZE_SCALAR(timer_event_time);
     }
     Tick watchdog_event_time;
-    if (watchdog_is_in_event){
+    if (watchdog_is_in_event) {
         watchdog_event_time = watchdogZeroEvent.when();
         SERIALIZE_SCALAR(watchdog_event_time);
     }
@@ -418,7 +423,7 @@ CpuLocalTimer::Timer::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(watchdog_is_in_event);
 
     Tick timer_event_time;
-    if (timer_is_in_event){
+    if (timer_is_in_event) {
         UNSERIALIZE_SCALAR(timer_event_time);
         parent->schedule(timerZeroEvent, timer_event_time);
     }
@@ -428,8 +433,6 @@ CpuLocalTimer::Timer::unserialize(CheckpointIn &cp)
         parent->schedule(watchdogZeroEvent, watchdog_event_time);
     }
 }
-
-
 
 void
 CpuLocalTimer::serialize(CheckpointOut &cp) const

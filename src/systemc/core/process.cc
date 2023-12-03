@@ -56,17 +56,21 @@ struct BuiltinExceptionWrapper : public ExceptionWrapperBase
 {
   public:
     T t;
-    void throw_it() override { throw t; }
+
+    void
+    throw_it() override
+    {
+        throw t;
+    }
 };
 
 BuiltinExceptionWrapper<UnwindExceptionReset> resetException;
 BuiltinExceptionWrapper<UnwindExceptionKill> killException;
 
-
 void
 Process::forEachKid(const std::function<void(Process *)> &work)
 {
-    for (auto &kid: get_child_objects()) {
+    for (auto &kid : get_child_objects()) {
         Process *p_kid = dynamic_cast<Process *>(kid);
         if (p_kid)
             work(p_kid);
@@ -84,7 +88,7 @@ Process::suspend(bool inc_kids)
         _suspendedReady = scheduler.suspend(this);
 
         if (procKind() != ::sc_core::SC_METHOD_PROC_ &&
-                scheduler.current() == this) {
+            scheduler.current() == this) {
             // This isn't in the spec, but Accellera says that a thread that
             // self suspends should be marked ready immediately when it's
             // resumed.
@@ -115,11 +119,11 @@ Process::disable(bool inc_kids)
         forEachKid([](Process *p) { p->disable(true); });
 
     if (!::sc_core::sc_allow_process_control_corners &&
-            timeoutEvent.scheduled()) {
+        timeoutEvent.scheduled()) {
         std::string message("attempt to disable a thread with timeout wait: ");
         message += name();
         SC_REPORT_ERROR(sc_core::SC_ID_PROCESS_CONTROL_CORNER_CASE_,
-                message.c_str());
+                        message.c_str());
     }
 
     if (!_terminated)
@@ -129,7 +133,6 @@ Process::disable(bool inc_kids)
 void
 Process::enable(bool inc_kids)
 {
-
     if (inc_kids)
         forEachKid([](Process *p) { p->enable(true); });
 
@@ -142,7 +145,7 @@ Process::kill(bool inc_kids)
 {
     if (::sc_core::sc_get_status() != ::sc_core::SC_RUNNING) {
         SC_REPORT_ERROR(sc_core::SC_ID_KILL_PROCESS_WHILE_UNITIALIZED_,
-                name());
+                        name());
     }
 
     // Propogate the kill to our children no matter what happens to us.
@@ -170,7 +173,7 @@ Process::reset(bool inc_kids)
 {
     if (::sc_core::sc_get_status() != ::sc_core::SC_RUNNING) {
         SC_REPORT_ERROR(sc_core::SC_ID_RESET_PROCESS_WHILE_NOT_RUNNING_,
-                name());
+                        name());
     }
 
     // Propogate the reset to our children no matter what happens to us.
@@ -204,7 +207,7 @@ Process::throw_it(ExceptionWrapperBase &exc, bool inc_kids)
         forEachKid([&exc](Process *p) { p->throw_it(exc, true); });
 
     if (_needsStart || _terminated ||
-            procKind() == ::sc_core::SC_METHOD_PROC_) {
+        procKind() == ::sc_core::SC_METHOD_PROC_) {
         SC_REPORT_WARNING(sc_core::SC_ID_THROW_IT_IGNORED_, name());
         return;
     }
@@ -266,9 +269,9 @@ Process::run()
         reset = false;
         try {
             func->call();
-        } catch(ScHalt) {
+        } catch (ScHalt) {
             std::cout << "Terminating process " << name() << std::endl;
-        } catch(const ::sc_core::sc_unwind_exception &exc) {
+        } catch (const ::sc_core::sc_unwind_exception &exc) {
             reset = exc.is_reset();
             _isUnwinding = false;
         } catch (...) {
@@ -338,7 +341,7 @@ Process::satisfySensitivity(Sensitivity *s)
 
     // If there's a dynamic sensitivity and this wasn't it, ignore.
     if ((dynamicSensitivity || timeoutEvent.scheduled()) &&
-            dynamicSensitivity != s) {
+        dynamicSensitivity != s) {
         return;
     }
 
@@ -367,27 +370,42 @@ Process::lastReport(::sc_core::sc_report *report)
 {
     if (report) {
         _lastReport = std::unique_ptr<::sc_core::sc_report>(
-                new ::sc_core::sc_report(*report));
+            new ::sc_core::sc_report(*report));
     } else {
         _lastReport = nullptr;
     }
 }
 
-::sc_core::sc_report *Process::lastReport() const { return _lastReport.get(); }
+::sc_core::sc_report *
+Process::lastReport() const
+{
+    return _lastReport.get();
+}
 
-Process::Process(const char *name, ProcessFuncWrapper *func, bool internal) :
-    ::sc_core::sc_process_b(name), excWrapper(nullptr),
-    timeoutEvent([this]() { this->timeout(); }),
-    func(func), _internal(internal), _timedOut(false), _dontInitialize(false),
-    _needsStart(true), _isUnwinding(false), _terminated(false),
-    _scheduled(false), _suspended(false), _disabled(false),
-    _syncReset(false), syncResetCount(0), asyncResetCount(0), _waitCount(0),
-    refCount(0), stackSize(gem5::Fiber::DefaultStackSize),
-    dynamicSensitivity(nullptr)
+Process::Process(const char *name, ProcessFuncWrapper *func, bool internal)
+    : ::sc_core::sc_process_b(name),
+      excWrapper(nullptr),
+      timeoutEvent([this]() { this->timeout(); }),
+      func(func),
+      _internal(internal),
+      _timedOut(false),
+      _dontInitialize(false),
+      _needsStart(true),
+      _isUnwinding(false),
+      _terminated(false),
+      _scheduled(false),
+      _suspended(false),
+      _disabled(false),
+      _syncReset(false),
+      syncResetCount(0),
+      asyncResetCount(0),
+      _waitCount(0),
+      refCount(0),
+      stackSize(gem5::Fiber::DefaultStackSize),
+      dynamicSensitivity(nullptr)
 {
     _dynamic =
-            (::sc_core::sc_get_status() >
-             ::sc_core::SC_BEFORE_END_OF_ELABORATION);
+        (::sc_core::sc_get_status() > ::sc_core::SC_BEFORE_END_OF_ELABORATION);
     _newest = this;
 }
 
@@ -400,7 +418,7 @@ Process::terminate()
     _syncReset = false;
     clearDynamic();
     cancelTimeout();
-    for (auto s: staticSensitivities) {
+    for (auto s : staticSensitivities) {
         s->clear();
         delete s;
     }
@@ -408,7 +426,7 @@ Process::terminate()
 
     _terminatedEvent.notify();
 
-    for (auto jw: joinWaiters)
+    for (auto jw : joinWaiters)
         jw->signal();
     joinWaiters.clear();
 }

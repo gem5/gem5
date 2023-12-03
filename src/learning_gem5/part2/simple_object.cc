@@ -33,8 +33,8 @@
 namespace gem5
 {
 
-SimpleObject::SimpleObject(const SimpleObjectParams &params) :
-    SimObject(params)
+SimpleObject::SimpleObject(const SimpleObjectParams &params)
+    : SimObject(params)
 {
     std::cout << "Hello World! From a SimObject!" << std::endl;
 }

@@ -55,6 +55,7 @@ class Globals : public Serializable
 {
   public:
     Globals() : unserializedCurTick(0) {}
+
     ~Globals() = default;
 
     void serialize(CheckpointOut &cp) const override;

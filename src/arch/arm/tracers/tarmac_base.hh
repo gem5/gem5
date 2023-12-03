@@ -60,7 +60,8 @@ namespace gem5
 
 class ThreadContext;
 
-namespace trace {
+namespace trace
+{
 
 class TarmacBaseRecord : public InstRecord
 {
@@ -75,20 +76,33 @@ class TarmacBaseRecord : public InstRecord
     };
 
     /** ARM instruction set state. */
-    enum ISetState { ISET_ARM, ISET_THUMB, ISET_A64,
-                     ISET_UNSUPPORTED };
+    enum ISetState
+    {
+        ISET_ARM,
+        ISET_THUMB,
+        ISET_A64,
+        ISET_UNSUPPORTED
+    };
 
     /** ARM register type. */
-    enum RegType { REG_R, REG_X, REG_S, REG_D, REG_P, REG_Q, REG_Z, REG_MISC };
+    enum RegType
+    {
+        REG_R,
+        REG_X,
+        REG_S,
+        REG_D,
+        REG_P,
+        REG_Q,
+        REG_Z,
+        REG_MISC
+    };
 
     /** TARMAC instruction trace record. */
     struct InstEntry
     {
         InstEntry() = default;
-        InstEntry(ThreadContext* thread,
-                  const PCStateBase &pc,
-                  const StaticInstPtr staticInst,
-                  bool predicate);
+        InstEntry(ThreadContext *thread, const PCStateBase &pc,
+                  const StaticInstPtr staticInst, bool predicate);
 
         bool taken;
         Addr addr;
@@ -131,7 +145,7 @@ class TarmacBaseRecord : public InstRecord
   public:
     TarmacBaseRecord(Tick _when, ThreadContext *_thread,
                      const StaticInstPtr _staticInst, const PCStateBase &_pc,
-                     const StaticInstPtr _macroStaticInst=nullptr);
+                     const StaticInstPtr _macroStaticInst = nullptr);
 
     virtual void dump() = 0;
 
@@ -144,7 +158,6 @@ class TarmacBaseRecord : public InstRecord
      */
     static ISetState pcToISetState(const PCStateBase &pc);
 };
-
 
 } // namespace trace
 } // namespace gem5

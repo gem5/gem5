@@ -71,7 +71,7 @@ class StackDistProbe : public BaseMemProbe
 
     struct StackDistProbeStats : public statistics::Group
     {
-        StackDistProbeStats(StackDistProbe* parent);
+        StackDistProbeStats(StackDistProbe *parent);
 
         // Reads linear histogram
         statistics::Histogram readLinearHist;

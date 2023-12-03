@@ -55,130 +55,129 @@ class ThreadContext;
 
 namespace X86ISA
 {
-    class Walker;
+class Walker;
 
-    class TLB : public BaseTLB
+class TLB : public BaseTLB
+{
+  protected:
+    friend class Walker;
+
+    typedef std::list<TlbEntry *> EntryList;
+
+    uint32_t configAddress;
+
+  public:
+    typedef X86TLBParams Params;
+    TLB(const Params &p);
+
+    void
+    takeOverFrom(BaseTLB *otlb) override
+    {}
+
+    TlbEntry *lookup(Addr va, bool update_lru = true);
+
+    void setConfigAddress(uint32_t addr);
+
+    // concatenate Page Addr and pcid
+    inline Addr
+    concAddrPcid(Addr vpn, uint64_t pcid)
     {
-      protected:
-        friend class Walker;
+        return (vpn | pcid);
+    }
 
-        typedef std::list<TlbEntry *> EntryList;
+  protected:
+    EntryList::iterator lookupIt(Addr va, bool update_lru = true);
 
-        uint32_t configAddress;
+    Walker *walker;
 
-      public:
+  public:
+    Walker *getWalker();
 
-        typedef X86TLBParams Params;
-        TLB(const Params &p);
+    void flushAll() override;
 
-        void takeOverFrom(BaseTLB *otlb) override {}
+    void flushNonGlobal();
 
-        TlbEntry *lookup(Addr va, bool update_lru = true);
+    void demapPage(Addr va, uint64_t asn) override;
 
-        void setConfigAddress(uint32_t addr);
-        //concatenate Page Addr and pcid
-        inline Addr concAddrPcid(Addr vpn, uint64_t pcid)
-        {
-          return (vpn | pcid);
-        }
+  protected:
+    uint32_t size;
 
-      protected:
+    std::vector<TlbEntry> tlb;
 
-        EntryList::iterator lookupIt(Addr va, bool update_lru = true);
+    EntryList freeList;
 
-        Walker * walker;
+    TlbEntryTrie trie;
+    uint64_t lruSeq;
 
-      public:
-        Walker *getWalker();
+    AddrRange m5opRange;
 
-        void flushAll() override;
+    struct TlbStats : public statistics::Group
+    {
+        TlbStats(statistics::Group *parent);
 
-        void flushNonGlobal();
+        statistics::Scalar rdAccesses;
+        statistics::Scalar wrAccesses;
+        statistics::Scalar rdMisses;
+        statistics::Scalar wrMisses;
+    } stats;
 
-        void demapPage(Addr va, uint64_t asn) override;
+    Fault translateInt(bool read, RequestPtr req, ThreadContext *tc);
 
-      protected:
-        uint32_t size;
+    Fault translate(const RequestPtr &req, ThreadContext *tc,
+                    BaseMMU::Translation *translation, BaseMMU::Mode mode,
+                    bool &delayedResponse, bool timing);
 
-        std::vector<TlbEntry> tlb;
+  public:
+    void evictLRU();
 
-        EntryList freeList;
+    uint64_t
+    nextSeq()
+    {
+        return ++lruSeq;
+    }
 
-        TlbEntryTrie trie;
-        uint64_t lruSeq;
+    Fault translateAtomic(const RequestPtr &req, ThreadContext *tc,
+                          BaseMMU::Mode mode) override;
+    Fault translateFunctional(const RequestPtr &req, ThreadContext *tc,
+                              BaseMMU::Mode mode) override;
+    void translateTiming(const RequestPtr &req, ThreadContext *tc,
+                         BaseMMU::Translation *translation,
+                         BaseMMU::Mode mode) override;
 
-        AddrRange m5opRange;
+    /**
+     * Do post-translation physical address finalization.
+     *
+     * Some addresses, for example requests going to the APIC,
+     * need post-translation updates. Such physical addresses are
+     * remapped into a "magic" part of the physical address space
+     * by this method.
+     *
+     * @param req Request to updated in-place.
+     * @param tc Thread context that created the request.
+     * @param mode Request type (read/write/execute).
+     * @return A fault on failure, NoFault otherwise.
+     */
+    Fault finalizePhysical(const RequestPtr &req, ThreadContext *tc,
+                           BaseMMU::Mode mode) const override;
 
-        struct TlbStats : public statistics::Group
-        {
-            TlbStats(statistics::Group *parent);
+    TlbEntry *insert(Addr vpn, const TlbEntry &entry, uint64_t pcid);
 
-            statistics::Scalar rdAccesses;
-            statistics::Scalar wrAccesses;
-            statistics::Scalar rdMisses;
-            statistics::Scalar wrMisses;
-        } stats;
+    // Checkpointing
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
-        Fault translateInt(bool read, RequestPtr req, ThreadContext *tc);
-
-        Fault translate(const RequestPtr &req, ThreadContext *tc,
-                BaseMMU::Translation *translation, BaseMMU::Mode mode,
-                bool &delayedResponse, bool timing);
-
-      public:
-
-        void evictLRU();
-
-        uint64_t
-        nextSeq()
-        {
-            return ++lruSeq;
-        }
-
-        Fault translateAtomic(
-            const RequestPtr &req, ThreadContext *tc,
-            BaseMMU::Mode mode) override;
-        Fault translateFunctional(
-            const RequestPtr &req, ThreadContext *tc,
-            BaseMMU::Mode mode) override;
-        void translateTiming(
-            const RequestPtr &req, ThreadContext *tc,
-            BaseMMU::Translation *translation, BaseMMU::Mode mode) override;
-
-        /**
-         * Do post-translation physical address finalization.
-         *
-         * Some addresses, for example requests going to the APIC,
-         * need post-translation updates. Such physical addresses are
-         * remapped into a "magic" part of the physical address space
-         * by this method.
-         *
-         * @param req Request to updated in-place.
-         * @param tc Thread context that created the request.
-         * @param mode Request type (read/write/execute).
-         * @return A fault on failure, NoFault otherwise.
-         */
-        Fault finalizePhysical(const RequestPtr &req, ThreadContext *tc,
-                               BaseMMU::Mode mode) const override;
-
-        TlbEntry *insert(Addr vpn, const TlbEntry &entry, uint64_t pcid);
-
-        // Checkpointing
-        void serialize(CheckpointOut &cp) const override;
-        void unserialize(CheckpointIn &cp) override;
-
-        /**
-         * Get the table walker port. This is used for
-         * migrating port connections during a CPU takeOverFrom()
-         * call. For architectures that do not have a table walker,
-         * NULL is returned, hence the use of a pointer rather than a
-         * reference. For X86 this method will always return a valid
-         * port pointer.
-         *
-         * @return A pointer to the walker port
-         */
-        Port *getTableWalkerPort() override;
-    };
+    /**
+     * Get the table walker port. This is used for
+     * migrating port connections during a CPU takeOverFrom()
+     * call. For architectures that do not have a table walker,
+     * NULL is returned, hence the use of a pointer rather than a
+     * reference. For X86 this method will always return a valid
+     * port pointer.
+     *
+     * @return A pointer to the walker port
+     */
+    Port *getTableWalkerPort() override;
+};
 
 } // namespace X86ISA
 } // namespace gem5

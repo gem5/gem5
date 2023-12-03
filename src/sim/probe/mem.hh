@@ -63,13 +63,14 @@ struct PacketInfo
     Addr pc;
     RequestorID id;
 
-    explicit PacketInfo(const PacketPtr& pkt) :
-        cmd(pkt->cmd),
-        addr(pkt->getAddr()),
-        size(pkt->getSize()),
-        flags(pkt->req->getFlags()),
-        pc(pkt->req->hasPC() ? pkt->req->getPC() : 0),
-        id(pkt->req->requestorId())  { }
+    explicit PacketInfo(const PacketPtr &pkt)
+        : cmd(pkt->cmd),
+          addr(pkt->getAddr()),
+          size(pkt->getSize()),
+          flags(pkt->req->getFlags()),
+          pc(pkt->req->hasPC() ? pkt->req->getPC() : 0),
+          id(pkt->req->requestorId())
+    {}
 };
 
 /**

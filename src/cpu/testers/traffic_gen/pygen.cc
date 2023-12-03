@@ -47,10 +47,7 @@ namespace py = pybind11;
 namespace gem5
 {
 
-PyTrafficGen::PyTrafficGen(const PyTrafficGenParams &p)
-    : BaseTrafficGen(p)
-{
-}
+PyTrafficGen::PyTrafficGen(const PyTrafficGenParams &p) : BaseTrafficGen(p) {}
 
 void
 PyTrafficGen::start(pybind11::object meta_generator)
@@ -76,7 +73,7 @@ PyTrafficGen::nextGenerator()
             metaGenerator->cast<std::shared_ptr<BaseGen>>();
         metaGenerator++;
         return gen;
-    } catch (py::cast_error&) {
+    } catch (py::cast_error &) {
         fatal("Meta generator didn't return a valid trace generator\n");
     }
 }

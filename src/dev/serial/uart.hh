@@ -66,7 +66,11 @@ class Uart : public BasicPioDevice
      * Return if we have an interrupt pending
      * @return interrupt status
      */
-    bool intStatus() { return status ? true : false; }
+    bool
+    intStatus()
+    {
+        return status ? true : false;
+    }
 };
 
 } // namespace gem5

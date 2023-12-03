@@ -49,31 +49,37 @@ class TimerTable
     TimerTable();
 
     void
-    setConsumer(Consumer* consumer_ptr)
+    setConsumer(Consumer *consumer_ptr)
     {
         assert(m_consumer_ptr == NULL);
         m_consumer_ptr = consumer_ptr;
     }
 
     void
-    setDescription(const std::string& name)
+    setDescription(const std::string &name)
     {
         m_name = name;
     }
 
     bool isReady(Tick curTime) const;
     Addr nextAddress() const;
-    bool isSet(Addr address) const { return !!m_map.count(address); }
+
+    bool
+    isSet(Addr address) const
+    {
+        return !!m_map.count(address);
+    }
+
     void set(Addr address, Tick ready_time);
     void unset(Addr address);
-    void print(std::ostream& out) const;
+    void print(std::ostream &out) const;
 
   private:
     void updateNext() const;
 
     // Private copy constructor and assignment operator
-    TimerTable(const TimerTable& obj);
-    TimerTable& operator=(const TimerTable& obj);
+    TimerTable(const TimerTable &obj);
+    TimerTable &operator=(const TimerTable &obj);
 
     // Data Members (m_prefix)
 
@@ -82,17 +88,17 @@ class TimerTable
     typedef std::map<Addr, Tick> AddressMap;
     AddressMap m_map;
     mutable bool m_next_valid;
-    mutable Tick m_next_time; // Only valid if m_next_valid is true
-    mutable Addr m_next_address;  // Only valid if m_next_valid is true
+    mutable Tick m_next_time;    // Only valid if m_next_valid is true
+    mutable Addr m_next_address; // Only valid if m_next_valid is true
 
     //! Consumer to signal a wakeup()
-    Consumer* m_consumer_ptr;
+    Consumer *m_consumer_ptr;
 
     std::string m_name;
 };
 
-inline std::ostream&
-operator<<(std::ostream& out, const TimerTable& obj)
+inline std::ostream &
+operator<<(std::ostream &out, const TimerTable &obj)
 {
     obj.print(out);
     out << std::flush;

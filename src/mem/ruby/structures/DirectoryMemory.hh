@@ -79,28 +79,32 @@ class DirectoryMemory : public SimObject
      */
     uint64_t mapAddressToLocalIdx(Addr address);
 
-    uint64_t getSize() { return m_size_bytes; }
+    uint64_t
+    getSize()
+    {
+        return m_size_bytes;
+    }
 
     bool isPresent(Addr address);
     AbstractCacheEntry *lookup(Addr address);
-    AbstractCacheEntry *allocate(Addr address, AbstractCacheEntry* new_entry);
+    AbstractCacheEntry *allocate(Addr address, AbstractCacheEntry *new_entry);
 
     // Explicitly free up this address
     void deallocate(Addr address);
 
-    void print(std::ostream& out) const;
+    void print(std::ostream &out) const;
     void recordRequestType(DirectoryRequestType requestType);
 
   private:
     // Private copy constructor and assignment operator
-    DirectoryMemory(const DirectoryMemory& obj);
-    DirectoryMemory& operator=(const DirectoryMemory& obj);
+    DirectoryMemory(const DirectoryMemory &obj);
+    DirectoryMemory &operator=(const DirectoryMemory &obj);
 
   private:
     const std::string m_name;
     AbstractCacheEntry **m_entries;
     // int m_size;  // # of memory module blocks this directory is
-                    // responsible for
+    // responsible for
     uint64_t m_size_bytes;
     uint64_t m_size_bits;
     uint64_t m_num_entries;
@@ -112,8 +116,8 @@ class DirectoryMemory : public SimObject
     const AddrRangeList addrRanges;
 };
 
-inline std::ostream&
-operator<<(std::ostream& out, const DirectoryMemory& obj)
+inline std::ostream &
+operator<<(std::ostream &out, const DirectoryMemory &obj)
 {
     obj.print(out);
     out << std::flush;

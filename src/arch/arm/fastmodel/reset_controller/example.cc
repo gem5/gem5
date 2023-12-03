@@ -37,56 +37,47 @@ namespace fastmodel
 {
 
 ResetControllerExample::CorePins::CorePins(const std::string &module_name)
-    : reset(module_name + ".reset"),
-      halt(module_name + ".halt")
+    : reset(module_name + ".reset"), halt(module_name + ".halt")
 {}
 
-ResetControllerExample::Registers::Registers(
-    const std::string &module_name, Iris::BaseCPU *c, CorePins *p)
-    : RegisterBankLE(module_name, 0), cpu(c), pins(p),
+ResetControllerExample::Registers::Registers(const std::string &module_name,
+                                             Iris::BaseCPU *c, CorePins *p)
+    : RegisterBankLE(module_name, 0),
+      cpu(c),
+      pins(p),
       nsrvbar(module_name + ".nsrvbar"),
       rvbar(module_name + ".rvbar"),
       reset(module_name + ".reset"),
       halt(module_name + ".halt")
 {
-      panic_if(cpu == nullptr, "ResetControllerExample needs a target cpu.");
-      nsrvbar.writer(
-          [this] (auto &reg, auto val)
-          {
-              cpu->setResetAddr(val, false);
-          });
-      rvbar.writer(
-          [this] (auto &reg, auto val)
-          {
-              cpu->setResetAddr(val, true);
-          });
-      reset.writer(
-          [this] (auto &reg, auto val)
-          {
-              panic_if(!pins->reset.isConnected(),
-                       "%s is not connected.", pins->reset.name());
-              pins->reset.set(val);
-          });
-      halt.writer(
-          [this] (auto &reg, auto val)
-          {
-              panic_if(!pins->halt.isConnected(),
-                       "%s is not connected.", pins->halt.name());
-              pins->halt.set(val);
-          });
+    panic_if(cpu == nullptr, "ResetControllerExample needs a target cpu.");
+    nsrvbar.writer(
+        [this](auto &reg, auto val) { cpu->setResetAddr(val, false); });
+    rvbar.writer(
+        [this](auto &reg, auto val) { cpu->setResetAddr(val, true); });
+    reset.writer([this](auto &reg, auto val) {
+        panic_if(!pins->reset.isConnected(), "%s is not connected.",
+                 pins->reset.name());
+        pins->reset.set(val);
+    });
+    halt.writer([this](auto &reg, auto val) {
+        panic_if(!pins->halt.isConnected(), "%s is not connected.",
+                 pins->halt.name());
+        pins->halt.set(val);
+    });
 
-      addRegisters({
-          nsrvbar,
-          rvbar,
-          reset,
-          halt,
-      });
+    addRegisters({
+        nsrvbar,
+        rvbar,
+        reset,
+        halt,
+    });
 }
 
 ResetControllerExample::ResetControllerExample(const Params &p)
     : BasicPioDevice(p, 0x20),
       pins(p.name + ".pins"),
-      registers(p.name  + ".registers", p.cpu, &pins)
+      registers(p.name + ".registers", p.cpu, &pins)
 {}
 
 Tick

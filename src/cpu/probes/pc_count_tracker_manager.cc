@@ -35,54 +35,50 @@ PcCountTrackerManager::PcCountTrackerManager(
     const PcCountTrackerManagerParams &p)
     : SimObject(p)
 {
-    currentPair = PcCountPair(0,0);
+    currentPair = PcCountPair(0, 0);
     ifListNotEmpty = true;
 
-    for (int i = 0 ; i < p.targets.size() ; i++) {
+    for (int i = 0; i < p.targets.size(); i++) {
         // initialize the counter for the inputted PC Count pair
         // unordered_map does not allow duplicate, so counter won't
         // have duplicates
-        counter.insert(std::make_pair(p.targets[i].getPC(),0));
+        counter.insert(std::make_pair(p.targets[i].getPC(), 0));
         // store all the PC Count pair into the targetPair set
         targetPair.insert(p.targets[i]);
     }
-    DPRINTF(PcCountTracker,
-            "total %i PCs in counter\n", counter.size());
-    DPRINTF(PcCountTracker,
-            "all targets: \n%s", printAllTargets());
+    DPRINTF(PcCountTracker, "total %i PCs in counter\n", counter.size());
+    DPRINTF(PcCountTracker, "all targets: \n%s", printAllTargets());
 }
 
 void
 PcCountTrackerManager::checkCount(Addr pc)
 {
-
-    if(ifListNotEmpty) {
+    if (ifListNotEmpty) {
         int count = ++counter.find(pc)->second;
         // increment the counter of the encountered PC address by 1
 
-        currentPair = PcCountPair(pc,count);
+        currentPair = PcCountPair(pc, count);
         // update the current PC Count pair
-        if(targetPair.find(currentPair) != targetPair.end()) {
+        if (targetPair.find(currentPair) != targetPair.end()) {
             // if the current PC Count pair is one of the target pairs
-            DPRINTF(PcCountTracker,
-                "pc:%s encountered\n", currentPair.to_string());
+            DPRINTF(PcCountTracker, "pc:%s encountered\n",
+                    currentPair.to_string());
 
             exitSimLoopNow("simpoint starting point found");
             // raise the SIMPOINT_BEGIN exit event
 
             targetPair.erase(currentPair);
             // erase the encountered PC Count pair from the target pairs
-            DPRINTF(PcCountTracker,
-                "There are %i targets remained\n", targetPair.size());
+            DPRINTF(PcCountTracker, "There are %i targets remained\n",
+                    targetPair.size());
         }
 
-        if(targetPair.empty()) {
+        if (targetPair.empty()) {
             // if all target PC Count pairs are encountered
-            DPRINTF(PcCountTracker,
-                    "all targets are encountered.\n");
+            DPRINTF(PcCountTracker, "all targets are encountered.\n");
             ifListNotEmpty = false;
         }
     }
 }
 
-}
+} // namespace gem5

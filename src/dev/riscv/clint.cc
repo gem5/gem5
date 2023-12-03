@@ -49,28 +49,26 @@ namespace gem5
 
 using namespace RiscvISA;
 
-Clint::Clint(const Params &params) :
-    BasicPioDevice(params, params.pio_size),
-    system(params.system),
-    nThread(params.num_threads),
-    signal(params.name + ".signal", 0, this),
-    registers(params.name + ".registers", params.pio_addr, this)
-{
-}
+Clint::Clint(const Params &params)
+    : BasicPioDevice(params, params.pio_size),
+      system(params.system),
+      nThread(params.num_threads),
+      signal(params.name + ".signal", 0, this),
+      registers(params.name + ".registers", params.pio_addr, this)
+{}
 
 void
 Clint::raiseInterruptPin(int id)
 {
     // Increment mtime
-    uint64_t& mtime = registers.mtime.get();
+    uint64_t &mtime = registers.mtime.get();
     mtime++;
 
     for (int context_id = 0; context_id < nThread; context_id++) {
-
         auto tc = system->threads[context_id];
 
         // Update misc reg file
-        ISA* isa = dynamic_cast<ISA*>(tc->getIsaPtr());
+        ISA *isa = dynamic_cast<ISA *>(tc->getIsaPtr());
         if (isa->rvType() == RV32) {
             isa->setMiscRegNoEffect(MISCREG_TIME, bits(mtime, 31, 0));
             isa->setMiscRegNoEffect(MISCREG_TIMEH, bits(mtime, 63, 32));
@@ -83,14 +81,14 @@ Clint::raiseInterruptPin(int id)
         if (mtime >= mtimecmp) {
             if (mtime == mtimecmp) {
                 DPRINTF(Clint,
-                    "MTIP posted - thread: %d, mtime: %d, mtimecmp: %d\n",
-                    context_id, mtime, mtimecmp);
+                        "MTIP posted - thread: %d, mtime: %d, mtimecmp: %d\n",
+                        context_id, mtime, mtimecmp);
             }
-            tc->getCpuPtr()->postInterrupt(tc->threadId(),
-                    ExceptionCode::INT_TIMER_MACHINE, 0);
+            tc->getCpuPtr()->postInterrupt(
+                tc->threadId(), ExceptionCode::INT_TIMER_MACHINE, 0);
         } else {
-            tc->getCpuPtr()->clearInterrupt(tc->threadId(),
-                    ExceptionCode::INT_TIMER_MACHINE, 0);
+            tc->getCpuPtr()->clearInterrupt(
+                tc->threadId(), ExceptionCode::INT_TIMER_MACHINE, 0);
         }
     }
 }
@@ -103,12 +101,12 @@ Clint::ClintRegisters::init()
     // Calculate reserved space size
     const size_t reserved0_size = mtimecmpStart - clint->nThread * 4;
     reserved.emplace_back("reserved0", reserved0_size);
-    const size_t reserved1_size = mtimeStart
-        - mtimecmpStart - clint->nThread * 8;
+    const size_t reserved1_size =
+        mtimeStart - mtimecmpStart - clint->nThread * 8;
     reserved.emplace_back("reserved1", reserved1_size);
 
     // Sanity check
-    assert((int) clint->pioSize <= maxBankSize);
+    assert((int)clint->pioSize <= maxBankSize);
 
     // Initialize registers
     for (int i = 0; i < clint->nThread; i++) {
@@ -134,7 +132,7 @@ Clint::ClintRegisters::init()
 }
 
 uint32_t
-Clint::readMSIP(Register32& reg, const int thread_id)
+Clint::readMSIP(Register32 &reg, const int thread_id)
 {
     // To avoid discrepancies if mip is externally set using remote_gdb etc.
     auto tc = system->threads[thread_id];
@@ -145,7 +143,7 @@ Clint::readMSIP(Register32& reg, const int thread_id)
 };
 
 void
-Clint::writeMSIP(Register32& reg, const uint32_t& data, const int thread_id)
+Clint::writeMSIP(Register32 &reg, const uint32_t &data, const int thread_id)
 {
     reg.update(data);
     assert(data <= 1);
@@ -153,11 +151,11 @@ Clint::writeMSIP(Register32& reg, const uint32_t& data, const int thread_id)
     if (data > 0) {
         DPRINTF(Clint, "MSIP posted - thread: %d\n", thread_id);
         tc->getCpuPtr()->postInterrupt(tc->threadId(),
-            ExceptionCode::INT_SOFTWARE_MACHINE, 0);
+                                       ExceptionCode::INT_SOFTWARE_MACHINE, 0);
     } else {
         DPRINTF(Clint, "MSIP cleared - thread: %d\n", thread_id);
-        tc->getCpuPtr()->clearInterrupt(tc->threadId(),
-            ExceptionCode::INT_SOFTWARE_MACHINE, 0);
+        tc->getCpuPtr()->clearInterrupt(
+            tc->threadId(), ExceptionCode::INT_SOFTWARE_MACHINE, 0);
     }
 };
 
@@ -166,9 +164,8 @@ Clint::read(PacketPtr pkt)
 {
     // Check for atomic operation
     bool is_atomic = pkt->isAtomicOp() && pkt->cmd == MemCmd::SwapReq;
-    DPRINTF(Clint,
-        "Read request - addr: %#x, size: %#x, atomic:%d\n",
-        pkt->getAddr(), pkt->getSize(), is_atomic);
+    DPRINTF(Clint, "Read request - addr: %#x, size: %#x, atomic:%d\n",
+            pkt->getAddr(), pkt->getSize(), is_atomic);
 
     // Perform register read
     registers.read(pkt->getAddr(), pkt->getPtr<void>(), pkt->getSize());
@@ -186,9 +183,8 @@ Clint::read(PacketPtr pkt)
 Tick
 Clint::write(PacketPtr pkt)
 {
-    DPRINTF(Clint,
-        "Write request - addr: %#x, size: %#x\n",
-        pkt->getAddr(), pkt->getSize());
+    DPRINTF(Clint, "Write request - addr: %#x, size: %#x\n", pkt->getAddr(),
+            pkt->getSize());
 
     // Perform register write
     registers.write(pkt->getAddr(), pkt->getPtr<void>(), pkt->getSize());
@@ -216,10 +212,10 @@ Clint::getPort(const std::string &if_name, PortID idx)
 void
 Clint::serialize(CheckpointOut &cp) const
 {
-    for (auto const &reg: registers.msip) {
+    for (auto const &reg : registers.msip) {
         paramOut(cp, reg.name(), reg);
     }
-    for (auto const &reg: registers.mtimecmp) {
+    for (auto const &reg : registers.mtimecmp) {
         paramOut(cp, reg.name(), reg);
     }
     paramOut(cp, "mtime", registers.mtime);
@@ -228,10 +224,10 @@ Clint::serialize(CheckpointOut &cp) const
 void
 Clint::unserialize(CheckpointIn &cp)
 {
-    for (auto &reg: registers.msip) {
+    for (auto &reg : registers.msip) {
         paramIn(cp, reg.name(), reg);
     }
-    for (auto &reg: registers.mtimecmp) {
+    for (auto &reg : registers.mtimecmp) {
         paramIn(cp, reg.name(), reg);
     }
     paramIn(cp, "mtime", registers.mtime);

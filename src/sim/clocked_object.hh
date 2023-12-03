@@ -44,7 +44,6 @@
 #ifndef __SIM_CLOCKED_OBJECT_HH__
 #define __SIM_CLOCKED_OBJECT_HH__
 
-
 #include "params/ClockedObject.hh"
 #include "sim/core.hh"
 #include "sim/clock_domain.hh"
@@ -61,7 +60,6 @@ namespace gem5
  */
 class Clocked
 {
-
   private:
     // the tick value of the next clock edge (>= curTick()) at the
     // time of the last call to update()
@@ -107,7 +105,6 @@ class Clocked
     ClockDomain &clockDomain;
 
   protected:
-
     /**
      * Create a clocked object and set the clock domain based on the
      * parameters.
@@ -126,7 +123,7 @@ class Clocked
     /**
      * Virtual destructor due to inheritance.
      */
-    virtual ~Clocked() { }
+    virtual ~Clocked() {}
 
     /**
      * Reset the object's clock using the current global tick value. Likely
@@ -145,10 +142,11 @@ class Clocked
      * A hook subclasses can implement so they can do any extra work that's
      * needed when the clock rate is changed.
      */
-    virtual void clockPeriodUpdated() {}
+    virtual void
+    clockPeriodUpdated()
+    {}
 
   public:
-
     /**
      * Update the tick to the current tick.
      */
@@ -174,7 +172,7 @@ class Clocked
      *     curTick() + [0, clockPeriod()) + clockPeriod() * cycles
      */
     Tick
-    clockEdge(Cycles cycles=Cycles(0)) const
+    clockEdge(Cycles cycles = Cycles(0)) const
     {
         // align tick to the next clock edge
         update();
@@ -187,9 +185,9 @@ class Clocked
      * Determine the current cycle, corresponding to a tick aligned to
      * a clock edge.
      *
-     * @return When curTick() is on a clock edge, return the Cycle corresponding
-     * to that clock edge. When curTick() is not on a clock edge, return the
-     * Cycle corresponding to the next clock edge.
+     * @return When curTick() is on a clock edge, return the Cycle
+     * corresponding to that clock edge. When curTick() is not on a clock edge,
+     * return the Cycle corresponding to the next clock edge.
      */
     Cycles
     curCycle() const
@@ -210,13 +208,29 @@ class Clocked
      * the future. Precisely, the returned tick can be in the range
      *     curTick() + [clockPeriod(), 2 * clockPeriod())
      */
-    Tick nextCycle() const { return clockEdge(Cycles(1)); }
+    Tick
+    nextCycle() const
+    {
+        return clockEdge(Cycles(1));
+    }
 
-    uint64_t frequency() const { return sim_clock::Frequency / clockPeriod(); }
+    uint64_t
+    frequency() const
+    {
+        return sim_clock::Frequency / clockPeriod();
+    }
 
-    Tick clockPeriod() const { return clockDomain.clockPeriod(); }
+    Tick
+    clockPeriod() const
+    {
+        return clockDomain.clockPeriod();
+    }
 
-    double voltage() const { return clockDomain.voltage(); }
+    double
+    voltage() const
+    {
+        return clockDomain.voltage();
+    }
 
     Cycles
     ticksToCycles(Tick t) const
@@ -224,7 +238,11 @@ class Clocked
         return Cycles(divCeil(t, clockPeriod()));
     }
 
-    Tick cyclesToTicks(Cycles c) const { return clockPeriod() * c; }
+    Tick
+    cyclesToTicks(Cycles c) const
+    {
+        return clockPeriod() * c;
+    }
 };
 
 /**

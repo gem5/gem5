@@ -49,28 +49,28 @@ namespace branch_prediction
 {
 
 TAGEBase::TAGEBase(const TAGEBaseParams &p)
-   : SimObject(p),
-     logRatioBiModalHystEntries(p.logRatioBiModalHystEntries),
-     nHistoryTables(p.nHistoryTables),
-     tagTableCounterBits(p.tagTableCounterBits),
-     tagTableUBits(p.tagTableUBits),
-     histBufferSize(p.histBufferSize),
-     minHist(p.minHist),
-     maxHist(p.maxHist),
-     pathHistBits(p.pathHistBits),
-     tagTableTagWidths(p.tagTableTagWidths),
-     logTagTableSizes(p.logTagTableSizes),
-     threadHistory(p.numThreads),
-     logUResetPeriod(p.logUResetPeriod),
-     initialTCounterValue(p.initialTCounterValue),
-     numUseAltOnNa(p.numUseAltOnNa),
-     useAltOnNaBits(p.useAltOnNaBits),
-     maxNumAlloc(p.maxNumAlloc),
-     noSkip(p.noSkip),
-     speculativeHistUpdate(p.speculativeHistUpdate),
-     instShiftAmt(p.instShiftAmt),
-     initialized(false),
-     stats(this, nHistoryTables)
+    : SimObject(p),
+      logRatioBiModalHystEntries(p.logRatioBiModalHystEntries),
+      nHistoryTables(p.nHistoryTables),
+      tagTableCounterBits(p.tagTableCounterBits),
+      tagTableUBits(p.tagTableUBits),
+      histBufferSize(p.histBufferSize),
+      minHist(p.minHist),
+      maxHist(p.maxHist),
+      pathHistBits(p.pathHistBits),
+      tagTableTagWidths(p.tagTableTagWidths),
+      logTagTableSizes(p.logTagTableSizes),
+      threadHistory(p.numThreads),
+      logUResetPeriod(p.logUResetPeriod),
+      initialTCounterValue(p.initialTCounterValue),
+      numUseAltOnNa(p.numUseAltOnNa),
+      useAltOnNaBits(p.useAltOnNaBits),
+      maxNumAlloc(p.maxNumAlloc),
+      noSkip(p.noSkip),
+      speculativeHistUpdate(p.speculativeHistUpdate),
+      instShiftAmt(p.instShiftAmt),
+      initialized(false),
+      stats(this, nHistoryTables)
 {
     if (noSkip.empty()) {
         // Set all the table to enabled by default
@@ -78,8 +78,9 @@ TAGEBase::TAGEBase(const TAGEBaseParams &p)
     }
 }
 
-TAGEBase::BranchInfo*
-TAGEBase::makeBranchInfo() {
+TAGEBase::BranchInfo *
+TAGEBase::makeBranchInfo()
+{
     return new BranchInfo(*this);
 }
 
@@ -87,7 +88,7 @@ void
 TAGEBase::init()
 {
     if (initialized) {
-       return;
+        return;
     }
 
     // Current method for periodically resetting the u counter bits only
@@ -97,7 +98,7 @@ TAGEBase::init()
 
     // we use int type for the path history, so it cannot be more than
     // its size
-    assert(pathHistBits <= (sizeof(int)*8));
+    assert(pathHistBits <= (sizeof(int) * 8));
 
     // initialize the counter to half of the period
     assert(logUResetPeriod != 0);
@@ -107,7 +108,7 @@ TAGEBase::init()
 
     useAltPredForNewlyAllocated.resize(numUseAltOnNa, 0);
 
-    for (auto& history : threadHistory) {
+    for (auto &history : threadHistory) {
         history.pathHist = 0;
         history.globalHistory = new uint8_t[histBufferSize];
         history.gHist = history.globalHistory;
@@ -115,21 +116,21 @@ TAGEBase::init()
         history.ptGhist = 0;
     }
 
-    histLengths = new int [nHistoryTables+1];
+    histLengths = new int[nHistoryTables + 1];
 
     calculateParameters();
 
-    assert(tagTableTagWidths.size() == (nHistoryTables+1));
-    assert(logTagTableSizes.size() == (nHistoryTables+1));
+    assert(tagTableTagWidths.size() == (nHistoryTables + 1));
+    assert(logTagTableSizes.size() == (nHistoryTables + 1));
 
     // First entry is for the Bimodal table and it is untagged in this
     // implementation
     assert(tagTableTagWidths[0] == 0);
 
-    for (auto& history : threadHistory) {
-        history.computeIndices = new FoldedHistory[nHistoryTables+1];
-        history.computeTags[0] = new FoldedHistory[nHistoryTables+1];
-        history.computeTags[1] = new FoldedHistory[nHistoryTables+1];
+    for (auto &history : threadHistory) {
+        history.computeIndices = new FoldedHistory[nHistoryTables + 1];
+        history.computeTags[0] = new FoldedHistory[nHistoryTables + 1];
+        history.computeTags[1] = new FoldedHistory[nHistoryTables + 1];
 
         initFoldedHistories(history);
     }
@@ -139,24 +140,23 @@ TAGEBase::init()
     btableHysteresis.resize(bimodalTableSize >> logRatioBiModalHystEntries,
                             true);
 
-    gtable = new TageEntry*[nHistoryTables + 1];
+    gtable = new TageEntry *[nHistoryTables + 1];
     buildTageTables();
 
-    tableIndices = new int [nHistoryTables+1];
-    tableTags = new int [nHistoryTables+1];
+    tableIndices = new int[nHistoryTables + 1];
+    tableTags = new int[nHistoryTables + 1];
     initialized = true;
 }
 
 void
-TAGEBase::initFoldedHistories(ThreadHistory & history)
+TAGEBase::initFoldedHistories(ThreadHistory &history)
 {
     for (int i = 1; i <= nHistoryTables; i++) {
-        history.computeIndices[i].init(
-            histLengths[i], (logTagTableSizes[i]));
-        history.computeTags[0][i].init(
-            history.computeIndices[i].origLength, tagTableTagWidths[i]);
-        history.computeTags[1][i].init(
-            history.computeIndices[i].origLength, tagTableTagWidths[i]-1);
+        history.computeIndices[i].init(histLengths[i], (logTagTableSizes[i]));
+        history.computeTags[0][i].init(history.computeIndices[i].origLength,
+                                       tagTableTagWidths[i]);
+        history.computeTags[1][i].init(history.computeIndices[i].origLength,
+                                       tagTableTagWidths[i] - 1);
         DPRINTF(Tage, "HistLength:%d, TTSize:%d, TTTWidth:%d\n",
                 histLengths[i], logTagTableSizes[i], tagTableTagWidths[i]);
     }
@@ -166,7 +166,7 @@ void
 TAGEBase::buildTageTables()
 {
     for (int i = 1; i <= nHistoryTables; i++) {
-        gtable[i] = new TageEntry[1<<(logTagTableSizes[i])];
+        gtable[i] = new TageEntry[1 << (logTagTableSizes[i])];
     }
 }
 
@@ -177,18 +177,19 @@ TAGEBase::calculateParameters()
     histLengths[nHistoryTables] = maxHist;
 
     for (int i = 2; i <= nHistoryTables; i++) {
-        histLengths[i] = (int) (((double) minHist *
-                       pow ((double) (maxHist) / (double) minHist,
-                           (double) (i - 1) / (double) ((nHistoryTables- 1))))
-                       + 0.5);
+        histLengths[i] =
+            (int)(((double)minHist *
+                   pow((double)(maxHist) / (double)minHist,
+                       (double)(i - 1) / (double)((nHistoryTables - 1)))) +
+                  0.5);
     }
 }
 
 void
-TAGEBase::btbUpdate(ThreadID tid, Addr branch_pc, BranchInfo* &bi)
+TAGEBase::btbUpdate(ThreadID tid, Addr branch_pc, BranchInfo *&bi)
 {
     if (speculativeHistUpdate) {
-        ThreadHistory& tHist = threadHistory[tid];
+        ThreadHistory &tHist = threadHistory[tid];
         DPRINTF(Tage, "BTB miss resets prediction: %lx\n", branch_pc);
         assert(tHist.gHist == &tHist.globalHistory[tHist.ptGhist]);
         tHist.gHist[0] = 0;
@@ -217,11 +218,11 @@ TAGEBase::F(int A, int size, int bank) const
     A = A & ((1ULL << size) - 1);
     A1 = (A & ((1ULL << logTagTableSizes[bank]) - 1));
     A2 = (A >> logTagTableSizes[bank]);
-    A2 = ((A2 << bank) & ((1ULL << logTagTableSizes[bank]) - 1))
-       + (A2 >> (logTagTableSizes[bank] - bank));
+    A2 = ((A2 << bank) & ((1ULL << logTagTableSizes[bank]) - 1)) +
+         (A2 >> (logTagTableSizes[bank] - bank));
     A = A1 ^ A2;
-    A = ((A << bank) & ((1ULL << logTagTableSizes[bank]) - 1))
-      + (A >> (logTagTableSizes[bank] - bank));
+    A = ((A << bank) & ((1ULL << logTagTableSizes[bank]) - 1)) +
+        (A >> (logTagTableSizes[bank] - bank));
     return (A);
 }
 
@@ -230,18 +231,16 @@ int
 TAGEBase::gindex(ThreadID tid, Addr pc, int bank) const
 {
     int index;
-    int hlen = (histLengths[bank] > pathHistBits) ? pathHistBits :
-                                                    histLengths[bank];
+    int hlen =
+        (histLengths[bank] > pathHistBits) ? pathHistBits : histLengths[bank];
     const unsigned int shiftedPc = pc >> instShiftAmt;
-    index =
-        shiftedPc ^
-        (shiftedPc >> ((int) abs(logTagTableSizes[bank] - bank) + 1)) ^
-        threadHistory[tid].computeIndices[bank].comp ^
-        F(threadHistory[tid].pathHist, hlen, bank);
+    index = shiftedPc ^
+            (shiftedPc >> ((int)abs(logTagTableSizes[bank] - bank) + 1)) ^
+            threadHistory[tid].computeIndices[bank].comp ^
+            F(threadHistory[tid].pathHist, hlen, bank);
 
     return (index & ((1ULL << (logTagTableSizes[bank])) - 1));
 }
-
 
 // Tag computation
 uint16_t
@@ -254,11 +253,10 @@ TAGEBase::gtag(ThreadID tid, Addr pc, int bank) const
     return (tag & ((1ULL << tagTableTagWidths[bank]) - 1));
 }
 
-
 // Up-down saturating counter
-template<typename T>
+template <typename T>
 void
-TAGEBase::ctrUpdate(T & ctr, bool taken, int nbits)
+TAGEBase::ctrUpdate(T &ctr, bool taken, int nbits)
 {
     assert(nbits <= sizeof(T) << 3);
     if (taken) {
@@ -271,12 +269,12 @@ TAGEBase::ctrUpdate(T & ctr, bool taken, int nbits)
 }
 
 // int8_t and int versions of this function may be needed
-template void TAGEBase::ctrUpdate(int8_t & ctr, bool taken, int nbits);
-template void TAGEBase::ctrUpdate(int & ctr, bool taken, int nbits);
+template void TAGEBase::ctrUpdate(int8_t &ctr, bool taken, int nbits);
+template void TAGEBase::ctrUpdate(int &ctr, bool taken, int nbits);
 
 // Up-down unsigned saturating counter
 void
-TAGEBase::unsignedCtrUpdate(uint8_t & ctr, bool up, unsigned nbits)
+TAGEBase::unsignedCtrUpdate(uint8_t &ctr, bool up, unsigned nbits)
 {
     assert(nbits <= sizeof(uint8_t) << 3);
     if (up) {
@@ -290,19 +288,19 @@ TAGEBase::unsignedCtrUpdate(uint8_t & ctr, bool up, unsigned nbits)
 
 // Bimodal prediction
 bool
-TAGEBase::getBimodePred(Addr pc, BranchInfo* bi) const
+TAGEBase::getBimodePred(Addr pc, BranchInfo *bi) const
 {
     return btablePrediction[bi->bimodalIndex];
 }
 
-
 // Update the bimodal predictor: a hysteresis bit is shared among N prediction
 // bits (N = 2 ^ logRatioBiModalHystEntries)
 void
-TAGEBase::baseUpdate(Addr pc, bool taken, BranchInfo* bi)
+TAGEBase::baseUpdate(Addr pc, bool taken, BranchInfo *bi)
 {
-    int inter = (btablePrediction[bi->bimodalIndex] << 1)
-        + btableHysteresis[bi->bimodalIndex >> logRatioBiModalHystEntries];
+    int inter =
+        (btablePrediction[bi->bimodalIndex] << 1) +
+        btableHysteresis[bi->bimodalIndex >> logRatioBiModalHystEntries];
     if (taken) {
         if (inter < 3)
             inter++;
@@ -319,17 +317,17 @@ TAGEBase::baseUpdate(Addr pc, bool taken, BranchInfo* bi)
 // shifting the global history:  we manage the history in a big table in order
 // to reduce simulation time
 void
-TAGEBase::updateGHist(uint8_t * &h, bool dir, uint8_t * tab, int &pt)
+TAGEBase::updateGHist(uint8_t *&h, bool dir, uint8_t *tab, int &pt)
 {
     if (pt == 0) {
         DPRINTF(Tage, "Rolling over the histories\n");
-         // Copy beginning of globalHistoryBuffer to end, such that
-         // the last maxHist outcomes are still reachable
-         // through pt[0 .. maxHist - 1].
-         for (int i = 0; i < maxHist; i++)
-             tab[histBufferSize - maxHist + i] = tab[i];
-         pt =  histBufferSize - maxHist;
-         h = &tab[pt];
+        // Copy beginning of globalHistoryBuffer to end, such that
+        // the last maxHist outcomes are still reachable
+        // through pt[0 .. maxHist - 1].
+        for (int i = 0; i < maxHist; i++)
+            tab[histBufferSize - maxHist + i] = tab[i];
+        pt = histBufferSize - maxHist;
+        h = &tab[pt];
     }
     pt--;
     h--;
@@ -337,8 +335,7 @@ TAGEBase::updateGHist(uint8_t * &h, bool dir, uint8_t * tab, int &pt)
 }
 
 void
-TAGEBase::calculateIndicesAndTags(ThreadID tid, Addr branch_pc,
-                                  BranchInfo* bi)
+TAGEBase::calculateIndicesAndTags(ThreadID tid, Addr branch_pc, BranchInfo *bi)
 {
     // computes the table addresses and the partial tags
     for (int i = 1; i <= nHistoryTables; i++) {
@@ -350,15 +347,15 @@ TAGEBase::calculateIndicesAndTags(ThreadID tid, Addr branch_pc,
 }
 
 unsigned
-TAGEBase::getUseAltIdx(BranchInfo* bi, Addr branch_pc)
+TAGEBase::getUseAltIdx(BranchInfo *bi, Addr branch_pc)
 {
     // There is only 1 counter on the base TAGE implementation
     return 0;
 }
 
 bool
-TAGEBase::tagePredict(ThreadID tid, Addr branch_pc,
-              bool cond_branch, BranchInfo* bi)
+TAGEBase::tagePredict(ThreadID tid, Addr branch_pc, bool cond_branch,
+                      BranchInfo *bi)
 {
     Addr pc = branch_pc;
     bool pred_taken = true;
@@ -372,31 +369,29 @@ TAGEBase::tagePredict(ThreadID tid, Addr branch_pc,
 
         bi->hitBank = 0;
         bi->altBank = 0;
-        //Look for the bank with longest matching history
+        // Look for the bank with longest matching history
         for (int i = nHistoryTables; i > 0; i--) {
-            if (noSkip[i] &&
-                gtable[i][tableIndices[i]].tag == tableTags[i]) {
+            if (noSkip[i] && gtable[i][tableIndices[i]].tag == tableTags[i]) {
                 bi->hitBank = i;
                 bi->hitBankIndex = tableIndices[bi->hitBank];
                 break;
             }
         }
-        //Look for the alternate bank
+        // Look for the alternate bank
         for (int i = bi->hitBank - 1; i > 0; i--) {
-            if (noSkip[i] &&
-                gtable[i][tableIndices[i]].tag == tableTags[i]) {
+            if (noSkip[i] && gtable[i][tableIndices[i]].tag == tableTags[i]) {
                 bi->altBank = i;
                 bi->altBankIndex = tableIndices[bi->altBank];
                 break;
             }
         }
-        //computes the prediction and the alternate prediction
+        // computes the prediction and the alternate prediction
         if (bi->hitBank > 0) {
             if (bi->altBank > 0) {
                 bi->altTaken =
                     gtable[bi->altBank][tableIndices[bi->altBank]].ctr >= 0;
                 extraAltCalc(bi);
-            }else {
+            } else {
                 bi->altTaken = getBimodePred(pc, bi);
             }
 
@@ -405,17 +400,18 @@ TAGEBase::tagePredict(ThreadID tid, Addr branch_pc,
             bi->pseudoNewAlloc =
                 abs(2 * gtable[bi->hitBank][bi->hitBankIndex].ctr + 1) <= 1;
 
-            //if the entry is recognized as a newly allocated entry and
-            //useAltPredForNewlyAllocated is positive use the alternate
-            //prediction
-            if ((useAltPredForNewlyAllocated[getUseAltIdx(bi, branch_pc)] < 0)
-                || ! bi->pseudoNewAlloc) {
+            // if the entry is recognized as a newly allocated entry and
+            // useAltPredForNewlyAllocated is positive use the alternate
+            // prediction
+            if ((useAltPredForNewlyAllocated[getUseAltIdx(bi, branch_pc)] <
+                 0) ||
+                !bi->pseudoNewAlloc) {
                 bi->tagePred = bi->longestMatchPred;
                 bi->provider = TAGE_LONGEST_MATCH;
             } else {
                 bi->tagePred = bi->altTaken;
-                bi->provider = bi->altBank ? TAGE_ALT_MATCH
-                                           : BIMODAL_ALT_MATCH;
+                bi->provider =
+                    bi->altBank ? TAGE_ALT_MATCH : BIMODAL_ALT_MATCH;
             }
         } else {
             bi->altTaken = getBimodePred(pc, bi);
@@ -423,7 +419,7 @@ TAGEBase::tagePredict(ThreadID tid, Addr branch_pc,
             bi->longestMatchPred = bi->altTaken;
             bi->provider = BIMODAL_ONLY;
         }
-        //end TAGE prediction
+        // end TAGE prediction
 
         pred_taken = (bi->tagePred);
         DPRINTF(Tage, "Predict for %lx: taken?:%d, tagePred:%d, altPred:%d\n",
@@ -435,14 +431,14 @@ TAGEBase::tagePredict(ThreadID tid, Addr branch_pc,
 }
 
 void
-TAGEBase::adjustAlloc(bool & alloc, bool taken, bool pred_taken)
+TAGEBase::adjustAlloc(bool &alloc, bool taken, bool pred_taken)
 {
     // Nothing for this base class implementation
 }
 
 void
-TAGEBase::handleAllocAndUReset(bool alloc, bool taken, BranchInfo* bi,
-                           int nrand)
+TAGEBase::handleAllocAndUReset(bool alloc, bool taken, BranchInfo *bi,
+                               int nrand)
 {
     if (alloc) {
         // is there some "unuseful" entry to allocate
@@ -456,8 +452,7 @@ TAGEBase::handleAllocAndUReset(bool alloc, bool taken, BranchInfo* bi,
         // we allocate an entry with a longer history
         // to  avoid ping-pong, we do not choose systematically the next
         // entry, but among the 3 next entries
-        int Y = nrand &
-            ((1ULL << (nHistoryTables - bi->hitBank - 1)) - 1);
+        int Y = nrand & ((1ULL << (nHistoryTables - bi->hitBank - 1)) - 1);
         int X = bi->hitBank + 1;
         if (Y & 1) {
             X++;
@@ -469,8 +464,7 @@ TAGEBase::handleAllocAndUReset(bool alloc, bool taken, BranchInfo* bi,
             gtable[X][bi->tableIndices[X]].u = 0;
         }
 
-
-        //Allocate entries
+        // Allocate entries
         unsigned numAllocated = 0;
         for (int i = X; i <= nHistoryTables; i++) {
             if (gtable[i][bi->tableIndices[i]].u == 0) {
@@ -492,7 +486,7 @@ TAGEBase::handleAllocAndUReset(bool alloc, bool taken, BranchInfo* bi,
 void
 TAGEBase::handleUReset()
 {
-    //periodic reset of u: reset is not complete but bit by bit
+    // periodic reset of u: reset is not complete but bit by bit
     if ((tCounter & ((1ULL << logUResetPeriod) - 1)) == 0) {
         // reset least significant bit
         // most significant bit becomes least significant bit
@@ -505,14 +499,15 @@ TAGEBase::handleUReset()
 }
 
 void
-TAGEBase::resetUctr(uint8_t & u)
+TAGEBase::resetUctr(uint8_t &u)
 {
     u >>= 1;
 }
 
 void
 TAGEBase::condBranchUpdate(ThreadID tid, Addr branch_pc, bool taken,
-    BranchInfo* bi, int nrand, Addr corrTarget, bool pred, bool preAdjustAlloc)
+                           BranchInfo *bi, int nrand, Addr corrTarget,
+                           bool pred, bool preAdjustAlloc)
 {
     // TAGE UPDATE
     // try to allocate a  new entries only if prediction was wrong
@@ -552,7 +547,7 @@ TAGEBase::condBranchUpdate(ThreadID tid, Addr branch_pc, bool taken,
 }
 
 void
-TAGEBase::handleTAGEUpdate(Addr branch_pc, bool taken, BranchInfo* bi)
+TAGEBase::handleTAGEUpdate(Addr branch_pc, bool taken, BranchInfo *bi)
 {
     if (bi->hitBank > 0) {
         DPRINTF(Tage, "Updating tag table entry (%d,%d) for branch %lx\n",
@@ -565,9 +560,10 @@ TAGEBase::handleTAGEUpdate(Addr branch_pc, bool taken, BranchInfo* bi)
             if (bi->altBank > 0) {
                 ctrUpdate(gtable[bi->altBank][bi->altBankIndex].ctr, taken,
                           tagTableCounterBits);
-                DPRINTF(Tage, "Updating tag table entry (%d,%d) for"
-                        " branch %lx\n", bi->hitBank, bi->hitBankIndex,
-                        branch_pc);
+                DPRINTF(Tage,
+                        "Updating tag table entry (%d,%d) for"
+                        " branch %lx\n",
+                        bi->hitBank, bi->hitBankIndex, branch_pc);
             }
             if (bi->altBank == 0) {
                 baseUpdate(branch_pc, taken, bi);
@@ -586,17 +582,17 @@ TAGEBase::handleTAGEUpdate(Addr branch_pc, bool taken, BranchInfo* bi)
 
 void
 TAGEBase::updateHistories(ThreadID tid, Addr branch_pc, bool taken,
-                          BranchInfo* bi, bool speculative,
+                          BranchInfo *bi, bool speculative,
                           const StaticInstPtr &inst, Addr target)
 {
     if (speculative != speculativeHistUpdate) {
         return;
     }
-    ThreadHistory& tHist = threadHistory[tid];
+    ThreadHistory &tHist = threadHistory[tid];
     //  UPDATE HISTORIES
     bool pathbit = ((branch_pc >> instShiftAmt) & 1);
-    //on a squash, return pointers to this and recompute indices.
-    //update user history
+    // on a squash, return pointers to this and recompute indices.
+    // update user history
     updateGHist(tHist.gHist, taken, tHist.globalHistory, tHist.ptGhist);
     tHist.pathHist = (tHist.pathHist << 1) + pathbit;
     tHist.pathHist = (tHist.pathHist & ((1ULL << pathHistBits) - 1));
@@ -606,11 +602,10 @@ TAGEBase::updateHistories(ThreadID tid, Addr branch_pc, bool taken,
         bi->pathHist = tHist.pathHist;
     }
 
-    //prepare next index and tag computations for user branchs
-    for (int i = 1; i <= nHistoryTables; i++)
-    {
+    // prepare next index and tag computations for user branchs
+    for (int i = 1; i <= nHistoryTables; i++) {
         if (speculative) {
-            bi->ci[i]  = tHist.computeIndices[i].comp;
+            bi->ci[i] = tHist.computeIndices[i].comp;
             bi->ct0[i] = tHist.computeTags[0][i].comp;
             bi->ct1[i] = tHist.computeTags[1][i].comp;
         }
@@ -618,11 +613,12 @@ TAGEBase::updateHistories(ThreadID tid, Addr branch_pc, bool taken,
         tHist.computeTags[0][i].update(tHist.gHist);
         tHist.computeTags[1][i].update(tHist.gHist);
     }
-    DPRINTF(Tage, "Updating global histories with branch:%lx; taken?:%d, "
-            "path Hist: %x; pointer:%d\n", branch_pc, taken, tHist.pathHist,
-            tHist.ptGhist);
+    DPRINTF(Tage,
+            "Updating global histories with branch:%lx; taken?:%d, "
+            "path Hist: %x; pointer:%d\n",
+            branch_pc, taken, tHist.pathHist, tHist.ptGhist);
     assert(threadHistory[tid].gHist ==
-            &threadHistory[tid].globalHistory[threadHistory[tid].ptGhist]);
+           &threadHistory[tid].globalHistory[threadHistory[tid].ptGhist]);
 }
 
 void
@@ -634,9 +630,11 @@ TAGEBase::squash(ThreadID tid, bool taken, TAGEBase::BranchInfo *bi,
         return;
     }
 
-    ThreadHistory& tHist = threadHistory[tid];
-    DPRINTF(Tage, "Restoring branch info: %lx; taken? %d; PathHistory:%x, "
-            "pointer:%d\n", bi->branchPC,taken, bi->pathHist, bi->ptGhist);
+    ThreadHistory &tHist = threadHistory[tid];
+    DPRINTF(Tage,
+            "Restoring branch info: %lx; taken? %d; PathHistory:%x, "
+            "pointer:%d\n",
+            bi->branchPC, taken, bi->pathHist, bi->ptGhist);
     tHist.pathHist = bi->pathHist;
     tHist.ptGhist = bi->ptGhist;
     tHist.gHist = &(tHist.globalHistory[tHist.ptGhist]);
@@ -652,46 +650,54 @@ TAGEBase::squash(ThreadID tid, bool taken, TAGEBase::BranchInfo *bi,
 }
 
 void
-TAGEBase::extraAltCalc(BranchInfo* bi)
+TAGEBase::extraAltCalc(BranchInfo *bi)
 {
     // do nothing. This is only used in some derived classes
     return;
 }
 
 void
-TAGEBase::updateStats(bool taken, BranchInfo* bi)
+TAGEBase::updateStats(bool taken, BranchInfo *bi)
 {
     if (taken == bi->tagePred) {
         // correct prediction
         switch (bi->provider) {
-          case BIMODAL_ONLY: stats.bimodalProviderCorrect++; break;
-          case TAGE_LONGEST_MATCH: stats.longestMatchProviderCorrect++; break;
-          case BIMODAL_ALT_MATCH:
+        case BIMODAL_ONLY:
+            stats.bimodalProviderCorrect++;
+            break;
+        case TAGE_LONGEST_MATCH:
+            stats.longestMatchProviderCorrect++;
+            break;
+        case BIMODAL_ALT_MATCH:
             stats.bimodalAltMatchProviderCorrect++;
             break;
-          case TAGE_ALT_MATCH: stats.altMatchProviderCorrect++; break;
+        case TAGE_ALT_MATCH:
+            stats.altMatchProviderCorrect++;
+            break;
         }
     } else {
         // wrong prediction
         switch (bi->provider) {
-          case BIMODAL_ONLY: stats.bimodalProviderWrong++; break;
-          case TAGE_LONGEST_MATCH:
+        case BIMODAL_ONLY:
+            stats.bimodalProviderWrong++;
+            break;
+        case TAGE_LONGEST_MATCH:
             stats.longestMatchProviderWrong++;
             if (bi->altTaken == taken) {
                 stats.altMatchProviderWouldHaveHit++;
             }
             break;
-          case BIMODAL_ALT_MATCH:
+        case BIMODAL_ALT_MATCH:
             stats.bimodalAltMatchProviderWrong++;
             break;
-          case TAGE_ALT_MATCH:
+        case TAGE_ALT_MATCH:
             stats.altMatchProviderWrong++;
             break;
         }
 
         switch (bi->provider) {
-          case BIMODAL_ALT_MATCH:
-          case TAGE_ALT_MATCH:
+        case BIMODAL_ALT_MATCH:
+        case TAGE_ALT_MATCH:
             if (bi->longestMatchPred == taken) {
                 stats.longestMatchProviderWouldHaveHit++;
             }
@@ -699,8 +705,8 @@ TAGEBase::updateStats(bool taken, BranchInfo* bi)
     }
 
     switch (bi->provider) {
-      case TAGE_LONGEST_MATCH:
-      case TAGE_ALT_MATCH:
+    case TAGE_LONGEST_MATCH:
+    case TAGE_ALT_MATCH:
         stats.longestMatchProvider[bi->hitBank]++;
         stats.altMatchProvider[bi->altBank]++;
         break;
@@ -722,8 +728,8 @@ TAGEBase::getGHR(ThreadID tid, BranchInfo *bi) const
     return val;
 }
 
-TAGEBase::TAGEBaseStats::TAGEBaseStats(
-    statistics::Group *parent, unsigned nHistoryTables)
+TAGEBase::TAGEBaseStats::TAGEBaseStats(statistics::Group *parent,
+                                       unsigned nHistoryTables)
     : statistics::Group(parent),
       ADD_STAT(longestMatchProviderCorrect, statistics::units::Count::get(),
                "Number of times TAGE Longest Match is the provider and the "
@@ -752,7 +758,8 @@ TAGEBase::TAGEBaseStats::TAGEBaseStats(
       ADD_STAT(altMatchProviderWouldHaveHit, statistics::units::Count::get(),
                "Number of times TAGE Longest Match is the provider, the "
                "prediction is wrong and Alt Match prediction was correct"),
-      ADD_STAT(longestMatchProviderWouldHaveHit, statistics::units::Count::get(),
+      ADD_STAT(longestMatchProviderWouldHaveHit,
+               statistics::units::Count::get(),
                "Number of times TAGE Alt Match is the provider, the "
                "prediction is wrong and Longest Match prediction was correct"),
       ADD_STAT(longestMatchProvider, statistics::units::Count::get(),
@@ -789,11 +796,12 @@ TAGEBase::isSpeculativeUpdateEnabled() const
 }
 
 size_t
-TAGEBase::getSizeInBits() const {
+TAGEBase::getSizeInBits() const
+{
     size_t bits = 0;
     for (int i = 1; i <= nHistoryTables; i++) {
         bits += (1 << logTagTableSizes[i]) *
-            (tagTableCounterBits + tagTableUBits + tagTableTagWidths[i]);
+                (tagTableCounterBits + tagTableUBits + tagTableTagWidths[i]);
     }
     uint64_t bimodalTableSize = 1ULL << logTagTableSizes[0];
     bits += numUseAltOnNa * useAltOnNaBits;

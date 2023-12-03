@@ -45,7 +45,7 @@ class FunctionProfile;
 
 namespace loader
 {
-    class SymbolTable;
+class SymbolTable;
 } // namespace loader
 
 class BaseStackTrace
@@ -63,6 +63,7 @@ class BaseStackTrace
 
   public:
     BaseStackTrace() : stack(64) {}
+
     virtual ~BaseStackTrace() {}
 
     void
@@ -72,7 +73,11 @@ class BaseStackTrace
         stack.clear();
     }
 
-    bool valid() const { return tc; }
+    bool
+    valid() const
+    {
+        return tc;
+    }
 
     bool
     trace(ThreadContext *tc, const StaticInstPtr &inst)
@@ -87,9 +92,18 @@ class BaseStackTrace
         return true;
     }
 
-    const std::vector<Addr> &getstack() const { return stack; }
+    const std::vector<Addr> &
+    getstack() const
+    {
+        return stack;
+    }
 
-    void dprintf() { if (debug::Stack) dump(); }
+    void
+    dprintf()
+    {
+        if (debug::Stack)
+            dump();
+    }
 
     // This function can be overridden so that special addresses which don't
     // actually refer to PCs can be translated into special names. For
