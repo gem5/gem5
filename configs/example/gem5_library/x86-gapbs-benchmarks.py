@@ -73,35 +73,11 @@ requires(
     kvm_required=True,
 )
 
-# Following are the list of benchmark programs for gapbs
-
-benchmark_choices = ["cc", "bc", "tc", "pr", "bfs"]
-
-synthetic_choices = ["0", "1"]
-
-size_choices = [
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "10",
-    "11",
-    "12",
-    "13",
-    "14",
-    "15",
-    "16",
-    "USA-road-d.NY.gr",
-]
-
 parser = argparse.ArgumentParser(
     description="An example configuration script to run the gapbs benchmarks."
 )
+
+gapbs_suite = obtain_resource("gapbs-benchmark-suite")
 
 # The only positional argument accepted is the benchmark name in this script.
 
@@ -110,27 +86,11 @@ parser.add_argument(
     type=str,
     required=True,
     help="Input the benchmark program to execute.",
-    choices=benchmark_choices,
-)
-
-parser.add_argument(
-    "--synthetic",
-    type=str,
-    required=True,
-    help="Synthetic Graph:: 1: synthetic graph is True; 0: real graph",
-    choices=synthetic_choices,
-)
-
-parser.add_argument(
-    "--size",
-    type=str,
-    required=True,
-    help="Graph Size:: If synthetic is True, then specify a size [1 .. 15]. \
-    Otherwise, specify a graph name [USA-road-d.NY.gr]",
-    choices=size_choices,
+    choices=[workload.get_id() for workload in gapbs_suite],
 )
 
 args = parser.parse_args()
+
 
 # Setting up all the fixed system parameters here
 # Caches: MESI Two Level Cache Hierarchy
@@ -185,30 +145,7 @@ board = X86Board(
 # committed instructions till ROI ends (marked by `workend`). We then finish
 # executing the rest of the benchmark.
 
-# GAPBS benchmarks can be run using a synthetic graph
-
-if args.synthetic == "1":
-    if args.size == "USA-road-d.NY.gr":
-        print(
-            "fatal: cannot use a real graph with --synthetic 1",
-            file=sys.stderr,
-        )
-        exit(-1)
-
-    command = f"./{args.benchmark} -g {args.size}\n"
-else:
-    command = f"./{args.benchmark} -sf ../{args.size}"
-
-board.set_kernel_disk_workload(
-    # The x86 linux kernel will be automatically downloaded to the
-    # `~/.cache/gem5` directory if not already present.
-    # gapbs benchamarks was tested with kernel version 4.19.83
-    kernel=obtain_resource("x86-linux-kernel-4.19.83"),
-    # The x86-gapbs image will be automatically downloaded to the
-    # `~/.cache/gem5` directory if not already present.
-    disk_image=obtain_resource("x86-gapbs"),
-    readfile_contents=command,
-)
+board.set_workload(obtain_resource(args.benchmark))
 
 
 def handle_workbegin():
