@@ -509,9 +509,6 @@ TLB::translateAtomic(const RequestPtr &req, ThreadContext *tc,
     BaseMMU::Mode mode)
 {
     bool delayedResponse;
-    // CLFLUSHOPT/WB/FLUSH should be treated as read for protection checks
-    if (req->isCacheClean())
-        mode = BaseMMU::Read;
     return TLB::translate(req, tc, NULL, mode, delayedResponse, false);
 }
 
@@ -519,9 +516,6 @@ Fault
 TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc,
     BaseMMU::Mode mode)
 {
-    // CLFLUSHOPT/WB/FLUSH should be treated as read for protection checks
-    if (req->isCacheClean())
-        mode = BaseMMU::Read;
     unsigned logBytes;
     const Addr vaddr = req->getVaddr();
     Addr addr = vaddr;
@@ -559,9 +553,6 @@ TLB::translateTiming(const RequestPtr &req, ThreadContext *tc,
 {
     bool delayedResponse;
     assert(translation);
-    // CLFLUSHOPT/WB/FLUSH should be treated as read for protection checks
-    if (req->isCacheClean())
-        mode = BaseMMU::Read;
     Fault fault =
         TLB::translate(req, tc, translation, mode, delayedResponse, true);
     if (!delayedResponse)
