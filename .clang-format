@@ -1,6 +1,6 @@
 ---
 # Language (LanguageKind) clang-format 3.5
-Language:        Cpp
+Language: Cpp
 
 # Based on clang-10 (latest version supported on Ubuntu 20)
 # No BasedOnStyle
@@ -28,7 +28,7 @@ AlignConsecutiveMacros: false
 AlignEscapedNewlines: Right
 
 # AlignOperands (Boolean) clang-format 3.5
-AlignOperands:   true
+AlignOperands: true
 
 # AlignTrailingComments (TrailingCommentsAlignmentStyle) clang-format 3.7
 AlignTrailingComments: true
@@ -86,25 +86,25 @@ BinPackParameters: true
 
 # BraceWrapping (BraceWrappingFlags) clang-format 3.8
 BraceWrapping:
-  AfterCaseLabel:  false
-  AfterClass:      true
-  AfterControlStatement: Never
-  AfterEnum:       true
-  AfterFunction:   true
-  AfterNamespace:  true
+    AfterCaseLabel: false
+    AfterClass: true
+    AfterControlStatement: Never
+    AfterEnum: true
+    AfterFunction: true
+    AfterNamespace: true
   # AfterObjCDeclaration
-  AfterStruct:     true
-  AfterUnion:      true
-  AfterExternBlock: true
-  BeforeCatch:     false
-  BeforeElse:      false
+    AfterStruct: true
+    AfterUnion: true
+    AfterExternBlock: false
+    BeforeCatch: false
+    BeforeElse: false
   # Not clang-format 10
   # BeforeLambdaBody: false
   # BeforeWhile:     false
-  IndentBraces:    false
-  SplitEmptyFunction: false
-  SplitEmptyRecord: false
-  SplitEmptyNamespace: false
+    IndentBraces: false
+    SplitEmptyFunction: false
+    SplitEmptyRecord: true
+    SplitEmptyNamespace: false
 
 # BreakAfterAttributes (AttributeBreakingStyle) clang-format 16
 
@@ -135,10 +135,10 @@ BreakInheritanceList: AfterColon
 BreakStringLiterals: true
 
 # ColumnLimit (Unsigned) clang-format 3.7
-ColumnLimit:     79
+ColumnLimit: 79
 
 # CommentPragmas (String) clang-format 3.7
-CommentPragmas:  ''
+CommentPragmas: ''
 
 # CompactNamespaces (Boolean) clang-format 5
 CompactNamespaces: false
@@ -162,7 +162,7 @@ DeriveLineEnding: true
 DerivePointerAlignment: false
 
 # DisableFormat (Boolean) clang-format 3.7
-DisableFormat:   false
+DisableFormat: false
 
 # EmptyLineAfterAccessModifier (EmptyLineAfterAccessModifierStyle) clang-format 13
 
@@ -175,27 +175,32 @@ FixNamespaceComments: true
 
 # ForEachMacros (List of Strings) clang-format 3.7
 ForEachMacros:
-  - GEM5_FOR_EACH_IN_PACK
+    - GEM5_FOR_EACH_IN_PACK
 
 # IfMacros (List of Strings) clang-format 13
 
 # IncludeBlocks (IncludeBlocksStyle) clang-format 6
-IncludeBlocks:   Preserve
+IncludeBlocks: Regroup
 
 # IncludeCategories (List of IncludeCategories) clang-format 3.8
 IncludeCategories:
-  - Regex:           '^<.*\.h>'
-    Priority:        1
-    SortPriority:    0
-  - Regex:           '^<.*'
-    Priority:        2
-    SortPriority:    0
-  - Regex:           '.*'
-    Priority:        3
-    SortPriority:    0
+    - Regex: ^<Python.h>$
+      Priority: 0
+      SortPriority: -1
+    - Regex: ^"pybind11/.*"
+      Priority: 1
+      SortPriority: -1
+    - Regex: ^<.*\.h>
+      Priority: 1
+    - Regex: ^<[^.]*>$
+      Priority: 2
+    - Regex: ^<.*
+      Priority: 3
+    - Regex: .*
+      Priority: 4
 
 # IncludeIsMainRegex (String) clang-format 3.9
-IncludeIsMainRegex: '([-_](test|unittest))?$'
+IncludeIsMainRegex: ([-_](test|unittest))?$
 
 # IncludeIsMainSourceRegex (String) clang-format 10
 IncludeIsMainSourceRegex: ''
@@ -218,7 +223,7 @@ IndentPPDirectives: None
 # IndentRequiresClause (Boolean) clang-format 15
 
 # IndentWidth (Unsigned) clang-format 3.7
-IndentWidth:     4
+IndentWidth: 4
 
 # IndentWrappedFunctionNames (Boolean) clang-format 3.7
 IndentWrappedFunctionNames: false
@@ -245,16 +250,10 @@ KeepEmptyLinesAtTheStartOfBlocks: false
 # LineEnding (LineEndingStyle) clang-format 16
 
 # MacroBlockBegin (String) clang-format 3.7
-MacroBlockBegin: "^(\
-BitUnion(8|16|32|64)|\
-SubBitUnion\
-)$"
+MacroBlockBegin: ^(BitUnion(8|16|32|64)|SubBitUnion)$
 
 # MacroBlockEnd (String) clang-format 3.7
-MacroBlockEnd: "^(\
-EndBitUnion|\
-EndSubBitUnion\
-)$"
+MacroBlockEnd: ^(EndBitUnion|EndSubBitUnion)$
 
 # MaxEmptyLinesToKeep (Unsigned) clang-format 3.7
 MaxEmptyLinesToKeep: 1
@@ -307,40 +306,40 @@ PointerAlignment: Right
 
 # RawStringFormats (List of RawStringFormats) clang-format 6
 RawStringFormats:
-  - Language:        Cpp
-    Delimiters:
-      - cc
-      - CC
-      - cpp
-      - Cpp
-      - CPP
-      - 'c++'
-      - 'C++'
-    CanonicalDelimiter: ''
-    BasedOnStyle:    google
-  - Language:        TextProto
-    Delimiters:
-      - pb
-      - PB
-      - proto
-      - PROTO
-    EnclosingFunctions:
-      - EqualsProto
-      - EquivToProto
-      - PARSE_PARTIAL_TEXT_PROTO
-      - PARSE_TEST_PROTO
-      - PARSE_TEXT_PROTO
-      - ParseTextOrDie
-      - ParseTextProtoOrDie
-      - ParseTestProto
-      - ParsePartialTestProto
-    CanonicalDelimiter: ''
-    BasedOnStyle:    google
+    - Language: Cpp
+      Delimiters:
+          - cc
+          - CC
+          - cpp
+          - Cpp
+          - CPP
+          - c++
+          - C++
+      CanonicalDelimiter: ''
+      BasedOnStyle: google
+    - Language: TextProto
+      Delimiters:
+          - pb
+          - PB
+          - proto
+          - PROTO
+      EnclosingFunctions:
+          - EqualsProto
+          - EquivToProto
+          - PARSE_PARTIAL_TEXT_PROTO
+          - PARSE_TEST_PROTO
+          - PARSE_TEXT_PROTO
+          - ParseTextOrDie
+          - ParseTextProtoOrDie
+          - ParseTestProto
+          - ParsePartialTestProto
+      CanonicalDelimiter: ''
+      BasedOnStyle: google
 
 # ReferenceAlignment (ReferenceAlignmentStyle) clang-format 13
 
 # ReflowComments (Boolean) clang-format 3.8
-ReflowComments:  true
+ReflowComments: true
 
 # RemoveBracesLLVM (Boolean) clang-format 14
 
@@ -360,7 +359,7 @@ SeparateDefinitionBlocks: Always
 # One way to fix this would be to use IWYU (include what you use)
 # But this adds complexity as some header are generated during the compilation,
 # hence cannot be run during pre-commit.
-SortIncludes:    false
+SortIncludes: false
 
 # SortJavaStaticImport (SortJavaStaticImportOptions) clang-format 12
 
@@ -413,7 +412,7 @@ SpaceInEmptyParentheses: false
 SpacesBeforeTrailingComments: 1
 
 # SpacesInAngles (SpacesInAnglesStyle) clang-format 3.4
-SpacesInAngles:  false
+SpacesInAngles: false
 
 # SpacesInCStyleCastParentheses (Boolean) clang-format 3.7
 SpacesInCStyleCastParentheses: false
@@ -433,7 +432,7 @@ SpacesInParentheses: false
 SpacesInSquareBrackets: false
 
 # Standard (LanguageStandard) clang-format 3.7
-Standard:        Auto
+Standard: Auto
 
 # StatementAttributeLikeMacros (List of Strings) clang-format 12
 
@@ -441,16 +440,15 @@ Standard:        Auto
 StatementMacros:
 
 # TabWidth (Unsigned) clang-format 3.7
-TabWidth:        8
+TabWidth: 8
 
 # TypenameMacros (List of Strings) clang-format 9
 
 # UseCRLF (Boolean) clang-format 10
-UseCRLF:         false
+UseCRLF: false
 
 # UseTab (UseTabStyle) clang-format 3.7
-UseTab:          Never
+UseTab: Never
 
 # WhitespaceSensitiveMacros (List of Strings) clang-format 11
 #
-...
