@@ -89,13 +89,6 @@ repos:
             args: [--py38-plus]
     - repo: local
       hooks:
-          - id: gem5-style-checker
-            name: gem5 style checker
-            entry: util/git-pre-commit.py
-            always_run: true
-            exclude: .*
-            language: system
-            description: The gem5 style checker hook.
           - id: gem5-commit-msg-checker
             name: gem5 commit msg checker
             entry: ext/git-commit-msg
