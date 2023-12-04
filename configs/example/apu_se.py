@@ -398,8 +398,8 @@ if buildEnv["PROTOCOL"] == "None":
     fatal("GPU model requires ruby")
 
 # Currently the gpu model requires only timing or detailed CPU
-if not (args.cpu_type == "TimingSimpleCPU" or args.cpu_type == "DerivO3CPU"):
-    fatal("GPU model requires TimingSimpleCPU or DerivO3CPU")
+if not (args.cpu_type == "X86TimingSimpleCPU" or args.cpu_type == "X86O3CPU"):
+    fatal("GPU model requires X86TimingSimpleCPU or X86O3CPU.")
 
 # This file can support multiple compute units
 assert args.num_compute_units >= 1
@@ -571,7 +571,7 @@ cp_list = []
 cpu_list = []
 
 CpuClass, mem_mode = Simulation.getCPUClass(args.cpu_type)
-if CpuClass == AtomicSimpleCPU:
+if CpuClass == X86AtomicSimpleCPU or CpuClass == AtomicSimpleCPU:
     fatal("AtomicSimpleCPU is not supported")
 if mem_mode != "timing":
     fatal("Only the timing memory mode is supported")
@@ -825,18 +825,15 @@ for i in range(args.num_cpus):
     system.cpu[i].dcache_port = ruby_port.in_ports
 
     ruby_port.mem_request_port = system.piobus.cpu_side_ports
-    if get_supported_isas().contains(ISA.X86):
-        system.cpu[i].interrupts[0].pio = system.piobus.mem_side_ports
-        system.cpu[i].interrupts[
-            0
-        ].int_requestor = system.piobus.cpu_side_ports
-        system.cpu[i].interrupts[
-            0
-        ].int_responder = system.piobus.mem_side_ports
-        if fast_forward:
-            system.cpu[i].mmu.connectWalkerPorts(
-                ruby_port.in_ports, ruby_port.in_ports
-            )
+
+    # X86 ISA is implied from cpu type check above
+    system.cpu[i].interrupts[0].pio = system.piobus.mem_side_ports
+    system.cpu[i].interrupts[0].int_requestor = system.piobus.cpu_side_ports
+    system.cpu[i].interrupts[0].int_responder = system.piobus.mem_side_ports
+    if fast_forward:
+        system.cpu[i].mmu.connectWalkerPorts(
+            ruby_port.in_ports, ruby_port.in_ports
+        )
 
 # attach CU ports to Ruby
 # Because of the peculiarities of the CP core, you may have 1 CPU but 2
