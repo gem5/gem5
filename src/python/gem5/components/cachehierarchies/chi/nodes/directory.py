@@ -61,6 +61,7 @@ class SimpleDirectory(AbstractNode):
         self.sequencer = NULL
 
         self.use_prefetcher = False
+        self.prefetcher = NULL
 
         # Set up home node that allows three hop protocols
         self.is_HN = True
