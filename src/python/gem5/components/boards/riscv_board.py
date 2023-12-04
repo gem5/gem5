@@ -256,7 +256,7 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
             root.append(node)
 
         node = FdtNode(f"chosen")
-        bootargs = " ".join(self.get_default_kernel_args())
+        bootargs = self.workload.command_line
         node.append(FdtPropertyStrings("bootargs", [bootargs]))
         node.append(FdtPropertyStrings("stdout-path", ["/uart@10000000"]))
         root.append(node)
