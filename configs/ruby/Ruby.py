@@ -48,7 +48,6 @@ from m5.util import (
 )
 
 from gem5.isas import ISA
-from gem5.runtime import get_runtime_isa
 
 addToPath("../")
 
@@ -62,8 +61,8 @@ from topologies import *
 
 
 def define_options(parser):
-    # By default, ruby uses the simple timing cpu
-    parser.set_defaults(cpu_type="TimingSimpleCPU")
+    # By default, ruby uses the simple timing cpu and the X86 ISA
+    parser.set_defaults(cpu_type="X86TimingSimpleCPU")
 
     parser.add_argument(
         "--ruby-clock",
@@ -331,9 +330,9 @@ def send_evicts(options):
     # 1. The O3 model must keep the LSQ coherent with the caches
     # 2. The x86 mwait instruction is built on top of coherence invalidations
     # 3. The local exclusive monitor in ARM systems
-    if options.cpu_type == "DerivO3CPU" or get_runtime_isa() in (
-        ISA.X86,
-        ISA.ARM,
-    ):
+
+    if isinstance(
+        options.cpu_type, DerivO3CPU
+    ) or ObjectList.CPUList().get_isa(options.cpu_type) in [ISA.X86, ISA.ARM]:
         return True
     return False

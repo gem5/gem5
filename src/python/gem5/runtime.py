@@ -60,43 +60,6 @@ def get_supported_isas() -> Set[ISA]:
     return supported_isas
 
 
-def get_runtime_isa() -> ISA:
-    """
-    Returns a single target ISA at runtime.
-
-    This determined via the "TARGET_ISA" parameter, which is set at
-    compilation. If not set, but only one ISA is compiled, we assume it's the
-    one ISA. If neither the "TARGET_ISA" parameter is set and there are
-    multiple ISA targets, an exception is thrown.
-
-    .. warning::
-
-       This function is deprecated and may be removed in future versions of
-       gem5. This function should not be relied upon to run gem5 simulations.
-
-    :returns: The target ISA.
-    """
-
-    warn(
-        "The `get_runtime_isa` function is deprecated. Please migrate away "
-        "from using this function."
-    )
-
-    if "TARGET_ISA" in buildEnv.keys():
-        return get_isa_from_str(buildEnv["TARGET_ISA"])
-
-    supported_isas = get_supported_isas()
-
-    if len(supported_isas) == 1:
-        return next(iter(supported_isas))
-
-    raise Exception(
-        "Cannot determine the the runtime ISA. Either the "
-        "'TARGET_ISA' parameter must be set or the binary only "
-        "compiled to one ISA."
-    )
-
-
 def get_runtime_coherence_protocol() -> CoherenceProtocol:
     """Gets the cache coherence protocol.
 

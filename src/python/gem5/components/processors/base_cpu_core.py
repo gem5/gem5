@@ -40,7 +40,6 @@ from m5.objects import (
 from m5.params import PcCountPair
 
 from ...isas import ISA
-from ...runtime import get_runtime_isa
 from ...utils.override import overrides
 from ...utils.requires import requires
 from .abstract_core import AbstractCore
@@ -51,17 +50,19 @@ class BaseCPUCore(AbstractCore):
     An stdlib AbstractCore subclass which wraps a BaseCPU SimObject type.
     """
 
-    def __init__(self, core: BaseCPU, isa: Optional[ISA] = None):
+    def __init__(self, core: BaseCPU, isa: ISA):
         super().__init__()
 
         # There is some annoying redundancy here. The BaseCPU type already
         # defines the ISA, so here we are defining it twice. However, there
         # currently isn't a good way to get the ISA from the BaseCPU Type.
-        if isa:
-            requires(isa_required=isa)
-            self._isa = isa
-        else:
-            self._isa = get_runtime_isa()
+        #
+        # TODO: Have some helper function to get the ISA from a BaseCPU type.
+        # This may just be a cause of using `instanceof`:
+        # e.g., `if instanceof(cpu, X86Cpu): return ISA.X86`.
+        #
+        requires(isa_required=isa)
+        self._isa = isa
 
         self.core = core
         self.core.createThreads()

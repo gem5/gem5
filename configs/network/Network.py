@@ -37,8 +37,8 @@ from m5.util import (
 
 
 def define_options(parser):
-    # By default, ruby uses the simple timing cpu
-    parser.set_defaults(cpu_type="TimingSimpleCPU")
+    # By default, ruby uses the simple timing cpu and the X86 ISA
+    parser.set_defaults(cpu_type="X86TimingSimpleCPU")
 
     parser.add_argument(
         "--topology",

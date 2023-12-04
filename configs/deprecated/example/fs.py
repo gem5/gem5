@@ -53,7 +53,6 @@ from m5.util import (
 from m5.util.fdthelper import *
 
 from gem5.isas import ISA
-from gem5.runtime import get_runtime_isa
 
 addToPath("../../")
 
@@ -86,9 +85,8 @@ def cmd_line_template():
     return None
 
 
-def build_test_system(np):
+def build_test_system(np, isa: ISA):
     cmdline = cmd_line_template()
-    isa = get_runtime_isa()
     if isa == ISA.MIPS:
         test_sys = makeLinuxMipsSystem(test_mem_mode, bm[0], cmdline=cmdline)
     elif isa == ISA.SPARC:
@@ -384,7 +382,8 @@ else:
 
 np = args.num_cpus
 
-test_sys = build_test_system(np)
+isa = ObjectList.CPUList.get_isa(args.cpu_type)
+test_sys = build_test_system(np, isa)
 
 if len(bm) == 2:
     drive_sys = build_drive_system(np)
