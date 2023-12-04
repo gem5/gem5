@@ -327,8 +327,10 @@ TLB::getMemPriv(ThreadContext *tc, BaseMMU::Mode mode)
 {
     STATUS status = (STATUS)tc->readMiscReg(MISCREG_STATUS);
     PrivilegeMode pmode = (PrivilegeMode)tc->readMiscReg(MISCREG_PRV);
-    if (mode != BaseMMU::Execute && status.mprv == 1)
-        pmode = (PrivilegeMode)(RegVal)status.mpp;
+    if (mode != BaseMMU::Execute && status.mprv == 1) {
+        ISA* isa = dynamic_cast<ISA*>(tc->getIsaPtr());
+        pmode = isa->getMpp();
+    }
     return pmode;
 }
 

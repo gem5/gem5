@@ -886,6 +886,113 @@ ISA::getFaultHandlerAddr(RegIndex idx, uint64_t cause, bool intr) const
     return addr;
 }
 
+void
+ISA::updateReturnFromTrapStatus(PrivilegeMode prv)
+{
+    STATUS status = readMiscReg(MISCREG_STATUS);
+
+    switch (prv) {
+      case PRV_U:
+        status.uie = status.upie;
+        status.upie = 1;
+        break;
+      case PRV_S:
+        setMiscRegNoEffect(MISCREG_PRV, status.spp);
+        status.sie = status.spie;
+        status.spie = 1;
+        status.spp = PRV_U;
+        break;
+      case PRV_M:
+        setMiscRegNoEffect(MISCREG_PRV, status.mpp);
+        status.mie = status.mpie;
+        status.mpie = 1;
+        status.mpp = PRV_U;
+        break;
+      default:
+        panic("Unknown privilege mode %d.", prv);
+        break;
+    }
+
+    setMiscReg(MISCREG_STATUS, status);
+}
+
+void
+ISA::updateEnterToTrapStatus(
+    PrivilegeMode prv, PrivilegeMode pp, bool isNonMaskIntr)
+{
+    STATUS status = readMiscReg(MISCREG_STATUS);
+
+    // According to riscv-privileged-v1.11, if a NMI occurs at the middle
+    // of a M-mode trap handler, the state (epc/cause) will be overwritten
+    // and is not necessary recoverable. There's nothing we can do here so
+    // we'll just warn our user that the CPU state might be broken.
+    warn_if(isNonMaskIntr && pp == PRV_M && status.mie == 0,
+            "NMI overwriting M-mode trap handler state");
+
+    switch (prv) {
+      case PRV_U:
+        status.upie = status.uie;
+        status.uie = 0;
+        break;
+      case PRV_S:
+        status.spp = pp;
+        status.spie = status.sie;
+        status.sie = 0;
+        break;
+      case PRV_M:
+        status.mpp = pp;
+        status.mpie = status.mie;
+        status.mie = 0;
+        break;
+      default:
+        panic("Unknown privilege mode %d.", prv);
+        break;
+    }
+
+    setMiscRegNoEffect(MISCREG_PRV, prv);
+    setMiscReg(MISCREG_STATUS, status);
+}
+
+PrivilegeMode
+ISA::getHandlerPriv(
+    PrivilegeMode pp, uint64_t cause, bool intr, bool isNonMaskIntr)
+{
+    PrivilegeMode prv = PRV_M;
+    MISA misa = readMiscRegNoEffect(MISCREG_ISA);
+
+    // Set fault handler privilege mode
+    if (isNonMaskIntr) {
+        prv = PRV_M;
+    } else if (intr) {
+        if (pp != PRV_M &&
+            bits(readMiscReg(MISCREG_MIDELEG), cause) != 0) {
+            prv = (misa.rvs) ? PRV_S : ((misa.rvn) ? PRV_U : PRV_M);
+        }
+        if (pp == PRV_U && misa.rvs && misa.rvn &&
+            bits(readMiscReg(MISCREG_SIDELEG), cause) != 0) {
+            prv = PRV_U;
+        }
+    } else {
+        if (pp != PRV_M &&
+            bits(readMiscReg(MISCREG_MEDELEG), cause) != 0) {
+            prv = (misa.rvs) ? PRV_S : ((misa.rvn) ? PRV_U : PRV_M);
+        }
+        if (pp == PRV_U && misa.rvs && misa.rvn &&
+            bits(readMiscReg(MISCREG_SEDELEG), cause) != 0) {
+            prv = PRV_U;
+        }
+    }
+
+    return prv;
+}
+
+PrivilegeMode
+ISA::getMpp()
+{
+    STATUS status = readMiscReg(MISCREG_STATUS);
+    return (PrivilegeMode)(RegVal)status.mpp;
+}
+
 } // namespace RiscvISA
 } // namespace gem5
 

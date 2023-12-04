@@ -173,6 +173,26 @@ class ISA : public BaseISA
 
     virtual Addr getFaultHandlerAddr(
         RegIndex idx, uint64_t cause, bool intr) const;
+
+    /** Update the RISC-V xpie, xie and xpp bits and privilege mode when
+     *  executing xret instruction
+     */
+    virtual void updateReturnFromTrapStatus(PrivilegeMode prv);
+
+    /** Update the RISC-V xpie, xie and xpp bits and privilege mode when
+     *  entering exception & interrupt handler
+     */
+    virtual void updateEnterToTrapStatus(
+        PrivilegeMode prv, PrivilegeMode pp, bool isNonMaskIntr);
+
+    /**
+     * Get the privilege mode of trap execution
+     */
+    virtual PrivilegeMode getHandlerPriv(
+        PrivilegeMode pp, uint64_t cause, bool intr, bool isNonMaskIntr);
+
+    /** Get mpp bits from CSR */
+    virtual PrivilegeMode getMpp();
 };
 
 } // namespace RiscvISA

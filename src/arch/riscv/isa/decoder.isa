@@ -4595,29 +4595,32 @@ decode QUADRANT default Unknown::unknown() {
                                 xc->pcState());
                         }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
                         0x2: uret({{
-                           MISA misa = xc->readMiscReg(MISCREG_ISA);
+                            auto* isa = dynamic_cast<RiscvISA::ISA*>(
+                                    xc->tcBase()->getIsaPtr());
+                            panic_if(!isa, "Invalid ISA specify.");
+                            MISA misa = isa->readMiscRegNoEffect(MISCREG_ISA);
                             if (!misa.rvn) {
                                 return std::make_shared<IllegalInstFault>(
                                     "sret can't execute without N systems",
                                     machInst);
                             }
-                            STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                            status.uie = status.upie;
-                            status.upie = 1;
-                            xc->setMiscReg(MISCREG_STATUS, status);
+                            isa->updateReturnFromTrapStatus(PRV_U);
                             NPC = xc->readMiscReg(MISCREG_UEPC);
                         }}, IsSerializeAfter, IsNonSpeculative, IsReturn);
                     }
                     0x8: decode RS2 {
                         0x2: sret({{
-                            MISA misa = xc->readMiscReg(MISCREG_ISA);
+                            auto* isa = dynamic_cast<RiscvISA::ISA*>(
+                                xc->tcBase()->getIsaPtr());
+                            panic_if(!isa, "Invalid ISA specify.");
+                            MISA misa = isa->readMiscRegNoEffect(MISCREG_ISA);
                             if (!misa.rvs) {
                                 return std::make_shared<IllegalInstFault>(
                                             "sret can't execute without RVS",
                                             machInst);
                             }
-                            STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                            auto pm = (PrivilegeMode)xc->readMiscReg(
+                            STATUS status = isa->readMiscReg(MISCREG_STATUS);
+                            auto pm = (PrivilegeMode)isa->readMiscRegNoEffect(
                                 MISCREG_PRV);
                             if (pm == PRV_U ||
                                 (pm == PRV_S && status.tsr == 1)) {
@@ -4626,11 +4629,7 @@ decode QUADRANT default Unknown::unknown() {
                                             machInst);
                                 NPC = NPC;
                             } else {
-                                xc->setMiscReg(MISCREG_PRV, status.spp);
-                                status.sie = status.spie;
-                                status.spie = 1;
-                                status.spp = PRV_U;
-                                xc->setMiscReg(MISCREG_STATUS, status);
+                                isa->updateReturnFromTrapStatus(PRV_S);
                                 NPC = xc->readMiscReg(MISCREG_SEPC);
                             }
                         }}, IsSerializeAfter, IsNonSpeculative, IsReturn);
@@ -4676,18 +4675,16 @@ decode QUADRANT default Unknown::unknown() {
                         xc->tcBase()->getMMUPtr()->demapPage(Rs1, Rs2);
                     }}, IsNonSpeculative, IsSerializeAfter, No_OpClass);
                     0x18: mret({{
-                        if (xc->readMiscReg(MISCREG_PRV) != PRV_M) {
+                        auto* isa = dynamic_cast<RiscvISA::ISA*>(
+                            xc->tcBase()->getIsaPtr());
+                        panic_if(!isa, "Invalid ISA specify.");
+                        if (isa->readMiscRegNoEffect(MISCREG_PRV) != PRV_M) {
                             return std::make_shared<IllegalInstFault>(
                                         "mret at lower privilege", machInst);
                             NPC = NPC;
                         } else {
-                            STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                            xc->setMiscReg(MISCREG_PRV, status.mpp);
                             xc->setMiscReg(MISCREG_NMIE, 1);
-                            status.mie = status.mpie;
-                            status.mpie = 1;
-                            status.mpp = PRV_U;
-                            xc->setMiscReg(MISCREG_STATUS, status);
+                            isa->updateReturnFromTrapStatus(PRV_M);
                             NPC = xc->readMiscReg(MISCREG_MEPC);
                         }
                     }}, IsSerializeAfter, IsNonSpeculative, IsReturn);
