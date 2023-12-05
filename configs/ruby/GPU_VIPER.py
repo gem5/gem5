@@ -129,7 +129,7 @@ class CPCntrl(CorePair_Controller, CntrlBase):
         self.sequencer1.is_cpu_sequencer = True
 
         self.issue_latency = options.cpu_to_dir_latency
-        self.send_evictions = send_evicts(options)
+        self.send_evictions = True if options.cpu_type == "X86O3CPU" else False
 
         self.ruby_system = ruby_system
 
