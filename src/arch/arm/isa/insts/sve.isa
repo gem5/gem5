@@ -2096,34 +2096,6 @@ let {{
                          'class_name' : 'Sve' + Name}
             exec_output += SveOpExecDeclare.subst(substDict)
 
-    # Generates definitions for ternary SVE instructions (indexed)
-    def sveTerInstIndexed(name, Name, opClass, types, op, decoder='Generic'):
-        global header_output, exec_output, decoders
-        code = sveEnabledCheckCode + '''
-        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
-                xc->tcBase());
-        for (unsigned i = 0; i < eCount; i++) {
-            int segbase = i - i % (128 / sizeof(Element));
-            int s = segbase + imm;
-            const Element& srcElem1 = AA64FpOp1_x[i];
-            const Element& srcElem2 = AA64FpOp2_x[s];
-            Element destElem = AA64FpDestMerge_x[i];
-            '''
-
-        code +=  f"{op} \n"
-
-
-        code += ''' AA64FpDest_x[i] = destElem;
-        }'''
-        iop = ArmInstObjParams(name, 'Sve2' + Name+ 'i', 'SveTerIndexedOp',
-                               {'code': code, 'op_class': opClass}, [])
-        header_output += SveTerIndexedOpDeclare.subst(iop)
-        exec_output += SveOpExecute.subst(iop)
-        for type in types:
-            substDict = {'targs' : type,
-                         'class_name' : 'Sve2' + Name + "i"}
-            exec_output += SveOpExecDeclare.subst(substDict)
-
     # Generates definitions for ternary SVE intructions (always predicated -
     # merging)
     def sveTerInst(name, Name, opClass, types, op, decoder='Generic'):
@@ -4276,13 +4248,13 @@ let {{
     mlaCode = 'destElem += srcElem1 * srcElem2;'
     sveTerInst('mla', 'Mla', 'SimdMultAccOp', signedTypes, mlaCode)
     #indexed
-    sveTerInstIndexed('mla', 'Mla', 'SimdMultAccOp', signedTypes, mlaCode)
+    sveTerIdxInst('mla', '2Mlai', 'SimdMultAccOp', signedTypes, mlaCode)
 
     # MLS
     mlsCode = 'destElem -= srcElem1 * srcElem2;'
     sveTerInst('mls', 'Mls', 'SimdMultAccOp', signedTypes, mlsCode)
     #indexed
-    sveTerInstIndexed('mls', 'Mls', 'SimdMultAccOp', signedTypes, mlsCode)
+    sveTerIdxInst('mls', '2Mlsi', 'SimdMultAccOp', signedTypes, mlsCode)
 
     # ADCLT
     adcltCode = 'res = srcElem1 + srcElem2 + carryIn;'

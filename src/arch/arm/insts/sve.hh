@@ -498,27 +498,6 @@ class SveTerPredOp : public ArmStaticInst
             Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
-/// Ternary, destructive, unpredicated , !INDEXED! SVE Instruction
-class SveTerIndexedOp : public ArmStaticInst
-{
-  protected:
-    RegIndex dest, op1, op2;
-    uint16_t imm;
-    uint8_t esize;
-
-    SveTerIndexedOp(const char* mnem, ExtMachInst _machInst,
-                    OpClass __opClass, RegIndex _dest,
-                    RegIndex _op1, RegIndex _op2, uint16_t _imm) :
-        ArmStaticInst(mnem, _machInst, __opClass),
-        dest(_dest), op1(_op1), op2(_op2) , imm(_imm)
-    {}
-
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
-};
-
-
-
 /// Ternary, destructive, unpredicated SVE instruction.
 class SveTerUnpredOp : public ArmStaticInst
 {
