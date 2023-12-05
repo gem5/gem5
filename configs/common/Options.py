@@ -38,7 +38,10 @@
 
 import argparse
 
-from common import ObjectList
+from common import (
+    CpuConfig,
+    ObjectList,
+)
 from common.Benchmarks import *
 
 import m5
@@ -242,6 +245,7 @@ def addNoISAOptions(parser):
 def addCommonOptions(parser):
     # start by adding the base options that do not assume an ISA
     addNoISAOptions(parser)
+    isa = list(get_supported_isas())[0]
 
     # system options
     parser.add_argument(
@@ -252,7 +256,7 @@ def addCommonOptions(parser):
     )
     parser.add_argument(
         "--cpu-type",
-        default=list(get_supported_isas())[0].name + "AtomicSimpleCPU",
+        default=CpuConfig.isa_string_map[isa] + "AtomicSimpleCPU",
         choices=ObjectList.cpu_list.get_names(),
         help="type of cpu to run with",
     )
@@ -583,7 +587,7 @@ def addCommonOptions(parser):
     parser.add_argument(
         "--restore-with-cpu",
         action="store",
-        default="AtomicSimpleCPU",
+        default=CpuConfig.isa_string_map[isa] + "AtomicSimpleCPU",
         choices=ObjectList.cpu_list.get_names(),
         help="cpu type for restoring from a checkpoint",
     )

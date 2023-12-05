@@ -51,7 +51,7 @@ parser.add_argument(
     "--cpu-type",
     type=str,
     default="X86TimingSimpleCPU",
-    choices=ObjectList.CPUList().get_names(),
+    choices=ObjectList.cpu_list.get_names(),
     help="CPU model to use",
 )
 HMC.add_options(parser)
@@ -65,7 +65,7 @@ clk = "1GHz"
 vd = VoltageDomain(voltage="1V")
 system.clk_domain = SrcClockDomain(clock=clk, voltage_domain=vd)
 # create a CPU
-system.cpu = ObjectList().get(options.cpu_type)()
+system.cpu = ObjectList.cpu_list.get(options.cpu_type)()
 # config memory system
 MemConfig.config_mem(options, system)
 # hook the CPU ports up to the membus
@@ -81,7 +81,7 @@ system.system_port = system.membus.cpu_side_ports
 
 binary = (
     "tests/test-progs/hello/bin/"
-    + ObjectList.CPUList().get_isa(options.cpu_type).name.lower()
+    + ObjectList.cpu_list.get_isa(options.cpu_type).name.lower()
     + "/linux/hello"
 )
 

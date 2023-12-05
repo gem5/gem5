@@ -86,3 +86,14 @@ class IOCache(Cache):
     mshrs = 20
     size = "1kB"
     tgts_per_mshr = 12
+
+
+class PageTableWalkerCache(Cache):
+    assoc = 2
+    tag_latency = 2
+    data_latency = 2
+    response_latency = 2
+    mshrs = 10
+    size = "1kB"
+    tgts_per_mshr = 12
+    is_read_only = False

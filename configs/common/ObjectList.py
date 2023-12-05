@@ -166,26 +166,15 @@ class CPUList(ObjectList):
 
         cls = self.get(name)
 
-        def class_exist(className: str) -> bool:
-            """Check if a class exists."""
-            import types
-
-            result = False
-            try:
-                result = eval("type(" + className + ")") == types.ClassType
-            except NameError:
-                pass
-            return result
-
-        if class_exist(m5.objects.X86CPU) and issubclass(
+        if hasattr(m5.objects, "X86CPU") and issubclass(
             cls, m5.objects.X86CPU
         ):
             return ISA.X86
-        elif class_exist(m5.objects.ArmCPU) and issubclass(
+        elif hasattr(m5.objects, "ArmCPU") and issubclass(
             cls, m5.objects.ArmCPU
         ):
             return ISA.ARM
-        elif class_exist(m5.objects.RiscvCPU) and issubclass(
+        elif hasattr(m5.objects, "RiscvCPU") and issubclass(
             cls, m5.objects.RiscvCPU
         ):
             return ISA.RISCV

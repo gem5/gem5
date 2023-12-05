@@ -148,9 +148,9 @@ def config_cache(options, system):
             dcache = dcache_class(**_get_cache_opts("l1d", options))
 
             # If we are using ISA.X86 or ISA.RISCV, we set walker caches.
-            if ObjectList.CPUList().get_isa(options.cpu_type) in [
-                ISA.RiscvCPU,
-                ISA.X86CPU,
+            if ObjectList.cpu_list.get_isa(options.cpu_type) in [
+                ISA.RISCV,
+                ISA.X86,
             ]:
                 iwalkcache = PageTableWalkerCache()
                 dwalkcache = PageTableWalkerCache()
@@ -191,7 +191,7 @@ def config_cache(options, system):
             # on these names.  For simplicity, we would advise configuring
             # it to use this naming scheme; if this isn't possible, change
             # the names below.
-            if ObjectList.CPUList().get_isa(options.cpu_type) in [
+            if ObjectList.cpu_list.get_isa(options.cpu_type) in [
                 ISA.X86,
                 ISA.ARM,
                 ISA.RISCV,
