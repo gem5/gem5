@@ -53,6 +53,8 @@ class ExitEvent(Enum):
     PERF_COUNTER_DISABLE = "performance counter disabled"
     PERF_COUNTER_RESET = "performance counter reset"
     PERF_COUNTER_INTERRUPT = "performance counter interrupt"
+    KERNEL_PANIC = "kernel panic in simulated system"
+    KERNEL_OOPS = "kernel oops in simulated system"
 
     @classmethod
     def translate_exit_status(cls, exit_string: str) -> "ExitEvent":
@@ -103,6 +105,10 @@ class ExitEvent(Enum):
             return ExitEvent.PERF_COUNTER_RESET
         elif exit_string == "performance counter interrupt":
             return ExitEvent.PERF_COUNTER_INTERRUPT
+        elif exit_string == "Kernel panic in simulated system.":
+            return ExitEvent.KERNEL_PANIC
+        elif exit_string == "Kernel oops in simulated system.":
+            return ExitEvent.KERNEL_OOPS
         elif exit_string.endswith("will terminate the simulation.\n"):
             # This is for the traffic generator exit event
             return ExitEvent.EXIT

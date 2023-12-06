@@ -32,7 +32,10 @@
 #include "base/loader/dtb_file.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
+#include "cpu/pc_event.hh"
+#include "kern/linux/events.hh"
 #include "sim/kernel_workload.hh"
+#include "sim/sim_exit.hh"
 #include "sim/system.hh"
 
 namespace gem5
@@ -72,6 +75,42 @@ FsLinux::initState()
     for (auto *tc: system->threads) {
         RiscvISA::Reset().invoke(tc);
         tc->activate();
+    }
+}
+
+void
+FsLinux::startup()
+{
+    KernelWorkload::startup();
+
+    addExitOnKernelPanicEvent();
+    addExitOnKernelOopsEvent();
+}
+
+void
+FsLinux::addExitOnKernelPanicEvent()
+{
+    const std::string dmesg_output = name() + ".dmesg";
+    if (params().exit_on_kernel_panic) {
+        kernelPanicPcEvent = addKernelFuncEvent<linux::PanicOrOopsEvent>(
+            "panic", "Kernel panic in simulated system.",
+            dmesg_output, params().on_panic
+        );
+        warn_if(!kernelPanicPcEvent, "Failed to find kernel symbol 'panic'");
+    }
+}
+
+void
+FsLinux::addExitOnKernelOopsEvent()
+{
+    const std::string dmesg_output = name() + ".dmesg";
+    if (params().exit_on_kernel_oops) {
+        kernelOopsPcEvent = addKernelFuncEvent<linux::PanicOrOopsEvent>(
+            "oops_exit", "Kernel oops in simulated system.",
+            dmesg_output, params().on_oops
+        );
+        warn_if(!kernelOopsPcEvent,
+                "Failed to find kernel symbol 'oops_exit'");
     }
 }
 
@@ -170,6 +209,30 @@ BootloaderKernelWorkload::loadDtb()
 }
 
 void
+BootloaderKernelWorkload::addExitOnKernelPanicEvent()
+{
+    const std::string dmesg_output = name() + ".dmesg";
+    if (params().exit_on_kernel_panic) {
+        kernelPanicPcEvent = addFuncEvent<linux::PanicOrOopsEvent>(
+            kernelSymbolTable, "panic", "Kernel panic in simulated system.",
+            dmesg_output, params().on_panic
+        );
+    }
+}
+
+void
+BootloaderKernelWorkload::addExitOnKernelOopsEvent()
+{
+    const std::string dmesg_output = name() + ".dmesg";
+    if (params().exit_on_kernel_oops) {
+        kernelOopsPcEvent = addFuncEvent<linux::PanicOrOopsEvent>(
+            kernelSymbolTable, "oops_exit", "Kernel oops in simulated system.",
+            dmesg_output, params().on_oops
+        );
+    }
+}
+
+void
 BootloaderKernelWorkload::initState()
 {
     loadBootloader();
@@ -180,6 +243,15 @@ BootloaderKernelWorkload::initState()
         RiscvISA::Reset().invoke(tc);
         tc->activate();
     }
+}
+
+void
+BootloaderKernelWorkload::startup()
+{
+    Workload::startup();
+
+    addExitOnKernelPanicEvent();
+    addExitOnKernelOopsEvent();
 }
 
 void
