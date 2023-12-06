@@ -42,7 +42,8 @@ namespace RiscvISA
 
 BareMetal::BareMetal(const Params &p) : Workload(p),
     _isBareMetal(p.bare_metal), _resetVect(p.reset_vect),
-    bootloader(loader::createObjectFile(p.bootloader))
+    bootloader(loader::createObjectFile(p.bootloader)),
+    semihosting(p.semihosting)
 {
     fatal_if(!bootloader, "Could not load bootloader file %s.", p.bootloader);
     _resetVect = bootloader->entryPoint();

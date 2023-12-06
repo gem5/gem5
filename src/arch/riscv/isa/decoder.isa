@@ -462,6 +462,8 @@ decode QUADRANT default Unknown::unknown() {
             0x1: decode RC2 {
                 0x0: decode RC1 {
                     0x0: SystemOp::c_ebreak({{
+                        // NB: Semihosting spec requires uncompressed ebreak,
+                        // so this instruction does not check for semihosting.
                         return std::make_shared<BreakpointFault>(
                             xc->pcState());
                     }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
@@ -4798,8 +4800,7 @@ decode QUADRANT default Unknown::unknown() {
                         }}, IsSerializeAfter, IsNonSpeculative, IsSyscall,
                             No_OpClass);
                         0x1: ebreak({{
-                            return std::make_shared<BreakpointFault>(
-                                xc->pcState());
+                            return executeEBreakOrSemihosting(xc);
                         }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
                         0x2: uret({{
                            MISA misa = xc->readMiscReg(MISCREG_ISA);
