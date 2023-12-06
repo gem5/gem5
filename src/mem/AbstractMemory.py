@@ -76,3 +76,5 @@ class AbstractMemory(ClockedObject):
     )
 
     writeable = Param.Bool(True, "Allow writes to this memory")
+
+    collect_stats = Param.Bool(True, "Collect traffic statistics")
