@@ -3094,9 +3094,6 @@ let {{
             substDict = {'targs': type, 'class_name': 'Sve' + Name}
             exec_output += SveOpExecDeclare.subst(substDict)
 
-
-
-
     # Generate definition for DOT instructions
     def sveDotInst(name, Name, opClass, types, isIndexed = True):
         global header_output, exec_output, decoders

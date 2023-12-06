@@ -515,10 +515,6 @@ class %(class_name)s : public %(base_class)s
 };
 }};
 
-
-
-
-
 def template SveMatMulOpDeclare {{
 template <typename DestElement,
           typename SrcElementA,
@@ -571,8 +567,6 @@ class %(class_name)s : public %(base_class)s
     Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
-
-
 
 def template SveReducOpDeclare {{
 template <class _Element>
