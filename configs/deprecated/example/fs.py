@@ -382,7 +382,7 @@ else:
 
 np = args.num_cpus
 
-isa = ObjectList.CPUList.get_isa(args.cpu_type)
+isa = ObjectList.cpu_list.get_isa(args.cpu_type)
 test_sys = build_test_system(np, isa)
 
 if len(bm) == 2:

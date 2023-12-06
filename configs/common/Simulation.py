@@ -81,9 +81,9 @@ def setCPUClass(options):
             TmpClass, test_mem_mode = getCPUClass(options.restore_with_cpu)
     elif options.fast_forward:
         CPUClass = TmpClass
+        CPUISA = ObjectList.cpu_list.get_isa(options.cpu_type)
         TmpClass = getCPUClass(
-            ObjectList.CPUList().get_isa(options.cpu_type).name
-            + "AtomicSimpleCPU"
+            CpuConfig.isa_string_map[CPUISA] + "AtomicSimpleCPU"
         )
         test_mem_mode = "atomic"
 

@@ -149,7 +149,7 @@ if args.bench:
 
     for app in apps:
         try:
-            if ObjectList.CPUList().get_isa(args.cpu_type) == ISA.ARM:
+            if ObjectList.cpu_list.get_isa(args.cpu_type) == ISA.ARM:
                 exec(
                     "workload = %s('arm_%s', 'linux', '%s')"
                     % (app, args.arm_iset, args.spec_input)
