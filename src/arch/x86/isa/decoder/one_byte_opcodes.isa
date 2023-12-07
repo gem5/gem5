@@ -287,31 +287,25 @@
             0x1: MOV(Ev,Gv);
             0x2: MOV(Gb,Eb);
             0x3: MOV(Gv,Ev);
-            0x4: decode REX_R {
-                0x0: decode MODRM_REG {
-                    0x0, 0x1, 0x2,
-                    0x3, 0x4, 0x5: MOV(Ev,Sv);
-                    }
-                default: UD2();
+            0x4: decode MODRM_REG {
+                0x0, 0x1, 0x2,
+                0x3, 0x4, 0x5: MOV(Ev,Sv);
             }
             0x5: LEA(Gv,M);
-            0x6: decode REX_R {
-                0x0: decode MODE_SUBMODE {
-                    0x3, 0x4: decode MODRM_REG {
-                        // Moving to the CS selector (0x1) is illegal, and 0x6 and
-                        // 0x7 are reserved.
-                        0x1, 0x6, 0x7: UD2();
-                        default: MOV_REAL(Sv,Ev);
-                    }
-                    default: decode MODRM_REG {
-                        // Moving to the CS selector (0x1) is illegal, and 0x6 and
-                        // 0x7 are reserved.
-                        0x1, 0x6, 0x7: UD2();
-                        0x2: MOVSS(Sv,Ev);
-                        default: MOV(Sv,Ev);
-                    }
+            0x6: decode MODE_SUBMODE {
+                0x3, 0x4: decode MODRM_REG {
+                    // Moving to the CS selector (0x1) is illegal, and 0x6 and
+                    // 0x7 are reserved.
+                    0x1, 0x6, 0x7: UD2();
+                    default: MOV_REAL(Sv,Ev);
                 }
-                default: UD2();
+                default: decode MODRM_REG {
+                    // Moving to the CS selector (0x1) is illegal, and 0x6 and
+                    // 0x7 are reserved.
+                    0x1, 0x6, 0x7: UD2();
+                    0x2: MOVSS(Sv,Ev);
+                    default: MOV(Sv,Ev);
+                }
             }
             //0x7: group10_Ev();
             0x7: decode MODRM_REG {

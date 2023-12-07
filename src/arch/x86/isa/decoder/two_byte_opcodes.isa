@@ -287,26 +287,23 @@
                 0x6: HINT_NOP();
                 0x7: HINT_NOP();
             }
-            0x04: decode REX_R {
-                0x0: decode LEGACY_DECODEVAL {
-                    // no prefix
-                    0x0: decode OPCODE_OP_BOTTOM3 {
-                        0x6: Cpl0CondInst::MOV(
-                            {{misc_reg::isValid(misc_reg::cr(MODRM_REG))}},Rd,Cd);
-                        0x1: Cpl0CondInst::MOV({{MODRM_REG < 8}},Rd,Dd);
-                        0x2: Cpl0CondInst::MOV(
-                            {{misc_reg::isValid(misc_reg::cr(MODRM_REG))}},Cd,Rd);
-                        0x3: Cpl0CondInst::MOV({{MODRM_REG < 8}},Dd,Rd);
-                        default: UD2();
-                    }
-                    // operand size (0x66)
-                    0x1: decode OPCODE_OP_BOTTOM3 {
-                        0x0: Cpl0CondInst::MOV(
-                            {{misc_reg::isValid(misc_reg::cr(MODRM_REG))}},Rd,Cd);
-                        0x2: Cpl0CondInst::MOV(
-                            {{misc_reg::isValid(misc_reg::cr(MODRM_REG))}},Cd,Rd);
-                    }
+            0x04: decode LEGACY_DECODEVAL {
+                // no prefix
+                0x0: decode OPCODE_OP_BOTTOM3 {
+                    0x0: Cpl0CondInst::MOV(
+                        {{misc_reg::isValid(misc_reg::cr(MODRM_REG))}},Rd,Cd);
+                    0x1: Cpl0CondInst::MOV({{MODRM_REG < 8}},Rd,Dd);
+                    0x2: Cpl0CondInst::MOV(
+                        {{misc_reg::isValid(misc_reg::cr(MODRM_REG))}},Cd,Rd);
+                    0x3: Cpl0CondInst::MOV({{MODRM_REG < 8}},Dd,Rd);
                     default: UD2();
+                }
+                // operand size (0x66)
+                0x1: decode OPCODE_OP_BOTTOM3 {
+                    0x0: Cpl0CondInst::MOV(
+                        {{misc_reg::isValid(misc_reg::cr(MODRM_REG))}},Rd,Cd);
+                    0x2: Cpl0CondInst::MOV(
+                        {{misc_reg::isValid(misc_reg::cr(MODRM_REG))}},Cd,Rd);
                 }
                 default: UD2();
             }
