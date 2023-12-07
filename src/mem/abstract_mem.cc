@@ -433,8 +433,9 @@ AbstractMemory::access(PacketPtr pkt)
 
             assert(!pkt->req->isInstFetch());
             TRACE_PACKET("Read/Write");
-            if (collectStats)
+            if (collectStats) {
                 stats.numOther[pkt->req->requestorId()]++;
+            }
         }
     } else if (pkt->isRead()) {
         assert(!pkt->isWrite());
@@ -451,8 +452,9 @@ AbstractMemory::access(PacketPtr pkt)
         if (collectStats) {
             stats.numReads[pkt->req->requestorId()]++;
             stats.bytesRead[pkt->req->requestorId()] += pkt->getSize();
-            if (pkt->req->isInstFetch())
+            if (pkt->req->isInstFetch()) {
                 stats.bytesInstRead[pkt->req->requestorId()] += pkt->getSize();
+            }
         }
     } else if (pkt->isInvalidate() || pkt->isClean()) {
         assert(!pkt->isWrite());
