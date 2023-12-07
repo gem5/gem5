@@ -41,16 +41,20 @@ addToPath("../")
 
 from common import (
     HMC,
+    CpuConfig,
     MemConfig,
     ObjectList,
 )
 
+from gem5.runtime import get_supported_isas
+
+default_isa = list(get_supported_isas())[0]
 pd = "Simple 'hello world' example using HMC as main memory"
 parser = argparse.ArgumentParser(description=pd)
 parser.add_argument(
     "--cpu-type",
     type=str,
-    default="X86TimingSimpleCPU",
+    default=CpuConfig.isa_string_map[default_isa] + "TimingSimpleCPU",
     choices=ObjectList.cpu_list.get_names(),
     help="CPU model to use",
 )
@@ -66,6 +70,7 @@ vd = VoltageDomain(voltage="1V")
 system.clk_domain = SrcClockDomain(clock=clk, voltage_domain=vd)
 # create a CPU
 system.cpu = ObjectList.cpu_list.get(options.cpu_type)()
+assert ObjectList.is_timing_cpu(system.cpu)
 # config memory system
 MemConfig.config_mem(options, system)
 # hook the CPU ports up to the membus

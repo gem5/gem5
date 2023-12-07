@@ -26,6 +26,8 @@
 
 import math
 
+from common import CpuConfig
+
 import m5
 from m5.defines import buildEnv
 from m5.objects import *
@@ -35,10 +37,15 @@ from m5.util import (
     warn,
 )
 
+from gem5.isas import ISA
 
-def define_options(parser):
-    # By default, ruby uses the simple timing cpu and the X86 ISA
-    parser.set_defaults(cpu_type="X86TimingSimpleCPU")
+
+def define_options(parser, isa: ISA):
+    if isa != ISA.NULL:
+        # By default, ruby uses the simple timing cpu with given ISA
+        parser.set_defaults(
+            cpu_type=CpuConfig.isa_string_map[isa] + "TimingSimpleCPU"
+        )
 
     parser.add_argument(
         "--topology",

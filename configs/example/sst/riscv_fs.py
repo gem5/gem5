@@ -152,7 +152,7 @@ system.clk_domain = SrcClockDomain(
 
 system.mem_ranges = [AddrRange(start=0x80000000, size=memory_size)]
 
-system.cpu = [TimingSimpleCPU(cpu_id=i) for i in range(1)]
+system.cpu = [RiscvTimingSimpleCPU(cpu_id=i) for i in range(1)]
 system.mem_mode = "timing"
 
 createHiFivePlatform(system)

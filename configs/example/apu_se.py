@@ -56,7 +56,7 @@ from ruby import Ruby
 
 # Adding script options
 parser = argparse.ArgumentParser()
-Options.addCommonOptions(parser)
+Options.addCommonOptions(parser, ISA.X86)
 Options.addSEOptions(parser)
 
 parser.add_argument(
@@ -380,7 +380,7 @@ parser.add_argument(
     help="Gfx version for gpuNote: gfx902 is not fully supported by ROCm",
 )
 
-Ruby.define_options(parser)
+Ruby.define_options(parser, ISA.X86)
 
 # add TLB options to the parser
 GPUTLBOptions.tlb_options(parser)
@@ -585,7 +585,7 @@ cp_list = []
 cpu_list = []
 
 CpuClass, mem_mode = Simulation.getCPUClass(args.cpu_type)
-if CpuClass == X86AtomicSimpleCPU or CpuClass == AtomicSimpleCPU:
+if issubclass(CpuClass, BaseAtomicSimpleCPU):
     fatal("AtomicSimpleCPU is not supported")
 if mem_mode != "timing":
     fatal("Only the timing memory mode is supported")

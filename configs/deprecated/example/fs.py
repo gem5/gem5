@@ -53,6 +53,7 @@ from m5.util import (
 from m5.util.fdthelper import *
 
 from gem5.isas import ISA
+from gem5.runtime import get_supported_isas
 
 addToPath("../../")
 
@@ -257,20 +258,23 @@ def build_test_system(np, isa: ISA):
 def build_drive_system(np):
     # driver system CPU is always simple, so is the memory
     # Note this is an assignment of a class, not an instance.
-    DriveCPUClass = AtomicSimpleCPU
     drive_mem_mode = "atomic"
     DriveMemClass = SimpleMemory
 
     cmdline = cmd_line_template()
     if buildEnv["USE_MIPS_ISA"]:
+        DriveCPUClass = MipsAtomicSimpleCPU
         drive_sys = makeLinuxMipsSystem(drive_mem_mode, bm[1], cmdline=cmdline)
     elif buildEnv["USE_SPARC_ISA"]:
+        DriveCPUClass = SparcAtomicSimpleCPU
         drive_sys = makeSparcSystem(drive_mem_mode, bm[1], cmdline=cmdline)
     elif buildEnv["USE_X86_ISA"]:
+        DriveCPUClass = X86AtomicSimpleCPU
         drive_sys = makeLinuxX86System(
             drive_mem_mode, np, bm[1], cmdline=cmdline
         )
     elif buildEnv["USE_ARM_ISA"]:
+        DriveCPUClass = ArmAtomicSimpleCPU
         drive_sys = makeArmSystem(
             drive_mem_mode,
             args.machine_type,
@@ -332,12 +336,13 @@ warn(
 
 # Add args
 parser = argparse.ArgumentParser()
-Options.addCommonOptions(parser)
+default_isa = list(get_supported_isas())[0]
+Options.addCommonOptions(parser, default_isa=default_isa)
 Options.addFSOptions(parser)
 
 # Add the ruby specific and protocol specific args
 if "--ruby" in sys.argv:
-    Ruby.define_options(parser)
+    Ruby.define_options(parser, isa=default_isa)
 
 args = parser.parse_args()
 

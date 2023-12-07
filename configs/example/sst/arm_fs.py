@@ -83,7 +83,7 @@ class ArmSstSystem(ArmSystem):
 
         self.memory_outgoing_bridge.port = self.membus.mem_side_ports
 
-        self.cpu = [TimingSimpleCPU(cpu_id=0)]
+        self.cpu = [ArmTimingSimpleCPU(cpu_id=0)]
         self.mem_mode = "timing"
 
         for cpu in self.cpu:

@@ -46,6 +46,11 @@ from m5.objects import *
 
 m5.util.addToPath("../../")
 
+from gem5.isas import ISA
+from gem5.utils.requires import requires
+
+requires(isa_required=ISA.ARM)
+
 import devices
 from common import (
     FSConfig,
@@ -101,7 +106,7 @@ class BigCluster(devices.ArmCpuCluster):
 class LittleCluster(devices.ArmCpuCluster):
     def __init__(self, system, num_cpus, cpu_clock, cpu_voltage="1.0V"):
         cpu_config = [
-            ObjectList.cpu_list.get("MinorCPU"),
+            ObjectList.cpu_list.get("ArmMinorCPU"),
             devices.L1I,
             devices.L1D,
             devices.L2,

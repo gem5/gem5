@@ -45,6 +45,12 @@ import m5
 from m5.objects import *
 
 m5.util.addToPath("../../dist")
+
+from gem5.isas import ISA
+from gem5.utils.requires import requires
+
+requires(isa_required=ISA.ARM)
+
 import sw
 
 
