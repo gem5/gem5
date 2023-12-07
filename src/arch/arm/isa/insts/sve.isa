@@ -4244,9 +4244,15 @@ let {{
     # MLA
     mlaCode = 'destElem += srcElem1 * srcElem2;'
     sveTerInst('mla', 'Mla', 'SimdMultAccOp', signedTypes, mlaCode)
+    #indexed
+    sveTerIdxInst('mla', '2Mlai', 'SimdMultAccOp', signedTypes, mlaCode)
+
     # MLS
     mlsCode = 'destElem -= srcElem1 * srcElem2;'
     sveTerInst('mls', 'Mls', 'SimdMultAccOp', signedTypes, mlsCode)
+    #indexed
+    sveTerIdxInst('mls', '2Mlsi', 'SimdMultAccOp', signedTypes, mlsCode)
+
     # ADCLT
     adcltCode = 'res = srcElem1 + srcElem2 + carryIn;'
     sveTerInstUnpred('adclt', 'Adclt', 'VectorIntegerArithOp', unsignedTypes,

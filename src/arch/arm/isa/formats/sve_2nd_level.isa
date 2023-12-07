@@ -246,6 +246,65 @@ namespace Aarch64
     }  // decodeSveIntMulAdd
 
     StaticInstPtr
+    decodeSveMultiplyAccIndexed(ExtMachInst machInst)
+    {
+        RegIndex zda = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        uint8_t size = bits(machInst, 23, 22);
+        uint8_t opc = (bits(machInst, 10));
+
+       switch(size) {
+            case 0b00:
+            case 0b01:
+            {
+
+                RegIndex zm_16 = (RegIndex)(uint8_t)bits(machInst, 18, 16);
+                uint8_t imm_16 = (uint8_t)(bits(machInst, 22) << 2)
+                | bits(machInst, 20, 19);
+                switch(opc)
+                    {
+                        case 0x0: return new Sve2Mlai<int16_t>(
+                            machInst, zda, zn, zm_16, imm_16);
+                        case 0x1: return new Sve2Mlsi<int16_t>(
+                            machInst, zda, zn, zm_16, imm_16);
+                    }
+            }
+                break;
+
+            case 0b10:
+            {
+
+                RegIndex zm_32 = (RegIndex)(uint8_t)bits(machInst, 18, 16);
+                uint8_t imm_32 = (uint8_t)bits(machInst, 20, 19);
+                switch(opc) {
+                    case 0x0: return new Sve2Mlai<int32_t>(
+                        machInst, zda, zn, zm_32, imm_32);
+                    case 0x1: return new Sve2Mlsi<int32_t>(
+                        machInst, zda, zn, zm_32, imm_32);
+                }
+            }
+                break;
+
+            case 0b11:
+            {
+
+                RegIndex zm_64 = (RegIndex)(uint8_t)bits(machInst, 19, 16);
+                uint8_t imm_64 = (uint8_t)bits(machInst, 20);
+                switch(opc) {
+                    case 0x0: return new Sve2Mlai<int64_t>(
+                        machInst, zda, zn, zm_64, imm_64);
+                    case 0x1: return new Sve2Mlsi<int64_t>(
+                        machInst, zda, zn, zm_64, imm_64);
+                }
+            }
+            break;
+        }
+
+        return new Unknown64(machInst);
+
+    } // decodeSveMultiplyAccIndexed
+
+    StaticInstPtr
     decodeSveIntMatMulAdd(ExtMachInst machInst)
     {
         RegIndex zda = (RegIndex) (uint8_t) bits(machInst, 4, 0);
@@ -3920,6 +3979,11 @@ namespace Aarch64
                 return decodeSveIntegerDotProductIndexed(machInst);
               case 0b11:
                 return decodeSveMixedSignDotProductIndexed(machInst);
+
+                // for mla/s indexed , can be renamed
+              case 0b01:
+                return decodeSveMultiplyAccIndexed(machInst);
+
               default:
                 return new Unknown64(machInst);
             }
