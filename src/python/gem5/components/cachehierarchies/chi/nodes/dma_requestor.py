@@ -25,6 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.objects import (
+    NULL,
     ClockDomain,
     RubyCache,
 )
@@ -67,6 +68,7 @@ class DMARequestor(AbstractNode):
 
         self.send_evictions = False
         self.use_prefetcher = False
+        self.prefetcher = NULL
         # Some reasonable default TBE params
         self.number_of_TBEs = 16
         self.number_of_repl_TBEs = 1
