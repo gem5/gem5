@@ -1847,10 +1847,10 @@ namespace VegaISA
         // One of the flat subtypes should be specified via flags
         assert(isFlat() ^ isFlatGlobal() ^ isFlatScratch());
 
-        if (isFlat()) {
-            generateFlatDisassembly();
-        } else if (isFlatGlobal() || isFlatScratch()) {
+        if (isFlatGlobal() || isFlatScratch()) {
             generateGlobalScratchDisassembly();
+        } else if (isFlat()) {
+            generateFlatDisassembly();
         } else {
             panic("Unknown flat subtype!\n");
         }
@@ -1862,13 +1862,19 @@ namespace VegaISA
         std::stringstream dis_stream;
         dis_stream << _opcode << " ";
 
-        if (isLoad())
-            dis_stream << "v" << extData.VDST << ", ";
+        if (isLoad() || isAtomic()) {
+            int dst_size = getOperandSize(numSrcRegOperands()) / 4;
+            dis_stream << opSelectorToRegSym(extData.VDST + 0x100, dst_size)
+                       << ", ";
+        }
 
-        dis_stream << "v[" << extData.ADDR << ":" << extData.ADDR + 1 << "]";
+        dis_stream << opSelectorToRegSym(extData.ADDR + 0x100, 2);
 
-        if (isStore())
-            dis_stream << ", v" << extData.DATA;
+        if (isStore() || isAtomic()) {
+            int src_size = getOperandSize(1) / 4;
+            dis_stream << ", "
+                << opSelectorToRegSym(extData.DATA + 0x100, src_size);
+        }
 
         disassembly = dis_stream.str();
     }
@@ -1888,25 +1894,38 @@ namespace VegaISA
         std::stringstream dis_stream;
         dis_stream << global_opcode << " ";
 
-        if (isLoad())
-            dis_stream << "v" << extData.VDST << ", ";
+        if (isLoad() || isAtomic()) {
+            // dest is the first operand after all the src operands
+            int dst_size = getOperandSize(numSrcRegOperands()) / 4;
+            dis_stream << opSelectorToRegSym(extData.VDST + 0x100, dst_size)
+                       << ", ";
+        }
 
-        if (extData.SADDR == 0x7f)
-            dis_stream << "v[" << extData.ADDR << ":" << extData.ADDR+1 << "]";
-        else
-            dis_stream << "v" << extData.ADDR;
+        if (extData.SADDR == 0x7f) {
+            dis_stream << opSelectorToRegSym(extData.ADDR + 0x100, 2);
+        } else {
+            dis_stream << opSelectorToRegSym(extData.ADDR + 0x100, 1);
+        }
 
-        if (isStore())
-            dis_stream << ", v" << extData.DATA;
+        if (isStore() || isAtomic()) {
+            int src_size = getOperandSize(1) / 4;
+            dis_stream << ", "
+                << opSelectorToRegSym(extData.DATA + 0x100, src_size);
+        }
 
-        if (extData.SADDR == 0x7f)
+        if (extData.SADDR == 0x7f) {
             dis_stream << ", off";
-        else
-            dis_stream << ", s[" << extData.SADDR << ":" << extData.SADDR+1
-                       << "]";
+        } else {
+            dis_stream << ", " << opSelectorToRegSym(extData.SADDR, 2);
+        }
 
-        if (instData.OFFSET)
+        if (instData.OFFSET) {
             dis_stream << " offset:" << instData.OFFSET;
+        }
+
+        if (instData.GLC) {
+            dis_stream << " glc";
+        }
 
         disassembly = dis_stream.str();
     }
