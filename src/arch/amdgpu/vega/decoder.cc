@@ -3627,9 +3627,9 @@ namespace VegaISA
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
+        &Decoder::decode_OP_VOP3P__V_PK_FMA_F32,
+        &Decoder::decode_OP_VOP3P__V_PK_MUL_F32,
+        &Decoder::decode_OP_VOP3P__V_PK_ADD_F32,
         &Decoder::decode_OP_VOP3P__V_PK_MOV_B32,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
@@ -4203,8 +4203,7 @@ namespace VegaISA
     GPUStaticInst*
     Decoder::decode_OP_VOP2__V_FMAC_F32(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_VOP2__V_FMAC_F32(&iFmt->iFmt_VOP2);
     }
 
     GPUStaticInst*
@@ -8293,8 +8292,7 @@ namespace VegaISA
     GPUStaticInst*
     Decoder::decode_OP_FLAT__FLAT_STORE_SHORT_D16_HI(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_STORE_SHORT_D16_HI(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
@@ -8607,8 +8605,7 @@ namespace VegaISA
     GPUStaticInst*
     Decoder::decode_OP_GLOBAL__GLOBAL_STORE_SHORT_D16_HI(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_STORE_SHORT_D16_HI(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
@@ -9968,8 +9965,7 @@ namespace VegaISA
     GPUStaticInst*
     Decoder::decode_OP_SCRATCH__SCRATCH_STORE_SHORT_D16_HI(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_FLAT__FLAT_STORE_SHORT_D16_HI(&iFmt->iFmt_FLAT);
     }
 
     GPUStaticInst*
@@ -13103,6 +13099,24 @@ namespace VegaISA
     {
         fatal("Trying to decode instruction without a class\n");
         return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_PK_FMA_F32(MachInst iFmt)
+    {
+        return new Inst_VOP3P__V_PK_FMA_F32(&iFmt->iFmt_VOP3P);
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_PK_MUL_F32(MachInst iFmt)
+    {
+        return new Inst_VOP3P__V_PK_MUL_F32(&iFmt->iFmt_VOP3P);
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_PK_ADD_F32(MachInst iFmt)
+    {
+        return new Inst_VOP3P__V_PK_ADD_F32(&iFmt->iFmt_VOP3P);
     }
 
     GPUStaticInst*
