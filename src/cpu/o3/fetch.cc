@@ -1349,7 +1349,7 @@ Fetch::fetch(bool &status_change)
     } else if (blkOffset >= fetchBufferSize) {
         DPRINTF(Fetch, "[tid:%i] Done fetching, reached the end "
                 "fetch buffer.\n", tid);
-    } else if (!curFT) {
+    } else if (decoupledFrontEnd && !curFT) {
         DPRINTF(Fetch, "[tid:%i] Done fetching, reached end of fetch "
                 "target.\n", tid);
     }
@@ -1377,7 +1377,7 @@ Fetch::fetch(bool &status_change)
     issuePipelinedIfetch[tid] = fetchBufferBlockPC != fetchBufferPC[tid] &&
         fetchStatus[tid] != IcacheWaitResponse &&
         fetchStatus[tid] != ItlbWait &&
-        (decoupledFrontEnd && (fetchStatus[tid] != FTQEmpty)) &&
+        fetchStatus[tid] != FTQEmpty &&
         fetchStatus[tid] != IcacheWaitRetry &&
         fetchStatus[tid] != QuiescePending &&
         !curMacroop;
