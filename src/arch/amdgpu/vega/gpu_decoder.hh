@@ -1585,6 +1585,8 @@ namespace VegaISA
         GPUStaticInst* decode_OP_VOP3P__V_MAD_MIX_F32(MachInst);
         GPUStaticInst* decode_OP_VOP3P__V_MAD_MIXLO_F16(MachInst);
         GPUStaticInst* decode_OP_VOP3P__V_MAD_MIXHI_F16(MachInst);
+        GPUStaticInst* decode_OP_VOP3P__V_PK_MOV_B32(MachInst);
+        GPUStaticInst* decode_OP_VOP3P__V_MFMA_F64_16X16X4F64(MachInst);
         GPUStaticInst* subDecode_OPU_VOP3(MachInst);
         GPUStaticInst* subDecode_OP_DS(MachInst);
         GPUStaticInst* subDecode_OP_FLAT(MachInst);
@@ -1908,7 +1910,27 @@ namespace VegaISA
         unsigned int       NEG : 3;
     };
 
-    union InstFormat {
+    struct InFmt_VOP3P_MAI
+    {
+        unsigned int      VDST : 8;
+        unsigned int      CBSZ : 3;
+        unsigned int      ABID : 4;
+        unsigned int    ACC_CD : 1;
+        unsigned int        OP : 7;
+        unsigned int  ENCODING : 9;
+    };
+
+    struct InFmt_VOP3P_MAI_1
+    {
+        unsigned int  SRC0 : 9;
+        unsigned int  SRC1 : 9;
+        unsigned int  SRC2 : 9;
+        unsigned int   ACC : 2;
+        unsigned int  BLGP : 3;
+    };
+
+    union InstFormat
+    {
         InFmt_DS            iFmt_DS;
         InFmt_DS_1          iFmt_DS_1;
         InFmt_EXP           iFmt_EXP;
@@ -1941,6 +1963,8 @@ namespace VegaISA
         InFmt_VOP_SDWAB     iFmt_VOP_SDWAB;
         InFmt_VOP3P         iFmt_VOP3P;
         InFmt_VOP3P_1       iFmt_VOP3P_1;
+        InFmt_VOP3P_MAI     iFmt_VOP3P_MAI;
+        InFmt_VOP3P_MAI_1   iFmt_VOP3P_MAI_1;
         uint32_t            imm_u32;
         float               imm_f32;
     }; // union InstFormat

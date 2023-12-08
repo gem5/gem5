@@ -491,6 +491,149 @@ namespace VegaISA
         bool hasSecondDword(InFmt_VOP3B *);
     }; // Inst_VOP3B
 
+    class Inst_VOP3P : public VEGAGPUStaticInst
+    {
+      public:
+        Inst_VOP3P(InFmt_VOP3P*, const std::string &opcode);
+        ~Inst_VOP3P();
+
+        int instSize() const override;
+        void generateDisassembly() override;
+
+        void initOperandInfo() override;
+
+      protected:
+        // first instruction DWORD
+        InFmt_VOP3P instData;
+        // second instruction DWORD
+        InFmt_VOP3P_1 extData;
+
+        template<typename T>
+        void vop3pHelper(GPUDynInstPtr gpuDynInst,
+                        T (*fOpImpl)(T, T, bool))
+        {
+            Wavefront *wf = gpuDynInst->wavefront();
+            ConstVecOperandU32 S0(gpuDynInst, extData.SRC0);
+            ConstVecOperandU32 S1(gpuDynInst, extData.SRC1);
+            VecOperandU32 D(gpuDynInst, instData.VDST);
+
+            S0.readSrc();
+            S1.readSrc();
+
+            int opLo = instData.OPSEL;
+            int opHi = instData.OPSEL_HI2 << 2 | extData.OPSEL_HI;
+            int negLo = extData.NEG;
+            int negHi = instData.NEG_HI;
+            bool clamp = instData.CLMP;
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (wf->execMask(lane)) {
+                    T upper_val = fOpImpl(word<T>(S0[lane], opHi, negHi, 0),
+                                          word<T>(S1[lane], opHi, negHi, 1),
+                                          clamp);
+                    T lower_val = fOpImpl(word<T>(S0[lane], opLo, negLo, 0),
+                                          word<T>(S1[lane], opLo, negLo, 1),
+                                          clamp);
+
+                    uint16_t upper_raw =
+                        *reinterpret_cast<uint16_t*>(&upper_val);
+                    uint16_t lower_raw =
+                        *reinterpret_cast<uint16_t*>(&lower_val);
+
+                    D[lane] = upper_raw << 16 | lower_raw;
+                }
+            }
+
+            D.write();
+        }
+
+        template<typename T>
+        void vop3pHelper(GPUDynInstPtr gpuDynInst,
+                        T (*fOpImpl)(T, T, T, bool))
+        {
+            Wavefront *wf = gpuDynInst->wavefront();
+            ConstVecOperandU32 S0(gpuDynInst, extData.SRC0);
+            ConstVecOperandU32 S1(gpuDynInst, extData.SRC1);
+            ConstVecOperandU32 S2(gpuDynInst, extData.SRC2);
+            VecOperandU32 D(gpuDynInst, instData.VDST);
+
+            S0.readSrc();
+            S1.readSrc();
+            S2.readSrc();
+
+            int opLo = instData.OPSEL;
+            int opHi = instData.OPSEL_HI2 << 2 | extData.OPSEL_HI;
+            int negLo = extData.NEG;
+            int negHi = instData.NEG_HI;
+            bool clamp = instData.CLMP;
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (wf->execMask(lane)) {
+                    T upper_val = fOpImpl(word<T>(S0[lane], opHi, negHi, 0),
+                                          word<T>(S1[lane], opHi, negHi, 1),
+                                          word<T>(S2[lane], opHi, negHi, 2),
+                                          clamp);
+                    T lower_val = fOpImpl(word<T>(S0[lane], opLo, negLo, 0),
+                                          word<T>(S1[lane], opLo, negLo, 1),
+                                          word<T>(S2[lane], opLo, negLo, 2),
+                                          clamp);
+
+                    uint16_t upper_raw =
+                        *reinterpret_cast<uint16_t*>(&upper_val);
+                    uint16_t lower_raw =
+                        *reinterpret_cast<uint16_t*>(&lower_val);
+
+                    D[lane] = upper_raw << 16 | lower_raw;
+                }
+            }
+
+            D.write();
+        }
+
+      private:
+        bool hasSecondDword(InFmt_VOP3P *);
+
+        template<typename T>
+        T
+        word(uint32_t data, int opSel, int neg, int opSelBit)
+        {
+            // This method assumes two words packed into a dword
+            static_assert(sizeof(T) == 2);
+
+            bool select = bits(opSel, opSelBit, opSelBit);
+            uint16_t raw = select ? bits(data, 31, 16)
+                                  : bits(data, 15, 0);
+
+            // Apply input modifiers. This may seem odd, but the hardware
+            // just flips the MSb instead of doing unary negation.
+            bool negate = bits(neg, opSelBit, opSelBit);
+            if (negate) {
+                raw ^= 0x8000;
+            }
+
+            return *reinterpret_cast<T*>(&raw);
+        }
+    }; // Inst_VOP3P
+
+    class Inst_VOP3P_MAI : public VEGAGPUStaticInst
+    {
+      public:
+        Inst_VOP3P_MAI(InFmt_VOP3P_MAI*, const std::string &opcode);
+        ~Inst_VOP3P_MAI();
+
+        int instSize() const override;
+        void generateDisassembly() override;
+
+        void initOperandInfo() override;
+
+      protected:
+        // first instruction DWORD
+        InFmt_VOP3P_MAI instData;
+        // second instruction DWORD
+        InFmt_VOP3P_MAI_1 extData;
+
+      private:
+        bool hasSecondDword(InFmt_VOP3P_MAI *);
+    }; // Inst_VOP3P
+
     class Inst_DS : public VEGAGPUStaticInst
     {
       public:

@@ -34,6 +34,7 @@
 #include "arch/amdgpu/vega/gpu_decoder.hh"
 #include "arch/amdgpu/vega/insts/gpu_static_inst.hh"
 #include "arch/amdgpu/vega/insts/instructions.hh"
+#include "arch/amdgpu/vega/insts/vop3p.hh"
 
 namespace gem5
 {
@@ -3629,6 +3630,7 @@ namespace VegaISA
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
+        &Decoder::decode_OP_VOP3P__V_PK_MOV_B32,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
@@ -3687,8 +3689,7 @@ namespace VegaISA
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
+        &Decoder::decode_OP_VOP3P__V_MFMA_F64_16X16X4F64,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
@@ -12920,134 +12921,115 @@ namespace VegaISA
     GPUStaticInst*
     Decoder::decode_OP_VOP3P__V_PK_MAD_I16(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_VOP3P__V_PK_MAD_I16(&iFmt->iFmt_VOP3P);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_VOP3P__V_PK_MUL_LO_U16(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_VOP3P__V_PK_MUL_LO_U16(&iFmt->iFmt_VOP3P);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_VOP3P__V_PK_ADD_I16(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_VOP3P__V_PK_ADD_I16(&iFmt->iFmt_VOP3P);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_VOP3P__V_PK_SUB_I16(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_VOP3P__V_PK_SUB_I16(&iFmt->iFmt_VOP3P);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_VOP3P__V_PK_LSHLREV_B16(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_VOP3P__V_PK_LSHLREV_B16(&iFmt->iFmt_VOP3P);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_VOP3P__V_PK_LSHRREV_B16(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_VOP3P__V_PK_LSHRREV_B16(&iFmt->iFmt_VOP3P);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_VOP3P__V_PK_ASHRREV_I16(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_VOP3P__V_PK_ASHRREV_B16(&iFmt->iFmt_VOP3P);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_VOP3P__V_PK_MAX_I16(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_VOP3P__V_PK_MAX_I16(&iFmt->iFmt_VOP3P);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_VOP3P__V_PK_MIN_I16(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_VOP3P__V_PK_MIN_I16(&iFmt->iFmt_VOP3P);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_VOP3P__V_PK_MAD_U16(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_VOP3P__V_PK_MAD_U16(&iFmt->iFmt_VOP3P);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_VOP3P__V_PK_ADD_U16(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_VOP3P__V_PK_ADD_U16(&iFmt->iFmt_VOP3P);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_VOP3P__V_PK_SUB_U16(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_VOP3P__V_PK_SUB_U16(&iFmt->iFmt_VOP3P);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_VOP3P__V_PK_MAX_U16(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_VOP3P__V_PK_MAX_U16(&iFmt->iFmt_VOP3P);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_VOP3P__V_PK_MIN_U16(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_VOP3P__V_PK_MIN_U16(&iFmt->iFmt_VOP3P);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_VOP3P__V_PK_FMA_F16(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_VOP3P__V_PK_FMA_F16(&iFmt->iFmt_VOP3P);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_VOP3P__V_PK_ADD_F16(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_VOP3P__V_PK_ADD_F16(&iFmt->iFmt_VOP3P);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_VOP3P__V_PK_MUL_F16(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_VOP3P__V_PK_MUL_F16(&iFmt->iFmt_VOP3P);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_VOP3P__V_PK_MIN_F16(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_VOP3P__V_PK_MIN_F16(&iFmt->iFmt_VOP3P);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_VOP3P__V_PK_MAX_F16(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_VOP3P__V_PK_MAX_F16(&iFmt->iFmt_VOP3P);
     }
 
     GPUStaticInst*
@@ -13069,6 +13051,19 @@ namespace VegaISA
     {
         fatal("Trying to decode instruction without a class\n");
         return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_PK_MOV_B32(MachInst iFmt)
+    {
+        return new Inst_VOP3P__V_PK_MOV_B32(&iFmt->iFmt_VOP3P);
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP3P__V_MFMA_F64_16X16X4F64(MachInst iFmt)
+    {
+        return new Inst_VOP3P_MAI__V_MFMA_F64_16X16X4F64(
+                &iFmt->iFmt_VOP3P_MAI);
     }
 
     GPUStaticInst*

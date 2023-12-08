@@ -43405,6 +43405,76 @@ namespace VegaISA
 
         void execute(GPUDynInstPtr) override;
     }; // Inst_FLAT__FLAT_ATOMIC_DEC_X2
+
+    class Inst_VOP3P__V_PK_MOV_B32 : public Inst_VOP3P
+    {
+      public:
+        Inst_VOP3P__V_PK_MOV_B32(InFmt_VOP3P*);
+        ~Inst_VOP3P__V_PK_MOV_B32();
+
+        int
+        getNumOperands() override
+        {
+            return numDstRegOperands() + numSrcRegOperands();
+        } // getNumOperands
+
+        int numDstRegOperands() override { return 1; }
+        int numSrcRegOperands() override { return 2; }
+
+        int
+        getOperandSize(int opIdx) override
+        {
+            switch (opIdx) {
+              case 0: // src0
+                return 8;
+              case 1: // src1
+                return 8;
+              case 2: // dst
+                return 8;
+              default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+            }
+        } // getOperandSize
+
+        void execute(GPUDynInstPtr) override;
+    }; // Inst_VOP3P__V_PK_MOV_B32
+
+    class Inst_VOP3P_MAI__V_MFMA_F64_16X16X4F64 : public Inst_VOP3P_MAI
+    {
+      public:
+        Inst_VOP3P_MAI__V_MFMA_F64_16X16X4F64(InFmt_VOP3P_MAI*);
+        ~Inst_VOP3P_MAI__V_MFMA_F64_16X16X4F64();
+
+        int
+        getNumOperands() override
+        {
+            return numDstRegOperands() + numSrcRegOperands();
+        } // getNumOperands
+
+        int numDstRegOperands() override { return 1; }
+        int numSrcRegOperands() override { return 3; }
+
+        int
+        getOperandSize(int opIdx) override
+        {
+            switch (opIdx) {
+              case 0: // src0 "A"
+                return 8;
+              case 1: // src1 "B"
+                return 8;
+              case 2: // src2 "C"
+                return 32;
+              case 3: // dst
+                return 32;
+              default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+            }
+        } // getOperandSize
+
+        void execute(GPUDynInstPtr) override;
+    };
 } // namespace VegaISA
 } // namespace gem5
 
