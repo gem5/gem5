@@ -416,6 +416,8 @@ class LSQ
         {
             return flags.isSet(Flag::WriteBackToRegister);
         }
+
+        void setWBToRegister();
         /** @} */
         virtual bool recvTimingResp(PacketPtr pkt) = 0;
         virtual void sendPacketToCache() = 0;

@@ -369,6 +369,9 @@ class LSQUnit
     /** Writes back the instruction, sending it to IEW. */
     void writeback(const DynInstPtr &inst, PacketPtr pkt);
 
+    /** Special early writeback for prefetch instructions. */
+    void writebackPrefetch(const DynInstPtr &inst);
+
     /** Try to finish a previously blocked write back attempt */
     void writebackBlockedStore();
 
@@ -393,6 +396,8 @@ class LSQUnit
     void schedule(Event& ev, Tick when);
 
     BaseMMU *getMMUPtr();
+
+    CPU *getCPU() { return cpu; }
 
   private:
     /** Pointer to the CPU. */

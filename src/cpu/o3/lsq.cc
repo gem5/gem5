@@ -1057,9 +1057,7 @@ LSQ::LSQRequest::LSQRequest(
     _numOutstandingPackets(0), _amo_op(nullptr)
 {
     flags.set(Flag::IsLoad, isLoad);
-    flags.set(Flag::WriteBackToRegister,
-              _inst->isStoreConditional() || _inst->isAtomic() ||
-              _inst->isLoad());
+    this->setWBToRegister();
     flags.set(Flag::IsAtomic, _inst->isAtomic());
     install();
 }
@@ -1080,11 +1078,34 @@ LSQ::LSQRequest::LSQRequest(
     _hasStaleTranslation(stale_translation)
 {
     flags.set(Flag::IsLoad, isLoad);
-    flags.set(Flag::WriteBackToRegister,
-              _inst->isStoreConditional() || _inst->isAtomic() ||
-              _inst->isLoad());
+    this->setWBToRegister();
     flags.set(Flag::IsAtomic, _inst->isAtomic());
     install();
+}
+
+void
+LSQ::LSQRequest::setWBToRegister()
+{
+    bool needWritebackToReg = false;
+    if (_inst->isStoreConditional() || _inst->isAtomic()) {
+        needWritebackToReg = true;
+    } else if (_inst->isLoad()) {
+        if (_inst->isDataPrefetch() || _inst->isInstPrefetch()) {
+            // Prefetch inst.
+            if (_port.getCPU()->params().block_on_prefetch_inst) {
+                // Only enable this if we block on prefetch inst.
+                needWritebackToReg = true;
+            }
+        } else {
+            // Normal load inst.
+            needWritebackToReg = true;
+        }
+    }
+    flags.set(Flag::WriteBackToRegister, needWritebackToReg);
+    if (_inst->isDataPrefetch() || _inst->isInstPrefetch()) {
+        DPRINTF(LSQ, "[sn:%llu] Pf inst NeedWB %d.\n",
+            _inst->seqNum, this->needWBToRegister());
+    }
 }
 
 void

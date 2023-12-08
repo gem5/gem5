@@ -93,6 +93,7 @@ class ThreadContext;
 class CPU : public BaseCPU
 {
   public:
+    PARAMS(BaseO3CPU);
     typedef std::list<DynInstPtr>::iterator ListIt;
 
     friend class ThreadContext;
