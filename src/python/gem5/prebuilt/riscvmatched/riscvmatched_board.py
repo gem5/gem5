@@ -45,7 +45,7 @@ from m5.objects import (
     PMAChecker,
     Port,
     RawDiskImage,
-    RiscvLinux,
+    RiscvBootloaderKernelWorkload,
     RiscvMmioVirtIO,
     RiscvRTC,
     VirtIOBlock,
@@ -144,7 +144,7 @@ class RISCVMatchedBoard(
     @overrides(AbstractSystemBoard)
     def _setup_board(self) -> None:
         if self._fs:
-            self.workload = RiscvLinux()
+            self.workload = RiscvBootloaderKernelWorkload()
 
             # Contains a CLINT, PLIC, UART, and some functions for the dtb, etc.
             self.platform = HiFive()
@@ -310,6 +310,18 @@ class RISCVMatchedBoard(
             self.mem_ranges = [AddrRange(memory.get_size())]
             memory.set_memory_range(self.mem_ranges)
 
+    @overrides(AbstractSystemBoard)
+    def _pre_instantiate(self):
+        if len(self._bootloader) > 0:
+            self.workload.bootloader_addr = 0x0
+            self.workload.bootloader_filename = self._bootloader[0]
+            self.workload.kernel_addr = 0x80200000
+            self.workload.entry_point = 0x80000000  # Bootloader starting point
+        else:
+            self.workload.kernel_addr = 0x0
+            self.workload.entry_point = 0x80000000
+        self._connect_things()
+
     def generate_device_tree(self, outdir: str) -> None:
         """Creates the ``dtb`` and ``dts`` files.
 
@@ -335,6 +347,12 @@ class RISCVMatchedBoard(
                 )
             )
             root.append(node)
+
+        node = FdtNode(f"chosen")
+        bootargs = self.workload.command_line
+        node.append(FdtPropertyStrings("bootargs", [bootargs]))
+        node.append(FdtPropertyStrings("stdout-path", ["/uart@10000000"]))
+        root.append(node)
 
         # See Documentation/devicetree/bindings/riscv/cpus.txt for details.
         cpus_node = FdtNode("cpus")
@@ -508,7 +526,7 @@ class RISCVMatchedBoard(
         uart_node.append(
             FdtPropertyWords("interrupt-parent", soc_state.phandle(plic))
         )
-        uart_node.appendCompatible(["ns8250"])
+        uart_node.appendCompatible(["ns8250", "ns16550a"])
         soc_node.append(uart_node)
 
         # VirtIO MMIO disk node
@@ -588,7 +606,7 @@ class RISCVMatchedBoard(
         kernel_args: Optional[List[str]] = None,
         exit_on_work_items: bool = True,
     ) -> None:
-        self.workload = RiscvLinux()
+        self.workload = RiscvBootloaderKernelWorkload()
         KernelDiskWorkload.set_kernel_disk_workload(
             self=self,
             kernel=kernel,
