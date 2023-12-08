@@ -131,7 +131,7 @@ class BaseO3CPU(BaseCPU):
     fetchTrapLatency = Param.Cycles(1, "Fetch trap latency")
 
     block_on_prefetch_inst = Param.Bool(
-        True, "Whether wait for prefetch inst."
+        False, "Whether wait for prefetch inst."
     )
 
     backComSize = Param.Unsigned(

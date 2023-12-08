@@ -1086,22 +1086,22 @@ LSQ::LSQRequest::LSQRequest(
 void
 LSQ::LSQRequest::setWBToRegister()
 {
-    bool needWritebackToReg = false;
+    bool need_writeback_to_reg = false;
     if (_inst->isStoreConditional() || _inst->isAtomic()) {
-        needWritebackToReg = true;
+        need_writeback_to_reg = true;
     } else if (_inst->isLoad()) {
         if (_inst->isDataPrefetch() || _inst->isInstPrefetch()) {
             // Prefetch inst.
             if (_port.getCPU()->params().block_on_prefetch_inst) {
                 // Only enable this if we block on prefetch inst.
-                needWritebackToReg = true;
+                need_writeback_to_reg = true;
             }
         } else {
             // Normal load inst.
-            needWritebackToReg = true;
+            need_writeback_to_reg = true;
         }
     }
-    flags.set(Flag::WriteBackToRegister, needWritebackToReg);
+    flags.set(Flag::WriteBackToRegister, need_writeback_to_reg);
     if (_inst->isDataPrefetch() || _inst->isInstPrefetch()) {
         DPRINTF(LSQ, "[sn:%llu] Pf inst NeedWB %d.\n",
             _inst->seqNum, this->needWBToRegister());
