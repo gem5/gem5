@@ -52,14 +52,13 @@
 
 namespace gem5
 {
-
 class BaseSimpleCPU;
 
 class SimpleExecContext : public ExecContext
 {
   public:
     BaseSimpleCPU *cpu;
-    SimpleThread* thread;
+    SimpleThread *thread;
 
     // This is the offset from the current pc that fetch should be performed
     Addr fetchOffset;
@@ -82,57 +81,52 @@ class SimpleExecContext : public ExecContext
 
     struct ExecContextStats : public statistics::Group
     {
-        ExecContextStats(BaseSimpleCPU *cpu, SimpleThread *thread)
-            : statistics::Group(cpu,
-                           csprintf("exec_context.thread_%i",
-                                    thread->threadId()).c_str()),
-              ADD_STAT(numMatAluAccesses, statistics::units::Count::get(),
-                       "Number of matrix alu accesses"),
-              ADD_STAT(numCallsReturns, statistics::units::Count::get(),
-                       "Number of times a function call or return occured"),
-              ADD_STAT(numMatInsts, statistics::units::Count::get(),
-                       "Number of matrix instructions"),
-              ADD_STAT(numIdleCycles, statistics::units::Cycle::get(),
-                       "Number of idle cycles"),
-              ADD_STAT(numBusyCycles, statistics::units::Cycle::get(),
-                       "Number of busy cycles"),
-              ADD_STAT(notIdleFraction, statistics::units::Ratio::get(),
-                       "Percentage of non-idle cycles"),
-              ADD_STAT(idleFraction, statistics::units::Ratio::get(),
-                       "Percentage of idle cycles"),
-              ADD_STAT(numPredictedBranches, statistics::units::Count::get(),
-                       "Number of branches predicted as taken"),
-              ADD_STAT(numBranchMispred, statistics::units::Count::get(),
-                       "Number of branch mispredictions"),
-              numRegReads{
-                  &(cpu->executeStats[thread->threadId()]->numIntRegReads),
-                  &(cpu->executeStats[thread->threadId()]->numFpRegReads),
-                  &(cpu->executeStats[thread->threadId()]->numVecRegReads),
-                  &(cpu->executeStats[thread->threadId()]->numVecRegReads),
-                  &(cpu->executeStats[thread->threadId()]->numVecPredRegReads),
-                  &(cpu->executeStats[thread->threadId()]->numCCRegReads),
-                  &numMatRegReads
-              },
-              numRegWrites{
-                  &(cpu->executeStats[thread->threadId()]->numIntRegWrites),
-                  &(cpu->executeStats[thread->threadId()]->numFpRegWrites),
-                  &(cpu->executeStats[thread->threadId()]->numVecRegWrites),
-                  &(cpu->executeStats[thread->threadId()]->numVecRegWrites),
-                  &(cpu->executeStats[thread->threadId()]
-                        ->numVecPredRegWrites),
-                  &(cpu->executeStats[thread->threadId()]->numCCRegWrites),
-                  &numMatRegWrites
-              }
+        ExecContextStats(BaseSimpleCPU *cpu, SimpleThread *thread) :
+            statistics::Group(
+                cpu, csprintf("exec_context.thread_%i", thread->threadId())
+                         .c_str()),
+            ADD_STAT(numMatAluAccesses, statistics::units::Count::get(),
+                "Number of matrix alu accesses"),
+            ADD_STAT(numCallsReturns, statistics::units::Count::get(),
+                "Number of times a function call or return occured"),
+            ADD_STAT(numMatInsts, statistics::units::Count::get(),
+                "Number of matrix instructions"),
+            ADD_STAT(numIdleCycles, statistics::units::Cycle::get(),
+                "Number of idle cycles"),
+            ADD_STAT(numBusyCycles, statistics::units::Cycle::get(),
+                "Number of busy cycles"),
+            ADD_STAT(notIdleFraction, statistics::units::Ratio::get(),
+                "Percentage of non-idle cycles"),
+            ADD_STAT(idleFraction, statistics::units::Ratio::get(),
+                "Percentage of idle cycles"),
+            ADD_STAT(numPredictedBranches, statistics::units::Count::get(),
+                "Number of branches predicted as taken"),
+            ADD_STAT(numBranchMispred, statistics::units::Count::get(),
+                "Number of branch mispredictions"),
+            numRegReads{
+                &(cpu->executeStats[thread->threadId()]->numIntRegReads),
+                &(cpu->executeStats[thread->threadId()]->numFpRegReads),
+                &(cpu->executeStats[thread->threadId()]->numVecRegReads),
+                &(cpu->executeStats[thread->threadId()]->numVecRegReads),
+                &(cpu->executeStats[thread->threadId()]->numVecPredRegReads),
+                &(cpu->executeStats[thread->threadId()]->numCCRegReads),
+                &numMatRegReads},
+            numRegWrites{
+                &(cpu->executeStats[thread->threadId()]->numIntRegWrites),
+                &(cpu->executeStats[thread->threadId()]->numFpRegWrites),
+                &(cpu->executeStats[thread->threadId()]->numVecRegWrites),
+                &(cpu->executeStats[thread->threadId()]->numVecRegWrites),
+                &(cpu->executeStats[thread->threadId()]->numVecPredRegWrites),
+                &(cpu->executeStats[thread->threadId()]->numCCRegWrites),
+                &numMatRegWrites}
         {
             idleFraction = statistics::constant(1.0) - notIdleFraction;
             numIdleCycles = idleFraction * cpu->baseStats.numCycles;
             numBusyCycles = notIdleFraction * cpu->baseStats.numCycles;
 
-            numPredictedBranches
-                .prereq(numPredictedBranches);
+            numPredictedBranches.prereq(numPredictedBranches);
 
-            numBranchMispred
-                .prereq(numBranchMispred);
+            numBranchMispred.prereq(numBranchMispred);
         }
 
         // Number of matrix alu accesses
@@ -172,11 +166,18 @@ class SimpleExecContext : public ExecContext
 
   public:
     /** Constructor */
-    SimpleExecContext(BaseSimpleCPU* _cpu, SimpleThread* _thread)
-        : cpu(_cpu), thread(_thread), fetchOffset(0), stayAtPC(false),
-        numInst(0), numOp(0), numLoad(0), lastIcacheStall(0),
-        lastDcacheStall(0), execContextStats(cpu, thread)
-    { }
+    SimpleExecContext(BaseSimpleCPU *_cpu, SimpleThread *_thread) :
+        cpu(_cpu),
+        thread(_thread),
+        fetchOffset(0),
+        stayAtPC(false),
+        numInst(0),
+        numOp(0),
+        numLoad(0),
+        lastIcacheStall(0),
+        lastDcacheStall(0),
+        execContextStats(cpu, thread)
+    {}
 
     RegVal
     getRegOperand(const StaticInst *si, int idx) override
@@ -226,7 +227,7 @@ class SimpleExecContext : public ExecContext
     readMiscRegOperand(const StaticInst *si, int idx) override
     {
         cpu->executeStats[thread->threadId()]->numMiscRegReads++;
-        const RegId& reg = si->srcRegIdx(idx);
+        const RegId &reg = si->srcRegIdx(idx);
         assert(reg.is(MiscRegClass));
         return thread->readMiscReg(reg.index());
     }
@@ -235,7 +236,7 @@ class SimpleExecContext : public ExecContext
     setMiscRegOperand(const StaticInst *si, int idx, RegVal val) override
     {
         cpu->executeStats[thread->threadId()]->numMiscRegWrites++;
-        const RegId& reg = si->destRegIdx(idx);
+        const RegId &reg = si->destRegIdx(idx);
         assert(reg.is(MiscRegClass));
         thread->setMiscReg(reg.index(), val);
     }
@@ -275,47 +276,39 @@ class SimpleExecContext : public ExecContext
     }
 
     Fault
-    readMem(Addr addr, uint8_t *data, unsigned int size,
-            Request::Flags flags,
-            const std::vector<bool>& byte_enable)
-        override
+    readMem(Addr addr, uint8_t *data, unsigned int size, Request::Flags flags,
+        const std::vector<bool> &byte_enable) override
     {
         assert(byte_enable.size() == size);
         return cpu->readMem(addr, data, size, flags, byte_enable);
     }
 
     Fault
-    initiateMemRead(Addr addr, unsigned int size,
-                    Request::Flags flags,
-                    const std::vector<bool>& byte_enable)
-        override
+    initiateMemRead(Addr addr, unsigned int size, Request::Flags flags,
+        const std::vector<bool> &byte_enable) override
     {
         assert(byte_enable.size() == size);
         return cpu->initiateMemRead(addr, size, flags, byte_enable);
     }
 
     Fault
-    writeMem(uint8_t *data, unsigned int size, Addr addr,
-             Request::Flags flags, uint64_t *res,
-             const std::vector<bool>& byte_enable)
-        override
+    writeMem(uint8_t *data, unsigned int size, Addr addr, Request::Flags flags,
+        uint64_t *res, const std::vector<bool> &byte_enable) override
     {
         assert(byte_enable.size() == size);
-        return cpu->writeMem(data, size, addr, flags, res,
-            byte_enable);
+        return cpu->writeMem(data, size, addr, flags, res, byte_enable);
     }
 
     Fault
-    amoMem(Addr addr, uint8_t *data, unsigned int size,
-           Request::Flags flags, AtomicOpFunctorPtr amo_op) override
+    amoMem(Addr addr, uint8_t *data, unsigned int size, Request::Flags flags,
+        AtomicOpFunctorPtr amo_op) override
     {
         return cpu->amoMem(addr, data, size, flags, std::move(amo_op));
     }
 
     Fault
-    initiateMemAMO(Addr addr, unsigned int size,
-                   Request::Flags flags,
-                   AtomicOpFunctorPtr amo_op) override
+    initiateMemAMO(Addr addr, unsigned int size, Request::Flags flags,
+        AtomicOpFunctorPtr amo_op) override
     {
         return cpu->initiateMemAMO(addr, size, flags, std::move(amo_op));
     }
@@ -345,7 +338,11 @@ class SimpleExecContext : public ExecContext
     }
 
     /** Returns a pointer to the ThreadContext. */
-    ThreadContext *tcBase() const override { return thread->getTC(); }
+    ThreadContext *
+    tcBase() const override
+    {
+        return thread->getTC();
+    }
 
     bool
     readPredicate() const override

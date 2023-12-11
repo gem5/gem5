@@ -46,28 +46,29 @@
 
 namespace gem5
 {
-
 namespace memory
 {
-
 DRAMSim2::DRAMSim2(const Params &p) :
     AbstractMemory(p),
     port(name() + ".port", *this),
-    wrapper(p.deviceConfigFile, p.systemConfigFile, p.filePath,
-            p.traceFile, p.range.size() / 1024 / 1024, p.enableDebug),
-    retryReq(false), retryResp(false), startTick(0),
-    nbrOutstandingReads(0), nbrOutstandingWrites(0),
-    sendResponseEvent([this]{ sendResponse(); }, name()),
-    tickEvent([this]{ tick(); }, name())
+    wrapper(p.deviceConfigFile, p.systemConfigFile, p.filePath, p.traceFile,
+        p.range.size() / 1024 / 1024, p.enableDebug),
+    retryReq(false),
+    retryResp(false),
+    startTick(0),
+    nbrOutstandingReads(0),
+    nbrOutstandingWrites(0),
+    sendResponseEvent([this] { sendResponse(); }, name()),
+    tickEvent([this] { tick(); }, name())
 {
     DPRINTF(DRAMSim2,
-            "Instantiated DRAMSim2 with clock %d ns and queue size %d\n",
-            wrapper.clockPeriod(), wrapper.queueSize());
+        "Instantiated DRAMSim2 with clock %d ns and queue size %d\n",
+        wrapper.clockPeriod(), wrapper.queueSize());
 
-    DRAMSim::TransactionCompleteCB* read_cb =
+    DRAMSim::TransactionCompleteCB *read_cb =
         new DRAMSim::Callback<DRAMSim2, void, unsigned, uint64_t, uint64_t>(
             this, &DRAMSim2::readComplete);
-    DRAMSim::TransactionCompleteCB* write_cb =
+    DRAMSim::TransactionCompleteCB *write_cb =
         new DRAMSim::Callback<DRAMSim2, void, unsigned, uint64_t, uint64_t>(
             this, &DRAMSim2::writeComplete);
     wrapper.setCallbacks(read_cb, write_cb);
@@ -90,7 +91,7 @@ DRAMSim2::init()
 
     if (system()->cacheLineSize() != wrapper.burstSize())
         fatal("DRAMSim2 burst size %d does not match cache line size %d\n",
-              wrapper.burstSize(), system()->cacheLineSize());
+            wrapper.burstSize(), system()->cacheLineSize());
 }
 
 void
@@ -115,8 +116,7 @@ DRAMSim2::sendResponse()
         responseQueue.pop_front();
 
         DPRINTF(DRAMSim2, "Have %d read, %d write, %d responses outstanding\n",
-                nbrOutstandingReads, nbrOutstandingWrites,
-                responseQueue.size());
+            nbrOutstandingReads, nbrOutstandingWrites, responseQueue.size());
 
         if (!responseQueue.empty() && !sendResponseEvent.scheduled())
             schedule(sendResponseEvent, curTick());
@@ -150,8 +150,8 @@ DRAMSim2::tick()
         port.sendRetryReq();
     }
 
-    schedule(tickEvent,
-        curTick() + wrapper.clockPeriod() * sim_clock::as_int::ns);
+    schedule(
+        tickEvent, curTick() + wrapper.clockPeriod() * sim_clock::as_int::ns);
 }
 
 Tick
@@ -271,8 +271,8 @@ DRAMSim2::accessAndRespond(PacketPtr pkt)
         // Reset the timings of the packet
         pkt->headerDelay = pkt->payloadDelay = 0;
 
-        DPRINTF(DRAMSim2, "Queuing response for address %lld\n",
-                pkt->getAddr());
+        DPRINTF(
+            DRAMSim2, "Queuing response for address %lld\n", pkt->getAddr());
 
         // queue it to be sent back
         responseQueue.push_back(pkt);
@@ -287,10 +287,11 @@ DRAMSim2::accessAndRespond(PacketPtr pkt)
     }
 }
 
-void DRAMSim2::readComplete(unsigned id, uint64_t addr, uint64_t cycle)
+void
+DRAMSim2::readComplete(unsigned id, uint64_t addr, uint64_t cycle)
 {
     assert(cycle == divCeil(curTick() - startTick,
-                            wrapper.clockPeriod() * sim_clock::as_int::ns));
+                        wrapper.clockPeriod() * sim_clock::as_int::ns));
 
     DPRINTF(DRAMSim2, "Read to address %lld complete\n", addr);
 
@@ -315,10 +316,11 @@ void DRAMSim2::readComplete(unsigned id, uint64_t addr, uint64_t cycle)
     accessAndRespond(pkt);
 }
 
-void DRAMSim2::writeComplete(unsigned id, uint64_t addr, uint64_t cycle)
+void
+DRAMSim2::writeComplete(unsigned id, uint64_t addr, uint64_t cycle)
 {
     assert(cycle == divCeil(curTick() - startTick,
-                            wrapper.clockPeriod() * sim_clock::as_int::ns));
+                        wrapper.clockPeriod() * sim_clock::as_int::ns));
 
     DPRINTF(DRAMSim2, "Write to address %lld complete\n", addr);
 
@@ -357,10 +359,9 @@ DRAMSim2::drain()
     return nbrOutstanding() != 0 ? DrainState::Draining : DrainState::Drained;
 }
 
-DRAMSim2::MemoryPort::MemoryPort(const std::string& _name,
-                                 DRAMSim2& _memory)
-    : ResponsePort(_name), mem(_memory)
-{ }
+DRAMSim2::MemoryPort::MemoryPort(const std::string &_name, DRAMSim2 &_memory) :
+    ResponsePort(_name), mem(_memory)
+{}
 
 AddrRangeList
 DRAMSim2::MemoryPort::getAddrRanges() const

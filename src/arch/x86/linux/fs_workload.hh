@@ -44,10 +44,8 @@
 
 namespace gem5
 {
-
 namespace X86ISA
 {
-
 class FsLinux : public X86ISA::FsWorkload
 {
   protected:

@@ -43,12 +43,10 @@
 
 namespace gem5
 {
-
 struct MultiCompressorParams;
 
 namespace compression
 {
-
 class Multi : public Base
 {
   protected:
@@ -60,7 +58,7 @@ class Multi : public Base
     class MultiCompData;
 
     /** List of sub-compressors. */
-    std::vector<Base*> compressors;
+    std::vector<Base *> compressors;
 
     /**
      * An encoding is associated to each sub-compressor to inform which
@@ -88,9 +86,9 @@ class Multi : public Base
 
     struct MultiStats : public statistics::Group
     {
-        const Multi& compressor;
+        const Multi &compressor;
 
-        MultiStats(BaseStats &base_group, Multi& _compressor);
+        MultiStats(BaseStats &base_group, Multi &_compressor);
 
         void regStats() override;
 
@@ -108,10 +106,10 @@ class Multi : public Base
     void setCache(BaseCache *_cache) override;
 
     std::unique_ptr<Base::CompressionData> compress(
-        const std::vector<Base::Chunk>& chunks,
-        Cycles& comp_lat, Cycles& decomp_lat) override;
+        const std::vector<Base::Chunk> &chunks, Cycles &comp_lat,
+        Cycles &decomp_lat) override;
 
-    void decompress(const CompressionData* comp_data, uint64_t* data) override;
+    void decompress(const CompressionData *comp_data, uint64_t *data) override;
 };
 
 class Multi::MultiCompData : public CompressionData
@@ -130,8 +128,8 @@ class Multi::MultiCompData : public CompressionData
      * @param index Index of the compressor that provided this compression.
      * @param comp_data Compression data of the best compressor.
      */
-    MultiCompData(unsigned index,
-        std::unique_ptr<Base::CompressionData> comp_data);
+    MultiCompData(
+        unsigned index, std::unique_ptr<Base::CompressionData> comp_data);
 
     /** Default destructor. */
     ~MultiCompData() = default;

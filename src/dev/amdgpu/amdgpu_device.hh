@@ -48,7 +48,6 @@
 
 namespace gem5
 {
-
 class AMDGPUInterruptHandler;
 class SDMAEngine;
 
@@ -96,7 +95,11 @@ class AMDGPUDevice : public PciDevice
      * VGA ROM methods
      */
     AddrRange romRange;
-    bool isROM(Addr addr) const { return romRange.contains(addr); }
+    bool
+    isROM(Addr addr) const
+    {
+        return romRange.contains(addr);
+    }
     void readROM(PacketPtr pkt);
     void writeROM(PacketPtr pkt);
 
@@ -177,12 +180,28 @@ class AMDGPUDevice : public PciDevice
     /**
      * Get handles to GPU blocks.
      */
-    AMDGPUInterruptHandler* getIH() { return deviceIH; }
-    SDMAEngine* getSDMAById(int id);
-    SDMAEngine* getSDMAEngine(Addr offset);
-    AMDGPUVM &getVM() { return gpuvm; }
-    AMDGPUMemoryManager* getMemMgr() { return gpuMemMgr; }
-    GPUCommandProcessor* CP() { return cp; }
+    AMDGPUInterruptHandler *
+    getIH()
+    {
+        return deviceIH;
+    }
+    SDMAEngine *getSDMAById(int id);
+    SDMAEngine *getSDMAEngine(Addr offset);
+    AMDGPUVM &
+    getVM()
+    {
+        return gpuvm;
+    }
+    AMDGPUMemoryManager *
+    getMemMgr()
+    {
+        return gpuMemMgr;
+    }
+    GPUCommandProcessor *
+    CP()
+    {
+        return cp;
+    }
 
     /**
      * Set handles to GPU blocks.
@@ -202,21 +221,37 @@ class AMDGPUDevice : public PciDevice
     /**
      * Methods related to translations and system/device memory.
      */
-    RequestorID vramRequestorId() { return gpuMemMgr->getRequestorID(); }
+    RequestorID
+    vramRequestorId()
+    {
+        return gpuMemMgr->getRequestorID();
+    }
 
     /* HW context stuff */
-    uint16_t lastVMID() { return _lastVMID; }
+    uint16_t
+    lastVMID()
+    {
+        return _lastVMID;
+    }
     uint16_t allocateVMID(uint16_t pasid);
     void deallocateVmid(uint16_t vmid);
     void deallocatePasid(uint16_t pasid);
     void deallocateAllQueues();
     void mapDoorbellToVMID(Addr doorbell, uint16_t vmid);
-    uint16_t getVMID(Addr doorbell) { return doorbellVMIDMap[doorbell]; }
-    std::unordered_map<uint16_t, std::set<int>>& getUsedVMIDs();
+    uint16_t
+    getVMID(Addr doorbell)
+    {
+        return doorbellVMIDMap[doorbell];
+    }
+    std::unordered_map<uint16_t, std::set<int>> &getUsedVMIDs();
     void insertQId(uint16_t vmid, int id);
 
     /* Device information */
-    GfxVersion getGfxVersion() const { return gfx_version; }
+    GfxVersion
+    getGfxVersion() const
+    {
+        return gfx_version;
+    }
 };
 
 } // namespace gem5

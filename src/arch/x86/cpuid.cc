@@ -35,15 +35,13 @@
 
 namespace gem5
 {
-
 namespace X86ISA
 {
-
-X86CPUID::X86CPUID(const std::string& vendor, const std::string& name)
-    : vendorString(vendor), nameString(name)
+X86CPUID::X86CPUID(const std::string &vendor, const std::string &name) :
+    vendorString(vendor), nameString(name)
 {
     fatal_if(vendorString.size() != 12,
-             "CPUID vendor string must be 12 characters\n");
+        "CPUID vendor string must be 12 characters\n");
 }
 
 void
@@ -61,8 +59,8 @@ X86CPUID::addExtendedFunc(uint32_t func, std::vector<uint32_t> values)
 }
 
 bool
-X86CPUID::doCpuid(ThreadContext * tc, uint32_t function, uint32_t index,
-                  CpuidResult &result)
+X86CPUID::doCpuid(
+    ThreadContext *tc, uint32_t function, uint32_t index, CpuidResult &result)
 {
     constexpr uint32_t ext = 0x80000000;
 
@@ -71,16 +69,16 @@ X86CPUID::doCpuid(ThreadContext * tc, uint32_t function, uint32_t index,
     // Handle the string-related CPUID functions specially
     if (function == VendorAndLargestStdFunc) {
         result = CpuidResult(NumStandardCpuidFuncs - 1,
-                             stringToRegister(vendorString.c_str()),
-                             stringToRegister(vendorString.c_str() + 4),
-                             stringToRegister(vendorString.c_str() + 8));
+            stringToRegister(vendorString.c_str()),
+            stringToRegister(vendorString.c_str() + 4),
+            stringToRegister(vendorString.c_str() + 8));
 
         return true;
     } else if (function == (ext | VendorAndLargestExtFunc)) {
         result = CpuidResult(0x80000000 + NumExtendedCpuidFuncs - 1,
-                             stringToRegister(vendorString.c_str()),
-                             stringToRegister(vendorString.c_str() + 4),
-                             stringToRegister(vendorString.c_str() + 8));
+            stringToRegister(vendorString.c_str()),
+            stringToRegister(vendorString.c_str() + 4),
+            stringToRegister(vendorString.c_str() + 8));
 
         return true;
     } else if ((function == (ext | NameString1)) ||
@@ -90,16 +88,15 @@ X86CPUID::doCpuid(ThreadContext * tc, uint32_t function, uint32_t index,
         // should go away once the string is a vetted parameter.
         char cleanName[nameStringSize];
         memset(cleanName, '\0', nameStringSize);
-        strncpy(cleanName, nameString.c_str(), nameStringSize-1);
+        strncpy(cleanName, nameString.c_str(), nameStringSize - 1);
 
         int funcNum = bits(function, 15, 0);
         int offset = (funcNum - NameString1) * 16;
         assert(nameStringSize >= offset + 16);
-        result = CpuidResult(
-                stringToRegister(cleanName + offset + 0),
-                stringToRegister(cleanName + offset + 4),
-                stringToRegister(cleanName + offset + 12),
-                stringToRegister(cleanName + offset + 8));
+        result = CpuidResult(stringToRegister(cleanName + offset + 0),
+            stringToRegister(cleanName + offset + 4),
+            stringToRegister(cleanName + offset + 12),
+            stringToRegister(cleanName + offset + 8));
 
         return true;
     }
@@ -123,9 +120,9 @@ X86CPUID::doCpuid(ThreadContext * tc, uint32_t function, uint32_t index,
 
     auto &cap_vec = capabilities[function];
     result = CpuidResult(cap_vec[cap_offset + 0], cap_vec[cap_offset + 1],
-                         cap_vec[cap_offset + 2], cap_vec[cap_offset + 3]);
-    DPRINTF(X86, "CPUID function %x returning (%x, %x, %x, %x)\n",
-            function, result.rax, result.rbx, result.rdx, result.rcx);
+        cap_vec[cap_offset + 2], cap_vec[cap_offset + 3]);
+    DPRINTF(X86, "CPUID function %x returning (%x, %x, %x, %x)\n", function,
+        result.rax, result.rbx, result.rdx, result.rcx);
 
     return true;
 }
@@ -134,7 +131,7 @@ uint64_t
 X86CPUID::stringToRegister(const char *str)
 {
     uint64_t reg = 0;
-    for (int pos = 3; pos >=0; pos--) {
+    for (int pos = 3; pos >= 0; pos--) {
         reg <<= 8;
         reg |= str[pos];
     }
@@ -151,9 +148,9 @@ X86CPUID::hasSignificantIndex(uint32_t function)
 
     if (family == 0x0000) {
         switch (funcNum) {
-          case ExtendedState:
+        case ExtendedState:
             return true;
-          default:
+        default:
             return false;
         }
     }

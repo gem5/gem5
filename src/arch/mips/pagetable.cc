@@ -33,10 +33,8 @@
 
 namespace gem5
 {
-
 namespace MipsISA
 {
-
 void
 PTE::serialize(CheckpointOut &cp) const
 {

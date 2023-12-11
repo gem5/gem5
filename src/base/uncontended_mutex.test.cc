@@ -39,7 +39,7 @@ TEST(UncontendedMutex, Lock)
     int data = 0;
     UncontendedMutex m;
 
-    std::thread t1([&] () {
+    std::thread t1([&]() {
         std::lock_guard<UncontendedMutex> g(m);
         // Simulate += operation with a racing change between read and write.
         int tmp = data;
@@ -47,13 +47,13 @@ TEST(UncontendedMutex, Lock)
         data = tmp + 1;
     });
 
-    std::thread t2([&] () {
+    std::thread t2([&]() {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         std::lock_guard<UncontendedMutex> g(m);
         data = data + 1;
     });
 
-    std::thread t3([&] () {
+    std::thread t3([&]() {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         std::lock_guard<UncontendedMutex> g(m);
         data = data + 1;
@@ -74,8 +74,8 @@ TEST(UncontendedMutex, HeavyContention)
     int data = 0;
     UncontendedMutex m;
 
-    for (int t = 0 ; t < num_of_thread; ++t) {
-        threads.emplace_back([&] () {
+    for (int t = 0; t < num_of_thread; ++t) {
+        threads.emplace_back([&]() {
             for (int k = 0; k < num_of_iter; ++k) {
                 std::lock_guard<UncontendedMutex> g(m);
                 data++;
@@ -83,7 +83,7 @@ TEST(UncontendedMutex, HeavyContention)
         });
     }
 
-    for (auto& t : threads) {
+    for (auto &t : threads) {
         t.join();
     }
     EXPECT_EQ(data, num_of_iter * num_of_thread);

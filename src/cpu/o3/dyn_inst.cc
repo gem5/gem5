@@ -49,17 +49,21 @@
 
 namespace gem5
 {
-
 namespace o3
 {
-
 DynInst::DynInst(const Arrays &arrays, const StaticInstPtr &static_inst,
-        const StaticInstPtr &_macroop, InstSeqNum seq_num, CPU *_cpu)
-    : seqNum(seq_num), staticInst(static_inst), cpu(_cpu),
-      _numSrcs(arrays.numSrcs), _numDests(arrays.numDests),
-      _flatDestIdx(arrays.flatDestIdx), _destIdx(arrays.destIdx),
-      _prevDestIdx(arrays.prevDestIdx), _srcIdx(arrays.srcIdx),
-      _readySrcIdx(arrays.readySrcIdx), macroop(_macroop)
+    const StaticInstPtr &_macroop, InstSeqNum seq_num, CPU *_cpu) :
+    seqNum(seq_num),
+    staticInst(static_inst),
+    cpu(_cpu),
+    _numSrcs(arrays.numSrcs),
+    _numDests(arrays.numDests),
+    _flatDestIdx(arrays.flatDestIdx),
+    _destIdx(arrays.destIdx),
+    _prevDestIdx(arrays.prevDestIdx),
+    _srcIdx(arrays.srcIdx),
+    _readySrcIdx(arrays.readySrcIdx),
+    macroop(_macroop)
 {
     std::fill(_readySrcIdx, _readySrcIdx + (numSrcs() + 7) / 8, 0);
 
@@ -74,10 +78,10 @@ DynInst::DynInst(const Arrays &arrays, const StaticInstPtr &static_inst,
     ++cpu->instcount;
 
     if (cpu->instcount > 1500) {
-#ifdef GEM5_DEBUG
+#    ifdef GEM5_DEBUG
         cpu->dumpInsts();
         dumpSNList();
-#endif
+#    endif
         assert(cpu->instcount <= 1500);
     }
 
@@ -89,21 +93,20 @@ DynInst::DynInst(const Arrays &arrays, const StaticInstPtr &static_inst,
 #ifdef GEM5_DEBUG
     cpu->snList.insert(seqNum);
 #endif
-
 }
 
 DynInst::DynInst(const Arrays &arrays, const StaticInstPtr &static_inst,
-        const StaticInstPtr &_macroop, const PCStateBase &_pc,
-        const PCStateBase &pred_pc, InstSeqNum seq_num, CPU *_cpu)
-    : DynInst(arrays, static_inst, _macroop, seq_num, _cpu)
+    const StaticInstPtr &_macroop, const PCStateBase &_pc,
+    const PCStateBase &pred_pc, InstSeqNum seq_num, CPU *_cpu) :
+    DynInst(arrays, static_inst, _macroop, seq_num, _cpu)
 {
     set(pc, _pc);
     set(predPC, pred_pc);
 }
 
 DynInst::DynInst(const Arrays &arrays, const StaticInstPtr &_staticInst,
-        const StaticInstPtr &_macroop)
-    : DynInst(arrays, _staticInst, _macroop, 0, nullptr)
+    const StaticInstPtr &_macroop) :
+    DynInst(arrays, _staticInst, _macroop, 0, nullptr)
 {}
 
 /*
@@ -226,11 +229,8 @@ DynInst::~DynInst()
             Tick val;
             // Print info needed by the pipeline activity viewer.
             DPRINTFR(O3PipeView, "O3PipeView:fetch:%llu:0x%08llx:%d:%llu:%s\n",
-                     fetch,
-                     pcState().instAddr(),
-                     pcState().microPC(),
-                     seqNum,
-                     staticInst->disassemble(pcState().instAddr()));
+                fetch, pcState().instAddr(), pcState().microPC(), seqNum,
+                staticInst->disassemble(pcState().instAddr()));
 
             val = (decodeTick == -1) ? 0 : fetch + decodeTick;
             DPRINTFR(O3PipeView, "O3PipeView:decode:%llu\n", val);
@@ -245,13 +245,13 @@ DynInst::~DynInst()
             val = (commitTick == -1) ? 0 : fetch + commitTick;
 
             Tick valS = (storeTick == -1) ? 0 : fetch + storeTick;
-            DPRINTFR(O3PipeView, "O3PipeView:retire:%llu:store:%llu\n",
-                    val, valS);
+            DPRINTFR(
+                O3PipeView, "O3PipeView:retire:%llu:store:%llu\n", val, valS);
         }
     }
 #endif
 
-    delete [] memData;
+    delete[] memData;
     delete traceData;
     fault = NoFault;
 
@@ -266,7 +266,6 @@ DynInst::~DynInst()
     cpu->snList.erase(seqNum);
 #endif
 };
-
 
 #ifdef GEM5_DEBUG
 void
@@ -304,8 +303,8 @@ DynInst::dump(std::string &outstring)
 void
 DynInst::markSrcRegReady()
 {
-    DPRINTF(IQ, "[sn:%lli] has %d ready out of %d sources. RTI %d)\n",
-            seqNum, readyRegs+1, numSrcRegs(), readyToIssue());
+    DPRINTF(IQ, "[sn:%lli] has %d ready out of %d sources. RTI %d)\n", seqNum,
+        readyRegs + 1, numSrcRegs(), readyToIssue());
     if (++readyRegs == numSrcRegs()) {
         setCanIssue();
     }
@@ -317,7 +316,6 @@ DynInst::markSrcRegReady(RegIndex src_idx)
     readySrcIdx(src_idx, true);
     markSrcRegReady();
 }
-
 
 void
 DynInst::setSquashed()
@@ -409,11 +407,10 @@ DynInst::trap(const Fault &fault)
 
 Fault
 DynInst::initiateMemRead(Addr addr, unsigned size, Request::Flags flags,
-                               const std::vector<bool> &byte_enable)
+    const std::vector<bool> &byte_enable)
 {
     assert(byte_enable.size() == size);
-    return cpu->pushRequest(
-        dynamic_cast<DynInstPtr::PtrType>(this),
+    return cpu->pushRequest(dynamic_cast<DynInstPtr::PtrType>(this),
         /* ld */ true, nullptr, size, addr, flags, nullptr, nullptr,
         byte_enable);
 }
@@ -422,37 +419,32 @@ Fault
 DynInst::initiateMemMgmtCmd(Request::Flags flags)
 {
     const unsigned int size = 8;
-    return cpu->pushRequest(
-            dynamic_cast<DynInstPtr::PtrType>(this),
-            /* ld */ true, nullptr, size, 0x0ul, flags, nullptr, nullptr,
-            std::vector<bool>(size, true));
+    return cpu->pushRequest(dynamic_cast<DynInstPtr::PtrType>(this),
+        /* ld */ true, nullptr, size, 0x0ul, flags, nullptr, nullptr,
+        std::vector<bool>(size, true));
 }
 
 Fault
 DynInst::writeMem(uint8_t *data, unsigned size, Addr addr,
-                        Request::Flags flags, uint64_t *res,
-                        const std::vector<bool> &byte_enable)
+    Request::Flags flags, uint64_t *res, const std::vector<bool> &byte_enable)
 {
     assert(byte_enable.size() == size);
-    return cpu->pushRequest(
-        dynamic_cast<DynInstPtr::PtrType>(this),
-        /* st */ false, data, size, addr, flags, res, nullptr,
-        byte_enable);
+    return cpu->pushRequest(dynamic_cast<DynInstPtr::PtrType>(this),
+        /* st */ false, data, size, addr, flags, res, nullptr, byte_enable);
 }
 
 Fault
-DynInst::initiateMemAMO(Addr addr, unsigned size, Request::Flags flags,
-                              AtomicOpFunctorPtr amo_op)
+DynInst::initiateMemAMO(
+    Addr addr, unsigned size, Request::Flags flags, AtomicOpFunctorPtr amo_op)
 {
     // atomic memory instructions do not have data to be written to memory yet
     // since the atomic operations will be executed directly in cache/memory.
     // Therefore, its `data` field is nullptr.
     // Atomic memory requests need to carry their `amo_op` fields to cache/
     // memory
-    return cpu->pushRequest(
-            dynamic_cast<DynInstPtr::PtrType>(this),
-            /* atomic */ false, nullptr, size, addr, flags, nullptr,
-            std::move(amo_op), std::vector<bool>(size, true));
+    return cpu->pushRequest(dynamic_cast<DynInstPtr::PtrType>(this),
+        /* atomic */ false, nullptr, size, addr, flags, nullptr,
+        std::move(amo_op), std::vector<bool>(size, true));
 }
 
 } // namespace o3

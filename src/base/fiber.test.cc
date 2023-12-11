@@ -58,7 +58,10 @@ TEST(Fiber, Starting)
     {
       public:
         StartingFiber(Fiber *link) : Fiber(link) {}
-        void main() { /** Do nothing */ }
+        void
+        main()
+        { /** Do nothing */
+        }
     };
 
     StartingFiber fiber(Fiber::primaryFiber());
@@ -86,19 +89,17 @@ extern SwitchingFiber a;
 extern SwitchingFiber b;
 extern SwitchingFiber c;
 
-SwitchingFiber a("A", { &b, &a, Fiber::primaryFiber(), &b, &c });
-SwitchingFiber b("B", { &a, &c });
-SwitchingFiber c("C", { &a, Fiber::primaryFiber(), Fiber::primaryFiber() });
+SwitchingFiber a("A", {&b, &a, Fiber::primaryFiber(), &b, &c});
+SwitchingFiber b("B", {&a, &c});
+SwitchingFiber c("C", {&a, Fiber::primaryFiber(), Fiber::primaryFiber()});
 
 std::vector<SwitchingFiber *>::iterator expectedIt;
-std::vector<SwitchingFiber *> expected({
-    &a, &b, &a, &a, /* main Fiber, */
+std::vector<SwitchingFiber *> expected({&a, &b, &a, &a, /* main Fiber, */
     &a, &b, &c, &a, &c,
-    /* main Fiber, */ &c, &c
-});
+    /* main Fiber, */ &c, &c});
 
 SwitchingFiber::SwitchingFiber(
-        const char *name, std::initializer_list<Fiber *> l) :
+    const char *name, std::initializer_list<Fiber *> l) :
     name(name), next(l)
 {}
 
@@ -138,8 +139,8 @@ TEST(Fiber, Switching)
     EXPECT_FALSE(c.finished());
 
     c.run();
-    EXPECT_EQ(expected.end(), expectedIt) <<
-        "Didn't exactly use up the expected Fiber sequence";
+    EXPECT_EQ(expected.end(), expectedIt)
+        << "Didn't exactly use up the expected Fiber sequence";
 
     EXPECT_TRUE(c.finished());
 }

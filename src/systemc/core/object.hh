@@ -36,7 +36,6 @@
 
 namespace sc_gem5
 {
-
 class Object;
 
 typedef std::vector<sc_core::sc_object *> Objects;
@@ -50,7 +49,7 @@ class Object
     Object(sc_core::sc_object *_sc_obj);
     Object(sc_core::sc_object *_sc_obj, const char *);
     Object(sc_core::sc_object *_sc_obj, const Object &);
-    Object &operator = (const Object &);
+    Object &operator=(const Object &);
 
     virtual ~Object();
 
@@ -60,8 +59,8 @@ class Object
     const char *name() const;
     const char *basename() const;
 
-    void print(std::ostream & =std::cout) const;
-    void dump(std::ostream & =std::cout) const;
+    void print(std::ostream & = std::cout) const;
+    void dump(std::ostream & = std::cout) const;
 
     const std::vector<sc_core::sc_object *> &get_child_objects() const;
     const std::vector<sc_core::sc_event *> &get_child_events() const;
@@ -83,7 +82,11 @@ class Object
         return sc_obj->_gem5_object;
     }
 
-    sc_core::sc_object *sc_obj() { return _sc_obj; }
+    sc_core::sc_object *
+    sc_obj()
+    {
+        return _sc_obj;
+    }
 
     EventsIt addChildEvent(sc_core::sc_event *e);
     void delChildEvent(sc_core::sc_event *e);
@@ -109,7 +112,7 @@ extern Objects topLevelObjects;
 extern Objects allObjects;
 
 sc_core::sc_object *findObject(
-        const char *name, const Objects &objects=topLevelObjects);
+    const char *name, const Objects &objects = topLevelObjects);
 
 sc_core::sc_object *pickParentObj();
 void pushParentObj(sc_core::sc_object *obj);
@@ -117,4 +120,4 @@ void popParentObj();
 
 } // namespace sc_gem5
 
-#endif  //__SYSTEMC_CORE_OBJECT_HH__
+#endif //__SYSTEMC_CORE_OBJECT_HH__

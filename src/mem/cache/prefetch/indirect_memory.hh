@@ -47,12 +47,10 @@
 
 namespace gem5
 {
-
 struct IndirectMemoryPrefetcherParams;
 
 namespace prefetch
 {
-
 class IndirectMemory : public Queued
 {
     /** Maximum number of prefetches generated per event */
@@ -98,11 +96,17 @@ class IndirectMemory : public Queued
          */
         bool increasedIndirectCounter;
 
-        PrefetchTableEntry(unsigned indirect_counter_bits)
-            : TaggedEntry(), address(0), secure(false), streamCounter(0),
-              enabled(false), index(0), baseAddr(0), shift(0),
-              indirectCounter(indirect_counter_bits),
-              increasedIndirectCounter(false)
+        PrefetchTableEntry(unsigned indirect_counter_bits) :
+            TaggedEntry(),
+            address(0),
+            secure(false),
+            streamCounter(0),
+            enabled(false),
+            index(0),
+            baseAddr(0),
+            shift(0),
+            indirectCounter(indirect_counter_bits),
+            increasedIndirectCounter(false)
         {}
 
         void
@@ -141,13 +145,15 @@ class IndirectMemory : public Queued
          */
         std::vector<std::vector<Addr>> baseAddr;
 
-        IndirectPatternDetectorEntry(unsigned int num_addresses,
-                                     unsigned int num_shifts)
-          : TaggedEntry(), idx1(0), idx2(0), secondIndexSet(false),
+        IndirectPatternDetectorEntry(
+            unsigned int num_addresses, unsigned int num_shifts) :
+            TaggedEntry(),
+            idx1(0),
+            idx2(0),
+            secondIndexSet(false),
             numMisses(0),
             baseAddr(num_addresses, std::vector<Addr>(num_shifts))
-        {
-        }
+        {}
 
         void
         invalidate() override
@@ -173,8 +179,8 @@ class IndirectMemory : public Queued
      * @param pt_entry Pointer to the associated page table entry
      * @param index Detected first index value
      */
-    void allocateOrUpdateIPDEntry(const PrefetchTableEntry *pt_entry,
-                                  int64_t index);
+    void allocateOrUpdateIPDEntry(
+        const PrefetchTableEntry *pt_entry, int64_t index);
     /**
      * Update an IPD entry with a detected miss address, when the first index
      * is being tracked
@@ -201,11 +207,11 @@ class IndirectMemory : public Queued
     ~IndirectMemory() = default;
 
     void calculatePrefetch(const PrefetchInfo &pfi,
-                           std::vector<AddrPriority> &addresses,
-                           const CacheAccessor &cache) override;
+        std::vector<AddrPriority> &addresses,
+        const CacheAccessor &cache) override;
 };
 
 } // namespace prefetch
 } // namespace gem5
 
-#endif//__MEM_CACHE_PREFETCH_INDIRECT_MEMORY_HH__
+#endif //__MEM_CACHE_PREFETCH_INDIRECT_MEMORY_HH__

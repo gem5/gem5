@@ -37,7 +37,6 @@
 
 namespace gem5
 {
-
 class DmaVirtDevice : public DmaDevice
 {
   protected:
@@ -62,14 +61,14 @@ class DmaVirtDevice : public DmaDevice
         T dmaBuffer;
 
         DmaVirtCallback(const std::function<void(const T &)> &function,
-                      T dma_buffer_value = 0)
-          : DmaCallback(), _function(function), dmaBuffer(dma_buffer_value)
-        { }
+            T dma_buffer_value = 0) :
+            DmaCallback(), _function(function), dmaBuffer(dma_buffer_value)
+        {}
     };
 
   public:
-    DmaVirtDevice(const Params& p) : DmaDevice(p) { }
-    virtual ~DmaVirtDevice() { }
+    DmaVirtDevice(const Params &p) : DmaDevice(p) {}
+    virtual ~DmaVirtDevice() {}
 
     /**
      * Initiate a DMA read from virtual address host_addr. Helper function
@@ -82,7 +81,7 @@ class DmaVirtDevice : public DmaDevice
      * @param delay Number of ticks to wait before scheduling callback
      */
     void dmaReadVirt(Addr host_addr, unsigned size, DmaCallback *cb,
-                     void *data, Tick delay = 0);
+        void *data, Tick delay = 0);
     /**
      * Initiate a DMA write from virtual address host_addr. Helper function
      * for dmaVirt method.
@@ -94,10 +93,10 @@ class DmaVirtDevice : public DmaDevice
      * @param delay Number of ticks to wait before scheduling callback
      */
     void dmaWriteVirt(Addr host_addr, unsigned size, DmaCallback *b,
-                      void *data, Tick delay = 0);
+        void *data, Tick delay = 0);
 
     // Typedefing dmaRead and dmaWrite function pointer
-    typedef void (DmaDevice::*DmaFnPtr)(Addr, int, Event*, uint8_t*, Tick);
+    typedef void (DmaDevice::*DmaFnPtr)(Addr, int, Event *, uint8_t *, Tick);
 
     /**
      * Initiate a call to DmaDevice using DmaFnPtr do a DMA starting from
@@ -112,7 +111,7 @@ class DmaVirtDevice : public DmaDevice
      * @param delay Number of ticks to wait before scheduling callback
      */
     void dmaVirt(DmaFnPtr dmaFn, Addr host_addr, unsigned size,
-                 DmaCallback *cb, void *data, Tick delay = 0);
+        DmaCallback *cb, void *data, Tick delay = 0);
 
     /**
      * Function used to translate a range of addresses from virtual to

@@ -65,7 +65,6 @@
 
 namespace gem5
 {
-
 class RequestPort;
 class ThreadContext;
 
@@ -113,28 +112,25 @@ class PortProxy : FunctionalRequestProtocol
 
     virtual ~PortProxy() {}
 
-
     /** Fixed functionality for use in base classes. */
 
     /**
      * Read size bytes memory at physical address and store in p.
      */
-    void readBlobPhys(Addr addr, Request::Flags flags,
-                      void *p, uint64_t size) const;
+    void readBlobPhys(
+        Addr addr, Request::Flags flags, void *p, uint64_t size) const;
 
     /**
      * Write size bytes from p to physical address.
      */
-    void writeBlobPhys(Addr addr, Request::Flags flags,
-                       const void *p, uint64_t size) const;
+    void writeBlobPhys(
+        Addr addr, Request::Flags flags, const void *p, uint64_t size) const;
 
     /**
      * Fill size bytes starting at physical addr with byte value val.
      */
-    void memsetBlobPhys(Addr addr, Request::Flags flags,
-                        uint8_t v, uint64_t size) const;
-
-
+    void memsetBlobPhys(
+        Addr addr, Request::Flags flags, uint8_t v, uint64_t size) const;
 
     /** Methods to override in base classes */
 
@@ -170,8 +166,6 @@ class PortProxy : FunctionalRequestProtocol
         memsetBlobPhys(addr, 0, val, size);
         return true;
     }
-
-
 
     /** Higher level interfaces based on the above. */
 
@@ -280,7 +274,6 @@ class PortProxy : FunctionalRequestProtocol
             fatal("readString(%#x, ...) failed", addr);
     }
 };
-
 
 template <typename T>
 T

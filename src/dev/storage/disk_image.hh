@@ -45,7 +45,6 @@
 
 namespace gem5
 {
-
 /**
  * Basic interface for accessing a disk image.
  */
@@ -61,10 +60,10 @@ class DiskImage : public SimObject
 
     virtual std::streampos size() const = 0;
 
-    virtual std::streampos read(uint8_t *data,
-                                std::streampos offset) const = 0;
-    virtual std::streampos write(const uint8_t *data,
-                                 std::streampos offset) = 0;
+    virtual std::streampos read(
+        uint8_t *data, std::streampos offset) const = 0;
+    virtual std::streampos write(
+        const uint8_t *data, std::streampos offset) = 0;
 };
 
 /**
@@ -146,21 +145,20 @@ class CowDiskImage : public DiskImage
 
 void SafeRead(std::ifstream &stream, void *data, int count);
 
-template<class T>
+template <class T>
 void SafeRead(std::ifstream &stream, T &data);
 
-template<class T>
+template <class T>
 void SafeReadSwap(std::ifstream &stream, T &data);
 
 void SafeWrite(std::ofstream &stream, const void *data, int count);
 
-template<class T>
+template <class T>
 void SafeWrite(std::ofstream &stream, const T &data);
 
-template<class T>
+template <class T>
 void SafeWriteSwap(std::ofstream &stream, const T &data);
 
 } // namespace gem5
-
 
 #endif // __DEV_STORAGE_DISK_IMAGE_HH__

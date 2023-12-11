@@ -46,7 +46,6 @@
 
 namespace gem5
 {
-
 // Schedule or execution arbitration stage.
 // From the pool of ready waves in the ready list,
 // one wave is selected for each execution resource.
@@ -63,14 +62,18 @@ class ScheduleStage
 {
   public:
     ScheduleStage(const ComputeUnitParams &p, ComputeUnit &cu,
-                  ScoreboardCheckToSchedule &from_scoreboard_check,
-                  ScheduleToExecute &to_execute);
+        ScoreboardCheckToSchedule &from_scoreboard_check,
+        ScheduleToExecute &to_execute);
     ~ScheduleStage();
     void init();
     void exec();
 
     // Stats related variables and methods
-    const std::string& name() const { return _name; }
+    const std::string &
+    name() const
+    {
+        return _name;
+    }
     enum SchNonRdyType
     {
         SCH_SCALAR_ALU_NRDY,
@@ -118,7 +121,7 @@ class ScheduleStage
     enum SCH_STATUS
     {
         RFBUSY = 0, // RF busy reading operands
-        RFREADY, // ready for exec
+        RFREADY,    // ready for exec
     };
 
   private:
@@ -165,8 +168,8 @@ class ScheduleStage
     // reserve resources for waves surviving arbitration in dispatchList
     void reserveResources();
 
-    void doDispatchListTransition(int unitId, DISPATCH_STATUS s,
-                                  const GPUDynInstPtr &gpu_dyn_inst);
+    void doDispatchListTransition(
+        int unitId, DISPATCH_STATUS s, const GPUDynInstPtr &gpu_dyn_inst);
     void doDispatchListTransition(int unitId, DISPATCH_STATUS s);
 
     // Set tracking wfDynId for each wave present in schedule stage

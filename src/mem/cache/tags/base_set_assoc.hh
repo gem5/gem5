@@ -64,7 +64,6 @@
 
 namespace gem5
 {
-
 /**
  * A basic cache tag store.
  * @sa  \ref gem5MemorySystem "gem5 Memory System"
@@ -89,7 +88,7 @@ class BaseSetAssoc : public BaseTags
 
   public:
     /** Convenience typedef. */
-     typedef BaseSetAssocParams Params;
+    typedef BaseSetAssocParams Params;
 
     /**
      * Construct and initialize this tag store.
@@ -99,7 +98,7 @@ class BaseSetAssoc : public BaseTags
     /**
      * Destructor
      */
-    virtual ~BaseSetAssoc() {};
+    virtual ~BaseSetAssoc(){};
 
     /**
      * Initialize blocks as CacheBlk instances.
@@ -124,7 +123,8 @@ class BaseSetAssoc : public BaseTags
      * @param lat The latency of the tag lookup.
      * @return Pointer to the cache block if found.
      */
-    CacheBlk* accessBlock(const PacketPtr pkt, Cycles &lat) override
+    CacheBlk *
+    accessBlock(const PacketPtr pkt, Cycles &lat) override
     {
         CacheBlk *blk = findBlock(pkt->getAddr(), pkt->isSecure());
 
@@ -165,17 +165,17 @@ class BaseSetAssoc : public BaseTags
      * @param evict_blks Cache blocks to be evicted.
      * @return Cache block to be replaced.
      */
-    CacheBlk* findVictim(Addr addr, const bool is_secure,
-                         const std::size_t size,
-                         std::vector<CacheBlk*>& evict_blks) override
+    CacheBlk *
+    findVictim(Addr addr, const bool is_secure, const std::size_t size,
+        std::vector<CacheBlk *> &evict_blks) override
     {
         // Get possible entries to be victimized
-        const std::vector<ReplaceableEntry*> entries =
+        const std::vector<ReplaceableEntry *> entries =
             indexingPolicy->getPossibleEntries(addr);
 
         // Choose replacement victim from replacement candidates
-        CacheBlk* victim = static_cast<CacheBlk*>(replacementPolicy->getVictim(
-                                entries));
+        CacheBlk *victim =
+            static_cast<CacheBlk *>(replacementPolicy->getVictim(entries));
 
         // There is only one eviction for this replacement
         evict_blks.push_back(victim);
@@ -189,7 +189,8 @@ class BaseSetAssoc : public BaseTags
      * @param pkt Packet holding the address to update
      * @param blk The block to update.
      */
-    void insertBlock(const PacketPtr pkt, CacheBlk *blk) override
+    void
+    insertBlock(const PacketPtr pkt, CacheBlk *blk) override
     {
         // Insert block
         BaseTags::insertBlock(pkt, blk);
@@ -207,7 +208,8 @@ class BaseSetAssoc : public BaseTags
      * Limit the allocation for the cache ways.
      * @param ways The maximum number of ways available for replacement.
      */
-    virtual void setWayAllocationMax(int ways) override
+    virtual void
+    setWayAllocationMax(int ways) override
     {
         fatal_if(ways < 1, "Allocation limit must be greater than zero");
         allocAssoc = ways;
@@ -217,7 +219,8 @@ class BaseSetAssoc : public BaseTags
      * Get the way allocation mask limit.
      * @return The maximum number of ways available for replacement.
      */
-    virtual int getWayAllocationMax() const override
+    virtual int
+    getWayAllocationMax() const override
     {
         return allocAssoc;
     }
@@ -228,13 +231,16 @@ class BaseSetAssoc : public BaseTags
      * @param block The block.
      * @return the block address.
      */
-    Addr regenerateBlkAddr(const CacheBlk* blk) const override
+    Addr
+    regenerateBlkAddr(const CacheBlk *blk) const override
     {
         return indexingPolicy->regenerateAddr(blk->getTag(), blk);
     }
 
-    bool anyBlk(std::function<bool(CacheBlk &)> visitor) override {
-        for (CacheBlk& blk : blks) {
+    bool
+    anyBlk(std::function<bool(CacheBlk &)> visitor) override
+    {
+        for (CacheBlk &blk : blks) {
             if (visitor(blk)) {
                 return true;
             }

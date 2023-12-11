@@ -42,7 +42,6 @@
 
 namespace gem5
 {
-
 //
 // Debug event: place a breakpoint on the process function and
 // schedule the event to break at a particular cycle
@@ -50,17 +49,16 @@ namespace gem5
 struct DebugBreakEvent : public GlobalEvent
 {
     DebugBreakEvent(Tick when);
-    void process();     // process event
+    void process(); // process event
     virtual const char *description() const;
 };
 
 //
 // constructor: schedule at specified time
 //
-DebugBreakEvent::DebugBreakEvent(Tick when)
-    : GlobalEvent(when, Debug_Break_Pri, AutoDelete)
-{
-}
+DebugBreakEvent::DebugBreakEvent(Tick when) :
+    GlobalEvent(when, Debug_Break_Pri, AutoDelete)
+{}
 
 //
 // handle debug event: set debugger breakpoint on this function
@@ -70,7 +68,6 @@ DebugBreakEvent::process()
 {
     debug::breakpoint();
 }
-
 
 const char *
 DebugBreakEvent::description() const

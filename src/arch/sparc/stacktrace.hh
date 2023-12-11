@@ -33,10 +33,8 @@
 
 namespace gem5
 {
-
 namespace SparcISA
 {
-
 class StackTrace : public BaseStackTrace
 {
   protected:

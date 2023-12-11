@@ -46,14 +46,12 @@
 
 namespace gem5
 {
-
 using namespace MipsISA;
 
-MipsProcess::MipsProcess(const ProcessParams &params,
-                         loader::ObjectFile *objFile)
-    : Process(params,
-              new EmulationPageTable(params.name, params.pid, PageBytes),
-              objFile)
+MipsProcess::MipsProcess(
+    const ProcessParams &params, loader::ObjectFile *objFile) :
+    Process(params, new EmulationPageTable(params.name, params.pid, PageBytes),
+        objFile)
 {
     fatal_if(params.useArchPT, "Arch page tables not implemented.");
     // Set up stack. On MIPS, stack starts at the top of kuseg
@@ -72,9 +70,8 @@ MipsProcess::MipsProcess(const ProcessParams &params,
     // Set up region for mmaps.  Start it 1GB above the top of the heap.
     Addr mmap_end = brk_point + 0x40000000L;
 
-    memState = std::make_shared<MemState>(
-            this, brk_point, stack_base, max_stack_size,
-            next_thread_stack_base, mmap_end);
+    memState = std::make_shared<MemState>(this, brk_point, stack_base,
+        max_stack_size, next_thread_stack_base, mmap_end);
 }
 
 void
@@ -85,7 +82,7 @@ MipsProcess::initState()
     argsInit<uint32_t>(PageBytes);
 }
 
-template<class IntType>
+template <class IntType>
 void
 MipsProcess::argsInit(int pageSize)
 {
@@ -94,8 +91,7 @@ MipsProcess::argsInit(int pageSize)
     std::vector<gem5::auxv::AuxVector<IntType>> auxv;
 
     auto *elfObject = dynamic_cast<loader::ElfObject *>(objFile);
-    if (elfObject)
-    {
+    if (elfObject) {
         // Set the system page size
         auxv.emplace_back(gem5::auxv::Pagesz, MipsISA::PageBytes);
         // Set the frequency at which time() increments
@@ -104,8 +100,8 @@ MipsProcess::argsInit(int pageSize)
         // address of the program header tables if they appear in the
         // executable image.
         auxv.emplace_back(gem5::auxv::Phdr, elfObject->programHeaderTable());
-        DPRINTF(Loader, "auxv at PHDR %08p\n",
-                elfObject->programHeaderTable());
+        DPRINTF(
+            Loader, "auxv at PHDR %08p\n", elfObject->programHeaderTable());
         // This is the size of a program header entry from the elf file.
         auxv.emplace_back(gem5::auxv::Phent, elfObject->programHeaderSize());
         // This is the number of program headers from the original elf file.
@@ -114,9 +110,9 @@ MipsProcess::argsInit(int pageSize)
         // zero for static executables or contain the base address for
         // dynamic executables.
         auxv.emplace_back(gem5::auxv::Base, getBias());
-        //The entry point to the program
+        // The entry point to the program
         auxv.emplace_back(gem5::auxv::Entry, objFile->entryPoint());
-        //Different user and group IDs
+        // Different user and group IDs
         auxv.emplace_back(gem5::auxv::Uid, uid());
         auxv.emplace_back(gem5::auxv::Euid, euid());
         auxv.emplace_back(gem5::auxv::Gid, gid());
@@ -142,13 +138,8 @@ MipsProcess::argsInit(int pageSize)
         env_data_size += envp[i].size() + 1;
     }
 
-    int space_needed =
-        argv_array_size +
-        envp_array_size +
-        auxv_array_size +
-        arg_data_size +
-        aux_data_size +
-        env_data_size;
+    int space_needed = argv_array_size + envp_array_size + auxv_array_size +
+                       arg_data_size + aux_data_size + env_data_size;
 
     // set bottom of stack
     memState->setStackMin(memState->getStackBase() - space_needed);
@@ -157,7 +148,7 @@ MipsProcess::argsInit(int pageSize)
     memState->setStackSize(memState->getStackBase() - memState->getStackMin());
     // map memory
     memState->mapRegion(memState->getStackMin(),
-                        roundUp(memState->getStackSize(), pageSize), "stack");
+        roundUp(memState->getStackSize(), pageSize), "stack");
 
     // map out initial stack contents; leave room for argc
     IntType argv_array_base = memState->getStackMin() + intSize;
@@ -174,21 +165,21 @@ MipsProcess::argsInit(int pageSize)
 
     initVirtMem->writeBlob(memState->getStackMin(), &argc, intSize);
 
-    copyStringArray(argv, argv_array_base, arg_data_base,
-                    ByteOrder::little, *initVirtMem);
+    copyStringArray(
+        argv, argv_array_base, arg_data_base, ByteOrder::little, *initVirtMem);
 
-    copyStringArray(envp, envp_array_base, env_data_base,
-                    ByteOrder::little, *initVirtMem);
+    copyStringArray(
+        envp, envp_array_base, env_data_base, ByteOrder::little, *initVirtMem);
 
     // Fix up the aux vectors which point to data.
-    for (auto &aux: auxv) {
+    for (auto &aux : auxv) {
         if (aux.type == gem5::auxv::Random)
             aux.val = aux_data_base;
     }
 
     // Copy the aux vector
     Addr auxv_array_end = auxv_array_base;
-    for (const auto &aux: auxv) {
+    for (const auto &aux : auxv) {
         initVirtMem->write(auxv_array_end, aux, ByteOrder::little);
         auxv_array_end += sizeof(aux);
     }

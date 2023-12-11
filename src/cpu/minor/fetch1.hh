@@ -57,10 +57,8 @@
 
 namespace gem5
 {
-
 namespace minor
 {
-
 /** A stage responsible for fetching "lines" from memory and passing
  *  them to Fetch2 */
 class Fetch1 : public Named
@@ -76,13 +74,20 @@ class Fetch1 : public Named
       public:
         IcachePort(std::string name, Fetch1 &fetch_, MinorCPU &cpu) :
             MinorCPU::MinorCPUPort(name, cpu), fetch(fetch_)
-        { }
+        {}
 
       protected:
-        bool recvTimingResp(PacketPtr pkt)
-        { return fetch.recvTimingResp(pkt); }
+        bool
+        recvTimingResp(PacketPtr pkt)
+        {
+            return fetch.recvTimingResp(pkt);
+        }
 
-        void recvReqRetry() { fetch.recvReqRetry(); }
+        void
+        recvReqRetry()
+        {
+            fetch.recvReqRetry();
+        }
     };
 
     /** Memory access queuing.
@@ -105,7 +110,7 @@ class Fetch1 : public Named
      *  translation and memory accesses. */
     class FetchRequest :
         public BaseMMU::Translation, /* For TLB lookups */
-        public Packet::SenderState /* For packing into a Packet */
+        public Packet::SenderState   /* For packing into a Packet */
     {
       protected:
         /** Owning fetch unit */
@@ -116,11 +121,11 @@ class Fetch1 : public Named
          *  memory */
         enum FetchRequestState
         {
-            NotIssued, /* Just been made */
-            InTranslation, /* Issued to ITLB, must wait for reqply */
-            Translated, /* Translation complete */
+            NotIssued,      /* Just been made */
+            InTranslation,  /* Issued to ITLB, must wait for reqply */
+            Translated,     /* Translation complete */
             RequestIssuing, /* Issued to memory, must wait for response */
-            Complete /* Complete.  Either a fault, or a fetched line */
+            Complete        /* Complete.  Either a fault, or a fetched line */
         };
 
         FetchRequestState state;
@@ -156,20 +161,26 @@ class Fetch1 : public Named
         bool isDiscardable() const;
 
         /** Is this a complete read line or fault */
-        bool isComplete() const { return state == Complete; }
+        bool
+        isComplete() const
+        {
+            return state == Complete;
+        }
 
       protected:
         /** BaseMMU::Translation interface */
 
         /** Interface for ITLB responses.  We can handle delay, so don't
          *  do anything */
-        void markDelayed() { }
+        void
+        markDelayed()
+        {}
 
         /** Interface for ITLB responses.  Populates self and then passes
          *  the request on to the ports' handleTLBResponse member
          *  function */
         void finish(const Fault &fault_, const RequestPtr &request_,
-                    ThreadContext *tc, BaseMMU::Mode mode);
+            ThreadContext *tc, BaseMMU::Mode mode);
 
       public:
         FetchRequest(Fetch1 &fetch_, InstId id_, Addr pc_) :
@@ -230,12 +241,12 @@ class Fetch1 : public Named
     /** State of memory access for head instruction fetch */
     enum FetchState
     {
-        FetchHalted, /* Not fetching, waiting to be woken by transition
-            to FetchWaitingForPC.  The PC is not valid in this state */
+        FetchHalted,       /* Not fetching, waiting to be woken by transition
+                  to FetchWaitingForPC.  The PC is not valid in this state */
         FetchWaitingForPC, /* Not fetching, waiting for stream change.
             This doesn't stop issued fetches from being returned and
             processed or for branches to change the state to Running. */
-        FetchRunning /* Try to fetch, when possible */
+        FetchRunning       /* Try to fetch, when possible */
     };
 
     /** Stage cycle-by-cycle state */
@@ -245,13 +256,13 @@ class Fetch1 : public Named
         // All fields have default initializers.
         Fetch1ThreadInfo() {}
 
-        Fetch1ThreadInfo(const Fetch1ThreadInfo& other) :
+        Fetch1ThreadInfo(const Fetch1ThreadInfo &other) :
             state(other.state),
             pc(other.pc->clone()),
             streamSeqNum(other.streamSeqNum),
             predictionSeqNum(other.predictionSeqNum),
             blocked(other.blocked)
-        { }
+        {}
 
         FetchState state = FetchWaitingForPC;
 
@@ -263,14 +274,14 @@ class Fetch1 : public Named
         /** The address we're currently fetching lines from. */
         Addr fetchAddr = 0;
 
-        /** Stream sequence number.  This changes on request from Execute and is
-         *  used to tag instructions by the fetch stream to which they belong.
-         *  Execute originates new prediction sequence numbers. */
+        /** Stream sequence number.  This changes on request from Execute and
+         * is used to tag instructions by the fetch stream to which they
+         * belong. Execute originates new prediction sequence numbers. */
         InstSeqNum streamSeqNum = InstId::firstStreamSeqNum;
 
-        /** Prediction sequence number.  This changes when requests from Execute
-         *  or Fetch2 ask for a change of fetch address and is used to tag lines
-         *  by the prediction to which they belong.  Fetch2 originates
+        /** Prediction sequence number.  This changes when requests from
+         * Execute or Fetch2 ask for a change of fetch address and is used to
+         * tag lines by the prediction to which they belong.  Fetch2 originates
          *  prediction sequence numbers. */
         InstSeqNum predictionSeqNum = InstId::firstPredictionSeqNum;
 
@@ -287,13 +298,12 @@ class Fetch1 : public Named
     /** State of memory access for head instruction fetch */
     enum IcacheState
     {
-        IcacheRunning, /* Default. Step icache queues when possible */
+        IcacheRunning,   /* Default. Step icache queues when possible */
         IcacheNeedsRetry /* Request rejected, will be asked to retry */
     };
 
-    typedef Queue<FetchRequestPtr,
-        ReportTraitsPtrAdaptor<FetchRequestPtr>,
-        NoBubbleTraits<FetchRequestPtr> >
+    typedef Queue<FetchRequestPtr, ReportTraitsPtrAdaptor<FetchRequestPtr>,
+        NoBubbleTraits<FetchRequestPtr>>
         FetchQueue;
 
     /** Queue of address translated requests from Fetch1 */
@@ -319,8 +329,8 @@ class Fetch1 : public Named
     unsigned int numFetchesInITLB;
 
   protected:
-    friend std::ostream &operator <<(std::ostream &os,
-        Fetch1::FetchState state);
+    friend std::ostream &operator<<(
+        std::ostream &os, Fetch1::FetchState state);
 
     /** Start fetching from a new address. */
     void changeStream(const BranchData &branch);
@@ -331,12 +341,9 @@ class Fetch1 : public Named
     void updateExpectedSeqNums(const BranchData &branch);
 
     /** Convert a response to a ForwardLineData */
-    void processResponse(FetchRequestPtr response,
-        ForwardLineData &line);
+    void processResponse(FetchRequestPtr response, ForwardLineData &line);
 
-    friend std::ostream &operator <<(std::ostream &os,
-        IcacheState state);
-
+    friend std::ostream &operator<<(std::ostream &os, IcacheState state);
 
     /** Use the current threading policy to determine the next thread to
      *  fetch from. */
@@ -375,25 +382,27 @@ class Fetch1 : public Named
     unsigned int numInFlightFetches();
 
     /** Print the appropriate MinorLine line for a fetch response */
-    void minorTraceResponseLine(const std::string &name,
-        FetchRequestPtr response) const;
+    void minorTraceResponseLine(
+        const std::string &name, FetchRequestPtr response) const;
 
     /** Memory interface */
     virtual bool recvTimingResp(PacketPtr pkt);
     virtual void recvReqRetry();
 
   public:
-    Fetch1(const std::string &name_,
-        MinorCPU &cpu_,
-        const BaseMinorCPUParams &params,
-        Latch<BranchData>::Output inp_,
+    Fetch1(const std::string &name_, MinorCPU &cpu_,
+        const BaseMinorCPUParams &params, Latch<BranchData>::Output inp_,
         Latch<ForwardLineData>::Input out_,
         Latch<BranchData>::Output prediction_,
         std::vector<InputBuffer<ForwardLineData>> &next_stage_input_buffer);
 
   public:
     /** Returns the IcachePort owned by this Fetch1 */
-    MinorCPU::MinorCPUPort &getIcachePort() { return icachePort; }
+    MinorCPU::MinorCPUPort &
+    getIcachePort()
+    {
+        return icachePort;
+    }
 
     /** Pass on input/buffer data to the output if you can */
     void evaluate();

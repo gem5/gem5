@@ -75,11 +75,11 @@ test_m5_read_file(void *buffer, uint64_t len, uint64_t offset)
 
     // The number of chunks are the number we cover fully, plus one for each
     // end were we partially overlap.
-    uint64_t num_chunks = remaining / chunk_size +
-        (at_start ? 1 : 0) + (at_end ? 1 : 0);
+    uint64_t num_chunks =
+        remaining / chunk_size + (at_start ? 1 : 0) + (at_end ? 1 : 0);
 
     // Build this part of the file.
-    uint32_t *chunks = new uint32_t [num_chunks];
+    uint32_t *chunks = new uint32_t[num_chunks];
 
     uint32_t chunk_idx = offset / chunk_size;
     for (uint64_t i = 0; i < num_chunks; i++)
@@ -89,18 +89,18 @@ test_m5_read_file(void *buffer, uint64_t len, uint64_t offset)
     std::memcpy(buffer, ((uint8_t *)chunks) + (chunk_size - at_start), len);
 
     // Clean up.
-    delete [] chunks;
+    delete[] chunks;
 
     test_total_read += len;
     return len;
 }
 
-DispatchTable dt = { .m5_read_file = &test_m5_read_file };
+DispatchTable dt = {.m5_read_file = &test_m5_read_file};
 
 std::string cout_output;
 
 bool
-run(std::initializer_list<std::string> arg_args, bool bad_file=false)
+run(std::initializer_list<std::string> arg_args, bool bad_file = false)
 {
     test_total_read = 0;
 
@@ -205,5 +205,5 @@ TEST(ReadfileDeathTest, BadFile)
     test_read_file_size = 16;
     test_max_buf_size = 0;
     EXPECT_EXIT(run({"readfile"}, true), ::testing::ExitedWithCode(2),
-            "Failed to write file");
+        "Failed to write file");
 }

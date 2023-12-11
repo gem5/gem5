@@ -35,10 +35,8 @@
 
 namespace gem5
 {
-
 namespace fastmodel
 {
-
 template <class Types>
 void
 ScxEvsCortexR52<Types>::setClkPeriod(Tick clk_period)
@@ -70,8 +68,9 @@ ScxEvsCortexR52<Types>::setResetAddr(int core, Addr addr, bool secure)
 
 template <class Types>
 ScxEvsCortexR52<Types>::CorePins::CorePins(Evs *_evs, int _cpu) :
-        name(csprintf("%s.cpu%s", _evs->name(), _cpu)),
-    evs(_evs), cpu(_cpu),
+    name(csprintf("%s.cpu%s", _evs->name(), _cpu)),
+    evs(_evs),
+    cpu(_cpu),
     llpp(evs->llpp[cpu], name + ".llpp", -1),
     flash(evs->flash[cpu], name + ".flash", -1),
     amba(evs->amba[cpu], name + ".amba", -1),
@@ -83,7 +82,7 @@ ScxEvsCortexR52<Types>::CorePins::CorePins(Evs *_evs, int _cpu) :
 {
     for (int i = 0; i < Evs::PpiCount; i++) {
         ppis.emplace_back(
-                new CoreInt(csprintf("%s.ppi[%d]", name, i), i, this));
+            new CoreInt(csprintf("%s.ppi[%d]", name, i), i, this));
     }
     core_reset.signal_out.bind(evs->core_reset[cpu]);
     poweron_reset.signal_out.bind(evs->poweron_reset[cpu]);
@@ -92,10 +91,9 @@ ScxEvsCortexR52<Types>::CorePins::CorePins(Evs *_evs, int _cpu) :
     cfgvectable.bind(evs->cfgvectable[cpu]);
 }
 
-
 template <class Types>
 ScxEvsCortexR52<Types>::ScxEvsCortexR52(
-        const sc_core::sc_module_name &mod_name, const Params &p) :
+    const sc_core::sc_module_name &mod_name, const Params &p) :
     Base(mod_name),
     ext_slave(Base::ext_slave, p.name + ".ext_slave", -1),
     top_reset(p.name + ".top_reset", 0),
@@ -118,7 +116,7 @@ ScxEvsCortexR52<Types>::ScxEvsCortexR52(
 
     for (int i = 0; i < SpiCount; i++) {
         spis.emplace_back(
-                new ClstrInt(csprintf("%s.spi[%d]", name(), i), i, this));
+            new ClstrInt(csprintf("%s.spi[%d]", name(), i), i, this));
     }
 
     top_reset.signal_out.bind(Base::top_reset);

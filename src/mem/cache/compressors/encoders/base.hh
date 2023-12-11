@@ -35,12 +35,10 @@
 
 namespace gem5
 {
-
 namespace compression
 {
 namespace encoder
 {
-
 struct Code
 {
     /** Only the LSB of the code are relevant. */

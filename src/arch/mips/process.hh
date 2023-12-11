@@ -33,7 +33,6 @@
 
 namespace gem5
 {
-
 namespace loader
 {
 class ObjectFile;
@@ -47,7 +46,7 @@ class MipsProcess : public Process
   protected:
     void initState();
 
-    template<class IntType>
+    template <class IntType>
     void argsInit(int pageSize);
 };
 

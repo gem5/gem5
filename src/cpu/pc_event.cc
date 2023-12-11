@@ -40,12 +40,9 @@
 
 namespace gem5
 {
+PCEventQueue::PCEventQueue() {}
 
-PCEventQueue::PCEventQueue()
-{}
-
-PCEventQueue::~PCEventQueue()
-{}
+PCEventQueue::~PCEventQueue() {}
 
 bool
 PCEventQueue::remove(PCEvent *event)
@@ -56,7 +53,7 @@ PCEventQueue::remove(PCEvent *event)
     while (i != range.second && i != pcMap.end()) {
         if (*i == event) {
             DPRINTF(PCEvent, "PC based event removed at %#x: %s\n",
-                    event->pc(), event->descr());
+                event->pc(), event->descr());
             i = pcMap.erase(i);
             ++removed;
         } else {
@@ -73,8 +70,8 @@ PCEventQueue::schedule(PCEvent *event)
     pcMap.push_back(event);
     std::sort(pcMap.begin(), pcMap.end(), MapCompare());
 
-    DPRINTF(PCEvent, "PC based event scheduled for %#x: %s\n",
-            event->pc(), event->descr());
+    DPRINTF(PCEvent, "PC based event scheduled for %#x: %s\n", event->pc(),
+        event->descr());
 
     return true;
 }
@@ -87,8 +84,8 @@ PCEventQueue::doService(Addr pc, ThreadContext *tc)
     int serviced = 0;
     range_t range = equal_range(pc);
     for (iterator i = range.first; i != range.second; ++i) {
-        DPRINTF(PCEvent, "PC based event serviced at %#x: %s\n",
-                (*i)->pc(), (*i)->descr());
+        DPRINTF(PCEvent, "PC based event serviced at %#x: %s\n", (*i)->pc(),
+            (*i)->descr());
 
         (*i)->process(tc);
         ++serviced;
@@ -104,8 +101,8 @@ PCEventQueue::dump() const
     const_iterator e = pcMap.end();
 
     for (; i != e; ++i)
-        cprintf("%d: event at %#x: %s\n", curTick(), (*i)->pc(),
-                (*i)->descr());
+        cprintf(
+            "%d: event at %#x: %s\n", curTick(), (*i)->pc(), (*i)->descr());
 }
 
 PCEventQueue::range_t
@@ -114,11 +111,10 @@ PCEventQueue::equal_range(Addr pc)
     return std::equal_range(pcMap.begin(), pcMap.end(), pc, MapCompare());
 }
 
-BreakPCEvent::BreakPCEvent(PCEventScope *s, const std::string &desc, Addr addr,
-                           bool del)
-    : PCEvent(s, desc, addr), remove(del)
-{
-}
+BreakPCEvent::BreakPCEvent(
+    PCEventScope *s, const std::string &desc, Addr addr, bool del) :
+    PCEvent(s, desc, addr), remove(del)
+{}
 
 void
 BreakPCEvent::process(ThreadContext *tc)
@@ -130,10 +126,9 @@ BreakPCEvent::process(ThreadContext *tc)
         delete this;
 }
 
-PanicPCEvent::PanicPCEvent(PCEventScope *s, const std::string &desc, Addr pc)
-    : PCEvent(s, desc, pc)
-{
-}
+PanicPCEvent::PanicPCEvent(PCEventScope *s, const std::string &desc, Addr pc) :
+    PCEvent(s, desc, pc)
+{}
 
 void
 PanicPCEvent::process(ThreadContext *tc)

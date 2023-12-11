@@ -41,17 +41,15 @@
 #include "traffic_generator.hh"
 
 int
-sc_main(int argc, char** argv)
+sc_main(int argc, char **argv)
 {
     CliParser parser;
     parser.parse(argc, argv);
 
     sc_core::sc_report_handler::set_handler(reportHandler);
 
-    Gem5SystemC::Gem5SimControl sim_control("gem5",
-                                            parser.getConfigFile(),
-                                            parser.getSimulationEnd(),
-                                            parser.getDebugFlags());
+    Gem5SystemC::Gem5SimControl sim_control("gem5", parser.getConfigFile(),
+        parser.getSimulationEnd(), parser.getDebugFlags());
 
     TrafficGenerator trafficGenerator("traffic_generator");
     Gem5SystemC::Gem5MasterTransactor transactor("transactor", "transactor");

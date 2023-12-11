@@ -41,27 +41,25 @@
 
 namespace Gem5SystemC
 {
-
 gem5::PacketPtr
-SCMasterPort::generatePacket(tlm::tlm_generic_payload& trans)
+SCMasterPort::generatePacket(tlm::tlm_generic_payload &trans)
 {
     gem5::Request::Flags flags;
     auto req = std::make_shared<gem5::Request>(
-        trans.get_address(), trans.get_data_length(), flags,
-        owner.id);
+        trans.get_address(), trans.get_data_length(), flags, owner.id);
 
     gem5::MemCmd cmd;
 
     switch (trans.get_command()) {
-        case tlm::TLM_READ_COMMAND:
-            cmd = gem5::MemCmd::ReadReq;
-            break;
-        case tlm::TLM_WRITE_COMMAND:
-            cmd = gem5::MemCmd::WriteReq;
-            break;
-        default:
-            SC_REPORT_FATAL("SCMasterPort",
-                            "received transaction with unsupported command");
+    case tlm::TLM_READ_COMMAND:
+        cmd = gem5::MemCmd::ReadReq;
+        break;
+    case tlm::TLM_WRITE_COMMAND:
+        cmd = gem5::MemCmd::WriteReq;
+        break;
+    default:
+        SC_REPORT_FATAL(
+            "SCMasterPort", "received transaction with unsupported command");
     }
 
     /*
@@ -80,11 +78,10 @@ SCMasterPort::destroyPacket(gem5::PacketPtr pkt)
     delete pkt;
 }
 
-SCMasterPort::SCMasterPort(const std::string& name_,
-                           const std::string& systemc_name,
-                           gem5::ExternalMaster& owner_,
-                           Gem5SimControl& simControl)
-  : gem5::ExternalMaster::ExternalPort(name_, owner_),
+SCMasterPort::SCMasterPort(const std::string &name_,
+    const std::string &systemc_name, gem5::ExternalMaster &owner_,
+    Gem5SimControl &simControl) :
+    gem5::ExternalMaster::ExternalPort(name_, owner_),
     peq(this, &SCMasterPort::peq_cb),
     waitForRetry(false),
     pendingRequest(nullptr),
@@ -94,12 +91,12 @@ SCMasterPort::SCMasterPort(const std::string& name_,
     transactor(nullptr),
     simControl(simControl)
 {
-    system = dynamic_cast<const gem5::ExternalMasterParams&>(
-        owner_.params()).system;
+    system = dynamic_cast<const gem5::ExternalMasterParams &>(owner_.params())
+                 .system;
 }
 
 void
-SCMasterPort::bindToTransactor(Gem5MasterTransactor* transactor)
+SCMasterPort::bindToTransactor(Gem5MasterTransactor *transactor)
 {
     sc_assert(this->transactor == nullptr);
 
@@ -115,22 +112,22 @@ SCMasterPort::bindToTransactor(Gem5MasterTransactor* transactor)
      */
     if (system->isTimingMode()) {
         SC_REPORT_INFO("SCMasterPort", "register non-blocking interface");
-        transactor->socket.register_nb_transport_fw(this,
-                                &SCMasterPort::nb_transport_fw);
+        transactor->socket.register_nb_transport_fw(
+            this, &SCMasterPort::nb_transport_fw);
     } else if (system->isAtomicMode()) {
         SC_REPORT_INFO("SCMasterPort", "register blocking interface");
-        transactor->socket.register_b_transport(this,
-                                &SCMasterPort::b_transport);
+        transactor->socket.register_b_transport(
+            this, &SCMasterPort::b_transport);
     } else {
         panic("gem5 operates neither in Timing nor in Atomic mode");
     }
 
-    transactor->socket.register_transport_dbg(this,
-                                              &SCMasterPort::transport_dbg);
+    transactor->socket.register_transport_dbg(
+        this, &SCMasterPort::transport_dbg);
 }
 
 void
-SCMasterPort::checkTransaction(tlm::tlm_generic_payload& trans)
+SCMasterPort::checkTransaction(tlm::tlm_generic_payload &trans)
 {
     if (trans.is_response_error()) {
         std::stringstream ss;
@@ -141,12 +138,12 @@ SCMasterPort::checkTransaction(tlm::tlm_generic_payload& trans)
 }
 
 tlm::tlm_sync_enum
-SCMasterPort::nb_transport_fw(tlm::tlm_generic_payload& trans,
-                              tlm::tlm_phase& phase, sc_core::sc_time& delay)
+SCMasterPort::nb_transport_fw(tlm::tlm_generic_payload &trans,
+    tlm::tlm_phase &phase, sc_core::sc_time &delay)
 {
     uint64_t adr = trans.get_address();
     unsigned len = trans.get_data_length();
-    unsigned char* byteEnable = trans.get_byte_enable_ptr();
+    unsigned char *byteEnable = trans.get_byte_enable_ptr();
     unsigned width = trans.get_streaming_width();
 
     // check the transaction attributes for unsupported features ...
@@ -166,22 +163,22 @@ SCMasterPort::nb_transport_fw(tlm::tlm_generic_payload& trans,
 }
 
 void
-SCMasterPort::peq_cb(tlm::tlm_generic_payload& trans,
-                       const tlm::tlm_phase& phase)
+SCMasterPort::peq_cb(
+    tlm::tlm_generic_payload &trans, const tlm::tlm_phase &phase)
 {
     // catch up with SystemC time
     simControl.catchup();
     assert(gem5::curTick() == sc_core::sc_time_stamp().value());
 
     switch (phase) {
-        case tlm::BEGIN_REQ:
-            handleBeginReq(trans);
-            break;
-        case tlm::END_RESP:
-            handleEndResp(trans);
-            break;
-        default:
-            panic("unimplemented phase in callback");
+    case tlm::BEGIN_REQ:
+        handleBeginReq(trans);
+        break;
+    case tlm::END_RESP:
+        handleEndResp(trans);
+        break;
+    default:
+        panic("unimplemented phase in callback");
     }
 
     // the functions called above may have scheduled gem5 events
@@ -190,7 +187,7 @@ SCMasterPort::peq_cb(tlm::tlm_generic_payload& trans,
 }
 
 void
-SCMasterPort::handleBeginReq(tlm::tlm_generic_payload& trans)
+SCMasterPort::handleBeginReq(tlm::tlm_generic_payload &trans)
 {
     sc_assert(!waitForRetry);
     sc_assert(pendingRequest == nullptr);
@@ -200,7 +197,7 @@ SCMasterPort::handleBeginReq(tlm::tlm_generic_payload& trans)
 
     gem5::PacketPtr pkt = nullptr;
 
-    Gem5Extension* extension = nullptr;
+    Gem5Extension *extension = nullptr;
     trans.get_extension(extension);
 
     // If there is an extension, this transaction was initiated by the gem5
@@ -226,7 +223,7 @@ SCMasterPort::handleBeginReq(tlm::tlm_generic_payload& trans)
 }
 
 void
-SCMasterPort::handleEndResp(tlm::tlm_generic_payload& trans)
+SCMasterPort::handleEndResp(tlm::tlm_generic_payload &trans)
 {
     sc_assert(responseInProgress);
 
@@ -241,21 +238,20 @@ SCMasterPort::handleEndResp(tlm::tlm_generic_payload& trans)
 }
 
 void
-SCMasterPort::sendEndReq(tlm::tlm_generic_payload& trans)
+SCMasterPort::sendEndReq(tlm::tlm_generic_payload &trans)
 {
     tlm::tlm_phase phase = tlm::END_REQ;
     auto delay = sc_core::SC_ZERO_TIME;
 
     auto status = transactor->socket->nb_transport_bw(trans, phase, delay);
     panic_if(status != tlm::TLM_ACCEPTED,
-             "Unexpected status after sending END_REQ");
+        "Unexpected status after sending END_REQ");
 }
 
 void
-SCMasterPort::b_transport(tlm::tlm_generic_payload& trans,
-                        sc_core::sc_time& t)
+SCMasterPort::b_transport(tlm::tlm_generic_payload &trans, sc_core::sc_time &t)
 {
-    Gem5Extension* extension = nullptr;
+    Gem5Extension *extension = nullptr;
     trans.get_extension(extension);
 
     gem5::PacketPtr pkt = nullptr;
@@ -272,7 +268,7 @@ SCMasterPort::b_transport(tlm::tlm_generic_payload& trans,
 
     // send an atomic request to gem5
     panic_if(pkt->needsResponse() && !pkt->isResponse(),
-             "Packet sending failed!\n");
+        "Packet sending failed!\n");
 
     // one tick is a pico second
     auto delay = sc_core::sc_time(
@@ -288,9 +284,9 @@ SCMasterPort::b_transport(tlm::tlm_generic_payload& trans,
 }
 
 unsigned int
-SCMasterPort::transport_dbg(tlm::tlm_generic_payload& trans)
+SCMasterPort::transport_dbg(tlm::tlm_generic_payload &trans)
 {
-    Gem5Extension* extension = nullptr;
+    Gem5Extension *extension = nullptr;
     trans.get_extension(extension);
 
     // If there is an extension, this transaction was initiated by the gem5
@@ -307,8 +303,8 @@ SCMasterPort::transport_dbg(tlm::tlm_generic_payload& trans)
 }
 
 bool
-SCMasterPort::get_direct_mem_ptr(tlm::tlm_generic_payload& trans,
-                               tlm::tlm_dmi& dmi_data)
+SCMasterPort::get_direct_mem_ptr(
+    tlm::tlm_generic_payload &trans, tlm::tlm_dmi &dmi_data)
 {
     return false;
 }
@@ -336,12 +332,13 @@ SCMasterPort::recvTimingResp(gem5::PacketPtr pkt)
     pkt->payloadDelay = 0;
     pkt->headerDelay = 0;
 
-    auto tlmSenderState = dynamic_cast<TlmSenderState*>(pkt->popSenderState());
+    auto tlmSenderState =
+        dynamic_cast<TlmSenderState *>(pkt->popSenderState());
     sc_assert(tlmSenderState != nullptr);
 
-    auto& trans = tlmSenderState->trans;
+    auto &trans = tlmSenderState->trans;
 
-    Gem5Extension* extension = nullptr;
+    Gem5Extension *extension = nullptr;
     trans.get_extension(extension);
 
     // clean up
@@ -359,8 +356,8 @@ SCMasterPort::recvTimingResp(gem5::PacketPtr pkt)
 }
 
 void
-SCMasterPort::sendBeginResp(tlm::tlm_generic_payload& trans,
-                            sc_core::sc_time& delay)
+SCMasterPort::sendBeginResp(
+    tlm::tlm_generic_payload &trans, sc_core::sc_time &delay)
 {
     tlm::tlm_phase phase = tlm::BEGIN_RESP;
 
@@ -391,7 +388,7 @@ SCMasterPort::recvReqRetry()
         waitForRetry = false;
         pendingPacket = nullptr;
 
-        auto& trans = *pendingRequest;
+        auto &trans = *pendingRequest;
         sendEndReq(trans);
         trans.release();
 
@@ -402,17 +399,16 @@ SCMasterPort::recvReqRetry()
 void
 SCMasterPort::recvRangeChange()
 {
-    SC_REPORT_WARNING("SCMasterPort",
-                      "received address range change but ignored it");
+    SC_REPORT_WARNING(
+        "SCMasterPort", "received address range change but ignored it");
 }
 
-gem5::ExternalMaster::ExternalPort*
+gem5::ExternalMaster::ExternalPort *
 SCMasterPortHandler::getExternalPort(const std::string &name,
-                                     gem5::ExternalMaster &owner,
-                                     const std::string &port_data)
+    gem5::ExternalMaster &owner, const std::string &port_data)
 {
     // Create and register a new SystemC master port
-    auto* port = new SCMasterPort(name, port_data, owner, control);
+    auto *port = new SCMasterPort(name, port_data, owner, control);
 
     control.registerMasterPort(port_data, port);
 

@@ -43,12 +43,10 @@
 
 namespace gem5
 {
-
 class ThreadContext;
 
 namespace ArmISA
 {
-
 class ISA;
 
 /**
@@ -65,7 +63,9 @@ class BaseISADevice
     virtual ~BaseISADevice() {}
 
     virtual void setISA(ISA *isa);
-    virtual void setThreadContext(ThreadContext *tc) {}
+    virtual void
+    setThreadContext(ThreadContext *tc)
+    {}
 
     /**
      * Write to a system register belonging to this device.
@@ -97,8 +97,7 @@ class BaseISADevice
 class DummyISADevice : public BaseISADevice
 {
   public:
-    DummyISADevice()
-        : BaseISADevice() {}
+    DummyISADevice() : BaseISADevice() {}
     ~DummyISADevice() {}
 
     void setMiscReg(int misc_reg, RegVal val) override;

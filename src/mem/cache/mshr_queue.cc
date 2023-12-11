@@ -51,17 +51,15 @@
 
 namespace gem5
 {
-
-MSHRQueue::MSHRQueue(const std::string &_label,
-                     int num_entries, int reserve,
-                     int demand_reserve, std::string cache_name = "")
-    : Queue<MSHR>(_label, num_entries, reserve, cache_name + ".mshr_queue"),
-      demandReserve(demand_reserve)
+MSHRQueue::MSHRQueue(const std::string &_label, int num_entries, int reserve,
+    int demand_reserve, std::string cache_name = "") :
+    Queue<MSHR>(_label, num_entries, reserve, cache_name + ".mshr_queue"),
+    demandReserve(demand_reserve)
 {}
 
 MSHR *
 MSHRQueue::allocate(Addr blk_addr, unsigned blk_size, PacketPtr pkt,
-                    Tick when_ready, Counter order, bool alloc_on_fill)
+    Tick when_ready, Counter order, bool alloc_on_fill)
 {
     assert(!freeList.empty());
     MSHR *mshr = freeList.front();
@@ -69,7 +67,7 @@ MSHRQueue::allocate(Addr blk_addr, unsigned blk_size, PacketPtr pkt,
     freeList.pop_front();
 
     DPRINTF(MSHR, "Allocating new MSHR. Number in use will be %lu/%lu\n",
-            allocatedList.size() + 1, numEntries);
+        allocatedList.size() + 1, numEntries);
 
     mshr->allocate(blk_addr, blk_size, pkt, when_ready, order, alloc_on_fill);
     mshr->allocIter = allocatedList.insert(allocatedList.end(), mshr);
@@ -80,15 +78,13 @@ MSHRQueue::allocate(Addr blk_addr, unsigned blk_size, PacketPtr pkt,
 }
 
 void
-MSHRQueue::deallocate(MSHR* mshr)
+MSHRQueue::deallocate(MSHR *mshr)
 {
-
     DPRINTF(MSHR, "Deallocating all targets: %s", mshr->print());
     Queue<MSHR>::deallocate(mshr);
     DPRINTF(MSHR, "MSHR deallocated. Number in use: %lu/%lu\n",
-            allocatedList.size(), numEntries);
+        allocatedList.size(), numEntries);
 }
-
 
 void
 MSHRQueue::moveToFront(MSHR *mshr)
@@ -104,10 +100,10 @@ void
 MSHRQueue::delay(MSHR *mshr, Tick delay_ticks)
 {
     mshr->delay(delay_ticks);
-    auto it = std::find_if(mshr->readyIter, readyList.end(),
-                            [mshr] (const MSHR* _mshr) {
-                                return mshr->readyTime >= _mshr->readyTime;
-                            });
+    auto it = std::find_if(
+        mshr->readyIter, readyList.end(), [mshr](const MSHR *_mshr) {
+            return mshr->readyTime >= _mshr->readyTime;
+        });
     readyList.splice(it, readyList, mshr->readyIter);
 }
 

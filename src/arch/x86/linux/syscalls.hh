@@ -35,15 +35,13 @@
 
 namespace gem5
 {
-
 namespace X86ISA
 {
+SyscallReturn unameFunc(
+    SyscallDesc *desc, ThreadContext *tc, VPtr<Linux::utsname> name);
 
-SyscallReturn unameFunc(SyscallDesc *desc, ThreadContext *tc,
-                        VPtr<Linux::utsname> name);
-
-SyscallReturn archPrctlFunc(SyscallDesc *desc, ThreadContext *tc,
-                            int code, uint64_t addr);
+SyscallReturn archPrctlFunc(
+    SyscallDesc *desc, ThreadContext *tc, int code, uint64_t addr);
 
 BitUnion32(UserDescFlags)
     Bitfield<0> seg_32bit;
@@ -62,8 +60,8 @@ struct UserDesc32
     uint32_t flags;
 };
 
-SyscallReturn setThreadArea32Func(SyscallDesc *desc, ThreadContext *tc,
-                                  VPtr<UserDesc32> userDesc);
+SyscallReturn setThreadArea32Func(
+    SyscallDesc *desc, ThreadContext *tc, VPtr<UserDesc32> userDesc);
 
 } // namespace X86ISA
 } // namespace gem5

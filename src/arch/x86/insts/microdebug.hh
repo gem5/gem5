@@ -32,10 +32,8 @@
 
 namespace gem5
 {
-
 namespace X86ISA
 {
-
 class MicroDebug : public X86ISA::X86MicroopBase
 {
   protected:
@@ -43,7 +41,7 @@ class MicroDebug : public X86ISA::X86MicroopBase
 
   public:
     MicroDebug(ExtMachInst mach_inst, const char *mnem, const char *inst_mnem,
-            uint64_t set_flags, GenericISA::M5DebugFault *_fault) :
+        uint64_t set_flags, GenericISA::M5DebugFault *_fault) :
         X86MicroopBase(mach_inst, mnem, inst_mnem, set_flags, No_OpClass),
         fault(_fault)
     {}
@@ -55,8 +53,8 @@ class MicroDebug : public X86ISA::X86MicroopBase
     }
 
     std::string
-    generateDisassembly(Addr pc,
-                        const loader::SymbolTable *symtab) const override
+    generateDisassembly(
+        Addr pc, const loader::SymbolTable *symtab) const override
     {
         std::stringstream response;
 

@@ -34,15 +34,14 @@
 #include "params/LupioTMR.hh"
 
 // Specific fields for CTRL
-#define LUPIO_TMR_IRQE    0x1
-#define LUPIO_TMR_PRDC    0x2
+#define LUPIO_TMR_IRQE 0x1
+#define LUPIO_TMR_PRDC 0x2
 
 // Specific fields for STAT
 #define LUPIO_TMR_EXPD 0x1
 
 namespace gem5
 {
-
 LupioTMR::LupioTMR(const Params &params) :
     BasicPioDevice(params, params.pio_size),
     system(params.system),
@@ -53,10 +52,7 @@ LupioTMR::LupioTMR(const Params &params) :
 
     for (int cpu = 0; cpu < nThread; cpu++) {
         timers[cpu].tmrEvent = new EventFunctionWrapper(
-            [=]{
-                lupioTMRCallback(cpu);
-            }, name()+"done"
-        );
+            [=] { lupioTMRCallback(cpu); }, name() + "done");
     }
 
     DPRINTF(LupioTMR, "LupioTMR initalized\n");
@@ -99,7 +95,7 @@ LupioTMR::lupioTMRSet(int cpu)
     if (!timers[cpu].tmrEvent->scheduled()) {
         // Convert the reload value to ticks from nanoseconds
         schedule(*(timers[cpu].tmrEvent),
-                (timers[cpu].reload * sim_clock::as_int::ns) + curTick());
+            (timers[cpu].reload * sim_clock::as_int::ns) + curTick());
     }
 }
 
@@ -127,29 +123,29 @@ LupioTMR::lupioTMRRead(uint8_t addr, int size)
     size_t reg = addr % LUPIO_TMR_MAX;
 
     switch (reg) {
-        case LUPIO_TMR_TIME:
-            r = lupioTMRCurrentTime();
-            DPRINTF(LupioTMR, "Read LUPIO_TMR_TME: %d\n", r);
-            break;
-        case LUPIO_TMR_LOAD:
-            r = timers[cpu].reload;
-            DPRINTF(LupioTMR, "Read LUPIO_TMR_LOAD: %d\n", r);
-            break;
-        case LUPIO_TMR_STAT:
-            if (timers[cpu].expired) {
-                r |= LUPIO_TMR_EXPD;
-            }
+    case LUPIO_TMR_TIME:
+        r = lupioTMRCurrentTime();
+        DPRINTF(LupioTMR, "Read LUPIO_TMR_TME: %d\n", r);
+        break;
+    case LUPIO_TMR_LOAD:
+        r = timers[cpu].reload;
+        DPRINTF(LupioTMR, "Read LUPIO_TMR_LOAD: %d\n", r);
+        break;
+    case LUPIO_TMR_STAT:
+        if (timers[cpu].expired) {
+            r |= LUPIO_TMR_EXPD;
+        }
 
-            // Acknowledge expiration
-            timers[cpu].expired = false;
-            DPRINTF(LupioTMR, "Read LUPIO_TMR_STAT: %d\n", r);
-            updateIRQ(0, cpu);
-            break;
+        // Acknowledge expiration
+        timers[cpu].expired = false;
+        DPRINTF(LupioTMR, "Read LUPIO_TMR_STAT: %d\n", r);
+        updateIRQ(0, cpu);
+        break;
 
-        default:
-            panic("Unexpected read to the LupioTMR device at address %#llx!",
-                    addr);
-            break;
+    default:
+        panic(
+            "Unexpected read to the LupioTMR device at address %#llx!", addr);
+        break;
     }
     return r;
 }
@@ -163,34 +159,33 @@ LupioTMR::lupioTMRWrite(uint8_t addr, uint64_t val64, int size)
     size_t reg = addr % LUPIO_TMR_MAX;
 
     switch (reg) {
-        case LUPIO_TMR_LOAD:
-            timers[cpu].reload = val;
-            DPRINTF(LupioTMR, "Write LUPIO_TMR_LOAD: %d\n",
-                    timers[cpu].reload);
-            break;
+    case LUPIO_TMR_LOAD:
+        timers[cpu].reload = val;
+        DPRINTF(LupioTMR, "Write LUPIO_TMR_LOAD: %d\n", timers[cpu].reload);
+        break;
 
-        case LUPIO_TMR_CTRL:
-            timers[cpu].ie = val & LUPIO_TMR_IRQE;
-            timers[cpu].pd = val & LUPIO_TMR_PRDC;
-            DPRINTF(LupioTMR, "Write LUPIO_TMR_CTRL\n");
+    case LUPIO_TMR_CTRL:
+        timers[cpu].ie = val & LUPIO_TMR_IRQE;
+        timers[cpu].pd = val & LUPIO_TMR_PRDC;
+        DPRINTF(LupioTMR, "Write LUPIO_TMR_CTRL\n");
 
-            // Stop current timer if any
-            if (curTick() < timers[cpu].startTime +
-                (timers[cpu].reload * sim_clock::as_int::ns) &&
-                (timers[cpu].tmrEvent)->scheduled()) {
-                deschedule(*(timers[cpu].tmrEvent));
-            }
+        // Stop current timer if any
+        if (curTick() < timers[cpu].startTime +
+                            (timers[cpu].reload * sim_clock::as_int::ns) &&
+            (timers[cpu].tmrEvent)->scheduled()) {
+            deschedule(*(timers[cpu].tmrEvent));
+        }
 
-            // If reload isn't 0, start a new one
-            if (timers[cpu].reload) {
-                lupioTMRSet(cpu);
-            }
-            break;
+        // If reload isn't 0, start a new one
+        if (timers[cpu].reload) {
+            lupioTMRSet(cpu);
+        }
+        break;
 
-        default:
-            panic("Unexpected write to the LupioTMR device at address %#llx!",
-                    addr);
-            break;
+    default:
+        panic(
+            "Unexpected write to the LupioTMR device at address %#llx!", addr);
+        break;
     }
 }
 
@@ -199,8 +194,8 @@ LupioTMR::read(PacketPtr pkt)
 {
     Addr tmr_addr = pkt->getAddr() - pioAddr;
 
-    DPRINTF(LupioTMR,
-        "Read request - addr: %#x, size: %#x\n", tmr_addr, pkt->getSize());
+    DPRINTF(LupioTMR, "Read request - addr: %#x, size: %#x\n", tmr_addr,
+        pkt->getSize());
 
     uint64_t read_val = lupioTMRRead(tmr_addr, pkt->getSize());
     DPRINTF(LupioTMR, "Packet Read: %#x\n", read_val);
@@ -216,7 +211,7 @@ LupioTMR::write(PacketPtr pkt)
     Addr tmr_addr = pkt->getAddr() - pioAddr;
 
     DPRINTF(LupioTMR, "Write register %#x value %#x\n", tmr_addr,
-            pkt->getUintX(byteOrder));
+        pkt->getUintX(byteOrder));
 
     lupioTMRWrite(tmr_addr, pkt->getUintX(byteOrder), pkt->getSize());
     DPRINTF(LupioTMR, "Packet Write Value: %d\n", pkt->getUintX(byteOrder));

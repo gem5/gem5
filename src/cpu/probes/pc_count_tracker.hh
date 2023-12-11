@@ -37,7 +37,6 @@
 
 namespace gem5
 {
-
 class PcCountTracker : public ProbeListenerObject
 {
   public:
@@ -52,7 +51,7 @@ class PcCountTracker : public ProbeListenerObject
      *
      * @param pc the targeting Program Counter address
      */
-    void checkPc(const Addr& pc);
+    void checkPc(const Addr &pc);
 
   private:
     /**
@@ -67,6 +66,6 @@ class PcCountTracker : public ProbeListenerObject
     /** the PcCounterTrackerManager */
     PcCountTrackerManager *manager;
 };
-}
+} // namespace gem5
 
 #endif // __CPU_PROBES_PC_COUNT_TRACKER_HH__

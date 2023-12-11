@@ -43,11 +43,7 @@
 
 namespace gem5
 {
-
 class AMDGPUDevice;
-
-
-
 
 class PM4PacketProcessor : public DmaVirtDevice
 {
@@ -63,6 +59,7 @@ class PM4PacketProcessor : public DmaVirtDevice
     std::unordered_map<uint16_t, PM4Queue *> queues;
     /* A map of PM4 queues based on doorbell offset */
     std::unordered_map<uint32_t, PM4Queue *> queuesMap;
+
   public:
     PM4PacketProcessor(const PM4PacketProcessorParams &p);
 
@@ -71,8 +68,16 @@ class PM4PacketProcessor : public DmaVirtDevice
     /**
      * Inherited methods.
      */
-    Tick write(PacketPtr pkt) override { return 0; }
-    Tick read(PacketPtr pkt) override { return 0; }
+    Tick
+    write(PacketPtr pkt) override
+    {
+        return 0;
+    }
+    Tick
+    read(PacketPtr pkt) override
+    {
+        return 0;
+    }
     AddrRangeList getAddrRanges() const override;
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
@@ -82,8 +87,16 @@ class PM4PacketProcessor : public DmaVirtDevice
      */
     TranslationGenPtr translate(Addr vaddr, Addr size) override;
 
-    uint32_t getKiqDoorbellOffset() { return kiq.doorbell & 0x1ffffffc; }
-    uint32_t getPqDoorbellOffset() { return pq.doorbellOffset; }
+    uint32_t
+    getKiqDoorbellOffset()
+    {
+        return kiq.doorbell & 0x1ffffffc;
+    }
+    uint32_t
+    getPqDoorbellOffset()
+    {
+        return pq.doorbellOffset;
+    }
 
     Addr getGARTAddr(Addr addr) const;
 
@@ -91,7 +104,7 @@ class PM4PacketProcessor : public DmaVirtDevice
      * Based on an offset communicated through doorbell write, the
      * PM4PacketProcessor identifies which queue needs processing.
      */
-    PM4Queue* getQueue(Addr offset, bool gfx = false);
+    PM4Queue *getQueue(Addr offset, bool gfx = false);
     /**
      * The first graphics queue, the Primary Queueu a.k.a. RB0, needs to be
      * mapped since all queue details are communicated through MMIOs to
@@ -108,8 +121,8 @@ class PM4PacketProcessor : public DmaVirtDevice
      * This method creates a new PM4Queue based on a queue descriptor and an
      * offset.
      */
-    void newQueue(QueueDesc *q, Addr offset, PM4MapQueues *pkt = nullptr,
-                  int id = -1);
+    void newQueue(
+        QueueDesc *q, Addr offset, PM4MapQueues *pkt = nullptr, int id = -1);
 
     /**
      * This method start processing a PM4Queue from the current read pointer
@@ -145,9 +158,9 @@ class PM4PacketProcessor : public DmaVirtDevice
     void mapProcessGfx9(PM4Queue *q, PM4MapProcess *pkt);
     void mapProcessGfx90a(PM4Queue *q, PM4MapProcessMI200 *pkt);
     void processMQD(PM4MapQueues *pkt, PM4Queue *q, Addr addr, QueueDesc *mqd,
-                    uint16_t vmid);
+        uint16_t vmid);
     void processSDMAMQD(PM4MapQueues *pkt, PM4Queue *q, Addr addr,
-                        SDMAQueueDesc *mqd, uint16_t vmid);
+        SDMAQueueDesc *mqd, uint16_t vmid);
     void releaseMem(PM4Queue *q, PM4ReleaseMem *pkt);
     void releaseMemDone(PM4Queue *q, PM4ReleaseMem *pkt, Addr addr);
     void runList(PM4Queue *q, PM4RunList *pkt);

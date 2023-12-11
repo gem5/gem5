@@ -38,17 +38,16 @@
 
 namespace gem5
 {
-
 namespace RiscvISA
 {
-
 // memfence micro instruction
 class MemFenceMicro : public RiscvMicroInst
 {
   public:
-    MemFenceMicro(ExtMachInst _machInst, OpClass __opClass)
-        : RiscvMicroInst("fence", _machInst, __opClass)
-    { }
+    MemFenceMicro(ExtMachInst _machInst, OpClass __opClass) :
+        RiscvMicroInst("fence", _machInst, __opClass)
+    {}
+
   protected:
     using RiscvMicroInst::RiscvMicroInst;
 
@@ -121,17 +120,25 @@ class AtomicMemOpMicro : public RiscvMicroInst
  * A generic atomic op class
  */
 
-template<typename T>
+template <typename T>
 class AtomicGenericOp : public TypedAtomicOpFunctor<T>
 {
   public:
-    AtomicGenericOp(T _a, std::function<void(T*,T)> _op)
-      : a(_a), op(_op) { }
-    AtomicOpFunctor* clone() { return new AtomicGenericOp<T>(*this); }
-    void execute(T *b) { op(b, a); }
+    AtomicGenericOp(T _a, std::function<void(T *, T)> _op) : a(_a), op(_op) {}
+    AtomicOpFunctor *
+    clone()
+    {
+        return new AtomicGenericOp<T>(*this);
+    }
+    void
+    execute(T *b)
+    {
+        op(b, a);
+    }
+
   private:
     T a;
-    std::function<void(T*,T)> op;
+    std::function<void(T *, T)> op;
 };
 
 } // namespace RiscvISA

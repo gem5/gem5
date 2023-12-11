@@ -105,7 +105,6 @@ TEST(IntmathTest, ceilLog2)
     EXPECT_EQ(42, ceilLog2(2821109907456));
 }
 
-
 TEST(IntmathTest, divCeil)
 {
     EXPECT_EQ(5, divCeil(55, 13));
@@ -306,27 +305,32 @@ TEST(IntmathTest, Log2i)
  */
 TEST(IntmathDeathTest, Log2iDeath)
 {
-
 #ifdef NDEBUG
     GTEST_SKIP() << "Skipping as assertions are "
-        "stripped out of fast builds";
+                    "stripped out of fast builds";
 #endif
 
     // 1) value = 0
-    EXPECT_DEATH({
-        const int value = 0;
-        log2i(value);
-    }, "value > 0.*failed");
+    EXPECT_DEATH(
+        {
+            const int value = 0;
+            log2i(value);
+        },
+        "value > 0.*failed");
 
     // 2) value < 0
-    EXPECT_DEATH({
-        const int value = -1;
-        log2i(value);
-    }, "value > 0.*failed");
+    EXPECT_DEATH(
+        {
+            const int value = -1;
+            log2i(value);
+        },
+        "value > 0.*failed");
 
     // 3) value is not a power of 2
-    EXPECT_DEATH({
-        const int value = 5;
-        log2i(value);
-    }, "isPowerOf2");
+    EXPECT_DEATH(
+        {
+            const int value = 5;
+            log2i(value);
+        },
+        "isPowerOf2");
 }

@@ -30,10 +30,8 @@
 
 namespace gem5
 {
-
 namespace SparcISA
 {
-
 GenericISA::BasicDecodeCache<Decoder, ExtMachInst> Decoder::defaultCache;
 
 } // namespace SparcISA

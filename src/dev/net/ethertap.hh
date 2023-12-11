@@ -42,7 +42,7 @@
 #include "dev/net/etherpkt.hh"
 
 #if HAVE_TUNTAP
-#include "params/EtherTap.hh"
+#    include "params/EtherTap.hh"
 
 #endif
 
@@ -52,7 +52,6 @@
 
 namespace gem5
 {
-
 class TapEvent;
 class EtherTapInt;
 
@@ -72,7 +71,6 @@ class EtherTapBase : public SimObject
 
     EtherDump *dump;
 
-
     /*
      * Interface to the real network.
      */
@@ -87,7 +85,6 @@ class EtherTapBase : public SimObject
     // Prepare and send data out to the real network.
     virtual bool sendReal(const void *data, size_t len) = 0;
 
-
     /*
      * Interface to the simulated network.
      */
@@ -95,8 +92,8 @@ class EtherTapBase : public SimObject
     EtherTapInt *interface;
 
   public:
-    Port &getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID) override;
+    Port &getPort(
+        const std::string &if_name, PortID idx = InvalidPortID) override;
 
     bool recvSimulated(EthPacketPtr packet);
     void sendSimulated(void *data, size_t len);
@@ -111,16 +108,21 @@ class EtherTapInt : public EtherInt
 {
   private:
     EtherTapBase *tap;
+
   public:
     EtherTapInt(const std::string &name, EtherTapBase *t) :
-            EtherInt(name), tap(t)
-    { }
+        EtherInt(name), tap(t)
+    {}
 
-    bool recvPacket(EthPacketPtr pkt) override
-        { return tap->recvSimulated(pkt); }
-    void sendDone() override {}
+    bool
+    recvPacket(EthPacketPtr pkt) override
+    {
+        return tap->recvSimulated(pkt);
+    }
+    void
+    sendDone() override
+    {}
 };
-
 
 class TapListener;
 
@@ -140,7 +142,6 @@ class EtherTapStub : public EtherTapBase
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 
-
   protected:
     friend class TapListener;
     TapListener *listener;
@@ -157,7 +158,6 @@ class EtherTapStub : public EtherTapBase
     bool sendReal(const void *data, size_t len) override;
 };
 
-
 #if HAVE_TUNTAP
 class EtherTap : public EtherTapBase
 {
@@ -165,7 +165,6 @@ class EtherTap : public EtherTapBase
     using Params = EtherTapParams;
     EtherTap(const Params &p);
     ~EtherTap();
-
 
   protected:
     int tap;

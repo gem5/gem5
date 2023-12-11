@@ -64,7 +64,6 @@
 
 namespace gem5
 {
-
 // Uncomment to enable sanity checks for the FALRU cache and the
 // TrackedCaches class
 //#define FALRU_DEBUG
@@ -126,7 +125,8 @@ class FALRU : public BaseTags
     struct PairHash
     {
         template <class T1, class T2>
-        std::size_t operator()(const std::pair<T1, T2> &p) const
+        std::size_t
+        operator()(const std::pair<T1, T2> &p) const
         {
             return std::hash<T1>()(p.first) ^ std::hash<T2>()(p.second);
         }
@@ -182,13 +182,13 @@ class FALRU : public BaseTags
      * @param in_cache_mask Mask indicating the caches in which the blk fits.
      * @return Pointer to the cache block.
      */
-    CacheBlk* accessBlock(const PacketPtr pkt, Cycles &lat,
-                          CachesMask *in_cache_mask);
+    CacheBlk *accessBlock(
+        const PacketPtr pkt, Cycles &lat, CachesMask *in_cache_mask);
 
     /**
      * Just a wrapper of above function to conform with the base interface.
      */
-    CacheBlk* accessBlock(const PacketPtr pkt, Cycles &lat) override;
+    CacheBlk *accessBlock(const PacketPtr pkt, Cycles &lat) override;
 
     /**
      * Find the block in the cache, do not update the replacement data.
@@ -197,7 +197,7 @@ class FALRU : public BaseTags
      * @param asid The address space ID.
      * @return Pointer to the cache block.
      */
-    CacheBlk* findBlock(Addr addr, bool is_secure) const override;
+    CacheBlk *findBlock(Addr addr, bool is_secure) const override;
 
     /**
      * Find a block given set and way.
@@ -206,7 +206,7 @@ class FALRU : public BaseTags
      * @param way The way of the block.
      * @return The block.
      */
-    ReplaceableEntry* findBlockBySetAndWay(int set, int way) const override;
+    ReplaceableEntry *findBlockBySetAndWay(int set, int way) const override;
 
     /**
      * Find replacement victim based on address. The list of evicted blocks
@@ -218,9 +218,8 @@ class FALRU : public BaseTags
      * @param evict_blks Cache blocks to be evicted.
      * @return Cache block to be replaced.
      */
-    CacheBlk* findVictim(Addr addr, const bool is_secure,
-                         const std::size_t size,
-                         std::vector<CacheBlk*>& evict_blks) override;
+    CacheBlk *findVictim(Addr addr, const bool is_secure,
+        const std::size_t size, std::vector<CacheBlk *> &evict_blks) override;
 
     /**
      * Insert the new block into the cache and update replacement data.
@@ -238,7 +237,8 @@ class FALRU : public BaseTags
      * @param addr The address to get the tag from.
      * @return The tag.
      */
-    Addr extractTag(Addr addr) const override
+    Addr
+    extractTag(Addr addr) const override
     {
         return blkAlign(addr);
     }
@@ -249,12 +249,15 @@ class FALRU : public BaseTags
      * @param block The block.
      * @return the block address.
      */
-    Addr regenerateBlkAddr(const CacheBlk* blk) const override
+    Addr
+    regenerateBlkAddr(const CacheBlk *blk) const override
     {
         return blk->getTag();
     }
 
-    bool anyBlk(std::function<bool(CacheBlk &)> visitor) override {
+    bool
+    anyBlk(std::function<bool(CacheBlk &)> visitor) override
+    {
         for (int i = 0; i < numBlocks; i++) {
             if (visitor(blks[i])) {
                 return true;
@@ -274,7 +277,7 @@ class FALRU : public BaseTags
     {
       public:
         CacheTracking(unsigned min_size, unsigned max_size,
-                      unsigned block_size, statistics::Group *parent);
+            unsigned block_size, statistics::Group *parent);
 
         /**
          * Initialiaze cache blocks and the tracking mechanism
@@ -342,7 +345,7 @@ class FALRU : public BaseTags
         /** A mask for all cache being tracked. */
         const CachesMask inAllCachesMask;
         /** Array of pointers to blocks at the cache boundaries. */
-        std::vector<FALRUBlk*> boundaries;
+        std::vector<FALRUBlk *> boundaries;
 
       protected:
         /**

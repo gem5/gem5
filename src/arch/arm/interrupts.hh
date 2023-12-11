@@ -52,10 +52,8 @@
 
 namespace gem5
 {
-
 namespace ArmISA
 {
-
 enum InterruptTypes
 {
     INT_RST,
@@ -81,11 +79,7 @@ class Interrupts : public BaseInterrupts
   public:
     using Params = ArmInterruptsParams;
 
-    Interrupts(const Params &p) : BaseInterrupts(p)
-    {
-        clearAll();
-    }
-
+    Interrupts(const Params &p) : BaseInterrupts(p) { clearAll(); }
 
     void
     post(int int_num, int index) override
@@ -143,7 +137,7 @@ class Interrupts : public BaseInterrupts
     bool
     checkInterrupts() const override
     {
-        HCR  hcr  = tc->readMiscReg(MISCREG_HCR_EL2);
+        HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
 
         if (!(intStatus || hcr.va || hcr.vi || hcr.vf))
             return false;
@@ -156,9 +150,7 @@ class Interrupts : public BaseInterrupts
                 ((interrupts[INT_VIRT_FIQ] || hcr.vf) &&
                     takeVirtualInt(INT_VIRT_FIQ)) ||
                 (hcr.va && takeVirtualInt(INT_VIRT_ABT)) ||
-                (interrupts[INT_RST]) ||
-                (interrupts[INT_SEV])
-               );
+                (interrupts[INT_RST]) || (interrupts[INT_SEV]));
     }
 
     /**
@@ -170,13 +162,13 @@ class Interrupts : public BaseInterrupts
     checkWfiWake(HCR hcr, CPSR cpsr, SCR scr) const
     {
         uint64_t masked_int_status;
-        bool     virt_wake;
+        bool virt_wake;
 
-        masked_int_status = intStatus & ~((1 << INT_VIRT_IRQ) |
-                                          (1 << INT_VIRT_FIQ));
-        virt_wake  = (hcr.vi || interrupts[INT_VIRT_IRQ]) && hcr.imo;
+        masked_int_status =
+            intStatus & ~((1 << INT_VIRT_IRQ) | (1 << INT_VIRT_FIQ));
+        virt_wake = (hcr.vi || interrupts[INT_VIRT_IRQ]) && hcr.imo;
         virt_wake |= (hcr.vf || interrupts[INT_VIRT_FIQ]) && hcr.fmo;
-        virt_wake |=  hcr.va                              && hcr.amo;
+        virt_wake |= hcr.va && hcr.amo;
         virt_wake &= currEL(cpsr) < EL2 && EL2Enabled(tc);
         return masked_int_status || virt_wake;
     }
@@ -187,11 +179,13 @@ class Interrupts : public BaseInterrupts
         bool use_hcr_mux = currEL(cpsr) < EL2 && EL2Enabled(tc);
         ISR isr = 0;
 
-        isr.i = (use_hcr_mux & hcr.imo) ? (interrupts[INT_VIRT_IRQ] || hcr.vi)
-                                        :  interrupts[INT_IRQ];
-        isr.f = (use_hcr_mux & hcr.fmo) ? (interrupts[INT_VIRT_FIQ] || hcr.vf)
-                                        :  interrupts[INT_FIQ];
-        isr.a = (use_hcr_mux & hcr.amo) ?  hcr.va : interrupts[INT_ABT];
+        isr.i = (use_hcr_mux & hcr.imo) ?
+                    (interrupts[INT_VIRT_IRQ] || hcr.vi) :
+                    interrupts[INT_IRQ];
+        isr.f = (use_hcr_mux & hcr.fmo) ?
+                    (interrupts[INT_VIRT_FIQ] || hcr.vf) :
+                    interrupts[INT_FIQ];
+        isr.a = (use_hcr_mux & hcr.amo) ? hcr.va : interrupts[INT_ABT];
         return isr;
     }
 
@@ -219,7 +213,7 @@ class Interrupts : public BaseInterrupts
     {
         assert(checkInterrupts());
 
-        HCR  hcr  = tc->readMiscReg(MISCREG_HCR_EL2);
+        HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
 
         if (interrupts[INT_IRQ] && takeInt(INT_IRQ))
             return std::make_shared<Interrupt>();
@@ -234,8 +228,8 @@ class Interrupts : public BaseInterrupts
         if (interrupts[INT_ABT] && takeInt(INT_ABT))
             return std::make_shared<SystemError>();
         if (hcr.va && takeVirtualInt(INT_VIRT_ABT))
-            return std::make_shared<VirtualDataAbort>(
-                0, TlbEntry::DomainType::NoAccess, false,
+            return std::make_shared<VirtualDataAbort>(0,
+                TlbEntry::DomainType::NoAccess, false,
                 ArmFault::AsynchronousExternalAbort);
         if (interrupts[INT_RST])
             return std::make_shared<Reset>();
@@ -245,7 +239,9 @@ class Interrupts : public BaseInterrupts
         panic("intStatus and interrupts not in sync\n");
     }
 
-    void updateIntrInfo() override {} // nothing to do
+    void
+    updateIntrInfo() override
+    {} // nothing to do
 
     void
     serialize(CheckpointOut &cp) const override
@@ -262,7 +258,7 @@ class Interrupts : public BaseInterrupts
     }
 };
 
-} // namespace ARM_ISA
+} // namespace ArmISA
 } // namespace gem5
 
 #endif // __ARCH_ARM_INTERRUPT_HH__

@@ -36,7 +36,6 @@
 
 namespace gem5
 {
-
 /**
  * LupioRTC:
  * A Real-Time Clock Virtual Device that returns the current date and time
@@ -48,7 +47,7 @@ class LupioRTC : public BasicPioDevice
     time_t start;
     struct tm time;
 
-  // Register map
+    // Register map
   private:
     enum
     {

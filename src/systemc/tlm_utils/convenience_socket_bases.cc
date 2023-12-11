@@ -27,7 +27,6 @@
 
 namespace tlm_utils
 {
-
 void
 convenience_socket_base::display_warning(const char *text) const
 {

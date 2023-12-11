@@ -36,10 +36,8 @@
 
 namespace gem5
 {
-
 namespace PowerISA
 {
-
 class StackTrace : public BaseStackTrace
 {
   protected:

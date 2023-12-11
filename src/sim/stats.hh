@@ -33,7 +33,6 @@
 
 namespace gem5
 {
-
 extern statistics::Formula &simSeconds;
 extern statistics::Value &simTicks;
 extern statistics::Value &simFreq;

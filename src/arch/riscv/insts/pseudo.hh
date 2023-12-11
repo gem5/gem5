@@ -35,16 +35,15 @@
 
 namespace gem5
 {
-
 namespace RiscvISA
 {
-
 class PseudoOp : public RiscvStaticInst
 {
   protected:
     using RiscvStaticInst::RiscvStaticInst;
 
-    std::string generateDisassembly(
+    std::string
+    generateDisassembly(
         Addr pc, const loader::SymbolTable *symtab) const override
     {
         return mnemonic;

@@ -37,7 +37,6 @@
 
 namespace Gem5SystemC
 {
-
 // forward declerations
 class SCSlavePort;
 class SCMasterPort;
@@ -45,10 +44,10 @@ class SCMasterPort;
 class Gem5SimControlInterface : public sc_core::sc_interface
 {
   public:
-    virtual SCSlavePort* getSlavePort(const std::string& name) = 0;
-    virtual SCMasterPort* getMasterPort(const std::string& name) = 0;
+    virtual SCSlavePort *getSlavePort(const std::string &name) = 0;
+    virtual SCMasterPort *getMasterPort(const std::string &name) = 0;
 };
 
-}
+} // namespace Gem5SystemC
 
 #endif

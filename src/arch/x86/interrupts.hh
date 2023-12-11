@@ -64,7 +64,6 @@
 
 namespace gem5
 {
-
 class ThreadContext;
 class BaseCPU;
 
@@ -72,7 +71,6 @@ int divideFromConf(uint32_t conf);
 
 namespace X86ISA
 {
-
 ApicRegIndex decodeAddr(Addr paddr);
 
 class Interrupts : public BaseInterrupts
@@ -171,7 +169,11 @@ class Interrupts : public BaseInterrupts
         return bits(regs[base + (vector / 32)], vector % 32);
     }
 
-    Tick clockPeriod() const { return clockDomain.clockPeriod(); }
+    Tick
+    clockPeriod() const
+    {
+        return clockDomain.clockPeriod();
+    }
 
     void requestInterrupt(uint8_t vector, uint8_t deliveryMode, bool level);
 
@@ -192,8 +194,11 @@ class Interrupts : public BaseInterrupts
     Addr pioAddr = MaxAddr;
 
   public:
-
-    int getInitialApicId() { return initialApicId; }
+    int
+    getInitialApicId()
+    {
+        return initialApicId;
+    }
 
     /*
      * Params stuff.
@@ -231,8 +236,7 @@ class Interrupts : public BaseInterrupts
     void lowerInterruptPin(int number);
 
     Port &
-    getPort(const std::string &if_name,
-            PortID idx=InvalidPortID) override
+    getPort(const std::string &if_name, PortID idx = InvalidPortID) override
     {
         if (if_name == "int_requestor") {
             return intRequestPort;
@@ -284,7 +288,11 @@ class Interrupts : public BaseInterrupts
      *
      * @return true there are unmaskable interrupts pending.
      */
-    bool hasPendingUnmaskable() const { return pendingUnmaskableInt; }
+    bool
+    hasPendingUnmaskable() const
+    {
+        return pendingUnmaskableInt;
+    }
     Fault getInterrupt() override;
     void updateIntrInfo() override;
 

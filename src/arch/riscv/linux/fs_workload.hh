@@ -38,10 +38,8 @@
 
 namespace gem5
 {
-
 namespace RiscvISA
 {
-
 class FsLinux : public KernelWorkload
 {
   private:
@@ -73,14 +71,18 @@ class FsLinux : public KernelWorkload
     setSystem(System *sys) override
     {
         KernelWorkload::setSystem(sys);
-        gdb = BaseRemoteGDB::build<RemoteGDB>(
-                params().remote_gdb_port, system);
+        gdb =
+            BaseRemoteGDB::build<RemoteGDB>(params().remote_gdb_port, system);
     }
 
-    ByteOrder byteOrder() const override { return ByteOrder::little; }
+    ByteOrder
+    byteOrder() const override
+    {
+        return ByteOrder::little;
+    }
 };
 
-class BootloaderKernelWorkload: public Workload
+class BootloaderKernelWorkload : public Workload
 {
   private:
     Addr entryPoint = 0;
@@ -108,8 +110,8 @@ class BootloaderKernelWorkload: public Workload
 
   public:
     PARAMS(RiscvBootloaderKernelWorkload);
-    BootloaderKernelWorkload(const Params &p)
-        : Workload(p), entryPoint(p.entry_point), bootArgs(p.command_line)
+    BootloaderKernelWorkload(const Params &p) :
+        Workload(p), entryPoint(p.entry_point), bootArgs(p.command_line)
     {
         loadBootloaderSymbolTable();
         loadKernelSymbolTable();
@@ -132,15 +134,27 @@ class BootloaderKernelWorkload: public Workload
     setSystem(System *sys) override
     {
         Workload::setSystem(sys);
-        gdb = BaseRemoteGDB::build<RemoteGDB>(
-            params().remote_gdb_port, system);
+        gdb =
+            BaseRemoteGDB::build<RemoteGDB>(params().remote_gdb_port, system);
     }
 
-    Addr getEntry() const override { return entryPoint; }
+    Addr
+    getEntry() const override
+    {
+        return entryPoint;
+    }
 
-    ByteOrder byteOrder() const override { return ByteOrder::little; }
+    ByteOrder
+    byteOrder() const override
+    {
+        return ByteOrder::little;
+    }
 
-    loader::Arch getArch() const override { return kernel->getArch(); }
+    loader::Arch
+    getArch() const override
+    {
+        return kernel->getArch();
+    }
 
     const loader::SymbolTable &
     symtab(ThreadContext *tc) override

@@ -49,7 +49,6 @@
 
 namespace gem5
 {
-
 /**
  * The PowerDomain groups PowerState objects together to regulate their
  * power states. As the PowerDomain itself is a PowerState object, you can
@@ -61,7 +60,7 @@ class PowerDomain : public PowerState
   public:
     PowerDomain(const PowerDomainParams &p);
     typedef PowerDomainParams Params;
-    ~PowerDomain() override {};
+    ~PowerDomain() override{};
 
     /**
      * During startup, the list of possible power states the
@@ -76,14 +75,14 @@ class PowerDomain : public PowerState
      * domain will change its own power state if required and if there is a
      * power state, it will schedule an event to update its followers
      */
-    void pwrStateChangeCallback(enums::PwrState new_pwr_state,
-                                PowerState* leader);
+    void pwrStateChangeCallback(
+        enums::PwrState new_pwr_state, PowerState *leader);
 
     /**
      * Function called by a follower to register itself as
      * a dependant of this power domain
      */
-    void addFollower(PowerState* pwr_obj) override;
+    void addFollower(PowerState *pwr_obj) override;
 
   private:
     /**
@@ -96,7 +95,7 @@ class PowerDomain : public PowerState
      * state (called from setFollowerPowerStates)
      */
     enums::PwrState calculatePowerDomainState(
-          const std::vector<enums::PwrState> &f_states={});
+        const std::vector<enums::PwrState> &f_states = {});
 
     /**
      * Check if a given p_state is available across all leaders and
@@ -119,14 +118,14 @@ class PowerDomain : public PowerState
     void setFollowerPowerStates();
 
   private: /* Power domain attributes */
-     /**
-     * List of all leaders in the PowerDomain. A leader can
-     * independently change its power state and does not depend on the
-     * PowerDomain to change its power state. A leader needs to be a
-     * PowerState object and can also be another PowerDomain. Each
-     * PowerDomain needs to have at least one leader.
-     */
-    std::vector<PowerState*> leaders;
+           /**
+            * List of all leaders in the PowerDomain. A leader can
+            * independently change its power state and does not depend on the
+            * PowerDomain to change its power state. A leader needs to be a
+            * PowerState object and can also be another PowerDomain. Each
+            * PowerDomain needs to have at least one leader.
+            */
+    std::vector<PowerState *> leaders;
 
     /**
      * Power state requested by the leader. This is not necessarily the
@@ -140,7 +139,7 @@ class PowerDomain : public PowerState
      * domain will determine the power state of the followers. A follower
      * cannot change its power state independently.
      */
-    std::vector<PowerState*> followers;
+    std::vector<PowerState *> followers;
 
     /**
      * Latency with which power state changes of the leaders will ripple
@@ -152,7 +151,7 @@ class PowerDomain : public PowerState
      * Event to update the power states of the followers
      */
     MemberEventWrapper<&PowerDomain::setFollowerPowerStates>
-                pwrStateUpdateEvent;
+        pwrStateUpdateEvent;
 
   protected:
     struct PowerDomainStats : public statistics::Group

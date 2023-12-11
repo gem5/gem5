@@ -29,7 +29,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #include "mem/ruby/network/garnet/NetworkLink.hh"
 
 #include "base/trace.hh"
@@ -38,19 +37,21 @@
 
 namespace gem5
 {
-
 namespace ruby
 {
-
 namespace garnet
 {
-
-NetworkLink::NetworkLink(const Params &p)
-    : ClockedObject(p), Consumer(this), m_id(p.link_id),
-      m_type(NUM_LINK_TYPES_),
-      m_latency(p.link_latency), m_link_utilized(0),
-      m_virt_nets(p.virt_nets), linkBuffer(),
-      link_consumer(nullptr), link_srcQueue(nullptr)
+NetworkLink::NetworkLink(const Params &p) :
+    ClockedObject(p),
+    Consumer(this),
+    m_id(p.link_id),
+    m_type(NUM_LINK_TYPES_),
+    m_latency(p.link_latency),
+    m_link_utilized(0),
+    m_virt_nets(p.virt_nets),
+    linkBuffer(),
+    link_consumer(nullptr),
+    link_srcQueue(nullptr)
 {
     int num_vnets = (p.supported_vnets).size();
     mVnets.resize(num_vnets);
@@ -89,13 +90,13 @@ NetworkLink::wakeup()
     if (link_srcQueue->isReady(curTick())) {
         flit *t_flit = link_srcQueue->getTopFlit();
         DPRINTF(RubyNetwork, "Transmission will finish at %ld :%s\n",
-                clockEdge(m_latency), *t_flit);
+            clockEdge(m_latency), *t_flit);
         if (m_type != NUM_LINK_TYPES_) {
             // Only for assertions and debug messages
             assert(t_flit->m_width == bitWidth);
             assert((std::find(mVnets.begin(), mVnets.end(),
-                t_flit->get_vnet()) != mVnets.end()) ||
-                (mVnets.size() == 0));
+                        t_flit->get_vnet()) != mVnets.end()) ||
+                   (mVnets.size() == 0));
         }
         t_flit->set_time(clockEdge(m_latency));
         linkBuffer.insert(t_flit);

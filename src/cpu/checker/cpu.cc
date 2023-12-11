@@ -54,7 +54,6 @@
 
 namespace gem5
 {
-
 void
 CheckerCPU::init()
 {
@@ -62,12 +61,15 @@ CheckerCPU::init()
     tc->getIsaPtr()->setThreadContext(tc);
 }
 
-CheckerCPU::CheckerCPU(const Params &p)
-    : BaseCPU(p, true),
-      systemPtr(NULL), icachePort(NULL), dcachePort(NULL),
-      tc(NULL), thread(NULL),
-      unverifiedReq(nullptr),
-      unverifiedMemData(nullptr)
+CheckerCPU::CheckerCPU(const Params &p) :
+    BaseCPU(p, true),
+    systemPtr(NULL),
+    icachePort(NULL),
+    dcachePort(NULL),
+    tc(NULL),
+    thread(NULL),
+    unverifiedReq(nullptr),
+    unverifiedMemData(nullptr)
 {
     curStaticInst = NULL;
     curMacroStaticInst = NULL;
@@ -88,9 +90,7 @@ CheckerCPU::CheckerCPU(const Params &p)
     updateOnError = true;
 }
 
-CheckerCPU::~CheckerCPU()
-{
-}
+CheckerCPU::~CheckerCPU() {}
 
 void
 CheckerCPU::setSystem(System *system)
@@ -100,12 +100,11 @@ CheckerCPU::setSystem(System *system)
     systemPtr = system;
 
     if (FullSystem) {
-        thread = new SimpleThread(this, 0, systemPtr, mmu, p.isa[0],
-                                  p.decoder[0]);
+        thread =
+            new SimpleThread(this, 0, systemPtr, mmu, p.isa[0], p.decoder[0]);
     } else {
         thread = new SimpleThread(this, 0, systemPtr,
-                                  workload.size() ? workload[0] : NULL,
-                                  mmu, p.isa[0], p.decoder[0]);
+            workload.size() ? workload[0] : NULL, mmu, p.isa[0], p.decoder[0]);
     }
 
     tc = thread->getTC();
@@ -128,35 +127,30 @@ CheckerCPU::setDcachePort(RequestPort *dcache_port)
 
 void
 CheckerCPU::serialize(std::ostream &os) const
-{
-}
+{}
 
 void
 CheckerCPU::unserialize(CheckpointIn &cp)
-{
-}
+{}
 
 RequestPtr
 CheckerCPU::genMemFragmentRequest(Addr frag_addr, int size,
-                                  Request::Flags flags,
-                                  const std::vector<bool>& byte_enable,
-                                  int& frag_size, int& size_left) const
+    Request::Flags flags, const std::vector<bool> &byte_enable, int &frag_size,
+    int &size_left) const
 {
-    frag_size = std::min(
-        cacheLineSize() - addrBlockOffset(frag_addr, cacheLineSize()),
-        (Addr) size_left);
+    frag_size =
+        std::min(cacheLineSize() - addrBlockOffset(frag_addr, cacheLineSize()),
+            (Addr)size_left);
     size_left -= frag_size;
 
     RequestPtr mem_req;
 
     // Set up byte-enable mask for the current fragment
-    auto it_start = byte_enable.cbegin() + (size - (frag_size +
-                                                    size_left));
+    auto it_start = byte_enable.cbegin() + (size - (frag_size + size_left));
     auto it_end = byte_enable.cbegin() + (size - size_left);
     if (isAnyActiveElement(it_start, it_end)) {
-        mem_req = std::make_shared<Request>(frag_addr, frag_size,
-                flags, requestorId, thread->pcState().instAddr(),
-                tc->contextId());
+        mem_req = std::make_shared<Request>(frag_addr, frag_size, flags,
+            requestorId, thread->pcState().instAddr(), tc->contextId());
         mem_req->setByteEnable(std::vector<bool>(it_start, it_end));
     }
 
@@ -165,8 +159,7 @@ CheckerCPU::genMemFragmentRequest(Addr frag_addr, int size,
 
 Fault
 CheckerCPU::readMem(Addr addr, uint8_t *data, unsigned size,
-                    Request::Flags flags,
-                    const std::vector<bool>& byte_enable)
+    Request::Flags flags, const std::vector<bool> &byte_enable)
 {
     assert(byte_enable.size() == size);
 
@@ -182,9 +175,8 @@ CheckerCPU::readMem(Addr addr, uint8_t *data, unsigned size,
 
     // Need to account for multiple accesses like the Atomic and TimingSimple
     while (1) {
-        RequestPtr mem_req = genMemFragmentRequest(frag_addr, size, flags,
-                                                   byte_enable, frag_size,
-                                                   size_left);
+        RequestPtr mem_req = genMemFragmentRequest(
+            frag_addr, size, flags, byte_enable, frag_size, size_left);
 
         predicate = (mem_req != nullptr);
 
@@ -195,7 +187,7 @@ CheckerCPU::readMem(Addr addr, uint8_t *data, unsigned size,
 
         if (predicate && !checked_flags && fault == NoFault && unverifiedReq) {
             flags_match = checkFlags(unverifiedReq, mem_req->getVaddr(),
-                                     mem_req->getPaddr(), mem_req->getFlags());
+                mem_req->getPaddr(), mem_req->getFlags());
             pAddr = mem_req->getPaddr();
             checked_flags = true;
         }
@@ -225,9 +217,8 @@ CheckerCPU::readMem(Addr addr, uint8_t *data, unsigned size,
             break;
         }
 
-        //If we don't need to access a second cache line, stop now.
-        if (size_left == 0)
-        {
+        // If we don't need to access a second cache line, stop now.
+        if (size_left == 0) {
             break;
         }
 
@@ -239,8 +230,8 @@ CheckerCPU::readMem(Addr addr, uint8_t *data, unsigned size,
 
     if (!flags_match) {
         warn("%lli: Flags do not match CPU:%#x %#x %#x Checker:%#x %#x %#x\n",
-             curTick(), unverifiedReq->getVaddr(), unverifiedReq->getPaddr(),
-             unverifiedReq->getFlags(), frag_addr, pAddr, flags);
+            curTick(), unverifiedReq->getVaddr(), unverifiedReq->getPaddr(),
+            unverifiedReq->getFlags(), frag_addr, pAddr, flags);
         handleError();
     }
 
@@ -248,9 +239,8 @@ CheckerCPU::readMem(Addr addr, uint8_t *data, unsigned size,
 }
 
 Fault
-CheckerCPU::writeMem(uint8_t *data, unsigned size,
-                     Addr addr, Request::Flags flags, uint64_t *res,
-                     const std::vector<bool>& byte_enable)
+CheckerCPU::writeMem(uint8_t *data, unsigned size, Addr addr,
+    Request::Flags flags, uint64_t *res, const std::vector<bool> &byte_enable)
 {
     assert(byte_enable.size() == size);
 
@@ -267,9 +257,8 @@ CheckerCPU::writeMem(uint8_t *data, unsigned size,
 
     // Need to account for a multiple access like Atomic and Timing CPUs
     while (1) {
-        RequestPtr mem_req = genMemFragmentRequest(frag_addr, size, flags,
-                                                   byte_enable, frag_size,
-                                                   size_left);
+        RequestPtr mem_req = genMemFragmentRequest(
+            frag_addr, size, flags, byte_enable, frag_size, size_left);
 
         predicate = (mem_req != nullptr);
 
@@ -278,10 +267,10 @@ CheckerCPU::writeMem(uint8_t *data, unsigned size,
         }
 
         if (predicate && !checked_flags && fault == NoFault && unverifiedReq) {
-           flags_match = checkFlags(unverifiedReq, mem_req->getVaddr(),
-                                    mem_req->getPaddr(), mem_req->getFlags());
-           pAddr = mem_req->getPaddr();
-           checked_flags = true;
+            flags_match = checkFlags(unverifiedReq, mem_req->getVaddr(),
+                mem_req->getPaddr(), mem_req->getFlags());
+            pAddr = mem_req->getPaddr();
+            checked_flags = true;
         }
 
         /*
@@ -293,75 +282,74 @@ CheckerCPU::writeMem(uint8_t *data, unsigned size,
          */
         bool was_prefetch = mem_req->isPrefetch();
 
-        //If we don't need to access a second cache line, stop now.
-        if (fault != NoFault || size_left == 0)
-        {
+        // If we don't need to access a second cache line, stop now.
+        if (fault != NoFault || size_left == 0) {
             if (fault != NoFault && was_prefetch) {
-              fault = NoFault;
+                fault = NoFault;
             }
             break;
         }
 
         frag_addr += frag_size;
-   }
+    }
 
-   if (!flags_match) {
-       warn("%lli: Flags do not match CPU:%#x %#x Checker:%#x %#x %#x\n",
+    if (!flags_match) {
+        warn("%lli: Flags do not match CPU:%#x %#x Checker:%#x %#x %#x\n",
             curTick(), unverifiedReq->getVaddr(), unverifiedReq->getPaddr(),
             unverifiedReq->getFlags(), frag_addr, pAddr, flags);
-       handleError();
-   }
+        handleError();
+    }
 
-   // Assume the result was the same as the one passed in.  This checker
-   // doesn't check if the SC should succeed or fail, it just checks the
-   // value.
-   if (unverifiedReq && res && unverifiedReq->extraDataValid())
-       *res = unverifiedReq->getExtraData();
+    // Assume the result was the same as the one passed in.  This checker
+    // doesn't check if the SC should succeed or fail, it just checks the
+    // value.
+    if (unverifiedReq && res && unverifiedReq->extraDataValid())
+        *res = unverifiedReq->getExtraData();
 
-   // Entire purpose here is to make sure we are getting the
-   // same data to send to the mem system as the CPU did.
-   // Cannot check this is actually what went to memory because
-   // there stores can be in ld/st queue or coherent operations
-   // overwriting values.
-   bool extraData = false;
-   if (unverifiedReq) {
-       extraData = unverifiedReq->extraDataValid() ?
-                        unverifiedReq->getExtraData() : true;
-   }
+    // Entire purpose here is to make sure we are getting the
+    // same data to send to the mem system as the CPU did.
+    // Cannot check this is actually what went to memory because
+    // there stores can be in ld/st queue or coherent operations
+    // overwriting values.
+    bool extraData = false;
+    if (unverifiedReq) {
+        extraData = unverifiedReq->extraDataValid() ?
+                        unverifiedReq->getExtraData() :
+                        true;
+    }
 
-   // If the request is to ZERO a cache block, there is no data to check
-   // against, but it's all zero. We need something to compare to, so use a
-   // const set of zeros.
-   if (flags & Request::STORE_NO_DATA) {
-       assert(!data);
-       assert(sizeof(zero_data) <= size);
-       data = zero_data;
-   }
+    // If the request is to ZERO a cache block, there is no data to check
+    // against, but it's all zero. We need something to compare to, so use a
+    // const set of zeros.
+    if (flags & Request::STORE_NO_DATA) {
+        assert(!data);
+        assert(sizeof(zero_data) <= size);
+        data = zero_data;
+    }
 
-   if (unverifiedReq && unverifiedMemData &&
-       memcmp(data, unverifiedMemData, size) && extraData) {
-           warn("%lli: Store value does not match value sent to memory! "
-                  "data: %#x inst_data: %#x", curTick(), data,
-                  unverifiedMemData);
-       handleError();
-   }
+    if (unverifiedReq && unverifiedMemData &&
+        memcmp(data, unverifiedMemData, size) && extraData) {
+        warn("%lli: Store value does not match value sent to memory! "
+             "data: %#x inst_data: %#x",
+            curTick(), data, unverifiedMemData);
+        handleError();
+    }
 
-   return fault;
+    return fault;
 }
 
 /**
  * Checks if the flags set by the Checker and Checkee match.
  */
 bool
-CheckerCPU::checkFlags(const RequestPtr &unverified_req, Addr vAddr,
-                       Addr pAddr, int flags)
+CheckerCPU::checkFlags(
+    const RequestPtr &unverified_req, Addr vAddr, Addr pAddr, int flags)
 {
     Addr unverifiedVAddr = unverified_req->getVaddr();
     Addr unverifiedPAddr = unverified_req->getPaddr();
     int unverifiedFlags = unverified_req->getFlags();
 
-    if (unverifiedVAddr != vAddr ||
-        unverifiedPAddr != pAddr ||
+    if (unverifiedVAddr != vAddr || unverifiedPAddr != pAddr ||
         unverifiedFlags != flags) {
         return false;
     }
@@ -372,8 +360,7 @@ CheckerCPU::checkFlags(const RequestPtr &unverified_req, Addr vAddr,
 void
 CheckerCPU::dumpAndExit()
 {
-    warn("%lli: Checker PC:%s",
-         curTick(), thread->pcState());
+    warn("%lli: Checker PC:%s", curTick(), thread->pcState());
     panic("Checker found an error!");
 }
 

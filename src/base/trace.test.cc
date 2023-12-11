@@ -53,8 +53,8 @@ namespace gem5
 namespace debug
 {
 /** Debug flag used for the tests in this file. */
-SimpleFlag TraceTestDebugFlag("TraceTestDebugFlag",
-    "Exclusive debug flag for the trace tests");
+SimpleFlag TraceTestDebugFlag(
+    "TraceTestDebugFlag", "Exclusive debug flag for the trace tests");
 } // namespace debug
 } // namespace gem5
 
@@ -449,8 +449,8 @@ TEST(TraceTest, DprintfFlagMultipleArgs)
     std::stringstream ss;
     trace::OstreamLogger logger(ss);
 
-    logger.dprintf_flag(Tick(100), "Foo", "", "Test %s %c %d %x",
-        "message", 'A', 217, 0x30);
+    logger.dprintf_flag(
+        Tick(100), "Foo", "", "Test %s %c %d %x", "message", 'A', 217, 0x30);
     ASSERT_EQ(getString(&logger), "    100: Foo: Test message A 217 30");
 }
 
@@ -505,10 +505,10 @@ TEST(TraceTest, DprintfWrapper)
     trace::OstreamLogger logger(ss);
     trace::OstreamLogger logger_flag(ss_flag);
 
-    logger.dprintf(Tick(100), "Foo", "Test %s %c %d %x",
-        "message", 'A', 217, 0x30);
-    logger_flag.dprintf_flag(Tick(100), "Foo", "", "Test %s %c %d %x",
-        "message", 'A', 217, 0x30);
+    logger.dprintf(
+        Tick(100), "Foo", "Test %s %c %d %x", "message", 'A', 217, 0x30);
+    logger_flag.dprintf_flag(
+        Tick(100), "Foo", "", "Test %s %c %d %x", "message", 'A', 217, 0x30);
     ASSERT_EQ(getString(&logger), getString(&logger_flag));
 }
 

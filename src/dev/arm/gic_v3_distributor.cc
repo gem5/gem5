@@ -51,46 +51,45 @@
 
 namespace gem5
 {
-
-const AddrRange Gicv3Distributor::GICD_IGROUPR   (0x0080, 0x0100);
-const AddrRange Gicv3Distributor::GICD_ISENABLER (0x0100, 0x0180);
-const AddrRange Gicv3Distributor::GICD_ICENABLER (0x0180, 0x0200);
-const AddrRange Gicv3Distributor::GICD_ISPENDR   (0x0200, 0x0280);
-const AddrRange Gicv3Distributor::GICD_ICPENDR   (0x0280, 0x0300);
-const AddrRange Gicv3Distributor::GICD_ISACTIVER (0x0300, 0x0380);
-const AddrRange Gicv3Distributor::GICD_ICACTIVER (0x0380, 0x0400);
+const AddrRange Gicv3Distributor::GICD_IGROUPR(0x0080, 0x0100);
+const AddrRange Gicv3Distributor::GICD_ISENABLER(0x0100, 0x0180);
+const AddrRange Gicv3Distributor::GICD_ICENABLER(0x0180, 0x0200);
+const AddrRange Gicv3Distributor::GICD_ISPENDR(0x0200, 0x0280);
+const AddrRange Gicv3Distributor::GICD_ICPENDR(0x0280, 0x0300);
+const AddrRange Gicv3Distributor::GICD_ISACTIVER(0x0300, 0x0380);
+const AddrRange Gicv3Distributor::GICD_ICACTIVER(0x0380, 0x0400);
 const AddrRange Gicv3Distributor::GICD_IPRIORITYR(0x0400, 0x0800);
-const AddrRange Gicv3Distributor::GICD_ITARGETSR (0x0800, 0x0c00);
-const AddrRange Gicv3Distributor::GICD_ICFGR     (0x0c00, 0x0d00);
-const AddrRange Gicv3Distributor::GICD_IGRPMODR  (0x0d00, 0x0d80);
-const AddrRange Gicv3Distributor::GICD_NSACR     (0x0e00, 0x0f00);
-const AddrRange Gicv3Distributor::GICD_CPENDSGIR (0x0f10, 0x0f20);
-const AddrRange Gicv3Distributor::GICD_SPENDSGIR (0x0f20, 0x0f30);
-const AddrRange Gicv3Distributor::GICD_IROUTER   (0x6000, 0x7fe0);
+const AddrRange Gicv3Distributor::GICD_ITARGETSR(0x0800, 0x0c00);
+const AddrRange Gicv3Distributor::GICD_ICFGR(0x0c00, 0x0d00);
+const AddrRange Gicv3Distributor::GICD_IGRPMODR(0x0d00, 0x0d80);
+const AddrRange Gicv3Distributor::GICD_NSACR(0x0e00, 0x0f00);
+const AddrRange Gicv3Distributor::GICD_CPENDSGIR(0x0f10, 0x0f20);
+const AddrRange Gicv3Distributor::GICD_SPENDSGIR(0x0f20, 0x0f30);
+const AddrRange Gicv3Distributor::GICD_IROUTER(0x6000, 0x7fe0);
 
-Gicv3Distributor::Gicv3Distributor(Gicv3 * gic, uint32_t it_lines)
-    : gic(gic),
-      itLines(it_lines),
-      ARE(true),
-      EnableGrp1S(0),
-      EnableGrp1NS(0),
-      EnableGrp0(0),
-      irqGroup(it_lines, 0),
-      irqEnabled(it_lines, false),
-      irqPending(it_lines, false),
-      irqPendingIspendr(it_lines, false),
-      irqActive(it_lines, false),
-      irqPriority(it_lines, 0xAA),
-      irqConfig(it_lines, Gicv3::INT_LEVEL_SENSITIVE),
-      irqGrpmod(it_lines, 0),
-      irqNsacr(it_lines, 0),
-      irqAffinityRouting(it_lines, 0),
-      gicdTyper(0),
-      gicdPidr0(0x92),
-      gicdPidr1(0xb4),
-      gicdPidr2(gic->params().gicv4 ? 0x4b : 0x3b),
-      gicdPidr3(0),
-      gicdPidr4(0x44)
+Gicv3Distributor::Gicv3Distributor(Gicv3 *gic, uint32_t it_lines) :
+    gic(gic),
+    itLines(it_lines),
+    ARE(true),
+    EnableGrp1S(0),
+    EnableGrp1NS(0),
+    EnableGrp0(0),
+    irqGroup(it_lines, 0),
+    irqEnabled(it_lines, false),
+    irqPending(it_lines, false),
+    irqPendingIspendr(it_lines, false),
+    irqActive(it_lines, false),
+    irqPriority(it_lines, 0xAA),
+    irqConfig(it_lines, Gicv3::INT_LEVEL_SENSITIVE),
+    irqGrpmod(it_lines, 0),
+    irqNsacr(it_lines, 0),
+    irqAffinityRouting(it_lines, 0),
+    gicdTyper(0),
+    gicdPidr0(0x92),
+    gicdPidr1(0xb4),
+    gicdPidr2(gic->params().gicv4 ? 0x4b : 0x3b),
+    gicdPidr3(0),
+    gicdPidr4(0x44)
 {
     panic_if(it_lines > Gicv3::INTID_SECURE, "Invalid value for it_lines!");
     /*
@@ -122,9 +121,8 @@ Gicv3Distributor::Gicv3Distributor(Gicv3 * gic, uint32_t it_lines)
     int max_spi_int_id = itLines - 1;
     int it_lines_number = divCeil(max_spi_int_id + 1, 32) - 1;
     gicdTyper = (1 << 26) | (1 << 25) | (1 << 24) | (IDBITS << 19) |
-        (1 << 17) | (1 << 16) |
-        ((have_security ? 1 : 0) << 10) |
-        (it_lines_number << 0);
+                (1 << 17) | (1 << 16) | ((have_security ? 1 : 0) << 10) |
+                (it_lines_number << 0);
 
     if (have_security) {
         DS = false;
@@ -135,8 +133,7 @@ Gicv3Distributor::Gicv3Distributor(Gicv3 * gic, uint32_t it_lines)
 
 void
 Gicv3Distributor::init()
-{
-}
+{}
 
 uint64_t
 Gicv3Distributor::read(Addr addr, size_t size, bool is_secure_access)
@@ -172,9 +169,7 @@ Gicv3Distributor::read(Addr addr, size_t size, bool is_secure_access)
 
         for (int i = 0, int_id = first_intid; i < 8 * size && int_id < itLines;
              i++, int_id++) {
-
-            if (nsAccessToSecInt(int_id, is_secure_access))
-            {
+            if (nsAccessToSecInt(int_id, is_secure_access)) {
                 continue;
             }
 
@@ -193,9 +188,7 @@ Gicv3Distributor::read(Addr addr, size_t size, bool is_secure_access)
 
         for (int i = 0, int_id = first_intid; i < 8 * size && int_id < itLines;
              i++, int_id++) {
-
-            if (nsAccessToSecInt(int_id, is_secure_access))
-            {
+            if (nsAccessToSecInt(int_id, is_secure_access)) {
                 continue;
             }
 
@@ -214,9 +207,7 @@ Gicv3Distributor::read(Addr addr, size_t size, bool is_secure_access)
 
         for (int i = 0, int_id = first_intid; i < 8 * size && int_id < itLines;
              i++, int_id++) {
-
-            if (nsAccessToSecInt(int_id, is_secure_access))
-            {
+            if (nsAccessToSecInt(int_id, is_secure_access)) {
                 if (irqNsacr[int_id] == 0) {
                     // Group 0 or Secure Group 1 interrupts are RAZ/WI
                     continue;
@@ -238,9 +229,7 @@ Gicv3Distributor::read(Addr addr, size_t size, bool is_secure_access)
 
         for (int i = 0, int_id = first_intid; i < 8 * size && int_id < itLines;
              i++, int_id++) {
-
-            if (nsAccessToSecInt(int_id, is_secure_access))
-            {
+            if (nsAccessToSecInt(int_id, is_secure_access)) {
                 if (irqNsacr[int_id] < 2) {
                     // Group 0 or Secure Group 1 interrupts are RAZ/WI
                     continue;
@@ -263,9 +252,7 @@ Gicv3Distributor::read(Addr addr, size_t size, bool is_secure_access)
 
         for (int i = 0, int_id = first_intid; i < 8 * size && int_id < itLines;
              i++, int_id++) {
-
-            if (nsAccessToSecInt(int_id, is_secure_access))
-            {
+            if (nsAccessToSecInt(int_id, is_secure_access)) {
                 // Group 0 or Secure Group 1 interrupts are RAZ/WI
                 if (irqNsacr[int_id] < 2) {
                     continue;
@@ -288,9 +275,7 @@ Gicv3Distributor::read(Addr addr, size_t size, bool is_secure_access)
 
         for (int i = 0, int_id = first_intid; i < 8 * size && int_id < itLines;
              i++, int_id++) {
-
-            if (nsAccessToSecInt(int_id, is_secure_access))
-            {
+            if (nsAccessToSecInt(int_id, is_secure_access)) {
                 if (irqNsacr[int_id] < 2) {
                     continue;
                 }
@@ -311,7 +296,6 @@ Gicv3Distributor::read(Addr addr, size_t size, bool is_secure_access)
 
         for (int i = 0, int_id = first_intid; i < size && int_id < itLines;
              i++, int_id++) {
-
             uint8_t prio = irqPriority[int_id];
 
             if (!DS && !is_secure_access) {
@@ -346,9 +330,7 @@ Gicv3Distributor::read(Addr addr, size_t size, bool is_secure_access)
 
         for (int i = 0, int_id = first_intid; i < 8 * size && int_id < itLines;
              i = i + 2, int_id++) {
-
-            if (nsAccessToSecInt(int_id, is_secure_access))
-            {
+            if (nsAccessToSecInt(int_id, is_secure_access)) {
                 continue;
             }
 
@@ -399,8 +381,8 @@ Gicv3Distributor::read(Addr addr, size_t size, bool is_secure_access)
 
         uint64_t val = 0x0;
 
-        for (int i = 0, int_id = first_intid;
-             i < 8 * size && int_id < itLines; i = i + 2, int_id++) {
+        for (int i = 0, int_id = first_intid; i < 8 * size && int_id < itLines;
+             i = i + 2, int_id++) {
             val |= irqNsacr[int_id] << i;
         }
 
@@ -423,8 +405,7 @@ Gicv3Distributor::read(Addr addr, size_t size, bool is_secure_access)
             return 0;
         }
 
-        if (nsAccessToSecInt(int_id, is_secure_access))
-        {
+        if (nsAccessToSecInt(int_id, is_secure_access)) {
             if (irqNsacr[int_id] < 3) {
                 return 0;
             }
@@ -442,7 +423,7 @@ Gicv3Distributor::read(Addr addr, size_t size, bool is_secure_access)
     }
 
     switch (addr) {
-      case GICD_CTLR: // Control Register
+    case GICD_CTLR: // Control Register
         if (!DS) {
             if (is_secure_access) {
                 // E1NWF [7] RAZ/WI
@@ -452,12 +433,8 @@ Gicv3Distributor::read(Addr addr, size_t size, bool is_secure_access)
                 // EnableGrp1S [2]
                 // EnableGrp1NS [1]
                 // EnableGrp0 [0]
-                return (EnableGrp0 << 0) |
-                    (EnableGrp1NS << 1) |
-                    (EnableGrp1S << 2) |
-                    (1 << 4) |
-                    (1 << 5) |
-                    (DS << 6);
+                return (EnableGrp0 << 0) | (EnableGrp1NS << 1) |
+                       (EnableGrp1S << 2) | (1 << 4) | (1 << 5) | (DS << 6);
             } else {
                 // ARE_NS [4] RAO/WI;
                 // EnableGrp1A [1] is a read-write alias of the Secure
@@ -466,53 +443,53 @@ Gicv3Distributor::read(Addr addr, size_t size, bool is_secure_access)
                 return (1 << 4) | (EnableGrp1NS << 1);
             }
         } else {
-            return (DS << 6) | (ARE << 4) |
-                (EnableGrp1NS << 1) | (EnableGrp0 << 0);
+            return (DS << 6) | (ARE << 4) | (EnableGrp1NS << 1) |
+                   (EnableGrp0 << 0);
         }
 
-      case GICD_TYPER: // Interrupt Controller Type Register
+    case GICD_TYPER: // Interrupt Controller Type Register
         return gicdTyper;
 
-      case GICD_IIDR: // Implementer Identification Register
-        //return 0x43b; // ARM JEP106 code (r0p0 GIC-500)
+    case GICD_IIDR: // Implementer Identification Register
+        // return 0x43b; // ARM JEP106 code (r0p0 GIC-500)
         return 0;
 
-      case GICD_TYPER2: // Interrupt Controller Type Register 2
-        return 0; // RES0
+    case GICD_TYPER2: // Interrupt Controller Type Register 2
+        return 0;     // RES0
 
-      case GICD_STATUSR: // Error Reporting Status Register
+    case GICD_STATUSR: // Error Reporting Status Register
         // Optional register, RAZ/WI
         return 0x0;
 
-      case GICD_PIDR0: // Peripheral ID0 Register
+    case GICD_PIDR0: // Peripheral ID0 Register
         return gicdPidr0;
 
-      case GICD_PIDR1: // Peripheral ID1 Register
+    case GICD_PIDR1: // Peripheral ID1 Register
         return gicdPidr1;
 
-      case GICD_PIDR2: // Peripheral ID2 Register
+    case GICD_PIDR2: // Peripheral ID2 Register
         return gicdPidr2;
 
-      case GICD_PIDR3: // Peripheral ID3 Register
+    case GICD_PIDR3: // Peripheral ID3 Register
         return gicdPidr3;
 
-      case GICD_PIDR4: // Peripheral ID4 Register
+    case GICD_PIDR4: // Peripheral ID4 Register
         return gicdPidr4;
 
-      case GICD_PIDR5: // Peripheral ID5 Register
-      case GICD_PIDR6: // Peripheral ID6 Register
-      case GICD_PIDR7: // Peripheral ID7 Register
-        return 0; // RES0
+    case GICD_PIDR5: // Peripheral ID5 Register
+    case GICD_PIDR6: // Peripheral ID6 Register
+    case GICD_PIDR7: // Peripheral ID7 Register
+        return 0;    // RES0
 
-      default:
+    default:
         gic->reserved("Gicv3Distributor::read(): invalid offset %#x\n", addr);
         return 0; // RES0
     }
 }
 
 void
-Gicv3Distributor::write(Addr addr, uint64_t data, size_t size,
-                        bool is_secure_access)
+Gicv3Distributor::write(
+    Addr addr, uint64_t data, size_t size, bool is_secure_access)
 {
     if (GICD_IGROUPR.contains(addr)) { // Interrupt Group Registers
         if (!DS && !is_secure_access) {
@@ -530,7 +507,7 @@ Gicv3Distributor::write(Addr addr, uint64_t data, size_t size,
              i++, int_id++) {
             irqGroup[int_id] = data & (1 << i) ? 1 : 0;
             DPRINTF(GIC, "Gicv3Distributor::write(): int_id %d group %d\n",
-                    int_id, irqGroup[int_id]);
+                int_id, irqGroup[int_id]);
         }
 
         return;
@@ -544,9 +521,7 @@ Gicv3Distributor::write(Addr addr, uint64_t data, size_t size,
 
         for (int i = 0, int_id = first_intid; i < 8 * size && int_id < itLines;
              i++, int_id++) {
-
-            if (nsAccessToSecInt(int_id, is_secure_access))
-            {
+            if (nsAccessToSecInt(int_id, is_secure_access)) {
                 continue;
             }
 
@@ -554,8 +529,10 @@ Gicv3Distributor::write(Addr addr, uint64_t data, size_t size,
 
             if (enable) {
                 if (!irqEnabled[int_id]) {
-                    DPRINTF(GIC, "Gicv3Distributor::write(): "
-                            "int_id %d enabled\n", int_id);
+                    DPRINTF(GIC,
+                        "Gicv3Distributor::write(): "
+                        "int_id %d enabled\n",
+                        int_id);
                 }
 
                 irqEnabled[int_id] = true;
@@ -573,9 +550,7 @@ Gicv3Distributor::write(Addr addr, uint64_t data, size_t size,
 
         for (int i = 0, int_id = first_intid; i < 8 * size && int_id < itLines;
              i++, int_id++) {
-
-            if (nsAccessToSecInt(int_id, is_secure_access))
-            {
+            if (nsAccessToSecInt(int_id, is_secure_access)) {
                 continue;
             }
 
@@ -583,8 +558,10 @@ Gicv3Distributor::write(Addr addr, uint64_t data, size_t size,
 
             if (disable) {
                 if (irqEnabled[int_id]) {
-                    DPRINTF(GIC, "Gicv3Distributor::write(): "
-                            "int_id %d disabled\n", int_id);
+                    DPRINTF(GIC,
+                        "Gicv3Distributor::write(): "
+                        "int_id %d disabled\n",
+                        int_id);
                 }
 
                 irqEnabled[int_id] = false;
@@ -602,9 +579,7 @@ Gicv3Distributor::write(Addr addr, uint64_t data, size_t size,
 
         for (int i = 0, int_id = first_intid; i < 8 * size && int_id < itLines;
              i++, int_id++) {
-
-            if (nsAccessToSecInt(int_id, is_secure_access))
-            {
+            if (nsAccessToSecInt(int_id, is_secure_access)) {
                 if (irqNsacr[int_id] == 0) {
                     // Group 0 or Secure Group 1 interrupts are RAZ/WI
                     continue;
@@ -614,8 +589,10 @@ Gicv3Distributor::write(Addr addr, uint64_t data, size_t size,
             bool pending = data & (1 << i) ? 1 : 0;
 
             if (pending) {
-                DPRINTF(GIC, "Gicv3Distributor::write() (GICD_ISPENDR): "
-                        "int_id %d (SPI) pending bit set\n", int_id);
+                DPRINTF(GIC,
+                    "Gicv3Distributor::write() (GICD_ISPENDR): "
+                    "int_id %d (SPI) pending bit set\n",
+                    int_id);
                 irqPending[int_id] = true;
                 irqPendingIspendr[int_id] = true;
             }
@@ -633,9 +610,7 @@ Gicv3Distributor::write(Addr addr, uint64_t data, size_t size,
 
         for (int i = 0, int_id = first_intid; i < 8 * size && int_id < itLines;
              i++, int_id++) {
-
-            if (nsAccessToSecInt(int_id, is_secure_access))
-            {
+            if (nsAccessToSecInt(int_id, is_secure_access)) {
                 if (irqNsacr[int_id] < 2) {
                     // Group 0 or Secure Group 1 interrupts are RAZ/WI
                     continue;
@@ -662,9 +637,7 @@ Gicv3Distributor::write(Addr addr, uint64_t data, size_t size,
 
         for (int i = 0, int_id = first_intid; i < 8 * size && int_id < itLines;
              i++, int_id++) {
-
-            if (nsAccessToSecInt(int_id, is_secure_access))
-            {
+            if (nsAccessToSecInt(int_id, is_secure_access)) {
                 continue;
             }
 
@@ -686,9 +659,7 @@ Gicv3Distributor::write(Addr addr, uint64_t data, size_t size,
 
         for (int i = 0, int_id = first_intid; i < 8 * size && int_id < itLines;
              i++, int_id++) {
-
-            if (nsAccessToSecInt(int_id, is_secure_access))
-            {
+            if (nsAccessToSecInt(int_id, is_secure_access)) {
                 continue;
             }
 
@@ -696,8 +667,10 @@ Gicv3Distributor::write(Addr addr, uint64_t data, size_t size,
 
             if (clear) {
                 if (irqActive[int_id]) {
-                    DPRINTF(GIC, "Gicv3Distributor::write(): "
-                            "int_id %d active cleared\n", int_id);
+                    DPRINTF(GIC,
+                        "Gicv3Distributor::write(): "
+                        "int_id %d active cleared\n",
+                        int_id);
                 }
 
                 irqActive[int_id] = false;
@@ -714,7 +687,7 @@ Gicv3Distributor::write(Addr addr, uint64_t data, size_t size,
         }
 
         for (int i = 0, int_id = first_intid; i < size && int_id < itLines;
-                i++, int_id++) {
+             i++, int_id++) {
             uint8_t prio = bits(data, (i + 1) * 8 - 1, (i * 8));
 
             if (!DS && !is_secure_access) {
@@ -728,7 +701,7 @@ Gicv3Distributor::write(Addr addr, uint64_t data, size_t size,
 
             irqPriority[int_id] = prio;
             DPRINTF(GIC, "Gicv3Distributor::write(): int_id %d priority %d\n",
-                    int_id, irqPriority[int_id]);
+                int_id, irqPriority[int_id]);
         }
 
         return;
@@ -753,16 +726,14 @@ Gicv3Distributor::write(Addr addr, uint64_t data, size_t size,
 
         for (int i = 0, int_id = first_intid; i < 8 * size && int_id < itLines;
              i = i + 2, int_id++) {
-
             if (nsAccessToSecInt(int_id, is_secure_access)) {
                 continue;
             }
 
-            irqConfig[int_id] = data & (0x2 << i) ?
-                                Gicv3::INT_EDGE_TRIGGERED :
-                                Gicv3::INT_LEVEL_SENSITIVE;
+            irqConfig[int_id] = data & (0x2 << i) ? Gicv3::INT_EDGE_TRIGGERED :
+                                                    Gicv3::INT_LEVEL_SENSITIVE;
             DPRINTF(GIC, "Gicv3Distributor::write(): int_id %d config %d\n",
-                    int_id, irqConfig[int_id]);
+                int_id, irqConfig[int_id]);
         }
 
         return;
@@ -786,7 +757,7 @@ Gicv3Distributor::write(Addr addr, uint64_t data, size_t size,
                     irqGrpmod[int_id] = bits(data, i);
                 }
 
-                return ;
+                return;
             }
         }
 
@@ -803,8 +774,8 @@ Gicv3Distributor::write(Addr addr, uint64_t data, size_t size,
             return;
         }
 
-        for (int i = 0, int_id = first_intid;
-             i < 8 * size && int_id < itLines; i = i + 2, int_id++) {
+        for (int i = 0, int_id = first_intid; i < 8 * size && int_id < itLines;
+             i = i + 2, int_id++) {
             irqNsacr[int_id] = (data >> (2 * int_id)) & 0x3;
         }
 
@@ -817,8 +788,7 @@ Gicv3Distributor::write(Addr addr, uint64_t data, size_t size,
             return;
         }
 
-        if (nsAccessToSecInt(int_id, is_secure_access))
-        {
+        if (nsAccessToSecInt(int_id, is_secure_access)) {
             if (irqNsacr[int_id] < 3) {
                 // Group 0 or Secure Group 1 interrupts are RAZ/WI
                 return;
@@ -838,14 +808,15 @@ Gicv3Distributor::write(Addr addr, uint64_t data, size_t size,
             irqAffinityRouting[int_id] = data;
         }
 
-        DPRINTF(GIC, "Gicv3Distributor::write(): "
-                "int_id %d GICD_IROUTER %#llx\n",
-                int_id, irqAffinityRouting[int_id]);
+        DPRINTF(GIC,
+            "Gicv3Distributor::write(): "
+            "int_id %d GICD_IROUTER %#llx\n",
+            int_id, irqAffinityRouting[int_id]);
         return;
     }
 
     switch (addr) {
-      case GICD_CTLR: // Control Register
+    case GICD_CTLR: // Control Register
         if (DS) {
             /*
              * E1NWF [7]
@@ -858,14 +829,15 @@ Gicv3Distributor::write(Addr addr, uint64_t data, size_t size,
              */
             if ((data & (1 << 4)) == 0) {
                 warn("Gicv3Distributor::write(): "
-                        "setting ARE to 0 is not supported!\n");
+                     "setting ARE to 0 is not supported!\n");
             }
 
             EnableGrp1NS = data & GICD_CTLR_ENABLEGRP1NS;
             EnableGrp0 = data & GICD_CTLR_ENABLEGRP0;
-            DPRINTF(GIC, "Gicv3Distributor::write(): (DS 1)"
-                    "EnableGrp1NS %d EnableGrp0 %d\n",
-                    EnableGrp1NS, EnableGrp0);
+            DPRINTF(GIC,
+                "Gicv3Distributor::write(): (DS 1)"
+                "EnableGrp1NS %d EnableGrp0 %d\n",
+                EnableGrp1NS, EnableGrp0);
         } else {
             if (is_secure_access) {
                 /*
@@ -882,22 +854,23 @@ Gicv3Distributor::write(Addr addr, uint64_t data, size_t size,
                  */
                 if ((data & (1 << 5)) == 0) {
                     warn("Gicv3Distributor::write(): "
-                            "setting ARE_NS to 0 is not supported!\n");
+                         "setting ARE_NS to 0 is not supported!\n");
                 }
 
                 if ((data & (1 << 4)) == 0) {
                     warn("Gicv3Distributor::write(): "
-                            "setting ARE_S to 0 is not supported!\n");
+                         "setting ARE_S to 0 is not supported!\n");
                 }
 
                 DS = data & GICD_CTLR_DS;
                 EnableGrp1S = data & GICD_CTLR_ENABLEGRP1S;
                 EnableGrp1NS = data & GICD_CTLR_ENABLEGRP1NS;
                 EnableGrp0 = data & GICD_CTLR_ENABLEGRP0;
-                DPRINTF(GIC, "Gicv3Distributor::write(): (DS 0 secure)"
-                        "DS %d "
-                        "EnableGrp1S %d EnableGrp1NS %d EnableGrp0 %d\n",
-                        DS, EnableGrp1S, EnableGrp1NS, EnableGrp0);
+                DPRINTF(GIC,
+                    "Gicv3Distributor::write(): (DS 0 secure)"
+                    "DS %d "
+                    "EnableGrp1S %d EnableGrp1NS %d EnableGrp0 %d\n",
+                    DS, EnableGrp1S, EnableGrp1NS, EnableGrp0);
 
                 if (data & GICD_CTLR_DS) {
                     EnableGrp1S = 0;
@@ -911,12 +884,14 @@ Gicv3Distributor::write(Addr addr, uint64_t data, size_t size,
                  */
                 if ((data & (1 << 4)) == 0) {
                     warn("Gicv3Distributor::write(): "
-                            "setting ARE_NS to 0 is not supported!\n");
+                         "setting ARE_NS to 0 is not supported!\n");
                 }
 
                 EnableGrp1NS = data & GICD_CTLR_ENABLEGRP1A;
-                DPRINTF(GIC, "Gicv3Distributor::write(): (DS 0 non-secure)"
-                        "EnableGrp1NS %d\n", EnableGrp1NS);
+                DPRINTF(GIC,
+                    "Gicv3Distributor::write(): (DS 0 non-secure)"
+                    "EnableGrp1NS %d\n",
+                    EnableGrp1NS);
             }
         }
 
@@ -924,11 +899,11 @@ Gicv3Distributor::write(Addr addr, uint64_t data, size_t size,
 
         break;
 
-      case GICD_SGIR: // Error Reporting Status Register
+    case GICD_SGIR: // Error Reporting Status Register
         // Only if affinity routing is disabled, RES0
         break;
 
-      case GICD_SETSPI_NSR: {
+    case GICD_SETSPI_NSR: {
         // Writes to this register have no effect if:
         // * The value written specifies an invalid SPI.
         // * The SPI is already pending.
@@ -938,16 +913,16 @@ Gicv3Distributor::write(Addr addr, uint64_t data, size_t size,
         const uint32_t intid = bits(data, 9, 0);
         if (isNotSPI(intid) || irqPending[intid] ||
             (nsAccessToSecInt(intid, is_secure_access) &&
-             irqNsacr[intid] == 0)) {
+                irqNsacr[intid] == 0)) {
             return;
         } else {
             // Valid SPI, set interrupt pending
             sendInt(intid);
         }
         break;
-      }
+    }
 
-      case GICD_CLRSPI_NSR: {
+    case GICD_CLRSPI_NSR: {
         // Writes to this register have no effect if:
         // * The value written specifies an invalid SPI.
         // * The SPI is not pending.
@@ -957,16 +932,16 @@ Gicv3Distributor::write(Addr addr, uint64_t data, size_t size,
         const uint32_t intid = bits(data, 9, 0);
         if (isNotSPI(intid) || !irqPending[intid] ||
             (nsAccessToSecInt(intid, is_secure_access) &&
-             irqNsacr[intid] < 2)) {
+                irqNsacr[intid] < 2)) {
             return;
         } else {
             // Valid SPI, clear interrupt pending
             deassertSPI(intid);
         }
         break;
-      }
+    }
 
-      case GICD_SETSPI_SR: {
+    case GICD_SETSPI_SR: {
         // Writes to this register have no effect if:
         // * GICD_CTLR.DS = 1 (WI)
         // * The value written specifies an invalid SPI.
@@ -980,9 +955,9 @@ Gicv3Distributor::write(Addr addr, uint64_t data, size_t size,
             sendInt(intid);
         }
         break;
-      }
+    }
 
-      case GICD_CLRSPI_SR: {
+    case GICD_CLRSPI_SR: {
         // Writes to this register have no effect if:
         // * GICD_CTLR.DS = 1 (WI)
         // * The value written specifies an invalid SPI.
@@ -996,9 +971,9 @@ Gicv3Distributor::write(Addr addr, uint64_t data, size_t size,
             deassertSPI(intid);
         }
         break;
-      }
+    }
 
-      default:
+    default:
         gic->reserved("Gicv3Distributor::write(): invalid offset %#x\n", addr);
         break;
     }
@@ -1011,8 +986,10 @@ Gicv3Distributor::sendInt(uint32_t int_id)
     panic_if(int_id > itLines, "Invalid SPI!");
     irqPending[int_id] = true;
     irqPendingIspendr[int_id] = false;
-    DPRINTF(GIC, "Gicv3Distributor::sendInt(): "
-            "int_id %d (SPI) pending bit set\n", int_id);
+    DPRINTF(GIC,
+        "Gicv3Distributor::sendInt(): "
+        "int_id %d (SPI) pending bit set\n",
+        int_id);
     update();
 }
 
@@ -1037,33 +1014,29 @@ Gicv3Distributor::deassertSPI(uint32_t int_id)
     update();
 }
 
-Gicv3CPUInterface*
+Gicv3CPUInterface *
 Gicv3Distributor::route(uint32_t int_id)
 {
     IROUTER affinity_routing = irqAffinityRouting[int_id];
-    Gicv3Redistributor * target_redistributor = nullptr;
+    Gicv3Redistributor *target_redistributor = nullptr;
 
     const Gicv3::GroupId int_group = getIntGroup(int_id);
 
     if (affinity_routing.IRM) {
         // Interrupts routed to any PE defined as a participating node
         for (int i = 0; i < gic->getSystem()->threads.size(); i++) {
-            Gicv3Redistributor * redistributor_i =
-                gic->getRedistributor(i);
+            Gicv3Redistributor *redistributor_i = gic->getRedistributor(i);
 
-            if (redistributor_i->
-                    canBeSelectedFor1toNInterrupt(int_group)) {
+            if (redistributor_i->canBeSelectedFor1toNInterrupt(int_group)) {
                 target_redistributor = redistributor_i;
                 break;
             }
         }
     } else {
-        uint32_t affinity = (affinity_routing.Aff3 << 24) |
-                            (affinity_routing.Aff2 << 16) |
-                            (affinity_routing.Aff1 << 8) |
-                            (affinity_routing.Aff0 << 0);
-        target_redistributor =
-            gic->getRedistributorByAffinity(affinity);
+        uint32_t affinity =
+            (affinity_routing.Aff3 << 24) | (affinity_routing.Aff2 << 16) |
+            (affinity_routing.Aff1 << 8) | (affinity_routing.Aff0 << 0);
+        target_redistributor = gic->getRedistributorByAffinity(affinity);
     }
 
     if (!target_redistributor) {
@@ -1094,19 +1067,18 @@ Gicv3Distributor::update()
         Gicv3::GroupId int_group = getIntGroup(int_id);
         bool group_enabled = groupEnabled(int_group);
 
-        if (irqPending[int_id] && irqEnabled[int_id] &&
-            !irqActive[int_id] && group_enabled) {
-
+        if (irqPending[int_id] && irqEnabled[int_id] && !irqActive[int_id] &&
+            group_enabled) {
             // Find the cpu interface where to route the interrupt
             Gicv3CPUInterface *target_cpu_interface = route(int_id);
 
             // Invalid routing
-            if (!target_cpu_interface) continue;
+            if (!target_cpu_interface)
+                continue;
 
             if ((irqPriority[int_id] < target_cpu_interface->hppi.prio) ||
                 (irqPriority[int_id] == target_cpu_interface->hppi.prio &&
-                int_id < target_cpu_interface->hppi.intid)) {
-
+                    int_id < target_cpu_interface->hppi.intid)) {
                 target_cpu_interface->hppi.intid = int_id;
                 target_cpu_interface->hppi.prio = irqPriority[int_id];
                 target_cpu_interface->hppi.group = int_group;
@@ -1205,7 +1177,7 @@ Gicv3Distributor::copy(Gicv3Registers *from, Gicv3Registers *to)
 }
 
 void
-Gicv3Distributor::serialize(CheckpointOut & cp) const
+Gicv3Distributor::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(ARE);
     SERIALIZE_SCALAR(DS);
@@ -1225,7 +1197,7 @@ Gicv3Distributor::serialize(CheckpointOut & cp) const
 }
 
 void
-Gicv3Distributor::unserialize(CheckpointIn & cp)
+Gicv3Distributor::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(ARE);
     UNSERIALIZE_SCALAR(DS);

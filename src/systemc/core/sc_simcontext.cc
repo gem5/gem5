@@ -32,10 +32,8 @@
 
 namespace sc_core
 {
-
 namespace
 {
-
 size_t objIndex = 0;
 sc_simcontext currContext;
 
@@ -43,8 +41,16 @@ sc_curr_proc_info currProcInfo;
 
 } // anonymous namespace
 
-sc_dt::uint64 sc_simcontext::delta_count() const { return sc_delta_count(); }
-void sc_simcontext::reset() { objIndex = 0; }
+sc_dt::uint64
+sc_simcontext::delta_count() const
+{
+    return sc_delta_count();
+}
+void
+sc_simcontext::reset()
+{
+    objIndex = 0;
+}
 
 sc_curr_proc_handle
 sc_simcontext::get_curr_proc_info()

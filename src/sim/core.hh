@@ -43,7 +43,6 @@
 
 namespace gem5
 {
-
 /// These are variables that are set based on the simulator frequency
 ///@{
 namespace sim_clock
@@ -52,7 +51,6 @@ extern Tick Frequency; ///< The number of ticks that equal one second
 
 namespace as_float
 {
-
 /** These variables equal the number of ticks in the unit of time they're
  * named after in a double.
  * @{

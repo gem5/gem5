@@ -32,17 +32,10 @@
 
 namespace gem5
 {
+BasicSignal::BasicSignal(Process *send, Process *receive, int signal_val) :
+    sender(send), receiver(receive), signalValue(signal_val)
+{}
 
-BasicSignal::BasicSignal(Process *send, Process *receive, int signal_val)
-    : sender(send),
-      receiver(receive),
-      signalValue(signal_val)
-{
-}
-
-
-BasicSignal::~BasicSignal()
-{
-}
+BasicSignal::~BasicSignal() {}
 
 } // namespace gem5

@@ -37,10 +37,8 @@
 
 namespace gem5
 {
-
 namespace fastmodel
 {
-
 class SignalSender : public SignalSinkPort<bool>
 {
   public:
@@ -58,4 +56,4 @@ class SignalSender : public SignalSinkPort<bool>
 } // namespace fastmodel
 } // namespace gem5
 
-#endif  // __ARCH_ARM_FASTMODEL_COMMON_SIGNAL_SENDER_HH__
+#endif // __ARCH_ARM_FASTMODEL_COMMON_SIGNAL_SENDER_HH__

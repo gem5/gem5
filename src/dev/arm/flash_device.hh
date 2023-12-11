@@ -48,7 +48,6 @@
 
 namespace gem5
 {
-
 /**
  * Flash Device model
  * The Flash Device model is a timing model for a NAND flash device.
@@ -57,7 +56,6 @@ namespace gem5
 class FlashDevice : public AbstractNVM
 {
   public:
-
     /** Initialize functions*/
     FlashDevice(const FlashDeviceParams &);
     ~FlashDevice();
@@ -122,14 +120,14 @@ class FlashDevice : public AbstractNVM
 
     void
     readMemory(uint64_t address, uint32_t amount,
-               const std::function<void()> &event) override
+        const std::function<void()> &event) override
     {
         accessDevice(address, amount, event, ActionRead);
     }
 
     void
     writeMemory(uint64_t address, uint32_t amount,
-                const std::function<void()> &event) override
+        const std::function<void()> &event) override
     {
         accessDevice(address, amount, event, ActionWrite);
     }
@@ -139,7 +137,7 @@ class FlashDevice : public AbstractNVM
 
     /**Flash action function*/
     void accessDevice(uint64_t address, uint32_t amount,
-                      const std::function<void()> &event, Actions action);
+        const std::function<void()> &event, Actions action);
 
     /** Event rescheduler*/
     void actionComplete();

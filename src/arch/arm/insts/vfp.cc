@@ -39,7 +39,6 @@
 
 namespace gem5
 {
-
 using namespace ArmISA;
 
 /*
@@ -50,7 +49,7 @@ using namespace ArmISA;
 
 std::string
 FpCondCompRegOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -65,7 +64,7 @@ FpCondCompRegOp::generateDisassembly(
 
 std::string
 FpCondSelOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -81,7 +80,7 @@ FpCondSelOp::generateDisassembly(
 
 std::string
 FpRegRegOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -93,7 +92,7 @@ FpRegRegOp::generateDisassembly(
 
 std::string
 FpRegImmOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -104,7 +103,7 @@ FpRegImmOp::generateDisassembly(
 
 std::string
 FpRegRegImmOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -117,7 +116,7 @@ FpRegRegImmOp::generateDisassembly(
 
 std::string
 FpRegRegRegOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -131,8 +130,7 @@ FpRegRegRegOp::generateDisassembly(
 
 std::string
 FpRegRegRegCondOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab)
-    const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -147,7 +145,7 @@ FpRegRegRegCondOp::generateDisassembly(
 
 std::string
 FpRegRegRegRegOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -163,7 +161,7 @@ FpRegRegRegRegOp::generateDisassembly(
 
 std::string
 FpRegRegRegImmOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -178,23 +176,22 @@ FpRegRegRegImmOp::generateDisassembly(
 
 namespace ArmISA
 {
-
 VfpSavedState
 prepFpState(uint32_t rMode)
 {
     int roundingMode = fegetround();
     feclearexcept(FeAllExceptions);
     switch (rMode) {
-      case VfpRoundNearest:
+    case VfpRoundNearest:
         fesetround(FeRoundNearest);
         break;
-      case VfpRoundUpward:
+    case VfpRoundUpward:
         fesetround(FeRoundUpward);
         break;
-      case VfpRoundDown:
+    case VfpRoundDown:
         fesetround(FeRoundDown);
         break;
-      case VfpRoundZero:
+    case VfpRoundZero:
         fesetround(FeRoundZero);
         break;
     }
@@ -251,10 +248,10 @@ fixDest(bool flush, bool defaultNan, fpType val, fpType op1)
     return val;
 }
 
-template
-float fixDest<float>(bool flush, bool defaultNan, float val, float op1);
-template
-double fixDest<double>(bool flush, bool defaultNan, double val, double op1);
+template float fixDest<float>(
+    bool flush, bool defaultNan, float val, float op1);
+template double fixDest<double>(
+    bool flush, bool defaultNan, double val, double op1);
 
 template <class fpType>
 fpType
@@ -290,12 +287,10 @@ fixDest(bool flush, bool defaultNan, fpType val, fpType op1, fpType op2)
     return val;
 }
 
-template
-float fixDest<float>(bool flush, bool defaultNan,
-                     float val, float op1, float op2);
-template
-double fixDest<double>(bool flush, bool defaultNan,
-                       double val, double op1, double op2);
+template float fixDest<float>(
+    bool flush, bool defaultNan, float val, float op1, float op2);
+template double fixDest<double>(
+    bool flush, bool defaultNan, double val, double op1, double op2);
 
 template <class fpType>
 fpType
@@ -305,14 +300,13 @@ fixDivDest(bool flush, bool defaultNan, fpType val, fpType op1, fpType op2)
     const bool single = (sizeof(fpType) == sizeof(float));
     const fpType junk = 0.0;
     if ((single && (val == bitsToFp(0x00800000, junk) ||
-                    val == bitsToFp(0x80800000, junk))) ||
+                       val == bitsToFp(0x80800000, junk))) ||
         (!single && (val == bitsToFp(0x0010000000000000ULL, junk) ||
-                     val == bitsToFp(0x8010000000000000ULL, junk)))
-        ) {
-        __asm__ __volatile__("" : "=m" (op1) : "m" (op1));
+                        val == bitsToFp(0x8010000000000000ULL, junk)))) {
+        __asm__ __volatile__("" : "=m"(op1) : "m"(op1));
         fesetround(FeRoundZero);
         fpType temp = 0.0;
-        __asm__ __volatile__("" : "=m" (temp) : "m" (temp));
+        __asm__ __volatile__("" : "=m"(temp) : "m"(temp));
         temp = op1 / op2;
         if (flushToZero(temp)) {
             feraiseexcept(FeUnderflow);
@@ -321,17 +315,15 @@ fixDivDest(bool flush, bool defaultNan, fpType val, fpType op1, fpType op2)
                 mid = temp;
             }
         }
-        __asm__ __volatile__("" :: "m" (temp));
+        __asm__ __volatile__("" ::"m"(temp));
     }
     return mid;
 }
 
-template
-float fixDivDest<float>(bool flush, bool defaultNan,
-                        float val, float op1, float op2);
-template
-double fixDivDest<double>(bool flush, bool defaultNan,
-                          double val, double op1, double op2);
+template float fixDivDest<float>(
+    bool flush, bool defaultNan, float val, float op1, float op2);
+template double fixDivDest<double>(
+    bool flush, bool defaultNan, double val, double op1, double op2);
 
 float
 fixFpDFpSDest(FPSCR fpscr, double val)
@@ -340,22 +332,21 @@ fixFpDFpSDest(FPSCR fpscr, double val)
     float op1 = 0.0;
     if (std::isnan(val)) {
         uint64_t valBits = fpToBits(val);
-        uint32_t op1Bits = bits(valBits, 50, 29) |
-                           (mask(9) << 22) |
+        uint32_t op1Bits = bits(valBits, 50, 29) | (mask(9) << 22) |
                            (bits(valBits, 63) << 31);
         op1 = bitsToFp(op1Bits, junk);
     }
     float mid = fixDest(fpscr.fz, fpscr.dn, (float)val, op1);
-    if (fpscr.fz && fetestexcept(FeUnderflow | FeInexact) ==
-                    (FeUnderflow | FeInexact)) {
+    if (fpscr.fz &&
+        fetestexcept(FeUnderflow | FeInexact) == (FeUnderflow | FeInexact)) {
         feclearexcept(FeInexact);
     }
     if (mid == bitsToFp(0x00800000, junk) ||
         mid == bitsToFp(0x80800000, junk)) {
-        __asm__ __volatile__("" : "=m" (val) : "m" (val));
+        __asm__ __volatile__("" : "=m"(val) : "m"(val));
         fesetround(FeRoundZero);
         float temp = 0.0;
-        __asm__ __volatile__("" : "=m" (temp) : "m" (temp));
+        __asm__ __volatile__("" : "=m"(temp) : "m"(temp));
         temp = val;
         if (flushToZero(temp)) {
             feraiseexcept(FeUnderflow);
@@ -364,7 +355,7 @@ fixFpDFpSDest(FPSCR fpscr, double val)
                 mid = temp;
             }
         }
-        __asm__ __volatile__("" :: "m" (temp));
+        __asm__ __volatile__("" ::"m"(temp));
     }
     return mid;
 }
@@ -384,10 +375,10 @@ fixFpSFpDDest(FPSCR fpscr, float val)
     double mid = fixDest(fpscr.fz, fpscr.dn, (double)val, op1);
     if (mid == bitsToFp(0x0010000000000000ULL, junk) ||
         mid == bitsToFp(0x8010000000000000ULL, junk)) {
-        __asm__ __volatile__("" : "=m" (val) : "m" (val));
+        __asm__ __volatile__("" : "=m"(val) : "m"(val));
         fesetround(FeRoundZero);
         double temp = 0.0;
-        __asm__ __volatile__("" : "=m" (temp) : "m" (temp));
+        __asm__ __volatile__("" : "=m"(temp) : "m"(temp));
         temp = val;
         if (flushToZero(temp)) {
             feraiseexcept(FeUnderflow);
@@ -396,14 +387,14 @@ fixFpSFpDDest(FPSCR fpscr, float val)
                 mid = temp;
             }
         }
-        __asm__ __volatile__("" :: "m" (temp));
+        __asm__ __volatile__("" ::"m"(temp));
     }
     return mid;
 }
 
 static inline uint16_t
-vcvtFpFpH(FPSCR &fpscr, bool flush, bool defaultNan,
-          uint32_t rMode, bool ahp, uint64_t opBits, bool isDouble)
+vcvtFpFpH(FPSCR &fpscr, bool flush, bool defaultNan, uint32_t rMode, bool ahp,
+    uint64_t opBits, bool isDouble)
 {
     uint32_t mWidth;
     uint32_t eWidth;
@@ -417,13 +408,13 @@ vcvtFpFpH(FPSCR &fpscr, bool flush, bool defaultNan,
         mWidth = 23;
         eWidth = 8;
     }
-    sBitPos    = eWidth + mWidth;
-    eHalfRange = (1 << (eWidth-1)) - 1;
+    sBitPos = eWidth + mWidth;
+    eHalfRange = (1 << (eWidth - 1)) - 1;
 
     // Extract the operand.
     bool neg = bits(opBits, sBitPos);
-    uint32_t exponent = bits(opBits, sBitPos-1, mWidth);
-    uint64_t oldMantissa = bits(opBits, mWidth-1, 0);
+    uint32_t exponent = bits(opBits, sBitPos - 1, mWidth);
+    uint64_t oldMantissa = bits(opBits, mWidth - 1, 0);
     uint32_t mantissa = oldMantissa >> (mWidth - 10);
     // Do the conversion.
     uint64_t extra = oldMantissa & mask(mWidth - 10);
@@ -477,8 +468,8 @@ vcvtFpFpH(FPSCR &fpscr, bool flush, bool defaultNan,
             if ((mode == VfpRoundUpward && !neg && extra) ||
                 (mode == VfpRoundDown && neg && extra) ||
                 (mode == VfpRoundNearest &&
-                 (extra > (1 << 9) ||
-                  (extra == (1 << 9) && bits(mantissa, 0))))) {
+                    (extra > (1 << 9) ||
+                        (extra == (1 << 9) && bits(mantissa, 0))))) {
                 mantissa++;
             }
 
@@ -523,7 +514,7 @@ vcvtFpFpH(FPSCR &fpscr, bool flush, bool defaultNan,
             if ((mode == VfpRoundUpward && !neg && nonZero) ||
                 (mode == VfpRoundDown && neg && nonZero) ||
                 (mode == VfpRoundNearest && topOne &&
-                 (!restZeros || bits(mantissa, 0)))) {
+                    (!restZeros || bits(mantissa, 0)))) {
                 mantissa++;
             }
 
@@ -574,16 +565,16 @@ vcvtFpFpH(FPSCR &fpscr, bool flush, bool defaultNan,
 }
 
 uint16_t
-vcvtFpSFpH(FPSCR &fpscr, bool flush, bool defaultNan,
-           uint32_t rMode, bool ahp, float op)
+vcvtFpSFpH(FPSCR &fpscr, bool flush, bool defaultNan, uint32_t rMode, bool ahp,
+    float op)
 {
     uint64_t opBits = fpToBits(op);
     return vcvtFpFpH(fpscr, flush, defaultNan, rMode, ahp, opBits, false);
 }
 
 uint16_t
-vcvtFpDFpH(FPSCR &fpscr, bool flush, bool defaultNan,
-           uint32_t rMode, bool ahp, double op)
+vcvtFpDFpH(FPSCR &fpscr, bool flush, bool defaultNan, uint32_t rMode, bool ahp,
+    double op)
 {
     uint64_t opBits = fpToBits(op);
     return vcvtFpFpH(fpscr, flush, defaultNan, rMode, ahp, opBits, true);
@@ -604,8 +595,8 @@ vcvtFpHFp(FPSCR &fpscr, bool defaultNan, bool ahp, uint16_t op, bool isDouble)
         mWidth = 23;
         eWidth = 8;
     }
-    sBitPos    = eWidth + mWidth;
-    eHalfRange = (1 << (eWidth-1)) - 1;
+    sBitPos = eWidth + mWidth;
+    eHalfRange = (1 << (eWidth - 1)) - 1;
 
     // Extract the bitfields.
     bool neg = bits(op, 15);
@@ -628,13 +619,13 @@ vcvtFpHFp(FPSCR &fpscr, bool defaultNan, bool ahp, uint16_t op, bool isDouble)
         if (mantissa != 0) {
             // Nans.
             mantissa = mantissa << (mWidth - 10);
-            if (bits(mantissa, mWidth-1) == 0) {
+            if (bits(mantissa, mWidth - 1) == 0) {
                 // Signalling nan.
                 fpscr.ioc = 1;
-                mantissa |= (((uint64_t) 1) << (mWidth-1));
+                mantissa |= (((uint64_t)1) << (mWidth - 1));
             }
             if (defaultNan) {
-                mantissa &= ~mask(mWidth-1);
+                mantissa &= ~mask(mWidth - 1);
                 neg = false;
             }
         }
@@ -643,10 +634,10 @@ vcvtFpHFp(FPSCR &fpscr, bool defaultNan, bool ahp, uint16_t op, bool isDouble)
         mantissa = mantissa << (mWidth - 10);
     }
     // Reassemble the result.
-    uint64_t result = bits(mantissa, mWidth-1, 0);
-    replaceBits(result, sBitPos-1, mWidth, exponent);
+    uint64_t result = bits(mantissa, mWidth - 1, 0);
+    replaceBits(result, sBitPos - 1, mWidth, exponent);
     if (neg) {
-        result |= (((uint64_t) 1) << sBitPos);
+        result |= (((uint64_t)1) << sBitPos);
     }
     return result;
 }
@@ -672,8 +663,8 @@ vcvtFpHFpS(FPSCR &fpscr, bool defaultNan, bool ahp, uint16_t op)
 }
 
 float
-vfpUFixedToFpS(bool flush, bool defaultNan,
-        uint64_t val, uint8_t width, uint8_t imm)
+vfpUFixedToFpS(
+    bool flush, bool defaultNan, uint64_t val, uint8_t width, uint8_t imm)
 {
     fesetround(FeRoundNearest);
     if (width == 16)
@@ -683,15 +674,15 @@ vfpUFixedToFpS(bool flush, bool defaultNan,
     else if (width != 64)
         panic("Unsupported width %d", width);
     float scale = powf(2.0, imm);
-    __asm__ __volatile__("" : "=m" (scale) : "m" (scale));
+    __asm__ __volatile__("" : "=m"(scale) : "m"(scale));
     feclearexcept(FeAllExceptions);
-    __asm__ __volatile__("" : "=m" (scale) : "m" (scale));
+    __asm__ __volatile__("" : "=m"(scale) : "m"(scale));
     return fixDivDest(flush, defaultNan, val / scale, (float)val, scale);
 }
 
 float
-vfpSFixedToFpS(bool flush, bool defaultNan,
-        int64_t val, uint8_t width, uint8_t imm)
+vfpSFixedToFpS(
+    bool flush, bool defaultNan, int64_t val, uint8_t width, uint8_t imm)
 {
     fesetround(FeRoundNearest);
     if (width == 16)
@@ -702,16 +693,15 @@ vfpSFixedToFpS(bool flush, bool defaultNan,
         panic("Unsupported width %d", width);
 
     float scale = powf(2.0, imm);
-    __asm__ __volatile__("" : "=m" (scale) : "m" (scale));
+    __asm__ __volatile__("" : "=m"(scale) : "m"(scale));
     feclearexcept(FeAllExceptions);
-    __asm__ __volatile__("" : "=m" (scale) : "m" (scale));
+    __asm__ __volatile__("" : "=m"(scale) : "m"(scale));
     return fixDivDest(flush, defaultNan, val / scale, (float)val, scale);
 }
 
-
 double
-vfpUFixedToFpD(bool flush, bool defaultNan,
-        uint64_t val, uint8_t width, uint8_t imm)
+vfpUFixedToFpD(
+    bool flush, bool defaultNan, uint64_t val, uint8_t width, uint8_t imm)
 {
     fesetround(FeRoundNearest);
     if (width == 16)
@@ -722,15 +712,15 @@ vfpUFixedToFpD(bool flush, bool defaultNan,
         panic("Unsupported width %d", width);
 
     double scale = pow(2.0, imm);
-    __asm__ __volatile__("" : "=m" (scale) : "m" (scale));
+    __asm__ __volatile__("" : "=m"(scale) : "m"(scale));
     feclearexcept(FeAllExceptions);
-    __asm__ __volatile__("" : "=m" (scale) : "m" (scale));
+    __asm__ __volatile__("" : "=m"(scale) : "m"(scale));
     return fixDivDest(flush, defaultNan, val / scale, (double)val, scale);
 }
 
 double
-vfpSFixedToFpD(bool flush, bool defaultNan,
-        int64_t val, uint8_t width, uint8_t imm)
+vfpSFixedToFpD(
+    bool flush, bool defaultNan, int64_t val, uint8_t width, uint8_t imm)
 {
     fesetround(FeRoundNearest);
     if (width == 16)
@@ -741,9 +731,9 @@ vfpSFixedToFpD(bool flush, bool defaultNan,
         panic("Unsupported width %d", width);
 
     double scale = pow(2.0, imm);
-    __asm__ __volatile__("" : "=m" (scale) : "m" (scale));
+    __asm__ __volatile__("" : "=m"(scale) : "m"(scale));
     feclearexcept(FeAllExceptions);
-    __asm__ __volatile__("" : "=m" (scale) : "m" (scale));
+    __asm__ __volatile__("" : "=m"(scale) : "m"(scale));
     return fixDivDest(flush, defaultNan, val / scale, (double)val, scale);
 }
 
@@ -780,8 +770,8 @@ fprSqrtEstimate(FPSCR &fpscr, float op)
     } else if (fpClass == FP_ZERO) {
         fpscr.dzc = 1;
         // Return infinity with the same sign as the operand.
-        return bitsToFp((std::signbit(op) << 31) |
-                       (0xFF << 23) | (0 << 0), junk);
+        return bitsToFp(
+            (std::signbit(op) << 31) | (0xFF << 23) | (0 << 0), junk);
     } else if (std::signbit(op)) {
         // Set invalid op bit.
         fpscr.ioc = 1;
@@ -793,20 +783,21 @@ fprSqrtEstimate(FPSCR &fpscr, float op)
         double scaled;
         if (bits(opBits, 23)) {
             scaled = bitsToFp((0 << 0) | (bits(opBits, 22, 0) << 29) |
-                              (0x3fdULL << 52) | (bits(opBits, 31) << 63),
-                              (double)0.0);
+                                  (0x3fdULL << 52) | (bits(opBits, 31) << 63),
+                (double)0.0);
         } else {
             scaled = bitsToFp((0 << 0) | (bits(opBits, 22, 0) << 29) |
-                              (0x3feULL << 52) | (bits(opBits, 31) << 63),
-                              (double)0.0);
+                                  (0x3feULL << 52) | (bits(opBits, 31) << 63),
+                (double)0.0);
         }
         uint64_t resultExp = (380 - bits(opBits, 30, 23)) / 2;
 
         uint64_t estimate = fpToBits(recipSqrtEstimate(scaled));
 
         return bitsToFp((bits(estimate, 63) << 31) |
-                        (bits(resultExp, 7, 0) << 23) |
-                        (bits(estimate, 51, 29) << 0), junk);
+                            (bits(resultExp, 7, 0) << 23) |
+                            (bits(estimate, 51, 29) << 0),
+            junk);
     }
 }
 
@@ -818,15 +809,13 @@ unsignedRSqrtEstimate(uint32_t op)
     } else {
         double dpOp;
         if (bits(op, 31)) {
-            dpOp = bitsToFp((0ULL << 63) |
-                            (0x3feULL << 52) |
-                            (bits((uint64_t)op, 30, 0) << 21) |
-                            (0 << 0), (double)0.0);
+            dpOp = bitsToFp((0ULL << 63) | (0x3feULL << 52) |
+                                (bits((uint64_t)op, 30, 0) << 21) | (0 << 0),
+                (double)0.0);
         } else {
-            dpOp = bitsToFp((0ULL << 63) |
-                            (0x3fdULL << 52) |
-                            (bits((uint64_t)op, 29, 0) << 22) |
-                            (0 << 0), (double)0.0);
+            dpOp = bitsToFp((0ULL << 63) | (0x3fdULL << 52) |
+                                (bits((uint64_t)op, 29, 0) << 22) | (0 << 0),
+                (double)0.0);
         }
         uint64_t estimate = fpToBits(recipSqrtEstimate(dpOp));
         return (1 << 31) | bits(estimate, 51, 21);
@@ -864,8 +853,8 @@ fpRecipEstimate(FPSCR &fpscr, float op)
     } else if (fpClass == FP_ZERO) {
         fpscr.dzc = 1;
         // Return infinity with the same sign as the operand.
-        return bitsToFp((std::signbit(op) << 31) |
-                       (0xFF << 23) | (0 << 0), junk);
+        return bitsToFp(
+            (std::signbit(op) << 31) | (0xFF << 23) | (0 << 0), junk);
     } else if (fabs(op) >= pow(2.0, 126)) {
         fpscr.ufc = 1;
         return bitsToFp(std::signbit(op) << 31, junk);
@@ -873,15 +862,16 @@ fpRecipEstimate(FPSCR &fpscr, float op)
         uint64_t opBits = fpToBits(op);
         double scaled;
         scaled = bitsToFp((0 << 0) | (bits(opBits, 22, 0) << 29) |
-                          (0x3feULL << 52) | (0ULL << 63),
-                          (double)0.0);
+                              (0x3feULL << 52) | (0ULL << 63),
+            (double)0.0);
         uint64_t resultExp = 253 - bits(opBits, 30, 23);
 
         uint64_t estimate = fpToBits(recipEstimate(scaled));
 
         return bitsToFp((bits(opBits, 31) << 31) |
-                        (bits(resultExp, 7, 0) << 23) |
-                        (bits(estimate, 51, 29) << 0), junk);
+                            (bits(resultExp, 7, 0) << 23) |
+                            (bits(estimate, 51, 29) << 0),
+            junk);
     }
 }
 
@@ -892,10 +882,9 @@ unsignedRecipEstimate(uint32_t op)
         return -1;
     } else {
         double dpOp;
-        dpOp = bitsToFp((0ULL << 63) |
-                        (0x3feULL << 52) |
-                        (bits((uint64_t)op, 30, 0) << 21) |
-                        (0 << 0), (double)0.0);
+        dpOp = bitsToFp((0ULL << 63) | (0x3feULL << 52) |
+                            (bits((uint64_t)op, 30, 0) << 21) | (0 << 0),
+            (double)0.0);
         uint64_t estimate = fpToBits(recipEstimate(dpOp));
         return (1 << 31) | bits(estimate, 51, 21);
     }
@@ -914,15 +903,14 @@ fpStandardFPSCRValue(const FPSCR &fpscr)
 
 template <class fpType>
 fpType
-FpOp::processNans(FPSCR &fpscr, bool &done, bool defaultNan,
-                  fpType op1, fpType op2) const
+FpOp::processNans(
+    FPSCR &fpscr, bool &done, bool defaultNan, fpType op1, fpType op2) const
 {
     done = true;
     fpType junk = 0.0;
     fpType dest = 0.0;
     const bool single = (sizeof(fpType) == sizeof(float));
-    const uint64_t qnan =
-        single ? 0x7fc00000 : 0x7ff8000000000000ULL;
+    const uint64_t qnan = single ? 0x7fc00000 : 0x7ff8000000000000ULL;
     const bool nan1 = std::isnan(op1);
     const bool nan2 = std::isnan(op2);
     const bool signal1 = nan1 && ((fpToBits(op1) & qnan) != qnan);
@@ -930,7 +918,7 @@ FpOp::processNans(FPSCR &fpscr, bool &done, bool defaultNan,
     if (nan1 || nan2) {
         if (defaultNan) {
             dest = bitsToFp(qnan, junk);
-        }  else if (signal1) {
+        } else if (signal1) {
             dest = bitsToFp(fpToBits(op1) | qnan, junk);
         } else if (signal2) {
             dest = bitsToFp(fpToBits(op2) | qnan, junk);
@@ -948,19 +936,18 @@ FpOp::processNans(FPSCR &fpscr, bool &done, bool defaultNan,
     return dest;
 }
 
-template
-float FpOp::processNans(FPSCR &fpscr, bool &done, bool defaultNan,
-                        float op1, float op2) const;
-template
-double FpOp::processNans(FPSCR &fpscr, bool &done, bool defaultNan,
-                         double op1, double op2) const;
+template float FpOp::processNans(
+    FPSCR &fpscr, bool &done, bool defaultNan, float op1, float op2) const;
+template double FpOp::processNans(
+    FPSCR &fpscr, bool &done, bool defaultNan, double op1, double op2) const;
 
-// @TODO remove this function when we've finished switching all FMA code to use the new FPLIB
+// @TODO remove this function when we've finished switching all FMA code to use
+// the new FPLIB
 template <class fpType>
 fpType
 FpOp::ternaryOp(FPSCR &fpscr, fpType op1, fpType op2, fpType op3,
-                fpType (*func)(fpType, fpType, fpType),
-                bool flush, bool defaultNan, uint32_t rMode) const
+    fpType (*func)(fpType, fpType, fpType), bool flush, bool defaultNan,
+    uint32_t rMode) const
 {
     const bool single = (sizeof(fpType) == sizeof(float));
     fpType junk = 0.0;
@@ -968,16 +955,16 @@ FpOp::ternaryOp(FPSCR &fpscr, fpType op1, fpType op2, fpType op3,
     if (flush && (flushToZero(op1, op2) || flushToZero(op3)))
         fpscr.idc = 1;
     VfpSavedState state = prepFpState(rMode);
-    __asm__ __volatile__ ("" : "=m" (op1), "=m" (op2), "=m" (op3), "=m" (state)
-                             :  "m" (op1),  "m" (op2),  "m" (op3),  "m" (state));
+    __asm__ __volatile__(""
+                         : "=m"(op1), "=m"(op2), "=m"(op3), "=m"(state)
+                         : "m"(op1), "m"(op2), "m"(op3), "m"(state));
     fpType dest = func(op1, op2, op3);
-    __asm__ __volatile__ ("" : "=m" (dest) : "m" (dest));
+    __asm__ __volatile__("" : "=m"(dest) : "m"(dest));
 
     int fpClass = std::fpclassify(dest);
     // Get NAN behavior right. This varies between x86 and ARM.
     if (fpClass == FP_NAN) {
-        const uint64_t qnan =
-            single ? 0x7fc00000 : 0x7ff8000000000000ULL;
+        const uint64_t qnan = single ? 0x7fc00000 : 0x7ff8000000000000ULL;
         const bool nan1 = std::isnan(op1);
         const bool nan2 = std::isnan(op2);
         const bool nan3 = std::isnan(op3);
@@ -1001,22 +988,22 @@ FpOp::ternaryOp(FPSCR &fpscr, fpType op1, fpType op2, fpType op3,
         }
     } else if (flush && flushToZero(dest)) {
         feraiseexcept(FeUnderflow);
-    } else if ((
-                (single && (dest == bitsToFp(0x00800000, junk) ||
-                     dest == bitsToFp(0x80800000, junk))) ||
-                (!single &&
-                    (dest == bitsToFp(0x0010000000000000ULL, junk) ||
-                     dest == bitsToFp(0x8010000000000000ULL, junk)))
-               ) && rMode != VfpRoundZero) {
+    } else if (((single && (dest == bitsToFp(0x00800000, junk) ||
+                               dest == bitsToFp(0x80800000, junk))) ||
+                   (!single &&
+                       (dest == bitsToFp(0x0010000000000000ULL, junk) ||
+                           dest == bitsToFp(0x8010000000000000ULL, junk)))) &&
+               rMode != VfpRoundZero) {
         /*
          * Correct for the fact that underflow is detected -before- rounding
          * in ARM and -after- rounding in x86.
          */
         fesetround(FeRoundZero);
-        __asm__ __volatile__ ("" : "=m" (op1), "=m" (op2), "=m" (op3)
-                                 :  "m" (op1),  "m" (op2),  "m" (op3));
+        __asm__ __volatile__(""
+                             : "=m"(op1), "=m"(op2), "=m"(op3)
+                             : "m"(op1), "m"(op2), "m"(op3));
         fpType temp = func(op1, op2, op2);
-        __asm__ __volatile__ ("" : "=m" (temp) : "m" (temp));
+        __asm__ __volatile__("" : "=m"(temp) : "m"(temp));
         if (flush && flushToZero(temp)) {
             dest = temp;
         }
@@ -1025,20 +1012,18 @@ FpOp::ternaryOp(FPSCR &fpscr, fpType op1, fpType op2, fpType op3,
     return dest;
 }
 
-template
-float FpOp::ternaryOp(FPSCR &fpscr, float op1, float op2, float op3,
-                      float (*func)(float, float, float),
-                      bool flush, bool defaultNan, uint32_t rMode) const;
-template
-double FpOp::ternaryOp(FPSCR &fpscr, double op1, double op2, double op3,
-                       double (*func)(double, double, double),
-                       bool flush, bool defaultNan, uint32_t rMode) const;
+template float FpOp::ternaryOp(FPSCR &fpscr, float op1, float op2, float op3,
+    float (*func)(float, float, float), bool flush, bool defaultNan,
+    uint32_t rMode) const;
+template double FpOp::ternaryOp(FPSCR &fpscr, double op1, double op2,
+    double op3, double (*func)(double, double, double), bool flush,
+    bool defaultNan, uint32_t rMode) const;
 
 template <class fpType>
 fpType
 FpOp::binaryOp(FPSCR &fpscr, fpType op1, fpType op2,
-               fpType (*func)(fpType, fpType),
-               bool flush, bool defaultNan, uint32_t rMode) const
+    fpType (*func)(fpType, fpType), bool flush, bool defaultNan,
+    uint32_t rMode) const
 {
     const bool single = (sizeof(fpType) == sizeof(float));
     fpType junk = 0.0;
@@ -1046,15 +1031,15 @@ FpOp::binaryOp(FPSCR &fpscr, fpType op1, fpType op2,
     if (flush && flushToZero(op1, op2))
         fpscr.idc = 1;
     VfpSavedState state = prepFpState(rMode);
-    __asm__ __volatile__ ("" : "=m" (op1), "=m" (op2), "=m" (state)
-                             : "m" (op1), "m" (op2), "m" (state));
+    __asm__ __volatile__(""
+                         : "=m"(op1), "=m"(op2), "=m"(state)
+                         : "m"(op1), "m"(op2), "m"(state));
     fpType dest = func(op1, op2);
-    __asm__ __volatile__ ("" : "=m" (dest) : "m" (dest));
+    __asm__ __volatile__("" : "=m"(dest) : "m"(dest));
 
     // Get NAN behavior right. This varies between x86 and ARM.
     if (std::isnan(dest)) {
-        const uint64_t qnan =
-            single ? 0x7fc00000 : 0x7ff8000000000000ULL;
+        const uint64_t qnan = single ? 0x7fc00000 : 0x7ff8000000000000ULL;
         const bool nan1 = std::isnan(op1);
         const bool nan2 = std::isnan(op2);
         const bool signal1 = nan1 && ((fpToBits(op1) & qnan) != qnan);
@@ -1072,22 +1057,20 @@ FpOp::binaryOp(FPSCR &fpscr, fpType op1, fpType op2,
         }
     } else if (flush && flushToZero(dest)) {
         feraiseexcept(FeUnderflow);
-    } else if ((
-                (single && (dest == bitsToFp(0x00800000, junk) ||
-                     dest == bitsToFp(0x80800000, junk))) ||
-                (!single &&
-                    (dest == bitsToFp(0x0010000000000000ULL, junk) ||
-                     dest == bitsToFp(0x8010000000000000ULL, junk)))
-               ) && rMode != VfpRoundZero) {
+    } else if (((single && (dest == bitsToFp(0x00800000, junk) ||
+                               dest == bitsToFp(0x80800000, junk))) ||
+                   (!single &&
+                       (dest == bitsToFp(0x0010000000000000ULL, junk) ||
+                           dest == bitsToFp(0x8010000000000000ULL, junk)))) &&
+               rMode != VfpRoundZero) {
         /*
          * Correct for the fact that underflow is detected -before- rounding
          * in ARM and -after- rounding in x86.
          */
         fesetround(FeRoundZero);
-        __asm__ __volatile__ ("" : "=m" (op1), "=m" (op2)
-                                 : "m" (op1), "m" (op2));
+        __asm__ __volatile__("" : "=m"(op1), "=m"(op2) : "m"(op1), "m"(op2));
         fpType temp = func(op1, op2);
-        __asm__ __volatile__ ("" : "=m" (temp) : "m" (temp));
+        __asm__ __volatile__("" : "=m"(temp) : "m"(temp));
         if (flush && flushToZero(temp)) {
             dest = temp;
         }
@@ -1096,19 +1079,17 @@ FpOp::binaryOp(FPSCR &fpscr, fpType op1, fpType op2,
     return dest;
 }
 
-template
-float FpOp::binaryOp(FPSCR &fpscr, float op1, float op2,
-                     float (*func)(float, float),
-                     bool flush, bool defaultNan, uint32_t rMode) const;
-template
-double FpOp::binaryOp(FPSCR &fpscr, double op1, double op2,
-                      double (*func)(double, double),
-                      bool flush, bool defaultNan, uint32_t rMode) const;
+template float FpOp::binaryOp(FPSCR &fpscr, float op1, float op2,
+    float (*func)(float, float), bool flush, bool defaultNan,
+    uint32_t rMode) const;
+template double FpOp::binaryOp(FPSCR &fpscr, double op1, double op2,
+    double (*func)(double, double), bool flush, bool defaultNan,
+    uint32_t rMode) const;
 
 template <class fpType>
 fpType
-FpOp::unaryOp(FPSCR &fpscr, fpType op1, fpType (*func)(fpType),
-              bool flush, uint32_t rMode) const
+FpOp::unaryOp(FPSCR &fpscr, fpType op1, fpType (*func)(fpType), bool flush,
+    uint32_t rMode) const
 {
     const bool single = (sizeof(fpType) == sizeof(float));
     fpType junk = 0.0;
@@ -1116,15 +1097,13 @@ FpOp::unaryOp(FPSCR &fpscr, fpType op1, fpType (*func)(fpType),
     if (flush && flushToZero(op1))
         fpscr.idc = 1;
     VfpSavedState state = prepFpState(rMode);
-    __asm__ __volatile__ ("" : "=m" (op1), "=m" (state)
-                             : "m" (op1), "m" (state));
+    __asm__ __volatile__("" : "=m"(op1), "=m"(state) : "m"(op1), "m"(state));
     fpType dest = func(op1);
-    __asm__ __volatile__ ("" : "=m" (dest) : "m" (dest));
+    __asm__ __volatile__("" : "=m"(dest) : "m"(dest));
 
     // Get NAN behavior right. This varies between x86 and ARM.
     if (std::isnan(dest)) {
-        const uint64_t qnan =
-            single ? 0x7fc00000 : 0x7ff8000000000000ULL;
+        const uint64_t qnan = single ? 0x7fc00000 : 0x7ff8000000000000ULL;
         const bool nan = std::isnan(op1);
         if (!nan || fpscr.dn == 1) {
             dest = bitsToFp(qnan, junk);
@@ -1133,21 +1112,20 @@ FpOp::unaryOp(FPSCR &fpscr, fpType op1, fpType (*func)(fpType),
         }
     } else if (flush && flushToZero(dest)) {
         feraiseexcept(FeUnderflow);
-    } else if ((
-                (single && (dest == bitsToFp(0x00800000, junk) ||
-                     dest == bitsToFp(0x80800000, junk))) ||
-                (!single &&
-                    (dest == bitsToFp(0x0010000000000000ULL, junk) ||
-                     dest == bitsToFp(0x8010000000000000ULL, junk)))
-               ) && rMode != VfpRoundZero) {
+    } else if (((single && (dest == bitsToFp(0x00800000, junk) ||
+                               dest == bitsToFp(0x80800000, junk))) ||
+                   (!single &&
+                       (dest == bitsToFp(0x0010000000000000ULL, junk) ||
+                           dest == bitsToFp(0x8010000000000000ULL, junk)))) &&
+               rMode != VfpRoundZero) {
         /*
          * Correct for the fact that underflow is detected -before- rounding
          * in ARM and -after- rounding in x86.
          */
         fesetround(FeRoundZero);
-        __asm__ __volatile__ ("" : "=m" (op1) : "m" (op1));
+        __asm__ __volatile__("" : "=m"(op1) : "m"(op1));
         fpType temp = func(op1);
-        __asm__ __volatile__ ("" : "=m" (temp) : "m" (temp));
+        __asm__ __volatile__("" : "=m"(temp) : "m"(temp));
         if (flush && flushToZero(temp)) {
             dest = temp;
         }
@@ -1156,12 +1134,10 @@ FpOp::unaryOp(FPSCR &fpscr, fpType op1, fpType (*func)(fpType),
     return dest;
 }
 
-template
-float FpOp::unaryOp(FPSCR &fpscr, float op1, float (*func)(float),
-                    bool flush, uint32_t rMode) const;
-template
-double FpOp::unaryOp(FPSCR &fpscr, double op1, double (*func)(double),
-                     bool flush, uint32_t rMode) const;
+template float FpOp::unaryOp(FPSCR &fpscr, float op1, float (*func)(float),
+    bool flush, uint32_t rMode) const;
+template double FpOp::unaryOp(FPSCR &fpscr, double op1, double (*func)(double),
+    bool flush, uint32_t rMode) const;
 
 RegIndex
 VfpMacroOp::addStride(RegIndex idx, unsigned stride)

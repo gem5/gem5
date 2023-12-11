@@ -47,10 +47,9 @@
 
 namespace gem5
 {
-
 class GPUStaticInst;
 
-template<typename T>
+template <typename T>
 class AtomicOpCAS : public TypedAtomicOpFunctor<T>
 {
   public:
@@ -59,8 +58,9 @@ class AtomicOpCAS : public TypedAtomicOpFunctor<T>
 
     ComputeUnit *computeUnit;
 
-    AtomicOpCAS(T _c, T _s, ComputeUnit *compute_unit)
-      : c(_c), s(_s), computeUnit(compute_unit) { }
+    AtomicOpCAS(T _c, T _s, ComputeUnit *compute_unit) :
+        c(_c), s(_s), computeUnit(compute_unit)
+    {}
 
     void
     execute(T *b)
@@ -73,7 +73,11 @@ class AtomicOpCAS : public TypedAtomicOpFunctor<T>
             computeUnit->stats.numFailedCASOps++;
         }
     }
-    AtomicOpFunctor* clone () { return new AtomicOpCAS(c, s, computeUnit); }
+    AtomicOpFunctor *
+    clone()
+    {
+        return new AtomicOpCAS(c, s, computeUnit);
+    }
 };
 
 class RegisterOperandInfo
@@ -81,23 +85,36 @@ class RegisterOperandInfo
   public:
     RegisterOperandInfo() = delete;
     RegisterOperandInfo(int op_idx, int num_dwords,
-                        const std::vector<int> &virt_indices,
-                        const std::vector<int> &phys_indices)
-        : opIdx(op_idx), numDWORDs(num_dwords), virtIndices(virt_indices),
-          physIndices(phys_indices)
-    {
-    }
+        const std::vector<int> &virt_indices,
+        const std::vector<int> &phys_indices) :
+        opIdx(op_idx),
+        numDWORDs(num_dwords),
+        virtIndices(virt_indices),
+        physIndices(phys_indices)
+    {}
 
     /**
      * The number of registers required to store this operand.
      */
-    int numRegisters() const { return numDWORDs / TheGpuISA::RegSizeDWords; }
-    int operandIdx() const { return opIdx; }
+    int
+    numRegisters() const
+    {
+        return numDWORDs / TheGpuISA::RegSizeDWords;
+    }
+    int
+    operandIdx() const
+    {
+        return opIdx;
+    }
     /**
      * We typically only need the first virtual register for the operand
      * regardless of its size.
      */
-    int virtIdx(int reg_num=0) const { return virtIndices.at(reg_num); }
+    int
+    virtIdx(int reg_num = 0) const
+    {
+        return virtIndices.at(reg_num);
+    }
 
   private:
     /**
@@ -117,14 +134,14 @@ class GPUDynInst : public GPUExecContext
 {
   public:
     GPUDynInst(ComputeUnit *_cu, Wavefront *_wf, GPUStaticInst *static_inst,
-               uint64_t instSeqNum);
+        uint64_t instSeqNum);
     ~GPUDynInst();
     void execute(GPUDynInstPtr gpuDynInst);
 
-    const std::vector<OperandInfo>& srcVecRegOperands() const;
-    const std::vector<OperandInfo>& dstVecRegOperands() const;
-    const std::vector<OperandInfo>& srcScalarRegOperands() const;
-    const std::vector<OperandInfo>& dstScalarRegOperands() const;
+    const std::vector<OperandInfo> &srcVecRegOperands() const;
+    const std::vector<OperandInfo> &dstVecRegOperands() const;
+    const std::vector<OperandInfo> &srcScalarRegOperands() const;
+    const std::vector<OperandInfo> &dstScalarRegOperands() const;
 
     int numSrcRegOperands();
     int numDstRegOperands();
@@ -152,9 +169,9 @@ class GPUDynInst : public GPUExecContext
 
     // returns true if the string "opcodeStr" is found in the
     // opcode of the instruction
-    bool isOpcode(const std::string& opcodeStr) const;
-    bool isOpcode(const std::string& opcodeStr,
-                  const std::string& extStr) const;
+    bool isOpcode(const std::string &opcodeStr) const;
+    bool isOpcode(
+        const std::string &opcodeStr, const std::string &extStr) const;
 
     const std::string &disassemble() const;
 
@@ -211,7 +228,11 @@ class GPUDynInst : public GPUExecContext
 
     void updateStats();
 
-    GPUStaticInst* staticInstruction() { return _staticInst; }
+    GPUStaticInst *
+    staticInstruction()
+    {
+        return _staticInst;
+    }
 
     TheGpuISA::ScalarRegU32 srcLiteral() const;
 
@@ -303,7 +324,8 @@ class GPUDynInst : public GPUExecContext
     // Function to resolve a flat accesses during execution stage.
     void resolveFlatSegment(const VectorMask &mask);
 
-    template<typename c0> AtomicOpFunctorPtr
+    template <typename c0>
+    AtomicOpFunctorPtr
     makeAtomicOpFunctor(c0 *reg0, c0 *reg1)
     {
         if (isAtomicAnd()) {
@@ -420,16 +442,20 @@ class GPUDynInst : public GPUExecContext
         for (int lane = 0; lane < TheGpuISA::NumVecElemPerVecReg; ++lane) {
             // if any lane still has pending requests, return false
             if (statusVector[lane] > 0) {
-                DPRINTF(GPUMem, "CU%d: WF[%d][%d]: lane: %d has %d pending "
-                        "request(s) for %#x\n", cu_id, simdId, wfSlotId, lane,
-                        statusVector[lane], addr[lane]);
+                DPRINTF(GPUMem,
+                    "CU%d: WF[%d][%d]: lane: %d has %d pending "
+                    "request(s) for %#x\n",
+                    cu_id, simdId, wfSlotId, lane, statusVector[lane],
+                    addr[lane]);
                 allZero = false;
             }
         }
 
         if (allZero) {
-            DPRINTF(GPUMem, "CU%d: WF[%d][%d]: all lanes have no pending"
-                    " requests for %#x\n", cu_id, simdId, wfSlotId, addr[0]);
+            DPRINTF(GPUMem,
+                "CU%d: WF[%d][%d]: all lanes have no pending"
+                " requests for %#x\n",
+                cu_id, simdId, wfSlotId, addr[0]);
         }
         return allZero;
     }
@@ -465,22 +491,45 @@ class GPUDynInst : public GPUExecContext
     // of outstanding reqs here
     int numScalarReqs;
 
-    Tick getAccessTime() const { return accessTime; }
+    Tick
+    getAccessTime() const
+    {
+        return accessTime;
+    }
 
-    void setAccessTime(Tick currentTime) { accessTime = currentTime; }
+    void
+    setAccessTime(Tick currentTime)
+    {
+        accessTime = currentTime;
+    }
 
     void profileRoundTripTime(Tick currentTime, int hopId);
-    std::vector<Tick> getRoundTripTime() const { return roundTripTime; }
+    std::vector<Tick>
+    getRoundTripTime() const
+    {
+        return roundTripTime;
+    }
 
     void profileLineAddressTime(Addr addr, Tick currentTime, int hopId);
-    const std::map<Addr, std::vector<Tick>>& getLineAddressTime() const
-    { return lineAddressTime; }
+    const std::map<Addr, std::vector<Tick>> &
+    getLineAddressTime() const
+    {
+        return lineAddressTime;
+    }
 
     // inst used to save/restore a wavefront context
     bool isSaveRestore;
 
-    bool isSystemReq() { return systemReq; }
-    void setSystemReq() { systemReq = true; }
+    bool
+    isSystemReq()
+    {
+        return systemReq;
+    }
+    void
+    setSystemReq()
+    {
+        systemReq = true;
+    }
 
   private:
     GPUStaticInst *_staticInst;

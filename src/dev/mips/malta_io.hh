@@ -43,7 +43,6 @@
 
 namespace gem5
 {
-
 /**
  * Malta I/O device is a catch all for all the south bridge stuff we care
  * to implement.
@@ -51,7 +50,6 @@ namespace gem5
 class MaltaIO : public BasicPioDevice
 {
   protected:
-
     class RTC : public MC146818
     {
       public:
@@ -59,9 +57,10 @@ class MaltaIO : public BasicPioDevice
         RTC(const std::string &name, const MaltaIOParams &p);
 
       protected:
-        void handleEvent()
+        void
+        handleEvent()
         {
-            //Actually interrupt the processor here
+            // Actually interrupt the processor here
             malta->cchip->postRTC();
         }
     };
@@ -79,7 +78,7 @@ class MaltaIO : public BasicPioDevice
     uint8_t mode2;
 
     /** Raw PIC interrupt register before masking */
-    uint8_t picr; //Raw PIC interrput register
+    uint8_t picr; // Raw PIC interrput register
 
     /** Is the pic interrupting right now or not. */
     bool picInterrupting;
@@ -116,7 +115,6 @@ class MaltaIO : public BasicPioDevice
     Tick read(PacketPtr pkt) override;
     Tick write(PacketPtr pkt) override;
 
-
     /** Post an Interrupt to the CPU */
     void postIntr(uint8_t interrupt);
 
@@ -130,7 +128,6 @@ class MaltaIO : public BasicPioDevice
      * Start running.
      */
     void startup() override;
-
 };
 
 } // namespace gem5

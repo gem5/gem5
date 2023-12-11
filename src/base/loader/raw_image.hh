@@ -34,11 +34,9 @@
 
 namespace gem5
 {
-
 namespace loader
 {
-
-class RawImage: public ObjectFile
+class RawImage : public ObjectFile
 {
   public:
     RawImage(ImageFileDataPtr ifd) : ObjectFile(ifd) {}
@@ -50,7 +48,7 @@ class RawImage: public ObjectFile
     MemoryImage
     buildImage() const override
     {
-        return {{ "data", imageData }};
+        return {{"data", imageData}};
     }
 };
 

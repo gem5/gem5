@@ -40,20 +40,20 @@
 
 namespace gem5
 {
-
 MemState::MemState(Process *owner, Addr brk_point, Addr stack_base,
-                   Addr max_stack_size, Addr next_thread_stack_base,
-                   Addr mmap_end)
-    : _ownerProcess(owner),
-      _pageBytes(owner->pTable->pageSize()), _brkPoint(brk_point),
-      _stackBase(stack_base), _stackSize(max_stack_size),
-      _maxStackSize(max_stack_size), _stackMin(stack_base - max_stack_size),
-      _nextThreadStackBase(next_thread_stack_base),
-      _mmapEnd(mmap_end)
-{
-}
+    Addr max_stack_size, Addr next_thread_stack_base, Addr mmap_end) :
+    _ownerProcess(owner),
+    _pageBytes(owner->pTable->pageSize()),
+    _brkPoint(brk_point),
+    _stackBase(stack_base),
+    _stackSize(max_stack_size),
+    _maxStackSize(max_stack_size),
+    _stackMin(stack_base - max_stack_size),
+    _nextThreadStackBase(next_thread_stack_base),
+    _mmapEnd(mmap_end)
+{}
 
-MemState&
+MemState &
 MemState::operator=(const MemState &in)
 {
     if (this == &in)
@@ -92,11 +92,11 @@ MemState::isUnmapped(Addr start_addr, Addr length)
      * In case someone skips the VMA interface and just directly maps memory
      * also consult the page tables to make sure that this memory isnt mapped.
      */
-    for (auto start = start_addr; start < end_addr;
-         start += _pageBytes) {
+    for (auto start = start_addr; start < end_addr; start += _pageBytes) {
         if (_ownerProcess->pTable->lookup(start) != nullptr) {
             panic("Someone allocated physical memory at VA %p without "
-                  "creating a VMA!\n", start);
+                  "creating a VMA!\n",
+                start);
             return false;
         }
     }
@@ -170,10 +170,10 @@ MemState::updateBrkRegion(Addr old_brk, Addr new_brk)
 
 void
 MemState::mapRegion(Addr start_addr, Addr length,
-                    const std::string& region_name, int sim_fd, Addr offset)
+    const std::string &region_name, int sim_fd, Addr offset)
 {
     DPRINTF(Vma, "memstate: creating vma (%s) [0x%x - 0x%x]\n",
-            region_name.c_str(), start_addr, start_addr + length);
+        region_name.c_str(), start_addr, start_addr + length);
 
     /**
      * Avoid creating a region that has preexisting mappings. This should
@@ -185,7 +185,7 @@ MemState::mapRegion(Addr start_addr, Addr length,
      * Record the region in our list structure.
      */
     _vmaList.emplace_back(AddrRange(start_addr, start_addr + length),
-                          _pageBytes, region_name, sim_fd, offset);
+        _pageBytes, region_name, sim_fd, offset);
 }
 
 void
@@ -197,11 +197,11 @@ MemState::unmapRegion(Addr start_addr, Addr length)
     auto vma = std::begin(_vmaList);
     while (vma != std::end(_vmaList)) {
         if (vma->isStrictSuperset(range)) {
-            DPRINTF(Vma, "memstate: split vma [0x%x - 0x%x] into "
-                    "[0x%x - 0x%x] and [0x%x - 0x%x]\n",
-                    vma->start(), vma->end(),
-                    vma->start(), start_addr,
-                    end_addr, vma->end());
+            DPRINTF(Vma,
+                "memstate: split vma [0x%x - 0x%x] into "
+                "[0x%x - 0x%x] and [0x%x - 0x%x]\n",
+                vma->start(), vma->end(), vma->start(), start_addr, end_addr,
+                vma->end());
             /**
              * Need to split into two smaller regions.
              * Create a clone of the old VMA and slice it to the right.
@@ -221,7 +221,7 @@ MemState::unmapRegion(Addr start_addr, Addr length)
             break;
         } else if (vma->isSubset(range)) {
             DPRINTF(Vma, "memstate: destroying vma [0x%x - 0x%x]\n",
-                    vma->start(), vma->end());
+                vma->start(), vma->end());
             /**
              * Need to nuke the existing VMA.
              */
@@ -234,19 +234,19 @@ MemState::unmapRegion(Addr start_addr, Addr length)
              * Trim up the existing VMA.
              */
             if (vma->start() < start_addr) {
-                DPRINTF(Vma, "memstate: resizing vma [0x%x - 0x%x] "
-                        "into [0x%x - 0x%x]\n",
-                        vma->start(), vma->end(),
-                        vma->start(), start_addr);
+                DPRINTF(Vma,
+                    "memstate: resizing vma [0x%x - 0x%x] "
+                    "into [0x%x - 0x%x]\n",
+                    vma->start(), vma->end(), vma->start(), start_addr);
                 /**
                  * Overlaps from the right.
                  */
                 vma->sliceRegionRight(start_addr);
             } else {
-                DPRINTF(Vma, "memstate: resizing vma [0x%x - 0x%x] "
-                        "into [0x%x - 0x%x]\n",
-                        vma->start(), vma->end(),
-                        end_addr, vma->end());
+                DPRINTF(Vma,
+                    "memstate: resizing vma [0x%x - 0x%x] "
+                    "into [0x%x - 0x%x]\n",
+                    vma->start(), vma->end(), end_addr, vma->end());
                 /**
                  * Overlaps from the left.
                  */
@@ -265,7 +265,7 @@ MemState::unmapRegion(Addr start_addr, Addr length)
      * There is currently no general method across all TLB implementations
      * that can flush just part of the address space.
      */
-    for (auto *tc: _ownerProcess->system->threads) {
+    for (auto *tc : _ownerProcess->system->threads) {
         tc->getMMUPtr()->flushAll();
     }
 
@@ -366,14 +366,14 @@ MemState::remapRegion(Addr start_addr, Addr new_start_addr, Addr length)
      * There is currently no general method across all TLB implementations
      * that can flush just part of the address space.
      */
-    for (auto *tc: _ownerProcess->system->threads) {
+    for (auto *tc : _ownerProcess->system->threads) {
         tc->getMMUPtr()->flushAll();
     }
 
     do {
         if (!_ownerProcess->pTable->isUnmapped(start_addr, _pageBytes))
-            _ownerProcess->pTable->remap(start_addr, _pageBytes,
-                                         new_start_addr);
+            _ownerProcess->pTable->remap(
+                start_addr, _pageBytes, new_start_addr);
 
         start_addr += _pageBytes;
         new_start_addr += _pageBytes;
@@ -413,8 +413,8 @@ MemState::fixupFault(Addr vaddr)
                  */
                 for (auto &cid : _ownerProcess->contextIds) {
                     auto *tc = _ownerProcess->system->threads[cid];
-                    SETranslatingPortProxy
-                        virt_mem(tc, SETranslatingPortProxy::Always);
+                    SETranslatingPortProxy virt_mem(
+                        tc, SETranslatingPortProxy::Always);
                     vma.fillMemPages(vpage_start, _pageBytes, virt_mem);
                 }
             }
@@ -465,16 +465,17 @@ MemState::extendMmap(Addr length)
     // that the region beyond mmap_end is free because of fixed mappings from
     // the user.
     while (!isUnmapped(start, length)) {
-        DPRINTF(Vma, "memstate: cannot extend vma for mmap region at %p. "
-                "Virtual address range is already reserved! Skipping a page "
-                "and trying again!\n", start);
+        DPRINTF(Vma,
+            "memstate: cannot extend vma for mmap region at %p. "
+            "Virtual address range is already reserved! Skipping a page "
+            "and trying again!\n",
+            start);
         start = (_ownerProcess->mmapGrowsDown()) ? start - _pageBytes :
-            start + _pageBytes;
+                                                   start + _pageBytes;
     }
 
     DPRINTF(Vma, "memstate: extending mmap region (old %p) (new %p)\n",
-            _mmapEnd,
-            _ownerProcess->mmapGrowsDown() ? start : start + length);
+        _mmapEnd, _ownerProcess->mmapGrowsDown() ? start : start + length);
 
     _mmapEnd = _ownerProcess->mmapGrowsDown() ? start : start + length;
 

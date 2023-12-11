@@ -34,12 +34,10 @@
 
 namespace gem5
 {
-
 struct BloomFilterH3Params;
 
 namespace bloom_filter
 {
-
 /**
  * Implementation of the bloom filter as described in "Implementing Signatures
  * for Transactional Memory", by Sanchez, Daniel, et al.

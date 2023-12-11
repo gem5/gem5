@@ -38,10 +38,8 @@
 
 namespace gem5
 {
-
 namespace free_bsd
 {
-
 class ThreadInfo
 {
   private:
@@ -49,13 +47,8 @@ class ThreadInfo
     System *sys;
 
   public:
-    ThreadInfo(ThreadContext *_tc)
-        : tc(_tc), sys(tc->getSystemPtr())
-    {
-
-    }
-    ~ThreadInfo()
-    {}
+    ThreadInfo(ThreadContext *_tc) : tc(_tc), sys(tc->getSystemPtr()) {}
+    ~ThreadInfo() {}
 };
 
 } // namespace free_bsd

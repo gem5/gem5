@@ -36,21 +36,20 @@
 
 namespace gem5
 {
-
 std::pair<std::uint64_t, bool>
 getUintX(const void *buf, std::size_t bytes, ByteOrder endian)
 {
     assert(buf);
     switch (bytes) {
-      case sizeof(std::uint64_t):
+    case sizeof(std::uint64_t):
         return {gtoh(*(const std::uint64_t *)buf, endian), true};
-      case sizeof(std::uint32_t):
+    case sizeof(std::uint32_t):
         return {gtoh(*(const std::uint32_t *)buf, endian), true};
-      case sizeof(std::uint16_t):
+    case sizeof(std::uint16_t):
         return {gtoh(*(const std::uint16_t *)buf, endian), true};
-      case sizeof(std::uint8_t):
+    case sizeof(std::uint8_t):
         return {gtoh(*(const std::uint8_t *)buf, endian), true};
-      default:
+    default:
         return {0, false};
     }
 }
@@ -61,19 +60,19 @@ setUintX(std::uint64_t val, void *buf, std::size_t bytes, ByteOrder endian)
     assert(buf);
 
     switch (bytes) {
-      case sizeof(std::uint64_t):
+    case sizeof(std::uint64_t):
         *(std::uint64_t *)buf = htog<std::uint64_t>(val, endian);
         return true;
-      case sizeof(std::uint32_t):
+    case sizeof(std::uint32_t):
         *(std::uint32_t *)buf = htog<std::uint32_t>(val, endian);
         return true;
-      case sizeof(std::uint16_t):
+    case sizeof(std::uint16_t):
         *(std::uint16_t *)buf = htog<std::uint16_t>(val, endian);
         return true;
-      case sizeof(std::uint8_t):
+    case sizeof(std::uint8_t):
         *(std::uint8_t *)buf = htog<std::uint8_t>(val, endian);
         return true;
-      default:
+    default:
         return false;
     }
 }
@@ -97,7 +96,7 @@ printUintX(const void *buf, std::size_t bytes, ByteOrder endian)
 
 std::string
 printByteBuf(const void *buf, std::size_t bytes, ByteOrder endian,
-        std::size_t chunk_size)
+    std::size_t chunk_size)
 {
     assert(buf);
 

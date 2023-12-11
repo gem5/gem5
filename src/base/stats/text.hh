@@ -52,10 +52,8 @@
 
 namespace gem5
 {
-
 namespace statistics
 {
-
 class Text : public Output
 {
   protected:

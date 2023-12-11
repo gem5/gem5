@@ -54,7 +54,6 @@
 
 namespace gem5
 {
-
 class ReplaceableEntry;
 
 /**
@@ -89,7 +88,7 @@ class BaseIndexingPolicy : public SimObject
     /**
      * The cache sets.
      */
-    std::vector<std::vector<ReplaceableEntry*>> sets;
+    std::vector<std::vector<ReplaceableEntry *>> sets;
 
     /**
      * The amount to shift the address to get the tag.
@@ -110,7 +109,7 @@ class BaseIndexingPolicy : public SimObject
     /**
      * Destructor.
      */
-    ~BaseIndexingPolicy() {};
+    ~BaseIndexingPolicy(){};
 
     /**
      * Associate a pointer to an entry to its physical counterpart.
@@ -118,7 +117,7 @@ class BaseIndexingPolicy : public SimObject
      * @param entry The entry pointer.
      * @param index An unique index for the entry.
      */
-    void setEntry(ReplaceableEntry* entry, const uint64_t index);
+    void setEntry(ReplaceableEntry *entry, const uint64_t index);
 
     /**
      * Get an entry based on its set and way. All entries must have been set
@@ -128,7 +127,7 @@ class BaseIndexingPolicy : public SimObject
      * @param way The way of the desired entry.
      * @return entry The entry pointer.
      */
-    ReplaceableEntry* getEntry(const uint32_t set, const uint32_t way) const;
+    ReplaceableEntry *getEntry(const uint32_t set, const uint32_t way) const;
 
     /**
      * Generate the tag from the given address.
@@ -146,8 +145,8 @@ class BaseIndexingPolicy : public SimObject
      * @param addr The addr to a find possible entries for.
      * @return The possible entries.
      */
-    virtual std::vector<ReplaceableEntry*> getPossibleEntries(const Addr addr)
-                                                                    const = 0;
+    virtual std::vector<ReplaceableEntry *> getPossibleEntries(
+        const Addr addr) const = 0;
 
     /**
      * Regenerate an entry's address from its tag and assigned indexing bits.
@@ -156,8 +155,8 @@ class BaseIndexingPolicy : public SimObject
      * @param entry The entry.
      * @return the entry's original address.
      */
-    virtual Addr regenerateAddr(const Addr tag, const ReplaceableEntry* entry)
-                                                                    const = 0;
+    virtual Addr regenerateAddr(
+        const Addr tag, const ReplaceableEntry *entry) const = 0;
 };
 
 } // namespace gem5

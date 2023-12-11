@@ -40,7 +40,6 @@
 
 namespace gem5
 {
-
 class Platform;
 
 const int RX_INT = 0x1;
@@ -66,7 +65,11 @@ class Uart : public BasicPioDevice
      * Return if we have an interrupt pending
      * @return interrupt status
      */
-    bool intStatus() { return status ? true : false; }
+    bool
+    intStatus()
+    {
+        return status ? true : false;
+    }
 };
 
 } // namespace gem5

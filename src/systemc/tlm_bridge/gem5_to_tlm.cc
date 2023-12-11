@@ -74,14 +74,13 @@ using namespace gem5;
 
 namespace sc_gem5
 {
-
 /**
  * Helper function to help set priority of phase change events of tlm
  * transactions. This is to workaround the uncertainty of gem5 eventq if
  * multiple events are scheduled at the same timestamp.
  */
 static EventBase::Priority
-getPriorityOfTlmPhase(const tlm::tlm_phase& phase)
+getPriorityOfTlmPhase(const tlm::tlm_phase &phase)
 {
     // In theory, for all phase change events of a specific TLM base protocol
     // transaction, only tlm::END_REQ and tlm::BEGIN_RESP would be scheduled at
@@ -105,7 +104,7 @@ namespace
  * Hold all the callbacks necessary to convert a gem5 packet to tlm payload.
  */
 std::vector<PacketToPayloadConversionStep> extraPacketToPayloadSteps;
-}  // namespace
+} // namespace
 
 /**
  * Notify the Gem5ToTlm bridge that we need an extra step to properly convert a
@@ -202,12 +201,12 @@ setPacketResponse(PacketPtr pkt, tlm::tlm_generic_payload &trans)
 
     auto resp = trans.get_response_status();
     switch (resp) {
-      case tlm::TLM_OK_RESPONSE:
+    case tlm::TLM_OK_RESPONSE:
         break;
-      case tlm::TLM_COMMAND_ERROR_RESPONSE:
+    case tlm::TLM_COMMAND_ERROR_RESPONSE:
         pkt->setBadCommand();
         break;
-      default:
+    default:
         pkt->setBadAddress();
         break;
     }
@@ -216,12 +215,12 @@ setPacketResponse(PacketPtr pkt, tlm::tlm_generic_payload &trans)
 template <unsigned int BITWIDTH>
 void
 Gem5ToTlmBridge<BITWIDTH>::pec(
-        tlm::tlm_generic_payload &trans, const tlm::tlm_phase &phase)
+    tlm::tlm_generic_payload &trans, const tlm::tlm_phase &phase)
 {
     sc_core::sc_time delay;
 
     if (phase == tlm::END_REQ ||
-            (&trans == blockingRequest && phase == tlm::BEGIN_RESP)) {
+        (&trans == blockingRequest && phase == tlm::BEGIN_RESP)) {
         sc_assert(&trans == blockingRequest);
         blockingRequest = nullptr;
 
@@ -287,8 +286,8 @@ Gem5ToTlmBridge<BITWIDTH>::getBackdoor(tlm::tlm_generic_payload &trans)
     // If the target gave us one, translate it to a gem5 MemBackdoor and
     // store it in our cache.
     AddrRange dmi_r(dmi_data.get_start_address(), dmi_data.get_end_address());
-    auto backdoor = new MemBackdoor(
-            dmi_r, dmi_data.get_dmi_ptr(), MemBackdoor::NoAccess);
+    auto backdoor =
+        new MemBackdoor(dmi_r, dmi_data.get_dmi_ptr(), MemBackdoor::NoAccess);
     backdoor->readable(dmi_data.is_read_allowed());
     backdoor->writeable(dmi_data.is_write_allowed());
 
@@ -303,7 +302,7 @@ Tick
 Gem5ToTlmBridge<BITWIDTH>::recvAtomic(PacketPtr packet)
 {
     panic_if(packet->cacheResponding(),
-             "Should not see packets where cache is responding");
+        "Should not see packets where cache is responding");
 
     // Prepare the transaction.
     auto *trans = packet2payload(packet);
@@ -326,10 +325,10 @@ Gem5ToTlmBridge<BITWIDTH>::recvAtomic(PacketPtr packet)
 template <unsigned int BITWIDTH>
 Tick
 Gem5ToTlmBridge<BITWIDTH>::recvAtomicBackdoor(
-        PacketPtr packet, MemBackdoorPtr &backdoor)
+    PacketPtr packet, MemBackdoorPtr &backdoor)
 {
     panic_if(packet->cacheResponding(),
-             "Should not see packets where cache is responding");
+        "Should not see packets where cache is responding");
 
     sc_core::sc_time delay = sc_core::SC_ZERO_TIME;
 
@@ -362,8 +361,8 @@ void
 Gem5ToTlmBridge<BITWIDTH>::recvFunctionalSnoop(PacketPtr packet)
 {
     // Snooping should be implemented with tlm_dbg_transport.
-    SC_REPORT_FATAL("Gem5ToTlmBridge",
-            "unimplemented func.: recvFunctionalSnoop");
+    SC_REPORT_FATAL(
+        "Gem5ToTlmBridge", "unimplemented func.: recvFunctionalSnoop");
 }
 
 // Similar to TLM's non-blocking transport (AT).
@@ -372,7 +371,7 @@ bool
 Gem5ToTlmBridge<BITWIDTH>::recvTimingReq(PacketPtr packet)
 {
     panic_if(packet->cacheResponding(),
-             "Should not see packets where cache is responding");
+        "Should not see packets where cache is responding");
 
     // We should never get a second request after noting that a retry is
     // required.
@@ -444,7 +443,7 @@ Gem5ToTlmBridge<BITWIDTH>::recvTimingReq(PacketPtr packet)
         packetMap.emplace(trans, packet);
         auto cb = [this, trans, phase]() { pec(*trans, phase); };
         auto event = new EventFunctionWrapper(
-                cb, "pec", true, getPriorityOfTlmPhase(phase));
+            cb, "pec", true, getPriorityOfTlmPhase(phase));
         system->schedule(event, curTick() + delay.value());
     } else if (status == tlm::TLM_COMPLETED) {
         // Transaction is over nothing has do be done.
@@ -460,8 +459,8 @@ bool
 Gem5ToTlmBridge<BITWIDTH>::recvTimingSnoopResp(PacketPtr packet)
 {
     // Snooping should be implemented with tlm_dbg_transport.
-    SC_REPORT_FATAL("Gem5ToTlmBridge",
-            "unimplemented func.: recvTimingSnoopResp");
+    SC_REPORT_FATAL(
+        "Gem5ToTlmBridge", "unimplemented func.: recvTimingSnoopResp");
     return false;
 }
 
@@ -508,8 +507,8 @@ Gem5ToTlmBridge<BITWIDTH>::recvFunctional(PacketPtr packet)
     /* Execute Debug Transport: */
     unsigned int bytes = socket->transport_dbg(*trans);
     if (bytes != trans->get_data_length()) {
-        SC_REPORT_FATAL("Gem5ToTlmBridge",
-                "debug transport was not completed");
+        SC_REPORT_FATAL(
+            "Gem5ToTlmBridge", "debug transport was not completed");
     }
 
     trans->release();
@@ -517,8 +516,8 @@ Gem5ToTlmBridge<BITWIDTH>::recvFunctional(PacketPtr packet)
 
 template <unsigned int BITWIDTH>
 void
-Gem5ToTlmBridge<BITWIDTH>::recvMemBackdoorReq(const MemBackdoorReq &req,
-        MemBackdoorPtr &backdoor)
+Gem5ToTlmBridge<BITWIDTH>::recvMemBackdoorReq(
+    const MemBackdoorReq &req, MemBackdoorPtr &backdoor)
 {
     // Create a transaction to send along to TLM's get_direct_mem_ptr.
     tlm::tlm_generic_payload *trans = mm.allocate();
@@ -547,7 +546,7 @@ Gem5ToTlmBridge<BITWIDTH>::nb_transport_bw(tlm::tlm_generic_payload &trans,
 {
     auto cb = [this, &trans, phase]() { pec(trans, phase); };
     auto event = new EventFunctionWrapper(
-            cb, "pec", true, getPriorityOfTlmPhase(phase));
+        cb, "pec", true, getPriorityOfTlmPhase(phase));
     system->schedule(event, curTick() + delay.value());
     return tlm::TLM_ACCEPTED;
 }
@@ -555,7 +554,7 @@ Gem5ToTlmBridge<BITWIDTH>::nb_transport_bw(tlm::tlm_generic_payload &trans,
 template <unsigned int BITWIDTH>
 void
 Gem5ToTlmBridge<BITWIDTH>::invalidate_direct_mem_ptr(
-        sc_dt::uint64 start_range, sc_dt::uint64 end_range)
+    sc_dt::uint64 start_range, sc_dt::uint64 end_range)
 {
     AddrRange r(start_range, end_range);
 
@@ -572,16 +571,17 @@ Gem5ToTlmBridge<BITWIDTH>::invalidate_direct_mem_ptr(
 
 template <unsigned int BITWIDTH>
 Gem5ToTlmBridge<BITWIDTH>::Gem5ToTlmBridge(
-        const Params &params, const sc_core::sc_module_name &mn) :
+    const Params &params, const sc_core::sc_module_name &mn) :
     Gem5ToTlmBridgeBase(mn),
     bridgeResponsePort(std::string(name()) + ".gem5", *this),
     socket("tlm_socket"),
     wrapper(socket, std::string(name()) + ".tlm", InvalidPortID),
-    system(params.system), blockingRequest(nullptr),
-    needToSendRequestRetry(false), blockingResponse(nullptr),
+    system(params.system),
+    blockingRequest(nullptr),
+    needToSendRequestRetry(false),
+    blockingResponse(nullptr),
     addrRanges(params.addr_ranges.begin(), params.addr_ranges.end())
-{
-}
+{}
 
 template <unsigned int BITWIDTH>
 gem5::Port &
@@ -603,7 +603,7 @@ Gem5ToTlmBridge<BITWIDTH>::before_end_of_elaboration()
 
     socket.register_nb_transport_bw(this, &Gem5ToTlmBridge::nb_transport_bw);
     socket.register_invalidate_direct_mem_ptr(
-            this, &Gem5ToTlmBridge::invalidate_direct_mem_ptr);
+        this, &Gem5ToTlmBridge::invalidate_direct_mem_ptr);
     sc_core::sc_module::before_end_of_elaboration();
 }
 
@@ -613,33 +613,33 @@ sc_gem5::Gem5ToTlmBridge<32> *
 gem5::Gem5ToTlmBridge32Params::create() const
 {
     return new sc_gem5::Gem5ToTlmBridge<32>(
-            *this, sc_core::sc_module_name(name.c_str()));
+        *this, sc_core::sc_module_name(name.c_str()));
 }
 
 sc_gem5::Gem5ToTlmBridge<64> *
 gem5::Gem5ToTlmBridge64Params::create() const
 {
     return new sc_gem5::Gem5ToTlmBridge<64>(
-            *this, sc_core::sc_module_name(name.c_str()));
+        *this, sc_core::sc_module_name(name.c_str()));
 }
 
 sc_gem5::Gem5ToTlmBridge<128> *
 gem5::Gem5ToTlmBridge128Params::create() const
 {
     return new sc_gem5::Gem5ToTlmBridge<128>(
-            *this, sc_core::sc_module_name(name.c_str()));
+        *this, sc_core::sc_module_name(name.c_str()));
 }
 
 sc_gem5::Gem5ToTlmBridge<256> *
 gem5::Gem5ToTlmBridge256Params::create() const
 {
     return new sc_gem5::Gem5ToTlmBridge<256>(
-            *this, sc_core::sc_module_name(name.c_str()));
+        *this, sc_core::sc_module_name(name.c_str()));
 }
 
 sc_gem5::Gem5ToTlmBridge<512> *
 gem5::Gem5ToTlmBridge512Params::create() const
 {
     return new sc_gem5::Gem5ToTlmBridge<512>(
-            *this, sc_core::sc_module_name(name.c_str()));
+        *this, sc_core::sc_module_name(name.c_str()));
 }

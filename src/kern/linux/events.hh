@@ -55,12 +55,10 @@
 
 namespace gem5
 {
-
 class ThreadContext;
 
 namespace linux
 {
-
 template <typename ABI, typename Base>
 class DebugPrintk : public Base
 {
@@ -98,11 +96,8 @@ class PanicOrOopsEvent : public PCEvent
 
   public:
     PanicOrOopsEvent(PCEventScope *s, const std::string &desc, Addr addr,
-                     const std::string &_fname,
-                     const KernelPanicOopsBehaviour _behaviour)
-        : PCEvent(s, desc, addr)
-        , fname(_fname)
-        , behaviour(_behaviour)
+        const std::string &_fname, const KernelPanicOopsBehaviour _behaviour) :
+        PCEvent(s, desc, addr), fname(_fname), behaviour(_behaviour)
     {}
     void process(ThreadContext *tc) override;
 };
@@ -136,7 +131,7 @@ class SkipUDelay : public Base
 
   public:
     SkipUDelay(PCEventScope *s, const std::string &desc, Addr addr,
-            uint64_t mult, uint64_t div) :
+        uint64_t mult, uint64_t div) :
         Base(s, desc, addr), argDivToNs(div), argMultToNs(mult)
     {}
 
@@ -147,8 +142,8 @@ class SkipUDelay : public Base
         // sized data type.
         std::function<void(ThreadContext *, Addr)> call_udelay =
             [this](ThreadContext *tc, Addr time) {
-            onUDelay(tc, argDivToNs, argMultToNs, time);
-        };
+                onUDelay(tc, argDivToNs, argMultToNs, time);
+            };
         invokeSimcall<ABI>(tc, call_udelay);
         Base::process(tc);
     }

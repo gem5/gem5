@@ -56,7 +56,6 @@
 
 namespace gem5
 {
-
 using namespace RiscvISA;
 
 ///////////////////////////////////////////////////////////////////////
@@ -71,8 +70,12 @@ buildKey(Addr vpn, uint16_t asid)
 }
 
 TLB::TLB(const Params &p) :
-    BaseTLB(p), size(p.size), tlb(size),
-    lruSeq(0), stats(this), pma(p.pma_checker),
+    BaseTLB(p),
+    size(p.size),
+    tlb(size),
+    lruSeq(0),
+    stats(this),
+    pma(p.pma_checker),
     pmp(p.pmp)
 {
     for (size_t x = 0; x < size; x++) {
@@ -124,16 +127,15 @@ TLB::lookup(Addr vpn, uint16_t asid, BaseMMU::Mode mode, bool hidden)
                 stats.writeMisses++;
             else
                 stats.readMisses++;
-        }
-        else {
+        } else {
             if (mode == BaseMMU::Write)
                 stats.writeHits++;
             else
                 stats.readHits++;
         }
 
-        DPRINTF(TLBVerbose, "lookup(vpn=%#x, asid=%#x): %s ppn %#x\n",
-                vpn, asid, entry ? "hit" : "miss", entry ? entry->paddr : 0);
+        DPRINTF(TLBVerbose, "lookup(vpn=%#x, asid=%#x): %s ppn %#x\n", vpn,
+            asid, entry ? "hit" : "miss", entry ? entry->paddr : 0);
     }
 
     return entry;
@@ -142,8 +144,8 @@ TLB::lookup(Addr vpn, uint16_t asid, BaseMMU::Mode mode, bool hidden)
 TlbEntry *
 TLB::insert(Addr vpn, const TlbEntry &entry)
 {
-    DPRINTF(TLB, "insert(vpn=%#x, asid=%#x): ppn=%#x pte=%#x size=%#x\n",
-        vpn, entry.asid, entry.paddr, entry.pte, entry.size());
+    DPRINTF(TLB, "insert(vpn=%#x, asid=%#x): ppn=%#x pte=%#x size=%#x\n", vpn,
+        entry.asid, entry.paddr, entry.pte, entry.size());
 
     // If somebody beat us to it, just use that existing entry.
     TlbEntry *newEntry = lookup(vpn, entry.asid, BaseMMU::Read, true);
@@ -165,7 +167,7 @@ TLB::insert(Addr vpn, const TlbEntry &entry)
     newEntry->lruSeq = nextSeq();
     newEntry->vaddr = vpn;
     newEntry->trieHandle =
-    trie.insert(key, TlbEntryTrie::MaxBits - entry.logBytes, newEntry);
+        trie.insert(key, TlbEntryTrie::MaxBits - entry.logBytes, newEntry);
     return newEntry;
 }
 
@@ -182,8 +184,7 @@ TLB::demapPage(Addr vpn, uint64_t asid)
             TlbEntry *newEntry = lookup(vpn, asid, BaseMMU::Read, true);
             if (newEntry)
                 remove(newEntry - tlb.data());
-        }
-        else {
+        } else {
             for (size_t i = 0; i < size; i++) {
                 if (tlb[i].trieHandle) {
                     Addr mask = ~(tlb[i].size() - 1);
@@ -221,19 +222,17 @@ TLB::remove(size_t idx)
 
 Fault
 TLB::checkPermissions(STATUS status, PrivilegeMode pmode, Addr vaddr,
-                      BaseMMU::Mode mode, PTESv39 pte)
+    BaseMMU::Mode mode, PTESv39 pte)
 {
     Fault fault = NoFault;
 
     if (mode == BaseMMU::Read && !pte.r) {
         DPRINTF(TLB, "PTE has no read perm, raising PF\n");
         fault = createPagefault(vaddr, mode);
-    }
-    else if (mode == BaseMMU::Write && !pte.w) {
+    } else if (mode == BaseMMU::Write && !pte.w) {
         DPRINTF(TLB, "PTE has no write perm, raising PF\n");
         fault = createPagefault(vaddr, mode);
-    }
-    else if (mode == BaseMMU::Execute && !pte.x) {
+    } else if (mode == BaseMMU::Execute && !pte.x) {
         DPRINTF(TLB, "PTE has no exec perm, raising PF\n");
         fault = createPagefault(vaddr, mode);
     }
@@ -243,8 +242,7 @@ TLB::checkPermissions(STATUS status, PrivilegeMode pmode, Addr vaddr,
         if (pmode == PrivilegeMode::PRV_U && !pte.u) {
             DPRINTF(TLB, "PTE is not user accessible, raising PF\n");
             fault = createPagefault(vaddr, mode);
-        }
-        else if (pmode == PrivilegeMode::PRV_S && pte.u && status.sum == 0) {
+        } else if (pmode == PrivilegeMode::PRV_S && pte.u && status.sum == 0) {
             DPRINTF(TLB, "PTE is only user accessible, raising PF\n");
             fault = createPagefault(vaddr, mode);
         }
@@ -276,8 +274,7 @@ TLB::translateWithTLB(Addr vaddr, uint16_t asid, BaseMMU::Mode mode)
 
 Fault
 TLB::doTranslate(const RequestPtr &req, ThreadContext *tc,
-                 BaseMMU::Translation *translation, BaseMMU::Mode mode,
-                 bool &delayed)
+    BaseMMU::Translation *translation, BaseMMU::Mode mode, bool &delayed)
 {
     delayed = false;
 
@@ -315,8 +312,8 @@ TLB::doTranslate(const RequestPtr &req, ThreadContext *tc,
     }
 
     Addr paddr = e->paddr << PageShift | (vaddr & mask(e->logBytes));
-    DPRINTF(TLBVerbose, "translate(vpn=%#x, asid=%#x): %#x\n",
-            vaddr, satp.asid, paddr);
+    DPRINTF(TLBVerbose, "translate(vpn=%#x, asid=%#x): %#x\n", vaddr,
+        satp.asid, paddr);
     req->setPaddr(paddr);
 
     return NoFault;
@@ -334,8 +331,7 @@ TLB::getMemPriv(ThreadContext *tc, BaseMMU::Mode mode)
 
 Fault
 TLB::translate(const RequestPtr &req, ThreadContext *tc,
-               BaseMMU::Translation *translation, BaseMMU::Mode mode,
-               bool &delayed)
+    BaseMMU::Translation *translation, BaseMMU::Mode mode, bool &delayed)
 {
     delayed = false;
 
@@ -395,7 +391,7 @@ TLB::translate(const RequestPtr &req, ThreadContext *tc,
         if (req->getVaddr() + req->getSize() - 1 < req->getVaddr())
             return std::make_shared<GenericPageTableFault>(req->getVaddr());
 
-        Process * p = tc->getProcessPtr();
+        Process *p = tc->getProcessPtr();
 
         Fault fault = p->pTable->translate(req);
         if (fault != NoFault)
@@ -406,8 +402,8 @@ TLB::translate(const RequestPtr &req, ThreadContext *tc,
 }
 
 Fault
-TLB::translateAtomic(const RequestPtr &req, ThreadContext *tc,
-                     BaseMMU::Mode mode)
+TLB::translateAtomic(
+    const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode)
 {
     bool delayed;
     return translate(req, tc, nullptr, mode, delayed);
@@ -415,7 +411,7 @@ TLB::translateAtomic(const RequestPtr &req, ThreadContext *tc,
 
 void
 TLB::translateTiming(const RequestPtr &req, ThreadContext *tc,
-                     BaseMMU::Translation *translation, BaseMMU::Mode mode)
+    BaseMMU::Translation *translation, BaseMMU::Mode mode)
 {
     bool delayed;
     assert(translation);
@@ -427,8 +423,8 @@ TLB::translateTiming(const RequestPtr &req, ThreadContext *tc,
 }
 
 Fault
-TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc,
-                         BaseMMU::Mode mode)
+TLB::translateFunctional(
+    const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode)
 {
     const Addr vaddr = req->getVaddr();
     Addr paddr = vaddr;
@@ -443,16 +439,14 @@ TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc,
             satp.mode != AddrXlateMode::BARE) {
             Walker *walker = mmu->getDataWalker();
             unsigned logBytes;
-            Fault fault = walker->startFunctional(
-                    tc, paddr, logBytes, mode);
+            Fault fault = walker->startFunctional(tc, paddr, logBytes, mode);
             if (fault != NoFault)
                 return fault;
 
             Addr masked_addr = vaddr & mask(logBytes);
             paddr |= masked_addr;
         }
-    }
-    else {
+    } else {
         Process *process = tc->getProcessPtr();
         const auto *pte = process->pTable->lookup(vaddr);
 
@@ -476,8 +470,8 @@ TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc,
 }
 
 Fault
-TLB::finalizePhysical(const RequestPtr &req,
-                      ThreadContext *tc, BaseMMU::Mode mode) const
+TLB::finalizePhysical(
+    const RequestPtr &req, ThreadContext *tc, BaseMMU::Mode mode) const
 {
     return NoFault;
 }
@@ -515,13 +509,13 @@ TLB::unserialize(CheckpointIn &cp)
 
         newEntry->unserializeSection(cp, csprintf("Entry%d", x));
         Addr key = buildKey(newEntry->vaddr, newEntry->asid);
-        newEntry->trieHandle = trie.insert(key,
-            TlbEntryTrie::MaxBits - newEntry->logBytes, newEntry);
+        newEntry->trieHandle = trie.insert(
+            key, TlbEntryTrie::MaxBits - newEntry->logBytes, newEntry);
     }
 }
 
-TLB::TlbStats::TlbStats(statistics::Group *parent)
-  : statistics::Group(parent),
+TLB::TlbStats::TlbStats(statistics::Group *parent) :
+    statistics::Group(parent),
     ADD_STAT(readHits, statistics::units::Count::get(), "read hits"),
     ADD_STAT(readMisses, statistics::units::Count::get(), "read misses"),
     ADD_STAT(readAccesses, statistics::units::Count::get(), "read accesses"),
@@ -529,14 +523,12 @@ TLB::TlbStats::TlbStats(statistics::Group *parent)
     ADD_STAT(writeMisses, statistics::units::Count::get(), "write misses"),
     ADD_STAT(writeAccesses, statistics::units::Count::get(), "write accesses"),
     ADD_STAT(hits, statistics::units::Count::get(),
-             "Total TLB (read and write) hits", readHits + writeHits),
+        "Total TLB (read and write) hits", readHits + writeHits),
     ADD_STAT(misses, statistics::units::Count::get(),
-             "Total TLB (read and write) misses", readMisses + writeMisses),
+        "Total TLB (read and write) misses", readMisses + writeMisses),
     ADD_STAT(accesses, statistics::units::Count::get(),
-             "Total TLB (read and write) accesses",
-             readAccesses + writeAccesses)
-{
-}
+        "Total TLB (read and write) accesses", readAccesses + writeAccesses)
+{}
 
 Port *
 TLB::getTableWalkerPort()

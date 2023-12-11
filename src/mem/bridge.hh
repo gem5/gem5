@@ -56,7 +56,6 @@
 
 namespace gem5
 {
-
 /**
  * A bridge is used to interface two different crossbars (or in general a
  * memory-mapped requestor and responder), with buffering for requests and
@@ -73,21 +72,17 @@ namespace gem5
 class Bridge : public ClockedObject
 {
   protected:
-
     /**
      * A deferred packet stores a packet along with its scheduled
      * transmission time
      */
     class DeferredPacket
     {
-
       public:
-
         const Tick tick;
         const PacketPtr pkt;
 
-        DeferredPacket(PacketPtr _pkt, Tick _tick) : tick(_tick), pkt(_pkt)
-        { }
+        DeferredPacket(PacketPtr _pkt, Tick _tick) : tick(_tick), pkt(_pkt) {}
     };
 
     // Forward declaration to allow the response port to have a pointer
@@ -101,16 +96,14 @@ class Bridge : public ClockedObject
      */
     class BridgeResponsePort : public ResponsePort
     {
-
       private:
-
         /** The bridge to which this port belongs. */
-        Bridge& bridge;
+        Bridge &bridge;
 
         /**
          * Request port on the other side of the bridge.
          */
-        BridgeRequestPort& memSidePort;
+        BridgeRequestPort &memSidePort;
 
         /** Minimum request delay though this bridge. */
         const Cycles delay;
@@ -159,7 +152,6 @@ class Bridge : public ClockedObject
         EventFunctionWrapper sendEvent;
 
       public:
-
         /**
          * Constructor for the BridgeResponsePort.
          *
@@ -171,9 +163,9 @@ class Bridge : public ClockedObject
          * @param _resp_limit the size of the response queue
          * @param _ranges a number of address ranges to forward
          */
-        BridgeResponsePort(const std::string& _name, Bridge& _bridge,
-                        BridgeRequestPort& _memSidePort, Cycles _delay,
-                        int _resp_limit, std::vector<AddrRange> _ranges);
+        BridgeResponsePort(const std::string &_name, Bridge &_bridge,
+            BridgeRequestPort &_memSidePort, Cycles _delay, int _resp_limit,
+            std::vector<AddrRange> _ranges);
 
         /**
          * Queue a response packet to be sent out later and also schedule
@@ -192,7 +184,6 @@ class Bridge : public ClockedObject
         void retryStalledReq();
 
       protected:
-
         /** When receiving a timing request from the peer port,
             pass it to the bridge. */
         bool recvTimingReq(PacketPtr pkt) override;
@@ -210,7 +201,6 @@ class Bridge : public ClockedObject
         Tick recvAtomicBackdoor(
             PacketPtr pkt, MemBackdoorPtr &backdoor) override;
 
-
         /** When receiving a Functional request from the peer port,
             pass it to the bridge. */
         void recvFunctional(PacketPtr pkt) override;
@@ -220,12 +210,10 @@ class Bridge : public ClockedObject
         void recvMemBackdoorReq(
             const MemBackdoorReq &req, MemBackdoorPtr &backdoor) override;
 
-
         /** When receiving a address range request the peer port,
             pass it to the bridge. */
         AddrRangeList getAddrRanges() const override;
     };
-
 
     /**
      * Port on the side that forwards requests and receives
@@ -234,16 +222,14 @@ class Bridge : public ClockedObject
      */
     class BridgeRequestPort : public RequestPort
     {
-
       private:
-
         /** The bridge to which this port belongs. */
-        Bridge& bridge;
+        Bridge &bridge;
 
         /**
          * The response port on the other side of the bridge.
          */
-        BridgeResponsePort& cpuSidePort;
+        BridgeResponsePort &cpuSidePort;
 
         /** Minimum delay though this bridge. */
         const Cycles delay;
@@ -270,7 +256,6 @@ class Bridge : public ClockedObject
         EventFunctionWrapper sendEvent;
 
       public:
-
         /**
          * Constructor for the BridgeRequestPort.
          *
@@ -281,9 +266,8 @@ class Bridge : public ClockedObject
          * @param _delay the delay in cycles from receiving to sending
          * @param _req_limit the size of the request queue
          */
-        BridgeRequestPort(const std::string& _name, Bridge& _bridge,
-                         BridgeResponsePort& _cpuSidePort, Cycles _delay,
-                         int _req_limit);
+        BridgeRequestPort(const std::string &_name, Bridge &_bridge,
+            BridgeResponsePort &_cpuSidePort, Cycles _delay, int _req_limit);
 
         /**
          * Is this side blocked from accepting new request packets.
@@ -312,7 +296,6 @@ class Bridge : public ClockedObject
         bool trySatisfyFunctional(PacketPtr pkt);
 
       protected:
-
         /** When receiving a timing request from the peer port,
             pass it to the bridge. */
         bool recvTimingResp(PacketPtr pkt) override;
@@ -329,9 +312,8 @@ class Bridge : public ClockedObject
     BridgeRequestPort memSidePort;
 
   public:
-
-    Port &getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID) override;
+    Port &getPort(
+        const std::string &if_name, PortID idx = InvalidPortID) override;
 
     void init() override;
 

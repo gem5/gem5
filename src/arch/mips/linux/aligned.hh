@@ -36,7 +36,6 @@
 
 namespace gem5
 {
-
 typedef GEM5_ALIGNED(8) uint64_t uint64_ta;
 typedef GEM5_ALIGNED(8) int64_t int64_ta;
 typedef GEM5_ALIGNED(8) Addr Addr_a;

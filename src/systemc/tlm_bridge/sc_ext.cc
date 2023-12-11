@@ -45,14 +45,12 @@ namespace Gem5SystemC
 {
 namespace
 {
-
 struct ControlConversionRegister
 {
     ControlConversionRegister()
     {
         sc_gem5::addPayloadToPacketConversionStep(
-            [] (PacketPtr pkt, tlm::tlm_generic_payload &trans)
-            {
+            [](PacketPtr pkt, tlm::tlm_generic_payload &trans) {
                 ControlExtension *control_ex = nullptr;
                 trans.get_extension(control_ex);
                 if (!control_ex) {
@@ -88,8 +86,7 @@ struct ControlConversionRegister
                 }
             });
         sc_gem5::addPacketToPayloadConversionStep(
-            [] (PacketPtr pkt, tlm::tlm_generic_payload &trans)
-            {
+            [](PacketPtr pkt, tlm::tlm_generic_payload &trans) {
                 ControlExtension *control_ex = nullptr;
                 trans.get_extension(control_ex);
                 if (!control_ex) {
@@ -112,9 +109,7 @@ struct ControlConversionRegister
 
 } // namespace
 
-Gem5Extension::Gem5Extension(PacketPtr p) : packet(p)
-{
-}
+Gem5Extension::Gem5Extension(PacketPtr p) : packet(p) {}
 
 Gem5Extension &
 Gem5Extension::getExtension(const tlm::tlm_generic_payload *payload)
@@ -151,10 +146,9 @@ Gem5Extension::copy_from(const tlm::tlm_extension_base &ext)
 }
 
 AtomicExtension::AtomicExtension(
-    std::shared_ptr<gem5::AtomicOpFunctor> o, bool r)
-    : op(o), returnRequired(r)
-{
-}
+    std::shared_ptr<gem5::AtomicOpFunctor> o, bool r) :
+    op(o), returnRequired(r)
+{}
 
 tlm::tlm_extension_base *
 AtomicExtension::clone() const
@@ -190,14 +184,14 @@ AtomicExtension::isReturnRequired() const
     return returnRequired;
 }
 
-gem5::AtomicOpFunctor*
+gem5::AtomicOpFunctor *
 AtomicExtension::getAtomicOpFunctor() const
 {
     return op.get();
 }
 
-ControlExtension::ControlExtension()
-    : privileged(false), secure(false), instruction(false), qos(0)
+ControlExtension::ControlExtension() :
+    privileged(false), secure(false), instruction(false), qos(0)
 {
     [[maybe_unused]] static ControlConversionRegister *conversion_register =
         new ControlConversionRegister();
@@ -315,4 +309,4 @@ ControlExtension::setSubstreamId(std::optional<uint32_t> s)
     substream_id = std::move(s);
 }
 
-}  // namespace Gem5SystemC
+} // namespace Gem5SystemC

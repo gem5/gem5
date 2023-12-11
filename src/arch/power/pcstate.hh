@@ -35,10 +35,8 @@
 
 namespace gem5
 {
-
 namespace PowerISA
 {
-
 class PCState : public GenericISA::SimplePCState<4>
 {
   private:
@@ -53,7 +51,11 @@ class PCState : public GenericISA::SimplePCState<4>
     {}
     PCState &operator=(const PCState &other) = default;
 
-    PCStateBase *clone() const override { return new PCState(*this); }
+    PCStateBase *
+    clone() const override
+    {
+        return new PCState(*this);
+    }
 
     void
     update(const PCStateBase &other) override

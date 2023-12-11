@@ -34,8 +34,8 @@
 
 namespace gem5
 {
-
-struct SignalInterruptDummyProtocolType {};
+struct SignalInterruptDummyProtocolType
+{};
 
 class SignalInterruptFwIf : public virtual sc_core::sc_interface
 {
@@ -59,14 +59,15 @@ class SignalInterruptSlaveBase : public SignalInterruptFwIf
 
 class SignalInterruptInitiatorSocket :
     public tlm::tlm_base_initiator_socket<64, SignalInterruptFwIf,
-                                          SignalInterruptBwIf>
+        SignalInterruptBwIf>
 {
   private:
     SignalInterruptBwIf dummyBwIf;
 
   public:
     typedef tlm::tlm_base_initiator_socket<64, SignalInterruptFwIf,
-                                           SignalInterruptBwIf> Base;
+        SignalInterruptBwIf>
+        Base;
 
     using Base::bind;
     using Base::operator();
@@ -95,11 +96,12 @@ class SignalInterruptInitiatorSocket :
 
 class SignalInterruptTargetSocket :
     public tlm::tlm_base_target_socket<64, SignalInterruptFwIf,
-                                       SignalInterruptBwIf>
+        SignalInterruptBwIf>
 {
   public:
     typedef tlm::tlm_base_target_socket<64, SignalInterruptFwIf,
-                                        SignalInterruptBwIf> Base;
+        SignalInterruptBwIf>
+        Base;
 
     using Base::bind;
     using Base::operator();

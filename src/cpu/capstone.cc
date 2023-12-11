@@ -41,14 +41,11 @@
 
 namespace gem5
 {
-
 namespace trace
 {
-
 std::string
-CapstoneDisassembler::disassemble(StaticInstPtr inst,
-        const PCStateBase &pc,
-        const loader::SymbolTable *symtab) const
+CapstoneDisassembler::disassemble(StaticInstPtr inst, const PCStateBase &pc,
+    const loader::SymbolTable *symtab) const
 {
     std::string inst_dist;
     if (inst->isPseudo() || inst->isMicroop()) {
@@ -62,15 +59,16 @@ CapstoneDisassembler::disassemble(StaticInstPtr inst,
         cs_insn *insn;
         // capstone disassembler
         if (const csh *curr_handle = currHandle(pc); curr_handle != nullptr) {
-            size_t count = cs_disasm(*curr_handle, (uint8_t*)&mach_inst,
+            size_t count = cs_disasm(*curr_handle, (uint8_t *)&mach_inst,
                 inst->size(), 0, 0, &insn);
 
-            // As we are passing only one instruction, we are expecting one instruction only
-            // being disassembled
+            // As we are passing only one instruction, we are expecting one
+            // instruction only being disassembled
             assert(count <= 1);
 
             for (int idx = 0; idx < count; idx++) {
-                inst_dist += csprintf("  %s   %s", insn[idx].mnemonic, insn[idx].op_str);
+                inst_dist += csprintf(
+                    "  %s   %s", insn[idx].mnemonic, insn[idx].op_str);
             }
         } else {
             // No valid handle; return an invalid string
@@ -81,10 +79,9 @@ CapstoneDisassembler::disassemble(StaticInstPtr inst,
     return inst_dist;
 }
 
-CapstoneDisassembler::CapstoneDisassembler(const Params &p)
-  : InstDisassembler(p)
-{
-}
+CapstoneDisassembler::CapstoneDisassembler(const Params &p) :
+    InstDisassembler(p)
+{}
 
 } // namespace trace
 } // namespace gem5

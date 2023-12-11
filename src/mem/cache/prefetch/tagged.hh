@@ -39,24 +39,22 @@
 
 namespace gem5
 {
-
 struct TaggedPrefetcherParams;
 
 namespace prefetch
 {
-
 class Tagged : public Queued
 {
   protected:
-      const int degree;
+    const int degree;
 
   public:
     Tagged(const TaggedPrefetcherParams &p);
     ~Tagged() = default;
 
     void calculatePrefetch(const PrefetchInfo &pfi,
-                           std::vector<AddrPriority> &addresses,
-                           const CacheAccessor &cache) override;
+        std::vector<AddrPriority> &addresses,
+        const CacheAccessor &cache) override;
 };
 
 } // namespace prefetch

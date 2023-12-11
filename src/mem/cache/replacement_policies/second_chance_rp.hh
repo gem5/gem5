@@ -43,12 +43,10 @@
 
 namespace gem5
 {
-
 struct SecondChanceRPParams;
 
 namespace replacement_policy
 {
-
 class SecondChance : public FIFO
 {
   protected:
@@ -74,7 +72,7 @@ class SecondChance : public FIFO
      * @param replacement_data Entry that will use its second chance.
      */
     void useSecondChance(
-        const std::shared_ptr<SecondChanceReplData>& replacement_data) const;
+        const std::shared_ptr<SecondChanceReplData> &replacement_data) const;
 
   public:
     typedef SecondChanceRPParams Params;
@@ -88,16 +86,16 @@ class SecondChance : public FIFO
      *
      * @param replacement_data Replacement data to be invalidated.
      */
-    void invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
-                                                                    override;
+    void invalidate(
+        const std::shared_ptr<ReplacementData> &replacement_data) override;
 
     /**
      * Touch an entry to update its re-insertion tick and second chance bit.
      *
      * @param replacement_data Replacement data to be touched.
      */
-    void touch(const std::shared_ptr<ReplacementData>& replacement_data) const
-                                                                     override;
+    void touch(const std::shared_ptr<ReplacementData> &replacement_data)
+        const override;
 
     /**
      * Reset replacement data. Used when an entry is inserted or re-inserted
@@ -106,8 +104,8 @@ class SecondChance : public FIFO
      *
      * @param replacement_data Replacement data to be reset.
      */
-    void reset(const std::shared_ptr<ReplacementData>& replacement_data) const
-                                                                     override;
+    void reset(const std::shared_ptr<ReplacementData> &replacement_data)
+        const override;
 
     /**
      * Find replacement victim using insertion timestamps and second chance
@@ -116,8 +114,8 @@ class SecondChance : public FIFO
      * @param cands Replacement candidates, selected by indexing policy.
      * @return Replacement entry to be replaced.
      */
-    ReplaceableEntry* getVictim(const ReplacementCandidates& candidates) const
-                                                                     override;
+    ReplaceableEntry *getVictim(
+        const ReplacementCandidates &candidates) const override;
 
     /**
      * Instantiate a replacement data entry.

@@ -48,17 +48,16 @@
  */
 
 // Registers used to read GPU clock count used in profiling
-#define AMDGPU_MM_RLC_GPU_CLOCK_COUNT_LSB                 0x13090
-#define AMDGPU_MM_RLC_GPU_CLOCK_COUNT_MSB                 0x13094
-#define AMDGPU_MM_RLC_CAPTURE_GPU_CLOCK_COUNT             0x13098
+#define AMDGPU_MM_RLC_GPU_CLOCK_COUNT_LSB 0x13090
+#define AMDGPU_MM_RLC_GPU_CLOCK_COUNT_MSB 0x13094
+#define AMDGPU_MM_RLC_CAPTURE_GPU_CLOCK_COUNT 0x13098
 
 namespace gem5
 {
-
 class AMDGPUGfx
 {
   public:
-    AMDGPUGfx() { }
+    AMDGPUGfx() {}
 
     void readMMIO(PacketPtr pkt, Addr offset);
     void writeMMIO(PacketPtr pkt, Addr offset);

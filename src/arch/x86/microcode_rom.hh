@@ -35,14 +35,11 @@
 
 namespace gem5
 {
-
 namespace X86ISAInst
 {
-
 class MicrocodeRom
 {
   protected:
-
     typedef StaticInstPtr (*GenFunc)(StaticInstPtr);
 
     static const MicroPC numMicroops;
@@ -50,14 +47,11 @@ class MicrocodeRom
     GenFunc *genFuncs;
 
   public:
-    //Constructor.
+    // Constructor.
     MicrocodeRom();
 
-    //Destructor.
-    ~MicrocodeRom()
-    {
-        delete [] genFuncs;
-    }
+    // Destructor.
+    ~MicrocodeRom() { delete[] genFuncs; }
 
     StaticInstPtr
     fetchMicroop(MicroPC microPC, StaticInstPtr curMacroop)
@@ -74,7 +68,6 @@ class MicrocodeRom
 
 namespace X86ISA
 {
-
 using X86ISAInst::MicrocodeRom;
 
 } // namespace X86ISA

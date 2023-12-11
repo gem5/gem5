@@ -56,16 +56,13 @@
 
 namespace gem5
 {
-
 namespace statistics
 {
-
 GlobalEvent *dumpEvent;
 
 void
 initSimStats()
-{
-}
+{}
 
 /**
  * Event to dump and/or reset the statistics.
@@ -78,11 +75,12 @@ class StatEvent : public GlobalEvent
     Tick repeat;
 
   public:
-    StatEvent(Tick _when, bool _dump, bool _reset, Tick _repeat)
-        : GlobalEvent(_when, Stat_Event_Pri, 0),
-          dump(_dump), reset(_reset), repeat(_repeat)
-    {
-    }
+    StatEvent(Tick _when, bool _dump, bool _reset, Tick _repeat) :
+        GlobalEvent(_when, Stat_Event_Pri, 0),
+        dump(_dump),
+        reset(_reset),
+        repeat(_repeat)
+    {}
 
     virtual void
     process()
@@ -94,12 +92,16 @@ class StatEvent : public GlobalEvent
             statistics::reset();
 
         if (repeat) {
-            statistics::schedStatEvent(dump, reset, curTick() + repeat,
-                repeat);
+            statistics::schedStatEvent(
+                dump, reset, curTick() + repeat, repeat);
         }
     }
 
-    const char *description() const { return "GlobalStatEvent"; }
+    const char *
+    description() const
+    {
+        return "GlobalStatEvent";
+    }
 };
 
 void

@@ -35,7 +35,6 @@
 
 namespace gem5
 {
-
 void py_interact();
 
 } // namespace gem5

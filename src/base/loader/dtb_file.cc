@@ -39,15 +39,13 @@
 
 namespace gem5
 {
-
 namespace loader
 {
-
 DtbFile::DtbFile(const std::string &filename) :
     ImageFile(ImageFileDataPtr(new ImageFileData(filename)))
 {
     panic_if(fdt_magic((const void *)imageData->data()) != FDT_MAGIC,
-            "File %s doesn't seem to be a DTB.\n", filename);
+        "File %s doesn't seem to be a DTB.\n", filename);
     fileDataMmapped = true;
     fileData = const_cast<uint8_t *>(imageData->data());
     length = imageData->len();
@@ -58,12 +56,12 @@ DtbFile::~DtbFile()
     // Make sure to clean up memory properly depending
     // on how buffer was allocated.
     if (!fileDataMmapped)
-        delete [] fileData;
+        delete[] fileData;
 }
 
 bool
 DtbFile::addBootData(const char *_cmdline, size_t cmdline_len,
-                     off_t initrd_start, size_t initrd_len)
+    off_t initrd_start, size_t initrd_len)
 {
     const char *root_path = "/";
     const char *node_name = "chosen";
@@ -79,8 +77,9 @@ DtbFile::addBootData(const char *_cmdline, size_t cmdline_len,
     int ret = fdt_open_into((void *)fileData, (void *)fdt_buf_w_space, newLen);
     if (ret < 0) {
         warn("Error resizing buffer of flattened device tree, "
-             "errno: %d\n", ret);
-        delete [] fdt_buf_w_space;
+             "errno: %d\n",
+            ret);
+        delete[] fdt_buf_w_space;
         return false;
     }
 
@@ -92,47 +91,50 @@ DtbFile::addBootData(const char *_cmdline, size_t cmdline_len,
         offset = fdt_add_subnode((void *)fdt_buf_w_space, offset, node_name);
         // if we successfully add the subnode, get the offset
         if (offset >= 0)
-          offset = fdt_path_offset((void *)fdt_buf_w_space,
-                                   full_path_node_name);
+            offset =
+                fdt_path_offset((void *)fdt_buf_w_space, full_path_node_name);
 
         if (offset < 0) {
             warn("Error finding or adding \"chosen\" subnode to flattened "
-                 "device tree, errno: %d\n", offset);
-            delete [] fdt_buf_w_space;
+                 "device tree, errno: %d\n",
+                offset);
+            delete[] fdt_buf_w_space;
             return false;
         }
     }
 
     // Set the bootargs property in the /chosen node
     ret = fdt_setprop((void *)fdt_buf_w_space, offset, bootargs_property_name,
-                      (const void *)_cmdline, cmdline_len+1);
+        (const void *)_cmdline, cmdline_len + 1);
     if (ret < 0) {
         warn("Error setting \"bootargs\" property to flattened device tree, "
-             "errno: %d\n", ret);
-        delete [] fdt_buf_w_space;
+             "errno: %d\n",
+            ret);
+        delete[] fdt_buf_w_space;
         return false;
     }
 
     if (initrd_len != 0) {
         // Set the linux,initrd-start property in the /chosen node
         ret = fdt_setprop_u64((void *)fdt_buf_w_space, offset,
-                              linux_initrd_start_property_name,
-                              (uint64_t)initrd_start);
+            linux_initrd_start_property_name, (uint64_t)initrd_start);
         if (ret < 0) {
             warn("Error setting \"linux,initrd-start\" property to flattened "
-                 "device tree, errno: %d\n", ret);
-            delete [] fdt_buf_w_space;
+                 "device tree, errno: %d\n",
+                ret);
+            delete[] fdt_buf_w_space;
             return false;
         }
 
         // Set the computed linux,initrd-end property in the /chosen node
         ret = fdt_setprop_u64((void *)fdt_buf_w_space, offset,
-                              linux_initrd_end_property_name,
-                              (uint64_t)initrd_start + initrd_len);
+            linux_initrd_end_property_name,
+            (uint64_t)initrd_start + initrd_len);
         if (ret < 0) {
             warn("Error setting \"linux,initrd-len\" property to flattened "
-                 "device tree, errno: %d\n", ret);
-            delete [] fdt_buf_w_space;
+                 "device tree, errno: %d\n",
+                ret);
+            delete[] fdt_buf_w_space;
             return false;
         }
     }
@@ -141,14 +143,15 @@ DtbFile::addBootData(const char *_cmdline, size_t cmdline_len,
     ret = fdt_pack((void *)fdt_buf_w_space);
     if (ret < 0) {
         warn("Error re-packing flattened device tree structure, "
-             "errno: %d\n", ret);
-        delete [] fdt_buf_w_space;
+             "errno: %d\n",
+            ret);
+        delete[] fdt_buf_w_space;
         return false;
     }
 
     // clean up old buffer and set to new fdt blob
     if (!fileDataMmapped)
-        delete [] fileData;
+        delete[] fileData;
     fileData = fdt_buf_w_space;
     fileDataMmapped = false;
     length = newLen;
@@ -171,7 +174,7 @@ DtbFile::findReleaseAddr()
         rel_addr = betoh(*static_cast<const uint32_t *>(temp));
     if (len == 8) {
         rel_addr = (rel_addr << 32) |
-            betoh(*(static_cast<const uint32_t *>(temp) + 1));
+                   betoh(*(static_cast<const uint32_t *>(temp) + 1));
     }
 
     return rel_addr;
@@ -181,9 +184,9 @@ MemoryImage
 DtbFile::buildImage() const
 {
     if (fileDataMmapped)
-        return {{ "data", imageData }};
+        return {{"data", imageData}};
     else
-        return {{ "data", 0, fileData, length }};
+        return {{"data", 0, fileData, length}};
 }
 
 } // namespace loader

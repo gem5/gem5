@@ -62,7 +62,6 @@
 
 namespace gem5
 {
-
 class System;
 class IndexingPolicy;
 class ReplaceableEntry;
@@ -205,14 +204,15 @@ class BaseTags : public ClockedObject
      * @param way The way of the block.
      * @return The block.
      */
-    virtual ReplaceableEntry* findBlockBySetAndWay(int set, int way) const;
+    virtual ReplaceableEntry *findBlockBySetAndWay(int set, int way) const;
 
     /**
      * Align an address to the block size.
      * @param addr the address to align.
      * @return The block address.
      */
-    Addr blkAlign(Addr addr) const
+    Addr
+    blkAlign(Addr addr) const
     {
         return addr & ~blkMask;
     }
@@ -222,7 +222,8 @@ class BaseTags : public ClockedObject
      * @param addr the address to get the offset of.
      * @return the block offset.
      */
-    int extractBlkOffset(Addr addr) const
+    int
+    extractBlkOffset(Addr addr) const
     {
         return (addr & blkMask);
     }
@@ -231,7 +232,8 @@ class BaseTags : public ClockedObject
      * Limit the allocation for the cache ways.
      * @param ways The maximum number of ways available for replacement.
      */
-    virtual void setWayAllocationMax(int ways)
+    virtual void
+    setWayAllocationMax(int ways)
     {
         panic("This tag class does not implement way allocation limit!\n");
     }
@@ -240,7 +242,8 @@ class BaseTags : public ClockedObject
      * Get the way allocation mask limit.
      * @return The maximum number of ways available for replacement.
      */
-    virtual int getWayAllocationMax() const
+    virtual int
+    getWayAllocationMax() const
     {
         panic("This tag class does not implement way allocation limit!\n");
         return -1;
@@ -251,7 +254,8 @@ class BaseTags : public ClockedObject
      *
      * @param blk A valid block to invalidate.
      */
-    virtual void invalidate(CacheBlk *blk)
+    virtual void
+    invalidate(CacheBlk *blk)
     {
         assert(blk);
         assert(blk->isValid());
@@ -278,9 +282,8 @@ class BaseTags : public ClockedObject
      * @param evict_blks Cache blocks to be evicted.
      * @return Cache block to be replaced.
      */
-    virtual CacheBlk* findVictim(Addr addr, const bool is_secure,
-                                 const std::size_t size,
-                                 std::vector<CacheBlk*>& evict_blks) = 0;
+    virtual CacheBlk *findVictim(Addr addr, const bool is_secure,
+        const std::size_t size, std::vector<CacheBlk *> &evict_blks) = 0;
 
     /**
      * Access block and update replacement data. May not succeed, in which case
@@ -292,7 +295,7 @@ class BaseTags : public ClockedObject
      * @param lat The latency of the tag lookup.
      * @return Pointer to the cache block if found.
      */
-    virtual CacheBlk* accessBlock(const PacketPtr pkt, Cycles &lat) = 0;
+    virtual CacheBlk *accessBlock(const PacketPtr pkt, Cycles &lat) = 0;
 
     /**
      * Generate the tag from the given address.
@@ -326,7 +329,7 @@ class BaseTags : public ClockedObject
      * @param block The block.
      * @return the block address.
      */
-    virtual Addr regenerateBlkAddr(const CacheBlk* blk) const = 0;
+    virtual Addr regenerateBlkAddr(const CacheBlk *blk) const = 0;
 
     /**
      * Visit each block in the tags and apply a visitor

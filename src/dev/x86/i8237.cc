@@ -34,13 +34,10 @@
 
 namespace gem5
 {
-
 namespace X86ISA
 {
-
 namespace
 {
-
 I8237::Register::ReadFunc
 readUnimpl(const std::string &label)
 {
@@ -81,8 +78,11 @@ I8237::WriteOnlyReg::WriteOnlyReg(const std::string &new_name, Addr offset) :
     });
 }
 
-I8237::I8237(const Params &p) : BasicPioDevice(p, 16), latency(p.pio_latency),
-    regs("registers", pioAddr), channels{{{0}, {1}, {2}, {3}}},
+I8237::I8237(const Params &p) :
+    BasicPioDevice(p, 16),
+    latency(p.pio_latency),
+    regs("registers", pioAddr),
+    channels{{{0}, {1}, {2}, {3}}},
     statusCommandReg("status/command"),
     requestReg("request", 0x9),
     setMaskBitReg("set mask bit", 0xa),
@@ -93,45 +93,38 @@ I8237::I8237(const Params &p) : BasicPioDevice(p, 16), latency(p.pio_latency),
     writeMaskReg("write mask", 0xf)
 {
     // Add the channel address and remaining registers.
-    for (auto &channel: channels)
-        regs.addRegisters({ channel.addrReg, channel.remainingReg });
+    for (auto &channel : channels)
+        regs.addRegisters({channel.addrReg, channel.remainingReg});
 
     // Add the other registers individually.
-    regs.addRegisters({
-        statusCommandReg.
-            reader([this](auto &reg) -> uint8_t { return statusVal; }).
-            writer([this](auto &reg, const uint8_t &value) {
-                        commandVal = value;
-                    }),
+    regs.addRegisters(
+        {statusCommandReg
+                .reader([this](auto &reg) -> uint8_t { return statusVal; })
+                .writer([this](auto &reg, const uint8_t &value) {
+                    commandVal = value;
+                }),
 
-        requestReg.
-            writer(this, &I8237::setRequestBit),
+            requestReg.writer(this, &I8237::setRequestBit),
 
-        setMaskBitReg.
-            writer(this, &I8237::setMaskBit),
+            setMaskBitReg.writer(this, &I8237::setMaskBit),
 
-        modeReg.
-            writer([this](auto &reg, const uint8_t &value) {
-                        channels[bits(value, 1, 0)].mode = value;
-                    }),
+            modeReg.writer([this](auto &reg, const uint8_t &value) {
+                channels[bits(value, 1, 0)].mode = value;
+            }),
 
-        clearFlipFlopReg.
-            writer([this](auto &reg, const uint8_t &value) {
-                        highByte = false;
-                    }),
+            clearFlipFlopReg.writer(
+                [this](auto &reg, const uint8_t &value) { highByte = false; }),
 
-        temporaryMasterClearReg.
-            reader([this](auto &reg) ->uint8_t { return tempVal; }).
-            writer([this](auto &reg, const uint8_t &value) { reset(); }),
+            temporaryMasterClearReg
+                .reader([this](auto &reg) -> uint8_t { return tempVal; })
+                .writer([this](auto &reg, const uint8_t &value) { reset(); }),
 
-        clearMaskReg.
-            writer([this](auto &reg, const uint8_t &value) { maskVal = 0x0; }),
+            clearMaskReg.writer(
+                [this](auto &reg, const uint8_t &value) { maskVal = 0x0; }),
 
-        writeMaskReg.
-            writer([this](auto &reg, const uint8_t &value) {
-                        maskVal = bits(value, 3, 0);
-                    })
-    });
+            writeMaskReg.writer([this](auto &reg, const uint8_t &value) {
+                maskVal = bits(value, 3, 0);
+            })});
 
     reset();
 }

@@ -46,9 +46,7 @@
 
 namespace gem5
 {
-
-std::map<std::string, ExternalMaster::Handler *>
-    ExternalMaster::portHandlers;
+std::map<std::string, ExternalMaster::Handler *> ExternalMaster::portHandlers;
 
 ExternalMaster::ExternalMaster(const ExternalMasterParams &params) :
     SimObject(params),
@@ -72,12 +70,13 @@ ExternalMaster::getPort(const std::string &if_name, PortID idx)
             if (handlerIter == portHandlers.end())
                 fatal("Can't find port handler type '%s'\n", portType);
 
-            externalPort = portHandlers[portType]->getExternalPort(portName,
-                *this, portData);
+            externalPort = portHandlers[portType]->getExternalPort(
+                portName, *this, portData);
 
             if (!externalPort) {
                 fatal("%s: Can't find external port type: %s"
-                    " port_data: '%s'\n", portName, portType, portData);
+                      " port_data: '%s'\n",
+                    portName, portType, portData);
             }
         }
         return *externalPort;
@@ -97,8 +96,8 @@ ExternalMaster::init()
 }
 
 void
-ExternalMaster::registerHandler(const std::string &handler_name,
-    Handler *handler)
+ExternalMaster::registerHandler(
+    const std::string &handler_name, Handler *handler)
 {
     portHandlers[handler_name] = handler;
 }

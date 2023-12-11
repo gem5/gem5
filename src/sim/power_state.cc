@@ -48,14 +48,13 @@
 
 namespace gem5
 {
-
 PowerState::PowerState(const PowerStateParams &p) :
-    SimObject(p), _currState(p.default_state),
-    possibleStates(p.possible_states.begin(),
-                   p.possible_states.end()),
+    SimObject(p),
+    _currState(p.default_state),
+    possibleStates(p.possible_states.begin(), p.possible_states.end()),
     stats(*this)
 {
-    for (auto &pm: p.leaders) {
+    for (auto &pm : p.leaders) {
         // Register this object as a follower. This object is
         // dependent on pm for power state transitions
         pm->addFollower(this);
@@ -63,13 +62,13 @@ PowerState::PowerState(const PowerStateParams &p) :
 }
 
 void
-PowerState::setControlledDomain(PowerDomain* pwr_dom)
+PowerState::setControlledDomain(PowerDomain *pwr_dom)
 {
     // Only a power domain can register as dependant of a power stated
     // object
     controlledDomain = pwr_dom;
     DPRINTF(PowerDomain, "%s is registered as controlled by %s \n",
-                         pwr_dom->name(), name());
+        pwr_dom->name(), name());
 }
 
 void
@@ -98,7 +97,7 @@ PowerState::set(enums::PwrState p)
     // Check if this power state is actually allowed by checking whether it is
     // present in pwrStateToIndex-dictionary
     panic_if(possibleStates.find(p) == possibleStates.end(),
-             "Cannot go to %s in %s \n", enums::PwrStateStrings[p], name());
+        "Cannot go to %s in %s \n", enums::PwrStateStrings[p], name());
 
     // Function should ideally be called only when there is a state change
     if (_currState == p) {
@@ -132,7 +131,6 @@ PowerState::set(enums::PwrState p)
     if (controlledDomain) {
         controlledDomain->pwrStateChangeCallback(p, this);
     }
-
 }
 
 enums::PwrState
@@ -145,7 +143,7 @@ PowerState::matchPwrState(enums::PwrState p)
     // If we are already in this power state, ignore request
     if (_currState == p) {
         DPRINTF(PowerDomain, "Already in p-state %s requested to match \n",
-                enums::PwrStateStrings[p]);
+            enums::PwrStateStrings[p]);
         return _currState;
     }
 
@@ -163,8 +161,8 @@ PowerState::matchPwrState(enums::PwrState p)
                 // This power state is the least performant power state that is
                 // still more performant than the requested one
                 DPRINTF(PowerDomain, "Best match for %s is %s \n",
-                        enums::PwrStateStrings[p],
-                        enums::PwrStateStrings[*(rev_it)]);
+                    enums::PwrStateStrings[p],
+                    enums::PwrStateStrings[*(rev_it)]);
                 set(*(rev_it));
                 break;
             }
@@ -174,10 +172,10 @@ PowerState::matchPwrState(enums::PwrState p)
     // The only case in which the power state cannot change is if the
     // object is already at in its most performant state.
     warn_if((_currState == old_state) &&
-            possibleStates.find(_currState) != possibleStates.begin(),
-            "Transition to power state %s was not possible, SimObject already"
-            " in the most performance state %s",
-            enums::PwrStateStrings[p], enums::PwrStateStrings[_currState]);
+                possibleStates.find(_currState) != possibleStates.begin(),
+        "Transition to power state %s was not possible, SimObject already"
+        " in the most performance state %s",
+        enums::PwrStateStrings[p], enums::PwrStateStrings[_currState]);
 
     stats.numPwrMatchStateTransitions++;
     return _currState;
@@ -215,25 +213,24 @@ PowerState::getWeights() const
 
     ret.resize(enums::PwrState::Num_PwrState);
     for (unsigned i = 0; i < enums::PwrState::Num_PwrState; i++)
-        ret[i] = residencies[i] / \
-                     (stats.pwrStateResidencyTicks.total() + elapsed_time);
+        ret[i] = residencies[i] /
+                 (stats.pwrStateResidencyTicks.total() + elapsed_time);
 
     return ret;
 }
 
-PowerState::PowerStateStats::PowerStateStats(PowerState &co)
-    : statistics::Group(&co),
+PowerState::PowerStateStats::PowerStateStats(PowerState &co) :
+    statistics::Group(&co),
     powerState(co),
     ADD_STAT(numTransitions, statistics::units::Count::get(),
-             "Number of power state transitions"),
+        "Number of power state transitions"),
     ADD_STAT(numPwrMatchStateTransitions, statistics::units::Count::get(),
-             "Number of power state transitions due match request"),
+        "Number of power state transitions due match request"),
     ADD_STAT(ticksClkGated, statistics::units::Tick::get(),
-             "Distribution of time spent in the clock gated state"),
+        "Distribution of time spent in the clock gated state"),
     ADD_STAT(pwrStateResidencyTicks, statistics::units::Tick::get(),
-             "Cumulative time (in ticks) in various power states")
-{
-}
+        "Cumulative time (in ticks) in various power states")
+{}
 
 void
 PowerState::PowerStateStats::regStats()
@@ -252,13 +249,9 @@ PowerState::PowerStateStats::regStats()
     ticksClkGated
         .init(p.clk_gate_min, p.clk_gate_max,
             (p.clk_gate_max - p.clk_gate_min + 1.0) / num_bins)
-        .flags(pdf | nozero | nonan)
-        ;
+        .flags(pdf | nozero | nonan);
 
-    pwrStateResidencyTicks
-        .init(enums::PwrState::Num_PwrState)
-        .flags(nozero)
-        ;
+    pwrStateResidencyTicks.init(enums::PwrState::Num_PwrState).flags(nozero);
     for (int i = 0; i < enums::PwrState::Num_PwrState; i++) {
         pwrStateResidencyTicks.subname(i, enums::PwrStateStrings[i]);
     }

@@ -35,12 +35,11 @@
 
 namespace gem5
 {
-
 class BaseCPU;
 class ThreadContext;
 
-namespace PowerISA {
-
+namespace PowerISA
+{
 class Interrupts : public BaseInterrupts
 {
   public:

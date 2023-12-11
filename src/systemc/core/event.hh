@@ -43,14 +43,12 @@
 
 namespace sc_core
 {
-
 class sc_event;
 
 } // namespace sc_core
 
 namespace sc_gem5
 {
-
 typedef std::vector<sc_core::sc_event *> Events;
 
 class Sensitivity;
@@ -58,13 +56,17 @@ class Sensitivity;
 class Event
 {
   public:
-    Event(sc_core::sc_event *_sc_event, bool internal=false);
+    Event(sc_core::sc_event *_sc_event, bool internal = false);
     Event(sc_core::sc_event *_sc_event, const char *_basename,
-            bool internal=false);
+        bool internal = false);
 
     ~Event();
 
-    sc_core::sc_event *sc_event() { return _sc_event; }
+    sc_core::sc_event *
+    sc_event()
+    {
+        return _sc_event;
+    }
 
     const std::string &name() const;
     const std::string &basename() const;
@@ -85,7 +87,11 @@ class Event
     void cancel();
 
     bool triggered() const;
-    uint64_t triggeredStamp() const { return _triggeredStamp; }
+    uint64_t
+    triggeredStamp() const
+    {
+        return _triggeredStamp;
+    }
 
     static Event *
     getFromScEvent(sc_core::sc_event *e)
@@ -111,7 +117,7 @@ class Event
     delSensitivity(StaticSensitivity *s) const
     {
         auto &senses = s->ofMethod() ? staticSenseMethod : staticSenseThread;
-        for (auto &t: senses) {
+        for (auto &t : senses) {
             if (t == s) {
                 t = senses.back();
                 senses.pop_back();
@@ -129,7 +135,7 @@ class Event
     delSensitivity(DynamicSensitivity *s) const
     {
         auto &senses = s->ofMethod() ? dynamicSenseMethod : dynamicSenseThread;
-        for (auto &t: senses) {
+        for (auto &t : senses) {
             if (t == s) {
                 t = senses.back();
                 senses.pop_back();
@@ -165,4 +171,4 @@ EventsIt findEvent(const std::string &name);
 
 } // namespace sc_gem5
 
-#endif  //__SYSTEMC_CORE_EVENT_HH__
+#endif //__SYSTEMC_CORE_EVENT_HH__

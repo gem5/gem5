@@ -33,18 +33,18 @@
 #include "dev/net/ethertap.hh"
 
 #if defined(__OpenBSD__) || defined(__APPLE__)
-#include <sys/param.h>
+#    include <sys/param.h>
 
 #endif
 
 #if HAVE_TUNTAP && defined(__linux__)
-#if 1 // Hide from the style checker since these have to be out of order.
-#include <sys/socket.h> // Has to be included before if.h for some reason.
+#    if 1 // Hide from the style checker since these have to be out of order.
+#        include <sys/socket.h> // Has to be included before if.h for some reason.
 
-#endif
+#    endif
 
-#include <linux/if.h>
-#include <linux/if_tun.h>
+#    include <linux/if.h>
+#    include <linux/if_tun.h>
 
 #endif
 
@@ -71,15 +71,14 @@
 
 namespace gem5
 {
-
 class TapEvent : public PollEvent
 {
   protected:
     EtherTapBase *tap;
 
   public:
-    TapEvent(EtherTapBase *_tap, int fd, int e)
-        : PollEvent(fd, e), tap(_tap) {}
+    TapEvent(EtherTapBase *_tap, int fd, int e) : PollEvent(fd, e), tap(_tap)
+    {}
 
     void
     process(int revent) override
@@ -92,10 +91,13 @@ class TapEvent : public PollEvent
     }
 };
 
-EtherTapBase::EtherTapBase(const Params &p)
-    : SimObject(p), buflen(p.bufsz), dump(p.dump), event(NULL),
-      interface(NULL),
-      txEvent([this]{ retransmit(); }, "EtherTapBase retransmit")
+EtherTapBase::EtherTapBase(const Params &p) :
+    SimObject(p),
+    buflen(p.bufsz),
+    dump(p.dump),
+    event(NULL),
+    interface(NULL),
+    txEvent([this] { retransmit(); }, "EtherTapBase retransmit")
 {
     buffer = new uint8_t[buflen];
     interface = new EtherTapInt(name() + ".interface", this);
@@ -142,12 +144,11 @@ EtherTapBase::unserialize(CheckpointIn &cp)
     }
 }
 
-
 void
 EtherTapBase::pollFd(int fd)
 {
     assert(!event);
-    event = new TapEvent(this, fd, POLLIN|POLLERR);
+    event = new TapEvent(this, fd, POLLIN | POLLERR);
     pollQueue.schedule(event);
 }
 
@@ -158,7 +159,6 @@ EtherTapBase::stopPolling()
     delete event;
     event = NULL;
 }
-
 
 Port &
 EtherTapBase::getPort(const std::string &if_name, PortID idx)
@@ -224,7 +224,6 @@ EtherTapBase::retransmit()
         schedule(txEvent, curTick() + sim_clock::as_int::ns);
 }
 
-
 class TapListener
 {
   protected:
@@ -236,7 +235,11 @@ class TapListener
       public:
         Event(TapListener *l, int fd, int e) : PollEvent(fd, e), listener(l) {}
 
-        void process(int revent) override { listener->accept(); }
+        void
+        process(int revent) override
+        {
+            listener->accept();
+        }
     };
 
     friend class Event;
@@ -250,7 +253,8 @@ class TapListener
 
   public:
     TapListener(EtherTapStub *t, ListenSocketPtr _listener) :
-        listener(std::move(_listener)), tap(t) {}
+        listener(std::move(_listener)), tap(t)
+    {}
     ~TapListener() { delete event; }
 
     void listen();
@@ -261,7 +265,7 @@ TapListener::listen()
 {
     listener->listen();
 
-    event = new Event(this, listener->getfd(), POLLIN|POLLERR);
+    event = new Event(this, listener->getfd(), POLLIN | POLLERR);
     pollQueue.schedule(event);
 }
 
@@ -281,7 +285,6 @@ TapListener::accept()
         tap->attach(sfd);
 }
 
-
 EtherTapStub::EtherTapStub(const Params &p) : EtherTapBase(p), socket(-1)
 {
     if (ListenSocket::allDisabled())
@@ -291,10 +294,7 @@ EtherTapStub::EtherTapStub(const Params &p) : EtherTapBase(p), socket(-1)
     listener->listen();
 }
 
-EtherTapStub::~EtherTapStub()
-{
-    delete listener;
-}
+EtherTapStub::~EtherTapStub() { delete listener; }
 
 void
 EtherTapStub::serialize(CheckpointOut &cp) const
@@ -315,7 +315,6 @@ EtherTapStub::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(buffer_used);
     UNSERIALIZE_SCALAR(frame_len);
 }
-
 
 void
 EtherTapStub::attach(int fd)
@@ -365,8 +364,10 @@ EtherTapStub::recvReal(int revent)
     if (frame_len == 0)
         frame_len = ntohl(*(uint32_t *)buffer);
 
-    DPRINTF(Ethernet, "Received data from peer: len=%d buffer_used=%d "
-            "frame_len=%d\n", len, buffer_used, frame_len);
+    DPRINTF(Ethernet,
+        "Received data from peer: len=%d buffer_used=%d "
+        "frame_len=%d\n",
+        len, buffer_used, frame_len);
 
     uint8_t *frame_start = &buffer[sizeof(uint32_t)];
     while (frame_len != 0 && buffer_used >= frame_len + sizeof(uint32_t)) {
@@ -394,7 +395,6 @@ EtherTapStub::sendReal(const void *data, size_t len)
         return false;
     return write(socket, data, len) == len;
 }
-
 
 #if HAVE_TUNTAP
 

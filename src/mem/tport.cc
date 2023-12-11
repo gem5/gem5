@@ -43,12 +43,10 @@
 
 namespace gem5
 {
-
-SimpleTimingPort::SimpleTimingPort(const std::string& _name,
-                                   SimObject* _owner) :
+SimpleTimingPort::SimpleTimingPort(
+    const std::string &_name, SimObject *_owner) :
     QueuedResponsePort(_name, queueImpl), queueImpl(*_owner, *this)
-{
-}
+{}
 
 void
 SimpleTimingPort::recvFunctional(PacketPtr pkt)

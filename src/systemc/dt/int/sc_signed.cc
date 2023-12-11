@@ -42,7 +42,6 @@
 
  *****************************************************************************/
 
-
 // $Log: sc_signed.cpp,v $
 // Revision 1.6  2011/02/18 20:19:15  acg
 //  Andy Goodrich: updating Copyright notice.
@@ -92,7 +91,6 @@
 // explicit template instantiations
 namespace sc_core
 {
-
 template class sc_vpool<sc_dt::sc_signed_bitref>;
 template class sc_vpool<sc_dt::sc_signed_subref>;
 
@@ -100,7 +98,6 @@ template class sc_vpool<sc_dt::sc_signed_subref>;
 
 namespace sc_dt
 {
-
 // Pool of temporary instances:
 
 sc_core::sc_vpool<sc_signed_bitref> sc_signed_bitref::m_pool(9);
@@ -110,7 +107,7 @@ void
 sc_signed::invalid_init(const char *type_name, int nb) const
 {
     std::stringstream msg;
-    msg << "sc_signed("<< type_name << ") : nb = " << nb << " is not valid";
+    msg << "sc_signed(" << type_name << ") : nb = " << nb << " is not valid";
     SC_REPORT_ERROR(sc_core::SC_ID_INIT_FAILED_, msg.str().c_str());
 }
 
@@ -122,8 +119,10 @@ void
 sc_signed::invalid_index(int i) const
 {
     std::stringstream msg;
-    msg << "sc_bigint bit selection: index = " << i << " violates "
-           "0 <= index <= " << (nbits - 1);
+    msg << "sc_bigint bit selection: index = " << i
+        << " violates "
+           "0 <= index <= "
+        << (nbits - 1);
     SC_REPORT_ERROR(sc_core::SC_ID_OUT_OF_BOUNDS_, msg.str().c_str());
     sc_core::sc_abort(); // can't recover from here
 }
@@ -132,14 +131,16 @@ void
 sc_signed::invalid_range(int l, int r) const
 {
     std::stringstream msg;
-    msg << "sc_bigint part selection: left = " <<
-           l << ", right = " << r << " \n"
-           "  violates either (" << (nbits-1) << " >= left >= 0) or "
-           "(" << (nbits-1) << " >= right >= 0)";
+    msg << "sc_bigint part selection: left = " << l << ", right = " << r
+        << " \n"
+           "  violates either ("
+        << (nbits - 1)
+        << " >= left >= 0) or "
+           "("
+        << (nbits - 1) << " >= right >= 0)";
     SC_REPORT_ERROR(sc_core::SC_ID_OUT_OF_BOUNDS_, msg.str().c_str());
     sc_core::sc_abort(); // can't recover from here
 }
-
 
 // ----------------------------------------------------------------------------
 
@@ -157,10 +158,10 @@ sc_signed::invalid_range(int l, int r) const
 bool
 sc_signed::concat_get_ctrl(sc_digit *dst_p, int low_i) const
 {
-    int dst_i; // Index to next word to set in dst_p.
-    int end_i; // Index of high order word to set.
+    int dst_i;      // Index to next word to set in dst_p.
+    int end_i;      // Index of high order word to set.
     int left_shift; // Amount to shift value left.
-    sc_digit mask; // Mask for partial word sets.
+    sc_digit mask;  // Mask for partial word sets.
 
     // CALCULATE METRICS FOR DATA MOVEMENT:
     dst_i = low_i / BITS_PER_DIGIT;
@@ -181,17 +182,17 @@ sc_signed::concat_get_ctrl(sc_digit *dst_p, int low_i) const
 bool
 sc_signed::concat_get_data(sc_digit *dst_p, int low_i) const
 {
-    sc_digit carry; // Carry bit for complements.
-    int dst_i; // Index to next word to set in dst_p.
-    int end_i; // Index of high order word to set.
-    int high_i; // Index w/in word of high order bit.
-    int left_shift; // Amount to shift value left.
-    sc_digit left_word; // High word component for set.
-    sc_digit mask; // Mask for partial word sets.
-    bool result; // True if inserted non-zero data.
-    int right_shift; // Amount to shift value right.
+    sc_digit carry;      // Carry bit for complements.
+    int dst_i;           // Index to next word to set in dst_p.
+    int end_i;           // Index of high order word to set.
+    int high_i;          // Index w/in word of high order bit.
+    int left_shift;      // Amount to shift value left.
+    sc_digit left_word;  // High word component for set.
+    sc_digit mask;       // Mask for partial word sets.
+    bool result;         // True if inserted non-zero data.
+    int right_shift;     // Amount to shift value right.
     sc_digit right_word; // Low word component for set.
-    int src_i; // Index to next word to get from digit.
+    int src_i;           // Index to next word to get from digit.
 
     // CALCULATE METRICS FOR DATA MOVEMENT:
     dst_i = low_i / BITS_PER_DIGIT;
@@ -200,17 +201,17 @@ sc_signed::concat_get_data(sc_digit *dst_p, int low_i) const
     left_shift = low_i % BITS_PER_DIGIT;
 
     switch (sgn) {
-      // POSITIVE SOURCE VALUE:
-      case SC_POS:
+    // POSITIVE SOURCE VALUE:
+    case SC_POS:
         result = true;
 
         // ALL DATA TO BE MOVED IS IN A SINGLE WORD:
         if (dst_i == end_i) {
             mask = ~(~0U << left_shift);
-            dst_p[dst_i] = ((dst_p[dst_i] & mask) |
-                (digit[0] << left_shift)) & DIGIT_MASK;
+            dst_p[dst_i] = ((dst_p[dst_i] & mask) | (digit[0] << left_shift)) &
+                           DIGIT_MASK;
 
-        // DATA IS IN MORE THAN ONE WORD, BUT IS WORD ALIGNED:
+            // DATA IS IN MORE THAN ONE WORD, BUT IS WORD ALIGNED:
         } else if (left_shift == 0) {
             for (src_i = 0; dst_i < end_i; dst_i++, src_i++) {
                 dst_p[dst_i] = digit[src_i];
@@ -219,53 +220,56 @@ sc_signed::concat_get_data(sc_digit *dst_p, int low_i) const
             mask = ~(~1U << high_i) & DIGIT_MASK;
             dst_p[dst_i] = digit[src_i] & mask;
 
-        // DATA IS IN MORE THAN ONE WORD, AND NOT WORD ALIGNED:
+            // DATA IS IN MORE THAN ONE WORD, AND NOT WORD ALIGNED:
         } else {
             high_i = high_i % BITS_PER_DIGIT;
             right_shift = BITS_PER_DIGIT - left_shift;
             mask = ~(~0U << left_shift);
             right_word = digit[0];
             dst_p[dst_i] = (dst_p[dst_i] & mask) |
-                ((right_word << left_shift) & DIGIT_MASK);
+                           ((right_word << left_shift) & DIGIT_MASK);
             for (src_i = 1, dst_i++; dst_i < end_i; dst_i++, src_i++) {
                 left_word = digit[src_i];
-                dst_p[dst_i] = ((left_word << left_shift)&DIGIT_MASK) |
-                    (right_word >> right_shift);
+                dst_p[dst_i] = ((left_word << left_shift) & DIGIT_MASK) |
+                               (right_word >> right_shift);
                 right_word = left_word;
             }
             left_word = (src_i < ndigits) ? digit[src_i] : 0;
             mask = ~(~1U << high_i) & DIGIT_MASK;
-            dst_p[dst_i] = ((left_word << left_shift) |
-                (right_word >> right_shift)) & mask;
+            dst_p[dst_i] =
+                ((left_word << left_shift) | (right_word >> right_shift)) &
+                mask;
         }
         break;
 
-      // SOURCE VALUE IS NEGATIVE:
-      case SC_NEG:
+    // SOURCE VALUE IS NEGATIVE:
+    case SC_NEG:
         // ALL DATA TO BE MOVED IS IN A SINGLE WORD:
         result = true;
         if (dst_i == end_i) {
             mask = ~(~0U << nbits);
             right_word = ((digit[0] ^ DIGIT_MASK) + 1) & mask;
             mask = ~(~0U << left_shift);
-            dst_p[dst_i] = ((dst_p[dst_i] & mask) |
-                (right_word << left_shift)) & DIGIT_MASK;
+            dst_p[dst_i] =
+                ((dst_p[dst_i] & mask) | (right_word << left_shift)) &
+                DIGIT_MASK;
 
-        // DATA IS IN MORE THAN ONE WORD, BUT IS WORD ALIGNED:
+            // DATA IS IN MORE THAN ONE WORD, BUT IS WORD ALIGNED:
         } else if (left_shift == 0) {
             carry = 1;
             for (src_i = 0; dst_i < end_i; dst_i++, src_i++) {
                 right_word = (digit[src_i] ^ DIGIT_MASK) + carry;
-                dst_p[dst_i] = right_word &  DIGIT_MASK;
+                dst_p[dst_i] = right_word & DIGIT_MASK;
                 carry = right_word >> BITS_PER_DIGIT;
             }
             high_i = high_i % BITS_PER_DIGIT;
             mask = (~(~1U << high_i)) & DIGIT_MASK;
             right_word = (src_i < ndigits) ?
-                (digit[src_i] ^ DIGIT_MASK) + carry : DIGIT_MASK + carry;
+                             (digit[src_i] ^ DIGIT_MASK) + carry :
+                             DIGIT_MASK + carry;
             dst_p[dst_i] = right_word & mask;
 
-        // DATA IS IN MORE THAN ONE WORD, AND NOT WORD ALIGNED:
+            // DATA IS IN MORE THAN ONE WORD, AND NOT WORD ALIGNED:
         } else {
             high_i = high_i % BITS_PER_DIGIT;
             right_shift = BITS_PER_DIGIT - left_shift;
@@ -273,40 +277,42 @@ sc_signed::concat_get_data(sc_digit *dst_p, int low_i) const
             carry = 1;
             right_word = (digit[0] ^ DIGIT_MASK) + carry;
             dst_p[dst_i] = (dst_p[dst_i] & mask) |
-                ((right_word << left_shift) & DIGIT_MASK);
+                           ((right_word << left_shift) & DIGIT_MASK);
             carry = right_word >> BITS_PER_DIGIT;
             right_word &= DIGIT_MASK;
             for (src_i = 1, dst_i++; dst_i < end_i; dst_i++, src_i++) {
                 left_word = (digit[src_i] ^ DIGIT_MASK) + carry;
-                dst_p[dst_i] = ((left_word << left_shift)&DIGIT_MASK) |
-                    (right_word >> right_shift);
+                dst_p[dst_i] = ((left_word << left_shift) & DIGIT_MASK) |
+                               (right_word >> right_shift);
                 carry = left_word >> BITS_PER_DIGIT;
                 right_word = left_word & DIGIT_MASK;
             }
             left_word = (src_i < ndigits) ?
-                (digit[src_i] ^ DIGIT_MASK) + carry : carry;
+                            (digit[src_i] ^ DIGIT_MASK) + carry :
+                            carry;
             mask = ~(~1U << high_i) & DIGIT_MASK;
-            dst_p[dst_i] = ((left_word << left_shift) |
-                (right_word >> right_shift)) & mask;
+            dst_p[dst_i] =
+                ((left_word << left_shift) | (right_word >> right_shift)) &
+                mask;
         }
         break;
 
-      // VALUE IS ZERO:
-      default:
+    // VALUE IS ZERO:
+    default:
         result = false;
         // ALL DATA TO BE MOVED IS IN A SINGLE WORD:
         if (dst_i == end_i) {
             mask = ~(~0U << nbits) << left_shift;
             dst_p[dst_i] = dst_p[dst_i] & ~mask;
 
-        // DATA IS IN MORE THAN ONE WORD, BUT IS WORD ALIGNED:
+            // DATA IS IN MORE THAN ONE WORD, BUT IS WORD ALIGNED:
         } else if (left_shift == 0) {
             for (src_i = 0; dst_i < end_i; dst_i++, src_i++) {
                 dst_p[dst_i] = 0;
             }
             dst_p[dst_i] = 0;
 
-        // DATA IS IN MORE THAN ONE WORD, AND NOT WORD ALIGNED:
+            // DATA IS IN MORE THAN ONE WORD, AND NOT WORD ALIGNED:
         } else {
             mask = ~(~0U << left_shift);
             dst_p[dst_i] = (dst_p[dst_i] & mask);
@@ -324,9 +330,9 @@ sc_signed::concat_get_data(sc_digit *dst_p, int low_i) const
 uint64
 sc_signed::concat_get_uint64() const
 {
-    uint64        result;
+    uint64 result;
     switch (sgn) {
-      case SC_POS:
+    case SC_POS:
         result = 0;
         if (ndigits > 2)
             result = digit[2];
@@ -334,7 +340,7 @@ sc_signed::concat_get_uint64() const
             result = (result << BITS_PER_DIGIT) | digit[1];
         result = (result << BITS_PER_DIGIT) | digit[0];
         break;
-      case SC_NEG:
+    case SC_NEG:
         result = 0;
         if (ndigits > 2)
             result = digit[2];
@@ -347,7 +353,7 @@ sc_signed::concat_get_uint64() const
             result = result & ~(mask << nbits);
         }
         break;
-      default:
+    default:
         result = 0;
         break;
     }
@@ -367,7 +373,7 @@ sc_signed::concat_set(const sc_signed &src, int low_i)
     if (low_i < src.length())
         *this = src >> low_i;
     else
-        *this = (src<0) ? (int_type)-1 : 0;
+        *this = (src < 0) ? (int_type)-1 : 0;
 }
 
 void
@@ -393,17 +399,18 @@ bool
 sc_signed::and_reduce() const
 {
     sc_digit current; // Current digit examining.
-    int i; // Index of digit examining.
+    int i;            // Index of digit examining.
 
     if (sgn == SC_NEG) {
         current = (1 << BITS_PER_DIGIT);
-        for (i = 0; i < ndigits-1; i++) {
-            current = (current >> BITS_PER_DIGIT) + (digit[i]^DIGIT_MASK);
-            if ((current & DIGIT_MASK) != DIGIT_MASK) return false;
+        for (i = 0; i < ndigits - 1; i++) {
+            current = (current >> BITS_PER_DIGIT) + (digit[i] ^ DIGIT_MASK);
+            if ((current & DIGIT_MASK) != DIGIT_MASK)
+                return false;
         }
-        current = (current >> BITS_PER_DIGIT) + (digit[i]^DIGIT_MASK);
+        current = (current >> BITS_PER_DIGIT) + (digit[i] ^ DIGIT_MASK);
         if ((current & ~(~0U << (nbits % BITS_PER_DIGIT))) ==
-             static_cast<sc_digit>(~(~0U << (nbits % BITS_PER_DIGIT)))) {
+            static_cast<sc_digit>(~(~0U << (nbits % BITS_PER_DIGIT)))) {
             return true;
         }
     }
@@ -419,7 +426,7 @@ sc_signed::or_reduce() const
 bool
 sc_signed::xor_reduce() const
 {
-    int i; // Digit examining.
+    int i;   // Digit examining.
     int odd; // Flag for odd number of digits.
 
     odd = 0;
@@ -429,8 +436,6 @@ sc_signed::xor_reduce() const
     return odd ? true : false;
 }
 
-
-
 // ----------------------------------------------------------------------------
 //  SECTION: Public members - Assignment operators.
 // ----------------------------------------------------------------------------
@@ -438,23 +443,25 @@ sc_signed::xor_reduce() const
 // assignment operators
 
 const sc_signed &
-sc_signed::operator = (const char *a)
+sc_signed::operator=(const char *a)
 {
     if (a == 0) {
-        SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
-                        "character string is zero");
+        SC_REPORT_ERROR(
+            sc_core::SC_ID_CONVERSION_FAILED_, "character string is zero");
     } else if (*a == 0) {
-        SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
-                        "character string is empty");
-    } else try {
-        int len = length();
-        sc_fix aa(a, len, len, SC_TRN, SC_WRAP, 0, SC_ON);
-        return this->operator = (aa);
-    } catch(const sc_core::sc_report &) {
-        std::stringstream msg;
-        msg << "character string '" << a << "' is not valid";
-        SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_, msg.str().c_str());
-    }
+        SC_REPORT_ERROR(
+            sc_core::SC_ID_CONVERSION_FAILED_, "character string is empty");
+    } else
+        try {
+            int len = length();
+            sc_fix aa(a, len, len, SC_TRN, SC_WRAP, 0, SC_ON);
+            return this->operator=(aa);
+        } catch (const sc_core::sc_report &) {
+            std::stringstream msg;
+            msg << "character string '" << a << "' is not valid";
+            SC_REPORT_ERROR(
+                sc_core::SC_ID_CONVERSION_FAILED_, msg.str().c_str());
+        }
     return *this;
 }
 
@@ -524,13 +531,13 @@ sc_signed::operator=(double v)
         v = -v;
         sgn = SC_NEG;
     } else {
-      sgn = SC_POS;
+        sgn = SC_POS;
     }
 
     int i = 0;
     while (std::floor(v) && (i < ndigits)) {
-        digit[i++] = ((sc_digit)std::floor(remainder(v, DIGIT_RADIX))) &
-                                           DIGIT_MASK;
+        digit[i++] =
+            ((sc_digit)std::floor(remainder(v, DIGIT_RADIX))) & DIGIT_MASK;
         v /= DIGIT_RADIX;
     }
     vec_zero(i, ndigits, digit);
@@ -538,11 +545,10 @@ sc_signed::operator=(double v)
     return *this;
 }
 
-
 // ----------------------------------------------------------------------------
 
 const sc_signed &
-sc_signed::operator = (const sc_bv_base &v)
+sc_signed::operator=(const sc_bv_base &v)
 {
     int minlen = sc_min(nbits, v.length());
     int i = 0;
@@ -557,7 +563,7 @@ sc_signed::operator = (const sc_bv_base &v)
 }
 
 const sc_signed &
-sc_signed::operator = (const sc_lv_base &v)
+sc_signed::operator=(const sc_lv_base &v)
 {
     int minlen = sc_min(nbits, v.length());
     int i = 0;
@@ -565,12 +571,11 @@ sc_signed::operator = (const sc_lv_base &v)
         safe_set(i, sc_logic(v.get_bit(i)).to_bool(), digit);
     }
     for (; i < nbits; ++i) {
-        safe_set(i, 0, digit);  // zero-extend
+        safe_set(i, 0, digit); // zero-extend
     }
     convert_2C_to_SM();
     return *this;
 }
-
 
 // explicit conversion to character string
 const std::string
@@ -589,648 +594,613 @@ sc_signed::to_string(sc_numrep numrep, bool w_prefix) const
     return aa.to_string(numrep, w_prefix);
 }
 
-
 // ----------------------------------------------------------------------------
 //  SECTION: Interfacing with sc_int_base
 // ----------------------------------------------------------------------------
 
 const sc_signed &
-sc_signed::operator = (const sc_int_base &v)
+sc_signed::operator=(const sc_int_base &v)
 {
-    return operator = ((int64)v);
-}
-
-
-sc_signed
-operator + (const sc_unsigned &u, const sc_int_base &v)
-{
-    return operator + (u, static_cast<int64>(v));
+    return operator=((int64)v);
 }
 
 sc_signed
-operator + (const sc_int_base &u, const sc_unsigned &v)
+operator+(const sc_unsigned &u, const sc_int_base &v)
 {
-    return operator + (static_cast<int64>(u), v);
+    return operator+(u, static_cast<int64>(v));
 }
 
 sc_signed
-operator + (const sc_signed &u, const sc_int_base &v)
+operator+(const sc_int_base &u, const sc_unsigned &v)
 {
-    return operator + (u, (int64)v);
+    return operator+(static_cast<int64>(u), v);
 }
 
 sc_signed
-operator + (const sc_int_base &u, const sc_signed &v)
+operator+(const sc_signed &u, const sc_int_base &v)
 {
-    return operator + ((int64)u, v);
+    return operator+(u, (int64)v);
+}
+
+sc_signed
+operator+(const sc_int_base &u, const sc_signed &v)
+{
+    return operator+((int64)u, v);
 }
 
 const sc_signed &
-sc_signed::operator += (const sc_int_base &v)
+sc_signed::operator+=(const sc_int_base &v)
 {
-    return operator += ((int64)v);
-}
-
-
-sc_signed
-operator - (const sc_unsigned &u, const sc_int_base &v)
-{
-    return operator - (u, (int64)v);
+    return operator+=((int64)v);
 }
 
 sc_signed
-operator - (const sc_int_base &u, const sc_unsigned &v)
+operator-(const sc_unsigned &u, const sc_int_base &v)
 {
-    return operator - ((int64)u, v);
+    return operator-(u, (int64)v);
 }
 
 sc_signed
-operator - (const sc_signed &u, const sc_int_base &v)
+operator-(const sc_int_base &u, const sc_unsigned &v)
 {
-    return operator - (u, (int64)v);
+    return operator-((int64)u, v);
 }
 
 sc_signed
-operator - (const sc_int_base &u, const sc_signed &v)
+operator-(const sc_signed &u, const sc_int_base &v)
 {
-    return operator - ((int64)u, v);
+    return operator-(u, (int64)v);
+}
+
+sc_signed
+operator-(const sc_int_base &u, const sc_signed &v)
+{
+    return operator-((int64)u, v);
 }
 
 const sc_signed &
-sc_signed::operator -= (const sc_int_base &v)
+sc_signed::operator-=(const sc_int_base &v)
 {
-    return operator -= ((int64)v);
-}
-
-
-sc_signed
-operator * (const sc_unsigned &u, const sc_int_base &v)
-{
-    return operator * (u, static_cast<int64>(v));
+    return operator-=((int64)v);
 }
 
 sc_signed
-operator * (const sc_int_base &u, const sc_unsigned &v)
+operator*(const sc_unsigned &u, const sc_int_base &v)
 {
-    return operator * (static_cast<int64>(u), v);
+    return operator*(u, static_cast<int64>(v));
 }
 
 sc_signed
-operator * (const sc_signed &u, const sc_int_base &v)
+operator*(const sc_int_base &u, const sc_unsigned &v)
 {
-    return operator * (u, (int64)v);
+    return operator*(static_cast<int64>(u), v);
 }
 
 sc_signed
-operator * (const sc_int_base &u, const sc_signed &v)
+operator*(const sc_signed &u, const sc_int_base &v)
 {
-    return operator * ((int64)u, v);
+    return operator*(u, (int64)v);
+}
+
+sc_signed
+operator*(const sc_int_base &u, const sc_signed &v)
+{
+    return operator*((int64)u, v);
 }
 
 const sc_signed &
-sc_signed::operator *= (const sc_int_base &v)
+sc_signed::operator*=(const sc_int_base &v)
 {
-    return operator *= ((int64)v);
-}
-
-
-sc_signed
-operator / (const sc_unsigned &u, const sc_int_base &v)
-{
-    return operator / (u, static_cast<int64>(v));
+    return operator*=((int64)v);
 }
 
 sc_signed
-operator / (const sc_int_base &u, const sc_unsigned &v)
+operator/(const sc_unsigned &u, const sc_int_base &v)
 {
-    return operator / (static_cast<int64>(u), v);
+    return operator/(u, static_cast<int64>(v));
 }
 
 sc_signed
-operator / (const sc_signed &u, const sc_int_base &v)
+operator/(const sc_int_base &u, const sc_unsigned &v)
 {
-    return operator / (u, (int64)v);
+    return operator/(static_cast<int64>(u), v);
 }
 
 sc_signed
-operator / (const sc_int_base &u, const sc_signed &v)
+operator/(const sc_signed &u, const sc_int_base &v)
 {
-    return operator / ((int64)u, v);
+    return operator/(u, (int64)v);
+}
+
+sc_signed
+operator/(const sc_int_base &u, const sc_signed &v)
+{
+    return operator/((int64)u, v);
 }
 
 const sc_signed &
-sc_signed::operator /= (const sc_int_base &v)
+sc_signed::operator/=(const sc_int_base &v)
 {
-    return operator /= ((int64)v);
-}
-
-
-sc_signed
-operator % (const sc_unsigned &u, const sc_int_base &v)
-{
-    return operator % (u, static_cast<int64>(v));
+    return operator/=((int64)v);
 }
 
 sc_signed
-operator % (const sc_int_base &u, const sc_unsigned &v)
+operator%(const sc_unsigned &u, const sc_int_base &v)
 {
-    return operator % (static_cast<int64>(u), v);
+    return operator%(u, static_cast<int64>(v));
 }
 
 sc_signed
-operator % (const sc_signed &u, const sc_int_base &v)
+operator%(const sc_int_base &u, const sc_unsigned &v)
 {
-    return operator % (u, (int64)v);
+    return operator%(static_cast<int64>(u), v);
 }
 
 sc_signed
-operator % (const sc_int_base &u, const sc_signed &v)
+operator%(const sc_signed &u, const sc_int_base &v)
 {
-    return operator % ((int64)u, v);
+    return operator%(u, (int64)v);
+}
+
+sc_signed
+operator%(const sc_int_base &u, const sc_signed &v)
+{
+    return operator%((int64)u, v);
 }
 
 const sc_signed &
-sc_signed::operator %= (const sc_int_base &v)
+sc_signed::operator%=(const sc_int_base &v)
 {
-    return operator %= ((int64)v);
-}
-
-
-sc_signed
-operator & (const sc_unsigned &u, const sc_int_base &v)
-{
-    return operator & (u, static_cast<int64>(v));
+    return operator%=((int64)v);
 }
 
 sc_signed
-operator & (const sc_int_base &u, const sc_unsigned &v)
+operator&(const sc_unsigned &u, const sc_int_base &v)
 {
-    return operator & (static_cast<int64>(u), v);
+    return operator&(u, static_cast<int64>(v));
 }
 
 sc_signed
-operator & (const sc_signed &u, const sc_int_base &v)
+operator&(const sc_int_base &u, const sc_unsigned &v)
 {
-    return operator & (u, (int64)v);
+    return operator&(static_cast<int64>(u), v);
 }
 
 sc_signed
-operator & (const sc_int_base &u, const sc_signed &v)
+operator&(const sc_signed &u, const sc_int_base &v)
 {
-    return operator & ((int64)u, v);
+    return operator&(u, (int64)v);
+}
+
+sc_signed
+operator&(const sc_int_base &u, const sc_signed &v)
+{
+    return operator&((int64)u, v);
 }
 
 const sc_signed &
-sc_signed::operator &= (const sc_int_base &v)
+sc_signed::operator&=(const sc_int_base &v)
 {
-    return operator &= ((int64)v);
-}
-
-
-sc_signed
-operator | (const sc_unsigned &u, const sc_int_base &v)
-{
-    return operator | (u, static_cast<int64>(v));
+    return operator&=((int64)v);
 }
 
 sc_signed
-operator | (const sc_int_base &u, const sc_unsigned &v)
+operator|(const sc_unsigned &u, const sc_int_base &v)
 {
-    return operator | (static_cast<int64>(u), v);
+    return operator|(u, static_cast<int64>(v));
 }
 
 sc_signed
-operator | (const sc_signed& u, const sc_int_base &v)
+operator|(const sc_int_base &u, const sc_unsigned &v)
+{
+    return operator|(static_cast<int64>(u), v);
+}
+
+sc_signed
+operator|(const sc_signed &u, const sc_int_base &v)
 {
     return operator|(u, (int64)v);
 }
 
 sc_signed
-operator | (const sc_int_base &u, const sc_signed &v)
+operator|(const sc_int_base &u, const sc_signed &v)
 {
-    return operator | ((int64)u, v);
+    return operator|((int64)u, v);
 }
 
 const sc_signed &
-sc_signed::operator |= (const sc_int_base &v)
+sc_signed::operator|=(const sc_int_base &v)
 {
-    return operator |= ((int64)v);
-}
-
-
-sc_signed
-operator ^ (const sc_unsigned &u, const sc_int_base &v)
-{
-    return operator ^ (u, static_cast<int64>(v));
+    return operator|=((int64)v);
 }
 
 sc_signed
-operator ^ (const sc_int_base &u, const sc_unsigned &v)
+operator^(const sc_unsigned &u, const sc_int_base &v)
 {
-    return operator ^ (static_cast<int64>(u), v);
+    return operator^(u, static_cast<int64>(v));
 }
 
 sc_signed
-operator ^ (const sc_signed &u, const sc_int_base &v)
+operator^(const sc_int_base &u, const sc_unsigned &v)
 {
-    return operator ^ (u, (int64)v);
+    return operator^(static_cast<int64>(u), v);
 }
 
 sc_signed
-operator ^ (const sc_int_base &u, const sc_signed &v)
+operator^(const sc_signed &u, const sc_int_base &v)
 {
-    return operator ^ ((int64)u, v);
+    return operator^(u, (int64)v);
+}
+
+sc_signed
+operator^(const sc_int_base &u, const sc_signed &v)
+{
+    return operator^((int64)u, v);
 }
 
 const sc_signed &
-sc_signed::operator ^= (const sc_int_base &v)
+sc_signed::operator^=(const sc_int_base &v)
 {
-    return operator ^= ((int64)v);
+    return operator^=((int64)v);
 }
 
-
 sc_signed
-operator << (const sc_signed &u, const sc_int_base &v)
+operator<<(const sc_signed &u, const sc_int_base &v)
 {
-    return operator << (u, (int64)v);
+    return operator<<(u, (int64)v);
 }
 
 const sc_signed &
-sc_signed::operator <<= (const sc_int_base &v)
+sc_signed::operator<<=(const sc_int_base &v)
 {
-    return operator <<= ((int64)v);
+    return operator<<=((int64)v);
 }
 
-
 sc_signed
-operator >> (const sc_signed &u, const sc_int_base &v)
+operator>>(const sc_signed &u, const sc_int_base &v)
 {
-    return operator >> (u, (int64)v);
+    return operator>>(u, (int64)v);
 }
 
 const sc_signed &
-sc_signed::operator >>= (const sc_int_base &v)
+sc_signed::operator>>=(const sc_int_base &v)
 {
-    return operator >>= ((int64)v);
-}
-
-
-bool
-operator == (const sc_signed &u, const sc_int_base &v)
-{
-    return operator == (u, (int64)v);
+    return operator>>=((int64)v);
 }
 
 bool
-operator == (const sc_int_base &u, const sc_signed &v)
+operator==(const sc_signed &u, const sc_int_base &v)
 {
-    return operator == ((int64)u, v);
-}
-
-
-bool
-operator != (const sc_signed &u, const sc_int_base &v)
-{
-    return operator != (u, (int64)v);
+    return operator==(u, (int64)v);
 }
 
 bool
-operator != (const sc_int_base &u, const sc_signed &v)
+operator==(const sc_int_base &u, const sc_signed &v)
 {
-    return operator != ((int64)u, v);
-}
-
-
-bool
-operator < (const sc_signed &u, const sc_int_base &v)
-{
-    return operator < (u, (int64)v);
+    return operator==((int64)u, v);
 }
 
 bool
-operator  <  (const sc_int_base &u, const sc_signed &v)
+operator!=(const sc_signed &u, const sc_int_base &v)
 {
-    return operator < ((int64)u, v);
-}
-
-
-bool
-operator  <=  (const sc_signed &u, const sc_int_base &v)
-{
-    return operator <= (u, (int64)v);
+    return operator!=(u, (int64)v);
 }
 
 bool
-operator  <=  (const sc_int_base &u, const sc_signed &v)
+operator!=(const sc_int_base &u, const sc_signed &v)
 {
-    return operator <= ((int64)u, v);
-}
-
-
-bool
-operator  >  (const sc_signed &u, const sc_int_base &v)
-{
-    return operator > (u, (int64)v);
+    return operator!=((int64)u, v);
 }
 
 bool
-operator  >  (const sc_int_base &u, const sc_signed &v)
+operator<(const sc_signed &u, const sc_int_base &v)
 {
-    return operator > ((int64)u, v);
-}
-
-
-bool
-operator  >=  (const sc_signed &u, const sc_int_base &v)
-{
-    return operator >= (u, (int64)v);
+    return operator<(u, (int64)v);
 }
 
 bool
-operator  >=  (const sc_int_base &u, const sc_signed &v)
+operator<(const sc_int_base &u, const sc_signed &v)
 {
-    return operator >= ((int64)u, v);
+    return operator<((int64)u, v);
 }
 
+bool
+operator<=(const sc_signed &u, const sc_int_base &v)
+{
+    return operator<=(u, (int64)v);
+}
+
+bool
+operator<=(const sc_int_base &u, const sc_signed &v)
+{
+    return operator<=((int64)u, v);
+}
+
+bool
+operator>(const sc_signed &u, const sc_int_base &v)
+{
+    return operator>(u, (int64)v);
+}
+
+bool
+operator>(const sc_int_base &u, const sc_signed &v)
+{
+    return operator>((int64)u, v);
+}
+
+bool
+operator>=(const sc_signed &u, const sc_int_base &v)
+{
+    return operator>=(u, (int64)v);
+}
+
+bool
+operator>=(const sc_int_base &u, const sc_signed &v)
+{
+    return operator>=((int64)u, v);
+}
 
 // ----------------------------------------------------------------------------
 //  SECTION: Interfacing with sc_uint_base
 // ----------------------------------------------------------------------------
 
 const sc_signed &
-sc_signed::operator = (const sc_uint_base &v)
+sc_signed::operator=(const sc_uint_base &v)
 {
-    return operator = ((uint64)v);
-}
-
-
-sc_signed
-operator + (const sc_signed &u, const sc_uint_base &v)
-{
-    return operator + (u, (uint64)v);
+    return operator=((uint64)v);
 }
 
 sc_signed
-operator + (const sc_uint_base &u, const sc_signed &v)
+operator+(const sc_signed &u, const sc_uint_base &v)
 {
-    return operator + ((uint64)u, v);
+    return operator+(u, (uint64)v);
+}
+
+sc_signed
+operator+(const sc_uint_base &u, const sc_signed &v)
+{
+    return operator+((uint64)u, v);
 }
 
 const sc_signed &
-sc_signed::operator += (const sc_uint_base &v)
+sc_signed::operator+=(const sc_uint_base &v)
 {
-    return operator += ((uint64)v);
-}
-
-
-sc_signed
-operator - (const sc_unsigned &u, const sc_uint_base &v)
-{
-    return operator - (u, (uint64)v);
+    return operator+=((uint64)v);
 }
 
 sc_signed
-operator - (const sc_uint_base &u, const sc_unsigned &v)
+operator-(const sc_unsigned &u, const sc_uint_base &v)
 {
-    return operator - ((uint64)u, v);
+    return operator-(u, (uint64)v);
 }
 
 sc_signed
-operator - (const sc_signed &u, const sc_uint_base &v)
+operator-(const sc_uint_base &u, const sc_unsigned &v)
 {
-    return operator - (u, (uint64)v);
+    return operator-((uint64)u, v);
 }
 
 sc_signed
-operator - (const sc_uint_base &u, const sc_signed &v)
+operator-(const sc_signed &u, const sc_uint_base &v)
 {
-    return operator - ((uint64)u, v);
+    return operator-(u, (uint64)v);
+}
+
+sc_signed
+operator-(const sc_uint_base &u, const sc_signed &v)
+{
+    return operator-((uint64)u, v);
 }
 
 const sc_signed &
-sc_signed::operator -= (const sc_uint_base &v)
+sc_signed::operator-=(const sc_uint_base &v)
 {
-    return operator -= ((uint64)v);
-}
-
-
-sc_signed
-operator * (const sc_signed &u, const sc_uint_base &v)
-{
-    return operator * (u, (uint64)v);
+    return operator-=((uint64)v);
 }
 
 sc_signed
-operator * (const sc_uint_base &u, const sc_signed &v)
+operator*(const sc_signed &u, const sc_uint_base &v)
 {
-    return operator * ((uint64)u, v);
+    return operator*(u, (uint64)v);
+}
+
+sc_signed
+operator*(const sc_uint_base &u, const sc_signed &v)
+{
+    return operator*((uint64)u, v);
 }
 
 const sc_signed &
-sc_signed::operator *= (const sc_uint_base &v)
+sc_signed::operator*=(const sc_uint_base &v)
 {
-    return operator *= ((uint64)v);
-}
-
-
-sc_signed
-operator / (const sc_signed &u, const sc_uint_base &v)
-{
-    return operator / (u, (uint64)v);
+    return operator*=((uint64)v);
 }
 
 sc_signed
-operator / (const sc_uint_base &u, const sc_signed &v)
+operator/(const sc_signed &u, const sc_uint_base &v)
 {
-    return operator / ((uint64)u, v);
+    return operator/(u, (uint64)v);
+}
+
+sc_signed
+operator/(const sc_uint_base &u, const sc_signed &v)
+{
+    return operator/((uint64)u, v);
 }
 
 const sc_signed &
-sc_signed::operator /= (const sc_uint_base &v)
+sc_signed::operator/=(const sc_uint_base &v)
 {
-    return operator /= ((uint64)v);
-}
-
-
-sc_signed
-operator % (const sc_signed &u, const sc_uint_base &v)
-{
-    return operator % (u, (uint64)v);
+    return operator/=((uint64)v);
 }
 
 sc_signed
-operator % (const sc_uint_base &u, const sc_signed &v)
+operator%(const sc_signed &u, const sc_uint_base &v)
 {
-    return operator % ((uint64)u, v);
-}
-
-const sc_signed&
-sc_signed::operator %= (const sc_uint_base &v)
-{
-    return operator %= ((uint64)v);
-}
-
-
-sc_signed
-operator & (const sc_signed &u, const sc_uint_base &v)
-{
-    return operator & (u, (uint64)v);
+    return operator%(u, (uint64)v);
 }
 
 sc_signed
-operator & (const sc_uint_base &u, const sc_signed &v)
+operator%(const sc_uint_base &u, const sc_signed &v)
 {
-    return operator & ((uint64)u, v);
+    return operator%((uint64)u, v);
 }
 
 const sc_signed &
-sc_signed::operator &= (const sc_uint_base &v)
+sc_signed::operator%=(const sc_uint_base &v)
 {
-    return operator &= ((uint64)v);
-}
-
-
-sc_signed
-operator | (const sc_signed &u, const sc_uint_base &v)
-{
-    return operator | (u, (uint64)v);
+    return operator%=((uint64)v);
 }
 
 sc_signed
-operator | (const sc_uint_base &u, const sc_signed &v)
+operator&(const sc_signed &u, const sc_uint_base &v)
 {
-    return operator | ((uint64)u, v);
+    return operator&(u, (uint64)v);
+}
+
+sc_signed
+operator&(const sc_uint_base &u, const sc_signed &v)
+{
+    return operator&((uint64)u, v);
 }
 
 const sc_signed &
-sc_signed::operator |= (const sc_uint_base &v)
+sc_signed::operator&=(const sc_uint_base &v)
 {
-    return operator |= ((uint64)v);
-}
-
-
-sc_signed
-operator ^ (const sc_signed &u, const sc_uint_base &v)
-{
-    return operator ^ (u, (uint64)v);
+    return operator&=((uint64)v);
 }
 
 sc_signed
-operator ^ (const sc_uint_base &u, const sc_signed &v)
+operator|(const sc_signed &u, const sc_uint_base &v)
 {
-    return operator ^ ((uint64)u, v);
+    return operator|(u, (uint64)v);
+}
+
+sc_signed
+operator|(const sc_uint_base &u, const sc_signed &v)
+{
+    return operator|((uint64)u, v);
 }
 
 const sc_signed &
-sc_signed::operator ^= (const sc_uint_base &v)
+sc_signed::operator|=(const sc_uint_base &v)
 {
-    return operator ^= ((uint64)v);
+    return operator|=((uint64)v);
 }
 
+sc_signed
+operator^(const sc_signed &u, const sc_uint_base &v)
+{
+    return operator^(u, (uint64)v);
+}
 
 sc_signed
-operator << (const sc_signed &u, const sc_uint_base &v)
+operator^(const sc_uint_base &u, const sc_signed &v)
 {
-    return operator << (u, (uint64)v);
+    return operator^((uint64)u, v);
 }
 
 const sc_signed &
-sc_signed::operator <<= (const sc_uint_base &v)
+sc_signed::operator^=(const sc_uint_base &v)
 {
-    return operator <<= ((uint64)v);
+    return operator^=((uint64)v);
 }
 
-
 sc_signed
-operator >> (const sc_signed& u, const sc_uint_base& v)
+operator<<(const sc_signed &u, const sc_uint_base &v)
 {
-    return operator >> (u, (uint64)v);
+    return operator<<(u, (uint64)v);
 }
 
 const sc_signed &
-sc_signed::operator >>= (const sc_uint_base& v)
+sc_signed::operator<<=(const sc_uint_base &v)
 {
-    return operator >>= ((uint64)v);
+    return operator<<=((uint64)v);
 }
 
-
-bool
-operator == (const sc_signed &u, const sc_uint_base &v)
+sc_signed
+operator>>(const sc_signed &u, const sc_uint_base &v)
 {
-    return operator == (u, (uint64)v);
+    return operator>>(u, (uint64)v);
 }
 
-bool
-operator == (const sc_uint_base &u, const sc_signed &v)
+const sc_signed &
+sc_signed::operator>>=(const sc_uint_base &v)
 {
-    return operator == ((uint64)u, v);
-}
-
-
-bool
-operator != (const sc_signed &u, const sc_uint_base &v)
-{
-    return operator != (u, (uint64)v);
+    return operator>>=((uint64)v);
 }
 
 bool
-operator != (const sc_uint_base &u, const sc_signed &v)
+operator==(const sc_signed &u, const sc_uint_base &v)
 {
-    return operator != ((uint64)u, v);
-}
-
-
-bool
-operator < (const sc_signed &u, const sc_uint_base &v)
-{
-    return operator < (u, (uint64)v);
+    return operator==(u, (uint64)v);
 }
 
 bool
-operator < (const sc_uint_base &u, const sc_signed &v)
+operator==(const sc_uint_base &u, const sc_signed &v)
 {
-    return operator < ((uint64)u, v);
-}
-
-
-bool
-operator <= (const sc_signed &u, const sc_uint_base &v)
-{
-    return operator <= (u, (uint64)v);
+    return operator==((uint64)u, v);
 }
 
 bool
-operator <= (const sc_uint_base &u, const sc_signed &v)
+operator!=(const sc_signed &u, const sc_uint_base &v)
 {
-    return operator <= ((uint64)u, v);
-}
-
-
-bool
-operator > (const sc_signed &u, const sc_uint_base &v)
-{
-    return operator > (u, (uint64)v);
+    return operator!=(u, (uint64)v);
 }
 
 bool
-operator > (const sc_uint_base &u, const sc_signed &v)
+operator!=(const sc_uint_base &u, const sc_signed &v)
 {
-    return operator > ((uint64)u, v);
-}
-
-
-bool
-operator >= (const sc_signed &u, const sc_uint_base &v)
-{
-    return operator >= (u, (uint64)v);
+    return operator!=((uint64)u, v);
 }
 
 bool
-operator >= (const sc_uint_base &u, const sc_signed &v)
+operator<(const sc_signed &u, const sc_uint_base &v)
 {
-    return operator >= ((uint64)u, v);
+    return operator<(u, (uint64)v);
 }
 
+bool
+operator<(const sc_uint_base &u, const sc_signed &v)
+{
+    return operator<((uint64)u, v);
+}
+
+bool
+operator<=(const sc_signed &u, const sc_uint_base &v)
+{
+    return operator<=(u, (uint64)v);
+}
+
+bool
+operator<=(const sc_uint_base &u, const sc_signed &v)
+{
+    return operator<=((uint64)u, v);
+}
+
+bool
+operator>(const sc_signed &u, const sc_uint_base &v)
+{
+    return operator>(u, (uint64)v);
+}
+
+bool
+operator>(const sc_uint_base &u, const sc_signed &v)
+{
+    return operator>((uint64)u, v);
+}
+
+bool
+operator>=(const sc_signed &u, const sc_uint_base &v)
+{
+    return operator>=(u, (uint64)v);
+}
+
+bool
+operator>=(const sc_uint_base &u, const sc_signed &v)
+{
+    return operator>=((uint64)u, v);
+}
 
 // ----------------------------------------------------------------------------
 //  SECTION: Input and output operators
@@ -1238,38 +1208,36 @@ operator >= (const sc_uint_base &u, const sc_signed &v)
 
 // Operators in this section are included from sc_nbcommon.cpp.
 
-
 // ----------------------------------------------------------------------------
 //  SECTION: Operator macros.
 // ----------------------------------------------------------------------------
 
 #define CONVERT_LONG(u) \
-small_type u ## s = get_sign(u); \
-sc_digit u ## d[DIGITS_PER_ULONG]; \
-from_uint(DIGITS_PER_ULONG, u ## d, (unsigned long) u);
+    small_type u##s = get_sign(u); \
+    sc_digit u##d[DIGITS_PER_ULONG]; \
+    from_uint(DIGITS_PER_ULONG, u##d, (unsigned long)u);
 
 #define CONVERT_LONG_2(u) \
-sc_digit u ## d[DIGITS_PER_ULONG]; \
-from_uint(DIGITS_PER_ULONG, u ## d, (unsigned long) u);
+    sc_digit u##d[DIGITS_PER_ULONG]; \
+    from_uint(DIGITS_PER_ULONG, u##d, (unsigned long)u);
 
 #define CONVERT_INT(u) \
-small_type u ## s = get_sign(u); \
-sc_digit u ## d[DIGITS_PER_UINT]; \
-from_uint(DIGITS_PER_UINT, u ## d, (unsigned int) u);
+    small_type u##s = get_sign(u); \
+    sc_digit u##d[DIGITS_PER_UINT]; \
+    from_uint(DIGITS_PER_UINT, u##d, (unsigned int)u);
 
 #define CONVERT_INT_2(u) \
-sc_digit u ## d[DIGITS_PER_UINT]; \
-from_uint(DIGITS_PER_UINT, u ## d, (unsigned int) u);
+    sc_digit u##d[DIGITS_PER_UINT]; \
+    from_uint(DIGITS_PER_UINT, u##d, (unsigned int)u);
 
 #define CONVERT_INT64(u) \
-small_type u ## s = get_sign(u); \
-sc_digit u ## d[DIGITS_PER_UINT64]; \
-from_uint(DIGITS_PER_UINT64, u ## d, (uint64) u);
+    small_type u##s = get_sign(u); \
+    sc_digit u##d[DIGITS_PER_UINT64]; \
+    from_uint(DIGITS_PER_UINT64, u##d, (uint64)u);
 
 #define CONVERT_INT64_2(u) \
-sc_digit u ## d[DIGITS_PER_UINT64]; \
-from_uint(DIGITS_PER_UINT64, u ## d, (uint64) u);
-
+    sc_digit u##d[DIGITS_PER_UINT64]; \
+    from_uint(DIGITS_PER_UINT64, u##d, (uint64)u);
 
 // ----------------------------------------------------------------------------
 //  SECTION: PLUS operators: +, +=, ++
@@ -1291,7 +1259,7 @@ from_uint(DIGITS_PER_UINT64, u ## d, (uint64) u);
 // 4. (-u) + 1 = -(u - 1) = sgn(u) * (u - 1)
 
 sc_signed
-operator + (const sc_unsigned &u, const sc_signed &v)
+operator+(const sc_unsigned &u, const sc_signed &v)
 {
     if (u.sgn == SC_ZERO) // case 1
         return sc_signed(v);
@@ -1300,13 +1268,12 @@ operator + (const sc_unsigned &u, const sc_signed &v)
         return sc_signed(u);
 
     // cases 3 and 4
-    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             v.sgn, v.nbits, v.ndigits, v.digit);
+    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator + (const sc_signed &u, const sc_unsigned &v)
+operator+(const sc_signed &u, const sc_unsigned &v)
 {
     if (u.sgn == SC_ZERO) // case 1
         return sc_signed(v);
@@ -1315,13 +1282,12 @@ operator + (const sc_signed &u, const sc_unsigned &v)
         return sc_signed(u);
 
     // cases 3 and 4
-    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             v.sgn, v.nbits, v.ndigits, v.digit);
+    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator + (const sc_signed &u, const sc_signed &v)
+operator+(const sc_signed &u, const sc_signed &v)
 {
     if (u.sgn == SC_ZERO) // case 1
         return sc_signed(v);
@@ -1330,13 +1296,12 @@ operator + (const sc_signed &u, const sc_signed &v)
         return sc_signed(u);
 
     // cases 3 and 4
-    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             v.sgn, v.nbits, v.ndigits, v.digit);
+    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator + (const sc_signed &u, int64 v)
+operator+(const sc_signed &u, int64 v)
 {
     if (v == 0) // case 2
         return sc_signed(u);
@@ -1347,13 +1312,12 @@ operator + (const sc_signed &u, int64 v)
         return sc_signed(vs, BITS_PER_UINT64, DIGITS_PER_UINT64, vd, false);
 
     // cases 3 and 4
-    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             vs, BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
+    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, vs,
+        BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
 }
 
-
 sc_signed
-operator + (int64 u, const sc_signed &v)
+operator+(int64 u, const sc_signed &v)
 {
     if (u == 0) // case 1
         return sc_signed(v);
@@ -1364,13 +1328,12 @@ operator + (int64 u, const sc_signed &v)
         return sc_signed(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud, false);
 
     // cases 3 and 4
-    return add_signed_friend(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud,
-                             v.sgn, v.nbits, v.ndigits, v.digit);
+    return add_signed_friend(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud, v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator + (const sc_unsigned &u, int64 v)
+operator+(const sc_unsigned &u, int64 v)
 {
     if (v == 0) // case 2
         return sc_signed(u);
@@ -1381,13 +1344,12 @@ operator + (const sc_unsigned &u, int64 v)
         return sc_signed(vs, BITS_PER_UINT64, DIGITS_PER_UINT64, vd, false);
 
     // cases 3 and 4
-    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             vs, BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
+    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, vs,
+        BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
 }
 
-
 sc_signed
-operator + (int64 u, const sc_unsigned &v)
+operator+(int64 u, const sc_unsigned &v)
 {
     if (u == 0) // case 1
         return sc_signed(v);
@@ -1398,13 +1360,12 @@ operator + (int64 u, const sc_unsigned &v)
         return sc_signed(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud, false);
 
     // cases 3 and 4
-    return add_signed_friend(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud,
-                             v.sgn, v.nbits, v.ndigits, v.digit);
+    return add_signed_friend(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud, v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator + (const sc_signed &u, uint64 v)
+operator+(const sc_signed &u, uint64 v)
 {
     if (v == 0) // case 2
         return sc_signed(u);
@@ -1415,13 +1376,12 @@ operator + (const sc_signed &u, uint64 v)
         return sc_signed(vs, BITS_PER_UINT64, DIGITS_PER_UINT64, vd, false);
 
     // cases 3 and 4
-    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             vs, BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
+    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, vs,
+        BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
 }
 
-
 sc_signed
-operator + (uint64 u, const sc_signed &v)
+operator+(uint64 u, const sc_signed &v)
 {
     if (u == 0) // case 1
         return sc_signed(v);
@@ -1432,13 +1392,12 @@ operator + (uint64 u, const sc_signed &v)
         return sc_signed(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud, false);
 
     // cases 3 and 4
-    return add_signed_friend(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud,
-                             v.sgn, v.nbits, v.ndigits, v.digit);
+    return add_signed_friend(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud, v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator + (const sc_signed &u, long v)
+operator+(const sc_signed &u, long v)
 {
     if (v == 0) // case 2
         return sc_signed(u);
@@ -1449,13 +1408,12 @@ operator + (const sc_signed &u, long v)
         return sc_signed(vs, BITS_PER_ULONG, DIGITS_PER_ULONG, vd, false);
 
     // cases 3 and 4
-    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             vs, BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
+    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, vs,
+        BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
 }
 
-
 sc_signed
-operator + (long u, const sc_signed &v)
+operator+(long u, const sc_signed &v)
 {
     if (u == 0) // case 1
         return sc_signed(v);
@@ -1466,13 +1424,12 @@ operator + (long u, const sc_signed &v)
         return sc_signed(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, false);
 
     // cases 3 and 4
-    return add_signed_friend(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud,
-                             v.sgn, v.nbits, v.ndigits, v.digit);
+    return add_signed_friend(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator + (const sc_unsigned &u, long v)
+operator+(const sc_unsigned &u, long v)
 {
     if (v == 0) // case 2
         return sc_signed(u);
@@ -1483,13 +1440,12 @@ operator + (const sc_unsigned &u, long v)
         return sc_signed(vs, BITS_PER_ULONG, DIGITS_PER_ULONG, vd, false);
 
     // cases 3 and 4
-    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             vs, BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
+    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, vs,
+        BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
 }
 
-
 sc_signed
-operator + (long u, const sc_unsigned &v)
+operator+(long u, const sc_unsigned &v)
 {
     if (u == 0) // case 1
         return sc_signed(v);
@@ -1500,13 +1456,12 @@ operator + (long u, const sc_unsigned &v)
         return sc_signed(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, false);
 
     // cases 3 and 4
-    return add_signed_friend(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud,
-                             v.sgn, v.nbits, v.ndigits, v.digit);
+    return add_signed_friend(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator + (const sc_signed &u, unsigned long v)
+operator+(const sc_signed &u, unsigned long v)
 {
     if (v == 0) // case 2
         return sc_signed(u);
@@ -1517,25 +1472,24 @@ operator + (const sc_signed &u, unsigned long v)
         return sc_signed(vs, BITS_PER_ULONG, DIGITS_PER_ULONG, vd, false);
 
     // cases 3 and 4
-    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             vs, BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
+    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, vs,
+        BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
 }
 
-
 sc_signed
-operator + (unsigned long u, const sc_signed &v)
+operator+(unsigned long u, const sc_signed &v)
 {
     if (u == 0) // case 1
         return sc_signed(v);
 
     CONVERT_LONG(u);
 
-    if (v.sgn == SC_ZERO)  // case 2
+    if (v.sgn == SC_ZERO) // case 2
         return sc_signed(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, false);
 
     // cases 3 and 4
-    return add_signed_friend(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud,
-                             v.sgn, v.nbits, v.ndigits, v.digit);
+    return add_signed_friend(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
 // The rest of the operators in this section are included from
@@ -1561,22 +1515,7 @@ operator + (unsigned long u, const sc_signed &v)
 // 4. u - 1 = u - 1 = sgn(u) * (u - 1)
 
 sc_signed
-operator - (const sc_unsigned &u, const sc_unsigned &v)
-{
-    if (v.sgn == SC_ZERO)  // case 1
-        return sc_signed(u);
-
-    if (u.sgn == SC_ZERO) // case 2
-        return sc_signed(v, -v.sgn);
-
-    // cases 3 and 4
-    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             -v.sgn, v.nbits, v.ndigits, v.digit);
-}
-
-
-sc_signed
-operator - (const sc_unsigned &u, const sc_signed &v)
+operator-(const sc_unsigned &u, const sc_unsigned &v)
 {
     if (v.sgn == SC_ZERO) // case 1
         return sc_signed(u);
@@ -1585,13 +1524,12 @@ operator - (const sc_unsigned &u, const sc_signed &v)
         return sc_signed(v, -v.sgn);
 
     // cases 3 and 4
-    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             -v.sgn, v.nbits, v.ndigits, v.digit);
+    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, -v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator - (const sc_signed &u, const sc_unsigned &v)
+operator-(const sc_unsigned &u, const sc_signed &v)
 {
     if (v.sgn == SC_ZERO) // case 1
         return sc_signed(u);
@@ -1600,28 +1538,40 @@ operator - (const sc_signed &u, const sc_unsigned &v)
         return sc_signed(v, -v.sgn);
 
     // cases 3 and 4
-    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             -v.sgn, v.nbits, v.ndigits, v.digit);
+    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, -v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator - (const sc_signed &u, const sc_signed &v)
+operator-(const sc_signed &u, const sc_unsigned &v)
 {
-    if (v.sgn == SC_ZERO)  // case 1
+    if (v.sgn == SC_ZERO) // case 1
         return sc_signed(u);
 
     if (u.sgn == SC_ZERO) // case 2
         return sc_signed(v, -v.sgn);
 
     // cases 3 and 4
-    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             -v.sgn, v.nbits, v.ndigits, v.digit);
+    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, -v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
+sc_signed
+operator-(const sc_signed &u, const sc_signed &v)
+{
+    if (v.sgn == SC_ZERO) // case 1
+        return sc_signed(u);
+
+    if (u.sgn == SC_ZERO) // case 2
+        return sc_signed(v, -v.sgn);
+
+    // cases 3 and 4
+    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, -v.sgn,
+        v.nbits, v.ndigits, v.digit);
+}
 
 sc_signed
-operator - (const sc_signed &u, int64 v)
+operator-(const sc_signed &u, int64 v)
 {
     if (v == 0) // case 1
         return sc_signed(u);
@@ -1632,13 +1582,12 @@ operator - (const sc_signed &u, int64 v)
         return sc_signed(-vs, BITS_PER_UINT64, DIGITS_PER_UINT64, vd, false);
 
     // cases 3 and 4
-    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             -vs, BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
+    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, -vs,
+        BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
 }
 
-
 sc_signed
-operator - (int64 u, const sc_signed &v)
+operator-(int64 u, const sc_signed &v)
 {
     if (u == 0) // case 1
         return sc_signed(v, -v.sgn);
@@ -1650,12 +1599,11 @@ operator - (int64 u, const sc_signed &v)
 
     // cases 3 and 4
     return add_signed_friend(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud,
-                             -v.sgn, v.nbits, v.ndigits, v.digit);
+        -v.sgn, v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator - (const sc_unsigned &u, int64 v)
+operator-(const sc_unsigned &u, int64 v)
 {
     if (v == 0) // case 1
         return sc_signed(u);
@@ -1666,13 +1614,12 @@ operator - (const sc_unsigned &u, int64 v)
         return sc_signed(-vs, BITS_PER_UINT64, DIGITS_PER_UINT64, vd, false);
 
     // cases 3 and 4
-    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             -vs, BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
+    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, -vs,
+        BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
 }
 
-
 sc_signed
-operator - (int64 u, const sc_unsigned &v)
+operator-(int64 u, const sc_unsigned &v)
 {
     if (u == 0) // case 1
         return sc_signed(v, -v.sgn);
@@ -1684,12 +1631,11 @@ operator - (int64 u, const sc_unsigned &v)
 
     // cases 3 and 4
     return add_signed_friend(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud,
-                             -v.sgn, v.nbits, v.ndigits, v.digit);
+        -v.sgn, v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator - (const sc_signed &u, uint64 v)
+operator-(const sc_signed &u, uint64 v)
 {
     if (v == 0) // case 1
         return sc_signed(u);
@@ -1701,13 +1647,12 @@ operator - (const sc_signed &u, uint64 v)
 
     // cases 3 and 4
 
-    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             -vs, BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
+    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, -vs,
+        BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
 }
 
-
 sc_signed
-operator - (uint64 u, const sc_signed &v)
+operator-(uint64 u, const sc_signed &v)
 {
     if (u == 0) // case 1
         return sc_signed(v, -v.sgn);
@@ -1719,12 +1664,11 @@ operator - (uint64 u, const sc_signed &v)
 
     // cases 3 and 4
     return add_signed_friend(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud,
-                             -v.sgn, v.nbits, v.ndigits, v.digit);
+        -v.sgn, v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator - (const sc_unsigned &u, uint64 v)
+operator-(const sc_unsigned &u, uint64 v)
 {
     if (v == 0) // case 1
         return sc_signed(u);
@@ -1735,13 +1679,12 @@ operator - (const sc_unsigned &u, uint64 v)
         return sc_signed(-vs, BITS_PER_UINT64, DIGITS_PER_UINT64, vd, false);
 
     // cases 3 and 4
-    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             -vs, BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
+    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, -vs,
+        BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
 }
 
-
 sc_signed
-operator - (uint64 u, const sc_unsigned &v)
+operator-(uint64 u, const sc_unsigned &v)
 {
     if (u == 0) // case 1
         return sc_signed(v, -v.sgn);
@@ -1753,12 +1696,11 @@ operator - (uint64 u, const sc_unsigned &v)
 
     // cases 3 and 4
     return add_signed_friend(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud,
-                             -v.sgn, v.nbits, v.ndigits, v.digit);
+        -v.sgn, v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator - (const sc_signed &u, long v)
+operator-(const sc_signed &u, long v)
 {
     if (v == 0) // case 1
         return sc_signed(u);
@@ -1769,13 +1711,12 @@ operator - (const sc_signed &u, long v)
         return sc_signed(-vs, BITS_PER_ULONG, DIGITS_PER_ULONG, vd, false);
 
     // cases 3 and 4
-    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             -vs, BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
+    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, -vs,
+        BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
 }
 
-
 sc_signed
-operator - (long u, const sc_signed &v)
+operator-(long u, const sc_signed &v)
 {
     if (u == 0) // case 1
         return sc_signed(v, -v.sgn);
@@ -1786,13 +1727,12 @@ operator - (long u, const sc_signed &v)
         return sc_signed(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, false);
 
     // cases 3 and 4
-    return add_signed_friend(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud,
-                             -v.sgn, v.nbits, v.ndigits, v.digit);
+    return add_signed_friend(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, -v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator - (const sc_unsigned &u, long v)
+operator-(const sc_unsigned &u, long v)
 {
     if (v == 0) // case 1
         return sc_signed(u);
@@ -1803,13 +1743,12 @@ operator - (const sc_unsigned &u, long v)
         return sc_signed(-vs, BITS_PER_ULONG, DIGITS_PER_ULONG, vd, false);
 
     // cases 3 and 4
-    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             -vs, BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
+    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, -vs,
+        BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
 }
 
-
 sc_signed
-operator - (long u, const sc_unsigned &v)
+operator-(long u, const sc_unsigned &v)
 {
     if (u == 0) // case 1
         return sc_signed(v, -v.sgn);
@@ -1820,13 +1759,12 @@ operator - (long u, const sc_unsigned &v)
         return sc_signed(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, false);
 
     // cases 3 and 4
-    return add_signed_friend(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud,
-                             -v.sgn, v.nbits, v.ndigits, v.digit);
+    return add_signed_friend(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, -v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator - (const sc_signed &u, unsigned long v)
+operator-(const sc_signed &u, unsigned long v)
 {
     if (v == 0) // case 1
         return sc_signed(u);
@@ -1837,13 +1775,12 @@ operator - (const sc_signed &u, unsigned long v)
         return sc_signed(-vs, BITS_PER_ULONG, DIGITS_PER_ULONG, vd, false);
 
     // cases 3 and 4
-    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             -vs, BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
+    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, -vs,
+        BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
 }
 
-
 sc_signed
-operator - (unsigned long u, const sc_signed &v)
+operator-(unsigned long u, const sc_signed &v)
 {
     if (u == 0) // case 1
         return sc_signed(v, -v.sgn);
@@ -1854,13 +1791,12 @@ operator - (unsigned long u, const sc_signed &v)
         return sc_signed(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, false);
 
     // cases 3 and 4
-    return add_signed_friend(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud,
-                             -v.sgn, v.nbits, v.ndigits, v.digit);
+    return add_signed_friend(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, -v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator - (const sc_unsigned &u, unsigned long v)
+operator-(const sc_unsigned &u, unsigned long v)
 {
     if (v == 0) // case 1
         return sc_signed(u);
@@ -1871,13 +1807,12 @@ operator - (const sc_unsigned &u, unsigned long v)
         return sc_signed(-vs, BITS_PER_ULONG, DIGITS_PER_ULONG, vd, false);
 
     // cases 3 and 4
-    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             -vs, BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
+    return add_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, -vs,
+        BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
 }
 
-
 sc_signed
-operator - (unsigned long u, const sc_unsigned &v)
+operator-(unsigned long u, const sc_unsigned &v)
 {
     if (u == 0) // case 1
         return sc_signed(v, -v.sgn);
@@ -1888,13 +1823,12 @@ operator - (unsigned long u, const sc_unsigned &v)
         return sc_signed(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, false);
 
     // cases 3 and 4
-    return add_signed_friend(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud,
-                             -v.sgn, v.nbits, v.ndigits, v.digit);
+    return add_signed_friend(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, -v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
 // The rest of the operators in this section are included from
 // sc_nbcommon.cpp.
-
 
 // ----------------------------------------------------------------------------
 //  SECTION: MULTIPLICATION operators: *, *=
@@ -1907,7 +1841,7 @@ operator - (unsigned long u, const sc_unsigned &v)
 // 4. u * v = u * v
 
 sc_signed
-operator * (const sc_unsigned &u, const sc_signed &v)
+operator*(const sc_unsigned &u, const sc_signed &v)
 {
     small_type s = mul_signs(u.sgn, v.sgn);
 
@@ -1915,13 +1849,12 @@ operator * (const sc_unsigned &u, const sc_signed &v)
         return sc_signed();
 
     // cases 2-4
-    return mul_signed_friend(s, u.nbits, u.ndigits, u.digit,
-                             v.nbits, v.ndigits, v.digit);
+    return mul_signed_friend(
+        s, u.nbits, u.ndigits, u.digit, v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator * (const sc_signed &u, const sc_unsigned &v)
+operator*(const sc_signed &u, const sc_unsigned &v)
 {
     small_type s = mul_signs(u.sgn, v.sgn);
 
@@ -1929,13 +1862,12 @@ operator * (const sc_signed &u, const sc_unsigned &v)
         return sc_signed();
 
     // cases 2-4
-    return mul_signed_friend(s, u.nbits, u.ndigits, u.digit,
-                             v.nbits, v.ndigits, v.digit);
+    return mul_signed_friend(
+        s, u.nbits, u.ndigits, u.digit, v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator * (const sc_signed &u, const sc_signed &v)
+operator*(const sc_signed &u, const sc_signed &v)
 {
     small_type s = mul_signs(u.sgn, v.sgn);
 
@@ -1943,13 +1875,12 @@ operator * (const sc_signed &u, const sc_signed &v)
         return sc_signed();
 
     // cases 2-4
-    return mul_signed_friend(s, u.nbits, u.ndigits, u.digit,
-                             v.nbits, v.ndigits, v.digit);
+    return mul_signed_friend(
+        s, u.nbits, u.ndigits, u.digit, v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator * (const sc_signed &u, int64 v)
+operator*(const sc_signed &u, int64 v)
 {
     small_type s = mul_signs(u.sgn, get_sign(v));
 
@@ -1959,13 +1890,12 @@ operator * (const sc_signed &u, int64 v)
     CONVERT_INT64_2(v);
 
     // cases 2-4
-    return mul_signed_friend(s, u.nbits, u.ndigits, u.digit,
-                             BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
+    return mul_signed_friend(s, u.nbits, u.ndigits, u.digit, BITS_PER_UINT64,
+        DIGITS_PER_UINT64, vd);
 }
 
-
 sc_signed
-operator * (int64 u, const sc_signed &v)
+operator*(int64 u, const sc_signed &v)
 {
     small_type s = mul_signs(v.sgn, get_sign(u));
 
@@ -1976,12 +1906,11 @@ operator * (int64 u, const sc_signed &v)
 
     // cases 2-4
     return mul_signed_friend(s, BITS_PER_UINT64, DIGITS_PER_UINT64, ud,
-                             v.nbits, v.ndigits, v.digit);
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator * (const sc_unsigned &u, int64 v)
+operator*(const sc_unsigned &u, int64 v)
 {
     small_type s = mul_signs(u.sgn, get_sign(v));
 
@@ -1991,13 +1920,12 @@ operator * (const sc_unsigned &u, int64 v)
     CONVERT_INT64_2(v);
 
     // cases 2-4
-    return mul_signed_friend(s, u.nbits, u.ndigits, u.digit,
-                             BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
+    return mul_signed_friend(s, u.nbits, u.ndigits, u.digit, BITS_PER_UINT64,
+        DIGITS_PER_UINT64, vd);
 }
 
-
 sc_signed
-operator * (int64 u, const sc_unsigned &v)
+operator*(int64 u, const sc_unsigned &v)
 {
     small_type s = mul_signs(v.sgn, get_sign(u));
 
@@ -2008,12 +1936,11 @@ operator * (int64 u, const sc_unsigned &v)
 
     // cases 2-4
     return mul_signed_friend(s, BITS_PER_UINT64, DIGITS_PER_UINT64, ud,
-                             v.nbits, v.ndigits, v.digit);
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator * (const sc_signed &u, uint64 v)
+operator*(const sc_signed &u, uint64 v)
 {
     small_type s = mul_signs(u.sgn, get_sign(v));
 
@@ -2023,13 +1950,12 @@ operator * (const sc_signed &u, uint64 v)
     CONVERT_INT64_2(v);
 
     // cases 2-4
-    return mul_signed_friend(s, u.nbits, u.ndigits, u.digit,
-                             BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
+    return mul_signed_friend(s, u.nbits, u.ndigits, u.digit, BITS_PER_UINT64,
+        DIGITS_PER_UINT64, vd);
 }
 
-
 sc_signed
-operator * (uint64 u, const sc_signed &v)
+operator*(uint64 u, const sc_signed &v)
 {
     small_type s = mul_signs(v.sgn, get_sign(u));
 
@@ -2040,12 +1966,11 @@ operator * (uint64 u, const sc_signed &v)
 
     // cases 2-4
     return mul_signed_friend(s, BITS_PER_UINT64, DIGITS_PER_UINT64, ud,
-                             v.nbits, v.ndigits, v.digit);
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator * (const sc_signed &u, long v)
+operator*(const sc_signed &u, long v)
 {
     small_type s = mul_signs(u.sgn, get_sign(v));
 
@@ -2055,13 +1980,12 @@ operator * (const sc_signed &u, long v)
     CONVERT_LONG_2(v);
 
     // cases 2-4
-    return mul_signed_friend(s, u.nbits, u.ndigits, u.digit,
-                             BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
+    return mul_signed_friend(
+        s, u.nbits, u.ndigits, u.digit, BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
 }
 
-
 sc_signed
-operator * (long u, const sc_signed &v)
+operator*(long u, const sc_signed &v)
 {
     small_type s = mul_signs(v.sgn, get_sign(u));
 
@@ -2071,13 +1995,12 @@ operator * (long u, const sc_signed &v)
     CONVERT_LONG_2(u);
 
     // cases 2-4
-    return mul_signed_friend(s, BITS_PER_ULONG, DIGITS_PER_ULONG, ud,
-                             v.nbits, v.ndigits, v.digit);
+    return mul_signed_friend(
+        s, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator * (const sc_unsigned &u, long v)
+operator*(const sc_unsigned &u, long v)
 {
     small_type s = mul_signs(u.sgn, get_sign(v));
 
@@ -2087,13 +2010,12 @@ operator * (const sc_unsigned &u, long v)
     CONVERT_LONG_2(v);
 
     // cases 2-4
-    return mul_signed_friend(s, u.nbits, u.ndigits, u.digit,
-                             BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
+    return mul_signed_friend(
+        s, u.nbits, u.ndigits, u.digit, BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
 }
 
-
 sc_signed
-operator * (long u, const sc_unsigned &v)
+operator*(long u, const sc_unsigned &v)
 {
     small_type s = mul_signs(v.sgn, get_sign(u));
 
@@ -2103,13 +2025,12 @@ operator * (long u, const sc_unsigned &v)
     CONVERT_LONG_2(u);
 
     // cases 2-4
-    return mul_signed_friend(s, BITS_PER_ULONG, DIGITS_PER_ULONG, ud,
-                             v.nbits, v.ndigits, v.digit);
+    return mul_signed_friend(
+        s, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator * (const sc_signed &u, unsigned long v)
+operator*(const sc_signed &u, unsigned long v)
 {
     small_type s = mul_signs(u.sgn, get_sign(v));
 
@@ -2119,12 +2040,12 @@ operator * (const sc_signed &u, unsigned long v)
     CONVERT_LONG_2(v);
 
     // else cases 2-4
-    return mul_signed_friend(s, u.nbits, u.ndigits, u.digit,
-                             BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
+    return mul_signed_friend(
+        s, u.nbits, u.ndigits, u.digit, BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
 }
 
 sc_signed
-operator * (unsigned long u, const sc_signed &v)
+operator*(unsigned long u, const sc_signed &v)
 {
     small_type s = mul_signs(v.sgn, get_sign(u));
 
@@ -2134,13 +2055,12 @@ operator * (unsigned long u, const sc_signed &v)
     CONVERT_LONG_2(u);
 
     // cases 2-4
-    return mul_signed_friend(s, BITS_PER_ULONG, DIGITS_PER_ULONG, ud,
-                             v.nbits, v.ndigits, v.digit);
+    return mul_signed_friend(
+        s, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, v.nbits, v.ndigits, v.digit);
 }
 
 // The rest of the operators in this section are included from
 // sc_nbcommon.cpp.
-
 
 // ----------------------------------------------------------------------------
 //  SECTION: DIVISION operators: /, /=
@@ -2155,7 +2075,7 @@ operator * (unsigned long u, const sc_signed &v)
 // 5. u / v & &u > v => u = q * v + r  - v can be 1 or -1
 
 sc_signed
-operator / (const sc_unsigned &u, const sc_signed &v)
+operator/(const sc_unsigned &u, const sc_signed &v)
 {
     small_type s = mul_signs(u.sgn, v.sgn);
 
@@ -2165,13 +2085,12 @@ operator / (const sc_unsigned &u, const sc_signed &v)
     }
 
     // other cases
-    return div_signed_friend(s, u.nbits, u.ndigits, u.digit,
-                             v.nbits, v.ndigits, v.digit);
+    return div_signed_friend(
+        s, u.nbits, u.ndigits, u.digit, v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator / (const sc_signed &u, const sc_unsigned &v)
+operator/(const sc_signed &u, const sc_unsigned &v)
 {
     small_type s = mul_signs(u.sgn, v.sgn);
 
@@ -2181,13 +2100,12 @@ operator / (const sc_signed &u, const sc_unsigned &v)
     }
 
     // other cases
-    return div_signed_friend(s, u.nbits, u.ndigits, u.digit,
-                             v.nbits, v.ndigits, v.digit);
+    return div_signed_friend(
+        s, u.nbits, u.ndigits, u.digit, v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator / (const sc_signed &u, const sc_signed &v)
+operator/(const sc_signed &u, const sc_signed &v)
 {
     small_type s = mul_signs(u.sgn, v.sgn);
 
@@ -2197,31 +2115,29 @@ operator / (const sc_signed &u, const sc_signed &v)
     }
 
     // other cases
-    return div_signed_friend(s, u.nbits, u.ndigits, u.digit,
-                             v.nbits, v.ndigits, v.digit);
+    return div_signed_friend(
+        s, u.nbits, u.ndigits, u.digit, v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator / (const sc_signed &u, int64 v)
+operator/(const sc_signed &u, int64 v)
 {
     small_type s = mul_signs(u.sgn, get_sign(v));
 
     if (s == SC_ZERO) {
-        div_by_zero(v); // case 1
+        div_by_zero(v);     // case 1
         return sc_signed(); // case 2
     }
 
     CONVERT_INT64_2(v);
 
     // other cases
-    return div_signed_friend(s, u.nbits, u.ndigits, u.digit,
-                             BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
+    return div_signed_friend(s, u.nbits, u.ndigits, u.digit, BITS_PER_UINT64,
+        DIGITS_PER_UINT64, vd);
 }
 
-
 sc_signed
-operator / (int64 u, const sc_signed &v)
+operator/(int64 u, const sc_signed &v)
 {
     small_type s = mul_signs(v.sgn, get_sign(u));
 
@@ -2234,30 +2150,28 @@ operator / (int64 u, const sc_signed &v)
 
     // other cases
     return div_signed_friend(s, BITS_PER_UINT64, DIGITS_PER_UINT64, ud,
-                             v.nbits, v.ndigits, v.digit);
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator / (const sc_unsigned &u, int64 v)
+operator/(const sc_unsigned &u, int64 v)
 {
     small_type s = mul_signs(u.sgn, get_sign(v));
 
     if (s == SC_ZERO) {
-        div_by_zero(v); // case 1
+        div_by_zero(v);     // case 1
         return sc_signed(); // case 2
     }
 
     CONVERT_INT64_2(v);
 
     // other cases
-    return div_signed_friend(s, u.nbits, u.ndigits, u.digit,
-                             BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
+    return div_signed_friend(s, u.nbits, u.ndigits, u.digit, BITS_PER_UINT64,
+        DIGITS_PER_UINT64, vd);
 }
 
-
 sc_signed
-operator / (int64 u, const sc_unsigned &v)
+operator/(int64 u, const sc_unsigned &v)
 {
     small_type s = mul_signs(v.sgn, get_sign(u));
 
@@ -2270,67 +2184,62 @@ operator / (int64 u, const sc_unsigned &v)
 
     // other cases
     return div_signed_friend(s, BITS_PER_UINT64, DIGITS_PER_UINT64, ud,
-                             v.nbits, v.ndigits, v.digit);
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator / (const sc_signed &u, uint64 v)
+operator/(const sc_signed &u, uint64 v)
 {
     small_type s = mul_signs(u.sgn, get_sign(v));
 
     if (s == SC_ZERO) {
-        div_by_zero(v); // case 1
+        div_by_zero(v);     // case 1
         return sc_signed(); // case 2
     }
 
     CONVERT_INT64_2(v);
 
     // other cases
-    return div_signed_friend(s, u.nbits, u.ndigits, u.digit,
-                             BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
+    return div_signed_friend(s, u.nbits, u.ndigits, u.digit, BITS_PER_UINT64,
+        DIGITS_PER_UINT64, vd);
 }
 
-
 sc_signed
-operator / (uint64 u, const sc_signed &v)
+operator/(uint64 u, const sc_signed &v)
 {
     small_type s = mul_signs(v.sgn, get_sign(u));
 
     if (s == SC_ZERO) {
         div_by_zero(v.sgn); // case 1
         return sc_signed(); // case 2
-
     }
 
     CONVERT_INT64_2(u);
 
     // other cases
     return div_signed_friend(s, BITS_PER_UINT64, DIGITS_PER_UINT64, ud,
-                             v.nbits, v.ndigits, v.digit);
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator / (const sc_signed &u, long v)
+operator/(const sc_signed &u, long v)
 {
     small_type s = mul_signs(u.sgn, get_sign(v));
 
     if (s == SC_ZERO) {
-        div_by_zero(v); // case 1
+        div_by_zero(v);     // case 1
         return sc_signed(); // case 2
     }
 
     CONVERT_LONG_2(v);
 
     // other cases
-    return div_signed_friend(s, u.nbits, u.ndigits, u.digit,
-                             BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
+    return div_signed_friend(
+        s, u.nbits, u.ndigits, u.digit, BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
 }
 
-
 sc_signed
-operator / (long u, const sc_signed &v)
+operator/(long u, const sc_signed &v)
 {
     small_type s = mul_signs(v.sgn, get_sign(u));
 
@@ -2342,31 +2251,29 @@ operator / (long u, const sc_signed &v)
     CONVERT_LONG_2(u);
 
     // other cases
-    return div_signed_friend(s, BITS_PER_ULONG, DIGITS_PER_ULONG, ud,
-                             v.nbits, v.ndigits, v.digit);
+    return div_signed_friend(
+        s, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator / (const sc_unsigned &u, long v)
+operator/(const sc_unsigned &u, long v)
 {
     small_type s = mul_signs(u.sgn, get_sign(v));
 
     if (s == SC_ZERO) {
-        div_by_zero(v); // case 1
+        div_by_zero(v);     // case 1
         return sc_signed(); // case 2
     }
 
     CONVERT_LONG_2(v);
 
     // other cases
-    return div_signed_friend(s, u.nbits, u.ndigits, u.digit,
-                             BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
+    return div_signed_friend(
+        s, u.nbits, u.ndigits, u.digit, BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
 }
 
-
 sc_signed
-operator / (long u, const sc_unsigned &v)
+operator/(long u, const sc_unsigned &v)
 {
     small_type s = mul_signs(v.sgn, get_sign(u));
 
@@ -2378,50 +2285,46 @@ operator / (long u, const sc_unsigned &v)
     CONVERT_LONG_2(u);
 
     // other cases
-    return div_signed_friend(s, BITS_PER_ULONG, DIGITS_PER_ULONG, ud,
-                             v.nbits, v.ndigits, v.digit);
+    return div_signed_friend(
+        s, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator / (const sc_signed &u, unsigned long v)
+operator/(const sc_signed &u, unsigned long v)
 {
     small_type s = mul_signs(u.sgn, get_sign(v));
 
     if (s == SC_ZERO) {
-        div_by_zero(v); // case 1
+        div_by_zero(v);     // case 1
         return sc_signed(); // case 2
     }
 
     CONVERT_LONG_2(v);
 
     // other cases
-    return div_signed_friend(s, u.nbits, u.ndigits, u.digit,
-                             BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
+    return div_signed_friend(
+        s, u.nbits, u.ndigits, u.digit, BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
 }
 
-
 sc_signed
-operator / (unsigned long u, const sc_signed &v)
+operator/(unsigned long u, const sc_signed &v)
 {
     small_type s = mul_signs(v.sgn, get_sign(u));
 
     if (s == SC_ZERO) {
         div_by_zero(v.sgn); // case 1
         return sc_signed(); // case 2
-
     }
 
     CONVERT_LONG_2(u);
 
     // other cases
-    return div_signed_friend(s, BITS_PER_ULONG, DIGITS_PER_ULONG, ud,
-                             v.nbits, v.ndigits, v.digit);
+    return div_signed_friend(
+        s, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, v.nbits, v.ndigits, v.digit);
 }
 
 // The rest of the operators in this section are included from
 // sc_nbcommon.cpp.
-
 
 // ----------------------------------------------------------------------------
 //  SECTION: MOD operators: %, %=.
@@ -2436,7 +2339,7 @@ operator / (unsigned long u, const sc_signed &v)
 // 5. u % v & &u > v => u = q * v + r  - v can be 1 or -1
 
 sc_signed
-operator % (const sc_unsigned &u, const sc_signed &v)
+operator%(const sc_unsigned &u, const sc_signed &v)
 {
     if ((u.sgn == SC_ZERO) || (v.sgn == SC_ZERO)) {
         div_by_zero(v.sgn); // case 1
@@ -2444,13 +2347,12 @@ operator % (const sc_unsigned &u, const sc_signed &v)
     }
 
     // other cases
-    return mod_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             v.nbits, v.ndigits, v.digit);
+    return mod_signed_friend(
+        u.sgn, u.nbits, u.ndigits, u.digit, v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator % (const sc_signed &u, const sc_unsigned &v)
+operator%(const sc_signed &u, const sc_unsigned &v)
 {
     if ((u.sgn == SC_ZERO) || (v.sgn == SC_ZERO)) {
         div_by_zero(v.sgn); // case 1
@@ -2458,13 +2360,12 @@ operator % (const sc_signed &u, const sc_unsigned &v)
     }
 
     // other cases
-    return mod_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             v.nbits, v.ndigits, v.digit);
+    return mod_signed_friend(
+        u.sgn, u.nbits, u.ndigits, u.digit, v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator % (const sc_signed &u, const sc_signed &v)
+operator%(const sc_signed &u, const sc_signed &v)
 {
     if ((u.sgn == SC_ZERO) || (v.sgn == SC_ZERO)) {
         div_by_zero(v.sgn); // case 1
@@ -2472,18 +2373,17 @@ operator % (const sc_signed &u, const sc_signed &v)
     }
 
     // other cases
-    return mod_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             v.nbits, v.ndigits, v.digit);
+    return mod_signed_friend(
+        u.sgn, u.nbits, u.ndigits, u.digit, v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator % (const sc_signed &u, int64 v)
+operator%(const sc_signed &u, int64 v)
 {
     small_type vs = get_sign(v);
 
     if ((u.sgn == SC_ZERO) || (vs == SC_ZERO)) {
-        div_by_zero(v); // case 1
+        div_by_zero(v);     // case 1
         return sc_signed(); // case 2
     }
 
@@ -2491,12 +2391,11 @@ operator % (const sc_signed &u, int64 v)
 
     // other cases
     return mod_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
+        BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
 }
 
-
 sc_signed
-operator % (int64 u, const sc_signed &v)
+operator%(int64 u, const sc_signed &v)
 {
     small_type us = get_sign(u);
 
@@ -2509,17 +2408,16 @@ operator % (int64 u, const sc_signed &v)
 
     // other cases
     return mod_signed_friend(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud,
-                             v.nbits, v.ndigits, v.digit);
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator % (const sc_unsigned &u, int64 v)
+operator%(const sc_unsigned &u, int64 v)
 {
     small_type vs = get_sign(v);
 
     if ((u.sgn == SC_ZERO) || (vs == SC_ZERO)) {
-        div_by_zero(v); // case 1
+        div_by_zero(v);     // case 1
         return sc_signed(); // case 2
     }
 
@@ -2527,12 +2425,11 @@ operator % (const sc_unsigned &u, int64 v)
 
     // other cases
     return mod_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
+        BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
 }
 
-
 sc_signed
-operator % (int64 u, const sc_unsigned &v)
+operator%(int64 u, const sc_unsigned &v)
 {
     small_type us = get_sign(u);
 
@@ -2545,15 +2442,14 @@ operator % (int64 u, const sc_unsigned &v)
 
     // other cases
     return mod_signed_friend(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud,
-                             v.nbits, v.ndigits, v.digit);
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator % (const sc_signed &u, uint64 v)
+operator%(const sc_signed &u, uint64 v)
 {
     if ((u.sgn == SC_ZERO) || (v == 0)) {
-        div_by_zero(v); // case 1
+        div_by_zero(v);     // case 1
         return sc_signed(); // case 2
     }
 
@@ -2561,12 +2457,11 @@ operator % (const sc_signed &u, uint64 v)
 
     // other cases
     return mod_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
+        BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
 }
 
-
 sc_signed
-operator % (uint64 u, const sc_signed &v)
+operator%(uint64 u, const sc_signed &v)
 {
     if ((u == 0) || (v.sgn == SC_ZERO)) {
         div_by_zero(v.sgn); // case 1
@@ -2577,17 +2472,16 @@ operator % (uint64 u, const sc_signed &v)
 
     // other cases
     return mod_signed_friend(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud,
-                             v.nbits, v.ndigits, v.digit);
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator % (const sc_signed &u, long v)
+operator%(const sc_signed &u, long v)
 {
     small_type vs = get_sign(v);
 
     if ((u.sgn == SC_ZERO) || (vs == SC_ZERO)) {
-        div_by_zero(v); // case 1
+        div_by_zero(v);     // case 1
         return sc_signed(); // case 2
     }
 
@@ -2595,12 +2489,11 @@ operator % (const sc_signed &u, long v)
 
     // other cases
     return mod_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
+        BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
 }
 
-
 sc_signed
-operator % (long u, const sc_signed &v)
+operator%(long u, const sc_signed &v)
 {
     small_type us = get_sign(u);
 
@@ -2612,32 +2505,29 @@ operator % (long u, const sc_signed &v)
     CONVERT_LONG_2(u);
 
     // other cases
-    return mod_signed_friend(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud,
-                             v.nbits, v.ndigits, v.digit);
+    return mod_signed_friend(
+        us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator % (const sc_unsigned &u, long v)
+operator%(const sc_unsigned &u, long v)
 {
+    small_type vs = get_sign(v);
 
-  small_type vs = get_sign(v);
+    if ((u.sgn == SC_ZERO) || (vs == SC_ZERO)) {
+        div_by_zero(v);     // case 1
+        return sc_signed(); // case 2
+    }
 
-  if ((u.sgn == SC_ZERO) || (vs == SC_ZERO)) {
-    div_by_zero(v); // case 1
-    return sc_signed(); // case 2
-  }
+    CONVERT_LONG_2(v);
 
-  CONVERT_LONG_2(v);
-
-  // other cases
-  return mod_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                           BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
+    // other cases
+    return mod_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
+        BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
 }
 
-
 sc_signed
-operator % (long u, const sc_unsigned &v)
+operator%(long u, const sc_unsigned &v)
 {
     small_type us = get_sign(u);
 
@@ -2649,16 +2539,15 @@ operator % (long u, const sc_unsigned &v)
     CONVERT_LONG_2(u);
 
     // other cases
-    return mod_signed_friend(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud,
-                             v.nbits, v.ndigits, v.digit);
+    return mod_signed_friend(
+        us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator % (const sc_signed &u, unsigned long v)
+operator%(const sc_signed &u, unsigned long v)
 {
     if ((u.sgn == SC_ZERO) || (v == 0)) {
-        div_by_zero(v); // case 1
+        div_by_zero(v);     // case 1
         return sc_signed(); // case 2
     }
 
@@ -2666,12 +2555,11 @@ operator % (const sc_signed &u, unsigned long v)
 
     // other cases
     return mod_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
+        BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
 }
 
-
 sc_signed
-operator % (unsigned long u, const sc_signed &v)
+operator%(unsigned long u, const sc_signed &v)
 {
     if ((u == 0) || (v.sgn == SC_ZERO)) {
         div_by_zero(v.sgn); // case 1
@@ -2681,13 +2569,12 @@ operator % (unsigned long u, const sc_signed &v)
     CONVERT_LONG(u);
 
     // other cases
-    return mod_signed_friend(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud,
-                             v.nbits, v.ndigits, v.digit);
+    return mod_signed_friend(
+        us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, v.nbits, v.ndigits, v.digit);
 }
 
 // The rest of the operators in this section are included from
 // sc_nbcommon.cpp.
-
 
 // ----------------------------------------------------------------------------
 //  SECTION: Bitwise AND operators: &, &=
@@ -2701,43 +2588,40 @@ operator % (unsigned long u, const sc_signed &v)
 // 5. (-u)  &v => sgn = +
 
 sc_signed
-operator & (const sc_unsigned &u, const sc_signed &v)
+operator&(const sc_unsigned &u, const sc_signed &v)
 {
     if ((u.sgn == SC_ZERO) || (v.sgn == SC_ZERO)) // case 1
         return sc_signed();
 
     // other cases
-    return and_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             v.sgn, v.nbits, v.ndigits, v.digit);
+    return and_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator & (const sc_signed &u, const sc_unsigned &v)
+operator&(const sc_signed &u, const sc_unsigned &v)
 {
     if ((u.sgn == SC_ZERO) || (v.sgn == SC_ZERO)) // case 1
         return sc_signed();
 
     // other cases
-    return and_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             v.sgn, v.nbits, v.ndigits, v.digit);
+    return and_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator & (const sc_signed &u, const sc_signed &v)
+operator&(const sc_signed &u, const sc_signed &v)
 {
     if ((u.sgn == SC_ZERO) || (v.sgn == SC_ZERO)) // case 1
         return sc_signed();
 
     // other cases
-    return and_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             v.sgn, v.nbits, v.ndigits, v.digit);
+    return and_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator & (const sc_signed &u, int64 v)
+operator&(const sc_signed &u, int64 v)
 {
     if ((u.sgn == SC_ZERO) || (v == 0)) // case 1
         return sc_signed();
@@ -2745,13 +2629,12 @@ operator & (const sc_signed &u, int64 v)
     CONVERT_INT64(v);
 
     // other cases
-    return and_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             vs, BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
+    return and_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, vs,
+        BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
 }
 
-
 sc_signed
-operator & (int64 u, const sc_signed &v)
+operator&(int64 u, const sc_signed &v)
 {
     if ((u == 0) || (v.sgn == SC_ZERO)) // case 1
         return sc_signed();
@@ -2759,13 +2642,12 @@ operator & (int64 u, const sc_signed &v)
     CONVERT_INT64(u);
 
     // other cases
-    return and_signed_friend(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud,
-                             v.sgn, v.nbits, v.ndigits, v.digit);
+    return and_signed_friend(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud, v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator & (const sc_unsigned &u, int64 v)
+operator&(const sc_unsigned &u, int64 v)
 {
     if ((u.sgn == SC_ZERO) || (v == 0)) // case 1
         return sc_signed();
@@ -2773,13 +2655,12 @@ operator & (const sc_unsigned &u, int64 v)
     CONVERT_INT64(v);
 
     // other cases
-    return and_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             vs, BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
+    return and_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, vs,
+        BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
 }
 
-
 sc_signed
-operator & (int64 u, const sc_unsigned &v)
+operator&(int64 u, const sc_unsigned &v)
 {
     if ((u == 0) || (v.sgn == SC_ZERO)) // case 1
         return sc_signed();
@@ -2787,13 +2668,12 @@ operator & (int64 u, const sc_unsigned &v)
     CONVERT_INT64(u);
 
     // other cases
-    return and_signed_friend(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud,
-                             v.sgn, v.nbits, v.ndigits, v.digit);
+    return and_signed_friend(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud, v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator & (const sc_signed &u, uint64 v)
+operator&(const sc_signed &u, uint64 v)
 {
     if ((u.sgn == SC_ZERO) || (v == 0)) // case 1
         return sc_signed();
@@ -2801,13 +2681,12 @@ operator & (const sc_signed &u, uint64 v)
     CONVERT_INT64(v);
 
     // other cases
-    return and_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             vs, BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
+    return and_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, vs,
+        BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
 }
 
-
 sc_signed
-operator & (uint64 u, const sc_signed &v)
+operator&(uint64 u, const sc_signed &v)
 {
     if ((u == 0) || (v.sgn == SC_ZERO)) // case 1
         return sc_signed();
@@ -2815,13 +2694,12 @@ operator & (uint64 u, const sc_signed &v)
     CONVERT_INT64(u);
 
     // other cases
-    return and_signed_friend(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud,
-                             v.sgn, v.nbits, v.ndigits, v.digit);
+    return and_signed_friend(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud, v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator & (const sc_signed &u, long v)
+operator&(const sc_signed &u, long v)
 {
     if ((u.sgn == SC_ZERO) || (v == 0)) // case 1
         return sc_signed();
@@ -2829,13 +2707,12 @@ operator & (const sc_signed &u, long v)
     CONVERT_LONG(v);
 
     // other cases
-    return and_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             vs, BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
+    return and_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, vs,
+        BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
 }
 
-
 sc_signed
-operator & (long u, const sc_signed &v)
+operator&(long u, const sc_signed &v)
 {
     if ((u == 0) || (v.sgn == SC_ZERO)) // case 1
         return sc_signed();
@@ -2843,13 +2720,12 @@ operator & (long u, const sc_signed &v)
     CONVERT_LONG(u);
 
     // other cases
-    return and_signed_friend(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud,
-                             v.sgn, v.nbits, v.ndigits, v.digit);
+    return and_signed_friend(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator & (const sc_unsigned &u, long v)
+operator&(const sc_unsigned &u, long v)
 {
     if ((u.sgn == SC_ZERO) || (v == 0)) // case 1
         return sc_signed();
@@ -2857,13 +2733,12 @@ operator & (const sc_unsigned &u, long v)
     CONVERT_LONG(v);
 
     // other cases
-    return and_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             vs, BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
+    return and_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, vs,
+        BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
 }
 
-
 sc_signed
-operator & (long u, const sc_unsigned &v)
+operator&(long u, const sc_unsigned &v)
 {
     if ((u == 0) || (v.sgn == SC_ZERO)) // case 1
         return sc_signed();
@@ -2871,13 +2746,12 @@ operator & (long u, const sc_unsigned &v)
     CONVERT_LONG(u);
 
     // other cases
-    return and_signed_friend(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud,
-                             v.sgn, v.nbits, v.ndigits, v.digit);
+    return and_signed_friend(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator & (const sc_signed &u, unsigned long v)
+operator&(const sc_signed &u, unsigned long v)
 {
     if ((u.sgn == SC_ZERO) || (v == 0)) // case 1
         return sc_signed();
@@ -2885,13 +2759,12 @@ operator & (const sc_signed &u, unsigned long v)
     CONVERT_LONG(v);
 
     // other cases
-    return and_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             vs, BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
+    return and_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, vs,
+        BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
 }
 
-
 sc_signed
-operator & (unsigned long u, const sc_signed &v)
+operator&(unsigned long u, const sc_signed &v)
 {
     if ((u == 0) || (v.sgn == SC_ZERO)) // case 1
         return sc_signed();
@@ -2899,13 +2772,12 @@ operator & (unsigned long u, const sc_signed &v)
     CONVERT_LONG(u);
 
     // other cases
-    return and_signed_friend(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud,
-                             v.sgn, v.nbits, v.ndigits, v.digit);
+    return and_signed_friend(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
 // The rest of the operators in this section are included from
 // sc_nbcommon.cpp.
-
 
 // ----------------------------------------------------------------------------
 //  SECTION: Bitwise OR operators: |, |=
@@ -2920,7 +2792,7 @@ operator & (unsigned long u, const sc_signed &v)
 // 6. (-u) | v => sgn = -
 
 sc_signed
-operator | (const sc_unsigned &u, const sc_signed &v)
+operator|(const sc_unsigned &u, const sc_signed &v)
 {
     if (v.sgn == SC_ZERO) // case 1
         return sc_signed(u);
@@ -2929,13 +2801,12 @@ operator | (const sc_unsigned &u, const sc_signed &v)
         return sc_signed(v);
 
     // other cases
-    return or_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                            v.sgn, v.nbits, v.ndigits, v.digit);
+    return or_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, v.sgn, v.nbits,
+        v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator | (const sc_signed &u, const sc_unsigned &v)
+operator|(const sc_signed &u, const sc_unsigned &v)
 {
     if (v.sgn == SC_ZERO) // case 1
         return sc_signed(u);
@@ -2944,13 +2815,12 @@ operator | (const sc_signed &u, const sc_unsigned &v)
         return sc_signed(v);
 
     // other cases
-    return or_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                            v.sgn, v.nbits, v.ndigits, v.digit);
+    return or_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, v.sgn, v.nbits,
+        v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator | (const sc_signed &u, const sc_signed &v)
+operator|(const sc_signed &u, const sc_signed &v)
 {
     if (v.sgn == SC_ZERO) // case 1
         return sc_signed(u);
@@ -2959,13 +2829,12 @@ operator | (const sc_signed &u, const sc_signed &v)
         return sc_signed(v);
 
     // other cases
-    return or_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                            v.sgn, v.nbits, v.ndigits, v.digit);
+    return or_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, v.sgn, v.nbits,
+        v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator | (const sc_signed &u, int64 v)
+operator|(const sc_signed &u, int64 v)
 {
     if (v == 0) // case 1
         return sc_signed(u);
@@ -2976,13 +2845,12 @@ operator | (const sc_signed &u, int64 v)
         return sc_signed(vs, BITS_PER_UINT64, DIGITS_PER_UINT64, vd, false);
 
     // other cases
-    return or_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                            vs, BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
+    return or_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, vs,
+        BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
 }
 
-
 sc_signed
-operator | (int64 u, const sc_signed &v)
+operator|(int64 u, const sc_signed &v)
 {
     if (u == 0)
         return sc_signed(v);
@@ -2993,13 +2861,12 @@ operator | (int64 u, const sc_signed &v)
         return sc_signed(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud, false);
 
     // other cases
-    return or_signed_friend(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud,
-                            v.sgn, v.nbits, v.ndigits, v.digit);
+    return or_signed_friend(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud, v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator | (const sc_unsigned &u, int64 v)
+operator|(const sc_unsigned &u, int64 v)
 {
     if (v == 0) // case 1
         return sc_signed(u);
@@ -3010,13 +2877,12 @@ operator | (const sc_unsigned &u, int64 v)
         return sc_signed(vs, BITS_PER_UINT64, DIGITS_PER_UINT64, vd, false);
 
     // other cases
-    return or_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                            vs, BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
+    return or_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, vs,
+        BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
 }
 
-
 sc_signed
-operator | (int64 u, const sc_unsigned &v)
+operator|(int64 u, const sc_unsigned &v)
 {
     if (u == 0)
         return sc_signed(v);
@@ -3027,13 +2893,12 @@ operator | (int64 u, const sc_unsigned &v)
         return sc_signed(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud, false);
 
     // other cases
-    return or_signed_friend(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud,
-                            v.sgn, v.nbits, v.ndigits, v.digit);
+    return or_signed_friend(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud, v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator | (const sc_signed &u, uint64 v)
+operator|(const sc_signed &u, uint64 v)
 {
     if (v == 0) // case 1
         return sc_signed(u);
@@ -3044,13 +2909,12 @@ operator | (const sc_signed &u, uint64 v)
         return sc_signed(vs, BITS_PER_UINT64, DIGITS_PER_UINT64, vd, false);
 
     // other cases
-    return or_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                            vs, BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
+    return or_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, vs,
+        BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
 }
 
-
 sc_signed
-operator | (uint64 u, const sc_signed &v)
+operator|(uint64 u, const sc_signed &v)
 {
     if (u == 0)
         return sc_signed(v);
@@ -3061,13 +2925,12 @@ operator | (uint64 u, const sc_signed &v)
         return sc_signed(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud, false);
 
     // other cases
-    return or_signed_friend(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud,
-                            v.sgn, v.nbits, v.ndigits, v.digit);
+    return or_signed_friend(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud, v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator | (const sc_signed &u, long v)
+operator|(const sc_signed &u, long v)
 {
     if (v == 0) // case 1
         return sc_signed(u);
@@ -3078,13 +2941,12 @@ operator | (const sc_signed &u, long v)
         return sc_signed(vs, BITS_PER_ULONG, DIGITS_PER_ULONG, vd, false);
 
     // other cases
-    return or_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                            vs, BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
+    return or_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, vs,
+        BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
 }
 
-
 sc_signed
-operator | (long u, const sc_signed &v)
+operator|(long u, const sc_signed &v)
 {
     if (u == 0)
         return sc_signed(v);
@@ -3095,13 +2957,12 @@ operator | (long u, const sc_signed &v)
         return sc_signed(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, false);
 
     // other cases
-    return or_signed_friend(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud,
-                            v.sgn, v.nbits, v.ndigits, v.digit);
+    return or_signed_friend(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator | (const sc_unsigned &u, long v)
+operator|(const sc_unsigned &u, long v)
 {
     if (v == 0) // case 1
         return sc_signed(u);
@@ -3112,13 +2973,12 @@ operator | (const sc_unsigned &u, long v)
         return sc_signed(vs, BITS_PER_ULONG, DIGITS_PER_ULONG, vd, false);
 
     // other cases
-    return or_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                            vs, BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
+    return or_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, vs,
+        BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
 }
 
-
 sc_signed
-operator | (long u, const sc_unsigned &v)
+operator|(long u, const sc_unsigned &v)
 {
     if (u == 0)
         return sc_signed(v);
@@ -3129,13 +2989,12 @@ operator | (long u, const sc_unsigned &v)
         return sc_signed(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, false);
 
     // other cases
-    return or_signed_friend(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud,
-                            v.sgn, v.nbits, v.ndigits, v.digit);
+    return or_signed_friend(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator | (const sc_signed &u, unsigned long v)
+operator|(const sc_signed &u, unsigned long v)
 {
     if (v == 0) // case 1
         return sc_signed(u);
@@ -3146,13 +3005,12 @@ operator | (const sc_signed &u, unsigned long v)
         return sc_signed(vs, BITS_PER_ULONG, DIGITS_PER_ULONG, vd, false);
 
     // other cases
-    return or_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                            vs, BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
+    return or_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, vs,
+        BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
 }
 
-
 sc_signed
-operator | (unsigned long u, const sc_signed &v)
+operator|(unsigned long u, const sc_signed &v)
 {
     if (u == 0)
         return sc_signed(v);
@@ -3163,13 +3021,12 @@ operator | (unsigned long u, const sc_signed &v)
         return sc_signed(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, false);
 
     // other cases
-    return or_signed_friend(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud,
-                            v.sgn, v.nbits, v.ndigits, v.digit);
+    return or_signed_friend(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
 // The rest of the operators in this section are included from
 // sc_nbcommon.cpp.
-
 
 // ----------------------------------------------------------------------------
 //  SECTION: Bitwise XOR operators: ^, ^=
@@ -3185,24 +3042,7 @@ operator | (unsigned long u, const sc_signed &v)
 // 6. (-u) ^ v => sgn = +
 
 sc_signed
-operator ^ (const sc_unsigned &u, const sc_signed &v)
-{
-
-  if (v.sgn == SC_ZERO) // case 1
-    return sc_signed(u);
-
-  if (u.sgn == SC_ZERO) // case 2
-    return sc_signed(v);
-
-  // other cases
-  return xor_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                           v.sgn, v.nbits, v.ndigits, v.digit);
-
-}
-
-
-sc_signed
-operator ^ (const sc_signed &u, const sc_unsigned &v)
+operator^(const sc_unsigned &u, const sc_signed &v)
 {
     if (v.sgn == SC_ZERO) // case 1
         return sc_signed(u);
@@ -3211,13 +3051,12 @@ operator ^ (const sc_signed &u, const sc_unsigned &v)
         return sc_signed(v);
 
     // other cases
-    return xor_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             v.sgn, v.nbits, v.ndigits, v.digit);
+    return xor_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator ^ (const sc_signed &u, const sc_signed &v)
+operator^(const sc_signed &u, const sc_unsigned &v)
 {
     if (v.sgn == SC_ZERO) // case 1
         return sc_signed(u);
@@ -3226,13 +3065,26 @@ operator ^ (const sc_signed &u, const sc_signed &v)
         return sc_signed(v);
 
     // other cases
-    return xor_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             v.sgn, v.nbits, v.ndigits, v.digit);
+    return xor_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
+sc_signed
+operator^(const sc_signed &u, const sc_signed &v)
+{
+    if (v.sgn == SC_ZERO) // case 1
+        return sc_signed(u);
+
+    if (u.sgn == SC_ZERO) // case 2
+        return sc_signed(v);
+
+    // other cases
+    return xor_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, v.sgn,
+        v.nbits, v.ndigits, v.digit);
+}
 
 sc_signed
-operator ^ (const sc_signed &u, int64 v)
+operator^(const sc_signed &u, int64 v)
 {
     if (v == 0) // case 1
         return sc_signed(u);
@@ -3243,13 +3095,12 @@ operator ^ (const sc_signed &u, int64 v)
         return sc_signed(vs, BITS_PER_UINT64, DIGITS_PER_UINT64, vd, false);
 
     // other cases
-    return xor_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             vs, BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
+    return xor_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, vs,
+        BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
 }
 
-
 sc_signed
-operator ^ (int64 u, const sc_signed &v)
+operator^(int64 u, const sc_signed &v)
 {
     if (u == 0)
         return sc_signed(v);
@@ -3260,13 +3111,12 @@ operator ^ (int64 u, const sc_signed &v)
         return sc_signed(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud, false);
 
     // other cases
-    return xor_signed_friend(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud,
-                             v.sgn, v.nbits, v.ndigits, v.digit);
+    return xor_signed_friend(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud, v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator ^ (const sc_unsigned &u, int64 v)
+operator^(const sc_unsigned &u, int64 v)
 {
     if (v == 0) // case 1
         return sc_signed(u);
@@ -3277,13 +3127,12 @@ operator ^ (const sc_unsigned &u, int64 v)
         return sc_signed(vs, BITS_PER_UINT64, DIGITS_PER_UINT64, vd, false);
 
     // other cases
-    return xor_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             vs, BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
+    return xor_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, vs,
+        BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
 }
 
-
 sc_signed
-operator ^ (int64 u, const sc_unsigned &v)
+operator^(int64 u, const sc_unsigned &v)
 {
     if (u == 0)
         return sc_signed(v);
@@ -3294,13 +3143,12 @@ operator ^ (int64 u, const sc_unsigned &v)
         return sc_signed(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud, false);
 
     // other cases
-    return xor_signed_friend(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud,
-                             v.sgn, v.nbits, v.ndigits, v.digit);
+    return xor_signed_friend(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud, v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator ^ (const sc_signed &u, uint64 v)
+operator^(const sc_signed &u, uint64 v)
 {
     if (v == 0) // case 1
         return sc_signed(u);
@@ -3311,12 +3159,12 @@ operator ^ (const sc_signed &u, uint64 v)
         return sc_signed(vs, BITS_PER_UINT64, DIGITS_PER_UINT64, vd, false);
 
     // other cases
-    return xor_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             vs, BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
+    return xor_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, vs,
+        BITS_PER_UINT64, DIGITS_PER_UINT64, vd);
 }
 
 sc_signed
-operator ^ (uint64 u, const sc_signed &v)
+operator^(uint64 u, const sc_signed &v)
 {
     if (u == 0)
         return sc_signed(v);
@@ -3327,13 +3175,12 @@ operator ^ (uint64 u, const sc_signed &v)
         return sc_signed(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud, false);
 
     // other cases
-    return xor_signed_friend(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud,
-                             v.sgn, v.nbits, v.ndigits, v.digit);
+    return xor_signed_friend(us, BITS_PER_UINT64, DIGITS_PER_UINT64, ud, v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator ^ (const sc_signed &u, long v)
+operator^(const sc_signed &u, long v)
 {
     if (v == 0) // case 1
         return sc_signed(u);
@@ -3344,13 +3191,12 @@ operator ^ (const sc_signed &u, long v)
         return sc_signed(vs, BITS_PER_ULONG, DIGITS_PER_ULONG, vd, false);
 
     // other cases
-    return xor_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             vs, BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
+    return xor_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, vs,
+        BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
 }
 
-
 sc_signed
-operator ^ (long u, const sc_signed &v)
+operator^(long u, const sc_signed &v)
 {
     if (u == 0)
         return sc_signed(v);
@@ -3361,13 +3207,12 @@ operator ^ (long u, const sc_signed &v)
         return sc_signed(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, false);
 
     // other cases
-    return xor_signed_friend(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud,
-                             v.sgn, v.nbits, v.ndigits, v.digit);
+    return xor_signed_friend(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator ^ (const sc_unsigned &u, long v)
+operator^(const sc_unsigned &u, long v)
 {
     if (v == 0) // case 1
         return sc_signed(u);
@@ -3378,13 +3223,12 @@ operator ^ (const sc_unsigned &u, long v)
         return sc_signed(vs, BITS_PER_ULONG, DIGITS_PER_ULONG, vd, false);
 
     // other cases
-    return xor_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             vs, BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
+    return xor_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, vs,
+        BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
 }
 
-
 sc_signed
-operator ^ (long u, const sc_unsigned &v)
+operator^(long u, const sc_unsigned &v)
 {
     if (u == 0)
         return sc_signed(v);
@@ -3395,13 +3239,12 @@ operator ^ (long u, const sc_unsigned &v)
         return sc_signed(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, false);
 
     // other cases
-    return xor_signed_friend(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud,
-                             v.sgn, v.nbits, v.ndigits, v.digit);
+    return xor_signed_friend(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
-
 sc_signed
-operator ^ (const sc_signed &u, unsigned long v)
+operator^(const sc_signed &u, unsigned long v)
 {
     if (v == 0) // case 1
         return sc_signed(u);
@@ -3412,12 +3255,12 @@ operator ^ (const sc_signed &u, unsigned long v)
         return sc_signed(vs, BITS_PER_ULONG, DIGITS_PER_ULONG, vd, false);
 
     // other cases
-    return xor_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit,
-                             vs, BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
+    return xor_signed_friend(u.sgn, u.nbits, u.ndigits, u.digit, vs,
+        BITS_PER_ULONG, DIGITS_PER_ULONG, vd);
 }
 
 sc_signed
-operator ^ (unsigned long u, const sc_signed &v)
+operator^(unsigned long u, const sc_signed &v)
 {
     if (u == 0)
         return sc_signed(v);
@@ -3428,13 +3271,12 @@ operator ^ (unsigned long u, const sc_signed &v)
         return sc_signed(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, false);
 
     // other cases
-    return xor_signed_friend(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud,
-                             v.sgn, v.nbits, v.ndigits, v.digit);
+    return xor_signed_friend(us, BITS_PER_ULONG, DIGITS_PER_ULONG, ud, v.sgn,
+        v.nbits, v.ndigits, v.digit);
 }
 
 // The rest of the operators in this section are included from
 // sc_nbcommon.cpp.
-
 
 // ----------------------------------------------------------------------------
 //  SECTION: Bitwise NOT operator: ~
@@ -3442,70 +3284,66 @@ operator ^ (unsigned long u, const sc_signed &v)
 
 // Operators in this section are included from sc_nbcommon.cpp.
 
-
 // ----------------------------------------------------------------------------
 //  SECTION: LEFT SHIFT operators: <<, <<=
 // ----------------------------------------------------------------------------
 
 sc_signed
-operator << (const sc_signed &u, const sc_unsigned &v)
+operator<<(const sc_signed &u, const sc_unsigned &v)
 {
     if (v.sgn == SC_ZERO)
         return sc_signed(u);
 
-    return operator << (u, v.to_ulong());
+    return operator<<(u, v.to_ulong());
 }
 
 // The rest of the operators in this section are included from
 // sc_nbcommon.cpp.
-
 
 // ----------------------------------------------------------------------------
 //  SECTION: RIGHT SHIFT operators: >>, >>=
 // ----------------------------------------------------------------------------
 
 sc_signed
-operator >> (const sc_signed &u, const sc_unsigned &v)
+operator>>(const sc_signed &u, const sc_unsigned &v)
 {
     if (v.sgn == SC_ZERO)
         return sc_signed(u);
 
-    return operator >> (u, v.to_ulong());
+    return operator>>(u, v.to_ulong());
 }
 
 // The rest of the operators in this section are included from
 // sc_nbcommon.cpp.
-
 
 // ----------------------------------------------------------------------------
 //  SECTION: Unary arithmetic operators.
 // ----------------------------------------------------------------------------
 
 sc_signed
-operator + (const sc_signed &u)
+operator+(const sc_signed &u)
 {
     return sc_signed(u);
 }
 
 sc_signed
-operator - (const sc_signed &u)
+operator-(const sc_signed &u)
 {
     return sc_signed(u, -u.sgn);
 }
 
 sc_signed
-operator - (const sc_unsigned &u)
+operator-(const sc_unsigned &u)
 {
     return sc_signed(u, -u.sgn);
 }
-
 
 // ----------------------------------------------------------------------------
 //    SECTION: EQUAL operator: ==
 // ----------------------------------------------------------------------------
 
 bool
-operator == (const sc_signed &u, const sc_signed &v)
+operator==(const sc_signed &u, const sc_signed &v)
 {
     if (u.sgn != v.sgn)
         return false;
@@ -3519,9 +3357,8 @@ operator == (const sc_signed &u, const sc_signed &v)
     return true;
 }
 
-
 bool
-operator == (const sc_signed &u, int64 v)
+operator==(const sc_signed &u, int64 v)
 {
     CONVERT_INT64(v);
 
@@ -3534,9 +3371,8 @@ operator == (const sc_signed &u, int64 v)
     return true;
 }
 
-
 bool
-operator == (int64 u, const sc_signed &v)
+operator==(int64 u, const sc_signed &v)
 {
     CONVERT_INT64(u);
 
@@ -3549,9 +3385,8 @@ operator == (int64 u, const sc_signed &v)
     return true;
 }
 
-
 bool
-operator == (const sc_signed &u, uint64 v)
+operator==(const sc_signed &u, uint64 v)
 {
     CONVERT_INT64(v);
 
@@ -3564,9 +3399,8 @@ operator == (const sc_signed &u, uint64 v)
     return true;
 }
 
-
 bool
-operator == (uint64 u, const sc_signed &v)
+operator==(uint64 u, const sc_signed &v)
 {
     CONVERT_INT64(u);
 
@@ -3579,9 +3413,8 @@ operator == (uint64 u, const sc_signed &v)
     return true;
 }
 
-
 bool
-operator == (const sc_signed &u, long v)
+operator==(const sc_signed &u, long v)
 {
     CONVERT_LONG(v);
 
@@ -3594,9 +3427,8 @@ operator == (const sc_signed &u, long v)
     return true;
 }
 
-
 bool
-operator == (long u, const sc_signed &v)
+operator==(long u, const sc_signed &v)
 {
     CONVERT_LONG(u);
 
@@ -3609,9 +3441,8 @@ operator == (long u, const sc_signed &v)
     return true;
 }
 
-
 bool
-operator == (const sc_signed &u, unsigned long v)
+operator==(const sc_signed &u, unsigned long v)
 {
     CONVERT_LONG(v);
 
@@ -3624,9 +3455,8 @@ operator == (const sc_signed &u, unsigned long v)
     return true;
 }
 
-
 bool
-operator == (unsigned long u, const sc_signed &v)
+operator==(unsigned long u, const sc_signed &v)
 {
     CONVERT_LONG(u);
 
@@ -3638,7 +3468,6 @@ operator == (unsigned long u, const sc_signed &v)
 
     return true;
 }
-
 
 // ----------------------------------------------------------------------------
 //    SECTION: NOT_EQUAL operator: !=
@@ -3646,13 +3475,12 @@ operator == (unsigned long u, const sc_signed &v)
 
 // Operators in this section are included from sc_nbcommon.cpp.
 
-
 // ----------------------------------------------------------------------------
 //    SECTION: LESS THAN operator: <
 // ----------------------------------------------------------------------------
 
 bool
-operator < (const sc_signed &u, const sc_signed &v)
+operator<(const sc_signed &u, const sc_signed &v)
 {
     if (u.sgn < v.sgn)
         return true;
@@ -3676,9 +3504,8 @@ operator < (const sc_signed &u, const sc_signed &v)
     return false;
 }
 
-
 bool
-operator < (const sc_signed &u, int64 v)
+operator<(const sc_signed &u, int64 v)
 {
     CONVERT_INT64(v);
 
@@ -3701,9 +3528,8 @@ operator < (const sc_signed &u, int64 v)
     return false;
 }
 
-
 bool
-operator < (int64 u, const sc_signed &v)
+operator<(int64 u, const sc_signed &v)
 {
     CONVERT_INT64(u);
 
@@ -3726,9 +3552,8 @@ operator < (int64 u, const sc_signed &v)
     return false;
 }
 
-
 bool
-operator < (const sc_signed &u, uint64 v)
+operator<(const sc_signed &u, uint64 v)
 {
     CONVERT_INT64(v);
 
@@ -3748,9 +3573,8 @@ operator < (const sc_signed &u, uint64 v)
     return false;
 }
 
-
 bool
-operator < (uint64 u, const sc_signed &v)
+operator<(uint64 u, const sc_signed &v)
 {
     CONVERT_INT64(u);
 
@@ -3770,9 +3594,8 @@ operator < (uint64 u, const sc_signed &v)
     return false;
 }
 
-
 bool
-operator < (const sc_signed &u, long v)
+operator<(const sc_signed &u, long v)
 {
     CONVERT_LONG(v);
 
@@ -3796,9 +3619,8 @@ operator < (const sc_signed &u, long v)
     return false;
 }
 
-
 bool
-operator < (long u, const sc_signed &v)
+operator<(long u, const sc_signed &v)
 {
     CONVERT_LONG(u);
 
@@ -3821,9 +3643,8 @@ operator < (long u, const sc_signed &v)
     return false;
 }
 
-
 bool
-operator < (const sc_signed &u, unsigned long v)
+operator<(const sc_signed &u, unsigned long v)
 {
     CONVERT_LONG(v);
 
@@ -3843,9 +3664,8 @@ operator < (const sc_signed &u, unsigned long v)
     return false;
 }
 
-
 bool
-operator < (unsigned long u, const sc_signed &v)
+operator<(unsigned long u, const sc_signed &v)
 {
     CONVERT_LONG(u);
 
@@ -3865,13 +3685,11 @@ operator < (unsigned long u, const sc_signed &v)
     return false;
 }
 
-
 // ---------------------------------------------------------------------------
 //    SECTION: LESS THAN or EQUAL operator: <=
 // ---------------------------------------------------------------------------
 
 // Operators in this section are included from sc_nbcommon.cpp.
-
 
 // ---------------------------------------------------------------------------
 //    SECTION: GREATER THAN operator: >
@@ -3879,13 +3697,11 @@ operator < (unsigned long u, const sc_signed &v)
 
 // Operators in this section are included from sc_nbcommon.cpp.
 
-
 // ---------------------------------------------------------------------------
 //    SECTION: GREATER THAN or EQUAL operator: >=
 // ---------------------------------------------------------------------------
 
 // Operators in this section are included from sc_nbcommon.cpp.
-
 
 // ---------------------------------------------------------------------------
 //    SECTION: Public members - Other utils.
@@ -3902,7 +3718,6 @@ sc_signed::iszero() const
         return check_for_zero(ndigits, digit);
 }
 
-
 bool
 sc_signed::sign() const
 {
@@ -3915,7 +3730,6 @@ sc_signed::sign() const
 }
 
 // The rest of the utils in this section are included from sc_nbcommon.cpp.
-
 
 // ----------------------------------------------------------------------------
 //    SECTION: Private members.

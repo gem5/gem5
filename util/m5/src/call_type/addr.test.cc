@@ -55,11 +55,25 @@ class DefaultCallType : public CallType
     DefaultCallType() : CallType("default") {}
 
     bool initCalled = false;
-    void init() override { initCalled = true; }
+    void
+    init() override
+    {
+        initCalled = true;
+    }
 
-    bool isDefault() const override { return true; }
-    void printDesc(std::ostream &os) const override {}
-    const DispatchTable &getDispatch() const override { return dt; }
+    bool
+    isDefault() const override
+    {
+        return true;
+    }
+    void
+    printDesc(std::ostream &os) const override
+    {}
+    const DispatchTable &
+    getDispatch() const override
+    {
+        return dt;
+    }
 };
 
 DefaultCallType defaultCallType;
@@ -289,7 +303,11 @@ class TempFile
         close(fd);
     }
 
-    const std::string &path() const { return _path; }
+    const std::string &
+    path() const
+    {
+        return _path;
+    }
 };
 
 // Sparse dummy mmap file if we're not in gem5.
@@ -306,8 +324,8 @@ verify_mmap()
     auto maps_path = os.str();
 
     if (access(maps_path.c_str(), R_OK) == -1) {
-        std::cout << "Unable to access " << maps_path <<
-            ", can't verify mmap." << std::endl;
+        std::cout << "Unable to access " << maps_path << ", can't verify mmap."
+                  << std::endl;
         return;
     }
 
@@ -323,8 +341,8 @@ verify_mmap()
     while (!maps.eof()) {
         std::string line;
         if (getline(maps, line).fail()) {
-            std::cout << "Error reading from \"" << maps_path << "\"." <<
-                std::endl;
+            std::cout << "Error reading from \"" << maps_path << "\"."
+                      << std::endl;
             return;
         }
 
@@ -347,9 +365,9 @@ verify_mmap()
     }
 
     if (maps.eof() && !found) {
-        std::cout << "Did not find entry for temp file \"" <<
-            mmapDummyFile.path() << "\" in \"" << maps_path <<
-            "\"." << std::endl;
+        std::cout << "Did not find entry for temp file \""
+                  << mmapDummyFile.path() << "\" in \"" << maps_path << "\"."
+                  << std::endl;
         ADD_FAILURE() << "No mapping for our mmapped file.";
         return;
     }

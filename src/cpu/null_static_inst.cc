@@ -32,7 +32,6 @@
 
 namespace gem5
 {
-
 const StaticInstPtr nullStaticInstPtr;
 
 } // namespace gem5

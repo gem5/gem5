@@ -39,9 +39,8 @@
 
 namespace gem5
 {
-
-SysSecCtrl::SysSecCtrl(const Params &p)
-  : BasicPioDevice(p, 0x1000),
+SysSecCtrl::SysSecCtrl(const Params &p) :
+    BasicPioDevice(p, 0x1000),
     sscDbgcfgStat("ssc_dbgcfg_stat", p.ssc_dbgcfg_stat),
     sscDbgcfgSet("ssc_dbgcfg_set"),
     sscDbgcfgClr("ssc_dbgcfg_clr"),
@@ -85,7 +84,9 @@ SysSecCtrl::SysSecCtrl(const Params &p)
     compid3.readonly();
 
     regBank.addRegisters({
-        sscDbgcfgStat, sscDbgcfgSet, sscDbgcfgClr,
+        sscDbgcfgStat,
+        sscDbgcfgSet,
+        sscDbgcfgClr,
         space0,
         sscAuxDbgcfg,
         space1,
@@ -95,15 +96,21 @@ SysSecCtrl::SysSecCtrl(const Params &p)
         space3,
         sscSwScratch,
         space4,
-        sscSwCap, sscSwCapCtrl,
+        sscSwCap,
+        sscSwCapCtrl,
         space5,
         sscChipIdSt,
         space6,
         sscPid4,
         space7,
-        sscPid0, sscPid1, sscPid2,
+        sscPid0,
+        sscPid1,
+        sscPid2,
         space8,
-        compid0, compid1, compid2, compid3,
+        compid0,
+        compid1,
+        compid2,
+        compid3,
     });
 }
 
@@ -131,4 +138,4 @@ SysSecCtrl::write(PacketPtr pkt)
     return pioDelay;
 }
 
-}
+} // namespace gem5

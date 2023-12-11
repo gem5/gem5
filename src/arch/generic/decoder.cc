@@ -31,7 +31,6 @@
 
 namespace gem5
 {
-
 StaticInstPtr
 InstDecoder::fetchRomMicroop(MicroPC micropc, StaticInstPtr curMacroop)
 {

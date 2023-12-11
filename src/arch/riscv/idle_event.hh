@@ -33,12 +33,11 @@
 
 namespace gem5
 {
-
 class IdleStartEvent : public PCEvent
 {
   public:
-    IdleStartEvent(PCEventScope *s, const std::string &desc, Addr addr)
-        : PCEvent(s, desc, addr)
+    IdleStartEvent(PCEventScope *s, const std::string &desc, Addr addr) :
+        PCEvent(s, desc, addr)
     {}
     virtual void process(ThreadContext *tc);
 };

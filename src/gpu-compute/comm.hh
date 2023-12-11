@@ -40,7 +40,6 @@
 
 namespace gem5
 {
-
 struct ComputeUnitParams;
 class Wavefront;
 
@@ -83,13 +82,13 @@ class ScoreboardCheckToSchedule : public PipeStageIFace
      *       They should be removed eventually for an API that hides such
      *       implementation details.
      */
-    std::vector<Wavefront*>& readyWFs(int func_unit_id);
+    std::vector<Wavefront *> &readyWFs(int func_unit_id);
 
     // TODO: Leftover from old CU code, needs to go away.
     void updateReadyList(int func_unit_id);
 
   private:
-    std::vector<std::vector<Wavefront*>> _readyWFs;
+    std::vector<std::vector<Wavefront *>> _readyWFs;
 };
 
 /**
@@ -101,7 +100,7 @@ class ScheduleToExecute : public PipeStageIFace
     ScheduleToExecute() = delete;
     ScheduleToExecute(const ComputeUnitParams &p);
     void reset() override;
-    GPUDynInstPtr& readyInst(int func_unit_id);
+    GPUDynInstPtr &readyInst(int func_unit_id);
     /**
      * Once the scheduler has chosen a winning WF for execution, and
      * after the WF's oldest instruction's operands have been read,
@@ -110,7 +109,7 @@ class ScheduleToExecute : public PipeStageIFace
      * stage.
      */
     void dispatchTransition(const GPUDynInstPtr &gpu_dyn_inst,
-                            int func_unit_id, DISPATCH_STATUS disp_status);
+        int func_unit_id, DISPATCH_STATUS disp_status);
     void dispatchTransition(int func_unit_id, DISPATCH_STATUS disp_status);
     DISPATCH_STATUS dispatchStatus(int func_unit_id) const;
 

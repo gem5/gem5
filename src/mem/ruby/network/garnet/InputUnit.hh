@@ -28,7 +28,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #ifndef __MEM_RUBY_NETWORK_GARNET_0_INPUTUNIT_HH__
 #define __MEM_RUBY_NETWORK_GARNET_0_INPUTUNIT_HH__
 
@@ -45,13 +44,10 @@
 
 namespace gem5
 {
-
 namespace ruby
 {
-
 namespace garnet
 {
-
 class InputUnit : public Consumer
 {
   public:
@@ -59,9 +55,13 @@ class InputUnit : public Consumer
     ~InputUnit() = default;
 
     void wakeup();
-    void print(std::ostream& out) const {};
+    void print(std::ostream &out) const {};
 
-    inline PortDirection get_direction() { return m_direction; }
+    inline PortDirection
+    get_direction()
+    {
+        return m_direction;
+    }
 
     inline void
     set_vc_idle(int vc, Tick curTime)
@@ -107,13 +107,13 @@ class InputUnit : public Consumer
 
     void increment_credit(int in_vc, bool free_signal, Tick curTime);
 
-    inline flit*
+    inline flit *
     peekTopFlit(int vc)
     {
         return virtualChannels[vc].peekTopFlit();
     }
 
-    inline flit*
+    inline flit *
     getTopFlit(int vc)
     {
         return virtualChannels[vc].getTopFlit();
@@ -131,7 +131,11 @@ class InputUnit : public Consumer
         return virtualChannels[invc].isReady(curTime);
     }
 
-    flitBuffer* getCreditQueue() { return &creditQueue; }
+    flitBuffer *
+    getCreditQueue()
+    {
+        return &creditQueue;
+    }
 
     inline void
     set_in_link(NetworkLink *link)
@@ -139,7 +143,11 @@ class InputUnit : public Consumer
         m_in_link = link;
     }
 
-    inline int get_inlink_id() { return m_in_link->get_id(); }
+    inline int
+    get_inlink_id()
+    {
+        return m_in_link->get_id();
+    }
 
     inline void
     set_credit_link(CreditLink *credit_link)
@@ -147,10 +155,16 @@ class InputUnit : public Consumer
         m_credit_link = credit_link;
     }
 
-    double get_buf_read_activity(unsigned int vnet) const
-    { return m_num_buffer_reads[vnet]; }
-    double get_buf_write_activity(unsigned int vnet) const
-    { return m_num_buffer_writes[vnet]; }
+    double
+    get_buf_read_activity(unsigned int vnet) const
+    {
+        return m_num_buffer_reads[vnet];
+    }
+    double
+    get_buf_write_activity(unsigned int vnet) const
+    {
+        return m_num_buffer_writes[vnet];
+    }
 
     bool functionalRead(Packet *pkt, WriteMask &mask);
     uint32_t functionalWrite(Packet *pkt);

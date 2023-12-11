@@ -53,10 +53,8 @@
 
 namespace gem5
 {
-
 namespace o3
 {
-
 /** Struct that defines the information passed from fetch to decode. */
 struct FetchStruct
 {
@@ -128,7 +126,8 @@ struct TimeStruct
 
     DecodeComm decodeInfo[MaxThreads];
 
-    struct RenameComm {};
+    struct RenameComm
+    {};
 
     RenameComm renameInfo[MaxThreads];
 
@@ -172,7 +171,7 @@ struct TimeStruct
 
         /// Provide fetch the instruction that mispredicted, if this
         /// pointer is not-null a misprediction occured
-        DynInstPtr mispredictInst;  // *F
+        DynInstPtr mispredictInst; // *F
 
         /// Instruction that caused the a non-mispredict squash
         DynInstPtr squashInst; // *F
@@ -193,7 +192,7 @@ struct TimeStruct
         /// Tell Rename how many free entries it has in the ROB
         unsigned freeROBEntries; // *R
 
-        bool squash; // *F, D, R, I
+        bool squash;       // *F, D, R, I
         bool robSquashing; // *F, D, R, I
 
         /// Rename should re-read number of free rob entries
@@ -212,7 +211,6 @@ struct TimeStruct
         /// Hack for now to send back an strictly ordered access to
         /// the IEW stage.
         bool strictlyOrdered; // *I
-
     };
 
     CommitComm commitInfo[MaxThreads];

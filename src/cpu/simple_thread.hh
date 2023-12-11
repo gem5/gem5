@@ -72,7 +72,6 @@
 
 namespace gem5
 {
-
 class BaseCPU;
 class CheckerCPU;
 
@@ -98,7 +97,7 @@ class SimpleThread : public ThreadState, public ThreadContext
   protected:
     std::array<RegFile, CCRegClass + 1> regFiles;
 
-    BaseISA *const isa;    // one "instance" of the current ISA.
+    BaseISA *const isa; // one "instance" of the current ISA.
 
     std::unique_ptr<PCStateBase> _pcState;
 
@@ -138,11 +137,11 @@ class SimpleThread : public ThreadState, public ThreadContext
     // constructor: initialize SimpleThread from given process structure
     // FS
     SimpleThread(BaseCPU *_cpu, int _thread_num, System *_system,
-                 BaseMMU *_mmu, BaseISA *_isa, InstDecoder *_decoder);
+        BaseMMU *_mmu, BaseISA *_isa, InstDecoder *_decoder);
     // SE
     SimpleThread(BaseCPU *_cpu, int _thread_num, System *_system,
-                 Process *_process, BaseMMU *_mmu,
-                 BaseISA *_isa, InstDecoder *_decoder);
+        Process *_process, BaseMMU *_mmu, BaseISA *_isa,
+        InstDecoder *_decoder);
 
     virtual ~SimpleThread() {}
 
@@ -162,7 +161,11 @@ class SimpleThread : public ThreadState, public ThreadContext
      *  when a ThreadContext must be passed to objects outside of the
      *  CPU.
      */
-    ThreadContext *getTC() { return this; }
+    ThreadContext *
+    getTC()
+    {
+        return this;
+    }
 
     void
     demapPage(Addr vaddr, uint64_t asn)
@@ -174,8 +177,16 @@ class SimpleThread : public ThreadState, public ThreadContext
      * ThreadContext interface functions.
      ******************************************/
 
-    bool schedule(PCEvent *e) override { return pcEventQueue.schedule(e); }
-    bool remove(PCEvent *e) override { return pcEventQueue.remove(e); }
+    bool
+    schedule(PCEvent *e) override
+    {
+        return pcEventQueue.schedule(e);
+    }
+    bool
+    remove(PCEvent *e) override
+    {
+        return pcEventQueue.remove(e);
+    }
 
     void
     scheduleInstCountEvent(Event *event, Tick count) override
@@ -193,31 +204,95 @@ class SimpleThread : public ThreadState, public ThreadContext
         return comInstEventQueue.getCurTick();
     }
 
-    BaseCPU *getCpuPtr() override { return baseCpu; }
+    BaseCPU *
+    getCpuPtr() override
+    {
+        return baseCpu;
+    }
 
-    int cpuId() const override { return ThreadState::cpuId(); }
-    uint32_t socketId() const override { return ThreadState::socketId(); }
-    int threadId() const override { return ThreadState::threadId(); }
-    void setThreadId(int id) override { ThreadState::setThreadId(id); }
-    ContextID contextId() const override { return ThreadState::contextId(); }
-    void setContextId(ContextID id) override { ThreadState::setContextId(id); }
+    int
+    cpuId() const override
+    {
+        return ThreadState::cpuId();
+    }
+    uint32_t
+    socketId() const override
+    {
+        return ThreadState::socketId();
+    }
+    int
+    threadId() const override
+    {
+        return ThreadState::threadId();
+    }
+    void
+    setThreadId(int id) override
+    {
+        ThreadState::setThreadId(id);
+    }
+    ContextID
+    contextId() const override
+    {
+        return ThreadState::contextId();
+    }
+    void
+    setContextId(ContextID id) override
+    {
+        ThreadState::setContextId(id);
+    }
 
-    BaseMMU *getMMUPtr() override { return mmu; }
+    BaseMMU *
+    getMMUPtr() override
+    {
+        return mmu;
+    }
 
-    CheckerCPU *getCheckerCpuPtr() override { return NULL; }
+    CheckerCPU *
+    getCheckerCpuPtr() override
+    {
+        return NULL;
+    }
 
-    BaseISA *getIsaPtr() const override { return isa; }
+    BaseISA *
+    getIsaPtr() const override
+    {
+        return isa;
+    }
 
-    InstDecoder *getDecoderPtr() override { return decoder; }
+    InstDecoder *
+    getDecoderPtr() override
+    {
+        return decoder;
+    }
 
-    System *getSystemPtr() override { return system; }
+    System *
+    getSystemPtr() override
+    {
+        return system;
+    }
 
-    Process *getProcessPtr() override { return ThreadState::getProcessPtr(); }
-    void setProcessPtr(Process *p) override { ThreadState::setProcessPtr(p); }
+    Process *
+    getProcessPtr() override
+    {
+        return ThreadState::getProcessPtr();
+    }
+    void
+    setProcessPtr(Process *p) override
+    {
+        ThreadState::setProcessPtr(p);
+    }
 
-    Status status() const override { return _status; }
+    Status
+    status() const override
+    {
+        return _status;
+    }
 
-    void setStatus(Status newStatus) override { _status = newStatus; }
+    void
+    setStatus(Status newStatus) override
+    {
+        _status = newStatus;
+    }
 
     /// Set the status to Active.
     void activate() override;
@@ -245,7 +320,7 @@ class SimpleThread : public ThreadState, public ThreadContext
     clearArchRegs() override
     {
         set(_pcState, isa->newPCState());
-        for (auto &rf: regFiles)
+        for (auto &rf : regFiles)
             rf.clear();
         isa->clear();
     }
@@ -253,8 +328,16 @@ class SimpleThread : public ThreadState, public ThreadContext
     //
     // New accessors for new decoder.
     //
-    const PCStateBase &pcState() const override { return *_pcState; }
-    void pcState(const PCStateBase &val) override { set(_pcState, val); }
+    const PCStateBase &
+    pcState() const override
+    {
+        return *_pcState;
+    }
+    void
+    pcState(const PCStateBase &val) override
+    {
+        set(_pcState, val);
+    }
 
     void
     pcStateNoRecord(const PCStateBase &val) override
@@ -262,8 +345,16 @@ class SimpleThread : public ThreadState, public ThreadContext
         set(_pcState, val);
     }
 
-    bool readPredicate() const { return predicate; }
-    void setPredicate(bool val) { predicate = val; }
+    bool
+    readPredicate() const
+    {
+        return predicate;
+    }
+    void
+    setPredicate(bool val)
+    {
+        predicate = val;
+    }
 
     RegVal
     readMiscRegNoEffect(RegIndex misc_reg) const override
@@ -289,7 +380,11 @@ class SimpleThread : public ThreadState, public ThreadContext
         return isa->setMiscReg(misc_reg, val);
     }
 
-    unsigned readStCondFailures() const override { return storeCondFailures; }
+    unsigned
+    readStCondFailures() const override
+    {
+        return storeCondFailures;
+    }
 
     bool
     readMemAccPredicate()
@@ -321,7 +416,7 @@ class SimpleThread : public ThreadState, public ThreadContext
 
         RegVal val = reg_file.reg(idx);
         DPRINTFV(reg_class.debug(), "Reading %s reg %s (%d) as %#x.\n",
-                reg.className(), reg_class.regName(arch_reg), idx, val);
+            reg.className(), reg_class.regName(arch_reg), idx, val);
         return val;
     }
 
@@ -337,8 +432,8 @@ class SimpleThread : public ThreadState, public ThreadContext
 
         reg_file.get(idx, val);
         DPRINTFV(reg_class.debug(), "Reading %s register %s (%d) as %s.\n",
-                reg.className(), reg_class.regName(arch_reg), idx,
-                reg_class.valString(val));
+            reg.className(), reg_class.regName(arch_reg), idx,
+            reg_class.valString(val));
     }
 
     void *
@@ -365,7 +460,7 @@ class SimpleThread : public ThreadState, public ThreadContext
         const auto &reg_class = reg_file.regClass;
 
         DPRINTFV(reg_class.debug(), "Setting %s register %s (%d) to %#x.\n",
-                reg.className(), reg_class.regName(arch_reg), idx, val);
+            reg.className(), reg_class.regName(arch_reg), idx, val);
         reg_file.reg(idx) = val;
     }
 
@@ -380,16 +475,16 @@ class SimpleThread : public ThreadState, public ThreadContext
         const auto &reg_class = reg_file.regClass;
 
         DPRINTFV(reg_class.debug(), "Setting %s register %s (%d) to %s.\n",
-                reg.className(), reg_class.regName(arch_reg), idx,
-                reg_class.valString(val));
+            reg.className(), reg_class.regName(arch_reg), idx,
+            reg_class.valString(val));
         reg_file.set(idx, val);
     }
 
     // hardware transactional memory
-    void htmAbortTransaction(uint64_t htm_uid,
-                             HtmFailureFaultCause cause) override;
+    void htmAbortTransaction(
+        uint64_t htm_uid, HtmFailureFaultCause cause) override;
 
-    BaseHTMCheckpointPtr& getHtmCheckpointPtr() override;
+    BaseHTMCheckpointPtr &getHtmCheckpointPtr() override;
     void setHtmCheckpointPtr(BaseHTMCheckpointPtr new_cpt) override;
 };
 

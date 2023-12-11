@@ -44,7 +44,6 @@
 
 namespace sc_core
 {
-
 sc_trace_file::sc_trace_file() {}
 sc_trace_file::~sc_trace_file() {}
 
@@ -115,85 +114,83 @@ sc_trace(sc_trace_file *tf, const sc_dt::sc_logic *v, const std::string &name)
 }
 
 void
-sc_trace(sc_trace_file *tf, const sc_dt::sc_int_base &v,
-        const std::string &name)
+sc_trace(
+    sc_trace_file *tf, const sc_dt::sc_int_base &v, const std::string &name)
 {
     static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name);
 }
 
 void
-sc_trace(sc_trace_file *tf, const sc_dt::sc_int_base *v,
-        const std::string &name)
+sc_trace(
+    sc_trace_file *tf, const sc_dt::sc_int_base *v, const std::string &name)
 {
     static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name);
 }
 
 void
-sc_trace(sc_trace_file *tf, const sc_dt::sc_uint_base &v,
-        const std::string &name)
+sc_trace(
+    sc_trace_file *tf, const sc_dt::sc_uint_base &v, const std::string &name)
 {
     static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name);
 }
 
 void
-sc_trace(sc_trace_file *tf, const sc_dt::sc_uint_base *v,
-        const std::string &name)
+sc_trace(
+    sc_trace_file *tf, const sc_dt::sc_uint_base *v, const std::string &name)
 {
     static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name);
 }
 
 void
-sc_trace(sc_trace_file *tf, const sc_dt::sc_signed &v,
-        const std::string &name)
+sc_trace(sc_trace_file *tf, const sc_dt::sc_signed &v, const std::string &name)
 {
     static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name);
 }
 
 void
-sc_trace(sc_trace_file *tf, const sc_dt::sc_signed *v,
-        const std::string &name)
+sc_trace(sc_trace_file *tf, const sc_dt::sc_signed *v, const std::string &name)
 {
     static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name);
 }
 
 void
-sc_trace(sc_trace_file *tf, const sc_dt::sc_unsigned &v,
-        const std::string &name)
+sc_trace(
+    sc_trace_file *tf, const sc_dt::sc_unsigned &v, const std::string &name)
 {
     static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name);
 }
 
 void
-sc_trace(sc_trace_file *tf, const sc_dt::sc_unsigned *v,
-        const std::string &name)
+sc_trace(
+    sc_trace_file *tf, const sc_dt::sc_unsigned *v, const std::string &name)
 {
     static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name);
 }
 
 void
-sc_trace(sc_trace_file *tf, const sc_dt::sc_bv_base &v,
-        const std::string &name)
+sc_trace(
+    sc_trace_file *tf, const sc_dt::sc_bv_base &v, const std::string &name)
 {
     static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name);
 }
 
 void
-sc_trace(sc_trace_file *tf, const sc_dt::sc_bv_base *v,
-        const std::string &name)
+sc_trace(
+    sc_trace_file *tf, const sc_dt::sc_bv_base *v, const std::string &name)
 {
     static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name);
 }
 
 void
-sc_trace(sc_trace_file *tf, const sc_dt::sc_lv_base &v,
-        const std::string &name)
+sc_trace(
+    sc_trace_file *tf, const sc_dt::sc_lv_base &v, const std::string &name)
 {
     static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name);
 }
 
 void
-sc_trace(sc_trace_file *tf, const sc_dt::sc_lv_base *v,
-        const std::string &name)
+sc_trace(
+    sc_trace_file *tf, const sc_dt::sc_lv_base *v, const std::string &name)
 {
     static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name);
 }
@@ -211,15 +208,15 @@ sc_trace(sc_trace_file *tf, const sc_dt::sc_fxval *v, const std::string &name)
 }
 
 void
-sc_trace(sc_trace_file *tf, const sc_dt::sc_fxval_fast &v,
-        const std::string &name)
+sc_trace(
+    sc_trace_file *tf, const sc_dt::sc_fxval_fast &v, const std::string &name)
 {
     static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name);
 }
 
 void
-sc_trace(sc_trace_file *tf, const sc_dt::sc_fxval_fast *v,
-        const std::string &name)
+sc_trace(
+    sc_trace_file *tf, const sc_dt::sc_fxval_fast *v, const std::string &name)
 {
     static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name);
 }
@@ -237,15 +234,15 @@ sc_trace(sc_trace_file *tf, const sc_dt::sc_fxnum *v, const std::string &name)
 }
 
 void
-sc_trace(sc_trace_file *tf, const sc_dt::sc_fxnum_fast &v,
-        const std::string &name)
+sc_trace(
+    sc_trace_file *tf, const sc_dt::sc_fxnum_fast &v, const std::string &name)
 {
     static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name);
 }
 
 void
-sc_trace(sc_trace_file *tf, const sc_dt::sc_fxnum_fast *v,
-        const std::string &name)
+sc_trace(
+    sc_trace_file *tf, const sc_dt::sc_fxnum_fast *v, const std::string &name)
 {
     static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name);
 }
@@ -275,57 +272,57 @@ sc_trace(sc_trace_file *tf, const sc_time *v, const std::string &name)
 }
 
 void
-sc_trace(sc_trace_file *tf, const unsigned char &v,
-         const std::string &name, int width)
+sc_trace(sc_trace_file *tf, const unsigned char &v, const std::string &name,
+    int width)
 {
     static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name, width);
 }
 
 void
-sc_trace(sc_trace_file *tf, const unsigned char *v,
-         const std::string &name, int width)
+sc_trace(sc_trace_file *tf, const unsigned char *v, const std::string &name,
+    int width)
 {
     static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name, width);
 }
 
 void
-sc_trace(sc_trace_file *tf, const unsigned short &v,
-         const std::string &name, int width)
+sc_trace(sc_trace_file *tf, const unsigned short &v, const std::string &name,
+    int width)
 {
     static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name, width);
 }
 
 void
-sc_trace(sc_trace_file *tf, const unsigned short *v,
-         const std::string &name, int width)
+sc_trace(sc_trace_file *tf, const unsigned short *v, const std::string &name,
+    int width)
 {
     static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name, width);
 }
 
 void
-sc_trace(sc_trace_file *tf, const unsigned int &v,
-        const std::string &name, int width)
+sc_trace(sc_trace_file *tf, const unsigned int &v, const std::string &name,
+    int width)
 {
     static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name, width);
 }
 
 void
-sc_trace(sc_trace_file *tf, const unsigned int *v,
-        const std::string &name, int width)
+sc_trace(sc_trace_file *tf, const unsigned int *v, const std::string &name,
+    int width)
 {
     static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name, width);
 }
 
 void
-sc_trace(sc_trace_file *tf, const unsigned long &v,
-         const std::string &name, int width)
+sc_trace(sc_trace_file *tf, const unsigned long &v, const std::string &name,
+    int width)
 {
     static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name, width);
 }
 
 void
-sc_trace(sc_trace_file *tf, const unsigned long *v,
-         const std::string &name, int width)
+sc_trace(sc_trace_file *tf, const unsigned long *v, const std::string &name,
+    int width)
 {
     static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name, width);
 }
@@ -343,15 +340,13 @@ sc_trace(sc_trace_file *tf, const char *v, const std::string &name, int width)
 }
 
 void
-sc_trace(sc_trace_file *tf, const short &v,
-        const std::string &name, int width)
+sc_trace(sc_trace_file *tf, const short &v, const std::string &name, int width)
 {
     static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name, width);
 }
 
 void
-sc_trace(sc_trace_file *tf, const short *v,
-        const std::string &name, int width)
+sc_trace(sc_trace_file *tf, const short *v, const std::string &name, int width)
 {
     static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name, width);
 }
@@ -381,71 +376,71 @@ sc_trace(sc_trace_file *tf, const long *v, const std::string &name, int width)
 }
 
 void
-sc_trace(sc_trace_file *tf, const sc_dt::int64 &v,
-        const std::string &name, int width)
+sc_trace(sc_trace_file *tf, const sc_dt::int64 &v, const std::string &name,
+    int width)
 {
     static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name, width);
 }
 
 void
-sc_trace(sc_trace_file *tf, const sc_dt::int64 *v,
-        const std::string &name, int width)
+sc_trace(sc_trace_file *tf, const sc_dt::int64 *v, const std::string &name,
+    int width)
 {
     static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name, width);
 }
 
 void
-sc_trace(sc_trace_file *tf, const sc_dt::uint64 &v,
-         const std::string &name, int width)
+sc_trace(sc_trace_file *tf, const sc_dt::uint64 &v, const std::string &name,
+    int width)
 {
     static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name, width);
 }
 
 void
-sc_trace(sc_trace_file *tf, const sc_dt::uint64 *v,
-         const std::string &name, int width)
+sc_trace(sc_trace_file *tf, const sc_dt::uint64 *v, const std::string &name,
+    int width)
 {
     static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name, width);
 }
 
 void
 sc_trace(sc_trace_file *tf, const sc_signal_in_if<char> &v,
-         const std::string &name, int width)
+    const std::string &name, int width)
 {
-    static_cast<::sc_gem5::TraceFile *>(tf)->
-        addTraceVal(&v.read(), name, width);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(
+        &v.read(), name, width);
 }
 
 void
 sc_trace(sc_trace_file *tf, const sc_signal_in_if<short> &v,
-         const std::string &name, int width)
+    const std::string &name, int width)
 {
-    static_cast<::sc_gem5::TraceFile *>(tf)->
-        addTraceVal(&v.read(), name, width);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(
+        &v.read(), name, width);
 }
 
 void
 sc_trace(sc_trace_file *tf, const sc_signal_in_if<int> &v,
-         const std::string &name, int width)
+    const std::string &name, int width)
 {
-    static_cast<::sc_gem5::TraceFile *>(tf)->
-        addTraceVal(&v.read(), name, width);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(
+        &v.read(), name, width);
 }
 
 void
 sc_trace(sc_trace_file *tf, const sc_signal_in_if<long> &v,
-         const std::string &name, int width)
+    const std::string &name, int width)
 {
-    static_cast<::sc_gem5::TraceFile *>(tf)->
-        addTraceVal(&v.read(), name, width);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(
+        &v.read(), name, width);
 }
 
 void
-sc_trace(sc_trace_file *tf, const unsigned int &v,
-         const std::string &name, const char **enum_literals)
+sc_trace(sc_trace_file *tf, const unsigned int &v, const std::string &name,
+    const char **enum_literals)
 {
-    static_cast<::sc_gem5::TraceFile *>(tf)->
-        addTraceVal(&v, name, enum_literals);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(
+        &v, name, enum_literals);
 }
 
 void

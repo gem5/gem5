@@ -38,16 +38,14 @@
 
 namespace gem5
 {
-
 namespace RiscvISA
 {
-
 std::string
 Load::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
-    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", " <<
-        offset << '(' << registerName(srcRegIdx(0)) << ')';
+    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", " << offset
+       << '(' << registerName(srcRegIdx(0)) << ')';
     return ss.str();
 }
 
@@ -59,8 +57,8 @@ Store::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
         ss << mnemonic << ' ' << offset << '(' << registerName(srcRegIdx(0))
            << ")";
     } else {
-        ss << mnemonic << ' ' << registerName(srcRegIdx(1)) << ", " <<
-            offset << '(' << registerName(srcRegIdx(0)) << ')';
+        ss << mnemonic << ' ' << registerName(srcRegIdx(1)) << ", " << offset
+           << '(' << registerName(srcRegIdx(0)) << ')';
     }
     return ss.str();
 }

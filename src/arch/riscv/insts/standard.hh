@@ -40,10 +40,8 @@
 
 namespace gem5
 {
-
 namespace RiscvISA
 {
-
 /**
  * Base class for operations that work only on registers
  */
@@ -59,14 +57,14 @@ class RegOp : public RiscvStaticInst
 /**
  * Base class for operations with immediates (I is the type of immediate)
  */
-template<typename I>
+template <typename I>
 class ImmOp : public RiscvStaticInst
 {
   protected:
     I imm;
 
-    ImmOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
-        : RiscvStaticInst(mnem, _machInst, __opClass), imm(0)
+    ImmOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
+        RiscvStaticInst(mnem, _machInst, __opClass), imm(0)
     {}
 };
 
@@ -92,9 +90,10 @@ class CSROp : public RiscvStaticInst
     uint64_t uimm;
 
     /// Constructor
-    CSROp(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
-        : RiscvStaticInst(mnem, _machInst, __opClass),
-          csr(_machInst.funct12), uimm(_machInst.csrimm)
+    CSROp(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
+        RiscvStaticInst(mnem, _machInst, __opClass),
+        csr(_machInst.funct12),
+        uimm(_machInst.csrimm)
     {
         if (csr == CSR_SATP) {
             flags[IsSquashAfter] = true;

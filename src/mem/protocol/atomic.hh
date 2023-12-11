@@ -46,7 +46,6 @@
 
 namespace gem5
 {
-
 class AtomicResponseProtocol;
 
 class AtomicRequestProtocol
@@ -77,8 +76,8 @@ class AtomicRequestProtocol
      *
      * @return Estimated latency of access.
      */
-    Tick sendBackdoor(AtomicResponseProtocol *peer, PacketPtr pkt,
-                      MemBackdoorPtr &backdoor);
+    Tick sendBackdoor(
+        AtomicResponseProtocol *peer, PacketPtr pkt, MemBackdoorPtr &backdoor);
 
     /**
      * Receive an atomic snoop request packet from our peer.
@@ -113,7 +112,7 @@ class AtomicResponseProtocol
      * provide a backdoor to the data being accessed.
      */
     virtual Tick recvAtomicBackdoor(
-            PacketPtr pkt, MemBackdoorPtr &backdoor) = 0;
+        PacketPtr pkt, MemBackdoorPtr &backdoor) = 0;
 };
 
 } // namespace gem5

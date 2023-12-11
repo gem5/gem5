@@ -33,10 +33,8 @@
 
 namespace gem5
 {
-
 namespace SparcISA
 {
-
 ////////////////////////////////////////////////////////////////////
 //
 // Block Memory instructions
@@ -61,13 +59,13 @@ class BlockMemImm : public BlockMem
 class BlockMemMicro : public SparcMicroInst
 {
   protected:
-    BlockMemMicro(const char *mnem, ExtMachInst _machInst,
-                  OpClass __opClass, int8_t _offset) :
+    BlockMemMicro(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+        int8_t _offset) :
         SparcMicroInst(mnem, _machInst, __opClass), offset(_offset)
     {}
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 
     const int8_t offset;
 };
@@ -76,13 +74,13 @@ class BlockMemImmMicro : public BlockMemMicro
 {
   protected:
     BlockMemImmMicro(const char *mnem, ExtMachInst _machInst,
-                     OpClass __opClass, int8_t _offset) :
+        OpClass __opClass, int8_t _offset) :
         BlockMemMicro(mnem, _machInst, __opClass, _offset),
         imm(szext<13>(_machInst))
     {}
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 
     const int32_t imm;
 };

@@ -32,10 +32,8 @@
 
 namespace gem5
 {
-
 namespace ruby
 {
-
 using stl_helpers::operator<<;
 
 SubBlock::SubBlock(Addr addr, int size)
@@ -48,7 +46,7 @@ SubBlock::SubBlock(Addr addr, int size)
 }
 
 void
-SubBlock::internalMergeFrom(const DataBlock& data)
+SubBlock::internalMergeFrom(const DataBlock &data)
 {
     int size = getSize();
     assert(size > 0);
@@ -59,7 +57,7 @@ SubBlock::internalMergeFrom(const DataBlock& data)
 }
 
 void
-SubBlock::internalMergeTo(DataBlock& data) const
+SubBlock::internalMergeTo(DataBlock &data) const
 {
     int size = getSize();
     assert(size > 0);
@@ -71,7 +69,7 @@ SubBlock::internalMergeTo(DataBlock& data) const
 }
 
 void
-SubBlock::print(std::ostream& out) const
+SubBlock::print(std::ostream &out) const
 {
     out << "[" << m_address << ", " << getSize() << ", " << m_data << "]";
 }

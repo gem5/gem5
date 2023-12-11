@@ -40,8 +40,8 @@
 
 using namespace gem5;
 
-namespace {
-
+namespace
+{
 std::istringstream iniFile(R"ini_file(
 [General]
    Test1=BARasdf

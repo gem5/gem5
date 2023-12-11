@@ -42,7 +42,6 @@
 
 namespace gem5
 {
-
 class LinearEquation;
 class ThermalNode;
 
@@ -55,8 +54,8 @@ class ThermalEntity
 {
   public:
     // Get the equation given a node and a step in seconds (assuming N nodes)
-    virtual LinearEquation getEquation(ThermalNode *tn, unsigned n,
-                                       double step) const = 0;
+    virtual LinearEquation getEquation(
+        ThermalNode *tn, unsigned n, double step) const = 0;
 };
 
 } // namespace gem5

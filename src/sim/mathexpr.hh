@@ -46,11 +46,9 @@
 
 namespace gem5
 {
-
 class MathExpr
 {
   public:
-
     MathExpr(std::string expr);
 
     typedef std::function<double(std::string)> EvalCallback;
@@ -60,7 +58,11 @@ class MathExpr
      *
      * @return A string containing the ASCII representation of the expression
      */
-    std::string toStr() const { return toStr(root, ""); }
+    std::string
+    toStr() const
+    {
+        return toStr(root, "");
+    }
 
     /**
      * Evaluates the expression
@@ -69,7 +71,11 @@ class MathExpr
      *
      * @return The value for this expression
      */
-    double eval(EvalCallback fn) const { return eval(root, fn); }
+    double
+    eval(EvalCallback fn) const
+    {
+        return eval(root, fn);
+    }
 
     /**
      * Return all variables in the this expression.
@@ -79,8 +85,9 @@ class MathExpr
      * found variables in a vector of strings
      *
      * @return A Vector with the names of all variables
-    */
-    std::vector<std::string> getVariables() const
+     */
+    std::vector<std::string>
+    getVariables() const
     {
         std::vector<std::string> vars;
         getVariables(root, vars);
@@ -90,7 +97,15 @@ class MathExpr
   private:
     enum Operator
     {
-        bAdd, bSub, bMul, bDiv, bPow, uNeg, sValue, sVariable, nInvalid
+        bAdd,
+        bSub,
+        bMul,
+        bDiv,
+        bPow,
+        uNeg,
+        sValue,
+        sVariable,
+        nInvalid
     };
 
     // Match operators
@@ -112,16 +127,18 @@ class MathExpr
     {
       public:
         Node() : op(nInvalid), l(0), r(0), value(0) {}
-        std::string toStr() const {
+        std::string
+        toStr() const
+        {
             const char opStr[] = {'+', '-', '*', '/', '^', '-'};
             switch (op) {
-              case nInvalid:
+            case nInvalid:
                 return "INVALID";
-              case sVariable:
+            case sVariable:
                 return variable;
-              case sValue:
+            case sValue:
                 return std::to_string(value);
-              default:
+            default:
                 return std::string(1, opStr[op]);
             };
         }
@@ -133,7 +150,7 @@ class MathExpr
     };
 
     /** Root node */
-    Node * root;
+    Node *root;
 
     /** Parse and create nodes from string */
     Node *parse(std::string expr);

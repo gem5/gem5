@@ -50,12 +50,10 @@
 
 namespace gem5
 {
-
 struct RubyGPUCoalescerParams;
 
 namespace ruby
 {
-
 class DataBlock;
 class CacheMsg;
 struct MachineID;
@@ -73,7 +71,7 @@ class UncoalescedTable
     void insertPacket(PacketPtr pkt);
     void insertReqType(PacketPtr pkt, RubyRequestType type);
     bool packetAvailable();
-    void printRequestTable(std::stringstream& ss);
+    void printRequestTable(std::stringstream &ss);
 
     // Modify packets remaining map. Init sets value iff the seqNum has not
     // yet been seen before. get/set act as a regular getter/setter.
@@ -84,7 +82,7 @@ class UncoalescedTable
     // Returns a pointer to the list of packets corresponding to an
     // instruction in the instruction map or nullptr if there are no
     // instructions at the offset.
-    PerInstPackets* getInstPackets(int offset);
+    PerInstPackets *getInstPackets(int offset);
     void updateResources();
     bool areRequestsDone(const InstSeqNum instSeqNum);
 
@@ -109,22 +107,57 @@ class UncoalescedTable
 class CoalescedRequest
 {
   public:
-    CoalescedRequest(uint64_t _seqNum)
-        : seqNum(_seqNum), issueTime(Cycles(0)),
-          rubyType(RubyRequestType_NULL)
+    CoalescedRequest(uint64_t _seqNum) :
+        seqNum(_seqNum), issueTime(Cycles(0)), rubyType(RubyRequestType_NULL)
     {}
     ~CoalescedRequest() {}
 
-    void insertPacket(PacketPtr pkt) { pkts.push_back(pkt); }
-    void setSeqNum(uint64_t _seqNum) { seqNum = _seqNum; }
-    void setIssueTime(Cycles _issueTime) { issueTime = _issueTime; }
-    void setRubyType(RubyRequestType type) { rubyType = type; }
+    void
+    insertPacket(PacketPtr pkt)
+    {
+        pkts.push_back(pkt);
+    }
+    void
+    setSeqNum(uint64_t _seqNum)
+    {
+        seqNum = _seqNum;
+    }
+    void
+    setIssueTime(Cycles _issueTime)
+    {
+        issueTime = _issueTime;
+    }
+    void
+    setRubyType(RubyRequestType type)
+    {
+        rubyType = type;
+    }
 
-    uint64_t getSeqNum() const { return seqNum; }
-    PacketPtr getFirstPkt() const { return pkts[0]; }
-    Cycles getIssueTime() const { return issueTime; }
-    RubyRequestType getRubyType() const { return rubyType; }
-    std::vector<PacketPtr>& getPackets() { return pkts; }
+    uint64_t
+    getSeqNum() const
+    {
+        return seqNum;
+    }
+    PacketPtr
+    getFirstPkt() const
+    {
+        return pkts[0];
+    }
+    Cycles
+    getIssueTime() const
+    {
+        return issueTime;
+    }
+    RubyRequestType
+    getRubyType() const
+    {
+        return rubyType;
+    }
+    std::vector<PacketPtr> &
+    getPackets()
+    {
+        return pkts;
+    }
 
   private:
     uint64_t seqNum;
@@ -140,18 +173,15 @@ class CoalescedRequest
 class PendingWriteInst
 {
   public:
-    PendingWriteInst()
-        : numPendingStores(0),
-          originalPort(nullptr),
-          gpuDynInstPtr(nullptr)
+    PendingWriteInst() :
+        numPendingStores(0), originalPort(nullptr), gpuDynInstPtr(nullptr)
     {}
 
-    ~PendingWriteInst()
-    {}
+    ~PendingWriteInst() {}
 
     void
-    addPendingReq(RubyPort::MemResponsePort* port, GPUDynInstPtr inst,
-                  bool usingRubyTester)
+    addPendingReq(RubyPort::MemResponsePort *port, GPUDynInstPtr inst,
+        bool usingRubyTester)
     {
         assert(port);
         originalPort = port;
@@ -179,14 +209,14 @@ class PendingWriteInst
         assert(numPendingStores == 0);
 
         // make a response packet
-        PacketPtr pkt = new Packet(std::make_shared<Request>(),
-                                   MemCmd::WriteCompleteResp);
+        PacketPtr pkt =
+            new Packet(std::make_shared<Request>(), MemCmd::WriteCompleteResp);
 
         if (!usingRubyTester) {
             assert(gpuDynInstPtr);
-            ComputeUnit::DataPort::SenderState* ss =
-                    new ComputeUnit::DataPort::SenderState
-                                            (gpuDynInstPtr, 0, nullptr);
+            ComputeUnit::DataPort::SenderState *ss =
+                new ComputeUnit::DataPort::SenderState(
+                    gpuDynInstPtr, 0, nullptr);
             pkt->senderState = ss;
         }
 
@@ -195,7 +225,8 @@ class PendingWriteInst
     }
 
     int
-    getNumPendingStores() {
+    getNumPendingStores()
+    {
         return numPendingStores;
     }
 
@@ -207,7 +238,7 @@ class PendingWriteInst
     // which implies multiple ports per instruction. However, we need
     // only 1 of the ports to call back the CU. Therefore, here we keep
     // track the port that sent the first packet of this instruction.
-    RubyPort::MemResponsePort* originalPort;
+    RubyPort::MemResponsePort *originalPort;
     // similar to the originalPort, this gpuDynInstPtr is set only for
     // the first packet of this instruction.
     GPUDynInstPtr gpuDynInstPtr;
@@ -219,17 +250,17 @@ class GPUCoalescer : public RubyPort
     class GMTokenPort : public TokenResponsePort
     {
       public:
-        GMTokenPort(const std::string& name,
-                    PortID id = InvalidPortID)
-            : TokenResponsePort(name, id)
-        { }
-        ~GMTokenPort() { }
+        GMTokenPort(const std::string &name, PortID id = InvalidPortID) :
+            TokenResponsePort(name, id)
+        {}
+        ~GMTokenPort() {}
 
       protected:
         Tick recvAtomic(PacketPtr) { return Tick(0); }
-        void recvFunctional(PacketPtr) { }
+        void recvFunctional(PacketPtr) {}
         bool recvTimingReq(PacketPtr) { return false; }
-        AddrRangeList getAddrRanges() const
+        AddrRangeList
+        getAddrRanges() const
         {
             AddrRangeList ranges;
             return ranges;
@@ -240,14 +271,14 @@ class GPUCoalescer : public RubyPort
     GPUCoalescer(const Params &);
     ~GPUCoalescer();
 
-    Port &getPort(const std::string &if_name,
-                  PortID idx = InvalidPortID) override;
+    Port &getPort(
+        const std::string &if_name, PortID idx = InvalidPortID) override;
 
     // Public Methods
     void wakeup(); // Used only for deadlock detection
-    void printRequestTable(std::stringstream& ss);
+    void printRequestTable(std::stringstream &ss);
 
-    void printProgress(std::ostream& out) const;
+    void printProgress(std::ostream &out) const;
     void resetStats() override;
     void collateStats();
 
@@ -262,60 +293,44 @@ class GPUCoalescer : public RubyPort
     //      at its destination cache or memory. writeCompleteCallback
     //      guarantees that the store is fully completed. This callback
     //      will decrement hardware counters in CU
-    void writeCallback(Addr address, DataBlock& data);
+    void writeCallback(Addr address, DataBlock &data);
 
-    void writeCallback(Addr address,
-                       MachineType mach,
-                       DataBlock& data);
+    void writeCallback(Addr address, MachineType mach, DataBlock &data);
 
-    void writeCallback(Addr address,
-                       MachineType mach,
-                       DataBlock& data,
-                       Cycles initialRequestTime,
-                       Cycles forwardRequestTime,
-                       Cycles firstResponseTime,
-                       bool isRegion);
+    void writeCallback(Addr address, MachineType mach, DataBlock &data,
+        Cycles initialRequestTime, Cycles forwardRequestTime,
+        Cycles firstResponseTime, bool isRegion);
 
-    void writeCallback(Addr address,
-                       MachineType mach,
-                       DataBlock& data,
-                       Cycles initialRequestTime,
-                       Cycles forwardRequestTime,
-                       Cycles firstResponseTime);
+    void writeCallback(Addr address, MachineType mach, DataBlock &data,
+        Cycles initialRequestTime, Cycles forwardRequestTime,
+        Cycles firstResponseTime);
 
-    void writeCompleteCallback(Addr address,
-                               uint64_t instSeqNum,
-                               MachineType mach);
+    void writeCompleteCallback(
+        Addr address, uint64_t instSeqNum, MachineType mach);
 
-    void readCallback(Addr address, DataBlock& data);
+    void readCallback(Addr address, DataBlock &data);
 
-    void readCallback(Addr address,
-                      MachineType mach,
-                      DataBlock& data);
+    void readCallback(Addr address, MachineType mach, DataBlock &data);
 
-    void readCallback(Addr address,
-                      MachineType mach,
-                      DataBlock& data,
-                      Cycles initialRequestTime,
-                      Cycles forwardRequestTime,
-                      Cycles firstResponseTime);
+    void readCallback(Addr address, MachineType mach, DataBlock &data,
+        Cycles initialRequestTime, Cycles forwardRequestTime,
+        Cycles firstResponseTime);
 
-    void readCallback(Addr address,
-                      MachineType mach,
-                      DataBlock& data,
-                      Cycles initialRequestTime,
-                      Cycles forwardRequestTime,
-                      Cycles firstResponseTime,
-                      bool isRegion);
+    void readCallback(Addr address, MachineType mach, DataBlock &data,
+        Cycles initialRequestTime, Cycles forwardRequestTime,
+        Cycles firstResponseTime, bool isRegion);
 
     /* atomics need their own callback because the data
        might be const coming from SLICC */
-    virtual void atomicCallback(Addr address,
-                                MachineType mach,
-                                const DataBlock& data);
+    virtual void atomicCallback(
+        Addr address, MachineType mach, const DataBlock &data);
 
     RequestStatus makeRequest(PacketPtr pkt) override;
-    int outstandingCount() const override { return m_outstanding_count; }
+    int
+    outstandingCount() const override
+    {
+        return m_outstanding_count;
+    }
 
     bool
     isDeadlockEventScheduled() const override
@@ -331,75 +346,103 @@ class GPUCoalescer : public RubyPort
 
     bool empty() const;
 
-    void print(std::ostream& out) const;
+    void print(std::ostream &out) const;
 
     void evictionCallback(Addr address);
     void completeIssue();
 
     void insertKernel(int wavefront_id, PacketPtr pkt);
 
-    GMTokenPort& getGMTokenPort() { return gmTokenPort; }
+    GMTokenPort &
+    getGMTokenPort()
+    {
+        return gmTokenPort;
+    }
 
-    statistics::Histogram& getOutstandReqHist() { return m_outstandReqHist; }
+    statistics::Histogram &
+    getOutstandReqHist()
+    {
+        return m_outstandReqHist;
+    }
 
-    statistics::Histogram& getLatencyHist() { return m_latencyHist; }
-    statistics::Histogram& getTypeLatencyHist(uint32_t t)
-    { return *m_typeLatencyHist[t]; }
+    statistics::Histogram &
+    getLatencyHist()
+    {
+        return m_latencyHist;
+    }
+    statistics::Histogram &
+    getTypeLatencyHist(uint32_t t)
+    {
+        return *m_typeLatencyHist[t];
+    }
 
-    statistics::Histogram& getMissLatencyHist()
-    { return m_missLatencyHist; }
-    statistics::Histogram& getMissTypeLatencyHist(uint32_t t)
-    { return *m_missTypeLatencyHist[t]; }
+    statistics::Histogram &
+    getMissLatencyHist()
+    {
+        return m_missLatencyHist;
+    }
+    statistics::Histogram &
+    getMissTypeLatencyHist(uint32_t t)
+    {
+        return *m_missTypeLatencyHist[t];
+    }
 
-    statistics::Histogram& getMissMachLatencyHist(uint32_t t) const
-    { return *m_missMachLatencyHist[t]; }
+    statistics::Histogram &
+    getMissMachLatencyHist(uint32_t t) const
+    {
+        return *m_missMachLatencyHist[t];
+    }
 
-    statistics::Histogram&
+    statistics::Histogram &
     getMissTypeMachLatencyHist(uint32_t r, uint32_t t) const
-    { return *m_missTypeMachLatencyHist[r][t]; }
+    {
+        return *m_missTypeMachLatencyHist[r][t];
+    }
 
-    statistics::Histogram& getIssueToInitialDelayHist(uint32_t t) const
-    { return *m_IssueToInitialDelayHist[t]; }
+    statistics::Histogram &
+    getIssueToInitialDelayHist(uint32_t t) const
+    {
+        return *m_IssueToInitialDelayHist[t];
+    }
 
-    statistics::Histogram&
+    statistics::Histogram &
     getInitialToForwardDelayHist(const MachineType t) const
-    { return *m_InitialToForwardDelayHist[t]; }
+    {
+        return *m_InitialToForwardDelayHist[t];
+    }
 
-    statistics::Histogram&
+    statistics::Histogram &
     getForwardRequestToFirstResponseHist(const MachineType t) const
-    { return *m_ForwardToFirstResponseDelayHist[t]; }
+    {
+        return *m_ForwardToFirstResponseDelayHist[t];
+    }
 
-    statistics::Histogram&
+    statistics::Histogram &
     getFirstResponseToCompletionDelayHist(const MachineType t) const
-    { return *m_FirstResponseToCompletionDelayHist[t]; }
+    {
+        return *m_FirstResponseToCompletionDelayHist[t];
+    }
 
   protected:
-    bool tryCacheAccess(Addr addr, RubyRequestType type,
-                        Addr pc, RubyAccessMode access_mode,
-                        int size, DataBlock*& data_ptr);
+    bool tryCacheAccess(Addr addr, RubyRequestType type, Addr pc,
+        RubyAccessMode access_mode, int size, DataBlock *&data_ptr);
 
     // since the two following issue functions are protocol-specific,
     // they must be implemented in a derived coalescer
-    virtual void issueRequest(CoalescedRequest* crequest) = 0;
-    virtual void issueMemSyncRequest(PacketPtr pkt) {}
+    virtual void issueRequest(CoalescedRequest *crequest) = 0;
+    virtual void
+    issueMemSyncRequest(PacketPtr pkt)
+    {}
 
     void kernelCallback(int wavefront_id);
 
-    void hitCallback(CoalescedRequest* crequest,
-                     MachineType mach,
-                     DataBlock& data,
-                     bool success,
-                     Cycles initialRequestTime,
-                     Cycles forwardRequestTime,
-                     Cycles firstResponseTime,
-                     bool isRegion);
-    void recordMissLatency(CoalescedRequest* crequest,
-                           MachineType mach,
-                           Cycles initialRequestTime,
-                           Cycles forwardRequestTime,
-                           Cycles firstResponseTime,
-                           bool success, bool isRegion);
-    void completeHitCallback(std::vector<PacketPtr> & mylist);
+    void hitCallback(CoalescedRequest *crequest, MachineType mach,
+        DataBlock &data, bool success, Cycles initialRequestTime,
+        Cycles forwardRequestTime, Cycles firstResponseTime, bool isRegion);
+    void recordMissLatency(CoalescedRequest *crequest, MachineType mach,
+        Cycles initialRequestTime, Cycles forwardRequestTime,
+        Cycles firstResponseTime, bool success, bool isRegion);
+    void completeHitCallback(std::vector<PacketPtr> &mylist);
 
     virtual RubyRequestType getRequestType(PacketPtr pkt);
 
@@ -418,8 +461,8 @@ class GPUCoalescer : public RubyPort
     int m_max_outstanding_requests;
     Cycles m_deadlock_threshold;
 
-    CacheMemory* m_dataCache_ptr;
-    CacheMemory* m_instCache_ptr;
+    CacheMemory *m_dataCache_ptr;
+    CacheMemory *m_instCache_ptr;
 
     // coalescingWindow is the maximum number of instructions that are
     // allowed to be coalesced in a single cycle.
@@ -435,11 +478,11 @@ class GPUCoalescer : public RubyPort
     // maximum size is equal to the maximum outstanding requests for a CU
     // (typically the number of blocks in TCP). If there are duplicates of
     // an address, the are serviced in age order.
-    std::map<Addr, std::deque<CoalescedRequest*>> coalescedTable;
+    std::map<Addr, std::deque<CoalescedRequest *>> coalescedTable;
     // Map of instruction sequence number to coalesced requests that get
     // created in coalescePacket, used in completeIssue to send the fully
     // coalesced request
-    std::unordered_map<uint64_t, std::deque<CoalescedRequest*>> coalescedReqs;
+    std::unordered_map<uint64_t, std::deque<CoalescedRequest *>> coalescedReqs;
 
     // a map btw an instruction sequence number and PendingWriteInst
     // this is used to do a final call back for each write when it is
@@ -462,28 +505,28 @@ class GPUCoalescer : public RubyPort
     EventFunctionWrapper deadlockCheckEvent;
     bool assumingRfOCoherence;
 
-// TODO - Need to update the following stats once the VIPER protocol
-//        is re-integrated.
-//    // m5 style stats for TCP hit/miss counts
-//    statistics::Scalar GPU_TCPLdHits;
-//    statistics::Scalar GPU_TCPLdTransfers;
-//    statistics::Scalar GPU_TCCLdHits;
-//    statistics::Scalar GPU_LdMiss;
-//
-//    statistics::Scalar GPU_TCPStHits;
-//    statistics::Scalar GPU_TCPStTransfers;
-//    statistics::Scalar GPU_TCCStHits;
-//    statistics::Scalar GPU_StMiss;
-//
-//    statistics::Scalar CP_TCPLdHits;
-//    statistics::Scalar CP_TCPLdTransfers;
-//    statistics::Scalar CP_TCCLdHits;
-//    statistics::Scalar CP_LdMiss;
-//
-//    statistics::Scalar CP_TCPStHits;
-//    statistics::Scalar CP_TCPStTransfers;
-//    statistics::Scalar CP_TCCStHits;
-//    statistics::Scalar CP_StMiss;
+    // TODO - Need to update the following stats once the VIPER protocol
+    //        is re-integrated.
+    //    // m5 style stats for TCP hit/miss counts
+    //    statistics::Scalar GPU_TCPLdHits;
+    //    statistics::Scalar GPU_TCPLdTransfers;
+    //    statistics::Scalar GPU_TCCLdHits;
+    //    statistics::Scalar GPU_LdMiss;
+    //
+    //    statistics::Scalar GPU_TCPStHits;
+    //    statistics::Scalar GPU_TCPStTransfers;
+    //    statistics::Scalar GPU_TCCStHits;
+    //    statistics::Scalar GPU_StMiss;
+    //
+    //    statistics::Scalar CP_TCPLdHits;
+    //    statistics::Scalar CP_TCPLdTransfers;
+    //    statistics::Scalar CP_TCCLdHits;
+    //    statistics::Scalar CP_LdMiss;
+    //
+    //    statistics::Scalar CP_TCPStHits;
+    //    statistics::Scalar CP_TCPStTransfers;
+    //    statistics::Scalar CP_TCCStHits;
+    //    statistics::Scalar CP_StMiss;
 
     //! Histogram for number of outstanding requests per cycle.
     statistics::Histogram m_outstandReqHist;
@@ -509,20 +552,20 @@ class GPUCoalescer : public RubyPort
     std::vector<statistics::Histogram *> m_ForwardToFirstResponseDelayHist;
     std::vector<statistics::Histogram *> m_FirstResponseToCompletionDelayHist;
 
-// TODO - Need to update the following stats once the VIPER protocol
-//        is re-integrated.
-//    statistics::Distribution numHopDelays;
-//    statistics::Distribution tcpToTccDelay;
-//    statistics::Distribution tccToSdDelay;
-//    statistics::Distribution sdToSdDelay;
-//    statistics::Distribution sdToTccDelay;
-//    statistics::Distribution tccToTcpDelay;
-//
-//    statistics::Average avgTcpToTcc;
-//    statistics::Average avgTccToSd;
-//    statistics::Average avgSdToSd;
-//    statistics::Average avgSdToTcc;
-//    statistics::Average avgTccToTcp;
+    // TODO - Need to update the following stats once the VIPER protocol
+    //        is re-integrated.
+    //    statistics::Distribution numHopDelays;
+    //    statistics::Distribution tcpToTccDelay;
+    //    statistics::Distribution tccToSdDelay;
+    //    statistics::Distribution sdToSdDelay;
+    //    statistics::Distribution sdToTccDelay;
+    //    statistics::Distribution tccToTcpDelay;
+    //
+    //    statistics::Average avgTcpToTcc;
+    //    statistics::Average avgTccToSd;
+    //    statistics::Average avgSdToSd;
+    //    statistics::Average avgSdToTcc;
+    //    statistics::Average avgTccToTcp;
 
   private:
     // Token port is used to send/receive tokens to/from GPU's global memory
@@ -531,12 +574,12 @@ class GPUCoalescer : public RubyPort
     GMTokenPort gmTokenPort;
 
     // Private copy constructor and assignment operator
-    GPUCoalescer(const GPUCoalescer& obj);
-    GPUCoalescer& operator=(const GPUCoalescer& obj);
+    GPUCoalescer(const GPUCoalescer &obj);
+    GPUCoalescer &operator=(const GPUCoalescer &obj);
 };
 
-inline std::ostream&
-operator<<(std::ostream& out, const GPUCoalescer& obj)
+inline std::ostream &
+operator<<(std::ostream &out, const GPUCoalescer &obj)
 {
     obj.print(out);
     out << std::flush;

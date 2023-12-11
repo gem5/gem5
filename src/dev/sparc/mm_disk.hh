@@ -40,7 +40,6 @@
 
 namespace gem5
 {
-
 class MmDisk : public BasicPioDevice
 {
   private:

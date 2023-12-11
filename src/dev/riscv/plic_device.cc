@@ -39,13 +39,11 @@
 
 namespace gem5
 {
-
 PlicIntDevice::PlicIntDevice(const Params &params) :
     BasicPioDevice(params, params.pio_size),
     system(params.system),
     platform(params.platform),
     _interruptID(params.interrupt_id)
-{
-}
+{}
 
 } // namespace gem5

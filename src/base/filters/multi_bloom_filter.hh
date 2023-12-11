@@ -36,12 +36,10 @@
 
 namespace gem5
 {
-
 struct BloomFilterMultiParams;
 
 namespace bloom_filter
 {
-
 /**
  * This BloomFilter has multiple sub-filters, each with its own hashing
  * functionality. The results of the operations are the results of applying
@@ -57,14 +55,14 @@ class Multi : public Base
     void set(Addr addr) override;
     void unset(Addr addr) override;
 
-    void merge(const Base* other) override;
+    void merge(const Base *other) override;
     bool isSet(Addr addr) const override;
     int getCount(Addr addr) const override;
     int getTotalCount() const override;
 
   private:
     /** Sub-filters used by this filter. */
-    std::vector<Base*> filters;
+    std::vector<Base *> filters;
 };
 
 } // namespace bloom_filter

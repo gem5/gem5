@@ -30,13 +30,11 @@
 
 namespace gem5
 {
-
 namespace SparcISA
 {
-
 std::string
 SparcMacroInst::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream response;
     printMnemonic(response, mnemonic);

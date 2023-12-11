@@ -46,7 +46,6 @@
 
 namespace gem5
 {
-
 struct BaseMemProbeParams;
 
 /**
@@ -78,12 +77,14 @@ class BaseMemProbe : public SimObject
     class PacketListener : public ProbeListenerArgBase<probing::PacketInfo>
     {
       public:
-        PacketListener(BaseMemProbe &_parent,
-                       ProbeManager *pm, const std::string &name)
-            : ProbeListenerArgBase(pm, name),
-              parent(_parent) {}
+        PacketListener(
+            BaseMemProbe &_parent, ProbeManager *pm, const std::string &name) :
+            ProbeListenerArgBase(pm, name), parent(_parent)
+        {}
 
-        void notify(const probing::PacketInfo &pkt_info) override {
+        void
+        notify(const probing::PacketInfo &pkt_info) override
+        {
             parent.handleRequest(pkt_info);
         }
 

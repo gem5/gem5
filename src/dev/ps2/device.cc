@@ -51,12 +51,9 @@
 
 namespace gem5
 {
-
 namespace ps2
 {
-
-Device::Device(const PS2DeviceParams &p)
-    : SimObject(p)
+Device::Device(const PS2DeviceParams &p) : SimObject(p)
 {
     inBuffer.reserve(16);
 }
@@ -86,8 +83,8 @@ void
 Device::hostRegDataAvailable(const std::function<void()> &c)
 {
     fatal_if(dataAvailableCallback,
-             "A data pending callback has already been associated with this "
-             "PS/2 device.\n");
+        "A data pending callback has already been associated with this "
+        "PS/2 device.\n");
 
     dataAvailableCallback = c;
 }

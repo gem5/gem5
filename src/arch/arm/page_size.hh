@@ -46,11 +46,10 @@
 
 namespace gem5
 {
-
 namespace ArmISA
 {
-    const Addr PageShift = 12;
-    const Addr PageBytes = 1ULL << PageShift;
+const Addr PageShift = 12;
+const Addr PageBytes = 1ULL << PageShift;
 
 } // namespace ArmISA
 } // namespace gem5

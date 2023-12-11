@@ -36,7 +36,6 @@
 
  *****************************************************************************/
 
-
 // $Log: sc_uint_base.cpp,v $
 // Revision 1.5  2011/02/18 20:19:15  acg
 //  Andy Goodrich: updating Copyright notice.
@@ -74,7 +73,6 @@
 // explicit template instantiations
 namespace sc_core
 {
-
 template class sc_vpool<sc_dt::sc_uint_bitref>;
 template class sc_vpool<sc_dt::sc_uint_subref>;
 
@@ -82,20 +80,17 @@ template class sc_vpool<sc_dt::sc_uint_subref>;
 
 namespace sc_dt
 {
-
 // to avoid code bloat in sc_uint_concat<T1,T2>
 
 void
 sc_uint_concref_invalid_length(int length)
 {
     std::stringstream msg;
-    msg << "sc_uint_concref<T1,T2> initialization: length = " << length <<
-           "violates 1 <= length <= " << SC_INTWIDTH;
+    msg << "sc_uint_concref<T1,T2> initialization: length = " << length
+        << "violates 1 <= length <= " << SC_INTWIDTH;
     SC_REPORT_ERROR(sc_core::SC_ID_OUT_OF_BOUNDS_, msg.str().c_str());
     sc_core::sc_abort(); // can't recover from here
 }
-
-
 
 // ----------------------------------------------------------------------------
 //  CLASS : sc_uint_bitref
@@ -142,7 +137,6 @@ sc_uint_bitref::concat_set(uint64 src, int low_i)
     *this = aa = (low_i < 64) ? src >> low_i : 0;
 }
 
-
 // other methods
 void
 sc_uint_bitref::scan(::std::istream &is)
@@ -151,7 +145,6 @@ sc_uint_bitref::scan(::std::istream &is)
     is >> b;
     *this = b;
 }
-
 
 // ----------------------------------------------------------------------------
 //  CLASS : sc_uint_subref_r
@@ -162,14 +155,14 @@ sc_uint_bitref::scan(::std::istream &is)
 bool
 sc_uint_subref_r::concat_get_ctrl(sc_digit *dst_p, int low_i) const
 {
-    int dst_i; // Word in dst_p now processing.
-    int end_i; // Highest order word in dst_p to process.
+    int dst_i;      // Word in dst_p now processing.
+    int end_i;      // Highest order word in dst_p to process.
     int left_shift; // Left shift for val.
     uint_type mask; // Mask for bits to extract or keep.
 
     dst_i = low_i / BITS_PER_DIGIT;
     left_shift = low_i % BITS_PER_DIGIT;
-    end_i = (low_i + (m_left-m_right)) / BITS_PER_DIGIT;
+    end_i = (low_i + (m_left - m_right)) / BITS_PER_DIGIT;
 
     mask = ~(~UINT_ZERO << left_shift);
     dst_p[dst_i] = (sc_digit)((dst_p[dst_i] & mask));
@@ -184,17 +177,17 @@ sc_uint_subref_r::concat_get_ctrl(sc_digit *dst_p, int low_i) const
 bool
 sc_uint_subref_r::concat_get_data(sc_digit *dst_p, int low_i) const
 {
-    int dst_i; // Word in dst_p now processing.
-    int end_i; // Highest order word in dst_p to process.
-    int high_i; // Index of high order bit in dst_p to set.
+    int dst_i;      // Word in dst_p now processing.
+    int end_i;      // Highest order word in dst_p to process.
+    int high_i;     // Index of high order bit in dst_p to set.
     int left_shift; // Left shift for val.
     uint_type mask; // Mask for bits to extract or keep.
-    bool result; // True if inserting non-zero value.
-    uint_type val; // Selection value extracted from m_obj_p.
+    bool result;    // True if inserting non-zero value.
+    uint_type val;  // Selection value extracted from m_obj_p.
 
     dst_i = low_i / BITS_PER_DIGIT;
     left_shift = low_i % BITS_PER_DIGIT;
-    high_i = low_i + (m_left-m_right);
+    high_i = low_i + (m_left - m_right);
     end_i = high_i / BITS_PER_DIGIT;
     mask = ~mask_int[m_left][m_right];
     val = (m_obj_p->m_val & mask) >> m_right;
@@ -202,30 +195,30 @@ sc_uint_subref_r::concat_get_data(sc_digit *dst_p, int low_i) const
 
     // PROCESS THE FIRST WORD:
     mask = ~(~UINT_ZERO << left_shift);
-    dst_p[dst_i] = (sc_digit)(((dst_p[dst_i] & mask)) |
-        ((val << left_shift) & DIGIT_MASK));
+    dst_p[dst_i] = (sc_digit)(
+        ((dst_p[dst_i] & mask)) | ((val << left_shift) & DIGIT_MASK));
 
     switch (end_i - dst_i) {
-      // BITS ARE ACROSS TWO WORDS:
-      case 1:
+    // BITS ARE ACROSS TWO WORDS:
+    case 1:
         dst_i++;
-        val >>= (BITS_PER_DIGIT-left_shift);
+        val >>= (BITS_PER_DIGIT - left_shift);
         dst_p[dst_i] = (sc_digit)val;
         break;
 
-      // BITS ARE ACROSS THREE WORDS:
-      case 2:
+    // BITS ARE ACROSS THREE WORDS:
+    case 2:
         dst_i++;
-        val >>= (BITS_PER_DIGIT-left_shift);
+        val >>= (BITS_PER_DIGIT - left_shift);
         dst_p[dst_i++] = (sc_digit)(val & DIGIT_MASK);
         val >>= BITS_PER_DIGIT;
         dst_p[dst_i] = (sc_digit)val;
         break;
 
-      // BITS ARE ACROSS THREE WORDS:
-      case 3:
+    // BITS ARE ACROSS THREE WORDS:
+    case 3:
         dst_i++;
-        val >>= (BITS_PER_DIGIT-left_shift);
+        val >>= (BITS_PER_DIGIT - left_shift);
         dst_p[dst_i++] = (sc_digit)(val & DIGIT_MASK);
         val >>= BITS_PER_DIGIT;
         dst_p[dst_i++] = (sc_digit)(val & DIGIT_MASK);
@@ -247,7 +240,7 @@ sc_core::sc_vpool<sc_uint_subref> sc_uint_subref::m_pool(9);
 // assignment operators
 
 sc_uint_subref &
-sc_uint_subref::operator = (uint_type v)
+sc_uint_subref::operator=(uint_type v)
 {
     uint_type val = m_obj_p->m_val;
     uint_type mask = mask_int[m_left][m_right];
@@ -259,28 +252,28 @@ sc_uint_subref::operator = (uint_type v)
 }
 
 sc_uint_subref &
-sc_uint_subref::operator = (const sc_signed &a)
+sc_uint_subref::operator=(const sc_signed &a)
 {
     sc_uint_base aa(length());
     return (*this = aa = a);
 }
 
 sc_uint_subref &
-sc_uint_subref::operator = (const sc_unsigned &a)
+sc_uint_subref::operator=(const sc_unsigned &a)
 {
     sc_uint_base aa(length());
     return (*this = aa = a);
 }
 
 sc_uint_subref &
-sc_uint_subref::operator = (const sc_bv_base &a)
+sc_uint_subref::operator=(const sc_bv_base &a)
 {
     sc_uint_base aa(length());
     return (*this = aa = a);
 }
 
 sc_uint_subref &
-sc_uint_subref::operator = (const sc_lv_base &a)
+sc_uint_subref::operator=(const sc_lv_base &a)
 {
     sc_uint_base aa(length());
     return (*this = aa = a);
@@ -332,7 +325,6 @@ sc_uint_subref::scan(::std::istream &is)
     *this = s.c_str();
 }
 
-
 // ----------------------------------------------------------------------------
 //  CLASS : sc_uint_base
 //
@@ -345,8 +337,8 @@ void
 sc_uint_base::invalid_length() const
 {
     std::stringstream msg;
-    msg << "sc_uint[_base] initialization: length = " << m_len <<
-           " violates 1 <= length <= " << SC_INTWIDTH;
+    msg << "sc_uint[_base] initialization: length = " << m_len
+        << " violates 1 <= length <= " << SC_INTWIDTH;
     SC_REPORT_ERROR(sc_core::SC_ID_OUT_OF_BOUNDS_, msg.str().c_str());
     sc_core::sc_abort(); // can't recover from here}
 }
@@ -355,8 +347,8 @@ void
 sc_uint_base::invalid_index(int i) const
 {
     std::stringstream msg;
-    msg << "sc_uint[_base] bit selection: index = " << i <<
-           " violates 0 <= index <= " << (m_len - 1);
+    msg << "sc_uint[_base] bit selection: index = " << i
+        << " violates 0 <= index <= " << (m_len - 1);
     SC_REPORT_ERROR(sc_core::SC_ID_OUT_OF_BOUNDS_, msg.str().c_str());
     sc_core::sc_abort(); // can't recover from here
 }
@@ -365,13 +357,12 @@ void
 sc_uint_base::invalid_range(int l, int r) const
 {
     std::stringstream msg;
-    msg << "sc_uint[_base] part selection: " <<
-           "left = " << l << ", right = " << r << " violates " <<
-           (m_len - 1) << " >= left >= right >= 0";
+    msg << "sc_uint[_base] part selection: "
+        << "left = " << l << ", right = " << r << " violates " << (m_len - 1)
+        << " >= left >= right >= 0";
     SC_REPORT_ERROR(sc_core::SC_ID_OUT_OF_BOUNDS_, msg.str().c_str());
     sc_core::sc_abort(); // can't recover from here
 }
-
 
 void
 sc_uint_base::check_value() const
@@ -383,7 +374,6 @@ sc_uint_base::check_value() const
         SC_REPORT_WARNING(sc_core::SC_ID_OUT_OF_BOUNDS_, msg.str().c_str());
     }
 }
-
 
 // constructors
 sc_uint_base::sc_uint_base(const sc_bv_base &v) :
@@ -434,7 +424,7 @@ sc_uint_base::sc_uint_base(const sc_unsigned &a) :
 // assignment operators
 
 sc_uint_base &
-sc_uint_base::operator = (const sc_signed &a)
+sc_uint_base::operator=(const sc_signed &a)
 {
     int minlen = sc_min(m_len, a.length());
     int i = 0;
@@ -451,7 +441,7 @@ sc_uint_base::operator = (const sc_signed &a)
 }
 
 sc_uint_base &
-sc_uint_base::operator = (const sc_unsigned &a)
+sc_uint_base::operator=(const sc_unsigned &a)
 {
     int minlen = sc_min(m_len, a.length());
     int i = 0;
@@ -466,9 +456,8 @@ sc_uint_base::operator = (const sc_unsigned &a)
     return *this;
 }
 
-
 sc_uint_base &
-sc_uint_base::operator = (const sc_bv_base &a)
+sc_uint_base::operator=(const sc_bv_base &a)
 {
     int minlen = sc_min(m_len, a.length());
     int i = 0;
@@ -484,7 +473,7 @@ sc_uint_base::operator = (const sc_bv_base &a)
 }
 
 sc_uint_base &
-sc_uint_base::operator = (const sc_lv_base &a)
+sc_uint_base::operator=(const sc_lv_base &a)
 {
     int minlen = sc_min(m_len, a.length());
     int i = 0;
@@ -500,26 +489,27 @@ sc_uint_base::operator = (const sc_lv_base &a)
 }
 
 sc_uint_base &
-sc_uint_base::operator = (const char *a)
+sc_uint_base::operator=(const char *a)
 {
     if (a == 0) {
-        SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
-                        "character string is zero");
+        SC_REPORT_ERROR(
+            sc_core::SC_ID_CONVERSION_FAILED_, "character string is zero");
     } else if (*a == 0) {
-        SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
-                        "character string is empty");
-    } else try {
-        int len = m_len;
-        sc_ufix aa(a, len, len, SC_TRN, SC_WRAP, 0, SC_ON);
-        return this->operator = (aa);
-    } catch(const sc_core::sc_report &) {
-        std::stringstream msg;
-        msg << "character string '" << a << "' is not valid";
-        SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_, msg.str().c_str());
-    }
+        SC_REPORT_ERROR(
+            sc_core::SC_ID_CONVERSION_FAILED_, "character string is empty");
+    } else
+        try {
+            int len = m_len;
+            sc_ufix aa(a, len, len, SC_TRN, SC_WRAP, 0, SC_ON);
+            return this->operator=(aa);
+        } catch (const sc_core::sc_report &) {
+            std::stringstream msg;
+            msg << "character string '" << a << "' is not valid";
+            SC_REPORT_ERROR(
+                sc_core::SC_ID_CONVERSION_FAILED_, msg.str().c_str());
+        }
     return *this;
 }
-
 
 // explicit conversion to character string
 const std::string
@@ -537,7 +527,6 @@ sc_uint_base::to_string(sc_numrep numrep, bool w_prefix) const
     sc_ufix aa(*this, len, len, SC_TRN, SC_WRAP, 0, SC_ON);
     return aa.to_string(numrep, w_prefix);
 }
-
 
 // reduce methods
 bool
@@ -566,12 +555,11 @@ sc_uint_base::xor_reduce() const
     return (val != uint_type(0));
 }
 
-
 bool
 sc_uint_base::concat_get_ctrl(sc_digit *dst_p, int low_i) const
 {
-    int dst_i; // Word in dst_p now processing.
-    int end_i; // Highest order word in dst_p to process.
+    int dst_i;      // Word in dst_p now processing.
+    int end_i;      // Highest order word in dst_p to process.
     int left_shift; // Left shift for val.
     uint_type mask; // Mask for bits to extract or keep.
 
@@ -607,13 +595,13 @@ sc_uint_base::concat_get_ctrl(sc_digit *dst_p, int low_i) const
 bool
 sc_uint_base::concat_get_data(sc_digit *dst_p, int low_i) const
 {
-    int dst_i; // Word in dst_p now processing.
-    int end_i; // Highest order word in dst_p to process.
-    int high_i; // Index of high order bit in dst_p to set.
+    int dst_i;      // Word in dst_p now processing.
+    int end_i;      // Highest order word in dst_p to process.
+    int high_i;     // Index of high order bit in dst_p to set.
     int left_shift; // Left shift for val.
     uint_type mask; // Mask for bits to extract or keep.
-    bool result; // True if inserting non-zero value.
-    uint_type val; // Value for this object.
+    bool result;    // True if inserting non-zero value.
+    uint_type val;  // Value for this object.
 
     dst_i = low_i / BITS_PER_DIGIT;
     left_shift = low_i % BITS_PER_DIGIT;
@@ -625,24 +613,24 @@ sc_uint_base::concat_get_data(sc_digit *dst_p, int low_i) const
     // MASK OFF DATA TO BE TRANSFERRED BASE ON WIDTH:
     if (m_len < 64) {
         mask = ~(~UINT_ZERO << m_len);
-        val &=  mask;
+        val &= mask;
     }
 
     // PROCESS THE FIRST WORD:
     mask = ~(~UINT_ZERO << left_shift);
-    dst_p[dst_i] = (sc_digit)(((dst_p[dst_i] & mask)) |
-        ((val << left_shift) & DIGIT_MASK));
+    dst_p[dst_i] = (sc_digit)(
+        ((dst_p[dst_i] & mask)) | ((val << left_shift) & DIGIT_MASK));
 
     switch (end_i - dst_i) {
-      // BITS ARE ACROSS TWO WORDS:
-      case 1:
+    // BITS ARE ACROSS TWO WORDS:
+    case 1:
         dst_i++;
         val >>= (BITS_PER_DIGIT - left_shift);
         dst_p[dst_i] = (sc_digit)val;
         break;
 
-      // BITS ARE ACROSS THREE WORDS:
-      case 2:
+    // BITS ARE ACROSS THREE WORDS:
+    case 2:
         dst_i++;
         val >>= (BITS_PER_DIGIT - left_shift);
         dst_p[dst_i++] = (sc_digit)(val & DIGIT_MASK);
@@ -650,8 +638,8 @@ sc_uint_base::concat_get_data(sc_digit *dst_p, int low_i) const
         dst_p[dst_i] = (sc_digit)val;
         break;
 
-      // BITS ARE ACROSS FOUR WORDS:
-      case 3:
+    // BITS ARE ACROSS FOUR WORDS:
+    case 3:
         dst_i++;
         val >>= (BITS_PER_DIGIT - left_shift);
         dst_p[dst_i++] = (sc_digit)(val & DIGIT_MASK);
@@ -694,7 +682,6 @@ sc_uint_base::concat_set(uint64 src, int low_i)
 {
     *this = (low_i < 64) ? src >> low_i : 0;
 }
-
 
 // other methods
 void

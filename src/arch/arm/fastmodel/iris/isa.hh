@@ -33,10 +33,8 @@
 
 namespace gem5
 {
-
 namespace Iris
 {
-
 class ISA : public BaseISA
 {
   public:
@@ -54,7 +52,7 @@ class ISA : public BaseISA
     }
 
     PCStateBase *
-    newPCState(Addr new_inst_addr=0) const override
+    newPCState(Addr new_inst_addr = 0) const override
     {
         return new ArmISA::PCState(new_inst_addr);
     }

@@ -37,7 +37,7 @@
 #define CONSOLE_START_ADDRESS 0xBFD00F00
 #define REG_OFFSET 1
 #define UART8250_BASE 0xBFD003F8
-#define UART8250_END 7*REG_OFFSET
+#define UART8250_END 7 * REG_OFFSET
 #ifdef CONSOLE
 typedef unsigned uint32_t;
 typedef unsigned long uint64_t;
@@ -46,37 +46,37 @@ typedef unsigned long uint64_t;
 // This structure hacked up from simos
 struct MipsAccess
 {
-    uint32_t    inputChar;              // 00: Placeholder for input
-    uint32_t    last_offset;            // 04: must be first field
-    uint32_t    version;                // 08:
-    uint32_t    numCPUs;                // 0C:
-    uint32_t    intrClockFrequency;     // 10: Hz
+    uint32_t inputChar;          // 00: Placeholder for input
+    uint32_t last_offset;        // 04: must be first field
+    uint32_t version;            // 08:
+    uint32_t numCPUs;            // 0C:
+    uint32_t intrClockFrequency; // 10: Hz
 
     // Loaded kernel
-    uint32_t    kernStart;              // 14:
-    uint32_t    kernEnd;                // 18:
-    uint32_t    entryPoint;             // 1c:
+    uint32_t kernStart;  // 14:
+    uint32_t kernEnd;    // 18:
+    uint32_t entryPoint; // 1c:
 
-                // console simple output stuff
-                uint32_t        outputChar;             // 20: Placeholder for output
+    // console simple output stuff
+    uint32_t outputChar; // 20: Placeholder for output
 
     // console disk stuff
-    uint32_t    diskUnit;               // 24:
-    uint32_t    diskCount;              // 28:
-    uint32_t    diskPAddr;              // 2c:
-    uint32_t    diskBlock;              // 30:
-    uint32_t    diskOperation;          // 34:
+    uint32_t diskUnit;      // 24:
+    uint32_t diskCount;     // 28:
+    uint32_t diskPAddr;     // 2c:
+    uint32_t diskBlock;     // 30:
+    uint32_t diskOperation; // 34:
 
-                // MP boot
-    uint32_t    cpuStack[64];           // 70:
+    // MP boot
+    uint32_t cpuStack[64]; // 70:
 
     /* XXX There appears to be a problem in accessing
      * unit64_t in the console.c file. They are treated
      * like uint32_int and result in the wrong address for
      * everything below. This problem should be investigated.
      */
-    uint64_t    cpuClock;               // 38: MHz
-    uint64_t    mem_size;               // 40:
+    uint64_t cpuClock; // 38: MHz
+    uint64_t mem_size; // 40:
 };
 
 #endif // __MIPS_ACCESS_H__

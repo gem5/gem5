@@ -27,10 +27,8 @@
 
 namespace tlm
 {
-
 namespace
 {
-
 struct tlm_phase_registry
 {
     typedef unsigned int key_type;
@@ -48,8 +46,8 @@ struct tlm_phase_registry
         type_map::const_iterator it = ids_.find(type);
 
         if (name.empty()) {
-            SC_REPORT_FATAL( sc_core::SC_ID_INTERNAL_ERROR_,
-                    "unexpected empty tlm_phase name" );
+            SC_REPORT_FATAL(sc_core::SC_ID_INTERNAL_ERROR_,
+                "unexpected empty tlm_phase name");
             return UNINITIALIZED_PHASE;
         }
 
@@ -63,7 +61,7 @@ struct tlm_phase_registry
 
         if (names_[it->second] != name) {
             SC_REPORT_FATAL(sc_core::SC_ID_INTERNAL_ERROR_,
-                    "tlm_phase registration failed: duplicate type info" );
+                "tlm_phase registration failed: duplicate type info");
             sc_core::sc_abort();
         }
         return it->second;
@@ -95,8 +93,7 @@ struct tlm_phase_registry
 
 } // anonymous namespace
 
-tlm_phase::tlm_phase(unsigned int id) : m_id(id)
-{}
+tlm_phase::tlm_phase(unsigned int id) : m_id(id) {}
 
 tlm_phase::tlm_phase(const std::type_info &type, const char *name) :
     m_id(tlm_phase_registry::instance().register_phase(type, name))

@@ -34,17 +34,15 @@
 
 namespace gem5
 {
-
 class IntSinkPinBase : public SignalSinkPort<bool>
 {
   private:
     const int _number = 0;
 
   public:
-
     template <class Device>
-    IntSinkPinBase(const std::string &_name, PortID _id, Device *dev,
-            int num) :
+    IntSinkPinBase(
+        const std::string &_name, PortID _id, Device *dev, int num) :
         SignalSinkPort(_name, _id), _number(num)
     {
         onChange([dev, num](const bool &new_val) {
@@ -68,7 +66,11 @@ class IntSinkPinBase : public SignalSinkPort<bool>
         IntSinkPinBase(_name, _id, _id)
     {}
 
-    int number() { return _number; }
+    int
+    number()
+    {
+        return _number;
+    }
 };
 
 template <class Compat>
@@ -86,8 +88,16 @@ class IntSourcePinBase : public SignalSourcePort<bool>
         SignalSourcePort(_name, _id)
     {}
 
-    void raise() { set(true); }
-    void lower() { set(false); }
+    void
+    raise()
+    {
+        set(true);
+    }
+    void
+    lower()
+    {
+        set(false);
+    }
 };
 
 template <class Compat>

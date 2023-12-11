@@ -44,12 +44,12 @@
 
 namespace gem5
 {
-
 /**
  * Check if all strings in a container are empty.
  */
-template<typename T>
-bool emptyStrings(const T &labels)
+template <typename T>
+bool
+emptyStrings(const T &labels)
 {
     for (const auto &s : labels) {
         if (!s.empty())
@@ -58,15 +58,15 @@ bool emptyStrings(const T &labels)
     return true;
 }
 
-
 namespace statistics
 {
-
-Hdf5::Hdf5(const std::string &file, unsigned chunking,
-           bool desc, bool formulas)
-    : fname(file), timeChunk(chunking),
-      enableDescriptions(desc), enableFormula(formulas),
-      dumpCount(0)
+Hdf5::Hdf5(
+    const std::string &file, unsigned chunking, bool desc, bool formulas) :
+    fname(file),
+    timeChunk(chunking),
+    enableDescriptions(desc),
+    enableFormula(formulas),
+    dumpCount(0)
 {
     // Tell the library not to print exceptions by default. There are
     // cases where we rely on exceptions to determine if we need to
@@ -74,17 +74,14 @@ Hdf5::Hdf5(const std::string &file, unsigned chunking,
     H5::Exception::dontPrint();
 }
 
-Hdf5::~Hdf5()
-{
-}
-
+Hdf5::~Hdf5() {}
 
 void
 Hdf5::begin()
 {
     h5File = H5::H5File(fname,
-                        // Truncate the file if this is the first dump
-                        dumpCount > 0 ? H5F_ACC_RDWR : H5F_ACC_TRUNC);
+        // Truncate the file if this is the first dump
+        dumpCount > 0 ? H5F_ACC_RDWR : H5F_ACC_TRUNC);
     path.push(h5File.openGroup("/"));
 }
 
@@ -102,7 +99,6 @@ Hdf5::valid() const
     return true;
 }
 
-
 void
 Hdf5::beginGroup(const char *name)
 {
@@ -113,9 +109,9 @@ Hdf5::beginGroup(const char *name)
     H5::Group group;
     try {
         group = base.openGroup(name);
-    } catch (const H5::FileIException& e) {
+    } catch (const H5::FileIException &e) {
         group = base.createGroup(name);
-    } catch (const H5::GroupIException& e) {
+    } catch (const H5::GroupIException &e) {
         group = base.createGroup(name);
     }
 
@@ -135,8 +131,12 @@ Hdf5::visit(const ScalarInfo &info)
     // Since this stat is a scalar, we need 1-dimensional value in the
     // stat file. The Hdf5::appendStat helper will populate the size
     // of the first dimension (time).
-    hsize_t fdims[1] = { 0, };
-    double data[1] = { info.result(), };
+    hsize_t fdims[1] = {
+        0,
+    };
+    double data[1] = {
+        info.result(),
+    };
 
     appendStat(info, 1, fdims, data);
 }
@@ -165,7 +165,7 @@ Hdf5::visit(const Vector2dInfo &info)
     // Request a 3-dimensional stat, the first dimension will be
     // populated by the Hdf5::appendStat() helper. The remaining two
     // dimensions correspond to the stat instance.
-    hsize_t fdims[3] = { 0, info.x, info.y };
+    hsize_t fdims[3] = {0, info.x, info.y};
     H5::DataSet data_set = appendStat(info, 3, fdims, info.cvec.data());
 
     if (dumpCount == 0) {
@@ -205,7 +205,7 @@ Hdf5::appendVectorInfo(const VectorInfo &info)
     // Request a 2-dimensional stat, the first dimension will be
     // populated by the Hdf5::appendStat() helper. The remaining
     // dimension correspond to the stat instance.
-    hsize_t fdims[2] = { 0, vr.size() };
+    hsize_t fdims[2] = {0, vr.size()};
     H5::DataSet data_set = appendStat(info, 2, fdims, vr.data());
 
     if (dumpCount == 0) {
@@ -255,15 +255,16 @@ Hdf5::appendStat(const Info &info, int rank, hsize_t *dims, const double *data)
 
         fspace = H5::DataSpace(rank, dims, max_dims.data());
         try {
-            DPRINTF(Stats, "Creating dataset %s in group %s\n",
-                info.name, group.getObjnameByIdx(group.getId()));
-            data_set = group.createDataSet(info.name,
-                H5::PredType::NATIVE_DOUBLE, fspace, props);
+            DPRINTF(Stats, "Creating dataset %s in group %s\n", info.name,
+                group.getObjnameByIdx(group.getId()));
+            data_set = group.createDataSet(
+                info.name, H5::PredType::NATIVE_DOUBLE, fspace, props);
         } catch (const H5::Exception &e) {
-          std::string err = "Failed creating H5::DataSet " +  info.name + "; ";
-          err += e.getDetailMsg() + " in " + e.getFuncName();
-          // Rethrow std exception so that it's passed on to the Python world
-          throw std::runtime_error(err);
+            std::string err =
+                "Failed creating H5::DataSet " + info.name + "; ";
+            err += e.getDetailMsg() + " in " + e.getFuncName();
+            // Rethrow std exception so that it's passed on to the Python world
+            throw std::runtime_error(err);
         }
 
         if (enableDescriptions && !info.desc.empty()) {
@@ -285,18 +286,20 @@ Hdf5::appendStat(const Info &info, int rank, hsize_t *dims, const double *data)
 
 void
 Hdf5::addMetaData(H5::DataSet &loc, const char *name,
-                  const std::vector<const char *> &values)
+    const std::vector<const char *> &values)
 {
     H5::StrType type(H5::PredType::C_S1, H5T_VARIABLE);
-    hsize_t dims[1] = { values.size(), };
+    hsize_t dims[1] = {
+        values.size(),
+    };
     H5::DataSpace space(1, dims);
     H5::Attribute attribute = loc.createAttribute(name, type, space);
     attribute.write(type, values.data());
 }
 
 void
-Hdf5::addMetaData(H5::DataSet &loc, const char *name,
-                  const std::vector<std::string> &values)
+Hdf5::addMetaData(
+    H5::DataSet &loc, const char *name, const std::vector<std::string> &values)
 {
     std::vector<const char *> cstrs(values.size());
     for (int i = 0; i < values.size(); ++i)
@@ -306,11 +309,12 @@ Hdf5::addMetaData(H5::DataSet &loc, const char *name,
 }
 
 void
-Hdf5::addMetaData(H5::DataSet &loc, const char *name,
-                  const std::string &value)
+Hdf5::addMetaData(H5::DataSet &loc, const char *name, const std::string &value)
 {
     H5::StrType type(H5::PredType::C_S1, value.length() + 1);
-    hsize_t dims[1] = { 1, };
+    hsize_t dims[1] = {
+        1,
+    };
     H5::DataSpace space(1, dims);
     H5::Attribute attribute = loc.createAttribute(name, type, space);
     attribute.write(type, value.c_str());
@@ -319,19 +323,20 @@ Hdf5::addMetaData(H5::DataSet &loc, const char *name,
 void
 Hdf5::addMetaData(H5::DataSet &loc, const char *name, double value)
 {
-    hsize_t dims[1] = { 1, };
+    hsize_t dims[1] = {
+        1,
+    };
     H5::DataSpace space(1, dims);
-    H5::Attribute attribute = loc.createAttribute(
-        name, H5::PredType::NATIVE_DOUBLE, space);
+    H5::Attribute attribute =
+        loc.createAttribute(name, H5::PredType::NATIVE_DOUBLE, space);
     attribute.write(H5::PredType::NATIVE_DOUBLE, &value);
 }
 
-
 std::unique_ptr<Output>
-initHDF5(const std::string &filename, unsigned chunking,
-         bool desc, bool formulas)
+initHDF5(
+    const std::string &filename, unsigned chunking, bool desc, bool formulas)
 {
-    return  std::unique_ptr<Output>(
+    return std::unique_ptr<Output>(
         new Hdf5(simout.resolve(filename), chunking, desc, formulas));
 }
 

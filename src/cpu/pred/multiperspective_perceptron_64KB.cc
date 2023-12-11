@@ -41,18 +41,16 @@
 
 namespace gem5
 {
-
 namespace branch_prediction
 {
-
 MultiperspectivePerceptron64KB::MultiperspectivePerceptron64KB(
-        const MultiperspectivePerceptron64KBParams &p)
-    : MultiperspectivePerceptron(p)
-{
-}
+    const MultiperspectivePerceptron64KBParams &p) :
+    MultiperspectivePerceptron(p)
+{}
 
 void
-MultiperspectivePerceptron64KB::createSpecs() {
+MultiperspectivePerceptron64KB::createSpecs()
+{
     addSpec(new ACYCLIC(10, -1, -1, 1.0, 0, 6, *this));
     addSpec(new BLURRYPATH(10, 7, -1, 1.0, 0, 6, *this));
     addSpec(new GHIST(0, 19, 1.3125, 0, 6, *this));

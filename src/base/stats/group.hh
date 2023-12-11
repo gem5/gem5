@@ -47,7 +47,6 @@
 
 namespace gem5
 {
-
 /**
  * Convenience macro to add a stat to a statistics group.
  *
@@ -76,7 +75,6 @@ namespace gem5
 
 namespace statistics
 {
-
 class Info;
 
 /**
@@ -99,7 +97,7 @@ class Group
     Group() = delete;
     Group(const Group &) = delete;
     Group &operator=(const Group &) = delete;
-    /** @}*/ //end of api_stats
+    /** @}*/ // end of api_stats
 
     /**
      * Construct a new statistics group.
@@ -176,7 +174,7 @@ class Group
      */
     const std::vector<Info *> &getStats() const;
 
-     /**
+    /**
      * Add a stat block as a child of this block
      *
      * This method may only be called from a Group constructor or from
@@ -201,7 +199,7 @@ class Group
      * @param name Name of the desired stat
      * @return Pointer to the stat with the provided name
      */
-    const Info * resolveStat(std::string name) const;
+    const Info *resolveStat(std::string name) const;
 
     /**
      * Merge the contents (stats & children) of a block to this block.

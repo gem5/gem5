@@ -43,10 +43,8 @@
 
 namespace gem5
 {
-
 namespace minor
 {
-
 void
 MinorActivityRecorder::minorTrace() const
 {
@@ -62,8 +60,8 @@ MinorActivityRecorder::minorTrace() const
             stages << ',';
     }
 
-    minor::minorTrace("activity=%d stages=%s\n", getActivityCount(),
-            stages.str());
+    minor::minorTrace(
+        "activity=%d stages=%s\n", getActivityCount(), stages.str());
 }
 
 } // namespace minor

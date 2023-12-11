@@ -40,8 +40,8 @@
 
 /**
  * @file
- * Declaration of top level class for the RealView platform chips. This class just
- * retains pointers to all its children so the children can communicate.
+ * Declaration of top level class for the RealView platform chips. This class
+ * just retains pointers to all its children so the children can communicate.
  */
 
 #ifndef __DEV_ARM_RealView_HH__
@@ -52,7 +52,6 @@
 
 namespace gem5
 {
-
 class BaseGic;
 class IdeController;
 
@@ -67,7 +66,11 @@ class RealView : public Platform
     RealView(const Params &p);
 
     /** Give platform a pointer to interrupt controller */
-    void setGic(BaseGic *_gic) { gic = _gic; }
+    void
+    setGic(BaseGic *_gic)
+    {
+        gic = _gic;
+    }
 
   public: // Public Platform interfaces
     void postConsoleInt() override;

@@ -52,12 +52,9 @@ class ThreadContext
     int intOffset = 0;
 };
 
-const int ThreadContext::ints[] = {
-    0, 1, 2, 3, 4, 5, 6, 7
-};
+const int ThreadContext::ints[] = {0, 1, 2, 3, 4, 5, 6, 7};
 const double ThreadContext::floats[] = {
-    10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0
-};
+    10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0};
 
 const int ThreadContext::DefaultIntResult = 0;
 const double ThreadContext::DefaultFloatResult = 0.0;
@@ -97,10 +94,8 @@ struct TestABI_TcInit
 
 namespace gem5
 {
-
 namespace guest_abi
 {
-
 // Hooks for the 1D ABI arguments and return value. Add 1 or 1.0 to return
 // values so we can tell they went through the right set of hooks.
 template <>
@@ -167,7 +162,9 @@ struct Argument<TestABI_Prepare, int>
 template <typename Ret>
 struct Result<TestABI_Prepare, Ret>
 {
-    static void store(ThreadContext *tc, const Ret &ret) {}
+    static void
+    store(ThreadContext *tc, const Ret &ret)
+    {}
     static void
     prepare(ThreadContext *tc, TestABI_Prepare::State &state)
     {
@@ -238,7 +235,7 @@ struct Argument<TestABI_TcInit, int>
 // which doesn't return anything.
 void
 testIntVoid(ThreadContext *tc, int a, float b, int c, double d,
-            guest_abi::VarArgs<int,float,double> varargs)
+    guest_abi::VarArgs<int, float, double> varargs)
 {
     EXPECT_EQ(a, tc->ints[0]);
     EXPECT_EQ(b, tc->floats[1]);
@@ -271,7 +268,7 @@ testPrepareInt(ThreadContext *tc, int a, int b)
 // which doesn't return anything.
 void
 test2DVoid(ThreadContext *tc, int a, float b, int c, double d,
-           guest_abi::VarArgs<int,float,double> varargs)
+    guest_abi::VarArgs<int, float, double> varargs)
 {
     EXPECT_EQ(a, tc->ints[0]);
     EXPECT_EQ(b, tc->floats[0]);
@@ -295,10 +292,21 @@ const int IntRetValue = 50;
 const float FloatRetValue = 3.14;
 const double DoubleRetValue = 12.34;
 
-int testIntRet(ThreadContext *tc) { return IntRetValue; }
-float testFloatRet(ThreadContext *tc) { return FloatRetValue; }
-double testDoubleRet(ThreadContext *tc) { return DoubleRetValue; }
-
+int
+testIntRet(ThreadContext *tc)
+{
+    return IntRetValue;
+}
+float
+testFloatRet(ThreadContext *tc)
+{
+    return FloatRetValue;
+}
+double
+testDoubleRet(ThreadContext *tc)
+{
+    return DoubleRetValue;
+}
 
 // The actual test bodies.
 TEST(GuestABITest, ABI_1D_args)
@@ -364,7 +372,6 @@ TEST(GuestABITest, ABI_returns)
         EXPECT_EQ(tc.floatResult, tc.DefaultFloatResult);
     }
 
-
     // 2D returns.
     {
         ThreadContext tc;
@@ -401,8 +408,10 @@ TEST(GuestABITest, isVarArgs)
     EXPECT_TRUE(guest_abi::IsVarArgsV<guest_abi::VarArgs<int>>);
     EXPECT_FALSE(guest_abi::IsVarArgsV<int>);
     EXPECT_FALSE(guest_abi::IsVarArgsV<double>);
-    struct FooStruct {};
+    struct FooStruct
+    {};
     EXPECT_FALSE(guest_abi::IsVarArgsV<FooStruct>);
-    union FooUnion {};
+    union FooUnion
+    {};
     EXPECT_FALSE(guest_abi::IsVarArgsV<FooUnion>);
 }

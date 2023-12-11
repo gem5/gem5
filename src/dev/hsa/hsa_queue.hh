@@ -36,7 +36,6 @@
 
 namespace gem5
 {
-
 enum _hsa_queue_type_t
 {
     _HSA_QUEUE_TYPE_MULTI = 0,

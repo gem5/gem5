@@ -41,7 +41,6 @@
 
 namespace gem5
 {
-
 void
 SMMUDeviceRetryEvent::process()
 {

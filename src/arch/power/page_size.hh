@@ -36,10 +36,8 @@
 
 namespace gem5
 {
-
 namespace PowerISA
 {
-
 const Addr PageShift = 12;
 const Addr PageBytes = 1ULL << PageShift;
 

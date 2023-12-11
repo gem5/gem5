@@ -36,7 +36,8 @@
 bool ran_test1 = false;
 
 // A dummy class so we can make a reference to pass around.
-class DispatchTable {};
+class DispatchTable
+{};
 
 DispatchTable dt;
 
@@ -62,17 +63,17 @@ TEST(CommandTest, OneCommandNoArgs)
 
     // Try to run the command with an extra argument, expecting it to fail.
     EXPECT_FALSE(ran_test1);
-    Args args1({ "test1", "extra" });
+    Args args1({"test1", "extra"});
     EXPECT_FALSE(Command::run(dt, args1));
     EXPECT_FALSE(ran_test1);
 
     // Try to run with an unrecognized command.
-    Args args2({ "bad_command" });
+    Args args2({"bad_command"});
     EXPECT_FALSE(Command::run(dt, args2));
     EXPECT_FALSE(ran_test1);
 
     // Run with the right name and number of arguments.
-    Args args3({ "test1" });
+    Args args3({"test1"});
     EXPECT_TRUE(Command::run(dt, args3));
     EXPECT_TRUE(ran_test1);
     ran_test1 = false;
@@ -89,23 +90,23 @@ TEST(CommandTest, OneCommandSomeArgs)
 
     // Too few arguments.
     EXPECT_FALSE(ran_test1);
-    Args args1({ "test1" });
+    Args args1({"test1"});
     EXPECT_FALSE(Command::run(dt, args1));
     EXPECT_FALSE(ran_test1);
 
     // Too many arguments.
-    Args args2({ "test1", "arg1", "arg2", "arg3", "arg4" });
+    Args args2({"test1", "arg1", "arg2", "arg3", "arg4"});
     EXPECT_FALSE(Command::run(dt, args2));
     EXPECT_FALSE(ran_test1);
 
     // Just enough arguments.
-    Args args3({ "test1", "arg1", "arg2" });
+    Args args3({"test1", "arg1", "arg2"});
     EXPECT_TRUE(Command::run(dt, args3));
     EXPECT_TRUE(ran_test1);
     ran_test1 = false;
 
     // Almost too many arguments.
-    Args args4({ "test1", "arg1", "arg2", "arg3" });
+    Args args4({"test1", "arg1", "arg2", "arg3"});
     EXPECT_TRUE(Command::run(dt, args4));
     EXPECT_TRUE(ran_test1);
     ran_test1 = false;
@@ -117,26 +118,26 @@ TEST(CommandTest, TwoCommands)
     Command test2("test2", 1, 1, do_test2, "");
 
     // Try a bad command name.
-    Args args1({ "bad_command" });
+    Args args1({"bad_command"});
     EXPECT_FALSE(Command::run(dt, args1));
     EXPECT_FALSE(ran_test1);
     EXPECT_FALSE(ran_test2);
 
     // Try the right command with the wrong number of arguments.
-    Args args2({ "test1", "arg1" });
+    Args args2({"test1", "arg1"});
     EXPECT_FALSE(Command::run(dt, args2));
     EXPECT_FALSE(ran_test1);
     EXPECT_FALSE(ran_test2);
 
     // Run the first command.
-    Args args3({ "test1" });
+    Args args3({"test1"});
     EXPECT_TRUE(Command::run(dt, args3));
     EXPECT_TRUE(ran_test1);
     EXPECT_FALSE(ran_test2);
     ran_test1 = ran_test2 = false;
 
     // Run the second command.
-    Args args4({ "test2", "arg1" });
+    Args args4({"test2", "arg1"});
     EXPECT_TRUE(Command::run(dt, args4));
     EXPECT_FALSE(ran_test1);
     EXPECT_TRUE(ran_test2);

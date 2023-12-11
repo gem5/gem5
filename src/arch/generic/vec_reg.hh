@@ -109,7 +109,6 @@
 
 namespace gem5
 {
-
 constexpr unsigned MaxVecRegLenInBytes = 1ULL << 16; // 2^16 bytes
 
 /**
@@ -123,13 +122,19 @@ template <size_t SIZE>
 class VecRegContainer
 {
   private:
-    static_assert(SIZE > 0,
-            "Cannot create Vector Register Container of zero size");
-    static_assert(SIZE <= MaxVecRegLenInBytes,
-            "Vector Register size limit exceeded");
+    static_assert(
+        SIZE > 0, "Cannot create Vector Register Container of zero size");
+    static_assert(
+        SIZE <= MaxVecRegLenInBytes, "Vector Register size limit exceeded");
+
   public:
-    static constexpr inline size_t size() { return SIZE; };
+    static constexpr inline size_t
+    size()
+    {
+        return SIZE;
+    };
     using Container = std::array<uint8_t, SIZE>;
+
   private:
     // 16-byte aligned to support 128bit element view
     alignas(16) Container container;
@@ -139,13 +144,17 @@ class VecRegContainer
     VecRegContainer(const VecRegContainer &) = default;
 
     /** Zero the container. */
-    void zero() { memset(container.data(), 0, SIZE); }
+    void
+    zero()
+    {
+        memset(container.data(), 0, SIZE);
+    }
 
     /** Assignment operators. */
     /** @{ */
     /** From VecRegContainer */
-    VecRegContainer<SIZE>&
-    operator=(const VecRegContainer<SIZE>& that)
+    VecRegContainer<SIZE> &
+    operator=(const VecRegContainer<SIZE> &that)
     {
         if (&that != this)
             std::memcpy(container.data(), that.container.data(), SIZE);
@@ -156,9 +165,9 @@ class VecRegContainer
     /** Equality operator.
      * Required to compare thread contexts.
      */
-    template<size_t S2>
+    template <size_t S2>
     inline bool
-    operator==(const VecRegContainer<S2>& that) const
+    operator==(const VecRegContainer<S2> &that) const
     {
         return SIZE == S2 &&
                !memcmp(container.data(), that.container.data(), SIZE);
@@ -166,9 +175,9 @@ class VecRegContainer
     /** Inequality operator.
      * Required to compare thread contexts.
      */
-    template<size_t S2>
+    template <size_t S2>
     bool
-    operator!=(const VecRegContainer<S2>& that) const
+    operator!=(const VecRegContainer<S2> &that) const
     {
         return !operator==(that);
     }
@@ -189,7 +198,7 @@ class VecRegContainer
     as()
     {
         static_assert(SIZE % sizeof(VecElem) == 0,
-                "VecElem does not evenly divide the register size");
+            "VecElem does not evenly divide the register size");
         return (VecElem *)container.data();
     }
 
@@ -198,17 +207,17 @@ class VecRegContainer
     as() const
     {
         static_assert(SIZE % sizeof(VecElem) == 0,
-                "VecElem does not evenly divide the register size");
+            "VecElem does not evenly divide the register size");
         return (VecElem *)container.data();
     }
 
-    friend std::ostream&
-    operator<<(std::ostream& os, const VecRegContainer<SIZE>& v)
+    friend std::ostream &
+    operator<<(std::ostream &os, const VecRegContainer<SIZE> &v)
     {
         // When printing for human consumption, break into 4 byte chunks.
         ccprintf(os, "[");
         size_t count = 0;
-        for (auto& b: v.container) {
+        for (auto &b : v.container) {
             if (count && (count % 4) == 0)
                 os << "_";
             ccprintf(os, "%02x", b);
@@ -236,7 +245,7 @@ struct ParseParam<VecRegContainer<Sz>>
     parse(const std::string &str, VecRegContainer<Sz> &value)
     {
         fatal_if(str.size() > 2 * Sz,
-                 "Vector register value overflow at unserialize");
+            "Vector register value overflow at unserialize");
 
         for (int i = 0; i < Sz; i++) {
             uint8_t b = 0;
@@ -254,7 +263,7 @@ struct ShowParam<VecRegContainer<Sz>>
     static void
     show(std::ostream &os, const VecRegContainer<Sz> &value)
     {
-        for (auto& b: value.container)
+        for (auto &b : value.container)
             ccprintf(os, "%02x", b);
     }
 };
@@ -268,10 +277,22 @@ struct ShowParam<VecRegContainer<Sz>>
 struct DummyVecRegContainer
 {
     RegVal filler = 0;
-    bool operator == (const DummyVecRegContainer &d) const { return true; }
-    bool operator != (const DummyVecRegContainer &d) const { return true; }
+    bool
+    operator==(const DummyVecRegContainer &d) const
+    {
+        return true;
+    }
+    bool
+    operator!=(const DummyVecRegContainer &d) const
+    {
+        return true;
+    }
     template <typename VecElem>
-    VecElem *as() { return nullptr; }
+    VecElem *
+    as()
+    {
+        return nullptr;
+    }
 };
 template <>
 struct ParseParam<DummyVecRegContainer>

@@ -34,10 +34,8 @@
 
 namespace gem5
 {
-
 namespace SparcISA
 {
-
 /**
  * Base class for privelege mode operations.
  */
@@ -46,14 +44,14 @@ class Priv : public SparcStaticInst
   protected:
     using SparcStaticInst::SparcStaticInst;
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 class PrivReg : public Priv
 {
   protected:
-    PrivReg(const char *mnem, ExtMachInst _machInst,
-            OpClass __opClass, char const * _regName) :
+    PrivReg(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+        char const *_regName) :
         Priv(mnem, _machInst, __opClass), regName(_regName)
     {}
 
@@ -67,7 +65,7 @@ class RdPriv : public PrivReg
   protected:
     using PrivReg::PrivReg;
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 // This class is for instructions that explicitly write control
@@ -77,7 +75,7 @@ class WrPriv : public PrivReg
   protected:
     using PrivReg::PrivReg;
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -100,13 +98,13 @@ class WrPrivImm : public PrivImm
 {
   protected:
     // Constructor
-    WrPrivImm(const char *mnem, ExtMachInst _machInst,
-              OpClass __opClass, char const *_regName) :
+    WrPrivImm(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+        char const *_regName) :
         PrivImm(mnem, _machInst, __opClass), regName(_regName)
     {}
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 
     char const *regName;
 };

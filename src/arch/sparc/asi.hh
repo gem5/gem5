@@ -31,10 +31,8 @@
 
 namespace gem5
 {
-
 namespace SparcISA
 {
-
 enum ASI
 {
     ASI_IMPLICIT = 0x00,
@@ -273,7 +271,7 @@ bool asiIsHPriv(ASI);
 bool asiIsReg(ASI);
 bool asiIsInterrupt(ASI);
 bool asiIsSparcError(ASI);
-};
+}; // namespace SparcISA
 
 } // namespace gem5
 

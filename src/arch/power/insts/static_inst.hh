@@ -37,20 +37,18 @@
 
 namespace gem5
 {
-
 namespace PowerISA
 {
-
 class PowerStaticInst : public StaticInst
 {
   protected:
     ExtMachInst machInst;
 
     // Constructor
-    PowerStaticInst(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
-        : StaticInst(mnem, __opClass), machInst(_machInst)
-    {
-    }
+    PowerStaticInst(
+        const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
+        StaticInst(mnem, __opClass), machInst(_machInst)
+    {}
 
     // Insert a condition value into a CR (condition register) field
     inline uint32_t
@@ -63,11 +61,10 @@ class PowerStaticInst : public StaticInst
 
     /// Print a register name for disassembly given the unique
     /// dependence tag number (FP or int).
-    void
-    printReg(std::ostream &os, RegId reg) const;
+    void printReg(std::ostream &os, RegId reg) const;
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 
     void
     advancePC(PCStateBase &pc_state) const override
@@ -84,8 +81,8 @@ class PowerStaticInst : public StaticInst
     }
 
     std::unique_ptr<PCStateBase>
-    buildRetPC(const PCStateBase &cur_pc,
-            const PCStateBase &call_pc) const override
+    buildRetPC(
+        const PCStateBase &cur_pc, const PCStateBase &call_pc) const override
     {
         PCStateBase *ret_pc = call_pc.clone();
         ret_pc->as<PCState>().advance();

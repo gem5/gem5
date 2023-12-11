@@ -48,11 +48,10 @@
 
 namespace gem5
 {
-
-RubyDirectedTester::RubyDirectedTester(const Params &p)
-  : ClockedObject(p),
-    directedStartEvent([this]{ wakeup(); }, "Directed tick",
-                       false, Event::CPU_Tick_Pri),
+RubyDirectedTester::RubyDirectedTester(const Params &p) :
+    ClockedObject(p),
+    directedStartEvent(
+        [this] { wakeup(); }, "Directed tick", false, Event::CPU_Tick_Pri),
     m_requests_to_complete(p.requests_to_complete),
     generator(p.generator)
 {
@@ -60,8 +59,8 @@ RubyDirectedTester::RubyDirectedTester(const Params &p)
 
     // create the ports
     for (int i = 0; i < p.port_cpuPort_connection_count; ++i) {
-        ports.push_back(new CpuPort(csprintf("%s-port%d", name(), i),
-                                    this, i));
+        ports.push_back(
+            new CpuPort(csprintf("%s-port%d", name(), i), this, i));
     }
 
     // add the check start event to the event queue
@@ -108,7 +107,7 @@ RubyDirectedTester::CpuPort::recvTimingResp(PacketPtr pkt)
     return true;
 }
 
-RequestPort*
+RequestPort *
 RubyDirectedTester::getCpuPort(int idx)
 {
     assert(idx >= 0 && idx < ports.size());
@@ -119,10 +118,8 @@ RubyDirectedTester::getCpuPort(int idx)
 void
 RubyDirectedTester::hitCallback(ruby::NodeID proc, Addr addr)
 {
-    DPRINTF(DirectedTest,
-            "completed request for proc: %d addr: 0x%x\n",
-            proc,
-            addr);
+    DPRINTF(DirectedTest, "completed request for proc: %d addr: 0x%x\n", proc,
+        addr);
 
     generator->performCallback(proc, addr);
     schedule(directedStartEvent, curTick());

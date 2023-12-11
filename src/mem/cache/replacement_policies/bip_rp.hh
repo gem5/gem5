@@ -46,12 +46,10 @@
 
 namespace gem5
 {
-
 struct BIPRPParams;
 
 namespace replacement_policy
 {
-
 class BIP : public LRU
 {
   protected:
@@ -73,8 +71,8 @@ class BIP : public LRU
      *
      * @param replacement_data Replacement data to be reset.
      */
-    void reset(const std::shared_ptr<ReplacementData>& replacement_data) const
-                                                                     override;
+    void reset(const std::shared_ptr<ReplacementData> &replacement_data)
+        const override;
 };
 
 } // namespace replacement_policy

@@ -42,21 +42,19 @@
 
 namespace gem5
 {
-
 /* The request protocol. */
 
 void
 FunctionalRequestProtocol::send(
-        FunctionalResponseProtocol *peer, PacketPtr pkt) const
+    FunctionalResponseProtocol *peer, PacketPtr pkt) const
 {
     assert(pkt->isRequest());
     return peer->recvFunctional(pkt);
 }
 
 void
-FunctionalRequestProtocol::sendMemBackdoorReq(
-        FunctionalResponseProtocol *peer,
-        const MemBackdoorReq &req, MemBackdoorPtr &backdoor)
+FunctionalRequestProtocol::sendMemBackdoorReq(FunctionalResponseProtocol *peer,
+    const MemBackdoorReq &req, MemBackdoorPtr &backdoor)
 {
     return peer->recvMemBackdoorReq(req, backdoor);
 }
@@ -65,7 +63,7 @@ FunctionalRequestProtocol::sendMemBackdoorReq(
 
 void
 FunctionalResponseProtocol::sendSnoop(
-        FunctionalRequestProtocol *peer, PacketPtr pkt) const
+    FunctionalRequestProtocol *peer, PacketPtr pkt) const
 {
     assert(pkt->isRequest());
     return peer->recvFunctionalSnoop(pkt);

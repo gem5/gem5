@@ -53,20 +53,19 @@
 
 namespace gem5
 {
-
 /** Enumerate the classes of registers. */
 enum RegClassType
 {
-    IntRegClass,        ///< Integer register
-    FloatRegClass,      ///< Floating-point register
+    IntRegClass,   ///< Integer register
+    FloatRegClass, ///< Floating-point register
     /** Vector Register. */
     VecRegClass,
     /** Vector Register Native Elem lane. */
     VecElemClass,
     VecPredRegClass,
-    MatRegClass,        ///< Matrix Register
-    CCRegClass,         ///< Condition-code register
-    MiscRegClass,       ///< Control (misc) register
+    MatRegClass,  ///< Matrix Register
+    CCRegClass,   ///< Condition-code register
+    MiscRegClass, ///< Control (misc) register
     InvalidRegClass = -1
 };
 
@@ -102,35 +101,32 @@ class RegId
   public:
     inline constexpr RegId();
 
-    constexpr RegId(const RegClass &reg_class, RegIndex reg_idx)
-        : _regClass(&reg_class), regIdx(reg_idx), numPinnedWrites(0)
+    constexpr RegId(const RegClass &reg_class, RegIndex reg_idx) :
+        _regClass(&reg_class), regIdx(reg_idx), numPinnedWrites(0)
     {}
 
-    constexpr operator RegIndex() const
-    {
-        return index();
-    }
+    constexpr operator RegIndex() const { return index(); }
 
     constexpr bool
-    operator==(const RegId& that) const
+    operator==(const RegId &that) const
     {
         return classValue() == that.classValue() && regIdx == that.index();
     }
 
     constexpr bool
-    operator!=(const RegId& that) const
+    operator!=(const RegId &that) const
     {
-        return !(*this==that);
+        return !(*this == that);
     }
 
     /** Order operator.
      * The order is required to implement maps with key type RegId
      */
     constexpr bool
-    operator<(const RegId& that) const
+    operator<(const RegId &that) const
     {
         return classValue() < that.classValue() ||
-            (classValue() == that.classValue() && (regIdx < that.index()));
+               (classValue() == that.classValue() && (regIdx < that.index()));
     }
 
     /**
@@ -147,21 +143,37 @@ class RegId
 
     /** Index accessors */
     /** @{ */
-    constexpr RegIndex index() const { return regIdx; }
+    constexpr RegIndex
+    index() const
+    {
+        return regIdx;
+    }
 
     /** Class accessor */
-    constexpr const RegClass &regClass() const { return *_regClass; }
+    constexpr const RegClass &
+    regClass() const
+    {
+        return *_regClass;
+    }
     inline constexpr RegClassType classValue() const;
     /** Return a const char* with the register class name. */
-    inline constexpr const char* className() const;
+    inline constexpr const char *className() const;
 
     inline constexpr bool isFlat() const;
     inline RegId flatten(const BaseISA &isa) const;
 
-    int getNumPinnedWrites() const { return numPinnedWrites; }
-    void setNumPinnedWrites(int num_writes) { numPinnedWrites = num_writes; }
+    int
+    getNumPinnedWrites() const
+    {
+        return numPinnedWrites;
+    }
+    void
+    setNumPinnedWrites(int num_writes)
+    {
+        numPinnedWrites = num_writes;
+    }
 
-    friend inline std::ostream& operator<<(std::ostream& os, const RegId& rid);
+    friend inline std::ostream &operator<<(std::ostream &os, const RegId &rid);
 };
 
 class RegClassOps
@@ -202,7 +214,7 @@ class RegClass
 
   public:
     constexpr RegClass(RegClassType type, const char *new_name,
-            size_t num_regs, const debug::Flag &debug_flag) :
+        size_t num_regs, const debug::Flag &debug_flag) :
         _type(type), _name(new_name), _numRegs(num_regs), debugFlag(debug_flag)
     {}
 
@@ -232,15 +244,47 @@ class RegClass
         return reg_class;
     }
 
-    constexpr RegClassType type() const { return _type; }
-    constexpr const char *name() const { return _name; }
-    constexpr size_t numRegs() const { return _numRegs; }
-    constexpr size_t regBytes() const { return _regBytes; }
-    constexpr size_t regShift() const { return _regShift; }
-    constexpr const debug::Flag &debug() const { return debugFlag; }
-    constexpr bool isFlat() const { return _flat; }
+    constexpr RegClassType
+    type() const
+    {
+        return _type;
+    }
+    constexpr const char *
+    name() const
+    {
+        return _name;
+    }
+    constexpr size_t
+    numRegs() const
+    {
+        return _numRegs;
+    }
+    constexpr size_t
+    regBytes() const
+    {
+        return _regBytes;
+    }
+    constexpr size_t
+    regShift() const
+    {
+        return _regShift;
+    }
+    constexpr const debug::Flag &
+    debug() const
+    {
+        return debugFlag;
+    }
+    constexpr bool
+    isFlat() const
+    {
+        return _flat;
+    }
 
-    std::string regName(const RegId &id) const { return _ops->regName(id); }
+    std::string
+    regName(const RegId &id) const
+    {
+        return _ops->regName(id);
+    }
     std::string
     valString(const void *val) const
     {
@@ -260,8 +304,8 @@ class RegClass
     inline constexpr RegId operator[](RegIndex idx) const;
 };
 
-inline constexpr RegClass
-    invalidRegClass(InvalidRegClass, "invalid", 0, debug::InvalidReg);
+inline constexpr RegClass invalidRegClass(
+    InvalidRegClass, "invalid", 0, debug::InvalidReg);
 
 constexpr RegId::RegId() : RegId(invalidRegClass, 0) {}
 
@@ -271,18 +315,30 @@ RegId::is(RegClassType reg_class) const
     return _regClass->type() == reg_class;
 }
 
-constexpr RegClassType RegId::classValue() const { return _regClass->type(); }
-constexpr const char* RegId::className() const { return _regClass->name(); }
+constexpr RegClassType
+RegId::classValue() const
+{
+    return _regClass->type();
+}
+constexpr const char *
+RegId::className() const
+{
+    return _regClass->name();
+}
 
-constexpr bool RegId::isFlat() const { return _regClass->isFlat(); }
+constexpr bool
+RegId::isFlat() const
+{
+    return _regClass->isFlat();
+}
 RegId
 RegId::flatten(const BaseISA &isa) const
 {
     return _regClass->flatten(isa, *this);
 }
 
-std::ostream&
-operator<<(std::ostream& os, const RegId& rid)
+std::ostream &
+operator<<(std::ostream &os, const RegId &rid)
 {
     return os << rid.regClass().regName(rid);
 }
@@ -305,8 +361,16 @@ class RegClassIterator
     using pointer = value_type *;
     using reference = value_type &;
 
-    reference operator*() const { return id; }
-    pointer operator->() { return &id; }
+    reference
+    operator*() const
+    {
+        return id;
+    }
+    pointer
+    operator->()
+    {
+        return &id;
+    }
 
     RegClassIterator &
     operator++()
@@ -398,44 +462,46 @@ class PhysRegId : private RegId
     bool pinned;
 
   public:
-    explicit PhysRegId() : RegId(invalidRegClass, -1), flatIdx(-1),
-                           numPinnedWritesToComplete(0)
+    explicit PhysRegId() :
+        RegId(invalidRegClass, -1), flatIdx(-1), numPinnedWritesToComplete(0)
     {}
 
     /** Scalar PhysRegId constructor. */
-    explicit PhysRegId(const RegClass &reg_class, RegIndex _regIdx,
-              RegIndex _flatIdx)
-        : RegId(reg_class, _regIdx), flatIdx(_flatIdx),
-          numPinnedWritesToComplete(0), pinned(false)
+    explicit PhysRegId(
+        const RegClass &reg_class, RegIndex _regIdx, RegIndex _flatIdx) :
+        RegId(reg_class, _regIdx),
+        flatIdx(_flatIdx),
+        numPinnedWritesToComplete(0),
+        pinned(false)
     {}
 
     /** Visible RegId methods */
     /** @{ */
-    using RegId::index;
-    using RegId::regClass;
-    using RegId::classValue;
     using RegId::className;
+    using RegId::classValue;
+    using RegId::index;
     using RegId::is;
-     /** @} */
+    using RegId::regClass;
+    /** @} */
     /**
      * Explicit forward methods, to prevent comparisons of PhysRegId with
      * RegIds.
      */
     /** @{ */
     bool
-    operator<(const PhysRegId& that) const
+    operator<(const PhysRegId &that) const
     {
         return RegId::operator<(that);
     }
 
     bool
-    operator==(const PhysRegId& that) const
+    operator==(const PhysRegId &that) const
     {
         return RegId::operator==(that);
     }
 
     bool
-    operator!=(const PhysRegId& that) const
+    operator!=(const PhysRegId &that) const
     {
         return RegId::operator!=(that);
     }
@@ -445,12 +511,24 @@ class PhysRegId : private RegId
      * Returns true if this register is always associated to the same
      * architectural register.
      */
-    bool isFixedMapping() const { return !isRenameable(); }
+    bool
+    isFixedMapping() const
+    {
+        return !isRenameable();
+    }
 
     /** Flat index accessor */
-    const RegIndex& flatIndex() const { return flatIdx; }
+    const RegIndex &
+    flatIndex() const
+    {
+        return flatIdx;
+    }
 
-    int getNumPinnedWrites() const { return numPinnedWrites; }
+    int
+    getNumPinnedWrites() const
+    {
+        return numPinnedWrites;
+    }
 
     void
     setNumPinnedWrites(int numWrites)
@@ -465,10 +543,22 @@ class PhysRegId : private RegId
         numPinnedWrites = numWrites;
     }
 
-    void decrNumPinnedWrites() { --numPinnedWrites; }
-    void incrNumPinnedWrites() { ++numPinnedWrites; }
+    void
+    decrNumPinnedWrites()
+    {
+        --numPinnedWrites;
+    }
+    void
+    incrNumPinnedWrites()
+    {
+        ++numPinnedWrites;
+    }
 
-    bool isPinned() const { return pinned; }
+    bool
+    isPinned() const
+    {
+        return pinned;
+    }
 
     int
     getNumPinnedWritesToComplete() const
@@ -482,28 +572,36 @@ class PhysRegId : private RegId
         numPinnedWritesToComplete = numWrites;
     }
 
-    void decrNumPinnedWritesToComplete() { --numPinnedWritesToComplete; }
-    void incrNumPinnedWritesToComplete() { ++numPinnedWritesToComplete; }
+    void
+    decrNumPinnedWritesToComplete()
+    {
+        --numPinnedWritesToComplete;
+    }
+    void
+    incrNumPinnedWritesToComplete()
+    {
+        ++numPinnedWritesToComplete;
+    }
 };
 
-using PhysRegIdPtr = PhysRegId*;
+using PhysRegIdPtr = PhysRegId *;
 
 } // namespace gem5
 
 namespace std
 {
-template<>
+template <>
 struct hash<gem5::RegId>
 {
     size_t
-    operator()(const gem5::RegId& reg_id) const
+    operator()(const gem5::RegId &reg_id) const
     {
         // Extract unique integral values for the effective fields of a RegId.
         const size_t index = static_cast<size_t>(reg_id.index());
         const size_t class_num = static_cast<size_t>(reg_id.classValue());
 
-        const size_t shifted_class_num =
-            class_num << (sizeof(gem5::RegIndex) << 3);
+        const size_t shifted_class_num = class_num
+                                         << (sizeof(gem5::RegIndex) << 3);
 
         // Concatenate the class_num to the end of the flat_index, in order to
         // maximize information retained.

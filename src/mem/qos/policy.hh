@@ -51,15 +51,12 @@
 
 namespace gem5
 {
-
 struct QoSPolicyParams;
 
 namespace memory
 {
-
 namespace qos
 {
-
 /**
  * QoS Policy base class
  *
@@ -75,15 +72,19 @@ class Policy : public SimObject
 
     virtual ~Policy();
 
-    virtual void regStats() override {};
+    virtual void regStats() override{};
 
-    virtual void init() override {};
+    virtual void init() override{};
 
     /**
      * Setting a pointer to the Memory Controller implementing
      * the policy.
      */
-    void setMemCtrl(MemCtrl* mem) { memCtrl = mem; };
+    void
+    setMemCtrl(MemCtrl *mem)
+    {
+        memCtrl = mem;
+    };
 
     /**
      * Builds a RequestorID/value pair given a requestor input.
@@ -106,8 +107,8 @@ class Policy : public SimObject
      * @param data data to schedule
      * @return QoS priority value
      */
-    virtual uint8_t schedule(const RequestorID requestor_id,
-                              const uint64_t data) = 0;
+    virtual uint8_t schedule(
+        const RequestorID requestor_id, const uint64_t data) = 0;
 
     /**
      * Schedules a packet. Non virtual interface for the scheduling
@@ -120,7 +121,7 @@ class Policy : public SimObject
 
   protected:
     /** Pointer to parent memory controller implementing the policy */
-    MemCtrl* memCtrl;
+    MemCtrl *memCtrl;
 };
 
 template <typename Requestor, typename T>
@@ -129,12 +130,11 @@ Policy::pair(Requestor requestor, T value)
 {
     auto id = memCtrl->system()->lookupRequestorId(requestor);
 
-    panic_if(id == Request::invldRequestorId,
-             "Unable to find requestor %s\n", requestor);
+    panic_if(id == Request::invldRequestorId, "Unable to find requestor %s\n",
+        requestor);
 
-    DPRINTF(QOS,
-            "Requestor %s [id %d] associated with QoS data %d\n",
-            requestor, id, value);
+    DPRINTF(QOS, "Requestor %s [id %d] associated with QoS data %d\n",
+        requestor, id, value);
 
     return std::pair<RequestorID, T>(id, value);
 }

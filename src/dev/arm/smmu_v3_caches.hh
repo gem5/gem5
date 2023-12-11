@@ -53,7 +53,6 @@
 
 namespace gem5
 {
-
 enum
 {
     SMMU_CACHE_REPL_ROUND_ROBIN,
@@ -71,8 +70,8 @@ class SMMUv3BaseCache
 
     struct SMMUv3BaseCacheStats : public statistics::Group
     {
-        SMMUv3BaseCacheStats(statistics::Group *parent,
-            const std::string &name);
+        SMMUv3BaseCacheStats(
+            statistics::Group *parent, const std::string &name);
 
         statistics::Formula averageLookups;
         statistics::Scalar totalLookups;
@@ -92,7 +91,7 @@ class SMMUv3BaseCache
 
   public:
     SMMUv3BaseCache(const std::string &policy_name, uint32_t seed,
-                    statistics::Group *parent, const std::string &name);
+        statistics::Group *parent, const std::string &name);
     virtual ~SMMUv3BaseCache() {}
 };
 
@@ -128,15 +127,15 @@ class SMMUTLB : public SMMUv3BaseCache
     };
 
     SMMUTLB(unsigned numEntries, unsigned _associativity,
-            const std::string &policy, statistics::Group *parent,
-            const std::string &name);
-    SMMUTLB(const SMMUTLB& tlb) = delete;
+        const std::string &policy, statistics::Group *parent,
+        const std::string &name);
+    SMMUTLB(const SMMUTLB &tlb) = delete;
     virtual ~SMMUTLB() {}
 
-    const Entry *lookup(uint32_t sid, uint32_t ssid, Addr va,
-                        bool updStats=true);
-    const Entry *lookupAnyVA(uint32_t sid, uint32_t ssid,
-                             bool updStats=true);
+    const Entry *lookup(
+        uint32_t sid, uint32_t ssid, Addr va, bool updStats = true);
+    const Entry *lookupAnyVA(
+        uint32_t sid, uint32_t ssid, bool updStats = true);
     void store(const Entry &incoming, AllocPolicy alloc);
 
     void invalidateSSID(uint32_t sid, uint32_t ssid);
@@ -178,11 +177,11 @@ class ARMArchTLB : public SMMUv3BaseCache
     };
 
     ARMArchTLB(unsigned numEntries, unsigned _associativity,
-               const std::string &policy, statistics::Group *parent);
+        const std::string &policy, statistics::Group *parent);
     virtual ~ARMArchTLB() {}
 
-    const Entry *lookup(Addr va, uint16_t asid, uint16_t vmid,
-                        bool updStats=true);
+    const Entry *lookup(
+        Addr va, uint16_t asid, uint16_t vmid, bool updStats = true);
 
     void store(const Entry &incoming);
 
@@ -221,10 +220,10 @@ class IPACache : public SMMUv3BaseCache
     };
 
     IPACache(unsigned numEntries, unsigned _associativity,
-             const std::string &policy, statistics::Group *parent);
+        const std::string &policy, statistics::Group *parent);
     virtual ~IPACache() {}
 
-    const Entry *lookup(Addr ipa, uint16_t vmid, bool updStats=true);
+    const Entry *lookup(Addr ipa, uint16_t vmid, bool updStats = true);
     void store(const Entry &incoming);
 
     void invalidateIPA(Addr ipa, uint16_t vmid);
@@ -269,10 +268,10 @@ class ConfigCache : public SMMUv3BaseCache
     };
 
     ConfigCache(unsigned numEntries, unsigned _associativity,
-                const std::string &policy, statistics::Group *parent);
+        const std::string &policy, statistics::Group *parent);
     virtual ~ConfigCache() {}
 
-    const Entry *lookup(uint32_t sid, uint32_t ssid, bool updStats=true);
+    const Entry *lookup(uint32_t sid, uint32_t ssid, bool updStats = true);
     void store(const Entry &incoming);
 
     void invalidateSSID(uint32_t sid, uint32_t ssid);
@@ -311,17 +310,17 @@ class WalkCache : public SMMUv3BaseCache
         uint8_t permissions;
     };
 
-    WalkCache(const std::array<unsigned, 2*WALK_CACHE_LEVELS> &_sizes,
-              unsigned _associativity, const std::string &policy,
-              statistics::Group *parent);
+    WalkCache(const std::array<unsigned, 2 * WALK_CACHE_LEVELS> &_sizes,
+        unsigned _associativity, const std::string &policy,
+        statistics::Group *parent);
     virtual ~WalkCache() {}
 
     const Entry *lookup(Addr va, Addr vaMask, uint16_t asid, uint16_t vmid,
-                        unsigned stage, unsigned level, bool updStats=true);
+        unsigned stage, unsigned level, bool updStats = true);
     void store(const Entry &incoming);
 
-    void invalidateVA(Addr va, uint16_t asid, uint16_t vmid,
-                      const bool leaf_only);
+    void invalidateVA(
+        Addr va, uint16_t asid, uint16_t vmid, const bool leaf_only);
     void invalidateVAA(Addr va, uint16_t vmid, const bool leaf_only);
     void invalidateASID(uint16_t asid, uint16_t vmid);
     void invalidateVMID(uint16_t vmid);
@@ -333,32 +332,33 @@ class WalkCache : public SMMUv3BaseCache
         WalkCacheStats(statistics::Group *parent);
         ~WalkCacheStats();
 
-        std::vector<statistics::Formula*> averageLookupsByStageLevel;
+        std::vector<statistics::Formula *> averageLookupsByStageLevel;
         statistics::Vector2d totalLookupsByStageLevel;
 
-        std::vector<statistics::Formula*> averageMissesByStageLevel;
+        std::vector<statistics::Formula *> averageMissesByStageLevel;
         statistics::Vector2d totalMissesByStageLevel;
 
-        std::vector<statistics::Formula*> averageUpdatesByStageLevel;
+        std::vector<statistics::Formula *> averageUpdatesByStageLevel;
         statistics::Vector2d totalUpdatesByStageLevel;
 
-        std::vector<statistics::Formula*> averageHitRateByStageLevel;
+        std::vector<statistics::Formula *> averageHitRateByStageLevel;
 
         statistics::Vector2d insertionsByStageLevel;
     } walkCacheStats;
+
   private:
     typedef std::vector<Entry> Set;
     std::vector<Set> sets;
 
     size_t associativity;
-    std::array<unsigned, 2*WALK_CACHE_LEVELS> sizes;
-    std::array<unsigned, 2*WALK_CACHE_LEVELS> offsets;
+    std::array<unsigned, 2 * WALK_CACHE_LEVELS> sizes;
+    std::array<unsigned, 2 * WALK_CACHE_LEVELS> offsets;
 
-    size_t pickSetIdx(Addr va, Addr vaMask,
-                      unsigned stage, unsigned level) const;
+    size_t pickSetIdx(
+        Addr va, Addr vaMask, unsigned stage, unsigned level) const;
 
-    size_t pickEntryIdxToReplace(const Set &set,
-                                 unsigned stage, unsigned level);
+    size_t pickEntryIdxToReplace(
+        const Set &set, unsigned stage, unsigned level);
 };
 
 } // namespace gem5

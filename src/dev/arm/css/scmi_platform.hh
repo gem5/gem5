@@ -46,12 +46,10 @@
 
 namespace gem5
 {
-
 class Doorbell;
 
 namespace scmi
 {
-
 class Platform;
 
 // Maximum number of protocols defined by the SCMI specification
@@ -77,10 +75,10 @@ enum class MessageType
 };
 
 BitUnion32(MessageHeader)
-    Bitfield<27,18> token;
-    Bitfield<17,10> protocolId;
-    Bitfield<9,8> messageType;
-    Bitfield<7,0> messageId;
+    Bitfield<27, 18> token;
+    Bitfield<17, 10> protocolId;
+    Bitfield<9, 8> messageType;
+    Bitfield<7, 0> messageId;
 EndBitUnion(MessageHeader)
 
 union Payload
@@ -138,7 +136,7 @@ union Payload
             int32_t status;
         };
         uint32_t numProtocols;
-        uint32_t protocols[(PROTOCOL_MAX - 1)/ 4];
+        uint32_t protocols[(PROTOCOL_MAX - 1) / 4];
     } baseDiscoverListProtocols;
 
     struct
@@ -171,10 +169,13 @@ struct Message
 class VirtualChannel : public SimObject
 {
   public:
-    VirtualChannel(const ScmiChannelParams &p)
-      : SimObject(p),
-        msgBuffer(), pendingMessage(false), shmem(p.shmem_range),
-        physID(p.phys_id), virtID(p.virt_id),
+    VirtualChannel(const ScmiChannelParams &p) :
+        SimObject(p),
+        msgBuffer(),
+        pendingMessage(false),
+        shmem(p.shmem_range),
+        physID(p.phys_id),
+        virtID(p.virt_id),
         doorbell(p.doorbell)
     {}
 
@@ -252,8 +253,9 @@ class PlatformChannel : public VirtualChannel
 class Communication : public SimObject
 {
   public:
-    Communication(const ScmiCommunicationParams &p)
-      : SimObject(p), platformChan(p.platform_channel),
+    Communication(const ScmiCommunicationParams &p) :
+        SimObject(p),
+        platformChan(p.platform_channel),
         agentChan(p.agent_channel)
     {}
 
@@ -273,10 +275,14 @@ class Platform : public Scp
     void handleMessage(AgentChannel *ch, Message &msg);
 
     /** Returns the number of agents in the system */
-    uint32_t numAgents() const { return agents.size(); }
+    uint32_t
+    numAgents() const
+    {
+        return agents.size();
+    }
 
     /** Returns the name of an agent given an index */
-    const char*
+    const char *
     getAgent(unsigned index) const
     {
         return agents[index].c_str();
@@ -286,9 +292,13 @@ class Platform : public Scp
      * Returns the number of protocols implemented, except for
      * the base protocol
      */
-    uint32_t numProtocols() const { return protocols.size() - 1; }
+    uint32_t
+    numProtocols() const
+    {
+        return protocols.size() - 1;
+    }
 
-    Port& getPort(const std::string &if_name, PortID idx) override;
+    Port &getPort(const std::string &if_name, PortID idx) override;
 
     void raiseInterrupt(const Doorbell *doorbell) override;
     void clearInterrupt(const Doorbell *doorbell) override;
@@ -311,14 +321,14 @@ class Platform : public Scp
         return bits(msg.header, 9, 8);
     }
 
-    const ProtocolList&
+    const ProtocolList &
     protocolList() const
     {
         return protocols;
     }
 
-    AgentChannel* find(PlatformChannel* platform) const;
-    PlatformChannel* find(AgentChannel* agent) const;
+    AgentChannel *find(PlatformChannel *platform) const;
+    PlatformChannel *find(AgentChannel *agent) const;
 
   private:
     std::vector<Communication *> comms;

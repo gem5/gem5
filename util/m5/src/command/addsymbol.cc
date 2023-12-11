@@ -32,7 +32,6 @@
 
 namespace
 {
-
 bool
 do_add_symbol(const DispatchTable &dt, Args &args)
 {
@@ -46,9 +45,9 @@ do_add_symbol(const DispatchTable &dt, Args &args)
     return true;
 }
 
-Command add_symbol = {
-    "addsymbol", 2, 2, do_add_symbol, "<address> <symbol>\n"
-        "        Adds a symbol with address \"address\" to gem5's "
-        "symbol table" };
+Command add_symbol = {"addsymbol", 2, 2, do_add_symbol,
+    "<address> <symbol>\n"
+    "        Adds a symbol with address \"address\" to gem5's "
+    "symbol table"};
 
 } // anonymous namespace

@@ -78,13 +78,11 @@
 
 namespace gem5
 {
-
 class SMMUTranslationProcess;
 
 class SMMUv3 : public ClockedObject
 {
   protected:
-
     friend class SMMUProcess;
     friend class SMMUTranslationProcess;
     friend class SMMUCommandExecProcess;
@@ -93,16 +91,16 @@ class SMMUv3 : public ClockedObject
     const System &system;
     const RequestorID requestorId;
 
-    SMMURequestPort    requestPort;
+    SMMURequestPort requestPort;
     SMMUTableWalkPort tableWalkPort;
-    SMMUControlPort   controlPort;
+    SMMUControlPort controlPort;
 
     const bool irqInterfaceEnable;
 
-    ARMArchTLB  tlb;
+    ARMArchTLB tlb;
     ConfigCache configCache;
-    IPACache    ipaCache;
-    WalkCache   walkCache;
+    IPACache ipaCache;
+    WalkCache walkCache;
 
     const bool tlbEnable;
     const bool configCacheEnable;
@@ -124,7 +122,7 @@ class SMMUv3 : public ClockedObject
     SMMUSemaphore requestPortSem;
 
     SMMUSemaphore transSem; // max N transactions in SMMU
-    SMMUSemaphore ptwSem; // max N concurrent PTWs
+    SMMUSemaphore ptwSem;   // max N concurrent PTWs
     SMMUSemaphore cycleSem; // max 1 table walk per cycle
 
     // Timing parameters
@@ -159,7 +157,6 @@ class SMMUv3 : public ClockedObject
     std::queue<SMMUAction> packetsToRetry;
     std::queue<SMMUAction> packetsTableWalkToRetry;
 
-
     void scheduleDeviceRetries();
 
     SMMUAction runProcess(SMMUProcess *proc, PacketPtr pkt);
@@ -192,8 +189,8 @@ class SMMUv3 : public ClockedObject
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 
-    virtual Port &getPort(const std::string &name,
-                          PortID id = InvalidPortID) override;
+    virtual Port &getPort(
+        const std::string &name, PortID id = InvalidPortID) override;
 };
 
 } // namespace gem5

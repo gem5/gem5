@@ -46,7 +46,6 @@
 
 namespace gem5
 {
-
 /**
  * Based on the RISC-V ISA privileged specifications
  * V1.11, there is no implementation guidelines on the
@@ -60,7 +59,6 @@ namespace gem5
 class PMAChecker : public SimObject
 {
   public:
-
     typedef PMACheckerParams Params;
 
     const Params &

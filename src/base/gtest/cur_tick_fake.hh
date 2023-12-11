@@ -31,7 +31,6 @@
 
 namespace gem5
 {
-
 class GTestTickHandler
 {
   public:
@@ -43,7 +42,11 @@ class GTestTickHandler
     }
 
     /** Assign a value to the current simulation tick. */
-    void setCurTick(Tick tick) { *Gem5Internal::_curTickPtr = tick; }
+    void
+    setCurTick(Tick tick)
+    {
+        *Gem5Internal::_curTickPtr = tick;
+    }
 };
 
 } // namespace gem5

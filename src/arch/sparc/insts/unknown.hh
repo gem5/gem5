@@ -33,20 +33,17 @@
 
 namespace gem5
 {
-
 namespace SparcISA
 {
-
 /**
  * Class for Unknown/Illegal instructions
  */
 class Unknown : public SparcStaticInst
 {
   public:
-
     // Constructor
     Unknown(ExtMachInst _machInst) :
-            SparcStaticInst("unknown", _machInst, No_OpClass)
+        SparcStaticInst("unknown", _machInst, No_OpClass)
     {}
 
     Fault
@@ -57,11 +54,10 @@ class Unknown : public SparcStaticInst
 
     std::string
     generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override
+        Addr pc, const loader::SymbolTable *symtab) const override
     {
         return "Unknown instruction";
     }
-
 };
 
 } // namespace SparcISA

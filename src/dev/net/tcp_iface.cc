@@ -60,38 +60,38 @@
 #include "sim/sim_exit.hh"
 
 #if defined(__FreeBSD__)
-#include <netinet/in.h>
+#    include <netinet/in.h>
 
 #endif
 
 // MSG_NOSIGNAL does not exists on OS X
 #if defined(__APPLE__) || defined(__MACH__)
-#ifndef MSG_NOSIGNAL
-#define MSG_NOSIGNAL SO_NOSIGPIPE
-#endif
+#    ifndef MSG_NOSIGNAL
+#        define MSG_NOSIGNAL SO_NOSIGPIPE
+#    endif
 #endif
 
 namespace gem5
 {
-
 std::vector<std::pair<TCPIface::NodeInfo, int> > TCPIface::nodes;
 std::vector<int> TCPIface::sockRegistry;
 int TCPIface::fdStatic = -1;
 bool TCPIface::anyListening = false;
 
 TCPIface::TCPIface(std::string server_name, unsigned server_port,
-                   unsigned dist_rank, unsigned dist_size,
-                   Tick sync_start, Tick sync_repeat,
-                   EventManager *em, bool use_pseudo_op, bool is_switch,
-                   int num_nodes) :
+    unsigned dist_rank, unsigned dist_size, Tick sync_start, Tick sync_repeat,
+    EventManager *em, bool use_pseudo_op, bool is_switch, int num_nodes) :
     DistIface(dist_rank, dist_size, sync_start, sync_repeat, em, use_pseudo_op,
-              is_switch, num_nodes), serverName(server_name),
-    serverPort(server_port), isSwitch(is_switch), listening(false)
+        is_switch, num_nodes),
+    serverName(server_name),
+    serverPort(server_port),
+    isSwitch(is_switch),
+    listening(false)
 {
     if (is_switch && isPrimary) {
         while (!listen(serverPort)) {
             DPRINTF(DistEthernet, "TCPIface(listen): Can't bind port %d\n",
-                    serverPort);
+                serverPort);
             serverPort++;
         }
         inform("tcp_iface listening on port %d", serverPort);
@@ -128,7 +128,7 @@ TCPIface::listen(int port)
     sockaddr.sin_port = htons(port);
     // finally clear sin_zero
     memset(&sockaddr.sin_zero, 0, sizeof(sockaddr.sin_zero));
-    ret = ::bind(fdStatic, (struct sockaddr *)&sockaddr, sizeof (sockaddr));
+    ret = ::bind(fdStatic, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
 
     if (ret != 0) {
         if (ret == -1 && errno != EADDRINUSE)
@@ -157,11 +157,10 @@ TCPIface::establishConnection()
 
     if (isSwitch) {
         if (cur_id == 0) { // first connection accepted in the ctor already
-            auto const &iface0 =
-                std::find_if(nodes.begin(), nodes.end(),
-                             [](const std::pair<NodeInfo, int> &cn) -> bool {
-                                 return cn.first.rank == cur_rank;
-                             });
+            auto const &iface0 = std::find_if(nodes.begin(), nodes.end(),
+                [](const std::pair<NodeInfo, int> &cn) -> bool {
+                    return cn.first.rank == cur_rank;
+                });
             assert(iface0 != nodes.end());
             assert(iface0->first.distIfaceId == 0);
             sock = iface0->second;
@@ -174,8 +173,8 @@ TCPIface::establishConnection()
             assert(ni.rank == cur_rank);
             assert(ni.distIfaceId == cur_id);
         }
-        inform("Link okay  (iface:%d -> (node:%d, iface:%d))",
-               distIfaceId, ni.rank, ni.distIfaceId);
+        inform("Link okay  (iface:%d -> (node:%d, iface:%d))", distIfaceId,
+            ni.rank, ni.distIfaceId);
         if (ni.distIfaceId < ni.distIfaceNum - 1) {
             cur_id++;
         } else {
@@ -194,12 +193,12 @@ TCPIface::establishConnection()
         ni.distIfaceNum = distIfaceNum;
         sendTCP(sock, &ni, sizeof(ni));
         DPRINTF(DistEthernet, "Connected, waiting for ack (distIfaceId:%d\n",
-                distIfaceId);
+            distIfaceId);
         if (!recvTCP(sock, &ni, sizeof(ni)))
             panic("Failed to receive ack");
         assert(ni.rank == rank);
         inform("Link okay  (iface:%d -> switch iface:%d)", distIfaceId,
-               ni.distIfaceId);
+            ni.distIfaceId);
     }
     sockRegistry.push_back(sock);
 }
@@ -208,12 +207,12 @@ void
 TCPIface::accept()
 {
     struct sockaddr_in sockaddr;
-    socklen_t slen = sizeof (sockaddr);
+    socklen_t slen = sizeof(sockaddr);
     sock = ::accept(fdStatic, (struct sockaddr *)&sockaddr, &slen);
     if (sock != -1) {
         int i = 1;
-        if (setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char *)&i,
-                         sizeof(i)) < 0)
+        if (setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char *)&i, sizeof(i)) <
+            0)
             warn("ListenSocket(accept): setsockopt() TCP_NODELAY failed!");
     }
 }
@@ -222,34 +221,35 @@ void
 TCPIface::connect()
 {
     struct addrinfo addr_hint, *addr_results;
-     int ret;
+    int ret;
 
-     std::string port_str = std::to_string(serverPort);
+    std::string port_str = std::to_string(serverPort);
 
-     sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-     panic_if(sock < 0, "socket() failed: %s", strerror(errno));
+    sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+    panic_if(sock < 0, "socket() failed: %s", strerror(errno));
 
-     int fl = 1;
-     if (setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char *)&fl, sizeof(fl)) < 0)
-         warn("ConnectSocket(connect): setsockopt() TCP_NODELAY failed!");
+    int fl = 1;
+    if (setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char *)&fl, sizeof(fl)) <
+        0)
+        warn("ConnectSocket(connect): setsockopt() TCP_NODELAY failed!");
 
-     bzero(&addr_hint, sizeof(addr_hint));
-     addr_hint.ai_family = AF_INET;
-     addr_hint.ai_socktype = SOCK_STREAM;
-     addr_hint.ai_protocol = IPPROTO_TCP;
+    bzero(&addr_hint, sizeof(addr_hint));
+    addr_hint.ai_family = AF_INET;
+    addr_hint.ai_socktype = SOCK_STREAM;
+    addr_hint.ai_protocol = IPPROTO_TCP;
 
-     ret = getaddrinfo(serverName.c_str(), port_str.c_str(),
-                       &addr_hint, &addr_results);
-     panic_if(ret < 0, "getaddrinf() failed: %s", strerror(errno));
+    ret = getaddrinfo(
+        serverName.c_str(), port_str.c_str(), &addr_hint, &addr_results);
+    panic_if(ret < 0, "getaddrinf() failed: %s", strerror(errno));
 
-     DPRINTF(DistEthernet, "Connecting to %s:%s\n",
-             serverName.c_str(), port_str.c_str());
+    DPRINTF(DistEthernet, "Connecting to %s:%s\n", serverName.c_str(),
+        port_str.c_str());
 
-     ret = ::connect(sock, (struct sockaddr *)(addr_results->ai_addr),
-                     addr_results->ai_addrlen);
-     panic_if(ret < 0, "connect() failed: %s", strerror(errno));
+    ret = ::connect(sock, (struct sockaddr *)(addr_results->ai_addr),
+        addr_results->ai_addrlen);
+    panic_if(ret < 0, "connect() failed: %s", strerror(errno));
 
-     freeaddrinfo(addr_results);
+    freeaddrinfo(addr_results);
 }
 
 TCPIface::~TCPIface()
@@ -282,7 +282,7 @@ TCPIface::recvTCP(int sock, void *buf, unsigned length)
 {
     ssize_t ret;
 
-    ret = ::recv(sock, buf, length,  MSG_WAITALL );
+    ret = ::recv(sock, buf, length, MSG_WAITALL);
     if (ret < 0) {
         if (errno == ECONNRESET || errno == EPIPE)
             inform("recv(): %s", strerror(errno));
@@ -307,12 +307,12 @@ void
 TCPIface::sendCmd(const Header &header)
 {
     DPRINTF(DistEthernetCmd, "TCPIface::sendCmd() type: %d\n",
-            static_cast<int>(header.msgType));
+        static_cast<int>(header.msgType));
     // Global commands (i.e. sync request) are always sent by the primary
     // DistIface. The transfer method is simply implemented as point-to-point
     // messages for now
-    for (auto s: sockRegistry)
-        sendTCP(s, (void*)&header, sizeof(header));
+    for (auto s : sockRegistry)
+        sendTCP(s, (void *)&header, sizeof(header));
 }
 
 bool
@@ -320,7 +320,7 @@ TCPIface::recvHeader(Header &header)
 {
     bool ret = recvTCP(sock, &header, sizeof(header));
     DPRINTF(DistEthernetCmd, "TCPIface::recvHeader() type: %d ret: %d\n",
-            static_cast<int>(header.msgType), ret);
+        static_cast<int>(header.msgType), ret);
     return ret;
 }
 

@@ -33,10 +33,8 @@
 
 namespace gem5
 {
-
 namespace PowerISA
 {
-
 /**
  * Class for misc operations.
  */
@@ -46,7 +44,7 @@ class MiscOp : public PowerStaticInst
     using PowerStaticInst::PowerStaticInst;
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 } // namespace PowerISA

@@ -39,7 +39,6 @@
 
 namespace gem5
 {
-
 /**
  * BadDevice
  * This device just panics when accessed. It is supposed to warn

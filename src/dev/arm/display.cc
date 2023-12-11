@@ -41,9 +41,6 @@
 
 namespace gem5
 {
-
-Display::Display(const DisplayParams &p)
-  : SimObject(p)
-{}
+Display::Display(const DisplayParams &p) : SimObject(p) {}
 
 } // namespace gem5

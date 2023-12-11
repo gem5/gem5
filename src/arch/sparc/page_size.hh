@@ -33,10 +33,8 @@
 
 namespace gem5
 {
-
 namespace SparcISA
 {
-
 const Addr PageShift = 13;
 const Addr PageBytes = 1ULL << PageShift;
 

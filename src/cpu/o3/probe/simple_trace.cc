@@ -43,35 +43,32 @@
 
 namespace gem5
 {
-
 namespace o3
 {
-
 void
-SimpleTrace::traceCommit(const DynInstConstPtr& dynInst)
+SimpleTrace::traceCommit(const DynInstConstPtr &dynInst)
 {
     DPRINTFR(SimpleTrace, "[%s]: Commit 0x%08x %s.\n", name(),
-             dynInst->pcState().instAddr(),
-             dynInst->staticInst->disassemble(dynInst->pcState().instAddr()));
+        dynInst->pcState().instAddr(),
+        dynInst->staticInst->disassemble(dynInst->pcState().instAddr()));
 }
 
 void
-SimpleTrace::traceFetch(const DynInstConstPtr& dynInst)
+SimpleTrace::traceFetch(const DynInstConstPtr &dynInst)
 {
     DPRINTFR(SimpleTrace, "[%s]: Fetch 0x%08x %s.\n", name(),
-             dynInst->pcState().instAddr(),
-             dynInst->staticInst->disassemble(dynInst->pcState().instAddr()));
+        dynInst->pcState().instAddr(),
+        dynInst->staticInst->disassemble(dynInst->pcState().instAddr()));
 }
 
 void
 SimpleTrace::regProbeListeners()
 {
-    typedef ProbeListenerArg<SimpleTrace,
-            DynInstConstPtr> DynInstListener;
-    listeners.push_back(new DynInstListener(this, "Commit",
-                &SimpleTrace::traceCommit));
-    listeners.push_back(new DynInstListener(this, "Fetch",
-                &SimpleTrace::traceFetch));
+    typedef ProbeListenerArg<SimpleTrace, DynInstConstPtr> DynInstListener;
+    listeners.push_back(
+        new DynInstListener(this, "Commit", &SimpleTrace::traceCommit));
+    listeners.push_back(
+        new DynInstListener(this, "Fetch", &SimpleTrace::traceFetch));
 }
 
 } // namespace o3

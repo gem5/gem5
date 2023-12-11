@@ -50,7 +50,6 @@
 
 namespace gem5
 {
-
 /**
  * Derived ThreadContext class for use with the Checker.  The template
  * parameter is the ThreadContext class used by the specific CPU being
@@ -63,11 +62,11 @@ template <class TC>
 class CheckerThreadContext : public ThreadContext
 {
   public:
-    CheckerThreadContext(TC *actual_tc,
-                         CheckerCPU *checker_cpu)
-        : actualTC(actual_tc), checkerTC(checker_cpu->thread),
-          checkerCPU(checker_cpu)
-    { }
+    CheckerThreadContext(TC *actual_tc, CheckerCPU *checker_cpu) :
+        actualTC(actual_tc),
+        checkerTC(checker_cpu->thread),
+        checkerCPU(checker_cpu)
+    {}
 
   private:
     /** The main CPU's ThreadContext, or class that implements the
@@ -115,23 +114,43 @@ class CheckerThreadContext : public ThreadContext
         return actualTC->getCurrentInstCount();
     }
 
-    BaseCPU *getCpuPtr() override { return actualTC->getCpuPtr(); }
+    BaseCPU *
+    getCpuPtr() override
+    {
+        return actualTC->getCpuPtr();
+    }
 
-    uint32_t socketId() const override { return actualTC->socketId(); }
+    uint32_t
+    socketId() const override
+    {
+        return actualTC->socketId();
+    }
 
-    int cpuId() const override { return actualTC->cpuId(); }
+    int
+    cpuId() const override
+    {
+        return actualTC->cpuId();
+    }
 
-    ContextID contextId() const override { return actualTC->contextId(); }
+    ContextID
+    contextId() const override
+    {
+        return actualTC->contextId();
+    }
 
     void
     setContextId(ContextID id) override
     {
-       actualTC->setContextId(id);
-       checkerTC->setContextId(id);
+        actualTC->setContextId(id);
+        checkerTC->setContextId(id);
     }
 
     /** Returns this thread's ID number. */
-    int threadId() const override { return actualTC->threadId(); }
+    int
+    threadId() const override
+    {
+        return actualTC->threadId();
+    }
     void
     setThreadId(int id) override
     {
@@ -139,7 +158,11 @@ class CheckerThreadContext : public ThreadContext
         actualTC->setThreadId(id);
     }
 
-    BaseMMU *getMMUPtr() override { return actualTC->getMMUPtr(); }
+    BaseMMU *
+    getMMUPtr() override
+    {
+        return actualTC->getMMUPtr();
+    }
 
     CheckerCPU *
     getCheckerCpuPtr() override
@@ -147,7 +170,11 @@ class CheckerThreadContext : public ThreadContext
         return checkerCPU;
     }
 
-    BaseISA *getIsaPtr() const override { return actualTC->getIsaPtr(); }
+    BaseISA *
+    getIsaPtr() const override
+    {
+        return actualTC->getIsaPtr();
+    }
 
     InstDecoder *
     getDecoderPtr() override
@@ -155,11 +182,23 @@ class CheckerThreadContext : public ThreadContext
         return actualTC->getDecoderPtr();
     }
 
-    System *getSystemPtr() override { return actualTC->getSystemPtr(); }
+    System *
+    getSystemPtr() override
+    {
+        return actualTC->getSystemPtr();
+    }
 
-    Process *getProcessPtr() override { return actualTC->getProcessPtr(); }
+    Process *
+    getProcessPtr() override
+    {
+        return actualTC->getProcessPtr();
+    }
 
-    void setProcessPtr(Process *p) override { actualTC->setProcessPtr(p); }
+    void
+    setProcessPtr(Process *p) override
+    {
+        actualTC->setProcessPtr(p);
+    }
 
     void
     connectMemPorts(ThreadContext *tc)
@@ -167,7 +206,11 @@ class CheckerThreadContext : public ThreadContext
         actualTC->connectMemPorts(tc);
     }
 
-    Status status() const override { return actualTC->status(); }
+    Status
+    status() const override
+    {
+        return actualTC->status();
+    }
 
     void
     setStatus(Status new_status) override
@@ -177,13 +220,25 @@ class CheckerThreadContext : public ThreadContext
     }
 
     /// Set the status to Active.
-    void activate() override { actualTC->activate(); }
+    void
+    activate() override
+    {
+        actualTC->activate();
+    }
 
     /// Set the status to Suspended.
-    void suspend() override { actualTC->suspend(); }
+    void
+    suspend() override
+    {
+        actualTC->suspend();
+    }
 
     /// Set the status to Halted.
-    void halt() override { actualTC->halt(); }
+    void
+    halt() override
+    {
+        actualTC->halt();
+    }
 
     void
     takeOverFrom(ThreadContext *oldContext) override
@@ -199,8 +254,16 @@ class CheckerThreadContext : public ThreadContext
         checkerTC->regStats(name);
     }
 
-    Tick readLastActivate() override { return actualTC->readLastActivate(); }
-    Tick readLastSuspend() override { return actualTC->readLastSuspend(); }
+    Tick
+    readLastActivate() override
+    {
+        return actualTC->readLastActivate();
+    }
+    Tick
+    readLastSuspend() override
+    {
+        return actualTC->readLastSuspend();
+    }
 
     // @todo: Do I need this?
     void
@@ -253,14 +316,18 @@ class CheckerThreadContext : public ThreadContext
     }
 
     /** Reads this thread's PC state. */
-    const PCStateBase &pcState() const override { return actualTC->pcState(); }
+    const PCStateBase &
+    pcState() const override
+    {
+        return actualTC->pcState();
+    }
 
     /** Sets this thread's PC state. */
     void
     pcState(const PCStateBase &val) override
     {
-        DPRINTF(Checker, "Changing PC to %s, old PC %s\n",
-                         val, checkerTC->pcState());
+        DPRINTF(Checker, "Changing PC to %s, old PC %s\n", val,
+            checkerTC->pcState());
         checkerTC->pcState(val);
         checkerCPU->recordPCChange(val);
         return actualTC->pcState(val);
@@ -287,8 +354,10 @@ class CheckerThreadContext : public ThreadContext
     void
     setMiscRegNoEffect(RegIndex misc_reg, RegVal val) override
     {
-        DPRINTF(Checker, "Setting misc reg with no effect: %d to both Checker"
-                         " and O3..\n", misc_reg);
+        DPRINTF(Checker,
+            "Setting misc reg with no effect: %d to both Checker"
+            " and O3..\n",
+            misc_reg);
         checkerTC->setMiscRegNoEffect(misc_reg, val);
         actualTC->setMiscRegNoEffect(misc_reg, val);
     }
@@ -296,8 +365,10 @@ class CheckerThreadContext : public ThreadContext
     void
     setMiscReg(RegIndex misc_reg, RegVal val) override
     {
-        DPRINTF(Checker, "Setting misc reg with effect: %d to both Checker"
-                         " and O3..\n", misc_reg);
+        DPRINTF(Checker,
+            "Setting misc reg with effect: %d to both Checker"
+            " and O3..\n",
+            misc_reg);
         checkerTC->setMiscReg(misc_reg, val);
         actualTC->setMiscReg(misc_reg, val);
     }
@@ -321,7 +392,7 @@ class CheckerThreadContext : public ThreadContext
         panic("function not implemented");
     }
 
-    BaseHTMCheckpointPtr&
+    BaseHTMCheckpointPtr &
     getHtmCheckpointPtr() override
     {
         return actualTC->getHtmCheckpointPtr();
@@ -332,7 +403,6 @@ class CheckerThreadContext : public ThreadContext
     {
         panic("function not implemented");
     }
-
 };
 
 } // namespace gem5

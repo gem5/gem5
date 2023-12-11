@@ -43,12 +43,11 @@
 
 namespace gem5
 {
-
-VirtIOConsole::VirtIOConsole(const Params &params)
-    : VirtIODeviceBase(params, ID_CONSOLE, sizeof(Config), F_SIZE),
-      qRecv(params.system->physProxy, byteOrder, params.qRecvSize, *this),
-      qTrans(params.system->physProxy, byteOrder, params.qTransSize, *this),
-      device(*params.device)
+VirtIOConsole::VirtIOConsole(const Params &params) :
+    VirtIODeviceBase(params, ID_CONSOLE, sizeof(Config), F_SIZE),
+    qRecv(params.system->physProxy, byteOrder, params.qRecvSize, *this),
+    qTrans(params.system->physProxy, byteOrder, params.qTransSize, *this),
+    device(*params.device)
 {
     registerQueue(qRecv);
     registerQueue(qTrans);
@@ -59,10 +58,7 @@ VirtIOConsole::VirtIOConsole(const Params &params)
     device.regInterfaceCallback([this]() { qRecv.trySend(); });
 }
 
-
-VirtIOConsole::~VirtIOConsole()
-{
-}
+VirtIOConsole::~VirtIOConsole() {}
 void
 VirtIOConsole::readConfig(PacketPtr pkt, Addr cfgOffset)
 {
@@ -100,8 +96,7 @@ VirtIOConsole::TermRecvQueue::trySend()
 void
 VirtIOConsole::TermTransQueue::onNotifyDescriptor(VirtDescriptor *desc)
 {
-    DPRINTF(VIOConsole, "Got input data descriptor (len: %i)\n",
-            desc->size());
+    DPRINTF(VIOConsole, "Got input data descriptor (len: %i)\n", desc->size());
 
     // Copy the data from the guest and forward it to the
     // terminal.

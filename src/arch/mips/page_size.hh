@@ -34,10 +34,8 @@
 
 namespace gem5
 {
-
 namespace MipsISA
 {
-
 const Addr PageShift = 13;
 const Addr PageBytes = 1ULL << PageShift;
 

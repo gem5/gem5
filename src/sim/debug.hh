@@ -38,7 +38,6 @@
 
 namespace gem5
 {
-
 /** Cause the simulator to execute a breakpoint
  * @param when the tick to break
  */

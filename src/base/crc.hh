@@ -42,7 +42,6 @@
 
 namespace gem5
 {
-
 /**
  * Evaluate the CRC32 of the first size bytes of a data buffer,
  * using a specific polynomium and an initial value.
@@ -59,7 +58,7 @@ namespace gem5
  */
 template <uint32_t Poly>
 uint32_t
-crc32(const uint8_t* data, uint32_t crc, std::size_t size)
+crc32(const uint8_t *data, uint32_t crc, std::size_t size)
 {
     uint32_t byte = 0;
 

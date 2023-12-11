@@ -40,7 +40,6 @@
 
 namespace gem5
 {
-
 class EtherDump;
 class EtherInt;
 class EtherBus : public SimObject
@@ -64,10 +63,14 @@ class EtherBus : public SimObject
 
     void txDone();
     void reg(EtherInt *dev);
-    bool busy() const { return (bool)packet; }
+    bool
+    busy() const
+    {
+        return (bool)packet;
+    }
     bool send(EtherInt *sender, EthPacketPtr &packet);
-    Port &getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID) override;
+    Port &getPort(
+        const std::string &if_name, PortID idx = InvalidPortID) override;
 };
 
 } // namespace gem5

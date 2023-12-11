@@ -46,21 +46,18 @@
 
 namespace gem5
 {
+PacketQueue::PacketQueue(EventManager &_em, const std::string &_label,
+    const std::string &_sendEventName, bool force_order,
+    bool disable_sanity_check) :
+    em(_em),
+    sendEvent([this] { processSendEvent(); }, _sendEventName),
+    _disableSanityCheck(disable_sanity_check),
+    forceOrder(force_order),
+    label(_label),
+    waitingOnRetry(false)
+{}
 
-PacketQueue::PacketQueue(EventManager& _em, const std::string& _label,
-                         const std::string& _sendEventName,
-                         bool force_order,
-                         bool disable_sanity_check)
-    : em(_em), sendEvent([this]{ processSendEvent(); }, _sendEventName),
-      _disableSanityCheck(disable_sanity_check),
-      forceOrder(force_order),
-      label(_label), waitingOnRetry(false)
-{
-}
-
-PacketQueue::~PacketQueue()
-{
-}
+PacketQueue::~PacketQueue() {}
 
 void
 PacketQueue::retry()
@@ -76,7 +73,7 @@ PacketQueue::checkConflict(const PacketPtr pkt, const int blk_size) const
 {
     // caller is responsible for ensuring that all packets have the
     // same alignment
-    for (const auto& p : transmitList) {
+    for (const auto &p : transmitList) {
         if (p.pkt->matchBlockAddr(pkt, blk_size))
             return true;
     }
@@ -107,8 +104,8 @@ void
 PacketQueue::schedSendTiming(PacketPtr pkt, Tick when)
 {
     DPRINTF(PacketQueue, "%s for %s address %x size %d when %lu ord: %i\n",
-            __func__, pkt->cmdString(), pkt->getAddr(), pkt->getSize(), when,
-            forceOrder);
+        __func__, pkt->cmdString(), pkt->getAddr(), pkt->getSize(), when,
+        forceOrder);
 
     // we can still send a packet before the end of this tick
     assert(when >= curTick());
@@ -119,8 +116,7 @@ PacketQueue::schedSendTiming(PacketPtr pkt, Tick when)
     // add a very basic sanity check on the port to ensure the
     // invisible buffer is not growing beyond reasonable limits
     if (!_disableSanityCheck && transmitList.size() > 128) {
-        panic("Packet queue %s has grown beyond 128 packets\n",
-              name());
+        panic("Packet queue %s has grown beyond 128 packets\n", name());
     }
 
     // we should either have an outstanding retry, or a send event
@@ -177,11 +173,10 @@ PacketQueue::schedSendEvent(Tick when)
     } else {
         // we get a MaxTick when there is no more to send, so if we're
         // draining, we may be done at this point
-        if (drainState() == DrainState::Draining &&
-            transmitList.empty() && !sendEvent.scheduled()) {
-
+        if (drainState() == DrainState::Draining && transmitList.empty() &&
+            !sendEvent.scheduled()) {
             DPRINTF(Drain, "PacketQueue done draining,"
-                    "processing drain event\n");
+                           "processing drain event\n");
             signalDrainDone();
         }
     }
@@ -235,12 +230,11 @@ PacketQueue::drain()
     }
 }
 
-ReqPacketQueue::ReqPacketQueue(EventManager& _em, RequestPort& _mem_side_port,
-                               const std::string _label)
-    : PacketQueue(_em, _label, name(_mem_side_port, _label)),
-      memSidePort(_mem_side_port)
-{
-}
+ReqPacketQueue::ReqPacketQueue(
+    EventManager &_em, RequestPort &_mem_side_port, const std::string _label) :
+    PacketQueue(_em, _label, name(_mem_side_port, _label)),
+    memSidePort(_mem_side_port)
+{}
 
 bool
 ReqPacketQueue::sendTiming(PacketPtr pkt)
@@ -248,14 +242,11 @@ ReqPacketQueue::sendTiming(PacketPtr pkt)
     return memSidePort.sendTimingReq(pkt);
 }
 
-SnoopRespPacketQueue::SnoopRespPacketQueue(EventManager& _em,
-                                           RequestPort& _mem_side_port,
-                                           bool force_order,
-                                           const std::string _label)
-    : PacketQueue(_em, _label, name(_mem_side_port, _label), force_order),
-      memSidePort(_mem_side_port)
-{
-}
+SnoopRespPacketQueue::SnoopRespPacketQueue(EventManager &_em,
+    RequestPort &_mem_side_port, bool force_order, const std::string _label) :
+    PacketQueue(_em, _label, name(_mem_side_port, _label), force_order),
+    memSidePort(_mem_side_port)
+{}
 
 bool
 SnoopRespPacketQueue::sendTiming(PacketPtr pkt)
@@ -263,14 +254,11 @@ SnoopRespPacketQueue::sendTiming(PacketPtr pkt)
     return memSidePort.sendTimingSnoopResp(pkt);
 }
 
-RespPacketQueue::RespPacketQueue(EventManager& _em,
-                                 ResponsePort& _cpu_side_port,
-                                 bool force_order,
-                                 const std::string _label)
-    : PacketQueue(_em, _label, name(_cpu_side_port, _label), force_order),
-      cpuSidePort(_cpu_side_port)
-{
-}
+RespPacketQueue::RespPacketQueue(EventManager &_em,
+    ResponsePort &_cpu_side_port, bool force_order, const std::string _label) :
+    PacketQueue(_em, _label, name(_cpu_side_port, _label), force_order),
+    cpuSidePort(_cpu_side_port)
+{}
 
 bool
 RespPacketQueue::sendTiming(PacketPtr pkt)

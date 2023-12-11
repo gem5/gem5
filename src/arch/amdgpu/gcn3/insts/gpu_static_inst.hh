@@ -41,52 +41,71 @@
 
 namespace gem5
 {
-
 namespace Gcn3ISA
 {
-    class GCN3GPUStaticInst : public GPUStaticInst
+class GCN3GPUStaticInst : public GPUStaticInst
+{
+  public:
+    GCN3GPUStaticInst(const std::string &opcode);
+    ~GCN3GPUStaticInst();
+
+    void
+    generateDisassembly() override
     {
-      public:
-        GCN3GPUStaticInst(const std::string &opcode);
-        ~GCN3GPUStaticInst();
+        disassembly = _opcode;
+    }
 
-        void generateDisassembly() override { disassembly = _opcode; }
+    bool
+    isFlatScratchRegister(int opIdx) override
+    {
+        return isFlatScratchReg(opIdx);
+    }
 
-        bool
-        isFlatScratchRegister(int opIdx) override
-        {
-            return isFlatScratchReg(opIdx);
-        }
+    bool
+    isExecMaskRegister(int opIdx) override
+    {
+        return isExecMask(opIdx);
+    }
 
-        bool
-        isExecMaskRegister(int opIdx) override
-        {
-            return isExecMask(opIdx);
-        }
+    void
+    initOperandInfo() override
+    {
+        return;
+    }
+    int
+    getOperandSize(int opIdx) override
+    {
+        return 0;
+    }
 
-        void initOperandInfo() override { return; }
-        int getOperandSize(int opIdx) override { return 0; }
+    /**
+     * Return the number of tokens needed by the coalescer. In GCN3 there
+     * is generally one packet per memory request per lane generated. In
+     * HSAIL, the number of dest operands is used for loads and src
+     * operands for stores. This method should be overriden on a per-inst
+     * basis when this value differs.
+     */
+    int
+    coalescerTokenCount() const override
+    {
+        return 1;
+    }
+    ScalarRegU32
+    srcLiteral() const override
+    {
+        return _srcLiteral;
+    }
 
-        /**
-          * Return the number of tokens needed by the coalescer. In GCN3 there
-          * is generally one packet per memory request per lane generated. In
-          * HSAIL, the number of dest operands is used for loads and src
-          * operands for stores. This method should be overriden on a per-inst
-          * basis when this value differs.
-          */
-        int coalescerTokenCount() const override { return 1; }
-        ScalarRegU32 srcLiteral() const override { return _srcLiteral; }
+  protected:
+    void panicUnimplemented() const;
 
-      protected:
-        void panicUnimplemented() const;
-
-        /**
-         * if the instruction has a src literal - an immediate
-         * value that is part of the instruction stream - we
-         * store that here
-         */
-        ScalarRegU32 _srcLiteral;
-    }; // class GCN3GPUStaticInst
+    /**
+     * if the instruction has a src literal - an immediate
+     * value that is part of the instruction stream - we
+     * store that here
+     */
+    ScalarRegU32 _srcLiteral;
+}; // class GCN3GPUStaticInst
 
 } // namespace Gcn3ISA
 } // namespace gem5

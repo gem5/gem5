@@ -47,8 +47,8 @@ std::vector<uint8_t> test_written_data;
 uint64_t test_max_buf_size;
 
 uint64_t
-test_m5_write_file(void *buffer, uint64_t len, uint64_t offset,
-                   const char *filename)
+test_m5_write_file(
+    void *buffer, uint64_t len, uint64_t offset, const char *filename)
 {
     if (test_max_buf_size && len > test_max_buf_size)
         len = test_max_buf_size;
@@ -72,7 +72,7 @@ test_m5_write_file(void *buffer, uint64_t len, uint64_t offset,
     return len;
 }
 
-DispatchTable dt = { .m5_write_file = &test_m5_write_file };
+DispatchTable dt = {.m5_write_file = &test_m5_write_file};
 
 std::string cout_output;
 
@@ -145,9 +145,21 @@ class TempFile
         close(fd);
     }
 
-    size_t size() const { return _size; }
-    const std::string &path() const { return _path; }
-    const void *buf() const { return _buf; }
+    size_t
+    size() const
+    {
+        return _size;
+    }
+    const std::string &
+    path() const
+    {
+        return _path;
+    }
+    const void *
+    buf() const
+    {
+        return _buf;
+    }
 
     void
     verify()
@@ -243,5 +255,5 @@ TEST(Writefile, CappedWriteSize)
 TEST(WritefileDeathTest, BadFile)
 {
     EXPECT_EXIT(run({"writefile", "this is not a valid path#$#$://\\\\"}),
-            ::testing::ExitedWithCode(2), "Error opening ");
+        ::testing::ExitedWithCode(2), "Error opening ");
 }

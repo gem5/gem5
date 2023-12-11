@@ -43,19 +43,17 @@
 
 namespace gem5
 {
-
 class PortProxy;
 
 namespace loader
 {
-
 class MemoryImage
 {
   public:
     struct Segment
     {
-        Segment(const std::string &_name, Addr _base,
-                const uint8_t *_data, size_t _size) :
+        Segment(const std::string &_name, Addr _base, const uint8_t *_data,
+            size_t _size) :
             name(_name), base(_base), data(_data), size(_size)
         {}
 
@@ -64,11 +62,11 @@ class MemoryImage
         {}
 
         Segment(const std::string &_name, Addr _base,
-                const ImageFileDataPtr &_ifd, Addr offset, size_t _size) :
+            const ImageFileDataPtr &_ifd, Addr offset, size_t _size) :
             ifd(_ifd), name(_name), base(_base), size(_size)
         {
             panic_if(offset + size > ifd->len(),
-                    "Segment outside the bounds of the image data");
+                "Segment outside the bounds of the image data");
             data = ifd->data() + offset;
         }
 
@@ -85,15 +83,9 @@ class MemoryImage
 
     MemoryImage() {}
 
-    MemoryImage(const Segment &seg)
-    {
-        addSegment(seg);
-    }
+    MemoryImage(const Segment &seg) { addSegment(seg); }
 
-    MemoryImage(std::initializer_list<Segment> segs)
-    {
-        addSegments(segs);
-    }
+    MemoryImage(std::initializer_list<Segment> segs) { addSegments(segs); }
 
   private:
     std::vector<Segment> _segments;
@@ -115,7 +107,7 @@ class MemoryImage
     void
     addSegments(std::initializer_list<Segment> segs)
     {
-        for (auto &seg: segs)
+        for (auto &seg : segs)
             addSegment(seg);
     }
 
@@ -124,10 +116,11 @@ class MemoryImage
     MemoryImage &
     offset(Addr by)
     {
-        return move([by](Addr a){ return by + a; });
+        return move([by](Addr a) { return by + a; });
     }
     MemoryImage &
-    mask(Addr m) {
+    mask(Addr m)
+    {
         return move([m](Addr a) { return a & m; });
     }
 
@@ -135,7 +128,7 @@ class MemoryImage
     maxAddr() const
     {
         Addr max = 0;
-        for (auto &seg: _segments)
+        for (auto &seg : _segments)
             max = std::max(max, seg.base + seg.size);
         return max;
     }
@@ -144,7 +137,7 @@ class MemoryImage
     minAddr() const
     {
         Addr min = MaxAddr;
-        for (auto &seg: _segments)
+        for (auto &seg : _segments)
             min = std::min(min, seg.base);
         return min;
     }
@@ -152,7 +145,7 @@ class MemoryImage
     bool
     contains(Addr addr) const
     {
-        for (auto &seg: _segments) {
+        for (auto &seg : _segments) {
             Addr start = seg.base;
             Addr end = seg.base + seg.size;
             if (addr >= start && addr < end)
@@ -163,7 +156,7 @@ class MemoryImage
 };
 
 static inline std::ostream &
-operator << (std::ostream &os, const MemoryImage::Segment &seg)
+operator<<(std::ostream &os, const MemoryImage::Segment &seg)
 {
     ccprintf(os, "%s: %#x %d", seg.name, seg.base, seg.size);
     return os;

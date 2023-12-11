@@ -32,7 +32,6 @@
 
 namespace gem5
 {
-
 using namespace RiscvISA;
 
 void

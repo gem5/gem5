@@ -44,7 +44,6 @@
 
 namespace gem5
 {
-
 class DirectedGenerator;
 
 class RubyDirectedTester : public ClockedObject
@@ -57,36 +56,49 @@ class RubyDirectedTester : public ClockedObject
 
       public:
         CpuPort(const std::string &_name, RubyDirectedTester *_tester,
-                PortID _id)
-            : RequestPort(_name, _id), tester(_tester)
+            PortID _id) :
+            RequestPort(_name, _id), tester(_tester)
         {}
 
       protected:
         virtual bool recvTimingResp(PacketPtr pkt);
-        virtual void recvReqRetry()
-        { panic("%s does not expect a retry\n", name()); }
+        virtual void
+        recvReqRetry()
+        {
+            panic("%s does not expect a retry\n", name());
+        }
     };
 
     typedef RubyDirectedTesterParams Params;
     RubyDirectedTester(const Params &p);
     ~RubyDirectedTester();
 
-    Port &getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID) override;
+    Port &getPort(
+        const std::string &if_name, PortID idx = InvalidPortID) override;
 
-    RequestPort* getCpuPort(int idx);
+    RequestPort *getCpuPort(int idx);
 
     void init() override;
 
     void wakeup();
 
-    void incrementCycleCompletions() { m_requests_completed++; }
+    void
+    incrementCycleCompletions()
+    {
+        m_requests_completed++;
+    }
 
-    void printStats(std::ostream& out) const {}
-    void clearStats() {}
-    void printConfig(std::ostream& out) const {}
+    void
+    printStats(std::ostream &out) const
+    {}
+    void
+    clearStats()
+    {}
+    void
+    printConfig(std::ostream &out) const
+    {}
 
-    void print(std::ostream& out) const;
+    void print(std::ostream &out) const;
 
   protected:
     EventFunctionWrapper directedStartEvent;
@@ -97,13 +109,13 @@ class RubyDirectedTester : public ClockedObject
     void checkForDeadlock();
 
     // Private copy constructor and assignment operator
-    RubyDirectedTester(const RubyDirectedTester& obj);
-    RubyDirectedTester& operator=(const RubyDirectedTester& obj);
+    RubyDirectedTester(const RubyDirectedTester &obj);
+    RubyDirectedTester &operator=(const RubyDirectedTester &obj);
 
     uint64_t m_requests_completed;
-    std::vector<RequestPort*> ports;
+    std::vector<RequestPort *> ports;
     uint64_t m_requests_to_complete;
-    DirectedGenerator* generator;
+    DirectedGenerator *generator;
 };
 
 } // namespace gem5

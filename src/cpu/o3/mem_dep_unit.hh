@@ -56,7 +56,6 @@
 
 namespace gem5
 {
-
 struct SNHash
 {
     size_t
@@ -72,7 +71,6 @@ struct BaseO3CPUParams;
 
 namespace o3
 {
-
 class CPU;
 class InstructionQueue;
 
@@ -103,7 +101,11 @@ class MemDepUnit
     ~MemDepUnit();
 
     /** Returns the name of the memory dependence unit. */
-    std::string name() const { return _name; }
+    std::string
+    name() const
+    {
+        return _name;
+    }
 
     /** Initializes the unit with parameters and a thread id. */
     void init(const BaseO3CPUParams &params, ThreadID tid, CPU *cpu);
@@ -152,8 +154,8 @@ class MemDepUnit
     void squash(const InstSeqNum &squashed_num, ThreadID tid);
 
     /** Indicates an ordering violation between a store and a younger load. */
-    void violation(const DynInstPtr &store_inst,
-                   const DynInstPtr &violating_load);
+    void violation(
+        const DynInstPtr &store_inst, const DynInstPtr &violating_load);
 
     /** Issues the given instruction */
     void issue(const DynInstPtr &inst);
@@ -162,7 +164,6 @@ class MemDepUnit
     void dumpLists();
 
   private:
-
     /** Completes a memory instruction. */
     void completed(const DynInstPtr &inst);
 
@@ -189,7 +190,11 @@ class MemDepUnit
         ~MemDepEntry();
 
         /** Returns the name of the memory dependence entry. */
-        std::string name() const { return "memdepentry"; }
+        std::string
+        name() const
+        {
+            return "memdepentry";
+        }
 
         /** The instruction being tracked. */
         DynInstPtr inst;
@@ -218,7 +223,7 @@ class MemDepUnit
     };
 
     /** Finds the memory dependence entry in the hash map. */
-    MemDepEntryPtr &findInHash(const DynInstConstPtr& inst);
+    MemDepEntryPtr &findInHash(const DynInstConstPtr &inst);
 
     /** Moves an entry to the ready list. */
     void moveToReady(MemDepEntryPtr &ready_inst_entry);
@@ -250,10 +255,18 @@ class MemDepUnit
     std::unordered_set<InstSeqNum> storeBarrierSNs;
 
     /** Is there an outstanding load barrier that loads must wait on. */
-    bool hasLoadBarrier() const { return !loadBarrierSNs.empty(); }
+    bool
+    hasLoadBarrier() const
+    {
+        return !loadBarrierSNs.empty();
+    }
 
     /** Is there an outstanding store barrier that loads must wait on. */
-    bool hasStoreBarrier() const { return !storeBarrierSNs.empty(); }
+    bool
+    hasStoreBarrier() const
+    {
+        return !storeBarrierSNs.empty();
+    }
 
     /** Inserts the SN of a barrier inst. to the list of tracked barriers */
     void insertBarrierSN(const DynInstPtr &barr_inst);

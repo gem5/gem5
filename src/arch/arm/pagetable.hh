@@ -53,14 +53,12 @@
 
 namespace gem5
 {
-
 namespace ArmISA
 {
-
 // Granule sizes
 enum GrainSize
 {
-    Grain4KB  = 12,
+    Grain4KB = 12,
     Grain16KB = 14,
     Grain64KB = 16,
     ReservedGrain = 0
@@ -75,16 +73,17 @@ const unsigned MaxPhysAddrRange = 52;
 // ITB/DTB page table entry
 struct PTE
 {
-    void serialize(CheckpointOut &cp) const
+    void
+    serialize(CheckpointOut &cp) const
     {
         panic("Need to implement PTE serialization\n");
     }
 
-    void unserialize(CheckpointIn &cp)
+    void
+    unserialize(CheckpointIn &cp)
     {
         panic("Need to implement PTE serialization\n");
     }
-
 };
 
 struct PageTableOps
@@ -214,24 +213,24 @@ struct TlbEntry : public Serializable
 
     // Matching variables
     Addr pfn;
-    Addr size;              // Size of this entry, == Type of TLB Rec
-    Addr vpn;               // Virtual Page Number
-    uint64_t attributes;    // Memory attributes formatted for PAR
+    Addr size;           // Size of this entry, == Type of TLB Rec
+    Addr vpn;            // Virtual Page Number
+    uint64_t attributes; // Memory attributes formatted for PAR
 
-    LookupLevel lookupLevel;    // Lookup level where the descriptor was fetched
-                                // from.  Used to set the FSR for faults
-                                // occurring while the long desc. format is in
-                                // use (AArch32 w/ LPAE and AArch64)
+    LookupLevel lookupLevel; // Lookup level where the descriptor was fetched
+                             // from.  Used to set the FSR for faults
+                             // occurring while the long desc. format is in
+                             // use (AArch32 w/ LPAE and AArch64)
 
-    uint16_t asid;          // Address Space Identifier
-    vmid_t vmid;            // Virtual machine Identifier
-    GrainSize tg;           // Translation Granule Size
-    uint8_t N;              // Number of bits in pagesize
+    uint16_t asid; // Address Space Identifier
+    vmid_t vmid;   // Virtual machine Identifier
+    GrainSize tg;  // Translation Granule Size
+    uint8_t N;     // Number of bits in pagesize
     uint8_t innerAttrs;
     uint8_t outerAttrs;
-    uint8_t ap;             // Access permissions bits
-    uint8_t hap;            // Hyp access permissions bits
-    DomainType domain;         // Access Domain
+    uint8_t ap;        // Access permissions bits
+    uint8_t hap;       // Hyp access permissions bits
+    DomainType domain; // Access Domain
 
     MemoryType mtype;
 
@@ -255,29 +254,48 @@ struct TlbEntry : public Serializable
     bool partial;
 
     // Type of memory
-    bool nonCacheable;     // Can we wrap this in mtype?
+    bool nonCacheable; // Can we wrap this in mtype?
 
     // Memory Attributes
     bool shareable;
     bool outerShareable;
 
     // Access permissions
-    bool xn;                // Execute Never
-    bool pxn;               // Privileged Execute Never (LPAE only)
+    bool xn;  // Execute Never
+    bool pxn; // Privileged Execute Never (LPAE only)
 
-    //Construct an entry that maps to physical address addr for SE mode
-    TlbEntry(Addr _asn, Addr _vaddr, Addr _paddr,
-             bool uncacheable, bool read_only) :
-         pfn(_paddr >> PageShift), size(PageBytes - 1), vpn(_vaddr >> PageShift),
-         attributes(0), lookupLevel(LookupLevel::L1),
-         asid(_asn), vmid(0), tg(Grain4KB), N(0),
-         innerAttrs(0), outerAttrs(0), ap(read_only ? 0x3 : 0), hap(0x3),
-         domain(DomainType::Client),  mtype(MemoryType::StronglyOrdered),
-         longDescFormat(false), isHyp(false), global(false), valid(true),
-         ns(true), nstid(true), el(EL0), type(TypeTLB::unified),
-         partial(false),
-         nonCacheable(uncacheable),
-         shareable(false), outerShareable(false), xn(0), pxn(0)
+    // Construct an entry that maps to physical address addr for SE mode
+    TlbEntry(Addr _asn, Addr _vaddr, Addr _paddr, bool uncacheable,
+        bool read_only) :
+        pfn(_paddr >> PageShift),
+        size(PageBytes - 1),
+        vpn(_vaddr >> PageShift),
+        attributes(0),
+        lookupLevel(LookupLevel::L1),
+        asid(_asn),
+        vmid(0),
+        tg(Grain4KB),
+        N(0),
+        innerAttrs(0),
+        outerAttrs(0),
+        ap(read_only ? 0x3 : 0),
+        hap(0x3),
+        domain(DomainType::Client),
+        mtype(MemoryType::StronglyOrdered),
+        longDescFormat(false),
+        isHyp(false),
+        global(false),
+        valid(true),
+        ns(true),
+        nstid(true),
+        el(EL0),
+        type(TypeTLB::unified),
+        partial(false),
+        nonCacheable(uncacheable),
+        shareable(false),
+        outerShareable(false),
+        xn(0),
+        pxn(0)
     {
         // no restrictions by default, hap = 0x3
 
@@ -287,14 +305,35 @@ struct TlbEntry : public Serializable
     }
 
     TlbEntry() :
-         pfn(0), size(0), vpn(0), attributes(0), lookupLevel(LookupLevel::L1),
-         asid(0), vmid(0), tg(ReservedGrain), N(0),
-         innerAttrs(0), outerAttrs(0), ap(0), hap(0x3),
-         domain(DomainType::Client), mtype(MemoryType::StronglyOrdered),
-         longDescFormat(false), isHyp(false), global(false), valid(false),
-         ns(true), nstid(true), el(EL0), type(TypeTLB::unified),
-         partial(false), nonCacheable(false),
-         shareable(false), outerShareable(false), xn(0), pxn(0)
+        pfn(0),
+        size(0),
+        vpn(0),
+        attributes(0),
+        lookupLevel(LookupLevel::L1),
+        asid(0),
+        vmid(0),
+        tg(ReservedGrain),
+        N(0),
+        innerAttrs(0),
+        outerAttrs(0),
+        ap(0),
+        hap(0x3),
+        domain(DomainType::Client),
+        mtype(MemoryType::StronglyOrdered),
+        longDescFormat(false),
+        isHyp(false),
+        global(false),
+        valid(false),
+        ns(true),
+        nstid(true),
+        el(EL0),
+        type(TypeTLB::unified),
+        partial(false),
+        nonCacheable(false),
+        shareable(false),
+        outerShareable(false),
+        xn(0),
+        pxn(0)
     {
         // no restrictions by default, hap = 0x3
 
@@ -331,9 +370,8 @@ struct TlbEntry : public Serializable
     match(const Lookup &lookup) const
     {
         bool match = false;
-        if (valid && matchAddress(lookup) &&
-            (lookup.secure == !nstid) && (lookup.hyp == isHyp))
-        {
+        if (valid && matchAddress(lookup) && (lookup.secure == !nstid) &&
+            (lookup.hyp == isHyp)) {
             match = checkELMatch(lookup.targetEL, lookup.inHost);
 
             if (match && !lookup.ignoreAsn) {
@@ -350,17 +388,16 @@ struct TlbEntry : public Serializable
     checkELMatch(ExceptionLevel target_el, bool in_host) const
     {
         switch (target_el) {
-            case EL3:
-                return el == EL3;
-            case EL2:
-              {
-                return el == EL2 || (el == EL0 && in_host);
-              }
-            case EL1:
-            case EL0:
-                return (el == EL0) || (el == EL1);
-            default:
-                return false;
+        case EL3:
+            return el == EL3;
+        case EL2: {
+            return el == EL2 || (el == EL0 && in_host);
+        }
+        case EL1:
+        case EL0:
+            return (el == EL0) || (el == EL1);
+        default:
+            return false;
         }
     }
 
@@ -377,9 +414,8 @@ struct TlbEntry : public Serializable
         uint64_t newBits;
 
         // chec bit 11 to determine if its currently LPAE or VMSA format.
-        if ( attributes & (1 << 11) ) {
-            newBits = ((outerShareable ? 0x2 :
-                      shareable         ? 0x3 : 0) << 7);
+        if (attributes & (1 << 11)) {
+            newBits = ((outerShareable ? 0x2 : shareable ? 0x3 : 0) << 7);
             mask = 0x180;
         } else {
             /** Formatting for Physical Address Register (PAR)
@@ -396,17 +432,16 @@ struct TlbEntry : public Serializable
              *      Outer[3:2](Outer memory attributes)
              *      SS   [1]  (SuperSection)
              *      F    [0]  (Fault, Fault Status in [6:1] if faulted)
-            */
-            newBits = ((outerShareable ? 0:1) << 10) |
-                      ((shareable ? 1:0) << 7) |
-                      (innerAttrs << 4) |
+             */
+            newBits = ((outerShareable ? 0 : 1) << 10) |
+                      ((shareable ? 1 : 0) << 7) | (innerAttrs << 4) |
                       (outerAttrs << 2);
-                      // TODO: Supersection bit
+            // TODO: Supersection bit
             mask = 0x4FC;
         }
         // common bits
-        newBits |= ns << 9;  // NS bit
-        mask    |= 1  << 9;
+        newBits |= ns << 9; // NS bit
+        mask |= 1 << 9;
         // add in the new bits
         attributes &= ~mask;
         attributes |= newBits;
@@ -423,8 +458,9 @@ struct TlbEntry : public Serializable
     print() const
     {
         return csprintf("%#x, asn %d vmn %d hyp %d ppn %#x size: %#x ap:%d "
-                        "ns:%d nstid:%d g:%d el:%d", vpn << N, asid, vmid,
-                        isHyp, pfn << N, size, ap, ns, nstid, global, el);
+                        "ns:%d nstid:%d g:%d el:%d",
+            vpn << N, asid, vmid, isHyp, pfn << N, size, ap, ns, nstid, global,
+            el);
     }
 
     void
@@ -490,7 +526,6 @@ struct TlbEntry : public Serializable
         paramIn(cp, "domain", domain_);
         domain = static_cast<DomainType>(domain_);
     }
-
 };
 
 const PageTableOps *getPageTableOps(GrainSize trans_granule);

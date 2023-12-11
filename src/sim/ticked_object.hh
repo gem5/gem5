@@ -50,7 +50,6 @@
 
 namespace gem5
 {
-
 struct TickedObjectParams;
 
 /** Ticked attaches gem5's event queue/scheduler to evaluate
@@ -95,7 +94,7 @@ class Ticked : public Serializable
         statistics::Scalar *imported_num_cycles = NULL,
         Event::Priority priority = Event::CPU_Tick_Pri);
 
-    virtual ~Ticked() { }
+    virtual ~Ticked() {}
 
     /** Register {num,ticks}Cycles if necessary.  If numCycles is
      *  imported, be sure to register it *before* calling this regStats */
@@ -158,7 +157,9 @@ class Ticked : public Serializable
      *
      * @param delta Number of cycles since the previous call.
      */
-    virtual void countCycles(Cycles delta) {}
+    virtual void
+    countCycles(Cycles delta)
+    {}
 };
 
 /** TickedObject attaches Ticked to ClockedObject and can be used as

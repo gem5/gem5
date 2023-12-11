@@ -46,12 +46,10 @@
 
 namespace gem5
 {
-
 struct PS2MouseParams;
 
 namespace ps2
 {
-
 class PS2Mouse : public Device
 {
   protected:

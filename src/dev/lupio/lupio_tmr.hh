@@ -36,7 +36,6 @@
 
 namespace gem5
 {
-
 /**
  * LupioTMR:
  * A virtual timer device which provides a real time counter, as well as a
@@ -67,9 +66,9 @@ class LupioTMR : public BasicPioDevice
     {
         Event *tmrEvent = nullptr;
         uint64_t reload = 0;
-        bool ie = false;            // Control
+        bool ie = false; // Control
         bool pd = false;
-        bool expired = false;       // Status
+        bool expired = false; // Status
         Tick startTime = 0;
     };
 

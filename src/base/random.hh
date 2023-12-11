@@ -55,14 +55,11 @@
 
 namespace gem5
 {
-
 class Checkpoint;
 
 class Random : public Serializable
 {
-
   public:
-
     /**
      * @ingroup api_base_utils
      */

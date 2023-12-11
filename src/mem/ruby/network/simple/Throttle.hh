@@ -60,10 +60,8 @@
 
 namespace gem5
 {
-
 namespace ruby
 {
-
 class MessageBuffer;
 class Switch;
 
@@ -71,29 +69,38 @@ class Throttle : public Consumer
 {
   private:
     Throttle(int sID, RubySystem *rs, NodeID node, Cycles link_latency,
-             int endpoint_bandwidth, Switch *em);
+        int endpoint_bandwidth, Switch *em);
+
   public:
     Throttle(int sID, RubySystem *rs, NodeID node, Cycles link_latency,
-             int link_bandwidth_multiplier, int endpoint_bandwidth,
-             Switch *em);
+        int link_bandwidth_multiplier, int endpoint_bandwidth, Switch *em);
     Throttle(int sID, RubySystem *rs, NodeID node, Cycles link_latency,
-             const std::vector<int> &vnet_channels,
-             const std::vector<int> &vnet_bandwidth_multiplier,
-             int endpoint_bandwidth, Switch *em);
+        const std::vector<int> &vnet_channels,
+        const std::vector<int> &vnet_bandwidth_multiplier,
+        int endpoint_bandwidth, Switch *em);
     ~Throttle() {}
 
-    std::string name()
-    { return csprintf("Throttle-%i", m_switch_id); }
+    std::string
+    name()
+    {
+        return csprintf("Throttle-%i", m_switch_id);
+    }
 
-    void addLinks(const std::vector<MessageBuffer*>& in_vec,
-                  const std::vector<MessageBuffer*>& out_vec);
+    void addLinks(const std::vector<MessageBuffer *> &in_vec,
+        const std::vector<MessageBuffer *> &out_vec);
     void wakeup();
 
     // The average utilization (a fraction) since last clearStats()
-    const statistics::Formula & getUtilization() const
-    { return throttleStats.link_utilization; }
-    const statistics::Vector & getMsgCount(unsigned int type) const
-    { return *(throttleStats.msg_counts[type]); }
+    const statistics::Formula &
+    getUtilization() const
+    {
+        return throttleStats.link_utilization;
+    }
+    const statistics::Vector &
+    getMsgCount(unsigned int type) const
+    {
+        return *(throttleStats.msg_counts[type]);
+    }
 
     int getLinkBandwidth(int vnet) const;
 
@@ -101,23 +108,27 @@ class Throttle : public Consumer
 
     int getChannelCnt(int vnet) const;
 
-    Cycles getLatency() const { return m_link_latency; }
+    Cycles
+    getLatency() const
+    {
+        return m_link_latency;
+    }
 
-    void print(std::ostream& out) const;
+    void print(std::ostream &out) const;
 
   private:
     void init(NodeID node, Cycles link_latency, int link_bandwidth_multiplier,
-              int endpoint_bandwidth);
+        int endpoint_bandwidth);
     void operateVnet(int vnet, int channel, int &total_bw_remaining,
-                     bool &bw_saturated, bool &output_blocked,
-                     MessageBuffer *in, MessageBuffer *out);
+        bool &bw_saturated, bool &output_blocked, MessageBuffer *in,
+        MessageBuffer *out);
 
     // Private copy constructor and assignment operator
-    Throttle(const Throttle& obj);
-    Throttle& operator=(const Throttle& obj);
+    Throttle(const Throttle &obj);
+    Throttle &operator=(const Throttle &obj);
 
-    std::vector<MessageBuffer*> m_in;
-    std::vector<MessageBuffer*> m_out;
+    std::vector<MessageBuffer *> m_in;
+    std::vector<MessageBuffer *> m_out;
     unsigned int m_vnets;
     std::vector<std::vector<int>> m_units_remaining;
 
@@ -140,8 +151,8 @@ class Throttle : public Consumer
         // Statistical variables
         statistics::Scalar acc_link_utilization;
         statistics::Formula link_utilization;
-        statistics::Vector* msg_counts[MessageSizeType_NUM];
-        statistics::Formula* msg_bytes[MessageSizeType_NUM];
+        statistics::Vector *msg_counts[MessageSizeType_NUM];
+        statistics::Formula *msg_bytes[MessageSizeType_NUM];
 
         statistics::Scalar total_msg_count;
         statistics::Scalar total_msg_bytes;
@@ -155,8 +166,8 @@ class Throttle : public Consumer
     } throttleStats;
 };
 
-inline std::ostream&
-operator<<(std::ostream& out, const Throttle& obj)
+inline std::ostream &
+operator<<(std::ostream &out, const Throttle &obj)
 {
     obj.print(out);
     out << std::flush;

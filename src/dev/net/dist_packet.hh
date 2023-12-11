@@ -57,7 +57,6 @@
 
 namespace gem5
 {
-
 class DistHeaderPkt
 {
   private:
@@ -65,7 +64,13 @@ class DistHeaderPkt
     ~DistHeaderPkt() {}
 
   public:
-    enum class ReqType { immediate, collective, pending, none };
+    enum class ReqType
+    {
+        immediate,
+        collective,
+        pending,
+        none
+    };
     /**
      *  The msg type defines what information a dist header packet carries.
      */

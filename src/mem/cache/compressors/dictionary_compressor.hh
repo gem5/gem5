@@ -58,12 +58,10 @@
 
 namespace gem5
 {
-
 struct BaseDictionaryCompressorParams;
 
 namespace compression
 {
-
 class BaseDictionaryCompressor : public Base
 {
   protected:
@@ -75,10 +73,10 @@ class BaseDictionaryCompressor : public Base
 
     struct DictionaryStats : public statistics::Group
     {
-        const BaseDictionaryCompressor& compressor;
+        const BaseDictionaryCompressor &compressor;
 
-        DictionaryStats(BaseStats &base_group,
-            BaseDictionaryCompressor& _compressor);
+        DictionaryStats(
+            BaseStats &base_group, BaseDictionaryCompressor &_compressor);
 
         void regStats() override;
 
@@ -150,9 +148,9 @@ class DictionaryCompressor : public BaseDictionaryCompressor
     template <class Head, class... Tail>
     struct Factory
     {
-        static std::unique_ptr<Pattern> getPattern(
-            const DictionaryEntry& bytes, const DictionaryEntry& dict_bytes,
-            const int match_location)
+        static std::unique_ptr<Pattern>
+        getPattern(const DictionaryEntry &bytes,
+            const DictionaryEntry &dict_bytes, const int match_location)
         {
             // If match this pattern, instantiate it. If a negative match
             // location is used, the patterns that use the dictionary bytes
@@ -160,11 +158,11 @@ class DictionaryCompressor : public BaseDictionaryCompressor
             // entries yet
             if (Head::isPattern(bytes, dict_bytes, match_location)) {
                 return std::unique_ptr<Pattern>(
-                            new Head(bytes, match_location));
-            // Otherwise, go for next pattern
+                    new Head(bytes, match_location));
+                // Otherwise, go for next pattern
             } else {
-                return Factory<Tail...>::getPattern(bytes, dict_bytes,
-                                                    match_location);
+                return Factory<Tail...>::getPattern(
+                    bytes, dict_bytes, match_location);
             }
         }
     };
@@ -183,8 +181,8 @@ class DictionaryCompressor : public BaseDictionaryCompressor
             "pattern.");
 
         static std::unique_ptr<Pattern>
-        getPattern(const DictionaryEntry& bytes,
-            const DictionaryEntry& dict_bytes, const int match_location)
+        getPattern(const DictionaryEntry &bytes,
+            const DictionaryEntry &dict_bytes, const int match_location)
         {
             return std::unique_ptr<Pattern>(new Head(bytes, match_location));
         }
@@ -198,9 +196,8 @@ class DictionaryCompressor : public BaseDictionaryCompressor
      * from this base class have to implement the call to their factory's
      * getPattern.
      */
-    virtual std::unique_ptr<Pattern>
-    getPattern(const DictionaryEntry& bytes, const DictionaryEntry& dict_bytes,
-        const int match_location) const = 0;
+    virtual std::unique_ptr<Pattern> getPattern(const DictionaryEntry &bytes,
+        const DictionaryEntry &dict_bytes, const int match_location) const = 0;
 
     /**
      * Compress data.
@@ -216,7 +213,7 @@ class DictionaryCompressor : public BaseDictionaryCompressor
      * @param pattern The pattern to be decompressed.
      * @return The decompressed word.
      */
-    T decompressValue(const Pattern* pattern);
+    T decompressValue(const Pattern *pattern);
 
     /** Clear all dictionary entries. */
     virtual void resetDictionary();
@@ -243,15 +240,15 @@ class DictionaryCompressor : public BaseDictionaryCompressor
      * @return Cache line after compression.
      */
     std::unique_ptr<Base::CompressionData> compress(
-        const std::vector<Chunk>& chunks);
+        const std::vector<Chunk> &chunks);
 
     std::unique_ptr<Base::CompressionData> compress(
-        const std::vector<Chunk>& chunks,
-        Cycles& comp_lat, Cycles& decomp_lat) override;
+        const std::vector<Chunk> &chunks, Cycles &comp_lat,
+        Cycles &decomp_lat) override;
 
     using BaseDictionaryCompressor::compress;
 
-    void decompress(const CompressionData* comp_data, uint64_t* data) override;
+    void decompress(const CompressionData *comp_data, uint64_t *data) override;
 
     /**
      * Turn a value into a dictionary entry.
@@ -267,7 +264,7 @@ class DictionaryCompressor : public BaseDictionaryCompressor
      * @param The dictionary entry to turn.
      * @return The value that the dictionary entry contained.
      */
-    static T fromDictionaryEntry(const DictionaryEntry& entry);
+    static T fromDictionaryEntry(const DictionaryEntry &entry);
 
   public:
     typedef BaseDictionaryCompressorParams Params;
@@ -314,13 +311,15 @@ class DictionaryCompressor<T>::Pattern
      * @param match_location Index of the match location.
      */
     Pattern(const int number, const uint64_t code,
-            const uint64_t metadata_length, const uint64_t num_unmatched_bits,
-            const int match_location, const bool allocate = true)
-        : patternNumber(number), code(code), length(metadata_length),
-          numUnmatchedBits(num_unmatched_bits),
-          matchLocation(match_location), allocate(allocate)
-    {
-    }
+        const uint64_t metadata_length, const uint64_t num_unmatched_bits,
+        const int match_location, const bool allocate = true) :
+        patternNumber(number),
+        code(code),
+        length(metadata_length),
+        numUnmatchedBits(num_unmatched_bits),
+        matchLocation(match_location),
+        allocate(allocate)
+    {}
 
     /** Default destructor. */
     virtual ~Pattern() = default;
@@ -330,21 +329,33 @@ class DictionaryCompressor<T>::Pattern
      *
      * @return The pattern enum number.
      */
-    int getPatternNumber() const { return patternNumber; };
+    int
+    getPatternNumber() const
+    {
+        return patternNumber;
+    };
 
     /**
      * Get code of this pattern.
      *
      * @return The code.
      */
-    uint8_t getCode() const { return code; }
+    uint8_t
+    getCode() const
+    {
+        return code;
+    }
 
     /**
      * Get the index of the dictionary match location.
      *
      * @return The index of the match location.
      */
-    uint8_t getMatchLocation() const { return matchLocation; }
+    uint8_t
+    getMatchLocation() const
+    {
+        return matchLocation;
+    }
 
     /**
      * Get size, in bits, of the pattern (excluding prefix). Corresponds to
@@ -363,7 +374,11 @@ class DictionaryCompressor<T>::Pattern
      *
      * @return True if should allocate a dictionary entry.
      */
-    bool shouldAllocate() const { return allocate; }
+    bool
+    shouldAllocate() const
+    {
+        return allocate;
+    }
 
     /**
      * Extract pattern's information to a string.
@@ -374,7 +389,7 @@ class DictionaryCompressor<T>::Pattern
     print() const
     {
         return csprintf("pattern %s (encoding %x, size %u bits)",
-                        getPatternNumber(), getCode(), getSizeBits());
+            getPatternNumber(), getCode(), getSizeBits());
     }
 
     /**
@@ -412,27 +427,24 @@ class DictionaryCompressor<T>::CompData : public CompressionData
  * an instance of this pattern is created.
  */
 template <class T>
-class DictionaryCompressor<T>::UncompressedPattern
-    : public DictionaryCompressor<T>::Pattern
+class DictionaryCompressor<T>::UncompressedPattern :
+    public DictionaryCompressor<T>::Pattern
 {
   private:
     /** A copy of the original data. */
     const DictionaryEntry data;
 
   public:
-    UncompressedPattern(const int number,
-        const uint64_t code,
-        const uint64_t metadata_length,
-        const int match_location,
-        const DictionaryEntry bytes)
-      : DictionaryCompressor<T>::Pattern(number, code, metadata_length,
+    UncompressedPattern(const int number, const uint64_t code,
+        const uint64_t metadata_length, const int match_location,
+        const DictionaryEntry bytes) :
+        DictionaryCompressor<T>::Pattern(number, code, metadata_length,
             sizeof(T) * 8, match_location, true),
         data(bytes)
-    {
-    }
+    {}
 
     static bool
-    isPattern(const DictionaryEntry& bytes, const DictionaryEntry& dict_bytes,
+    isPattern(const DictionaryEntry &bytes, const DictionaryEntry &dict_bytes,
         const int match_location)
     {
         // An entry can always be uncompressed
@@ -460,31 +472,27 @@ class DictionaryCompressor<T>::UncompressedPattern
  */
 template <class T>
 template <T mask>
-class DictionaryCompressor<T>::MaskedPattern
-    : public DictionaryCompressor<T>::Pattern
+class DictionaryCompressor<T>::MaskedPattern :
+    public DictionaryCompressor<T>::Pattern
 {
   private:
     static_assert(mask != 0, "The pattern's value mask must not be zero. Use "
-        "the uncompressed pattern instead.");
+                             "the uncompressed pattern instead.");
 
     /** A copy of the bits that do not belong to the mask. */
     const T bits;
 
   public:
-    MaskedPattern(const int number,
-        const uint64_t code,
-        const uint64_t metadata_length,
-        const int match_location,
-        const DictionaryEntry bytes,
-        const bool allocate = true)
-      : DictionaryCompressor<T>::Pattern(number, code, metadata_length,
+    MaskedPattern(const int number, const uint64_t code,
+        const uint64_t metadata_length, const int match_location,
+        const DictionaryEntry bytes, const bool allocate = true) :
+        DictionaryCompressor<T>::Pattern(number, code, metadata_length,
             popCount(static_cast<T>(~mask)), match_location, allocate),
         bits(DictionaryCompressor<T>::fromDictionaryEntry(bytes) & ~mask)
-    {
-    }
+    {}
 
     static bool
-    isPattern(const DictionaryEntry& bytes, const DictionaryEntry& dict_bytes,
+    isPattern(const DictionaryEntry &bytes, const DictionaryEntry &dict_bytes,
         const int match_location)
     {
         const T masked_bytes =
@@ -522,26 +530,21 @@ class DictionaryCompressor<T>::MaskedPattern
  */
 template <class T>
 template <T value, T mask>
-class DictionaryCompressor<T>::MaskedValuePattern
-    : public MaskedPattern<mask>
+class DictionaryCompressor<T>::MaskedValuePattern : public MaskedPattern<mask>
 {
   private:
     static_assert(mask != 0, "The pattern's value mask must not be zero.");
 
   public:
-    MaskedValuePattern(const int number,
-        const uint64_t code,
-        const uint64_t metadata_length,
-        const int match_location,
-        const DictionaryEntry bytes,
-        const bool allocate = false)
-      : MaskedPattern<mask>(number, code, metadata_length, match_location,
-            bytes, allocate)
-    {
-    }
+    MaskedValuePattern(const int number, const uint64_t code,
+        const uint64_t metadata_length, const int match_location,
+        const DictionaryEntry bytes, const bool allocate = false) :
+        MaskedPattern<mask>(
+            number, code, metadata_length, match_location, bytes, allocate)
+    {}
 
     static bool
-    isPattern(const DictionaryEntry& bytes, const DictionaryEntry& dict_bytes,
+    isPattern(const DictionaryEntry &bytes, const DictionaryEntry &dict_bytes,
         const int match_location)
     {
         // Compare the masked fixed value to the value being checked for
@@ -569,29 +572,26 @@ class DictionaryCompressor<T>::MaskedValuePattern
  */
 template <class T>
 template <T mask, int location>
-class DictionaryCompressor<T>::LocatedMaskedPattern
-    : public MaskedPattern<mask>
+class DictionaryCompressor<T>::LocatedMaskedPattern :
+    public MaskedPattern<mask>
 {
   public:
-    LocatedMaskedPattern(const int number,
-        const uint64_t code,
-        const uint64_t metadata_length,
-        const int match_location,
-        const DictionaryEntry bytes,
-        const bool allocate = true)
-      : MaskedPattern<mask>(number, code, metadata_length, match_location,
-            bytes, allocate)
-    {
-    }
+    LocatedMaskedPattern(const int number, const uint64_t code,
+        const uint64_t metadata_length, const int match_location,
+        const DictionaryEntry bytes, const bool allocate = true) :
+        MaskedPattern<mask>(
+            number, code, metadata_length, match_location, bytes, allocate)
+    {}
 
     static bool
-    isPattern(const DictionaryEntry& bytes, const DictionaryEntry& dict_bytes,
+    isPattern(const DictionaryEntry &bytes, const DictionaryEntry &dict_bytes,
         const int match_location)
     {
         // Besides doing the regular masked pattern matching, the match
         // location must match perfectly with this instance's
         return (match_location == location) &&
-            MaskedPattern<mask>::isPattern(bytes, dict_bytes, match_location);
+               MaskedPattern<mask>::isPattern(
+                   bytes, dict_bytes, match_location);
     }
 };
 
@@ -607,31 +607,28 @@ class DictionaryCompressor<T>::LocatedMaskedPattern
  */
 template <class T>
 template <class RepT>
-class DictionaryCompressor<T>::RepeatedValuePattern
-    : public DictionaryCompressor<T>::Pattern
+class DictionaryCompressor<T>::RepeatedValuePattern :
+    public DictionaryCompressor<T>::Pattern
 {
   private:
-    static_assert(sizeof(T) > sizeof(RepT), "The repeated value's type must "
+    static_assert(sizeof(T) > sizeof(RepT),
+        "The repeated value's type must "
         "be smaller than the dictionary entry's type.");
 
     /** The repeated value. */
     RepT value;
 
   public:
-    RepeatedValuePattern(const int number,
-        const uint64_t code,
-        const uint64_t metadata_length,
-        const int match_location,
-        const DictionaryEntry bytes,
-        const bool allocate = true)
-      : DictionaryCompressor<T>::Pattern(number, code, metadata_length,
+    RepeatedValuePattern(const int number, const uint64_t code,
+        const uint64_t metadata_length, const int match_location,
+        const DictionaryEntry bytes, const bool allocate = true) :
+        DictionaryCompressor<T>::Pattern(number, code, metadata_length,
             8 * sizeof(RepT), match_location, allocate),
         value(DictionaryCompressor<T>::fromDictionaryEntry(bytes))
-    {
-    }
+    {}
 
     static bool
-    isPattern(const DictionaryEntry& bytes, const DictionaryEntry& dict_bytes,
+    isPattern(const DictionaryEntry &bytes, const DictionaryEntry &dict_bytes,
         const int match_location)
     {
         // Parse the dictionary entry in a RepT granularity, and if all values
@@ -679,8 +676,8 @@ class DictionaryCompressor<T>::RepeatedValuePattern
  */
 template <class T>
 template <std::size_t DeltaSizeBits>
-class DictionaryCompressor<T>::DeltaPattern
-    : public DictionaryCompressor<T>::Pattern
+class DictionaryCompressor<T>::DeltaPattern :
+    public DictionaryCompressor<T>::Pattern
 {
   private:
     static_assert(DeltaSizeBits < (sizeof(T) * 8),
@@ -694,16 +691,13 @@ class DictionaryCompressor<T>::DeltaPattern
     const DictionaryEntry bytes;
 
   public:
-    DeltaPattern(const int number,
-        const uint64_t code,
-        const uint64_t metadata_length,
-        const int match_location,
-        const DictionaryEntry bytes)
-      : DictionaryCompressor<T>::Pattern(number, code, metadata_length,
+    DeltaPattern(const int number, const uint64_t code,
+        const uint64_t metadata_length, const int match_location,
+        const DictionaryEntry bytes) :
+        DictionaryCompressor<T>::Pattern(number, code, metadata_length,
             DeltaSizeBits, match_location, false),
         bytes(bytes)
-    {
-    }
+    {}
 
     /**
      * Compares a given value against a base to calculate their delta, and
@@ -714,13 +708,12 @@ class DictionaryCompressor<T>::DeltaPattern
      * @return Whether the value fits in the container.
      */
     static bool
-    isValidDelta(const DictionaryEntry& bytes,
-        const DictionaryEntry& base_bytes)
+    isValidDelta(
+        const DictionaryEntry &bytes, const DictionaryEntry &base_bytes)
     {
-        const typename std::make_signed<T>::type limit = DeltaSizeBits ?
-            mask(DeltaSizeBits - 1) : 0;
-        const T value =
-            DictionaryCompressor<T>::fromDictionaryEntry(bytes);
+        const typename std::make_signed<T>::type limit =
+            DeltaSizeBits ? mask(DeltaSizeBits - 1) : 0;
+        const T value = DictionaryCompressor<T>::fromDictionaryEntry(bytes);
         const T base =
             DictionaryCompressor<T>::fromDictionaryEntry(base_bytes);
         const typename std::make_signed<T>::type delta = value - base;
@@ -728,8 +721,8 @@ class DictionaryCompressor<T>::DeltaPattern
     }
 
     static bool
-    isPattern(const DictionaryEntry& bytes,
-        const DictionaryEntry& dict_bytes, const int match_location)
+    isPattern(const DictionaryEntry &bytes, const DictionaryEntry &dict_bytes,
+        const int match_location)
     {
         return (match_location >= 0) && isValidDelta(bytes, dict_bytes);
     }
@@ -753,8 +746,8 @@ class DictionaryCompressor<T>::DeltaPattern
  */
 template <class T>
 template <unsigned N>
-class DictionaryCompressor<T>::SignExtendedPattern
-    : public DictionaryCompressor<T>::Pattern
+class DictionaryCompressor<T>::SignExtendedPattern :
+    public DictionaryCompressor<T>::Pattern
 {
   private:
     static_assert((N > 0) & (N <= (sizeof(T) * 8)),
@@ -764,20 +757,17 @@ class DictionaryCompressor<T>::SignExtendedPattern
     const T bits : N;
 
   public:
-    SignExtendedPattern(const int number,
-        const uint64_t code,
-        const uint64_t metadata_length,
-        const DictionaryEntry bytes,
-        const bool allocate = false)
-      : DictionaryCompressor<T>::Pattern(number, code, metadata_length, N,
-            -1, allocate),
+    SignExtendedPattern(const int number, const uint64_t code,
+        const uint64_t metadata_length, const DictionaryEntry bytes,
+        const bool allocate = false) :
+        DictionaryCompressor<T>::Pattern(
+            number, code, metadata_length, N, -1, allocate),
         bits(fromDictionaryEntry(bytes) & mask(N))
-    {
-    }
+    {}
 
     static bool
-    isPattern(const DictionaryEntry& bytes,
-        const DictionaryEntry& dict_bytes, const int match_location)
+    isPattern(const DictionaryEntry &bytes, const DictionaryEntry &dict_bytes,
+        const int match_location)
     {
         const T data = DictionaryCompressor<T>::fromDictionaryEntry(bytes);
         return data == (T)szext<N>(data);

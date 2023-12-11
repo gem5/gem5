@@ -37,9 +37,10 @@
 
 using namespace gem5;
 
-namespace {
-
-static inline uint32_t *ptr(uintptr_t val)
+namespace
+{
+static inline uint32_t *
+ptr(uintptr_t val)
 {
     return (uint32_t *)val;
 }

@@ -51,7 +51,6 @@ namespace gem5
 {
 namespace RiscvISA
 {
-
 using RiscvType = enums::RiscvType;
 constexpr enums::RiscvType RV32 = enums::RV32;
 constexpr enums::RiscvType RV64 = enums::RV64;
@@ -70,9 +69,12 @@ class PCState : public GenericISA::UPCState<4>
     uint32_t _vl = 0;
 
   public:
-    PCState(const PCState &other) : Base(other),
-        _rvType(other._rvType), _vlenb(other._vlenb),
-        _vtype(other._vtype), _vl(other._vl)
+    PCState(const PCState &other) :
+        Base(other),
+        _rvType(other._rvType),
+        _vlenb(other._vlenb),
+        _vtype(other._vtype),
+        _vl(other._vl)
     {}
     PCState &operator=(const PCState &other) = default;
     PCState() = default;
@@ -84,7 +86,11 @@ class PCState : public GenericISA::UPCState<4>
         _vlenb = vlenb;
     }
 
-    PCStateBase *clone() const override { return new PCState(*this); }
+    PCStateBase *
+    clone() const override
+    {
+        return new PCState(*this);
+    }
 
     void
     update(const PCStateBase &other) override
@@ -98,22 +104,63 @@ class PCState : public GenericISA::UPCState<4>
         _vl = pcstate._vl;
     }
 
-    void compressed(bool c) { _compressed = c; }
-    bool compressed() const { return _compressed; }
+    void
+    compressed(bool c)
+    {
+        _compressed = c;
+    }
+    bool
+    compressed() const
+    {
+        return _compressed;
+    }
 
-    void rvType(RiscvType rvType) { _rvType = rvType; }
-    RiscvType rvType() const { return _rvType; }
+    void
+    rvType(RiscvType rvType)
+    {
+        _rvType = rvType;
+    }
+    RiscvType
+    rvType() const
+    {
+        return _rvType;
+    }
 
-    void vlenb(uint64_t v) { _vlenb = v; }
-    uint64_t vlenb() const { return _vlenb; }
+    void
+    vlenb(uint64_t v)
+    {
+        _vlenb = v;
+    }
+    uint64_t
+    vlenb() const
+    {
+        return _vlenb;
+    }
 
-    void vtype(VTYPE v) { _vtype = v; }
-    VTYPE vtype() const { return _vtype; }
+    void
+    vtype(VTYPE v)
+    {
+        _vtype = v;
+    }
+    VTYPE
+    vtype() const { return _vtype; }
 
-    void vl(uint32_t v) { _vl = v; }
-    uint32_t vl() const { return _vl; }
+    void
+    vl(uint32_t v)
+    {
+        _vl = v;
+    }
+    uint32_t
+    vl() const
+    {
+        return _vl;
+    }
 
-    uint64_t size() const { return _compressed ? 2 : 4; }
+    uint64_t
+    size() const
+    {
+        return _compressed ? 2 : 4;
+    }
 
     bool
     branching() const override
@@ -125,10 +172,8 @@ class PCState : public GenericISA::UPCState<4>
     equals(const PCStateBase &other) const override
     {
         auto &opc = other.as<PCState>();
-        return Base::equals(other) &&
-            _vlenb == opc._vlenb &&
-            _vtype == opc._vtype &&
-            _vl == opc._vl;
+        return Base::equals(other) && _vlenb == opc._vlenb &&
+               _vtype == opc._vtype && _vl == opc._vl;
     }
 
     void

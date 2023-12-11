@@ -41,7 +41,7 @@ test_m5_dump_reset_stats(uint64_t ns_delay, uint64_t ns_period)
     test_ns_period = ns_period;
 }
 
-DispatchTable dt = { .m5_dump_reset_stats = &test_m5_dump_reset_stats };
+DispatchTable dt = {.m5_dump_reset_stats = &test_m5_dump_reset_stats};
 
 bool
 run(std::initializer_list<std::string> arg_args)

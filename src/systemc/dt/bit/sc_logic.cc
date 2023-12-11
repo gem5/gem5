@@ -36,7 +36,6 @@
 
  *****************************************************************************/
 
-
 // $Log: sc_logic.cpp,v $
 // Revision 1.1.1.1  2006/12/15 20:20:04  acg
 // SystemC 2.3
@@ -54,7 +53,6 @@
 
 namespace sc_dt
 {
-
 // ----------------------------------------------------------------------------
 //  CLASS : sc_logic
 //
@@ -84,7 +82,6 @@ sc_logic::invalid_value(int i)
     SC_REPORT_ERROR(sc_core::SC_ID_VALUE_NOT_VALID_, msg.str().c_str());
 }
 
-
 void
 sc_logic::invalid_01() const
 {
@@ -94,53 +91,37 @@ sc_logic::invalid_01() const
         SC_REPORT_WARNING(sc_core::SC_ID_LOGIC_X_TO_BOOL_, 0);
 }
 
-
 // conversion tables
-const sc_logic_value_t sc_logic::char_to_logic[128] = {
-    Log_0, Log_1, Log_Z, Log_X, Log_X, Log_X, Log_X, Log_X,
-    Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X,
-    Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X,
-    Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X,
-    Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X,
-    Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X,
-    Log_0, Log_1, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X,
-    Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X,
-    Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X,
-    Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X,
-    Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X,
-    Log_X, Log_X, Log_Z, Log_X, Log_X, Log_X, Log_X, Log_X,
-    Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X,
-    Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X,
-    Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X,
-    Log_X, Log_X, Log_Z, Log_X, Log_X, Log_X, Log_X, Log_X
-};
+const sc_logic_value_t sc_logic::char_to_logic[128] = {Log_0, Log_1, Log_Z,
+    Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X,
+    Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X,
+    Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X,
+    Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X,
+    Log_X, Log_X, Log_X, Log_X, Log_X, Log_0, Log_1, Log_X, Log_X, Log_X,
+    Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X,
+    Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X,
+    Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X,
+    Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_Z, Log_X, Log_X,
+    Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X,
+    Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X,
+    Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_X, Log_Z,
+    Log_X, Log_X, Log_X, Log_X, Log_X};
 
-const char sc_logic::logic_to_char[4] = { '0', '1', 'Z', 'X' };
+const char sc_logic::logic_to_char[4] = {'0', '1', 'Z', 'X'};
 
 const sc_logic_value_t sc_logic::and_table[4][4] = {
-    { Log_0, Log_0, Log_0, Log_0 },
-    { Log_0, Log_1, Log_X, Log_X },
-    { Log_0, Log_X, Log_X, Log_X },
-    { Log_0, Log_X, Log_X, Log_X }
-};
+    {Log_0, Log_0, Log_0, Log_0}, {Log_0, Log_1, Log_X, Log_X},
+    {Log_0, Log_X, Log_X, Log_X}, {Log_0, Log_X, Log_X, Log_X}};
 
 const sc_logic_value_t sc_logic::or_table[4][4] = {
-    { Log_0, Log_1, Log_X, Log_X },
-    { Log_1, Log_1, Log_1, Log_1 },
-    { Log_X, Log_1, Log_X, Log_X },
-    { Log_X, Log_1, Log_X, Log_X }
-};
+    {Log_0, Log_1, Log_X, Log_X}, {Log_1, Log_1, Log_1, Log_1},
+    {Log_X, Log_1, Log_X, Log_X}, {Log_X, Log_1, Log_X, Log_X}};
 
 const sc_logic_value_t sc_logic::xor_table[4][4] = {
-    { Log_0, Log_1, Log_X, Log_X },
-    { Log_1, Log_0, Log_X, Log_X },
-    { Log_X, Log_X, Log_X, Log_X },
-    { Log_X, Log_X, Log_X, Log_X }
-};
+    {Log_0, Log_1, Log_X, Log_X}, {Log_1, Log_0, Log_X, Log_X},
+    {Log_X, Log_X, Log_X, Log_X}, {Log_X, Log_X, Log_X, Log_X}};
 
-const sc_logic_value_t sc_logic::not_table[4] = {
-    Log_1, Log_0, Log_X, Log_X
-};
+const sc_logic_value_t sc_logic::not_table[4] = {Log_1, Log_0, Log_X, Log_X};
 
 // other methods
 void

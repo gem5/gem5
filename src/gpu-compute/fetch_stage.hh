@@ -41,7 +41,6 @@
 
 namespace gem5
 {
-
 // Instruction fetch stage.
 // All dispatched wavefronts for all SIMDS are analyzed for the
 // need to fetch instructions. From the fetch eligible waves,
@@ -62,8 +61,16 @@ class FetchStage
     void fetch(PacketPtr pkt, Wavefront *wave);
 
     // Stats related variables and methods
-    const std::string& name() const { return _name; }
-    FetchUnit &fetchUnit(int simdId) { return _fetchUnit.at(simdId); }
+    const std::string &
+    name() const
+    {
+        return _name;
+    }
+    FetchUnit &
+    fetchUnit(int simdId)
+    {
+        return _fetchUnit.at(simdId);
+    }
 
   private:
     int numVectorALUs;

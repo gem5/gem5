@@ -33,13 +33,11 @@
 
 namespace gem5
 {
-
 namespace fastmodel
 {
-
 AmbaFromTlmBridge64::AmbaFromTlmBridge64(
     const AmbaFromTlmBridge64Params &params,
-    const sc_core::sc_module_name& name) :
+    const sc_core::sc_module_name &name) :
     amba_pv::amba_pv_from_tlm_bridge<64>(name),
     targetProxy("target_proxy"),
     initiatorProxy("initiator_proxy"),
@@ -49,7 +47,8 @@ AmbaFromTlmBridge64::AmbaFromTlmBridge64(
     targetProxy.register_b_transport(this, &AmbaFromTlmBridge64::bTransport);
     targetProxy.register_get_direct_mem_ptr(
         this, &AmbaFromTlmBridge64::getDirectMemPtr);
-    targetProxy.register_transport_dbg(this, &AmbaFromTlmBridge64::transportDbg);
+    targetProxy.register_transport_dbg(
+        this, &AmbaFromTlmBridge64::transportDbg);
     initiatorProxy.register_invalidate_direct_mem_ptr(
         this, &AmbaFromTlmBridge64::invalidateDirectMemPtr);
     initiatorProxy(tlm_s);
@@ -64,21 +63,21 @@ AmbaFromTlmBridge64::gem5_getPort(const std::string &if_name, int idx)
         return ambaWrapper;
     } else {
         return amba_pv::amba_pv_from_tlm_bridge<64>::gem5_getPort(
-                if_name, idx);
+            if_name, idx);
     }
 }
 
 void
-AmbaFromTlmBridge64::bTransport(amba_pv::amba_pv_transaction &trans,
-                                sc_core::sc_time &t)
+AmbaFromTlmBridge64::bTransport(
+    amba_pv::amba_pv_transaction &trans, sc_core::sc_time &t)
 {
     syncControlExtension(trans);
     return initiatorProxy->b_transport(trans, t);
 }
 
 bool
-AmbaFromTlmBridge64::getDirectMemPtr(amba_pv::amba_pv_transaction &trans,
-                                   tlm::tlm_dmi &dmi_data)
+AmbaFromTlmBridge64::getDirectMemPtr(
+    amba_pv::amba_pv_transaction &trans, tlm::tlm_dmi &dmi_data)
 {
     return initiatorProxy->get_direct_mem_ptr(trans, dmi_data);
 }
@@ -91,8 +90,8 @@ AmbaFromTlmBridge64::transportDbg(amba_pv::amba_pv_transaction &trans)
 }
 
 void
-AmbaFromTlmBridge64::invalidateDirectMemPtr(sc_dt::uint64 start_range,
-                                          sc_dt::uint64 end_range)
+AmbaFromTlmBridge64::invalidateDirectMemPtr(
+    sc_dt::uint64 start_range, sc_dt::uint64 end_range)
 {
     targetProxy->invalidate_direct_mem_ptr(start_range, end_range);
 }

@@ -37,7 +37,6 @@
 
 namespace gem5
 {
-
 /**
  * these enums represent the indices into the
  * initialRegState bitfields in HsaKernelInfo.

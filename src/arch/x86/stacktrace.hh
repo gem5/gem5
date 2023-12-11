@@ -33,14 +33,12 @@
 
 namespace gem5
 {
-
 namespace X86ISA
 {
-
 class StackTrace : public BaseStackTrace
 {
   protected:
-    void trace(ThreadContext *tc, bool is_call) override {};
+    void trace(ThreadContext *tc, bool is_call) override{};
 };
 
 } // namespace X86ISA

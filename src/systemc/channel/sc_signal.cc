@@ -34,9 +34,9 @@
 
 namespace sc_gem5
 {
-
 ScSignalBase::ScSignalBase(const char *name) :
-    sc_core::sc_prim_channel(name), _changeStamp(~0ULL),
+    sc_core::sc_prim_channel(name),
+    _changeStamp(~0ULL),
     _gem5WriterPort(nullptr)
 {}
 
@@ -83,23 +83,23 @@ ScSignalBaseBinary::_signalNegedge()
 
 namespace
 {
-
 void
 reportSignalError(ScSignalBase *sig, sc_core::sc_object *first,
-        sc_core::sc_object *second, bool delta_conflict=false)
+    sc_core::sc_object *second, bool delta_conflict = false)
 {
     std::ostringstream ss;
-    ss << "\n signal " << "`" << sig->name() << "' (" << sig->kind() << ")";
-    ss << "\n first driver `" << first->name() << "' (" <<
-        first->kind() << ")";
-    ss << "\n second driver `" << second->name() << "' (" <<
-        second->kind() << ")";
+    ss << "\n signal "
+       << "`" << sig->name() << "' (" << sig->kind() << ")";
+    ss << "\n first driver `" << first->name() << "' (" << first->kind()
+       << ")";
+    ss << "\n second driver `" << second->name() << "' (" << second->kind()
+       << ")";
     if (delta_conflict) {
-        ss << "\n conflicting write in delta cycle " <<
-            sc_core::sc_delta_count();
+        ss << "\n conflicting write in delta cycle "
+           << sc_core::sc_delta_count();
     }
-    SC_REPORT_ERROR(sc_core::SC_ID_MORE_THAN_ONE_SIGNAL_DRIVER_,
-            ss.str().c_str());
+    SC_REPORT_ERROR(
+        sc_core::SC_ID_MORE_THAN_ONE_SIGNAL_DRIVER_, ss.str().c_str());
 }
 
 } // anonymous namespace
@@ -110,7 +110,7 @@ WriteChecker<sc_core::SC_ONE_WRITER>::WriteChecker(ScSignalBase *_sig) :
 
 void
 WriteChecker<sc_core::SC_ONE_WRITER>::checkPort(sc_core::sc_port_base &port,
-        std::string iface_type_name, std::string out_name)
+    std::string iface_type_name, std::string out_name)
 {
     if (iface_type_name == out_name) {
         if (firstPort)
@@ -138,7 +138,7 @@ WriteChecker<sc_core::SC_MANY_WRITERS>::WriteChecker(ScSignalBase *_sig) :
 
 void
 WriteChecker<sc_core::SC_MANY_WRITERS>::checkPort(sc_core::sc_port_base &port,
-        std::string iface_type_name, std::string out_name)
+    std::string iface_type_name, std::string out_name)
 {
     return;
 }
@@ -193,7 +193,7 @@ ScSignalBaseBinary::_signalReset(sc_gem5::Reset *r)
 void
 ScSignalBaseBinary::_signalReset()
 {
-    for (auto r: _resets)
+    for (auto r : _resets)
         _signalReset(r);
 }
 

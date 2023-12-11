@@ -30,7 +30,6 @@
 
 namespace gem5
 {
-
 void
 IdleStartEvent::process(ThreadContext *tc)
 {

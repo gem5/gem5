@@ -38,7 +38,6 @@
 
 namespace gem5
 {
-
 class ProtocolTester;
 class TesterThread;
 
@@ -63,7 +62,11 @@ class Episode
         Action(Type t, int num_lanes);
         ~Action() {}
 
-        Type getType() const { return type; }
+        Type
+        getType() const
+        {
+            return type;
+        }
         void setLocation(int lane, Location loc);
         Location getLocation(int lane) const;
         bool isAtomicAction() const;
@@ -77,25 +80,37 @@ class Episode
         LocationList locations;
     };
 
-    Episode(ProtocolTester* tester, TesterThread* thread, int num_loads,
-            int num_stores);
+    Episode(ProtocolTester *tester, TesterThread *thread, int num_loads,
+        int num_stores);
     ~Episode();
 
     // return episode id
-    int getEpisodeId() const { return episodeId; }
+    int
+    getEpisodeId() const
+    {
+        return episodeId;
+    }
     // return the action at the head of the action queue
-    const Action* peekCurAction() const;
+    const Action *peekCurAction() const;
     // pop the action at the head of the action queue
     void popAction();
     // check if there is more action to be issued in this episode
-    bool hasMoreActions() const { return nextActionIdx < actions.size();}
+    bool
+    hasMoreActions() const
+    {
+        return nextActionIdx < actions.size();
+    }
     // complete this episode by releasing all locations & updating st effects
     void completeEpisode();
     // check if this episode is executing
-    bool isEpsActive() const { return isActive; }
+    bool
+    isEpsActive() const
+    {
+        return isActive;
+    }
     // check if the input episode and this one have any data race
-    bool checkDRF(Location atomic_loc, Location loc, bool isStore,
-                  int max_lane) const;
+    bool checkDRF(
+        Location atomic_loc, Location loc, bool isStore, int max_lane) const;
 
   private:
     // pointers to tester, thread and address amanger structures
@@ -106,7 +121,7 @@ class Episode
     // a unique episode id
     int episodeId;
     // list of actions in this episode
-    typedef std::vector<Action*> ActionList;
+    typedef std::vector<Action *> ActionList;
     ActionList actions;
     // list of atomic locations picked for this episode
     typedef std::vector<Location> AtomicLocationList;

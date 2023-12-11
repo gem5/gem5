@@ -42,31 +42,34 @@
 
 namespace gem5
 {
-
 /**
  * The class stores temperatures in Kelvin and provides helper methods
  * to convert to/from Celsius.
  */
 class Temperature
 {
-
   private:
     /** Temperature in Kelvin */
     double value;
 
   public:
     /** Explicit constructor assigning a value. */
-    explicit constexpr Temperature(double _value=0.0)
-        : value(_value)
-    {
-    }
+    explicit constexpr Temperature(double _value = 0.0) : value(_value) {}
 
     static Temperature fromKelvin(double _value);
     static Temperature fromCelsius(double _value);
     static Temperature fromFahrenheit(double _value);
 
-    constexpr double toKelvin() const { return value; }
-    constexpr double toCelsius() const { return value - 273.15; }
+    constexpr double
+    toKelvin() const
+    {
+        return value;
+    }
+    constexpr double
+    toCelsius() const
+    {
+        return value - 273.15;
+    }
     double toFahrenheit() const;
 
     constexpr bool

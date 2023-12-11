@@ -30,10 +30,8 @@
 
 namespace gem5
 {
-
 namespace MipsISA
 {
-
 GenericISA::BasicDecodeCache<Decoder, ExtMachInst> Decoder::defaultCache;
 
 } // namespace MipsISA

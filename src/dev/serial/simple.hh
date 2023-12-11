@@ -35,7 +35,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #ifndef __DEV_SERIAL_SIMPLE_HH__
 #define __DEV_SERIAL_SIMPLE_HH__
 
@@ -43,7 +42,6 @@
 
 namespace gem5
 {
-
 struct SimpleUartParams;
 
 class SimpleUart : public Uart
@@ -56,7 +54,7 @@ class SimpleUart : public Uart
     Tick write(PacketPtr pkt) override;
 
   public: // Uart
-    void dataAvailable() override {
+    void dataAvailable() override{
         // We don't support interrupts, so ignore the data available
         // call.
     };

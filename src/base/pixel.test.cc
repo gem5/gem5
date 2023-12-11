@@ -47,26 +47,20 @@ static Pixel pixel_blue(0x00, 0x00, 0xff);
 
 TEST(FBTest, PixelConversionRGBA8888)
 {
-    EXPECT_EQ(PixelConverter::rgba8888_le.fromPixel(pixel_red),
-              0x000000ffU);
-    EXPECT_EQ(PixelConverter::rgba8888_le.fromPixel(pixel_green),
-              0x0000ff00U);
-    EXPECT_EQ(PixelConverter::rgba8888_le.fromPixel(pixel_blue),
-              0x00ff0000U);
+    EXPECT_EQ(PixelConverter::rgba8888_le.fromPixel(pixel_red), 0x000000ffU);
+    EXPECT_EQ(PixelConverter::rgba8888_le.fromPixel(pixel_green), 0x0000ff00U);
+    EXPECT_EQ(PixelConverter::rgba8888_le.fromPixel(pixel_blue), 0x00ff0000U);
 
-    EXPECT_EQ(PixelConverter::rgba8888_le.toPixel(0x000000ffU),
-              pixel_red);
-    EXPECT_EQ(PixelConverter::rgba8888_le.toPixel(0x0000ff00U),
-              pixel_green);
-    EXPECT_EQ(PixelConverter::rgba8888_le.toPixel(0x00ff0000U),
-              pixel_blue);
+    EXPECT_EQ(PixelConverter::rgba8888_le.toPixel(0x000000ffU), pixel_red);
+    EXPECT_EQ(PixelConverter::rgba8888_le.toPixel(0x0000ff00U), pixel_green);
+    EXPECT_EQ(PixelConverter::rgba8888_le.toPixel(0x00ff0000U), pixel_blue);
 }
 
 TEST(FBTest, PixelConversionRGB565)
 {
-    EXPECT_EQ(PixelConverter::rgb565_le.fromPixel(pixel_red),   0x001fU);
+    EXPECT_EQ(PixelConverter::rgb565_le.fromPixel(pixel_red), 0x001fU);
     EXPECT_EQ(PixelConverter::rgb565_le.fromPixel(pixel_green), 0x07e0U);
-    EXPECT_EQ(PixelConverter::rgb565_le.fromPixel(pixel_blue),  0xf800U);
+    EXPECT_EQ(PixelConverter::rgb565_le.fromPixel(pixel_blue), 0xf800U);
 
     EXPECT_EQ(PixelConverter::rgb565_le.toPixel(0x001fU), pixel_red);
     EXPECT_EQ(PixelConverter::rgb565_le.toPixel(0x07e0U), pixel_green);
@@ -75,7 +69,7 @@ TEST(FBTest, PixelConversionRGB565)
 
 TEST(FBTest, PixelToMemRGBA8888LE)
 {
-    uint8_t data[] = { 0xde, 0xad, 0xbe, 0xef };
+    uint8_t data[] = {0xde, 0xad, 0xbe, 0xef};
     PixelConverter::rgba8888_le.fromPixel(data, pixel_red);
     EXPECT_EQ(data[0], 0xff);
     EXPECT_EQ(data[1], 0x00);
@@ -100,9 +94,9 @@ TEST(FBTest, PixelToMemRGBA8888LE)
 
 TEST(FBTest, MemToPixelRGBA8888LE)
 {
-    uint8_t red[] = { 0xff, 0x00, 0x00, 0x00 };
-    uint8_t green[] = { 0x00, 0xff, 0x00, 0x00 };
-    uint8_t blue[] = { 0x00, 0x00, 0xff, 0x00 };
+    uint8_t red[] = {0xff, 0x00, 0x00, 0x00};
+    uint8_t green[] = {0x00, 0xff, 0x00, 0x00};
+    uint8_t blue[] = {0x00, 0x00, 0xff, 0x00};
 
     EXPECT_EQ(PixelConverter::rgba8888_le.toPixel(red), pixel_red);
     EXPECT_EQ(PixelConverter::rgba8888_le.toPixel(green), pixel_green);
@@ -111,9 +105,9 @@ TEST(FBTest, MemToPixelRGBA8888LE)
 
 TEST(FBTest, MemToPixelRGBA8888BE)
 {
-    uint8_t red[] = { 0x00, 0x00, 0x00, 0xff };
-    uint8_t green[] = { 0x00, 0x00, 0xff, 0x00 };
-    uint8_t blue[] = { 0x00, 0xff, 0x00, 0x00 };
+    uint8_t red[] = {0x00, 0x00, 0x00, 0xff};
+    uint8_t green[] = {0x00, 0x00, 0xff, 0x00};
+    uint8_t blue[] = {0x00, 0xff, 0x00, 0x00};
 
     EXPECT_EQ(PixelConverter::rgba8888_be.toPixel(red), pixel_red);
     EXPECT_EQ(PixelConverter::rgba8888_be.toPixel(green), pixel_green);

@@ -38,10 +38,8 @@
 
 namespace gem5
 {
-
 namespace statistics
 {
-
 /** All counters are of 64-bit values. */
 typedef double Counter;
 /** vector of counters. */
@@ -59,7 +57,12 @@ typedef std::vector<Result> VResult;
 typedef unsigned int size_type;
 typedef unsigned int off_type;
 
-enum DistType { Deviation, Dist, Hist };
+enum DistType
+{
+    Deviation,
+    Dist,
+    Hist
+};
 
 /** General container for distribution data. */
 struct DistData

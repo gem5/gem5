@@ -40,7 +40,6 @@
 
 namespace gem5
 {
-
 struct VectorRegisterFileParams;
 
 // Vector Register File
@@ -50,13 +49,13 @@ class VectorRegisterFile : public RegisterFile
     using VecRegContainer = TheGpuISA::VecRegContainerU32;
 
     VectorRegisterFile(const VectorRegisterFileParams &p);
-    ~VectorRegisterFile() { }
+    ~VectorRegisterFile() {}
 
     virtual bool operandsReady(Wavefront *w, GPUDynInstPtr ii) const override;
-    virtual void scheduleWriteOperands(Wavefront *w,
-                                       GPUDynInstPtr ii) override;
-    virtual void scheduleWriteOperandsFromLoad(Wavefront *w,
-                                               GPUDynInstPtr ii) override;
+    virtual void scheduleWriteOperands(
+        Wavefront *w, GPUDynInstPtr ii) override;
+    virtual void scheduleWriteOperandsFromLoad(
+        Wavefront *w, GPUDynInstPtr ii) override;
     virtual void waveExecuteInst(Wavefront *w, GPUDynInstPtr ii) override;
 
     void
@@ -66,14 +65,14 @@ class VectorRegisterFile : public RegisterFile
     }
 
     // Read a register that is writeable (e.g., a DST operand)
-    VecRegContainer&
+    VecRegContainer &
     readWriteable(int regIdx)
     {
         return regFile[regIdx];
     }
 
     // Read a register that is not writeable (e.g., src operand)
-    const VecRegContainer&
+    const VecRegContainer &
     read(int regIdx) const
     {
         return regFile[regIdx];

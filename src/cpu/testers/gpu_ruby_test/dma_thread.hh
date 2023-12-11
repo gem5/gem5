@@ -37,12 +37,11 @@
 
 namespace gem5
 {
-
 class DmaThread : public TesterThread
 {
   public:
     typedef DmaThreadParams Params;
-    DmaThread(const Params& _params);
+    DmaThread(const Params &_params);
     virtual ~DmaThread();
 
     typedef AddressManager::Location Location;

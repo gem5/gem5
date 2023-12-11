@@ -39,7 +39,6 @@
 
 namespace gem5
 {
-
 /**
  * ObjectMatch contains a vector of expressions. ObjectMatch can then be
  * queried, via ObjectMatch.match(std::string), to check if a string matches
@@ -66,11 +65,13 @@ class ObjectMatch
     void setExpression(const std::string &expression);
     void setExpression(const std::vector<std::string> &expression);
     std::vector<std::vector<std::string> > getExpressions();
-    bool empty() const
+    bool
+    empty() const
     {
         return tokens.empty();
     }
-    bool match(const std::string &name) const
+    bool
+    match(const std::string &name) const
     {
         return tokens.empty() ? false : domatch(name);
     }

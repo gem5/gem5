@@ -45,7 +45,6 @@
 
 namespace gem5
 {
-
 /**
  * The NonCachingSimpleCPU is an AtomicSimpleCPU using the
  * 'atomic_noncaching' memory mode instead of just 'atomic'.

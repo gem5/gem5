@@ -42,10 +42,8 @@
 
 namespace gem5
 {
-
 namespace X86ISA
 {
-
 extern const StaticInstPtr badMicroop;
 
 } // namespace X86ISA

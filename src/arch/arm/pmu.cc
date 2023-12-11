@@ -50,39 +50,43 @@
 
 namespace gem5
 {
-
-namespace ArmISA {
-
+namespace ArmISA
+{
 const RegVal PMU::reg_pmcr_wr_mask = 0x39;
 
-PMU::PMU(const ArmPMUParams &p)
-    : SimObject(p), BaseISADevice(),
-      use64bitCounters(p.use64bitCounters),
-      reg_pmcnten(0), reg_pmcr(0),
-      reg_pmselr(0), reg_pminten(0), reg_pmovsr(0),
-      reg_pmceid0(0),reg_pmceid1(0),
-      clock_remainder(0),
-      maximumCounterCount(p.eventCounters),
-      cycleCounter(*this, maximumCounterCount, p.use64bitCounters),
-      cycleCounterEventId(p.cycleEventId),
-      swIncrementEvent(nullptr),
-      reg_pmcr_conf(0),
-      interrupt(nullptr),
-      exitOnPMUControl(p.exitOnPMUControl),
-      exitOnPMUInterrupt(p.exitOnPMUInterrupt)
+PMU::PMU(const ArmPMUParams &p) :
+    SimObject(p),
+    BaseISADevice(),
+    use64bitCounters(p.use64bitCounters),
+    reg_pmcnten(0),
+    reg_pmcr(0),
+    reg_pmselr(0),
+    reg_pminten(0),
+    reg_pmovsr(0),
+    reg_pmceid0(0),
+    reg_pmceid1(0),
+    clock_remainder(0),
+    maximumCounterCount(p.eventCounters),
+    cycleCounter(*this, maximumCounterCount, p.use64bitCounters),
+    cycleCounterEventId(p.cycleEventId),
+    swIncrementEvent(nullptr),
+    reg_pmcr_conf(0),
+    interrupt(nullptr),
+    exitOnPMUControl(p.exitOnPMUControl),
+    exitOnPMUInterrupt(p.exitOnPMUInterrupt)
 {
     DPRINTF(PMUVerbose, "Initializing the PMU.\n");
 
     if (maximumCounterCount > 31) {
         fatal("The PMU can only accept 31 counters, %d counters requested.\n",
-              maximumCounterCount);
+            maximumCounterCount);
     }
 
-    warn_if(!p.interrupt, "ARM PMU: No interrupt specified, interrupt " \
-            "delivery disabled.\n");
+    warn_if(!p.interrupt, "ARM PMU: No interrupt specified, interrupt "
+                          "delivery disabled.\n");
 
     /* Setup the performance counter ID registers */
-    reg_pmcr_conf.imp = 0x41;    // ARM Ltd.
+    reg_pmcr_conf.imp = 0x41; // ARM Ltd.
     reg_pmcr_conf.idcode = 0x00;
     reg_pmcr_conf.n = p.eventCounters;
 
@@ -91,9 +95,7 @@ PMU::PMU(const ArmPMUParams &p)
     cycleCounter.eventId = 0x11;
 }
 
-PMU::~PMU()
-{
-}
+PMU::~PMU() {}
 
 void
 PMU::setThreadContext(ThreadContext *tc)
@@ -113,14 +115,16 @@ PMU::addSoftwareIncrementEvent(unsigned int id)
 
     if (swIncrementEvent) {
         fatal_if(old_event == eventMap.end() ||
-                 old_event->second != swIncrementEvent,
-                 "Trying to add a software increment event with multiple"
-                 "IDs. This is not supported.\n");
+                     old_event->second != swIncrementEvent,
+            "Trying to add a software increment event with multiple"
+            "IDs. This is not supported.\n");
         return;
     }
 
-    fatal_if(old_event != eventMap.end(), "An event with id %d has "
-             "been previously defined\n", id);
+    fatal_if(old_event != eventMap.end(),
+        "An event with id %d has "
+        "been previously defined\n",
+        id);
 
     swIncrementEvent = std::make_shared<SWIncrementEvent>();
     eventMap[id] = swIncrementEvent;
@@ -130,9 +134,10 @@ PMU::addSoftwareIncrementEvent(unsigned int id)
 void
 PMU::addEventProbe(unsigned int id, SimObject *obj, const char *probe_name)
 {
-
-    DPRINTF(PMUVerbose, "PMU: Adding Probe Driven event with id '0x%x'"
-        "as probe %s:%s\n",id, obj->name(), probe_name);
+    DPRINTF(PMUVerbose,
+        "PMU: Adding Probe Driven event with id '0x%x'"
+        "as probe %s:%s\n",
+        id, obj->name(), probe_name);
 
     std::shared_ptr<RegularEvent> event;
     auto event_entry = eventMap.find(id);
@@ -146,7 +151,6 @@ PMU::addEventProbe(unsigned int id, SimObject *obj, const char *probe_name)
     event->addMicroarchitectureProbe(obj, probe_name);
 
     registerEvent(id);
-
 }
 
 void
@@ -175,10 +179,9 @@ PMU::drainResume()
 void
 PMU::regProbeListeners()
 {
-
     // at this stage all probe configurations are done
     // counters can be configured
-    for (uint32_t index = 0; index < maximumCounterCount-1; index++) {
+    for (uint32_t index = 0; index < maximumCounterCount - 1; index++) {
         counters.emplace_back(*this, index, use64bitCounters);
     }
 
@@ -192,109 +195,110 @@ void
 PMU::setMiscReg(int misc_reg, RegVal val)
 {
     DPRINTF(PMUVerbose, "setMiscReg(%s, 0x%x)\n",
-            miscRegName[unflattenMiscReg(misc_reg)], val);
+        miscRegName[unflattenMiscReg(misc_reg)], val);
 
     switch (unflattenMiscReg(misc_reg)) {
-      case MISCREG_PMCR_EL0:
-      case MISCREG_PMCR:
+    case MISCREG_PMCR_EL0:
+    case MISCREG_PMCR:
         setControlReg(val);
         return;
 
-      case MISCREG_PMCNTENSET_EL0:
-      case MISCREG_PMCNTENSET:
+    case MISCREG_PMCNTENSET_EL0:
+    case MISCREG_PMCNTENSET:
         reg_pmcnten |= val;
         updateAllCounters();
         return;
 
-      case MISCREG_PMCNTENCLR_EL0:
-      case MISCREG_PMCNTENCLR:
+    case MISCREG_PMCNTENCLR_EL0:
+    case MISCREG_PMCNTENCLR:
         reg_pmcnten &= ~val;
         updateAllCounters();
         return;
 
-      case MISCREG_PMOVSCLR_EL0:
-      case MISCREG_PMOVSR:
+    case MISCREG_PMOVSCLR_EL0:
+    case MISCREG_PMOVSR:
         setOverflowStatus(reg_pmovsr & ~val);
         return;
 
-      case MISCREG_PMSWINC_EL0:
-      case MISCREG_PMSWINC:
+    case MISCREG_PMSWINC_EL0:
+    case MISCREG_PMSWINC:
         if (swIncrementEvent) {
             swIncrementEvent->write(val);
         }
         return;
 
-      case MISCREG_PMCCNTR_EL0:
-      case MISCREG_PMCCNTR:
+    case MISCREG_PMCCNTR_EL0:
+    case MISCREG_PMCCNTR:
         cycleCounter.setValue(val);
         return;
 
-      case MISCREG_PMSELR_EL0:
-      case MISCREG_PMSELR:
+    case MISCREG_PMSELR_EL0:
+    case MISCREG_PMSELR:
         reg_pmselr = val;
         return;
-      //TODO: implement MISCREF_PMCEID{2,3}
-      case MISCREG_PMCEID0_EL0:
-      case MISCREG_PMCEID0:
-      case MISCREG_PMCEID1_EL0:
-      case MISCREG_PMCEID1:
+    // TODO: implement MISCREF_PMCEID{2,3}
+    case MISCREG_PMCEID0_EL0:
+    case MISCREG_PMCEID0:
+    case MISCREG_PMCEID1_EL0:
+    case MISCREG_PMCEID1:
         // Ignore writes
         return;
 
-      case MISCREG_PMEVTYPER0_EL0...MISCREG_PMEVTYPER5_EL0:
+    case MISCREG_PMEVTYPER0_EL0 ... MISCREG_PMEVTYPER5_EL0:
         setCounterTypeRegister(misc_reg - MISCREG_PMEVTYPER0_EL0, val);
         return;
 
-      case MISCREG_PMCCFILTR:
-      case MISCREG_PMCCFILTR_EL0:
+    case MISCREG_PMCCFILTR:
+    case MISCREG_PMCCFILTR_EL0:
         DPRINTF(PMUVerbose, "Setting PMCCFILTR: 0x%x\n", val);
         setCounterTypeRegister(PMCCNTR, val);
         return;
 
-      case MISCREG_PMXEVTYPER_PMCCFILTR:
-      case MISCREG_PMXEVTYPER_EL0:
-      case MISCREG_PMXEVTYPER:
-        DPRINTF(PMUVerbose, "Setting counter type: "
-                "[PMSELR: 0x%x, PMSELER.sel: 0x%x, EVTYPER: 0x%x]\n",
-                reg_pmselr, reg_pmselr.sel, val);
+    case MISCREG_PMXEVTYPER_PMCCFILTR:
+    case MISCREG_PMXEVTYPER_EL0:
+    case MISCREG_PMXEVTYPER:
+        DPRINTF(PMUVerbose,
+            "Setting counter type: "
+            "[PMSELR: 0x%x, PMSELER.sel: 0x%x, EVTYPER: 0x%x]\n",
+            reg_pmselr, reg_pmselr.sel, val);
         setCounterTypeRegister(reg_pmselr.sel, val);
         return;
 
-      case MISCREG_PMEVCNTR0_EL0...MISCREG_PMEVCNTR5_EL0:
+    case MISCREG_PMEVCNTR0_EL0 ... MISCREG_PMEVCNTR5_EL0:
         setCounterValue(misc_reg - MISCREG_PMEVCNTR0_EL0, val);
         return;
 
-      case MISCREG_PMXEVCNTR_EL0:
-      case MISCREG_PMXEVCNTR:
+    case MISCREG_PMXEVCNTR_EL0:
+    case MISCREG_PMXEVCNTR:
         setCounterValue(reg_pmselr.sel, val);
         return;
 
-      case MISCREG_PMUSERENR_EL0:
-      case MISCREG_PMUSERENR:
+    case MISCREG_PMUSERENR_EL0:
+    case MISCREG_PMUSERENR:
         // TODO
         break;
 
-      case MISCREG_PMINTENSET_EL1:
-      case MISCREG_PMINTENSET:
+    case MISCREG_PMINTENSET_EL1:
+    case MISCREG_PMINTENSET:
         reg_pminten |= val;
         return;
 
-      case MISCREG_PMINTENCLR_EL1:
-      case MISCREG_PMINTENCLR:
+    case MISCREG_PMINTENCLR_EL1:
+    case MISCREG_PMINTENCLR:
         reg_pminten &= ~val;
         return;
 
-      case MISCREG_PMOVSSET_EL0:
-      case MISCREG_PMOVSSET:
+    case MISCREG_PMOVSSET_EL0:
+    case MISCREG_PMOVSSET:
         setOverflowStatus(reg_pmovsr | val);
         return;
 
-      default:
+    default:
         panic("Unexpected PMU register: %i\n", miscRegName[misc_reg]);
     }
 
-    warn("Not doing anything for write to miscreg %s\n",
-         miscRegName[misc_reg]);
+    warn(
+        "Not doing anything for write to miscreg %s\n", miscRegName[misc_reg]);
 }
 
 RegVal
@@ -302,7 +306,7 @@ PMU::readMiscReg(int misc_reg)
 {
     RegVal val(readMiscRegInt(misc_reg));
     DPRINTF(PMUVerbose, "readMiscReg(%s): 0x%x\n",
-            miscRegName[unflattenMiscReg(misc_reg)], val);
+        miscRegName[unflattenMiscReg(misc_reg)], val);
     return val;
 }
 
@@ -311,88 +315,86 @@ PMU::readMiscRegInt(int misc_reg)
 {
     misc_reg = unflattenMiscReg(misc_reg);
     switch (misc_reg) {
-      case MISCREG_PMCR_EL0:
-      case MISCREG_PMCR:
+    case MISCREG_PMCR_EL0:
+    case MISCREG_PMCR:
         return reg_pmcr_conf | (reg_pmcr & reg_pmcr_wr_mask);
 
-      case MISCREG_PMCNTENSET_EL0:
-      case MISCREG_PMCNTENCLR_EL0:
-      case MISCREG_PMCNTENSET:
-      case MISCREG_PMCNTENCLR:
+    case MISCREG_PMCNTENSET_EL0:
+    case MISCREG_PMCNTENCLR_EL0:
+    case MISCREG_PMCNTENSET:
+    case MISCREG_PMCNTENCLR:
         return reg_pmcnten;
 
-      case MISCREG_PMOVSCLR_EL0:
-      case MISCREG_PMOVSSET_EL0:
-      case MISCREG_PMOVSR:  // Overflow Status Register
-      case MISCREG_PMOVSSET:
+    case MISCREG_PMOVSCLR_EL0:
+    case MISCREG_PMOVSSET_EL0:
+    case MISCREG_PMOVSR: // Overflow Status Register
+    case MISCREG_PMOVSSET:
         return reg_pmovsr;
 
-      case MISCREG_PMSWINC_EL0:
-      case MISCREG_PMSWINC: // Software Increment Register (RAZ)
+    case MISCREG_PMSWINC_EL0:
+    case MISCREG_PMSWINC: // Software Increment Register (RAZ)
         return 0;
 
-      case MISCREG_PMSELR_EL0:
-      case MISCREG_PMSELR:
+    case MISCREG_PMSELR_EL0:
+    case MISCREG_PMSELR:
         return reg_pmselr;
 
-      case MISCREG_PMCEID0_EL0:
+    case MISCREG_PMCEID0_EL0:
         return reg_pmceid0;
 
-      case MISCREG_PMCEID1_EL0:
+    case MISCREG_PMCEID1_EL0:
         return reg_pmceid1;
 
-      //TODO: implement MISCREF_PMCEID{2,3}
-      case MISCREG_PMCEID0: // Common Event ID register
+    // TODO: implement MISCREF_PMCEID{2,3}
+    case MISCREG_PMCEID0: // Common Event ID register
         return reg_pmceid0 & 0xFFFFFFFF;
 
-      case MISCREG_PMCEID1: // Common Event ID register
+    case MISCREG_PMCEID1: // Common Event ID register
         return reg_pmceid1 & 0xFFFFFFFF;
 
-      case MISCREG_PMCCNTR_EL0:
+    case MISCREG_PMCCNTR_EL0:
         return cycleCounter.getValue();
 
-      case MISCREG_PMCCNTR:
+    case MISCREG_PMCCNTR:
         return cycleCounter.getValue() & 0xFFFFFFFF;
 
-      case MISCREG_PMEVTYPER0_EL0...MISCREG_PMEVTYPER5_EL0:
+    case MISCREG_PMEVTYPER0_EL0 ... MISCREG_PMEVTYPER5_EL0:
         return getCounterTypeRegister(misc_reg - MISCREG_PMEVTYPER0_EL0);
 
-      case MISCREG_PMCCFILTR:
-      case MISCREG_PMCCFILTR_EL0:
+    case MISCREG_PMCCFILTR:
+    case MISCREG_PMCCFILTR_EL0:
         return getCounterTypeRegister(PMCCNTR);
 
-      case MISCREG_PMXEVTYPER_PMCCFILTR:
-      case MISCREG_PMXEVTYPER_EL0:
-      case MISCREG_PMXEVTYPER:
+    case MISCREG_PMXEVTYPER_PMCCFILTR:
+    case MISCREG_PMXEVTYPER_EL0:
+    case MISCREG_PMXEVTYPER:
         return getCounterTypeRegister(reg_pmselr.sel);
 
-      case MISCREG_PMEVCNTR0_EL0...MISCREG_PMEVCNTR5_EL0: {
-            return getCounterValue(misc_reg - MISCREG_PMEVCNTR0_EL0) &
-                0xFFFFFFFF;
+    case MISCREG_PMEVCNTR0_EL0 ... MISCREG_PMEVCNTR5_EL0: {
+        return getCounterValue(misc_reg - MISCREG_PMEVCNTR0_EL0) & 0xFFFFFFFF;
+    }
 
-        }
-
-      case MISCREG_PMXEVCNTR_EL0:
-      case MISCREG_PMXEVCNTR:
+    case MISCREG_PMXEVCNTR_EL0:
+    case MISCREG_PMXEVCNTR:
         return getCounterValue(reg_pmselr.sel) & 0xFFFFFFFF;
 
-      case MISCREG_PMUSERENR_EL0:
-      case MISCREG_PMUSERENR:
+    case MISCREG_PMUSERENR_EL0:
+    case MISCREG_PMUSERENR:
         // TODO
         return 0;
 
-      case MISCREG_PMINTENSET_EL1:
-      case MISCREG_PMINTENCLR_EL1:
-      case MISCREG_PMINTENSET:
-      case MISCREG_PMINTENCLR:
+    case MISCREG_PMINTENSET_EL1:
+    case MISCREG_PMINTENCLR_EL1:
+    case MISCREG_PMINTENSET:
+    case MISCREG_PMINTENCLR:
         return reg_pminten;
 
-      default:
+    default:
         panic("Unexpected PMU register: %i\n", miscRegName[misc_reg]);
     }
 
     warn("Not doing anything for read from miscreg %s\n",
-         miscRegName[misc_reg]);
+        miscRegName[misc_reg]);
     return 0;
 }
 
@@ -468,7 +470,7 @@ PMU::PMUEvent::attachEvent(PMU::CounterState *user)
 void
 PMU::PMUEvent::increment(const uint64_t val)
 {
-    for (auto& counter: userCounters) {
+    for (auto &counter : userCounters) {
         counter->add(val);
     }
 }
@@ -492,7 +494,7 @@ PMU::RegularEvent::RegularProbe::notify(const uint64_t &val)
 void
 PMU::RegularEvent::enable()
 {
-    for (auto& subEvents: microArchitectureEventSet) {
+    for (auto &subEvents : microArchitectureEventSet) {
         attachedProbePointList.emplace_back(
             new RegularProbe(this, subEvents.first, subEvents.second));
     }
@@ -514,19 +516,19 @@ PMU::CounterState::isFiltered() const
     const bool secure(pmu.isa->inSecureState());
 
     switch (el) {
-      case EL0:
+    case EL0:
         return secure ? filter.u : (filter.u != filter.nsu);
 
-      case EL1:
+    case EL1:
         return secure ? filter.p : (filter.p != filter.nsk);
 
-      case EL2:
+    case EL2:
         return !filter.nsh;
 
-      case EL3:
+    case EL3:
         return filter.p != filter.m;
 
-      default:
+    default:
         panic("Unexpected execution level in PMU::isFiltered.\n");
     }
 }
@@ -539,7 +541,7 @@ PMU::CounterState::detach()
         sourceEvent = nullptr;
     } else {
         debugCounter("detaching event not currently attached"
-            " to any event\n");
+                     " to any event\n");
     }
 }
 
@@ -547,8 +549,8 @@ void
 PMU::CounterState::attach(const std::shared_ptr<PMUEvent> &event)
 {
     if (!resetValue) {
-      value = 0;
-      resetValue = true;
+        value = 0;
+        resetValue = true;
     }
     sourceEvent = event;
     sourceEvent->attachEvent(this);
@@ -561,7 +563,7 @@ PMU::CounterState::getValue() const
         sourceEvent->updateAttachedCounters();
     } else {
         debugCounter("attempted to get value from a counter without"
-            " an associated event\n");
+                     " an associated event\n");
     }
     return value;
 }
@@ -576,7 +578,7 @@ PMU::CounterState::setValue(uint64_t val)
         sourceEvent->updateAttachedCounters();
     } else {
         debugCounter("attempted to set value from a counter without"
-            " an associated event\n");
+                     " an associated event\n");
     }
 }
 
@@ -590,18 +592,18 @@ PMU::updateCounter(CounterState &ctr)
 
     } else {
         DPRINTF(PMUVerbose, "updateCounter(%i): Enable event id 0x%x\n",
-                ctr.getCounterId(), ctr.eventId);
+            ctr.getCounterId(), ctr.eventId);
 
         auto sourceEvent = eventMap.find(ctr.eventId);
         if (sourceEvent == eventMap.end()) {
             warn("Can't enable PMU counter of type '0x%x': "
-                 "No such event type.\n", ctr.eventId);
+                 "No such event type.\n",
+                ctr.eventId);
         } else {
             ctr.attach(sourceEvent->second);
         }
     }
 }
-
 
 void
 PMU::resetEventCounts()
@@ -614,8 +616,8 @@ void
 PMU::setCounterValue(CounterId id, uint64_t val)
 {
     if (!isValidCounter(id)) {
-        warn_once("Can't change counter value: Counter %i does not exist.\n",
-                  id);
+        warn_once(
+            "Can't change counter value: Counter %i does not exist.\n", id);
         return;
     }
 
@@ -642,8 +644,8 @@ PMU::setCounterTypeRegister(CounterId id, PMEVTYPER_t val)
 {
     DPRINTF(PMUVerbose, "Set Event [%d] = 0x%08x\n", id, val);
     if (!isValidCounter(id)) {
-        warn_once("Can't change counter type: Counter %i does not exist.\n",
-                  id);
+        warn_once(
+            "Can't change counter type: Counter %i does not exist.\n", id);
         return;
     }
 
@@ -803,14 +805,13 @@ PMU::CounterState::add(uint64_t delta)
     }
 
     if (delta > value_until_overflow) {
-
         // overflow situation detected
         // flag the overflow occurence
         pmu.reg_pmovsr |= (1 << counterId);
 
         // Deliver a PMU interrupt if interrupt delivery is enabled
         // for this counter.
-        if (pmu.reg_pminten  & (1 << counterId)) {
+        if (pmu.reg_pminten & (1 << counterId)) {
             pmu.raiseInterrupt();
         }
         return overflow64 ? UINT64_MAX : UINT32_MAX;
@@ -821,7 +822,7 @@ PMU::CounterState::add(uint64_t delta)
 void
 PMU::SWIncrementEvent::write(uint64_t val)
 {
-    for (auto& counter: userCounters) {
+    for (auto &counter : userCounters) {
         if (val & (0x1 << counter->getCounterId())) {
             counter->add(1);
         }

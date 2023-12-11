@@ -45,11 +45,10 @@
 
 namespace gem5
 {
-
 class ThreadContext;
 
-namespace trace {
-
+namespace trace
+{
 /**
  * Capstone Disassembler:
  * The disassembler relies on the capstone library to convert
@@ -75,13 +74,10 @@ class CapstoneDisassembler : public InstDisassembler
     PARAMS(CapstoneDisassembler);
     CapstoneDisassembler(const Params &p);
 
-    std::string
-    disassemble(StaticInstPtr inst,
-                const PCStateBase &pc,
-                const loader::SymbolTable *symtab) const override;
+    std::string disassemble(StaticInstPtr inst, const PCStateBase &pc,
+        const loader::SymbolTable *symtab) const override;
 
   protected:
-
     /**
      * Return a pointer to the current capstone handle (csh).
      *
@@ -93,7 +89,7 @@ class CapstoneDisassembler : public InstDisassembler
      * The current handle in use should be returned every time
      * the currHandle is called.
      */
-    virtual const csh* currHandle(const PCStateBase &pc) const = 0;
+    virtual const csh *currHandle(const PCStateBase &pc) const = 0;
 };
 
 } // namespace trace

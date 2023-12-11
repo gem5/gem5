@@ -34,10 +34,8 @@
 
 namespace gem5
 {
-
 namespace Iris
 {
-
 class Interrupts : public BaseInterrupts
 {
   public:
@@ -45,11 +43,23 @@ class Interrupts : public BaseInterrupts
 
     Interrupts(const Params &p) : BaseInterrupts(p) {}
 
-    bool checkInterrupts() const override { return false; }
-    Fault getInterrupt() override { return NoFault; }
-    void updateIntrInfo() override {}
+    bool
+    checkInterrupts() const override
+    {
+        return false;
+    }
+    Fault
+    getInterrupt() override
+    {
+        return NoFault;
+    }
+    void
+    updateIntrInfo() override
+    {}
 
-    void clearAll() override {}
+    void
+    clearAll() override
+    {}
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;

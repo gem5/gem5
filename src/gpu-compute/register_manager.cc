@@ -44,17 +44,16 @@
 
 namespace gem5
 {
-
-RegisterManager::RegisterManager(const RegisterManagerParams &p)
-    : SimObject(p), srfPoolMgrs(p.srf_pool_managers),
-      vrfPoolMgrs(p.vrf_pool_managers)
+RegisterManager::RegisterManager(const RegisterManagerParams &p) :
+    SimObject(p),
+    srfPoolMgrs(p.srf_pool_managers),
+    vrfPoolMgrs(p.vrf_pool_managers)
 {
     if (p.policy == "static") {
         policy = new StaticRegisterManagerPolicy();
     } else {
         fatal("Unimplemented Register Manager Policy");
     }
-
 }
 
 RegisterManager::~RegisterManager()
@@ -79,27 +78,27 @@ RegisterManager::setParent(ComputeUnit *cu)
     computeUnit = cu;
     policy->setParent(computeUnit);
     for (int i = 0; i < srfPoolMgrs.size(); i++) {
-        fatal_if(computeUnit->srf[i]->numRegs() %
-                 srfPoolMgrs[i]->minAllocation(),
-                 "Min SGPR allocation is not multiple of VRF size\n");
+        fatal_if(
+            computeUnit->srf[i]->numRegs() % srfPoolMgrs[i]->minAllocation(),
+            "Min SGPR allocation is not multiple of VRF size\n");
     }
     for (int i = 0; i < vrfPoolMgrs.size(); i++) {
-        fatal_if(computeUnit->vrf[i]->numRegs() %
-                 vrfPoolMgrs[i]->minAllocation(),
-                 "Min VGPG allocation is not multiple of VRF size\n");
+        fatal_if(
+            computeUnit->vrf[i]->numRegs() % vrfPoolMgrs[i]->minAllocation(),
+            "Min VGPG allocation is not multiple of VRF size\n");
     }
 }
 
 // compute mapping for vector register
 int
-RegisterManager::mapVgpr(Wavefront* w, int vgprIndex)
+RegisterManager::mapVgpr(Wavefront *w, int vgprIndex)
 {
     return policy->mapVgpr(w, vgprIndex);
 }
 
 // compute mapping for scalar register
 int
-RegisterManager::mapSgpr(Wavefront* w, int sgprIndex)
+RegisterManager::mapSgpr(Wavefront *w, int sgprIndex)
 {
     return policy->mapSgpr(w, sgprIndex);
 }
@@ -119,14 +118,14 @@ RegisterManager::canAllocateSgprs(int simdId, int nWfs, int demandPerWf)
 
 // allocate registers
 void
-RegisterManager::allocateRegisters(Wavefront *w, int vectorDemand,
-                                   int scalarDemand)
+RegisterManager::allocateRegisters(
+    Wavefront *w, int vectorDemand, int scalarDemand)
 {
     policy->allocateRegisters(w, vectorDemand, scalarDemand);
 }
 
 void
-RegisterManager::freeRegisters(Wavefront* w)
+RegisterManager::freeRegisters(Wavefront *w)
 {
     policy->freeRegisters(w);
 }

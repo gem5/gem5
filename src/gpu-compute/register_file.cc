@@ -45,9 +45,8 @@
 
 namespace gem5
 {
-
-RegisterFile::RegisterFile(const RegisterFileParams &p)
-    : SimObject(p), simdId(p.simd_id), _numRegs(p.num_regs), stats(this)
+RegisterFile::RegisterFile(const RegisterFileParams &p) :
+    SimObject(p), simdId(p.simd_id), _numRegs(p.num_regs), stats(this)
 {
     fatal_if((_numRegs % 2) != 0, "VRF size is illegal\n");
     fatal_if(simdId < 0, "Illegal SIMD id for VRF");
@@ -56,9 +55,7 @@ RegisterFile::RegisterFile(const RegisterFileParams &p)
     busy.resize(_numRegs, 0);
 }
 
-RegisterFile::~RegisterFile()
-{
-}
+RegisterFile::~RegisterFile() {}
 
 void
 RegisterFile::setParent(ComputeUnit *_computeUnit)
@@ -95,27 +92,25 @@ RegisterFile::regBusy(int idx) const
 void
 RegisterFile::markReg(int regIdx, bool value)
 {
-    DPRINTF(GPURF, "SIMD[%d] markReg(): physReg[%d] = %d\n",
-            simdId, regIdx, (int)value);
+    DPRINTF(GPURF, "SIMD[%d] markReg(): physReg[%d] = %d\n", simdId, regIdx,
+        (int)value);
     busy.at(regIdx) = value;
 }
 
 void
 RegisterFile::enqRegFreeEvent(uint32_t regIdx, uint64_t delay)
 {
-    DPRINTF(GPURF, "SIMD[%d] enqRegFreeEvent physReg[%d] at %llu\n",
-            simdId, regIdx, curTick() + delay);
-    schedule(new MarkRegFreeScbEvent(this, regIdx),
-             curTick() + delay);
+    DPRINTF(GPURF, "SIMD[%d] enqRegFreeEvent physReg[%d] at %llu\n", simdId,
+        regIdx, curTick() + delay);
+    schedule(new MarkRegFreeScbEvent(this, regIdx), curTick() + delay);
 }
 
 void
 RegisterFile::enqRegBusyEvent(uint32_t regIdx, uint64_t delay)
 {
-    DPRINTF(GPURF, "SIMD[%d] enqRegBusyEvent physReg[%d] at %llu\n",
-            simdId, regIdx, curTick() + delay);
-    schedule(new MarkRegBusyScbEvent(this, regIdx),
-             curTick() + delay);
+    DPRINTF(GPURF, "SIMD[%d] enqRegBusyEvent physReg[%d] at %llu\n", simdId,
+        regIdx, curTick() + delay);
+    schedule(new MarkRegBusyScbEvent(this, regIdx), curTick() + delay);
 }
 
 // Schedule functions
@@ -127,8 +122,7 @@ RegisterFile::canScheduleReadOperands(Wavefront *w, GPUDynInstPtr ii)
 
 void
 RegisterFile::scheduleReadOperands(Wavefront *w, GPUDynInstPtr ii)
-{
-}
+{}
 
 bool
 RegisterFile::canScheduleWriteOperands(Wavefront *w, GPUDynInstPtr ii)
@@ -138,8 +132,7 @@ RegisterFile::canScheduleWriteOperands(Wavefront *w, GPUDynInstPtr ii)
 
 void
 RegisterFile::scheduleWriteOperands(Wavefront *w, GPUDynInstPtr ii)
-{
-}
+{}
 
 bool
 RegisterFile::canScheduleWriteOperandsFromLoad(Wavefront *w, GPUDynInstPtr ii)
@@ -149,8 +142,7 @@ RegisterFile::canScheduleWriteOperandsFromLoad(Wavefront *w, GPUDynInstPtr ii)
 
 void
 RegisterFile::scheduleWriteOperandsFromLoad(Wavefront *w, GPUDynInstPtr ii)
-{
-}
+{}
 
 bool
 RegisterFile::operandReadComplete(Wavefront *w, GPUDynInstPtr ii)
@@ -161,13 +153,11 @@ RegisterFile::operandReadComplete(Wavefront *w, GPUDynInstPtr ii)
 // Exec functions
 void
 RegisterFile::exec()
-{
-}
+{}
 
 void
 RegisterFile::waveExecuteInst(Wavefront *w, GPUDynInstPtr ii)
-{
-}
+{}
 
 // Events
 
@@ -187,20 +177,17 @@ RegisterFile::MarkRegBusyScbEvent::process()
 
 void
 RegisterFile::dispatchInstruction(GPUDynInstPtr ii)
-{
-}
+{}
 
-RegisterFile::RegisterFileStats::RegisterFileStats(statistics::Group *parent)
-    : statistics::Group(parent),
-      ADD_STAT(registerReads,
-              "Total number of DWORDs read from register file"),
-      ADD_STAT(registerWrites,
-              "Total number of DWORDS written to register file"),
-      ADD_STAT(sramReads,
-              "Total number of register file bank SRAM activations for reads"),
-      ADD_STAT(sramWrites,
-              "Total number of register file bank SRAM activations for writes")
-{
-}
+RegisterFile::RegisterFileStats::RegisterFileStats(statistics::Group *parent) :
+    statistics::Group(parent),
+    ADD_STAT(registerReads, "Total number of DWORDs read from register file"),
+    ADD_STAT(
+        registerWrites, "Total number of DWORDS written to register file"),
+    ADD_STAT(sramReads,
+        "Total number of register file bank SRAM activations for reads"),
+    ADD_STAT(sramWrites,
+        "Total number of register file bank SRAM activations for writes")
+{}
 
 } // namespace gem5

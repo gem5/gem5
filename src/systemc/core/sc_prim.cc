@@ -33,14 +33,16 @@
 
 namespace sc_gem5
 {
-
-uint64_t getChangeStamp() { return scheduler.changeStamp(); }
+uint64_t
+getChangeStamp()
+{
+    return scheduler.changeStamp();
+}
 
 } // namespace sc_gem5
 
 namespace sc_core
 {
-
 sc_prim_channel::sc_prim_channel() : _gem5_channel(nullptr)
 {
     if (sc_is_running()) {
@@ -134,7 +136,7 @@ sc_prim_channel::next_trigger(const sc_time &t, const sc_event_or_list &eol)
 
 void
 sc_prim_channel::next_trigger(
-        double d, sc_time_unit u, const sc_event_or_list &eol)
+    double d, sc_time_unit u, const sc_event_or_list &eol)
 {
     ::sc_core::next_trigger(d, u, eol);
 }
@@ -147,7 +149,7 @@ sc_prim_channel::next_trigger(const sc_time &t, const sc_event_and_list &eal)
 
 void
 sc_prim_channel::next_trigger(
-        double d, sc_time_unit u, const sc_event_and_list &eal)
+    double d, sc_time_unit u, const sc_event_and_list &eal)
 {
     ::sc_core::next_trigger(d, u, eal);
 }

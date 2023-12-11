@@ -46,10 +46,8 @@
 
 namespace gem5
 {
-
 namespace RiscvISA
 {
-
 const Addr PageShift = 12;
 const Addr PageBytes = 1ULL << PageShift;
 

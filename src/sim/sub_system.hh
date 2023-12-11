@@ -50,7 +50,6 @@
 
 namespace gem5
 {
-
 class PowerModel;
 
 /**
@@ -67,12 +66,14 @@ class SubSystem : public SimObject
 
     double getStaticPower() const;
 
-    void registerPowerProducer(PowerModel *pm) {
+    void
+    registerPowerProducer(PowerModel *pm)
+    {
         powerProducers.push_back(pm);
     }
 
   protected:
-    std::vector<PowerModel*> powerProducers;
+    std::vector<PowerModel *> powerProducers;
 };
 
 } // namespace gem5

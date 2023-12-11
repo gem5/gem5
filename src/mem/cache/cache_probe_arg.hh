@@ -35,7 +35,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #ifndef __MEM_CACHE_PROBE_ARG_HH__
 #define __MEM_CACHE_PROBE_ARG_HH__
 
@@ -43,7 +42,6 @@
 
 namespace gem5
 {
-
 /**
  * Provides generic cache lookup functions. A cache may provide
  * a CacheAccessor object to other components that need to perform
@@ -60,8 +58,8 @@ struct CacheAccessor
     virtual bool hasBeenPrefetched(Addr addr, bool is_secure) const = 0;
 
     /** Determine if address has been prefetched by the requestor */
-    virtual bool hasBeenPrefetched(Addr addr, bool is_secure,
-                                   RequestorID requestor) const = 0;
+    virtual bool hasBeenPrefetched(
+        Addr addr, bool is_secure, RequestorID requestor) const = 0;
 
     /** Determine if address is in cache miss queue */
     virtual bool inMissQueue(Addr addr, bool is_secure) const = 0;
@@ -82,10 +80,9 @@ class CacheAccessProbeArg
     /** Accessor for the cache */
     CacheAccessor &cache;
 
-    CacheAccessProbeArg(PacketPtr _pkt, CacheAccessor &_cache)
-        :pkt(_pkt), cache(_cache)
-    {
-    }
+    CacheAccessProbeArg(PacketPtr _pkt, CacheAccessor &_cache) :
+        pkt(_pkt), cache(_cache)
+    {}
 };
 
 /**
@@ -106,18 +103,20 @@ struct CacheDataUpdateProbeArg
     /** The new data contents. If zero-sized this is an invalidation. */
     std::vector<uint64_t> newData;
     /** Set if the update is from a prefetch or evicting a prefetched
-    *  block that was never used. */
+     *  block that was never used. */
     bool hwPrefetched;
     /** Accessor for the cache */
     CacheAccessor &accessor;
 
     CacheDataUpdateProbeArg(Addr _addr, bool is_secure,
-                            RequestorID _requestorID,
-                            CacheAccessor &_accessor)
-        : addr(_addr), isSecure(is_secure), requestorID(_requestorID),
-          oldData(), newData(), accessor(_accessor)
-    {
-    }
+        RequestorID _requestorID, CacheAccessor &_accessor) :
+        addr(_addr),
+        isSecure(is_secure),
+        requestorID(_requestorID),
+        oldData(),
+        newData(),
+        accessor(_accessor)
+    {}
 };
 
 } // namespace gem5

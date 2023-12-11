@@ -50,10 +50,8 @@
 
 namespace gem5
 {
-
 namespace X86ISA
 {
-
 uint64_t
 getRFlags(ThreadContext *tc)
 {
@@ -66,8 +64,7 @@ getRFlags(ThreadContext *tc)
 
     // Reconstruct the real rflags state, mask out internal flags, and
     // make sure reserved bits have the expected values.
-    return ((ncc_flags | cc_flags | cfof_bits | df_bit) & 0x3F7FD5)
-        | 0x2;
+    return ((ncc_flags | cc_flags | cfof_bits | df_bit) & 0x3F7FD5) | 0x2;
 }
 
 void
@@ -168,5 +165,5 @@ storeFloat80(void *_mem, double value)
     memcpy(_mem, fp80.bits, 10);
 }
 
-} // namespace X86_ISA
+} // namespace X86ISA
 } // namespace gem5

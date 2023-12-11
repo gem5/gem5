@@ -51,14 +51,10 @@
 
 namespace gem5
 {
-
 namespace minor
 {
-
-Fetch2::Fetch2(const std::string &name,
-    MinorCPU &cpu_,
-    const BaseMinorCPUParams &params,
-    Latch<ForwardLineData>::Output inp_,
+Fetch2::Fetch2(const std::string &name, MinorCPU &cpu_,
+    const BaseMinorCPUParams &params, Latch<ForwardLineData>::Output inp_,
     Latch<BranchData>::Output branchInp_,
     Latch<BranchData>::Input predictionOut_,
     Latch<ForwardInstData>::Input out_,
@@ -74,22 +70,22 @@ Fetch2::Fetch2(const std::string &name,
     processMoreThanOneInput(params.fetch2CycleInput),
     branchPredictor(*params.branchPred),
     fetchInfo(params.numThreads),
-    threadPriority(0), stats(&cpu_)
+    threadPriority(0),
+    stats(&cpu_)
 {
     if (outputWidth < 1)
         fatal("%s: decodeInputWidth must be >= 1 (%d)\n", name, outputWidth);
 
     if (params.fetch2InputBufferSize < 1) {
         fatal("%s: fetch2InputBufferSize must be >= 1 (%d)\n", name,
-        params.fetch2InputBufferSize);
+            params.fetch2InputBufferSize);
     }
 
     /* Per-thread input buffers */
     for (ThreadID tid = 0; tid < params.numThreads; tid++) {
-        inputBuffer.push_back(
-            InputBuffer<ForwardLineData>(
-                name + ".inputBuffer" + std::to_string(tid), "lines",
-                params.fetch2InputBufferSize));
+        inputBuffer.push_back(InputBuffer<ForwardLineData>(
+            name + ".inputBuffer" + std::to_string(tid), "lines",
+            params.fetch2InputBufferSize));
     }
 }
 
@@ -135,54 +131,51 @@ Fetch2::updateBranchPrediction(const BranchData &branch)
         return;
 
     switch (branch.reason) {
-      case BranchData::NoBranch:
+    case BranchData::NoBranch:
         /* No data to update */
         break;
-      case BranchData::Interrupt:
+    case BranchData::Interrupt:
         /* Never try to predict interrupts */
         break;
-      case BranchData::SuspendThread:
+    case BranchData::SuspendThread:
         /* Don't need to act on suspends */
         break;
-      case BranchData::HaltFetch:
+    case BranchData::HaltFetch:
         /* Don't need to act on fetch wakeup */
         break;
-      case BranchData::BranchPrediction:
+    case BranchData::BranchPrediction:
         /* Shouldn't happen.  Fetch2 is the only source of
          *  BranchPredictions */
         break;
-      case BranchData::UnpredictedBranch:
+    case BranchData::UnpredictedBranch:
         /* Unpredicted branch or barrier */
         DPRINTF(Branch, "Unpredicted branch seen inst: %s\n", *inst);
-        branchPredictor.squash(inst->id.fetchSeqNum,
-            *branch.target, true, inst->id.threadId);
+        branchPredictor.squash(
+            inst->id.fetchSeqNum, *branch.target, true, inst->id.threadId);
         // Update after squashing to accomodate O3CPU
         // using the branch prediction code.
-        branchPredictor.update(inst->id.fetchSeqNum,
-            inst->id.threadId);
+        branchPredictor.update(inst->id.fetchSeqNum, inst->id.threadId);
         break;
-      case BranchData::CorrectlyPredictedBranch:
+    case BranchData::CorrectlyPredictedBranch:
         /* Predicted taken, was taken */
         DPRINTF(Branch, "Branch predicted correctly inst: %s\n", *inst);
-        branchPredictor.update(inst->id.fetchSeqNum,
-            inst->id.threadId);
+        branchPredictor.update(inst->id.fetchSeqNum, inst->id.threadId);
         break;
-      case BranchData::BadlyPredictedBranch:
+    case BranchData::BadlyPredictedBranch:
         /* Predicted taken, not taken */
         DPRINTF(Branch, "Branch mis-predicted inst: %s\n", *inst);
         branchPredictor.squash(inst->id.fetchSeqNum,
             *branch.target /* Not used */, false, inst->id.threadId);
         // Update after squashing to accomodate O3CPU
         // using the branch prediction code.
-        branchPredictor.update(inst->id.fetchSeqNum,
-            inst->id.threadId);
+        branchPredictor.update(inst->id.fetchSeqNum, inst->id.threadId);
         break;
-      case BranchData::BadlyPredictedBranchTarget:
+    case BranchData::BadlyPredictedBranchTarget:
         /* Predicted taken, was taken but to a different target */
         DPRINTF(Branch, "Branch mis-predicted target inst: %s target: %s\n",
             *inst, *branch.target);
-        branchPredictor.squash(inst->id.fetchSeqNum,
-            *branch.target, true, inst->id.threadId);
+        branchPredictor.squash(
+            inst->id.fetchSeqNum, *branch.target, true, inst->id.threadId);
         break;
     }
 }
@@ -195,7 +188,7 @@ Fetch2::predictBranch(MinorDynInstPtr inst, BranchData &branch)
     assert(!inst->predictedTaken);
 
     /* Skip non-control/sys call instructions */
-    if (inst->staticInst->isControl() || inst->staticInst->isSyscall()){
+    if (inst->staticInst->isControl() || inst->staticInst->isSyscall()) {
         std::unique_ptr<PCStateBase> inst_pc(inst->pc->clone());
 
         /* Tried to predict */
@@ -203,8 +196,8 @@ Fetch2::predictBranch(MinorDynInstPtr inst, BranchData &branch)
 
         DPRINTF(Branch, "Trying to predict for inst: %s\n", *inst);
 
-        if (branchPredictor.predict(inst->staticInst,
-                    inst->id.fetchSeqNum, *inst_pc, inst->id.threadId)) {
+        if (branchPredictor.predict(inst->staticInst, inst->id.fetchSeqNum,
+                *inst_pc, inst->id.threadId)) {
             set(branch.target, *inst_pc);
             inst->predictedTaken = true;
             set(inst->predictedTarget, inst_pc);
@@ -220,16 +213,16 @@ Fetch2::predictBranch(MinorDynInstPtr inst, BranchData &branch)
         thread.expectedStreamSeqNum = inst->id.streamSeqNum;
 
         BranchData new_branch = BranchData(BranchData::BranchPrediction,
-            inst->id.threadId,
-            inst->id.streamSeqNum, thread.predictionSeqNum + 1,
-            *inst->predictedTarget, inst);
+            inst->id.threadId, inst->id.streamSeqNum,
+            thread.predictionSeqNum + 1, *inst->predictedTarget, inst);
 
         /* Mark with a new prediction number by the stream number of the
          *  instruction causing the prediction */
         thread.predictionSeqNum++;
         branch = new_branch;
 
-        DPRINTF(Branch, "Branch predicted taken inst: %s target: %s"
+        DPRINTF(Branch,
+            "Branch predicted taken inst: %s target: %s"
             " new predictionSeqNum: %d\n",
             *inst, *inst->predictedTarget, thread.predictionSeqNum);
     }
@@ -256,7 +249,7 @@ Fetch2::evaluate()
      *  react to your own predictions */
     if (branch_inp.isStreamChange()) {
         DPRINTF(Fetch, "Dumping all input as a stream changing branch"
-            " has arrived\n");
+                       " has arrived\n");
         dumpAllInput(branch_inp.threadId);
         fetchInfo[branch_inp.threadId].havePC = false;
     }
@@ -272,10 +265,10 @@ Fetch2::evaluate()
         const ForwardLineData *line_in = getInput(tid);
 
         while (line_in &&
-            thread.expectedStreamSeqNum == line_in->id.streamSeqNum &&
-            thread.predictionSeqNum != line_in->id.predictionSeqNum)
-        {
-            DPRINTF(Fetch, "Discarding line %s"
+               thread.expectedStreamSeqNum == line_in->id.streamSeqNum &&
+               thread.predictionSeqNum != line_in->id.predictionSeqNum) {
+            DPRINTF(Fetch,
+                "Discarding line %s"
                 " due to predictionSeqNum mismatch (expected: %d)\n",
                 line_in->id, thread.predictionSeqNum);
 
@@ -305,12 +298,12 @@ Fetch2::evaluate()
         /* Pack instructions into the output while we can.  This may involve
          * using more than one input line.  Note that lineWidth will be 0
          * for faulting lines */
-        while (line_in &&
+        while (
+            line_in &&
             (line_in->isFault() ||
                 fetch_info.inputIndex < line_in->lineWidth) && /* More input */
             output_index < outputWidth && /* More output to fill */
-            prediction.isBubble() /* No predicted branch */)
-        {
+            prediction.isBubble() /* No predicted branch */) {
             ThreadContext *thread = cpu.getContext(line_in->id.threadId);
             InstDecoder *decoder = thread->getDecoderPtr();
 
@@ -323,7 +316,8 @@ Fetch2::evaluate()
             /* Set the PC if the stream changes.  Setting havePC to false in
              *  a previous cycle handles all other change of flow of control
              *  issues */
-            bool set_pc = fetch_info.lastStreamSeqNum != line_in->id.streamSeqNum;
+            bool set_pc =
+                fetch_info.lastStreamSeqNum != line_in->id.streamSeqNum;
 
             if (!discard_line && (!fetch_info.havePC || set_pc)) {
                 /* Set the inputIndex to be the MachInst-aligned offset
@@ -331,7 +325,8 @@ Fetch2::evaluate()
                 fetch_info.inputIndex =
                     (line_in->pc->instAddr() & decoder->pcMask()) -
                     line_in->lineBaseAddr;
-                DPRINTF(Fetch, "Setting new PC value: %s inputIndex: 0x%x"
+                DPRINTF(Fetch,
+                    "Setting new PC value: %s inputIndex: 0x%x"
                     " lineBaseAddr: 0x%x lineWidth: 0x%x\n",
                     *line_in->pc, fetch_info.inputIndex, line_in->lineBaseAddr,
                     line_in->lineWidth);
@@ -347,7 +342,8 @@ Fetch2::evaluate()
             if (discard_line) {
                 /* Rest of line was from an older prediction in the same
                  *  stream */
-                DPRINTF(Fetch, "Discarding line %s (from inputIndex: %d)"
+                DPRINTF(Fetch,
+                    "Discarding line %s (from inputIndex: %d)"
                     " due to predictionSeqNum mismatch (expected: %d)\n",
                     line_in->id, fetch_info.inputIndex,
                     fetch_info.predictionSeqNum);
@@ -371,20 +367,22 @@ Fetch2::evaluate()
                  *  instructions to be generated. (Fetch2 makes no
                  *  immediate judgement about streamSeqNum) */
                 dyn_inst->fault = line_in->fault;
-                DPRINTF(Fetch, "Fault being passed output_index: "
-                    "%d: %s\n", output_index, dyn_inst->fault->name());
+                DPRINTF(Fetch,
+                    "Fault being passed output_index: "
+                    "%d: %s\n",
+                    output_index, dyn_inst->fault->name());
             } else {
                 uint8_t *line = line_in->line;
 
                 /* The instruction is wholly in the line, can just copy. */
                 memcpy(decoder->moreBytesPtr(), line + fetch_info.inputIndex,
-                        decoder->moreBytesSize());
+                    decoder->moreBytesSize());
 
                 if (!decoder->instReady()) {
                     decoder->moreBytes(*fetch_info.pc,
                         line_in->lineBaseAddr + fetch_info.inputIndex);
                     DPRINTF(Fetch, "Offering MachInst to decoder addr: 0x%x\n",
-                            line_in->lineBaseAddr + fetch_info.inputIndex);
+                        line_in->lineBaseAddr + fetch_info.inputIndex);
                 }
 
                 /* Maybe make the above a loop to accomodate ISAs with
@@ -403,7 +401,8 @@ Fetch2::evaluate()
 
                     /* Fetch and prediction sequence numbers originate here */
                     dyn_inst->id.fetchSeqNum = fetch_info.fetchSeqNum;
-                    dyn_inst->id.predictionSeqNum = fetch_info.predictionSeqNum;
+                    dyn_inst->id.predictionSeqNum =
+                        fetch_info.predictionSeqNum;
                     /* To complete the set, test that exec sequence number
                      *  has not been set */
                     assert(dyn_inst->id.execSeqNum == 0);
@@ -425,12 +424,12 @@ Fetch2::evaluate()
                     else if (decoded_inst->isInteger())
                         stats.intInstructions++;
 
-                    DPRINTF(Fetch, "Instruction extracted from line %s"
+                    DPRINTF(Fetch,
+                        "Instruction extracted from line %s"
                         " lineWidth: %d output_index: %d inputIndex: %d"
                         " pc: %s inst: %s\n",
-                        line_in->id,
-                        line_in->lineWidth, output_index, fetch_info.inputIndex,
-                        *fetch_info.pc, *dyn_inst);
+                        line_in->id, line_in->lineWidth, output_index,
+                        fetch_info.inputIndex, *fetch_info.pc, *dyn_inst);
 
                     /*
                      * In SE mode, it's possible to branch to a microop when
@@ -463,10 +462,12 @@ Fetch2::evaluate()
                 if (decoder->needMoreBytes()) {
                     fetch_info.inputIndex += decoder->moreBytesSize();
 
-                DPRINTF(Fetch, "Updated inputIndex value PC: %s"
-                    " inputIndex: 0x%x lineBaseAddr: 0x%x lineWidth: 0x%x\n",
-                    *line_in->pc, fetch_info.inputIndex, line_in->lineBaseAddr,
-                    line_in->lineWidth);
+                    DPRINTF(Fetch,
+                        "Updated inputIndex value PC: %s"
+                        " inputIndex: 0x%x lineBaseAddr: 0x%x lineWidth: "
+                        "0x%x\n",
+                        *line_in->pc, fetch_info.inputIndex,
+                        line_in->lineBaseAddr, line_in->lineWidth);
                 }
             }
 
@@ -497,8 +498,7 @@ Fetch2::evaluate()
             /* Asked to discard line or there was a branch or fault */
             if (!prediction.isBubble() || /* The remains of a
                     line with a prediction in it */
-                line_in->isFault() /* A line which is just a fault */)
-            {
+                line_in->isFault() /* A line which is just a fault */) {
                 DPRINTF(Fetch, "Discarding all input on branch/fault\n");
                 dumpAllInput(tid);
                 fetch_info.havePC = false;
@@ -543,8 +543,7 @@ Fetch2::evaluate()
 
     /* If we still have input to process and somewhere to put it,
      *  mark stage as active */
-    for (ThreadID i = 0; i < cpu.numThreads; i++)
-    {
+    for (ThreadID i = 0; i < cpu.numThreads; i++) {
         if (getInput(i) && nextStageReserve[i].canReserve()) {
             cpu.activityRecorder->activateStage(Pipeline::Fetch2StageId);
             break;
@@ -563,16 +562,16 @@ Fetch2::getScheduledThread()
     std::vector<ThreadID> priority_list;
 
     switch (cpu.threadPolicy) {
-      case enums::SingleThreaded:
+    case enums::SingleThreaded:
         priority_list.push_back(0);
         break;
-      case enums::RoundRobin:
+    case enums::RoundRobin:
         priority_list = cpu.roundRobinPriority(threadPriority);
         break;
-      case enums::Random:
+    case enums::Random:
         priority_list = cpu.randomPriority();
         break;
-      default:
+    default:
         panic("Unknown fetch policy");
     }
 
@@ -583,7 +582,7 @@ Fetch2::getScheduledThread()
         }
     }
 
-   return InvalidThreadID;
+    return InvalidThreadID;
 }
 
 bool
@@ -598,33 +597,27 @@ Fetch2::isDrained()
            (*predictionOut.inputWire).isBubble();
 }
 
-Fetch2::Fetch2Stats::Fetch2Stats(MinorCPU *cpu)
-      : statistics::Group(cpu, "fetch2"),
-      ADD_STAT(intInstructions, statistics::units::Count::get(),
-               "Number of integer instructions successfully decoded"),
-      ADD_STAT(fpInstructions, statistics::units::Count::get(),
-               "Number of floating point instructions successfully decoded"),
-      ADD_STAT(vecInstructions, statistics::units::Count::get(),
-               "Number of SIMD instructions successfully decoded"),
-      ADD_STAT(loadInstructions, statistics::units::Count::get(),
-               "Number of memory load instructions successfully decoded"),
-      ADD_STAT(storeInstructions, statistics::units::Count::get(),
-               "Number of memory store instructions successfully decoded"),
-      ADD_STAT(amoInstructions, statistics::units::Count::get(),
-               "Number of memory atomic instructions successfully decoded")
+Fetch2::Fetch2Stats::Fetch2Stats(MinorCPU *cpu) :
+    statistics::Group(cpu, "fetch2"),
+    ADD_STAT(intInstructions, statistics::units::Count::get(),
+        "Number of integer instructions successfully decoded"),
+    ADD_STAT(fpInstructions, statistics::units::Count::get(),
+        "Number of floating point instructions successfully decoded"),
+    ADD_STAT(vecInstructions, statistics::units::Count::get(),
+        "Number of SIMD instructions successfully decoded"),
+    ADD_STAT(loadInstructions, statistics::units::Count::get(),
+        "Number of memory load instructions successfully decoded"),
+    ADD_STAT(storeInstructions, statistics::units::Count::get(),
+        "Number of memory store instructions successfully decoded"),
+    ADD_STAT(amoInstructions, statistics::units::Count::get(),
+        "Number of memory atomic instructions successfully decoded")
 {
-        intInstructions
-            .flags(statistics::total);
-        fpInstructions
-            .flags(statistics::total);
-        vecInstructions
-            .flags(statistics::total);
-        loadInstructions
-            .flags(statistics::total);
-        storeInstructions
-            .flags(statistics::total);
-        amoInstructions
-            .flags(statistics::total);
+    intInstructions.flags(statistics::total);
+    fpInstructions.flags(statistics::total);
+    vecInstructions.flags(statistics::total);
+    loadInstructions.flags(statistics::total);
+    storeInstructions.flags(statistics::total);
+    amoInstructions.flags(statistics::total);
 }
 
 void

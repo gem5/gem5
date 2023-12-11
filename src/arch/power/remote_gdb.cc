@@ -129,7 +129,6 @@
  * "Stub" to allow remote cpu to debug over a serial line using gdb.
  */
 
-
 #include "arch/power/remote_gdb.hh"
 
 #include <sys/signal.h>
@@ -152,14 +151,11 @@
 
 namespace gem5
 {
-
 using namespace PowerISA;
 
-RemoteGDB::RemoteGDB(System *_system, ListenSocketConfig _listen_config)
-    : BaseRemoteGDB(_system, _listen_config),
-    regCache32(this), regCache64(this)
-{
-}
+RemoteGDB::RemoteGDB(System *_system, ListenSocketConfig _listen_config) :
+    BaseRemoteGDB(_system, _listen_config), regCache32(this), regCache64(this)
+{}
 
 /*
  * Determine if the mapping at va..(va+len) is valid.
@@ -285,7 +281,7 @@ RemoteGDB::Power64GdbRegCache::setRegs(ThreadContext *context) const
     context->setReg(int_reg::Fpscr, gtoh(r.fpscr, order));
 }
 
-BaseGdbRegCache*
+BaseGdbRegCache *
 RemoteGDB::gdbRegs()
 {
     Msr msr = context()->getReg(int_reg::Msr);
@@ -299,22 +295,22 @@ bool
 RemoteGDB::getXferFeaturesRead(const std::string &annex, std::string &output)
 {
 #define GDB_XML(x, s) \
-        { x, std::string(reinterpret_cast<const char *>(Blobs::s), \
-        Blobs::s ## _len) }
+    { \
+        x, std::string( \
+               reinterpret_cast<const char *>(Blobs::s), Blobs::s##_len) \
+    }
     static const std::map<std::string, std::string> annexMap32{
         GDB_XML("target.xml", gdb_xml_powerpc_32),
         GDB_XML("power-core.xml", gdb_xml_power_core),
-        GDB_XML("power-fpu.xml", gdb_xml_power_fpu)
-    };
+        GDB_XML("power-fpu.xml", gdb_xml_power_fpu)};
     static const std::map<std::string, std::string> annexMap64{
         GDB_XML("target.xml", gdb_xml_powerpc_64),
         GDB_XML("power64-core.xml", gdb_xml_power64_core),
-        GDB_XML("power-fpu.xml", gdb_xml_power_fpu)
-    };
+        GDB_XML("power-fpu.xml", gdb_xml_power_fpu)};
 #undef GDB_XML
 
     Msr msr = context()->getReg(int_reg::Msr);
-    auto& annexMap = msr.sf ? annexMap64 : annexMap32;
+    auto &annexMap = msr.sf ? annexMap64 : annexMap32;
     auto it = annexMap.find(annex);
     if (it == annexMap.end())
         return false;

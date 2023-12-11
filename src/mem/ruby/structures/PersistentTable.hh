@@ -39,15 +39,15 @@
 
 namespace gem5
 {
-
 namespace ruby
 {
-
 class PersistentTableEntry
 {
   public:
     PersistentTableEntry() {}
-    void print(std::ostream& out) const {}
+    void
+    print(std::ostream &out) const
+    {}
 
     NetDest m_starving;
     NetDest m_marked;
@@ -64,8 +64,8 @@ class PersistentTable
     ~PersistentTable();
 
     // Public Methods
-    void persistentRequestLock(Addr address, MachineID locker,
-                               AccessType type);
+    void persistentRequestLock(
+        Addr address, MachineID locker, AccessType type);
     void persistentRequestUnlock(Addr address, MachineID unlocker);
     bool okToIssueStarving(Addr address, MachineID machID) const;
     MachineID findSmallest(Addr address) const;
@@ -75,28 +75,28 @@ class PersistentTable
     int countStarvingForAddress(Addr addr) const;
     int countReadStarvingForAddress(Addr addr) const;
 
-    void print(std::ostream& out) const;
+    void print(std::ostream &out) const;
 
   private:
     // Private copy constructor and assignment operator
-    PersistentTable(const PersistentTable& obj);
-    PersistentTable& operator=(const PersistentTable& obj);
+    PersistentTable(const PersistentTable &obj);
+    PersistentTable &operator=(const PersistentTable &obj);
 
     // Data Members (m_prefix)
     typedef std::unordered_map<Addr, PersistentTableEntry> AddressMap;
     AddressMap m_map;
 };
 
-inline std::ostream&
-operator<<(std::ostream& out, const PersistentTable& obj)
+inline std::ostream &
+operator<<(std::ostream &out, const PersistentTable &obj)
 {
     obj.print(out);
     out << std::flush;
     return out;
 }
 
-inline std::ostream&
-operator<<(std::ostream& out, const PersistentTableEntry& obj)
+inline std::ostream &
+operator<<(std::ostream &out, const PersistentTableEntry &obj)
 {
     obj.print(out);
     out << std::flush;

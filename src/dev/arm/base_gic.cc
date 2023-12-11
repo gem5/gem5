@@ -48,12 +48,9 @@
 
 namespace gem5
 {
-
-BaseGic::BaseGic(const Params &p)
-        : PioDevice(p),
-          platform(p.platform)
+BaseGic::BaseGic(const Params &p) : PioDevice(p), platform(p.platform)
 {
-    RealView *const rv = dynamic_cast<RealView*>(p.platform);
+    RealView *const rv = dynamic_cast<RealView *>(p.platform);
     // The platform keeps track of the GIC that is hooked up to the
     // system. Due to quirks in gem5's configuration system, the
     // platform can't take a GIC as parameter. Instead, we need to
@@ -63,9 +60,7 @@ BaseGic::BaseGic(const Params &p)
     rv->setGic(this);
 }
 
-BaseGic::~BaseGic()
-{
-}
+BaseGic::~BaseGic() {}
 
 void
 BaseGic::init()
@@ -80,29 +75,24 @@ BaseGic::params() const
     return dynamic_cast<const Params &>(_params);
 }
 
-ArmInterruptPinGen::ArmInterruptPinGen(const ArmInterruptPinParams &p)
-  : SimObject(p)
-{
-}
+ArmInterruptPinGen::ArmInterruptPinGen(const ArmInterruptPinParams &p) :
+    SimObject(p)
+{}
 
-ArmSPIGen::ArmSPIGen(const ArmSPIParams &p)
-    : ArmInterruptPinGen(p), pin(new ArmSPI(p))
-{
-}
+ArmSPIGen::ArmSPIGen(const ArmSPIParams &p) :
+    ArmInterruptPinGen(p), pin(new ArmSPI(p))
+{}
 
-ArmInterruptPin*
-ArmSPIGen::get(ThreadContext* tc)
+ArmInterruptPin *
+ArmSPIGen::get(ThreadContext *tc)
 {
     return pin;
 }
 
-ArmPPIGen::ArmPPIGen(const ArmPPIParams &p)
-    : ArmInterruptPinGen(p)
-{
-}
+ArmPPIGen::ArmPPIGen(const ArmPPIParams &p) : ArmInterruptPinGen(p) {}
 
-ArmInterruptPin*
-ArmPPIGen::get(ThreadContext* tc)
+ArmInterruptPin *
+ArmPPIGen::get(ThreadContext *tc)
 {
     panic_if(!tc, "Invalid Thread Context\n");
     ContextID cid = tc->contextId();
@@ -122,12 +112,13 @@ ArmPPIGen::get(ThreadContext* tc)
     }
 }
 
-ArmSigInterruptPinGen::ArmSigInterruptPinGen(const ArmSigInterruptPinParams &p)
-    : ArmInterruptPinGen(p), pin(new ArmSigInterruptPin(p))
+ArmSigInterruptPinGen::ArmSigInterruptPinGen(
+    const ArmSigInterruptPinParams &p) :
+    ArmInterruptPinGen(p), pin(new ArmSigInterruptPin(p))
 {}
 
-ArmInterruptPin*
-ArmSigInterruptPinGen::get(ThreadContext* tc)
+ArmInterruptPin *
+ArmSigInterruptPinGen::get(ThreadContext *tc)
 {
     return pin;
 }
@@ -140,9 +131,8 @@ ArmSigInterruptPinGen::getPort(const std::string &if_name, PortID idx)
         if (idx >= pin->sigPin.size())
             pin->sigPin.resize(idx + 1);
         if (!pin->sigPin.at(idx))
-            pin->sigPin.at(idx).reset(
-                new IntSourcePin<ArmSigInterruptPinGen>(
-                    csprintf("%s.irq[%d]", name(), idx), idx, this));
+            pin->sigPin.at(idx).reset(new IntSourcePin<ArmSigInterruptPinGen>(
+                csprintf("%s.irq[%d]", name(), idx), idx, this));
         return *pin->sigPin.at(idx);
     }
 
@@ -150,9 +140,12 @@ ArmSigInterruptPinGen::getPort(const std::string &if_name, PortID idx)
 }
 
 ArmInterruptPin::ArmInterruptPin(
-    const ArmInterruptPinParams &p, ThreadContext *tc)
-      : threadContext(tc), platform(dynamic_cast<RealView*>(p.platform)),
-        intNum(p.num), triggerType(p.int_type), _active(false)
+    const ArmInterruptPinParams &p, ThreadContext *tc) :
+    threadContext(tc),
+    platform(dynamic_cast<RealView *>(p.platform)),
+    intNum(p.num),
+    triggerType(p.int_type),
+    _active(false)
 {
     fatal_if(!platform, "Interrupt not connected to a RealView platform");
 }
@@ -160,8 +153,7 @@ ArmInterruptPin::ArmInterruptPin(
 void
 ArmInterruptPin::setThreadContext(ThreadContext *tc)
 {
-    panic_if(threadContext,
-             "InterruptLine::setThreadContext called twice\n");
+    panic_if(threadContext, "InterruptLine::setThreadContext called twice\n");
 
     threadContext = tc;
 }
@@ -169,8 +161,8 @@ ArmInterruptPin::setThreadContext(ThreadContext *tc)
 ContextID
 ArmInterruptPin::targetContext() const
 {
-    panic_if(!threadContext, "Per-context interrupt triggered without a " \
-             "call to InterruptLine::setThreadContext.\n");
+    panic_if(!threadContext, "Per-context interrupt triggered without a "
+                             "call to InterruptLine::setThreadContext.\n");
     return threadContext->contextId();
 }
 
@@ -186,11 +178,7 @@ ArmInterruptPin::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(_active);
 }
 
-ArmSPI::ArmSPI(
-    const ArmSPIParams &p)
-      : ArmInterruptPin(p, nullptr)
-{
-}
+ArmSPI::ArmSPI(const ArmSPIParams &p) : ArmInterruptPin(p, nullptr) {}
 
 void
 ArmSPI::raise()
@@ -206,11 +194,9 @@ ArmSPI::clear()
     platform->gic->clearInt(intNum);
 }
 
-ArmPPI::ArmPPI(
-    const ArmPPIParams &p, ThreadContext *tc)
-      : ArmInterruptPin(p, tc)
-{
-}
+ArmPPI::ArmPPI(const ArmPPIParams &p, ThreadContext *tc) :
+    ArmInterruptPin(p, tc)
+{}
 
 void
 ArmPPI::raise()
@@ -226,8 +212,8 @@ ArmPPI::clear()
     platform->gic->clearPPInt(intNum, targetContext());
 }
 
-ArmSigInterruptPin::ArmSigInterruptPin(const ArmSigInterruptPinParams &p)
-      : ArmInterruptPin(p, nullptr)
+ArmSigInterruptPin::ArmSigInterruptPin(const ArmSigInterruptPinParams &p) :
+    ArmInterruptPin(p, nullptr)
 {}
 
 void

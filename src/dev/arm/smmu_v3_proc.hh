@@ -48,7 +48,6 @@
 
 namespace gem5
 {
-
 class SMMUv3DeviceInterface;
 
 /*
@@ -80,9 +79,7 @@ class SMMUProcess;
 
 struct SMMUSemaphore
 {
-    explicit SMMUSemaphore(unsigned _max) :
-        count(_max), max(_max)
-    {}
+    explicit SMMUSemaphore(unsigned _max) : count(_max), max(_max) {}
 
     unsigned count;
     unsigned max;
@@ -126,13 +123,17 @@ class SMMUProcess : public Packet::SenderState
 
     void scheduleWakeup(Tick when);
 
- public:
+  public:
     SMMUProcess(const std::string &name, SMMUv3 &_smmu);
     virtual ~SMMUProcess();
 
     SMMUAction run(PacketPtr pkt);
 
-    const std::string name() const { return myName; };
+    const std::string
+    name() const
+    {
+        return myName;
+    };
 };
 
 } // namespace gem5

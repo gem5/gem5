@@ -35,7 +35,6 @@
 
 namespace gem5
 {
-
 void
 SkipFuncBase::process(ThreadContext *tc)
 {
@@ -44,7 +43,7 @@ SkipFuncBase::process(ThreadContext *tc)
     returnFromFuncIn(tc);
 
     DPRINTF(PCEvent, "skipping %s: pc = %s, newpc = %s\n", description,
-            *old_pc, tc->pcState());
+        *old_pc, tc->pcState());
 }
 
 } // namespace gem5

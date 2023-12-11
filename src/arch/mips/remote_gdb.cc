@@ -148,13 +148,11 @@
 
 namespace gem5
 {
-
 using namespace MipsISA;
 
-RemoteGDB::RemoteGDB(System *_system, ListenSocketConfig _listen_config)
-    : BaseRemoteGDB(_system, _listen_config), regCache(this)
-{
-}
+RemoteGDB::RemoteGDB(System *_system, ListenSocketConfig _listen_config) :
+    BaseRemoteGDB(_system, _listen_config), regCache(this)
+{}
 
 /*
  * Determine if the mapping at va..(va+len) is valid.
@@ -206,7 +204,7 @@ RemoteGDB::MipsGdbRegCache::setRegs(ThreadContext *context) const
     context->setReg(float_reg::Fir, r.fir);
 }
 
-BaseGdbRegCache*
+BaseGdbRegCache *
 RemoteGDB::gdbRegs()
 {
     return &regCache;
@@ -216,9 +214,11 @@ bool
 RemoteGDB::getXferFeaturesRead(const std::string &annex, std::string &output)
 {
 #define GDB_XML(x, s) \
-        { x, std::string(reinterpret_cast<const char *>(Blobs::s), \
-        Blobs::s ## _len) }
-    static const std::map<std::string, std::string> annexMap {
+    { \
+        x, std::string( \
+               reinterpret_cast<const char *>(Blobs::s), Blobs::s##_len) \
+    }
+    static const std::map<std::string, std::string> annexMap{
         GDB_XML("target.xml", gdb_xml_mips),
     };
 #undef GDB_XML

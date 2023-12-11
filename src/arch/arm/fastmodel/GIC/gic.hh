@@ -48,10 +48,8 @@
 
 namespace gem5
 {
-
 namespace fastmodel
 {
-
 // The fast model exports a class called scx_evs_GIC which represents
 // the subsystem described in LISA+. This class specializes it to export gem5
 // ports and interface with its peer gem5 GIC. The gem5 GIC inherits from the
@@ -65,14 +63,17 @@ class SCGIC : public scx_evs_GIC
     // sockets for them to connect to, binds everything together, and
     // implements the target interface with a dummy stub that will complain
     // and crash gem5 if it ever gets called.
-    class Terminator : public sc_core::sc_module,
-                            public svp_gicv3_comms::gicv3_comms_fw_if
+    class Terminator :
+        public sc_core::sc_module,
+        public svp_gicv3_comms::gicv3_comms_fw_if
     {
       protected:
         typedef sc_core::sc_vector<
-            svp_gicv3_comms::gicv3_comms_initiator_socket<>> Initiators;
+            svp_gicv3_comms::gicv3_comms_initiator_socket<>>
+            Initiators;
         typedef sc_core::sc_vector<
-            svp_gicv3_comms::gicv3_comms_target_socket<>> Targets;
+            svp_gicv3_comms::gicv3_comms_target_socket<>>
+            Targets;
 
         Targets targets;
 
@@ -108,7 +109,9 @@ class SCGIC : public scx_evs_GIC
         scx_evs_GIC::end_of_elaboration();
         scx_evs_GIC::start_of_simulation();
     }
-    void start_of_simulation() override {}
+    void
+    start_of_simulation() override
+    {}
     PARAMS(SCFastModelGIC);
 };
 
@@ -118,10 +121,10 @@ class SCGIC : public scx_evs_GIC
 class GIC : public BaseGic
 {
   private:
-    typedef sc_gem5::TlmInitiatorBaseWrapper<
-        64, svp_gicv3_comms::gicv3_comms_fw_if,
-        svp_gicv3_comms::gicv3_comms_bw_if, 1,
-        sc_core::SC_ONE_OR_MORE_BOUND> TlmGicInitiator;
+    typedef sc_gem5::TlmInitiatorBaseWrapper<64,
+        svp_gicv3_comms::gicv3_comms_fw_if, svp_gicv3_comms::gicv3_comms_bw_if,
+        1, sc_core::SC_ONE_OR_MORE_BOUND>
+        TlmGicInitiator;
 
     AmbaInitiator ambaM;
     AmbaTarget ambaS;
@@ -133,8 +136,8 @@ class GIC : public BaseGic
   public:
     GIC(const FastModelGICParams &params);
 
-    Port &getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID) override;
+    Port &getPort(
+        const std::string &if_name, PortID idx = InvalidPortID) override;
 
     void sendInt(uint32_t num) override;
     void clearInt(uint32_t num) override;
@@ -144,9 +147,21 @@ class GIC : public BaseGic
 
     bool supportsVersion(GicVersion version) override;
 
-    AddrRangeList getAddrRanges() const override { return AddrRangeList(); }
-    Tick read(PacketPtr pkt) override { return 0; }
-    Tick write(PacketPtr pkt) override { return 0; }
+    AddrRangeList
+    getAddrRanges() const override
+    {
+        return AddrRangeList();
+    }
+    Tick
+    read(PacketPtr pkt) override
+    {
+        return 0;
+    }
+    Tick
+    write(PacketPtr pkt) override
+    {
+        return 0;
+    }
 };
 
 } // namespace fastmodel

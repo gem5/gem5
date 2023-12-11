@@ -52,13 +52,12 @@
 
 namespace gem5
 {
-
 /**
  * The AddrRangeMap uses an STL map to implement an interval tree for
  * address decoding. The value stored is a template type and can be
  * e.g. a port identifier, or a pointer.
  */
-template <typename V, int max_cache_size=0>
+template <typename V, int max_cache_size = 0>
 class AddrRangeMap
 {
   private:
@@ -152,7 +151,7 @@ class AddrRangeMap
      * @ingroup api_addr_range
      */
     iterator
-    insert(const AddrRange &r, const V& d)
+    insert(const AddrRange &r, const V &d)
     {
         if (intersects(r) != end())
             return tree.end();
@@ -179,7 +178,7 @@ class AddrRangeMap
         for (auto it = p; it != q; it++) {
             cache.remove(p);
         }
-        tree.erase(p,q);
+        tree.erase(p, q);
     }
 
     /**
@@ -314,8 +313,7 @@ class AddrRangeMap
                 return i;
             }
             // Keep looking if the next range merges with the current one.
-        } while (next != begin() &&
-                 (--next)->first.mergesWith(i->first));
+        } while (next != begin() && (--next)->first.mergesWith(i->first));
 
         return end();
     }

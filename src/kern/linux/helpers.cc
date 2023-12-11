@@ -50,14 +50,14 @@
 #include "sim/byteswap.hh"
 #include "sim/system.hh"
 
-namespace gem5 {
-
-namespace linux {
-
-namespace {
-
-namespace pre5_10 {
-
+namespace gem5
+{
+namespace linux
+{
+namespace
+{
+namespace pre5_10
+{
 /** Dmesg entry for Linux versions pre-v5.10 */
 struct GEM5_PACKED DmesgEntry
 {
@@ -71,9 +71,8 @@ struct GEM5_PACKED DmesgEntry
 
 /** Dump a Linux Demsg entry, pre-v5.10. */
 static int
-dumpDmesgEntry(const uint8_t *base, const uint8_t *end,
-               const ByteOrder bo,
-               std::ostream &os)
+dumpDmesgEntry(const uint8_t *base, const uint8_t *end, const ByteOrder bo,
+    std::ostream &os)
 {
     const size_t max_length = end - base;
     DmesgEntry de;
@@ -88,10 +87,8 @@ dumpDmesgEntry(const uint8_t *base, const uint8_t *end,
     de.len = gtoh(de.len, bo);
     de.text_len = gtoh(de.text_len, bo);
 
-    if (de.len < sizeof(de) ||
-        max_length < de.len ||
+    if (de.len < sizeof(de) || max_length < de.len ||
         max_length < sizeof(DmesgEntry) + de.text_len) {
-
         warn("Malformed dmesg entry:\n");
         warn("\tMax length: %i\n", max_length);
         warn("\tde.len: %i\n", de.len);
@@ -122,8 +119,8 @@ dumpDmesg(ThreadContext *tc, std::ostream &os)
 
     auto end_it = symtab.end();
 
-    if (lb == end_it || lb_len == end_it ||
-            first == end_it || next == end_it) {
+    if (lb == end_it || lb_len == end_it || first == end_it ||
+        next == end_it) {
         warn("Failed to find kernel dmesg symbols.\n");
         return;
     }
@@ -156,8 +153,7 @@ dumpDmesg(ThreadContext *tc, std::ostream &os)
         length = log_buf_len;
         proxy.readBlob(
             lb->address() + log_first_idx, log_buf.data(), length_2);
-        proxy.readBlob(
-            lb->address(), log_buf.data() + length_2, log_next_idx);
+        proxy.readBlob(lb->address(), log_buf.data() + length_2, log_next_idx);
     }
 
     // Print dmesg buffer content
@@ -172,8 +168,8 @@ dumpDmesg(ThreadContext *tc, std::ostream &os)
 
 } // namespace pre5_10
 
-namespace post5_10 {
-
+namespace post5_10
+{
 /** Metadata record for the Linux dmesg ringbuffer, post-v5.10.
  *
  *  Struct data members are compatible with the equivalent Linux data
@@ -184,7 +180,7 @@ namespace post5_10 {
  *  the gem5 world.
  *
  */
-template<typename atomic_var_t>
+template <typename atomic_var_t>
 struct GEM5_PACKED DmesgMetadataRecord
 {
     using guest_ptr_t = typename std::make_unsigned_t<atomic_var_t>;
@@ -199,10 +195,8 @@ struct GEM5_PACKED DmesgMetadataRecord
 
     /** Read a DmesgMetadataRecord from guest memory. */
     static DmesgMetadataRecord
-    read(const TranslatingPortProxy & proxy,
-         Addr address,
-         guest_ptr_t data_offset_mask,
-         const ByteOrder & bo)
+    read(const TranslatingPortProxy &proxy, Addr address,
+        guest_ptr_t data_offset_mask, const ByteOrder &bo)
     {
         DmesgMetadataRecord metadata;
         proxy.readBlob(address, &metadata, sizeof(metadata));
@@ -251,9 +245,7 @@ struct GEM5_PACKED DmesgInfoRecord
 
     /** Read a DmesgInfoRecord from guest memory. */
     static DmesgInfoRecord
-    read(const TranslatingPortProxy & proxy,
-         Addr address,
-         const ByteOrder & bo)
+    read(const TranslatingPortProxy &proxy, Addr address, const ByteOrder &bo)
     {
         DmesgInfoRecord info;
         proxy.readBlob(address, &info, sizeof(info));
@@ -269,12 +261,11 @@ struct GEM5_PACKED DmesgInfoRecord
 /** Metadata struct for Linux pre-v5.18.0
  *
  */
-template<typename AtomicVarType>
+template <typename AtomicVarType>
 struct Metadata_Pre_v5_18_0
 {
     using atomic_var_t = AtomicVarType;
-    using guest_ptr_t =
-        typename std::make_unsigned_t<atomic_var_t>;
+    using guest_ptr_t = typename std::make_unsigned_t<atomic_var_t>;
     unsigned int mask_bits;
     guest_ptr_t metadata_ring_ptr;
     guest_ptr_t info_ring_ptr;
@@ -282,16 +273,14 @@ struct Metadata_Pre_v5_18_0
     atomic_var_t unused2;
 };
 
-
 /** Metadata struct for Linux post-v5.18.0
  *
  */
-template<typename AtomicVarType>
+template <typename AtomicVarType>
 struct Metadata_Post_v5_18_0
 {
     using atomic_var_t = AtomicVarType;
-    using guest_ptr_t =
-        typename std::make_unsigned_t<atomic_var_t>;
+    using guest_ptr_t = typename std::make_unsigned_t<atomic_var_t>;
     unsigned int mask_bits;
     guest_ptr_t metadata_ring_ptr;
     guest_ptr_t info_ring_ptr;
@@ -299,7 +288,6 @@ struct Metadata_Post_v5_18_0
     atomic_var_t unused2;
     atomic_var_t unused3;
 };
-
 
 /** Top-level ringbuffer record for the Linux dmesg ringbuffer, post-v5.10.
  *
@@ -311,14 +299,11 @@ struct Metadata_Post_v5_18_0
  *  the gem5 world, and reading/generating appropriate masks.
  *
  */
-template<typename AtomicVarType, typename MetadataStructType>
+template <typename AtomicVarType, typename MetadataStructType>
 struct GEM5_PACKED DmesgRingbuffer
 {
-    static_assert(
-        std::disjunction<
-            std::is_same<AtomicVarType, int32_t>,
-            std::is_same<AtomicVarType, int64_t>
-        >::value,
+    static_assert(std::disjunction<std::is_same<AtomicVarType, int32_t>,
+                      std::is_same<AtomicVarType, int64_t>>::value,
         "AtomicVarType must be int32_t or int64_t");
 
     using atomic_var_t = AtomicVarType;
@@ -340,20 +325,17 @@ struct GEM5_PACKED DmesgRingbuffer
 
     /** Read a DmesgRingbuffer from guest memory. */
     static DmesgRingbuffer
-    read(const TranslatingPortProxy & proxy,
-         const Addr address,
-         const ByteOrder & bo)
+    read(const TranslatingPortProxy &proxy, const Addr address,
+        const ByteOrder &bo)
     {
         DmesgRingbuffer rb;
         proxy.readBlob(address, &rb, sizeof(rb));
 
         // Convert members to host byte order
-        rb.metadata.mask_bits =
-            gtoh(rb.metadata.mask_bits, bo);
+        rb.metadata.mask_bits = gtoh(rb.metadata.mask_bits, bo);
         rb.metadata.metadata_ring_ptr =
             gtoh(rb.metadata.metadata_ring_ptr, bo);
-        rb.metadata.info_ring_ptr =
-            gtoh(rb.metadata.info_ring_ptr, bo);
+        rb.metadata.info_ring_ptr = gtoh(rb.metadata.info_ring_ptr, bo);
 
         rb.data.mask_bits = gtoh(rb.data.mask_bits, bo);
         rb.data.data_ring_ptr = gtoh(rb.data.data_ring_ptr, bo);
@@ -361,10 +343,8 @@ struct GEM5_PACKED DmesgRingbuffer
         rb.data.tail_offset = gtoh(rb.data.tail_offset, bo);
 
         // Mask offsets to the correct number of bits
-        rb.data.head_offset =
-            rb.mask_data_offset(rb.data.head_offset);
-        rb.data.tail_offset =
-            rb.mask_data_offset(rb.data.tail_offset);
+        rb.data.head_offset = rb.mask_data_offset(rb.data.head_offset);
+        rb.data.tail_offset = rb.mask_data_offset(rb.data.tail_offset);
 
         return rb;
     }
@@ -372,20 +352,19 @@ struct GEM5_PACKED DmesgRingbuffer
     /** Make a mask for the bottom mask_bits of an `atomic_var_t`, then
      *  cast it to the required `as_type`.
      */
-    template<typename as_type>
+    template <typename as_type>
     static as_type
     make_offset_mask_as(const unsigned int mask_bits)
     {
         using unsigned_atomic_var_t =
             typename std::make_unsigned<atomic_var_t>::type;
-        const atomic_var_t offset_mask =
-            static_cast<atomic_var_t>(
-                (static_cast<unsigned_atomic_var_t>(1) << mask_bits) - 1);
+        const atomic_var_t offset_mask = static_cast<atomic_var_t>(
+            (static_cast<unsigned_atomic_var_t>(1) << mask_bits) - 1);
         return static_cast<as_type>(offset_mask);
     }
 
     /** Make a mask for an offset into the metadata or info ringbuffers. */
-    template<typename metadata_offset_t>
+    template <typename metadata_offset_t>
     metadata_offset_t
     make_metadata_offset_mask() const
     {
@@ -393,7 +372,7 @@ struct GEM5_PACKED DmesgRingbuffer
     }
 
     /** Make a mask for an offset into the data ringbuffer. */
-    template<typename data_offset_t>
+    template <typename data_offset_t>
     data_offset_t
     make_data_offset_mask() const
     {
@@ -402,7 +381,7 @@ struct GEM5_PACKED DmesgRingbuffer
 
     /** Apply the correct masking to an offset into the metadata or info
         ringbuffers. */
-    template<typename metadata_offset_t>
+    template <typename metadata_offset_t>
     metadata_offset_t
     mask_metadata_offset(const metadata_offset_t metadata_offset) const
     {
@@ -412,7 +391,7 @@ struct GEM5_PACKED DmesgRingbuffer
     }
 
     /** Apply the correct masking to an offset into the data ringbuffer. */
-    template<typename data_offset_t>
+    template <typename data_offset_t>
     data_offset_t
     mask_data_offset(const data_offset_t data_offset) const
     {
@@ -446,15 +425,12 @@ using Linux32_Ringbuffer_Post_v5_18_0 =
  *
  */
 template <typename ringbuffer_t,
-          typename atomic_var_t=typename ringbuffer_t::atomic_var_t,
-          typename guest_ptr_t=typename ringbuffer_t::guest_ptr_t>
+    typename atomic_var_t = typename ringbuffer_t::atomic_var_t,
+    typename guest_ptr_t = typename ringbuffer_t::guest_ptr_t>
 atomic_var_t
-iterateDataRingbuffer(std::ostream & os,
-                      const TranslatingPortProxy & proxy,
-                      const ringbuffer_t & rb,
-                      const atomic_var_t offset,
-                      const guest_ptr_t first_metadata_offset,
-                      const ByteOrder bo)
+iterateDataRingbuffer(std::ostream &os, const TranslatingPortProxy &proxy,
+    const ringbuffer_t &rb, const atomic_var_t offset,
+    const guest_ptr_t first_metadata_offset, const ByteOrder bo)
 {
     using metadata_record_t = typename ringbuffer_t::metadata_record_t;
 
@@ -487,10 +463,8 @@ iterateDataRingbuffer(std::ostream & os,
 
     // Read the info record from the info ringbuffer.
     guest_ptr_t info_address =
-        rb.metadata.info_ring_ptr +
-        (metadata_info_offset * INFO_RECORD_SIZE);
-    DmesgInfoRecord info =
-        DmesgInfoRecord::read(proxy, info_address, bo);
+        rb.metadata.info_ring_ptr + (metadata_info_offset * INFO_RECORD_SIZE);
+    DmesgInfoRecord info = DmesgInfoRecord::read(proxy, info_address, bo);
 
     // The metadata record should point back to the same data record
     // in the data ringbuffer.
@@ -498,7 +472,7 @@ iterateDataRingbuffer(std::ostream & os,
         warn_once("Dmesg dump: metadata record (at 0x%08x) does not point "
                   "back to the correponding data record (at 0x%08x). Dmesg "
                   "buffer may be corrupted",
-             metadata.data_buffer.next_offset, offset);
+            metadata.data_buffer.next_offset, offset);
     }
 
     // Read the message from the data record. This is placed
@@ -506,7 +480,7 @@ iterateDataRingbuffer(std::ostream & os,
     // the beginning of the record.
     std::vector<uint8_t> message(info.message_size);
     proxy.readBlob(rb.data.data_ring_ptr + offset + sizeof(guest_ptr_t),
-                   message.data(), info.message_size);
+        message.data(), info.message_size);
 
     // Print the record
     ccprintf(os, "[%.6f] ", info.ts_nsec * 10e-9);
@@ -563,9 +537,8 @@ dumpDmesgImpl(ThreadContext *tc, std::ostream &os)
     guest_ptr_t active_ringbuffer_ptr = 0x0;
     auto active_ringbuffer_ptr_symbol = symtab.find("prb");
     if (active_ringbuffer_ptr_symbol != symtab_end_it) {
-        active_ringbuffer_ptr =
-            proxy.read<guest_ptr_t>(active_ringbuffer_ptr_symbol->address(),
-                                    bo);
+        active_ringbuffer_ptr = proxy.read<guest_ptr_t>(
+            active_ringbuffer_ptr_symbol->address(), bo);
     } else {
         warn("Failed to find required dmesg symbols.\n");
         return;
@@ -573,14 +546,14 @@ dumpDmesgImpl(ThreadContext *tc, std::ostream &os)
 
     if (active_ringbuffer_ptr == 0 ||
         (active_ringbuffer_ptr != dynamic_rb_symbol->address() &&
-         active_ringbuffer_ptr != static_rb_symbol->address())) {
+            active_ringbuffer_ptr != static_rb_symbol->address())) {
         warn("Kernel Dmesg ringbuffer appears to be invalid.\n");
         return;
     }
 
-    ringbuffer_t & rb =
-        (active_ringbuffer_ptr == dynamic_rb_symbol->address())
-        ? dynamic_rb : static_rb;
+    ringbuffer_t &rb =
+        (active_ringbuffer_ptr == dynamic_rb_symbol->address()) ? dynamic_rb :
+                                                                  static_rb;
 
     atomic_var_t head_offset = rb.data.head_offset;
     atomic_var_t tail_offset = rb.data.tail_offset;
@@ -608,9 +581,8 @@ dumpDmesgImpl(ThreadContext *tc, std::ostream &os)
     // block is unused.
     guest_ptr_t count = 0;
     while (head_offset < tail_offset && count < invalid_metadata_offset) {
-        tail_offset =
-            iterateDataRingbuffer<ringbuffer_t>(
-                os, proxy, rb, tail_offset, first_metadata_offset, bo);
+        tail_offset = iterateDataRingbuffer<ringbuffer_t>(
+            os, proxy, rb, tail_offset, first_metadata_offset, bo);
         ++count;
     }
 
@@ -618,9 +590,8 @@ dumpDmesgImpl(ThreadContext *tc, std::ostream &os)
     // the head offset.
     count = 0;
     while (tail_offset < head_offset && count < invalid_metadata_offset) {
-        tail_offset =
-            iterateDataRingbuffer<ringbuffer_t>(
-                os, proxy, rb, tail_offset, invalid_metadata_offset, bo);
+        tail_offset = iterateDataRingbuffer<ringbuffer_t>(
+            os, proxy, rb, tail_offset, invalid_metadata_offset, bo);
         ++count;
     }
 }
@@ -635,7 +606,7 @@ extract_printable_strings(const std::vector<uint8_t> buffer)
     std::vector<std::string> results;
     std::string result;
     bool reading_printable = false;
-    for (const uint8_t byte: buffer) {
+    for (const uint8_t byte : buffer) {
         if (std::isprint(byte)) {
             result += static_cast<char>(byte);
             reading_printable = true;
@@ -673,7 +644,8 @@ extract_printable_strings(const std::vector<uint8_t> buffer)
  *
  */
 uint32_t
-extract_kernel_version(ThreadContext* tc) {
+extract_kernel_version(ThreadContext *tc)
+{
     System *system = tc->getSystemPtr();
     const auto &symtab = system->workload->symtab(tc);
     auto symtab_end_it = symtab.end();
@@ -686,8 +658,7 @@ extract_kernel_version(ThreadContext* tc) {
     // Use size of `init_uts_ns` in Linux v5.18.0 as a default.
     // (e.g. for upgraded checkpoints.)
     const size_t INIT_UTS_NS_SIZE_DEFAULT = 432;
-    const size_t BUFFER_SIZE =
-        symbol->sizeOrDefault(INIT_UTS_NS_SIZE_DEFAULT);
+    const size_t BUFFER_SIZE = symbol->sizeOrDefault(INIT_UTS_NS_SIZE_DEFAULT);
 
     TranslatingPortProxy proxy(tc);
     std::vector<uint8_t> buffer(BUFFER_SIZE);
@@ -695,24 +666,20 @@ extract_kernel_version(ThreadContext* tc) {
         symbol->address(), buffer.data(), buffer.size() * sizeof(uint8_t));
     auto strings = extract_printable_strings(buffer);
 
-    const std::regex version_re {"^(\\d+)\\.(\\d+)\\.(\\d)+$"};
+    const std::regex version_re{"^(\\d+)\\.(\\d+)\\.(\\d)+$"};
     std::smatch match;
-    for (const auto& string: strings) {
+    for (const auto &string : strings) {
         if (std::regex_search(string, match, version_re)) {
             try {
                 int major = std::stoi(match[1]);
                 int minor = std::stoi(match[2]);
                 int point = std::stoi(match[3]);
-                return (
-                    (major & 0xFF) << 16
-                    | (minor & 0xFF) << 8
-                    | std::min(point, 255));
-            }
-            catch (const std::invalid_argument &) {
+                return ((major & 0xFF) << 16 | (minor & 0xFF) << 8 |
+                        std::min(point, 255));
+            } catch (const std::invalid_argument &) {
                 // This shouldn't be possible if the regex matched.
                 continue;
-            }
-            catch (const std::out_of_range &) {
+            } catch (const std::out_of_range &) {
                 continue;
             }
         }
@@ -773,8 +740,8 @@ dumpDmesg(ThreadContext *tc, std::ostream &os)
     auto first = symtab.find("log_first_idx");
     auto next = symtab.find("log_next_idx");
 
-    if (lb != end_it && lb_len != end_it &&
-            first != end_it && next != end_it) {
+    if (lb != end_it && lb_len != end_it && first != end_it &&
+        next != end_it) {
         linux::pre5_10::dumpDmesg(tc, os);
         return;
     }

@@ -48,10 +48,8 @@
 
 namespace gem5
 {
-
 namespace loader
 {
-
 SymbolTable debugSymbolTable;
 
 void
@@ -70,12 +68,12 @@ SymbolTable::insert(const Symbol &symbol)
 
     int idx = symbols.size();
 
-    if (!nameMap.insert({ symbol.name(), idx }).second)
+    if (!nameMap.insert({symbol.name(), idx}).second)
         return false;
 
     // There can be multiple symbols for the same address, so always
     // update the addrTable multimap when we see a new symbol name.
-    addrMap.insert({ symbol.address(), idx });
+    addrMap.insert({symbol.address(), idx});
 
     symbols.emplace_back(symbol);
 
@@ -88,16 +86,16 @@ SymbolTable::insert(const SymbolTable &other)
     // Check if any symbol in other already exists in our table.
     NameMap intersection;
     std::set_intersection(other.nameMap.begin(), other.nameMap.end(),
-                          nameMap.begin(), nameMap.end(),
-                          std::inserter(intersection, intersection.begin()),
-                          nameMap.value_comp());
+        nameMap.begin(), nameMap.end(),
+        std::inserter(intersection, intersection.begin()),
+        nameMap.value_comp());
     if (!intersection.empty()) {
         warn("Cannot insert a new symbol table due to name collisions. "
              "Adding prefix to each symbol's name can resolve this issue.");
         return false;
     }
 
-    for (const Symbol &symbol: other)
+    for (const Symbol &symbol : other)
         insert(symbol);
 
     return true;
@@ -109,23 +107,23 @@ SymbolTable::serialize(const std::string &base, CheckpointOut &cp) const
     paramOut(cp, base + ".size", symbols.size());
 
     int i = 0;
-    for (auto &symbol: symbols) {
+    for (auto &symbol : symbols) {
         paramOut(cp, csprintf("%s.addr_%d", base, i), symbol.address());
         if (symbol.sizeIsValid()) {
             paramOut(cp, csprintf("%s.size_%d", base, i),
-                     symbol.sizeOrDefault(0x0));
+                symbol.sizeOrDefault(0x0));
         }
         paramOut(cp, csprintf("%s.symbol_%d", base, i), symbol.name());
-        paramOut(cp, csprintf("%s.binding_%d", base, i),
-                 (int)symbol.binding());
+        paramOut(
+            cp, csprintf("%s.binding_%d", base, i), (int)symbol.binding());
         paramOut(cp, csprintf("%s.type_%d", base, i), (int)symbol.type());
         i++;
     }
 }
 
 void
-SymbolTable::unserialize(const std::string &base, CheckpointIn &cp,
-                         Symbol::Binding default_binding)
+SymbolTable::unserialize(
+    const std::string &base, CheckpointIn &cp, Symbol::Binding default_binding)
 {
     clear();
     int size;
@@ -138,8 +136,8 @@ SymbolTable::unserialize(const std::string &base, CheckpointIn &cp,
         Symbol::SymbolType type = Symbol::SymbolType::Other;
 
         paramIn(cp, csprintf("%s.addr_%d", base, i), address);
-        bool size_present = optParamIn(
-            cp, csprintf("%s.size_%d", base, i), size, false);
+        bool size_present =
+            optParamIn(cp, csprintf("%s.size_%d", base, i), size, false);
         paramIn(cp, csprintf("%s.symbol_%d", base, i), name);
         if (!optParamIn(cp, csprintf("%s.binding_%d", base, i), binding))
             binding = default_binding;

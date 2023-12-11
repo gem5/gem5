@@ -38,7 +38,6 @@
 
 namespace gem5
 {
-
 class CpuThread : public TesterThread
 {
   public:

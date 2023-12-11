@@ -35,32 +35,37 @@
 
 namespace gem5
 {
-
 namespace prefetch
 {
-
 AccessMapPatternMatching::AccessMapPatternMatching(
-    const AccessMapPatternMatchingParams &p)
-    : ClockedObject(p), blkSize(p.block_size), limitStride(p.limit_stride),
-      startDegree(p.start_degree), hotZoneSize(p.hot_zone_size),
-      highCoverageThreshold(p.high_coverage_threshold),
-      lowCoverageThreshold(p.low_coverage_threshold),
-      highAccuracyThreshold(p.high_accuracy_threshold),
-      lowAccuracyThreshold(p.low_accuracy_threshold),
-      highCacheHitThreshold(p.high_cache_hit_threshold),
-      lowCacheHitThreshold(p.low_cache_hit_threshold),
-      epochCycles(p.epoch_cycles),
-      offChipMemoryLatency(p.offchip_memory_latency),
-      accessMapTable(p.access_map_table_assoc, p.access_map_table_entries,
-                     p.access_map_table_indexing_policy,
-                     p.access_map_table_replacement_policy,
-                     AccessMapEntry(hotZoneSize / blkSize)),
-      numGoodPrefetches(0), numTotalPrefetches(0), numRawCacheMisses(0),
-      numRawCacheHits(0), degree(startDegree), usefulDegree(startDegree),
-      epochEvent([this]{ processEpochEvent(); }, name())
+    const AccessMapPatternMatchingParams &p) :
+    ClockedObject(p),
+    blkSize(p.block_size),
+    limitStride(p.limit_stride),
+    startDegree(p.start_degree),
+    hotZoneSize(p.hot_zone_size),
+    highCoverageThreshold(p.high_coverage_threshold),
+    lowCoverageThreshold(p.low_coverage_threshold),
+    highAccuracyThreshold(p.high_accuracy_threshold),
+    lowAccuracyThreshold(p.low_accuracy_threshold),
+    highCacheHitThreshold(p.high_cache_hit_threshold),
+    lowCacheHitThreshold(p.low_cache_hit_threshold),
+    epochCycles(p.epoch_cycles),
+    offChipMemoryLatency(p.offchip_memory_latency),
+    accessMapTable(p.access_map_table_assoc, p.access_map_table_entries,
+        p.access_map_table_indexing_policy,
+        p.access_map_table_replacement_policy,
+        AccessMapEntry(hotZoneSize / blkSize)),
+    numGoodPrefetches(0),
+    numTotalPrefetches(0),
+    numRawCacheMisses(0),
+    numRawCacheHits(0),
+    degree(startDegree),
+    usefulDegree(startDegree),
+    epochEvent([this] { processEpochEvent(); }, name())
 {
-    fatal_if(!isPowerOf2(hotZoneSize),
-        "the hot zone size must be a power of 2");
+    fatal_if(
+        !isPowerOf2(hotZoneSize), "the hot zone size must be a power of 2");
 }
 
 void
@@ -74,28 +79,28 @@ AccessMapPatternMatching::processEpochEvent()
 {
     schedule(epochEvent, clockEdge(epochCycles));
     double prefetch_accuracy =
-        ((double) numGoodPrefetches) / ((double) numTotalPrefetches);
+        ((double)numGoodPrefetches) / ((double)numTotalPrefetches);
     double prefetch_coverage =
-        ((double) numGoodPrefetches) / ((double) numRawCacheMisses);
-    double cache_hit_ratio = ((double) numRawCacheHits) /
-        ((double) (numRawCacheHits + numRawCacheMisses));
-    double num_requests = (double) (numRawCacheMisses - numGoodPrefetches +
-        numTotalPrefetches);
-    double memory_bandwidth = num_requests * offChipMemoryLatency /
-        cyclesToTicks(epochCycles);
+        ((double)numGoodPrefetches) / ((double)numRawCacheMisses);
+    double cache_hit_ratio = ((double)numRawCacheHits) /
+                             ((double)(numRawCacheHits + numRawCacheMisses));
+    double num_requests =
+        (double)(numRawCacheMisses - numGoodPrefetches + numTotalPrefetches);
+    double memory_bandwidth =
+        num_requests * offChipMemoryLatency / cyclesToTicks(epochCycles);
 
     if (prefetch_coverage > highCoverageThreshold &&
         (prefetch_accuracy > highAccuracyThreshold ||
-        cache_hit_ratio < lowCacheHitThreshold)) {
+            cache_hit_ratio < lowCacheHitThreshold)) {
         usefulDegree += 1;
     } else if ((prefetch_coverage < lowCoverageThreshold &&
-               (prefetch_accuracy < lowAccuracyThreshold ||
-                cache_hit_ratio > highCacheHitThreshold)) ||
+                   (prefetch_accuracy < lowAccuracyThreshold ||
+                       cache_hit_ratio > highCacheHitThreshold)) ||
                (prefetch_accuracy < lowAccuracyThreshold &&
-                cache_hit_ratio > highCacheHitThreshold)) {
+                   cache_hit_ratio > highCacheHitThreshold)) {
         usefulDegree -= 1;
     }
-    degree = std::min((unsigned) memory_bandwidth, usefulDegree);
+    degree = std::min((unsigned)memory_bandwidth, usefulDegree);
     // reset epoch stats
     numGoodPrefetches = 0.0;
     numTotalPrefetches = 0.0;
@@ -104,8 +109,7 @@ AccessMapPatternMatching::processEpochEvent()
 }
 
 AccessMapPatternMatching::AccessMapEntry *
-AccessMapPatternMatching::getAccessMapEntry(Addr am_addr,
-                bool is_secure)
+AccessMapPatternMatching::getAccessMapEntry(Addr am_addr, bool is_secure)
 {
     AccessMapEntry *am_entry = accessMapTable.findEntry(am_addr, is_secure);
     if (am_entry != nullptr) {
@@ -120,44 +124,44 @@ AccessMapPatternMatching::getAccessMapEntry(Addr am_addr,
 }
 
 void
-AccessMapPatternMatching::setEntryState(AccessMapEntry &entry,
-    Addr block, enum AccessMapState state)
+AccessMapPatternMatching::setEntryState(
+    AccessMapEntry &entry, Addr block, enum AccessMapState state)
 {
     enum AccessMapState old = entry.states[block];
     entry.states[block] = state;
 
-    //do not update stats when initializing
-    if (state == AM_INIT) return;
+    // do not update stats when initializing
+    if (state == AM_INIT)
+        return;
 
     switch (old) {
-        case AM_INIT:
-            if (state == AM_PREFETCH) {
-                numTotalPrefetches += 1;
-            } else if (state == AM_ACCESS) {
-                numRawCacheMisses += 1;
-            }
-            break;
-        case AM_PREFETCH:
-            if (state == AM_ACCESS) {
-                numGoodPrefetches += 1;
-                numRawCacheMisses += 1;
-            }
-            break;
-        case AM_ACCESS:
-            if (state == AM_ACCESS) {
-                numRawCacheHits += 1;
-            }
-            break;
-        default:
-            panic("Impossible path\n");
-            break;
+    case AM_INIT:
+        if (state == AM_PREFETCH) {
+            numTotalPrefetches += 1;
+        } else if (state == AM_ACCESS) {
+            numRawCacheMisses += 1;
+        }
+        break;
+    case AM_PREFETCH:
+        if (state == AM_ACCESS) {
+            numGoodPrefetches += 1;
+            numRawCacheMisses += 1;
+        }
+        break;
+    case AM_ACCESS:
+        if (state == AM_ACCESS) {
+            numRawCacheHits += 1;
+        }
+        break;
+    default:
+        panic("Impossible path\n");
+        break;
     }
 }
 
 void
 AccessMapPatternMatching::calculatePrefetch(const Base::PrefetchInfo &pfi,
-    std::vector<Queued::AddrPriority> &addresses,
-    const CacheAccessor &cache)
+    std::vector<Queued::AddrPriority> &addresses, const CacheAccessor &cache)
 {
     assert(addresses.empty());
 
@@ -169,16 +173,18 @@ AccessMapPatternMatching::calculatePrefetch(const Base::PrefetchInfo &pfi,
     // Get the entries of the curent block (am_addr), the previous, and the
     // following ones
     AccessMapEntry *am_entry_curr = getAccessMapEntry(am_addr, is_secure);
-    AccessMapEntry *am_entry_prev = (am_addr > 0) ?
-        getAccessMapEntry(am_addr-1, is_secure) : nullptr;
-    AccessMapEntry *am_entry_next = (am_addr < (MaxAddr/hotZoneSize)) ?
-        getAccessMapEntry(am_addr+1, is_secure) : nullptr;
+    AccessMapEntry *am_entry_prev =
+        (am_addr > 0) ? getAccessMapEntry(am_addr - 1, is_secure) : nullptr;
+    AccessMapEntry *am_entry_next =
+        (am_addr < (MaxAddr / hotZoneSize)) ?
+            getAccessMapEntry(am_addr + 1, is_secure) :
+            nullptr;
     assert(am_entry_curr != am_entry_prev);
     assert(am_entry_curr != am_entry_next);
     assert(am_entry_prev != am_entry_next);
     assert(am_entry_curr != nullptr);
 
-    //Mark the current access as Accessed
+    // Mark the current access as Accessed
     setEntryState(*am_entry_curr, current_block, AM_ACCESS);
 
     /**
@@ -256,15 +262,11 @@ AccessMapPatternMatching::calculatePrefetch(const Base::PrefetchInfo &pfi,
     }
 }
 
-AMPM::AMPM(const AMPMPrefetcherParams &p)
-  : Queued(p), ampm(*p.ampm)
-{
-}
+AMPM::AMPM(const AMPMPrefetcherParams &p) : Queued(p), ampm(*p.ampm) {}
 
 void
 AMPM::calculatePrefetch(const PrefetchInfo &pfi,
-    std::vector<AddrPriority> &addresses,
-    const CacheAccessor &cache)
+    std::vector<AddrPriority> &addresses, const CacheAccessor &cache)
 {
     ampm.calculatePrefetch(pfi, addresses, cache);
 }

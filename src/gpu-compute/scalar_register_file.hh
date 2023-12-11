@@ -42,7 +42,6 @@
 
 namespace gem5
 {
-
 struct ScalarRegisterFileParams;
 
 // Scalar Register File
@@ -52,13 +51,13 @@ class ScalarRegisterFile : public RegisterFile
     using ScalarRegU32 = TheGpuISA::ScalarRegU32;
 
     ScalarRegisterFile(const ScalarRegisterFileParams &p);
-    ~ScalarRegisterFile() { }
+    ~ScalarRegisterFile() {}
 
     virtual bool operandsReady(Wavefront *w, GPUDynInstPtr ii) const override;
-    virtual void scheduleWriteOperands(Wavefront *w,
-                                       GPUDynInstPtr ii) override;
-    virtual void scheduleWriteOperandsFromLoad(Wavefront *w,
-                                               GPUDynInstPtr ii) override;
+    virtual void scheduleWriteOperands(
+        Wavefront *w, GPUDynInstPtr ii) override;
+    virtual void scheduleWriteOperandsFromLoad(
+        Wavefront *w, GPUDynInstPtr ii) override;
     virtual void waveExecuteInst(Wavefront *w, GPUDynInstPtr ii) override;
 
     void
@@ -68,7 +67,7 @@ class ScalarRegisterFile : public RegisterFile
     }
 
     // Read a register that is writeable (e.g., a DST operand)
-    ScalarRegU32&
+    ScalarRegU32 &
     readWriteable(int regIdx)
     {
         return regFile[regIdx];

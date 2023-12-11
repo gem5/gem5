@@ -35,7 +35,6 @@
 
 namespace gem5
 {
-
 struct GPURenderDriverParams;
 
 class GPURenderDriver final : public EmulatedDriver
@@ -51,8 +50,8 @@ class GPURenderDriver final : public EmulatedDriver
         return -EBADF;
     }
 
-    Addr mmap(ThreadContext *tc, Addr start, uint64_t length,
-              int prot, int tgt_flags, int tgt_fd, off_t offset) override;
+    Addr mmap(ThreadContext *tc, Addr start, uint64_t length, int prot,
+        int tgt_flags, int tgt_fd, off_t offset) override;
 };
 
 } // namespace gem5

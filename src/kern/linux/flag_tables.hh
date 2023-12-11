@@ -55,7 +55,6 @@
 
 namespace gem5
 {
-
 template <typename Target>
 class OpenFlagTable
 {
@@ -63,53 +62,53 @@ class OpenFlagTable
     // open(2) flags translation table
     static inline const std::map<int, int> openFlagTable = {
 #ifdef _MSC_VER
-      { Target::TGT_O_RDONLY,     _O_RDONLY },
-      { Target::TGT_O_WRONLY,     _O_WRONLY },
-      { Target::TGT_O_RDWR,       _O_RDWR },
-      { Target::TGT_O_CREAT,      _O_CREAT },
-      { Target::TGT_O_EXCL,       _O_EXCL },
-      { Target::TGT_O_TRUNC,      _O_TRUNC },
-      { Target::TGT_O_APPEND,     _O_APPEND },
+        {Target::TGT_O_RDONLY, _O_RDONLY},
+        {Target::TGT_O_WRONLY, _O_WRONLY},
+        {Target::TGT_O_RDWR, _O_RDWR},
+        {Target::TGT_O_CREAT, _O_CREAT},
+        {Target::TGT_O_EXCL, _O_EXCL},
+        {Target::TGT_O_TRUNC, _O_TRUNC},
+        {Target::TGT_O_APPEND, _O_APPEND},
 #else /* !_MSC_VER */
-      { Target::TGT_O_RDONLY,     O_RDONLY },
-      { Target::TGT_O_WRONLY,     O_WRONLY },
-      { Target::TGT_O_RDWR,       O_RDWR },
-      { Target::TGT_O_CREAT,      O_CREAT },
-      { Target::TGT_O_EXCL,       O_EXCL },
-      { Target::TGT_O_TRUNC,      O_TRUNC },
-      { Target::TGT_O_APPEND,     O_APPEND },
-      { Target::TGT_O_NOCTTY,     O_NOCTTY },
-      { Target::TGT_O_NONBLOCK,   O_NONBLOCK },
-#ifdef O_DSYNC
-      { Target::TGT_O_DSYNC,      O_DSYNC },
-#endif
-#ifdef O_ASYNC
-      { Target::TGT_FASYNC,       O_ASYNC },
-#endif
-#ifdef O_DIRECT
-      { Target::TGT_O_DIRECT,     O_DIRECT },
-#endif
-#ifdef O_LARGEFILE
-      { Target::TGT_O_LARGEFILE,  O_LARGEFILE },
-#endif
-#ifdef O_DIRECTORY
-      { Target::TGT_O_DIRECTORY,  O_DIRECTORY },
-#endif
-#ifdef O_NOFOLLOW
-      { Target::TGT_O_NOFOLLOW,   O_NOFOLLOW },
-#endif
-#ifdef O_NOATIME
-      { Target::TGT_O_NOATIME,    O_NOATIME },
-#endif
-#ifdef O_CLOEXEC
-      { Target::TGT_O_CLOEXEC,    O_CLOEXEC },
-#endif
-#ifdef O_SYNC
-      { Target::TGT_O_SYNC,       O_SYNC },
-#endif
-#ifdef O_PATH
-      { Target::TGT_O_PATH,       O_PATH },
-#endif
+        {Target::TGT_O_RDONLY, O_RDONLY},
+        {Target::TGT_O_WRONLY, O_WRONLY},
+        {Target::TGT_O_RDWR, O_RDWR},
+        {Target::TGT_O_CREAT, O_CREAT},
+        {Target::TGT_O_EXCL, O_EXCL},
+        {Target::TGT_O_TRUNC, O_TRUNC},
+        {Target::TGT_O_APPEND, O_APPEND},
+        {Target::TGT_O_NOCTTY, O_NOCTTY},
+        {Target::TGT_O_NONBLOCK, O_NONBLOCK},
+#    ifdef O_DSYNC
+        {Target::TGT_O_DSYNC, O_DSYNC},
+#    endif
+#    ifdef O_ASYNC
+        {Target::TGT_FASYNC, O_ASYNC},
+#    endif
+#    ifdef O_DIRECT
+        {Target::TGT_O_DIRECT, O_DIRECT},
+#    endif
+#    ifdef O_LARGEFILE
+        {Target::TGT_O_LARGEFILE, O_LARGEFILE},
+#    endif
+#    ifdef O_DIRECTORY
+        {Target::TGT_O_DIRECTORY, O_DIRECTORY},
+#    endif
+#    ifdef O_NOFOLLOW
+        {Target::TGT_O_NOFOLLOW, O_NOFOLLOW},
+#    endif
+#    ifdef O_NOATIME
+        {Target::TGT_O_NOATIME, O_NOATIME},
+#    endif
+#    ifdef O_CLOEXEC
+        {Target::TGT_O_CLOEXEC, O_CLOEXEC},
+#    endif
+#    ifdef O_SYNC
+        {Target::TGT_O_SYNC, O_SYNC},
+#    endif
+#    ifdef O_PATH
+        {Target::TGT_O_PATH, O_PATH},
+#    endif
 #endif /* _MSC_VER */
     };
 };

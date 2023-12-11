@@ -50,7 +50,6 @@
 
 namespace gem5
 {
-
 class ComputeUnit;
 class Wavefront;
 
@@ -59,10 +58,13 @@ class LocalMemPipeline
   public:
     LocalMemPipeline(const ComputeUnitParams &p, ComputeUnit &cu);
     void exec();
-    std::queue<GPUDynInstPtr> &getLMRespFIFO() { return lmReturnedRequests; }
+    std::queue<GPUDynInstPtr> &
+    getLMRespFIFO()
+    {
+        return lmReturnedRequests;
+    }
 
     void issueRequest(GPUDynInstPtr gpuDynInst);
-
 
     bool
     isLMRespFIFOWrRdy() const
@@ -71,12 +73,16 @@ class LocalMemPipeline
     }
 
     bool
-    isLMReqFIFOWrRdy(uint32_t pendReqs=0) const
+    isLMReqFIFOWrRdy(uint32_t pendReqs = 0) const
     {
         return (lmIssuedRequests.size() + pendReqs) < lmQueueSize;
     }
 
-    const std::string& name() const { return _name; }
+    const std::string &
+    name() const
+    {
+        return _name;
+    }
 
     void
     incLoadVRFBankConflictCycles(int num_cycles)

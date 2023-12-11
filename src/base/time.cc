@@ -40,7 +40,6 @@
 
 namespace gem5
 {
-
 void
 Time::_set(bool monotonic)
 {
@@ -66,7 +65,7 @@ Tick
 Time::getTick() const
 {
     return sec() * sim_clock::Frequency +
-        static_cast<uint64_t>(nsec() * sim_clock::as_float::ns);
+           static_cast<uint64_t>(nsec() * sim_clock::as_float::ns);
 }
 
 std::string

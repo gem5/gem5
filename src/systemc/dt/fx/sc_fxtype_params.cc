@@ -35,7 +35,6 @@
 
  *****************************************************************************/
 
-
 // $Log: sc_fxtype_params.cpp,v $
 // Revision 1.1.1.1  2006/12/15 20:20:04  acg
 // SystemC 2.3
@@ -51,7 +50,6 @@
 
 namespace sc_dt
 {
-
 template class sc_global<sc_fxtype_params>;
 template class sc_context<sc_fxtype_params>;
 
@@ -72,13 +70,8 @@ sc_fxtype_params::to_string() const
 void
 sc_fxtype_params::print(::std::ostream &os) const
 {
-    os << "("
-       << m_wl << ","
-       << m_iwl << ","
-       << m_q_mode << ","
-       << m_o_mode << ","
-       << m_n_bits
-       << ")";
+    os << "(" << m_wl << "," << m_iwl << "," << m_q_mode << "," << m_o_mode
+       << "," << m_n_bits << ")";
 }
 
 void

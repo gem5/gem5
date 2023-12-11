@@ -48,23 +48,15 @@
 
 namespace gem5
 {
+KvmDevice::KvmDevice(int _fd) : fd(_fd) {}
 
-KvmDevice::KvmDevice(int _fd)
-    : fd(_fd)
-{
-}
-
-KvmDevice::~KvmDevice()
-{
-    close(fd);
-}
+KvmDevice::~KvmDevice() { close(fd); }
 
 void
 KvmDevice::getAttrPtr(uint32_t group, uint64_t attr, void *data) const
 {
 #ifdef KVM_GET_DEVICE_ATTR
-    struct kvm_device_attr dattr =
-    {
+    struct kvm_device_attr dattr = {
         0, // Flags
         group,
         attr,
@@ -73,7 +65,7 @@ KvmDevice::getAttrPtr(uint32_t group, uint64_t attr, void *data) const
 
     if (ioctl(KVM_GET_DEVICE_ATTR, &dattr) == -1) {
         panic("Failed to get attribute (group: %i, attr: %i, errno: %i)",
-              group, attr, errno);
+            group, attr, errno);
     }
 #else
     panic("Kernel headers don't support KVM_GET_DEVICE_ATTR\n");
@@ -84,8 +76,7 @@ void
 KvmDevice::setAttrPtr(uint32_t group, uint64_t attr, const void *data) const
 {
 #ifdef KVM_SET_DEVICE_ATTR
-    struct kvm_device_attr dattr =
-    {
+    struct kvm_device_attr dattr = {
         0, // Flags
         group,
         attr,
@@ -94,7 +85,7 @@ KvmDevice::setAttrPtr(uint32_t group, uint64_t attr, const void *data) const
 
     if (ioctl(KVM_SET_DEVICE_ATTR, &dattr) == -1) {
         panic("Failed to set attribute (group: %i, attr: %i, errno: %i)",
-              group, attr, errno);
+            group, attr, errno);
     }
 #else
     panic("Kernel headers don't support KVM_GET_DEVICE_ATTR\n");
@@ -105,11 +96,9 @@ bool
 KvmDevice::hasAttr(uint32_t group, uint64_t attr) const
 {
 #ifdef KVM_HAS_DEVICE_ATTR
-    struct kvm_device_attr dattr =
-    {
+    struct kvm_device_attr dattr = {
         0, // Flags
-        group,
-        attr,
+        group, attr,
         0, // Data address (ignored)
     };
 

@@ -28,7 +28,6 @@
 
 namespace gem5
 {
-
 /**
  * @ingroup api_base_utils
  */

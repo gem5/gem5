@@ -41,7 +41,6 @@
 
 namespace gem5
 {
-
 /**
  * System DMA Engine class for AMD dGPU.
  */
@@ -68,27 +67,100 @@ class SDMAEngine : public DmaVirtDevice
         SDMAType _type;
         SDMAQueueDesc *_mqd;
         Addr _mqd_addr = 0;
+
       public:
-        SDMAQueue() : _rptr(0), _wptr(0), _valid(false), _processing(false),
-            _parent(nullptr), _ib(nullptr), _type(SDMAGfx), _mqd(nullptr) {}
+        SDMAQueue() :
+            _rptr(0),
+            _wptr(0),
+            _valid(false),
+            _processing(false),
+            _parent(nullptr),
+            _ib(nullptr),
+            _type(SDMAGfx),
+            _mqd(nullptr)
+        {}
 
-        Addr base() { return _base; }
-        Addr rptr() { return _base + _rptr; }
-        Addr getRptr() { return _rptr; }
-        Addr wptr() { return _base + _wptr; }
-        Addr getWptr() { return _wptr; }
-        Addr size() { return _size; }
-        Addr rptrWbAddr() { return _rptr_wb_addr; }
-        Addr globalRptr() { return _global_rptr; }
-        bool valid() { return _valid; }
-        bool processing() { return _processing; }
-        SDMAQueue* parent() { return _parent; }
-        SDMAQueue* ib() { return _ib; }
-        SDMAType queueType() { return _type; }
-        SDMAQueueDesc* getMQD() { return _mqd; }
-        Addr getMQDAddr() { return _mqd_addr; }
+        Addr
+        base()
+        {
+            return _base;
+        }
+        Addr
+        rptr()
+        {
+            return _base + _rptr;
+        }
+        Addr
+        getRptr()
+        {
+            return _rptr;
+        }
+        Addr
+        wptr()
+        {
+            return _base + _wptr;
+        }
+        Addr
+        getWptr()
+        {
+            return _wptr;
+        }
+        Addr
+        size()
+        {
+            return _size;
+        }
+        Addr
+        rptrWbAddr()
+        {
+            return _rptr_wb_addr;
+        }
+        Addr
+        globalRptr()
+        {
+            return _global_rptr;
+        }
+        bool
+        valid()
+        {
+            return _valid;
+        }
+        bool
+        processing()
+        {
+            return _processing;
+        }
+        SDMAQueue *
+        parent()
+        {
+            return _parent;
+        }
+        SDMAQueue *
+        ib()
+        {
+            return _ib;
+        }
+        SDMAType
+        queueType()
+        {
+            return _type;
+        }
+        SDMAQueueDesc *
+        getMQD()
+        {
+            return _mqd;
+        }
+        Addr
+        getMQDAddr()
+        {
+            return _mqd_addr;
+        }
 
-        void base(Addr value) { _base = value; }
+        void
+        base(Addr value)
+        {
+            _base = value;
+        }
 
         void
         incRptr(uint32_t value)
@@ -110,17 +182,57 @@ class SDMAEngine : public DmaVirtDevice
             _wptr = value % _size;
         }
 
-        void wptr(Addr value) { _wptr = value; }
+        void
+        wptr(Addr value)
+        {
+            _wptr = value;
+        }
 
-        void size(Addr value) { _size = value; }
-        void rptrWbAddr(Addr value) { _rptr_wb_addr = value; }
-        void valid(bool v) { _valid = v; }
-        void processing(bool value) { _processing = value; }
-        void parent(SDMAQueue* q) { _parent = q; }
-        void ib(SDMAQueue* ib) { _ib = ib; }
-        void queueType(SDMAType type) { _type = type; }
-        void setMQD(SDMAQueueDesc *mqd) { _mqd = mqd; }
-        void setMQDAddr(Addr mqdAddr) { _mqd_addr = mqdAddr; }
+        void
+        size(Addr value)
+        {
+            _size = value;
+        }
+        void
+        rptrWbAddr(Addr value)
+        {
+            _rptr_wb_addr = value;
+        }
+        void
+        valid(bool v)
+        {
+            _valid = v;
+        }
+        void
+        processing(bool value)
+        {
+            _processing = value;
+        }
+        void
+        parent(SDMAQueue *q)
+        {
+            _parent = q;
+        }
+        void
+        ib(SDMAQueue *ib)
+        {
+            _ib = ib;
+        }
+        void
+        queueType(SDMAType type)
+        {
+            _type = type;
+        }
+        void
+        setMQD(SDMAQueueDesc *mqd)
+        {
+            _mqd = mqd;
+        }
+        void
+        setMQDAddr(Addr mqdAddr)
+        {
+            _mqd_addr = mqdAddr;
+        }
     };
 
     /* SDMA Engine ID */
@@ -164,8 +276,16 @@ class SDMAEngine : public DmaVirtDevice
 
     void setGPUDevice(AMDGPUDevice *gpu_device);
 
-    void setId(int _id) { id = _id; }
-    int getId() const { return id; }
+    void
+    setId(int _id)
+    {
+        id = _id;
+    }
+    int
+    getId() const
+    {
+        return id;
+    }
     /**
      * Returns the client id for the Interrupt Handler.
      */
@@ -187,8 +307,16 @@ class SDMAEngine : public DmaVirtDevice
     /**
      * Inherited methods.
      */
-    Tick write(PacketPtr pkt) override { return 0; }
-    Tick read(PacketPtr pkt) override { return 0; }
+    Tick
+    write(PacketPtr pkt) override
+    {
+        return 0;
+    }
+    Tick
+    read(PacketPtr pkt) override
+    {
+        return 0;
+    }
     AddrRangeList getAddrRanges() const override;
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
@@ -231,20 +359,20 @@ class SDMAEngine : public DmaVirtDevice
     void fence(SDMAQueue *q, sdmaFence *pkt);
     void fenceDone(SDMAQueue *q, sdmaFence *pkt);
     void trap(SDMAQueue *q, sdmaTrap *pkt);
-    void srbmWrite(SDMAQueue *q, sdmaSRBMWriteHeader *header,
-                    sdmaSRBMWrite *pkt);
-    void pollRegMem(SDMAQueue *q, sdmaPollRegMemHeader *header,
-                    sdmaPollRegMem *pkt);
+    void srbmWrite(
+        SDMAQueue *q, sdmaSRBMWriteHeader *header, sdmaSRBMWrite *pkt);
+    void pollRegMem(
+        SDMAQueue *q, sdmaPollRegMemHeader *header, sdmaPollRegMem *pkt);
     void pollRegMemRead(SDMAQueue *q, sdmaPollRegMemHeader *header,
-                        sdmaPollRegMem *pkt, uint32_t dma_buffer, int count);
+        sdmaPollRegMem *pkt, uint32_t dma_buffer, int count);
     bool pollRegMemFunc(uint32_t value, uint32_t reference, uint32_t func);
     void ptePde(SDMAQueue *q, sdmaPtePde *pkt);
     void ptePdeDone(SDMAQueue *q, sdmaPtePde *pkt, uint64_t *dmaBuffer);
     void atomic(SDMAQueue *q, sdmaAtomicHeader *header, sdmaAtomic *pkt);
     void atomicData(SDMAQueue *q, sdmaAtomicHeader *header, sdmaAtomic *pkt,
-                    uint64_t *dmaBuffer);
+        uint64_t *dmaBuffer);
     void atomicDone(SDMAQueue *q, sdmaAtomicHeader *header, sdmaAtomic *pkt,
-                    uint64_t *dmaBuffer);
+        uint64_t *dmaBuffer);
     void constFill(SDMAQueue *q, sdmaConstFill *pkt, uint32_t header);
     void constFillDone(SDMAQueue *q, sdmaConstFill *pkt, uint8_t *fill_data);
 
@@ -253,22 +381,70 @@ class SDMAEngine : public DmaVirtDevice
      * the python configuration depending on device to allow for flexible base
      * addresses depending on what GPU is being simulated.
      */
-    Addr getMmioBase() { return mmioBase; }
-    Addr getMmioSize() { return mmioSize; }
+    Addr
+    getMmioBase()
+    {
+        return mmioBase;
+    }
+    Addr
+    getMmioSize()
+    {
+        return mmioSize;
+    }
 
     /**
      * Methods for getting the values of SDMA MMIO registers.
      */
-    uint64_t getGfxBase() { return gfxBase; }
-    uint64_t getGfxRptr() { return gfxRptr; }
-    uint64_t getGfxDoorbell() { return gfxDoorbell; }
-    uint64_t getGfxDoorbellOffset() { return gfxDoorbellOffset; }
-    uint64_t getGfxWptr() { return gfxWptr; }
-    uint64_t getPageBase() { return pageBase; }
-    uint64_t getPageRptr() { return pageRptr; }
-    uint64_t getPageDoorbell() { return pageDoorbell; }
-    uint64_t getPageDoorbellOffset() { return pageDoorbellOffset; }
-    uint64_t getPageWptr() { return pageWptr; }
+    uint64_t
+    getGfxBase()
+    {
+        return gfxBase;
+    }
+    uint64_t
+    getGfxRptr()
+    {
+        return gfxRptr;
+    }
+    uint64_t
+    getGfxDoorbell()
+    {
+        return gfxDoorbell;
+    }
+    uint64_t
+    getGfxDoorbellOffset()
+    {
+        return gfxDoorbellOffset;
+    }
+    uint64_t
+    getGfxWptr()
+    {
+        return gfxWptr;
+    }
+    uint64_t
+    getPageBase()
+    {
+        return pageBase;
+    }
+    uint64_t
+    getPageRptr()
+    {
+        return pageRptr;
+    }
+    uint64_t
+    getPageDoorbell()
+    {
+        return pageDoorbell;
+    }
+    uint64_t
+    getPageDoorbellOffset()
+    {
+        return pageDoorbellOffset;
+    }
+    uint64_t
+    getPageWptr()
+    {
+        return pageWptr;
+    }
 
     /**
      * Methods for setting the values of SDMA MMIO registers.

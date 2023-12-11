@@ -43,20 +43,18 @@
 
 namespace gem5
 {
-
 class BaseGic;
 struct GenericArmPciHostParams;
 
-class GenericArmPciHost
-    : public GenericPciHost
+class GenericArmPciHost : public GenericPciHost
 {
   public:
     GenericArmPciHost(const GenericArmPciHostParams &p);
     virtual ~GenericArmPciHost() {}
 
   protected:
-    uint32_t mapPciInterrupt(const PciBusAddr &addr,
-                             PciIntPin pin) const override;
+    uint32_t mapPciInterrupt(
+        const PciBusAddr &addr, PciIntPin pin) const override;
 
   protected:
     const enums::ArmPciIntRouting intPolicy;

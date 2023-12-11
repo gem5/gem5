@@ -49,11 +49,25 @@ class DefaultCallType : public CallType
     DefaultCallType() : CallType("default") {}
 
     bool init_called = false;
-    void init() override { init_called = true; }
+    void
+    init() override
+    {
+        init_called = true;
+    }
 
-    bool isDefault() const override { return true; }
-    void printDesc(std::ostream &os) const override {}
-    const DispatchTable &getDispatch() const override { return dt; }
+    bool
+    isDefault() const override
+    {
+        return true;
+    }
+    void
+    printDesc(std::ostream &os) const override
+    {}
+    const DispatchTable &
+    getDispatch() const override
+    {
+        return dt;
+    }
 };
 
 DefaultCallType defaultCallType;

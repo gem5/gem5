@@ -35,7 +35,6 @@
 
 namespace gem5
 {
-
 LupioIPI::LupioIPI(const Params &params) :
     BasicPioDevice(params, params.pio_size),
     system(params.system),
@@ -71,19 +70,18 @@ LupioIPI::lupioIPIRead(uint8_t addr, int size)
     int reg = addr % LUPIO_IPI_MAX;
 
     switch (reg) {
-      case LUPIO_IPI_MASK:
+    case LUPIO_IPI_MASK:
         r = mask[cpu];
         DPRINTF(LupioIPI, "Read IPI_MASK[%d]: %#x\n", cpu, r);
         break;
-      case LUPIO_IPI_PEND:
+    case LUPIO_IPI_PEND:
         r = pending[cpu];
         DPRINTF(LupioIPI, "Read IPI_PEND[%d]: %#x\n", cpu, r);
         break;
 
-      default:
-        panic("Unexpected read to LupioIPI device at address %#llx!",
-              addr);
-            break;
+    default:
+        panic("Unexpected read to LupioIPI device at address %#llx!", addr);
+        break;
     }
 
     return r;
@@ -98,21 +96,20 @@ LupioIPI::lupioIPIWrite(uint8_t addr, uint64_t val64, int size)
     int reg = addr % LUPIO_IPI_MAX;
 
     switch (reg) {
-      case LUPIO_IPI_MASK:
+    case LUPIO_IPI_MASK:
         mask[cpu] = val;
         DPRINTF(LupioIPI, "Write IPI_MASK[%d]: %#x\n", cpu, mask[cpu]);
         lupioIPIUpdateIRQ();
         break;
-      case LUPIO_IPI_PEND:
+    case LUPIO_IPI_PEND:
         pending[cpu] = val;
         DPRINTF(LupioIPI, "Write IPI_PEND[%d]: %#x\n", cpu, pending[cpu]);
         lupioIPIUpdateIRQ();
         break;
 
-      default:
-        panic("Unexpected write to LupioIPI device at address %#llx!",
-              addr);
-            break;
+    default:
+        panic("Unexpected write to LupioIPI device at address %#llx!", addr);
+        break;
     }
 }
 
@@ -121,8 +118,8 @@ LupioIPI::read(PacketPtr pkt)
 {
     Addr ipi_addr = pkt->getAddr() - pioAddr;
 
-    DPRINTF(LupioIPI,
-        "Read request - addr: %#x, size: %#x\n", ipi_addr, pkt->getSize());
+    DPRINTF(LupioIPI, "Read request - addr: %#x, size: %#x\n", ipi_addr,
+        pkt->getSize());
 
     uint64_t read_val = lupioIPIRead(ipi_addr, pkt->getSize());
     DPRINTF(LupioIPI, "Packet Read: %#x\n", read_val);
@@ -138,7 +135,7 @@ LupioIPI::write(PacketPtr pkt)
     Addr ipi_addr = pkt->getAddr() - pioAddr;
 
     DPRINTF(LupioIPI, "Write register %#x value %#x\n", ipi_addr,
-            pkt->getUintX(byteOrder));
+        pkt->getUintX(byteOrder));
 
     lupioIPIWrite(ipi_addr, pkt->getUintX(byteOrder), pkt->getSize());
     DPRINTF(LupioIPI, "Packet Write Value: %d\n", pkt->getUintX(byteOrder));

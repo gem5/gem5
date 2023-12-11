@@ -34,12 +34,10 @@
 
 namespace gem5
 {
-
 struct BloomFilterMultiBitSelParams;
 
 namespace bloom_filter
 {
-
 /**
  * The MultiBitSel Bloom Filter associates an address to multiple entries
  * through the use of multiple hash functions.

@@ -42,10 +42,8 @@
 
 namespace gem5
 {
-
 namespace AMBA
 {
-
 typedef RequestorID OrderID;
 
 static OrderID

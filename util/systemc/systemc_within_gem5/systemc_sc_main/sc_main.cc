@@ -38,10 +38,7 @@ class Printer : public sc_core::sc_module
   public:
     sc_core::sc_in<const char *> input;
 
-    SC_CTOR(Printer)
-    {
-        SC_THREAD(print);
-    }
+    SC_CTOR(Printer) { SC_THREAD(print); }
 
     using sc_core::sc_object::print;
     void

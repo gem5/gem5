@@ -35,10 +35,8 @@
 
 namespace gem5
 {
-
 namespace linux
 {
-
 class ThreadInfo
 {
   private:
@@ -66,14 +64,12 @@ class ThreadInfo
     }
 
   public:
-    ThreadInfo(ThreadContext *_tc)
-        : tc(_tc), sys(tc->getSystemPtr()),
+    ThreadInfo(ThreadContext *_tc) :
+        tc(_tc),
+        sys(tc->getSystemPtr()),
         byteOrder(tc->getSystemPtr()->getGuestByteOrder())
-    {
-
-    }
-    ~ThreadInfo()
     {}
+    ~ThreadInfo() {}
 
     virtual Addr
     curThreadInfo()
@@ -161,7 +157,7 @@ class ThreadInfo
 
         char buffer[size + 1];
         TranslatingPortProxy(tc).readString(
-                buffer, task_struct + offset, size);
+            buffer, task_struct + offset, size);
 
         return buffer;
     }

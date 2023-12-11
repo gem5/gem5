@@ -34,10 +34,8 @@
 
 namespace gem5
 {
-
 namespace X86ISA
 {
-
 class I8254;
 class I8259;
 class Cmos;

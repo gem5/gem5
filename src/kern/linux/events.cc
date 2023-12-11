@@ -54,10 +54,8 @@
 
 namespace gem5
 {
-
 namespace linux
 {
-
 void
 PanicOrOopsEvent::process(ThreadContext *tc)
 {

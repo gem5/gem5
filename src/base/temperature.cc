@@ -39,7 +39,6 @@
 
 namespace gem5
 {
-
 Temperature
 Temperature::fromKelvin(double _value)
 {

@@ -29,7 +29,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #include "gpu-compute/dispatcher.hh"
 
 #include "debug/GPUAgentDisp.hh"
@@ -46,22 +45,22 @@
 
 namespace gem5
 {
-
-GPUDispatcher::GPUDispatcher(const Params &p)
-    : SimObject(p), shader(nullptr), gpuCmdProc(nullptr),
-      tickEvent([this]{ exec(); },
-          "GPU Dispatcher tick", false, Event::CPU_Tick_Pri),
-      dispatchActive(false), kernelExitEvents(p.kernel_exit_events),
-      stats(this)
+GPUDispatcher::GPUDispatcher(const Params &p) :
+    SimObject(p),
+    shader(nullptr),
+    gpuCmdProc(nullptr),
+    tickEvent(
+        [this] { exec(); }, "GPU Dispatcher tick", false, Event::CPU_Tick_Pri),
+    dispatchActive(false),
+    kernelExitEvents(p.kernel_exit_events),
+    stats(this)
 {
     schedule(&tickEvent, 0);
 }
 
-GPUDispatcher::~GPUDispatcher()
-{
-}
+GPUDispatcher::~GPUDispatcher() {}
 
-HSAQueueEntry*
+HSAQueueEntry *
 GPUDispatcher::hsaTask(int disp_id)
 {
     assert(hsaQueueEntries.find(disp_id) != hsaQueueEntries.end());
@@ -118,9 +117,9 @@ GPUDispatcher::dispatch(HSAQueueEntry *task)
     ++stats.numKernelLaunched;
 
     DPRINTF(GPUDisp, "launching kernel: %s, dispatch ID: %d\n",
-            task->kernelName(), task->dispatchId());
+        task->kernelName(), task->dispatchId());
     DPRINTF(GPUAgentDisp, "launching kernel: %s, dispatch ID: %d\n",
-            task->kernelName(), task->dispatchId());
+        task->kernelName(), task->dispatchId());
 
     execIds.push(task->dispatchId());
     dispatchActive = true;
@@ -172,12 +171,14 @@ GPUDispatcher::exec()
          * invalidate is still ongoing, put the kernel on the queue to
          * retry later
          */
-        if (!task->isInvDone()){
+        if (!task->isInvDone()) {
             execIds.push(exec_id);
             ++fail_count;
 
-            DPRINTF(GPUDisp, "kernel %d failed to launch, due to [%d] pending"
-                " invalidate requests\n", exec_id, task->outstandingInvs());
+            DPRINTF(GPUDisp,
+                "kernel %d failed to launch, due to [%d] pending"
+                " invalidate requests\n",
+                exec_id, task->outstandingInvs());
 
             // try the next kernel_id
             execIds.pop();
@@ -216,7 +217,7 @@ GPUDispatcher::exec()
 
     DPRINTF(GPUDisp, "Returning %d Kernels\n", doneIds.size());
     DPRINTF(GPUWgLatency, "Kernel Wgs dispatched: %d | %d failures\n",
-            disp_count, fail_count);
+        disp_count, fail_count);
 
     while (doneIds.size()) {
         DPRINTF(GPUDisp, "Kernel %d completed\n", doneIds.front());
@@ -245,7 +246,8 @@ GPUDispatcher::isReachingKernelEnd(Wavefront *wf)
  * val: +1/-1, increment or decrement the counter (default: -1)
  */
 void
-GPUDispatcher::updateInvCounter(int kern_id, int val) {
+GPUDispatcher::updateInvCounter(int kern_id, int val)
+{
     assert(val == -1 || val == 1);
 
     auto task = hsaQueueEntries[kern_id];
@@ -265,7 +267,8 @@ GPUDispatcher::updateInvCounter(int kern_id, int val) {
  * return true if all wbs are done for the kernel
  */
 bool
-GPUDispatcher::updateWbCounter(int kern_id, int val) {
+GPUDispatcher::updateWbCounter(int kern_id, int val)
+{
     assert(val == -1 || val == 1);
 
     auto task = hsaQueueEntries[kern_id];
@@ -279,7 +282,8 @@ GPUDispatcher::updateWbCounter(int kern_id, int val) {
  * get kernel's outstanding cache writeback requests
  */
 int
-GPUDispatcher::getOutstandingWbs(int kernId) {
+GPUDispatcher::getOutstandingWbs(int kernId)
+{
     auto task = hsaQueueEntries[kernId];
 
     return task->outstandingWbs();
@@ -307,20 +311,22 @@ GPUDispatcher::notifyWgCompl(Wavefront *wf)
 
     if (task->numWgCompleted() == task->numWgTotal()) {
         // Notify the HSA PP that this kernel is complete
-        gpuCmdProc->hsaPacketProc()
-            .finishPkt(task->dispPktPtr(), task->queueId());
+        gpuCmdProc->hsaPacketProc().finishPkt(
+            task->dispPktPtr(), task->queueId());
         if (task->completionSignal()) {
-            DPRINTF(GPUDisp, "HSA AQL Kernel Complete with completion "
-                    "signal! Addr: %d\n", task->completionSignal());
+            DPRINTF(GPUDisp,
+                "HSA AQL Kernel Complete with completion "
+                "signal! Addr: %d\n",
+                task->completionSignal());
 
             gpuCmdProc->sendCompletionSignal(task->completionSignal());
         } else {
             DPRINTF(GPUDisp, "HSA AQL Kernel Complete! No completion "
-                "signal\n");
+                             "signal\n");
         }
 
         DPRINTF(GPUWgLatency, "Kernel Complete ticks:%d kernel:%d\n",
-                curTick(), kern_id);
+            curTick(), kern_id);
         DPRINTF(GPUKernelInfo, "Completed kernel %d\n", kern_id);
 
         if (kernelExitEvents) {
@@ -342,12 +348,12 @@ GPUDispatcher::scheduleDispatch()
 }
 
 GPUDispatcher::GPUDispatcherStats::GPUDispatcherStats(
-    statistics::Group *parent)
-    : statistics::Group(parent),
-      ADD_STAT(numKernelLaunched, "number of kernel launched"),
-      ADD_STAT(cyclesWaitingForDispatch, "number of cycles with outstanding "
-               "wavefronts that are waiting to be dispatched")
-{
-}
+    statistics::Group *parent) :
+    statistics::Group(parent),
+    ADD_STAT(numKernelLaunched, "number of kernel launched"),
+    ADD_STAT(cyclesWaitingForDispatch,
+        "number of cycles with outstanding "
+        "wavefronts that are waiting to be dispatched")
+{}
 
 } // namespace gem5

@@ -40,7 +40,7 @@
 struct DispatchTable
 {
 #define M5OP(name, func) __typeof__(&::name) name;
-M5OP_FOREACH
+    M5OP_FOREACH
 #undef M5OP
 };
 

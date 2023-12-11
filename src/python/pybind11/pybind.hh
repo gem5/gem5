@@ -43,7 +43,6 @@
 
 namespace gem5
 {
-
 void pybind_init_core(pybind11::module_ &m_native);
 void pybind_init_debug(pybind11::module_ &m_native);
 

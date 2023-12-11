@@ -58,10 +58,8 @@
 
 namespace gem5
 {
-
 namespace minor
 {
-
 /** Interface class for data with reporting/tracing facilities.  This
  *  interface doesn't actually have to be used as other classes which need
  *  this interface uses templating rather than inheritance but it's provided
@@ -73,7 +71,7 @@ class ReportIF
      *  trace lines */
     virtual void reportData(std::ostream &os) const = 0;
 
-    virtual ~ReportIF() { }
+    virtual ~ReportIF() {}
 };
 
 /** Interface class for data with 'bubble' values.  This interface doesn't
@@ -98,7 +96,9 @@ class ReportTraitsAdaptor
   public:
     static void
     reportData(std::ostream &os, const ElemType &elem)
-    { elem.reportData(os); }
+    {
+        elem.reportData(os);
+    }
 };
 
 /** A similar adaptor but for elements held by pointer
@@ -109,7 +109,9 @@ class ReportTraitsPtrAdaptor
   public:
     static void
     reportData(std::ostream &os, const PtrType &elem)
-    { elem->reportData(os); }
+    {
+        elem->reportData(os);
+    }
 };
 
 /** ... BubbleTraits are trait classes to add BubbleIF interface
@@ -121,7 +123,11 @@ template <typename ElemType>
 class NoBubbleTraits
 {
   public:
-    static bool isBubble(const ElemType &) { return false; }
+    static bool
+    isBubble(const ElemType &)
+    {
+        return false;
+    }
     static ElemType
     bubble()
     {
@@ -134,10 +140,17 @@ template <typename ElemType>
 class BubbleTraitsAdaptor
 {
   public:
-    static bool isBubble(const ElemType &elem)
-    { return elem.isBubble(); }
+    static bool
+    isBubble(const ElemType &elem)
+    {
+        return elem.isBubble();
+    }
 
-    static ElemType bubble() { return ElemType::bubble(); }
+    static ElemType
+    bubble()
+    {
+        return ElemType::bubble();
+    }
 };
 
 /** Pass on call to the element where the element is a pointer */
@@ -145,10 +158,17 @@ template <typename PtrType, typename ElemType>
 class BubbleTraitsPtrAdaptor
 {
   public:
-    static bool isBubble(const PtrType &elem)
-    { return elem->isBubble(); }
+    static bool
+    isBubble(const PtrType &elem)
+    {
+        return elem->isBubble();
+    }
 
-    static PtrType bubble() { return ElemType::bubble(); }
+    static PtrType
+    bubble()
+    {
+        return ElemType::bubble();
+    }
 };
 
 /** TimeBuffer with MinorTrace and Named interfaces */
@@ -165,14 +185,15 @@ class MinorBuffer : public Named, public TimeBuffer<ElemType>
     std::string dataName;
 
   public:
-    MinorBuffer(const std::string &name,
-        const std::string &data_name,
-        int num_past, int num_future,
-        int report_left = -1, int report_right = -1) :
-        Named(name), TimeBuffer<ElemType>(num_past, num_future),
-        reportLeft(report_left), reportRight(report_right),
-            dataName(data_name)
-    { }
+    MinorBuffer(const std::string &name, const std::string &data_name,
+        int num_past, int num_future, int report_left = -1,
+        int report_right = -1) :
+        Named(name),
+        TimeBuffer<ElemType>(num_past, num_future),
+        reportLeft(report_left),
+        reportRight(report_right),
+        dataName(data_name)
+    {}
 
   public:
     /* Is this buffer full of only bubbles */
@@ -190,9 +211,9 @@ class MinorBuffer : public Named, public TimeBuffer<ElemType>
     }
 
     /** Report buffer states from 'slot' 'from' to 'to'.  For example 0,-1
-      * will produce two slices with current (just assigned) and last (one
-      * advance() old) slices with the current (0) one on the left.
-      * Reverse the numbers to change the order of slices */
+     * will produce two slices with current (just assigned) and last (one
+     * advance() old) slices with the current (0) one on the left.
+     * Reverse the numbers to change the order of slices */
     void
     minorTrace() const
     {
@@ -233,14 +254,12 @@ class Latch
   public:
     /** forward/backwardDelay specify the delay from input to output in each
      *  direction.  These arguments *must* be >= 1 */
-    Latch(const std::string &name,
-        const std::string &data_name,
-        Cycles delay_ = Cycles(1),
-        bool report_backwards = false) :
+    Latch(const std::string &name, const std::string &data_name,
+        Cycles delay_ = Cycles(1), bool report_backwards = false) :
         delay(delay_),
         buffer(name, data_name, delay_, 0, (report_backwards ? -delay_ : 0),
             (report_backwards ? 0 : -delay_))
-    { }
+    {}
 
   public:
     /** Encapsulate wires on either input or output of the latch.
@@ -254,9 +273,7 @@ class Latch
         typename Buffer::wire inputWire;
 
       public:
-        Input(typename Buffer::wire input_wire) :
-            inputWire(input_wire)
-        { }
+        Input(typename Buffer::wire input_wire) : inputWire(input_wire) {}
     };
 
     class Output
@@ -265,30 +282,47 @@ class Latch
         typename Buffer::wire outputWire;
 
       public:
-        Output(typename Buffer::wire output_wire) :
-            outputWire(output_wire)
-        { }
+        Output(typename Buffer::wire output_wire) : outputWire(output_wire) {}
     };
 
-    bool empty() const { return buffer.empty(); }
+    bool
+    empty() const
+    {
+        return buffer.empty();
+    }
 
     /** An interface to just the input of the buffer */
-    Input input() { return Input(buffer.getWire(0)); }
+    Input
+    input()
+    {
+        return Input(buffer.getWire(0));
+    }
 
     /** An interface to just the output of the buffer */
-    Output output() { return Output(buffer.getWire(-delay)); }
+    Output
+    output()
+    {
+        return Output(buffer.getWire(-delay));
+    }
 
-    void minorTrace() const { buffer.minorTrace(); }
+    void
+    minorTrace() const
+    {
+        buffer.minorTrace();
+    }
 
-    void evaluate() { buffer.advance(); }
+    void
+    evaluate()
+    {
+        buffer.advance();
+    }
 };
 
 /** A pipeline simulating class that will stall (not advance when advance()
  *  is called) if a non-bubble value lies at the far end of the pipeline.
  *  The user can clear the stall before calling advance to unstall the
  *  pipeline. */
-template <typename ElemType,
-    typename ReportTraits,
+template <typename ElemType, typename ReportTraits,
     typename BubbleTraits = BubbleTraitsAdaptor<ElemType> >
 class SelfStallingPipeline : public MinorBuffer<ElemType, ReportTraits>
 {
@@ -306,11 +340,10 @@ class SelfStallingPipeline : public MinorBuffer<ElemType, ReportTraits>
     unsigned int occupancy;
 
   public:
-    SelfStallingPipeline(const std::string &name,
-        const std::string &data_name,
+    SelfStallingPipeline(const std::string &name, const std::string &data_name,
         unsigned depth) :
-        MinorBuffer<ElemType, ReportTraits>
-            (name, data_name, depth, 0, -1, -depth),
+        MinorBuffer<ElemType, ReportTraits>(
+            name, data_name, depth, 0, -1, -depth),
         pushWire(this->getWire(0)),
         popWire(this->getWire(-depth)),
         stalled(false),
@@ -329,7 +362,8 @@ class SelfStallingPipeline : public MinorBuffer<ElemType, ReportTraits>
      *  the pipeline to advance until advance is called.  Pushing twice
      *  without advance-ing will just cause an overwrite of the last push's
      *  data. */
-    void push(ElemType &elem)
+    void
+    push(ElemType &elem)
     {
         assert(!alreadyPushed());
         *pushWire = elem;
@@ -338,15 +372,31 @@ class SelfStallingPipeline : public MinorBuffer<ElemType, ReportTraits>
     }
 
     /** Peek at the end element of the pipe */
-    ElemType &front() { return *popWire; }
+    ElemType &
+    front()
+    {
+        return *popWire;
+    }
 
-    const ElemType &front() const { return *popWire; }
+    const ElemType &
+    front() const
+    {
+        return *popWire;
+    }
 
     /** Have we already pushed onto this pipe without advancing */
-    bool alreadyPushed() { return !BubbleTraits::isBubble(*pushWire); }
+    bool
+    alreadyPushed()
+    {
+        return !BubbleTraits::isBubble(*pushWire);
+    }
 
     /** There's data (not a bubble) at the end of the pipe */
-    bool isPopable() { return !BubbleTraits::isBubble(front()); }
+    bool
+    isPopable()
+    {
+        return !BubbleTraits::isBubble(front());
+    }
 
     /** Try to advance the pipeline.  If we're stalled, don't advance.  If
      *  we're not stalled, advance then check to see if we become stalled
@@ -386,7 +436,7 @@ class Reservable
     /** Free a reserved slot */
     virtual void freeReservation() = 0;
 
-    virtual ~Reservable() {};
+    virtual ~Reservable(){};
 };
 
 /** Wrapper for a queue type to act as a pipeline stage input queue.
@@ -403,7 +453,7 @@ template <typename ElemType,
 class Queue : public Named, public Reservable
 {
   private:
-      std::deque<ElemType> queue;
+    std::deque<ElemType> queue;
 
     /** Number of slots currently reserved for future (reservation
      *  respecting) pushes */
@@ -422,7 +472,7 @@ class Queue : public Named, public Reservable
         numReservedSlots(0),
         capacity(capacity_),
         dataName(data_name)
-    { }
+    {}
 
   public:
     /** Push an element into the buffer if it isn't a bubble.  Bubbles are
@@ -437,17 +487,22 @@ class Queue : public Named, public Reservable
 
             if (queue.size() > capacity) {
                 warn("%s: No space to push data into queue of capacity"
-                    " %u, pushing anyway\n", name(), capacity);
+                     " %u, pushing anyway\n",
+                    name(), capacity);
             }
-
         }
     }
 
     /** Clear all allocated space.  Be careful how this is used */
-    void clearReservedSpace() { numReservedSlots = 0; }
+    void
+    clearReservedSpace()
+    {
+        numReservedSlots = 0;
+    }
 
     /** Clear a single reserved slot */
-    void freeReservation()
+    void
+    freeReservation()
     {
         if (numReservedSlots != 0)
             numReservedSlots--;
@@ -466,16 +521,32 @@ class Queue : public Named, public Reservable
         numReservedSlots++;
     }
 
-    bool canReserve() const { return unreservedRemainingSpace() != 0; }
+    bool
+    canReserve() const
+    {
+        return unreservedRemainingSpace() != 0;
+    }
 
     /** Number of slots available in an empty buffer */
-    unsigned int totalSpace() const { return capacity; }
+    unsigned int
+    totalSpace() const
+    {
+        return capacity;
+    }
 
     /** Number of slots already occupied in this buffer */
-    unsigned int occupiedSpace() const { return queue.size(); }
+    unsigned int
+    occupiedSpace() const
+    {
+        return queue.size();
+    }
 
     /** Number of slots which are reserved. */
-    unsigned int reservedSpace() const { return numReservedSlots; }
+    unsigned int
+    reservedSpace() const
+    {
+        return numReservedSlots;
+    }
 
     /** Number of slots yet to fill in this buffer.  This doesn't include
      *  reservation. */
@@ -497,15 +568,31 @@ class Queue : public Named, public Reservable
     }
 
     /** Head value.  Like std::queue::front */
-    ElemType &front() { return queue.front(); }
+    ElemType &
+    front()
+    {
+        return queue.front();
+    }
 
-    const ElemType &front() const { return queue.front(); }
+    const ElemType &
+    front() const
+    {
+        return queue.front();
+    }
 
     /** Pop the head item.  Like std::queue::pop */
-    void pop() { queue.pop_front(); }
+    void
+    pop()
+    {
+        queue.pop_front();
+    }
 
     /** Is the queue empty? */
-    bool empty() const { return queue.empty(); }
+    bool
+    empty() const
+    {
+        return queue.empty();
+    }
 
     void
     minorTrace() const
@@ -513,8 +600,8 @@ class Queue : public Named, public Reservable
         std::ostringstream data;
         /* If we become over-full, totalSpace() can actually be smaller than
          * occupiedSpace().  Handle this */
-        unsigned int num_total = (occupiedSpace() > totalSpace() ?
-            occupiedSpace() : totalSpace());
+        unsigned int num_total =
+            (occupiedSpace() > totalSpace() ? occupiedSpace() : totalSpace());
 
         unsigned int num_reserved = reservedSpace();
         unsigned int num_occupied = occupiedSpace();
@@ -531,9 +618,8 @@ class Queue : public Named, public Reservable
 
         int num_printed_reserved = 1;
         /* Show reserved slots */
-        while (num_printed_reserved <= num_reserved &&
-            num_printed <= num_total)
-        {
+        while (
+            num_printed_reserved <= num_reserved && num_printed <= num_total) {
             data << 'R';
             num_printed_reserved++;
             num_printed++;
@@ -580,9 +666,8 @@ class InputBuffer : public Reservable
   public:
     InputBuffer(const std::string &name, const std::string &data_name,
         unsigned int capacity_) :
-        queue(name, data_name, capacity_),
-        elementPtr(NULL)
-    { }
+        queue(name, data_name, capacity_), elementPtr(NULL)
+    {}
 
   public:
     /** Set the tail of the queue, this is like push but needs
@@ -601,14 +686,24 @@ class InputBuffer : public Reservable
     }
 
     /** No single element or queue entries */
-    bool empty() const { return !elementPtr && queue.empty(); }
+    bool
+    empty() const
+    {
+        return !elementPtr && queue.empty();
+    }
 
     /** Return the element, or the front of the queue */
-    const ElemType &front() const
-    { return (elementPtr ? *elementPtr : queue.front()); }
+    const ElemType &
+    front() const
+    {
+        return (elementPtr ? *elementPtr : queue.front());
+    }
 
-    ElemType &front()
-    { return (elementPtr ? *elementPtr : queue.front()); }
+    ElemType &
+    front()
+    {
+        return (elementPtr ? *elementPtr : queue.front());
+    }
 
     /** Pop either the head, or if none, the head of the queue */
     void
@@ -644,9 +739,21 @@ class InputBuffer : public Reservable
     }
 
     /** Reservable interface, passed on to queue */
-    bool canReserve() const { return queue.canReserve(); }
-    void reserve() { queue.reserve(); }
-    void freeReservation() { queue.freeReservation(); }
+    bool
+    canReserve() const
+    {
+        return queue.canReserve();
+    }
+    void
+    reserve()
+    {
+        queue.reserve();
+    }
+    void
+    freeReservation()
+    {
+        queue.freeReservation();
+    }
 
     /** Like remainingSpace but does not count reserved spaces */
     unsigned int

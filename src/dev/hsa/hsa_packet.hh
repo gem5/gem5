@@ -38,18 +38,17 @@
 
 namespace gem5
 {
-
 struct hsa_packet_header_bitfield_t
 {
-        // TODO: replace with more portable impl based on offset, length
-        uint16_t type:8;
-        uint16_t barrier:1;
-        uint16_t acquire_fence_scope:2;
-        uint16_t release_fence_scope:2;
-        uint16_t reserved:3;
+    // TODO: replace with more portable impl based on offset, length
+    uint16_t type : 8;
+    uint16_t barrier : 1;
+    uint16_t acquire_fence_scope : 2;
+    uint16_t release_fence_scope : 2;
+    uint16_t reserved : 3;
 };
 
-//TODO: put an _ in front of these guys to avoud prob with hsa.h for now
+// TODO: put an _ in front of these guys to avoud prob with hsa.h for now
 struct _hsa_dispatch_packet_t
 {
     uint16_t header;

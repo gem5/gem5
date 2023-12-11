@@ -51,39 +51,45 @@
 
 namespace gem5
 {
-
 namespace ruby
 {
-
 using stl_helpers::operator<<;
 
-MessageBuffer::MessageBuffer(const Params &p)
-    : SimObject(p), m_stall_map_size(0), m_max_size(p.buffer_size),
-    m_max_dequeue_rate(p.max_dequeue_rate), m_dequeues_this_cy(0),
+MessageBuffer::MessageBuffer(const Params &p) :
+    SimObject(p),
+    m_stall_map_size(0),
+    m_max_size(p.buffer_size),
+    m_max_dequeue_rate(p.max_dequeue_rate),
+    m_dequeues_this_cy(0),
     m_time_last_time_size_checked(0),
-    m_time_last_time_enqueue(0), m_time_last_time_pop(0),
-    m_last_arrival_time(0), m_last_message_strict_fifo_bypassed(false),
+    m_time_last_time_enqueue(0),
+    m_time_last_time_pop(0),
+    m_last_arrival_time(0),
+    m_last_message_strict_fifo_bypassed(false),
     m_strict_fifo(p.ordered),
     m_randomization(p.randomization),
     m_allow_zero_latency(p.allow_zero_latency),
     m_routing_priority(p.routing_priority),
     ADD_STAT(m_not_avail_count, statistics::units::Count::get(),
-             "Number of times this buffer did not have N slots available"),
+        "Number of times this buffer did not have N slots available"),
     ADD_STAT(m_msg_count, statistics::units::Count::get(),
-             "Number of messages passed the buffer"),
-    ADD_STAT(m_buf_msgs, statistics::units::Rate<
-                statistics::units::Count, statistics::units::Tick>::get(),
-             "Average number of messages in buffer"),
+        "Number of messages passed the buffer"),
+    ADD_STAT(m_buf_msgs,
+        statistics::units::Rate<statistics::units::Count,
+            statistics::units::Tick>::get(),
+        "Average number of messages in buffer"),
     ADD_STAT(m_stall_time, statistics::units::Tick::get(),
-             "Total number of ticks messages were stalled in this buffer"),
+        "Total number of ticks messages were stalled in this buffer"),
     ADD_STAT(m_stall_count, statistics::units::Count::get(),
-             "Number of times messages were stalled"),
-    ADD_STAT(m_avg_stall_time, statistics::units::Rate<
-                statistics::units::Tick, statistics::units::Count>::get(),
-             "Average stall ticks per message"),
-    ADD_STAT(m_occupancy, statistics::units::Rate<
-                statistics::units::Ratio, statistics::units::Tick>::get(),
-             "Average occupancy of buffer capacity")
+        "Number of times messages were stalled"),
+    ADD_STAT(m_avg_stall_time,
+        statistics::units::Rate<statistics::units::Tick,
+            statistics::units::Count>::get(),
+        "Average stall ticks per message"),
+    ADD_STAT(m_occupancy,
+        statistics::units::Rate<statistics::units::Ratio,
+            statistics::units::Tick>::get(),
+        "Average occupancy of buffer capacity")
 {
     m_msg_counter = 0;
     m_consumer = NULL;
@@ -103,26 +109,19 @@ MessageBuffer::MessageBuffer(const Params &p)
     m_dequeue_callback = nullptr;
 
     // stats
-    m_not_avail_count
-        .flags(statistics::nozero);
+    m_not_avail_count.flags(statistics::nozero);
 
-    m_msg_count
-        .flags(statistics::nozero);
+    m_msg_count.flags(statistics::nozero);
 
-    m_buf_msgs
-        .flags(statistics::nozero);
+    m_buf_msgs.flags(statistics::nozero);
 
-    m_stall_count
-        .flags(statistics::nozero);
+    m_stall_count.flags(statistics::nozero);
 
-    m_avg_stall_time
-        .flags(statistics::nozero | statistics::nonan);
+    m_avg_stall_time.flags(statistics::nozero | statistics::nonan);
 
-    m_occupancy
-        .flags(statistics::nozero);
+    m_occupancy.flags(statistics::nozero);
 
-    m_stall_time
-        .flags(statistics::nozero);
+    m_stall_time.flags(statistics::nozero);
 
     if (m_max_size > 0) {
         m_occupancy = m_buf_msgs / m_max_size;
@@ -147,7 +146,6 @@ MessageBuffer::getSize(Tick curTime)
 bool
 MessageBuffer::areNSlotsAvailable(unsigned int n, Tick current_time)
 {
-
     // fast path when message buffers have infinite size
     if (m_max_size == 0) {
         return true;
@@ -182,20 +180,21 @@ MessageBuffer::areNSlotsAvailable(unsigned int n, Tick current_time)
     if (current_size + current_stall_size + n <= m_max_size) {
         return true;
     } else {
-        DPRINTF(RubyQueue, "n: %d, current_size: %d, heap size: %d, "
-                "m_max_size: %d\n",
-                n, current_size + current_stall_size,
-                m_prio_heap.size(), m_max_size);
+        DPRINTF(RubyQueue,
+            "n: %d, current_size: %d, heap size: %d, "
+            "m_max_size: %d\n",
+            n, current_size + current_stall_size, m_prio_heap.size(),
+            m_max_size);
         m_not_avail_count++;
         return false;
     }
 }
 
-const Message*
+const Message *
 MessageBuffer::peek() const
 {
     DPRINTF(RubyQueue, "Peeking at head of queue.\n");
-    const Message* msg_ptr = m_prio_heap.front().get();
+    const Message *msg_ptr = m_prio_heap.front().get();
     assert(msg_ptr);
 
     DPRINTF(RubyQueue, "Message: %s\n", (*msg_ptr));
@@ -207,20 +206,20 @@ Tick
 random_time()
 {
     Tick time = 1;
-    time += random_mt.random(0, 3);  // [0...3]
-    if (random_mt.random(0, 7) == 0) {  // 1 in 8 chance
+    time += random_mt.random(0, 3);            // [0...3]
+    if (random_mt.random(0, 7) == 0) {         // 1 in 8 chance
         time += 100 + random_mt.random(1, 15); // 100 + [1...15]
     }
     return time;
 }
 
 void
-MessageBuffer::enqueue(MsgPtr message, Tick current_time, Tick delta,
-                       bool bypassStrictFIFO)
+MessageBuffer::enqueue(
+    MsgPtr message, Tick current_time, Tick delta, bool bypassStrictFIFO)
 {
     // record current time incase we have a pop that also adjusts my size
     if (m_time_last_time_enqueue < current_time) {
-        m_msgs_this_cycle = 0;  // first msg this cycle
+        m_msgs_this_cycle = 0; // first msg this cycle
         m_time_last_time_enqueue = current_time;
     }
 
@@ -230,14 +229,14 @@ MessageBuffer::enqueue(MsgPtr message, Tick current_time, Tick delta,
     // Calculate the arrival time of the message, that is, the first
     // cycle the message can be dequeued.
     panic_if((delta == 0) && !m_allow_zero_latency,
-           "Delta equals zero and allow_zero_latency is false during enqueue");
+        "Delta equals zero and allow_zero_latency is false during enqueue");
     Tick arrival_time = 0;
 
     // random delays are inserted if the RubySystem level randomization flag
     // is turned on and this buffer allows it
     if ((m_randomization == MessageRandomization::disabled) ||
         ((m_randomization == MessageRandomization::ruby_system) &&
-          !RubySystem::getRandomization())) {
+            !RubySystem::getRandomization())) {
         // No randomization
         arrival_time = current_time + delta;
     } else {
@@ -259,8 +258,8 @@ MessageBuffer::enqueue(MsgPtr message, Tick current_time, Tick delta,
         if (arrival_time < m_last_arrival_time) {
             panic("FIFO ordering violated: %s name: %s current time: %d "
                   "delta: %d arrival_time: %d last arrival_time: %d\n",
-                  *this, name(), current_time, delta, arrival_time,
-                  m_last_arrival_time);
+                *this, name(), current_time, delta, arrival_time,
+                m_last_arrival_time);
         }
     }
 
@@ -272,7 +271,7 @@ MessageBuffer::enqueue(MsgPtr message, Tick current_time, Tick delta,
     m_last_message_strict_fifo_bypassed = bypassStrictFIFO;
 
     // compute the delay cycles and set enqueue time
-    Message* msg_ptr = message.get();
+    Message *msg_ptr = message.get();
     assert(msg_ptr != NULL);
 
     assert(current_time >= msg_ptr->getLastEnqueueTime() &&
@@ -292,7 +291,7 @@ MessageBuffer::enqueue(MsgPtr message, Tick current_time, Tick delta,
            ((m_prio_heap.size() + m_stall_map_size) <= m_max_size));
 
     DPRINTF(RubyQueue, "Enqueue arrival_time: %lld, Message: %s\n",
-            arrival_time, *(message.get()));
+        arrival_time, *(message.get()));
 
     // Schedule the wakeup
     assert(m_consumer != NULL);
@@ -392,8 +391,8 @@ MessageBuffer::reanalyzeList(std::list<MsgPtr> &lt, Tick schdTick)
         assert(m->getLastEnqueueTime() <= schdTick);
 
         m_prio_heap.push_back(m);
-        push_heap(m_prio_heap.begin(), m_prio_heap.end(),
-                  std::greater<MsgPtr>());
+        push_heap(
+            m_prio_heap.begin(), m_prio_heap.end(), std::greater<MsgPtr>());
 
         m_consumer->scheduleEventAbsolute(schdTick);
 
@@ -474,7 +473,7 @@ void
 MessageBuffer::deferEnqueueingMessage(Addr addr, MsgPtr message)
 {
     DPRINTF(RubyQueue, "Deferring enqueueing message: %s, Address %#x\n",
-            *(message.get()), addr);
+        *(message.get()), addr);
     (m_deferred_msg_map[addr]).push_back(message);
 }
 
@@ -482,7 +481,7 @@ void
 MessageBuffer::enqueueDeferredMessages(Addr addr, Tick curTime, Tick delay)
 {
     assert(!isDeferredMsgMapEmpty(addr));
-    std::vector<MsgPtr>& msg_vec = m_deferred_msg_map[addr];
+    std::vector<MsgPtr> &msg_vec = m_deferred_msg_map[addr];
     assert(msg_vec.size() > 0);
 
     // enqueue all deferred messages associated with this address
@@ -501,7 +500,7 @@ MessageBuffer::isDeferredMsgMapEmpty(Addr addr) const
 }
 
 void
-MessageBuffer::print(std::ostream& out) const
+MessageBuffer::print(std::ostream &out) const
 {
     ccprintf(out, "[MessageBuffer: ");
     if (m_consumer != NULL) {
@@ -520,8 +519,9 @@ MessageBuffer::isReady(Tick current_time) const
     bool can_dequeue = (m_max_dequeue_rate == 0) ||
                        (m_time_last_time_pop < current_time) ||
                        (m_dequeues_this_cy < m_max_dequeue_rate);
-    bool is_ready = (m_prio_heap.size() > 0) &&
-                   (m_prio_heap.front()->getLastEnqueueTime() <= current_time);
+    bool is_ready =
+        (m_prio_heap.size() > 0) &&
+        (m_prio_heap.front()->getLastEnqueueTime() <= current_time);
     if (!can_dequeue && is_ready) {
         // Make sure the Consumer executes next cycle to dequeue the ready msg
         m_consumer->scheduleEvent(Cycles(1));
@@ -541,8 +541,8 @@ MessageBuffer::readyTime() const
 uint32_t
 MessageBuffer::functionalAccess(Packet *pkt, bool is_read, WriteMask *mask)
 {
-    DPRINTF(RubyQueue, "functional %s for %#x\n",
-            is_read ? "read" : "write", pkt->getAddr());
+    DPRINTF(RubyQueue, "functional %s for %#x\n", is_read ? "read" : "write",
+        pkt->getAddr());
 
     uint32_t num_functional_accesses = 0;
 
@@ -561,12 +561,9 @@ MessageBuffer::functionalAccess(Packet *pkt, bool is_read, WriteMask *mask)
     // Check the stall queue and write any messages that may
     // correspond to the address in the packet.
     for (StallMsgMapType::iterator map_iter = m_stall_msg_map.begin();
-         map_iter != m_stall_msg_map.end();
-         ++map_iter) {
-
+         map_iter != m_stall_msg_map.end(); ++map_iter) {
         for (std::list<MsgPtr>::iterator it = (map_iter->second).begin();
-            it != (map_iter->second).end(); ++it) {
-
+             it != (map_iter->second).end(); ++it) {
             Message *msg = (*it).get();
             if (is_read && !mask && msg->functionalRead(pkt))
                 return 1;

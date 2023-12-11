@@ -44,10 +44,8 @@
 
 namespace gem5
 {
-
 namespace probing
 {
-
 /**
  * PMU probe point
  *
@@ -59,7 +57,7 @@ namespace probing
 typedef ProbePointArg<uint64_t> PMU;
 typedef std::unique_ptr<PMU> PMUUPtr;
 
-}
+} // namespace probing
 
 } // namespace gem5
 

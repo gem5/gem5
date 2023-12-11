@@ -51,17 +51,19 @@
 
 namespace gem5
 {
-
-GPUCommandProcessor::GPUCommandProcessor(const Params &p)
-    : DmaVirtDevice(p), dispatcher(*p.dispatcher), _driver(nullptr),
-      walker(p.walker), hsaPP(p.hsapp)
+GPUCommandProcessor::GPUCommandProcessor(const Params &p) :
+    DmaVirtDevice(p),
+    dispatcher(*p.dispatcher),
+    _driver(nullptr),
+    walker(p.walker),
+    hsaPP(p.hsapp)
 {
     assert(hsaPP);
     hsaPP->setDevice(this);
     dispatcher.setCommandProcessor(this);
 }
 
-HSAPacketProcessor&
+HSAPacketProcessor &
 GPUCommandProcessor::hsaPacketProc()
 {
     return *hsaPP;
@@ -90,9 +92,8 @@ GPUCommandProcessor::translate(Addr vaddr, Addr size)
 
     // In full system use the page tables setup by the kernel driver rather
     // than the CPU page tables.
-    return TranslationGenPtr(
-        new AMDGPUVM::UserTranslationGen(&gpuDevice->getVM(), walker,
-                                         1 /* vmid */, vaddr, size));
+    return TranslationGenPtr(new AMDGPUVM::UserTranslationGen(
+        &gpuDevice->getVM(), walker, 1 /* vmid */, vaddr, size));
 }
 
 /**
@@ -113,10 +114,10 @@ GPUCommandProcessor::translate(Addr vaddr, Addr size)
  * queue, and notify the runtime that the task has completed.
  */
 void
-GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
-                                       Addr host_pkt_addr)
+GPUCommandProcessor::submitDispatchPkt(
+    void *raw_pkt, uint32_t queue_id, Addr host_pkt_addr)
 {
-    _hsa_dispatch_packet_t *disp_pkt = (_hsa_dispatch_packet_t*)raw_pkt;
+    _hsa_dispatch_packet_t *disp_pkt = (_hsa_dispatch_packet_t *)raw_pkt;
     assert(!(disp_pkt->kernel_object & (system()->cacheLineSize() - 1)));
 
     /**
@@ -148,8 +149,8 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
         SETranslatingPortProxy virt_proxy(tc);
 
         DPRINTF(GPUCommandProc, "reading kernel_object using proxy\n");
-        virt_proxy.readBlob(disp_pkt->kernel_object, (uint8_t*)akc,
-            sizeof(AMDKernelCode));
+        virt_proxy.readBlob(
+            disp_pkt->kernel_object, (uint8_t *)akc, sizeof(AMDKernelCode));
 
         dispatchKernelObject(akc, raw_pkt, queue_id, host_pkt_addr);
     } else {
@@ -171,36 +172,38 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
         int vmid = 1;
         unsigned tmp_bytes;
         walker->startFunctional(gpuDevice->getVM().getPageTableBase(vmid),
-                                phys_addr, tmp_bytes, BaseMMU::Mode::Read,
-                                is_system_page);
+            phys_addr, tmp_bytes, BaseMMU::Mode::Read, is_system_page);
 
-        DPRINTF(GPUCommandProc, "kernel_object vaddr %#lx paddr %#lx size %d"
-                " s:%d\n", disp_pkt->kernel_object, phys_addr,
-                sizeof(AMDKernelCode), is_system_page);
+        DPRINTF(GPUCommandProc,
+            "kernel_object vaddr %#lx paddr %#lx size %d"
+            " s:%d\n",
+            disp_pkt->kernel_object, phys_addr, sizeof(AMDKernelCode),
+            is_system_page);
 
         /**
          * System objects use DMA device. Device objects need to use device
          * memory.
          */
         if (is_system_page) {
-            DPRINTF(GPUCommandProc,
-                    "sending system DMA read for kernel_object\n");
+            DPRINTF(
+                GPUCommandProc, "sending system DMA read for kernel_object\n");
 
-            auto dma_callback = new DmaVirtCallback<uint32_t>(
-              [=](const uint32_t&) {
-                dispatchKernelObject(akc, raw_pkt, queue_id, host_pkt_addr);
-              });
+            auto dma_callback =
+                new DmaVirtCallback<uint32_t>([=](const uint32_t &) {
+                    dispatchKernelObject(
+                        akc, raw_pkt, queue_id, host_pkt_addr);
+                });
 
             dmaReadVirt(disp_pkt->kernel_object, sizeof(AMDKernelCode),
-                    dma_callback, (void *)akc);
+                dma_callback, (void *)akc);
         } else {
-            DPRINTF(GPUCommandProc,
-                    "kernel_object in device, using device mem\n");
+            DPRINTF(
+                GPUCommandProc, "kernel_object in device, using device mem\n");
 
             // Read from GPU memory manager one cache line at a time to prevent
             // rare cases where the AKC spans two memory pages.
             ChunkGenerator gen(disp_pkt->kernel_object, sizeof(AMDKernelCode),
-                               system()->cacheLineSize());
+                system()->cacheLineSize());
             for (; !gen.done(); gen.next()) {
                 Addr chunk_addr = gen.addr();
                 int vmid = 1;
@@ -225,16 +228,18 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
 }
 
 void
-GPUCommandProcessor::dispatchKernelObject(AMDKernelCode *akc, void *raw_pkt,
-                                        uint32_t queue_id, Addr host_pkt_addr)
+GPUCommandProcessor::dispatchKernelObject(
+    AMDKernelCode *akc, void *raw_pkt, uint32_t queue_id, Addr host_pkt_addr)
 {
-    _hsa_dispatch_packet_t *disp_pkt = (_hsa_dispatch_packet_t*)raw_pkt;
+    _hsa_dispatch_packet_t *disp_pkt = (_hsa_dispatch_packet_t *)raw_pkt;
 
-    DPRINTF(GPUCommandProc, "GPU machine code is %lli bytes from start of the "
-        "kernel object\n", akc->kernel_code_entry_byte_offset);
+    DPRINTF(GPUCommandProc,
+        "GPU machine code is %lli bytes from start of the "
+        "kernel object\n",
+        akc->kernel_code_entry_byte_offset);
 
-    Addr machine_code_addr = (Addr)disp_pkt->kernel_object
-        + akc->kernel_code_entry_byte_offset;
+    Addr machine_code_addr =
+        (Addr)disp_pkt->kernel_object + akc->kernel_code_entry_byte_offset;
 
     DPRINTF(GPUCommandProc, "Machine code starts at addr: %#x\n",
         machine_code_addr);
@@ -258,24 +263,27 @@ GPUCommandProcessor::dispatchKernelObject(AMDKernelCode *akc, void *raw_pkt,
 
     DPRINTF(GPUKernelInfo, "Kernel name: %s\n", kernel_name.c_str());
 
-    GfxVersion gfxVersion = FullSystem ? gpuDevice->getGfxVersion()
-                          : driver()->getGfxVersion();
-    HSAQueueEntry *task = new HSAQueueEntry(kernel_name, queue_id,
-        dynamic_task_id, raw_pkt, akc, host_pkt_addr, machine_code_addr,
-        gfxVersion);
+    GfxVersion gfxVersion =
+        FullSystem ? gpuDevice->getGfxVersion() : driver()->getGfxVersion();
+    HSAQueueEntry *task =
+        new HSAQueueEntry(kernel_name, queue_id, dynamic_task_id, raw_pkt, akc,
+            host_pkt_addr, machine_code_addr, gfxVersion);
 
-    DPRINTF(GPUCommandProc, "Task ID: %i Got AQL: wg size (%dx%dx%d), "
+    DPRINTF(GPUCommandProc,
+        "Task ID: %i Got AQL: wg size (%dx%dx%d), "
         "grid size (%dx%dx%d) kernarg addr: %#x, completion "
-        "signal addr:%#x\n", dynamic_task_id, disp_pkt->workgroup_size_x,
+        "signal addr:%#x\n",
+        dynamic_task_id, disp_pkt->workgroup_size_x,
         disp_pkt->workgroup_size_y, disp_pkt->workgroup_size_z,
-        disp_pkt->grid_size_x, disp_pkt->grid_size_y,
-        disp_pkt->grid_size_z, disp_pkt->kernarg_address,
-        disp_pkt->completion_signal);
+        disp_pkt->grid_size_x, disp_pkt->grid_size_y, disp_pkt->grid_size_z,
+        disp_pkt->kernarg_address, disp_pkt->completion_signal);
 
-    DPRINTF(GPUCommandProc, "Extracted code object: %s (num vector regs: %d, "
+    DPRINTF(GPUCommandProc,
+        "Extracted code object: %s (num vector regs: %d, "
         "num scalar regs: %d, code addr: %#x, kernarg size: %d, "
-        "LDS size: %d)\n", kernel_name, task->numVectorRegs(),
-        task->numScalarRegs(), task->codeAddr(), 0, 0);
+        "LDS size: %d)\n",
+        kernel_name, task->numVectorRegs(), task->numScalarRegs(),
+        task->codeAddr(), 0, 0);
 
     initABI(task);
     ++dynamic_task_id;
@@ -297,11 +305,11 @@ GPUCommandProcessor::sendCompletionSignal(Addr signal_handle)
 
     if (!FullSystem) {
         /**
-        * HACK: The semantics of the HSA signal is to decrement
-        * the current signal value. We cheat here and read out
-        * he value from main memory using functional access and
-        * then just DMA the decremented value.
-        */
+         * HACK: The semantics of the HSA signal is to decrement
+         * the current signal value. We cheat here and read out
+         * he value from main memory using functional access and
+         * then just DMA the decremented value.
+         */
         uint64_t signal_value = functionalReadHsaSignal(signal_handle);
 
         updateHsaSignal(signal_handle, signal_value - 1);
@@ -319,17 +327,17 @@ GPUCommandProcessor::updateHsaSignalAsync(Addr signal_handle, int64_t diff)
 {
     Addr mailbox_addr = getHsaSignalMailboxAddr(signal_handle);
     uint64_t *mailboxValue = new uint64_t;
-    auto cb2 = new DmaVirtCallback<uint64_t>(
-        [ = ] (const uint64_t &)
-            { updateHsaMailboxData(signal_handle, mailboxValue); });
+    auto cb2 = new DmaVirtCallback<uint64_t>([=](const uint64_t &) {
+        updateHsaMailboxData(signal_handle, mailboxValue);
+    });
     dmaReadVirt(mailbox_addr, sizeof(uint64_t), cb2, (void *)mailboxValue);
     DPRINTF(GPUCommandProc, "updateHsaSignalAsync reading mailbox addr %lx\n",
-            mailbox_addr);
+        mailbox_addr);
 }
 
 void
-GPUCommandProcessor::updateHsaMailboxData(Addr signal_handle,
-                                          uint64_t *mailbox_value)
+GPUCommandProcessor::updateHsaMailboxData(
+    Addr signal_handle, uint64_t *mailbox_value)
 {
     Addr event_addr = getHsaSignalEventAddr(signal_handle);
 
@@ -338,9 +346,9 @@ GPUCommandProcessor::updateHsaMailboxData(Addr signal_handle,
         // This is an interruptible signal. Now, read the
         // event ID and directly communicate with the driver
         // about that event notification.
-        auto cb = new DmaVirtCallback<uint64_t>(
-            [ = ] (const uint64_t &)
-                { updateHsaEventData(signal_handle, mailbox_value); });
+        auto cb = new DmaVirtCallback<uint64_t>([=](const uint64_t &) {
+            updateHsaEventData(signal_handle, mailbox_value);
+        });
         dmaReadVirt(event_addr, sizeof(uint64_t), cb, (void *)mailbox_value);
     } else {
         delete mailbox_value;
@@ -350,28 +358,30 @@ GPUCommandProcessor::updateHsaMailboxData(Addr signal_handle,
         amd_event_t *event_ts = new amd_event_t;
         event_ts->start_ts = dispatchStartTime[signal_handle];
         event_ts->end_ts = curTick() / sim_clock::as_int::ns;
-        auto cb = new DmaVirtCallback<uint64_t>(
-            [ = ] (const uint64_t &)
-                { updateHsaEventTs(signal_handle, event_ts); });
+        auto cb = new DmaVirtCallback<uint64_t>([=](const uint64_t &) {
+            updateHsaEventTs(signal_handle, event_ts);
+        });
         dmaWriteVirt(ts_addr, sizeof(amd_event_t), cb, (void *)event_ts);
-        DPRINTF(GPUCommandProc, "updateHsaMailboxData reading timestamp addr "
-                "%lx\n", ts_addr);
+        DPRINTF(GPUCommandProc,
+            "updateHsaMailboxData reading timestamp addr "
+            "%lx\n",
+            ts_addr);
 
         dispatchStartTime.erase(signal_handle);
     }
 }
 
 void
-GPUCommandProcessor::updateHsaEventData(Addr signal_handle,
-                                        uint64_t *event_value)
+GPUCommandProcessor::updateHsaEventData(
+    Addr signal_handle, uint64_t *event_value)
 {
     Addr mailbox_addr = getHsaSignalMailboxAddr(signal_handle);
 
     DPRINTF(GPUCommandProc, "updateHsaEventData read %ld\n", *event_value);
     // Write *event_value to the mailbox to clear the event
     auto cb = new DmaVirtCallback<uint64_t>(
-        [ = ] (const uint64_t &)
-            { updateHsaSignalDone(event_value); }, *event_value);
+        [=](const uint64_t &) { updateHsaSignalDone(event_value); },
+        *event_value);
     dmaWriteVirt(mailbox_addr, sizeof(uint64_t), cb, &cb->dmaBuffer, 0);
 
     Addr ts_addr = signal_handle + offsetof(amd_signal_t, start_ts);
@@ -380,18 +390,16 @@ GPUCommandProcessor::updateHsaEventData(Addr signal_handle,
     event_ts->start_ts = dispatchStartTime[signal_handle];
     event_ts->end_ts = curTick() / sim_clock::as_int::ns;
     auto cb2 = new DmaVirtCallback<uint64_t>(
-        [ = ] (const uint64_t &)
-            { updateHsaEventTs(signal_handle, event_ts); });
+        [=](const uint64_t &) { updateHsaEventTs(signal_handle, event_ts); });
     dmaWriteVirt(ts_addr, sizeof(amd_event_t), cb2, (void *)event_ts);
     DPRINTF(GPUCommandProc, "updateHsaEventData reading timestamp addr %lx\n",
-            ts_addr);
+        ts_addr);
 
     dispatchStartTime.erase(signal_handle);
 }
 
 void
-GPUCommandProcessor::updateHsaEventTs(Addr signal_handle,
-                                      amd_event_t *ts)
+GPUCommandProcessor::updateHsaEventTs(Addr signal_handle, amd_event_t *ts)
 {
     delete ts;
 
@@ -399,25 +407,24 @@ GPUCommandProcessor::updateHsaEventTs(Addr signal_handle,
     int64_t diff = -1;
 
     uint64_t *signalValue = new uint64_t;
-    auto cb = new DmaVirtCallback<uint64_t>(
-        [ = ] (const uint64_t &)
-            { updateHsaSignalData(value_addr, diff, signalValue); });
+    auto cb = new DmaVirtCallback<uint64_t>([=](const uint64_t &) {
+        updateHsaSignalData(value_addr, diff, signalValue);
+    });
     dmaReadVirt(value_addr, sizeof(uint64_t), cb, (void *)signalValue);
     DPRINTF(GPUCommandProc, "updateHsaSignalAsync reading value addr %lx\n",
-            value_addr);
+        value_addr);
 }
 
 void
-GPUCommandProcessor::updateHsaSignalData(Addr value_addr, int64_t diff,
-                                         uint64_t *prev_value)
+GPUCommandProcessor::updateHsaSignalData(
+    Addr value_addr, int64_t diff, uint64_t *prev_value)
 {
     // Reuse the value allocated for the read
     DPRINTF(GPUCommandProc, "updateHsaSignalData read %ld, writing %ld\n",
-            *prev_value, *prev_value + diff);
+        *prev_value, *prev_value + diff);
     *prev_value += diff;
     auto cb = new DmaVirtCallback<uint64_t>(
-        [ = ] (const uint64_t &)
-            { updateHsaSignalDone(prev_value); });
+        [=](const uint64_t &) { updateHsaSignalDone(prev_value); });
     dmaWriteVirt(value_addr, sizeof(uint64_t), cb, (void *)prev_value);
 }
 
@@ -438,7 +445,7 @@ GPUCommandProcessor::functionalReadHsaSignal(Addr signal_handle)
 
 void
 GPUCommandProcessor::updateHsaSignal(Addr signal_handle, uint64_t signal_value,
-                                     HsaSignalCallbackFunction function)
+    HsaSignalCallbackFunction function)
 {
     // The signal value is aligned 8 bytes from
     // the actual handle in the runtime
@@ -465,8 +472,10 @@ GPUCommandProcessor::updateHsaSignal(Addr signal_handle, uint64_t signal_value,
         // about that event notification.
         ConstVPtr<uint32_t> event_val(event_addr, tc);
 
-        DPRINTF(GPUCommandProc, "Calling signal wakeup event on "
-                "signal event value %d\n", *event_val);
+        DPRINTF(GPUCommandProc,
+            "Calling signal wakeup event on "
+            "signal event value %d\n",
+            *event_val);
 
         // The mailbox/wakeup signal uses the SE mode proxy port to write
         // the event value. This is not available in full system mode so
@@ -491,7 +500,7 @@ GPUCommandProcessor::attachDriver(GPUComputeDriver *gpu_driver)
     assert(_driver);
 }
 
-GPUComputeDriver*
+GPUComputeDriver *
 GPUCommandProcessor::driver()
 {
     return _driver;
@@ -516,8 +525,8 @@ GPUCommandProcessor::driver()
  * for now.
  */
 void
-GPUCommandProcessor::submitVendorPkt(void *raw_pkt, uint32_t queue_id,
-    Addr host_pkt_addr)
+GPUCommandProcessor::submitVendorPkt(
+    void *raw_pkt, uint32_t queue_id, Addr host_pkt_addr)
 {
     auto vendor_pkt = (_hsa_generic_vendor_pkt *)raw_pkt;
 
@@ -538,41 +547,42 @@ GPUCommandProcessor::submitVendorPkt(void *raw_pkt, uint32_t queue_id,
  * For now it simply finishes the pkt.
  */
 void
-GPUCommandProcessor::submitAgentDispatchPkt(void *raw_pkt, uint32_t queue_id,
-    Addr host_pkt_addr)
+GPUCommandProcessor::submitAgentDispatchPkt(
+    void *raw_pkt, uint32_t queue_id, Addr host_pkt_addr)
 {
-    //Parse the Packet, see what it wants us to do
-    _hsa_agent_dispatch_packet_t * agent_pkt =
+    // Parse the Packet, see what it wants us to do
+    _hsa_agent_dispatch_packet_t *agent_pkt =
         (_hsa_agent_dispatch_packet_t *)raw_pkt;
 
     if (agent_pkt->type == AgentCmd::Nop) {
         DPRINTF(GPUCommandProc, "Agent Dispatch Packet NOP\n");
     } else if (agent_pkt->type == AgentCmd::Steal) {
-        //This is where we steal the HSA Task's completion signal
+        // This is where we steal the HSA Task's completion signal
         int kid = agent_pkt->arg[0];
         DPRINTF(GPUCommandProc,
             "Agent Dispatch Packet Stealing signal handle for kernel %d\n",
             kid);
 
         HSAQueueEntry *task = dispatcher.hsaTask(kid);
-        uint64_t signal_addr = task->completionSignal();// + sizeof(uint64_t);
+        uint64_t signal_addr = task->completionSignal(); // + sizeof(uint64_t);
 
         uint64_t return_address = agent_pkt->return_address;
-        DPRINTF(GPUCommandProc, "Return Addr: %p\n",return_address);
+        DPRINTF(GPUCommandProc, "Return Addr: %p\n", return_address);
         //*return_address = signal_addr;
         Addr *new_signal_addr = new Addr;
-        *new_signal_addr  = (Addr)signal_addr;
-        dmaWriteVirt(return_address, sizeof(Addr), nullptr, new_signal_addr, 0);
+        *new_signal_addr = (Addr)signal_addr;
+        dmaWriteVirt(
+            return_address, sizeof(Addr), nullptr, new_signal_addr, 0);
 
         DPRINTF(GPUCommandProc,
-            "Agent Dispatch Packet Stealing signal handle from kid %d :" \
+            "Agent Dispatch Packet Stealing signal handle from kid %d :"
             "(%x:%x) writing into %x\n",
-            kid,signal_addr,new_signal_addr,return_address);
+            kid, signal_addr, new_signal_addr, return_address);
 
-    } else
-    {
-        panic("The agent dispatch packet provided an unknown argument in" \
-        "arg[0],currently only 0(nop) or 1(return kernel signal) is accepted");
+    } else {
+        panic("The agent dispatch packet provided an unknown argument in"
+              "arg[0],currently only 0(nop) or 1(return kernel signal) is "
+              "accepted");
     }
 
     hsaPP->finishPkt(raw_pkt, queue_id);
@@ -606,17 +616,19 @@ void
 GPUCommandProcessor::initABI(HSAQueueEntry *task)
 {
     auto cb = new DmaVirtCallback<uint32_t>(
-        [ = ] (const uint32_t &readDispIdOffset)
-            { ReadDispIdOffsetDmaEvent(task, readDispIdOffset); }, 0);
+        [=](const uint32_t &readDispIdOffset) {
+            ReadDispIdOffsetDmaEvent(task, readDispIdOffset);
+        },
+        0);
 
-    Addr hostReadIdxPtr
-        = hsaPP->getQueueDesc(task->queueId())->hostReadIndexPtr;
+    Addr hostReadIdxPtr =
+        hsaPP->getQueueDesc(task->queueId())->hostReadIndexPtr;
 
-    dmaReadVirt(hostReadIdxPtr + sizeof(hostReadIdxPtr),
-        sizeof(uint32_t), cb, &cb->dmaBuffer);
+    dmaReadVirt(hostReadIdxPtr + sizeof(hostReadIdxPtr), sizeof(uint32_t), cb,
+        &cb->dmaBuffer);
 }
 
-System*
+System *
 GPUCommandProcessor::system()
 {
     return sys;
@@ -642,7 +654,7 @@ GPUCommandProcessor::setShader(Shader *shader)
     _shader = shader;
 }
 
-Shader*
+Shader *
 GPUCommandProcessor::shader()
 {
     return _shader;

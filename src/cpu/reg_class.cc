@@ -48,7 +48,6 @@
 
 namespace gem5
 {
-
 std::string
 RegClassOps::regName(const RegId &id) const
 {

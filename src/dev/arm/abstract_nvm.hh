@@ -44,7 +44,6 @@
 
 namespace gem5
 {
-
 /**
  * This is an interface between the disk interface (which will handle the disk
  * data transactions) and the timing model. The timing model only takes care
@@ -55,10 +54,9 @@ namespace gem5
  */
 class AbstractNVM : public SimObject
 {
-
   public:
-    AbstractNVM(const AbstractNVMParams &p): SimObject(p) {};
-    virtual ~AbstractNVM() {};
+    AbstractNVM(const AbstractNVMParams &p) : SimObject(p){};
+    virtual ~AbstractNVM(){};
 
     /**
      * Initialize Memory.
@@ -81,8 +79,8 @@ class AbstractNVM : public SimObject
      * @param sector_size size of one sector in bytes; value is defined in
      * disk_image.hh
      */
-    virtual void initializeMemory(uint64_t disk_size, uint32_t sector_size) =
-        0;
+    virtual void initializeMemory(
+        uint64_t disk_size, uint32_t sector_size) = 0;
 
     /**
      * Access functions
@@ -102,9 +100,9 @@ class AbstractNVM : public SimObject
      * data transfer between the disk and the disk controller.
      */
     virtual void readMemory(uint64_t address, uint32_t amount,
-                            const std::function<void()> &event) = 0;
+        const std::function<void()> &event) = 0;
     virtual void writeMemory(uint64_t address, uint32_t amount,
-                             const std::function<void()> &event) = 0;
+        const std::function<void()> &event) = 0;
 };
 
 } // namespace gem5

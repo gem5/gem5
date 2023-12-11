@@ -33,17 +33,19 @@
 
 namespace gem5
 {
-
 namespace Gem5Internal
 {
-
 // This pointer is maintained by curEventQueue in src/sim/eventq.hh.
 extern __thread Tick *_curTickPtr;
 
 } // namespace Gem5Internal
 
 /// The universal simulation clock.
-inline Tick curTick() { return *Gem5Internal::_curTickPtr; }
+inline Tick
+curTick()
+{
+    return *Gem5Internal::_curTickPtr;
+}
 
 } // namespace gem5
 

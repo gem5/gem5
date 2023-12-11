@@ -42,11 +42,10 @@
 
 namespace gem5
 {
-
-namespace ArmISA {
-
+namespace ArmISA
+{
 void
-TLBIALL::operator()(ThreadContext* tc)
+TLBIALL::operator()(ThreadContext *tc)
 {
     HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     inHost = (hcr.tge == 1 && hcr.e2h == 1);
@@ -63,41 +62,41 @@ TLBIALL::operator()(ThreadContext* tc)
 }
 
 bool
-TLBIALL::match(TlbEntry* te, vmid_t vmid) const
+TLBIALL::match(TlbEntry *te, vmid_t vmid) const
 {
     return te->valid && secureLookup == !te->nstid &&
-        (te->vmid == vmid || el2Enabled) &&
-        te->checkELMatch(targetEL, inHost);
+           (te->vmid == vmid || el2Enabled) &&
+           te->checkELMatch(targetEL, inHost);
 }
 
 void
-ITLBIALL::operator()(ThreadContext* tc)
+ITLBIALL::operator()(ThreadContext *tc)
 {
     el2Enabled = EL2Enabled(tc);
     getMMUPtr(tc)->iflush(*this);
 }
 
 bool
-ITLBIALL::match(TlbEntry* te, vmid_t vmid) const
+ITLBIALL::match(TlbEntry *te, vmid_t vmid) const
 {
     return TLBIALL::match(te, vmid) && (te->type & TypeTLB::instruction);
 }
 
 void
-DTLBIALL::operator()(ThreadContext* tc)
+DTLBIALL::operator()(ThreadContext *tc)
 {
     el2Enabled = EL2Enabled(tc);
     getMMUPtr(tc)->dflush(*this);
 }
 
 bool
-DTLBIALL::match(TlbEntry* te, vmid_t vmid) const
+DTLBIALL::match(TlbEntry *te, vmid_t vmid) const
 {
     return TLBIALL::match(te, vmid) && (te->type & TypeTLB::data);
 }
 
 void
-TLBIALLEL::operator()(ThreadContext* tc)
+TLBIALLEL::operator()(ThreadContext *tc)
 {
     HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     inHost = (hcr.tge == 1 && hcr.e2h == 1);
@@ -111,14 +110,14 @@ TLBIALLEL::operator()(ThreadContext* tc)
 }
 
 bool
-TLBIALLEL::match(TlbEntry* te, vmid_t vmid) const
+TLBIALLEL::match(TlbEntry *te, vmid_t vmid) const
 {
     return te->valid && secureLookup == !te->nstid &&
-        te->checkELMatch(targetEL, inHost);
+           te->checkELMatch(targetEL, inHost);
 }
 
 void
-TLBIVMALL::operator()(ThreadContext* tc)
+TLBIVMALL::operator()(ThreadContext *tc)
 {
     HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     inHost = (hcr.tge == 1 && hcr.e2h == 1);
@@ -134,15 +133,15 @@ TLBIVMALL::operator()(ThreadContext* tc)
 }
 
 bool
-TLBIVMALL::match(TlbEntry* te, vmid_t vmid) const
+TLBIVMALL::match(TlbEntry *te, vmid_t vmid) const
 {
     return te->valid && secureLookup == !te->nstid &&
-        te->checkELMatch(targetEL, inHost) &&
-        (te->vmid == vmid || !el2Enabled || (!stage2Flush() && inHost));
+           te->checkELMatch(targetEL, inHost) &&
+           (te->vmid == vmid || !el2Enabled || (!stage2Flush() && inHost));
 }
 
 void
-TLBIASID::operator()(ThreadContext* tc)
+TLBIASID::operator()(ThreadContext *tc)
 {
     HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     inHost = (hcr.tge == 1 && hcr.e2h == 1);
@@ -156,42 +155,41 @@ TLBIASID::operator()(ThreadContext* tc)
 }
 
 bool
-TLBIASID::match(TlbEntry* te, vmid_t vmid) const
+TLBIASID::match(TlbEntry *te, vmid_t vmid) const
 {
-    return te->valid && te->asid == asid &&
-        secureLookup == !te->nstid &&
-        te->checkELMatch(targetEL, inHost) &&
-        (te->vmid == vmid || !el2Enabled || inHost);
+    return te->valid && te->asid == asid && secureLookup == !te->nstid &&
+           te->checkELMatch(targetEL, inHost) &&
+           (te->vmid == vmid || !el2Enabled || inHost);
 }
 
 void
-ITLBIASID::operator()(ThreadContext* tc)
+ITLBIASID::operator()(ThreadContext *tc)
 {
     el2Enabled = EL2Enabled(tc);
     getMMUPtr(tc)->iflush(*this);
 }
 
 bool
-ITLBIASID::match(TlbEntry* te, vmid_t vmid) const
+ITLBIASID::match(TlbEntry *te, vmid_t vmid) const
 {
     return TLBIASID::match(te, vmid) && (te->type & TypeTLB::instruction);
 }
 
 void
-DTLBIASID::operator()(ThreadContext* tc)
+DTLBIASID::operator()(ThreadContext *tc)
 {
     el2Enabled = EL2Enabled(tc);
     getMMUPtr(tc)->dflush(*this);
 }
 
 bool
-DTLBIASID::match(TlbEntry* te, vmid_t vmid) const
+DTLBIASID::match(TlbEntry *te, vmid_t vmid) const
 {
     return TLBIASID::match(te, vmid) && (te->type & TypeTLB::data);
 }
 
 void
-TLBIALLN::operator()(ThreadContext* tc)
+TLBIALLN::operator()(ThreadContext *tc)
 {
     getMMUPtr(tc)->flush(*this);
 
@@ -202,11 +200,10 @@ TLBIALLN::operator()(ThreadContext* tc)
 }
 
 bool
-TLBIALLN::match(TlbEntry* te, vmid_t vmid) const
+TLBIALLN::match(TlbEntry *te, vmid_t vmid) const
 {
-    return te->valid && te->nstid &&
-        te->isHyp == (targetEL == EL2) &&
-        te->checkELMatch(targetEL, false);
+    return te->valid && te->nstid && te->isHyp == (targetEL == EL2) &&
+           te->checkELMatch(targetEL, false);
 }
 
 TlbEntry::Lookup
@@ -226,7 +223,7 @@ TLBIMVAA::lookupGen(vmid_t vmid) const
 }
 
 void
-TLBIMVAA::operator()(ThreadContext* tc)
+TLBIMVAA::operator()(ThreadContext *tc)
 {
     HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     inHost = (hcr.tge == 1 && hcr.e2h == 1);
@@ -239,7 +236,7 @@ TLBIMVAA::operator()(ThreadContext* tc)
 }
 
 bool
-TLBIMVAA::match(TlbEntry* te, vmid_t vmid) const
+TLBIMVAA::match(TlbEntry *te, vmid_t vmid) const
 {
     TlbEntry::Lookup lookup_data = lookupGen(vmid);
 
@@ -265,7 +262,7 @@ TLBIMVA::lookupGen(vmid_t vmid) const
 }
 
 void
-TLBIMVA::operator()(ThreadContext* tc)
+TLBIMVA::operator()(ThreadContext *tc)
 {
     HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     inHost = (hcr.tge == 1 && hcr.e2h == 1);
@@ -278,7 +275,7 @@ TLBIMVA::operator()(ThreadContext* tc)
 }
 
 bool
-TLBIMVA::match(TlbEntry* te, vmid_t vmid) const
+TLBIMVA::match(TlbEntry *te, vmid_t vmid) const
 {
     TlbEntry::Lookup lookup_data = lookupGen(vmid);
 
@@ -286,31 +283,31 @@ TLBIMVA::match(TlbEntry* te, vmid_t vmid) const
 }
 
 void
-ITLBIMVA::operator()(ThreadContext* tc)
+ITLBIMVA::operator()(ThreadContext *tc)
 {
     getMMUPtr(tc)->iflush(*this);
 }
 
 bool
-ITLBIMVA::match(TlbEntry* te, vmid_t vmid) const
+ITLBIMVA::match(TlbEntry *te, vmid_t vmid) const
 {
     return TLBIMVA::match(te, vmid) && (te->type & TypeTLB::instruction);
 }
 
 void
-DTLBIMVA::operator()(ThreadContext* tc)
+DTLBIMVA::operator()(ThreadContext *tc)
 {
     getMMUPtr(tc)->dflush(*this);
 }
 
 bool
-DTLBIMVA::match(TlbEntry* te, vmid_t vmid) const
+DTLBIMVA::match(TlbEntry *te, vmid_t vmid) const
 {
     return TLBIMVA::match(te, vmid) && (te->type & TypeTLB::data);
 }
 
 void
-TLBIIPA::operator()(ThreadContext* tc)
+TLBIIPA::operator()(ThreadContext *tc)
 {
     getMMUPtr(tc)->flushStage2(makeStage2());
 
@@ -321,7 +318,7 @@ TLBIIPA::operator()(ThreadContext* tc)
 }
 
 bool
-TLBIRMVA::match(TlbEntry* te, vmid_t vmid) const
+TLBIRMVA::match(TlbEntry *te, vmid_t vmid) const
 {
     TlbEntry::Lookup lookup_data = lookupGen(vmid);
     lookup_data.size = rangeSize();
@@ -329,15 +326,15 @@ TLBIRMVA::match(TlbEntry* te, vmid_t vmid) const
     auto addr_match = te->match(lookup_data) && (!lastLevel || !te->partial);
     if (addr_match) {
         return tgMap[rangeData.tg] == te->tg &&
-        (resTLBIttl(rangeData.tg, rangeData.ttl) ||
-            rangeData.ttl == te->lookupLevel);
+               (resTLBIttl(rangeData.tg, rangeData.ttl) ||
+                   rangeData.ttl == te->lookupLevel);
     } else {
         return false;
     }
 }
 
 bool
-TLBIRMVAA::match(TlbEntry* te, vmid_t vmid) const
+TLBIRMVAA::match(TlbEntry *te, vmid_t vmid) const
 {
     TlbEntry::Lookup lookup_data = lookupGen(vmid);
     lookup_data.size = rangeSize();
@@ -345,8 +342,8 @@ TLBIRMVAA::match(TlbEntry* te, vmid_t vmid) const
     auto addr_match = te->match(lookup_data) && (!lastLevel || !te->partial);
     if (addr_match) {
         return tgMap[rangeData.tg] == te->tg &&
-        (resTLBIttl(rangeData.tg, rangeData.ttl) ||
-            rangeData.ttl == te->lookupLevel);
+               (resTLBIttl(rangeData.tg, rangeData.ttl) ||
+                   rangeData.ttl == te->lookupLevel);
     } else {
         return false;
     }

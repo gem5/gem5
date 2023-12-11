@@ -50,11 +50,10 @@
 
 namespace gem5
 {
-
 namespace X86ISA
 {
-
-FsWorkload::FsWorkload(const Params &p) : KernelWorkload(p),
+FsWorkload::FsWorkload(const Params &p) :
+    KernelWorkload(p),
     smbiosTable(p.smbios_table),
     mpFloatingPointer(p.intel_mp_pointer),
     mpConfigTable(p.intel_mp_table),
@@ -65,8 +64,8 @@ FsWorkload::FsWorkload(const Params &p) : KernelWorkload(p),
 void
 installSegDesc(ThreadContext *tc, int seg, SegDescriptor desc, bool longmode)
 {
-    bool honorBase = !longmode || seg == segment_idx::Fs ||
-                                  seg == segment_idx::Gs;
+    bool honorBase =
+        !longmode || seg == segment_idx::Fs || seg == segment_idx::Gs;
 
     SegAttr attr = 0;
 
@@ -108,7 +107,7 @@ FsWorkload::initState()
 {
     KernelWorkload::initState();
 
-    for (auto *tc: system->threads) {
+    for (auto *tc : system->threads) {
         X86ISA::InitInterrupt(0).invoke(tc);
 
         if (tc->contextId() == 0) {
@@ -124,7 +123,7 @@ FsWorkload::initState()
     fatal_if(!kernelObj, "No kernel to load.");
 
     fatal_if(kernelObj->getArch() == loader::I386,
-             "Loading a 32 bit x86 kernel is not supported.");
+        "Loading a 32 bit x86 kernel is not supported.");
 
     ThreadContext *tc = system->threads[0];
     auto phys_proxy = system->physProxy;
@@ -141,8 +140,7 @@ FsWorkload::initState()
 
     const Addr PageMapLevel4 = 0x70000;
     const Addr PageDirPtrTable = 0x71000;
-    const Addr PageDirTable[NumPDTs] =
-        {0x72000, 0x73000, 0x74000, 0x75000};
+    const Addr PageDirTable[NumPDTs] = {0x72000, 0x73000, 0x74000, 0x75000};
     const Addr GDTBase = 0x76000;
 
     const int PML4Bits = 9;
@@ -341,8 +339,8 @@ FsWorkload::initState()
 }
 
 void
-FsWorkload::writeOutSMBiosTable(Addr header,
-        Addr &headerSize, Addr &structSize, Addr table)
+FsWorkload::writeOutSMBiosTable(
+    Addr header, Addr &headerSize, Addr &structSize, Addr table)
 {
     // If the table location isn't specified, just put it after the header.
     // The header size as of the 2.5 SMBios specification is 0x1F bytes.
@@ -392,7 +390,7 @@ FsWorkload::writeOutACPITables(Addr fp, Addr &fpSize)
         rsdp->write(system->physProxy, alloc);
         fpSize = alloc.alloc(0, 0) - fp;
         DPRINTF(ACPI, "Wrote ACPI tables to memory at %llx with size %llx.\n",
-                fp, fpSize);
+            fp, fpSize);
     }
 }
 

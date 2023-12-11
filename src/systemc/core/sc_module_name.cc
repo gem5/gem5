@@ -25,7 +25,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #include "systemc/core/module.hh"
 #include "systemc/core/scheduler.hh"
 #include "systemc/ext/core/messages.hh"
@@ -35,7 +34,6 @@
 
 namespace sc_core
 {
-
 sc_module_name::sc_module_name(const char *name) :
     _name(name), _gem5_module(nullptr), _on_the_stack(true)
 {
@@ -58,9 +56,6 @@ sc_module_name::~sc_module_name()
     }
 }
 
-sc_module_name::operator const char *() const
-{
-    return _name;
-}
+sc_module_name::operator const char *() const { return _name; }
 
 } // namespace sc_core

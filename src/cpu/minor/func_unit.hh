@@ -63,7 +63,6 @@
 
 namespace gem5
 {
-
 /** Boxing for MinorOpClass to get around a build problem with C++11 but
  *  also allow for future additions to op class checking */
 class MinorOpClass : public SimObject
@@ -73,9 +72,8 @@ class MinorOpClass : public SimObject
 
   public:
     MinorOpClass(const MinorOpClassParams &params) :
-        SimObject(params),
-        opClass(params.opClass)
-    { }
+        SimObject(params), opClass(params.opClass)
+    {}
 };
 
 /** Wrapper for a matchable set of op classes */
@@ -93,14 +91,18 @@ class MinorOpClassSet : public SimObject
 
   public:
     /** Does this set support the given op class */
-    bool provides(OpClass op_class) { return capabilityList[op_class]; }
+    bool
+    provides(OpClass op_class)
+    {
+        return capabilityList[op_class];
+    }
 };
 
 /** Extra timing capability to allow individual ops to have their source
  *  register dependency latencies tweaked based on the ExtMachInst of the
  *  source instruction.
  */
-class MinorFUTiming: public SimObject
+class MinorFUTiming : public SimObject
 {
   public:
     /** Mask off the ExtMachInst of an instruction before comparing with
@@ -143,7 +145,11 @@ class MinorFUTiming: public SimObject
 
   public:
     /** Does the extra decode in this object support the given op class */
-    bool provides(OpClass op_class) { return opClasses->provides(op_class); }
+    bool
+    provides(OpClass op_class)
+    {
+        return opClasses->provides(op_class);
+    }
 };
 
 /** A functional unit that can execute any of opClasses operations with a
@@ -182,7 +188,7 @@ class MinorFU : public SimObject
         issueLat(params.issueLat),
         cantForwardFromFUIndices(params.cantForwardFromFUIndices),
         timings(params.timings)
-    { }
+    {}
 };
 
 /** A collection of MinorFUs */
@@ -193,14 +199,12 @@ class MinorFUPool : public SimObject
 
   public:
     MinorFUPool(const MinorFUPoolParams &params) :
-        SimObject(params),
-        funcUnits(params.funcUnits)
-    { }
+        SimObject(params), funcUnits(params.funcUnits)
+    {}
 };
 
 namespace minor
 {
-
 /** Container class to box instructions in the FUs to make those
  *  queues have correct bubble behaviour when stepped */
 class QueuedInst
@@ -209,24 +213,29 @@ class QueuedInst
     MinorDynInstPtr inst;
 
   public:
-    QueuedInst(MinorDynInstPtr inst_ = MinorDynInst::bubble()) :
-        inst(inst_)
-    { }
+    QueuedInst(MinorDynInstPtr inst_ = MinorDynInst::bubble()) : inst(inst_) {}
 
   public:
     /** Report and bubble interfaces */
     void reportData(std::ostream &os) const;
-    bool isBubble() const { return inst->isBubble(); }
+    bool
+    isBubble() const
+    {
+        return inst->isBubble();
+    }
 
-    static QueuedInst bubble()
-    { return QueuedInst(MinorDynInst::bubble()); }
+    static QueuedInst
+    bubble()
+    {
+        return QueuedInst(MinorDynInst::bubble());
+    }
 };
 
 /** Functional units have pipelines which stall when an inst gets to
  *  their ends allowing Execute::commit to pick up timing-completed insts
  *  when it feels like it */
-typedef SelfStallingPipeline<QueuedInst,
-    ReportTraitsAdaptor<QueuedInst> > FUPipelineBase;
+typedef SelfStallingPipeline<QueuedInst, ReportTraitsAdaptor<QueuedInst> >
+    FUPipelineBase;
 
 /** A functional unit configured from a MinorFU object */
 class FUPipeline : public FUPipelineBase, public FuncUnit

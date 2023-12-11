@@ -44,9 +44,8 @@
 
 namespace gem5
 {
-
-VectorRegisterFile::VectorRegisterFile(const VectorRegisterFileParams &p)
-    : RegisterFile(p)
+VectorRegisterFile::VectorRegisterFile(const VectorRegisterFileParams &p) :
+    RegisterFile(p)
 {
     regFile.resize(numRegs());
 
@@ -58,22 +57,22 @@ VectorRegisterFile::VectorRegisterFile(const VectorRegisterFileParams &p)
 bool
 VectorRegisterFile::operandsReady(Wavefront *w, GPUDynInstPtr ii) const
 {
-    for (const auto& srcVecOp : ii->srcVecRegOperands()) {
-        for (const auto& physIdx : srcVecOp.physIndices()) {
+    for (const auto &srcVecOp : ii->srcVecRegOperands()) {
+        for (const auto &physIdx : srcVecOp.physIndices()) {
             if (regBusy(physIdx)) {
                 DPRINTF(GPUVRF, "RAW stall: WV[%d]: %s: physReg[%d]\n",
-                        w->wfDynId, ii->disassemble(), physIdx);
+                    w->wfDynId, ii->disassemble(), physIdx);
                 w->stats.numTimesBlockedDueRAWDependencies++;
                 return false;
             }
         }
     }
 
-    for (const auto& dstVecOp : ii->dstVecRegOperands()) {
-        for (const auto& physIdx : dstVecOp.physIndices()) {
+    for (const auto &dstVecOp : ii->dstVecRegOperands()) {
+        for (const auto &physIdx : dstVecOp.physIndices()) {
             if (regBusy(physIdx)) {
                 DPRINTF(GPUVRF, "WAX stall: WV[%d]: %s: physReg[%d]\n",
-                        w->wfDynId, ii->disassemble(), physIdx);
+                    w->wfDynId, ii->disassemble(), physIdx);
                 w->stats.numTimesBlockedDueWAXDependencies++;
                 return false;
             }
@@ -86,8 +85,8 @@ VectorRegisterFile::operandsReady(Wavefront *w, GPUDynInstPtr ii) const
 void
 VectorRegisterFile::scheduleWriteOperands(Wavefront *w, GPUDynInstPtr ii)
 {
-    for (const auto& dstVecOp : ii->dstVecRegOperands()) {
-        for (const auto& physIdx : dstVecOp.physIndices()) {
+    for (const auto &dstVecOp : ii->dstVecRegOperands()) {
+        for (const auto &physIdx : dstVecOp.physIndices()) {
             // If the instruction is atomic instruciton and the atomics do
             // not return value, then do not mark this reg as busy.
             if (!(ii->isAtomic() && !ii->isAtomicRet())) {
@@ -123,17 +122,16 @@ VectorRegisterFile::waveExecuteInst(Wavefront *w, GPUDynInstPtr ii)
         mask = mask >> 4;
     }
 
-    if (!ii->isLoad()
-        && !(ii->isAtomic() || ii->isMemSync())) {
+    if (!ii->isLoad() && !(ii->isAtomic() || ii->isMemSync())) {
         // TODO: compute proper delay
         // For now, it is based on largest operand size
         int opSize = ii->maxOperandSize();
-        Cycles delay(opSize <= 4 ? computeUnit->spBypassLength()
-            : computeUnit->dpBypassLength());
+        Cycles delay(opSize <= 4 ? computeUnit->spBypassLength() :
+                                   computeUnit->dpBypassLength());
         Tick tickDelay = computeUnit->cyclesToTicks(delay);
 
-        for (const auto& dstVecOp : ii->dstVecRegOperands()) {
-            for (const auto& physIdx : dstVecOp.physIndices()) {
+        for (const auto &dstVecOp : ii->dstVecRegOperands()) {
+            for (const auto &physIdx : dstVecOp.physIndices()) {
                 enqRegFreeEvent(physIdx, tickDelay);
             }
         }
@@ -157,8 +155,8 @@ VectorRegisterFile::scheduleWriteOperandsFromLoad(
     Wavefront *w, GPUDynInstPtr ii)
 {
     assert(ii->isLoad() || ii->isAtomicRet());
-    for (const auto& dstVecOp : ii->dstVecRegOperands()) {
-        for (const auto& physIdx : dstVecOp.physIndices()) {
+    for (const auto &dstVecOp : ii->dstVecRegOperands()) {
+        for (const auto &physIdx : dstVecOp.physIndices()) {
             enqRegFreeEvent(physIdx, computeUnit->clockPeriod());
         }
     }

@@ -73,15 +73,15 @@ TEST(DuelerTest, SetSample)
             ASSERT_FALSE(is_sample);
         }
     }
-
 }
 
 // We assume that the monitors are assigned sequential powers of
 // two ids starting from 1
 static uint64_t monitor_id = 0;
 
-class DuelingMonitorTest : public testing::TestWithParam<
-    std::tuple<unsigned, std::size_t, std::size_t, unsigned, double, double>>
+class DuelingMonitorTest :
+    public testing::TestWithParam<std::tuple<unsigned, std::size_t,
+        std::size_t, unsigned, double, double>>
 {
   protected:
     /** A vector simulating a table-like structure. */
@@ -115,12 +115,12 @@ class DuelingMonitorTest : public testing::TestWithParam<
         lowThreshold = std::get<4>(GetParam());
         highThreshold = std::get<5>(GetParam());
 
-        monitor.reset(new DuelingMonitor(constituencySize, teamSize, numBits,
-            lowThreshold, highThreshold));
+        monitor.reset(new DuelingMonitor(
+            constituencySize, teamSize, numBits, lowThreshold, highThreshold));
 
         // Initialize entries
         entries.resize(num_entries);
-        for (auto& entry : entries) {
+        for (auto &entry : entries) {
             monitor->initEntry(&entry);
         }
     }
@@ -148,7 +148,7 @@ TEST_P(DuelingMonitorTest, CountSamples)
     int count_samples_true = 0;
     int count_samples_false = 0;
     bool team;
-    for (auto& entry : entries) {
+    for (auto &entry : entries) {
         if (entry.isSample(1ULL << monitor_id, team)) {
             if (team) {
                 count_samples_true++;
@@ -194,8 +194,7 @@ TEST_P(DuelingMonitorTest, WinnerSelection)
     // low threshold
     bool current_winner = monitor->getWinner();
     double threshold = current_winner ? lowThreshold : highThreshold;
-    for (; expected_selector.calcSaturation() < 1.0;
-        expected_selector++) {
+    for (; expected_selector.calcSaturation() < 1.0; expected_selector++) {
         ASSERT_EQ(expected_selector.calcSaturation() >= threshold,
             monitor->getWinner());
         monitor->sample(&entries[team_true_index]);
@@ -215,8 +214,7 @@ TEST_P(DuelingMonitorTest, WinnerSelection)
     // is winning, the low threshold must be passed in order to
     // make team false win the duel
     threshold = lowThreshold;
-    for (; expected_selector.calcSaturation() > 0.0;
-        expected_selector--) {
+    for (; expected_selector.calcSaturation() > 0.0; expected_selector--) {
         ASSERT_EQ(expected_selector.calcSaturation() >= threshold,
             monitor->getWinner());
         monitor->sample(&entries[team_false_index]);
@@ -258,5 +256,4 @@ INSTANTIATE_TEST_CASE_P(DuelingMonitorTests, DuelingMonitorTest,
         std::make_tuple(16, 4, 1, 3, 0.8, 0.9),
 
         // Test for larger tables
-        std::make_tuple(2048, 32, 4, 4, 0.4, 0.6))
-);
+        std::make_tuple(2048, 32, 4, 4, 0.4, 0.6)));

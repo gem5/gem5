@@ -33,7 +33,6 @@
 
 namespace gem5
 {
-
 // These functions keep reading/writing, if possible, until all data
 // has been transferred.  Basically, try again when there's no error,
 // but there is data left also retry on EINTR.
@@ -50,10 +49,10 @@ ssize_t atomic_write(int fd, const void *s, size_t n);
  * this macro is intended to be used in fatal signal handlers where
  * error handling might not be feasible.
  */
-#define STATIC_MSG(fd, m)                                       \
-    do {                                                        \
-        static const char msg[] = m;                            \
-        atomic_write(fd, msg, sizeof(msg) - 1);                 \
+#define STATIC_MSG(fd, m) \
+    do { \
+        static const char msg[] = m; \
+        atomic_write(fd, msg, sizeof(msg) - 1); \
     } while (0)
 
 /**

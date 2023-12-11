@@ -39,10 +39,8 @@
 
 namespace sc_gem5
 {
-
 namespace
 {
-
 ObjectsIt
 findObjectIn(Objects &objects, const std::string &name)
 {
@@ -72,10 +70,10 @@ popObject(Objects *objects, const std::string &name)
 bool
 nameIsUnique(Objects *objects, Events *events, const std::string &name)
 {
-    for (auto obj: *objects)
+    for (auto obj : *objects)
         if (!strcmp(obj->basename(), name.c_str()))
             return false;
-    for (auto event: *events)
+    for (auto event : *events)
         if (!strcmp(event->basename(), name.c_str()))
             return false;
     return true;
@@ -118,8 +116,8 @@ Object::Object(sc_core::sc_object *_sc_obj, const char *obj_name) :
 
     if (_basename != original_name) {
         std::string message = path + original_name +
-            ". Latter declaration will be renamed to " +
-            path + _basename;
+                              ". Latter declaration will be renamed to " +
+                              path + _basename;
         SC_REPORT_WARNING(sc_core::SC_ID_INSTANCE_EXISTS_, message.c_str());
     }
     _name = path + _basename;
@@ -130,7 +128,7 @@ Object::Object(sc_core::sc_object *_sc_obj, const Object &arg) :
 {}
 
 Object &
-Object::operator = (const Object &)
+Object::operator=(const Object &)
 {
     return *this;
 }
@@ -138,13 +136,13 @@ Object::operator = (const Object &)
 Object::~Object()
 {
     // Promote all children to be top level objects.
-    for (auto child: children) {
+    for (auto child : children) {
         addObject(&topLevelObjects, child);
         child->_gem5_object->parent = nullptr;
     }
     children.clear();
 
-    for (auto event: events)
+    for (auto event : events)
         Event::getFromScEvent(event)->clearParent();
 
     if (parent)
@@ -191,7 +189,8 @@ Object::get_child_events() const
     return events;
 }
 
-sc_core::sc_object *Object::get_parent_object() const
+sc_core::sc_object *
+Object::get_parent_object() const
 {
     return parent;
 }
@@ -282,7 +281,6 @@ pickUniqueName(::sc_core::sc_object *parent, std::string base)
     return base;
 }
 
-
 Objects topLevelObjects;
 Objects allObjects;
 
@@ -301,7 +299,6 @@ findObject(const char *name, const Objects &objects)
 
 namespace
 {
-
 std::stack<sc_core::sc_object *> objParentStack;
 
 } // anonymous namespace
@@ -319,7 +316,15 @@ pickParentObj()
     return nullptr;
 }
 
-void pushParentObj(sc_core::sc_object *obj) { objParentStack.push(obj); }
-void popParentObj() { objParentStack.pop(); }
+void
+pushParentObj(sc_core::sc_object *obj)
+{
+    objParentStack.push(obj);
+}
+void
+popParentObj()
+{
+    objParentStack.pop();
+}
 
 } // namespace sc_gem5

@@ -41,14 +41,13 @@
 
 namespace gem5
 {
-
 namespace statistics
 {
-
 extern void pythonDump();
 extern void pythonReset();
 
-void registerPythonStatsHandlers()
+void
+registerPythonStatsHandlers()
 {
     registerHandlers(pythonReset, pythonDump);
 }

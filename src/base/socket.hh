@@ -42,7 +42,6 @@
 
 namespace gem5
 {
-
 class ListenSocket : public Named
 {
   protected:
@@ -91,19 +90,27 @@ class ListenSocket : public Named
 
     virtual void output(std::ostream &os) const = 0;
 
-    int getfd() const { return fd; }
-    bool islistening() const { return listening; }
+    int
+    getfd() const
+    {
+        return fd;
+    }
+    bool
+    islistening() const
+    {
+        return listening;
+    }
 
     /* Create a socket, adding SOCK_CLOEXEC if available. */
     static int socketCloexec(int domain, int type, int protocol);
     /* Accept a connection, adding SOCK_CLOEXEC if available. */
-    static int acceptCloexec(int sockfd, struct sockaddr *addr,
-                              socklen_t *addrlen);
+    static int acceptCloexec(
+        int sockfd, struct sockaddr *addr, socklen_t *addrlen);
     /** @} */ // end of api_socket
 };
 
 inline static std::ostream &
-operator << (std::ostream &os, const ListenSocket &socket)
+operator<<(std::ostream &os, const ListenSocket &socket)
 {
     socket.output(os);
     return os;
@@ -134,7 +141,11 @@ class ListenSocketConfig
     Builder builder;
 };
 
-static inline ListenSocketConfig listenSocketEmptyConfig() { return {}; }
+static inline ListenSocketConfig
+listenSocketEmptyConfig()
+{
+    return {};
+}
 
 // AF_INET based sockets.
 
@@ -183,7 +194,7 @@ class ListenSocketUnixFile : public ListenSocketUnix
 
   public:
     ListenSocketUnixFile(const std::string &_name, const std::string &_dir,
-            const std::string &_fname);
+        const std::string &_fname);
     ~ListenSocketUnixFile();
 
     void listen() override;
@@ -191,7 +202,7 @@ class ListenSocketUnixFile : public ListenSocketUnix
 };
 
 ListenSocketConfig listenSocketUnixFileConfig(
-        std::string dir, std::string fname);
+    std::string dir, std::string fname);
 
 class ListenSocketUnixAbstract : public ListenSocketUnix
 {
@@ -202,7 +213,7 @@ class ListenSocketUnixAbstract : public ListenSocketUnix
 
   public:
     ListenSocketUnixAbstract(
-            const std::string &_name, const std::string &_path);
+        const std::string &_name, const std::string &_path);
 
     void output(std::ostream &os) const override;
 };

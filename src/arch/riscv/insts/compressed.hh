@@ -37,10 +37,8 @@
 
 namespace gem5
 {
-
 namespace RiscvISA
 {
-
 /**
  * Base class for compressed operations that work only on registers
  */

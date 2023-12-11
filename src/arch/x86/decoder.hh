@@ -48,12 +48,10 @@
 
 namespace gem5
 {
-
 class BaseISA;
 
 namespace X86ISA
 {
-
 class Decoder : public InstDecoder
 {
   private:
@@ -84,8 +82,7 @@ class Decoder : public InstDecoder
         std::vector<MachInst> masks;
         int lastOffset;
 
-        InstBytes() : lastOffset(0)
-        {}
+        InstBytes() : lastOffset(0) {}
     };
 
     static InstBytes dummy;
@@ -149,7 +146,7 @@ class Decoder : public InstDecoder
         assert(offset <= sizeof(MachInst));
         if (offset == sizeof(MachInst)) {
             DPRINTF(Decoder, "At the end of a chunk, idx = %d, chunks = %d.\n",
-                    chunkIdx, instBytes->chunks.size());
+                chunkIdx, instBytes->chunks.size());
             chunkIdx++;
             if (chunkIdx == instBytes->chunks.size()) {
                 outOfBytes = true;
@@ -226,8 +223,8 @@ class Decoder : public InstDecoder
     State doImmediateState();
 
     // Process the actual opcode found earlier, using the supplied tables.
-    State processOpcode(ByteTable &immTable, ByteTable &modrmTable,
-                        bool addrSizedImm = false);
+    State processOpcode(
+        ByteTable &immTable, ByteTable &modrmTable, bool addrSizedImm = false);
     // Process the opcode found with VEX / XOP prefix.
     State processExtendedOpcode(ByteTable &immTable);
 
@@ -242,8 +239,8 @@ class Decoder : public InstDecoder
     AddrCacheMap addrCacheMap;
 
     decode_cache::InstMap<ExtMachInst> *instMap = nullptr;
-    typedef std::unordered_map<
-            CacheKey, decode_cache::InstMap<ExtMachInst> *> InstCacheMap;
+    typedef std::unordered_map<CacheKey, decode_cache::InstMap<ExtMachInst> *>
+        InstCacheMap;
     static InstCacheMap instCacheMap;
 
     StaticInstPtr decodeInst(ExtMachInst mach_inst);
@@ -343,9 +340,9 @@ class Decoder : public InstDecoder
         if (!nextPC.size()) {
             int size = basePC + offset - origPC;
             DPRINTF(Decoder,
-                    "Calculating the instruction size: "
-                    "basePC: %#x offset: %#x origPC: %#x size: %d\n",
-                    basePC, offset, origPC, size);
+                "Calculating the instruction size: "
+                "basePC: %#x offset: %#x origPC: %#x size: %d\n",
+                basePC, offset, origPC, size);
             nextPC.size(size);
             nextPC.npc(nextPC.pc() + size);
         }
@@ -355,7 +352,7 @@ class Decoder : public InstDecoder
     StaticInstPtr decode(PCStateBase &next_pc) override;
 
     StaticInstPtr fetchRomMicroop(
-            MicroPC micropc, StaticInstPtr curMacroop) override;
+        MicroPC micropc, StaticInstPtr curMacroop) override;
 };
 
 } // namespace X86ISA

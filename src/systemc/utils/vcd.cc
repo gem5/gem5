@@ -50,10 +50,8 @@
 
 namespace sc_gem5
 {
-
 namespace
 {
-
 std::string
 cleanName(std::string name)
 {
@@ -94,20 +92,20 @@ class VcdTraceValBase : public TraceValBase
     scLogicToVcdState(char in)
     {
         switch (in) {
-          case 'U':
-          case 'X':
-          case 'W':
-          case 'D':
+        case 'U':
+        case 'X':
+        case 'W':
+        case 'D':
             return 'x';
-          case '0':
-          case 'L':
+        case '0':
+        case 'L':
             return '0';
-          case '1':
-          case 'H':
+        case '1':
+        case 'H':
             return '1';
-          case 'Z':
+        case 'Z':
             return 'z';
-          default:
+        default:
             return '?';
         }
     }
@@ -116,14 +114,15 @@ class VcdTraceValBase : public TraceValBase
     printVal(std::ostream &os, const std::string &rep)
     {
         switch (width()) {
-          case 0:
+        case 0:
             return;
-          case 1:
-            os << rep << vcdName() << std::endl;;
+        case 1:
+            os << rep << vcdName() << std::endl;
+            ;
             return;
-          default:
-            os << "b" << stripLeadingBits(rep.c_str()) << " " <<
-                vcdName() << std::endl;
+        default:
+            os << "b" << stripLeadingBits(rep.c_str()) << " " << vcdName()
+               << std::endl;
             return;
         }
     }
@@ -132,9 +131,21 @@ class VcdTraceValBase : public TraceValBase
     VcdTraceValBase(int width) : TraceValBase(width) {}
     ~VcdTraceValBase() {}
 
-    void vcdName(const std::string &vcd_name) { _vcdName = vcd_name; }
-    const std::string &vcdName() { return _vcdName; }
-    virtual std::string vcdType() { return "wire"; }
+    void
+    vcdName(const std::string &vcd_name)
+    {
+        _vcdName = vcd_name;
+    }
+    const std::string &
+    vcdName()
+    {
+        return _vcdName;
+    }
+    virtual std::string
+    vcdType()
+    {
+        return "wire";
+    }
 
     virtual void output(std::ostream &os) = 0;
 };
@@ -159,7 +170,7 @@ VcdTraceScope::output(const std::string &name, std::ostream &os)
 {
     os << "$scope module " << name << " $end" << std::endl;
 
-    for (auto &p: values) {
+    for (auto &p : values) {
         const std::string &name = p.first;
         VcdTraceValBase *value = p.second;
 
@@ -175,14 +186,14 @@ VcdTraceScope::output(const std::string &name, std::ostream &os)
         std::string clean_name = cleanName(name);
         if (w == 1) {
             gem5::ccprintf(os, "$var %s  % 3d  %s  %s       $end\n",
-                     value->vcdType(), w, value->vcdName(), clean_name);
+                value->vcdType(), w, value->vcdName(), clean_name);
         } else {
             gem5::ccprintf(os, "$var %s  % 3d  %s  %s [%d:0]  $end\n",
-                     value->vcdType(), w, value->vcdName(), clean_name, w - 1);
+                value->vcdType(), w, value->vcdName(), clean_name, w - 1);
         }
     }
 
-    for (auto &p: scopes)
+    for (auto &p : scopes)
         p.second->output(p.first, os);
 
     os << "$upscope $end" << std::endl;
@@ -194,7 +205,7 @@ class VcdTraceVal : public TraceVal<T, VcdTraceValBase>
   public:
     typedef T TracedType;
 
-    VcdTraceVal(const T* t, const std::string &vcd_name, int width) :
+    VcdTraceVal(const T *t, const std::string &vcd_name, int width) :
         TraceVal<T, VcdTraceValBase>(t, width)
     {
         this->vcdName(vcd_name);
@@ -239,11 +250,11 @@ VcdTraceFile::initialize()
 
     // Timescale.
     stream() << "$timescale" << std::endl;
-    stream() << "     " << ::sc_core::sc_time::from_value(timeUnitTicks) <<
-        std::endl;
+    stream() << "     " << ::sc_core::sc_time::from_value(timeUnitTicks)
+             << std::endl;
     stream() << "$end" << std::endl << std::endl;
 
-    for (auto tv: traceVals)
+    for (auto tv : traceVals)
         tv->finalize();
 
     topScope.output("SystemC", stream());
@@ -254,15 +265,15 @@ VcdTraceFile::initialize()
 
     std::string timedump_comment =
         gem5::csprintf("All initial values are dumped below at time "
-                 "%g sec = %g timescale units.",
-                 static_cast<double>(now) / gem5::sim_clock::as_float::s,
-                 static_cast<double>(now / timeUnitTicks));
+                       "%g sec = %g timescale units.",
+            static_cast<double>(now) / gem5::sim_clock::as_float::s,
+            static_cast<double>(now / timeUnitTicks));
     writeComment(timedump_comment);
 
     lastPrintedTime = now / timeUnitTicks;
 
     stream() << "$dumpvars" << std::endl;
-    for (auto tv: traceVals)
+    for (auto tv : traceVals)
         tv->output(stream());
     stream() << "$end" << std::endl << std::endl;
 
@@ -271,13 +282,13 @@ VcdTraceFile::initialize()
 
 VcdTraceFile::~VcdTraceFile()
 {
-    for (auto tv: traceVals)
+    for (auto tv : traceVals)
         delete tv;
     traceVals.clear();
 
     if (timeUnitTicks) {
-        gem5::ccprintf(stream(), "#%u\n",
-            scheduler.getCurTick() / timeUnitTicks);
+        gem5::ccprintf(
+            stream(), "#%u\n", scheduler.getCurTick() / timeUnitTicks);
     }
 }
 
@@ -308,7 +319,7 @@ VcdTraceFile::trace(bool delta)
     }
 
     bool time_printed = false;
-    for (auto tv: traceVals) {
+    for (auto tv : traceVals) {
         if (tv->check()) {
             if (!time_printed) {
                 lastPrintedTime = now;
@@ -347,7 +358,11 @@ class VcdTraceValFloat : public VcdTraceVal<T>
   public:
     using VcdTraceVal<T>::VcdTraceVal;
 
-    std::string vcdType() override { return "real"; }
+    std::string
+    vcdType() override
+    {
+        return "real";
+    }
 
     void
     output(std::ostream &os) override
@@ -375,10 +390,7 @@ class VcdTraceValScLogic : public VcdTraceVal<sc_dt::sc_logic>
     void
     output(std::ostream &os) override
     {
-        char str[2] = {
-            scLogicToVcdState(value().to_char()),
-            '\0'
-        };
+        char str[2] = {scLogicToVcdState(value().to_char()), '\0'};
         printVal(os, str);
     }
 };
@@ -417,14 +429,13 @@ class VcdTraceValFinite : public VcdTraceVal<T>
 };
 
 void
-VcdTraceFile::addTraceVal(const sc_dt::sc_int_base *v,
-                          const std::string &name)
+VcdTraceFile::addTraceVal(const sc_dt::sc_int_base *v, const std::string &name)
 {
     addNewTraceVal<VcdTraceValFinite<sc_dt::sc_int_base>>(v, name);
 }
 void
-VcdTraceFile::addTraceVal(const sc_dt::sc_uint_base *v,
-                          const std::string &name)
+VcdTraceFile::addTraceVal(
+    const sc_dt::sc_uint_base *v, const std::string &name)
 {
     addNewTraceVal<VcdTraceValFinite<sc_dt::sc_uint_base>>(v, name);
 }
@@ -435,8 +446,7 @@ VcdTraceFile::addTraceVal(const sc_dt::sc_signed *v, const std::string &name)
     addNewTraceVal<VcdTraceValFinite<sc_dt::sc_signed>>(v, name);
 }
 void
-VcdTraceFile::addTraceVal(const sc_dt::sc_unsigned *v,
-                          const std::string &name)
+VcdTraceFile::addTraceVal(const sc_dt::sc_unsigned *v, const std::string &name)
 {
     addNewTraceVal<VcdTraceValFinite<sc_dt::sc_unsigned>>(v, name);
 }
@@ -478,13 +488,17 @@ class VcdTraceValFxval : public VcdTraceVal<T>
   public:
     using VcdTraceVal<T>::VcdTraceVal;
 
-    std::string vcdType() override { return "real"; }
+    std::string
+    vcdType() override
+    {
+        return "real";
+    }
 
     void
     output(std::ostream &os) override
     {
-        gem5::ccprintf(os, "r%.16g %s\n",
-                this->value().to_double(), this->vcdName());
+        gem5::ccprintf(
+            os, "r%.16g %s\n", this->value().to_double(), this->vcdName());
     }
 };
 
@@ -494,8 +508,8 @@ VcdTraceFile::addTraceVal(const sc_dt::sc_fxval *v, const std::string &name)
     addNewTraceVal<VcdTraceValFxval<sc_dt::sc_fxval>>(v, name);
 }
 void
-VcdTraceFile::addTraceVal(const sc_dt::sc_fxval_fast *v,
-                          const std::string &name)
+VcdTraceFile::addTraceVal(
+    const sc_dt::sc_fxval_fast *v, const std::string &name)
 {
     addNewTraceVal<VcdTraceValFxval<sc_dt::sc_fxval_fast>>(v, name);
 }
@@ -526,8 +540,8 @@ VcdTraceFile::addTraceVal(const sc_dt::sc_fxnum *v, const std::string &name)
     addNewTraceVal<VcdTraceValFxnum<::sc_dt::sc_fxnum>>(v, name);
 }
 void
-VcdTraceFile::addTraceVal(const sc_dt::sc_fxnum_fast *v,
-                          const std::string &name)
+VcdTraceFile::addTraceVal(
+    const sc_dt::sc_fxnum_fast *v, const std::string &name)
 {
     addNewTraceVal<VcdTraceValFxnum<::sc_dt::sc_fxnum_fast>>(v, name);
 }
@@ -537,7 +551,11 @@ class VcdTraceValEvent : public VcdTraceVal<::sc_core::sc_event>
   public:
     using VcdTraceVal<::sc_core::sc_event>::VcdTraceVal;
 
-    std::string vcdType() override { return "event"; }
+    std::string
+    vcdType() override
+    {
+        return "event";
+    }
 
     void
     output(std::ostream &os) override
@@ -563,7 +581,11 @@ class VcdTraceValTime : public VcdTraceVal<::sc_core::sc_time>
   public:
     using VcdTraceVal<::sc_core::sc_time>::VcdTraceVal;
 
-    std::string vcdType() override { return "time"; }
+    std::string
+    vcdType() override
+    {
+        return "time";
+    }
 
     void
     finalize() override
@@ -620,8 +642,8 @@ class VcdTraceValInt : public VcdTraceVal<T>
 };
 
 void
-VcdTraceFile::addTraceVal(const unsigned char *v, const std::string &name,
-                          int width)
+VcdTraceFile::addTraceVal(
+    const unsigned char *v, const std::string &name, int width)
 {
     addNewTraceVal<VcdTraceValInt<unsigned char>>(v, name, width);
 }
@@ -631,8 +653,8 @@ VcdTraceFile::addTraceVal(const char *v, const std::string &name, int width)
     addNewTraceVal<VcdTraceValInt<char>>(v, name, width);
 }
 void
-VcdTraceFile::addTraceVal(const unsigned short *v, const std::string &name,
-                          int width)
+VcdTraceFile::addTraceVal(
+    const unsigned short *v, const std::string &name, int width)
 {
     addNewTraceVal<VcdTraceValInt<unsigned short>>(v, name, width);
 }
@@ -642,8 +664,8 @@ VcdTraceFile::addTraceVal(const short *v, const std::string &name, int width)
     addNewTraceVal<VcdTraceValInt<short>>(v, name, width);
 }
 void
-VcdTraceFile::addTraceVal(const unsigned int *v, const std::string &name,
-                          int width)
+VcdTraceFile::addTraceVal(
+    const unsigned int *v, const std::string &name, int width)
 {
     addNewTraceVal<VcdTraceValInt<unsigned int>>(v, name, width);
 }
@@ -653,8 +675,8 @@ VcdTraceFile::addTraceVal(const int *v, const std::string &name, int width)
     addNewTraceVal<VcdTraceValInt<int>>(v, name, width);
 }
 void
-VcdTraceFile::addTraceVal(const unsigned long *v, const std::string &name,
-                          int width)
+VcdTraceFile::addTraceVal(
+    const unsigned long *v, const std::string &name, int width)
 {
     addNewTraceVal<VcdTraceValInt<unsigned long>>(v, name, width);
 }
@@ -665,21 +687,21 @@ VcdTraceFile::addTraceVal(const long *v, const std::string &name, int width)
 }
 
 void
-VcdTraceFile::addTraceVal(const sc_dt::int64 *v, const std::string &name,
-                          int width)
+VcdTraceFile::addTraceVal(
+    const sc_dt::int64 *v, const std::string &name, int width)
 {
     addNewTraceVal<VcdTraceValInt<sc_dt::int64>>(v, name, width);
 }
 void
-VcdTraceFile::addTraceVal(const sc_dt::uint64 *v, const std::string &name,
-                          int width)
+VcdTraceFile::addTraceVal(
+    const sc_dt::uint64 *v, const std::string &name, int width)
 {
     addNewTraceVal<VcdTraceValInt<sc_dt::uint64>>(v, name, width);
 }
 
 void
-VcdTraceFile::addTraceVal(const unsigned int *v, const std::string &name,
-                          const char **literals)
+VcdTraceFile::addTraceVal(
+    const unsigned int *v, const std::string &name, const char **literals)
 {
     uint64_t count = 0;
     while (*literals++)

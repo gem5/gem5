@@ -32,7 +32,6 @@
 
 namespace
 {
-
 bool
 do_exit(const DispatchTable &dt, Args &args)
 {
@@ -45,8 +44,8 @@ do_exit(const DispatchTable &dt, Args &args)
     return true;
 }
 
-Command exit_cmd = {
-    "exit", 0, 1, do_exit, "[delay]\n"
-        "        Exit after delay, or immediately" };
+Command exit_cmd = {"exit", 0, 1, do_exit,
+    "[delay]\n"
+    "        Exit after delay, or immediately"};
 
 } // anonymous namespace

@@ -42,18 +42,17 @@
 #include "config/have_png.hh"
 
 #if HAVE_PNG
-#include "base/pngwriter.hh"
+#    include "base/pngwriter.hh"
 
 #endif
 
 namespace gem5
 {
-
 std::unique_ptr<ImgWriter>
 createImgWriter(enums::ImageFormat type, const FrameBuffer *fb)
 {
     switch (type) {
-      case enums::Auto:
+    case enums::Auto:
         // The Auto option allows gem5 to choose automatically the
         // writer type, and it will choose for the best fit in
         // performance.
@@ -62,12 +61,12 @@ createImgWriter(enums::ImageFormat type, const FrameBuffer *fb)
 
         [[fallthrough]];
 #if HAVE_PNG
-      case enums::Png:
+    case enums::Png:
         return std::unique_ptr<PngWriter>(new PngWriter(fb));
 #endif
-      case enums::Bitmap:
+    case enums::Bitmap:
         return std::unique_ptr<BmpWriter>(new BmpWriter(fb));
-      default:
+    default:
         warn("Invalid Image Type specified, defaulting to Bitmap\n");
         return std::unique_ptr<BmpWriter>(new BmpWriter(fb));
     }

@@ -52,19 +52,17 @@
 
 namespace gem5
 {
-
-NoncoherentXBar::NoncoherentXBar(const NoncoherentXBarParams &p)
-    : BaseXBar(p)
+NoncoherentXBar::NoncoherentXBar(const NoncoherentXBarParams &p) : BaseXBar(p)
 {
     // create the ports based on the size of the memory-side port and
     // CPU-side port vector ports, and the presence of the default port,
     // the ports are enumerated starting from zero
     for (int i = 0; i < p.port_mem_side_ports_connection_count; ++i) {
         std::string portName = csprintf("%s.mem_side_port[%d]", name(), i);
-        RequestPort* bp = new NoncoherentXBarRequestPort(portName, *this, i);
+        RequestPort *bp = new NoncoherentXBarRequestPort(portName, *this, i);
         memSidePorts.push_back(bp);
-        reqLayers.push_back(new ReqLayer(*bp, *this,
-                                         csprintf("reqLayer%d", i)));
+        reqLayers.push_back(
+            new ReqLayer(*bp, *this, csprintf("reqLayer%d", i)));
     }
 
     // see if we have a default CPU-side-port device connected and if so add
@@ -72,29 +70,29 @@ NoncoherentXBar::NoncoherentXBar(const NoncoherentXBarParams &p)
     if (p.port_default_connection_count) {
         defaultPortID = memSidePorts.size();
         std::string portName = name() + ".default";
-        RequestPort* bp = new NoncoherentXBarRequestPort(portName, *this,
-                                                      defaultPortID);
+        RequestPort *bp =
+            new NoncoherentXBarRequestPort(portName, *this, defaultPortID);
         memSidePorts.push_back(bp);
-        reqLayers.push_back(new ReqLayer(*bp, *this, csprintf("reqLayer%d",
-                                                              defaultPortID)));
+        reqLayers.push_back(
+            new ReqLayer(*bp, *this, csprintf("reqLayer%d", defaultPortID)));
     }
 
     // create the CPU-side ports, once again starting at zero
     for (int i = 0; i < p.port_cpu_side_ports_connection_count; ++i) {
         std::string portName = csprintf("%s.cpu_side_ports[%d]", name(), i);
-        QueuedResponsePort* bp = new NoncoherentXBarResponsePort(portName,
-                                                                *this, i);
+        QueuedResponsePort *bp =
+            new NoncoherentXBarResponsePort(portName, *this, i);
         cpuSidePorts.push_back(bp);
-        respLayers.push_back(new RespLayer(*bp, *this,
-                                           csprintf("respLayer%d", i)));
+        respLayers.push_back(
+            new RespLayer(*bp, *this, csprintf("respLayer%d", i)));
     }
 }
 
 NoncoherentXBar::~NoncoherentXBar()
 {
-    for (auto l: reqLayers)
+    for (auto l : reqLayers)
         delete l;
-    for (auto l: respLayers)
+    for (auto l : respLayers)
         delete l;
 }
 
@@ -114,12 +112,12 @@ NoncoherentXBar::recvTimingReq(PacketPtr pkt, PortID cpu_side_port_id)
     // port
     if (!reqLayers[mem_side_port_id]->tryTiming(src_port)) {
         DPRINTF(NoncoherentXBar, "recvTimingReq: src %s %s 0x%x BUSY\n",
-                src_port->name(), pkt->cmdString(), pkt->getAddr());
+            src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
     }
 
     DPRINTF(NoncoherentXBar, "recvTimingReq: src %s %s 0x%x\n",
-            src_port->name(), pkt->cmdString(), pkt->getAddr());
+        src_port->name(), pkt->cmdString(), pkt->getAddr());
 
     // store size and command as they might be modified when
     // forwarding the packet
@@ -140,22 +138,22 @@ NoncoherentXBar::recvTimingReq(PacketPtr pkt, PortID cpu_side_port_id)
 
     // before forwarding the packet (and possibly altering it),
     // remember if we are expecting a response
-    const bool expect_response = pkt->needsResponse() &&
-        !pkt->cacheResponding();
+    const bool expect_response =
+        pkt->needsResponse() && !pkt->cacheResponding();
 
     // since it is a normal request, attempt to send the packet
     bool success = memSidePorts[mem_side_port_id]->sendTimingReq(pkt);
 
-    if (!success)  {
+    if (!success) {
         DPRINTF(NoncoherentXBar, "recvTimingReq: src %s %s 0x%x RETRY\n",
-                src_port->name(), pkt->cmdString(), pkt->getAddr());
+            src_port->name(), pkt->cmdString(), pkt->getAddr());
 
         // restore the header delay as it is additive
         pkt->headerDelay = old_header_delay;
 
         // occupy until the header is sent
-        reqLayers[mem_side_port_id]->failedTiming(src_port,
-                                                clockEdge(Cycles(1)));
+        reqLayers[mem_side_port_id]->failedTiming(
+            src_port, clockEdge(Cycles(1)));
 
         return false;
     }
@@ -193,12 +191,12 @@ NoncoherentXBar::recvTimingResp(PacketPtr pkt, PortID mem_side_port_id)
     // port
     if (!respLayers[cpu_side_port_id]->tryTiming(src_port)) {
         DPRINTF(NoncoherentXBar, "recvTimingResp: src %s %s 0x%x BUSY\n",
-                src_port->name(), pkt->cmdString(), pkt->getAddr());
+            src_port->name(), pkt->cmdString(), pkt->getAddr());
         return false;
     }
 
     DPRINTF(NoncoherentXBar, "recvTimingResp: src %s %s 0x%x\n",
-            src_port->name(), pkt->cmdString(), pkt->getAddr());
+        src_port->name(), pkt->cmdString(), pkt->getAddr());
 
     // store size and command as they might be modified when
     // forwarding the packet
@@ -218,8 +216,7 @@ NoncoherentXBar::recvTimingResp(PacketPtr pkt, PortID mem_side_port_id)
     // any outstanding latency
     Tick latency = pkt->headerDelay;
     pkt->headerDelay = 0;
-    cpuSidePorts[cpu_side_port_id]->schedTimingResp(pkt,
-                                        curTick() + latency);
+    cpuSidePorts[cpu_side_port_id]->schedTimingResp(pkt, curTick() + latency);
 
     // remove the request from the routing table
     routeTo.erase(route_lookup);
@@ -244,12 +241,12 @@ NoncoherentXBar::recvReqRetry(PortID mem_side_port_id)
 }
 
 Tick
-NoncoherentXBar::recvAtomicBackdoor(PacketPtr pkt, PortID cpu_side_port_id,
-                                    MemBackdoorPtr *backdoor)
+NoncoherentXBar::recvAtomicBackdoor(
+    PacketPtr pkt, PortID cpu_side_port_id, MemBackdoorPtr *backdoor)
 {
     DPRINTF(NoncoherentXBar, "recvAtomic: packet src %s addr 0x%x cmd %s\n",
-            cpuSidePorts[cpu_side_port_id]->name(), pkt->getAddr(),
-            pkt->cmdString());
+        cpuSidePorts[cpu_side_port_id]->name(), pkt->getAddr(),
+        pkt->cmdString());
 
     unsigned int pkt_size = pkt->hasData() ? pkt->getSize() : 0;
     unsigned int pkt_cmd = pkt->cmdToIndex();
@@ -264,9 +261,9 @@ NoncoherentXBar::recvAtomicBackdoor(PacketPtr pkt, PortID cpu_side_port_id,
 
     // forward the request to the appropriate destination
     auto mem_side_port = memSidePorts[mem_side_port_id];
-    Tick response_latency = backdoor ?
-        mem_side_port->sendAtomicBackdoor(pkt, *backdoor) :
-        mem_side_port->sendAtomic(pkt);
+    Tick response_latency =
+        backdoor ? mem_side_port->sendAtomicBackdoor(pkt, *backdoor) :
+                   mem_side_port->sendAtomic(pkt);
 
     // add the response data
     if (pkt->isResponse()) {
@@ -285,8 +282,8 @@ NoncoherentXBar::recvAtomicBackdoor(PacketPtr pkt, PortID cpu_side_port_id,
 }
 
 void
-NoncoherentXBar::recvMemBackdoorReq(const MemBackdoorReq &req,
-        MemBackdoorPtr &backdoor)
+NoncoherentXBar::recvMemBackdoorReq(
+    const MemBackdoorReq &req, MemBackdoorPtr &backdoor)
 {
     PortID dest_id = findPort(req.range());
     memSidePorts[dest_id]->sendMemBackdoorReq(req, backdoor);
@@ -298,13 +295,13 @@ NoncoherentXBar::recvFunctional(PacketPtr pkt, PortID cpu_side_port_id)
     if (!pkt->isPrint()) {
         // don't do DPRINTFs on PrintReq as it clutters up the output
         DPRINTF(NoncoherentXBar,
-                "recvFunctional: packet src %s addr 0x%x cmd %s\n",
-                cpuSidePorts[cpu_side_port_id]->name(), pkt->getAddr(),
-                pkt->cmdString());
+            "recvFunctional: packet src %s addr 0x%x cmd %s\n",
+            cpuSidePorts[cpu_side_port_id]->name(), pkt->getAddr(),
+            pkt->cmdString());
     }
 
     // since our CPU-side ports are queued ports we need to check them as well
-    for (const auto& p : cpuSidePorts) {
+    for (const auto &p : cpuSidePorts) {
         // if we find a response that has the data, then the
         // downstream caches/memories may be out of date, so simply stop
         // here

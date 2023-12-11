@@ -38,7 +38,6 @@
 
 namespace gem5
 {
-
 /**
  * @file sim/global_event.hh
  * Global events and related declarations.
@@ -63,15 +62,14 @@ namespace gem5
 class BaseGlobalEvent : public EventBase
 {
   private:
-      //! Mutex variable for providing exculsive right to schedule global
-      //! events. This is necessary so that a total order can be maintained
-      //! amongst the global events. Without ensuring the total order, it is
-      //! possible that threads execute global events in different orders,
-      //! which can result in a deadlock.
-      static std::mutex globalQMutex;
+    //! Mutex variable for providing exculsive right to schedule global
+    //! events. This is necessary so that a total order can be maintained
+    //! amongst the global events. Without ensuring the total order, it is
+    //! possible that threads execute global events in different orders,
+    //! which can result in a deadlock.
+    static std::mutex globalQMutex;
 
   protected:
-
     /// The base class for the local events that will synchronize
     /// threads to perform the global event.  This class is abstract,
     /// since it derives from the abstract Event class but still does
@@ -81,16 +79,16 @@ class BaseGlobalEvent : public EventBase
       protected:
         BaseGlobalEvent *_globalEvent;
 
-        BarrierEvent(BaseGlobalEvent *global_event, Priority p, Flags f)
-            : Event(p, f), _globalEvent(global_event)
-        {
-        }
+        BarrierEvent(BaseGlobalEvent *global_event, Priority p, Flags f) :
+            Event(p, f), _globalEvent(global_event)
+        {}
 
         ~BarrierEvent();
 
         friend class BaseGlobalEvent;
 
-        bool globalBarrier()
+        bool
+        globalBarrier()
         {
             // This method will be called from the process() method in
             // the local barrier events
@@ -105,7 +103,11 @@ class BaseGlobalEvent : public EventBase
         }
 
       public:
-        virtual BaseGlobalEvent *globalEvent() { return _globalEvent; }
+        virtual BaseGlobalEvent *
+        globalEvent()
+        {
+            return _globalEvent;
+        }
     };
 
     //! The barrier that all threads wait on before performing the
@@ -126,7 +128,8 @@ class BaseGlobalEvent : public EventBase
 
     void schedule(Tick when);
 
-    bool scheduled() const
+    bool
+    scheduled() const
     {
         bool sched = false;
         for (uint32_t i = 0; i < numMainEventQueues; ++i) {
@@ -136,7 +139,8 @@ class BaseGlobalEvent : public EventBase
         return sched;
     }
 
-    Tick when() const
+    Tick
+    when() const
     {
         assert(numMainEventQueues > 0);
         return barrierEvent[0]->when();
@@ -145,7 +149,6 @@ class BaseGlobalEvent : public EventBase
     void deschedule();
     void reschedule(Tick when);
 };
-
 
 /**
  * Funky intermediate class to support CRTP so that we can have a
@@ -156,16 +159,14 @@ template <class Derived>
 class BaseGlobalEventTemplate : public BaseGlobalEvent
 {
   protected:
-    BaseGlobalEventTemplate(Priority p, Flags f)
-        : BaseGlobalEvent(p, f)
+    BaseGlobalEventTemplate(Priority p, Flags f) : BaseGlobalEvent(p, f)
     {
         for (int i = 0; i < numMainEventQueues; ++i)
             barrierEvent[i] = new typename Derived::BarrierEvent(this, p, f);
     }
 
-    virtual ~BaseGlobalEventTemplate(){}
+    virtual ~BaseGlobalEventTemplate() {}
 };
-
 
 /**
  * The main global event class.  Ordinary global events should derive
@@ -184,17 +185,14 @@ class GlobalEvent : public BaseGlobalEventTemplate<GlobalEvent>
     {
       public:
         void process();
-        BarrierEvent(Base *global_event, Priority p, Flags f)
-            : Base::BarrierEvent(global_event, p, f)
-        { }
+        BarrierEvent(Base *global_event, Priority p, Flags f) :
+            Base::BarrierEvent(global_event, p, f)
+        {}
     };
 
-    GlobalEvent(Priority p, Flags f)
-        : Base(p, f)
-    { }
+    GlobalEvent(Priority p, Flags f) : Base(p, f) {}
 
-    GlobalEvent(Tick when, Priority p, Flags f)
-        : Base(p, f)
+    GlobalEvent(Tick when, Priority p, Flags f) : Base(p, f)
     {
         schedule(when);
     }
@@ -216,22 +214,20 @@ class GlobalSyncEvent : public BaseGlobalEventTemplate<GlobalSyncEvent>
     {
       public:
         void process();
-        BarrierEvent(Base *global_event, Priority p, Flags f)
-            : Base::BarrierEvent(global_event, p, f)
-        { }
+        BarrierEvent(Base *global_event, Priority p, Flags f) :
+            Base::BarrierEvent(global_event, p, f)
+        {}
     };
 
-    GlobalSyncEvent(Priority p, Flags f)
-        : Base(p, f), repeat(0)
-    { }
+    GlobalSyncEvent(Priority p, Flags f) : Base(p, f), repeat(0) {}
 
-    GlobalSyncEvent(Tick when, Tick _repeat, Priority p, Flags f)
-        : Base(p, f), repeat(_repeat)
+    GlobalSyncEvent(Tick when, Tick _repeat, Priority p, Flags f) :
+        Base(p, f), repeat(_repeat)
     {
         schedule(when);
     }
 
-    virtual ~GlobalSyncEvent (){}
+    virtual ~GlobalSyncEvent() {}
 
     void process();
 

@@ -33,7 +33,6 @@
 
 namespace gem5
 {
-
 ////////////////////////////////////////////////////////////////////
 //
 // Branch instructions
@@ -41,7 +40,6 @@ namespace gem5
 
 namespace SparcISA
 {
-
 /**
  * Base class for branch operations.
  */
@@ -51,7 +49,7 @@ class Branch : public SparcStaticInst
     using SparcStaticInst::SparcStaticInst;
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 /**
@@ -61,12 +59,12 @@ class BranchDisp : public Branch
 {
   protected:
     BranchDisp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-               int32_t _disp) :
+        int32_t _disp) :
         Branch(mnem, _machInst, __opClass), disp(_disp)
     {}
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 
     int32_t disp;
 };
@@ -74,7 +72,7 @@ class BranchDisp : public Branch
 /**
  * Base class for branches with n bit displacements.
  */
-template<int bits>
+template <int bits>
 class BranchNBits : public BranchDisp
 {
   protected:
@@ -93,8 +91,8 @@ class BranchSplit : public BranchDisp
     // Constructor
     BranchSplit(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
         BranchDisp(mnem, _machInst, __opClass,
-                   sext<18>((bits(_machInst, 21, 20) << 16) |
-                            (bits(_machInst, 13, 0) << 2)))
+            sext<18>((bits(_machInst, 21, 20) << 16) |
+                     (bits(_machInst, 13, 0) << 2)))
     {}
 };
 
@@ -111,7 +109,7 @@ class BranchImm13 : public Branch
     {}
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 
     int32_t imm;
 };

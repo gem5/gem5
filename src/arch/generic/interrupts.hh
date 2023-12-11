@@ -34,7 +34,6 @@
 
 namespace gem5
 {
-
 class ThreadContext;
 class BaseCPU;
 
@@ -48,7 +47,11 @@ class BaseInterrupts : public SimObject
 
     BaseInterrupts(const Params &p) : SimObject(p) {}
 
-    virtual void setThreadContext(ThreadContext *_tc) { tc = _tc; }
+    virtual void
+    setThreadContext(ThreadContext *_tc)
+    {
+        tc = _tc;
+    }
 
     /*
      * Functions for retrieving interrupts for the CPU to handle.

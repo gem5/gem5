@@ -36,7 +36,6 @@
 
 namespace gem5
 {
-
 void
 EthPacketData::serialize(const std::string &base, CheckpointOut &cp) const
 {

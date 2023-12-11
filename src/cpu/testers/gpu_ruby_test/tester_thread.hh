@@ -45,7 +45,6 @@
 
 namespace gem5
 {
-
 class TesterThread : public ClockedObject
 {
   public:
@@ -62,37 +61,61 @@ class TesterThread : public ClockedObject
     void scheduleDeadlockCheckEvent();
 
     void attachTesterThreadToPorts(ProtocolTester *_tester,
-                             ProtocolTester::SeqPort *_port,
-                             ProtocolTester::GMTokenPort *_tokenPort = nullptr,
-                             ProtocolTester::SeqPort *_sqcPort = nullptr,
-                             ProtocolTester::SeqPort *_scalarPort = nullptr);
+        ProtocolTester::SeqPort *_port,
+        ProtocolTester::GMTokenPort *_tokenPort = nullptr,
+        ProtocolTester::SeqPort *_sqcPort = nullptr,
+        ProtocolTester::SeqPort *_scalarPort = nullptr);
 
-    const std::string& getName() const { return threadName; }
+    const std::string &
+    getName() const
+    {
+        return threadName;
+    }
 
     // must be implemented by a child class
     virtual void hitCallback(PacketPtr pkt) = 0;
 
-    int getTesterThreadId() const { return threadId; }
-    int getNumLanes() const { return numLanes; }
+    int
+    getTesterThreadId() const
+    {
+        return threadId;
+    }
+    int
+    getNumLanes() const
+    {
+        return numLanes;
+    }
     // check if the input location would satisfy DRF constraint
     bool checkDRF(Location atomic_loc, Location loc, bool isStore) const;
 
-    void printAllOutstandingReqs(std::stringstream& ss) const;
+    void printAllOutstandingReqs(std::stringstream &ss) const;
 
   protected:
     class TesterThreadEvent : public Event
     {
       private:
-        TesterThread* thread;
+        TesterThread *thread;
         std::string desc;
 
       public:
-        TesterThreadEvent(TesterThread* _thread, std::string _description)
-            : Event(CPU_Tick_Pri), thread(_thread), desc(_description)
+        TesterThreadEvent(TesterThread *_thread, std::string _description) :
+            Event(CPU_Tick_Pri), thread(_thread), desc(_description)
         {}
-        void setDesc(std::string _description) { desc = _description; }
-        void process() override { thread->wakeup(); }
-        const std::string name() const override { return desc; }
+        void
+        setDesc(std::string _description)
+        {
+            desc = _description;
+        }
+        void
+        process() override
+        {
+            thread->wakeup();
+        }
+        const std::string
+        name() const override
+        {
+            return desc;
+        }
     };
 
     TesterThreadEvent threadEvent;
@@ -100,13 +123,17 @@ class TesterThread : public ClockedObject
     class DeadlockCheckEvent : public Event
     {
       private:
-        TesterThread* thread;
+        TesterThread *thread;
 
       public:
-        DeadlockCheckEvent(TesterThread* _thread)
-            : Event(CPU_Tick_Pri), thread(_thread)
+        DeadlockCheckEvent(TesterThread *_thread) :
+            Event(CPU_Tick_Pri), thread(_thread)
         {}
-        void process() override { thread->checkDeadlock(); }
+        void
+        process() override
+        {
+            thread->checkDeadlock();
+        }
 
         const std::string
         name() const override
@@ -124,12 +151,11 @@ class TesterThread : public ClockedObject
         Value storedValue;
         Cycles issueCycle;
 
-        OutstandingReq(int _lane, Location _loc, Value _val, Cycles _cycle)
-            : lane(_lane), origLoc(_loc), storedValue(_val), issueCycle(_cycle)
+        OutstandingReq(int _lane, Location _loc, Value _val, Cycles _cycle) :
+            lane(_lane), origLoc(_loc), storedValue(_val), issueCycle(_cycle)
         {}
 
-        ~OutstandingReq()
-        {}
+        ~OutstandingReq() {}
     };
 
     // the unique global id of this thread
@@ -143,14 +169,14 @@ class TesterThread : public ClockedObject
     // pointer to the address manager
     AddressManager *addrManager;
 
-    ProtocolTester::SeqPort *port;       // main data port (GPU-vector data)
+    ProtocolTester::SeqPort *port; // main data port (GPU-vector data)
     ProtocolTester::GMTokenPort *tokenPort;
     ProtocolTester::SeqPort *scalarPort; // nullptr for CPU
-    ProtocolTester::SeqPort *sqcPort;   // nullptr for CPU
+    ProtocolTester::SeqPort *sqcPort;    // nullptr for CPU
 
     // a list of issued episodes sorted by time
     // the last episode in the list is the current episode
-    typedef std::vector<Episode*> EpisodeHistory;
+    typedef std::vector<Episode *> EpisodeHistory;
     EpisodeHistory episodeHistory;
     // pointer to the current episode
     Episode *curEpisode;
@@ -189,21 +215,21 @@ class TesterThread : public ClockedObject
     virtual void issueReleaseOp() = 0;
 
     // add an outstanding request to its corresponding table
-    void addOutstandingReqs(OutstandingReqTable& req_table, Addr addr,
-                            int lane, Location loc,
-                            Value stored_val = AddressManager::INVALID_VALUE);
+    void addOutstandingReqs(OutstandingReqTable &req_table, Addr addr,
+        int lane, Location loc,
+        Value stored_val = AddressManager::INVALID_VALUE);
 
     // pop an outstanding request from the input table
-    OutstandingReq popOutstandingReq(OutstandingReqTable& req_table,
-                                     Addr address);
+    OutstandingReq popOutstandingReq(
+        OutstandingReqTable &req_table, Addr address);
 
     // validate all atomic responses
     void validateAtomicResp(Location loc, int lane, Value ret_val);
     // validate all Load responses
     void validateLoadResp(Location loc, int lane, Value ret_val);
 
-    void printOutstandingReqs(const OutstandingReqTable& table,
-                              std::stringstream& ss) const;
+    void printOutstandingReqs(
+        const OutstandingReqTable &table, std::stringstream &ss) const;
 };
 
 } // namespace gem5

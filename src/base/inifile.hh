@@ -44,7 +44,6 @@
 
 namespace gem5
 {
-
 ///
 /// This class represents the contents of a ".ini" file.
 ///
@@ -55,37 +54,46 @@ namespace gem5
 class IniFile
 {
   protected:
-
     ///
     /// A single key/value pair.
     ///
     class Entry
     {
-        std::string     value;          ///< The entry value.
-        mutable bool    referenced;     ///< Has this entry been used?
+        std::string value;       ///< The entry value.
+        mutable bool referenced; ///< Has this entry been used?
 
       public:
         /// Constructor.
-        Entry(const std::string &v)
-            : value(v), referenced(false)
-        {
-        }
+        Entry(const std::string &v) : value(v), referenced(false) {}
 
         /// Has this entry been used?
-        bool isReferenced() const { return referenced; }
+        bool
+        isReferenced() const
+        {
+            return referenced;
+        }
 
         /// Fetch the value.
         const std::string &getValue() const;
 
         /// Set the value.
-        void setValue(const std::string &v) { value = v; }
+        void
+        setValue(const std::string &v)
+        {
+            value = v;
+        }
 
         /// Append the given string to the value.  A space is inserted
         /// between the existing value and the new value.  Since this
         /// operation is typically used with values that are
         /// space-separated lists of tokens, this keeps the tokens
         /// separate.
-        void appendValue(const std::string &v) { value += " "; value += v; }
+        void
+        appendValue(const std::string &v)
+        {
+            value += " ";
+            value += v;
+        }
     };
 
     ///
@@ -96,25 +104,26 @@ class IniFile
         /// EntryTable type.  Map of strings to Entry object pointers.
         typedef std::unordered_map<std::string, Entry> EntryTable;
 
-        EntryTable      table;          ///< Table of entries.
-        mutable bool    referenced;     ///< Has this section been used?
+        EntryTable table;        ///< Table of entries.
+        mutable bool referenced; ///< Has this section been used?
 
       public:
         /// Constructor.
-        Section()
-            : table(), referenced(false)
-        {
-        }
+        Section() : table(), referenced(false) {}
 
         /// Has this section been used?
-        bool isReferenced() const { return referenced; }
+        bool
+        isReferenced() const
+        {
+            return referenced;
+        }
 
         /// Add an entry to the table.  If an entry with the same name
         /// already exists, the 'append' parameter is checked If true,
         /// the new value will be appended to the existing entry.  If
         /// false, the new value will replace the existing entry.
         void addEntry(const std::string &entryName, const std::string &value,
-                      bool append);
+            bool append);
 
         /// Add an entry to the table given a string assigment.
         /// Assignment should be of the form "param=value" or
@@ -185,13 +194,13 @@ class IniFile
     /// Value is returned by reference in 'value' param.
     /// @retval True if found, false if not.
     bool find(const std::string &section, const std::string &entry,
-              std::string &value) const;
+        std::string &value) const;
 
     /// Determine whether the entry exists within named section exists
     /// in the .ini file.
     /// @return True if the section exists.
-    bool entryExists(const std::string &section,
-                     const std::string &entry) const;
+    bool entryExists(
+        const std::string &section, const std::string &entry) const;
 
     /// Determine whether the named section exists in the .ini file.
     /// Note that the 'Section' class is (intentionally) not public,
@@ -211,8 +220,8 @@ class IniFile
     void dump();
 
     /// Visitor callback that receives key/value pairs.
-    using VisitSectionCallback = std::function<void(
-        const std::string&, const std::string&)>;
+    using VisitSectionCallback =
+        std::function<void(const std::string &, const std::string &)>;
 
     /// Iterate over key/value pairs of the given section.
     void visitSection(const std::string &sectionName, VisitSectionCallback cb);

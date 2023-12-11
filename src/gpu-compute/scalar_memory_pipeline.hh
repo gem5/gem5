@@ -52,7 +52,6 @@
 
 namespace gem5
 {
-
 class ComputeUnit;
 
 class ScalarMemPipeline
@@ -61,9 +60,21 @@ class ScalarMemPipeline
     ScalarMemPipeline(const ComputeUnitParams &p, ComputeUnit &cu);
     void exec();
 
-    std::queue<GPUDynInstPtr> &getGMReqFIFO() { return issuedRequests; }
-    std::queue<GPUDynInstPtr> &getGMStRespFIFO() { return returnedStores; }
-    std::queue<GPUDynInstPtr> &getGMLdRespFIFO() { return returnedLoads; }
+    std::queue<GPUDynInstPtr> &
+    getGMReqFIFO()
+    {
+        return issuedRequests;
+    }
+    std::queue<GPUDynInstPtr> &
+    getGMStRespFIFO()
+    {
+        return returnedStores;
+    }
+    std::queue<GPUDynInstPtr> &
+    getGMLdRespFIFO()
+    {
+        return returnedLoads;
+    }
 
     void issueRequest(GPUDynInstPtr gpuDynInst);
 
@@ -80,12 +91,16 @@ class ScalarMemPipeline
     }
 
     bool
-    isGMReqFIFOWrRdy(uint32_t pendReqs=0) const
+    isGMReqFIFOWrRdy(uint32_t pendReqs = 0) const
     {
         return (issuedRequests.size() + pendReqs) < queueSize;
     }
 
-    const std::string& name() const { return _name; }
+    const std::string &
+    name() const
+    {
+        return _name;
+    }
 
   private:
     ComputeUnit &computeUnit;

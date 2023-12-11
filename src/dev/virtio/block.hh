@@ -44,7 +44,6 @@
 
 namespace gem5
 {
-
 struct VirtIOBlockParams;
 
 /**
@@ -145,7 +144,7 @@ class VirtIOBlock : public VirtIODeviceBase
      * @param size Request data size.
      */
     Status read(const BlkRequest &req, VirtDescriptor *desc_chain,
-                size_t off_data, size_t size);
+        size_t off_data, size_t size);
     /**
      * Device write request.
      *
@@ -157,24 +156,28 @@ class VirtIOBlock : public VirtIODeviceBase
      * @param size Request data size.
      */
     Status write(const BlkRequest &req, VirtDescriptor *desc_chain,
-                 size_t off_data, size_t size);
+        size_t off_data, size_t size);
 
   protected:
     /**
      * Virtqueue for disk requests.
      */
-    class RequestQueue
-        : public VirtQueue
+    class RequestQueue : public VirtQueue
     {
       public:
-        RequestQueue(PortProxy &proxy, ByteOrder bo,
-                uint16_t size, VirtIOBlock &_parent)
-            : VirtQueue(proxy, bo, size), parent(_parent) {}
+        RequestQueue(PortProxy &proxy, ByteOrder bo, uint16_t size,
+            VirtIOBlock &_parent) :
+            VirtQueue(proxy, bo, size), parent(_parent)
+        {}
         virtual ~RequestQueue() {}
 
         void onNotifyDescriptor(VirtDescriptor *desc);
 
-        std::string name() const { return parent.name() + ".qRequests"; }
+        std::string
+        name() const
+        {
+            return parent.name() + ".qRequests";
+        }
 
       protected:
         VirtIOBlock &parent;

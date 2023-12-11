@@ -37,7 +37,6 @@
 
 namespace gem5
 {
-
 class PollQueue;
 
 class PollEvent : public Serializable
@@ -69,7 +68,11 @@ class PollEvent : public Serializable
     /**
      * @ingroup api_poll_event
      */
-    bool queued() { return queue != 0; }
+    bool
+    queued()
+    {
+        return queue != 0;
+    }
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
@@ -101,7 +104,6 @@ class PollQueue
     void schedule(PollEvent *event);
     void service();
     /** @} */ // end of api_poll_queue
-
 
   public:
     static void setupAsyncIO(int fd, bool set);

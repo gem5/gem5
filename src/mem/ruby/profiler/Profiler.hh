@@ -61,10 +61,8 @@
 
 namespace gem5
 {
-
 namespace ruby
 {
-
 class RubyRequest;
 class AddressProfiler;
 
@@ -80,22 +78,38 @@ class Profiler
     void regStats();
     void collateStats();
 
-    AddressProfiler* getAddressProfiler() { return m_address_profiler_ptr; }
-    AddressProfiler* getInstructionProfiler() { return m_inst_profiler_ptr; }
+    AddressProfiler *
+    getAddressProfiler()
+    {
+        return m_address_profiler_ptr;
+    }
+    AddressProfiler *
+    getInstructionProfiler()
+    {
+        return m_inst_profiler_ptr;
+    }
 
-    void addAddressTraceSample(const RubyRequest& msg, NodeID id);
+    void addAddressTraceSample(const RubyRequest &msg, NodeID id);
 
     // added by SS
-    bool getHotLines() const { return m_hot_lines; }
-    bool getAllInstructions() const { return m_all_instructions; }
+    bool
+    getHotLines() const
+    {
+        return m_hot_lines;
+    }
+    bool
+    getAllInstructions() const
+    {
+        return m_all_instructions;
+    }
 
   private:
     // Private copy constructor and assignment operator
-    Profiler(const Profiler& obj);
-    Profiler& operator=(const Profiler& obj);
+    Profiler(const Profiler &obj);
+    Profiler &operator=(const Profiler &obj);
 
-    AddressProfiler* m_address_profiler_ptr;
-    AddressProfiler* m_inst_profiler_ptr;
+    AddressProfiler *m_address_profiler_ptr;
+    AddressProfiler *m_inst_profiler_ptr;
 
     struct ProfilerStats : public statistics::Group
     {
@@ -137,18 +151,18 @@ class Profiler
             std::vector<statistics::Histogram *>
                 m_InitialToForwardDelayHistSeqr;
             std::vector<statistics::Histogram *>
-              m_ForwardToFirstResponseDelayHistSeqr;
+                m_ForwardToFirstResponseDelayHistSeqr;
             std::vector<statistics::Histogram *>
-              m_FirstResponseToCompletionDelayHistSeqr;
+                m_FirstResponseToCompletionDelayHistSeqr;
             std::vector<statistics::Scalar *> m_IncompleteTimesSeqr;
             std::vector<statistics::Histogram *>
                 m_IssueToInitialDelayHistCoalsr;
             std::vector<statistics::Histogram *>
                 m_InitialToForwardDelayHistCoalsr;
             std::vector<statistics::Histogram *>
-              m_ForwardToFirstResponseDelayHistCoalsr;
+                m_ForwardToFirstResponseDelayHistCoalsr;
             std::vector<statistics::Histogram *>
-              m_FirstResponseToCompletionDelayHistCoalsr;
+                m_FirstResponseToCompletionDelayHistCoalsr;
         } perMachineTypeStats;
 
         struct PerRequestTypeMachineTypeStats : public statistics::Group
@@ -157,15 +171,15 @@ class Profiler
 
             //! Histograms for profiling the latencies for requests that
             //! did not required external messages.
-            std::vector< std::vector<statistics::Histogram *> >
-              m_hitTypeMachLatencyHistSeqr;
+            std::vector<std::vector<statistics::Histogram *> >
+                m_hitTypeMachLatencyHistSeqr;
 
             //! Histograms for profiling the latencies for requests that
             //! required external messages.
-            std::vector< std::vector<statistics::Histogram *> >
-              m_missTypeMachLatencyHistSeqr;
-            std::vector< std::vector<statistics::Histogram *> >
-              m_missTypeMachLatencyHistCoalsr;
+            std::vector<std::vector<statistics::Histogram *> >
+                m_missTypeMachLatencyHistSeqr;
+            std::vector<std::vector<statistics::Histogram *> >
+                m_missTypeMachLatencyHistCoalsr;
         } perRequestTypeMachineTypeStats;
 
         statistics::Histogram delayHistogram;
@@ -189,11 +203,10 @@ class Profiler
         statistics::Histogram m_missLatencyHistCoalsr;
     };
 
-    //added by SS
+    // added by SS
     const bool m_hot_lines;
     const bool m_all_instructions;
     const uint32_t m_num_vnets;
-
 
   public:
     ProfilerStats rubyProfilerStats;

@@ -42,10 +42,8 @@
 
 namespace gem5
 {
-
 namespace X86ISA
 {
-
 class DecodeFaultInst : public X86StaticInst
 {
   private:

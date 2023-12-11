@@ -37,7 +37,6 @@
 
 namespace gem5
 {
-
 AMDGPUNbio::AMDGPUNbio()
 {
     // All read-before-write MMIOs go here
@@ -54,42 +53,40 @@ void
 AMDGPUNbio::readMMIO(PacketPtr pkt, Addr offset)
 {
     switch (offset) {
-      // This is a PCIe status register. At some point during driver init
-      // the driver checks that interrupts are enabled. This is only
-      // checked once, so if the MMIO trace does not exactly line up with
-      // what the driver is doing in gem5, this may still have the first
-      // bit zero causing driver to fail. Therefore, we always set this
-      // bit to one as there is no harm to do so.
-      case AMDGPU_PCIE_DATA_REG:
-        {
-          uint32_t value = pkt->getLE<uint32_t>() | 0x1;
-          DPRINTF(AMDGPUDevice, "Marking interrupts enabled: %#lx\n", value);
-          pkt->setLE<uint32_t>(value);
-        }
-        break;
-      case AMDGPU_MM_DATA:
-        //pkt->setLE<uint32_t>(regs[mm_index_reg]);
+    // This is a PCIe status register. At some point during driver init
+    // the driver checks that interrupts are enabled. This is only
+    // checked once, so if the MMIO trace does not exactly line up with
+    // what the driver is doing in gem5, this may still have the first
+    // bit zero causing driver to fail. Therefore, we always set this
+    // bit to one as there is no harm to do so.
+    case AMDGPU_PCIE_DATA_REG: {
+        uint32_t value = pkt->getLE<uint32_t>() | 0x1;
+        DPRINTF(AMDGPUDevice, "Marking interrupts enabled: %#lx\n", value);
+        pkt->setLE<uint32_t>(value);
+    } break;
+    case AMDGPU_MM_DATA:
+        // pkt->setLE<uint32_t>(regs[mm_index_reg]);
         pkt->setLE<uint32_t>(gpuDevice->getRegVal(mm_index_reg));
         break;
-      case VEGA10_INV_ENG17_ACK1:
-      case VEGA10_INV_ENG17_ACK2:
-      case MI100_INV_ENG17_ACK2:
-      case MI100_INV_ENG17_ACK3:
-      case MI200_INV_ENG17_ACK2:
+    case VEGA10_INV_ENG17_ACK1:
+    case VEGA10_INV_ENG17_ACK2:
+    case MI100_INV_ENG17_ACK2:
+    case MI100_INV_ENG17_ACK3:
+    case MI200_INV_ENG17_ACK2:
         pkt->setLE<uint32_t>(0x10001);
         break;
-      case VEGA10_INV_ENG17_SEM1:
-      case VEGA10_INV_ENG17_SEM2:
-      case MI100_INV_ENG17_SEM2:
-      case MI100_INV_ENG17_SEM3:
-      case MI200_INV_ENG17_SEM2:
+    case VEGA10_INV_ENG17_SEM1:
+    case VEGA10_INV_ENG17_SEM2:
+    case MI100_INV_ENG17_SEM2:
+    case MI100_INV_ENG17_SEM3:
+    case MI200_INV_ENG17_SEM2:
         pkt->setLE<uint32_t>(0x1);
         break;
-      // PSP responds with bit 31 set when ready
-      case AMDGPU_MP0_SMN_C2PMSG_35:
+    // PSP responds with bit 31 set when ready
+    case AMDGPU_MP0_SMN_C2PMSG_35:
         pkt->setLE<uint32_t>(0x80000000);
         break;
-      default:
+    default:
         if (triggered_reads.count(offset)) {
             DPRINTF(AMDGPUDevice, "Found triggered read for %#x\n", offset);
             pkt->setLE<uint32_t>(triggered_reads[offset]);
@@ -97,12 +94,12 @@ AMDGPUNbio::readMMIO(PacketPtr pkt, Addr offset)
             uint32_t reg_val = gpuDevice->getRegVal(offset);
 
             DPRINTF(AMDGPUDevice, "Reading value of %#lx from regs: %#lx\n",
-                    offset, reg_val);
+                offset, reg_val);
 
             pkt->setLE<uint32_t>(reg_val);
         } else {
             DPRINTF(AMDGPUDevice, "NBIO Unknown MMIO %#x (%#x)\n", offset,
-                    pkt->getAddr());
+                pkt->getAddr());
         }
         break;
     }
@@ -113,15 +110,14 @@ AMDGPUNbio::writeMMIO(PacketPtr pkt, Addr offset)
 {
     if (offset == AMDGPU_MM_INDEX) {
         assert(pkt->getSize() == 4);
-        mm_index_reg = insertBits(mm_index_reg, 31, 0,
-                                  pkt->getLE<uint32_t>());
+        mm_index_reg = insertBits(mm_index_reg, 31, 0, pkt->getLE<uint32_t>());
     } else if (offset == AMDGPU_MM_INDEX_HI) {
         assert(pkt->getSize() == 4);
-        mm_index_reg = insertBits(mm_index_reg, 63, 32,
-                                  pkt->getLE<uint32_t>());
+        mm_index_reg =
+            insertBits(mm_index_reg, 63, 32, pkt->getLE<uint32_t>());
     } else if (offset == AMDGPU_MM_DATA) {
-        DPRINTF(AMDGPUDevice, "MM write to reg %#lx data %#lx\n",
-                mm_index_reg, pkt->getLE<uint32_t>());
+        DPRINTF(AMDGPUDevice, "MM write to reg %#lx data %#lx\n", mm_index_reg,
+            pkt->getLE<uint32_t>());
         gpuDevice->setRegVal(AMDGPU_MM_DATA, pkt->getLE<uint32_t>());
     } else if (offset == AMDGPU_MP0_SMN_C2PMSG_35) {
         // See psp_v3_1_bootloader_load_sos in amdgpu driver code.
@@ -134,13 +130,13 @@ AMDGPUNbio::writeMMIO(PacketPtr pkt, Addr offset)
     } else if (offset == AMDGPU_MP0_SMN_C2PMSG_69) {
         // PSP ring low addr
         psp_ring = insertBits(psp_ring, 31, 0, pkt->getLE<uint32_t>());
-        psp_ring_listen_addr = psp_ring
-                             - gpuDevice->getVM().getSysAddrRangeLow() + 0xc;
+        psp_ring_listen_addr =
+            psp_ring - gpuDevice->getVM().getSysAddrRangeLow() + 0xc;
     } else if (offset == AMDGPU_MP0_SMN_C2PMSG_70) {
         // PSP ring high addr
         psp_ring = insertBits(psp_ring, 63, 32, pkt->getLE<uint32_t>());
-        psp_ring_listen_addr = psp_ring
-                             - gpuDevice->getVM().getSysAddrRangeLow() + 0xc;
+        psp_ring_listen_addr =
+            psp_ring - gpuDevice->getVM().getSysAddrRangeLow() + 0xc;
     } else if (offset == AMDGPU_MP0_SMN_C2PMSG_71) {
         // PSP ring size
         psp_ring_size = pkt->getLE<uint32_t>();
@@ -164,8 +160,10 @@ void
 AMDGPUNbio::writeFrame(PacketPtr pkt, Addr offset)
 {
     if (offset == psp_ring_listen_addr) {
-        DPRINTF(AMDGPUDevice, "Saw psp_ring_listen_addr with size %ld value "
-                "%ld\n", pkt->getSize(), pkt->getUintX(ByteOrder::little));
+        DPRINTF(AMDGPUDevice,
+            "Saw psp_ring_listen_addr with size %ld value "
+            "%ld\n",
+            pkt->getSize(), pkt->getUintX(ByteOrder::little));
 
         /*
          * In ROCm versions 4.x this packet is a 4 byte value. In ROCm 5.x
@@ -175,14 +173,14 @@ AMDGPUNbio::writeFrame(PacketPtr pkt, Addr offset)
         if (pkt->getSize() == 4) {
             psp_ring_dev_addr = pkt->getLE<uint32_t>();
         } else if (pkt->getSize() == 8) {
-            psp_ring_dev_addr = pkt->getUintX(ByteOrder::little)
-                              - gpuDevice->getVM().getSysAddrRangeLow();
+            psp_ring_dev_addr = pkt->getUintX(ByteOrder::little) -
+                                gpuDevice->getVM().getSysAddrRangeLow();
         } else {
             panic("Invalid write size to psp_ring_listen_addr\n");
         }
 
         DPRINTF(AMDGPUDevice, "Setting PSP ring device address to %#lx\n",
-                psp_ring_dev_addr);
+            psp_ring_dev_addr);
     }
 }
 

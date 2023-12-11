@@ -43,14 +43,11 @@
 
 namespace gem5
 {
-
 class CpuCluster : public SubSystem
 {
   public:
     PARAMS(CpuCluster);
-    CpuCluster(const Params &p)
-      : SubSystem(p)
-    {}
+    CpuCluster(const Params &p) : SubSystem(p) {}
 };
 
 } // namespace gem5

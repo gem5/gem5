@@ -32,10 +32,8 @@
 
 namespace gem5
 {
-
 namespace X86ISA
 {
-
 /* memory mappings for KVMCpu in SE mode */
 const Addr syscallCodeVirtAddr = 0xffff800000000000;
 const Addr GDTVirtAddr = 0xffff800000001000;

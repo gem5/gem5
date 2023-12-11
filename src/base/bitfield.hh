@@ -51,7 +51,6 @@
 
 namespace gem5
 {
-
 extern const uint8_t reverseBitsLookUpTable[];
 
 /**
@@ -213,7 +212,7 @@ insertBits(T val, unsigned bit, B bit_val)
  */
 template <class T, class B>
 constexpr void
-replaceBits(T& val, unsigned first, unsigned last, B bit_val)
+replaceBits(T &val, unsigned first, unsigned last, B bit_val)
 {
     val = insertBits(val, first, last, bit_val);
 }
@@ -225,7 +224,7 @@ replaceBits(T& val, unsigned first, unsigned last, B bit_val)
  */
 template <class T, class B>
 constexpr void
-replaceBits(T& val, unsigned bit, B bit_val)
+replaceBits(T &val, unsigned bit, B bit_val)
 {
     val = insertBits(val, bit, bit, bit_val);
 }
@@ -252,7 +251,7 @@ replaceBits(T& val, unsigned bit, B bit_val)
  */
 template <class T>
 std::enable_if_t<std::is_integral_v<T>, T>
-reverseBits(T val, size_t size=sizeof(T))
+reverseBits(T val, size_t size = sizeof(T))
 {
     assert(size <= sizeof(T));
 
@@ -306,16 +305,18 @@ findMsbSet(uint64_t val)
     return msb;
 }
 
-namespace {
-template<typename T>
+namespace
+{
+template <typename T>
 constexpr bool
-hasBuiltinCtz() {
+hasBuiltinCtz()
+{
 // Since the defined(__has_builtin) in the subsequent #if statement
 // won't short-circuit the macro expansion of
 // __has_builtin(__builtin_ctz), we must explicitly define it as zero
 // if it's undefined to avoid a preprocessor error.
 #ifndef __has_builtin
-#   define __has_builtin(foo) 0
+#    define __has_builtin(foo) 0
 #endif
 #if defined(__has_builtin) && __has_builtin(__builtin_ctz)
     return sizeof(unsigned long long) >= sizeof(T);
@@ -324,9 +325,9 @@ hasBuiltinCtz() {
 #endif
 }
 
-[[maybe_unused]]
-constexpr int
-findLsbSetFallback(uint64_t val) {
+[[maybe_unused]] constexpr int
+findLsbSetFallback(uint64_t val)
+{
     int lsb = 0;
     if (!val) {
         return sizeof(val) * 8;
@@ -366,8 +367,10 @@ findLsbSetFallback(uint64_t val) {
  * @ingroup api_bitfield
  */
 constexpr int
-findLsbSet(uint64_t val) {
-    if (val == 0) return 64;
+findLsbSet(uint64_t val)
+{
+    if (val == 0)
+        return 64;
 
     if constexpr (hasBuiltinCtz<decltype(val)>()) {
         return __builtin_ctzll(val);
@@ -376,15 +379,15 @@ findLsbSet(uint64_t val) {
     }
 }
 
-
-template<size_t N>
+template <size_t N>
 constexpr int
 findLsbSet(std::bitset<N> bs)
 {
     if constexpr (N <= 64) {
         return findLsbSet(bs.to_ullong());
     } else {
-        if (bs.none()) return N;
+        if (bs.none())
+            return N;
         // Mask of ones
         constexpr std::bitset<N> mask(std::numeric_limits<uint64_t>::max());
         // Is the lsb set in the rightmost 64 bits ?
@@ -415,15 +418,15 @@ constexpr int
 popCount(uint64_t val)
 {
 #ifndef __has_builtin
-#   define __has_builtin(foo) 0
+#    define __has_builtin(foo) 0
 #endif
 #if defined(__GNUC__) || \
     (defined(__clang__) && __has_builtin(__builtin_popcountl))
     return __builtin_popcountl(val);
 #else
-    const uint64_t m1 = 0x5555555555555555ULL;  // ..010101b
-    const uint64_t m2 = 0x3333333333333333ULL;  // ..110011b
-    const uint64_t m4 = 0x0f0f0f0f0f0f0f0fULL;  // ..001111b
+    const uint64_t m1 = 0x5555555555555555ULL; // ..010101b
+    const uint64_t m2 = 0x3333333333333333ULL; // ..110011b
+    const uint64_t m4 = 0x0f0f0f0f0f0f0f0fULL; // ..001111b
     const uint64_t sum = 0x0101010101010101ULL;
 
     val -= (val >> 1) & m1;               // 2 bits count -> 2 bits

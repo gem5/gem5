@@ -32,10 +32,8 @@
 
 namespace gem5
 {
-
 namespace ruby
 {
-
 class RubyDummyPort : public Port
 {
   public:
@@ -50,7 +48,9 @@ class RubyDummyPort : public Port
         // TODO: Add real ports to MessageBuffers and use SimObject connect
         // code below to bind MessageBuffer senders and receivers
     }
-    void unbind() override {}
+    void
+    unbind() override
+    {}
 
     static RubyDummyPort &
     instance()

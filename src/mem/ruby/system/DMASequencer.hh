@@ -41,14 +41,12 @@
 
 namespace gem5
 {
-
 namespace ruby
 {
-
 struct DMARequest
 {
     DMARequest(uint64_t start_paddr, int len, bool write, int bytes_completed,
-               int bytes_issued, uint8_t *data, PacketPtr pkt);
+        int bytes_issued, uint8_t *data, PacketPtr pkt);
 
     uint64_t start_paddr;
     int len;
@@ -68,10 +66,24 @@ class DMASequencer : public RubyPort
 
     /* external interface */
     RequestStatus makeRequest(PacketPtr pkt) override;
-    bool busy() { return m_outstanding_count > 0; }
-    int outstandingCount() const override { return m_outstanding_count; }
-    bool isDeadlockEventScheduled() const override { return false; }
-    void descheduleDeadlockEvent() override {}
+    bool
+    busy()
+    {
+        return m_outstanding_count > 0;
+    }
+    int
+    outstandingCount() const override
+    {
+        return m_outstanding_count;
+    }
+    bool
+    isDeadlockEventScheduled() const override
+    {
+        return false;
+    }
+    void
+    descheduleDeadlockEvent() override
+    {}
 
     /* SLICC callback */
     void dataCallback(const DataBlock &dblk, const Addr &addr);

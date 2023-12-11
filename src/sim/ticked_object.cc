@@ -43,22 +43,20 @@
 
 namespace gem5
 {
-
-Ticked::Ticked(ClockedObject &object_,
-    statistics::Scalar *imported_num_cycles,
+Ticked::Ticked(ClockedObject &object_, statistics::Scalar *imported_num_cycles,
     Event::Priority priority) :
     object(object_),
-    event([this]{ processClockEvent(); }, object_.name(), false, priority),
+    event([this] { processClockEvent(); }, object_.name(), false, priority),
     running(false),
     lastStopped(0),
     /* Allocate numCycles if an external stat wasn't passed in */
     numCyclesLocal((imported_num_cycles ? NULL : new statistics::Scalar)),
-    numCycles((imported_num_cycles ? *imported_num_cycles :
-        *numCyclesLocal))
-{ }
+    numCycles((imported_num_cycles ? *imported_num_cycles : *numCyclesLocal))
+{}
 
 void
-Ticked::processClockEvent() {
+Ticked::processClockEvent()
+{
     ++tickCycles;
     ++numCycles;
     countCycles(Cycles(1));
@@ -71,17 +69,14 @@ void
 Ticked::regStats()
 {
     if (numCyclesLocal) {
-        numCycles
-            .name(object.name() + ".totalTickCycles")
+        numCycles.name(object.name() + ".totalTickCycles")
             .desc("Number of cycles that the object ticked or was stopped");
     }
 
-    tickCycles
-        .name(object.name() + ".tickCycles")
+    tickCycles.name(object.name() + ".tickCycles")
         .desc("Number of cycles that the object actually ticked");
 
-    idleCycles
-        .name(object.name() + ".idleCycles")
+    idleCycles.name(object.name() + ".idleCycles")
         .desc("Total number of cycles that the object has spent stopped");
     idleCycles = numCycles - tickCycles;
 }
@@ -110,12 +105,12 @@ Ticked::unserialize(CheckpointIn &cp)
     lastStopped = Cycles(lastStoppedUint);
 }
 
-TickedObject::TickedObject(const TickedObjectParams &params,
-    Event::Priority priority) :
+TickedObject::TickedObject(
+    const TickedObjectParams &params, Event::Priority priority) :
     ClockedObject(params),
     /* Make numCycles in Ticked */
     Ticked(*this, NULL, priority)
-{ }
+{}
 
 void
 TickedObject::regStats()

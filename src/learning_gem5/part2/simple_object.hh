@@ -34,7 +34,6 @@
 
 namespace gem5
 {
-
 class SimpleObject : public SimObject
 {
   public:

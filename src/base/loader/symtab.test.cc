@@ -48,30 +48,29 @@ using namespace gem5;
  * @return The error string, if any.
  */
 std::string
-getSymbolError(const loader::Symbol& symbol, const loader::Symbol& expected)
+getSymbolError(const loader::Symbol &symbol, const loader::Symbol &expected)
 {
     std::stringstream ss;
 
     if (symbol.binding() != expected.binding()) {
-        ss << "    symbols' bindings do not match: seen `" <<
-            (int)symbol.binding() << "`, expected `" <<
-            (int)expected.binding() << "`.\n";
+        ss << "    symbols' bindings do not match: seen `"
+           << (int)symbol.binding() << "`, expected `"
+           << (int)expected.binding() << "`.\n";
     }
 
     if (symbol.type() != expected.type()) {
-        ss << "    symbols' types do not match: seen `" <<
-            (int)symbol.type() << "`, expected `" <<
-            (int)expected.type() << "`.\n";
+        ss << "    symbols' types do not match: seen `" << (int)symbol.type()
+           << "`, expected `" << (int)expected.type() << "`.\n";
     }
 
     if (symbol.name() != expected.name()) {
-        ss << "    symbols' names do not match: seen `" << symbol.name() <<
-            "`, expected `" << expected.name() << "`.\n";
+        ss << "    symbols' names do not match: seen `" << symbol.name()
+           << "`, expected `" << expected.name() << "`.\n";
     }
 
     if (symbol.address() != expected.address()) {
-        ss << "    symbols' addresses do not match: seen `" <<
-            symbol.address() << "`, expected `" << expected.address() << "`.\n";
+        ss << "    symbols' addresses do not match: seen `" << symbol.address()
+           << "`, expected `" << expected.address() << "`.\n";
     }
 
     // No error, symbols match
@@ -88,13 +87,15 @@ getSymbolError(const loader::Symbol& symbol, const loader::Symbol& expected)
  * @return A GTest's assertion result, with error message on failure.
  */
 ::testing::AssertionResult
-checkSymbol(const char* m_symbol, const char* m_expected,
-    const loader::Symbol& symbol, const loader::Symbol& expected)
+checkSymbol(const char *m_symbol, const char *m_expected,
+    const loader::Symbol &symbol, const loader::Symbol &expected)
 {
     const std::string error = getSymbolError(symbol, expected);
     if (!error.empty()) {
-        return ::testing::AssertionFailure() << "Symbols do not match (" <<
-            m_symbol << " != " << m_expected << ")\n" << error;
+        return ::testing::AssertionFailure()
+               << "Symbols do not match (" << m_symbol << " != " << m_expected
+               << ")\n"
+               << error;
     }
     return ::testing::AssertionSuccess();
 }
@@ -107,19 +108,20 @@ checkSymbol(const char* m_symbol, const char* m_expected,
  * @return A GTest's assertion result, with error message on failure.
  */
 ::testing::AssertionResult
-checkTable(const loader::SymbolTable& symtab,
-    const std::initializer_list<loader::Symbol>& expected)
+checkTable(const loader::SymbolTable &symtab,
+    const std::initializer_list<loader::Symbol> &expected)
 {
     if (expected.size() != (symtab.end() - symtab.begin())) {
-        return ::testing::AssertionFailure() << "the number of symbols in "
-            "the table does not match expectation (seen " <<
-            (symtab.end() - symtab.begin()) << ",  expected " <<
-            expected.size();
+        return ::testing::AssertionFailure()
+               << "the number of symbols in "
+                  "the table does not match expectation (seen "
+               << (symtab.end() - symtab.begin()) << ",  expected "
+               << expected.size();
     }
 
     // @todo We should not assume that the symbols are seen in the given order
     auto it = symtab.begin();
-    for (const auto& symbol : expected) {
+    for (const auto &symbol : expected) {
         const std::string error = getSymbolError(*(it++), symbol);
         if (!error.empty()) {
             return ::testing::AssertionFailure() << error;
@@ -142,9 +144,8 @@ TEST(LoaderSymtabTest, InsertSymbolNoName)
 {
     loader::SymbolTable symtab;
 
-    loader::Symbol symbol = \
-        {loader::Symbol::Binding::Local, loader::Symbol::SymbolType::Other,
-            "", 0x10};
+    loader::Symbol symbol = {loader::Symbol::Binding::Local,
+        loader::Symbol::SymbolType::Other, "", 0x10};
     ASSERT_FALSE(symtab.insert(symbol));
     ASSERT_TRUE(checkTable(symtab, {}));
 }
@@ -154,9 +155,8 @@ TEST(LoaderSymtabTest, InsertOneSymbol)
 {
     loader::SymbolTable symtab;
 
-    loader::Symbol symbol = \
-        {loader::Symbol::Binding::Local, loader::Symbol::SymbolType::Other,
-            "symbol", 0x10};
+    loader::Symbol symbol = {loader::Symbol::Binding::Local,
+        loader::Symbol::SymbolType::Other, "symbol", 0x10};
     ASSERT_TRUE(symtab.insert(symbol));
 
     ASSERT_FALSE(symtab.empty());
@@ -280,8 +280,8 @@ TEST(LoaderSymtabTest, Offset)
         {symbols[2].binding(), symbols[2].type(), symbols[2].name(),
             symbols[2].address() + offset},
     };
-    ASSERT_TRUE(checkTable(*symtab_new, {expected_symbols[0],
-        expected_symbols[1], expected_symbols[2]}));
+    ASSERT_TRUE(checkTable(*symtab_new,
+        {expected_symbols[0], expected_symbols[1], expected_symbols[2]}));
 }
 
 /**
@@ -311,8 +311,8 @@ TEST(LoaderSymtabTest, Mask)
     const auto symtab_new = symtab.mask(mask);
 
     // Check that the original table is not modified
-    ASSERT_TRUE(checkTable(symtab, {symbols[0], symbols[1], symbols[2],
-        symbols[3]}));
+    ASSERT_TRUE(
+        checkTable(symtab, {symbols[0], symbols[1], symbols[2], symbols[3]}));
 
     // Check that the new table is masked
     loader::Symbol expected_symbols[] = {
@@ -325,8 +325,9 @@ TEST(LoaderSymtabTest, Mask)
         {symbols[3].binding(), symbols[3].type(), symbols[3].name(),
             symbols[3].address() & mask},
     };
-    ASSERT_TRUE(checkTable(*symtab_new, {expected_symbols[0],
-        expected_symbols[1], expected_symbols[2], expected_symbols[3]}));
+    ASSERT_TRUE(checkTable(
+        *symtab_new, {expected_symbols[0], expected_symbols[1],
+                         expected_symbols[2], expected_symbols[3]}));
 }
 
 /**
@@ -352,26 +353,27 @@ TEST(LoaderSymtabTest, Rename)
     EXPECT_TRUE(symtab.insert(symbols[2]));
     EXPECT_TRUE(symtab.insert(symbols[3]));
 
-    const auto symtab_new =
-        symtab.rename([](const std::string &name) { return name + "_suffix"; });
+    const auto symtab_new = symtab.rename(
+        [](const std::string &name) { return name + "_suffix"; });
 
     // Check that the original table is not modified
-    ASSERT_TRUE(checkTable(symtab, {symbols[0], symbols[1], symbols[2],
-        symbols[3]}));
+    ASSERT_TRUE(
+        checkTable(symtab, {symbols[0], symbols[1], symbols[2], symbols[3]}));
 
     // Check that the new table's symbols have been renamed
     loader::Symbol expected_symbols[] = {
-        {symbols[0].binding(), symbols[0].type(), symbols[0].name() + "_suffix",
-            symbols[0].address()},
-        {symbols[1].binding(), symbols[1].type(), symbols[1].name() + "_suffix",
-            symbols[1].address()},
-        {symbols[2].binding(), symbols[2].type(), symbols[2].name() + "_suffix",
-            symbols[2].address()},
-        {symbols[3].binding(), symbols[3].type(), symbols[3].name() + "_suffix",
-            symbols[3].address()},
+        {symbols[0].binding(), symbols[0].type(),
+            symbols[0].name() + "_suffix", symbols[0].address()},
+        {symbols[1].binding(), symbols[1].type(),
+            symbols[1].name() + "_suffix", symbols[1].address()},
+        {symbols[2].binding(), symbols[2].type(),
+            symbols[2].name() + "_suffix", symbols[2].address()},
+        {symbols[3].binding(), symbols[3].type(),
+            symbols[3].name() + "_suffix", symbols[3].address()},
     };
-    ASSERT_TRUE(checkTable(*symtab_new, {expected_symbols[0],
-        expected_symbols[1], expected_symbols[2], expected_symbols[3]}));
+    ASSERT_TRUE(checkTable(
+        *symtab_new, {expected_symbols[0], expected_symbols[1],
+                         expected_symbols[2], expected_symbols[3]}));
 }
 
 /**
@@ -398,18 +400,17 @@ TEST(LoaderSymtabTest, RenameNonUnique)
     EXPECT_TRUE(symtab.insert(symbols[3]));
 
     int i = 0;
-    const auto symtab_new = symtab.rename([&i](const std::string &name)
-        {
-            if ((i++ % 2) == 0) {
-                return std::string("NonUniqueName");
-            } else {
-                return name;
-            }
-        });
+    const auto symtab_new = symtab.rename([&i](const std::string &name) {
+        if ((i++ % 2) == 0) {
+            return std::string("NonUniqueName");
+        } else {
+            return name;
+        }
+    });
 
     // Check that the original table is not modified
-    ASSERT_TRUE(checkTable(symtab, {symbols[0], symbols[1], symbols[2],
-        symbols[3]}));
+    ASSERT_TRUE(
+        checkTable(symtab, {symbols[0], symbols[1], symbols[2], symbols[3]}));
 
     // Check that the new table's symbols have been renamed, yet it does not
     // contain the symbols with duplicated names
@@ -421,8 +422,8 @@ TEST(LoaderSymtabTest, RenameNonUnique)
         {symbols[3].binding(), symbols[3].type(), symbols[3].name(),
             symbols[3].address()},
     };
-    ASSERT_TRUE(checkTable(*symtab_new, {expected_symbols[0],
-        expected_symbols[1], expected_symbols[2]}));
+    ASSERT_TRUE(checkTable(*symtab_new,
+        {expected_symbols[0], expected_symbols[1], expected_symbols[2]}));
 }
 
 /**
@@ -443,8 +444,7 @@ TEST(LoaderSymtabTest, Globals)
         {loader::Symbol::Binding::Weak, loader::Symbol::SymbolType::Other,
             "symbol4", 0x40},
         {loader::Symbol::Binding::Weak, loader::Symbol::SymbolType::Other,
-            "symbol5", 0x50}
-    };
+            "symbol5", 0x50}};
     EXPECT_TRUE(symtab.insert(symbols[0]));
     EXPECT_TRUE(symtab.insert(symbols[1]));
     EXPECT_TRUE(symtab.insert(symbols[2]));
@@ -454,8 +454,8 @@ TEST(LoaderSymtabTest, Globals)
     const auto symtab_new = symtab.globals();
 
     // Check that the original table is not modified
-    ASSERT_TRUE(checkTable(symtab, {symbols[0], symbols[1], symbols[2],
-        symbols[3], symbols[4]}));
+    ASSERT_TRUE(checkTable(
+        symtab, {symbols[0], symbols[1], symbols[2], symbols[3], symbols[4]}));
 
     // Check that the new table only contains globals
     ASSERT_TRUE(checkTable(*symtab_new, {symbols[1]}));
@@ -479,8 +479,7 @@ TEST(LoaderSymtabTest, Locals)
         {loader::Symbol::Binding::Weak, loader::Symbol::SymbolType::Other,
             "symbol4", 0x40},
         {loader::Symbol::Binding::Weak, loader::Symbol::SymbolType::Other,
-            "symbol5", 0x50}
-    };
+            "symbol5", 0x50}};
     EXPECT_TRUE(symtab.insert(symbols[0]));
     EXPECT_TRUE(symtab.insert(symbols[1]));
     EXPECT_TRUE(symtab.insert(symbols[2]));
@@ -490,8 +489,8 @@ TEST(LoaderSymtabTest, Locals)
     const auto symtab_new = symtab.locals();
 
     // Check that the original table is not modified
-    ASSERT_TRUE(checkTable(symtab, {symbols[0], symbols[1], symbols[2],
-        symbols[3], symbols[4]}));
+    ASSERT_TRUE(checkTable(
+        symtab, {symbols[0], symbols[1], symbols[2], symbols[3], symbols[4]}));
 
     // Check that the new table only contains locals
     ASSERT_TRUE(checkTable(*symtab_new, {symbols[0], symbols[2]}));
@@ -515,8 +514,7 @@ TEST(LoaderSymtabTest, Weaks)
         {loader::Symbol::Binding::Weak, loader::Symbol::SymbolType::Other,
             "symbol4", 0x40},
         {loader::Symbol::Binding::Weak, loader::Symbol::SymbolType::Other,
-            "symbol5", 0x50}
-    };
+            "symbol5", 0x50}};
     EXPECT_TRUE(symtab.insert(symbols[0]));
     EXPECT_TRUE(symtab.insert(symbols[1]));
     EXPECT_TRUE(symtab.insert(symbols[2]));
@@ -526,8 +524,8 @@ TEST(LoaderSymtabTest, Weaks)
     const auto symtab_new = symtab.weaks();
 
     // Check that the original table is not modified
-    ASSERT_TRUE(checkTable(symtab, {symbols[0], symbols[1], symbols[2],
-        symbols[3], symbols[4]}));
+    ASSERT_TRUE(checkTable(
+        symtab, {symbols[0], symbols[1], symbols[2], symbols[3], symbols[4]}));
 
     // Check that the new table only contains weaks
     ASSERT_TRUE(checkTable(*symtab_new, {symbols[3], symbols[4]}));
@@ -551,8 +549,7 @@ TEST(LoaderSymtabTest, FunctionSymbols)
         {loader::Symbol::Binding::Global, loader::Symbol::SymbolType::Object,
             "symbol4", 0x40},
         {loader::Symbol::Binding::Global, loader::Symbol::SymbolType::Function,
-            "symbol5", 0x50}
-    };
+            "symbol5", 0x50}};
     EXPECT_TRUE(symtab.insert(symbols[0]));
     EXPECT_TRUE(symtab.insert(symbols[1]));
     EXPECT_TRUE(symtab.insert(symbols[2]));
@@ -562,8 +559,8 @@ TEST(LoaderSymtabTest, FunctionSymbols)
     const auto symtab_new = symtab.functionSymbols();
 
     // Check that the original table is not modified
-    ASSERT_TRUE(checkTable(symtab, {symbols[0], symbols[1], symbols[2],
-        symbols[3], symbols[4]}));
+    ASSERT_TRUE(checkTable(
+        symtab, {symbols[0], symbols[1], symbols[2], symbols[3], symbols[4]}));
 
     // Check that the new table only contains function symbols
     ASSERT_TRUE(checkTable(*symtab_new, {symbols[2], symbols[4]}));
@@ -574,9 +571,8 @@ TEST(LoaderSymtabTest, FindNonExistentAddress)
 {
     loader::SymbolTable symtab;
 
-    loader::Symbol symbol = \
-        {loader::Symbol::Binding::Local, loader::Symbol::SymbolType::Other,
-            "symbol", 0x10};
+    loader::Symbol symbol = {loader::Symbol::Binding::Local,
+        loader::Symbol::SymbolType::Other, "symbol", 0x10};
     EXPECT_TRUE(symtab.insert(symbol));
 
     ASSERT_EQ(symtab.find(0x0), symtab.end());
@@ -634,9 +630,8 @@ TEST(LoaderSymtabTest, FindNonExistentName)
 {
     loader::SymbolTable symtab;
 
-    loader::Symbol symbol = \
-        {loader::Symbol::Binding::Local, loader::Symbol::SymbolType::Other,
-            "symbol", 0x10};
+    loader::Symbol symbol = {loader::Symbol::Binding::Local,
+        loader::Symbol::SymbolType::Other, "symbol", 0x10};
     EXPECT_TRUE(symtab.insert(symbol));
 
     const auto it = symtab.find("symbol2");
@@ -692,9 +687,8 @@ TEST(LoaderSymtabTest, FindNearestRound)
 {
     loader::SymbolTable symtab;
 
-    loader::Symbol symbol = \
-        {loader::Symbol::Binding::Local, loader::Symbol::SymbolType::Other,
-            "symbol", 0x10};
+    loader::Symbol symbol = {loader::Symbol::Binding::Local,
+        loader::Symbol::SymbolType::Other, "symbol", 0x10};
     EXPECT_TRUE(symtab.insert(symbol));
 
     const auto it = symtab.findNearest(symbol.address() + 0x1);
@@ -736,9 +730,8 @@ TEST(LoaderSymtabTest, FindNearestRoundWithNextNonExistent)
 {
     loader::SymbolTable symtab;
 
-    loader::Symbol symbol = \
-        {loader::Symbol::Binding::Local, loader::Symbol::SymbolType::Other,
-            "symbol", 0x10};
+    loader::Symbol symbol = {loader::Symbol::Binding::Local,
+        loader::Symbol::SymbolType::Other, "symbol", 0x10};
     EXPECT_TRUE(symtab.insert(symbol));
 
     Addr next_addr;
@@ -756,9 +749,8 @@ TEST(LoaderSymtabTest, FindNearestNonExistent)
 {
     loader::SymbolTable symtab;
 
-    loader::Symbol symbol = \
-        {loader::Symbol::Binding::Local, loader::Symbol::SymbolType::Other,
-            "symbol", 0x10};
+    loader::Symbol symbol = {loader::Symbol::Binding::Local,
+        loader::Symbol::SymbolType::Other, "symbol", 0x10};
     EXPECT_TRUE(symtab.insert(symbol));
 
     const auto it = symtab.findNearest(symbol.address() - 0x1);
@@ -842,8 +834,8 @@ TEST(LoaderSymtabTest, InsertTable)
     ASSERT_TRUE(checkTable(symtab2, {symbols[3], symbols[4]}));
 
     // Check that the symbols from symtab2 have been inserted in symtab
-    ASSERT_TRUE(checkTable(symtab, {symbols[0], symbols[1], symbols[2],
-        symbols[3], symbols[4]}));
+    ASSERT_TRUE(checkTable(
+        symtab, {symbols[0], symbols[1], symbols[2], symbols[3], symbols[4]}));
 }
 
 using LoaderSymtabSerializationFixture = SerializationFixture;
@@ -871,13 +863,15 @@ TEST_F(LoaderSymtabSerializationFixture, Serialization)
     symtab.serialize("test", cp);
 
     // Verify the output
-    ASSERT_THAT(cp.str(), ::testing::StrEq("\n[Section1]\ntest.size=3\n"
-        "test.addr_0=16\ntest.symbol_0=symbol\ntest.binding_0=1\n"
-        "test.type_0=5\n"
-        "test.addr_1=32\ntest.symbol_1=symbol2\ntest.binding_1=1\n"
-        "test.type_1=5\n"
-        "test.addr_2=48\ntest.symbol_2=symbol3\ntest.binding_2=1\n"
-        "test.type_2=5\n"));
+    ASSERT_THAT(cp.str(),
+        ::testing::StrEq(
+            "\n[Section1]\ntest.size=3\n"
+            "test.addr_0=16\ntest.symbol_0=symbol\ntest.binding_0=1\n"
+            "test.type_0=5\n"
+            "test.addr_1=32\ntest.symbol_1=symbol2\ntest.binding_1=1\n"
+            "test.type_1=5\n"
+            "test.addr_2=48\ntest.symbol_2=symbol3\ntest.binding_2=1\n"
+            "test.type_2=5\n"));
 }
 
 /** Test unserialization. */
@@ -891,7 +885,8 @@ TEST_F(LoaderSymtabSerializationFixture, Unserialization)
         {loader::Symbol::Binding::Local, loader::Symbol::SymbolType::Other,
             "symbol3", 0x30},
     };
-    simulateSerialization("\n[Section1]\ntest.size=3\n"
+    simulateSerialization(
+        "\n[Section1]\ntest.size=3\n"
         "test.addr_0=16\ntest.symbol_0=symbol\ntest.binding_0=1\n"
         "test.type_0=5\n"
         "test.addr_1=32\ntest.symbol_1=symbol2\ntest.binding_1=1\n"
@@ -906,8 +901,8 @@ TEST_F(LoaderSymtabSerializationFixture, Unserialization)
 
     // Make sure that the symbols in symtab are present in the
     // unserialized table
-    ASSERT_TRUE(checkTable(unserialized_symtab, {symbols[0], symbols[1],
-        symbols[2]}));
+    ASSERT_TRUE(
+        checkTable(unserialized_symtab, {symbols[0], symbols[1], symbols[2]}));
 }
 
 /**
@@ -925,7 +920,8 @@ TEST_F(LoaderSymtabSerializationFixture, UnserializationMissingBinding)
         {loader::Symbol::Binding::Local, loader::Symbol::SymbolType::Other,
             "symbol3", 0x30},
     };
-    simulateSerialization("\n[Section1]\ntest.size=3\n"
+    simulateSerialization(
+        "\n[Section1]\ntest.size=3\n"
         "test.addr_0=16\ntest.symbol_0=symbol\ntest.binding_0=1\n"
         "test.type_0=5\n"
         "test.addr_1=32\ntest.symbol_1=symbol2\ntest.type_1=5\n"
@@ -940,8 +936,8 @@ TEST_F(LoaderSymtabSerializationFixture, UnserializationMissingBinding)
 
     // Make sure that the symbols in symtab are present in the
     // unserialized table
-    ASSERT_TRUE(checkTable(unserialized_symtab, {symbols[0], symbols[1],
-        symbols[2]}));
+    ASSERT_TRUE(
+        checkTable(unserialized_symtab, {symbols[0], symbols[1], symbols[2]}));
 }
 
 /**
@@ -960,7 +956,8 @@ TEST_F(LoaderSymtabSerializationFixture,
         {loader::Symbol::Binding::Local, loader::Symbol::SymbolType::Other,
             "symbol3", 0x30},
     };
-    simulateSerialization("\n[Section1]\ntest.size=3\n"
+    simulateSerialization(
+        "\n[Section1]\ntest.size=3\n"
         "test.addr_0=16\ntest.symbol_0=symbol\ntest.binding_0=1\n"
         "test.type_0=5\n"
         "test.addr_1=32\ntest.symbol_1=symbol2\n"
@@ -972,11 +969,10 @@ TEST_F(LoaderSymtabSerializationFixture,
     CheckpointIn cp(getDirName());
     Serializable::ScopedCheckpointSection scs(cp, "Section1");
 
-    unserialized_symtab.unserialize("test", cp,
-        loader::Symbol::Binding::Weak);
+    unserialized_symtab.unserialize("test", cp, loader::Symbol::Binding::Weak);
 
     // Make sure that the symbols in symtab are present in the
     // unserialized table
-    ASSERT_TRUE(checkTable(unserialized_symtab, {symbols[0], symbols[1],
-        symbols[2]}));
+    ASSERT_TRUE(
+        checkTable(unserialized_symtab, {symbols[0], symbols[1], symbols[2]}));
 }

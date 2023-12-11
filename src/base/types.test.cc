@@ -61,7 +61,6 @@ TEST(CyclesTest, PrefixIncrement)
     EXPECT_EQ(2, cycles);
 }
 
-
 TEST(CyclesTest, PrefixDecrement)
 {
     Cycles cycles(10);
@@ -128,10 +127,7 @@ TEST(CyclesTest, OutStream)
  * MicroPCRomBit is a constant. This simple test verifies it has not changed.
  * The following MicroPC tests rely heavily on this constant.
  */
-TEST(MicroPCTest, CheckMicroPCRomBit)
-{
-    EXPECT_EQ((1 << 15), MicroPCRomBit);
-}
+TEST(MicroPCTest, CheckMicroPCRomBit) { EXPECT_EQ((1 << 15), MicroPCRomBit); }
 
 TEST(MicroPCTest, RomMicroPCTest)
 {
@@ -158,10 +154,7 @@ TEST(MicroPCTest, IsNotRomMicroPCTest)
  * union approach to carry out type punning. These checks are simple regression
  * tests.
  */
-TEST(TypesTest, FloatToBits32)
-{
-    EXPECT_EQ(0x3e828f5c, floatToBits32(0.255));
-}
+TEST(TypesTest, FloatToBits32) { EXPECT_EQ(0x3e828f5c, floatToBits32(0.255)); }
 
 TEST(TypesTest, floatToBits64)
 {

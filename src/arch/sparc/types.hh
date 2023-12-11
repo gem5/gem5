@@ -34,10 +34,8 @@
 
 namespace gem5
 {
-
 namespace SparcISA
 {
-
 typedef uint32_t MachInst;
 typedef uint64_t ExtMachInst;
 

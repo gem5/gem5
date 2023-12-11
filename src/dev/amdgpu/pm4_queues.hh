@@ -37,7 +37,6 @@
 
 namespace gem5
 {
-
 /**
  * Queue descriptor with relevant MQD attributes. Taken from
  * https://github.com/RadeonOpenCompute/ROCK-Kernel-Driver/blob/roc-4.3.x/
@@ -392,57 +391,131 @@ class PM4Queue
     bool _processing;
     bool _ib;
     PM4MapQueues _pkt;
-  public:
-    PM4Queue() : _id(0), q(nullptr), _wptr(0), _offset(0), _processing(false),
-        _ib(false), _pkt() {}
-    PM4Queue(int id, QueueDesc *queue, Addr offset) :
-        _id(id), q(queue), _wptr(queue->rptr), _ibWptr(0), _offset(offset),
-        _processing(false), _ib(false), _pkt() {}
-    PM4Queue(int id, QueueDesc *queue, Addr offset, PM4MapQueues *pkt) :
-        _id(id), q(queue), _wptr(queue->rptr), _ibWptr(0), _offset(offset),
-        _processing(false), _ib(false), _pkt(*pkt) {}
 
-    QueueDesc *getMQD() { return q; }
-    int id() { return _id; }
-    Addr mqdBase() { return q->mqdBase; }
-    Addr base() { return q->base; }
-    Addr ibBase() { return q->ibBase; }
+  public:
+    PM4Queue() :
+        _id(0),
+        q(nullptr),
+        _wptr(0),
+        _offset(0),
+        _processing(false),
+        _ib(false),
+        _pkt()
+    {}
+    PM4Queue(int id, QueueDesc *queue, Addr offset) :
+        _id(id),
+        q(queue),
+        _wptr(queue->rptr),
+        _ibWptr(0),
+        _offset(offset),
+        _processing(false),
+        _ib(false),
+        _pkt()
+    {}
+    PM4Queue(int id, QueueDesc *queue, Addr offset, PM4MapQueues *pkt) :
+        _id(id),
+        q(queue),
+        _wptr(queue->rptr),
+        _ibWptr(0),
+        _offset(offset),
+        _processing(false),
+        _ib(false),
+        _pkt(*pkt)
+    {}
+
+    QueueDesc *
+    getMQD()
+    {
+        return q;
+    }
+    int
+    id()
+    {
+        return _id;
+    }
+    Addr
+    mqdBase()
+    {
+        return q->mqdBase;
+    }
+    Addr
+    base()
+    {
+        return q->base;
+    }
+    Addr
+    ibBase()
+    {
+        return q->ibBase;
+    }
 
     Addr
     rptr()
     {
-        if (ib()) return q->ibBase + q->ibRptr;
-        else return q->base + (q->rptr % size());
+        if (ib())
+            return q->ibBase + q->ibRptr;
+        else
+            return q->base + (q->rptr % size());
     }
 
     Addr
     wptr()
     {
-        if (ib()) return q->ibBase + _ibWptr;
-        else return q->base + (_wptr % size());
+        if (ib())
+            return q->ibBase + _ibWptr;
+        else
+            return q->base + (_wptr % size());
     }
 
     Addr
     getRptr()
     {
-        if (ib()) return q->ibRptr;
-        else return q->rptr;
+        if (ib())
+            return q->ibRptr;
+        else
+            return q->rptr;
     }
 
     Addr
     getWptr()
     {
-        if (ib()) return _ibWptr;
-        else return _wptr;
+        if (ib())
+            return _ibWptr;
+        else
+            return _wptr;
     }
 
-    Addr offset() { return _offset; }
-    bool processing() { return _processing; }
-    bool ib() { return _ib; }
+    Addr
+    offset()
+    {
+        return _offset;
+    }
+    bool
+    processing()
+    {
+        return _processing;
+    }
+    bool
+    ib()
+    {
+        return _ib;
+    }
 
-    void id(int value) { _id = value; }
-    void base(Addr value) { q->base = value; }
-    void ibBase(Addr value) { q->ibBase = value; }
+    void
+    id(int value)
+    {
+        _id = value;
+    }
+    void
+    base(Addr value)
+    {
+        q->base = value;
+    }
+    void
+    ibBase(Addr value)
+    {
+        q->ibBase = value;
+    }
 
     /**
      * It seems that PM4 nop packets with count 0x3fff, not only do not
@@ -454,40 +527,82 @@ class PM4Queue
     void
     fastforwardRptr()
     {
-        if (ib()) q->ibRptr = _ibWptr;
-        else q->rptr = _wptr;
+        if (ib())
+            q->ibRptr = _ibWptr;
+        else
+            q->rptr = _wptr;
     }
 
     void
     incRptr(Addr value)
     {
-        if (ib()) q->ibRptr += value;
-        else q->rptr += value;
+        if (ib())
+            q->ibRptr += value;
+        else
+            q->rptr += value;
     }
 
     void
     rptr(Addr value)
     {
-        if (ib()) q->ibRptr = value;
-        else q->rptr = value;
+        if (ib())
+            q->ibRptr = value;
+        else
+            q->rptr = value;
     }
 
     void
     wptr(Addr value)
     {
-        if (ib()) _ibWptr = value;
-        else _wptr = value;
+        if (ib())
+            _ibWptr = value;
+        else
+            _wptr = value;
     }
 
-    void offset(Addr value) { _offset = value; }
-    void processing(bool value) { _processing = value; }
-    void ib(bool value) { _ib = value; }
-    uint32_t me() { return _pkt.me + 1; }
-    uint32_t pipe() { return _pkt.pipe; }
-    uint32_t queue() { return _pkt.queueSlot; }
-    bool privileged() { return _pkt.queueSel == 0 ? 1 : 0; }
-    PM4MapQueues* getPkt() { return &_pkt; }
-    void setPkt(uint32_t me, uint32_t pipe, uint32_t queue, bool privileged) {
+    void
+    offset(Addr value)
+    {
+        _offset = value;
+    }
+    void
+    processing(bool value)
+    {
+        _processing = value;
+    }
+    void
+    ib(bool value)
+    {
+        _ib = value;
+    }
+    uint32_t
+    me()
+    {
+        return _pkt.me + 1;
+    }
+    uint32_t
+    pipe()
+    {
+        return _pkt.pipe;
+    }
+    uint32_t
+    queue()
+    {
+        return _pkt.queueSlot;
+    }
+    bool
+    privileged()
+    {
+        return _pkt.queueSel == 0 ? 1 : 0;
+    }
+    PM4MapQueues *
+    getPkt()
+    {
+        return &_pkt;
+    }
+    void
+    setPkt(uint32_t me, uint32_t pipe, uint32_t queue, bool privileged)
+    {
         _pkt.me = me - 1;
         _pkt.pipe = pipe;
         _pkt.queueSlot = queue;
@@ -495,7 +610,11 @@ class PM4Queue
     }
 
     // Same computation as processMQD. See comment there for details.
-    uint64_t size() { return 4UL << ((q->hqd_pq_control & 0x3f) + 1); }
+    uint64_t
+    size()
+    {
+        return 4UL << ((q->hqd_pq_control & 0x3f) + 1);
+    }
 };
 
 } // namespace gem5

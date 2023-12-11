@@ -39,10 +39,8 @@
 
 namespace gem5
 {
-
 namespace SparcISA
 {
-
 enum InterruptTypes
 {
     IT_TRAP_LEVEL_ZERO,
@@ -62,13 +60,9 @@ class Interrupts : public BaseInterrupts
     uint64_t intStatus;
 
   public:
-
     using Params = SparcInterruptsParams;
 
-    Interrupts(const Params &p) : BaseInterrupts(p)
-    {
-        clearAll();
-    }
+    Interrupts(const Params &p) : BaseInterrupts(p) { clearAll(); }
 
     int
     InterruptLevel(uint64_t softint)
@@ -143,7 +137,7 @@ class Interrupts : public BaseInterrupts
             }
         } else {
             if (interrupts[IT_TRAP_LEVEL_ZERO]) {
-                    // this is cleared by deasserting HPSTATE::tlz
+                // this is cleared by deasserting HPSTATE::tlz
                 return true;
             }
             // HStick matches always happen in priv mode (ie doesn't matter)
@@ -169,7 +163,7 @@ class Interrupts : public BaseInterrupts
                     return true;
                 }
             } // !hpriv && pstate.ie
-        }  // !hpriv
+        }     // !hpriv
 
         return false;
     }
@@ -200,7 +194,7 @@ class Interrupts : public BaseInterrupts
             }
         } else {
             if (interrupts[IT_TRAP_LEVEL_ZERO]) {
-                    // this is cleared by deasserting HPSTATE::tlz
+                // this is cleared by deasserting HPSTATE::tlz
                 return std::make_shared<TrapLevelZero>();
             }
             // HStick matches always happen in priv mode (ie doesn't matter)
@@ -227,11 +221,13 @@ class Interrupts : public BaseInterrupts
                     return std::make_shared<ResumableError>();
                 }
             } // !hpriv && pstate.ie
-        }  // !hpriv
+        }     // !hpriv
         return NoFault;
     }
 
-    void updateIntrInfo() override {}
+    void
+    updateIntrInfo() override
+    {}
 
     uint64_t
     get_vec(int int_num)
@@ -243,14 +239,14 @@ class Interrupts : public BaseInterrupts
     void
     serialize(CheckpointOut &cp) const override
     {
-        SERIALIZE_ARRAY(interrupts,NumInterruptTypes);
+        SERIALIZE_ARRAY(interrupts, NumInterruptTypes);
         SERIALIZE_SCALAR(intStatus);
     }
 
     void
     unserialize(CheckpointIn &cp) override
     {
-        UNSERIALIZE_ARRAY(interrupts,NumInterruptTypes);
+        UNSERIALIZE_ARRAY(interrupts, NumInterruptTypes);
         UNSERIALIZE_SCALAR(intStatus);
     }
 };

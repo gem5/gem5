@@ -53,14 +53,9 @@
 
 namespace gem5
 {
-
 namespace networking
 {
-
-EthAddr::EthAddr()
-{
-    std::memset(data, 0, ETH_ADDR_LEN);
-}
+EthAddr::EthAddr() { std::memset(data, 0, ETH_ADDR_LEN); }
 
 EthAddr::EthAddr(const uint8_t ea[ETH_ADDR_LEN])
 {
@@ -74,10 +69,7 @@ EthAddr::EthAddr(const eth_addr &ea)
         data[i] = ea.data[i];
 }
 
-EthAddr::EthAddr(const std::string &addr)
-{
-    parse(addr);
-}
+EthAddr::EthAddr(const std::string &addr) { parse(addr); }
 
 const EthAddr &
 EthAddr::operator=(const eth_addr &ea)
@@ -100,7 +92,7 @@ EthAddr::parse(const std::string &addr)
     // the sscanf function won't work.
     int bytes[ETH_ADDR_LEN == 6 ? ETH_ADDR_LEN : -1];
     if (sscanf(addr.c_str(), "%x:%x:%x:%x:%x:%x", &bytes[0], &bytes[1],
-               &bytes[2], &bytes[3], &bytes[4], &bytes[5]) != ETH_ADDR_LEN) {
+            &bytes[2], &bytes[3], &bytes[4], &bytes[5]) != ETH_ADDR_LEN) {
         std::memset(data, 0xff, ETH_ADDR_LEN);
         return;
     }
@@ -129,7 +121,7 @@ operator==(const EthAddr &left, const EthAddr &right)
     return !std::memcmp(left.bytes(), right.bytes(), ETH_ADDR_LEN);
 }
 
-    std::ostream &
+std::ostream &
 operator<<(std::ostream &stream, const EthAddr &ea)
 {
     const uint8_t *a = ea.addr();
@@ -155,9 +147,8 @@ std::ostream &
 operator<<(std::ostream &stream, const IpAddress &ia)
 {
     uint32_t ip = ia.ip();
-    ccprintf(stream, "%x.%x.%x.%x",
-            (uint8_t)(ip >> 24), (uint8_t)(ip >> 16),
-            (uint8_t)(ip >> 8),  (uint8_t)(ip >> 0));
+    ccprintf(stream, "%x.%x.%x.%x", (uint8_t)(ip >> 24), (uint8_t)(ip >> 16),
+        (uint8_t)(ip >> 8), (uint8_t)(ip >> 0));
     return stream;
 }
 
@@ -172,8 +163,7 @@ IpNetmask::string() const
 bool
 operator==(const IpNetmask &left, const IpNetmask &right)
 {
-    return (left.ip() == right.ip()) &&
-        (left.netmask() == right.netmask());
+    return (left.ip() == right.ip()) && (left.netmask() == right.netmask());
 }
 
 std::ostream &
@@ -224,11 +214,11 @@ __tu_cksum(const IpPtr &ip)
 uint16_t
 __tu_cksum6(const Ip6Ptr &ip6)
 {
-   int tcplen = ip6->plen() - ip6->extensionLength();
-   int sum = ip_cksum_add(ip6->payload(), tcplen, 0);
-   sum = ip_cksum_add(ip6->src(), 32, sum);
-   sum += htons(ip6->proto() + tcplen);
-   return ip_cksum_carry(sum);
+    int tcplen = ip6->plen() - ip6->extensionLength();
+    int sum = ip_cksum_add(ip6->payload(), tcplen, 0);
+    sum = ip_cksum_add(ip6->src(), 32, sum);
+    sum += htons(ip6->proto() + tcplen);
+    return ip_cksum_carry(sum);
 }
 
 uint16_t
@@ -281,13 +271,12 @@ IpHdr::options(std::vector<const IpOpt *> &vec) const
 
 namespace
 {
-
 bool
 ip6Extension(uint8_t nxt)
 {
     return nxt == IP_PROTO_HOPOPTS || nxt == IP_PROTO_ROUTING ||
-        nxt == IP_PROTO_FRAGMENT || nxt == IP_PROTO_AH ||
-        nxt == IP_PROTO_ESP || nxt == IP_PROTO_DSTOPTS;
+           nxt == IP_PROTO_FRAGMENT || nxt == IP_PROTO_AH ||
+           nxt == IP_PROTO_ESP || nxt == IP_PROTO_DSTOPTS;
 }
 
 } // anonymous namespace
@@ -318,12 +307,12 @@ Ip6Hdr::extensionLength() const
  * header type and return a pointer to it if it
  * exists, otherwise return NULL
  */
-const Ip6Opt*
+const Ip6Opt *
 Ip6Hdr::getExt(uint8_t ext_type) const
 {
     const uint8_t *data = bytes() + IP6_HDR_LEN;
     uint8_t nxt = ip6_nxt;
-    Ip6Opt* opt = NULL;
+    Ip6Opt *opt = NULL;
     [[maybe_unused]] int all = plen();
 
     while (ip6Extension(nxt)) {
@@ -337,7 +326,7 @@ Ip6Hdr::getExt(uint8_t ext_type) const
         opt = NULL;
         assert(all >= 0);
     }
-    return (const Ip6Opt*)opt;
+    return (const Ip6Opt *)opt;
 }
 
 /* Scan the IP6 header and any extension headers

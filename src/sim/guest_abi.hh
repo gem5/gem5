@@ -37,7 +37,6 @@
 
 namespace gem5
 {
-
 class ThreadContext;
 
 // These functions wrap a simulator level function with the given signature.
@@ -45,46 +44,46 @@ class ThreadContext;
 // and write a result (if any) back to. For convenience, the wrapper also
 // returns the result of the wrapped function.
 
-template <typename ABI, bool store_ret, typename Ret, typename ...Args>
+template <typename ABI, bool store_ret, typename Ret, typename... Args>
 Ret
-invokeSimcall(ThreadContext *tc,
-              std::function<Ret(ThreadContext *, Args...)> target)
+invokeSimcall(
+    ThreadContext *tc, std::function<Ret(ThreadContext *, Args...)> target)
 {
     // Default construct a State to track consumed resources. Built in
     // types will be zero initialized.
     auto state = guest_abi::initializeState<ABI>(tc);
     guest_abi::prepareForFunction<ABI, Ret, Args...>(tc, state);
-    return guest_abi::callFrom<ABI, Ret, store_ret, Args...>(tc, state,
-        target);
+    return guest_abi::callFrom<ABI, Ret, store_ret, Args...>(
+        tc, state, target);
 }
 
-template <typename ABI, typename Ret, typename ...Args>
+template <typename ABI, typename Ret, typename... Args>
 Ret
-invokeSimcall(ThreadContext *tc,
-              std::function<Ret(ThreadContext *, Args...)> target)
+invokeSimcall(
+    ThreadContext *tc, std::function<Ret(ThreadContext *, Args...)> target)
 {
     return invokeSimcall<ABI, true>(tc, target);
 }
 
-template <typename ABI, bool store_ret, typename Ret, typename ...Args>
+template <typename ABI, bool store_ret, typename Ret, typename... Args>
 Ret
 invokeSimcall(ThreadContext *tc, Ret (*target)(ThreadContext *, Args...))
 {
     return invokeSimcall<ABI, store_ret>(
-            tc, std::function<Ret(ThreadContext *, Args...)>(target));
+        tc, std::function<Ret(ThreadContext *, Args...)>(target));
 }
 
-template <typename ABI, typename Ret, typename ...Args>
+template <typename ABI, typename Ret, typename... Args>
 Ret
 invokeSimcall(ThreadContext *tc, Ret (*target)(ThreadContext *, Args...))
 {
     return invokeSimcall<ABI, true>(tc, target);
 }
 
-template <typename ABI, typename ...Args>
+template <typename ABI, typename... Args>
 void
-invokeSimcall(ThreadContext *tc,
-              std::function<void(ThreadContext *, Args...)> target)
+invokeSimcall(
+    ThreadContext *tc, std::function<void(ThreadContext *, Args...)> target)
 {
     // Default construct a State to track consumed resources. Built in
     // types will be zero initialized.
@@ -93,24 +92,23 @@ invokeSimcall(ThreadContext *tc,
     guest_abi::callFrom<ABI, void, false, Args...>(tc, state, target);
 }
 
-template <typename ABI, typename ...Args>
+template <typename ABI, typename... Args>
 void
 invokeSimcall(ThreadContext *tc, void (*target)(ThreadContext *, Args...))
 {
     invokeSimcall<ABI>(
-            tc, std::function<void(ThreadContext *, Args...)>(target));
+        tc, std::function<void(ThreadContext *, Args...)>(target));
 }
-
 
 // These functions also wrap a simulator level function. Instead of running the
 // function, they return a string which shows what arguments the function would
 // be invoked with if it were called from the given context.
 
-template <typename ABI, typename Ret, typename ...Args>
+template <typename ABI, typename Ret, typename... Args>
 std::string
 dumpSimcall(std::string name, ThreadContext *tc,
-            std::function<Ret(ThreadContext *, Args...)> target=
-            std::function<Ret(ThreadContext *, Args...)>())
+    std::function<Ret(ThreadContext *, Args...)> target =
+        std::function<Ret(ThreadContext *, Args...)>())
 {
     auto state = guest_abi::initializeState<ABI>(tc);
     std::ostringstream ss;
@@ -121,13 +119,13 @@ dumpSimcall(std::string name, ThreadContext *tc,
     return ss.str();
 }
 
-template <typename ABI, typename Ret, typename ...Args>
+template <typename ABI, typename Ret, typename... Args>
 std::string
 dumpSimcall(std::string name, ThreadContext *tc,
-            Ret (*target)(ThreadContext *, Args...))
+    Ret (*target)(ThreadContext *, Args...))
 {
     return dumpSimcall<ABI>(
-            name, tc, std::function<Ret(ThreadContext *, Args...)>(target));
+        name, tc, std::function<Ret(ThreadContext *, Args...)>(target));
 }
 
 } // namespace gem5

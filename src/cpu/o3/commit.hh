@@ -58,12 +58,10 @@
 
 namespace gem5
 {
-
 struct BaseO3CPUParams;
 
 namespace o3
 {
-
 class ThreadState;
 
 /**
@@ -306,10 +304,18 @@ class Commit
 
   public:
     /** Reads the PC of a specific thread. */
-    const PCStateBase &pcState(ThreadID tid) { return *pc[tid]; }
+    const PCStateBase &
+    pcState(ThreadID tid)
+    {
+        return *pc[tid];
+    }
 
     /** Sets the PC of a specific thread. */
-    void pcState(const PCStateBase &val, ThreadID tid) { set(pc[tid], val); }
+    void
+    pcState(const PCStateBase &val, ThreadID tid)
+    {
+        set(pc[tid], val);
+    }
 
   private:
     /** Time buffer interface. */
@@ -349,7 +355,8 @@ class Commit
     std::vector<ThreadState *> thread;
 
     /** Records that commit has written to the time buffer this cycle. Used for
-     * the CPU to determine if it can deschedule itself if there is no activity.
+     * the CPU to determine if it can deschedule itself if there is no
+     * activity.
      */
     bool wroteToTimeBuffer;
 

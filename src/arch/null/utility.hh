@@ -43,10 +43,8 @@
 
 namespace gem5
 {
-
 namespace NullISA
 {
-
 static inline uint64_t
 getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
 {

@@ -43,7 +43,6 @@
 
 namespace gem5
 {
-
 using namespace ArmISA;
 
 std::string
@@ -55,7 +54,7 @@ MrsOp::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
     ss << ", ";
     bool foundPsr = false;
     for (unsigned i = 0; i < numSrcRegs(); i++) {
-        const RegId& reg = srcRegIdx(i);
+        const RegId &reg = srcRegIdx(i);
         if (!reg.is(MiscRegClass)) {
             continue;
         }
@@ -83,7 +82,7 @@ MsrBase::printMsrBase(std::ostream &os) const
     bool apsr = false;
     bool foundPsr = false;
     for (unsigned i = 0; i < numDestRegs(); i++) {
-        const RegId& reg = destRegIdx(i);
+        const RegId &reg = destRegIdx(i);
         if (!reg.is(MiscRegClass)) {
             continue;
         }
@@ -215,7 +214,7 @@ RegOp::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
 
 std::string
 RegRegRegImmOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -230,7 +229,7 @@ RegRegRegImmOp::generateDisassembly(
 
 std::string
 RegRegRegRegOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -246,7 +245,7 @@ RegRegRegRegOp::generateDisassembly(
 
 std::string
 RegRegRegOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -260,7 +259,7 @@ RegRegRegOp::generateDisassembly(
 
 std::string
 RegRegImmOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -273,7 +272,7 @@ RegRegImmOp::generateDisassembly(
 
 std::string
 MiscRegRegImmOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -285,7 +284,7 @@ MiscRegRegImmOp::generateDisassembly(
 
 std::string
 RegMiscRegImmOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -297,7 +296,7 @@ RegMiscRegImmOp::generateDisassembly(
 
 std::string
 RegImmImmOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -308,7 +307,7 @@ RegImmImmOp::generateDisassembly(
 
 std::string
 RegRegImmImmOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -321,7 +320,7 @@ RegRegImmImmOp::generateDisassembly(
 
 std::string
 RegImmRegOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -333,7 +332,7 @@ RegImmRegOp::generateDisassembly(
 
 std::string
 RegImmRegShiftOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -346,14 +345,14 @@ RegImmRegShiftOp::generateDisassembly(
 
 std::string
 UnknownOp::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     return csprintf("%-10s (inst %#08x)", "unknown", encoding());
 }
 
 McrMrcMiscInst::McrMrcMiscInst(const char *_mnemonic, ExtMachInst _machInst,
-                               uint64_t _iss, MiscRegIndex _miscReg)
-    : ArmStaticInst(_mnemonic, _machInst, No_OpClass)
+    uint64_t _iss, MiscRegIndex _miscReg) :
+    ArmStaticInst(_mnemonic, _machInst, No_OpClass)
 {
     flags[IsNonSpeculative] = true;
     iss = _iss;
@@ -368,15 +367,14 @@ McrMrcMiscInst::execute(ExecContext *xc, trace::InstRecord *traceData) const
 
 std::string
 McrMrcMiscInst::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     return csprintf("%-10s (pipe flush)", mnemonic);
 }
 
 McrMrcImplDefined::McrMrcImplDefined(const char *_mnemonic,
-                                     ExtMachInst _machInst, uint64_t _iss,
-                                     MiscRegIndex _miscReg)
-    : McrMrcMiscInst(_mnemonic, _machInst, _iss, _miscReg)
+    ExtMachInst _machInst, uint64_t _iss, MiscRegIndex _miscReg) :
+    McrMrcMiscInst(_mnemonic, _machInst, _iss, _miscReg)
 {}
 
 Fault
@@ -386,14 +384,14 @@ McrMrcImplDefined::execute(ExecContext *xc, trace::InstRecord *traceData) const
     if (fault != NoFault) {
         return fault;
     } else {
-        return std::make_shared<UndefinedInstruction>(machInst, false,
-                                                      mnemonic);
+        return std::make_shared<UndefinedInstruction>(
+            machInst, false, mnemonic);
     }
 }
 
 std::string
 McrMrcImplDefined::generateDisassembly(
-        Addr pc, const loader::SymbolTable *symtab) const
+    Addr pc, const loader::SymbolTable *symtab) const
 {
     return csprintf("%-10s (implementation defined)", mnemonic);
 }
@@ -401,374 +399,303 @@ McrMrcImplDefined::generateDisassembly(
 void
 TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
 {
-    ThreadContext* tc = xc->tcBase();
+    ThreadContext *tc = xc->tcBase();
     auto isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
     auto release = isa->getRelease();
 
     switch (dest_idx) {
-      case MISCREG_TLBIALL: // TLBI all entries, EL0&1,
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+    case MISCREG_TLBIALL: // TLBI all entries, EL0&1,
+    {
+        SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIALL tlbiOp(EL1, secure);
-            tlbiOp(tc);
-            return;
-        }
-      // TLB Invalidate All, Inner Shareable
-      case MISCREG_TLBIALLIS:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+        TLBIALL tlbiOp(EL1, secure);
+        tlbiOp(tc);
+        return;
+    }
+    // TLB Invalidate All, Inner Shareable
+    case MISCREG_TLBIALLIS: {
+        SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIALL tlbiOp(EL1, secure);
-            tlbiOp.broadcast(tc);
-            return;
-        }
-      // Instruction TLB Invalidate All
-      case MISCREG_ITLBIALL:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+        TLBIALL tlbiOp(EL1, secure);
+        tlbiOp.broadcast(tc);
+        return;
+    }
+    // Instruction TLB Invalidate All
+    case MISCREG_ITLBIALL: {
+        SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            ITLBIALL tlbiOp(EL1, secure);
-            tlbiOp(tc);
-            return;
-        }
-      // Data TLB Invalidate All
-      case MISCREG_DTLBIALL:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+        ITLBIALL tlbiOp(EL1, secure);
+        tlbiOp(tc);
+        return;
+    }
+    // Data TLB Invalidate All
+    case MISCREG_DTLBIALL: {
+        SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            DTLBIALL tlbiOp(EL1, secure);
-            tlbiOp(tc);
-            return;
-        }
-      // TLB Invalidate by VA
-      case MISCREG_TLBIMVA:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+        DTLBIALL tlbiOp(EL1, secure);
+        tlbiOp(tc);
+        return;
+    }
+    // TLB Invalidate by VA
+    case MISCREG_TLBIMVA: {
+        SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVA tlbiOp(EL1,
-                           secure,
-                           mbits(value, 31, 12),
-                           bits(value, 7, 0),
-                           false);
+        bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+        TLBIMVA tlbiOp(
+            EL1, secure, mbits(value, 31, 12), bits(value, 7, 0), false);
 
-            tlbiOp(tc);
-            return;
-        }
-      // TLB Invalidate by VA, Last Level
-      case MISCREG_TLBIMVAL:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        tlbiOp(tc);
+        return;
+    }
+    // TLB Invalidate by VA, Last Level
+    case MISCREG_TLBIMVAL: {
+        SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVA tlbiOp(EL1,
-                           secure,
-                           mbits(value, 31, 12),
-                           bits(value, 7, 0),
-                           true);
+        bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+        TLBIMVA tlbiOp(
+            EL1, secure, mbits(value, 31, 12), bits(value, 7, 0), true);
 
-            tlbiOp(tc);
-            return;
-        }
-      // TLB Invalidate by VA, Inner Shareable
-      case MISCREG_TLBIMVAIS:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        tlbiOp(tc);
+        return;
+    }
+    // TLB Invalidate by VA, Inner Shareable
+    case MISCREG_TLBIMVAIS: {
+        SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVA tlbiOp(EL1,
-                           secure,
-                           mbits(value, 31, 12),
-                           bits(value, 7, 0),
-                           false);
+        bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+        TLBIMVA tlbiOp(
+            EL1, secure, mbits(value, 31, 12), bits(value, 7, 0), false);
 
-            tlbiOp.broadcast(tc);
-            return;
-        }
-      // TLB Invalidate by VA, Last Level, Inner Shareable
-      case MISCREG_TLBIMVALIS:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        tlbiOp.broadcast(tc);
+        return;
+    }
+    // TLB Invalidate by VA, Last Level, Inner Shareable
+    case MISCREG_TLBIMVALIS: {
+        SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVA tlbiOp(EL1,
-                           secure,
-                           mbits(value, 31, 12),
-                           bits(value, 7, 0),
-                           true);
+        bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+        TLBIMVA tlbiOp(
+            EL1, secure, mbits(value, 31, 12), bits(value, 7, 0), true);
 
-            tlbiOp.broadcast(tc);
-            return;
-        }
-      // TLB Invalidate by ASID match
-      case MISCREG_TLBIASID:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        tlbiOp.broadcast(tc);
+        return;
+    }
+    // TLB Invalidate by ASID match
+    case MISCREG_TLBIASID: {
+        SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIASID tlbiOp(EL1,
-                            secure,
-                            bits(value, 7, 0));
+        bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+        TLBIASID tlbiOp(EL1, secure, bits(value, 7, 0));
 
-            tlbiOp(tc);
-            return;
-        }
-      // TLB Invalidate by ASID match, Inner Shareable
-      case MISCREG_TLBIASIDIS:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        tlbiOp(tc);
+        return;
+    }
+    // TLB Invalidate by ASID match, Inner Shareable
+    case MISCREG_TLBIASIDIS: {
+        SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIASID tlbiOp(EL1,
-                            secure,
-                            bits(value, 7, 0));
+        bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+        TLBIASID tlbiOp(EL1, secure, bits(value, 7, 0));
 
-            tlbiOp.broadcast(tc);
-            return;
-        }
-      // TLB Invalidate by VA, All ASID
-      case MISCREG_TLBIMVAA:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        tlbiOp.broadcast(tc);
+        return;
+    }
+    // TLB Invalidate by VA, All ASID
+    case MISCREG_TLBIMVAA: {
+        SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVAA tlbiOp(EL1, secure,
-                            mbits(value, 31, 12), false);
+        bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+        TLBIMVAA tlbiOp(EL1, secure, mbits(value, 31, 12), false);
 
-            tlbiOp(tc);
-            return;
-        }
-      // TLB Invalidate by VA, Last Level, All ASID
-      case MISCREG_TLBIMVAAL:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        tlbiOp(tc);
+        return;
+    }
+    // TLB Invalidate by VA, Last Level, All ASID
+    case MISCREG_TLBIMVAAL: {
+        SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVAA tlbiOp(EL1, secure,
-                            mbits(value, 31, 12), true);
+        bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+        TLBIMVAA tlbiOp(EL1, secure, mbits(value, 31, 12), true);
 
-            tlbiOp(tc);
-            return;
-        }
-      // TLB Invalidate by VA, All ASID, Inner Shareable
-      case MISCREG_TLBIMVAAIS:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        tlbiOp(tc);
+        return;
+    }
+    // TLB Invalidate by VA, All ASID, Inner Shareable
+    case MISCREG_TLBIMVAAIS: {
+        SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVAA tlbiOp(EL1, secure,
-                            mbits(value, 31, 12), false);
+        bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+        TLBIMVAA tlbiOp(EL1, secure, mbits(value, 31, 12), false);
 
-            tlbiOp.broadcast(tc);
-            return;
-        }
-      // TLB Invalidate by VA, All ASID, Last Level, Inner Shareable
-      case MISCREG_TLBIMVAALIS:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        tlbiOp.broadcast(tc);
+        return;
+    }
+    // TLB Invalidate by VA, All ASID, Last Level, Inner Shareable
+    case MISCREG_TLBIMVAALIS: {
+        SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVAA tlbiOp(EL1, secure,
-                            mbits(value, 31, 12), true);
+        bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+        TLBIMVAA tlbiOp(EL1, secure, mbits(value, 31, 12), true);
 
-            tlbiOp.broadcast(tc);
-            return;
-        }
-      // TLB Invalidate by VA, Hyp mode
-      case MISCREG_TLBIMVAH:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        tlbiOp.broadcast(tc);
+        return;
+    }
+    // TLB Invalidate by VA, Hyp mode
+    case MISCREG_TLBIMVAH: {
+        SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVAA tlbiOp(EL2, secure,
-                            mbits(value, 31, 12), false);
+        bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+        TLBIMVAA tlbiOp(EL2, secure, mbits(value, 31, 12), false);
 
-            tlbiOp(tc);
-            return;
-        }
-      // TLB Invalidate by VA, Last Level, Hyp mode
-      case MISCREG_TLBIMVALH:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        tlbiOp(tc);
+        return;
+    }
+    // TLB Invalidate by VA, Last Level, Hyp mode
+    case MISCREG_TLBIMVALH: {
+        SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVAA tlbiOp(EL2, secure,
-                            mbits(value, 31, 12), true);
+        bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+        TLBIMVAA tlbiOp(EL2, secure, mbits(value, 31, 12), true);
 
-            tlbiOp(tc);
-            return;
-        }
-      // TLB Invalidate by VA, Hyp mode, Inner Shareable
-      case MISCREG_TLBIMVAHIS:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        tlbiOp(tc);
+        return;
+    }
+    // TLB Invalidate by VA, Hyp mode, Inner Shareable
+    case MISCREG_TLBIMVAHIS: {
+        SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVAA tlbiOp(EL2, secure,
-                            mbits(value, 31, 12), false);
+        bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+        TLBIMVAA tlbiOp(EL2, secure, mbits(value, 31, 12), false);
 
-            tlbiOp.broadcast(tc);
-            return;
-        }
-      // TLB Invalidate by VA, Hyp mode, Last Level, Inner Shareable
-      case MISCREG_TLBIMVALHIS:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        tlbiOp.broadcast(tc);
+        return;
+    }
+    // TLB Invalidate by VA, Hyp mode, Last Level, Inner Shareable
+    case MISCREG_TLBIMVALHIS: {
+        SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVAA tlbiOp(EL2, secure,
-                            mbits(value, 31, 12), true);
+        bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+        TLBIMVAA tlbiOp(EL2, secure, mbits(value, 31, 12), true);
 
-            tlbiOp.broadcast(tc);
-            return;
-        }
-      // TLB Invalidate by Intermediate Physical Address, Stage 2
-      case MISCREG_TLBIIPAS2:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        tlbiOp.broadcast(tc);
+        return;
+    }
+    // TLB Invalidate by Intermediate Physical Address, Stage 2
+    case MISCREG_TLBIIPAS2: {
+        SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIIPA tlbiOp(EL1,
-                           secure,
-                           static_cast<Addr>(bits(value, 35, 0)) << 12,
-                           false);
+        bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+        TLBIIPA tlbiOp(
+            EL1, secure, static_cast<Addr>(bits(value, 35, 0)) << 12, false);
 
-            tlbiOp(tc);
-            return;
-        }
-      // TLB Invalidate by Intermediate Physical Address, Stage 2,
-      // Last Level
-      case MISCREG_TLBIIPAS2L:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        tlbiOp(tc);
+        return;
+    }
+    // TLB Invalidate by Intermediate Physical Address, Stage 2,
+    // Last Level
+    case MISCREG_TLBIIPAS2L: {
+        SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIIPA tlbiOp(EL1,
-                           secure,
-                           static_cast<Addr>(bits(value, 35, 0)) << 12,
-                           true);
+        bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+        TLBIIPA tlbiOp(
+            EL1, secure, static_cast<Addr>(bits(value, 35, 0)) << 12, true);
 
-            tlbiOp(tc);
-            return;
-        }
-      // TLB Invalidate by Intermediate Physical Address, Stage 2,
-      // Inner Shareable
-      case MISCREG_TLBIIPAS2IS:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        tlbiOp(tc);
+        return;
+    }
+    // TLB Invalidate by Intermediate Physical Address, Stage 2,
+    // Inner Shareable
+    case MISCREG_TLBIIPAS2IS: {
+        SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIIPA tlbiOp(EL1,
-                           secure,
-                           static_cast<Addr>(bits(value, 35, 0)) << 12,
-                           false);
+        bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+        TLBIIPA tlbiOp(
+            EL1, secure, static_cast<Addr>(bits(value, 35, 0)) << 12, false);
 
-            tlbiOp.broadcast(tc);
-            return;
-        }
-      // TLB Invalidate by Intermediate Physical Address, Stage 2,
-      // Last Level, Inner Shareable
-      case MISCREG_TLBIIPAS2LIS:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        tlbiOp.broadcast(tc);
+        return;
+    }
+    // TLB Invalidate by Intermediate Physical Address, Stage 2,
+    // Last Level, Inner Shareable
+    case MISCREG_TLBIIPAS2LIS: {
+        SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIIPA tlbiOp(EL1,
-                           secure,
-                           static_cast<Addr>(bits(value, 35, 0)) << 12,
-                           true);
+        bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+        TLBIIPA tlbiOp(
+            EL1, secure, static_cast<Addr>(bits(value, 35, 0)) << 12, true);
 
-            tlbiOp.broadcast(tc);
-            return;
-        }
-      // Instruction TLB Invalidate by VA
-      case MISCREG_ITLBIMVA:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        tlbiOp.broadcast(tc);
+        return;
+    }
+    // Instruction TLB Invalidate by VA
+    case MISCREG_ITLBIMVA: {
+        SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            ITLBIMVA tlbiOp(EL1,
-                            secure,
-                            mbits(value, 31, 12),
-                            bits(value, 7, 0));
+        bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+        ITLBIMVA tlbiOp(EL1, secure, mbits(value, 31, 12), bits(value, 7, 0));
 
-            tlbiOp(tc);
-            return;
-        }
-      // Data TLB Invalidate by VA
-      case MISCREG_DTLBIMVA:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        tlbiOp(tc);
+        return;
+    }
+    // Data TLB Invalidate by VA
+    case MISCREG_DTLBIMVA: {
+        SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            DTLBIMVA tlbiOp(EL1,
-                            secure,
-                            mbits(value, 31, 12),
-                            bits(value, 7, 0));
+        bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+        DTLBIMVA tlbiOp(EL1, secure, mbits(value, 31, 12), bits(value, 7, 0));
 
-            tlbiOp(tc);
-            return;
-        }
-      // Instruction TLB Invalidate by ASID match
-      case MISCREG_ITLBIASID:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        tlbiOp(tc);
+        return;
+    }
+    // Instruction TLB Invalidate by ASID match
+    case MISCREG_ITLBIASID: {
+        SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            ITLBIASID tlbiOp(EL1,
-                             secure,
-                             bits(value, 7, 0));
+        bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+        ITLBIASID tlbiOp(EL1, secure, bits(value, 7, 0));
 
-            tlbiOp(tc);
-            return;
-        }
-      // Data TLB Invalidate by ASID match
-      case MISCREG_DTLBIASID:
-        {
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        tlbiOp(tc);
+        return;
+    }
+    // Data TLB Invalidate by ASID match
+    case MISCREG_DTLBIASID: {
+        SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            DTLBIASID tlbiOp(EL1,
-                             secure,
-                             bits(value, 7, 0));
+        bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+        DTLBIASID tlbiOp(EL1, secure, bits(value, 7, 0));
 
-            tlbiOp(tc);
-            return;
-        }
-      // TLB Invalidate All, Non-Secure Non-Hyp
-      case MISCREG_TLBIALLNSNH:
-        {
-            TLBIALLN tlbiOp(EL1);
-            tlbiOp(tc);
-            return;
-        }
-      // TLB Invalidate All, Non-Secure Non-Hyp, Inner Shareable
-      case MISCREG_TLBIALLNSNHIS:
-        {
-            TLBIALLN tlbiOp(EL1);
-            tlbiOp.broadcast(tc);
-            return;
-        }
-      // TLB Invalidate All, Hyp mode
-      case MISCREG_TLBIALLH:
-        {
-            TLBIALLN tlbiOp(EL2);
-            tlbiOp(tc);
-            return;
-        }
-      // TLB Invalidate All, Hyp mode, Inner Shareable
-      case MISCREG_TLBIALLHIS:
-        {
-            TLBIALLN tlbiOp(EL2);
-            tlbiOp.broadcast(tc);
-            return;
-        }
-      default:
+        tlbiOp(tc);
+        return;
+    }
+    // TLB Invalidate All, Non-Secure Non-Hyp
+    case MISCREG_TLBIALLNSNH: {
+        TLBIALLN tlbiOp(EL1);
+        tlbiOp(tc);
+        return;
+    }
+    // TLB Invalidate All, Non-Secure Non-Hyp, Inner Shareable
+    case MISCREG_TLBIALLNSNHIS: {
+        TLBIALLN tlbiOp(EL1);
+        tlbiOp.broadcast(tc);
+        return;
+    }
+    // TLB Invalidate All, Hyp mode
+    case MISCREG_TLBIALLH: {
+        TLBIALLN tlbiOp(EL2);
+        tlbiOp(tc);
+        return;
+    }
+    // TLB Invalidate All, Hyp mode, Inner Shareable
+    case MISCREG_TLBIALLHIS: {
+        TLBIALLN tlbiOp(EL2);
+        tlbiOp.broadcast(tc);
+        return;
+    }
+    default:
         panic("Unrecognized TLBIOp\n");
     }
 }

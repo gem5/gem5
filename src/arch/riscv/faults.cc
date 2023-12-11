@@ -46,10 +46,8 @@
 
 namespace gem5
 {
-
 namespace RiscvISA
 {
-
 void
 RiscvFault::invokeSE(ThreadContext *tc, const StaticInstPtr &inst)
 {
@@ -61,8 +59,8 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     auto pc_state = tc->pcState().as<PCState>();
 
-    DPRINTFS(Faults, tc->getCpuPtr(), "Fault (%s) at PC: %s\n",
-             name(), pc_state);
+    DPRINTFS(
+        Faults, tc->getCpuPtr(), "Fault (%s) at PC: %s\n", name(), pc_state);
 
     if (FullSystem) {
         PrivilegeMode pp = (PrivilegeMode)tc->readMiscReg(MISCREG_PRV);
@@ -75,7 +73,7 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         // and is not necessary recoverable. There's nothing we can do here so
         // we'll just warn our user that the CPU state might be broken.
         warn_if(isNonMaskableInterrupt() && pp == PRV_M && status.mie == 0,
-                "NMI overwriting M-mode trap handler state");
+            "NMI overwriting M-mode trap handler state");
 
         // Set fault handler privilege mode
         if (isNonMaskableInterrupt()) {
@@ -103,7 +101,7 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         // Set fault registers and status
         MiscRegIndex cause, epc, tvec, tval;
         switch (prv) {
-          case PRV_U:
+        case PRV_U:
             cause = MISCREG_UCAUSE;
             epc = MISCREG_UEPC;
             tvec = MISCREG_UTVEC;
@@ -112,7 +110,7 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
             status.upie = status.uie;
             status.uie = 0;
             break;
-          case PRV_S:
+        case PRV_S:
             cause = MISCREG_SCAUSE;
             epc = MISCREG_SEPC;
             tvec = MISCREG_STVEC;
@@ -122,7 +120,7 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
             status.spie = status.sie;
             status.sie = 0;
             break;
-          case PRV_M:
+        case PRV_M:
             cause = MISCREG_MCAUSE;
             epc = MISCREG_MEPC;
             tvec = isNonMaskableInterrupt() ? MISCREG_NMIVEC : MISCREG_MTVEC;
@@ -132,7 +130,7 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
             status.mpie = status.mie;
             status.mie = 0;
             break;
-          default:
+        default:
             panic("Unknown privilege mode %d.", prv);
             break;
         }
@@ -140,7 +138,7 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         // Set fault cause, privilege, and return PC
         uint64_t _cause = _code;
         if (isInterrupt()) {
-           _cause |= CAUSE_INTERRUPT_MASKS[pc_state.rvType()];
+            _cause |= CAUSE_INTERRUPT_MASKS[pc_state.rvType()];
         }
         tc->setMiscReg(cause, _cause);
         tc->setMiscReg(epc, tc->pcState().instAddr());
@@ -155,7 +153,7 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         }
 
         // Clear load reservation address
-        auto isa = static_cast<RiscvISA::ISA*>(tc->getIsaPtr());
+        auto isa = static_cast<RiscvISA::ISA *>(tc->getIsaPtr());
         isa->clearLoadReservation(tc->contextId());
 
         // Set PC to fault handler address
@@ -189,7 +187,7 @@ Reset::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     tc->pcState(*new_pc);
 
     // Reset PMP Cfg
-    auto* mmu = dynamic_cast<RiscvISA::MMU*>(tc->getMMUPtr());
+    auto *mmu = dynamic_cast<RiscvISA::MMU *>(tc->getMMUPtr());
     if (mmu == nullptr) {
         warn("MMU is not Riscv MMU instance, we can't reset PMP");
         return;
@@ -201,14 +199,13 @@ void
 UnknownInstFault::invokeSE(ThreadContext *tc, const StaticInstPtr &inst)
 {
     auto *rsi = static_cast<RiscvStaticInst *>(inst.get());
-    panic("Unknown instruction 0x%08x at pc %s", rsi->machInst,
-        tc->pcState());
+    panic("Unknown instruction 0x%08x at pc %s", rsi->machInst, tc->pcState());
 }
 
 void
 IllegalInstFault::invokeSE(ThreadContext *tc, const StaticInstPtr &inst)
 {
-    if (! tc->getSystemPtr()->trapToGdb(GDBSignal::ILL, tc->contextId()) ) {
+    if (!tc->getSystemPtr()->trapToGdb(GDBSignal::ILL, tc->contextId())) {
         auto *rsi = static_cast<RiscvStaticInst *>(inst.get());
         panic("Illegal instruction 0x%08x at pc %s: %s", rsi->machInst,
             tc->pcState(), reason.c_str());
@@ -224,14 +221,14 @@ UnimplementedFault::invokeSE(ThreadContext *tc, const StaticInstPtr &inst)
 void
 IllegalFrmFault::invokeSE(ThreadContext *tc, const StaticInstPtr &inst)
 {
-    panic("Illegal floating-point rounding mode 0x%x at pc %s.",
-            frm, tc->pcState());
+    panic("Illegal floating-point rounding mode 0x%x at pc %s.", frm,
+        tc->pcState());
 }
 
 void
 BreakpointFault::invokeSE(ThreadContext *tc, const StaticInstPtr &inst)
 {
-    if (! tc->getSystemPtr()->trapToGdb(GDBSignal::TRAP, tc->contextId()) ) {
+    if (!tc->getSystemPtr()->trapToGdb(GDBSignal::TRAP, tc->contextId())) {
         schedRelBreak(0);
     }
 }

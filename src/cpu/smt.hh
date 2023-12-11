@@ -38,12 +38,11 @@
 
 #ifndef SMT_MAX_THREADS
 /** The number of TPUs in any processor. */
-#define SMT_MAX_THREADS 4
+#    define SMT_MAX_THREADS 4
 #endif
 
 namespace gem5
 {
-
 /**
  * The maximum number of active threads across all cpus. Used to
  * initialize per-thread statistics in the cache.

@@ -38,10 +38,8 @@
 
 namespace gem5
 {
-
 namespace SparcISA
 {
-
 /**
  * Base class for trap instructions,
  * or instructions that always fault.
@@ -49,7 +47,6 @@ namespace SparcISA
 class Trap : public SparcStaticInst
 {
   protected:
-
     // Constructor
     Trap(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
         SparcStaticInst(mnem, _machInst, __opClass),
@@ -57,7 +54,7 @@ class Trap : public SparcStaticInst
     {}
 
     std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override;
+        Addr pc, const loader::SymbolTable *symtab) const override;
 
     int trapNum;
 };
@@ -69,7 +66,7 @@ class FpUnimpl : public SparcStaticInst
 
     std::string
     generateDisassembly(
-            Addr pc,  const loader::SymbolTable *symtab) const override
+        Addr pc, const loader::SymbolTable *symtab) const override
     {
         return mnemonic;
     }

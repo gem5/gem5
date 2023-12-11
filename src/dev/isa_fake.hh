@@ -41,7 +41,6 @@
 
 namespace gem5
 {
-
 /**
  * IsaFake is a device that returns, BadAddr, 1 or 0 on all reads and
  *  rites. It is meant to be placed at an address range
@@ -61,9 +60,9 @@ class IsaFake : public BasicPioDevice
     PARAMS(IsaFake);
 
     /**
-      * The constructor for Isa Fake just registers itself with the MMU.
-      * @param p params structure
-      */
+     * The constructor for Isa Fake just registers itself with the MMU.
+     * @param p params structure
+     */
     IsaFake(const Params &p);
 
     /**

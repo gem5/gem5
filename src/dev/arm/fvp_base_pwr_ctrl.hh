@@ -45,7 +45,6 @@
 
 namespace gem5
 {
-
 class ArmSystem;
 struct FVPBasePwrCtrlParams;
 class ThreadContext;
@@ -104,7 +103,7 @@ class FVPBasePwrCtrl : public BasicPioDevice
         Bitfield<28> wen;
         Bitfield<27> pc;
         Bitfield<26> pp;
-        Bitfield<25,24> wk;
+        Bitfield<25, 24> wk;
         Bitfield<1> pwfi;
         Bitfield<0> pwk;
     EndBitUnion(PwrStatus)
@@ -112,10 +111,10 @@ class FVPBasePwrCtrl : public BasicPioDevice
     enum Offset : Addr
     {
         PPOFFR = 0x00,
-        PPONR  = 0x04,
+        PPONR = 0x04,
         PCOFFR = 0x08,
         PWKUPR = 0x0c,
-        PSYSR  = 0x10
+        PSYSR = 0x10
     };
 
     struct Registers
@@ -130,7 +129,13 @@ class FVPBasePwrCtrl : public BasicPioDevice
     /** Mask for extracting the MPID from a 32-bit value */
     static constexpr uint32_t MPID_MSK = 0x00ffffff;
     /** Wake-up reasons */
-    enum { WK_COLD, WK_RESET, WK_PPONR, WK_GICWR };
+    enum
+    {
+        WK_COLD,
+        WK_RESET,
+        WK_PPONR,
+        WK_GICWR
+    };
 
     /**
      * Per-core power status. This is power related information for each core

@@ -45,14 +45,14 @@ TEST(HashHelpers, isHashEnabled)
     EXPECT_TRUE(stl_helpers::is_hash_enabled<long>);
     EXPECT_TRUE(stl_helpers::is_hash_enabled<double>);
     EXPECT_TRUE(stl_helpers::is_hash_enabled<std::string>);
-    EXPECT_TRUE(stl_helpers::is_hash_enabled<void*>);
+    EXPECT_TRUE(stl_helpers::is_hash_enabled<void *>);
     using vector_t = std::vector<int>;
     EXPECT_TRUE(stl_helpers::is_hash_enabled<vector_t>);
-    using tuple_t = std::tuple<int, bool, int**, std::string(*)(float)>;
+    using tuple_t = std::tuple<int, bool, int **, std::string (*)(float)>;
     EXPECT_TRUE(stl_helpers::is_hash_enabled<tuple_t>);
     EXPECT_TRUE((stl_helpers::is_hash_enabled<std::pair<vector_t, tuple_t>>));
-    EXPECT_TRUE((stl_helpers::is_hash_enabled<
-        std::unordered_map<tuple_t, vector_t>>));
+    EXPECT_TRUE(
+        (stl_helpers::is_hash_enabled<std::unordered_map<tuple_t, vector_t>>));
 }
 
 // The following tests do not test the hash value as it is considered an

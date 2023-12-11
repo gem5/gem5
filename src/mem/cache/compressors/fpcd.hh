@@ -49,12 +49,10 @@
 
 namespace gem5
 {
-
 struct FPCDParams;
 
 namespace compression
 {
-
 class FPCD : public DictionaryCompressor<uint32_t>
 {
   private:
@@ -98,23 +96,40 @@ class FPCD : public DictionaryCompressor<uint32_t>
      */
     enum PatternNumber
     {
-        ZZZZ, FFFF, MMMMPenultimate, MMMMPrevious, ZZZX, XZZZ, RRRR,
-        MMMXPenultimate, MMMXPrevious, ZZXX, ZXZX, FFXX, XXZZ,
-        MMXXPenultimate, MMXXPrevious, XXXX, NUM_PATTERNS
+        ZZZZ,
+        FFFF,
+        MMMMPenultimate,
+        MMMMPrevious,
+        ZZZX,
+        XZZZ,
+        RRRR,
+        MMMXPenultimate,
+        MMMXPrevious,
+        ZZXX,
+        ZXZX,
+        FFXX,
+        XXZZ,
+        MMXXPenultimate,
+        MMXXPrevious,
+        XXXX,
+        NUM_PATTERNS
     };
 
     /**
      * Convenience factory declaration. The templates must be organized by
      * size, with the smallest first, and "no-match" last.
      */
-    using PatternFactory =
-        Factory<PatternZZZZ, PatternFFFF, PatternMMMMPrevious,
-                PatternMMMMPenultimate, PatternZZZX, PatternXZZZ,
-                PatternRRRR, PatternMMMXPrevious, PatternMMMXPenultimate,
-                PatternZZXX, PatternZXZX, PatternFFXX, PatternXXZZ,
-                PatternMMXXPrevious, PatternMMXXPenultimate, PatternXXXX>;
+    using PatternFactory = Factory<PatternZZZZ, PatternFFFF,
+        PatternMMMMPrevious, PatternMMMMPenultimate, PatternZZZX, PatternXZZZ,
+        PatternRRRR, PatternMMMXPrevious, PatternMMMXPenultimate, PatternZZXX,
+        PatternZXZX, PatternFFXX, PatternXXZZ, PatternMMXXPrevious,
+        PatternMMXXPenultimate, PatternXXXX>;
 
-    uint64_t getNumPatterns() const override { return NUM_PATTERNS; }
+    uint64_t
+    getNumPatterns() const override
+    {
+        return NUM_PATTERNS;
+    }
 
     std::string
     getName(int number) const override
@@ -122,21 +137,18 @@ class FPCD : public DictionaryCompressor<uint32_t>
         static std::map<PatternNumber, std::string> pattern_names = {
             {ZZZZ, "ZZZZ"}, {FFFF, "FFFF"},
             {MMMMPenultimate, "MMMMPenultimate"},
-            {MMMMPrevious, "MMMMPrevious"}, {ZZZX, "ZZZX"},
-            {XZZZ, "XZZZ"}, {RRRR, "RRRR"},
-            {MMMXPenultimate, "MMMXPenultimate"},
-            {MMMXPrevious, "MMMXPrevious"},
-            {ZZXX, "ZZXX"},
-            {ZXZX, "ZXZX"}, {FFXX, "FFXX"}, {XXZZ, "XXZZ"},
+            {MMMMPrevious, "MMMMPrevious"}, {ZZZX, "ZZZX"}, {XZZZ, "XZZZ"},
+            {RRRR, "RRRR"}, {MMMXPenultimate, "MMMXPenultimate"},
+            {MMMXPrevious, "MMMXPrevious"}, {ZZXX, "ZZXX"}, {ZXZX, "ZXZX"},
+            {FFXX, "FFXX"}, {XXZZ, "XXZZ"},
             {MMXXPenultimate, "MMXXPenultimate"},
-            {MMXXPrevious, "MMXXPrevious"}, {XXXX, "XXXX"}
-        };
+            {MMXXPrevious, "MMXXPrevious"}, {XXXX, "XXXX"}};
 
         return pattern_names[(PatternNumber)number];
     };
 
     std::unique_ptr<Pattern>
-    getPattern(const DictionaryEntry& bytes, const DictionaryEntry& dict_bytes,
+    getPattern(const DictionaryEntry &bytes, const DictionaryEntry &dict_bytes,
         const int match_location) const override
     {
         return PatternFactory::getPattern(bytes, dict_bytes, match_location);
@@ -153,173 +165,156 @@ class FPCD : public DictionaryCompressor<uint32_t>
 class FPCD::PatternZZZZ : public MaskedValuePattern<0, 0xFFFFFFFF>
 {
   public:
-    PatternZZZZ(const DictionaryEntry bytes, const int match_location)
-        : MaskedValuePattern<0, 0xFFFFFFFF>(ZZZZ, 0x0, prefixSize,
-          match_location, bytes, true)
-    {
-    }
+    PatternZZZZ(const DictionaryEntry bytes, const int match_location) :
+        MaskedValuePattern<0, 0xFFFFFFFF>(
+            ZZZZ, 0x0, prefixSize, match_location, bytes, true)
+    {}
 };
 
 class FPCD::PatternFFFF : public MaskedValuePattern<0xFFFFFFFF, 0xFFFFFFFF>
 {
   public:
-    PatternFFFF(const DictionaryEntry bytes, const int match_location)
-        : MaskedValuePattern<0xFFFFFFFF, 0xFFFFFFFF>(FFFF, 0x1,
-          prefixSize, match_location, bytes, true)
-    {
-    }
+    PatternFFFF(const DictionaryEntry bytes, const int match_location) :
+        MaskedValuePattern<0xFFFFFFFF, 0xFFFFFFFF>(
+            FFFF, 0x1, prefixSize, match_location, bytes, true)
+    {}
 };
 
-class FPCD::PatternMMMMPrevious
-    : public LocatedMaskedPattern<0xFFFFFFFF, previousIndex>
+class FPCD::PatternMMMMPrevious :
+    public LocatedMaskedPattern<0xFFFFFFFF, previousIndex>
 {
   public:
-    PatternMMMMPrevious(const DictionaryEntry bytes,
-        const int match_location)
-        : LocatedMaskedPattern<0xFFFFFFFF, previousIndex>(MMMMPrevious,
-          0x2, prefixSize, match_location, bytes)
-    {
-    }
+    PatternMMMMPrevious(
+        const DictionaryEntry bytes, const int match_location) :
+        LocatedMaskedPattern<0xFFFFFFFF, previousIndex>(
+            MMMMPrevious, 0x2, prefixSize, match_location, bytes)
+    {}
 };
 
-class FPCD::PatternMMMMPenultimate
-    : public LocatedMaskedPattern<0xFFFFFFFF, penultimateIndex>
+class FPCD::PatternMMMMPenultimate :
+    public LocatedMaskedPattern<0xFFFFFFFF, penultimateIndex>
 {
   public:
-    PatternMMMMPenultimate(const DictionaryEntry bytes,
-        const int match_location)
-        : LocatedMaskedPattern<0xFFFFFFFF, penultimateIndex>(
-          MMMMPenultimate, 0x3, prefixSize, match_location, bytes)
-    {
-    }
+    PatternMMMMPenultimate(
+        const DictionaryEntry bytes, const int match_location) :
+        LocatedMaskedPattern<0xFFFFFFFF, penultimateIndex>(
+            MMMMPenultimate, 0x3, prefixSize, match_location, bytes)
+    {}
 };
 
 class FPCD::PatternZZZX : public MaskedValuePattern<0, 0xFFFFFF00>
 {
   public:
-    PatternZZZX(const DictionaryEntry bytes, const int match_location)
-        : MaskedValuePattern<0, 0xFFFFFF00>(ZZZX, 0x4, prefixSize,
-          match_location, bytes, true)
-    {
-    }
+    PatternZZZX(const DictionaryEntry bytes, const int match_location) :
+        MaskedValuePattern<0, 0xFFFFFF00>(
+            ZZZX, 0x4, prefixSize, match_location, bytes, true)
+    {}
 };
 
 class FPCD::PatternXZZZ : public MaskedValuePattern<0, 0x00FFFFFF>
 {
   public:
-    PatternXZZZ(const DictionaryEntry bytes, const int match_location)
-        : MaskedValuePattern<0, 0x00FFFFFF>(XZZZ, 0x5, prefixSize,
-          match_location, bytes, true)
-    {
-    }
+    PatternXZZZ(const DictionaryEntry bytes, const int match_location) :
+        MaskedValuePattern<0, 0x00FFFFFF>(
+            XZZZ, 0x5, prefixSize, match_location, bytes, true)
+    {}
 };
 
 class FPCD::PatternRRRR : public RepeatedValuePattern<uint8_t>
 {
   public:
-    PatternRRRR(const DictionaryEntry bytes, const int match_location)
-        : RepeatedValuePattern<uint8_t>(RRRR, 0x6, prefixSize,
-          match_location, bytes, true)
-    {
-    }
+    PatternRRRR(const DictionaryEntry bytes, const int match_location) :
+        RepeatedValuePattern<uint8_t>(
+            RRRR, 0x6, prefixSize, match_location, bytes, true)
+    {}
 };
 
-class FPCD::PatternMMMXPrevious
-    : public LocatedMaskedPattern<0xFFFFFF00, previousIndex>
+class FPCD::PatternMMMXPrevious :
+    public LocatedMaskedPattern<0xFFFFFF00, previousIndex>
 {
   public:
-    PatternMMMXPrevious(const DictionaryEntry bytes,
-        const int match_location)
-        : LocatedMaskedPattern<0xFFFFFF00, previousIndex>(MMMXPrevious,
-          0x7, prefixSize, match_location, bytes)
-    {
-    }
+    PatternMMMXPrevious(
+        const DictionaryEntry bytes, const int match_location) :
+        LocatedMaskedPattern<0xFFFFFF00, previousIndex>(
+            MMMXPrevious, 0x7, prefixSize, match_location, bytes)
+    {}
 };
 
-class FPCD::PatternMMMXPenultimate
-    : public LocatedMaskedPattern<0xFFFFFF00, penultimateIndex>
+class FPCD::PatternMMMXPenultimate :
+    public LocatedMaskedPattern<0xFFFFFF00, penultimateIndex>
 {
   public:
-    PatternMMMXPenultimate(const DictionaryEntry bytes,
-        const int match_location)
-        : LocatedMaskedPattern<0xFFFFFF00, penultimateIndex>(
-          MMMXPenultimate, 0x8, prefixSize, match_location, bytes)
-    {
-    }
+    PatternMMMXPenultimate(
+        const DictionaryEntry bytes, const int match_location) :
+        LocatedMaskedPattern<0xFFFFFF00, penultimateIndex>(
+            MMMXPenultimate, 0x8, prefixSize, match_location, bytes)
+    {}
 };
 
 class FPCD::PatternZZXX : public MaskedValuePattern<0, 0xFFFF0000>
 {
   public:
-    PatternZZXX(const DictionaryEntry bytes, const int match_location)
-        : MaskedValuePattern<0, 0xFFFF0000>(ZZXX, 0x9, prefixSize,
-          match_location, bytes, true)
-    {
-    }
+    PatternZZXX(const DictionaryEntry bytes, const int match_location) :
+        MaskedValuePattern<0, 0xFFFF0000>(
+            ZZXX, 0x9, prefixSize, match_location, bytes, true)
+    {}
 };
 
 class FPCD::PatternZXZX : public MaskedValuePattern<0, 0xFF00FF00>
 {
   public:
-    PatternZXZX(const DictionaryEntry bytes, const int match_location)
-        : MaskedValuePattern<0, 0xFF00FF00>(ZXZX, 0xA, prefixSize,
-          match_location, bytes, true)
-    {
-    }
+    PatternZXZX(const DictionaryEntry bytes, const int match_location) :
+        MaskedValuePattern<0, 0xFF00FF00>(
+            ZXZX, 0xA, prefixSize, match_location, bytes, true)
+    {}
 };
 
 class FPCD::PatternFFXX : public MaskedValuePattern<0xFFFFFFFF, 0xFFFF0000>
 {
   public:
-    PatternFFXX(const DictionaryEntry bytes, const int match_location)
-        : MaskedValuePattern<0xFFFFFFFF, 0xFFFF0000>(FFXX, 0xB,
-          prefixSize, match_location, bytes, true)
-    {
-    }
+    PatternFFXX(const DictionaryEntry bytes, const int match_location) :
+        MaskedValuePattern<0xFFFFFFFF, 0xFFFF0000>(
+            FFXX, 0xB, prefixSize, match_location, bytes, true)
+    {}
 };
 
 class FPCD::PatternXXZZ : public MaskedValuePattern<0, 0x0000FFFF>
 {
   public:
-    PatternXXZZ(const DictionaryEntry bytes, const int match_location)
-        : MaskedValuePattern<0, 0x0000FFFF>(XXZZ, 0xC, prefixSize,
-          match_location, bytes, true)
-    {
-    }
+    PatternXXZZ(const DictionaryEntry bytes, const int match_location) :
+        MaskedValuePattern<0, 0x0000FFFF>(
+            XXZZ, 0xC, prefixSize, match_location, bytes, true)
+    {}
 };
 
-class FPCD::PatternMMXXPrevious
-    : public LocatedMaskedPattern<0xFFFF0000, previousIndex>
+class FPCD::PatternMMXXPrevious :
+    public LocatedMaskedPattern<0xFFFF0000, previousIndex>
 {
   public:
-    PatternMMXXPrevious(const DictionaryEntry bytes,
-        const int match_location)
-        : LocatedMaskedPattern<0xFFFF0000, previousIndex>(MMXXPrevious,
-          0xD, prefixSize, match_location, bytes)
-    {
-    }
+    PatternMMXXPrevious(
+        const DictionaryEntry bytes, const int match_location) :
+        LocatedMaskedPattern<0xFFFF0000, previousIndex>(
+            MMXXPrevious, 0xD, prefixSize, match_location, bytes)
+    {}
 };
 
-class FPCD::PatternMMXXPenultimate
-    : public LocatedMaskedPattern<0xFFFF0000, penultimateIndex>
+class FPCD::PatternMMXXPenultimate :
+    public LocatedMaskedPattern<0xFFFF0000, penultimateIndex>
 {
   public:
-    PatternMMXXPenultimate(const DictionaryEntry bytes,
-        const int match_location)
-        : LocatedMaskedPattern<0xFFFF0000, penultimateIndex>(
-          MMXXPenultimate, 0xE, prefixSize, match_location, bytes)
-    {
-    }
+    PatternMMXXPenultimate(
+        const DictionaryEntry bytes, const int match_location) :
+        LocatedMaskedPattern<0xFFFF0000, penultimateIndex>(
+            MMXXPenultimate, 0xE, prefixSize, match_location, bytes)
+    {}
 };
 
 class FPCD::PatternXXXX : public UncompressedPattern
 {
   public:
-    PatternXXXX(const DictionaryEntry bytes, const int match_location)
-        : UncompressedPattern(XXXX, 0xF, prefixSize, match_location,
-          bytes)
-    {
-    }
+    PatternXXXX(const DictionaryEntry bytes, const int match_location) :
+        UncompressedPattern(XXXX, 0xF, prefixSize, match_location, bytes)
+    {}
 };
 
 } // namespace compression

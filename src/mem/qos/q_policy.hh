@@ -49,13 +49,10 @@
 
 namespace gem5
 {
-
 namespace memory
 {
-
 namespace qos
 {
-
 /**
  * QoS Queue Policy
  *
@@ -76,7 +73,7 @@ class QueuePolicy
      * @param p qos::MemCtrl parameter variable
      * @return Pointer to the QueuePolicy
      */
-    static QueuePolicy* create(const QoSMemCtrlParams &p);
+    static QueuePolicy *create(const QoSMemCtrlParams &p);
 
     /**
      * This method is called by the memory controller after it enqueues a
@@ -86,7 +83,7 @@ class QueuePolicy
      *
      * @param pkt Enqueued packet
      */
-    virtual void enqueuePacket(PacketPtr pkt) {};
+    virtual void enqueuePacket(PacketPtr pkt){};
 
     /**
      * Policy selector.
@@ -97,32 +94,32 @@ class QueuePolicy
      * @return Iterator pointing to the packet in the queue to be
      *         serviced
      */
-    virtual PacketQueue::iterator selectPacket(PacketQueue* queue) = 0;
+    virtual PacketQueue::iterator selectPacket(PacketQueue *queue) = 0;
 
     /**
      * Setting a pointer to the Memory Controller implementing
      * the policy.
      */
-    void setMemCtrl(MemCtrl* mem) { memCtrl = mem; };
+    void
+    setMemCtrl(MemCtrl *mem)
+    {
+        memCtrl = mem;
+    };
 
-    virtual ~QueuePolicy() {};
+    virtual ~QueuePolicy(){};
 
   protected:
-    QueuePolicy(const QoSMemCtrlParams &p)
-      : memCtrl(nullptr)
-    {}
+    QueuePolicy(const QoSMemCtrlParams &p) : memCtrl(nullptr) {}
 
     /** Pointer to parent memory controller implementing the policy */
-    MemCtrl* memCtrl;
+    MemCtrl *memCtrl;
 };
 
 /** Last In First Out Queue Policy */
 class LifoQueuePolicy : public QueuePolicy
 {
   public:
-    LifoQueuePolicy(const QoSMemCtrlParams &p)
-      : QueuePolicy(p)
-    {}
+    LifoQueuePolicy(const QoSMemCtrlParams &p) : QueuePolicy(p) {}
 
     /**
      * Implements LIFO packet select policy
@@ -131,7 +128,7 @@ class LifoQueuePolicy : public QueuePolicy
      * @return Iterator to the selected packet
      */
     PacketQueue::iterator
-    selectPacket(PacketQueue* queue) override
+    selectPacket(PacketQueue *queue) override
     {
         return queue->end();
     }
@@ -141,9 +138,7 @@ class LifoQueuePolicy : public QueuePolicy
 class FifoQueuePolicy : public QueuePolicy
 {
   public:
-    FifoQueuePolicy(const QoSMemCtrlParams &p)
-      : QueuePolicy(p)
-    {}
+    FifoQueuePolicy(const QoSMemCtrlParams &p) : QueuePolicy(p) {}
 
     /**
      * Implements FCFS packet select policy
@@ -152,7 +147,7 @@ class FifoQueuePolicy : public QueuePolicy
      * @return Iterator to the selected packet
      */
     PacketQueue::iterator
-    selectPacket(PacketQueue* queue) override
+    selectPacket(PacketQueue *queue) override
     {
         return queue->begin();
     }
@@ -167,9 +162,7 @@ class FifoQueuePolicy : public QueuePolicy
 class LrgQueuePolicy : public QueuePolicy
 {
   public:
-    LrgQueuePolicy(const QoSMemCtrlParams &p)
-      : QueuePolicy(p)
-    {}
+    LrgQueuePolicy(const QoSMemCtrlParams &p) : QueuePolicy(p) {}
 
     void enqueuePacket(PacketPtr pkt) override;
 
@@ -179,8 +172,7 @@ class LrgQueuePolicy : public QueuePolicy
      * @param queue The queue in which to select a packet
      * @return Iterator to the selected packet
      */
-    PacketQueue::iterator
-    selectPacket(PacketQueue* queue) override;
+    PacketQueue::iterator selectPacket(PacketQueue *queue) override;
 
   protected:
     /**

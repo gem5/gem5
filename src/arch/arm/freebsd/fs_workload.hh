@@ -41,10 +41,8 @@
 
 namespace gem5
 {
-
 namespace ArmISA
 {
-
 class FsFreebsd : public ArmISA::FsWorkload
 {
   public:
@@ -63,7 +61,7 @@ class FsFreebsd : public ArmISA::FsWorkload
 
     /** This is a file that is placed in the run directory that prints out
      * mappings between taskIds and OS process IDs */
-    std::ostream* taskFile;
+    std::ostream *taskFile;
 
     FsFreebsd(const Params &p);
     ~FsFreebsd();
@@ -72,7 +70,7 @@ class FsFreebsd : public ArmISA::FsWorkload
 
     /** This function creates a new task Id for the given pid.
      * @param tc thread context that is currentyl executing  */
-    void mapPid(ThreadContext* tc, uint32_t pid);
+    void mapPid(ThreadContext *tc, uint32_t pid);
 
   private:
     /** Event to halt the simulator if the kernel calls panic()  */

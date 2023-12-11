@@ -39,15 +39,13 @@
 
 namespace gem5
 {
-
 /**
  * Replacement candidates as chosen by the indexing policy.
  */
-typedef std::vector<ReplaceableEntry*> ReplacementCandidates;
+typedef std::vector<ReplaceableEntry *> ReplacementCandidates;
 
 namespace replacement_policy
 {
-
 /**
  * A common base class of cache replacement policy objects.
  */
@@ -63,8 +61,8 @@ class Base : public SimObject
      *
      * @param replacement_data Replacement data to be invalidated.
      */
-    virtual void invalidate(const std::shared_ptr<ReplacementData>&
-        replacement_data) = 0;
+    virtual void invalidate(
+        const std::shared_ptr<ReplacementData> &replacement_data) = 0;
 
     /**
      * Update replacement data.
@@ -72,13 +70,14 @@ class Base : public SimObject
      * @param replacement_data Replacement data to be touched.
      * @param pkt Packet that generated this access.
      */
-    virtual void touch(const std::shared_ptr<ReplacementData>&
-        replacement_data, const PacketPtr pkt)
+    virtual void
+    touch(const std::shared_ptr<ReplacementData> &replacement_data,
+        const PacketPtr pkt)
     {
         touch(replacement_data);
     }
-    virtual void touch(const std::shared_ptr<ReplacementData>&
-        replacement_data) const = 0;
+    virtual void touch(
+        const std::shared_ptr<ReplacementData> &replacement_data) const = 0;
 
     /**
      * Reset replacement data. Used when it's holder is inserted/validated.
@@ -86,13 +85,14 @@ class Base : public SimObject
      * @param replacement_data Replacement data to be reset.
      * @param pkt Packet that generated this access.
      */
-    virtual void reset(const std::shared_ptr<ReplacementData>&
-        replacement_data, const PacketPtr pkt)
+    virtual void
+    reset(const std::shared_ptr<ReplacementData> &replacement_data,
+        const PacketPtr pkt)
     {
         reset(replacement_data);
     }
-    virtual void reset(const std::shared_ptr<ReplacementData>&
-        replacement_data) const = 0;
+    virtual void reset(
+        const std::shared_ptr<ReplacementData> &replacement_data) const = 0;
 
     /**
      * Find replacement victim among candidates.
@@ -100,8 +100,8 @@ class Base : public SimObject
      * @param candidates Replacement candidates, selected by indexing policy.
      * @return Replacement entry to be replaced.
      */
-    virtual ReplaceableEntry* getVictim(
-                           const ReplacementCandidates& candidates) const = 0;
+    virtual ReplaceableEntry *getVictim(
+        const ReplacementCandidates &candidates) const = 0;
 
     /**
      * Instantiate a replacement data entry.

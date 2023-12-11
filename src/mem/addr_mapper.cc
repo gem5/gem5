@@ -39,13 +39,11 @@
 
 namespace gem5
 {
-
-AddrMapper::AddrMapper(const AddrMapperParams &p)
-    : SimObject(p),
-      memSidePort(name() + "-mem_side_port", *this),
-      cpuSidePort(name() + "-cpu_side_port", *this)
-{
-}
+AddrMapper::AddrMapper(const AddrMapperParams &p) :
+    SimObject(p),
+    memSidePort(name() + "-mem_side_port", *this),
+    cpuSidePort(name() + "-cpu_side_port", *this)
+{}
 
 void
 AddrMapper::init()
@@ -85,11 +83,11 @@ AddrMapper::recvFunctionalSnoop(PacketPtr pkt)
 }
 
 void
-AddrMapper::recvMemBackdoorReq(const MemBackdoorReq &req,
-                               MemBackdoorPtr &backdoor)
+AddrMapper::recvMemBackdoorReq(
+    const MemBackdoorReq &req, MemBackdoorPtr &backdoor)
 {
-    AddrRange remapped_req_range = AddrRange(remapAddr(req.range().start()),
-                                             remapAddr(req.range().end()));
+    AddrRange remapped_req_range = AddrRange(
+        remapAddr(req.range().start()), remapAddr(req.range().end()));
     MemBackdoorReq remapped_req(remapped_req_range, req.flags());
     memSidePort.sendMemBackdoorReq(remapped_req, backdoor);
     if (backdoor != nullptr) {
@@ -102,7 +100,7 @@ AddrMapper::recvAtomic(PacketPtr pkt)
 {
     Addr orig_addr = pkt->getAddr();
     pkt->setAddr(remapAddr(orig_addr));
-    Tick ret_tick =  memSidePort.sendAtomic(pkt);
+    Tick ret_tick = memSidePort.sendAtomic(pkt);
     pkt->setAddr(orig_addr);
     return ret_tick;
 }
@@ -118,7 +116,7 @@ AddrMapper::recvAtomicSnoop(PacketPtr pkt)
 }
 
 Tick
-AddrMapper::recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr& backdoor)
+AddrMapper::recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor)
 {
     Addr orig_addr = pkt->getAddr();
     pkt->setAddr(remapAddr(orig_addr));
@@ -161,13 +159,12 @@ AddrMapper::recvTimingReq(PacketPtr pkt)
 bool
 AddrMapper::recvTimingResp(PacketPtr pkt)
 {
-    AddrMapperSenderState* receivedState =
-        dynamic_cast<AddrMapperSenderState*>(pkt->senderState);
+    AddrMapperSenderState *receivedState =
+        dynamic_cast<AddrMapperSenderState *>(pkt->senderState);
 
     // Restore initial sender state
     if (receivedState == NULL)
-        panic("AddrMapper %s got a response without sender state\n",
-              name());
+        panic("AddrMapper %s got a response without sender state\n", name());
 
     Addr remapped_addr = pkt->getAddr();
 
@@ -260,8 +257,8 @@ RangeAddrMapper::remapAddr(Addr addr) const
 }
 
 MemBackdoorPtr
-RangeAddrMapper::getRevertedBackdoor(MemBackdoorPtr &backdoor,
-                                     const AddrRange &range)
+RangeAddrMapper::getRevertedBackdoor(
+    MemBackdoorPtr &backdoor, const AddrRange &range)
 {
     return backdoorManager.getRevertedBackdoor(backdoor, range);
 }

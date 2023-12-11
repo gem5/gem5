@@ -38,7 +38,6 @@
 
 namespace gem5
 {
-
 /**
  * LupioRNG:
  * A Random Number Generator virtual device that returns either a random
@@ -49,7 +48,7 @@ class LupioRNG : public BasicPioDevice
   protected:
     const ByteOrder byteOrder = ByteOrder::little;
 
-  // Register map
+    // Register map
   private:
     enum
     {

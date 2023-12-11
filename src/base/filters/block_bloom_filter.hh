@@ -36,12 +36,10 @@
 
 namespace gem5
 {
-
 struct BloomFilterBlockParams;
 
 namespace bloom_filter
 {
-
 /**
  * Simple deletable (with false negatives) bloom filter that extracts
  * bitfields of an address to use as indexes of the filter vector.

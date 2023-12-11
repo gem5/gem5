@@ -36,13 +36,12 @@
 
 namespace Gem5SystemC
 {
-
-Gem5MasterTransactor::Gem5MasterTransactor(sc_core::sc_module_name name,
-                                           const std::string& portName)
-    : sc_core::sc_module(name),
-      socket(portName.c_str()),
-      sim_control("sim_control"),
-      portName(portName)
+Gem5MasterTransactor::Gem5MasterTransactor(
+    sc_core::sc_module_name name, const std::string &portName) :
+    sc_core::sc_module(name),
+    socket(portName.c_str()),
+    sim_control("sim_control"),
+    portName(portName)
 {
     if (portName.empty()) {
         SC_REPORT_ERROR(name, "No port name specified!\n");
@@ -52,9 +51,9 @@ Gem5MasterTransactor::Gem5MasterTransactor(sc_core::sc_module_name name,
 void
 Gem5MasterTransactor::before_end_of_elaboration()
 {
-    auto* port = sim_control->getMasterPort(portName);
+    auto *port = sim_control->getMasterPort(portName);
 
     port->bindToTransactor(this);
 }
 
-}
+} // namespace Gem5SystemC

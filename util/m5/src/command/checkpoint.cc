@@ -32,7 +32,6 @@
 
 namespace
 {
-
 bool
 do_checkpoint(const DispatchTable &dt, Args &args)
 {
@@ -44,9 +43,9 @@ do_checkpoint(const DispatchTable &dt, Args &args)
     return true;
 }
 
-Command checkpoint = {
-    "checkpoint", 0, 2, do_checkpoint, "[delay [period]]\n"
-        "        After delay (default 0) take a checkpoint, and then "
-            "optionally every period after" };
+Command checkpoint = {"checkpoint", 0, 2, do_checkpoint,
+    "[delay [period]]\n"
+    "        After delay (default 0) take a checkpoint, and then "
+    "optionally every period after"};
 
 } // anonymous namespace

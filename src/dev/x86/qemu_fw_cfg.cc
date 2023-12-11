@@ -34,10 +34,8 @@
 
 namespace gem5
 {
-
 namespace qemu
 {
-
 FwCfgItemE820::FwCfgItemE820(const QemuFwCfgItemE820Params &p) :
     FwCfgItemFixed(p.path, p.arch_specific, p.index)
 {
@@ -58,7 +56,7 @@ FwCfgItemE820::FwCfgItemE820(const QemuFwCfgItemE820Params &p) :
     uint8_t *ptr = data.data();
 
     // Write out the e820 entries.
-    for (auto *e: p.entries) {
+    for (auto *e : p.entries) {
         Entry entry{htole(e->addr), htole(e->size), htole(e->type)};
         std::memcpy(ptr, &entry, sizeof(entry));
         ptr += sizeof(entry);

@@ -59,13 +59,12 @@
 
 namespace gem5
 {
-
 using namespace linux;
 
 namespace ArmISA
 {
-
-FsLinux::FsLinux(const Params &p) : ArmISA::FsWorkload(p),
+FsLinux::FsLinux(const Params &p) :
+    ArmISA::FsWorkload(p),
     enableContextSwitchStatsDump(p.enable_context_switch_stats_dump)
 {}
 
@@ -96,30 +95,30 @@ FsLinux::initState()
 
         if (initrd_file_specified) {
             inform("Loading initrd file: %s at address %#x\n",
-                    params().initrd_filename, params().initrd_addr);
+                params().initrd_filename, params().initrd_addr);
 
             loader::ImageFileDataPtr initrd_file_data(
                 new loader::ImageFileData(params().initrd_filename));
             system->physProxy.writeBlob(params().initrd_addr,
-                                        initrd_file_data->data(),
-                                        initrd_file_data->len());
+                initrd_file_data->data(), initrd_file_data->len());
             initrd_len = initrd_file_data->len();
         }
 
         // Kernel supports flattened device tree and dtb file specified.
         // Using Device Tree Blob to describe system configuration.
         inform("Loading DTB file: %s at address %#x\n", params().dtb_filename,
-                params().dtb_addr);
+            params().dtb_addr);
 
         auto *dtb_file = new loader::DtbFile(params().dtb_filename);
 
         if (!dtb_file->addBootData(commandLine.c_str(), commandLine.size(),
-                                   params().initrd_addr, initrd_len)) {
+                params().initrd_addr, initrd_len)) {
             warn("couldn't append bootargs to DTB file: %s\n",
-                 params().dtb_filename);
+                params().dtb_filename);
         }
 
-        dtb_file->buildImage().offset(params().dtb_addr)
+        dtb_file->buildImage()
+            .offset(params().dtb_addr)
             .write(system->physProxy);
         delete dtb_file;
     } else {
@@ -142,8 +141,8 @@ FsLinux::initState()
 
         AddrRangeList atagRanges = system->getPhysMem().getConfAddrRanges();
         fatal_if(atagRanges.size() != 1,
-                 "Expected a single ATAG memory entry but got %d",
-                 atagRanges.size());
+            "Expected a single ATAG memory entry but got %d",
+            atagRanges.size());
         AtagMem am;
         am.memSize(atagRanges.begin()->size());
         am.memStart(atagRanges.begin()->start());
@@ -151,8 +150,8 @@ FsLinux::initState()
         AtagCmdline ad;
         ad.cmdline(commandLine);
 
-        DPRINTF(Loader, "boot command line %d bytes: %s\n",
-                ad.size() << 2, commandLine);
+        DPRINTF(Loader, "boot command line %d bytes: %s\n", ad.size() << 2,
+            commandLine);
 
         AtagNone an;
 
@@ -168,8 +167,7 @@ FsLinux::initState()
         DPRINTF(Loader, "Boot atags was %d bytes in total\n", size << 2);
         DDUMP(Loader, boot_data, size << 2);
 
-        system->physProxy.writeBlob(params().dtb_addr,
-                                    boot_data, size << 2);
+        system->physProxy.writeBlob(params().dtb_addr, boot_data, size << 2);
 
         delete[] boot_data;
     }
@@ -178,13 +176,13 @@ FsLinux::initState()
         // We inform the bootloader of the kernel entry point. This was added
         // originally done because the entry offset changed in kernel v5.8.
         // Previously the bootloader just used a hardcoded address.
-        for (auto *tc: system->threads) {
+        for (auto *tc : system->threads) {
             tc->setReg(int_reg::X0, params().dtb_addr);
             tc->setReg(int_reg::X5, params().cpu_release_addr);
         }
     } else {
         // Kernel boot requirements to set up r0, r1 and r2 in ARMv7
-        for (auto *tc: system->threads) {
+        for (auto *tc : system->threads) {
             tc->setReg(int_reg::R0, (RegVal)0);
             tc->setReg(int_reg::R1, params().machine_type);
             tc->setReg(int_reg::R2, params().dtb_addr);
@@ -219,7 +217,7 @@ FsLinux::startup()
         std::string task_filename = "tasks.txt";
         taskFile = simout.create(name() + "." + task_filename);
 
-        for (auto *tc: system->threads) {
+        for (auto *tc : system->threads) {
             uint32_t pid = tc->getCpuPtr()->getPid();
             if (pid != BaseCPU::invldPid) {
                 mapPid(tc, pid);
@@ -230,17 +228,16 @@ FsLinux::startup()
 
     const std::string dmesg_output_fname = name() + ".dmesg";
 
-    kernelPanic = addKernelFuncEvent<linux::PanicOrOopsEvent>(
-        "panic", "Kernel panic in simulated kernel",
-        dmesg_output_fname, params().on_panic);
+    kernelPanic = addKernelFuncEvent<linux::PanicOrOopsEvent>("panic",
+        "Kernel panic in simulated kernel", dmesg_output_fname,
+        params().on_panic);
     if (kernelPanic == nullptr) {
         warn("Could not add Kernel Panic event handler. "
              "`panic` symbol not found.");
     }
 
-    kernelOops = addKernelFuncEvent<linux::PanicOrOopsEvent>(
-        "oops_exit", "Kernel oops in guest",
-        dmesg_output_fname, params().on_oops);
+    kernelOops = addKernelFuncEvent<linux::PanicOrOopsEvent>("oops_exit",
+        "Kernel oops in guest", dmesg_output_fname, params().on_oops);
     if (kernelOops == nullptr) {
         warn("Could not add Kernel Oops event handler. "
              "`oops_exit` symbol not found.");
@@ -248,11 +245,10 @@ FsLinux::startup()
 
     // With ARM udelay() is #defined to __udelay
     // newer kernels use __loop_udelay and __loop_const_udelay symbols
-    skipUDelay = addSkipFunc<SkipUDelay>(
-        "__loop_udelay", "__udelay", 1000, 0);
+    skipUDelay = addSkipFunc<SkipUDelay>("__loop_udelay", "__udelay", 1000, 0);
     if (!skipUDelay) {
-        skipUDelay = addSkipFuncOrPanic<SkipUDelay>(
-                "__udelay", "__udelay", 1000, 0);
+        skipUDelay =
+            addSkipFuncOrPanic<SkipUDelay>("__udelay", "__udelay", 1000, 0);
     }
 
     // constant arguments to udelay() have some precomputation done ahead of
@@ -298,9 +294,9 @@ FsLinux::dumpDmesg()
  *  r2 = thread_info of the next process to run
  */
 void
-DumpStats::getTaskDetails(ThreadContext *tc, uint32_t &pid,
-    uint32_t &tgid, std::string &next_task_str, int32_t &mm) {
-
+DumpStats::getTaskDetails(ThreadContext *tc, uint32_t &pid, uint32_t &tgid,
+    std::string &next_task_str, int32_t &mm)
+{
     linux::ThreadInfo ti(tc);
     Addr task_descriptor = tc->getReg(int_reg::R2);
     pid = ti.curTaskPID(task_descriptor);
@@ -320,9 +316,9 @@ DumpStats::getTaskDetails(ThreadContext *tc, uint32_t &pid,
  *  r1 = task_struct of next process to run
  */
 void
-DumpStats64::getTaskDetails(ThreadContext *tc, uint32_t &pid,
-    uint32_t &tgid, std::string &next_task_str, int32_t &mm) {
-
+DumpStats64::getTaskDetails(ThreadContext *tc, uint32_t &pid, uint32_t &tgid,
+    std::string &next_task_str, int32_t &mm)
+{
     linux::ThreadInfo ti(tc);
     Addr task_struct = tc->getReg(int_reg::X1);
     pid = ti.curTaskPIDFromTaskStruct(task_struct);
@@ -354,9 +350,9 @@ DumpStats::process(ThreadContext *tc)
         next_task_str = "kernel";
     }
 
-    FsLinux* wl = dynamic_cast<FsLinux *>(tc->getSystemPtr()->workload);
+    FsLinux *wl = dynamic_cast<FsLinux *>(tc->getSystemPtr()->workload);
     panic_if(!wl, "System workload is not ARM Linux!");
-    std::map<uint32_t, uint32_t>& taskMap = wl->taskMap;
+    std::map<uint32_t, uint32_t> &taskMap = wl->taskMap;
 
     // Create a new unique identifier for this pid
     wl->mapPid(tc, pid);
@@ -365,14 +361,14 @@ DumpStats::process(ThreadContext *tc)
     tc->getCpuPtr()->taskId(taskMap[pid]);
     tc->getCpuPtr()->setPid(pid);
 
-    OutputStream* taskFile = wl->taskFile;
+    OutputStream *taskFile = wl->taskFile;
 
     // Task file is read by cache occupancy plotting script or
     // Streamline conversion script.
     ccprintf(*(taskFile->stream()),
-             "tick=%lld %d cpu_id=%d next_pid=%d next_tgid=%d next_task=%s\n",
-             curTick(), taskMap[pid], tc->cpuId(), (int)pid, (int)tgid,
-             next_task_str);
+        "tick=%lld %d cpu_id=%d next_pid=%d next_tgid=%d next_task=%s\n",
+        curTick(), taskMap[pid], tc->cpuId(), (int)pid, (int)tgid,
+        next_task_str);
     taskFile->stream()->flush();
 
     // Dump and reset statistics

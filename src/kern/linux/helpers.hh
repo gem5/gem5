@@ -44,12 +44,10 @@
 
 namespace gem5
 {
-
 class ThreadContext;
 
 namespace linux
 {
-
 /**
  * Dump Linux's dmesg log buffer to the an output stream.
  *

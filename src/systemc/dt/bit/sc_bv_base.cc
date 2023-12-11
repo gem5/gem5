@@ -35,7 +35,6 @@
 
  *****************************************************************************/
 
-
 // $Log: sc_bv_base.cpp,v $
 // Revision 1.2  2011/08/24 22:05:40  acg
 //  Torsten Maehne: initialization changes to remove warnings.
@@ -63,7 +62,6 @@
 
 namespace sc_dt
 {
-
 // ----------------------------------------------------------------------------
 //  CLASS : sc_bv_base
 //
@@ -110,8 +108,8 @@ sc_bv_base::assign_from_string(const std::string &s)
         set_bit(i, sc_logic_value_t(c - '0'));
     }
     // if formatted, fill the rest with sign(s), otherwise fill with zeros
-    sc_logic_value_t fill = (s[s_len] == 'F' ? sc_logic_value_t(s[0] - '0')
-                                             : sc_logic_value_t(0));
+    sc_logic_value_t fill =
+        (s[s_len] == 'F' ? sc_logic_value_t(s[0] - '0') : sc_logic_value_t(0));
     for (; i < len; ++i) {
         set_bit(i, fill);
     }
@@ -133,7 +131,9 @@ sc_bv_base::sc_bv_base(const char *a, int length_) :
 }
 
 sc_bv_base::sc_bv_base(const sc_bv_base &a) :
-    sc_proxy<sc_bv_base>(), m_len(a.m_len), m_size(a.m_size),
+    sc_proxy<sc_bv_base>(),
+    m_len(a.m_len),
+    m_size(a.m_size),
     m_data(new sc_digit[m_size])
 {
     // copy the bits
@@ -145,12 +145,11 @@ sc_bv_base::sc_bv_base(const sc_bv_base &a) :
 
 // assignment operators
 sc_bv_base &
-sc_bv_base::operator = (const char *a)
+sc_bv_base::operator=(const char *a)
 {
     assign_from_string(convert_to_bin(a));
     return *this;
 }
-
 
 // ----------------------------------------------------------------------------
 // convert formatted string to binary string
@@ -162,13 +161,13 @@ convert_to_bin(const char *s)
     //         because this is seen as a hexadecimal encoding prefix!
 
     if (s == 0) {
-        SC_REPORT_ERROR(sc_core::SC_ID_CANNOT_CONVERT_,
-                "character string is zero");
+        SC_REPORT_ERROR(
+            sc_core::SC_ID_CANNOT_CONVERT_, "character string is zero");
         return std::string();
     }
     if (*s == 0) {
-        SC_REPORT_ERROR(sc_core::SC_ID_CANNOT_CONVERT_,
-            "character string is empty");
+        SC_REPORT_ERROR(
+            sc_core::SC_ID_CANNOT_CONVERT_, "character string is empty");
         return std::string();
     }
 
@@ -185,11 +184,10 @@ convert_to_bin(const char *s)
                 return str;
             }
         }
-        if (s[i + 1] == 'b' || s[i + 1] == 'B' ||
-            s[i + 1] == 'c' || s[i + 1] == 'C' ||
-            s[i + 1] == 'd' || s[i + 1] == 'D' ||
-            s[i + 1] == 'o' || s[i + 1] == 'O' ||
-            s[i + 1] == 'x' || s[i + 1] == 'X') {
+        if (s[i + 1] == 'b' || s[i + 1] == 'B' || s[i + 1] == 'c' ||
+            s[i + 1] == 'C' || s[i + 1] == 'd' || s[i + 1] == 'D' ||
+            s[i + 1] == 'o' || s[i + 1] == 'O' || s[i + 1] == 'x' ||
+            s[i + 1] == 'X') {
             try {
                 // worst case length = n * 4
                 sc_fix a(s, n * 4, n * 4, SC_TRN, SC_WRAP, 0, SC_ON);
@@ -204,8 +202,8 @@ convert_to_bin(const char *s)
             } catch (const sc_core::sc_report &) {
                 std::stringstream msg;
                 msg << "character string '" << s << "' is not valid";
-                SC_REPORT_ERROR(sc_core::SC_ID_CANNOT_CONVERT_,
-                        msg.str().c_str());
+                SC_REPORT_ERROR(
+                    sc_core::SC_ID_CANNOT_CONVERT_, msg.str().c_str());
                 return std::string();
             }
         }

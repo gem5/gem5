@@ -48,10 +48,8 @@
 
 namespace gem5
 {
-
 namespace X86ISA
 {
-
 // Base class for all x86 "faults" where faults is in the m5 sense
 class X86FaultBase : public FaultBase
 {
@@ -62,17 +60,31 @@ class X86FaultBase : public FaultBase
     uint64_t errorCode;
 
     X86FaultBase(const char *_faultName, const char *_mnem,
-                 const uint8_t _vector, uint64_t _errorCode=(uint64_t)-1) :
-        faultName(_faultName), mnem(_mnem),
-        vector(_vector), errorCode(_errorCode)
+        const uint8_t _vector, uint64_t _errorCode = (uint64_t)-1) :
+        faultName(_faultName),
+        mnem(_mnem),
+        vector(_vector),
+        errorCode(_errorCode)
     {}
 
-    const char *name() const override { return faultName; }
-    virtual bool isBenign() { return true; }
-    virtual const char *mnemonic() const { return mnem; }
+    const char *
+    name() const override
+    {
+        return faultName;
+    }
+    virtual bool
+    isBenign()
+    {
+        return true;
+    }
+    virtual const char *
+    mnemonic() const
+    {
+        return mnem;
+    }
 
-    void invoke(ThreadContext *tc, const StaticInstPtr &inst=
-                nullStaticInstPtr) override;
+    void invoke(ThreadContext *tc,
+        const StaticInstPtr &inst = nullStaticInstPtr) override;
 
     virtual std::string describe() const;
 
@@ -82,7 +94,11 @@ class X86FaultBase : public FaultBase
      *
      * @return interrupt vector number.
      */
-    virtual uint8_t getVector() const { return vector; }
+    virtual uint8_t
+    getVector() const
+    {
+        return vector;
+    }
 };
 
 // Base class for x86 faults which behave as if the underlying instruction
@@ -100,8 +116,8 @@ class X86Trap : public X86FaultBase
   protected:
     using X86FaultBase::X86FaultBase;
 
-    void invoke(ThreadContext *tc, const StaticInstPtr &inst=
-                nullStaticInstPtr) override;
+    void invoke(ThreadContext *tc,
+        const StaticInstPtr &inst = nullStaticInstPtr) override;
 };
 
 // Base class for x86 aborts which seem to be catastrophic failures.
@@ -110,8 +126,8 @@ class X86Abort : public X86FaultBase
   protected:
     using X86FaultBase::X86FaultBase;
 
-    void invoke(ThreadContext *tc, const StaticInstPtr &inst=
-                nullStaticInstPtr) override;
+    void invoke(ThreadContext *tc,
+        const StaticInstPtr &inst = nullStaticInstPtr) override;
 };
 
 // Base class for x86 interrupts.
@@ -131,8 +147,8 @@ class UnimpInstFault : public FaultBase
     }
 
     void
-    invoke(ThreadContext *tc, const StaticInstPtr &inst=
-            nullStaticInstPtr) override
+    invoke(ThreadContext *tc,
+        const StaticInstPtr &inst = nullStaticInstPtr) override
     {
         panic("Unimplemented instruction!");
     }
@@ -143,31 +159,31 @@ class UnimpInstFault : public FaultBase
 
 // Class  |  Type    | vector |               Cause                 | mnem
 //------------------------------------------------------------------------
-//Contrib   Fault     0         Divide Error                          #DE
-//Benign    Either    1         Debug                                 #DB
-//Benign    Interrupt 2         Non-Maskable-Interrupt                #NMI
-//Benign    Trap      3         Breakpoint                            #BP
-//Benign    Trap      4         Overflow                              #OF
-//Benign    Fault     5         Bound-Range                           #BR
-//Benign    Fault     6         Invalid-Opcode                        #UD
-//Benign    Fault     7         Device-Not-Available                  #NM
-//Benign    Abort     8         Double-Fault                          #DF
+// Contrib   Fault     0         Divide Error                          #DE
+// Benign    Either    1         Debug                                 #DB
+// Benign    Interrupt 2         Non-Maskable-Interrupt                #NMI
+// Benign    Trap      3         Breakpoint                            #BP
+// Benign    Trap      4         Overflow                              #OF
+// Benign    Fault     5         Bound-Range                           #BR
+// Benign    Fault     6         Invalid-Opcode                        #UD
+// Benign    Fault     7         Device-Not-Available                  #NM
+// Benign    Abort     8         Double-Fault                          #DF
 //                    9         Coprocessor-Segment-Overrun
-//Contrib   Fault     10        Invalid-TSS                           #TS
-//Contrib   Fault     11        Segment-Not-Present                   #NP
-//Contrib   Fault     12        Stack                                 #SS
-//Contrib   Fault     13        General-Protection                    #GP
-//Either    Fault     14        Page-Fault                            #PF
+// Contrib   Fault     10        Invalid-TSS                           #TS
+// Contrib   Fault     11        Segment-Not-Present                   #NP
+// Contrib   Fault     12        Stack                                 #SS
+// Contrib   Fault     13        General-Protection                    #GP
+// Either    Fault     14        Page-Fault                            #PF
 //                    15        Reserved
-//Benign    Fault     16        x87 Floating-Point Exception Pending  #MF
-//Benign    Fault     17        Alignment-Check                       #AC
-//Benign    Abort     18        Machine-Check                         #MC
-//Benign    Fault     19        SIMD Floating-Point                   #XF
+// Benign    Fault     16        x87 Floating-Point Exception Pending  #MF
+// Benign    Fault     17        Alignment-Check                       #AC
+// Benign    Abort     18        Machine-Check                         #MC
+// Benign    Fault     19        SIMD Floating-Point                   #XF
 //                    20-29     Reserved
-//Contrib   ?         30        Security Exception                    #SX
+// Contrib   ?         30        Security Exception                    #SX
 //                    31        Reserved
-//Benign    Interrupt 0-255     External Interrupts                   #INTR
-//Benign    Interrupt 0-255     Software Interrupts                   INTn
+// Benign    Interrupt 0-255     External Interrupts                   #INTR
+// Benign    Interrupt 0-255     Software Interrupts                   INTn
 
 // Note that
 class DivideError : public X86Fault
@@ -213,8 +229,8 @@ class InvalidOpcode : public X86Fault
   public:
     InvalidOpcode() : X86Fault("Invalid-Opcode", "#UD", 6) {}
 
-    void invoke(ThreadContext *tc, const StaticInstPtr &inst =
-                nullStaticInstPtr) override;
+    void invoke(ThreadContext *tc,
+        const StaticInstPtr &inst = nullStaticInstPtr) override;
 };
 
 class DeviceNotAvailable : public X86Fault
@@ -278,8 +294,8 @@ class PageFault : public X86Fault
         X86Fault("Page-Fault", "#PF", 14, _errorCode), addr(_addr)
     {}
 
-    PageFault(Addr _addr, bool present, BaseMMU::Mode mode,
-            bool user, bool reserved) :
+    PageFault(Addr _addr, bool present, BaseMMU::Mode mode, bool user,
+        bool reserved) :
         X86Fault("Page-Fault", "#PF", 14, 0), addr(_addr)
     {
         PageFaultErrorCode code = 0;
@@ -291,9 +307,8 @@ class PageFault : public X86Fault
         errorCode = code;
     }
 
-    void
-    invoke(ThreadContext *tc, const StaticInstPtr &inst=
-                nullStaticInstPtr);
+    void invoke(
+        ThreadContext *tc, const StaticInstPtr &inst = nullStaticInstPtr);
 
     virtual std::string describe() const;
 };
@@ -353,8 +368,8 @@ class InitInterrupt : public X86Interrupt
         X86Interrupt("INIT Interrupt", "#INIT", _vector)
     {}
 
-    void invoke(ThreadContext *tc, const StaticInstPtr &inst=
-                nullStaticInstPtr) override;
+    void invoke(ThreadContext *tc,
+        const StaticInstPtr &inst = nullStaticInstPtr) override;
 };
 
 class StartupInterrupt : public X86Interrupt
@@ -364,8 +379,8 @@ class StartupInterrupt : public X86Interrupt
         X86Interrupt("Startup Interrupt", "#SIPI", _vector)
     {}
 
-    void invoke(ThreadContext *tc, const StaticInstPtr &inst=
-                nullStaticInstPtr) override;
+    void invoke(ThreadContext *tc,
+        const StaticInstPtr &inst = nullStaticInstPtr) override;
 };
 
 } // namespace X86ISA

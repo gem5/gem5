@@ -45,20 +45,20 @@
 
 namespace gem5
 {
-
 void
-IdleGen::enter() { }
+IdleGen::enter()
+{}
 
 PacketPtr
 IdleGen::getNextPacket()
 {
-        return NULL;
+    return NULL;
 }
 
 Tick
 IdleGen::nextPacketTick(bool elastic, Tick delay) const
 {
-        return MaxTick;
+    return MaxTick;
 }
 
 } // namespace gem5

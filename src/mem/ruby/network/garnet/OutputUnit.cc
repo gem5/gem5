@@ -28,7 +28,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #include "mem/ruby/network/garnet/OutputUnit.hh"
 
 #include "debug/RubyNetwork.hh"
@@ -39,16 +38,16 @@
 
 namespace gem5
 {
-
 namespace ruby
 {
-
 namespace garnet
 {
-
-OutputUnit::OutputUnit(int id, PortDirection direction, Router *router,
-  uint32_t consumerVcs)
-  : Consumer(router), m_router(router), m_id(id), m_direction(direction),
+OutputUnit::OutputUnit(
+    int id, PortDirection direction, Router *router, uint32_t consumerVcs) :
+    Consumer(router),
+    m_router(router),
+    m_id(id),
+    m_direction(direction),
     m_vc_per_vnet(consumerVcs)
 {
     const int m_num_vcs = consumerVcs * m_router->get_num_vnets();
@@ -61,11 +60,12 @@ OutputUnit::OutputUnit(int id, PortDirection direction, Router *router,
 void
 OutputUnit::decrement_credit(int out_vc)
 {
-    DPRINTF(RubyNetwork, "Router %d OutputUnit %s decrementing credit:%d for "
-            "outvc %d at time: %lld for %s\n", m_router->get_id(),
-            m_router->getPortDirectionName(get_direction()),
-            outVcState[out_vc].get_credit_count(),
-            out_vc, m_router->curCycle(), m_credit_link->name());
+    DPRINTF(RubyNetwork,
+        "Router %d OutputUnit %s decrementing credit:%d for "
+        "outvc %d at time: %lld for %s\n",
+        m_router->get_id(), m_router->getPortDirectionName(get_direction()),
+        outVcState[out_vc].get_credit_count(), out_vc, m_router->curCycle(),
+        m_credit_link->name());
 
     outVcState[out_vc].decrement_credit();
 }
@@ -73,11 +73,12 @@ OutputUnit::decrement_credit(int out_vc)
 void
 OutputUnit::increment_credit(int out_vc)
 {
-    DPRINTF(RubyNetwork, "Router %d OutputUnit %s incrementing credit:%d for "
-            "outvc %d at time: %lld from:%s\n", m_router->get_id(),
-            m_router->getPortDirectionName(get_direction()),
-            outVcState[out_vc].get_credit_count(),
-            out_vc, m_router->curCycle(), m_credit_link->name());
+    DPRINTF(RubyNetwork,
+        "Router %d OutputUnit %s incrementing credit:%d for "
+        "outvc %d at time: %lld from:%s\n",
+        m_router->get_id(), m_router->getPortDirectionName(get_direction()),
+        outVcState[out_vc].get_credit_count(), out_vc, m_router->curCycle(),
+        m_credit_link->name());
 
     outVcState[out_vc].increment_credit();
 }
@@ -92,12 +93,11 @@ OutputUnit::has_credit(int out_vc)
     return outVcState[out_vc].has_credit();
 }
 
-
 // Check if the output port (i.e., input port at next router) has free VCs.
 bool
 OutputUnit::has_free_vc(int vnet)
 {
-    int vc_base = vnet*m_vc_per_vnet;
+    int vc_base = vnet * m_vc_per_vnet;
     for (int vc = vc_base; vc < vc_base + m_vc_per_vnet; vc++) {
         if (is_vc_idle(vc, curTick()))
             return true;
@@ -110,7 +110,7 @@ OutputUnit::has_free_vc(int vnet)
 int
 OutputUnit::select_free_vc(int vnet)
 {
-    int vc_base = vnet*m_vc_per_vnet;
+    int vc_base = vnet * m_vc_per_vnet;
     for (int vc = vc_base; vc < vc_base + m_vc_per_vnet; vc++) {
         if (is_vc_idle(vc, curTick())) {
             outVcState[vc].setState(ACTIVE_, curTick());
@@ -133,7 +133,7 @@ void
 OutputUnit::wakeup()
 {
     if (m_credit_link->isReady(curTick())) {
-        Credit *t_credit = (Credit*) m_credit_link->consumeLink();
+        Credit *t_credit = (Credit *)m_credit_link->consumeLink();
         increment_credit(t_credit->get_vc());
 
         if (t_credit->is_free_signal())
@@ -147,7 +147,7 @@ OutputUnit::wakeup()
     }
 }
 
-flitBuffer*
+flitBuffer *
 OutputUnit::getOutQueue()
 {
     return &outBuffer;

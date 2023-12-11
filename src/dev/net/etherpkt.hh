@@ -42,7 +42,6 @@
 
 namespace gem5
 {
-
 /*
  * Reference counted class containing ethernet packet data
  */
@@ -73,15 +72,17 @@ class EthPacketData
      */
     unsigned simLength;
 
-    EthPacketData()
-        : data(nullptr), bufLength(0), length(0), simLength(0)
-    { }
+    EthPacketData() : data(nullptr), bufLength(0), length(0), simLength(0) {}
 
-    explicit EthPacketData(unsigned size)
-        : data(new uint8_t[size]), bufLength(size), length(0), simLength(0)
-    { }
+    explicit EthPacketData(unsigned size) :
+        data(new uint8_t[size]), bufLength(size), length(0), simLength(0)
+    {}
 
-    ~EthPacketData() { if (data) delete [] data; }
+    ~EthPacketData()
+    {
+        if (data)
+            delete[] data;
+    }
 
     void serialize(const std::string &base, CheckpointOut &cp) const;
     void unserialize(const std::string &base, CheckpointIn &cp);

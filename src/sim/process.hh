@@ -48,7 +48,6 @@
 
 namespace gem5
 {
-
 namespace loader
 {
 class ObjectFile;
@@ -68,7 +67,7 @@ class Process : public SimObject
 {
   public:
     Process(const ProcessParams &params, EmulationPageTable *pTable,
-            loader::ObjectFile *obj_file);
+        loader::ObjectFile *obj_file);
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
@@ -77,19 +76,63 @@ class Process : public SimObject
     void initState() override;
     DrainState drain() override;
 
-    virtual void syscall(ThreadContext *tc) { numSyscalls++; }
+    virtual void
+    syscall(ThreadContext *tc)
+    {
+        numSyscalls++;
+    }
 
-    inline uint64_t uid() { return _uid; }
-    inline uint64_t euid() { return _euid; }
-    inline uint64_t gid() { return _gid; }
-    inline uint64_t egid() { return _egid; }
-    inline uint64_t pid() { return _pid; }
-    inline uint64_t ppid() { return _ppid; }
-    inline uint64_t pgid() { return _pgid; }
-    inline void pgid(uint64_t pgid) { _pgid = pgid; }
-    inline uint64_t tgid() { return _tgid; }
+    inline uint64_t
+    uid()
+    {
+        return _uid;
+    }
+    inline uint64_t
+    euid()
+    {
+        return _euid;
+    }
+    inline uint64_t
+    gid()
+    {
+        return _gid;
+    }
+    inline uint64_t
+    egid()
+    {
+        return _egid;
+    }
+    inline uint64_t
+    pid()
+    {
+        return _pid;
+    }
+    inline uint64_t
+    ppid()
+    {
+        return _ppid;
+    }
+    inline uint64_t
+    pgid()
+    {
+        return _pgid;
+    }
+    inline void
+    pgid(uint64_t pgid)
+    {
+        _pgid = pgid;
+    }
+    inline uint64_t
+    tgid()
+    {
+        return _tgid;
+    }
 
-    const char *progName() const { return executable.c_str(); }
+    const char *
+    progName() const
+    {
+        return executable.c_str();
+    }
 
     /**
      * Find an emulated device driver.
@@ -118,7 +161,7 @@ class Process : public SimObject
     // align to page boundaries, it will be expanded in either direction until
     // it does. This function will therefore set up *at least* the range
     // requested, and may configure more if necessary.
-    void allocateMem(Addr vaddr, int64_t size, bool clobber=false);
+    void allocateMem(Addr vaddr, int64_t size, bool clobber = false);
 
     /// Attempt to fix up a fault at vaddr by allocating a page on the stack.
     /// @return Whether the fault has been fixed.
@@ -143,7 +186,11 @@ class Process : public SimObject
      * platforms grow downward, but a few (such as Alpha) grow upward
      * instead, so they can override this method to return false.
      */
-    virtual bool mmapGrowsDown() const { return true; }
+    virtual bool
+    mmapGrowsDown() const
+    {
+        return true;
+    }
 
     /**
      * Maps a contiguous range of virtual addresses in this process's
@@ -161,10 +208,10 @@ class Process : public SimObject
     bool map(Addr vaddr, Addr paddr, int size, bool cacheable = true);
 
     void replicatePage(Addr vaddr, Addr new_paddr, ThreadContext *old_tc,
-                       ThreadContext *new_tc, bool alloc_page);
+        ThreadContext *new_tc, bool alloc_page);
 
     virtual void clone(ThreadContext *old_tc, ThreadContext *new_tc,
-                       Process *new_p, RegVal flags);
+        Process *new_p, RegVal flags);
 
     // thread contexts associated with this process
     std::vector<ContextID> contextIds;
@@ -211,14 +258,14 @@ class Process : public SimObject
          * error like file IO errors, etc., those should fail non-silently
          * with a panic or fail as normal.
          */
-        virtual Process *load(const ProcessParams &params,
-                              loader::ObjectFile *obj_file) = 0;
+        virtual Process *load(
+            const ProcessParams &params, loader::ObjectFile *obj_file) = 0;
     };
 
     // Try all the Loader instance's "load" methods one by one until one is
     // successful. If none are, complain and fail.
-    static Process *tryLoaders(const ProcessParams &params,
-                               loader::ObjectFile *obj_file);
+    static Process *tryLoaders(
+        const ProcessParams &params, loader::ObjectFile *obj_file);
 
     loader::ObjectFile *objFile;
     loader::MemoryImage image;

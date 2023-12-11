@@ -37,13 +37,11 @@
 
 namespace gem5
 {
-
 namespace ruby
 {
-
 BankedArray::BankedArray(unsigned int banks, Cycles accessLatency,
-                         unsigned int startIndexBit, RubySystem *rs)
-    : m_ruby_system(rs)
+    unsigned int startIndexBit, RubySystem *rs) :
+    m_ruby_system(rs)
 {
     this->banks = banks;
     this->accessLatency = accessLatency;
@@ -66,7 +64,7 @@ BankedArray::tryAccess(int64_t idx)
     assert(bank < banks);
 
     if (busyBanks[bank].endAccess >= curTick()) {
-            return false;
+        return false;
     }
 
     return true;
@@ -83,7 +81,7 @@ BankedArray::reserve(int64_t idx)
 
     if (busyBanks[bank].endAccess >= curTick()) {
         if (busyBanks[bank].startAccess == curTick() &&
-             busyBanks[bank].idx == idx) {
+            busyBanks[bank].idx == idx) {
             // this is the same reservation (can happen when
             // e.g., reserve the same resource for read and write)
             return; // OK
@@ -94,8 +92,8 @@ BankedArray::reserve(int64_t idx)
 
     busyBanks[bank].idx = idx;
     busyBanks[bank].startAccess = curTick();
-    busyBanks[bank].endAccess = curTick() +
-        (accessLatency-1) * m_ruby_system->clockPeriod();
+    busyBanks[bank].endAccess =
+        curTick() + (accessLatency - 1) * m_ruby_system->clockPeriod();
 }
 
 unsigned int

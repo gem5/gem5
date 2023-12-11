@@ -44,28 +44,27 @@
 
 namespace gem5
 {
-
-namespace ArmISAInst {
-
+namespace ArmISAInst
+{
 class MicroTmeOp : public ArmISA::MicroOp
 {
   protected:
-    MicroTmeOp(const char *mnem, ArmISA::ExtMachInst machInst,
-               OpClass __opClass)
-      : ArmISA::MicroOp(mnem, machInst, __opClass)
+    MicroTmeOp(
+        const char *mnem, ArmISA::ExtMachInst machInst, OpClass __opClass) :
+        ArmISA::MicroOp(mnem, machInst, __opClass)
     {}
 };
 
 class MicroTmeBasic64 : public MicroTmeOp
 {
   protected:
-    MicroTmeBasic64(const char *mnem, ArmISA::ExtMachInst machInst,
-                    OpClass __opClass) :
-                    MicroTmeOp(mnem, machInst, __opClass)
+    MicroTmeBasic64(
+        const char *mnem, ArmISA::ExtMachInst machInst, OpClass __opClass) :
+        MicroTmeOp(mnem, machInst, __opClass)
     {}
 
-    std::string generateDisassembly(Addr pc,
-                                    const loader::SymbolTable *symtab) const;
+    std::string generateDisassembly(
+        Addr pc, const loader::SymbolTable *symtab) const;
 };
 
 class TmeImmOp64 : public ArmISA::ArmStaticInst
@@ -74,13 +73,12 @@ class TmeImmOp64 : public ArmISA::ArmStaticInst
     uint64_t imm;
 
     TmeImmOp64(const char *mnem, ArmISA::ExtMachInst machInst,
-               OpClass __opClass, uint64_t _imm)
-      : ArmISA::ArmStaticInst(mnem, machInst, __opClass),
-        imm(_imm)
+        OpClass __opClass, uint64_t _imm) :
+        ArmISA::ArmStaticInst(mnem, machInst, __opClass), imm(_imm)
     {}
 
-    std::string generateDisassembly(Addr pc,
-                                    const loader::SymbolTable *symtab) const;
+    std::string generateDisassembly(
+        Addr pc, const loader::SymbolTable *symtab) const;
 };
 
 class TmeRegNone64 : public ArmISA::ArmStaticInst
@@ -89,13 +87,12 @@ class TmeRegNone64 : public ArmISA::ArmStaticInst
     RegIndex dest;
 
     TmeRegNone64(const char *mnem, ArmISA::ExtMachInst machInst,
-                 OpClass __opClass, RegIndex _dest)
-      : ArmISA::ArmStaticInst(mnem, machInst, __opClass),
-        dest(_dest)
+        OpClass __opClass, RegIndex _dest) :
+        ArmISA::ArmStaticInst(mnem, machInst, __opClass), dest(_dest)
     {}
 
-    std::string generateDisassembly(Addr pc,
-                                    const loader::SymbolTable *symtab) const;
+    std::string generateDisassembly(
+        Addr pc, const loader::SymbolTable *symtab) const;
 };
 
 class Tstart64 : public TmeRegNone64
@@ -152,12 +149,11 @@ class MicroTcommit64 : public MicroTmeBasic64
     Fault completeAcc(PacketPtr, ExecContext *, trace::InstRecord *) const;
 };
 
-
 class MacroTmeOp : public ArmISA::PredMacroOp
 {
   protected:
-    MacroTmeOp(const char *mnem, ArmISA::ExtMachInst _machInst,
-               OpClass __opClass);
+    MacroTmeOp(
+        const char *mnem, ArmISA::ExtMachInst _machInst, OpClass __opClass);
 };
 
 class Tcommit64 : public MacroTmeOp

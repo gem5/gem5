@@ -43,7 +43,6 @@ GEM5_WEAK int sc_main(int argc, char *argv[]);
 
 namespace sc_gem5
 {
-
 void
 ScMainFiber::main()
 {
@@ -64,12 +63,12 @@ ScMainFiber::main()
             // There was an exception nobody caught.
             _resultStr = "uncaught sc_report";
             reportHandlerProc(
-                    r, ::sc_core::sc_report_handler::get_catch_actions());
+                r, ::sc_core::sc_report_handler::get_catch_actions());
         } catch (...) {
             // There was some other type of exception we need to wrap.
             _resultStr = "uncaught exception";
             reportHandlerProc(reportifyException(),
-                    ::sc_core::sc_report_handler::get_catch_actions());
+                ::sc_core::sc_report_handler::get_catch_actions());
         }
         scheduler.clear();
     } else {

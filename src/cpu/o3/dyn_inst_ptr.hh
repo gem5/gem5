@@ -46,10 +46,8 @@
 
 namespace gem5
 {
-
 namespace o3
 {
-
 class DynInst;
 
 using DynInstPtr = RefCountingPtr<DynInst>;

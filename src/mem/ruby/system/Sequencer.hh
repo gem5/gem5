@@ -55,10 +55,8 @@
 
 namespace gem5
 {
-
 namespace ruby
 {
-
 struct SequencerRequest
 {
     PacketPtr pkt;
@@ -66,12 +64,15 @@ struct SequencerRequest
     RubyRequestType m_second_type;
     Cycles issue_time;
     SequencerRequest(PacketPtr _pkt, RubyRequestType _m_type,
-                     RubyRequestType _m_second_type, Cycles _issue_time)
-                : pkt(_pkt), m_type(_m_type), m_second_type(_m_second_type),
-                  issue_time(_issue_time)
+        RubyRequestType _m_second_type, Cycles _issue_time) :
+        pkt(_pkt),
+        m_type(_m_type),
+        m_second_type(_m_second_type),
+        issue_time(_issue_time)
     {}
 
-    bool functionalWrite(Packet *func_pkt) const
+    bool
+    functionalWrite(Packet *func_pkt) const
     {
         // Follow-up on RubyRequest::functionalWrite
         // This makes sure the hitCallback won't overrite the value we
@@ -81,7 +82,7 @@ struct SequencerRequest
     }
 };
 
-std::ostream& operator<<(std::ostream& out, const SequencerRequest& obj);
+std::ostream &operator<<(std::ostream &out, const SequencerRequest &obj);
 
 class Sequencer : public RubyPort
 {
@@ -94,138 +95,191 @@ class Sequencer : public RubyPort
      * Proxy function to writeCallback that first
      * invalidates the line address in the local monitor.
      */
-    void writeCallbackScFail(Addr address,
-                        DataBlock& data);
+    void writeCallbackScFail(Addr address, DataBlock &data);
 
     // Public Methods
     virtual void wakeup(); // Used only for deadlock detection
     void resetStats() override;
     void collateStats();
 
-    void writeCallback(Addr address,
-                       DataBlock& data,
-                       const bool externalHit = false,
-                       const MachineType mach = MachineType_NUM,
-                       const Cycles initialRequestTime = Cycles(0),
-                       const Cycles forwardRequestTime = Cycles(0),
-                       const Cycles firstResponseTime = Cycles(0),
-                       const bool noCoales = false);
+    void writeCallback(Addr address, DataBlock &data,
+        const bool externalHit = false,
+        const MachineType mach = MachineType_NUM,
+        const Cycles initialRequestTime = Cycles(0),
+        const Cycles forwardRequestTime = Cycles(0),
+        const Cycles firstResponseTime = Cycles(0),
+        const bool noCoales = false);
 
     // Write callback that prevents coalescing
-    void writeUniqueCallback(Addr address, DataBlock& data)
+    void
+    writeUniqueCallback(Addr address, DataBlock &data)
     {
         writeCallback(address, data, true, MachineType_NUM, Cycles(0),
-                      Cycles(0), Cycles(0), true);
+            Cycles(0), Cycles(0), true);
     }
 
-    void readCallback(Addr address,
-                      DataBlock& data,
-                      const bool externalHit = false,
-                      const MachineType mach = MachineType_NUM,
-                      const Cycles initialRequestTime = Cycles(0),
-                      const Cycles forwardRequestTime = Cycles(0),
-                      const Cycles firstResponseTime = Cycles(0));
+    void readCallback(Addr address, DataBlock &data,
+        const bool externalHit = false,
+        const MachineType mach = MachineType_NUM,
+        const Cycles initialRequestTime = Cycles(0),
+        const Cycles forwardRequestTime = Cycles(0),
+        const Cycles firstResponseTime = Cycles(0));
 
-    void atomicCallback(Addr address,
-                        DataBlock& data,
-                        const bool externalHit = false,
-                        const MachineType mach = MachineType_NUM,
-                        const Cycles initialRequestTime = Cycles(0),
-                        const Cycles forwardRequestTime = Cycles(0),
-                        const Cycles firstResponseTime = Cycles(0));
+    void atomicCallback(Addr address, DataBlock &data,
+        const bool externalHit = false,
+        const MachineType mach = MachineType_NUM,
+        const Cycles initialRequestTime = Cycles(0),
+        const Cycles forwardRequestTime = Cycles(0),
+        const Cycles firstResponseTime = Cycles(0));
 
     void unaddressedCallback(Addr unaddressedReqId,
-                             RubyRequestType requestType,
-                             const MachineType mach = MachineType_NUM,
-                             const Cycles initialRequestTime = Cycles(0),
-                             const Cycles forwardRequestTime = Cycles(0),
-                             const Cycles firstResponseTime = Cycles(0));
+        RubyRequestType requestType, const MachineType mach = MachineType_NUM,
+        const Cycles initialRequestTime = Cycles(0),
+        const Cycles forwardRequestTime = Cycles(0),
+        const Cycles firstResponseTime = Cycles(0));
 
     RequestStatus makeRequest(PacketPtr pkt) override;
     virtual bool empty() const;
-    int outstandingCount() const override { return m_outstanding_count; }
+    int
+    outstandingCount() const override
+    {
+        return m_outstanding_count;
+    }
 
-    bool isDeadlockEventScheduled() const override
-    { return deadlockCheckEvent.scheduled(); }
+    bool
+    isDeadlockEventScheduled() const override
+    {
+        return deadlockCheckEvent.scheduled();
+    }
 
-    void descheduleDeadlockEvent() override
-    { deschedule(deadlockCheckEvent); }
+    void
+    descheduleDeadlockEvent() override
+    {
+        deschedule(deadlockCheckEvent);
+    }
 
-    virtual void print(std::ostream& out) const;
+    virtual void print(std::ostream &out) const;
 
     void markRemoved();
     void evictionCallback(Addr address);
-    int coreId() const { return m_coreId; }
+    int
+    coreId() const
+    {
+        return m_coreId;
+    }
 
     virtual int functionalWrite(Packet *func_pkt) override;
 
     void recordRequestType(SequencerRequestType requestType);
-    statistics::Histogram& getOutstandReqHist() { return m_outstandReqHist; }
+    statistics::Histogram &
+    getOutstandReqHist()
+    {
+        return m_outstandReqHist;
+    }
 
-    statistics::Histogram& getLatencyHist() { return m_latencyHist; }
-    statistics::Histogram& getTypeLatencyHist(uint32_t t)
-    { return *m_typeLatencyHist[t]; }
+    statistics::Histogram &
+    getLatencyHist()
+    {
+        return m_latencyHist;
+    }
+    statistics::Histogram &
+    getTypeLatencyHist(uint32_t t)
+    {
+        return *m_typeLatencyHist[t];
+    }
 
-    statistics::Histogram& getHitLatencyHist() { return m_hitLatencyHist; }
-    statistics::Histogram& getHitTypeLatencyHist(uint32_t t)
-    { return *m_hitTypeLatencyHist[t]; }
+    statistics::Histogram &
+    getHitLatencyHist()
+    {
+        return m_hitLatencyHist;
+    }
+    statistics::Histogram &
+    getHitTypeLatencyHist(uint32_t t)
+    {
+        return *m_hitTypeLatencyHist[t];
+    }
 
-    statistics::Histogram& getHitMachLatencyHist(uint32_t t)
-    { return *m_hitMachLatencyHist[t]; }
+    statistics::Histogram &
+    getHitMachLatencyHist(uint32_t t)
+    {
+        return *m_hitMachLatencyHist[t];
+    }
 
-    statistics::Histogram& getHitTypeMachLatencyHist(uint32_t r, uint32_t t)
-    { return *m_hitTypeMachLatencyHist[r][t]; }
+    statistics::Histogram &
+    getHitTypeMachLatencyHist(uint32_t r, uint32_t t)
+    {
+        return *m_hitTypeMachLatencyHist[r][t];
+    }
 
-    statistics::Histogram& getMissLatencyHist()
-    { return m_missLatencyHist; }
-    statistics::Histogram& getMissTypeLatencyHist(uint32_t t)
-    { return *m_missTypeLatencyHist[t]; }
+    statistics::Histogram &
+    getMissLatencyHist()
+    {
+        return m_missLatencyHist;
+    }
+    statistics::Histogram &
+    getMissTypeLatencyHist(uint32_t t)
+    {
+        return *m_missTypeLatencyHist[t];
+    }
 
-    statistics::Histogram& getMissMachLatencyHist(uint32_t t) const
-    { return *m_missMachLatencyHist[t]; }
+    statistics::Histogram &
+    getMissMachLatencyHist(uint32_t t) const
+    {
+        return *m_missMachLatencyHist[t];
+    }
 
-    statistics::Histogram&
+    statistics::Histogram &
     getMissTypeMachLatencyHist(uint32_t r, uint32_t t) const
-    { return *m_missTypeMachLatencyHist[r][t]; }
+    {
+        return *m_missTypeMachLatencyHist[r][t];
+    }
 
-    statistics::Histogram& getIssueToInitialDelayHist(uint32_t t) const
-    { return *m_IssueToInitialDelayHist[t]; }
+    statistics::Histogram &
+    getIssueToInitialDelayHist(uint32_t t) const
+    {
+        return *m_IssueToInitialDelayHist[t];
+    }
 
-    statistics::Histogram&
+    statistics::Histogram &
     getInitialToForwardDelayHist(const MachineType t) const
-    { return *m_InitialToForwardDelayHist[t]; }
+    {
+        return *m_InitialToForwardDelayHist[t];
+    }
 
-    statistics::Histogram&
+    statistics::Histogram &
     getForwardRequestToFirstResponseHist(const MachineType t) const
-    { return *m_ForwardToFirstResponseDelayHist[t]; }
+    {
+        return *m_ForwardToFirstResponseDelayHist[t];
+    }
 
-    statistics::Histogram&
+    statistics::Histogram &
     getFirstResponseToCompletionDelayHist(const MachineType t) const
-    { return *m_FirstResponseToCompletionDelayHist[t]; }
+    {
+        return *m_FirstResponseToCompletionDelayHist[t];
+    }
 
-    statistics::Counter getIncompleteTimes(const MachineType t) const
-    { return m_IncompleteTimes[t]; }
+    statistics::Counter
+    getIncompleteTimes(const MachineType t) const
+    {
+        return m_IncompleteTimes[t];
+    }
 
   private:
     void issueRequest(PacketPtr pkt, RubyRequestType type);
 
-    void hitCallback(SequencerRequest* srequest, DataBlock& data,
-                     bool llscSuccess,
-                     const MachineType mach, const bool externalHit,
-                     const Cycles initialRequestTime,
-                     const Cycles forwardRequestTime,
-                     const Cycles firstResponseTime,
-                     const bool was_coalesced);
+    void hitCallback(SequencerRequest *srequest, DataBlock &data,
+        bool llscSuccess, const MachineType mach, const bool externalHit,
+        const Cycles initialRequestTime, const Cycles forwardRequestTime,
+        const Cycles firstResponseTime, const bool was_coalesced);
 
-    void recordMissLatency(SequencerRequest* srequest, bool llscSuccess,
-                           const MachineType respondingMach,
-                           bool isExternalHit, Cycles initialRequestTime,
-                           Cycles forwardRequestTime,
-                           Cycles firstResponseTime);
+    void recordMissLatency(SequencerRequest *srequest, bool llscSuccess,
+        const MachineType respondingMach, bool isExternalHit,
+        Cycles initialRequestTime, Cycles forwardRequestTime,
+        Cycles firstResponseTime);
 
     // Private copy constructor and assignment operator
-    Sequencer(const Sequencer& obj);
-    Sequencer& operator=(const Sequencer& obj);
+    Sequencer(const Sequencer &obj);
+    Sequencer &operator=(const Sequencer &obj);
 
   protected:
     // RequestTable contains both read and write requests, handles aliasing
@@ -237,13 +291,12 @@ class Sequencer : public RubyPort
     Cycles m_deadlock_threshold;
 
     virtual RequestStatus insertRequest(PacketPtr pkt,
-                                        RubyRequestType primary_type,
-                                        RubyRequestType secondary_type);
+        RubyRequestType primary_type, RubyRequestType secondary_type);
 
   private:
     int m_max_outstanding_requests;
 
-    CacheMemory* m_dataCache_ptr;
+    CacheMemory *m_dataCache_ptr;
 
     // The cache access latency for top-level caches (L0/L1). These are
     // currently assessed at the beginning of each memory access through the
@@ -323,7 +376,6 @@ class Sequencer : public RubyPort
      */
     bool llscStoreConditional(const Addr);
 
-
     /**
      * Increment the unaddressed transaction counter
      */
@@ -344,7 +396,6 @@ class Sequencer : public RubyPort
      */
     bool llscCheckMonitor(const Addr);
 
-
     /**
      * Removes all addresses from the local monitor.
      * This is independent of this Sequencer object's version id.
@@ -352,8 +403,8 @@ class Sequencer : public RubyPort
     void llscClearLocalMonitor();
 };
 
-inline std::ostream&
-operator<<(std::ostream& out, const Sequencer& obj)
+inline std::ostream &
+operator<<(std::ostream &out, const Sequencer &obj)
 {
     obj.print(out);
     out << std::flush;

@@ -44,7 +44,6 @@
 
 namespace gem5
 {
-
 /** System Security Control registers */
 class SysSecCtrl : public BasicPioDevice
 {

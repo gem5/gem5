@@ -53,7 +53,6 @@
 
 namespace gem5
 {
-
 struct GPUComputeDriverParams;
 class GPUCommandProcessor;
 class PortProxy;
@@ -67,8 +66,8 @@ class GPUComputeDriver final : public EmulatedDriver
     int ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf) override;
 
     int open(ThreadContext *tc, int mode, int flags) override;
-    Addr mmap(ThreadContext *tc, Addr start, uint64_t length,
-              int prot, int tgt_flags, int tgt_fd, off_t offset) override;
+    Addr mmap(ThreadContext *tc, Addr start, uint64_t length, int prot,
+        int tgt_flags, int tgt_fd, off_t offset) override;
     virtual void signalWakeupEvent(uint32_t event_id);
     void sleepCPU(ThreadContext *tc, uint32_t milliSecTimeout);
     /**
@@ -86,14 +85,14 @@ class GPUComputeDriver final : public EmulatedDriver
     doorbellSize()
     {
         switch (gfxVersion) {
-          case GfxVersion::gfx801:
-          case GfxVersion::gfx803:
-          case GfxVersion::gfx902:
+        case GfxVersion::gfx801:
+        case GfxVersion::gfx803:
+        case GfxVersion::gfx902:
             return 4;
-          case GfxVersion::gfx900:
+        case GfxVersion::gfx900:
             // gfx900 supports large BAR, so it has a larger doorbell
             return 8;
-          default:
+        default:
             fatal("Invalid GPU type\n");
         }
         return 4;
@@ -102,12 +101,14 @@ class GPUComputeDriver final : public EmulatedDriver
     class DriverWakeupEvent : public Event
     {
       public:
-        DriverWakeupEvent(GPUComputeDriver *gpu_driver,
-                          ThreadContext *thrd_cntxt)
-          : driver(gpu_driver), tc(thrd_cntxt) {}
+        DriverWakeupEvent(
+            GPUComputeDriver *gpu_driver, ThreadContext *thrd_cntxt) :
+            driver(gpu_driver), tc(thrd_cntxt)
+        {}
         void process() override;
         const char *description() const override;
         void scheduleWakeup(Tick wakeup_delay);
+
       private:
         GPUComputeDriver *driver;
         ThreadContext *tc;
@@ -142,7 +143,11 @@ class GPUComputeDriver final : public EmulatedDriver
     };
     typedef class EventTableEntry ETEntry;
 
-    GfxVersion getGfxVersion() const { return gfxVersion; }
+    GfxVersion
+    getGfxVersion() const
+    {
+        return gfxVersion;
+    }
 
   private:
     /**
@@ -155,7 +160,7 @@ class GPUComputeDriver final : public EmulatedDriver
     int dGPUPoolID;
     Addr eventPage;
     uint32_t eventSlotIndex;
-    //Event table that keeps track of events. It is indexed with event ID.
+    // Event table that keeps track of events. It is indexed with event ID.
     std::unordered_map<uint32_t, ETEntry> ETable;
 
     /**
@@ -168,9 +173,9 @@ class GPUComputeDriver final : public EmulatedDriver
      */
     enum MtypeFlags
     {
-        SHARED                  = 0,
-        READ_WRITE              = 1,
-        CACHED                  = 2,
+        SHARED = 0,
+        READ_WRITE = 1,
+        CACHED = 2,
         NUM_MTYPE_BITS
     };
 
@@ -185,10 +190,12 @@ class GPUComputeDriver final : public EmulatedDriver
     {
       public:
         EventList() : driver(nullptr), timerEvent(nullptr, nullptr) {}
-        EventList(GPUComputeDriver *gpu_driver, ThreadContext *thrd_cntxt)
-            : driver(gpu_driver), timerEvent(gpu_driver, thrd_cntxt)
-        { }
-        void clearEvents() {
+        EventList(GPUComputeDriver *gpu_driver, ThreadContext *thrd_cntxt) :
+            driver(gpu_driver), timerEvent(gpu_driver, thrd_cntxt)
+        {}
+        void
+        clearEvents()
+        {
             assert(driver);
             for (auto event : signalEvents) {
                 assert(event < driver->eventSlotIndex);
@@ -243,12 +250,11 @@ class GPUComputeDriver final : public EmulatedDriver
      * be able to select which pages to unmap when the user provides us with
      * a handle during the free ioctl.
      */
-    void allocateGpuVma(Request::CacheCoherenceFlags mtype, Addr start,
-                        Addr length);
+    void allocateGpuVma(
+        Request::CacheCoherenceFlags mtype, Addr start, Addr length);
     Addr deallocateGpuVma(Addr start);
 
     void allocateQueue(PortProxy &mem_proxy, Addr ioc_buf_addr);
-
 };
 
 } // namespace gem5

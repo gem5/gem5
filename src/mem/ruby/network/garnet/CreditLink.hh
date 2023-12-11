@@ -27,7 +27,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #ifndef __MEM_RUBY_NETWORK_GARNET_0_CREDITLINK_HH__
 #define __MEM_RUBY_NETWORK_GARNET_0_CREDITLINK_HH__
 
@@ -36,13 +35,10 @@
 
 namespace gem5
 {
-
 namespace ruby
 {
-
 namespace garnet
 {
-
 class CreditLink : public NetworkLink
 {
   public:

@@ -43,39 +43,38 @@
 
 namespace gem5
 {
-
-MemFootprintProbe::MemFootprintProbe(const MemFootprintProbeParams &p)
-    : BaseMemProbe(p),
-      cacheLineSizeLg2(floorLog2(p.system->cacheLineSize())),
-      pageSizeLg2(floorLog2(p.page_size)),
-      totalCacheLinesInMem(p.system->memSize() / p.system->cacheLineSize()),
-      totalPagesInMem(p.system->memSize() / p.page_size),
-      cacheLines(),
-      cacheLinesAll(),
-      pages(),
-      pagesAll(),
-      system(p.system),
-      stats(this)
+MemFootprintProbe::MemFootprintProbe(const MemFootprintProbeParams &p) :
+    BaseMemProbe(p),
+    cacheLineSizeLg2(floorLog2(p.system->cacheLineSize())),
+    pageSizeLg2(floorLog2(p.page_size)),
+    totalCacheLinesInMem(p.system->memSize() / p.system->cacheLineSize()),
+    totalPagesInMem(p.system->memSize() / p.page_size),
+    cacheLines(),
+    cacheLinesAll(),
+    pages(),
+    pagesAll(),
+    system(p.system),
+    stats(this)
 {
     fatal_if(!isPowerOf2(system->cacheLineSize()),
-             "MemFootprintProbe expects cache line size is power of 2.");
+        "MemFootprintProbe expects cache line size is power of 2.");
     fatal_if(!isPowerOf2(p.page_size),
-             "MemFootprintProbe expects page size parameter is power of 2");
+        "MemFootprintProbe expects page size parameter is power of 2");
 }
 
 MemFootprintProbe::MemFootprintProbeStats::MemFootprintProbeStats(
-    MemFootprintProbe *parent)
-    : statistics::Group(parent),
-      ADD_STAT(cacheLine, statistics::units::Count::get(),
-               "Memory footprint at cache line granularity"),
-      ADD_STAT(cacheLineTotal, statistics::units::Count::get(),
-               "Total memory footprint at cache line granularity since "
-               "simulation begin"),
-      ADD_STAT(page, statistics::units::Count::get(),
-               "Memory footprint at page granularity"),
-      ADD_STAT(pageTotal, statistics::units::Count::get(),
-               "Total memory footprint at page granularity since simulation "
-               "begin")
+    MemFootprintProbe *parent) :
+    statistics::Group(parent),
+    ADD_STAT(cacheLine, statistics::units::Count::get(),
+        "Memory footprint at cache line granularity"),
+    ADD_STAT(cacheLineTotal, statistics::units::Count::get(),
+        "Total memory footprint at cache line granularity since "
+        "simulation begin"),
+    ADD_STAT(page, statistics::units::Count::get(),
+        "Memory footprint at page granularity"),
+    ADD_STAT(pageTotal, statistics::units::Count::get(),
+        "Total memory footprint at page granularity since simulation "
+        "begin")
 {
     using namespace statistics;
     // clang-format off

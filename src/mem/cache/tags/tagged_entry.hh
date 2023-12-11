@@ -37,7 +37,6 @@
 
 namespace gem5
 {
-
 /**
  * A tagged entry is an entry containing a tag. Each tag is accompanied by a
  * secure bit, which informs whether it belongs to a secure address space.
@@ -54,21 +53,33 @@ class TaggedEntry : public ReplaceableEntry
      *
      * @return True if the entry is valid.
      */
-    virtual bool isValid() const { return _valid; }
+    virtual bool
+    isValid() const
+    {
+        return _valid;
+    }
 
     /**
      * Check if this block holds data from the secure memory space.
      *
      * @return True if the block holds data from the secure memory space.
      */
-    bool isSecure() const { return _secure; }
+    bool
+    isSecure() const
+    {
+        return _secure;
+    }
 
     /**
      * Get tag associated to this block.
      *
      * @return The tag value.
      */
-    virtual Addr getTag() const { return _tag; }
+    virtual Addr
+    getTag() const
+    {
+        return _tag;
+    }
 
     /**
      * Checks if the given tag information corresponds to this entry's.
@@ -100,7 +111,8 @@ class TaggedEntry : public ReplaceableEntry
     }
 
     /** Invalidate the block. Its contents are no longer valid. */
-    virtual void invalidate()
+    virtual void
+    invalidate()
     {
         _valid = false;
         setTag(MaxAddr);
@@ -120,10 +132,18 @@ class TaggedEntry : public ReplaceableEntry
      *
      * @param tag The tag value.
      */
-    virtual void setTag(Addr tag) { _tag = tag; }
+    virtual void
+    setTag(Addr tag)
+    {
+        _tag = tag;
+    }
 
     /** Set secure bit. */
-    virtual void setSecure() { _secure = true; }
+    virtual void
+    setSecure()
+    {
+        _secure = true;
+    }
 
     /** Set valid bit. The block must be invalid beforehand. */
     virtual void
@@ -151,9 +171,13 @@ class TaggedEntry : public ReplaceableEntry
     Addr _tag;
 
     /** Clear secure bit. Should be only used by the invalidation function. */
-    void clearSecure() { _secure = false; }
+    void
+    clearSecure()
+    {
+        _secure = false;
+    }
 };
 
 } // namespace gem5
 
-#endif//__CACHE_TAGGED_ENTRY_HH__
+#endif //__CACHE_TAGGED_ENTRY_HH__

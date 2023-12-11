@@ -47,10 +47,8 @@
 
 namespace gem5
 {
-
 namespace o3
 {
-
 /**
  * Derived ThreadContext class for use with the O3CPU.  It
  * provides the interface for any external objects to access a
@@ -67,7 +65,7 @@ namespace o3
 class ThreadContext : public gem5::ThreadContext
 {
   public:
-   /** Pointer to the CPU. */
+    /** Pointer to the CPU. */
     CPU *cpu;
 
     bool
@@ -101,9 +99,17 @@ class ThreadContext : public gem5::ThreadContext
     ThreadState *thread;
 
     /** Returns a pointer to the MMU. */
-    BaseMMU *getMMUPtr() override { return cpu->mmu; }
+    BaseMMU *
+    getMMUPtr() override
+    {
+        return cpu->mmu;
+    }
 
-    CheckerCPU *getCheckerCpuPtr() override { return NULL; }
+    CheckerCPU *
+    getCheckerCpuPtr() override
+    {
+        return NULL;
+    }
 
     BaseISA *
     getIsaPtr() const override
@@ -118,32 +124,76 @@ class ThreadContext : public gem5::ThreadContext
     }
 
     /** Returns a pointer to this CPU. */
-    BaseCPU *getCpuPtr() override { return cpu; }
+    BaseCPU *
+    getCpuPtr() override
+    {
+        return cpu;
+    }
 
     /** Reads this CPU's ID. */
-    int cpuId() const override { return cpu->cpuId(); }
+    int
+    cpuId() const override
+    {
+        return cpu->cpuId();
+    }
 
     /** Reads this CPU's Socket ID. */
-    uint32_t socketId() const override { return cpu->socketId(); }
+    uint32_t
+    socketId() const override
+    {
+        return cpu->socketId();
+    }
 
-    ContextID contextId() const override { return thread->contextId(); }
+    ContextID
+    contextId() const override
+    {
+        return thread->contextId();
+    }
 
-    void setContextId(ContextID id) override { thread->setContextId(id); }
+    void
+    setContextId(ContextID id) override
+    {
+        thread->setContextId(id);
+    }
 
     /** Returns this thread's ID number. */
-    int threadId() const override { return thread->threadId(); }
-    void setThreadId(int id) override { return thread->setThreadId(id); }
+    int
+    threadId() const override
+    {
+        return thread->threadId();
+    }
+    void
+    setThreadId(int id) override
+    {
+        return thread->setThreadId(id);
+    }
 
     /** Returns a pointer to the system. */
-    System *getSystemPtr() override { return cpu->system; }
+    System *
+    getSystemPtr() override
+    {
+        return cpu->system;
+    }
 
     /** Returns a pointer to this thread's process. */
-    Process *getProcessPtr() override { return thread->getProcessPtr(); }
+    Process *
+    getProcessPtr() override
+    {
+        return thread->getProcessPtr();
+    }
 
-    void setProcessPtr(Process *p) override { thread->setProcessPtr(p); }
+    void
+    setProcessPtr(Process *p) override
+    {
+        thread->setProcessPtr(p);
+    }
 
     /** Returns this thread's status. */
-    Status status() const override { return thread->status(); }
+    Status
+    status() const override
+    {
+        return thread->status();
+    }
 
     /** Sets this thread's status. */
     void
@@ -244,9 +294,9 @@ class ThreadContext : public gem5::ThreadContext
     void setReg(const RegId &reg, const void *val) override;
 
     // hardware transactional memory
-    void htmAbortTransaction(uint64_t htm_uid,
-                             HtmFailureFaultCause cause) override;
-    BaseHTMCheckpointPtr& getHtmCheckpointPtr() override;
+    void htmAbortTransaction(
+        uint64_t htm_uid, HtmFailureFaultCause cause) override;
+    BaseHTMCheckpointPtr &getHtmCheckpointPtr() override;
     void setHtmCheckpointPtr(BaseHTMCheckpointPtr new_cpt) override;
 };
 

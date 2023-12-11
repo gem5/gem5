@@ -45,16 +45,15 @@
 
 namespace gem5
 {
-
 namespace branch_prediction
 {
-
 class MultiperspectivePerceptron64KB : public MultiperspectivePerceptron
 {
     void createSpecs() override;
-    public:
+
+  public:
     MultiperspectivePerceptron64KB(
-            const MultiperspectivePerceptron64KBParams &p);
+        const MultiperspectivePerceptron64KBParams &p);
 };
 
 } // namespace branch_prediction

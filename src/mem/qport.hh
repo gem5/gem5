@@ -49,7 +49,6 @@
 
 namespace gem5
 {
-
 /**
  * A queued port is a port that has an infinite queue for outgoing
  * packets and thus decouples the module that wants to send
@@ -60,16 +59,17 @@ namespace gem5
  */
 class QueuedResponsePort : public ResponsePort
 {
-
   protected:
-
     /** Packet queue used to store outgoing responses. */
     RespPacketQueue &respQueue;
 
-    void recvRespRetry() { respQueue.retry(); }
+    void
+    recvRespRetry()
+    {
+        respQueue.retry();
+    }
 
   public:
-
     /**
      * Create a QueuedPort with a given name, owner, and a supplied
      * implementation of a packet queue. The external definition of
@@ -77,13 +77,12 @@ class QueuedResponsePort : public ResponsePort
      * behaviuor in a subclass, and provide the latter to the
      * QueuePort constructor.
      */
-    QueuedResponsePort(const std::string& name,
-                       RespPacketQueue &resp_queue,
-                       PortID id = InvalidPortID) :
+    QueuedResponsePort(const std::string &name, RespPacketQueue &resp_queue,
+        PortID id = InvalidPortID) :
         ResponsePort(name, id), respQueue(resp_queue)
-    { }
+    {}
 
-    virtual ~QueuedResponsePort() { }
+    virtual ~QueuedResponsePort() {}
 
     /**
      * Schedule the sending of a timing response.
@@ -91,13 +90,19 @@ class QueuedResponsePort : public ResponsePort
      * @param pkt Packet to send
      * @param when Absolute time (in ticks) to send packet
      */
-    void schedTimingResp(PacketPtr pkt, Tick when)
-    { respQueue.schedSendTiming(pkt, when); }
+    void
+    schedTimingResp(PacketPtr pkt, Tick when)
+    {
+        respQueue.schedSendTiming(pkt, when);
+    }
 
     /** Check the list of buffered packets against the supplied
      * functional request. */
-    bool trySatisfyFunctional(PacketPtr pkt)
-    { return respQueue.trySatisfyFunctional(pkt); }
+    bool
+    trySatisfyFunctional(PacketPtr pkt)
+    {
+        return respQueue.trySatisfyFunctional(pkt);
+    }
 };
 
 /**
@@ -109,21 +114,26 @@ class QueuedResponsePort : public ResponsePort
  */
 class QueuedRequestPort : public RequestPort
 {
-
   protected:
-
     /** Packet queue used to store outgoing requests. */
     ReqPacketQueue &reqQueue;
 
     /** Packet queue used to store outgoing snoop responses. */
     SnoopRespPacketQueue &snoopRespQueue;
 
-    void recvReqRetry() { reqQueue.retry(); }
+    void
+    recvReqRetry()
+    {
+        reqQueue.retry();
+    }
 
-    void recvRetrySnoopResp() { snoopRespQueue.retry(); }
+    void
+    recvRetrySnoopResp()
+    {
+        snoopRespQueue.retry();
+    }
 
   public:
-
     /**
      * Create a QueuedPort with a given name, and a supplied
      * implementation of two packet queues. The external definition of
@@ -131,15 +141,14 @@ class QueuedRequestPort : public RequestPort
      * behaviuor in a subclass, and provide the latter to the
      * QueuePort constructor.
      */
-    QueuedRequestPort(const std::string& name,
-                     ReqPacketQueue &req_queue,
-                     SnoopRespPacketQueue &snoop_resp_queue,
-                     PortID id = InvalidPortID) :
-        RequestPort(name, id), reqQueue(req_queue),
+    QueuedRequestPort(const std::string &name, ReqPacketQueue &req_queue,
+        SnoopRespPacketQueue &snoop_resp_queue, PortID id = InvalidPortID) :
+        RequestPort(name, id),
+        reqQueue(req_queue),
         snoopRespQueue(snoop_resp_queue)
-    { }
+    {}
 
-    virtual ~QueuedRequestPort() { }
+    virtual ~QueuedRequestPort() {}
 
     /**
      * Schedule the sending of a timing request.
@@ -147,8 +156,11 @@ class QueuedRequestPort : public RequestPort
      * @param pkt Packet to send
      * @param when Absolute time (in ticks) to send packet
      */
-    void schedTimingReq(PacketPtr pkt, Tick when)
-    { reqQueue.schedSendTiming(pkt, when); }
+    void
+    schedTimingReq(PacketPtr pkt, Tick when)
+    {
+        reqQueue.schedSendTiming(pkt, when);
+    }
 
     /**
      * Schedule the sending of a timing snoop response.
@@ -156,15 +168,19 @@ class QueuedRequestPort : public RequestPort
      * @param pkt Packet to send
      * @param when Absolute time (in ticks) to send packet
      */
-    void schedTimingSnoopResp(PacketPtr pkt, Tick when)
-    { snoopRespQueue.schedSendTiming(pkt, when); }
+    void
+    schedTimingSnoopResp(PacketPtr pkt, Tick when)
+    {
+        snoopRespQueue.schedSendTiming(pkt, when);
+    }
 
     /** Check the list of buffered packets against the supplied
      * functional request. */
-    bool trySatisfyFunctional(PacketPtr pkt)
+    bool
+    trySatisfyFunctional(PacketPtr pkt)
     {
         return reqQueue.trySatisfyFunctional(pkt) ||
-            snoopRespQueue.trySatisfyFunctional(pkt);
+               snoopRespQueue.trySatisfyFunctional(pkt);
     }
 };
 

@@ -45,10 +45,8 @@
 
 namespace gem5
 {
-
 namespace probing
 {
-
 /**
  * A struct to hold on to the essential fields from a packet, so that
  * the packet and underlying request can be safely passed on, and
@@ -63,13 +61,14 @@ struct PacketInfo
     Addr pc;
     RequestorID id;
 
-    explicit PacketInfo(const PacketPtr& pkt) :
+    explicit PacketInfo(const PacketPtr &pkt) :
         cmd(pkt->cmd),
         addr(pkt->getAddr()),
         size(pkt->getSize()),
         flags(pkt->req->getFlags()),
         pc(pkt->req->hasPC() ? pkt->req->getPC() : 0),
-        id(pkt->req->requestorId())  { }
+        id(pkt->req->requestorId())
+    {}
 };
 
 /**

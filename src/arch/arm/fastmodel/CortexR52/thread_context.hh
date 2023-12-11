@@ -32,10 +32,8 @@
 
 namespace gem5
 {
-
 namespace fastmodel
 {
-
 // This ThreadContext class translates accesses to state using gem5's native
 // to the Iris API. This includes extracting and translating register indices.
 class CortexR52TC : public Iris::ThreadContext
@@ -47,10 +45,9 @@ class CortexR52TC : public Iris::ThreadContext
     static std::vector<iris::MemorySpaceId> bpSpaceIds;
 
   public:
-    CortexR52TC(gem5::BaseCPU *cpu, int id, System *system,
-                gem5::BaseMMU *mmu, gem5::BaseISA *isa,
-                iris::IrisConnectionInterface *iris_if,
-                const std::string &iris_path);
+    CortexR52TC(gem5::BaseCPU *cpu, int id, System *system, gem5::BaseMMU *mmu,
+        gem5::BaseISA *isa, iris::IrisConnectionInterface *iris_if,
+        const std::string &iris_path);
 
     bool translateAddress(Addr &paddr, Addr vaddr) override;
 
@@ -78,7 +75,7 @@ class CortexR52TC : public Iris::ThreadContext
     readMiscRegNoEffect(RegIndex idx) const override
     {
         panic_if(miscRegIdxNameMap.find(idx) == miscRegIdxNameMap.end(),
-                "No mapping for index %#x.", idx);
+            "No mapping for index %#x.", idx);
         return Iris::ThreadContext::readMiscRegNoEffect(idx);
     }
 
@@ -86,7 +83,7 @@ class CortexR52TC : public Iris::ThreadContext
     setMiscRegNoEffect(RegIndex idx, const RegVal val) override
     {
         panic_if(miscRegIdxNameMap.find(idx) == miscRegIdxNameMap.end(),
-                "No mapping for index %#x.", idx);
+            "No mapping for index %#x.", idx);
         Iris::ThreadContext::setMiscRegNoEffect(idx, val);
     }
 

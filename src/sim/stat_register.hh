@@ -46,10 +46,8 @@
 
 namespace gem5
 {
-
 namespace statistics
 {
-
 /** Register py_... functions as the statistics handlers */
 void registerPythonStatsHandlers();
 

@@ -54,19 +54,17 @@ namespace py = pybind11;
 
 namespace gem5
 {
-
 pybind11::module_ *EmbeddedPyBind::mod = nullptr;
 
-EmbeddedPyBind::EmbeddedPyBind(const char *_name,
-                               void (*init_func)(py::module_ &),
-                               const char *_base) :
+EmbeddedPyBind::EmbeddedPyBind(
+    const char *_name, void (*init_func)(py::module_ &), const char *_base) :
     initFunc(init_func), name(_name), base(_base)
 {
     init();
 }
 
-EmbeddedPyBind::EmbeddedPyBind(const char *_name,
-                               void (*init_func)(py::module_ &)) :
+EmbeddedPyBind::EmbeddedPyBind(
+    const char *_name, void (*init_func)(py::module_ &)) :
     EmbeddedPyBind(_name, init_func, "")
 {}
 
@@ -107,7 +105,7 @@ EmbeddedPyBind::initPending(const std::string &finished)
         range.first, range.second);
     pending.erase(range.first, range.second);
 
-    for (auto &entry: todo)
+    for (auto &entry : todo)
         entry.second->init();
 }
 

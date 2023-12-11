@@ -36,7 +36,6 @@
 
 namespace gem5
 {
-
 /**
  * LupioIPI:
  * An inter-processor interrupt virtual device
