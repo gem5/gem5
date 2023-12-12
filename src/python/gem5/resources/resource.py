@@ -1098,7 +1098,6 @@ def obtain_resource(
             for key in resource_json["additional_params"].keys():
                 assert isinstance(key, str)
                 value = resource_json["additional_params"][key]
-                assert isinstance(value, str)
                 params[key] = value
         resource_json["parameters"] = params
     # Once we know what AbstractResource subclass we are using, we create it.
