@@ -42,6 +42,41 @@ namespace gem5
 
 namespace VegaISA
 {
+    // One source operand
+    class Inst_VOP3P__1OP : public Inst_VOP3P
+    {
+      public:
+        Inst_VOP3P__1OP(InFmt_VOP3P *iFmt, const std::string& name)
+            : Inst_VOP3P(iFmt, name)
+        {
+            setFlag(ALU);
+        }
+
+        int
+        getNumOperands() override
+        {
+            return numDstRegOperands() + numSrcRegOperands();
+        } // getNumOperands
+
+        int numDstRegOperands() override { return 1; }
+        int numSrcRegOperands() override { return 1; }
+
+        int
+        getOperandSize(int opIdx) override
+        {
+            switch (opIdx) {
+              case 0: // src
+                return 4;
+              case 1: // dst
+                return 4;
+              default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+            }
+        }
+
+    };
+
     // Two source operands with two 16-bit values in a dword
     class Inst_VOP3P__2OP_X16 : public Inst_VOP3P
     {
@@ -306,6 +341,96 @@ namespace VegaISA
       public:
         Inst_VOP3P__V_PK_MAX_F16(InFmt_VOP3P *iFmt)
             : Inst_VOP3P__2OP_X16(iFmt, "v_pk_max_f16")
+        { }
+
+        void execute(GPUDynInstPtr gpuDynInst) override;
+    };
+
+    class Inst_VOP3P__V_DOT2_F32_F16 : public Inst_VOP3P__3OP_X16
+    {
+      public:
+        Inst_VOP3P__V_DOT2_F32_F16(InFmt_VOP3P *iFmt)
+            : Inst_VOP3P__3OP_X16(iFmt, "v_dot2_f32_f16")
+        { }
+
+        void execute(GPUDynInstPtr gpuDynInst) override;
+    };
+
+    class Inst_VOP3P__V_DOT2_I32_I16 : public Inst_VOP3P__3OP_X16
+    {
+      public:
+        Inst_VOP3P__V_DOT2_I32_I16(InFmt_VOP3P *iFmt)
+            : Inst_VOP3P__3OP_X16(iFmt, "v_dot2_i32_i16")
+        { }
+
+        void execute(GPUDynInstPtr gpuDynInst) override;
+    };
+
+    class Inst_VOP3P__V_DOT2_U32_U16 : public Inst_VOP3P__3OP_X16
+    {
+      public:
+        Inst_VOP3P__V_DOT2_U32_U16(InFmt_VOP3P *iFmt)
+            : Inst_VOP3P__3OP_X16(iFmt, "v_dot2_u32_u16")
+        { }
+
+        void execute(GPUDynInstPtr gpuDynInst) override;
+    };
+
+    class Inst_VOP3P__V_DOT4_I32_I8 : public Inst_VOP3P__3OP_X16
+    {
+      public:
+        Inst_VOP3P__V_DOT4_I32_I8(InFmt_VOP3P *iFmt)
+            : Inst_VOP3P__3OP_X16(iFmt, "v_dot4_i32_i8")
+        { }
+
+        void execute(GPUDynInstPtr gpuDynInst) override;
+    };
+
+    class Inst_VOP3P__V_DOT4_U32_U8 : public Inst_VOP3P__3OP_X16
+    {
+      public:
+        Inst_VOP3P__V_DOT4_U32_U8(InFmt_VOP3P *iFmt)
+            : Inst_VOP3P__3OP_X16(iFmt, "v_dot4_u32_u8")
+        { }
+
+        void execute(GPUDynInstPtr gpuDynInst) override;
+    };
+
+    class Inst_VOP3P__V_DOT8_I32_I4 : public Inst_VOP3P__3OP_X16
+    {
+      public:
+        Inst_VOP3P__V_DOT8_I32_I4(InFmt_VOP3P *iFmt)
+            : Inst_VOP3P__3OP_X16(iFmt, "v_dot8_i32_i4")
+        { }
+
+        void execute(GPUDynInstPtr gpuDynInst) override;
+    };
+
+    class Inst_VOP3P__V_DOT8_U32_U4 : public Inst_VOP3P__3OP_X16
+    {
+      public:
+        Inst_VOP3P__V_DOT8_U32_U4(InFmt_VOP3P *iFmt)
+            : Inst_VOP3P__3OP_X16(iFmt, "v_dot8_u32_u4")
+        { }
+
+        void execute(GPUDynInstPtr gpuDynInst) override;
+    };
+
+    class Inst_VOP3P__V_ACCVGPR_READ : public Inst_VOP3P__1OP
+    {
+      public:
+        Inst_VOP3P__V_ACCVGPR_READ(InFmt_VOP3P *iFmt)
+            : Inst_VOP3P__1OP(iFmt, "v_accvgpr_read")
+        { }
+
+        void execute(GPUDynInstPtr gpuDynInst) override;
+    };
+
+    class Inst_VOP3P__V_ACCVGPR_WRITE : public Inst_VOP3P__1OP
+    {
+      public:
+        Inst_VOP3P__V_ACCVGPR_WRITE(InFmt_VOP3P *iFmt)
+            : Inst_VOP3P__1OP(iFmt, "v_accvgpr_write")
         { }
 
         void execute(GPUDynInstPtr gpuDynInst) override;

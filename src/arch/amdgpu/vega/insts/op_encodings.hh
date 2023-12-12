@@ -588,6 +588,56 @@ namespace VegaISA
             D.write();
         }
 
+        void
+        dotHelper(GPUDynInstPtr gpuDynInst,
+                  uint32_t (*fOpImpl)(uint32_t, uint32_t, uint32_t, bool))
+        {
+            Wavefront *wf = gpuDynInst->wavefront();
+            ConstVecOperandU32 S0(gpuDynInst, extData.SRC0);
+            ConstVecOperandU32 S1(gpuDynInst, extData.SRC1);
+            ConstVecOperandU32 S2(gpuDynInst, extData.SRC2);
+            VecOperandU32 D(gpuDynInst, instData.VDST);
+
+            S0.readSrc();
+            S1.readSrc();
+            S2.readSrc();
+
+            // OPSEL[2] and OPSEL_HI2 are unused. Craft two dwords where:
+            // dword1[15:0]  is upper/lower 16b of src0 based on opsel[0]
+            // dword1[31:15] is upper/lower 16b of src0 based on opsel_hi[0]
+            // dword2[15:0]  is upper/lower 16b of src1 based on opsel[1]
+            // dword2[31:15] is upper/lower 16b of src1 based on opsel_hi[1]
+            int opLo = instData.OPSEL;
+            int opHi = extData.OPSEL_HI;
+            int negLo = extData.NEG;
+            int negHi = instData.NEG_HI;
+            bool clamp = instData.CLMP;
+
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (wf->execMask(lane)) {
+                    uint32_t dword1l =
+                        word<uint16_t>(S0[lane], opLo, negLo, 0);
+                    uint32_t dword1h =
+                        word<uint16_t>(S0[lane], opHi, negHi, 0);
+                    uint32_t dword2l =
+                        word<uint16_t>(S1[lane], opLo, negLo, 1);
+                    uint32_t dword2h =
+                        word<uint16_t>(S1[lane], opHi, negHi, 1);
+
+                    uint32_t dword1 = (dword1h << 16) | dword1l;
+                    uint32_t dword2 = (dword2h << 16) | dword2l;
+
+                    // Take in two uint32_t dwords and one src2 dword. The
+                    // function will need to call bits to break up to the
+                    // correct size and then reinterpret cast to the correct
+                    // value.
+                    D[lane] = fOpImpl(dword1, dword2, S2[lane], clamp);
+                }
+            }
+
+            D.write();
+        }
+
       private:
         bool hasSecondDword(InFmt_VOP3P *);
 

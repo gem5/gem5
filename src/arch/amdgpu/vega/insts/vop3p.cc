@@ -42,6 +42,38 @@ namespace VegaISA
 using half = uint16_t;
 
 // Helper functions
+template<int N>
+int32_t
+dotClampI(int32_t value, bool clamp)
+{
+    // Only valid for N < 32
+    static_assert(N < 32);
+
+    if (!clamp) {
+        return static_cast<int32_t>(value);
+    }
+
+    int32_t min = -(1 << (N - 1));
+    int32_t max = (1 << (N - 1)) - 1;
+    return std::clamp<int32_t>(value, min, max);
+}
+
+template<int N>
+uint32_t
+dotClampU(uint32_t value, bool clamp)
+{
+    // Only valid for N < 32
+    static_assert(N < 32);
+
+    if (!clamp) {
+        return static_cast<int32_t>(value);
+    }
+
+    uint32_t min = 0;
+    uint32_t max = (1 << N) - 1;
+    return std::clamp<int32_t>(value, min, max);
+}
+
 int16_t
 clampI16(int32_t value, bool clamp)
 {
@@ -81,6 +113,16 @@ clampF16(uint16_t value, bool clamp)
     // If value > one, set to one, then if value < zero set to zero.
     uint16_t imm = fplibMin(value, one, fpscr1);
     return fplibMax(imm, zero, fpscr2);
+}
+
+float
+clampF32(float value, bool clamp)
+{
+    if (!clamp) {
+        return value;
+    }
+
+    return std::clamp(value, 0.0f, 1.0f);
 }
 
 
@@ -296,6 +338,297 @@ void Inst_VOP3P__V_PK_MAX_F16::execute(GPUDynInstPtr gpuDynInst)
     };
 
     vop3pHelper<half>(gpuDynInst, opImpl);
+}
+
+void Inst_VOP3P__V_DOT2_F32_F16::execute(GPUDynInstPtr gpuDynInst)
+{
+    auto opImpl =
+        [](uint32_t S0r, uint32_t S1r, uint32_t S2r, bool clamp) -> uint32_t
+    {
+        constexpr unsigned INBITS = 16;
+
+        constexpr unsigned elems = 32 / INBITS;
+        half S0[elems];
+        half S1[elems];
+
+        for (int i = 0; i < elems; ++i) {
+            S0[i] = bits(S0r, i*INBITS+INBITS-1, i*INBITS);
+            S1[i] = bits(S1r, i*INBITS+INBITS-1, i*INBITS);
+        }
+
+        float S2 = *reinterpret_cast<float*>(&S2r);
+
+        // Compute components individually to prevent overflow across packing
+        half C[elems];
+        float Csum = 0.0f;
+
+        for (int i = 0; i < elems; ++i) {
+            ArmISA::FPSCR fpscr;
+            C[i] = fplibMul(S0[i], S1[i], fpscr);
+            uint32_t conv =
+                ArmISA::fplibConvert<uint16_t, uint32_t>(
+                        C[i], ArmISA::FPRounding_TIEEVEN, fpscr);
+            Csum += clampF32(*reinterpret_cast<float*>(&conv), clamp);
+        }
+
+        Csum += S2;
+        uint32_t rv = *reinterpret_cast<uint32_t*>(&Csum);
+
+        return rv;
+    };
+
+    dotHelper(gpuDynInst, opImpl);
+}
+
+void Inst_VOP3P__V_DOT2_I32_I16::execute(GPUDynInstPtr gpuDynInst)
+{
+    auto opImpl =
+        [](uint32_t S0r, uint32_t S1r, uint32_t S2r, bool clamp) -> uint32_t
+    {
+        constexpr unsigned INBITS = 16;
+
+        constexpr unsigned elems = 32 / INBITS;
+        uint32_t S0[elems];
+        uint32_t S1[elems];
+
+        for (int i = 0; i < elems; ++i) {
+            S0[i] = bits(S0r, i*INBITS+INBITS-1, i*INBITS);
+            S1[i] = bits(S1r, i*INBITS+INBITS-1, i*INBITS);
+        }
+
+        int32_t S2 = *reinterpret_cast<int32_t*>(&S2r);
+
+        // Compute components individually to prevent overflow across packing
+        int32_t C[elems];
+        int32_t Csum = 0;
+
+        for (int i = 0; i < elems; ++i) {
+            C[i] = sext<INBITS>(S0[i]) * sext<INBITS>(S1[i]);
+            C[i] = sext<INBITS>(dotClampI<INBITS>(C[i], clamp) & mask(INBITS));
+            Csum += C[i];
+        }
+
+        Csum += S2;
+        uint32_t rv = *reinterpret_cast<uint32_t*>(&Csum);
+
+        return rv;
+    };
+
+    dotHelper(gpuDynInst, opImpl);
+}
+
+void Inst_VOP3P__V_DOT2_U32_U16::execute(GPUDynInstPtr gpuDynInst)
+{
+    auto opImpl =
+        [](uint32_t S0r, uint32_t S1r, uint32_t S2, bool clamp) -> uint32_t
+    {
+        constexpr unsigned INBITS = 16;
+
+        constexpr unsigned elems = 32 / INBITS;
+        uint32_t S0[elems];
+        uint32_t S1[elems];
+
+        for (int i = 0; i < elems; ++i) {
+            S0[i] = bits(S0r, i*INBITS+INBITS-1, i*INBITS);
+            S1[i] = bits(S1r, i*INBITS+INBITS-1, i*INBITS);
+        }
+
+        // Compute components individually to prevent overflow across packing
+        uint32_t C[elems];
+        uint32_t Csum = 0;
+
+        for (int i = 0; i < elems; ++i) {
+            C[i] = S0[i] * S1[i];
+            C[i] = dotClampU<INBITS>(C[i], clamp);
+            Csum += C[i];
+        }
+
+        Csum += S2;
+
+        return Csum;
+    };
+
+    dotHelper(gpuDynInst, opImpl);
+}
+
+void Inst_VOP3P__V_DOT4_I32_I8::execute(GPUDynInstPtr gpuDynInst)
+{
+    auto opImpl =
+        [](uint32_t S0r, uint32_t S1r, uint32_t S2r, bool clamp) -> uint32_t
+    {
+        constexpr unsigned INBITS = 8;
+
+        constexpr unsigned elems = 32 / INBITS;
+        uint32_t S0[elems];
+        uint32_t S1[elems];
+
+        for (int i = 0; i < elems; ++i) {
+            S0[i] = bits(S0r, i*INBITS+INBITS-1, i*INBITS);
+            S1[i] = bits(S1r, i*INBITS+INBITS-1, i*INBITS);
+        }
+
+        int32_t S2 = *reinterpret_cast<int32_t*>(&S2r);
+
+        // Compute components individually to prevent overflow across packing
+        int32_t C[elems];
+        int32_t Csum = 0;
+
+        for (int i = 0; i < elems; ++i) {
+            C[i] = sext<INBITS>(S0[i]) * sext<INBITS>(S1[i]);
+            C[i] = sext<INBITS>(dotClampI<INBITS>(C[i], clamp) & mask(INBITS));
+            Csum += C[i];
+        }
+
+        Csum += S2;
+        uint32_t rv = *reinterpret_cast<uint32_t*>(&Csum);
+
+        return rv;
+    };
+
+    dotHelper(gpuDynInst, opImpl);
+}
+
+void Inst_VOP3P__V_DOT4_U32_U8::execute(GPUDynInstPtr gpuDynInst)
+{
+    auto opImpl =
+        [](uint32_t S0r, uint32_t S1r, uint32_t S2, bool clamp) -> uint32_t
+    {
+        constexpr unsigned INBITS = 8;
+
+        constexpr unsigned elems = 32 / INBITS;
+        uint32_t S0[elems];
+        uint32_t S1[elems];
+
+        for (int i = 0; i < elems; ++i) {
+            S0[i] = bits(S0r, i*INBITS+INBITS-1, i*INBITS);
+            S1[i] = bits(S1r, i*INBITS+INBITS-1, i*INBITS);
+        }
+
+        // Compute components individually to prevent overflow across packing
+        uint32_t C[elems];
+        uint32_t Csum = 0;
+
+        for (int i = 0; i < elems; ++i) {
+            C[i] = S0[i] * S1[i];
+            C[i] = dotClampU<INBITS>(C[i], clamp);
+            Csum += C[i];
+        }
+
+        Csum += S2;
+
+        return Csum;
+    };
+
+    dotHelper(gpuDynInst, opImpl);
+}
+
+void Inst_VOP3P__V_DOT8_I32_I4::execute(GPUDynInstPtr gpuDynInst)
+{
+    auto opImpl =
+        [](uint32_t S0r, uint32_t S1r, uint32_t S2r, bool clamp) -> uint32_t
+    {
+        constexpr unsigned INBITS = 4;
+
+        constexpr unsigned elems = 32 / INBITS;
+        uint32_t S0[elems];
+        uint32_t S1[elems];
+
+        for (int i = 0; i < elems; ++i) {
+            S0[i] = bits(S0r, i*INBITS+INBITS-1, i*INBITS);
+            S1[i] = bits(S1r, i*INBITS+INBITS-1, i*INBITS);
+        }
+
+        int32_t S2 = *reinterpret_cast<int32_t*>(&S2r);
+
+        // Compute components individually to prevent overflow across packing
+        int32_t C[elems];
+        int32_t Csum = 0;
+
+        for (int i = 0; i < elems; ++i) {
+            C[i] = sext<INBITS>(S0[i]) * sext<INBITS>(S1[i]);
+            C[i] = sext<INBITS>(dotClampI<INBITS>(C[i], clamp) & mask(INBITS));
+            Csum += C[i];
+        }
+
+        Csum += S2;
+        uint32_t rv = *reinterpret_cast<uint32_t*>(&Csum);
+
+        return rv;
+    };
+
+    dotHelper(gpuDynInst, opImpl);
+}
+
+void Inst_VOP3P__V_DOT8_U32_U4::execute(GPUDynInstPtr gpuDynInst)
+{
+    auto opImpl =
+        [](uint32_t S0r, uint32_t S1r, uint32_t S2, bool clamp) -> uint32_t
+    {
+        constexpr unsigned INBITS = 4;
+
+        constexpr unsigned elems = 32 / INBITS;
+        uint32_t S0[elems];
+        uint32_t S1[elems];
+
+        for (int i = 0; i < elems; ++i) {
+            S0[i] = bits(S0r, i*INBITS+INBITS-1, i*INBITS);
+            S1[i] = bits(S1r, i*INBITS+INBITS-1, i*INBITS);
+        }
+
+        // Compute components individually to prevent overflow across packing
+        uint32_t C[elems];
+        uint32_t Csum = 0;
+
+        for (int i = 0; i < elems; ++i) {
+            C[i] = S0[i] * S1[i];
+            C[i] = dotClampU<INBITS>(C[i], clamp);
+            Csum += C[i];
+        }
+
+        Csum += S2;
+
+        return Csum;
+    };
+
+    dotHelper(gpuDynInst, opImpl);
+}
+
+void Inst_VOP3P__V_ACCVGPR_READ::execute(GPUDynInstPtr gpuDynInst)
+{
+    // The Acc register file is not supported in gem5 and has been removed
+    // in MI200. Therefore this instruction becomes a mov.
+    Wavefront *wf = gpuDynInst->wavefront();
+    ConstVecOperandU32 src(gpuDynInst, extData.SRC0);
+    VecOperandU32 vdst(gpuDynInst, instData.VDST);
+
+    src.readSrc();
+
+    for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+        if (wf->execMask(lane)) {
+            vdst[lane] = src[lane];
+        }
+    }
+
+    vdst.write();
+}
+
+void Inst_VOP3P__V_ACCVGPR_WRITE::execute(GPUDynInstPtr gpuDynInst)
+{
+    // The Acc register file is not supported in gem5 and has been removed
+    // in MI200. Therefore this instruction becomes a mov.
+    Wavefront *wf = gpuDynInst->wavefront();
+    ConstVecOperandU32 src(gpuDynInst, extData.SRC0);
+    VecOperandU32 vdst(gpuDynInst, instData.VDST);
+
+    src.readSrc();
+
+    for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+        if (wf->execMask(lane)) {
+            vdst[lane] = src[lane];
+        }
+    }
+
+    vdst.write();
 }
 
 } // namespace VegaISA
