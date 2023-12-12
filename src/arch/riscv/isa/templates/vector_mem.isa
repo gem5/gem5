@@ -1586,7 +1586,7 @@ Fault
     }
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
-    %(op_src_decl)s;
+    %(op_decl)s;
     %(op_rd)s;
     %(set_vlenb)s;
     %(ea_code)s;
