@@ -189,7 +189,8 @@ def download_resources(resources: List[Dict], output: TextIO):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Get resources from the database"
+        description="Download all the remote gem5 Resources data and files "
+        "to be cached and used locally."
     )
 
     parser.add_argument(
@@ -197,12 +198,12 @@ if __name__ == "__main__":
         type=str,
         default=Path(__file__)
         .resolve()
-        .parent.joinpath("gem5_default_config.py"),
+        .parent.joinpath("gem5_default_config.json"),
         help="Filepath to the gem5 config file",
     )
 
     parser.add_argument(
-        "--output_dir",
+        "--output-dir",
         type=str,
         default=Path.cwd(),
         help="Output directory path, default is the cwd."
@@ -215,9 +216,7 @@ if __name__ == "__main__":
     # Get the gem5 config file from the  file
 
     with open(args.config_file_path) as f:
-        gem5_config_file_contents = f.read()
-    gem5_config_str = gem5_config_file_contents.split("=")[-1]
-    gem5_config_json = eval(gem5_config_str)
+        gem5_config_json = json.load(f)
     gem5_config_gem5_resources = gem5_config_json["sources"]["gem5-resources"]
 
     # Parse the gem5 config
@@ -229,7 +228,7 @@ if __name__ == "__main__":
     api_key = gem5_config_gem5_resources["apiKey"]
 
     if not output_path.exists():
-        output_path = output_path.mkdir()
+        output_path = output_path.mkdir(parents=True, exist_ok=True)
 
     token = get_token(auth_url, api_key)
 
