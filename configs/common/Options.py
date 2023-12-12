@@ -37,6 +37,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import argparse
+from typing import Optional
 
 from common import (
     CpuConfig,
@@ -48,6 +49,7 @@ import m5
 from m5.defines import buildEnv
 from m5.objects import *
 
+from gem5.isas import ISA
 from gem5.runtime import get_supported_isas
 
 vio_9p_help = """\
@@ -242,10 +244,13 @@ def addNoISAOptions(parser):
 # Add common options that assume a non-NULL ISA.
 
 
-def addCommonOptions(parser):
+def addCommonOptions(parser, default_isa: Optional[ISA] = None):
     # start by adding the base options that do not assume an ISA
     addNoISAOptions(parser)
-    isa = list(get_supported_isas())[0]
+    if default_isa is None:
+        isa = list(get_supported_isas())[0]
+    else:
+        isa = default_isa
 
     # system options
     parser.add_argument(
@@ -790,12 +795,20 @@ def addFSOptions(parser):
         "files in the gem5 output directory",
     )
 
-    if buildEnv["USE_ARM_ISA"]:
+    if buildEnv["USE_ARM_ISA"] or buildEnv["USE_RISCV_ISA"]:
         parser.add_argument(
             "--bare-metal",
             action="store_true",
             help="Provide the raw system without the linux specific bits",
         )
+        parser.add_argument(
+            "--dtb-filename",
+            action="store",
+            type=str,
+            help="Specifies device tree blob file to use with device-tree-"
+            "enabled kernels",
+        )
+    if buildEnv["USE_ARM_ISA"]:
         parser.add_argument(
             "--list-machine-types",
             action=ListPlatform,
@@ -807,13 +820,6 @@ def addFSOptions(parser):
             action="store",
             choices=ObjectList.platform_list.get_names(),
             default="VExpress_GEM5_V1",
-        )
-        parser.add_argument(
-            "--dtb-filename",
-            action="store",
-            type=str,
-            help="Specifies device tree blob file to use with device-tree-"
-            "enabled kernels",
         )
         parser.add_argument(
             "--enable-context-switch-stats-dump",
