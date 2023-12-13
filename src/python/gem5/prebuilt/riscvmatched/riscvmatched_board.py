@@ -312,14 +312,18 @@ class RISCVMatchedBoard(
 
     @overrides(AbstractSystemBoard)
     def _pre_instantiate(self):
-        if len(self._bootloader) > 0:
-            self.workload.bootloader_addr = 0x0
-            self.workload.bootloader_filename = self._bootloader[0]
-            self.workload.kernel_addr = 0x80200000
-            self.workload.entry_point = 0x80000000  # Bootloader starting point
-        else:
-            self.workload.kernel_addr = 0x0
-            self.workload.entry_point = 0x80000000
+        if self._fs:
+            if len(self._bootloader) > 0:
+                self.workload.bootloader_addr = 0x0
+                self.workload.bootloader_filename = self._bootloader[0]
+                self.workload.kernel_addr = 0x80200000
+                self.workload.entry_point = (
+                    0x80000000  # Bootloader starting point
+                )
+            else:
+                self.workload.kernel_addr = 0x0
+                self.workload.entry_point = 0x80000000
+
         self._connect_things()
 
     def generate_device_tree(self, outdir: str) -> None:
