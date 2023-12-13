@@ -279,6 +279,12 @@ for i in range(np):
             system.cpu[i].branchPred.indirectBranchPred = IndirectBPClass()
     system.cpu[i].createThreads()
 
+    for j in range(len(system.cpu[i].isa)):
+        system.cpu[i].isa[j].riscv_type = args.riscv_type
+        system.cpu[i].isa[j].vlen = args.riscv_vlen
+        system.cpu[i].isa[j].elen = args.riscv_elen
+        system.cpu[i].isa[j].privilege_mode_set = args.riscv_privilege_mode_set
+
 # ----------------------------- PMA Checker ---------------------------- #
 
 uncacheable_range = [

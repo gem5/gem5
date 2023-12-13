@@ -689,6 +689,31 @@ def addCommonOptions(parser, default_isa: Optional[ISA] = None):
         help="Override vendor string returned by CPUID instruction in X86.",
     )
 
+    # RISC-V ISA options
+    parser.add_argument(
+        "--riscv-type",
+        action="store",
+        default="RV64",
+        choices=["RV32", "RV64"],
+        help="xlen for RISC-V cores",
+    )
+    parser.add_argument(
+        "--riscv-vlen",
+        action="store",
+        type=int,
+        default=256,
+        help="Length of each vector register in bits. "
+        "VLEN in Ch. 2 of RISC-V vector spec",
+    )
+    parser.add_argument(
+        "--riscv-elen",
+        action="store",
+        type=int,
+        default=64,
+        help="Length of each vector element in bits. "
+        "ELEN in Ch. 2 of RISC-V vector spec",
+    )
+
 
 def addSEOptions(parser):
     # Benchmark options
@@ -897,4 +922,14 @@ def addFSOptions(parser):
         default=False,
         action="store_true",
         help="Wait for remote GDB to connect.",
+    )
+
+    # RISC-V ISA options
+    parser.add_argument(
+        "--riscv-privilege-mode-set",
+        action="store",
+        default="MSU",
+        choices=["M", "MU", "MNU", "MSU", "MNSU"],
+        help="The combination of privilege modes "
+        "in Privilege Levels section of RISC-V privileged spec",
     )

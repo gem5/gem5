@@ -263,6 +263,15 @@ for i in range(np):
 
     system.cpu[i].createThreads()
 
+    if (
+        ObjectList.cpu_list.get_isa(system.cpu[i].__class__.__name__)
+        == ISA.RISCV
+    ):
+        for j in range(len(system.cpu[i].isa)):
+            system.cpu[i].isa[j].riscv_type = args.riscv_type
+            system.cpu[i].isa[j].vlen = args.riscv_vlen
+            system.cpu[i].isa[j].elen = args.riscv_elen
+
 if args.ruby:
     Ruby.create_system(args, False, system)
     assert args.num_cpus == len(system.ruby._cpu_ports)
