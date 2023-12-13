@@ -129,7 +129,7 @@ containingFunc(uint64_t init_val, uint64_t fieldVal)
 // Declare these as global so g++ doesn't ignore them. Initialize them in
 // various ways.
 EmptySixtyFour emptySixtyFour = 0;
-EmptyThirtyTwo emptyThirtyTwo{};
+[[maybe_unused]] EmptyThirtyTwo emptyThirtyTwo{};
 [[maybe_unused]] EmptySixteen emptySixteen;
 EmptyEight emptyEight(0);
 

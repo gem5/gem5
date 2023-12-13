@@ -90,7 +90,7 @@
 // This version is for macros which are statement-like, which frequently use
 // "do {} while (0)" to make their syntax look more like normal c++ statements.
 #  define GEM5_DEPRECATED_MACRO_STMT(name, definition, message) \
-     do {{definition;} GEM5_DEPRECATED_MACRO(name, {}, message);} while (0)
+     do {{definition;} GEM5_DEPRECATED_MACRO(name, ({}), message);} while (0)
 
 // To mark a class as deprecated in favor of a new name, add a respective
 // instance of this macro to the file that used to declare the old name.
