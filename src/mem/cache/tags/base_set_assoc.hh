@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2014,2017 ARM Limited
+ * Copyright (c) 2012-2014, 2017, 2023-2024 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -59,6 +59,7 @@
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
 #include "mem/cache/tags/base.hh"
 #include "mem/cache/tags/indexing_policies/base.hh"
+#include "mem/cache/tags/partitioning_policies/partition_fields_extension.hh"
 #include "mem/packet.hh"
 #include "params/BaseSetAssoc.hh"
 
@@ -163,19 +164,25 @@ class BaseSetAssoc : public BaseTags
      * @param is_secure True if the target memory space is secure.
      * @param size Size, in bits, of new block to allocate.
      * @param evict_blks Cache blocks to be evicted.
+     * @param partition_id Partition ID for resource management.
      * @return Cache block to be replaced.
      */
     CacheBlk* findVictim(Addr addr, const bool is_secure,
                          const std::size_t size,
-                         std::vector<CacheBlk*>& evict_blks) override
+                         std::vector<CacheBlk*>& evict_blks,
+                         const uint64_t partition_id=0) override
     {
         // Get possible entries to be victimized
-        const std::vector<ReplaceableEntry*> entries =
+        std::vector<ReplaceableEntry*> entries =
             indexingPolicy->getPossibleEntries(addr);
 
+        // Filter entries based on PartitionID
+        for (auto partitioning_policy : partitioningPolicies)
+            partitioning_policy->filterByPartition(entries, partition_id);
+
         // Choose replacement victim from replacement candidates
-        CacheBlk* victim = static_cast<CacheBlk*>(replacementPolicy->getVictim(
-                                entries));
+        CacheBlk* victim = entries.empty() ? nullptr :
+            static_cast<CacheBlk*>(replacementPolicy->getVictim(entries));
 
         // There is only one eviction for this replacement
         evict_blks.push_back(victim);
@@ -196,6 +203,14 @@ class BaseSetAssoc : public BaseTags
 
         // Increment tag counter
         stats.tagsInUse++;
+
+        // Notify partitioning policies of acquisition of ownership
+        for (auto & partitioning_policy : partitioningPolicies) {
+            // get partitionId from Packet
+            const auto partitionId =
+                partitioning_policy::readPacketPartitionID(pkt);
+            partitioning_policy->notifyAcquire(partitionId);
+        }
 
         // Update replacement policy
         replacementPolicy->reset(blk->replacementData, pkt);

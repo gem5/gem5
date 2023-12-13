@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2012-2013, 2023-2024 ARM Limited
- * All rights reserved
+ * Copyright (c) 2024 ARM Limited
+ * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
  * not be construed as granting a license to any other intellectual
@@ -10,10 +10,6 @@
  * terms below provided that you ensure that this notice is replicated
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
- *
- * Copyright (c) 2020 Inria
- * Copyright (c) 2007 The Regents of The University of Michigan
- * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -39,48 +35,68 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mem/cache/cache_blk.hh"
+#ifndef __MEM_CACHE_TAGS_PARTITIONING_POLICIES_BASE_HH__
+#define __MEM_CACHE_TAGS_PARTITIONING_POLICIES_BASE_HH__
 
-#include "base/cprintf.hh"
+#include <vector>
+
+#include "params/BasePartitioningPolicy.hh"
+#include "sim/sim_object.hh"
 
 namespace gem5
 {
 
-void
-CacheBlk::insert(const Addr tag, const bool is_secure,
-                 const int src_requestor_ID, const uint32_t task_ID,
-                 const uint64_t partition_id)
+class ReplaceableEntry;
+
+namespace partitioning_policy
 {
-    // Make sure that the block has been properly invalidated
-    assert(!isValid());
 
-    insert(tag, is_secure);
-
-    // Set source requestor ID
-    setSrcRequestorId(src_requestor_ID);
-
-    // Set task ID
-    setTaskId(task_ID);
-
-    // Set partition ID
-    setPartitionId(partition_id);
-
-    // Set insertion tick as current tick
-    setTickInserted();
-
-    // Insertion counts as a reference to the block
-    increaseRefCount();
-}
-
-void
-CacheBlkPrintWrapper::print(std::ostream &os, int verbosity,
-                            const std::string &prefix) const
+/**
+ * A Partitioning Policy is a cache partitioning mechanism that limits the
+ * cache block allocations in a cache based on a PartitionID identifier. This
+ * identifier may be set to any upstream memory request by attaching a
+ * PartitionFieldExtention to it as so:
+ *
+ * std::shared_ptr<PartitionFieldExtention> ext(PartitionFieldExtention);
+ * ext->setPartitionID(PartitionID);
+ * req->setExtension(ext);
+ *
+ * When partitioning policies are in place, the allocatable cache blocks for
+ * this memory request will be filtered based on its PartitionID.
+ *
+ */
+class BasePartitioningPolicy : public SimObject
 {
-    ccprintf(os, "%sblk %c%c%c%c\n", prefix,
-             blk->isValid()    ? 'V' : '-',
-             blk->isSet(CacheBlk::WritableBit) ? 'E' : '-',
-             blk->isSet(CacheBlk::DirtyBit)    ? 'M' : '-',
-             blk->isSecure()   ? 'S' : '-');
-}
+  public:
+    BasePartitioningPolicy(const BasePartitioningPolicyParams &params);
+
+    /**
+    * Filters the allocatable cache blocks for a memory request based on its
+    * PartitionID and policy allocation
+    * @param entries candidate cache blocks for this request; filtered in place
+    * @param partition_id PartitionID of the upstream memory request
+    */
+    virtual void
+    filterByPartition(std::vector<ReplaceableEntry *> &entries,
+                      const uint64_t partition_id) const = 0;
+
+    /**
+    * Notify of acquisition of ownership of a cache line
+    * @param partition_id PartitionID of the upstream memory request
+    */
+    virtual void
+    notifyAcquire(const uint64_t partition_id) = 0;
+
+    /**
+    * Notify of release of ownership of a cache line
+    * @param partition_id PartitionID of the upstream memory request
+    */
+    virtual void
+    notifyRelease(const uint64_t partition_id) = 0;
+};
+
+} // namespace partitioning_policy
 
 } // namespace gem5
+
+#endif // __MEM_CACHE_TAGS_PARTITIONING_POLICIES_BASE_HH__

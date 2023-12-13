@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2012-2013, 2023-2024 ARM Limited
- * All rights reserved
+ * Copyright (c) 2024 ARM Limited
+ * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
  * not be construed as granting a license to any other intellectual
@@ -10,10 +10,6 @@
  * terms below provided that you ensure that this notice is replicated
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
- *
- * Copyright (c) 2020 Inria
- * Copyright (c) 2007 The Regents of The University of Michigan
- * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -39,48 +35,68 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mem/cache/cache_blk.hh"
+#ifndef __MEM_CACHE_TAGS_PARTITIONING_POLICIES_FIELD_EXTENTION_HH__
+#define __MEM_CACHE_TAGS_PARTITIONING_POLICIES_FIELD_EXTENTION_HH__
 
-#include "base/cprintf.hh"
+#include "base/extensible.hh"
+#include "mem/packet.hh"
+#include "mem/request.hh"
 
 namespace gem5
 {
 
-void
-CacheBlk::insert(const Addr tag, const bool is_secure,
-                 const int src_requestor_ID, const uint32_t task_ID,
-                 const uint64_t partition_id)
+namespace partitioning_policy
 {
-    // Make sure that the block has been properly invalidated
-    assert(!isValid());
 
-    insert(tag, is_secure);
+const uint64_t DEFAULT_PARTITION_ID = 0;
+const uint64_t DEFAULT_PARTITION_MONITORING_ID = 0;
 
-    // Set source requestor ID
-    setSrcRequestorId(src_requestor_ID);
-
-    // Set task ID
-    setTaskId(task_ID);
-
-    // Set partition ID
-    setPartitionId(partition_id);
-
-    // Set insertion tick as current tick
-    setTickInserted();
-
-    // Insertion counts as a reference to the block
-    increaseRefCount();
-}
-
-void
-CacheBlkPrintWrapper::print(std::ostream &os, int verbosity,
-                            const std::string &prefix) const
+class PartitionFieldExtention : public Extension<Request,
+                                                 PartitionFieldExtention>
 {
-    ccprintf(os, "%sblk %c%c%c%c\n", prefix,
-             blk->isValid()    ? 'V' : '-',
-             blk->isSet(CacheBlk::WritableBit) ? 'E' : '-',
-             blk->isSet(CacheBlk::DirtyBit)    ? 'M' : '-',
-             blk->isSecure()   ? 'S' : '-');
-}
+  public:
+    std::unique_ptr<ExtensionBase> clone() const override;
+    PartitionFieldExtention() = default;
+
+    /**
+    * _partitionID getter
+    * @return extension Partition ID
+    */
+    uint64_t getPartitionID() const;
+
+    /**
+    * _partitionMonitoringID getter
+    * @return extension Partition Monitoring ID
+    */
+    uint64_t getPartitionMonitoringID() const;
+
+    /**
+    * _partitionID setter
+    * @param id Partition ID to set for the extension
+    */
+    void setPartitionID(uint64_t id);
+
+    /**
+    * _partitionMonitoringID setter
+    * @param id Partition Monitoring ID to set for the extension
+    */
+    void setPartitionMonitoringID(uint64_t id);
+
+  private:
+    uint64_t _partitionID = DEFAULT_PARTITION_ID;
+    uint64_t _partitionMonitoringID = DEFAULT_PARTITION_MONITORING_ID;
+};
+
+/**
+* Helper function to retrieve PartitionID from a packet; Returns packet
+* PartitionID if available or DEFAULT_PARTITION_ID if extention is not set
+* @param pkt pointer to packet (PacketPtr)
+* @return packet PartitionID.
+*/
+uint64_t readPacketPartitionID (PacketPtr pkt);
+
+} // namespace partitioning_policy
 
 } // namespace gem5
+
+#endif // __MEM_CACHE_TAGS_PARTITIONING_POLICIES_FIELD_EXTENTION_HH__

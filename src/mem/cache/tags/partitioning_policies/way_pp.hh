@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2012-2013, 2023-2024 ARM Limited
- * All rights reserved
+ * Copyright (c) 2024 ARM Limited
+ * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
  * not be construed as granting a license to any other intellectual
@@ -10,10 +10,6 @@
  * terms below provided that you ensure that this notice is replicated
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
- *
- * Copyright (c) 2020 Inria
- * Copyright (c) 2007 The Regents of The University of Michigan
- * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -39,48 +35,66 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mem/cache/cache_blk.hh"
+#ifndef __MEM_CACHE_TAGS_PARTITIONING_POLICIES_WAY_HH__
+#define __MEM_CACHE_TAGS_PARTITIONING_POLICIES_WAY_HH__
 
-#include "base/cprintf.hh"
+#include <unordered_map>
+#include <unordered_set>
+
+#include "debug/PartitionPolicy.hh"
+#include "mem/cache/replacement_policies/replaceable_entry.hh"
+#include "mem/cache/tags/partitioning_policies/base_pp.hh"
+#include "params/WayPartitioningPolicy.hh"
 
 namespace gem5
 {
 
-void
-CacheBlk::insert(const Addr tag, const bool is_secure,
-                 const int src_requestor_ID, const uint32_t task_ID,
-                 const uint64_t partition_id)
+namespace partitioning_policy
 {
-    // Make sure that the block has been properly invalidated
-    assert(!isValid());
 
-    insert(tag, is_secure);
-
-    // Set source requestor ID
-    setSrcRequestorId(src_requestor_ID);
-
-    // Set task ID
-    setTaskId(task_ID);
-
-    // Set partition ID
-    setPartitionId(partition_id);
-
-    // Set insertion tick as current tick
-    setTickInserted();
-
-    // Insertion counts as a reference to the block
-    increaseRefCount();
-}
-
-void
-CacheBlkPrintWrapper::print(std::ostream &os, int verbosity,
-                            const std::string &prefix) const
+/**
+ * A WayPartitioningPolicy filters the cache blocks available to a memory
+ * requestor (identified via PartitionID) based on the cache ways allocated to
+ * that requestor. This policy has no effect on requests with unregistered
+ * PartitionIDs.
+ *
+ * @see BasePartitioningPolicy
+ */
+class WayPartitioningPolicy : public BasePartitioningPolicy
 {
-    ccprintf(os, "%sblk %c%c%c%c\n", prefix,
-             blk->isValid()    ? 'V' : '-',
-             blk->isSet(CacheBlk::WritableBit) ? 'E' : '-',
-             blk->isSet(CacheBlk::DirtyBit)    ? 'M' : '-',
-             blk->isSecure()   ? 'S' : '-');
-}
+  public:
+    WayPartitioningPolicy(const WayPartitioningPolicyParams &params);
+
+    void
+    filterByPartition(std::vector<ReplaceableEntry *> &entries,
+                        const uint64_t partition_id) const override;
+
+    /**
+    * Empty implementation as block allocations do not vary with number of
+    * allocated blocks for this policy
+    * @param partition_id PartitionID of the upstream memory request
+    */
+    void
+    notifyAcquire(const uint64_t partition_id) override {};
+
+    /**
+    * Empty implementation as block allocations do not vary with number of
+    * allocated blocks for this policy
+    * @param partition_id PartitionID of the upstream memory request
+    */
+    void
+    notifyRelease(const uint64_t partition_id) override {};
+
+  private:
+    /**
+    * Map of policied PartitionIDs and their associated cache ways
+    */
+    std::unordered_map< uint64_t, std::unordered_set< unsigned > >
+        partitionIdWays;
+};
+
+} // namespace partitioning_policy
 
 } // namespace gem5
+
+#endif // __MEM_CACHE_TAGS_PARTITIONING_POLICIES_WAY_HH__
