@@ -399,6 +399,22 @@ namespace Aarch64
                                 "unallocated_hint", machInst);
                     } else if (crn == 0x3 && op1 == 0x3) {
                         switch (op2) {
+                          case 0x1:
+                            if (bits(crm, 1, 0) == 0b10) {
+                                switch (bits(crm, 3, 2)) {
+                                  case 0x1: // Non-Shareable
+                                    return new Dsb64Local(machInst);
+                                  case 0x0: // OuterShareable
+                                  case 0x2: // InnerShareable
+                                  case 0x3: // FullSystem
+                                    return new Dsb64Shareable(
+                                        machInst, dec.dvmEnabled);
+                                  default:
+                                    GEM5_UNREACHABLE;
+                                }
+                            } else {
+                                return new Unknown64(machInst);
+                            }
                           case 0x2:
                             return new Clrex64(machInst);
                           case 0x4:
@@ -526,86 +542,86 @@ namespace Aarch64
                                 return new Dcivac(machInst, rt, miscReg);
                               // 64-bit TLBIs split into "Local"
                               // and "Shareable"
-                              case MISCREG_TLBI_ALLE3:
-                              case MISCREG_TLBI_ALLE2:
-                              case MISCREG_TLBI_ALLE1:
-                              case MISCREG_TLBI_VMALLS12E1:
-                              case MISCREG_TLBI_VMALLE1:
-                              case MISCREG_TLBI_VAE3:
-                              case MISCREG_TLBI_VALE3:
-                              case MISCREG_TLBI_VAE2:
-                              case MISCREG_TLBI_VALE2:
-                              case MISCREG_TLBI_VAE1:
-                              case MISCREG_TLBI_VALE1:
-                              case MISCREG_TLBI_ASIDE1:
-                              case MISCREG_TLBI_VAAE1:
-                              case MISCREG_TLBI_VAALE1:
-                              case MISCREG_TLBI_IPAS2E1:
-                              case MISCREG_TLBI_IPAS2LE1:
-                              case MISCREG_TLBI_RVAE1:
-                              case MISCREG_TLBI_RVAAE1:
-                              case MISCREG_TLBI_RVALE1:
-                              case MISCREG_TLBI_RVAALE1:
-                              case MISCREG_TLBI_RIPAS2E1:
-                              case MISCREG_TLBI_RIPAS2LE1:
-                              case MISCREG_TLBI_RVAE2:
-                              case MISCREG_TLBI_RVALE2:
-                              case MISCREG_TLBI_RVAE3:
-                              case MISCREG_TLBI_RVALE3:
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE3)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE2)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE1)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VMALLS12E1)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VMALLE1)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE3)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE3)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE2)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE2)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE1)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE1)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_ASIDE1)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAAE1)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAALE1)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_IPAS2E1)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_IPAS2LE1)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE1)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAAE1)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE1)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAALE1)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RIPAS2E1)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RIPAS2LE1)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE2)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE2)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE3)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE3)
                                 return new Tlbi64LocalHub(
                                   machInst, miscReg, rt, dec.dvmEnabled);
-                              case MISCREG_TLBI_ALLE3IS:
-                              case MISCREG_TLBI_ALLE3OS:
-                              case MISCREG_TLBI_ALLE2IS:
-                              case MISCREG_TLBI_ALLE2OS:
-                              case MISCREG_TLBI_ALLE1IS:
-                              case MISCREG_TLBI_ALLE1OS:
-                              case MISCREG_TLBI_VMALLS12E1IS:
-                              case MISCREG_TLBI_VMALLS12E1OS:
-                              case MISCREG_TLBI_VMALLE1IS:
-                              case MISCREG_TLBI_VMALLE1OS:
-                              case MISCREG_TLBI_VAE3IS:
-                              case MISCREG_TLBI_VAE3OS:
-                              case MISCREG_TLBI_VALE3IS:
-                              case MISCREG_TLBI_VALE3OS:
-                              case MISCREG_TLBI_VAE2IS:
-                              case MISCREG_TLBI_VAE2OS:
-                              case MISCREG_TLBI_VALE2IS:
-                              case MISCREG_TLBI_VALE2OS:
-                              case MISCREG_TLBI_VAE1IS:
-                              case MISCREG_TLBI_VAE1OS:
-                              case MISCREG_TLBI_VALE1IS:
-                              case MISCREG_TLBI_VALE1OS:
-                              case MISCREG_TLBI_ASIDE1IS:
-                              case MISCREG_TLBI_ASIDE1OS:
-                              case MISCREG_TLBI_VAAE1IS:
-                              case MISCREG_TLBI_VAAE1OS:
-                              case MISCREG_TLBI_VAALE1IS:
-                              case MISCREG_TLBI_VAALE1OS:
-                              case MISCREG_TLBI_IPAS2E1IS:
-                              case MISCREG_TLBI_IPAS2E1OS:
-                              case MISCREG_TLBI_IPAS2LE1IS:
-                              case MISCREG_TLBI_IPAS2LE1OS:
-                              case MISCREG_TLBI_RVAE1IS:
-                              case MISCREG_TLBI_RVAE1OS:
-                              case MISCREG_TLBI_RVAAE1IS:
-                              case MISCREG_TLBI_RVAAE1OS:
-                              case MISCREG_TLBI_RVALE1IS:
-                              case MISCREG_TLBI_RVALE1OS:
-                              case MISCREG_TLBI_RVAALE1IS:
-                              case MISCREG_TLBI_RVAALE1OS:
-                              case MISCREG_TLBI_RIPAS2E1IS:
-                              case MISCREG_TLBI_RIPAS2E1OS:
-                              case MISCREG_TLBI_RIPAS2LE1IS:
-                              case MISCREG_TLBI_RIPAS2LE1OS:
-                              case MISCREG_TLBI_RVAE2IS:
-                              case MISCREG_TLBI_RVAE2OS:
-                              case MISCREG_TLBI_RVALE2IS:
-                              case MISCREG_TLBI_RVALE2OS:
-                              case MISCREG_TLBI_RVAE3IS:
-                              case MISCREG_TLBI_RVAE3OS:
-                              case MISCREG_TLBI_RVALE3IS:
-                              case MISCREG_TLBI_RVALE3OS:
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE3IS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE3OS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE2IS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE2OS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE1IS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE1OS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VMALLS12E1IS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VMALLS12E1OS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VMALLE1IS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VMALLE1OS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE3IS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE3OS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE3IS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE3OS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE2IS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE2OS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE2IS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE2OS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE1IS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE1OS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE1IS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE1OS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_ASIDE1IS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_ASIDE1OS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAAE1IS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAAE1OS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAALE1IS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAALE1OS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_IPAS2E1IS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_IPAS2E1OS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_IPAS2LE1IS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_IPAS2LE1OS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE1IS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE1OS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAAE1IS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAAE1OS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE1IS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE1OS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAALE1IS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAALE1OS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RIPAS2E1IS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RIPAS2E1OS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RIPAS2LE1IS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RIPAS2LE1OS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE2IS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE2OS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE2IS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE2OS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE3IS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE3OS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE3IS)
+                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE3OS)
                                 return new Tlbi64ShareableHub(
                                   machInst, miscReg, rt, dec.dvmEnabled);
                               default:

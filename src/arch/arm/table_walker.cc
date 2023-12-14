@@ -1479,6 +1479,13 @@ TableWalker::memAttrsLPAE(ThreadContext *tc, TlbEntry &te,
     te.attributes |= (uint64_t) attr << 56;
 }
 
+bool
+TableWalker::uncacheableFromAttrs(uint8_t attrs)
+{
+    return !bits(attrs, 2) || // Write-through
+        attrs == 0b0100;      // NonCacheable
+}
+
 void
 TableWalker::memAttrsAArch64(ThreadContext *tc, TlbEntry &te,
                              LongDescriptor &l_descriptor)
@@ -1511,6 +1518,9 @@ TableWalker::memAttrsAArch64(ThreadContext *tc, TlbEntry &te,
             // but for performance reasons not optimal.
             te.nonCacheable = (attr_hi == 1) || (attr_hi == 2) ||
                 (attr_lo == 1) || (attr_lo == 2);
+
+            // To be used when merging stage1 and astage 2 attributes
+            te.xs = !l_descriptor.fnxs();
         }
     } else {
         uint8_t attrIndx = l_descriptor.attrIndx();
@@ -1540,32 +1550,31 @@ TableWalker::memAttrsAArch64(ThreadContext *tc, TlbEntry &te,
         attr_lo = bits(attr, 3, 0);
         attr_hi = bits(attr, 7, 4);
 
-        // Memory type
-        te.mtype = attr_hi == 0 ? TlbEntry::MemoryType::Device : TlbEntry::MemoryType::Normal;
-
-        // Cacheability
-        te.nonCacheable = false;
-        if (te.mtype == TlbEntry::MemoryType::Device) {  // Device memory
-            te.nonCacheable = true;
-        }
         // Treat write-through memory as uncacheable, this is safe
         // but for performance reasons not optimal.
-        switch (attr_hi) {
-          case 0x1 ... 0x3: // Normal Memory, Outer Write-through transient
-          case 0x4:         // Normal memory, Outer Non-cacheable
-          case 0x8 ... 0xb: // Normal Memory, Outer Write-through non-transient
+        switch (attr) {
+          case 0b00000000 ... 0b00001111: // Device Memory
+            te.mtype = TlbEntry::MemoryType::Device;
             te.nonCacheable = true;
-        }
-        switch (attr_lo) {
-          case 0x1 ... 0x3: // Normal Memory, Inner Write-through transient
-          case 0x9 ... 0xb: // Normal Memory, Inner Write-through non-transient
-            warn_if(!attr_hi, "Unpredictable behavior");
-            [[fallthrough]];
-          case 0x4:         // Device-nGnRE memory or
-                            // Normal memory, Inner Non-cacheable
-          case 0x8:         // Device-nGRE memory or
-                            // Normal memory, Inner Write-through non-transient
+            te.xs = !bits(attr, 0);
+            break;
+          case 0b01000000: // Normal memory, Non-cacheable
+            te.mtype = TlbEntry::MemoryType::Normal;
             te.nonCacheable = true;
+            te.xs = false;
+            break;
+          case 0b10100000: // Normal memory, Write-through
+            te.mtype = TlbEntry::MemoryType::Normal;
+            te.nonCacheable = true;
+            te.xs = false;
+            break;
+          default:
+            te.mtype = TlbEntry::MemoryType::Normal;
+            te.nonCacheable = uncacheableFromAttrs(attr_hi) ||
+                              uncacheableFromAttrs(attr_lo);
+            // XS is 0 only for write-back regions (cacheable)
+            te.xs = te.nonCacheable;
+            break;
         }
 
         te.shareable       = sh == 2;
@@ -1594,6 +1603,9 @@ TableWalker::memAttrsWalkAArch64(TlbEntry &te)
         te.nonCacheable = (te.outerAttrs == 0 || te.outerAttrs == 2) &&
             (te.innerAttrs == 0 || te.innerAttrs == 2);
     }
+
+    // XS is 0 only for write-back regions (cacheable)
+    te.xs = te.nonCacheable;
 }
 
 void

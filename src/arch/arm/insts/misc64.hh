@@ -39,6 +39,7 @@
 #define __ARCH_ARM_INSTS_MISC64_HH__
 
 #include "arch/arm/insts/static_inst.hh"
+#include "arch/arm/tlbi_op.hh"
 #include "arch/arm/types.hh"
 
 namespace gem5
@@ -286,42 +287,47 @@ class TlbiOp64 : public MiscRegRegImmOp64
 {
   protected:
     using TlbiFunc = std::function<void(ThreadContext*,RegVal)>;
+    using TlbiAttr = ArmISA::TLBIOp::Attr;
 
     static std::unordered_map<ArmISA::MiscRegIndex, TlbiFunc> tlbiOps;
 
     static void tlbiAll(ThreadContext *tc, RegVal value,
-        bool secure, ArmISA::TranslationRegime regime, bool shareable);
+        bool secure, ArmISA::TranslationRegime regime, bool shareable,
+        TlbiAttr attrs=TlbiAttr::None);
 
     static void tlbiVmall(ThreadContext *tc, RegVal value,
         bool secure, ArmISA::TranslationRegime regime, bool shareable,
-        bool stage2=false);
+        bool stage2=false, TlbiAttr attrs=TlbiAttr::None);
 
     static void tlbiVa(ThreadContext *tc, RegVal value,
         bool secure, ArmISA::TranslationRegime regime, bool shareable,
-        bool last_level);
+        bool last_level, TlbiAttr attrs=TlbiAttr::None);
 
     static void tlbiVaa(ThreadContext *tc, RegVal value,
         bool secure, ArmISA::TranslationRegime regime, bool shareable,
-        bool last_level);
+        bool last_level, TlbiAttr attrs=TlbiAttr::None);
 
     static void tlbiAsid(ThreadContext *tc, RegVal value,
-        bool secure, ArmISA::TranslationRegime regime, bool shareable);
+        bool secure, ArmISA::TranslationRegime regime, bool shareable,
+        TlbiAttr attrs=TlbiAttr::None);
 
     static void tlbiIpaS2(ThreadContext *tc, RegVal value,
         bool secure, ArmISA::TranslationRegime regime, bool shareable,
-        bool last_level);
+        bool last_level, TlbiAttr attrs=TlbiAttr::None);
 
     static void tlbiRvaa(ThreadContext *tc, RegVal value,
         bool secure, ArmISA::TranslationRegime regime, bool shareable,
-        bool last_level);
+        bool last_level, TlbiAttr attrs=TlbiAttr::None);
 
     static void tlbiRva(ThreadContext *tc, RegVal value,
         bool secure, ArmISA::TranslationRegime regime, bool shareable,
-        bool last_level);
+        bool last_level, TlbiAttr attrs=TlbiAttr::None);
 
     static void tlbiRipaS2(ThreadContext *tc, RegVal value,
         bool secure, ArmISA::TranslationRegime regime, bool shareable,
-        bool last_level);
+        bool last_level, TlbiAttr attrs=TlbiAttr::None);
+
+    static bool fnxsAttrs(ThreadContext *tc);
 
   protected:
     TlbiOp64(const char *mnem, ArmISA::ExtMachInst _machInst,
