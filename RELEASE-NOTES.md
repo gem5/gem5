@@ -15,6 +15,14 @@ Suites is a new category of resource being introduced in gem5. Documentation of 
 
 - Users can use GEM5_RESOURCE_JSON  and GEM5_RESOURCE_JSON_APPEND env variables to overwrite all the data sources with the provided JSON and append a JSON file to all the data source respectively. More information can be found here: {link placeholder waiting on PR approval}.
 
+### Full-system GPU model changes
+
+- Support for up to latest ROCm 5.7.1.
+- Various changes to enable PyTorch/TensorFlow simulations.
+- New packer disk image script containing ROCm 5.4.2, PyTorch 2.0.1, and Tensorflow 2.11.
+- GPU instructions can now perform atomics on host addresses.
+- The provided configs scripts can now run KVM on more restrictive setups.
+
 # Version 23.0.0.1
 
 **[HOTFIX]** Fixes compilation of `GCN3_X86` and `VEGA_X85`.
