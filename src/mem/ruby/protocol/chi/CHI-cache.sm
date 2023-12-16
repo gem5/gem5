@@ -334,6 +334,8 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     SnpOnce,                     desc="", in_trans="yes";
     SnpOnceFwd,                  desc="", in_trans="yes";
     SnpStalled, desc="", in_trans="yes"; // A snoop stall triggered from the inport
+    StashOnceShared,             desc="", in_trans="yes"; // Just discarding the hint
+    StashOnceUnique,             desc="", in_trans="yes"; // Just discarding the hint
 
     // DVM sequencer requests
     DvmTlbi_Initiate, desc="", out_trans="yes", in_trans="yes"; // triggered when a CPU core wants to send a TLBI

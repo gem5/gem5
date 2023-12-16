@@ -836,6 +836,14 @@ transition(BUSY_INTR, {SnpOnce,SnpOnceFwd}, BUSY_BLKD) {
   ProcessNextState;
 }
 
+// Stash
+transition({I,SC,UC,SD,UD,RU,RSC,RSD,RUSD,SC_RSC,UC_RSC,SD_RSC,UD_RSC,UC_RU,UD_RU,UD_RSD,SD_RSD,RUSC},
+           {StashOnceShared,StashOnceUnique}, BUSY_BLKD) {
+  Initiate_Request;
+  Send_CompI;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
 
 // Stalls
 
@@ -850,7 +858,8 @@ transition({BUSY_BLKD,BUSY_INTR},
             WriteUnique,WriteUniquePtl_PoC,
             WriteUniqueFull_PoC,WriteUniqueFull_PoC_Alloc
             AtomicReturn,AtomicReturn_PoC,
-            AtomicNoReturn,AtomicNoReturn_PoC}) {
+            AtomicNoReturn,AtomicNoReturn_PoC,
+            StashOnceShared,StashOnceUnique}) {
   StallRequest;
 }
 

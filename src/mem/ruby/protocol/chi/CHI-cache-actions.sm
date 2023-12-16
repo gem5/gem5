@@ -2938,11 +2938,13 @@ action(Send_RespSepData, desc="") {
 action(Send_CompI, desc="") {
   assert(is_valid(tbe));
 
-  // Used to ack Evict request
-  assert(tbe.dir_sharers.isElement(tbe.requestor));
-  assert((tbe.dir_ownerExists == false) || (tbe.dir_owner != tbe.requestor));
+  if (!isStashReqType(tbe.reqType)) {
+    // Used to ack Evict request
+    assert(tbe.dir_sharers.isElement(tbe.requestor));
+    assert((tbe.dir_ownerExists == false) || (tbe.dir_owner != tbe.requestor));
 
-  tbe.dir_sharers.remove(tbe.requestor);
+    tbe.dir_sharers.remove(tbe.requestor);
+  }
 
   enqueue(rspOutPort, CHIResponseMsg, response_latency) {
     out_msg.addr := address;
