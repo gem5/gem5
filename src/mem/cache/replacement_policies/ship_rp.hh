@@ -51,9 +51,6 @@ struct SHiPRPParams;
 struct SHiPMemRPParams;
 struct SHiPPCRPParams;
 
-namespace replacement_policy
-{
-
 class SHiP : public BRRIP
 {
   protected:
@@ -186,7 +183,6 @@ class SHiPPC : public SHiP
     ~SHiPPC() = default;
 };
 
-} // namespace replacement_policy
 } // namespace gem5
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_SHIP_RP_HH__

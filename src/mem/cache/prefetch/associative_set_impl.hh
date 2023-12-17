@@ -37,7 +37,7 @@ namespace gem5
 
 template<class Entry>
 AssociativeSet<Entry>::AssociativeSet(int assoc, int num_entries,
-        BaseIndexingPolicy *idx_policy, replacement_policy::Base *rpl_policy,
+        BaseIndexingPolicy *idx_policy, BaseReplacementPolicy *rpl_policy,
         Entry const &init_value)
   : associativity(assoc), numEntries(num_entries), indexingPolicy(idx_policy),
     replacementPolicy(rpl_policy), entries(numEntries, init_value)

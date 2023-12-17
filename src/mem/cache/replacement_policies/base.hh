@@ -45,18 +45,15 @@ namespace gem5
  */
 typedef std::vector<ReplaceableEntry*> ReplacementCandidates;
 
-namespace replacement_policy
-{
-
 /**
  * A common base class of cache replacement policy objects.
  */
-class Base : public SimObject
+class BaseReplacementPolicy : public SimObject
 {
   public:
     typedef BaseReplacementPolicyParams Params;
-    Base(const Params &p) : SimObject(p) {}
-    virtual ~Base() = default;
+    BaseReplacementPolicy(const Params &p) : SimObject(p) {}
+    virtual ~BaseReplacementPolicy() = default;
 
     /**
      * Invalidate replacement data to set it as the next probable victim.
@@ -111,7 +108,6 @@ class Base : public SimObject
     virtual std::shared_ptr<ReplacementData> instantiateEntry() = 0;
 };
 
-} // namespace replacement_policy
 } // namespace gem5
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_BASE_HH__

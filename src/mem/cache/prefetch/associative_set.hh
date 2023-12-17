@@ -58,7 +58,7 @@ class AssociativeSet
     /** Pointer to the indexing policy */
     BaseIndexingPolicy* const indexingPolicy;
     /** Pointer to the replacement policy */
-    replacement_policy::Base* const replacementPolicy;
+    BaseReplacementPolicy* const replacementPolicy;
     /** Vector containing the entries of the container */
     std::vector<Entry> entries;
 
@@ -73,7 +73,7 @@ class AssociativeSet
      * @param init_val initial value of the elements of the set
      */
     AssociativeSet(int assoc, int num_entries, BaseIndexingPolicy *idx_policy,
-        replacement_policy::Base *rpl_policy, Entry const &init_val = Entry());
+        BaseReplacementPolicy *rpl_policy, Entry const &init_val = Entry());
 
     /**
      * Find an entry within the set

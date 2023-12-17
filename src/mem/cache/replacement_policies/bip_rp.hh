@@ -49,9 +49,6 @@ namespace gem5
 
 struct BIPRPParams;
 
-namespace replacement_policy
-{
-
 class BIP : public LRU
 {
   protected:
@@ -77,7 +74,6 @@ class BIP : public LRU
                                                                      override;
 };
 
-} // namespace replacement_policy
 } // namespace gem5
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_BIP_RP_HH__

@@ -37,9 +37,6 @@
 namespace gem5
 {
 
-namespace replacement_policy
-{
-
 BIP::BIP(const Params &p)
   : LRU(p), btp(p.btp)
 {
@@ -60,5 +57,4 @@ BIP::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
     }
 }
 
-} // namespace replacement_policy
 } // namespace gem5

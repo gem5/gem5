@@ -36,11 +36,8 @@
 namespace gem5
 {
 
-namespace replacement_policy
-{
-
 LFU::LFU(const Params &p)
-  : Base(p)
+  : BaseReplacementPolicy(p)
 {
 }
 
@@ -92,5 +89,4 @@ LFU::instantiateEntry()
     return std::shared_ptr<ReplacementData>(new LFUReplData());
 }
 
-} // namespace replacement_policy
 } // namespace gem5

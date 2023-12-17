@@ -32,13 +32,13 @@ from m5.SimObject import SimObject
 class BaseReplacementPolicy(SimObject):
     type = "BaseReplacementPolicy"
     abstract = True
-    cxx_class = "gem5::replacement_policy::Base"
+    cxx_class = "gem5::BaseReplacementPolicy"
     cxx_header = "mem/cache/replacement_policies/base.hh"
 
 
 class DuelingRP(BaseReplacementPolicy):
     type = "DuelingRP"
-    cxx_class = "gem5::replacement_policy::Dueling"
+    cxx_class = "gem5::Dueling"
     cxx_header = "mem/cache/replacement_policies/dueling_rp.hh"
 
     constituency_size = Param.Unsigned(
@@ -57,31 +57,31 @@ class DuelingRP(BaseReplacementPolicy):
 
 class FIFORP(BaseReplacementPolicy):
     type = "FIFORP"
-    cxx_class = "gem5::replacement_policy::FIFO"
+    cxx_class = "gem5::FIFO"
     cxx_header = "mem/cache/replacement_policies/fifo_rp.hh"
 
 
 class SecondChanceRP(FIFORP):
     type = "SecondChanceRP"
-    cxx_class = "gem5::replacement_policy::SecondChance"
+    cxx_class = "gem5::SecondChance"
     cxx_header = "mem/cache/replacement_policies/second_chance_rp.hh"
 
 
 class LFURP(BaseReplacementPolicy):
     type = "LFURP"
-    cxx_class = "gem5::replacement_policy::LFU"
+    cxx_class = "gem5::LFU"
     cxx_header = "mem/cache/replacement_policies/lfu_rp.hh"
 
 
 class LRURP(BaseReplacementPolicy):
     type = "LRURP"
-    cxx_class = "gem5::replacement_policy::LRU"
+    cxx_class = "gem5::LRU"
     cxx_header = "mem/cache/replacement_policies/lru_rp.hh"
 
 
 class BIPRP(LRURP):
     type = "BIPRP"
-    cxx_class = "gem5::replacement_policy::BIP"
+    cxx_class = "gem5::BIP"
     cxx_header = "mem/cache/replacement_policies/bip_rp.hh"
     btp = Param.Percent(3, "Percentage of blocks to be inserted as MRU")
 
@@ -92,19 +92,19 @@ class LIPRP(BIPRP):
 
 class MRURP(BaseReplacementPolicy):
     type = "MRURP"
-    cxx_class = "gem5::replacement_policy::MRU"
+    cxx_class = "gem5::MRU"
     cxx_header = "mem/cache/replacement_policies/mru_rp.hh"
 
 
 class RandomRP(BaseReplacementPolicy):
     type = "RandomRP"
-    cxx_class = "gem5::replacement_policy::Random"
+    cxx_class = "gem5::RandomRP"
     cxx_header = "mem/cache/replacement_policies/random_rp.hh"
 
 
 class BRRIPRP(BaseReplacementPolicy):
     type = "BRRIPRP"
-    cxx_class = "gem5::replacement_policy::BRRIP"
+    cxx_class = "gem5::BRRIP"
     cxx_header = "mem/cache/replacement_policies/brrip_rp.hh"
     num_bits = Param.Int(2, "Number of bits per RRPV")
     hit_priority = Param.Bool(
@@ -138,7 +138,7 @@ class NRURP(BRRIPRP):
 class SHiPRP(BRRIPRP):
     type = "SHiPRP"
     abstract = True
-    cxx_class = "gem5::replacement_policy::SHiP"
+    cxx_class = "gem5::SHiP"
     cxx_header = "mem/cache/replacement_policies/ship_rp.hh"
 
     shct_size = Param.Unsigned(16384, "Number of SHCT entries")
@@ -154,24 +154,24 @@ class SHiPRP(BRRIPRP):
 
 class SHiPMemRP(SHiPRP):
     type = "SHiPMemRP"
-    cxx_class = "gem5::replacement_policy::SHiPMem"
+    cxx_class = "gem5::SHiPMem"
     cxx_header = "mem/cache/replacement_policies/ship_rp.hh"
 
 
 class SHiPPCRP(SHiPRP):
     type = "SHiPPCRP"
-    cxx_class = "gem5::replacement_policy::SHiPPC"
+    cxx_class = "gem5::SHiPPC"
     cxx_header = "mem/cache/replacement_policies/ship_rp.hh"
 
 
 class TreePLRURP(BaseReplacementPolicy):
     type = "TreePLRURP"
-    cxx_class = "gem5::replacement_policy::TreePLRU"
+    cxx_class = "gem5::TreePLRU"
     cxx_header = "mem/cache/replacement_policies/tree_plru_rp.hh"
     num_leaves = Param.Int(Parent.assoc, "Number of leaves in each tree")
 
 
 class WeightedLRURP(LRURP):
     type = "WeightedLRURP"
-    cxx_class = "gem5::replacement_policy::WeightedLRU"
+    cxx_class = "gem5::WeightedLRU"
     cxx_header = "mem/cache/replacement_policies/weighted_lru_rp.hh"

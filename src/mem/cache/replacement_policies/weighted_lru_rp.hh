@@ -42,9 +42,6 @@ namespace gem5
 
 struct WeightedLRURPParams;
 
-namespace replacement_policy
-{
-
 class WeightedLRU : public LRU
 {
   protected:
@@ -64,7 +61,7 @@ class WeightedLRU : public LRU
     WeightedLRU(const Params &p);
     ~WeightedLRU() = default;
 
-    using Base::touch;
+    using BaseReplacementPolicy::touch;
     void touch(const std::shared_ptr<ReplacementData>& replacement_data,
                                         int occupancy) const;
 
@@ -85,7 +82,6 @@ class WeightedLRU : public LRU
                                               candidates) const override;
 };
 
-} // namespace replacement_policy
 } // namespace gem5
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_WEIGHTED_LRU_RP_HH__

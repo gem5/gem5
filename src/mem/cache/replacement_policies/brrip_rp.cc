@@ -38,12 +38,9 @@
 namespace gem5
 {
 
-namespace replacement_policy
-{
-
 BRRIP::BRRIP(const Params &p)
-  : Base(p), numRRPVBits(p.num_bits), hitPriority(p.hit_priority),
-    btp(p.btp)
+  : BaseReplacementPolicy(p), numRRPVBits(p.num_bits),
+    hitPriority(p.hit_priority), btp(p.btp)
 {
     fatal_if(numRRPVBits <= 0, "There should be at least one bit per RRPV.\n");
 }
@@ -147,5 +144,4 @@ BRRIP::instantiateEntry()
     return std::shared_ptr<ReplacementData>(new BRRIPReplData(numRRPVBits));
 }
 
-} // namespace replacement_policy
 } // namespace gem5

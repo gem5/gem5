@@ -60,10 +60,7 @@ namespace gem5
 
 struct BRRIPRPParams;
 
-namespace replacement_policy
-{
-
-class BRRIP : public Base
+class BRRIP : public BaseReplacementPolicy
 {
   protected:
     /** BRRIP-specific implementation of replacement data. */
@@ -159,7 +156,6 @@ class BRRIP : public Base
     std::shared_ptr<ReplacementData> instantiateEntry() override;
 };
 
-} // namespace replacement_policy
 } // namespace gem5
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_BRRIP_RP_HH__

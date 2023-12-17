@@ -39,9 +39,6 @@
 namespace gem5
 {
 
-namespace replacement_policy
-{
-
 WeightedLRU::WeightedLRU(const Params &p)
   : LRU(p)
 {
@@ -96,5 +93,4 @@ WeightedLRU::instantiateEntry()
     return std::shared_ptr<ReplacementData>(new WeightedLRUReplData);
 }
 
-} // namespace replacement_policy
 } // namespace gem5

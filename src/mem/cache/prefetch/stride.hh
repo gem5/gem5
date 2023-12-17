@@ -64,10 +64,7 @@ namespace gem5
 {
 
 class BaseIndexingPolicy;
-namespace replacement_policy
-{
-    class Base;
-}
+class BaseReplacementPolicy;
 struct StridePrefetcherParams;
 
 namespace prefetch
@@ -114,11 +111,11 @@ class Stride : public Queued
         const int numEntries;
 
         BaseIndexingPolicy* const indexingPolicy;
-        replacement_policy::Base* const replacementPolicy;
+        BaseReplacementPolicy* const replacementPolicy;
 
         PCTableInfo(int assoc, int num_entries,
             BaseIndexingPolicy* indexing_policy,
-            replacement_policy::Base* repl_policy)
+            BaseReplacementPolicy* repl_policy)
           : assoc(assoc), numEntries(num_entries),
             indexingPolicy(indexing_policy), replacementPolicy(repl_policy)
         {

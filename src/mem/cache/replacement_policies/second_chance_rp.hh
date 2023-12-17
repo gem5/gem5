@@ -46,9 +46,6 @@ namespace gem5
 
 struct SecondChanceRPParams;
 
-namespace replacement_policy
-{
-
 class SecondChance : public FIFO
 {
   protected:
@@ -127,7 +124,6 @@ class SecondChance : public FIFO
     std::shared_ptr<ReplacementData> instantiateEntry() override;
 };
 
-} // namespace replacement_policy
 } // namespace gem5
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_SECOND_CHANCE_RP_HH__

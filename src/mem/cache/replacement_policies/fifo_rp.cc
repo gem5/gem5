@@ -37,11 +37,8 @@
 namespace gem5
 {
 
-namespace replacement_policy
-{
-
 FIFO::FIFO(const Params &p)
-  : Base(p)
+  : BaseReplacementPolicy(p)
 {
 }
 
@@ -94,5 +91,4 @@ FIFO::instantiateEntry()
     return std::shared_ptr<ReplacementData>(new FIFOReplData());
 }
 
-} // namespace replacement_policy
 } // namespace gem5

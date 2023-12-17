@@ -47,10 +47,7 @@
 namespace gem5
 {
 
-namespace replacement_policy
-{
-    class Base;
-}
+class BaseReplacementPolicy;
 class ReplaceableEntry;
 
 /**
@@ -77,7 +74,7 @@ class SectorTags : public BaseTags
     const bool sequentialAccess;
 
     /** Replacement policy */
-    replacement_policy::Base *replacementPolicy;
+    BaseReplacementPolicy *replacementPolicy;
 
     /** Number of data blocks per sector. */
     const unsigned numBlocksPerSector;

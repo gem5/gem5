@@ -38,16 +38,11 @@
 namespace gem5
 {
 
-namespace replacement_policy
-{
-
 /**
  * The replacement data needed by replacement policies. Each replacement policy
  * should have its own implementation of replacement data.
  */
 struct ReplacementData {};
-
-} // namespace replacement_policy
 
 /**
  * A replaceable entry is a basic entry in a 2d table-like structure that needs
@@ -80,7 +75,7 @@ class ReplaceableEntry
      * Replacement data associated to this entry.
      * It must be instantiated by the replacement policy before being used.
      */
-    std::shared_ptr<replacement_policy::ReplacementData> replacementData;
+    std::shared_ptr<ReplacementData> replacementData;
 
     /**
      * Set both the set and way. Should be called only once.

@@ -34,11 +34,8 @@
 namespace gem5
 {
 
-namespace replacement_policy
-{
-
 Dueling::Dueling(const Params &p)
-  : Base(p), replPolicyA(p.replacement_policy_a),
+  : BaseReplacementPolicy(p), replPolicyA(p.replacement_policy_a),
     replPolicyB(p.replacement_policy_b),
     duelingMonitor(p.constituency_size, p.team_size),
     duelingStats(this)
@@ -189,5 +186,4 @@ Dueling::DuelingStats::DuelingStats(statistics::Group* parent)
 {
 }
 
-} // namespace replacement_policy
 } // namespace gem5

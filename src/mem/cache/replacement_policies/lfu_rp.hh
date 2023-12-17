@@ -44,10 +44,7 @@ namespace gem5
 
 struct LFURPParams;
 
-namespace replacement_policy
-{
-
-class LFU : public Base
+class LFU : public BaseReplacementPolicy
 {
   protected:
     /** LFU-specific implementation of replacement data. */
@@ -111,7 +108,6 @@ class LFU : public Base
     std::shared_ptr<ReplacementData> instantiateEntry() override;
 };
 
-} // namespace replacement_policy
 } // namespace gem5
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_LFU_RP_HH__

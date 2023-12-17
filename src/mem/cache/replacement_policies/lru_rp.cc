@@ -37,11 +37,8 @@
 namespace gem5
 {
 
-namespace replacement_policy
-{
-
 LRU::LRU(const Params &p)
-  : Base(p)
+  : BaseReplacementPolicy(p)
 {
 }
 
@@ -96,5 +93,4 @@ LRU::instantiateEntry()
     return std::shared_ptr<ReplacementData>(new LRUReplData());
 }
 
-} // namespace replacement_policy
 } // namespace gem5

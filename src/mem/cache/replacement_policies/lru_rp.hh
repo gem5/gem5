@@ -42,10 +42,7 @@ namespace gem5
 
 struct LRURPParams;
 
-namespace replacement_policy
-{
-
-class LRU : public Base
+class LRU : public BaseReplacementPolicy
 {
   protected:
     /** LRU-specific implementation of replacement data. */
@@ -109,7 +106,6 @@ class LRU : public Base
     std::shared_ptr<ReplacementData> instantiateEntry() override;
 };
 
-} // namespace replacement_policy
 } // namespace gem5
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_LRU_RP_HH__

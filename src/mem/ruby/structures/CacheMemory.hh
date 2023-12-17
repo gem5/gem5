@@ -71,7 +71,7 @@ class CacheMemory : public SimObject
 {
   public:
     typedef RubyCacheParams Params;
-    typedef std::shared_ptr<replacement_policy::ReplacementData> ReplData;
+    typedef std::shared_ptr<ReplacementData> ReplData;
     CacheMemory(const Params &p);
     ~CacheMemory();
 
@@ -183,7 +183,7 @@ class CacheMemory : public SimObject
     std::vector<std::vector<AbstractCacheEntry*> > m_cache;
 
     /** We use the replacement policies from the Classic memory system. */
-    replacement_policy::Base *m_replacementPolicy_ptr;
+    BaseReplacementPolicy *m_replacementPolicy_ptr;
 
     BankedArray dataArray;
     BankedArray tagArray;

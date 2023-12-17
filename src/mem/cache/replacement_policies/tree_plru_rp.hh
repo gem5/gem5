@@ -80,10 +80,7 @@ namespace gem5
 
 struct TreePLRURPParams;
 
-namespace replacement_policy
-{
-
-class TreePLRU : public Base
+class TreePLRU : public BaseReplacementPolicy
 {
   private:
     /**
@@ -209,7 +206,6 @@ class TreePLRU : public Base
     std::shared_ptr<ReplacementData> instantiateEntry() override;
 };
 
-} // namespace replacement_policy
 } // namespace gem5
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_TREE_PLRU_RP_HH__

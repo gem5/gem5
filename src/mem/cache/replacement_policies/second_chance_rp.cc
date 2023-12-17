@@ -35,9 +35,6 @@
 namespace gem5
 {
 
-namespace replacement_policy
-{
-
 SecondChance::SecondChance(const Params &p)
   : FIFO(p)
 {
@@ -137,5 +134,4 @@ SecondChance::instantiateEntry()
     return std::shared_ptr<ReplacementData>(new SecondChanceReplData());
 }
 
-} // namespace replacement_policy
 } // namespace gem5

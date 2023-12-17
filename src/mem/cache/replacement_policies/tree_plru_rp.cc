@@ -43,9 +43,6 @@
 namespace gem5
 {
 
-namespace replacement_policy
-{
-
 /**
  * Get the index of the parent of the given indexed subtree.
  *
@@ -102,7 +99,8 @@ TreePLRU::TreePLRUReplData::TreePLRUReplData(
 }
 
 TreePLRU::TreePLRU(const Params &p)
-  : Base(p), numLeaves(p.num_leaves), count(0), treeInstance(nullptr)
+  : BaseReplacementPolicy(p), numLeaves(p.num_leaves),
+    count(0), treeInstance(nullptr)
 {
     fatal_if(!isPowerOf2(numLeaves),
              "Number of leaves must be non-zero and a power of 2");
@@ -214,5 +212,4 @@ TreePLRU::instantiateEntry()
     return std::shared_ptr<ReplacementData>(treePLRUReplData);
 }
 
-} // namespace replacement_policy
 } // namespace gem5

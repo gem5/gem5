@@ -84,7 +84,7 @@ CacheMemory::CacheMemory(const Params &p)
     m_is_instruction_only_cache = p.is_icache;
     m_resource_stalls = p.resourceStalls;
     m_block_size = p.block_size;  // may be 0 at this point. Updated in init()
-    m_use_occupancy = dynamic_cast<replacement_policy::WeightedLRU*>(
+    m_use_occupancy = dynamic_cast<WeightedLRU*>(
                                     m_replacementPolicy_ptr) ? true : false;
 }
 
@@ -400,9 +400,8 @@ CacheMemory::setMRU(Addr address, int occupancy)
         // replacement policy. Depending on different replacement policies,
         // use different touch() function.
         if (m_use_occupancy) {
-            static_cast<replacement_policy::WeightedLRU*>(
-                m_replacementPolicy_ptr)->touch(
-                entry->replacementData, occupancy);
+            static_cast<WeightedLRU*>(m_replacementPolicy_ptr)->touch(
+                                       entry->replacementData, occupancy);
         } else {
             m_replacementPolicy_ptr->touch(entry->replacementData);
         }

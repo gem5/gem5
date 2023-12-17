@@ -41,15 +41,12 @@ namespace gem5
 
 struct DuelingRPParams;
 
-namespace replacement_policy
-{
-
 /**
  * This replacement policy duels two replacement policies to find out which
  * one provides the best results. A policy is said to have the best results
  * when it has a lower number of misses.
  */
-class Dueling : public Base
+class Dueling : public BaseReplacementPolicy
 {
   protected:
     /**
@@ -71,9 +68,9 @@ class Dueling : public Base
     };
 
     /** Sub-replacement policy used in this multiple container. */
-    Base* const replPolicyA;
+    BaseReplacementPolicy* const replPolicyA;
     /** Sub-replacement policy used in this multiple container. */
-    Base* const replPolicyB;
+    BaseReplacementPolicy* const replPolicyB;
 
     /**
      * A dueling monitor that decides which is the best sub-policy based on
@@ -112,7 +109,6 @@ class Dueling : public Base
     std::shared_ptr<ReplacementData> instantiateEntry() override;
 };
 
-} // namespace replacement_policy
 } // namespace gem5
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_DUELING_RP_HH__

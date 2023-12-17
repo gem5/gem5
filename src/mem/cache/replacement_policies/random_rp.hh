@@ -42,10 +42,7 @@ namespace gem5
 
 struct RandomRPParams;
 
-namespace replacement_policy
-{
-
-class Random : public Base
+class RandomRP : public BaseReplacementPolicy
 {
   protected:
     /** Random-specific implementation of replacement data. */
@@ -65,8 +62,8 @@ class Random : public Base
 
   public:
     typedef RandomRPParams Params;
-    Random(const Params &p);
-    ~Random() = default;
+    RandomRP(const Params &p);
+    ~RandomRP() = default;
 
     /**
      * Invalidate replacement data to set it as the next probable victim.
@@ -112,7 +109,6 @@ class Random : public Base
     std::shared_ptr<ReplacementData> instantiateEntry() override;
 };
 
-} // namespace replacement_policy
 } // namespace gem5
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_RANDOM_RP_HH__

@@ -44,10 +44,7 @@ namespace gem5
 
 struct FIFORPParams;
 
-namespace replacement_policy
-{
-
-class FIFO : public Base
+class FIFO : public BaseReplacementPolicy
 {
   protected:
     /** FIFO-specific implementation of replacement data. */
@@ -117,7 +114,6 @@ class FIFO : public Base
     std::shared_ptr<ReplacementData> instantiateEntry() override;
 };
 
-} // namespace replacement_policy
 } // namespace gem5
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_FIFO_RP_HH__

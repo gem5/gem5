@@ -36,9 +36,6 @@
 namespace gem5
 {
 
-namespace replacement_policy
-{
-
 SHiP::SHiPReplData::SHiPReplData(int num_bits)
   : BRRIPReplData(num_bits), signature(0), outcome(false)
 {
@@ -171,5 +168,4 @@ SHiPPC::getSignature(const PacketPtr pkt) const
     return signature % SHCT.size();
 }
 
-} // namespace replacement_policy
 } // namespace gem5

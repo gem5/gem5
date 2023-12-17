@@ -37,16 +37,13 @@
 namespace gem5
 {
 
-namespace replacement_policy
-{
-
-Random::Random(const Params &p)
-  : Base(p)
+RandomRP::RandomRP(const Params &p)
+  : BaseReplacementPolicy(p)
 {
 }
 
 void
-Random::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
+RandomRP::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
 {
     // Unprioritize replacement data victimization
     std::static_pointer_cast<RandomReplData>(
@@ -54,12 +51,12 @@ Random::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
 }
 
 void
-Random::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
+RandomRP::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
 {
 }
 
 void
-Random::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
+RandomRP::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
 {
     // Unprioritize replacement data victimization
     std::static_pointer_cast<RandomReplData>(
@@ -67,7 +64,7 @@ Random::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
 }
 
 ReplaceableEntry*
-Random::getVictim(const ReplacementCandidates& candidates) const
+RandomRP::getVictim(const ReplacementCandidates& candidates) const
 {
     // There must be at least one replacement candidate
     assert(candidates.size() > 0);
@@ -90,10 +87,9 @@ Random::getVictim(const ReplacementCandidates& candidates) const
 }
 
 std::shared_ptr<ReplacementData>
-Random::instantiateEntry()
+RandomRP::instantiateEntry()
 {
     return std::shared_ptr<ReplacementData>(new RandomReplData());
 }
 
-} // namespace replacement_policy
 } // namespace gem5
