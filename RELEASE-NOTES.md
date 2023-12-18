@@ -1,8 +1,13 @@
 # Version 23.1
+
 ## Significant API and user-facing changes
+
 ### gem5 can be built with `kconfig`
+
 - gem5 can now be built using kconfig. For more details refer to the documentation here: [kconfig documentation](https://www.gem5.org/documentation/general_docs/kconfig_build_system/)
+
 ### `WorkloadResource` added to resource specialization
+
 - The `Workload` and `CustomWorkload` classes are now deprecated. They have been transformed into wrappers for the `obtain_resource` and `WorkloadResource` classes in `resource.py`, respectively.
 - Code utilizing the older API will continue to function as expected but will trigger a warning message. To update code using the `Workload` class, change the call from `Workload(id='resource_id', resource_version='1.0.0')` to `obtain_resource(id='resource_id', resource_version='1.0.0')`. Similarly, to update code using the `CustomWorkload` class, change the call from `CustomWorkload(function=func, parameters=params)` to `WorkloadResource(function=func, parameters=params)`.
 - Workload resources in gem5 can now be directly acquired using the `obtain_resource` function, just like other resources.
@@ -26,13 +31,21 @@ Suites is a new category of resource being introduced in gem5. Documentation of 
 - The provided configs scripts can now run KVM on more restrictive setups.
 
 ## Known Bugs/Issues
+
 - [RISC-V RVV Bad execution of riscv rvv vss instruction](https://github.com/gem5/gem5/issues/594)
+
 - [RISC-V Vector Extension float32_t bugs/unsupported widening instructions](https://github.com/gem5/gem5/issues/442)
+
 - [Implement AVX xsave/xstor to avoid workaround when checkpointing](https://github.com/gem5/gem5/issues/434)
+
 - [Adding Vector Segmented Loads/Stores to RISC-V V 1.0 implementation](https://github.com/gem5/gem5/issues/382)
+
 - [Integer overflow in AddrRange subset check](https://github.com/gem5/gem5/issues/240)
+
 - [RISCV64 TLB refuses to access upper half of physical address space](https://github.com/gem5/gem5/issues/238)
+
 - [Bug when trying to restore checkpoints in SPARC: “panic: panic condition !pte occurred: Tried to execute unmapped address 0.”](https://github.com/gem5/gem5/issues/197)
+
 - [BaseCache::recvTimingResp can trigger an assertion error from getTarget() due to MSHR in senderState having no targets](https://github.com/gem5/gem5/issues/100)
 
 # Version 23.0.0.1
