@@ -67,6 +67,7 @@ enumeration(CHIRequestType, desc="") {
   WriteEvictFull;
   WriteUniquePtl;
   WriteUniqueFull;
+  WriteUniqueZero;
 
   AtomicReturn;
   AtomicNoReturn;
