@@ -34,6 +34,7 @@
 #include <utility>
 #include <vector>
 
+#include "base/associative_cache.hh"
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
 
@@ -62,20 +63,35 @@ struct ltseqnum
 class StoreSet
 {
   public:
-    typedef unsigned SSID;
+    typedef Addr SSID;
+    typedef replacement_policy::Base BaseReplacementPolicy;
 
   public:
+    class SSITEntry : public CacheEntry
+    {
+        SSID _ssid;
+      public:
+        SSITEntry() : CacheEntry(), _ssid(MaxAddr) {}
+
+        void setSSID(SSID id) { _ssid = id; }
+        SSID getSSID(void) { return _ssid; }
+    };
+
     /** Default constructor.  init() must be called prior to use. */
-    StoreSet() { };
+    StoreSet() {};
 
     /** Creates store set predictor with given table sizes. */
-    StoreSet(uint64_t clear_period, int SSIT_size, int LFST_size);
+    StoreSet(uint64_t clear_period, int SSIT_size, int SSIT_assoc,
+             BaseReplacementPolicy *replPolicy,
+             BaseIndexingPolicy *indexingPolicy, int LFST_size);
 
     /** Default destructor. */
     ~StoreSet();
 
     /** Initializes the store set predictor with the given table sizes. */
-    void init(uint64_t clear_period, int SSIT_size, int LFST_size);
+    void init(uint64_t clear_period, int SSIT_size, int SSIT_assoc,
+              BaseReplacementPolicy *_replPolicy,
+              BaseIndexingPolicy *_indexingPolicy, int LFST_size);
 
     /** Records a memory ordering violation between the younger load
      * and the older store. */
@@ -115,19 +131,12 @@ class StoreSet
     void dump();
 
   private:
-    /** Calculates the index into the SSIT based on the PC. */
-    inline int calcIndex(Addr PC)
-    { return (PC >> offsetBits) & indexMask; }
-
     /** Calculates a Store Set ID based on the PC. */
     inline SSID calcSSID(Addr PC)
     { return ((PC ^ (PC >> 10)) % LFSTSize); }
 
     /** The Store Set ID Table. */
-    std::vector<SSID> SSIT;
-
-    /** Bit vector to tell if the SSIT has a valid entry. */
-    std::vector<bool> validSSIT;
+    AssociativeCache<SSITEntry> SSIT;
 
     /** Last Fetched Store Table. */
     std::vector<InstSeqNum> LFST;
@@ -149,15 +158,13 @@ class StoreSet
 
     /** Store Set ID Table size, in entries. */
     int SSITSize;
+    int SSITAssoc;
+
+    BaseReplacementPolicy *SSITReplPolicy;
+    BaseIndexingPolicy *SSITIndexingPolicy;
 
     /** Last Fetched Store Table size, in entries. */
     int LFSTSize;
-
-    /** Mask to obtain the index. */
-    int indexMask;
-
-    // HACK: Hardcoded for now.
-    int offsetBits;
 
     /** Number of memory operations predicted since last clear of predictor */
     int memOpsPred;

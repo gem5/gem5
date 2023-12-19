@@ -42,6 +42,8 @@ from m5.objects.BaseCPU import BaseCPU
 # from m5.objects.O3Checker import O3Checker
 from m5.objects.BranchPredictor import *
 from m5.objects.FUPool import *
+from m5.objects.IndexingPolicies import *
+from m5.objects.ReplacementPolicies import *
 from m5.params import *
 from m5.proxy import *
 
@@ -154,6 +156,13 @@ class BaseO3CPU(BaseCPU):
     )
     LFSTSize = Param.Unsigned(1024, "Last fetched store table size")
     SSITSize = Param.Unsigned(1024, "Store set ID table size")
+    SSITAssoc = Param.Unsigned(1, "SSIT table associativity")
+    SSITReplPolicy = Param.BaseReplacementPolicy(
+        LRURP(), "SSIT replacement policy"
+    )
+    SSITIndexingPolicy = Param.BaseIndexingPolicy(
+        SetAssociative(), "SSIT indexing policy"
+    )
 
     numRobs = Param.Unsigned(1, "Number of Reorder Buffers")
 
