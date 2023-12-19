@@ -78,7 +78,7 @@ class TaggedEntry : public ReplaceableEntry
      * @return True if the tag information match this entry's.
      */
     virtual bool
-    matchTag(Addr tag, bool is_secure) const
+    matchTag(Addr tag, bool is_secure = false) const
     {
         return isValid() && (getTag() == tag) && (isSecure() == is_secure);
     }
@@ -90,7 +90,7 @@ class TaggedEntry : public ReplaceableEntry
      * @param tag The tag value.
      */
     virtual void
-    insert(const Addr tag, const bool is_secure)
+    insert(const Addr tag, const bool is_secure = false)
     {
         setValid();
         setTag(tag);
