@@ -70,7 +70,7 @@ gem5_verify_config(
     length=constants.long_tag,
 )
 
-null_tests = [
+x86_tests = [
     ("garnet_synth_traffic", None, ["--sim-cycles", "5000000"]),
     ("memcheck", None, ["--maxtick", "2000000000", "--prefetchers"]),
     (
@@ -122,7 +122,7 @@ null_tests = [
     ("ruby_direct_test", None, ["--requests", "50000"]),
 ]
 
-for test_name, basename_noext, args in null_tests:
+for test_name, basename_noext, args in x86_tests:
     if basename_noext == None:
         basename_noext = test_name
     gem5_verify_config(
@@ -133,7 +133,8 @@ for test_name, basename_noext, args in null_tests:
             config.base_dir, "configs", "example", basename_noext + ".py"
         ),
         config_args=args,
-        valid_isas=(constants.null_tag,),
+        valid_isas=(constants.x86_tag,),
+        protocol="MESI_Two_Level",
         valid_hosts=constants.supported_hosts,
         length=constants.long_tag,
     )

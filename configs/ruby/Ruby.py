@@ -331,8 +331,9 @@ def send_evicts(options):
     # 2. The x86 mwait instruction is built on top of coherence invalidations
     # 3. The local exclusive monitor in ARM systems
 
-    if isinstance(options.cpu_type, DerivO3CPU) or ObjectList.cpu_list.get_isa(
-        options.cpu_type
-    ) in [ISA.X86, ISA.ARM]:
+    if (
+        hasattr(m5.objects, "DerivO3CPU")
+        and isinstance(options.cpu_type, DerivO3CPU)
+    ) or ObjectList.cpu_list.get_isa(options.cpu_type) in [ISA.X86, ISA.ARM]:
         return True
     return False

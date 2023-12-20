@@ -151,7 +151,7 @@ MemTest::completeRequest(PacketPtr pkt, bool functional)
     const uint8_t *pkt_data = pkt->getConstPtr<uint8_t>();
 
     if (pkt->isError()) {
-        if (!functional || !suppressFuncErrors)
+        if (!functional || !pkt->suppressFuncError() || !suppressFuncErrors)
             panic( "%s access failed at %#x\n",
                 pkt->isWrite() ? "Write" : "Read", req->getPaddr());
     } else {
