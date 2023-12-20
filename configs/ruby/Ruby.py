@@ -48,6 +48,7 @@ from m5.util import (
 )
 
 from gem5.isas import ISA
+from gem5.runtime import get_supported_isas
 
 addToPath("../")
 
@@ -330,6 +331,8 @@ def send_evicts(options):
     # 1. The O3 model must keep the LSQ coherent with the caches
     # 2. The x86 mwait instruction is built on top of coherence invalidations
     # 3. The local exclusive monitor in ARM systems
+    if get_supported_isas() == {ISA.NULL}:
+        return False
 
     if (
         hasattr(m5.objects, "DerivO3CPU")
