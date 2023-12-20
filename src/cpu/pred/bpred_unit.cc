@@ -394,6 +394,21 @@ BPredUnit::commitBranch(ThreadID tid, PredictorHistory* &hist)
                          hist->type,
                          hist->rasHistory);
     }
+
+    // Update the BTB with commited branches.
+    // Install all taken
+    if (hist->actuallyTaken) {
+
+        DPRINTF(Branch,"[tid:%i] BTB Update called for [sn:%llu] "
+                    "PC %#x -> T: %#x\n", tid,
+                    hist->seqNum, hist->pc, hist->target->instAddr());
+
+        stats.BTBUpdates++;
+        btb->update(tid, hist->pc,
+                        *hist->target,
+                         hist->type,
+                         hist->inst);
+    }
 }
 
 
@@ -602,11 +617,11 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
                         "PC %#x -> T: %#x\n", tid,
                         hist->seqNum, hist->pc, hist->target->instAddr());
 
-            stats.BTBUpdates++;
-            btb->update(tid, hist->pc,
-                            *hist->target,
-                             hist->type,
-                             hist->inst);
+            // stats.BTBUpdates++;
+            // btb->update(tid, hist->pc,
+            //                 *hist->target,
+            //                  hist->type,
+            //                  hist->inst);
             btb->incorrectTarget(hist->pc, hist->type);
         }
 
