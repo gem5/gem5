@@ -44,6 +44,27 @@ Suites is a new category of resource being introduced in gem5. Documentation of 
 - New packer disk image script containing ROCm 5.4.2, PyTorch 2.0.1, and Tensorflow 2.11.
 - GPU instructions can now perform atomics on host addresses.
 - The provided configs scripts can now run KVM on more restrictive setups.
+- Add support to checkpoint and restore between kernels in GPUFS, including adding various AQL, HSA Queue, VMID map, MQD attributes, GART translations, and PM4Queues to GPU checkpoints
+- move GPU cache recorder code to RubyPort instead of Sequencer/GPUCoalescer to allow checkpointing to occur
+- add support for flushing GPU caches, as well as cache cooldown/warmup support, for checkpoints
+- Update vega10_kvm.py to add checkpointing instructions
+
+## SE mode GPU model improvements
+- started adding support for mmap'ing inputs for GPUSE tests, which reduces their runtime by 8-15% per run
+
+## GPU model improvements
+- update GPU VIPER and Coalescer support to ensure correct replacement policy behavior when multiple requests from the same CU are concurrently accessing the same line
+- fix bug with GPU VIPER to resolve a race conflict for loads that bypass the TCP (L1D$)
+- fix bug with MRU replacement policy updates in GPU SQC (I$)
+- update GPU and Ruby debug prints to resolve various small errors
+- Add configurable GPU L1,L2 num banks and L2 latencies
+- Add decodings for new MI100 VOP2 insts
+- Add GPU GLC Atomic Resource Constraints to better model how atomic resources are shared at GPU TCC (L2$)
+- Update GPU tester to work with both requests that bypass all caches (SLC) and requests that bypass only the TCP (L1D$)
+- Fixes for how write mask works for GPU WB L2 caches
+- Added support for WB and WT GPU atomics
+- Added configurable support to better model the latency of GPU atomic requests
+- fix GPU's default number of HW barrier/CU to better model amount of concurrency GPU CUs should have
 
 ## RISC-V RVV 1.0 implemented
 
