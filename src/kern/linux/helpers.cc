@@ -45,12 +45,10 @@
 
 // ignore 'maybe-uniitialized' warnings for GCC 12.1.
 #if __GNUC__ &&  __GNUC__ == 12 && __GNUC_MINOR__ == 1
-    #if __has_warning( "-Wmaybe-uninitialized" )
-        #define SUPPRESSING_MAYBE_UNINITIALIZED_WARNING
-        // save diagnostic state.
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-    #endif
+    #define SUPPRESSING_MAYBE_UNINITIALIZED_WARNING
+    // save diagnostic state.
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #endif
 #include <regex>
 #ifdef SUPPRESSING_MAYBE_UNINITIALIZED_WARNING
