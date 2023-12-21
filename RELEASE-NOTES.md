@@ -34,6 +34,8 @@ Suites is a new category of resource being introduced in gem5. Documentation of 
 - Added support for clang 15 and clang 16
 - gem5 no longer supports building on Ubuntu 18.04
 - GCC 7, GCC 9, and clang 6 are no longer supported
+- The stats `board.memory.mem_ctrl.dram.bytesRead` and `board.memory.mem_ctrl.dram.bytesWritten` are changed to `board.memory.mem_ctrl.dram.dramBytesRead` and `board.memory.mem_ctrl.dram.dramBytesWritten` respectively.
+- The stats `board.memory.mem_ctrl.nvm.bytesRead` and `board.memory.mem_ctrl.nvm.bytesWritten` are changed to `board.memory.mem_ctrl.nvm.nvmBytesRead` and `board.memory.mem_ctrl.nvm.nvmBytesWritten` respectively.
 
 ## Full-system GPU model improvements
 
