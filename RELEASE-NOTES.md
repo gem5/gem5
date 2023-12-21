@@ -60,6 +60,21 @@ Jerin Joy who did much of the initial work, and many others who contributed to t
   - The model for executing memory instructions is not very high performance
   - The statistics are not correct for counting vector instruction execution
 
+## ArmISA changes/improvements
+
+- Architectural support for the following extensions:
+* FEAT_TLBIRANGE
+* FEAT_FGT
+* FEAT_TCR2
+* FEAT_SCTLR2
+
+- Arm support for SVE instructions improved
+- Fixed some FEAT_SEL2 related issues:
+  - [Fix virtual interrupt logic in secure mode](https://github.com/gem5/gem5/pull/584)
+  - [Make interrupt masking handle VHE/SEL2 cases](https://github.com/gem5/gem5/pull/430)
+- Removed support for Arm Jazelle and ThumbEE
+- Implementation of an Arm Capstone Disassembler
+
 ## Other notable changes/improvements
 
 - Improvements to the CHI coherence protocol implementation
@@ -70,14 +85,13 @@ Jerin Joy who did much of the initial work, and many others who contributed to t
 - DRAMSys integration updated to latest DRAMSys version (5.0)
 - Improved support for RISC-V privilege modes
 - Fixed bug in switching CPUs with RISC-V
-- Arm support for SVE instructions improved
-- Removed support for Arm Jazelle and ThumbEE
 - CPU branch preditor refactoring to prepare for decoupled front end support
 - Perf is now optional when using the KVM CPU model
 - Improvements to the gem5-SST bridge including updating to SST 13.0
 - Improved formatting of documentation in stdlib
 - By default use isort for python imports in style
 - Many, many testing improvements during the migration to GitHub actions
+- Fixed the elastic trace replaying logic (TraceCPU)
 
 ## Known Bugs/Issues
 
