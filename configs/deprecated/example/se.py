@@ -118,7 +118,8 @@ def get_processes(args):
         idx += 1
 
     if args.smt:
-        assert isinstance(args.cpu_type, DerivO3CPU)
+        cpu_type = ObjectList.cpu_list.get(args.cpu_type)
+        assert ObjectList.is_o3_cpu(cpu_type), "SMT requires an O3CPU"
         return multiprocesses, idx
     else:
         return multiprocesses, 1
