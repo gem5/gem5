@@ -7,9 +7,9 @@ During this release, there have been 362 pull requests merged which comprise 416
 
 ### The gem5 build can is now configured with `kconfig`
 
-Most gem5 builds (e.g., `build/X86/gem5.opt`) are backwards compatible and require no changes to your current workflows.
+Most gem5 builds without customized options (excluding double dash options) (e.g. , build/X86/gem5.opt) are backwards compatible and require no changes to your current workflows.
 All of the default builds in `build_opts` are unchanged and still available.
-However, if you want to specialize your build, you now have to use `scons <kconfig command>`.
+However, if you want to specialize your build. For example, use customized ruby protocol. The command scons PROTOCOL=<PROTOCAL_NAME> build/ALL/gem5.opt will not work anymore. you now have to use scons <kconfig command> to update the ruby protocol as example. The double dash options (--without-tcmalloc, --with-asan and so on) are still continue to work as normal.
 For more details refer to the documentation here: [kconfig documentation](https://www.gem5.org/documentation/general_docs/kconfig_build_system/)
 
 ### Standard library improvements
@@ -102,6 +102,7 @@ Jerin Joy who did much of the initial work, and many others who contributed to t
 - Far atomics implemented in CHI
 - Ruby now supports using the prefetchers from the classic caches, if the protocol supports it. CHI has been extended to support the classic prefetchers.
 - Bug in RISC-V TLB to fixed to correctly count misses and hits
+- Added new RISC-V Zcb instructions https://github.com/gem5/gem5/pull/399
 - RISC-V can now use a separate binary for the bootloader and kernel in FS mode
 - DRAMSys integration updated to latest DRAMSys version (5.0)
 - Improved support for RISC-V privilege modes
