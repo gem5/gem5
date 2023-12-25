@@ -7,10 +7,10 @@ During this release, there have been 362 pull requests merged which comprise 416
 
 ### The gem5 build can is now configured with `kconfig`
 
-Most gem5 builds without customized options (excluding double dash options) (e.g. , build/X86/gem5.opt) are backwards compatible and require no changes to your current workflows.
-All of the default builds in `build_opts` are unchanged and still available.
-However, if you want to specialize your build. For example, use customized ruby protocol. The command scons PROTOCOL=<PROTOCAL_NAME> build/ALL/gem5.opt will not work anymore. you now have to use scons <kconfig command> to update the ruby protocol as example. The double dash options (--without-tcmalloc, --with-asan and so on) are still continue to work as normal.
-For more details refer to the documentation here: [kconfig documentation](https://www.gem5.org/documentation/general_docs/kconfig_build_system/)
+- Most gem5 builds without customized options (excluding double dash options) (e.g. , build/X86/gem5.opt) are backwards compatible and require no changes to your current workflows.
+- All of the default builds in `build_opts` are unchanged and still available.
+- However, if you want to specialize your build. For example, use customized ruby protocol. The command `scons PROTOCOL=<PROTOCAL_NAME> build/ALL/gem5.opt` will not work anymore. you now have to use `scons <kconfig command>` to update the ruby protocol as example. The double dash options (`--without-tcmalloc`, `--with-asan` and so on) are still continue to work as normal.
+- For more details refer to the documentation here: [kconfig documentation](https://www.gem5.org/documentation/general_docs/kconfig_build_system/)
 
 ### Standard library improvements
 
