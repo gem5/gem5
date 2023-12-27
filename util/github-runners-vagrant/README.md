@@ -67,6 +67,26 @@ You can check the status of the runner here: https://github.com/organizations/{G
 
 If the runner ever shows as offline, you can rerun the `vagrant up --provider=libvirt` command to make sure everything is working properly.
 
+## Troubleshooting
+
+### The default libvirt disk image storage pool is on the wrong drive
+
+By default libvirt will store disk images in "/var/lib/libvirt/images".
+This is not ideal as it is on a small root partition.
+A solution to this is to change the default storage location.
+To do so, do the following:
+
+```sh
+virsh pool-list --all # Confirm here a "default" pool exist. We'll modify this.
+virsh pool-dumpxml default >default-pool.xml # We take a dump of the default then removed it.
+virsh pool-destroy default
+virsh pool-undefine default
+vim default-pool.xml # Change the image path to the desired path
+virsh pool-define default-pool.xml # From here we re-add the default.
+virsh pool-start default
+virsh pool-autostart default
+```
+
 ### Error: "Vagrant failed to initialize at a very early stage"
 
 W set the `VAGRANT_HOME` environment variable to the CWD.

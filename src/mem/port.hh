@@ -47,6 +47,7 @@
 #define __MEM_PORT_HH__
 
 #include <memory>
+#include <sstream>
 #include <stack>
 #include <string>
 
