@@ -597,14 +597,6 @@ for variant_path in variant_paths:
                     env.Append(LINKFLAGS=['-Wl,--no-keep-memory'])
                 else:
                     error("Unable to use --no-keep-memory with the linker")
-
-        # Treat warnings as errors but white list some warnings that we
-        # want to allow (e.g., deprecation warnings).
-        env.Append(CCFLAGS=['-Werror',
-                             '-Wno-error=deprecated-declarations',
-                             '-Wno-error=deprecated',
-                            ])
-
     else:
         error('\n'.join((
               "Don't know what compiler options to use for your compiler.",
