@@ -50,9 +50,11 @@ Suites is a new category of resource being introduced in gem5. Documentation of 
 - Update vega10_kvm.py to add checkpointing instructions
 
 ## SE mode GPU model improvements
+
 - started adding support for mmap'ing inputs for GPUSE tests, which reduces their runtime by 8-15% per run
 
 ## GPU model improvements
+
 - update GPU VIPER and Coalescer support to ensure correct replacement policy behavior when multiple requests from the same CU are concurrently accessing the same line
 - fix bug with GPU VIPER to resolve a race conflict for loads that bypass the TCP (L1D$)
 - fix bug with MRU replacement policy updates in GPU SQC (I$)
@@ -125,6 +127,32 @@ Jerin Joy who did much of the initial work, and many others who contributed to t
 - [RISCV64 TLB refuses to access upper half of physical address space](https://github.com/gem5/gem5/issues/238)
 - [Bug when trying to restore checkpoints in SPARC: “panic: panic condition !pte occurred: Tried to execute unmapped address 0.”](https://github.com/gem5/gem5/issues/197)
 - [BaseCache::recvTimingResp can trigger an assertion error from getTarget() due to MSHR in senderState having no targets](https://github.com/gem5/gem5/issues/100)
+
+# Version 23.0.1.0
+
+This minor release incorporates documentation updates, bug fixes, and some minor improvements.
+
+## Documentation updates
+
+* "TESTING.md" has been updated to more accurately reflect our current testing infrastructure.
+* "README" has been replaced with "README.md" and includes more up-to-date information on using gem5.
+* "CONTRIBUTING.md" has been updated to reflect our migration to GitHub and the changes in policy and proceedures.
+* Where needed old references to Gerrit have been removed in favor of GitHub.
+
+## Bug Fixes
+
+* Fixes an assert failure when using ARM which was trigged when `shiftAmt` is 0 for a UQRSH instruction.
+* Fixes `name 'fatal' is not defined` being thrown when tracing is off.
+* Fixes a bug in ARM in which the TLBIOS instructions were decoded as normal MSR instructions with no effect on the TLBs.
+* Fixes invalid `packet_id` value in flit.
+* Fixes default CustomMesh for use with Garnet.
+
+## Minor Improvements
+
+* The gem5 resources downloader now outputs more helpful errors in the case of a failure.
+* "util/github-runners-vagrant" has been added. This outlines how to setup a GitHub Action's set-hosted runner for gem5.
+* The PyUnit tests have been refactored to no longer download large resources during testing.
+* Using Perf is now optional when utilizing KVM CPUs.
 
 # Version 23.0.0.1
 
