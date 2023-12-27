@@ -389,10 +389,8 @@ decode QUADRANT default Unknown::unknown() {
                 if (status.fs == FPUStatus::OFF)
                     return std::make_shared<IllegalInstFault>("FPU is off",
                                                                machInst);
-
                 status.fs = FPUStatus::DIRTY;
                 xc->setMiscReg(MISCREG_STATUS, status);
-
                 Fc1_bits = Mem;
             }}, {{
                 EA = rvZext(sp + offset);
@@ -420,10 +418,8 @@ decode QUADRANT default Unknown::unknown() {
                     if (status.fs == FPUStatus::OFF)
                         return std::make_shared<IllegalInstFault>("FPU is off",
                                                                    machInst);
-
                     status.fs = FPUStatus::DIRTY;
                     xc->setMiscReg(MISCREG_STATUS, status);
-
                     freg_t fd;
                     fd = freg(f32(Mem_uw));
                     Fd_bits = fd.v;
