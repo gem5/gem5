@@ -25,5 +25,5 @@ python-dotenv==1.0.0
 requests==2.31.0
 sentinels==1.0.0
 urllib3==2.0.2
-Werkzeug==2.3.4
+Werkzeug==2.3.8
 zipp==3.15.0
