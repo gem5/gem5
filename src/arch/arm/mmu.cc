@@ -1205,17 +1205,20 @@ MMU::CachedState::updateMiscReg(ThreadContext *tc,
     ArmTranslationType tran_type)
 {
     cpsr = tc->readMiscReg(MISCREG_CPSR);
+    hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+    scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
     // Dependencies: SCR/SCR_EL3, CPSR
     isSecure = ArmISA::isSecure(tc) &&
         !(tran_type & HypMode) && !(tran_type & S1S2NsTran);
 
-    aarch64EL = tranTypeEL(cpsr, tran_type);
+    aarch64EL = tranTypeEL(cpsr, scr, tran_type);
     aarch64 = isStage2 ?
         ELIs64(tc, EL2) :
         ELIs64(tc, aarch64EL == EL0 ? EL1 : aarch64EL);
 
-    hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+    isHyp = aarch64EL == EL2;
+
     if (aarch64) {  // AArch64
         // determine EL we need to translate in
         switch (aarch64EL) {
@@ -1274,14 +1277,9 @@ MMU::CachedState::updateMiscReg(ThreadContext *tc,
             break;
         }
 
-        scr = tc->readMiscReg(MISCREG_SCR_EL3);
         isPriv = aarch64EL != EL0;
         if (mmu->release()->has(ArmExtension::VIRTUALIZATION)) {
             vmid = getVMID(tc);
-            isHyp = aarch64EL == EL2;
-            isHyp |= tran_type & HypMode;
-            isHyp &= (tran_type & S1S2NsTran) == 0;
-            isHyp &= (tran_type & S1CTran)    == 0;
             bool vm = hcr.vm;
             if (HaveExt(tc, ArmExtension::FEAT_VHE) &&
                 hcr.e2h == 1 && hcr.tge ==1) {
@@ -1319,7 +1317,6 @@ MMU::CachedState::updateMiscReg(ThreadContext *tc,
                                  !isSecure));
         ttbcr  = tc->readMiscReg(snsBankedIndex(MISCREG_TTBCR, tc,
                                  !isSecure));
-        scr    = tc->readMiscReg(MISCREG_SCR_EL3);
         isPriv = cpsr.mode != MODE_USER;
         if (longDescFormatInUse(tc)) {
             uint64_t ttbr_asid = tc->readMiscReg(
@@ -1338,14 +1335,9 @@ MMU::CachedState::updateMiscReg(ThreadContext *tc,
                                !isSecure));
         dacr = tc->readMiscReg(snsBankedIndex(MISCREG_DACR, tc,
                                !isSecure));
-        hcr  = tc->readMiscReg(MISCREG_HCR_EL2);
 
         if (mmu->release()->has(ArmExtension::VIRTUALIZATION)) {
             vmid   = bits(tc->readMiscReg(MISCREG_VTTBR), 55, 48);
-            isHyp  = cpsr.mode == MODE_HYP;
-            isHyp |=  tran_type & HypMode;
-            isHyp &= (tran_type & S1S2NsTran) == 0;
-            isHyp &= (tran_type & S1CTran)    == 0;
             if (isHyp) {
                 sctlr = tc->readMiscReg(MISCREG_HSCTLR);
             }
@@ -1370,7 +1362,7 @@ MMU::CachedState::updateMiscReg(ThreadContext *tc,
 }
 
 ExceptionLevel
-MMU::tranTypeEL(CPSR cpsr, ArmTranslationType type)
+MMU::tranTypeEL(CPSR cpsr, SCR scr, ArmTranslationType type)
 {
     switch (type) {
       case S1E0Tran:
@@ -1379,18 +1371,21 @@ MMU::tranTypeEL(CPSR cpsr, ArmTranslationType type)
 
       case S1E1Tran:
       case S12E1Tran:
+      case S1S2NsTran:
         return EL1;
 
       case S1E2Tran:
+      case HypMode:
         return EL2;
 
       case S1E3Tran:
         return EL3;
 
-      case NormalTran:
       case S1CTran:
-      case S1S2NsTran:
-      case HypMode:
+        return currEL(cpsr) == EL3 && scr.ns == 0 ?
+           EL3 : EL1;
+
+      case NormalTran:
         return currEL(cpsr);
 
       default:

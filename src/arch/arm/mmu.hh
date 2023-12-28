@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2016, 2019-2022 Arm Limited
+ * Copyright (c) 2010-2013, 2016, 2019-2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -388,7 +388,7 @@ class MMU : public BaseMMU
      * a specific translation type. If the translation type doesn't
      * specify an EL, we use the current EL.
      */
-    static ExceptionLevel tranTypeEL(CPSR cpsr, ArmTranslationType type);
+    static ExceptionLevel tranTypeEL(CPSR cpsr, SCR scr, ArmTranslationType type);
 
     static bool hasUnprivRegime(ExceptionLevel el, bool e2h);
 
