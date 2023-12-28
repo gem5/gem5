@@ -117,6 +117,8 @@ AddOption('--no-compress-debug', action='store_true',
           help="Don't compress debug info in build files")
 AddOption('--with-lto', action='store_true',
           help='Enable Link-Time Optimization')
+AddOption('--with-libcxx', action='store_true',
+          help='Use libc++ as the C++ standard library (requires Clang)')
 AddOption('--verbose', action='store_true',
           help='Print full tool command lines')
 AddOption('--without-python', action='store_true',
@@ -567,6 +569,16 @@ for variant_path in variant_paths:
         with gem5_scons.Configure(env) as conf:
             conf.CheckLinkFlag('-Wl,--as-needed')
 
+        want_libcxx = GetOption('with_libcxx')
+        if want_libcxx:
+            with gem5_scons.Configure(env) as conf:
+                # Try using libc++ if it supports the <filesystem> library.
+                code = '#include <filesystem>\nint main() { return 0; }'
+                if (not conf.CheckCxxFlag('-stdlib=libc++') or
+                    not conf.CheckLinkFlag('-stdlib=libc++', code=code)
+                ):
+                    error('Requested libc++ but it is not usable')
+
         linker = GetOption('linker')
         if linker:
             with gem5_scons.Configure(env) as conf:
@@ -672,7 +684,7 @@ for variant_path in variant_paths:
 
         env.Append(TCMALLOC_CCFLAGS=['-fno-builtin'])
 
-        if compareVersions(env['CXXVERSION'], "11") < 0:
+        if not want_libcxx and compareVersions(env['CXXVERSION'], "11") < 0:
             # `libstdc++fs`` must be explicitly linked for `std::filesystem``
             # in clang versions 6 through 10.
             #
@@ -686,7 +698,7 @@ for variant_path in variant_paths:
 
         # On Mac OS X/Darwin we need to also use libc++ (part of XCode) as
         # opposed to libstdc++, as the later is dated.
-        if sys.platform == "darwin":
+        if not want_libcxx and sys.platform == "darwin":
             env.Append(CXXFLAGS=['-stdlib=libc++'])
             env.Append(LIBS=['c++'])
 
