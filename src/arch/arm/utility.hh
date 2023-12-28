@@ -367,10 +367,12 @@ void syncVecElemsToRegs(ThreadContext *tc);
 bool fgtEnabled(ThreadContext *tc);
 bool isHcrxEL2Enabled(ThreadContext *tc);
 
+TranslationRegime translationRegime(ThreadContext *tc, ExceptionLevel el);
+
 static inline bool
-useVMID(ExceptionLevel el, bool in_host)
+useVMID(TranslationRegime regime)
 {
-    return el == EL1 || (el == EL0 && !in_host);
+    return regime == TranslationRegime::EL10;
 }
 
 } // namespace ArmISA

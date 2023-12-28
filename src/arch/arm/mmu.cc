@@ -180,8 +180,7 @@ MMU::translateFunctional(ThreadContext *tc, Addr va, Addr &pa)
     lookup_data.vmid = state.vmid;
     lookup_data.secure = state.isSecure;
     lookup_data.functional = true;
-    lookup_data.targetEL = state.aarch64EL;
-    lookup_data.inHost = false;
+    lookup_data.targetRegime = state.currRegime;
     lookup_data.mode = BaseMMU::Read;
 
     TlbEntry *e = tlb->multiLookup(lookup_data);
@@ -638,8 +637,8 @@ MMU::s1PermBits64(TlbEntry *te, const RequestPtr &req, Mode mode,
         return std::make_pair(false, false);
     }
 
-    ExceptionLevel regime = !is_priv ? EL0 : state.aarch64EL;
-    if (hasUnprivRegime(regime, state)) {
+    TranslationRegime regime = !is_priv ? TranslationRegime::EL10 : state.currRegime;
+    if (hasUnprivRegime(regime)) {
         bool pr = false;
         bool pw = false;
         bool ur = false;
@@ -701,26 +700,15 @@ MMU::s1PermBits64(TlbEntry *te, const RequestPtr &req, Mode mode,
 }
 
 bool
-MMU::hasUnprivRegime(ExceptionLevel el, bool e2h)
+MMU::hasUnprivRegime(TranslationRegime regime)
 {
-    switch (el) {
-      case EL0:
-      case EL1:
-        // EL1&0
+    switch (regime) {
+      case TranslationRegime::EL10:
+      case TranslationRegime::EL20:
         return true;
-      case EL2:
-        // EL2&0 or EL2
-        return e2h;
-      case EL3:
       default:
         return false;
     }
-}
-
-bool
-MMU::hasUnprivRegime(ExceptionLevel el, CachedState &state)
-{
-    return hasUnprivRegime(el, state.hcr.e2h);
 }
 
 bool
@@ -778,7 +766,8 @@ MMU::checkPAN(ThreadContext *tc, uint8_t ap, const RequestPtr &req, Mode mode,
 }
 
 Addr
-MMU::purifyTaggedAddr(Addr vaddr_tainted, ThreadContext *tc, ExceptionLevel el,
+MMU::purifyTaggedAddr(Addr vaddr_tainted, ThreadContext *tc,
+                      ExceptionLevel el,
                       TCR tcr, bool is_inst, CachedState& state)
 {
     const bool selbit = bits(vaddr_tainted, 55);
@@ -1210,37 +1199,15 @@ MMU::CachedState::updateMiscReg(ThreadContext *tc,
         !(tran_type & HypMode) && !(tran_type & S1S2NsTran);
 
     aarch64EL = tranTypeEL(cpsr, scr, tran_type);
+    currRegime = translationRegime(tc, aarch64EL);
     aarch64 = isStage2 ?
         ELIs64(tc, EL2) :
         ELIs64(tc, aarch64EL == EL0 ? EL1 : aarch64EL);
 
     if (aarch64) {  // AArch64
         // determine EL we need to translate in
-        switch (aarch64EL) {
-          case EL0:
-            if (HaveExt(tc, ArmExtension::FEAT_VHE) &&
-                hcr.tge == 1 && hcr.e2h == 1) {
-                // VHE code for EL2&0 regime
-                sctlr = tc->readMiscReg(MISCREG_SCTLR_EL2);
-                ttbcr = tc->readMiscReg(MISCREG_TCR_EL2);
-                uint64_t ttbr_asid = ttbcr.a1 ?
-                    tc->readMiscReg(MISCREG_TTBR1_EL2) :
-                    tc->readMiscReg(MISCREG_TTBR0_EL2);
-                asid = bits(ttbr_asid,
-                            (mmu->haveLargeAsid64 && ttbcr.as) ? 63 : 55, 48);
-
-            } else {
-                sctlr = tc->readMiscReg(MISCREG_SCTLR_EL1);
-                ttbcr = tc->readMiscReg(MISCREG_TCR_EL1);
-                uint64_t ttbr_asid = ttbcr.a1 ?
-                    tc->readMiscReg(MISCREG_TTBR1_EL1) :
-                    tc->readMiscReg(MISCREG_TTBR0_EL1);
-                asid = bits(ttbr_asid,
-                            (mmu->haveLargeAsid64 && ttbcr.as) ? 63 : 55, 48);
-
-            }
-            break;
-          case EL1:
+        switch (currRegime) {
+          case TranslationRegime::EL10:
             {
                 sctlr = tc->readMiscReg(MISCREG_SCTLR_EL1);
                 ttbcr = tc->readMiscReg(MISCREG_TCR_EL1);
@@ -1251,21 +1218,24 @@ MMU::CachedState::updateMiscReg(ThreadContext *tc,
                             (mmu->haveLargeAsid64 && ttbcr.as) ? 63 : 55, 48);
             }
             break;
-          case EL2:
-            sctlr = tc->readMiscReg(MISCREG_SCTLR_EL2);
-            ttbcr = tc->readMiscReg(MISCREG_TCR_EL2);
-            if (hcr.e2h == 1) {
+          case TranslationRegime::EL20:
+            {
                 // VHE code for EL2&0 regime
+                sctlr = tc->readMiscReg(MISCREG_SCTLR_EL2);
+                ttbcr = tc->readMiscReg(MISCREG_TCR_EL2);
                 uint64_t ttbr_asid = ttbcr.a1 ?
                     tc->readMiscReg(MISCREG_TTBR1_EL2) :
                     tc->readMiscReg(MISCREG_TTBR0_EL2);
                 asid = bits(ttbr_asid,
                             (mmu->haveLargeAsid64 && ttbcr.as) ? 63 : 55, 48);
-            } else {
-                asid = -1;
             }
             break;
-          case EL3:
+          case TranslationRegime::EL2:
+            sctlr = tc->readMiscReg(MISCREG_SCTLR_EL2);
+            ttbcr = tc->readMiscReg(MISCREG_TCR_EL2);
+            asid = -1;
+            break;
+          case TranslationRegime::EL3:
             sctlr = tc->readMiscReg(MISCREG_SCTLR_EL3);
             ttbcr = tc->readMiscReg(MISCREG_TCR_EL3);
             asid = -1;
@@ -1399,8 +1369,8 @@ MMU::getTE(TlbEntry **te, const RequestPtr &req, ThreadContext *tc, Mode mode,
 
 TlbEntry*
 MMU::lookup(Addr va, uint16_t asid, vmid_t vmid, bool secure,
-            bool functional, bool ignore_asn, ExceptionLevel target_el,
-            bool in_host, bool stage2, BaseMMU::Mode mode)
+            bool functional, bool ignore_asn, TranslationRegime regime,
+            bool stage2, BaseMMU::Mode mode)
 {
     TLB *tlb = getTlb(mode, stage2);
 
@@ -1412,8 +1382,7 @@ MMU::lookup(Addr va, uint16_t asid, vmid_t vmid, bool secure,
     lookup_data.vmid = vmid;
     lookup_data.secure = secure;
     lookup_data.functional = functional;
-    lookup_data.targetEL = target_el;
-    lookup_data.inHost = in_host;
+    lookup_data.targetRegime = regime;
     lookup_data.mode = mode;
 
     return tlb->multiLookup(lookup_data);
@@ -1433,16 +1402,17 @@ MMU::getTE(TlbEntry **te, const RequestPtr &req, ThreadContext *tc, Mode mode,
 
     Addr vaddr_tainted = req->getVaddr();
     Addr vaddr = 0;
-    ExceptionLevel target_el = state.aarch64EL;
+    TranslationRegime regime = state.currRegime;
+
     if (state.aarch64) {
-        vaddr = purifyTaggedAddr(vaddr_tainted, tc, target_el,
+        vaddr = purifyTaggedAddr(vaddr_tainted, tc, state.aarch64EL,
             static_cast<TCR>(state.ttbcr), mode==Execute, state);
     } else {
         vaddr = vaddr_tainted;
     }
 
     *te = lookup(vaddr, state.asid, state.vmid, is_secure, false,
-                 false, target_el, false, state.isStage2, mode);
+                 false, regime, state.isStage2, mode);
 
     if (!isCompleteTranslation(*te)) {
         if (req->isPrefetch()) {
@@ -1472,7 +1442,7 @@ MMU::getTE(TlbEntry **te, const RequestPtr &req, ThreadContext *tc, Mode mode,
         }
 
         *te = lookup(vaddr, state.asid, state.vmid, is_secure,
-                     true, false, target_el, false, state.isStage2, mode);
+                     true, false, regime, state.isStage2, mode);
         assert(*te);
     }
     return NoFault;

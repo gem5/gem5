@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2016, 2019, 2021-2022 Arm Limited
+ * Copyright (c) 2010-2016, 2019, 2021-2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -647,7 +647,7 @@ class TableWalker : public ClockedObject
                                         !currState->secureLookup)) {
                 return false;  // ARM ARM issue C B3.6.3
             } else if (currState->aarch64) {
-                if (!MMU::hasUnprivRegime(currState->el, currState->hcr.e2h)) {
+                if (!MMU::hasUnprivRegime(currState->regime)) {
                     // By default translations are treated as global
                     // in AArch64 for regimes without an unpriviledged
                     // component
@@ -809,6 +809,9 @@ class TableWalker : public ClockedObject
 
         /** Current exception level */
         ExceptionLevel el;
+
+        /** Current translation regime */
+        TranslationRegime regime;
 
         /** Current physical address range in bits */
         int physAddrRange;

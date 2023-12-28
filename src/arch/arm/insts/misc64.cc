@@ -258,7 +258,7 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
       // AArch64 TLB Invalidate All, EL3
       case MISCREG_TLBI_ALLE3:
         {
-            TLBIALLEL tlbiOp(EL3, true);
+            TLBIALLEL tlbiOp(TranslationRegime::EL3, true);
             tlbiOp(tc);
             return;
         }
@@ -269,7 +269,7 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
       // We therefore implement TLBIOS instructions as TLBIIS
       case MISCREG_TLBI_ALLE3OS:
         {
-            TLBIALLEL tlbiOp(EL3, true);
+            TLBIALLEL tlbiOp(TranslationRegime::EL3, true);
             tlbiOp.broadcast(tc);
             return;
         }
@@ -279,7 +279,10 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIALLEL tlbiOp(EL2, secure);
+            auto regime = ELIsInHost(tc, EL2) ?
+                TranslationRegime::EL20 : TranslationRegime::EL2;
+
+            TLBIALLEL tlbiOp(regime, secure);
             tlbiOp(tc);
             return;
         }
@@ -293,7 +296,10 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIALLEL tlbiOp(EL2, secure);
+            auto regime = ELIsInHost(tc, EL2) ?
+                TranslationRegime::EL20 : TranslationRegime::EL2;
+
+            TLBIALLEL tlbiOp(regime, secure);
             tlbiOp.broadcast(tc);
             return;
         }
@@ -303,7 +309,7 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIALLEL tlbiOp(EL1, secure);
+            TLBIALLEL tlbiOp(TranslationRegime::EL10, secure);
             tlbiOp(tc);
             return;
         }
@@ -317,7 +323,7 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIALLEL tlbiOp(EL1, secure);
+            TLBIALLEL tlbiOp(TranslationRegime::EL10, secure);
             tlbiOp.broadcast(tc);
             return;
         }
@@ -326,7 +332,7 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIVMALL tlbiOp(EL1, secure, true);
+            TLBIVMALL tlbiOp(TranslationRegime::EL10, secure, true);
             tlbiOp(tc);
             return;
         }
@@ -334,16 +340,11 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIVMALL tlbiOp(target_el, secure, false);
+            auto regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TLBIVMALL tlbiOp(regime, secure, false);
             tlbiOp(tc);
             return;
         }
@@ -355,7 +356,7 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIVMALL tlbiOp(EL1, secure, true);
+            TLBIVMALL tlbiOp(TranslationRegime::EL10, secure, true);
             tlbiOp.broadcast(tc);
             return;
         }
@@ -366,16 +367,11 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIVMALL tlbiOp(target_el, secure, false);
+            auto regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TLBIVMALL tlbiOp(regime, secure, false);
             tlbiOp.broadcast(tc);
             return;
         }
@@ -383,7 +379,7 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
       case MISCREG_TLBI_VAE3:
         {
 
-            TLBIMVAA tlbiOp(EL3, true,
+            TLBIMVAA tlbiOp(TranslationRegime::EL3, true,
                             static_cast<Addr>(bits(value, 43, 0)) << 12,
                             false);
             tlbiOp(tc);
@@ -393,7 +389,7 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
       case MISCREG_TLBI_VALE3:
         {
 
-            TLBIMVAA tlbiOp(EL3, true,
+            TLBIMVAA tlbiOp(TranslationRegime::EL3, true,
                             static_cast<Addr>(bits(value, 43, 0)) << 12,
                             true);
             tlbiOp(tc);
@@ -406,7 +402,7 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
       // We therefore implement TLBIOS instructions as TLBIIS
       case MISCREG_TLBI_VAE3OS:
         {
-            TLBIMVAA tlbiOp(EL3, true,
+            TLBIMVAA tlbiOp(TranslationRegime::EL3, true,
                             static_cast<Addr>(bits(value, 43, 0)) << 12,
                             false);
 
@@ -420,7 +416,7 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
       // We therefore implement TLBIOS instructions as TLBIIS
       case MISCREG_TLBI_VALE3OS:
         {
-            TLBIMVAA tlbiOp(EL3, true,
+            TLBIMVAA tlbiOp(TranslationRegime::EL3, true,
                             static_cast<Addr>(bits(value, 43, 0)) << 12,
                             true);
 
@@ -431,21 +427,20 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
       case MISCREG_TLBI_VAE2:
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
 
-            if (hcr.e2h) {
+            if (ELIsInHost(tc, EL2)) {
                 // The asid will only be used when e2h == 1
                 auto asid = asid_16bits ? bits(value, 63, 48) :
                                           bits(value, 55, 48);
 
-                TLBIMVA tlbiOp(EL2, secure,
+                TLBIMVA tlbiOp(TranslationRegime::EL20, secure,
                                static_cast<Addr>(bits(value, 43, 0)) << 12,
                                asid, false);
                 tlbiOp(tc);
             } else {
-                TLBIMVAA tlbiOp(EL2, secure,
+                TLBIMVAA tlbiOp(TranslationRegime::EL2, secure,
                                 static_cast<Addr>(bits(value, 43, 0)) << 12,
                                 false);
                 tlbiOp(tc);
@@ -456,21 +451,20 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
       case MISCREG_TLBI_VALE2:
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
 
-            if (hcr.e2h) {
+            if (ELIsInHost(tc, EL2)) {
                 // The asid will only be used when e2h == 1
                 auto asid = asid_16bits ? bits(value, 63, 48) :
                                           bits(value, 55, 48);
 
-                TLBIMVA tlbiOp(EL2, secure,
+                TLBIMVA tlbiOp(TranslationRegime::EL20, secure,
                                static_cast<Addr>(bits(value, 43, 0)) << 12,
                                asid, true);
                 tlbiOp(tc);
             } else {
-                TLBIMVAA tlbiOp(EL2, secure,
+                TLBIMVAA tlbiOp(TranslationRegime::EL2, secure,
                                 static_cast<Addr>(bits(value, 43, 0)) << 12,
                                 true);
                 tlbiOp(tc);
@@ -485,21 +479,20 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
       case MISCREG_TLBI_VAE2OS:
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
 
-            if (hcr.e2h) {
+            if (ELIsInHost(tc, EL2)) {
                 // The asid will only be used when e2h == 1
                 auto asid = asid_16bits ? bits(value, 63, 48) :
                                           bits(value, 55, 48);
 
-                TLBIMVA tlbiOp(EL2, secure,
+                TLBIMVA tlbiOp(TranslationRegime::EL20, secure,
                                static_cast<Addr>(bits(value, 43, 0)) << 12,
                                asid, false);
                 tlbiOp.broadcast(tc);
             } else {
-                TLBIMVAA tlbiOp(EL2, secure,
+                TLBIMVAA tlbiOp(TranslationRegime::EL2, secure,
                                 static_cast<Addr>(bits(value, 43, 0)) << 12,
                                 false);
                 tlbiOp.broadcast(tc);
@@ -514,21 +507,20 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
       case MISCREG_TLBI_VALE2OS:
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
 
-            if (hcr.e2h) {
+            if (ELIsInHost(tc, EL2)) {
                 // The asid will only be used when e2h == 1
                 auto asid = asid_16bits ? bits(value, 63, 48) :
                                           bits(value, 55, 48);
 
-                TLBIMVA tlbiOp(EL2, secure,
+                TLBIMVA tlbiOp(TranslationRegime::EL20, secure,
                                static_cast<Addr>(bits(value, 43, 0)) << 12,
                                asid, true);
                 tlbiOp.broadcast(tc);
             } else {
-                TLBIMVAA tlbiOp(EL2, secure,
+                TLBIMVAA tlbiOp(TranslationRegime::EL2, secure,
                                 static_cast<Addr>(bits(value, 43, 0)) << 12,
                                 true);
                 tlbiOp.broadcast(tc);
@@ -542,16 +534,11 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
             auto asid = asid_16bits ? bits(value, 63, 48) :
                                       bits(value, 55, 48);
 
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVA tlbiOp(target_el, secure,
+            auto regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TLBIMVA tlbiOp(regime, secure,
                            static_cast<Addr>(bits(value, 43, 0)) << 12,
                            asid, false);
 
@@ -565,16 +552,11 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
             auto asid = asid_16bits ? bits(value, 63, 48) :
                                       bits(value, 55, 48);
 
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVA tlbiOp(target_el, secure,
+            auto regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TLBIMVA tlbiOp(regime, secure,
                            static_cast<Addr>(bits(value, 43, 0)) << 12,
                            asid, true);
 
@@ -592,18 +574,13 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
             auto asid = asid_16bits ? bits(value, 63, 48) :
                                       bits(value, 55, 48);
 
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVA tlbiOp(target_el, secure,
-                            static_cast<Addr>(bits(value, 43, 0)) << 12,
-                            asid, false);
+            auto regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TLBIMVA tlbiOp(regime, secure,
+                           static_cast<Addr>(bits(value, 43, 0)) << 12,
+                           asid, false);
 
             tlbiOp.broadcast(tc);
             return;
@@ -614,18 +591,13 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
             auto asid = asid_16bits ? bits(value, 63, 48) :
                                       bits(value, 55, 48);
 
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVA tlbiOp(target_el, secure,
-                            static_cast<Addr>(bits(value, 43, 0)) << 12,
-                            asid, true);
+            auto regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TLBIMVA tlbiOp(regime, secure,
+                           static_cast<Addr>(bits(value, 43, 0)) << 12,
+                           asid, true);
 
             tlbiOp.broadcast(tc);
             return;
@@ -637,16 +609,11 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
             auto asid = asid_16bits ? bits(value, 63, 48) :
                                       bits(value, 55, 48);
 
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIASID tlbiOp(target_el, secure, asid);
+            auto regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TLBIASID tlbiOp(regime, secure, asid);
             tlbiOp(tc);
             return;
         }
@@ -661,16 +628,11 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
             auto asid = asid_16bits ? bits(value, 63, 48) :
                                       bits(value, 55, 48);
 
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIASID tlbiOp(target_el, secure, asid);
+            auto regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TLBIASID tlbiOp(regime, secure, asid);
             tlbiOp.broadcast(tc);
             return;
         }
@@ -679,16 +641,11 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVAA tlbiOp(target_el, secure,
+            auto regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TLBIMVAA tlbiOp(regime, secure,
                 static_cast<Addr>(bits(value, 43, 0)) << 12,
                 false);
 
@@ -700,16 +657,11 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVAA tlbiOp(target_el, secure,
+            auto regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TLBIMVAA tlbiOp(regime, secure,
                 static_cast<Addr>(bits(value, 43, 0)) << 12,
                 true);
 
@@ -725,16 +677,11 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVAA tlbiOp(target_el, secure,
+            auto regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TLBIMVAA tlbiOp(regime, secure,
                 static_cast<Addr>(bits(value, 43, 0)) << 12,
                 false);
 
@@ -752,16 +699,11 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIMVAA tlbiOp(target_el, secure,
+            auto regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TLBIMVAA tlbiOp(regime, secure,
                 static_cast<Addr>(bits(value, 43, 0)) << 12,
                 true);
 
@@ -780,7 +722,7 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
 
                 const int top_bit = ArmSystem::physAddrRange(tc) == 52 ?
                     39 : 35;
-                TLBIIPA tlbiOp(EL1, secure,
+                TLBIIPA tlbiOp(TranslationRegime::EL10, secure,
                     static_cast<Addr>(bits(value, top_bit, 0)) << 12,
                     false);
 
@@ -798,7 +740,7 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
                 bool secure = release->has(ArmExtension::SECURITY) &&
                     !scr.ns && !bits(value, 63);
 
-                TLBIIPA tlbiOp(EL1, secure,
+                TLBIIPA tlbiOp(TranslationRegime::EL10, secure,
                     static_cast<Addr>(bits(value, 35, 0)) << 12,
                     true);
 
@@ -823,7 +765,7 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
 
                 const int top_bit = ArmSystem::physAddrRange(tc) == 52 ?
                     39 : 35;
-                TLBIIPA tlbiOp(EL1, secure,
+                TLBIIPA tlbiOp(TranslationRegime::EL10, secure,
                     static_cast<Addr>(bits(value, top_bit, 0)) << 12,
                     false);
 
@@ -846,7 +788,7 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
                 bool secure = release->has(ArmExtension::SECURITY) &&
                     !scr.ns && !bits(value, 63);
 
-                TLBIIPA tlbiOp(EL1, secure,
+                TLBIIPA tlbiOp(TranslationRegime::EL10, secure,
                     static_cast<Addr>(bits(value, 35, 0)) << 12,
                     true);
 
@@ -860,16 +802,11 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
             auto asid = asid_16bits ? bits(value, 63, 48) :
                                       bits(value, 55, 48);
 
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIRMVA tlbiOp(target_el, secure, value, asid, false);
+            auto regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TLBIRMVA tlbiOp(regime, secure, value, asid, false);
 
             if (tlbiOp.valid())
                 tlbiOp(tc);
@@ -882,16 +819,11 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
             auto asid = asid_16bits ? bits(value, 63, 48) :
                                       bits(value, 55, 48);
 
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIRMVA tlbiOp(target_el, secure, value, asid, false);
+            auto regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TLBIRMVA tlbiOp(regime, secure, value, asid, false);
 
             if (tlbiOp.valid())
                 tlbiOp.broadcast(tc);
@@ -901,16 +833,11 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIRMVAA tlbiOp(target_el, secure, value, false);
+            auto regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TLBIRMVAA tlbiOp(regime, secure, value, false);
 
             if (tlbiOp.valid())
                 tlbiOp(tc);
@@ -921,16 +848,11 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIRMVAA tlbiOp(target_el, secure, value, false);
+            auto regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TLBIRMVAA tlbiOp(regime, secure, value, false);
 
             if (tlbiOp.valid())
                 tlbiOp.broadcast(tc);
@@ -942,16 +864,11 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
             auto asid = asid_16bits ? bits(value, 63, 48) :
                                       bits(value, 55, 48);
 
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIRMVA tlbiOp(target_el, secure, value, asid, true);
+            auto regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TLBIRMVA tlbiOp(regime, secure, value, asid, true);
 
             if (tlbiOp.valid())
                 tlbiOp(tc);
@@ -964,16 +881,11 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
             auto asid = asid_16bits ? bits(value, 63, 48) :
                                       bits(value, 55, 48);
 
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIRMVA tlbiOp(target_el, secure, value, asid, true);
+            auto regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TLBIRMVA tlbiOp(regime, secure, value, asid, true);
 
             if (tlbiOp.valid())
                 tlbiOp.broadcast(tc);
@@ -983,16 +895,11 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIRMVAA tlbiOp(target_el, secure, value, true);
+            auto regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TLBIRMVAA tlbiOp(regime, secure, value, true);
 
             if (tlbiOp.valid())
                 tlbiOp(tc);
@@ -1003,16 +910,11 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
-            ExceptionLevel target_el = EL1;
-            if (EL2Enabled(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                if (hcr.tge && hcr.e2h) {
-                    target_el = EL2;
-                }
-            }
-
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIRMVAA tlbiOp(target_el, secure, value, true);
+            auto regime = ELIsInHost(tc, EL0) ?
+                TranslationRegime::EL20 : TranslationRegime::EL10;
+
+            TLBIRMVAA tlbiOp(regime, secure, value, true);
 
             if (tlbiOp.valid())
                 tlbiOp.broadcast(tc);
@@ -1026,7 +928,7 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
                 bool secure = release->has(ArmExtension::SECURITY) &&
                     !scr.ns && !bits(value, 63);
 
-                TLBIRIPA tlbiOp(EL1, secure, value, false);
+                TLBIRIPA tlbiOp(TranslationRegime::EL10, secure, value, false);
 
                 tlbiOp(tc);
             }
@@ -1040,7 +942,7 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
                 bool secure = release->has(ArmExtension::SECURITY) &&
                     !scr.ns && !bits(value, 63);
 
-                TLBIRIPA tlbiOp(EL1, secure, value, false);
+                TLBIRIPA tlbiOp(TranslationRegime::EL10, secure, value, false);
 
                 tlbiOp.broadcast(tc);
             }
@@ -1054,7 +956,7 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
                 bool secure = release->has(ArmExtension::SECURITY) &&
                     !scr.ns && !bits(value, 63);
 
-                TLBIRIPA tlbiOp(EL1, secure, value, true);
+                TLBIRIPA tlbiOp(TranslationRegime::EL10, secure, value, true);
 
                 tlbiOp(tc);
             }
@@ -1068,7 +970,7 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
                 bool secure = release->has(ArmExtension::SECURITY) &&
                     !scr.ns && !bits(value, 63);
 
-                TLBIRIPA tlbiOp(EL1, secure, value, true);
+                TLBIRIPA tlbiOp(TranslationRegime::EL10, secure, value, true);
 
                 tlbiOp.broadcast(tc);
             }
@@ -1077,21 +979,20 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
       case MISCREG_TLBI_RVAE2:
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
 
-            if (hcr.e2h) {
+            if (ELIsInHost(tc, EL2)) {
                 // The asid will only be used when e2h == 1
                 auto asid = asid_16bits ? bits(value, 63, 48) :
                                           bits(value, 55, 48);
 
-                TLBIRMVA tlbiOp(EL2, secure, value, asid, false);
+                TLBIRMVA tlbiOp(TranslationRegime::EL20, secure, value, asid, false);
 
                 if (tlbiOp.valid())
                     tlbiOp(tc);
             } else {
-                TLBIRMVAA tlbiOp(EL2, secure, value, false);
+                TLBIRMVAA tlbiOp(TranslationRegime::EL2, secure, value, false);
 
                 if (tlbiOp.valid())
                     tlbiOp(tc);
@@ -1102,21 +1003,20 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
       case MISCREG_TLBI_RVAE2OS:
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
 
-            if (hcr.e2h) {
+            if (ELIsInHost(tc, EL2)) {
                 // The asid will only be used when e2h == 1
                 auto asid = asid_16bits ? bits(value, 63, 48) :
                                           bits(value, 55, 48);
 
-                TLBIRMVA tlbiOp(EL2, secure, value, asid, false);
+                TLBIRMVA tlbiOp(TranslationRegime::EL20, secure, value, asid, false);
 
                 if (tlbiOp.valid())
                     tlbiOp.broadcast(tc);
             } else {
-                TLBIRMVAA tlbiOp(EL2, secure, value, false);
+                TLBIRMVAA tlbiOp(TranslationRegime::EL2, secure, value, false);
 
                 if (tlbiOp.valid())
                     tlbiOp.broadcast(tc);
@@ -1126,21 +1026,20 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
       case MISCREG_TLBI_RVALE2:
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
 
-            if (hcr.e2h) {
+            if (ELIsInHost(tc, EL2)) {
                 // The asid will only be used when e2h == 1
                 auto asid = asid_16bits ? bits(value, 63, 48) :
                                           bits(value, 55, 48);
 
-                TLBIRMVA tlbiOp(EL2, secure, value, asid, true);
+                TLBIRMVA tlbiOp(TranslationRegime::EL20, secure, value, asid, true);
 
                 if (tlbiOp.valid())
                     tlbiOp(tc);
             } else {
-                TLBIRMVAA tlbiOp(EL2, secure, value, true);
+                TLBIRMVAA tlbiOp(TranslationRegime::EL2, secure, value, true);
 
                 if (tlbiOp.valid())
                     tlbiOp(tc);
@@ -1151,21 +1050,20 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
       case MISCREG_TLBI_RVALE2OS:
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
 
-            if (hcr.e2h) {
+            if (ELIsInHost(tc, EL2)) {
                 // The asid will only be used when e2h == 1
                 auto asid = asid_16bits ? bits(value, 63, 48) :
                                           bits(value, 55, 48);
 
-                TLBIRMVA tlbiOp(EL2, secure, value, asid, true);
+                TLBIRMVA tlbiOp(TranslationRegime::EL20, secure, value, asid, true);
 
                 if (tlbiOp.valid())
                     tlbiOp.broadcast(tc);
             } else {
-                TLBIRMVAA tlbiOp(EL2, secure, value, true);
+                TLBIRMVAA tlbiOp(TranslationRegime::EL2, secure, value, true);
 
                 if (tlbiOp.valid())
                     tlbiOp.broadcast(tc);
@@ -1174,7 +1072,7 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
         }
       case MISCREG_TLBI_RVAE3:
         {
-            TLBIRMVAA tlbiOp(EL3, true, value, false);
+            TLBIRMVAA tlbiOp(TranslationRegime::EL3, true, value, false);
             if (tlbiOp.valid())
                 tlbiOp(tc);
             return;
@@ -1182,14 +1080,14 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
       case MISCREG_TLBI_RVAE3IS:
       case MISCREG_TLBI_RVAE3OS:
         {
-            TLBIRMVAA tlbiOp(EL3, true, value, false);
+            TLBIRMVAA tlbiOp(TranslationRegime::EL3, true, value, false);
             if (tlbiOp.valid())
                 tlbiOp.broadcast(tc);
             return;
         }
       case MISCREG_TLBI_RVALE3:
         {
-            TLBIRMVAA tlbiOp(EL3, true, value, true);
+            TLBIRMVAA tlbiOp(TranslationRegime::EL3, true, value, true);
             if (tlbiOp.valid())
                 tlbiOp(tc);
             return;
@@ -1197,7 +1095,7 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
       case MISCREG_TLBI_RVALE3IS:
       case MISCREG_TLBI_RVALE3OS:
         {
-            TLBIRMVAA tlbiOp(EL3, true, value, true);
+            TLBIRMVAA tlbiOp(TranslationRegime::EL3, true, value, true);
             if (tlbiOp.valid())
                 tlbiOp.broadcast(tc);
             return;

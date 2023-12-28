@@ -1366,5 +1366,24 @@ isHcrxEL2Enabled(ThreadContext *tc)
     return EL2Enabled(tc);
 }
 
+TranslationRegime
+translationRegime(ThreadContext *tc, ExceptionLevel el)
+{
+    switch (el) {
+      case EL3:
+        return TranslationRegime::EL3;
+      case EL2:
+        return ELIsInHost(tc, EL2) ?
+            TranslationRegime::EL20 : TranslationRegime::EL2;
+      case EL1:
+        return TranslationRegime::EL10;
+      case EL0:
+        return ELIsInHost(tc, EL0) ?
+            TranslationRegime::EL20 : TranslationRegime::EL10;
+      default:
+        panic("Invalid ExceptionLevel\n");
+    }
+}
+
 } // namespace ArmISA
 } // namespace gem5

@@ -203,9 +203,7 @@ struct TlbEntry : public Serializable
         // if the lookup should modify state
         bool functional = false;
         // selecting the translation regime
-        ExceptionLevel targetEL = EL0;
-        // if we are in host (EL2&0 regime)
-        bool inHost = false;
+        TranslationRegime targetRegime = TranslationRegime::EL10;
         // mode to differentiate between read/writes/fetches.
         BaseMMU::Mode mode = BaseMMU::Read;
     };
@@ -243,8 +241,8 @@ struct TlbEntry : public Serializable
     bool ns;
     // True if the entry was brought in from a non-secure page table
     bool nstid;
-    // Exception level on insert, AARCH64 EL0&1, AARCH32 -> el=1
-    ExceptionLevel el;
+    // Translation regime on insert, AARCH64 EL0&1, AARCH32 -> el=1
+    TranslationRegime regime;
     // This is used to distinguish between instruction and data entries
     // in unified TLBs
     TypeTLB type;
@@ -271,8 +269,8 @@ struct TlbEntry : public Serializable
          innerAttrs(0), outerAttrs(0), ap(read_only ? 0x3 : 0), hap(0x3),
          domain(DomainType::Client),  mtype(MemoryType::StronglyOrdered),
          longDescFormat(false), global(false), valid(true),
-         ns(true), nstid(true), el(EL0), type(TypeTLB::unified),
-         partial(false),
+         ns(true), nstid(true), regime(TranslationRegime::EL10),
+         type(TypeTLB::unified), partial(false),
          nonCacheable(uncacheable),
          shareable(false), outerShareable(false), xn(0), pxn(0)
     {
@@ -289,8 +287,8 @@ struct TlbEntry : public Serializable
          innerAttrs(0), outerAttrs(0), ap(0), hap(0x3),
          domain(DomainType::Client), mtype(MemoryType::StronglyOrdered),
          longDescFormat(false), global(false), valid(false),
-         ns(true), nstid(true), el(EL0), type(TypeTLB::unified),
-         partial(false), nonCacheable(false),
+         ns(true), nstid(true), regime(TranslationRegime::EL10),
+         type(TypeTLB::unified), partial(false), nonCacheable(false),
          shareable(false), outerShareable(false), xn(0), pxn(0)
     {
         // no restrictions by default, hap = 0x3
@@ -329,14 +327,14 @@ struct TlbEntry : public Serializable
     {
         bool match = false;
         if (valid && matchAddress(lookup) &&
-            lookup.secure == !nstid)
+            (lookup.secure == !nstid))
         {
-            match = checkELMatch(lookup.targetEL, lookup.inHost);
+            match = checkRegime(lookup.targetRegime);
 
             if (match && !lookup.ignoreAsn) {
                 match = global || (lookup.asn == asid);
             }
-            if (match && useVMID(lookup.targetEL, lookup.inHost)) {
+            if (match && useVMID(lookup.targetRegime)) {
                 match = lookup.vmid == vmid;
             }
         }
@@ -344,21 +342,9 @@ struct TlbEntry : public Serializable
     }
 
     bool
-    checkELMatch(ExceptionLevel target_el, bool in_host) const
+    checkRegime(TranslationRegime target_regime) const
     {
-        switch (target_el) {
-            case EL3:
-                return el == EL3;
-            case EL2:
-              {
-                return el == EL2 || (el == EL0 && in_host);
-              }
-            case EL1:
-            case EL0:
-                return (el == EL0) || (el == EL1);
-            default:
-                return false;
-        }
+        return regime == target_regime;
     }
 
     Addr
@@ -419,9 +405,10 @@ struct TlbEntry : public Serializable
     std::string
     print() const
     {
-        return csprintf("%#x, asn %d vmn %d hyp %d ppn %#x size: %#x ap:%d "
-                        "ns:%d nstid:%d g:%d el:%d", vpn << N, asid, vmid,
-                        el == EL2, pfn << N, size, ap, ns, nstid, global, el);
+        return csprintf("%#x, asn %d vmn %d ppn %#x size: %#x ap:%d "
+                        "ns:%d nstid:%d g:%d regime:%s", vpn << N, asid, vmid,
+                        pfn << N, size, ap, ns, nstid, global,
+                        regimeToStr(regime));
     }
 
     void

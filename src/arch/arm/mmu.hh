@@ -144,7 +144,8 @@ class MMU : public BaseMMU
             isStage2 = rhs.isStage2;
             cpsr = rhs.cpsr;
             aarch64 = rhs.aarch64;
-            aarch64EL = EL0;
+            aarch64EL = rhs.aarch64EL;
+            currRegime = rhs.currRegime;
             sctlr = rhs.sctlr;
             scr = rhs.scr;
             isPriv = rhs.isPriv;
@@ -179,6 +180,7 @@ class MMU : public BaseMMU
         CPSR cpsr = 0;
         bool aarch64 = false;
         ExceptionLevel aarch64EL = EL0;
+        TranslationRegime currRegime = TranslationRegime::EL10;
         SCTLR sctlr = 0;
         SCR scr = 0;
         bool isPriv = false;
@@ -388,7 +390,7 @@ class MMU : public BaseMMU
      */
     static ExceptionLevel tranTypeEL(CPSR cpsr, SCR scr, ArmTranslationType type);
 
-    static bool hasUnprivRegime(ExceptionLevel el, bool e2h);
+    static bool hasUnprivRegime(TranslationRegime regime);
 
   public:
     /** Lookup an entry in the TLB
@@ -398,15 +400,14 @@ class MMU : public BaseMMU
      * @param secure if the lookup is secure
      * @param functional if the lookup should modify state
      * @param ignore_asn if on lookup asn should be ignored
-     * @param target_el selecting the translation regime
-     * @param in_host if we are in host (EL2&0 regime)
+     * @param target_regime selecting the translation regime
      * @param mode to differentiate between read/writes/fetches.
      * @return pointer to TLB entry if it exists
      */
     TlbEntry *lookup(Addr vpn, uint16_t asn, vmid_t vmid,
                      bool secure, bool functional,
-                     bool ignore_asn, ExceptionLevel target_el,
-                     bool in_host, bool stage2, BaseMMU::Mode mode);
+                     bool ignore_asn, TranslationRegime target_regime,
+                     bool stage2, BaseMMU::Mode mode);
 
     Fault getTE(TlbEntry **te, const RequestPtr &req,
                 ThreadContext *tc, Mode mode,
@@ -444,8 +445,6 @@ class MMU : public BaseMMU
 
     bool faultPAN(ThreadContext *tc, uint8_t ap, const RequestPtr &req,
                   Mode mode, const bool is_priv, CachedState &state);
-
-    bool hasUnprivRegime(ExceptionLevel el, CachedState &state);
 
     std::pair<bool, bool> s1PermBits64(
         TlbEntry *te, const RequestPtr &req, Mode mode,

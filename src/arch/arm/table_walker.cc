@@ -123,7 +123,8 @@ TableWalker::setMmu(MMU *_mmu)
 }
 
 TableWalker::WalkerState::WalkerState() :
-    tc(nullptr), aarch64(false), el(EL0), physAddrRange(0), req(nullptr),
+    tc(nullptr), aarch64(false), regime(TranslationRegime::EL10),
+    physAddrRange(0), req(nullptr),
     asid(0), vmid(0), transState(nullptr),
     vaddr(0), vaddr_tainted(0),
     sctlr(0), scr(0), cpsr(0), tcr(0),
@@ -336,12 +337,15 @@ TableWalker::walk(const RequestPtr &_req, ThreadContext *_tc, uint16_t _asid,
     // even AArch32 EL0 will use AArch64 translation if EL1 is in AArch64.
     if (isStage2) {
         currState->el = EL1;
+        currState->regime = TranslationRegime::EL10;
         currState->aarch64 = ELIs64(_tc, EL2);
     } else {
         currState->el =
             MMU::tranTypeEL(_tc->readMiscReg(MISCREG_CPSR),
                 _tc->readMiscReg(MISCREG_SCR_EL3),
                 tranType);
+        currState->regime =
+            translationRegime(_tc, currState->el);
         currState->aarch64 =
             ELIs64(_tc, currState->el == EL0 ? EL1 : currState->el);
     }
@@ -383,33 +387,24 @@ TableWalker::walk(const RequestPtr &_req, ThreadContext *_tc, uint16_t _asid,
                 currState->vtcr =
                     currState->tc->readMiscReg(MISCREG_VTCR_EL2);
             }
-        } else switch (currState->el) {
-          case EL0:
-            if (HaveExt(currState->tc, ArmExtension::FEAT_VHE) &&
-                  currState->hcr.tge == 1 && currState->hcr.e2h ==1) {
-              currState->sctlr = currState->tc->readMiscReg(MISCREG_SCTLR_EL2);
-              currState->tcr = currState->tc->readMiscReg(MISCREG_TCR_EL2);
-            } else {
-              currState->sctlr = currState->tc->readMiscReg(MISCREG_SCTLR_EL1);
-              currState->tcr = currState->tc->readMiscReg(MISCREG_TCR_EL1);
-            }
-            break;
-          case EL1:
+        } else switch (currState->regime) {
+          case TranslationRegime::EL10:
             currState->sctlr = currState->tc->readMiscReg(MISCREG_SCTLR_EL1);
             currState->tcr = currState->tc->readMiscReg(MISCREG_TCR_EL1);
             break;
-          case EL2:
+          case TranslationRegime::EL20:
+          case TranslationRegime::EL2:
             assert(release->has(ArmExtension::VIRTUALIZATION));
             currState->sctlr = currState->tc->readMiscReg(MISCREG_SCTLR_EL2);
             currState->tcr = currState->tc->readMiscReg(MISCREG_TCR_EL2);
             break;
-          case EL3:
+          case TranslationRegime::EL3:
             assert(release->has(ArmExtension::SECURITY));
             currState->sctlr = currState->tc->readMiscReg(MISCREG_SCTLR_EL3);
             currState->tcr = currState->tc->readMiscReg(MISCREG_TCR_EL3);
             break;
           default:
-            panic("Invalid exception level");
+            panic("Invalid translation regime");
             break;
         }
     } else {
@@ -495,7 +490,7 @@ TableWalker::processWalkWrapper()
     // @TODO Should this always be the TLB or should we look in the stage2 TLB?
     TlbEntry* te = mmu->lookup(currState->vaddr, currState->asid,
         currState->vmid, currState->isSecure, true, false,
-        currState->el, false, isStage2, currState->mode);
+        currState->regime, isStage2, currState->mode);
 
     // Check if we still need to have a walk for this request. If the requesting
     // instruction has been squashed, or a previous walk has filled the TLB with
@@ -567,7 +562,7 @@ TableWalker::processWalkWrapper()
             currState = pendingQueue.front();
             te = mmu->lookup(currState->vaddr, currState->asid,
                 currState->vmid, currState->isSecure, true,
-                false, currState->el, false, isStage2, currState->mode);
+                false, currState->regime, isStage2, currState->mode);
         } else {
             // Terminate the loop, nothing more to do
             currState = NULL;
@@ -913,55 +908,8 @@ TableWalker::processWalkAArch64()
         currState->el);
 
     bool vaddr_fault = false;
-    switch (currState->el) {
-      case EL0:
-        {
-            Addr ttbr0;
-            Addr ttbr1;
-            if (HaveExt(currState->tc, ArmExtension::FEAT_VHE) &&
-                    currState->hcr.tge==1 && currState->hcr.e2h == 1) {
-                // VHE code for EL2&0 regime
-                ttbr0 = currState->tc->readMiscReg(MISCREG_TTBR0_EL2);
-                ttbr1 = currState->tc->readMiscReg(MISCREG_TTBR1_EL2);
-            } else {
-                ttbr0 = currState->tc->readMiscReg(MISCREG_TTBR0_EL1);
-                ttbr1 = currState->tc->readMiscReg(MISCREG_TTBR1_EL1);
-            }
-            switch (bits(currState->vaddr, 63,48)) {
-              case 0:
-                DPRINTF(TLB, " - Selecting TTBR0 (AArch64)\n");
-                ttbr = ttbr0;
-                tsz = 64 - currState->tcr.t0sz;
-                tg = GrainMap_tg0[currState->tcr.tg0];
-                currState->hpd = currState->tcr.hpd0;
-                currState->isUncacheable = currState->tcr.irgn0 == 0;
-                vaddr_fault = checkVAddrSizeFaultAArch64(currState->vaddr,
-                    top_bit, tg, tsz, true);
-
-                if (vaddr_fault || currState->tcr.epd0)
-                    fault = true;
-                break;
-              case 0xffff:
-                DPRINTF(TLB, " - Selecting TTBR1 (AArch64)\n");
-                ttbr = ttbr1;
-                tsz = 64 - currState->tcr.t1sz;
-                tg = GrainMap_tg1[currState->tcr.tg1];
-                currState->hpd = currState->tcr.hpd1;
-                currState->isUncacheable = currState->tcr.irgn1 == 0;
-                vaddr_fault = checkVAddrSizeFaultAArch64(currState->vaddr,
-                    top_bit, tg, tsz, false);
-
-                if (vaddr_fault || currState->tcr.epd1)
-                    fault = true;
-                break;
-              default:
-                // top two bytes must be all 0s or all 1s, else invalid addr
-                fault = true;
-            }
-            ps = currState->tcr.ips;
-        }
-        break;
-      case EL1:
+    switch (currState->regime) {
+      case TranslationRegime::EL10:
         if (isStage2) {
             if (currState->secureLookup) {
                 DPRINTF(TLB, " - Selecting VSTTBR_EL2 (AArch64 stage 2)\n");
@@ -1010,7 +958,8 @@ TableWalker::processWalkAArch64()
             ps = currState->tcr.ips;
         }
         break;
-      case EL2:
+      case TranslationRegime::EL2:
+      case TranslationRegime::EL20:
         switch(bits(currState->vaddr, top_bit)) {
           case 0:
             DPRINTF(TLB, " - Selecting TTBR0_EL2 (AArch64)\n");
@@ -1047,7 +996,7 @@ TableWalker::processWalkAArch64()
         }
         ps = currState->hcr.e2h ? currState->tcr.ips: currState->tcr.ps;
         break;
-      case EL3:
+      case TranslationRegime::EL3:
         switch(bits(currState->vaddr, top_bit)) {
           case 0:
             DPRINTF(TLB, " - Selecting TTBR0_EL3 (AArch64)\n");
@@ -2302,8 +2251,7 @@ TableWalker::insertPartialTableEntry(LongDescriptor &descriptor)
     te.partial        = true;
     // The entry is global if there is no address space identifier
     // to differentiate translation contexts
-    te.global         = !mmu->hasUnprivRegime(
-        currState->el, currState->hcr.e2h);
+    te.global         = !mmu->hasUnprivRegime(currState->regime);
     te.asid           = currState->asid;
     te.vmid           = currState->vmid;
     te.N              = descriptor.offsetBits();
@@ -2317,7 +2265,7 @@ TableWalker::insertPartialTableEntry(LongDescriptor &descriptor)
     te.nstid          = !currState->isSecure;
     te.type           = TypeTLB::unified;
 
-    te.el         = currState->el;
+    te.regime = currState->regime;
 
     te.xn = currState->xnTable;
     te.pxn = currState->pxnTable;
@@ -2328,9 +2276,9 @@ TableWalker::insertPartialTableEntry(LongDescriptor &descriptor)
     DPRINTF(TLB, " - N:%d pfn:%#x size:%#x global:%d valid:%d\n",
             te.N, te.pfn, te.size, te.global, te.valid);
     DPRINTF(TLB, " - vpn:%#x xn:%d pxn:%d ap:%d domain:%d asid:%d "
-            "vmid:%d hyp:%d nc:%d ns:%d\n", te.vpn, te.xn, te.pxn,
+            "vmid:%d nc:%d ns:%d\n", te.vpn, te.xn, te.pxn,
             te.ap, static_cast<uint8_t>(te.domain), te.asid, te.vmid,
-            te.el == EL2, te.nonCacheable, te.ns);
+            te.nonCacheable, te.ns);
     DPRINTF(TLB, " - domain from L%d desc:%d data:%#x\n",
             descriptor.lookupLevel, static_cast<uint8_t>(descriptor.domain()),
             descriptor.getRawData());
@@ -2362,7 +2310,7 @@ TableWalker::insertTableEntry(DescriptorBase &descriptor, bool long_descriptor)
     te.type           = currState->mode == BaseMMU::Execute ?
         TypeTLB::instruction : TypeTLB::data;
 
-    te.el         = currState->el;
+    te.regime = currState->regime;
 
     stats.pageSizes[pageSizeNtoStatBin(te.N)]++;
     stats.requestOrigin[COMPLETED][currState->isFetch]++;
