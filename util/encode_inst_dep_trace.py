@@ -86,8 +86,9 @@
 # 8,35670,1,STORE,1748748,4,74,0:,6,3:,7
 # 9,35670,1,COMP,500::,7
 
-import protolib
 import sys
+
+import protolib
 
 # Import the packet proto definitions. If they are not found, attempt
 # to generate them automatically. This assumes that the script is
@@ -127,8 +128,8 @@ def main():
 
     # Open the file in read mode
     try:
-        ascii_in = open(sys.argv[1], "r")
-    except IOError:
+        ascii_in = open(sys.argv[1])
+    except OSError:
         print("Failed to open ", sys.argv[1], " for reading")
         exit(-1)
 

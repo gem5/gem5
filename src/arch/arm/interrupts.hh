@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2016 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2016, 2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -65,7 +65,11 @@ enum InterruptTypes
     INT_SEV, // Special interrupt for recieving SEV's
     INT_VIRT_IRQ,
     INT_VIRT_FIQ,
-    NumInterruptTypes
+    NumInterruptTypes,
+    // Cannot be raised by an external signal
+    // (for now) from the IC so we don't instantiate a
+    // interrupt entry in the state array
+    INT_VIRT_ABT
 };
 
 class Interrupts : public BaseInterrupts
@@ -129,6 +133,12 @@ class Interrupts : public BaseInterrupts
     };
 
     bool takeInt(InterruptTypes int_type) const;
+    bool takeInt32(InterruptTypes int_type) const;
+    bool takeInt64(InterruptTypes int_type) const;
+
+    bool takeVirtualInt(InterruptTypes int_type) const;
+    bool takeVirtualInt32(InterruptTypes int_type) const;
+    bool takeVirtualInt64(InterruptTypes int_type) const;
 
     bool
     checkInterrupts() const override
@@ -138,41 +148,15 @@ class Interrupts : public BaseInterrupts
         if (!(intStatus || hcr.va || hcr.vi || hcr.vf))
             return false;
 
-        CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
-
-        bool no_vhe = !HaveExt(tc, ArmExtension::FEAT_VHE);
-        bool amo, fmo, imo;
-        if (hcr.tge == 1){
-            amo =  (no_vhe || hcr.e2h == 0);
-            fmo =  (no_vhe || hcr.e2h == 0);
-            imo =  (no_vhe || hcr.e2h == 0);
-        } else {
-            amo = hcr.amo;
-            fmo = hcr.fmo;
-            imo = hcr.imo;
-        }
-
-        bool isHypMode   = currEL(tc) == EL2;
-        bool isSecure    = ArmISA::isSecure(tc);
-        bool allowVIrq   = !cpsr.i && imo && !isSecure && !isHypMode;
-        bool allowVFiq   = !cpsr.f && fmo && !isSecure && !isHypMode;
-        bool allowVAbort = !cpsr.a && amo && !isSecure && !isHypMode;
-
-        if ( !(intStatus || (hcr.vi && allowVIrq) || (hcr.vf && allowVFiq) ||
-               (hcr.va && allowVAbort)) )
-            return false;
-
-        bool take_irq = takeInt(INT_IRQ);
-        bool take_fiq = takeInt(INT_FIQ);
-        bool take_ea =  takeInt(INT_ABT);
-
-        return ((interrupts[INT_IRQ] && take_irq)                   ||
-                (interrupts[INT_FIQ] && take_fiq)                   ||
-                (interrupts[INT_ABT] && take_ea)                    ||
-                ((interrupts[INT_VIRT_IRQ] || hcr.vi) && allowVIrq) ||
-                ((interrupts[INT_VIRT_FIQ] || hcr.vf) && allowVFiq) ||
-                (hcr.va && allowVAbort)                             ||
-                (interrupts[INT_RST])                               ||
+        return ((interrupts[INT_IRQ] && takeInt(INT_IRQ)) ||
+                (interrupts[INT_FIQ] && takeInt(INT_FIQ)) ||
+                (interrupts[INT_ABT] && takeInt(INT_ABT)) ||
+                ((interrupts[INT_VIRT_IRQ] || hcr.vi) &&
+                    takeVirtualInt(INT_VIRT_IRQ)) ||
+                ((interrupts[INT_VIRT_FIQ] || hcr.vf) &&
+                    takeVirtualInt(INT_VIRT_FIQ)) ||
+                (hcr.va && takeVirtualInt(INT_VIRT_ABT)) ||
+                (interrupts[INT_RST]) ||
                 (interrupts[INT_SEV])
                );
     }
@@ -185,30 +169,29 @@ class Interrupts : public BaseInterrupts
     bool
     checkWfiWake(HCR hcr, CPSR cpsr, SCR scr) const
     {
-        uint64_t maskedIntStatus;
-        bool     virtWake;
+        uint64_t masked_int_status;
+        bool     virt_wake;
 
-        maskedIntStatus = intStatus & ~((1 << INT_VIRT_IRQ) |
-                                        (1 << INT_VIRT_FIQ));
-        virtWake  = (hcr.vi || interrupts[INT_VIRT_IRQ]) && hcr.imo;
-        virtWake |= (hcr.vf || interrupts[INT_VIRT_FIQ]) && hcr.fmo;
-        virtWake |=  hcr.va                              && hcr.amo;
-        virtWake &= (cpsr.mode != MODE_HYP) && !isSecure(tc);
-        return maskedIntStatus || virtWake;
+        masked_int_status = intStatus & ~((1 << INT_VIRT_IRQ) |
+                                          (1 << INT_VIRT_FIQ));
+        virt_wake  = (hcr.vi || interrupts[INT_VIRT_IRQ]) && hcr.imo;
+        virt_wake |= (hcr.vf || interrupts[INT_VIRT_FIQ]) && hcr.fmo;
+        virt_wake |=  hcr.va                              && hcr.amo;
+        virt_wake &= currEL(cpsr) < EL2 && EL2Enabled(tc);
+        return masked_int_status || virt_wake;
     }
 
     uint32_t
     getISR(HCR hcr, CPSR cpsr, SCR scr)
     {
-        bool useHcrMux;
-        CPSR isr = 0; // ARM ARM states ISR reg uses same bit possitions as CPSR
+        bool use_hcr_mux = currEL(cpsr) < EL2 && EL2Enabled(tc);
+        ISR isr = 0;
 
-        useHcrMux = (cpsr.mode != MODE_HYP) && !isSecure(tc);
-        isr.i = (useHcrMux & hcr.imo) ? (interrupts[INT_VIRT_IRQ] || hcr.vi)
-                                      :  interrupts[INT_IRQ];
-        isr.f = (useHcrMux & hcr.fmo) ? (interrupts[INT_VIRT_FIQ] || hcr.vf)
-                                      :  interrupts[INT_FIQ];
-        isr.a = (useHcrMux & hcr.amo) ?  hcr.va : interrupts[INT_ABT];
+        isr.i = (use_hcr_mux & hcr.imo) ? (interrupts[INT_VIRT_IRQ] || hcr.vi)
+                                        :  interrupts[INT_IRQ];
+        isr.f = (use_hcr_mux & hcr.fmo) ? (interrupts[INT_VIRT_FIQ] || hcr.vf)
+                                        :  interrupts[INT_FIQ];
+        isr.a = (use_hcr_mux & hcr.amo) ?  hcr.va : interrupts[INT_ABT];
         return isr;
     }
 
@@ -237,44 +220,20 @@ class Interrupts : public BaseInterrupts
         assert(checkInterrupts());
 
         HCR  hcr  = tc->readMiscReg(MISCREG_HCR_EL2);
-        CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
 
-        bool no_vhe = !HaveExt(tc, ArmExtension::FEAT_VHE);
-        bool amo, fmo, imo;
-        if (hcr.tge == 1){
-            amo =  (no_vhe || hcr.e2h == 0);
-            fmo =  (no_vhe || hcr.e2h == 0);
-            imo =  (no_vhe || hcr.e2h == 0);
-        } else {
-            amo = hcr.amo;
-            fmo = hcr.fmo;
-            imo = hcr.imo;
-        }
-
-        // Calculate a few temp vars so we can work out if there's a pending
-        // virtual interrupt, and if its allowed to happen
-        // ARM ARM Issue C section B1.9.9, B1.9.11, and B1.9.13
-        bool isHypMode   = currEL(tc) == EL2;
-        bool isSecure    = ArmISA::isSecure(tc);
-        bool allowVIrq   = !cpsr.i && imo && !isSecure && !isHypMode;
-        bool allowVFiq   = !cpsr.f && fmo && !isSecure && !isHypMode;
-        bool allowVAbort = !cpsr.a && amo && !isSecure && !isHypMode;
-
-        bool take_irq = takeInt(INT_IRQ);
-        bool take_fiq = takeInt(INT_FIQ);
-        bool take_ea =  takeInt(INT_ABT);
-
-        if (interrupts[INT_IRQ] && take_irq)
+        if (interrupts[INT_IRQ] && takeInt(INT_IRQ))
             return std::make_shared<Interrupt>();
-        if ((interrupts[INT_VIRT_IRQ] || hcr.vi) && allowVIrq)
+        if ((interrupts[INT_VIRT_IRQ] || hcr.vi) &&
+            takeVirtualInt(INT_VIRT_IRQ))
             return std::make_shared<VirtualInterrupt>();
-        if (interrupts[INT_FIQ] && take_fiq)
+        if (interrupts[INT_FIQ] && takeInt(INT_FIQ))
             return std::make_shared<FastInterrupt>();
-        if ((interrupts[INT_VIRT_FIQ] || hcr.vf) && allowVFiq)
+        if ((interrupts[INT_VIRT_FIQ] || hcr.vf) &&
+            takeVirtualInt(INT_VIRT_FIQ))
             return std::make_shared<VirtualFastInterrupt>();
-        if (interrupts[INT_ABT] && take_ea)
+        if (interrupts[INT_ABT] && takeInt(INT_ABT))
             return std::make_shared<SystemError>();
-        if (hcr.va && allowVAbort)
+        if (hcr.va && takeVirtualInt(INT_VIRT_ABT))
             return std::make_shared<VirtualDataAbort>(
                 0, TlbEntry::DomainType::NoAccess, false,
                 ArmFault::AsynchronousExternalAbort);

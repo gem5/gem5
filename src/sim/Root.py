@@ -26,13 +26,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.SimObject import SimObject
 from m5.params import *
+from m5.SimObject import SimObject
 from m5.util import fatal
 
 
 class Root(SimObject):
-
     _the_instance = None
 
     def __new__(cls, **kwargs):

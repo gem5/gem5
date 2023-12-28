@@ -458,7 +458,9 @@ machine(MachineType:RegionBuffer, "Region Buffer for AMD_Base-like protocol")
             trigger(Event:CPUWrite, in_msg.addr, cache_entry, tbe);
           } else if (in_msg.Type == CoherenceRequestType:WriteThrough ) {
             trigger(Event:CPUWrite, in_msg.addr, cache_entry, tbe);
-          } else if (in_msg.Type == CoherenceRequestType:Atomic ) {
+          } else if (in_msg.Type == CoherenceRequestType:Atomic ||
+                     in_msg.Type == CoherenceRequestType:AtomicReturn ||
+                     in_msg.Type == CoherenceRequestType:AtomicNoReturn) {
             trigger(Event:CPUWrite, in_msg.addr, cache_entry, tbe);
           } else {
               if (in_msg.Type == CoherenceRequestType:VicDirty ||
@@ -523,9 +525,11 @@ machine(MachineType:RegionBuffer, "Region Buffer for AMD_Base-like protocol")
           assert(in_msg.Type == CoherenceRequestType:RdBlkM || in_msg.Type == CoherenceRequestType:RdBlkS);
         }
         APPEND_TRANSITION_COMMENT(cache_entry.NumOutstandingReqs);
-        if (in_msg.Type == CoherenceRequestType:RdBlkM || in_msg.Type == CoherenceRequestType:Atomic ||
-            in_msg.Type == CoherenceRequestType:WriteThrough )
-        {
+        if (in_msg.Type == CoherenceRequestType:RdBlkM ||
+            in_msg.Type == CoherenceRequestType:Atomic ||
+            in_msg.Type == CoherenceRequestType:AtomicReturn ||
+            in_msg.Type == CoherenceRequestType:AtomicNoReturn ||
+            in_msg.Type == CoherenceRequestType:WriteThrough) {
           cache_entry.dirty := true;
         }
         if (in_msg.Type == CoherenceRequestType:VicDirty ||

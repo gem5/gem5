@@ -58,15 +58,16 @@
 # APC project generation based on Gator v17 (DS-5 v5.17)
 # Subsequent versions should be backward compatible
 
-import re, sys, os
-from configparser import ConfigParser
-import gzip
-import xml.etree.ElementTree as ET
-import xml.dom.minidom as minidom
-import shutil
-import zlib
-
 import argparse
+import gzip
+import os
+import re
+import shutil
+import sys
+import xml.dom.minidom as minidom
+import xml.etree.ElementTree as ET
+import zlib
+from configparser import ConfigParser
 
 parser = argparse.ArgumentParser(
     formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -126,7 +127,7 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-if not re.match("(.*)\.apc", args.output_path):
+if not re.match(r"(.*)\.apc", args.output_path):
     print("ERROR: <dest .apc folder> should end with '.apc'!")
     sys.exit(1)
 
@@ -142,6 +143,7 @@ num_events = args.num_events
 
 start_tick = -1
 end_tick = -1
+
 
 # Parse gem5 config.ini file to determine some system configurations.
 # Number of CPUs, L2s, etc.
@@ -187,7 +189,7 @@ idle_uid = -1
 kernel_uid = -1
 
 
-class Task(object):
+class Task:
     def __init__(self, uid, pid, tgid, task_name, is_process, tick):
         if pid == 0:  # Idle
             self.uid = 0
@@ -203,7 +205,7 @@ class Task(object):
         self.tick = tick  # time this task first appeared
 
 
-class Event(object):
+class Event:
     def __init__(self, tick, task):
         self.tick = tick
         self.task = task
@@ -221,6 +223,7 @@ def packed32(x):
     ret = []
     more = True
     while more:
+        x = int(x)
         b = x & 0x7F
         x = x >> 7
         if ((x == 0) and ((b & 0x40) == 0)) or (
@@ -383,7 +386,13 @@ def timestampList(x):
 
 def writeBinary(outfile, binary_list):
     for i in binary_list:
-        outfile.write(f"{i:c}")
+        if isinstance(i, str):
+            byteVal = bytes(i, "utf-8")
+        elif isinstance(i, int):
+            byteVal = bytes([i])
+        else:
+            byteVal = i
+        outfile.write(byteVal)
 
 
 ############################################################
@@ -654,14 +663,14 @@ def parseProcessInfo(task_file):
         sys.exit(1)
 
     process_re = re.compile(
-        "tick=(\d+)\s+(\d+)\s+cpu_id=(\d+)\s+"
-        + "next_pid=([-\d]+)\s+next_tgid=([-\d]+)\s+next_task=(.*)"
+        r"tick=(\d+)\s+(\d+)\s+cpu_id=(\d+)\s+"
+        + r"next_pid=([-\d]+)\s+next_tgid=([-\d]+)\s+next_task=(.*)"
     )
 
     task_name_failure_warned = False
 
     for line in process_file:
-        match = re.match(process_re, line)
+        match = re.match(process_re, line.decode())
         if match:
             tick = int(match.group(1))
             if start_tick < 0:
@@ -805,9 +814,8 @@ def writeXmlFile(xml, filename):
 
 
 # StatsEntry that contains individual statistics
-class StatsEntry(object):
+class StatsEntry:
     def __init__(self, name, group, group_index, per_cpu, key):
-
         # Full name of statistics
         self.name = name
 
@@ -819,12 +827,14 @@ class StatsEntry(object):
 
         # Shorter name with "system" stripped off
         # and symbols converted to alphanumerics
-        self.short_name = re.sub("system\.", "", name)
+        self.short_name = re.sub(r"system\.", "", name)
         self.short_name = re.sub(":", "_", name)
 
         # Regex for this stat (string version used to construct union regex)
-        self.regex_string = "^" + name + "\s+([\d\.]+)"
-        self.regex = re.compile("^" + name + "\s+([\d\.e\-]+)\s+# (.*)$", re.M)
+        self.regex_string = "^" + name + r"\s+([\d\.]+)"
+        self.regex = re.compile(
+            "^" + name + r"\s+([\d\.e\-]+)\s+# (.*)$", re.M
+        )
         self.description = ""
 
         # Whether this stat is use per CPU or not
@@ -862,11 +872,11 @@ class StatsEntry(object):
                 print("\t", per_cpu_name)
 
                 self.per_cpu_regex_string.append(
-                    "^" + per_cpu_name + "\s+[\d\.]+"
+                    "^" + per_cpu_name + r"\s+[\d\.]+"
                 )
                 self.per_cpu_regex.append(
                     re.compile(
-                        "^" + per_cpu_name + "\s+([\d\.e\-]+)\s+# (.*)$", re.M
+                        "^" + per_cpu_name + r"\s+([\d\.e\-]+)\s+# (.*)$", re.M
                     )
                 )
                 self.values.append([])
@@ -881,7 +891,7 @@ class StatsEntry(object):
 
 # Global stats object that contains the list of stats entries
 # and other utility functions
-class Stats(object):
+class Stats:
     def __init__(self):
         self.stats_list = []
         self.tick_list = []
@@ -975,17 +985,17 @@ def readGem5Stats(stats, gem5_stats_file):
     window_end_regex = re.compile(
         "^---------- End Simulation Statistics   ----------"
     )
-    final_tick_regex = re.compile("^final_tick\s+(\d+)")
+    final_tick_regex = re.compile(r"^final_tick\s+(\d+)")
 
     global ticks_in_ns
-    sim_freq_regex = re.compile("^sim_freq\s+(\d+)")
+    sim_freq_regex = re.compile(r"^sim_freq\s+(\d+)")
     sim_freq = -1
 
     try:
         if ext == ".gz":
             f = gzip.open(gem5_stats_file, "r")
         else:
-            f = open(gem5_stats_file, "r")
+            f = open(gem5_stats_file)
     except:
         print("ERROR opening stats file", gem5_stats_file, "!")
         sys.exit(1)
@@ -997,7 +1007,7 @@ def readGem5Stats(stats, gem5_stats_file):
         error = False
         try:
             line = f.readline()
-        except IOError:
+        except OSError:
             print("")
             print("WARNING: IO error in stats file")
             print("(gzip stream not closed properly?)...continuing for now")
@@ -1139,7 +1149,7 @@ def doCapturedXML(output_path, stats):
     counters = ET.SubElement(xml, "counters")
     for stat in stats.stats_list:
         s = ET.SubElement(counters, "counter")
-        stat_name = re.sub("\.", "_", stat.short_name)
+        stat_name = re.sub(r"\.", "_", stat.short_name)
         stat_name = re.sub("#", "", stat_name)
         s.set("title", stat.group)
         s.set("name", stat_name)
@@ -1266,7 +1276,7 @@ def writeVisualAnnotations(blob, input_path, output_path):
     frame_count = 0
     file_list = os.listdir(frame_path)
     file_list.sort()
-    re_fb = re.compile("fb\.(\d+)\.(\d+)\.bmp.gz")
+    re_fb = re.compile(r"fb\.(\d+)\.(\d+)\.bmp.gz")
 
     # Use first non-negative pid to tag visual annotations
     annotate_pid = -1

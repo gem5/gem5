@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2011-2013, 2016-2018, 2020-2021 Arm Limited
+// Copyright (c) 2011-2013, 2016-2018, 2020-2021, 2023 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -43,7 +43,29 @@ let {{
             HtmFailureFaultCause::EXCEPTION);
         return fault;
     }
-    fault = std::make_shared<SupervisorCall>(machInst, bits(machInst, 20, 5));
+
+    const uint32_t iss = bits(machInst, 20, 5);
+    if (fgtEnabled(xc->tcBase())) {
+        ExceptionLevel curr_el = currEL(xc->tcBase());
+        HFGITR hfgitr = xc->tcBase()->readMiscReg(MISCREG_HFGITR_EL2);
+        switch (curr_el) {
+          case EL0:
+            if (!ELIsInHost(xc->tcBase(), curr_el) && hfgitr.svcEL0) {
+                return std::make_shared<HypervisorTrap>(
+                    machInst, iss, ExceptionClass::SVC_64);
+            }
+            break;
+          case EL1:
+            if (hfgitr.svcEL1) {
+                return std::make_shared<HypervisorTrap>(
+                    machInst, iss, ExceptionClass::SVC_64);
+            }
+            break;
+          default:
+            break;
+        }
+    }
+    fault = std::make_shared<SupervisorCall>(machInst, iss);
     '''
 
     svcIop = ArmInstObjParams("svc", "Svc64", "ImmOp64",

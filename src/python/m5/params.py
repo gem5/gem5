@@ -56,13 +56,15 @@
 
 import copy
 import datetime
+import math
 import re
 import sys
 import time
-import math
 
-from . import proxy
-from . import ticks
+from . import (
+    proxy,
+    ticks,
+)
 from .util import *
 
 
@@ -101,7 +103,7 @@ class MetaParamValue(type):
 
 # Dummy base class to identify types that are legitimate for SimObject
 # parameters.
-class ParamValue(object, metaclass=MetaParamValue):
+class ParamValue(metaclass=MetaParamValue):
     cmd_line_settable = False
 
     # Generate the code needed as a prerequisite for declaring a C++
@@ -149,7 +151,7 @@ class ParamValue(object, metaclass=MetaParamValue):
 
 
 # Regular parameter description.
-class ParamDesc(object):
+class ParamDesc:
     def __init__(self, ptype_str, ptype, *args, **kwargs):
         self.ptype_str = ptype_str
         # remember ptype only if it is provided
@@ -298,8 +300,7 @@ class SimObjectVector(VectorParamValue):
     # SimObjectVector directly.
     def descendants(self):
         for v in self:
-            for obj in v.descendants():
-                yield obj
+            yield from v.descendants()
 
     def get_config_as_dict(self):
         a = []
@@ -415,7 +416,7 @@ class VectorParamDesc(ParamDesc):
         code("std::vector< ${{self.ptype.cxx_type}} > ${{self.name}};")
 
 
-class ParamFactory(object):
+class ParamFactory:
     def __init__(self, param_desc_class, ptype_str=None):
         self.param_desc_class = param_desc_class
         self.ptype_str = ptype_str
@@ -452,6 +453,7 @@ VectorParam = ParamFactory(VectorParamDesc)
 # the __str__() conversion method).
 #
 #####################################################################
+
 
 # String-valued parameter.  Just mixin the ParamValue class with the
 # built-in str class.
@@ -965,7 +967,7 @@ class AddrRange(ParamValue):
         if len(self.masks) == 0:
             return f"{self.start}:{self.end}"
         else:
-            return "%s:%s:%s:%s" % (
+            return "{}:{}:{}:{}".format(
                 self.start,
                 self.end,
                 self.intlvMatch,
@@ -1099,10 +1101,12 @@ class HostSocket(ParamValue):
             self.value = value
 
     def getValue(self):
-        from _m5.socket import listenSocketEmptyConfig
-        from _m5.socket import listenSocketInetConfig
-        from _m5.socket import listenSocketUnixFileConfig
-        from _m5.socket import listenSocketUnixAbstractConfig
+        from _m5.socket import (
+            listenSocketEmptyConfig,
+            listenSocketInetConfig,
+            listenSocketUnixAbstractConfig,
+            listenSocketUnixFileConfig,
+        )
 
         if isinstance(self.value, str):
             if self.value[0] == "@":
@@ -1443,8 +1447,16 @@ time_formats = [
 
 
 def parse_time(value):
-    from time import gmtime, strptime, struct_time, time
-    from datetime import datetime, date
+    from datetime import (
+        date,
+        datetime,
+    )
+    from time import (
+        gmtime,
+        strptime,
+        struct_time,
+        time,
+    )
 
     if isinstance(value, struct_time):
         return value
@@ -1483,8 +1495,9 @@ class Time(ParamValue):
         return value
 
     def getValue(self):
-        from _m5.core import tm
         import calendar
+
+        from _m5.core import tm
 
         return tm.gmtime(calendar.timegm(self.value))
 
@@ -1524,10 +1537,11 @@ class Time(ParamValue):
 # derive the new type from the appropriate base class on the fly.
 
 allEnums = {}
+
+
 # Metaclass for Enum types
 class MetaEnum(MetaParamValue):
     def __new__(mcls, name, bases, dict):
-
         cls = super().__new__(mcls, name, bases, dict)
         allEnums[name] = cls
         return cls
@@ -1600,7 +1614,7 @@ class Enum(ParamValue, metaclass=MetaEnum):
     def cxx_ini_parse(cls, code, src, dest, ret):
         code("if (false) {")
         for elem_name in cls.map.keys():
-            code('} else if (%s == "%s") {' % (src, elem_name))
+            code(f'}} else if ({src} == "{elem_name}") {{')
             code.indent()
             name = cls.__name__ if cls.enum_name is None else cls.enum_name
             code(f"{dest} = {name if cls.is_class else 'enums'}::{elem_name};")
@@ -1963,11 +1977,12 @@ class MemoryBandwidth(float, ParamValue):
 # "Constants"... handy aliases for various values.
 #
 
+
 # Special class for NULL pointers.  Note the special check in
 # make_param_value() above that lets these be assigned where a
 # SimObject is required.
 # only one copy of a particular node
-class NullSimObject(object, metaclass=Singleton):
+class NullSimObject(metaclass=Singleton):
     _name = "Null"
 
     def __call__(cls):
@@ -2030,9 +2045,10 @@ AllMemory = AddrRange(0, MaxAddr)
 #
 #####################################################################
 
+
 # Port reference: encapsulates a reference to a particular port on a
 # particular SimObject.
-class PortRef(object):
+class PortRef:
     def __init__(self, simobj, name, role, is_source):
         assert isSimObject(simobj) or isSimObjectClass(simobj)
         self.simobj = simobj
@@ -2202,7 +2218,7 @@ class VectorPortElementRef(PortRef):
 
 # A reference to a complete vector-valued port (not just a single element).
 # Can be indexed to retrieve individual VectorPortElementRef instances.
-class VectorPortRef(object):
+class VectorPortRef:
     def __init__(self, simobj, name, role, is_source):
         assert isSimObject(simobj) or isSimObjectClass(simobj)
         self.simobj = simobj
@@ -2284,7 +2300,7 @@ class VectorPortRef(object):
 # Port description object.  Like a ParamDesc object, this represents a
 # logical port in the SimObject class, not a particular port on a
 # SimObject instance.  The latter are represented by PortRef objects.
-class Port(object):
+class Port:
     # Port("role", "description")
 
     _compat_dict = {}
@@ -2371,15 +2387,16 @@ SlavePort = ResponsePort
 VectorMasterPort = VectorRequestPort
 VectorSlavePort = VectorResponsePort
 
+
 # 'Fake' ParamDesc for Port references to assign to the _pdesc slot of
 # proxy objects (via set_param_desc()) so that proxy error messages
 # make sense.
-class PortParamDesc(object, metaclass=Singleton):
+class PortParamDesc(metaclass=Singleton):
     ptype_str = "Port"
     ptype = Port
 
 
-class DeprecatedParam(object):
+class DeprecatedParam:
     """A special type for deprecated parameter variable names.
 
     There are times when we need to change the name of parameter, but this

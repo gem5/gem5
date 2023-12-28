@@ -36,6 +36,7 @@
 
 #include "base/bitunion.hh"
 #include "dev/amdgpu/amdgpu_defines.hh"
+#include "dev/amdgpu/amdgpu_gfx.hh"
 #include "dev/amdgpu/amdgpu_nbio.hh"
 #include "dev/amdgpu/amdgpu_vm.hh"
 #include "dev/amdgpu/memory_manager.hh"
@@ -89,6 +90,7 @@ class AMDGPUDevice : public PciDevice
     using GPURegMap = std::unordered_map<uint32_t, uint64_t>;
     GPURegMap regs;
     std::unordered_map<uint32_t, QueueType> doorbells;
+    std::unordered_map<uint32_t, PacketPtr> pendingDoorbellPkts;
 
     /**
      * VGA ROM methods
@@ -109,6 +111,7 @@ class AMDGPUDevice : public PciDevice
      * Blocks of the GPU
      */
     AMDGPUNbio nbio;
+    AMDGPUGfx gfx;
     AMDGPUMemoryManager *gpuMemMgr;
     AMDGPUInterruptHandler *deviceIH;
     AMDGPUVM gpuvm;
@@ -185,6 +188,7 @@ class AMDGPUDevice : public PciDevice
      * Set handles to GPU blocks.
      */
     void setDoorbellType(uint32_t offset, QueueType qt);
+    void processPendingDoorbells(uint32_t offset);
     void setSDMAEngine(Addr offset, SDMAEngine *eng);
 
     /**

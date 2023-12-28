@@ -27,14 +27,20 @@
 """Tests for the Artifact object and associated functions"""
 
 import hashlib
-from pathlib import Path
-import unittest
-from uuid import uuid4, UUID
-import sys
 import io
+import sys
+import unittest
+from pathlib import Path
+from uuid import (
+    UUID,
+    uuid4,
+)
 
 from gem5art import artifact
-from gem5art.artifact._artifactdb import ArtifactDB, getDBConnection
+from gem5art.artifact._artifactdb import (
+    ArtifactDB,
+    getDBConnection,
+)
 
 
 class MockDB(ArtifactDB):
@@ -85,7 +91,7 @@ class TestGit(unittest.TestCase):
     def test_keys(self):
         git = artifact.artifact.getGit(Path("."))
         self.assertSetEqual(
-            set(git.keys()), set(["origin", "hash", "name"]), "git keys wrong"
+            set(git.keys()), {"origin", "hash", "name"}, "git keys wrong"
         )
 
     def test_origin(self):
@@ -205,7 +211,6 @@ class TestArtifactSimilarity(unittest.TestCase):
 
 class TestRegisterArtifact(unittest.TestCase):
     def setUp(self):
-
         # Create and register an artifact
         self.testArtifactA = artifact.Artifact.registerArtifact(
             name="artifact-A",

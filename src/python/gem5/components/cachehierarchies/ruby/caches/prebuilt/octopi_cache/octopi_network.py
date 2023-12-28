@@ -27,10 +27,11 @@
 from m5.objects import SimpleNetwork
 
 from .ruby_network_components import (
+    RubyIntLink,
     RubyNetworkComponent,
     RubyRouter,
-    RubyIntLink,
 )
+
 
 # . The Network owns all routers, all int links and all ext links that are not in CCD's.
 # . The CCD subsystems are not of type RubyNetwork, so we need to copy the references of

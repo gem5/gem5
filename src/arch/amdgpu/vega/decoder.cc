@@ -495,7 +495,7 @@ namespace VegaISA
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
         &Decoder::subDecode_OP_FLAT,
-        &Decoder::decode_invalid,
+        &Decoder::subDecode_OP_FLAT,
         &Decoder::subDecode_OP_FLAT,
         &Decoder::subDecode_OP_FLAT,
         &Decoder::decode_invalid,
@@ -3140,8 +3140,8 @@ namespace VegaISA
         &Decoder::decode_OP_VOP1__V_CVT_NORM_I16_F16,
         &Decoder::decode_OP_VOP1__V_CVT_NORM_U16_F16,
         &Decoder::decode_OP_VOP1__V_SAT_PK_U8_I16,
-        &Decoder::decode_OP_VOP1__V_SWAP_B32,
         &Decoder::decode_invalid,
+        &Decoder::decode_OP_VOP1__V_SWAP_B32,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
@@ -7020,7 +7020,7 @@ namespace VegaISA
     GPUStaticInst*
     Decoder::decode_OPU_VOP3__V_OR3_B32(MachInst iFmt)
     {
-        return new Inst_VOP3__V_OR_B32(&iFmt->iFmt_VOP3A);
+        return new Inst_VOP3__V_OR3_B32(&iFmt->iFmt_VOP3A);
     }
 
     GPUStaticInst*

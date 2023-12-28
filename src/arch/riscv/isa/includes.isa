@@ -34,6 +34,7 @@
 //
 
 output header {{
+#include <functional>
 #include <iomanip>
 #include <sstream>
 #include <string>
@@ -53,6 +54,7 @@ output header {{
 #include "arch/riscv/insts/standard.hh"
 #include "arch/riscv/insts/static_inst.hh"
 #include "arch/riscv/insts/unknown.hh"
+#include "arch/riscv/insts/vector.hh"
 #include "arch/riscv/interrupts.hh"
 #include "cpu/static_inst.hh"
 #include "mem/packet.hh"
@@ -66,9 +68,15 @@ output decoder {{
 #include <limits>
 #include <string>
 
+/* riscv softfloat library */
+#include <internals.h>
+#include <softfloat.h>
+#include <specialize.h>
+
 #include "arch/riscv/decoder.hh"
 #include "arch/riscv/faults.hh"
 #include "arch/riscv/mmu.hh"
+#include "arch/riscv/regs/float.hh"
 #include "base/cprintf.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/thread_context.hh"
@@ -95,6 +103,7 @@ output exec {{
 #include "arch/riscv/reg_abi.hh"
 #include "arch/riscv/regs/float.hh"
 #include "arch/riscv/regs/misc.hh"
+#include "arch/riscv/regs/vector.hh"
 #include "arch/riscv/utility.hh"
 #include "base/condcodes.hh"
 #include "cpu/base.hh"

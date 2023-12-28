@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 ARM Limited
+ * Copyright (c) 2020-2021,2023 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -139,6 +139,13 @@ structure (Sequencer, external = "yes") {
                      Cycles, Cycles, Cycles);
   void writeUniqueCallback(Addr, DataBlock);
 
+  void atomicCallback(Addr, DataBlock);
+  void atomicCallback(Addr, DataBlock, bool);
+  void atomicCallback(Addr, DataBlock, bool, MachineType);
+  void atomicCallback(Addr, DataBlock, bool, MachineType,
+                      Cycles, Cycles, Cycles);
+
+
   void unaddressedCallback(Addr, RubyRequestType);
   void unaddressedCallback(Addr, RubyRequestType, MachineType);
   void unaddressedCallback(Addr, RubyRequestType, MachineType,
@@ -251,4 +258,15 @@ structure (RubyPrefetcher, external = "yes") {
     void observeMiss(Addr, RubyRequestType);
     void observePfHit(Addr);
     void observePfMiss(Addr);
+}
+
+structure(RubyPrefetcherProxy, external = "yes") {
+    void notifyPfHit(RequestPtr, bool, DataBlock);
+    void notifyPfMiss(RequestPtr, bool, DataBlock);
+    void notifyPfFill(RequestPtr, DataBlock, bool);
+    void notifyPfEvict(Addr, bool, RequestorID);
+    void completePrefetch(Addr);
+    // SLICC controller must define its own regProbePoints and call
+    // this for every RubyPrefetcherProxy object present
+    void regProbePoints();
 }

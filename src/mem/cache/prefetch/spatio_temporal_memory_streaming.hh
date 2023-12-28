@@ -181,7 +181,7 @@ class STeMS : public Queued
     unsigned int lastTriggerCounter;
 
     /** Checks if the active generations have ended */
-    void checkForActiveGenerationsEnd();
+    void checkForActiveGenerationsEnd(const CacheAccessor &cache);
     /**
      * Adds an entry to the RMOB
      * @param sr_addr Spatial region address
@@ -206,7 +206,8 @@ class STeMS : public Queued
     ~STeMS() = default;
 
     void calculatePrefetch(const PrefetchInfo &pfi,
-                           std::vector<AddrPriority> &addresses) override;
+                           std::vector<AddrPriority> &addresses,
+                           const CacheAccessor &cache) override;
 };
 
 } // namespace prefetch

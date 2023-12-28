@@ -24,15 +24,17 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from m5.objects import (
+    MessageBuffer,
+    RubyDirectoryMemory,
+)
+
 from ......utils.override import overrides
 from ..abstract_directory import AbstractDirectory
-
-from m5.objects import MessageBuffer, RubyDirectoryMemory
 
 
 class Directory(AbstractDirectory):
     def __init__(self, network, cache_line_size, mem_range, port):
-
         super().__init__(network, cache_line_size)
         self.addr_ranges = [mem_range]
         self.directory = RubyDirectoryMemory()

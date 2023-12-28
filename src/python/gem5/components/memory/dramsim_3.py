@@ -1,8 +1,19 @@
-import m5
-import os
 import configparser
+import os
+from typing import (
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+)
 
-from m5.objects import DRAMsim3, AddrRange, Port, MemCtrl
+import m5
+from m5.objects import (
+    AddrRange,
+    DRAMsim3,
+    MemCtrl,
+    Port,
+)
 from m5.util.convert import toMemorySize
 
 from ...utils.override import overrides
@@ -10,16 +21,15 @@ from ..boards.abstract_board import AbstractBoard
 from .abstract_memory_system import AbstractMemorySystem
 
 
-from typing import Optional, Tuple, Sequence, List
-
-
 def config_ds3(mem_type: str, num_chnls: int) -> Tuple[str, str]:
     """
     This function creates a config file that will be used to create a memory
-    controller of type DRAMSim3. It stores the config file in /tmp/ directory.
+    controller of type DRAMSim3. It stores the config file in ``/tmp/`` directory.
 
     :param mem_type: The name for the type of the memory to be configured.
+
     :param num_chnls: The number of channels to configure for the memory
+
     :returns: A tuple containing the output file and the output directory.
     """
     config = configparser.ConfigParser()

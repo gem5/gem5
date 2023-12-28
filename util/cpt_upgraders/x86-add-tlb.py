@@ -5,11 +5,11 @@ def upgrader(cpt):
             import re
 
             # Search for all ISA sections
-            if re.search(".*sys.*\.cpu.*\.dtb$", sec):
+            if re.search(r".*sys.*\.cpu.*\.dtb$", sec):
                 cpt.set(sec, "_size", "0")
                 cpt.set(sec, "lruSeq", "0")
 
-            if re.search(".*sys.*\.cpu.*\.itb$", sec):
+            if re.search(r".*sys.*\.cpu.*\.itb$", sec):
                 cpt.set(sec, "_size", "0")
                 cpt.set(sec, "lruSeq", "0")
     else:

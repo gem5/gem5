@@ -37220,6 +37220,8 @@ namespace VegaISA
         } // getOperandSize
 
         void execute(GPUDynInstPtr) override;
+        void initiateAcc(GPUDynInstPtr) override;
+        void completeAcc(GPUDynInstPtr) override;
     }; // Inst_MUBUF__BUFFER_ATOMIC_CMPSWAP
 
     class Inst_MUBUF__BUFFER_ATOMIC_ADD : public Inst_MUBUF

@@ -35,9 +35,10 @@
 #
 # Author: Glenn Bergmans
 
-from m5.ext.pyfdt import pyfdt
-import re
 import os
+import re
+
+from m5.ext.pyfdt import pyfdt
 from m5.SimObject import SimObject
 from m5.util import fatal
 
@@ -86,7 +87,7 @@ class FdtPropertyBytes(pyfdt.FdtPropertyBytes):
         super().__init__(name, values)
 
 
-class FdtState(object):
+class FdtState:
     """Class for maintaining state while recursively generating a flattened
     device tree. The state tracks address, size and CPU address cell sizes, and
     maintains a dictionary of allocated phandles."""
@@ -270,7 +271,7 @@ class Fdt(pyfdt.Fdt):
             with open(filename, "wb") as f:
                 f.write(self.to_dtb())
             return filename
-        except IOError:
+        except OSError:
             raise RuntimeError("Failed to open DTB output file")
 
     def writeDtsFile(self, filename):
@@ -280,5 +281,5 @@ class Fdt(pyfdt.Fdt):
             with open(filename, "w") as f:
                 f.write(self.to_dts())
             return filename
-        except IOError:
+        except OSError:
             raise RuntimeError("Failed to open DTS output file")

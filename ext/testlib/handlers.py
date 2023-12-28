@@ -26,37 +26,40 @@
 #
 # Authors: Sean Wilson
 
-'''
+"""
 Handlers for the testlib Log.
 
 
-'''
+"""
 import multiprocessing
 import os
 import sys
 import threading
 import time
 import traceback
+from queue import (
+    Empty,
+    Queue,
+)
 
 import testlib.helper as helper
 import testlib.log as log
 import testlib.result as result
 import testlib.state as state
 import testlib.terminal as terminal
-
-from queue import Queue, Empty
 from testlib.configuration import constants
 
 
-class _TestStreamManager(object):
+class _TestStreamManager:
     def __init__(self):
         self._writers = {}
 
     def open_writer(self, test_result):
         if test_result in self._writers:
-            raise ValueError('Cannot have multiple writters on a single test.')
-        self._writers[test_result] = _TestStreams(test_result.stdout,
-                test_result.stderr)
+            raise ValueError("Cannot have multiple writters on a single test.")
+        self._writers[test_result] = _TestStreams(
+            test_result.stdout, test_result.stderr
+        )
 
     def get_writer(self, test_result):
         if test_result not in self._writers:
@@ -73,89 +76,94 @@ class _TestStreamManager(object):
             writer.close()
         self._writers.clear()
 
-class _TestStreams(object):
+
+class _TestStreams:
     def __init__(self, stdout, stderr):
         helper.mkdir_p(os.path.dirname(stdout))
         helper.mkdir_p(os.path.dirname(stderr))
-        self.stdout = open(stdout, 'w')
-        self.stderr = open(stderr, 'w')
+        self.stdout = open(stdout, "w")
+        self.stderr = open(stderr, "w")
 
     def close(self):
         self.stdout.close()
         self.stderr.close()
 
-class ResultHandler(object):
-    '''
+
+class ResultHandler:
+    """
     Log handler which listens for test results and output saving data as
     it is reported.
 
     When the handler is closed it writes out test results in the python pickle
     format.
-    '''
+    """
+
     def __init__(self, schedule, directory):
-        '''
+        """
         :param schedule: The entire schedule as a :class:`LoadedLibrary`
             object.
 
         :param directory: Directory to save test stdout/stderr and aggregate
             results to.
-        '''
+        """
         self.directory = directory
-        self.internal_results = result.InternalLibraryResults(schedule,
-                directory)
+        self.internal_results = result.InternalLibraryResults(
+            schedule, directory
+        )
         self.test_stream_manager = _TestStreamManager()
         self._closed = False
 
         self.mapping = {
             log.LibraryStatus.type_id: self.handle_library_status,
-
             log.SuiteResult.type_id: self.handle_suite_result,
             log.TestResult.type_id: self.handle_test_result,
-
             log.TestStderr.type_id: self.handle_stderr,
             log.TestStdout.type_id: self.handle_stdout,
         }
 
     def handle(self, record):
         if not self._closed:
-            self.mapping.get(record.type_id, lambda _:None)(record)
+            self.mapping.get(record.type_id, lambda _: None)(record)
 
     def handle_library_status(self, record):
-        if record['status'] in (state.Status.Complete, state.Status.Avoided):
+        if record["status"] in (state.Status.Complete, state.Status.Avoided):
             self.test_stream_manager.close()
 
     def handle_suite_result(self, record):
         suite_result = self.internal_results.get_suite_result(
-                    record['metadata'].uid)
-        suite_result.result = record['result']
+            record["metadata"].uid
+        )
+        suite_result.result = record["result"]
 
     def handle_test_result(self, record):
         test_result = self._get_test_result(record)
-        test_result.result = record['result']
+        test_result.result = record["result"]
 
     def handle_stderr(self, record):
         self.test_stream_manager.get_writer(
             self._get_test_result(record)
-        ).stderr.write(record['buffer'])
+        ).stderr.write(record["buffer"])
 
     def handle_stdout(self, record):
         self.test_stream_manager.get_writer(
             self._get_test_result(record)
-        ).stdout.write(record['buffer'])
+        ).stdout.write(record["buffer"])
 
     def _get_test_result(self, test_record):
         return self.internal_results.get_test_result(
-                    test_record['metadata'].uid,
-                    test_record['metadata'].suite_uid)
+            test_record["metadata"].uid, test_record["metadata"].suite_uid
+        )
 
     def _save(self):
-        #FIXME Hardcoded path name
+        # FIXME Hardcoded path name
         result.InternalSavedResults.save(
             self.internal_results,
-            os.path.join(self.directory, constants.pickle_filename))
+            os.path.join(self.directory, constants.pickle_filename),
+        )
         result.JUnitSavedResults.save(
             self.internal_results,
-            os.path.join(self.directory, constants.xml_filename))
+            os.path.join(self.directory, constants.xml_filename),
+        )
 
     def close(self):
         if self._closed:
@@ -164,11 +172,11 @@ class ResultHandler(object):
         self._save()
 
     def unsuccessful(self):
-        '''
+        """
         Performs an or reduce on all of the results.
         Returns true if at least one test is unsuccessful, false when all tests
         pass
-        '''
+        """
         for suite_result in self.internal_results:
             if suite_result.unsuccessful:
                 return True
@@ -176,20 +184,21 @@ class ResultHandler(object):
         return False
 
 
-#TODO Change from a handler to an internal post processor so it can be used
+# TODO Change from a handler to an internal post processor so it can be used
 # to reprint results
-class SummaryHandler(object):
-    '''
+class SummaryHandler:
+    """
     A log handler which listens to the log for test results
     and reports the aggregate results when closed.
-    '''
+    """
+
     color = terminal.get_termcap()
     reset = color.Normal
     colormap = {
-            state.Result.Errored: color.Red,
-            state.Result.Failed: color.Red,
-            state.Result.Passed: color.Green,
-            state.Result.Skipped: color.Cyan,
+        state.Result.Errored: color.Red,
+        state.Result.Failed: color.Red,
+        state.Result.Passed: color.Green,
+        state.Result.Skipped: color.Cyan,
     }
 
     def __init__(self):
@@ -201,24 +210,28 @@ class SummaryHandler(object):
         self.results = []
 
     def handle_library_status(self, record):
-        if record['status'] == state.Status.Building:
+        if record["status"] == state.Status.Building:
             self._timer.restart()
 
     def handle_testresult(self, record):
-        result = record['result'].value
-        if result in (state.Result.Skipped, state.Result.Failed,
-                state.Result.Passed, state.Result.Errored):
+        result = record["result"].value
+        if result in (
+            state.Result.Skipped,
+            state.Result.Failed,
+            state.Result.Passed,
+            state.Result.Errored,
+        ):
             self.results.append(result)
 
     def handle(self, record):
-        self.mapping.get(record.type_id, lambda _:None)(record)
+        self.mapping.get(record.type_id, lambda _: None)(record)
 
     def close(self):
         print(self._display_summary())
 
     def _display_summary(self):
         most_severe_outcome = None
-        outcome_fmt = ' {count} {outcome}'
+        outcome_fmt = " {count} {outcome}"
         strings = []
 
         outcome_count = [0] * len(state.Result.enums)
@@ -228,24 +241,31 @@ class SummaryHandler(object):
         # Iterate over enums so they are in order of severity
         for outcome in state.Result.enums:
             outcome = getattr(state.Result, outcome)
-            count  = outcome_count[outcome]
+            count = outcome_count[outcome]
             if count:
-                strings.append(outcome_fmt.format(count=count,
-                        outcome=state.Result.enums[outcome]))
+                strings.append(
+                    outcome_fmt.format(
+                        count=count, outcome=state.Result.enums[outcome]
+                    )
+                )
                 most_severe_outcome = outcome
-        string = ','.join(strings)
+        string = ",".join(strings)
         if most_severe_outcome is None:
-            string = ' No testing done'
+            string = " No testing done"
             most_severe_outcome = state.Result.Passed
         else:
-            string = ' Results:' + string + ' in {:.2} seconds '.format(
-                    self._timer.active_time())
-        string += ' '
+            string = (
+                " Results:"
+                + string
+                + f" in {self._timer.active_time():.2} seconds "
+            )
+        string += " "
         return terminal.insert_separator(
-                string,
-                color=self.colormap[most_severe_outcome] + self.color.Bold)
+            string, color=self.colormap[most_severe_outcome] + self.color.Bold
+        )
 
-class TerminalHandler(object):
+
+class TerminalHandler:
     color = terminal.get_termcap()
     verbosity_mapping = {
         log.LogLevel.Warn: color.Yellow,
@@ -268,75 +288,85 @@ class TerminalHandler(object):
         }
 
     def _display_outcome(self, name, outcome, reason=None):
-        print(self.color.Bold
-                 + SummaryHandler.colormap[outcome]
-                 + name
-                 + ' '
-                 + state.Result.enums[outcome]
-                 + SummaryHandler.reset)
+        print(
+            self.color.Bold
+            + SummaryHandler.colormap[outcome]
+            + name
+            + " "
+            + state.Result.enums[outcome]
+            + SummaryHandler.reset
+        )
 
         if reason is not None:
-            log.test_log.info('')
-            log.test_log.info('Reason:')
+            log.test_log.info("")
+            log.test_log.info("Reason:")
             log.test_log.info(reason)
-            log.test_log.info(terminal.separator('-'))
+            log.test_log.info(terminal.separator("-"))
 
     def handle_teststatus(self, record):
-        if record['status'] == state.Status.Running:
-            log.test_log.debug('Starting Test Case: %s' %\
-                    record['metadata'].name)
+        if record["status"] == state.Status.Running:
+            log.test_log.debug(
+                "Starting Test Case: %s" % record["metadata"].name
+            )
 
     def handle_testresult(self, record):
         self._display_outcome(
-            'Test: %s'  % record['metadata'].name,
-            record['result'].value)
+            "Test: %s" % record["metadata"].name, record["result"].value
+        )
 
     def handle_suitestatus(self, record):
-        if record['status'] == state.Status.Running:
-              log.test_log.debug('Starting Test Suite: %s ' %\
-                    record['metadata'].name)
+        if record["status"] == state.Status.Running:
+            log.test_log.debug(
+                "Starting Test Suite: %s " % record["metadata"].name
+            )
 
     def handle_stderr(self, record):
         if self.stream:
-            print(record.data['buffer'], file=sys.stderr, end='')
+            print(record.data["buffer"], file=sys.stderr, end="")
 
     def handle_stdout(self, record):
         if self.stream:
-            print(record.data['buffer'], file=sys.stdout, end='')
+            print(record.data["buffer"], file=sys.stdout, end="")
 
     def handle_testmessage(self, record):
         if self.stream:
-            print(self._colorize(record['message'], record['level']))
+            print(self._colorize(record["message"], record["level"]))
 
     def handle_librarymessage(self, record):
-        if not self.machine_only or record.data.get('machine_readable', False):
-            print(self._colorize(record['message'], record['level'],
-                    record['bold']))
+        if not self.machine_only or record.data.get("machine_readable", False):
+            print(
+                self._colorize(
+                    record["message"], record["level"], record["bold"]
+                )
+            )
 
     def _colorize(self, message, level, bold=False):
-        return '%s%s%s%s' % (
-                self.color.Bold if bold else '',
-                self.verbosity_mapping.get(level, ''),
-                message,
-                self.default)
+        return "{}{}{}{}".format(
+            self.color.Bold if bold else "",
+            self.verbosity_mapping.get(level, ""),
+            message,
+            self.default,
+        )
 
     def handle(self, record):
-        if record.data.get('level', self.verbosity) > self.verbosity:
+        if record.data.get("level", self.verbosity) > self.verbosity:
             return
-        self.mapping.get(record.type_id, lambda _:None)(record)
+        self.mapping.get(record.type_id, lambda _: None)(record)
 
     def close(self):
         pass
 
-class MultiprocessingHandlerWrapper(object):
-    '''
+
+class MultiprocessingHandlerWrapper:
+    """
     A handler class which forwards log records to subhandlers, enabling
     logging across multiprocessing python processes.
 
     The 'parent' side of the handler should execute either
     :func:`async_process` or :func:`process` to forward
     log records to subhandlers.
-    '''
+    """
+
     def __init__(self, *subhandlers):
         # Create thread to spin handing recipt of messages
         # Create queue to push onto
@@ -350,7 +380,7 @@ class MultiprocessingHandlerWrapper(object):
 
     def add_handler(self, handler):
         self._handler_lock.acquire()
-        self._subhandlers = (handler, ) + self._subhandlers
+        self._subhandlers = (handler,) + self._subhandlers
         self._handler_lock.release()
 
     def _with_handlers(self, callback):
@@ -405,7 +435,7 @@ class MultiprocessingHandlerWrapper(object):
         self.queue.put(record)
 
     def _close(self):
-        if hasattr(self, 'thread'):
+        if hasattr(self, "thread"):
             self.thread.join()
         _wrap(self._drain)
         self._with_handlers(lambda handler: _wrap(handler.close))
@@ -415,9 +445,9 @@ class MultiprocessingHandlerWrapper(object):
         # This sleep adds some time for the sender threads on this process to
         # finish pickling the object and complete shutdown after the queue is
         # closed.
-        time.sleep(.2)
+        time.sleep(0.2)
         self.queue.close()
-        time.sleep(.2)
+        time.sleep(0.2)
 
     def close(self):
         if not self._shutdown.is_set():

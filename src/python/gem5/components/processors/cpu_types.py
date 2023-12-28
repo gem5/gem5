@@ -24,11 +24,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from ..boards.mem_mode import MemMode
-
+import os
 from enum import Enum
 from typing import Set
-import os
+
+from ..boards.mem_mode import MemMode
 
 
 class CPUTypes(Enum):
@@ -52,7 +52,7 @@ def get_cpu_type_from_str(input: str) -> CPUTypes:
     the enum's value. E.g., "kvm" will return ISA.KVM. Throws an exception if
     the input string is invalid.
 
-    `get_cpu_types_str_set()` can be used to determine the valid strings.
+    ``get_cpu_types_str_set()`` can be used to determine the valid strings.
 
     This is for parsing text inputs that specify CPU Type targets.
 
@@ -62,7 +62,7 @@ def get_cpu_type_from_str(input: str) -> CPUTypes:
         if input.lower() == cpu_type.value:
             return cpu_type
 
-    valid_cpu_types_list_str = str()
+    valid_cpu_types_list_str = ""
     for cpu_type_str in get_cpu_types_str_set():
         valid_cpu_types_list_str += f"{os.linesep}{cpu_type_str}"
 

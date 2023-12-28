@@ -26,8 +26,15 @@
 
 import os
 import sys
-from os.path import basename, exists, join as joinpath, normpath
-from os.path import isdir, isfile, islink
+from os.path import (
+    basename,
+    exists,
+    isdir,
+    isfile,
+    islink,
+)
+from os.path import join as joinpath
+from os.path import normpath
 
 spec_dist = os.environ.get("M5_CPU2000", "/dist/m5/cpu2000")
 
@@ -71,7 +78,7 @@ def copyfiles(srcdir, dstdir):
         os.symlink(".", outlink)
 
 
-class Benchmark(object):
+class Benchmark:
     def __init__(self, isa, os, input_set):
         if not hasattr(self.__class__, "name"):
             self.name = self.__class__.__name__
@@ -877,7 +884,7 @@ class vortex(Benchmark):
         else:
             raise AttributeError(f"unknown ISA {isa}")
 
-        super(vortex, self).__init__(isa, os, input_set)
+        super().__init__(isa, os, input_set)
 
     def test(self, isa, os):
         self.args = [f"{self.endian}.raw"]

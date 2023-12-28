@@ -66,7 +66,11 @@ def readCommand(cmd, **kwargs):
     :returns: command stdout
     :rtype: string
     """
-    from subprocess import Popen, PIPE, STDOUT
+    from subprocess import (
+        PIPE,
+        STDOUT,
+        Popen,
+    )
 
     if isinstance(cmd, str):
         cmd = cmd.split()
@@ -100,7 +104,7 @@ def compareVersions(v1, v2):
             return v
         elif isinstance(v, str):
             return list(
-                map(lambda x: int(re.match("\d+", x).group()), v.split("."))
+                map(lambda x: int(re.match(r"\d+", x).group()), v.split("."))
             )
         else:
             raise TypeError()

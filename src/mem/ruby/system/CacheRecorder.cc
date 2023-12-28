@@ -30,8 +30,10 @@
 #include "mem/ruby/system/CacheRecorder.hh"
 
 #include "debug/RubyCacheTrace.hh"
+#include "mem/packet.hh"
 #include "mem/ruby/system/RubySystem.hh"
 #include "mem/ruby/system/Sequencer.hh"
+#include "sim/sim_exit.hh"
 
 namespace gem5
 {
@@ -56,12 +58,14 @@ CacheRecorder::CacheRecorder()
 
 CacheRecorder::CacheRecorder(uint8_t* uncompressed_trace,
                              uint64_t uncompressed_trace_size,
-                             std::vector<Sequencer*>& seq_map,
+                             std::vector<RubyPort*>& ruby_port_map,
                              uint64_t block_size_bytes)
     : m_uncompressed_trace(uncompressed_trace),
       m_uncompressed_trace_size(uncompressed_trace_size),
-      m_seq_map(seq_map),  m_bytes_read(0), m_records_read(0),
-      m_records_flushed(0), m_block_size_bytes(block_size_bytes)
+      m_ruby_port_map(ruby_port_map), m_bytes_read(0),
+      m_records_read(0), m_records_flushed(0),
+      m_block_size_bytes(block_size_bytes)
+
 {
     if (m_uncompressed_trace != NULL) {
         if (m_block_size_bytes < RubySystem::getBlockSizeBytes()) {
@@ -80,7 +84,7 @@ CacheRecorder::~CacheRecorder()
         delete [] m_uncompressed_trace;
         m_uncompressed_trace = NULL;
     }
-    m_seq_map.clear();
+    m_ruby_port_map.clear();
 }
 
 void
@@ -94,13 +98,19 @@ CacheRecorder::enqueueNextFlushRequest()
                                              Request::funcRequestorId);
         MemCmd::Command requestType = MemCmd::FlushReq;
         Packet *pkt = new Packet(req, requestType);
+        pkt->req->setReqInstSeqNum(m_records_flushed);
 
-        Sequencer* m_sequencer_ptr = m_seq_map[rec->m_cntrl_id];
-        assert(m_sequencer_ptr != NULL);
-        m_sequencer_ptr->makeRequest(pkt);
+
+        RubyPort* m_ruby_port_ptr = m_ruby_port_map[rec->m_cntrl_id];
+        assert(m_ruby_port_ptr != NULL);
+        m_ruby_port_ptr->makeRequest(pkt);
 
         DPRINTF(RubyCacheTrace, "Flushing %s\n", *rec);
+
     } else {
+        if (m_records_flushed > 0) {
+            exitSimLoop("Finished Drain", 0);
+        }
         DPRINTF(RubyCacheTrace, "Flushed all %d records\n", m_records_flushed);
     }
 }
@@ -141,15 +151,19 @@ CacheRecorder::enqueueNextFetchRequest()
 
             Packet *pkt = new Packet(req, requestType);
             pkt->dataStatic(traceRecord->m_data + rec_bytes_read);
+            pkt->req->setReqInstSeqNum(m_records_read);
 
-            Sequencer* m_sequencer_ptr = m_seq_map[traceRecord->m_cntrl_id];
-            assert(m_sequencer_ptr != NULL);
-            m_sequencer_ptr->makeRequest(pkt);
+
+            RubyPort* m_ruby_port_ptr =
+                m_ruby_port_map[traceRecord->m_cntrl_id];
+            assert(m_ruby_port_ptr != NULL);
+            m_ruby_port_ptr->makeRequest(pkt);
         }
 
         m_bytes_read += (sizeof(TraceRecord) + m_block_size_bytes);
         m_records_read++;
     } else {
+        exitSimLoop("Finished Warmup", 0);
         DPRINTF(RubyCacheTrace, "Fetched all %d records\n", m_records_read);
     }
 }
@@ -168,6 +182,8 @@ CacheRecorder::addRecord(int cntrl, Addr data_addr, Addr pc_addr,
     memcpy(rec->m_data, data.getData(0, m_block_size_bytes),
            m_block_size_bytes);
 
+    DPRINTF(RubyCacheTrace, "Inside addRecord with cntrl id %d and type %d\n",
+            cntrl, type);
     m_records.push_back(rec);
 }
 

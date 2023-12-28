@@ -37,9 +37,14 @@ gem5_verify_config(
     verifiers=(),
     fixtures=(),
     config=joinpath(
-        config.base_dir, "tests", "gem5", "configs", "simple_binary_run.py"
+        config.base_dir,
+        "tests",
+        "gem5",
+        "stdlib",
+        "configs",
+        "simple_binary_run.py",
     ),
-    config_args=["x86-hello64-static", "timing", "x86", "-b"],
+    config_args=["x86-hello64-static", "timing", "x86"],
     valid_isas=(constants.all_compiled_tag,),
     length=constants.quick_tag,
 )
@@ -49,9 +54,14 @@ gem5_verify_config(
     verifiers=(),
     fixtures=(),
     config=joinpath(
-        config.base_dir, "tests", "gem5", "configs", "simple_binary_run.py"
+        config.base_dir,
+        "tests",
+        "gem5",
+        "stdlib",
+        "configs",
+        "simple_binary_run.py",
     ),
-    config_args=["riscv-hello", "atomic", "riscv", "-b"],
+    config_args=["riscv-hello", "atomic", "riscv"],
     valid_isas=(constants.all_compiled_tag,),
     length=constants.quick_tag,
 )
@@ -61,9 +71,14 @@ gem5_verify_config(
     verifiers=(),
     fixtures=(),
     config=joinpath(
-        config.base_dir, "tests", "gem5", "configs", "simple_binary_run.py"
+        config.base_dir,
+        "tests",
+        "gem5",
+        "stdlib",
+        "configs",
+        "simple_binary_run.py",
     ),
-    config_args=["arm-hello64-static", "o3", "arm", "-b"],
+    config_args=["arm-hello64-static", "o3", "arm"],
     valid_isas=(constants.all_compiled_tag,),
     length=constants.quick_tag,
 )

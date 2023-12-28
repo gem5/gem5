@@ -31,6 +31,7 @@ from m5.objects import *
 #                ex5 LITTLE core (based on the ARM Cortex-A7)
 # -----------------------------------------------------------------------
 
+
 # Simple ALU Instructions have a latency of 3
 class ex5_LITTLE_Simple_Int(MinorDefaultIntFU):
     opList = [OpDesc(opClass="IntAlu", opLat=4)]
@@ -146,9 +147,8 @@ class L2(Cache):
     size = "512kB"
     assoc = 8
     write_buffers = 16
-    prefetch_on_access = True
     clusivity = "mostly_excl"
     # Simple stride prefetcher
-    prefetcher = StridePrefetcher(degree=1, latency=1)
+    prefetcher = StridePrefetcher(degree=1, latency=1, prefetch_on_access=True)
     tags = BaseSetAssoc()
     replacement_policy = RandomRP()

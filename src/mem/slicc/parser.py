@@ -42,7 +42,10 @@ import re
 import sys
 
 from code_formatter import code_formatter
-from grammar import Grammar, ParseError
+from grammar import (
+    Grammar,
+    ParseError,
+)
 
 import slicc.ast as ast
 import slicc.util as util
@@ -86,7 +89,7 @@ class SLICC(Grammar):
         self.symtab.writeHTMLFiles(html_path)
 
     def files(self):
-        f = set(["Types.hh"])
+        f = {"Types.hh"}
 
         f |= self.decl_list.files()
 
@@ -284,7 +287,7 @@ class SLICC(Grammar):
     def p_decl__protocol(self, p):
         "decl : PROTOCOL STRING SEMI"
         if self.protocol:
-            msg = "Protocol can only be set once! Error at %s:%s\n" % (
+            msg = "Protocol can only be set once! Error at {}:{}\n".format(
                 self.current_source,
                 self.current_line,
             )
@@ -633,11 +636,15 @@ class SLICC(Grammar):
 
     def p_statement__enqueue(self, p):
         "statement : ENQUEUE '(' var ',' type ')' statements"
-        p[0] = ast.EnqueueStatementAST(self, p[3], p[5], None, p[7])
+        p[0] = ast.EnqueueStatementAST(self, p[3], p[5], None, None, p[7])
 
     def p_statement__enqueue_latency(self, p):
         "statement : ENQUEUE '(' var ',' type ',' expr ')' statements"
-        p[0] = ast.EnqueueStatementAST(self, p[3], p[5], p[7], p[9])
+        p[0] = ast.EnqueueStatementAST(self, p[3], p[5], p[7], None, p[9])
+
+    def p_statement__enqueue_latency_bypass_strict_fifo(self, p):
+        "statement : ENQUEUE '(' var ',' type ',' expr ',' expr ')' statements"
+        p[0] = ast.EnqueueStatementAST(self, p[3], p[5], p[7], p[9], p[11])
 
     def p_statement__defer_enqueueing(self, p):
         "statement : DEFER_ENQUEUEING '(' var ',' type ')' statements"

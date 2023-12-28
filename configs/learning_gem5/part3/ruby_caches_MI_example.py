@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2015 Jason Power
 # All rights reserved.
 #
@@ -40,9 +39,11 @@ IMPORTANT: If you modify this file, it's likely that the Learning gem5 book
 import math
 
 from m5.defines import buildEnv
-from m5.util import fatal, panic
-
 from m5.objects import *
+from m5.util import (
+    fatal,
+    panic,
+)
 
 
 class MyCacheSystem(RubySystem):
@@ -50,7 +51,7 @@ class MyCacheSystem(RubySystem):
         if buildEnv["PROTOCOL"] != "MI_example":
             fatal("This system assumes MI_example!")
 
-        super(MyCacheSystem, self).__init__()
+        super().__init__()
 
     def setup(self, system, cpus, mem_ctrls):
         """Set up the Ruby cache subsystem. Note: This can't be done in the
@@ -108,7 +109,6 @@ class MyCacheSystem(RubySystem):
 
 
 class L1Cache(L1Cache_Controller):
-
     _version = 0
 
     @classmethod
@@ -120,7 +120,7 @@ class L1Cache(L1Cache_Controller):
         """CPUs are needed to grab the clock domain and system is needed for
         the cache block size.
         """
-        super(L1Cache, self).__init__()
+        super().__init__()
 
         self.version = self.versionCount()
         # This is the cache memory object that stores the cache data and tags
@@ -163,7 +163,6 @@ class L1Cache(L1Cache_Controller):
 
 
 class DirController(Directory_Controller):
-
     _version = 0
 
     @classmethod
@@ -175,7 +174,7 @@ class DirController(Directory_Controller):
         """ranges are the memory ranges assigned to this controller."""
         if len(mem_ctrls) > 1:
             panic("This cache system can only be connected to one mem ctrl")
-        super(DirController, self).__init__()
+        super().__init__()
         self.version = self.versionCount()
         self.addr_ranges = ranges
         self.ruby_system = ruby_system
@@ -204,7 +203,7 @@ class MyNetwork(SimpleNetwork):
     """A simple point-to-point network. This doesn't not use garnet."""
 
     def __init__(self, ruby_system):
-        super(MyNetwork, self).__init__()
+        super().__init__()
         self.netifs = []
         self.ruby_system = ruby_system
 

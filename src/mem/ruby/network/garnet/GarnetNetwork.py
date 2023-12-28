@@ -28,11 +28,12 @@
 # Author: Tushar Krishna
 #
 
-from m5.params import *
-from m5.proxy import *
-from m5.objects.Network import RubyNetwork
+from m5.citations import add_citation
 from m5.objects.BasicRouter import BasicRouter
 from m5.objects.ClockedObject import ClockedObject
+from m5.objects.Network import RubyNetwork
+from m5.params import *
+from m5.proxy import *
 
 
 class GarnetNetwork(RubyNetwork):
@@ -83,3 +84,40 @@ class GarnetRouter(BasicRouter):
     width = Param.UInt32(
         Parent.ni_flit_size, "bit width supported by the router"
     )
+
+
+add_citation(
+    GarnetNetwork,
+    """@inproceedings{Bharadwaj:2020:kite,
+  author       = {Srikant Bharadwaj and
+                  Jieming Yin and
+                  Bradford M. Beckmann and
+                  Tushar Krishna},
+  title        = {Kite: {A} Family of Heterogeneous Interposer Topologies Enabled via
+                  Accurate Interconnect Modeling},
+  booktitle    = {57th {ACM/IEEE} Design Automation Conference, {DAC} 2020, San Francisco,
+                  CA, USA, July 20-24, 2020},
+  pages        = {1--6},
+  publisher    = {{IEEE}},
+  year         = {2020},
+  url          = {https://doi.org/10.1109/DAC18072.2020.9218539},
+  doi          = {10.1109/DAC18072.2020.9218539}
+}
+@inproceedings{Agarwal:2009:garnet,
+  author       = {Niket Agarwal and
+                  Tushar Krishna and
+                  Li{-}Shiuan Peh and
+                  Niraj K. Jha},
+  title        = {{GARNET:} {A} detailed on-chip network model inside a full-system
+                  simulator},
+  booktitle    = {{IEEE} International Symposium on Performance Analysis of Systems
+                  and Software, {ISPASS} 2009, April 26-28, 2009, Boston, Massachusetts,
+                  USA, Proceedings},
+  pages        = {33--42},
+  publisher    = {{IEEE} Computer Society},
+  year         = {2009},
+  url          = {https://doi.org/10.1109/ISPASS.2009.4919636},
+  doi          = {10.1109/ISPASS.2009.4919636}
+}
+""",
+)

@@ -310,20 +310,10 @@ GPUDispatcher::notifyWgCompl(Wavefront *wf)
         gpuCmdProc->hsaPacketProc()
             .finishPkt(task->dispPktPtr(), task->queueId());
         if (task->completionSignal()) {
-            /**
-            * HACK: The semantics of the HSA signal is to decrement
-            * the current signal value. We cheat here and read out
-            * he value from main memory using functional access and
-            * then just DMA the decremented value.
-            */
-            uint64_t signal_value =
-                gpuCmdProc->functionalReadHsaSignal(task->completionSignal());
-
             DPRINTF(GPUDisp, "HSA AQL Kernel Complete with completion "
                     "signal! Addr: %d\n", task->completionSignal());
 
-            gpuCmdProc->updateHsaSignal(task->completionSignal(),
-                                        signal_value - 1);
+            gpuCmdProc->sendCompletionSignal(task->completionSignal());
         } else {
             DPRINTF(GPUDisp, "HSA AQL Kernel Complete! No completion "
                 "signal\n");
@@ -334,7 +324,7 @@ GPUDispatcher::notifyWgCompl(Wavefront *wf)
         DPRINTF(GPUKernelInfo, "Completed kernel %d\n", kern_id);
 
         if (kernelExitEvents) {
-            exitSimLoop("GPU Kernel Completed");
+            shader->requestKernelExitEvent();
         }
     }
 

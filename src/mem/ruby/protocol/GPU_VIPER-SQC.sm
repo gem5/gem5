@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2012-2015 Advanced Micro Devices, Inc.
+ * Copyright (c) 2023 Matthew D. Sinclair
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -47,6 +48,9 @@ machine(MachineType:SQC, "GPU SQC (L1 I Cache)")
 {
   state_declaration(State, desc="SQC Cache States", default="SQC_State_I") {
     I, AccessPermission:Invalid, desc="Invalid";
+    // Note: currently IV in the TCP is only for pending loads to a given cache
+    // line.  Since the SQC is read only, there are no stores.
+    IV, AccessPermission:Invalid, desc="Going from I to V, waiting on TCC data";
     V, AccessPermission:Read_Only, desc="Valid";
   }
 
@@ -74,7 +78,7 @@ machine(MachineType:SQC, "GPU SQC (L1 I Cache)")
   }
 
   structure(TBE, desc="...") {
-    State TBEState,             desc="Transient state";
+    State TBEState,          desc="Transient state";
     DataBlock DataBlk,       desc="data for the block, required for concurrent writebacks";
     bool Dirty,              desc="Is the data dirty (different than memory)?";
     int NumPendingMsgs,      desc="Number of acks/data messages that this processor is waiting for";
@@ -97,6 +101,7 @@ machine(MachineType:SQC, "GPU SQC (L1 I Cache)")
   void unset_tbe();
   void wakeUpAllBuffers();
   void wakeUpBuffers(Addr a);
+  void wakeUpAllBuffers(Addr a);
   Cycles curCycle();
 
   // Internal functions
@@ -269,12 +274,31 @@ machine(MachineType:SQC, "GPU SQC (L1 I Cache)")
     }
   }
 
+  action(t_allocateTBE, "t", desc="allocate TBE Entry") {
+    check_allocate(TBEs);
+    TBEs.allocate(address);
+    set_tbe(TBEs.lookup(address));
+  }
+
+  action(d_deallocateTBE, "d", desc="Deallocate TBE") {
+    TBEs.deallocate(address);
+    unset_tbe();
+  }
+
+  action(st_stallAndWaitRequest, "st", desc="Stall and wait on the address") {
+    stall_and_wait(mandatoryQueue_in, address);
+  }
+
   action(p_popMandatoryQueue, "pm", desc="Pop Mandatory Queue") {
     mandatoryQueue_in.dequeue(clockEdge());
   }
 
   action(pr_popResponseQueue, "pr", desc="Pop Response Queue") {
     responseToSQC_in.dequeue(clockEdge());
+  }
+
+  action(wada_wakeUpAllDependentsAddr, "wada", desc="Wake up any requests waiting for this address") {
+    wakeUpAllBuffers(address);
   }
 
   action(l_loadDoneHit, "ldh", desc="local load done (hits in SQC)") {
@@ -297,6 +321,10 @@ machine(MachineType:SQC, "GPU SQC (L1 I Cache)")
     }
   }
 
+  action(mru_updateMRU, "mru", desc="Touch block for replacement policy") {
+    L1cache.setMRU(address);
+  }
+
   // added for profiling
   action(uu_profileDataMiss, "\udm", desc="Profile SQC demand miss"){
     L1cache.profileDemandMiss();
@@ -308,22 +336,52 @@ machine(MachineType:SQC, "GPU SQC (L1 I Cache)")
 
   // Transitions
 
+  // if another request arrives for the same cache line that has a pending
+  // load, put it on the wakeup buffer.  This reduced resource contention since
+  // they won't try again every cycle and will instead only try again once woken
+  // up
+  transition(IV, {Fetch}) {
+      st_stallAndWaitRequest;
+  }
+
   // transitions from base
-  transition({I, V}, Repl, I) {TagArrayRead, TagArrayWrite} {
+  transition({I, IV, V}, Repl, I) {TagArrayRead, TagArrayWrite} {
     // since we're evicting something, don't bother classifying as hit/miss
     ic_invCache;
   }
 
-  transition(I, Data, V) {TagArrayRead, TagArrayWrite, DataArrayRead} {
+  // if we got a response for a load where the line is in I, then
+  // another request must have come in that replaced the line in question in
+  // the cache.  Thus, complete this request without allocating the line, but
+  // still deallocate TBE and wakeup any dependent addresses.
+  transition(I, Data) {TagArrayRead, TagArrayWrite, DataArrayRead} {
+    // don't profile this as a hit/miss since it's a reponse from L2,
+    // so we already counted it
+    l_loadDoneMiss;
+    wada_wakeUpAllDependentsAddr;
+    d_deallocateTBE;
+    pr_popResponseQueue;
+  }
+
+  // if line is currently in IV, then Data is returning the data for a
+  // pending load, so transition to V, deallocate TBE, and wakeup any dependent
+  // requests so they will be replayed now that this request has returned.
+  transition(IV, Data, V) {TagArrayRead, TagArrayWrite, DataArrayRead} {
     a_allocate;
     // don't profile this as a hit/miss since it's a reponse from L2,
     // so we already counted it
     w_writeCache;
     l_loadDoneMiss;
+    wada_wakeUpAllDependentsAddr;
+    d_deallocateTBE;
     pr_popResponseQueue;
   }
 
-  transition(I, Fetch) {TagArrayRead, TagArrayWrite} {
+  // if we have a load that misses, allocate TBE entry and transition to IV
+  // to prevent subsequent requests to same cache line from also going to TCC
+  // while this request is pending
+  transition(I, Fetch, IV) {TagArrayRead, TagArrayWrite} {
+    t_allocateTBE;
     nS_issueRdBlkS;
     uu_profileDataMiss; // since line wasn't in SQC, we missed
     p_popMandatoryQueue;
@@ -332,6 +390,7 @@ machine(MachineType:SQC, "GPU SQC (L1 I Cache)")
   // simple hit transitions
   transition(V, Fetch) {TagArrayRead, DataArrayRead} {
     l_loadDoneHit;
+    mru_updateMRU;
     uu_profileDataHit; // line was in SQC, so we hit
     p_popMandatoryQueue;
   }

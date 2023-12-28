@@ -222,26 +222,16 @@ class WriteMask
 
     void print(std::ostream& out) const;
 
-    void
-    performAtomic(uint8_t * p) const
-    {
-        for (int i = 0; i < mAtomicOp.size(); i++) {
-            int offset = mAtomicOp[i].first;
-            AtomicOpFunctor *fnctr = mAtomicOp[i].second;
-            (*fnctr)(&p[offset]);
-        }
-    }
-
-    void
-    performAtomic(DataBlock & blk) const
-    {
-        for (int i = 0; i < mAtomicOp.size(); i++) {
-            int offset = mAtomicOp[i].first;
-            uint8_t *p = blk.getDataMod(offset);
-            AtomicOpFunctor *fnctr = mAtomicOp[i].second;
-            (*fnctr)(p);
-        }
-    }
+    /*
+     * Performs atomic operations on the data block pointed to by p. The
+     * atomic operations to perform are in the vector mAtomicOp. The
+     * effect of each atomic operation is pushed to the atomicChangeLog
+     * so that each individual atomic requestor may see the results of their
+     * specific atomic operation.
+     */
+    void performAtomic(uint8_t * p,
+            std::deque<uint8_t*>& atomicChangeLog,
+            bool isAtomicNoReturn=true) const;
 
     const AtomicOpVector&
     getAtomicOps() const

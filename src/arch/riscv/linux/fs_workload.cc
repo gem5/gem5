@@ -32,7 +32,10 @@
 #include "base/loader/dtb_file.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
+#include "cpu/pc_event.hh"
+#include "kern/linux/events.hh"
 #include "sim/kernel_workload.hh"
+#include "sim/sim_exit.hh"
 #include "sim/system.hh"
 
 namespace gem5
@@ -73,6 +76,196 @@ FsLinux::initState()
         RiscvISA::Reset().invoke(tc);
         tc->activate();
     }
+}
+
+void
+FsLinux::startup()
+{
+    KernelWorkload::startup();
+
+    addExitOnKernelPanicEvent();
+    addExitOnKernelOopsEvent();
+}
+
+void
+FsLinux::addExitOnKernelPanicEvent()
+{
+    const std::string dmesg_output = name() + ".dmesg";
+    if (params().exit_on_kernel_panic) {
+        kernelPanicPcEvent = addKernelFuncEvent<linux::PanicOrOopsEvent>(
+            "panic", "Kernel panic in simulated system.",
+            dmesg_output, params().on_panic
+        );
+        warn_if(!kernelPanicPcEvent, "Failed to find kernel symbol 'panic'");
+    }
+}
+
+void
+FsLinux::addExitOnKernelOopsEvent()
+{
+    const std::string dmesg_output = name() + ".dmesg";
+    if (params().exit_on_kernel_oops) {
+        kernelOopsPcEvent = addKernelFuncEvent<linux::PanicOrOopsEvent>(
+            "oops_exit", "Kernel oops in simulated system.",
+            dmesg_output, params().on_oops
+        );
+        warn_if(!kernelOopsPcEvent,
+                "Failed to find kernel symbol 'oops_exit'");
+    }
+}
+
+void
+BootloaderKernelWorkload::loadBootloaderSymbolTable()
+{
+    if (params().bootloader_filename != "") {
+        Addr bootloader_paddr_offset = params().bootloader_addr;
+        bootloader = loader::createObjectFile(params().bootloader_filename);
+        bootloaderSymbolTable = bootloader->symtab();
+        auto renamedBootloaderSymbolTable = \
+            bootloaderSymbolTable.offset(
+                bootloader_paddr_offset
+            )->functionSymbols()->rename(
+                [](const std::string &name) {
+                    return "bootloader." + name;
+                }
+            );
+        loader::debugSymbolTable.insert(*renamedBootloaderSymbolTable);
+    }
+}
+
+void
+BootloaderKernelWorkload::loadKernelSymbolTable()
+{
+    if (params().object_file != "") {
+        kernel = loader::createObjectFile(params().object_file);
+        kernelSymbolTable = kernel->symtab();
+        auto renamedKernelSymbolTable = \
+            kernelSymbolTable.functionSymbols()->rename(
+                [](const std::string &name) {
+                    return "kernel." + name;
+                }
+            );
+        loader::debugSymbolTable.insert(*renamedKernelSymbolTable);
+    }
+}
+
+void
+BootloaderKernelWorkload::loadBootloader()
+{
+    if (params().bootloader_filename != "") {
+        Addr bootloader_addr_offset = params().bootloader_addr;
+        bootloader->buildImage().offset(bootloader_addr_offset).write(
+            system->physProxy
+        );
+        delete bootloader;
+
+        inform("Loaded bootloader \'%s\' at 0x%llx\n",
+               params().bootloader_filename,
+               bootloader_addr_offset);
+    } else {
+        inform("Bootloader is not specified.\n");
+    }
+}
+
+void
+BootloaderKernelWorkload::loadKernel()
+{
+    if (params().object_file != "") {
+        Addr kernel_paddr_offset = params().kernel_addr;
+        kernel->buildImage().offset(kernel_paddr_offset).write(
+            system->physProxy
+        );
+        delete kernel;
+
+        inform("Loaded kernel \'%s\' at 0x%llx\n",
+                params().object_file,
+                kernel_paddr_offset);
+    } else {
+        inform("Kernel is not specified.\n");
+    }
+}
+
+
+void
+BootloaderKernelWorkload::loadDtb()
+{
+    if (params().dtb_filename != "") {
+        auto *dtb_file = new loader::DtbFile(params().dtb_filename);
+
+        dtb_file->buildImage().offset(params().dtb_addr)
+            .write(system->physProxy);
+        delete dtb_file;
+
+        inform("Loaded DTB \'%s\' at 0x%llx\n",
+                params().dtb_filename,
+                params().dtb_addr);
+
+        for (auto *tc: system->threads) {
+            tc->setReg(int_reg::A1, params().dtb_addr);
+        }
+    } else {
+        inform("DTB file is not specified.\n");
+    }
+}
+
+void
+BootloaderKernelWorkload::addExitOnKernelPanicEvent()
+{
+    const std::string dmesg_output = name() + ".dmesg";
+    if (params().exit_on_kernel_panic) {
+        kernelPanicPcEvent = addFuncEvent<linux::PanicOrOopsEvent>(
+            kernelSymbolTable, "panic", "Kernel panic in simulated system.",
+            dmesg_output, params().on_panic
+        );
+    }
+}
+
+void
+BootloaderKernelWorkload::addExitOnKernelOopsEvent()
+{
+    const std::string dmesg_output = name() + ".dmesg";
+    if (params().exit_on_kernel_oops) {
+        kernelOopsPcEvent = addFuncEvent<linux::PanicOrOopsEvent>(
+            kernelSymbolTable, "oops_exit", "Kernel oops in simulated system.",
+            dmesg_output, params().on_oops
+        );
+    }
+}
+
+void
+BootloaderKernelWorkload::initState()
+{
+    loadBootloader();
+    loadKernel();
+    loadDtb();
+
+    for (auto *tc: system->threads) {
+        RiscvISA::Reset().invoke(tc);
+        tc->activate();
+    }
+}
+
+void
+BootloaderKernelWorkload::startup()
+{
+    Workload::startup();
+
+    addExitOnKernelPanicEvent();
+    addExitOnKernelOopsEvent();
+}
+
+void
+BootloaderKernelWorkload::serialize(CheckpointOut &checkpoint) const
+{
+    bootloaderSymbolTable.serialize("bootloader_symbol_table", checkpoint);
+    kernelSymbolTable.serialize("kernel_symbol_table", checkpoint);
+}
+
+void
+BootloaderKernelWorkload::unserialize(CheckpointIn &checkpoint)
+{
+    bootloaderSymbolTable.unserialize("bootloader_symbol_table", checkpoint);
+    kernelSymbolTable.unserialize("kernel_symbol_table", checkpoint);
 }
 
 } // namespace RiscvISA

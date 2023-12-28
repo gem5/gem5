@@ -54,14 +54,16 @@ class SignalSinkPort : public Port
     OnChangeFunc _onChange;
 
   protected:
+    // if bypass_on_change is specified true, it will not call the _onChange
+    // function. Only _state will be updated if needed.
     void
-    set(const State &new_state)
+    set(const State &new_state, const bool bypass_on_change = false)
     {
         if (new_state == _state)
             return;
 
         _state = new_state;
-        if (_onChange)
+        if (!bypass_on_change && _onChange)
             _onChange(_state);
     }
 
@@ -79,6 +81,8 @@ class SignalSinkPort : public Port
         _source = dynamic_cast<SignalSourcePort<State> *>(&peer);
         fatal_if(!_source, "Attempt to bind signal pin %s to "
                 "incompatible pin %s", name(), peer.name());
+        // The state of sink has to match the state of source.
+        _state = _source->state();
         Port::bind(peer);
     }
     void
@@ -94,18 +98,30 @@ class SignalSourcePort : public Port
 {
   private:
     SignalSinkPort<State> *sink = nullptr;
-    State _state = {};
+    State _state;
 
   public:
-    SignalSourcePort(const std::string &_name, PortID _id=InvalidPortID) :
-        Port(_name, _id)
-    {}
+    SignalSourcePort(const std::string &_name, PortID _id = InvalidPortID)
+        : Port(_name, _id)
+    {
+        _state = {};
+    }
 
+    // Give an initial value to the _state instead of using a default value.
+    SignalSourcePort(const std::string &_name, PortID _id,
+                     const State &init_state)
+        : SignalSourcePort(_name, _id)
+    {
+        _state = init_state;
+    }
+
+    // if bypass_on_change is specified true, it will not call the _onChange
+    // function. Only _state will be updated if needed.
     void
-    set(const State &new_state)
+    set(const State &new_state, const bool bypass_on_change = false)
     {
         _state = new_state;
-        sink->set(new_state);
+        sink->set(new_state, bypass_on_change);
     }
 
     const State &state() const { return _state; }
@@ -126,6 +142,6 @@ class SignalSourcePort : public Port
     }
 };
 
-} // namespace gem5
+}  // namespace gem5
 
-#endif //__SIM_SIGNAL_HH__
+#endif  //__SIM_SIGNAL_HH__

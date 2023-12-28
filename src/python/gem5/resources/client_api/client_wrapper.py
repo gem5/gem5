@@ -24,12 +24,21 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from .jsonclient import JSONClient
-from .atlasclient import AtlasClient
-from _m5 import core
-from typing import Optional, Dict, List, Tuple
 import itertools
+import sys
+from typing import (
+    Dict,
+    List,
+    Optional,
+    Tuple,
+)
+
 from m5.util import warn
+
+from _m5 import core
+
+from .atlasclient import AtlasClient
+from .jsonclient import JSONClient
 
 
 class ClientWrapper:
@@ -43,8 +52,10 @@ class ClientWrapper:
         """
         This function creates respective client object for each source in the
         config file according to the type of source.
-        Params: config: config file containing the source information
-        Returns: clients: dictionary of clients for each source
+
+        :param config: config file containing the source information
+
+        :returns: clients: dictionary of clients for each source
         """
         clients = {}
         for client in config["sources"]:
@@ -63,7 +74,6 @@ class ClientWrapper:
         clients: Optional[List[str]] = None,
         gem5_version: Optional[str] = core.gem5Version,
     ) -> Dict[str, List[str]]:
-
         clients_to_search = (
             list(self.clients.keys()) if clients is None else clients
         )
@@ -98,9 +108,10 @@ class ClientWrapper:
         """
         This function returns all the resources with the given id from all the
         sources.
+
         :param resource_id: The id of the resource to search for.
-        :param clients: A list of clients to search through. If None, all
-        clients are searched.
+        :param clients: A list of clients to search through. If ``None``, all
+                        clients are searched.
         :return: A list of resources as Python dictionaries.
         """
         resources = []
@@ -114,7 +125,12 @@ class ClientWrapper:
                     self.clients[client].get_resources_by_id(resource_id)
                 )
             except Exception as e:
-                warn(f"Error getting resources from client {client}: {str(e)}")
+                print(
+                    f"Exception thrown while getting resource '{resource_id}' "
+                    f"from client '{client}'\n",
+                    file=sys.stderr,
+                )
+                raise e
         # check if no 2 resources have the same id and version
         for res1, res2 in itertools.combinations(resources, 2):
             if res1["resource_version"] == res2["resource_version"]:
@@ -134,15 +150,16 @@ class ClientWrapper:
         """
         This function returns the resource object from the client with the
         given id and version.
+
         :param resource_id: The id of the resource to search for.
         :param resource_version: The version of the resource to search for.
-        :param clients: A list of clients to search through. If None, all
-        clients are searched.
+        :param clients: A list of clients to search through. If ``None``, all
+                        clients are searched.
         :param gem5_version: The gem5 version to check compatibility with. If
-        None, no compatibility check is performed. By default, is the current
-        version of gem5.
+                             ``None``, no compatibility check is performed. By
+                             default, is the current version of gem5.
         :return: The resource object as a Python dictionary if found.
-        If not found, exception is thrown.
+                 If not found, exception is thrown.
         """
         # getting all the resources with the given id from the dictionary
         resources = self.get_all_resources_by_id(resource_id, clients)
@@ -183,10 +200,12 @@ class ClientWrapper:
         """
         Searches for the resource with the given version. If the resource is
         not found, an exception is thrown.
+
         :param resources: A list of resources to search through.
         :param resource_version: The version of the resource to search for.
+
         :return: The resource object as a Python dictionary if found.
-        If not found, None is returned.
+                 If not found, ``None`` is returned.
         """
         return_resource = next(
             iter(
@@ -213,23 +232,29 @@ class ClientWrapper:
         """
         Returns a list of compatible resources with the current gem5 version.
 
-        Note: This function assumes if the minor component of
-        a resource's gem5_version is not specified, it that the
-        resource is compatible all minor versions of the same major version.
-        Likewise, if no hot-fix component is specified, it is assumed that
-        the resource is compatible with all hot-fix versions of the same
-        minor version.
+        .. note::
+
+            This function assumes if the minor component of a resource's
+            gem5_version is not specified, it that the resource is compatible
+            all minor versions of the same major version.
+
+            Likewise, if no hot-fix component is specified, it is assumed that
+            the resource is compatible with all hot-fix versions of the same
+            minor version.
 
         * '20.1' would be compatible with gem5 '20.1.1.0' and '20.1.2.0'.
         * '21.5.2' would be compatible with gem5 '21.5.2.0' and '21.5.2.0'.
         * '22.3.2.4' would only be compatible with gem5 '22.3.2.4'.
 
         :param resources: A list of resources to filter.
+
         :return: A list of compatible resources as Python dictionaries.
 
-        **Note**: This is a big duplication of code. This functionality already
-        exists in the `AbstractClient` class. This code should be refactored
-        to avoid this duplication.
+        .. note::
+
+            This is a big duplication of code. This functionality already
+            exists in the `AbstractClient` class. This code should be refactored
+            to avoid this duplication.
         """
 
         compatible_resources = []
@@ -242,8 +267,11 @@ class ClientWrapper:
     def _sort_resources(self, resources: List) -> List:
         """
         Sorts the resources by ID.
+
         If the IDs are the same, the resources are sorted by version.
+
         :param resources: A list of resources to sort.
+
         :return: A list of sorted resources.
         """
 
@@ -251,7 +279,7 @@ class ClientWrapper:
             """This is used for sorting resources by ID and version. First
             the ID is sorted, then the version. In cases where the version
             contains periods, it's assumed this is to separate a
-            "major.minor.hotfix" style versioning system. In which case, the
+            ``major.minor.hotfix`` style versioning system. In which case, the
             value separated in the most-significant position is sorted before
             those less significant. If the value is a digit it is cast as an
             int, otherwise, it is cast as a string, to lower-case.
@@ -275,29 +303,33 @@ class ClientWrapper:
     ) -> bool:
         """
         Checks if the resource is compatible with the gem5 version.
+
         Prints a warning if the resource is not compatible.
+
         :param resource: The resource to check.
         :optional param gem5_version: The gem5 version to check
-        compatibility with.
-        :return: True if the resource is compatible, False otherwise.
+                                      compatibility with.
+        :return: ``True`` if the resource is compatible, ``False`` otherwise.
         """
         if not resource:
             return False
         if (
             gem5_version
+            and not gem5_version.upper().startswith("DEVELOP")
             and not self._get_resources_compatible_with_gem5_version(
                 [resource], gem5_version=gem5_version
             )
         ):
-            warn(
-                f"Resource {resource['id']} with version "
-                f"{resource['resource_version']} is not known to be compatible"
-                f" with gem5 version {gem5_version}. "
-                "This may cause problems with your simulation. "
-                "This resource's compatibility "
-                "with different gem5 versions can be found here: "
-                "https://resources.gem5.org"
-                f"/resources/{resource['id']}/versions"
-            )
+            if not gem5_version.upper().startswith("DEVELOP"):
+                warn(
+                    f"Resource {resource['id']} with version "
+                    f"{resource['resource_version']} is not known to be compatible"
+                    f" with gem5 version {gem5_version}. "
+                    "This may cause problems with your simulation. "
+                    "This resource's compatibility "
+                    "with different gem5 versions can be found here: "
+                    "https://resources.gem5.org"
+                    f"/resources/{resource['id']}/versions"
+                )
             return False
         return True

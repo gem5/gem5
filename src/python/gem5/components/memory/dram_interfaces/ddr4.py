@@ -40,10 +40,10 @@
 
 """Interfaces for DDR4 memories
 
-These memory "interfaces" contain the timing,energy,etc parameters for each
+These memory "interfaces" contain the timing, energy, etc parameters for each
 memory type and are usually based on datasheets for the memory devices.
 
-You can use these interfaces in the MemCtrl object as the `dram` timing
+You can use these interfaces in the MemCtrl object as the ``dram`` timing
 interface.
 """
 
@@ -55,7 +55,9 @@ class DDR4_2400_16x4(DRAMInterface):
     A single DDR4-2400 x64 channel (one command and address bus), with
     timings based on a DDR4-2400 8 Gbit datasheet (Micron MT40A2G4)
     in an 16x4 configuration.
-    Total channel capacity is 32GiB
+
+    Total channel capacity is 32GiB.
+
     16 devices/rank * 2 ranks/channel * 1GiB/device = 32GiB/channel
     """
 
@@ -170,7 +172,9 @@ class DDR4_2400_8x8(DDR4_2400_16x4):
     A single DDR4-2400 x64 channel (one command and address bus), with
     timings based on a DDR4-2400 8 Gbit datasheet (Micron MT40A1G8)
     in an 8x8 configuration.
-    Total channel capacity is 16GiB
+
+    Total channel capacity is 16GiB.
+
     8 devices/rank * 2 ranks/channel * 1GiB/device = 16GiB/channel
     """
 
@@ -201,7 +205,9 @@ class DDR4_2400_4x16(DDR4_2400_16x4):
     A single DDR4-2400 x64 channel (one command and address bus), with
     timings based on a DDR4-2400 8 Gbit datasheet (Micron MT40A512M16)
     in an 4x16 configuration.
-    Total channel capacity is 4GiB
+
+    Total channel capacity is 4GiB.
+
     4 devices/rank * 1 ranks/channel * 1GiB/device = 4GiB/channel
     """
 

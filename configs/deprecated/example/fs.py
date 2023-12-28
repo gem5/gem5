@@ -45,25 +45,30 @@ import sys
 import m5
 from m5.defines import buildEnv
 from m5.objects import *
-from m5.util import addToPath, fatal, warn
+from m5.util import (
+    addToPath,
+    fatal,
+    warn,
+)
 from m5.util.fdthelper import *
+
 from gem5.isas import ISA
-from gem5.runtime import get_runtime_isa
 
 addToPath("../../")
 
-from ruby import Ruby
-
+from common import (
+    CacheConfig,
+    CpuConfig,
+    MemConfig,
+    ObjectList,
+    Options,
+    Simulation,
+)
+from common.Benchmarks import *
+from common.Caches import *
 from common.FSConfig import *
 from common.SysPaths import *
-from common.Benchmarks import *
-from common import Simulation
-from common import CacheConfig
-from common import CpuConfig
-from common import MemConfig
-from common import ObjectList
-from common.Caches import *
-from common import Options
+from ruby import Ruby
 
 
 def cmd_line_template():
@@ -80,9 +85,8 @@ def cmd_line_template():
     return None
 
 
-def build_test_system(np):
+def build_test_system(np, isa: ISA):
     cmdline = cmd_line_template()
-    isa = get_runtime_isa()
     if isa == ISA.MIPS:
         test_sys = makeLinuxMipsSystem(test_mem_mode, bm[0], cmdline=cmdline)
     elif isa == ISA.SPARC:
@@ -164,7 +168,7 @@ def build_test_system(np):
         # assuming that there is just one such port.
         test_sys.iobus.mem_side_ports = test_sys.ruby._io_port.in_ports
 
-        for (i, cpu) in enumerate(test_sys.cpu):
+        for i, cpu in enumerate(test_sys.cpu):
             #
             # Tie the cpu ports to the correct ruby system ports
             #
@@ -378,7 +382,8 @@ else:
 
 np = args.num_cpus
 
-test_sys = build_test_system(np)
+isa = ObjectList.cpu_list.get_isa(args.cpu_type)
+test_sys = build_test_system(np, isa)
 
 if len(bm) == 2:
     drive_sys = build_drive_system(np)

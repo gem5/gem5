@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017,2019-2022 ARM Limited
+ * Copyright (c) 2017,2019-2023 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -61,6 +61,7 @@
 #include "mem/ruby/system/CacheRecorder.hh"
 #include "params/RubyController.hh"
 #include "sim/clocked_object.hh"
+#include "sim/eventq.hh"
 
 namespace gem5
 {
@@ -100,6 +101,14 @@ class AbstractController : public ClockedObject, public Consumer
     virtual MessageBuffer* getMandatoryQueue() const = 0;
     virtual MessageBuffer* getMemReqQueue() const = 0;
     virtual MessageBuffer* getMemRespQueue() const = 0;
+
+    // That function must be called by controller when dequeuing mem resp queue
+    // for memory controller to receive the retry request in time
+    void memRespQueueDequeued();
+    // Or that function can be called to perform both dequeue and notification
+    // at once.
+    void dequeueMemRespQueue();
+
     virtual AccessPermission getAccessPermission(const Addr &addr) = 0;
 
     virtual void print(std::ostream & out) const = 0;
@@ -165,7 +174,7 @@ class AbstractController : public ClockedObject, public Consumer
     Port &getPort(const std::string &if_name,
                   PortID idx=InvalidPortID);
 
-    void recvTimingResp(PacketPtr pkt);
+    bool recvTimingResp(PacketPtr pkt);
     Tick recvAtomic(PacketPtr pkt);
 
     const AddrRangeList &getAddrRanges() const { return addrRanges; }
@@ -258,7 +267,7 @@ class AbstractController : public ClockedObject, public Consumer
         assert(m_inTrans.find(addr) == m_inTrans.end());
         m_inTrans[addr] = {type, initialState, curTick()};
         if (retried)
-          ++(*stats.inTransLatRetries[type]);
+          ++(*stats.inTransRetryCnt[type]);
     }
 
     /**
@@ -279,11 +288,23 @@ class AbstractController : public ClockedObject, public Consumer
           isAddressed ? m_inTransAddressed : m_inTransUnaddressed;
         auto iter = m_inTrans.find(addr);
         assert(iter != m_inTrans.end());
-        stats.inTransLatHist[iter->second.transaction]
-                              [iter->second.state]
-                              [(unsigned)finalState]->sample(
-                                ticksToCycles(curTick() - iter->second.time));
-        ++(*stats.inTransLatTotal[iter->second.transaction]);
+        auto &trans = iter->second;
+
+        auto stat_iter_ev = stats.inTransStateChanges.find(trans.transaction);
+        gem5_assert(stat_iter_ev != stats.inTransStateChanges.end(),
+          "%s: event type=%d not marked as in_trans in SLICC",
+          name(), trans.transaction);
+
+        auto stat_iter_state = stat_iter_ev->second.find(trans.state);
+        gem5_assert(stat_iter_state != stat_iter_ev->second.end(),
+          "%s: event type=%d has no transition from state=%d",
+          name(), trans.transaction, trans.state);
+
+        ++(*stat_iter_state->second[(unsigned)finalState]);
+
+        stats.inTransLatHist[iter->second.transaction]->sample(
+                                ticksToCycles(curTick() - trans.time));
+
        m_inTrans.erase(iter);
     }
 
@@ -325,10 +346,17 @@ class AbstractController : public ClockedObject, public Consumer
           isAddressed ? m_outTransAddressed : m_outTransUnaddressed;
         auto iter = m_outTrans.find(addr);
         assert(iter != m_outTrans.end());
-        stats.outTransLatHist[iter->second.transaction]->sample(
-            ticksToCycles(curTick() - iter->second.time));
+        auto &trans = iter->second;
+
+        auto stat_iter = stats.outTransLatHist.find(trans.transaction);
+        gem5_assert(stat_iter != stats.outTransLatHist.end(),
+          "%s: event type=%d not marked as out_trans in SLICC",
+          name(), trans.transaction);
+
+        stat_iter->second->sample(
+            ticksToCycles(curTick() - trans.time));
         if (retried)
-          ++(*stats.outTransLatHistRetries[iter->second.transaction]);
+          ++(*stats.outTransRetryCnt[trans.transaction]);
         m_outTrans.erase(iter);
     }
 
@@ -338,6 +366,28 @@ class AbstractController : public ClockedObject, public Consumer
     void wakeUpAllBuffers(Addr addr);
     void wakeUpAllBuffers();
     bool serviceMemoryQueue();
+
+    /**
+     * Functions needed by CacheAccessor. These are implemented in SLICC,
+     * thus the const& for all args to match the generated code.
+     */
+    virtual bool inCache(const Addr &addr, const bool &is_secure)
+    { fatal("inCache: prefetching not supported"); return false; }
+
+    virtual bool hasBeenPrefetched(const Addr &addr, const bool &is_secure)
+    { fatal("hasBeenPrefetched: prefetching not supported"); return false; }
+
+    virtual bool hasBeenPrefetched(const Addr &addr, const bool &is_secure,
+                                   const RequestorID &requestor)
+    { fatal("hasBeenPrefetched: prefetching not supported"); return false; }
+
+    virtual bool inMissQueue(const Addr &addr, const bool &is_secure)
+    { fatal("inMissQueue: prefetching not supported"); return false; }
+
+    virtual bool coalesce()
+    { fatal("coalesce: prefetching not supported"); return false; }
+
+    friend class RubyPrefetcherProxy;
 
   protected:
     const NodeID m_version;
@@ -364,6 +414,7 @@ class AbstractController : public ClockedObject, public Consumer
     Cycles m_recycle_latency;
     const Cycles m_mandatory_queue_latency;
     bool m_waiting_mem_retry;
+    bool m_mem_ctrl_waiting_retry;
 
     /**
      * Port that forwards requests and receives responses from the
@@ -411,22 +462,33 @@ class AbstractController : public ClockedObject, public Consumer
     NetDest downstreamDestinations;
     NetDest upstreamDestinations;
 
+    void sendRetryRespToMem();
+    MemberEventWrapper<&AbstractController::sendRetryRespToMem> mRetryRespEvent;
+
   public:
     struct ControllerStats : public statistics::Group
     {
         ControllerStats(statistics::Group *parent);
 
-        // Initialized by the SLICC compiler for all combinations of event and
-        // states. Only histograms with samples will appear in the stats
-        std::vector<std::vector<std::vector<statistics::Histogram*>>>
-          inTransLatHist;
-        std::vector<statistics::Scalar*> inTransLatRetries;
-        std::vector<statistics::Scalar*> inTransLatTotal;
+        // Initialized by the SLICC compiler for all events with the
+        // "in_trans" property.
+        // Only histograms with samples will appear in the stats
+        std::unordered_map<unsigned, statistics::Histogram*> inTransLatHist;
+        std::unordered_map<unsigned, statistics::Scalar*> inTransRetryCnt;
+        // Initialized by the SLICC compiler for all combinations of events
+        // with the "in_trans" property, potential initial states, and
+        // potential final states. Potential initial states are states that
+        // appear in transitions triggered by that event. Currently all states
+        // are considered as potential final states.
+        std::unordered_map<unsigned, std::unordered_map<unsigned,
+          std::vector<statistics::Scalar*>>> inTransStateChanges;
 
-        // Initialized by the SLICC compiler for all events.
+        // Initialized by the SLICC compiler for all events with the
+        // "out_trans" property.
         // Only histograms with samples will appear in the stats.
-        std::vector<statistics::Histogram*> outTransLatHist;
-        std::vector<statistics::Scalar*> outTransLatHistRetries;
+        std::unordered_map<unsigned, statistics::Histogram*> outTransLatHist;
+        std::unordered_map<unsigned, statistics::Scalar*>
+          outTransRetryCnt;
 
         //! Counter for the number of cycles when the transitions carried out
         //! were equal to the maximum allowed

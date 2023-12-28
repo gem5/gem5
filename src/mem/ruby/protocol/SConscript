@@ -36,7 +36,7 @@ from gem5_scons import Transform
 
 Import('*')
 
-if env['CONF']['PROTOCOL'] == 'None':
+if not env['CONF']['RUBY']:
     Return()
 
 output_dir = Dir('.')

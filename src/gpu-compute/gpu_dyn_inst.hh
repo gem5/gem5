@@ -234,6 +234,7 @@ class GPUDynInst : public GPUExecContext
     bool isMemRef() const;
     bool isFlat() const;
     bool isFlatGlobal() const;
+    bool isFlatScratch() const;
     bool isLoad() const;
     bool isStore() const;
 
@@ -256,6 +257,7 @@ class GPUDynInst : public GPUExecContext
     bool writesFlatScratch() const;
     bool readsExecMask() const;
     bool writesExecMask() const;
+    bool needsToken() const;
 
     bool isAtomicAnd() const;
     bool isAtomicOr() const;

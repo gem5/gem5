@@ -26,12 +26,13 @@
 
 
 from typing import Optional
-from m5.objects import Addr
-from ...utils.override import overrides
 
+from m5.objects import Addr
+
+from ...utils.override import overrides
+from ..boards.abstract_board import AbstractBoard
 from ..boards.mem_mode import MemMode
 from .abstract_generator import AbstractGenerator
-from ..boards.abstract_board import AbstractBoard
 from .gups_generator_core import GUPSGeneratorCore
 
 
@@ -45,6 +46,7 @@ class GUPSGeneratorPAR(AbstractGenerator):
         clk_freq: Optional[str] = None,
     ):
         """The GUPSGeneratorPAR class
+
         This class defines the interface for multi core GUPSGenerator, this
         generator could be used in place of a processor. In terms of
         benchmarking this generator implements the parallel (3rd)
@@ -52,10 +54,11 @@ class GUPSGeneratorPAR(AbstractGenerator):
 
         :param start_addr: The start address for allocating the update table.
         :param mem_size: The size of memory to allocate for the update table.
-        Should be a power of 2.
+                         Should be a power of 2.
         :param update_limit: The number of updates to do before terminating
-        simulation. Pass zero to run the benchmark to completion (The amount of
-        time it takes to simulate depends on )
+                             simulation. Pass zero to run the benchmark to
+                             completion (The amount of time it takes to simulate
+                             depends on it).
         """
         super().__init__(
             cores=self._create_cores(
@@ -88,7 +91,7 @@ class GUPSGeneratorPAR(AbstractGenerator):
     @overrides(AbstractGenerator)
     def start_traffic(self):
         """
-        Since GUPSGeneratorCore does not need a call to start_traffic to
+        Since GUPSGeneratorCore does not need a call to ``start_traffic`` to
         start generation. This function is just pass.
         """
         pass

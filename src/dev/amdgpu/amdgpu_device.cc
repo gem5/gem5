@@ -216,11 +216,47 @@ AMDGPUDevice::getAddrRanges() const
 Tick
 AMDGPUDevice::readConfig(PacketPtr pkt)
 {
-    [[maybe_unused]] int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
-    DPRINTF(AMDGPUDevice, "Read Config: from offset: %#x size: %#x "
-            "data: %#x\n", offset, pkt->getSize(), config.data[offset]);
+    int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
 
-    Tick delay = PciDevice::readConfig(pkt);
+    if (offset < PCI_DEVICE_SPECIFIC) {
+        PciDevice::readConfig(pkt);
+    } else {
+        if (offset >= PXCAP_BASE && offset < (PXCAP_BASE + sizeof(PXCAP))) {
+            int pxcap_offset = offset - PXCAP_BASE;
+
+            switch (pkt->getSize()) {
+                case sizeof(uint8_t):
+                    pkt->setLE<uint8_t>(pxcap.data[pxcap_offset]);
+                    DPRINTF(AMDGPUDevice,
+                        "Read PXCAP:  dev %#x func %#x reg %#x 1 bytes: data "
+                        "= %#x\n", _busAddr.dev, _busAddr.func, pxcap_offset,
+                        (uint32_t)pkt->getLE<uint8_t>());
+                    break;
+                case sizeof(uint16_t):
+                    pkt->setLE<uint16_t>(
+                        *(uint16_t*)&pxcap.data[pxcap_offset]);
+                    DPRINTF(AMDGPUDevice,
+                        "Read PXCAP:  dev %#x func %#x reg %#x 2 bytes: data "
+                        "= %#x\n", _busAddr.dev, _busAddr.func, pxcap_offset,
+                        (uint32_t)pkt->getLE<uint16_t>());
+                    break;
+                case sizeof(uint32_t):
+                    pkt->setLE<uint32_t>(
+                        *(uint32_t*)&pxcap.data[pxcap_offset]);
+                    DPRINTF(AMDGPUDevice,
+                        "Read PXCAP:  dev %#x func %#x reg %#x 4 bytes: data "
+                        "= %#x\n",_busAddr.dev, _busAddr.func, pxcap_offset,
+                        (uint32_t)pkt->getLE<uint32_t>());
+                    break;
+                default:
+                    panic("Invalid access size (%d) for amdgpu PXCAP %#x\n",
+                          pkt->getSize(), pxcap_offset);
+            }
+            pkt->makeAtomicResponse();
+        } else {
+            warn("Device specific offset %d not implemented!\n", offset);
+        }
+    }
 
     // Before sending MMIOs the driver sends three interrupts in a row.
     // Use this to trigger creating a checkpoint to restore in timing mode.
@@ -231,14 +267,14 @@ AMDGPUDevice::readConfig(PacketPtr pkt)
         if (offset == PCI0_INTERRUPT_PIN) {
             if (++init_interrupt_count == 3) {
                 DPRINTF(AMDGPUDevice, "Checkpointing before first MMIO\n");
-                exitSimLoop("checkpoint", 0, curTick() + delay + 1);
+                exitSimLoop("checkpoint", 0, curTick() + configDelay + 1);
             }
         } else {
             init_interrupt_count = 0;
         }
     }
 
-    return delay;
+    return configDelay;
 }
 
 Tick
@@ -249,7 +285,24 @@ AMDGPUDevice::writeConfig(PacketPtr pkt)
             "data: %#x\n", offset, pkt->getSize(),
             pkt->getUintX(ByteOrder::little));
 
-    return PciDevice::writeConfig(pkt);
+    if (offset < PCI_DEVICE_SPECIFIC)
+        return PciDevice::writeConfig(pkt);
+
+
+    if (offset >= PXCAP_BASE && offset < (PXCAP_BASE + sizeof(PXCAP))) {
+        uint8_t *pxcap_data = &(pxcap.data[0]);
+        int pxcap_offset = offset - PXCAP_BASE;
+
+        DPRINTF(AMDGPUDevice, "Writing PXCAP offset %d size %d\n",
+                pxcap_offset, pkt->getSize());
+
+        memcpy(pxcap_data + pxcap_offset, pkt->getConstPtr<void>(),
+               pkt->getSize());
+    }
+
+    pkt->makeAtomicResponse();
+
+    return configDelay;
 }
 
 void
@@ -291,6 +344,7 @@ AMDGPUDevice::readFrame(PacketPtr pkt, Addr offset)
     system->getDeviceMemory(readPkt)->access(readPkt);
 
     pkt->setUintX(readPkt->getUintX(ByteOrder::little), ByteOrder::little);
+    delete readPkt;
 }
 
 void
@@ -324,6 +378,9 @@ AMDGPUDevice::readMMIO(PacketPtr pkt, Addr offset)
         break;
       case GRBM_BASE:
         gpuvm.readMMIO(pkt, aperture_offset >> GRBM_OFFSET_SHIFT);
+        break;
+      case GFX_BASE:
+        gfx.readMMIO(pkt, aperture_offset);
         break;
       case MMHUB_BASE:
         gpuvm.readMMIO(pkt, aperture_offset >> MMHUB_OFFSET_SHIFT);
@@ -409,7 +466,17 @@ AMDGPUDevice::writeDoorbell(PacketPtr pkt, Addr offset)
             panic("Write to unkown queue type!");
         }
     } else {
-        warn("Unknown doorbell offset: %lx\n", offset);
+        warn("Unknown doorbell offset: %lx. Saving to pending doorbells.\n",
+             offset);
+
+        // We have to ACK the PCI packet immediately, so create a copy of the
+        // packet here to send again.
+        RequestPtr pending_req(pkt->req);
+        PacketPtr pending_pkt = Packet::createWrite(pending_req);
+        uint8_t *pending_data = new uint8_t[pkt->getSize()];
+        pending_pkt->dataDynamic(pending_data);
+
+        pendingDoorbellPkts.emplace(offset, pending_pkt);
     }
 }
 
@@ -452,6 +519,9 @@ AMDGPUDevice::writeMMIO(PacketPtr pkt, Addr offset)
       /* Write an IO space register */
       case NBIO_BASE:
         nbio.writeMMIO(pkt, aperture_offset);
+        break;
+      case GFX_BASE:
+        gfx.writeMMIO(pkt, aperture_offset);
         break;
       default:
         DPRINTF(AMDGPUDevice, "Unknown MMIO aperture for %#x\n", offset);
@@ -529,6 +599,17 @@ AMDGPUDevice::write(PacketPtr pkt)
     return pioDelay;
 }
 
+void
+AMDGPUDevice::processPendingDoorbells(uint32_t offset)
+{
+    if (pendingDoorbellPkts.count(offset)) {
+        DPRINTF(AMDGPUDevice, "Sending pending doorbell %x\n", offset);
+        writeDoorbell(pendingDoorbellPkts[offset], offset);
+        delete pendingDoorbellPkts[offset];
+        pendingDoorbellPkts.erase(offset);
+    }
+}
+
 bool
 AMDGPUDevice::haveRegVal(uint32_t addr)
 {
@@ -597,10 +678,13 @@ AMDGPUDevice::serialize(CheckpointOut &cp) const
     uint64_t regs_size = regs.size();
     uint64_t doorbells_size = doorbells.size();
     uint64_t sdma_engs_size = sdmaEngs.size();
+    uint64_t used_vmid_map_size = usedVMIDs.size();
 
     SERIALIZE_SCALAR(regs_size);
     SERIALIZE_SCALAR(doorbells_size);
     SERIALIZE_SCALAR(sdma_engs_size);
+    // Save the number of vmids used
+    SERIALIZE_SCALAR(used_vmid_map_size);
 
     // Make a c-style array of the regs to serialize
     uint32_t reg_addrs[regs_size];
@@ -609,6 +693,9 @@ AMDGPUDevice::serialize(CheckpointOut &cp) const
     QueueType doorbells_queues[doorbells_size];
     uint32_t sdma_engs_offset[sdma_engs_size];
     int sdma_engs[sdma_engs_size];
+    int used_vmids[used_vmid_map_size];
+    int used_queue_id_sizes[used_vmid_map_size];
+    std::vector<int> used_vmid_sets;
 
     int idx = 0;
     for (auto & it : regs) {
@@ -631,6 +718,20 @@ AMDGPUDevice::serialize(CheckpointOut &cp) const
         ++idx;
     }
 
+    idx = 0;
+    for (auto & it : usedVMIDs) {
+        used_vmids[idx] = it.first;
+        used_queue_id_sizes[idx] = it.second.size();
+        std::vector<int> set_vector(it.second.begin(), it.second.end());
+        used_vmid_sets.insert(used_vmid_sets.end(),
+                set_vector.begin(), set_vector.end());
+        ++idx;
+    }
+
+    int num_queue_id = used_vmid_sets.size();
+    int* vmid_array = new int[num_queue_id];
+    std::copy(used_vmid_sets.begin(), used_vmid_sets.end(), vmid_array);
+
     SERIALIZE_ARRAY(reg_addrs, sizeof(reg_addrs)/sizeof(reg_addrs[0]));
     SERIALIZE_ARRAY(reg_values, sizeof(reg_values)/sizeof(reg_values[0]));
     SERIALIZE_ARRAY(doorbells_offset, sizeof(doorbells_offset)/
@@ -640,10 +741,21 @@ AMDGPUDevice::serialize(CheckpointOut &cp) const
     SERIALIZE_ARRAY(sdma_engs_offset, sizeof(sdma_engs_offset)/
         sizeof(sdma_engs_offset[0]));
     SERIALIZE_ARRAY(sdma_engs, sizeof(sdma_engs)/sizeof(sdma_engs[0]));
+    // Save the vmids used in an array
+    SERIALIZE_ARRAY(used_vmids, sizeof(used_vmids)/sizeof(used_vmids[0]));
+    // Save the size of the set of queue ids mapped to each vmid
+    SERIALIZE_ARRAY(used_queue_id_sizes,
+            sizeof(used_queue_id_sizes)/sizeof(used_queue_id_sizes[0]));
+    // Save all the queue ids used for all the vmids
+    SERIALIZE_ARRAY(vmid_array, num_queue_id);
+    // Save the total number of queue idsused
+    SERIALIZE_SCALAR(num_queue_id);
 
     // Serialize the device memory
     deviceMem.serializeSection(cp, "deviceMem");
     gpuvm.serializeSection(cp, "GPUVM");
+
+    delete[] vmid_array;
 }
 
 void
@@ -655,10 +767,13 @@ AMDGPUDevice::unserialize(CheckpointIn &cp)
     uint64_t regs_size = 0;
     uint64_t doorbells_size = 0;
     uint64_t sdma_engs_size = 0;
+    uint64_t used_vmid_map_size = 0;
 
     UNSERIALIZE_SCALAR(regs_size);
     UNSERIALIZE_SCALAR(doorbells_size);
     UNSERIALIZE_SCALAR(sdma_engs_size);
+    UNSERIALIZE_SCALAR(used_vmid_map_size);
+
 
     if (regs_size > 0) {
         uint32_t reg_addrs[regs_size];
@@ -703,6 +818,33 @@ AMDGPUDevice::unserialize(CheckpointIn &cp)
             SDMAEngine *sdma = sdmaIds[sdma_id];
             sdmaEngs.insert(std::make_pair(sdma_engs_offset[idx], sdma));
         }
+    }
+
+    if (used_vmid_map_size > 0) {
+        int used_vmids[used_vmid_map_size];
+        int used_queue_id_sizes[used_vmid_map_size];
+        int num_queue_id = 0;
+        std::vector<int> used_vmid_sets;
+        // Extract the total number of queue ids used
+        UNSERIALIZE_SCALAR(num_queue_id);
+        int* vmid_array = new int[num_queue_id];
+        // Extract the number of vmids used
+        UNSERIALIZE_ARRAY(used_vmids, used_vmid_map_size);
+        // Extract the size of the queue id set for each vmid
+        UNSERIALIZE_ARRAY(used_queue_id_sizes, used_vmid_map_size);
+        // Extract all the queue ids used
+        UNSERIALIZE_ARRAY(vmid_array, num_queue_id);
+        // Populate the usedVMIDs map with the queue ids per vm
+        int idx = 0;
+        for (int it = 0; it < used_vmid_map_size; it++) {
+            int vmid = used_vmids[it];
+            int vmid_set_size = used_queue_id_sizes[it];
+            for (int j = 0; j < vmid_set_size; j++) {
+                usedVMIDs[vmid].insert(vmid_array[idx + j]);
+            }
+            idx += vmid_set_size;
+        }
+        delete[] vmid_array;
     }
 
     // Unserialize the device memory
@@ -751,6 +893,14 @@ AMDGPUDevice::deallocateAllQueues()
 
     for (auto& it : sdmaEngs) {
         it.second->deallocateRLCQueues();
+    }
+
+    // "All" queues implicitly refers to all user queues. User queues begin at
+    // doorbell address 0x4000, so unmap any queue at or above that address.
+    for (auto [offset, vmid] : doorbellVMIDMap) {
+        if (offset >= 0x4000) {
+            doorbells.erase(offset);
+        }
     }
 }
 

@@ -50,6 +50,7 @@
 #include "base/types.hh"
 #include "sim/async.hh"
 #include "sim/eventq.hh"
+#include "sim/init_signals.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"
 #include "sim/stat_control.hh"
@@ -187,6 +188,10 @@ GlobalSimLoopExitEvent *global_exit_event= nullptr;
 GlobalSimLoopExitEvent *
 simulate(Tick num_cycles)
 {
+    // install the sigint handler to catch ctrl-c and exit the sim loop cleanly
+    // Note: This should be done before initializing the threads
+    initSigInt();
+
     if (global_exit_event)//cleaning last global exit event
         global_exit_event->clean();
     std::unique_ptr<GlobalSyncEvent, DescheduleDeleter> quantum_event;
@@ -228,6 +233,9 @@ simulate(Tick num_cycles)
     simulatorThreads->runUntilLocalExit();
     Event *local_event = doSimLoop(mainEventQueue[0]);
     assert(local_event);
+
+    // Restore normal ctrl-c operation as soon as the event queue is done
+    restoreSigInt();
 
     inParallelMode = false;
 

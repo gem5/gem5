@@ -24,12 +24,16 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from ..runtime import get_runtime_coherence_protocol, get_supported_isas
-from ..isas import ISA
-from ..coherence_protocol import CoherenceProtocol
-from typing import Optional
-import os
 import inspect
+import os
+from typing import Optional
+
+from ..coherence_protocol import CoherenceProtocol
+from ..isas import ISA
+from ..runtime import (
+    get_runtime_coherence_protocol,
+    get_supported_isas,
+)
 
 
 def _get_exception_str(msg: str):
@@ -61,11 +65,11 @@ def requires(
 
     :param isa_required: The ISA(s) gem5 must be compiled to.
     :param coherence_protocol_required: The coherence protocol gem5 must be
-        compiled to.
+                                        compiled to.
     :param kvm_required: The host system must have the Kernel-based Virtual
-        Machine available.
+                         Machine available.
     :raises Exception: Raises an exception if the required ISA or coherence
-        protocol do not match that of the current gem5 binary.
+                       protocol do not match that of the current gem5 binary.
     """
 
     supported_isas = get_supported_isas()

@@ -27,42 +27,31 @@
 import os
 from typing import List
 
-from ....utils.override import overrides
-from ..abstract_system_board import AbstractSystemBoard
-from ...processors.abstract_processor import AbstractProcessor
-from ...memory.abstract_memory_system import AbstractMemorySystem
-from ...cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
-from ..kernel_disk_workload import KernelDiskWorkload
-from ....resources.resource import AbstractResource
-from ....isas import ISA
-
 import m5
 from m5.objects import (
-    Bridge,
-    PMAChecker,
-    RiscvLinux,
-    RiscvRTC,
     AddrRange,
-    IOXBar,
+    Bridge,
     Clint,
-    Plic,
-    Terminal,
+    CowDiskImage,
+    Frequency,
+    IOXBar,
     LupioBLK,
     LupioIPI,
     LupioPIC,
     LupioRNG,
     LupioRTC,
+    LupioSYS,
     LupioTMR,
     LupioTTY,
-    LupioSYS,
     LupV,
-    AddrRange,
-    CowDiskImage,
-    RawDiskImage,
-    Frequency,
+    Plic,
+    PMAChecker,
     Port,
+    RawDiskImage,
+    RiscvLinux,
+    RiscvRTC,
+    Terminal,
 )
-
 from m5.util.fdthelper import (
     Fdt,
     FdtNode,
@@ -71,6 +60,15 @@ from m5.util.fdthelper import (
     FdtPropertyWords,
     FdtState,
 )
+
+from ....isas import ISA
+from ....resources.resource import AbstractResource
+from ....utils.override import overrides
+from ...cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
+from ...memory.abstract_memory_system import AbstractMemorySystem
+from ...processors.abstract_processor import AbstractProcessor
+from ..abstract_system_board import AbstractSystemBoard
+from ..kernel_disk_workload import KernelDiskWorkload
 
 
 class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
@@ -90,9 +88,8 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
         memory: AbstractMemorySystem,
         cache_hierarchy: AbstractCacheHierarchy,
     ) -> None:
-
         if cache_hierarchy.is_ruby():
-            raise EnvironmentError("RiscvBoard is not compatible with Ruby")
+            raise OSError("RiscvBoard is not compatible with Ruby")
 
         if processor.get_isa() != ISA.RISCV:
             raise Exception(
@@ -105,7 +102,6 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
 
     @overrides(AbstractSystemBoard)
     def _setup_board(self) -> None:
-
         self.workload = RiscvLinux()
 
         # Initialize all the devices that we want to use on this board
@@ -220,7 +216,7 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
         ]
 
     def _setup_io_devices(self) -> None:
-        """Connect the I/O devices to the I/O bus"""
+        """Connect the I/O devices to the I/O bus."""
         for device in self._off_chip_devices:
             device.pio = self.iobus.mem_side_ports
         self.lupio_blk.dma = self.iobus.cpu_side_ports
@@ -238,7 +234,7 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
         ]
 
     def _setup_pma(self) -> None:
-        """Set the PMA devices on each core"""
+        """Set the PMA devices on each core."""
         uncacheable_range = [
             AddrRange(dev.pio_addr, size=dev.pio_size)
             for dev in self._on_chip_devices + self._off_chip_devices
@@ -282,9 +278,11 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
         memory.set_memory_range(self.mem_ranges)
 
     def _generate_device_tree(self, outdir: str) -> None:
-        """Creates the dtb and dts files.
-        Creates two files in the outdir: 'device.dtb' and 'device.dts'
-        :param outdir: Directory to output the files
+        """Creates the ``dtb`` and ``dts`` files.
+
+        Creates two files in the outdir: ``device.dtb`` and ``device.dts``.
+
+        :param outdir: Directory to output the files.
         """
         state = FdtState(addr_cells=2, size_cells=2, cpu_cells=1)
         root = FdtNode("/")
@@ -318,7 +316,7 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
             node.append(FdtPropertyWords("reg", state.CPUAddrCells(i)))
             node.append(FdtPropertyStrings("mmu-type", "riscv,sv48"))
             node.append(FdtPropertyStrings("status", "okay"))
-            node.append(FdtPropertyStrings("riscv,isa", "rv64imafdcsu"))
+            node.append(FdtPropertyStrings("riscv,isa", "rv64imafdc"))
             # TODO: Should probably get this from the core.
             freq = self.clk_domain.clock[0].frequency
             node.appendCompatible(["riscv"])
@@ -535,12 +533,17 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
         fdt.writeDtbFile(os.path.join(outdir, "device.dtb"))
 
     @overrides(KernelDiskWorkload)
-    def get_default_kernel_args(self) -> List[str]:
-        return ["console=ttyLIO0", "root={root_value}", "rw"]
-
-    @overrides(KernelDiskWorkload)
     def get_disk_device(self) -> str:
         return "/dev/lda"
+
+    @overrides(KernelDiskWorkload)
+    def get_default_kernel_args(self) -> List[str]:
+        return [
+            "console=ttyLIO0",
+            "root={root_value}",
+            "disk_device={disk_device}",
+            "rw",
+        ]
 
     @overrides(KernelDiskWorkload)
     def _add_disk_to_board(self, disk_image: AbstractResource) -> None:

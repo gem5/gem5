@@ -86,8 +86,9 @@
 # 8,35670,1,STORE,1748748,4,74,0:,6,3:,7
 # 9,35670,1,COMP,500::,7
 
-import protolib
 import sys
+
+import protolib
 
 # Import the packet proto definitions. If they are not found, attempt
 # to generate them automatically. This assumes that the script is
@@ -125,12 +126,12 @@ def main():
 
     try:
         ascii_out = open(sys.argv[2], "w")
-    except IOError:
+    except OSError:
         print("Failed to open ", sys.argv[2], " for writing")
         exit(-1)
 
     # Read the magic number in 4-byte Little Endian
-    magic_number = proto_in.read(4)
+    magic_number = proto_in.read(4).decode()
 
     if magic_number != "gem5":
         print("Unrecognized file")

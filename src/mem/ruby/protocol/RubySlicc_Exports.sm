@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 ARM Limited
+ * Copyright (c) 2020-2021,2023 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -51,6 +51,8 @@ external_type(Addr, primitive="yes");
 external_type(Cycles, primitive="yes", default="Cycles(0)");
 external_type(Tick, primitive="yes", default="0");
 external_type(RequestPtr, primitive="yes", default="nullptr");
+external_type(RequestorID, primitive="yes");
+external_type(prefetch::Base, primitive="yes");
 
 structure(WriteMask, external="yes", desc="...") {
   void clear();
@@ -77,6 +79,9 @@ structure(DataBlock, external = "yes", desc="..."){
   void copyPartial(DataBlock, int, int);
   void copyPartial(DataBlock, WriteMask);
   void atomicPartial(DataBlock, WriteMask);
+  void atomicPartial(DataBlock, WriteMask, bool);
+  int numAtomicLogEntries();
+  void clearAtomicLogEntries();
 }
 
 bool testAndRead(Addr addr, DataBlock datablk, Packet *pkt);
@@ -228,11 +233,13 @@ enumeration(CacheRequestType, desc="...", default="CacheRequestType_NULL") {
   DataArrayWrite,   desc="Write access to the cache's data array";
   TagArrayRead,     desc="Read access to the cache's tag array";
   TagArrayWrite,    desc="Write access to the cache's tag array";
+  AtomicALUOperation,  desc="Atomic ALU operation";
 }
 
 enumeration(CacheResourceType, desc="...", default="CacheResourceType_NULL") {
   DataArray,    desc="Access to the cache's data array";
   TagArray,     desc="Access to the cache's tag array";
+  AtomicALUArray, desc="Access to the cache's atomic ALU array";
 }
 
 enumeration(DirectoryRequestType, desc="...", default="DirectoryRequestType_NULL") {

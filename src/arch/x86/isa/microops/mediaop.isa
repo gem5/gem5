@@ -393,7 +393,7 @@ let {{
 
                 // Handle saturation.
                 if (signBit) {
-                    if (overflow != mask(destBits - srcBits + 1)) {
+                    if (overflow != mask(srcBits - destBits + 1)) {
                         if (signedOp())
                             picked = (1ULL << (destBits - 1));
                         else
@@ -421,7 +421,7 @@ let {{
 
                 // Handle saturation.
                 if (signBit) {
-                    if (overflow != mask(destBits - srcBits + 1)) {
+                    if (overflow != mask(srcBits - destBits + 1)) {
                         if (signedOp())
                             picked = (1ULL << (destBits - 1));
                         else

@@ -36,6 +36,7 @@ machine(MachineType:TCC, "TCC Cache")
    bool WB; /*is this cache Writeback?*/
    Cycles l2_request_latency := 50;
    Cycles l2_response_latency := 20;
+   Cycles glc_atomic_latency := 0;
 
   // From the TCPs or SQCs
   MessageBuffer * requestFromTCP, network="From", virtual_network="1", vnet_type="request";
@@ -60,10 +61,13 @@ machine(MachineType:TCC, "TCC Cache")
     WrVicBlk,               desc="L1 Write Through";
     WrVicBlkBack,           desc="L1 Write Through(dirty cache)";
     WrVicBlkEvict,          desc="L1 Write Through(dirty cache) and evict";
+    AtomicWait,             desc="Atomic Op that must wait for pending loads";
     Atomic,                 desc="Atomic Op";
+    AtomicPassOn,           desc="Atomic Op Passed on to Directory";
     AtomicDone,             desc="AtomicOps Complete";
     AtomicNotDone,          desc="AtomicOps not Complete";
-    Data,                   desc="data messgae";
+    Data,                   desc="Data message";
+    Flush,                  desc="Flush cache entry";
     // Coming from this TCC
     L2_Repl,                desc="L2 Replacement";
     // Probes
@@ -81,6 +85,7 @@ machine(MachineType:TCC, "TCC Cache")
     I, AccessPermission:Invalid,    desc="Invalid";
     IV, AccessPermission:Busy,      desc="Waiting for Data";
     WI, AccessPermission:Busy,      desc="Waiting on Writethrough Ack";
+    WIB, AccessPermission:Busy,     desc="Waiting on Writethrough Ack; Will be Bypassed";
     A, AccessPermission:Busy,       desc="Invalid waiting on atomici Data";
   }
 
@@ -89,6 +94,7 @@ machine(MachineType:TCC, "TCC Cache")
     DataArrayWrite,   desc="Write the data array";
     TagArrayRead,     desc="Read the data array";
     TagArrayWrite,    desc="Write the data array";
+    AtomicALUOperation,  desc="Atomic ALU operation";
   }
 
 
@@ -102,16 +108,18 @@ machine(MachineType:TCC, "TCC Cache")
   }
 
   structure(TBE, desc="...") {
-    State TBEState,     desc="Transient state";
-    DataBlock DataBlk,  desc="data for the block";
-    bool Dirty,         desc="Is the data dirty?";
-    bool Shared,        desc="Victim hit by shared probe";
-    MachineID From,     desc="Waiting for writeback from...";
-    NetDest Destination, desc="Data destination";
-    int numAtomics,     desc="number remaining atomics";
-    int atomicDoneCnt,  desc="number AtomicDones triggered";
-    bool isGLCSet,      desc="Bypass L1 Cache";
-    bool isSLCSet,      desc="Bypass L1 and L2 Cache";
+    State TBEState,                  desc="Transient state";
+    DataBlock DataBlk,               desc="data for the block";
+    bool Dirty,                      desc="Is the data dirty?";
+    bool Shared,                     desc="Victim hit by shared probe";
+    MachineID From,                  desc="Waiting for writeback from...";
+    NetDest Destination,             desc="Data destination";
+    int numPending,                  desc="num pending requests";
+    int numPendingDirectoryAtomics,  desc="number of pending atomics to be performed in directory";
+    int atomicDoneCnt,               desc="number AtomicDones triggered";
+    bool isGLCSet,                   desc="Bypass L1 Cache";
+    bool isSLCSet,                   desc="Bypass L1 and L2 Cache";
+    WriteMask atomicWriteMask,       desc="Atomic write mask";
   }
 
   structure(TBETable, external="yes") {
@@ -218,6 +226,8 @@ machine(MachineType:TCC, "TCC Cache")
         L2cache.recordRequestType(CacheRequestType:TagArrayRead, addr);
     } else if (request_type == RequestType:TagArrayWrite) {
         L2cache.recordRequestType(CacheRequestType:TagArrayWrite, addr);
+    } else if (request_type == RequestType:AtomicALUOperation) {
+        L2cache.recordRequestType(CacheRequestType:AtomicALUOperation, addr);
     }
   }
 
@@ -230,6 +240,8 @@ machine(MachineType:TCC, "TCC Cache")
       return L2cache.checkResourceAvailable(CacheResourceType:TagArray, addr);
     } else if (request_type == RequestType:TagArrayWrite) {
       return L2cache.checkResourceAvailable(CacheResourceType:TagArray, addr);
+    } else if (request_type == RequestType:AtomicALUOperation) {
+      return L2cache.checkResourceAvailable(CacheResourceType:AtomicALUArray, addr);
     } else {
       error("Invalid RequestType type in checkResourceAvailable");
       return true;
@@ -253,13 +265,14 @@ machine(MachineType:TCC, "TCC Cache")
   // request queue going to NB
   //
 
-
-// ** IN_PORTS **
+  // ** IN_PORTS **
   in_port(triggerQueue_in, TriggerMsg, triggerQueue) {
     if (triggerQueue_in.isReady(clockEdge())) {
       peek(triggerQueue_in, TriggerMsg) {
         TBE tbe := TBEs.lookup(in_msg.addr);
         Entry cache_entry := getCacheEntry(in_msg.addr);
+
+        // The trigger queue applies only to atomics performed in the directory.
 
         // There is a possible race where multiple AtomicDone triggers can be
         // sent if another Atomic to the same address is issued after the
@@ -267,7 +280,7 @@ machine(MachineType:TCC, "TCC Cache")
         // that case we count the number of AtomicDones in flight for this
         // address and only call AtomicDone to deallocate the TBE when it is
         // the last in flight message.
-        if (tbe.numAtomics == 0 && tbe.atomicDoneCnt == 1) {
+        if (tbe.numPendingDirectoryAtomics == 0 && tbe.atomicDoneCnt == 1) {
             trigger(Event:AtomicDone, in_msg.addr, cache_entry, tbe);
         } else {
             trigger(Event:AtomicNotDone, in_msg.addr, cache_entry, tbe);
@@ -276,32 +289,45 @@ machine(MachineType:TCC, "TCC Cache")
     }
   }
 
-
-
+  // handle responses from directory here
   in_port(responseFromNB_in, ResponseMsg, responseFromNB) {
     if (responseFromNB_in.isReady(clockEdge())) {
       peek(responseFromNB_in, ResponseMsg, block_on="addr") {
         TBE tbe := TBEs.lookup(in_msg.addr);
         Entry cache_entry := getCacheEntry(in_msg.addr);
-        bool is_slc_set := false;
+        /*
+          MOESI_AMD_Base-dir acts as the directory, and it always passes
+          SLC information back to L2 because of races at L2 with requests
+          from different CUs sending requests to same cache line in parallel.
+          If these requests have different GLC/SLC settings, the L2 TBE may
+          not have the correct GLC/SLC information for a given request.
+         */
+        bool is_slc_set := in_msg.isSLCSet;
 
-        if (!is_invalid(tbe)) {
-            is_slc_set := tbe.isSLCSet;
-        }
-
-        if (is_slc_set) {
-            // If the SLC bit is set, the response needs to bypass the cache
-            // and should not be allocated an entry.
-            trigger(Event:Bypass, in_msg.addr, cache_entry, tbe);
-        } else if (in_msg.Type == CoherenceResponseType:NBSysResp) {
-          if(presentOrAvail(in_msg.addr)) {
-            trigger(Event:Data, in_msg.addr, cache_entry, tbe);
-          } else {
-            Addr victim :=  L2cache.cacheProbe(in_msg.addr);
-            trigger(Event:L2_Repl, victim, getCacheEntry(victim), TBEs.lookup(victim));
-          }
-        } else if (in_msg.Type == CoherenceResponseType:NBSysWBAck) {
+        // Whether the SLC bit is set or not, WB acks should invoke the
+        // WBAck event. For cases where a read response will follow a
+        // WBAck (A read bypass evict on a dirty line), the line's TLB
+        // will not be deallocated on WBAck, and the SLC bit will be
+        // checked when the read response is received.
+        if (in_msg.Type == CoherenceResponseType:NBSysWBAck) {
           trigger(Event:WBAck, in_msg.addr, cache_entry, tbe);
+        } else if(in_msg.Type == CoherenceResponseType:NBSysResp) {
+          // If the SLC bit is set or the cache is write-through and
+          // we're receiving modified data (such as from an atomic),
+          // the response needs to bypass the cache and should not be
+          // allocated an entry.
+          if(is_slc_set || (!WB && in_msg.State == CoherenceState:Modified)) {
+            trigger(Event:Bypass, in_msg.addr, cache_entry, tbe);
+          } else {
+            if(presentOrAvail(in_msg.addr)) {
+              // Responses with atomic data will only reach here if the
+              // SLC bit isn't set and the cache is WB
+              trigger(Event:Data, in_msg.addr, cache_entry, tbe);
+            } else {
+              Addr victim :=  L2cache.cacheProbe(in_msg.addr);
+              trigger(Event:L2_Repl, victim, getCacheEntry(victim), TBEs.lookup(victim));
+            }
+          }
         } else {
           error("Unexpected Response Message to Core");
         }
@@ -348,12 +374,33 @@ machine(MachineType:TCC, "TCC Cache")
             } else {
                 trigger(Event:WrVicBlk, in_msg.addr, cache_entry, tbe);
             }
-        } else if (in_msg.Type == CoherenceRequestType:Atomic) {
-          // Currently the Atomic requests do not have GLC/SLC bit handing
-          // support. The assert ensures that the requests do not have
-          // these set, and therefore do not expect to bypass the cache
-          assert(!in_msg.isSLCSet);
-          trigger(Event:Atomic, in_msg.addr, cache_entry, tbe);
+        } else if (in_msg.Type == CoherenceRequestType:Atomic ||
+                   in_msg.Type == CoherenceRequestType:AtomicReturn ||
+                   in_msg.Type == CoherenceRequestType:AtomicNoReturn) {
+	  /*
+	    If there are pending requests for this line already and those
+	    requests are not atomics, because we can't easily differentiate
+	    between different request types on return and because decrementing
+	    the atomic count assumes all returned requests in the A state are
+	    atomics, we will need to put this atomic to sleep and wake it up
+	    when the loads return.
+	   */
+	  if (is_valid(tbe) && (tbe.numPending > 0) &&
+	        (tbe.numPendingDirectoryAtomics == 0)) {
+            trigger(Event:AtomicWait, in_msg.addr, cache_entry, tbe);
+          } else {
+            // If the request is system-level, if the address isn't in the cache,
+            // or if this cache is write-through, then send the request to the
+            // directory. Since non-SLC atomics won't be performed by the directory,
+            // TCC will perform the atomic on the return path on Event:Data.
+            // The action will invalidate the cache line if SLC is set and the address is
+            // in the cache.
+            if(in_msg.isSLCSet || !WB) {
+              trigger(Event:AtomicPassOn, in_msg.addr, cache_entry, tbe);
+            } else {
+              trigger(Event:Atomic, in_msg.addr, cache_entry, tbe);
+            }
+          }
         } else if (in_msg.Type == CoherenceRequestType:RdBlk) {
           if (in_msg.isSLCSet) {
             // If SLC bit is set, the request needs to go directly to memory.
@@ -362,6 +409,8 @@ machine(MachineType:TCC, "TCC Cache")
           } else {
             trigger(Event:RdBlk, in_msg.addr, cache_entry, tbe);
           }
+        } else if (in_msg.Type == CoherenceRequestType:WriteFlush) {
+            trigger(Event:Flush, in_msg.addr, cache_entry, tbe);
         } else {
           DPRINTF(RubySlicc, "%s\n", in_msg);
           error("Unexpected Response Message to Core");
@@ -402,24 +451,35 @@ machine(MachineType:TCC, "TCC Cache")
       out_msg.addr := address;
       out_msg.Type := CoherenceResponseType:TDSysResp;
       out_msg.Sender := machineID;
-      out_msg.Destination := tbe.Destination;
-      out_msg.DataBlk := cache_entry.DataBlk;
       out_msg.MessageSize := MessageSizeType:Response_Data;
       out_msg.Dirty := false;
       out_msg.State := CoherenceState:Shared;
-      DPRINTF(RubySlicc, "%s\n", out_msg);
       peek(responseFromNB_in, ResponseMsg) {
-        out_msg.isGLCSet := tbe.isGLCSet;
-        out_msg.isSLCSet := tbe.isSLCSet;
+        // if line state is Invalid, then we must be doing the transition(I, Data)
+        // so use the DataBlk from the incoming message
+        if ((getAccessPermission(address) == AccessPermission:NotPresent) ||
+	      (getAccessPermission(address) == AccessPermission:Invalid)) {
+          out_msg.DataBlk := in_msg.DataBlk;
+        } else {
+          out_msg.DataBlk := cache_entry.DataBlk;
+        }
+        out_msg.isGLCSet := in_msg.isGLCSet;
+        out_msg.isSLCSet := in_msg.isSLCSet;
+        // reuse CURequestor field to allow multiple concurrent loads and
+        // track where they should go back to (since TBE can't distinguish
+        // destinations)
+        out_msg.Destination.clear();
+        out_msg.Destination.add(in_msg.CURequestor);
       }
+      DPRINTF(RubySlicc, "%s\n", out_msg);
     }
     enqueue(unblockToNB_out, UnblockMsg, 1) {
       out_msg.addr := address;
       out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.MessageSize := MessageSizeType:Unblock_Control;
       peek(responseFromNB_in, ResponseMsg) {
-        out_msg.isGLCSet := tbe.isGLCSet;
-        out_msg.isSLCSet := tbe.isSLCSet;
+        out_msg.isGLCSet := in_msg.isGLCSet;
+        out_msg.isSLCSet := in_msg.isSLCSet;
       }
       DPRINTF(RubySlicc, "%s\n", out_msg);
     }
@@ -431,13 +491,17 @@ machine(MachineType:TCC, "TCC Cache")
           out_msg.addr := address;
           out_msg.Type := CoherenceResponseType:TDSysResp;
           out_msg.Sender := machineID;
-          out_msg.Destination := tbe.Destination;
+          // reuse CURequestor field to allow multiple concurrent loads and
+          // track where they should go back to (since TBE can't distinguish
+          // destinations)
+          out_msg.Destination.clear();
+          out_msg.Destination.add(in_msg.CURequestor);
           out_msg.DataBlk := in_msg.DataBlk;
           out_msg.MessageSize := MessageSizeType:Response_Data;
           out_msg.Dirty := false;
           out_msg.State := CoherenceState:Shared;
-          out_msg.isGLCSet := tbe.isGLCSet;
-          out_msg.isSLCSet := tbe.isSLCSet;
+          out_msg.isGLCSet := in_msg.isGLCSet;
+          out_msg.isSLCSet := in_msg.isSLCSet;
           DPRINTF(RubySlicc, "%s\n", out_msg);
         }
         enqueue(unblockToNB_out, UnblockMsg, 1) {
@@ -450,19 +514,25 @@ machine(MachineType:TCC, "TCC Cache")
   }
 
   action(rd_requestData, "r", desc="Miss in L2, pass on") {
-    if(tbe.Destination.count()==1){
-      peek(coreRequestNetwork_in, CPURequestMsg) {
-        enqueue(requestToNB_out, CPURequestMsg, l2_request_latency) {
-          out_msg.addr := address;
-          out_msg.Type := in_msg.Type;
-          out_msg.Requestor := machineID;
-          out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
-          out_msg.Shared := false; // unneeded for this request
-          out_msg.MessageSize := in_msg.MessageSize;
-          out_msg.isGLCSet := tbe.isGLCSet;
-          out_msg.isSLCSet := tbe.isSLCSet;
-          DPRINTF(RubySlicc, "%s\n", out_msg);
-        }
+    peek(coreRequestNetwork_in, CPURequestMsg) {
+      DPRINTF(RubySlicc, "in_msg: %s\n", in_msg);
+      enqueue(requestToNB_out, CPURequestMsg, l2_request_latency) {
+        out_msg.addr := address;
+        out_msg.Type := in_msg.Type;
+        out_msg.Requestor := machineID;
+        /*
+          To allow multiple concurrent requests from different CUs, we pass
+          the orgin information along to the directory, which stores it in its
+          TBE as appropriate before passing it back to the TCC on the return
+          path.
+         */
+        out_msg.CURequestor := in_msg.Requestor;
+        out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
+        out_msg.Shared := false; // unneeded for this request
+        out_msg.MessageSize := in_msg.MessageSize;
+        out_msg.isGLCSet := in_msg.isGLCSet;
+        out_msg.isSLCSet := in_msg.isSLCSet;
+        DPRINTF(RubySlicc, "out_msg: %s\n", out_msg);
       }
     }
   }
@@ -473,7 +543,7 @@ machine(MachineType:TCC, "TCC Cache")
         out_msg.addr := address;
         out_msg.Type := CoherenceResponseType:TDSysWBAck;
         out_msg.Destination.clear();
-        out_msg.Destination.add(in_msg.WTRequestor);
+        out_msg.Destination.add(in_msg.CURequestor);
         out_msg.Sender := machineID;
         out_msg.MessageSize := MessageSizeType:Writeback_Control;
         out_msg.instSeqNum := in_msg.instSeqNum;
@@ -495,17 +565,64 @@ machine(MachineType:TCC, "TCC Cache")
     }
   }
 
+  action(fw_sendFlushResponse, "fw", desc="send Flush Response") {
+    peek(coreRequestNetwork_in, CPURequestMsg) {
+      enqueue(responseToCore_out, ResponseMsg, l2_response_latency) {
+        out_msg.addr := address;
+        out_msg.Type := CoherenceResponseType:TDSysWBAck;
+        out_msg.Destination.clear();
+        out_msg.Destination.add(in_msg.Requestor);
+        out_msg.Sender := machineID;
+        out_msg.MessageSize := MessageSizeType:Writeback_Control;
+        out_msg.instSeqNum := in_msg.instSeqNum;
+      }
+    }
+  }
+
   action(ar_sendAtomicResponse, "ar", desc="send Atomic Ack") {
+    peek(coreRequestNetwork_in, CPURequestMsg) {
+        enqueue(responseToCore_out, ResponseMsg, l2_response_latency + glc_atomic_latency, true) {
+          out_msg.addr := address;
+          out_msg.Type := CoherenceResponseType:TDSysResp;
+          out_msg.Destination.clear();
+          out_msg.Destination.add(in_msg.Requestor);
+          out_msg.Sender := machineID;
+          out_msg.MessageSize := MessageSizeType:Response_Data;
+          out_msg.DataBlk := cache_entry.DataBlk;
+          out_msg.isGLCSet := in_msg.isGLCSet;
+          out_msg.isSLCSet := in_msg.isSLCSet;
+        }
+    }
+    cache_entry.DataBlk.clearAtomicLogEntries();
+  }
+
+  action(baplr_sendBypassedAtomicPerformedLocallyResponse, "barplr", desc="send locally-performed bypassed Atomic Ack") {
     peek(responseFromNB_in, ResponseMsg) {
         enqueue(responseToCore_out, ResponseMsg, l2_response_latency) {
           out_msg.addr := address;
           out_msg.Type := CoherenceResponseType:TDSysResp;
-          out_msg.Destination.add(in_msg.WTRequestor);
+          out_msg.Destination.add(in_msg.CURequestor);
+          out_msg.Sender := machineID;
+          out_msg.MessageSize := in_msg.MessageSize;
+          out_msg.DataBlk := cache_entry.DataBlk;
+          out_msg.isGLCSet := tbe.isGLCSet;
+          out_msg.isSLCSet := tbe.isSLCSet;
+        }
+    }
+    cache_entry.DataBlk.clearAtomicLogEntries();
+  }
+
+  action(bapdr_sendBypassedAtomicPerformedInDirectoryResponse, "bapdr", desc="send bypassed Atomic Ack") {
+    peek(responseFromNB_in, ResponseMsg) {
+        enqueue(responseToCore_out, ResponseMsg, l2_response_latency) {
+          out_msg.addr := address;
+          out_msg.Type := CoherenceResponseType:TDSysResp;
+          out_msg.Destination.add(in_msg.CURequestor);
           out_msg.Sender := machineID;
           out_msg.MessageSize := in_msg.MessageSize;
           out_msg.DataBlk := in_msg.DataBlk;
-          out_msg.isGLCSet := tbe.isGLCSet;
-          out_msg.isSLCSet := tbe.isSLCSet;
+          out_msg.isGLCSet := in_msg.isGLCSet;
+          out_msg.isSLCSet := in_msg.isSLCSet;
         }
     }
   }
@@ -531,24 +648,51 @@ machine(MachineType:TCC, "TCC Cache")
       TBEs.allocate(address);
       set_tbe(TBEs.lookup(address));
       tbe.Destination.clear();
-      tbe.numAtomics := 0;
+      tbe.numPendingDirectoryAtomics := 0;
       tbe.atomicDoneCnt := 0;
+      tbe.numPending := 0;
     }
+    // each pending requests increments this count by 1
+    tbe.numPending := tbe.numPending + 1;
     if (coreRequestNetwork_in.isReady(clockEdge())) {
       peek(coreRequestNetwork_in, CPURequestMsg) {
-        if(in_msg.Type == CoherenceRequestType:RdBlk || in_msg.Type == CoherenceRequestType:Atomic){
+        if(in_msg.Type == CoherenceRequestType:RdBlk ||
+           in_msg.Type == CoherenceRequestType:Atomic ||
+           in_msg.Type == CoherenceRequestType:AtomicReturn ||
+           in_msg.Type == CoherenceRequestType:AtomicNoReturn){
           tbe.Destination.add(in_msg.Requestor);
         }
+        /*
+          If there are multiple concurrent requests to the same cache line, each
+          one will overwrite the previous ones GLC/SLC information here.
+          If these requests have different GLC/SLC information, this causes
+          a segfault.  Hence, currently the support relies on the directory to
+          pass back the GLC/SLC information instead of relying on L2 TBE to be
+          correct.
+
+          This message is left here as an FYI for future developers.
+         */
         tbe.isGLCSet := in_msg.isGLCSet;
         tbe.isSLCSet := in_msg.isSLCSet;
+        if(in_msg.Type == CoherenceRequestType:Atomic ||
+           in_msg.Type == CoherenceRequestType:AtomicReturn ||
+           in_msg.Type == CoherenceRequestType:AtomicNoReturn){
+          tbe.atomicWriteMask.clear();
+          tbe.atomicWriteMask.orMask(in_msg.writeMask);
+        }
       }
     }
   }
 
   action(dt_deallocateTBE, "dt", desc="Deallocate TBE entry") {
-    tbe.Destination.clear();
-    TBEs.deallocate(address);
-    unset_tbe();
+    // since we may have multiple destinations, can't deallocate if we aren't
+    // last one
+    tbe.numPending := tbe.numPending - 1;
+    if (tbe.numPending == 0) {
+      tbe.Destination.clear();
+      TBEs.deallocate(address);
+      unset_tbe();
+    }
   }
 
   action(wcb_writeCacheBlock, "wcb", desc="write data to TCC") {
@@ -566,12 +710,26 @@ machine(MachineType:TCC, "TCC Cache")
     }
   }
 
+  action(wardb_writeAtomicResponseDirtyBytes, "wardb", desc="write data to TCC") {
+    peek(responseFromNB_in, ResponseMsg) {
+      cache_entry.DataBlk := in_msg.DataBlk;
+      cache_entry.writeMask.orMask(tbe.atomicWriteMask);
+      DPRINTF(RubySlicc, "Writing to TCC: %s\n", in_msg);
+    }
+  }
+
+  action(owm_orWriteMask, "owm", desc="or TCCs write mask") {
+    peek(coreRequestNetwork_in, CPURequestMsg) {
+      cache_entry.writeMask.orMask(in_msg.writeMask);
+    }
+  }
+
   action(wt_writeThrough, "wt", desc="write back data") {
     peek(coreRequestNetwork_in, CPURequestMsg) {
       enqueue(requestToNB_out, CPURequestMsg, l2_request_latency) {
         out_msg.addr := address;
         out_msg.Requestor := machineID;
-        out_msg.WTRequestor := in_msg.Requestor;
+        out_msg.CURequestor := in_msg.Requestor;
         out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
         out_msg.MessageSize := MessageSizeType:Data;
         out_msg.Type := CoherenceRequestType:WriteThrough;
@@ -579,6 +737,8 @@ machine(MachineType:TCC, "TCC Cache")
         out_msg.DataBlk := in_msg.DataBlk;
         out_msg.writeMask.orMask(in_msg.writeMask);
         out_msg.instSeqNum := in_msg.instSeqNum;
+        out_msg.isGLCSet := in_msg.isGLCSet;
+        out_msg.isSLCSet := in_msg.isSLCSet;
       }
     }
   }
@@ -587,7 +747,7 @@ machine(MachineType:TCC, "TCC Cache")
     enqueue(requestToNB_out, CPURequestMsg, l2_request_latency) {
       out_msg.addr := address;
       out_msg.Requestor := machineID;
-      out_msg.WTRequestor := machineID;
+      out_msg.CURequestor := machineID;
       out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.MessageSize := MessageSizeType:Data;
       out_msg.Type := CoherenceRequestType:WriteThrough;
@@ -597,17 +757,37 @@ machine(MachineType:TCC, "TCC Cache")
     }
   }
 
+  action(f_flush, "f", desc="write back data") {
+    peek(coreRequestNetwork_in, CPURequestMsg) {
+      enqueue(requestToNB_out, CPURequestMsg, l2_request_latency) {
+        out_msg.addr := address;
+        out_msg.Requestor := machineID;
+        out_msg.CURequestor := in_msg.Requestor;
+        out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
+        out_msg.MessageSize := MessageSizeType:Data;
+        out_msg.Type := CoherenceRequestType:WriteFlush;
+        out_msg.Dirty := true;
+        out_msg.DataBlk := cache_entry.DataBlk;
+        out_msg.writeMask.orMask(cache_entry.writeMask);
+        out_msg.isGLCSet := in_msg.isGLCSet;
+        out_msg.isSLCSet := in_msg.isSLCSet;
+      }
+    }
+  }
+
   action(at_atomicThrough, "at", desc="write back data") {
     peek(coreRequestNetwork_in, CPURequestMsg) {
       enqueue(requestToNB_out, CPURequestMsg, l2_request_latency) {
         out_msg.addr := address;
         out_msg.Requestor := machineID;
-        out_msg.WTRequestor := in_msg.Requestor;
+        out_msg.CURequestor := in_msg.Requestor;
         out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
         out_msg.MessageSize := MessageSizeType:Data;
-        out_msg.Type := CoherenceRequestType:Atomic;
+        out_msg.Type := in_msg.Type;
         out_msg.Dirty := true;
         out_msg.writeMask.orMask(in_msg.writeMask);
+        out_msg.isGLCSet := in_msg.isGLCSet;
+        out_msg.isSLCSet := in_msg.isSLCSet;
       }
     }
   }
@@ -649,26 +829,40 @@ machine(MachineType:TCC, "TCC Cache")
     wakeUpAllBuffers(address);
   }
 
+  /*
+    Currently z_stall is unused because it can lead to Protocol Stalls that
+    eventually lead to deadlock.  Instead, it is recommended to use
+    st_stallAndWaitRequest in combination with a wakeupBuffer call (e.g.,
+    wada_wakeUpAllDependentsAddr) to put the pending requests to sleep instead of
+    them causing head of line blocking -- wada_wakeUpAllDependentsAddr should wake
+    the request up once the request preventing it from completing is done.
   action(z_stall, "z", desc="stall") {
       // built-in
   }
+  */
 
 
-  action(ina_incrementNumAtomics, "ina", desc="inc num atomics") {
-    tbe.numAtomics := tbe.numAtomics + 1;
+  action(inpa_incrementNumPendingDirectoryAtomics, "inpa", desc="inc num atomics") {
+    // Only increment number of atomics if they will actually be performed in directory
+    // That is, if the SLC bit is set or if the cache is write through
+    peek(coreRequestNetwork_in, CPURequestMsg) {
+      if (in_msg.isSLCSet || !WB) {
+        tbe.numPendingDirectoryAtomics := tbe.numPendingDirectoryAtomics + 1;
+      }
+    }
   }
 
 
-  action(dna_decrementNumAtomics, "dna", desc="inc num atomics") {
-    tbe.numAtomics := tbe.numAtomics - 1;
-    if (tbe.numAtomics==0) {
+  action(dnpa_decrementNumPendingDirectoryAtomics, "dnpa", desc="dec num atomics") {
+    tbe.numPendingDirectoryAtomics := tbe.numPendingDirectoryAtomics - 1;
+    if (tbe.numPendingDirectoryAtomics==0) {
       enqueue(triggerQueue_out, TriggerMsg, 1) {
         tbe.atomicDoneCnt := tbe.atomicDoneCnt + 1;
         out_msg.addr := address;
         out_msg.Type := TriggerType:AtomicDone;
         peek(responseFromNB_in, ResponseMsg) {
-          out_msg.isGLCSet := tbe.isGLCSet;
-          out_msg.isSLCSet := tbe.isSLCSet;
+          out_msg.isGLCSet := in_msg.isGLCSet;
+          out_msg.isSLCSet := in_msg.isSLCSet;
         }
       }
     }
@@ -682,6 +876,19 @@ machine(MachineType:TCC, "TCC Cache")
     triggerQueue_in.dequeue(clockEdge());
   }
 
+  action(pa_performAtomic, "pa", desc="Perform atomic") {
+    peek(coreRequestNetwork_in, CPURequestMsg) {
+      if (in_msg.Type == CoherenceRequestType:AtomicReturn) {
+        cache_entry.DataBlk.atomicPartial(cache_entry.DataBlk, cache_entry.writeMask, false);
+      } else {
+        // Set the isAtomicNoReturn flag to ensure that logs are not
+        // generated erroneously
+        assert(in_msg.Type == CoherenceRequestType:AtomicNoReturn);
+        cache_entry.DataBlk.atomicPartial(cache_entry.DataBlk, cache_entry.writeMask, true);
+      }
+    }
+  }
+
   // END ACTIONS
 
   // BEGIN TRANSITIONS
@@ -693,37 +900,71 @@ machine(MachineType:TCC, "TCC Cache")
   // Stalling transitions do NOT check the tag array...and if they do,
   // they can cause a resource stall deadlock!
 
-  transition(WI, {RdBlk, WrVicBlk, Atomic, WrVicBlkBack}) { //TagArrayRead} {
-      // by putting the stalled requests in a buffer, we reduce resource contention
-      // since they won't try again every cycle and will instead only try again once
-      // woken up
+  transition(WI, {RdBlk, WrVicBlk, Atomic, AtomicPassOn, WrVicBlkBack}) { //TagArrayRead} {
+      // don't profile as hit or miss since it will be tried again
+      /*
+        By putting the stalled requests in a buffer, we reduce resource contention
+        since they won't try again every cycle and will instead only try again once
+        woken up.
+       */
+      st_stallAndWaitRequest;
+  }
+  transition(WIB, {RdBlk, WrVicBlk, Atomic, WrVicBlkBack}) { //TagArrayRead} {
+      // don't profile as hit or miss since it will be tried again
+      /*
+        By putting the stalled requests in a buffer, we reduce resource contention
+        since they won't try again every cycle and will instead only try again once
+        woken up.
+       */
       st_stallAndWaitRequest;
   }
   transition(A, {RdBlk, WrVicBlk, WrVicBlkBack}) { //TagArrayRead} {
-      // by putting the stalled requests in a buffer, we reduce resource contention
-      // since they won't try again every cycle and will instead only try again once
-      // woken up
+      // don't profile as hit or miss since it will be tried again
+      /*
+        By putting the stalled requests in a buffer, we reduce resource contention
+        since they won't try again every cycle and will instead only try again once
+        woken up.
+       */
       st_stallAndWaitRequest;
   }
-  transition(IV, {WrVicBlk, Atomic, WrVicBlkBack}) { //TagArrayRead} {
-      // by putting the stalled requests in a buffer, we reduce resource contention
-      // since they won't try again every cycle and will instead only try again once
-      // woken up
+
+  transition(IV, {WrVicBlk, Atomic, AtomicPassOn, WrVicBlkBack}) { //TagArrayRead} {
+      // don't profile as hit or miss since it will be tried again
+      /*
+        By putting the stalled requests in a buffer, we reduce resource contention
+        since they won't try again every cycle and will instead only try again once
+        woken up.
+       */
       st_stallAndWaitRequest;
   }
+
+  transition({I, IV, V, WI}, AtomicWait) {
+    // don't profile as hit or miss since it will be tried again
+    /*
+      By putting the stalled requests in a buffer, we reduce resource contention
+      since they won't try again every cycle and will instead only try again once
+      woken up.
+     */
+    st_stallAndWaitRequest;
+  }
+
   transition({M, V}, RdBlk) {TagArrayRead, DataArrayRead} {
     p_profileHit;
     sd_sendData;
     ut_updateTag;
     p_popRequestQueue;
   }
+
   transition(W, RdBlk, WI) {TagArrayRead, DataArrayRead} {
+    // don't profile as hit or miss since it will be tried again
     t_allocateTBE;
     wb_writeBack;
-    // need to try this request again after writing back the current entry -- to
-    // do so, put it with other stalled requests in a buffer to reduce resource
-    // contention since they won't try again every cycle and will instead only
-    // try again once woken up
+    /*
+      Need to try this request again after writing back the current entry -- to
+      do so, put it with other stalled requests in a buffer to reduce resource
+      contention since they won't try again every cycle and will instead only
+      try again once woken up.
+     */
     st_stallAndWaitRequest;
   }
 
@@ -748,10 +989,10 @@ machine(MachineType:TCC, "TCC Cache")
     p_popRequestQueue;
   }
 
-// Transition to be called when a read request with SLC flag set arrives at
-// entry in state W. It evicts and invalidates the cache entry before
-// forwarding the request to global memory
-  transition(W, RdBypassEvict, I) {TagArrayRead} {
+  // Transition to be called when a read request with SLC flag set arrives at
+  // entry in state W. It evicts and invalidates the cache entry before
+  // forwarding the request to global memory
+  transition(W, RdBypassEvict, WIB) {TagArrayRead} {
     p_profileMiss;
     t_allocateTBE;
     wb_writeBack;
@@ -760,10 +1001,10 @@ machine(MachineType:TCC, "TCC Cache")
     p_popRequestQueue;
   }
 
-// Transition to be called when a read request with SLC flag set arrives at
-// entry in state M. It evicts and invalidates the cache entry before
-// forwarding the request to global memory to main memory
-  transition(M, RdBypassEvict, I) {TagArrayRead} {
+  // Transition to be called when a read request with SLC flag set arrives at
+  // entry in state M. It evicts and invalidates the cache entry before
+  // forwarding the request to global memory to main memory
+  transition(M, RdBypassEvict, WIB) {TagArrayRead} {
     p_profileMiss;
     t_allocateTBE;
     wb_writeBack;
@@ -772,9 +1013,9 @@ machine(MachineType:TCC, "TCC Cache")
     p_popRequestQueue;
   }
 
-// Transition to be called when a read request with SLC flag set arrives at
-// entry in state V. It invalidates the cache entry before forwarding the
-// request to global memory.
+  // Transition to be called when a read request with SLC flag set arrives at
+  // entry in state V. It invalidates the cache entry before forwarding the
+  // request to global memory.
   transition(V, RdBypassEvict, I) {TagArrayRead} {
     p_profileMiss;
     t_allocateTBE;
@@ -783,39 +1024,78 @@ machine(MachineType:TCC, "TCC Cache")
     p_popRequestQueue;
   }
 
-// Transition to be called when a read request with SLC flag arrives at entry
-// in transient state. The request stalls until the pending transition is complete.
-  transition({WI, IV}, RdBypassEvict)  {
+  // Transition to be called when a read request with SLC flag arrives at entry
+  // in transient state. The request stalls until the pending transition is complete.
+  transition({WI, WIB, IV}, RdBypassEvict)  {
+    // don't profile as hit or miss since it will be tried again
     st_stallAndWaitRequest;
   }
 
-  transition(V, Atomic, A) {TagArrayRead} {
+  transition(V, Atomic, M) {TagArrayRead, TagArrayWrite, DataArrayWrite, AtomicALUOperation} {
     p_profileHit;
-    i_invL2;
-    t_allocateTBE;
-    at_atomicThrough;
-    ina_incrementNumAtomics;
+    ut_updateTag;
+    owm_orWriteMask;
+    pa_performAtomic;
+    ar_sendAtomicResponse;
     p_popRequestQueue;
   }
 
-transition(I, Atomic, A) {TagArrayRead} {
-    p_profileMiss;
-    i_invL2;
-    t_allocateTBE;
-    at_atomicThrough;
-    ina_incrementNumAtomics;
-    p_popRequestQueue;
-  }
-
-  transition(A, Atomic) {
-    p_profileMiss;
+  transition(A, {Atomic, AtomicWait}) {
+    // don't profile as hit or miss since it will be tried again
     // by putting the stalled requests in a buffer, we reduce resource contention
     // since they won't try again every cycle and will instead only try again once
     // woken up
     st_stallAndWaitRequest;
   }
 
-  transition({M, W}, Atomic, WI) {TagArrayRead} {
+  transition(W, Atomic, WI) {
+    t_allocateTBE;
+    wb_writeBack;
+    // need to try this request again after writing back the current entry -- to
+    // do so, put it with other stalled requests in a buffer to reduce resource
+    // contention since they won't try again every cycle and will instead only
+    // try again once woken up
+    st_stallAndWaitRequest;
+  }
+
+  transition(M, Atomic) {TagArrayRead, DataArrayWrite, AtomicALUOperation} {
+    p_profileHit;
+    owm_orWriteMask;
+    pa_performAtomic;
+    ar_sendAtomicResponse;
+    p_popRequestQueue;
+  }
+
+  // The following atomic pass on actions will send the request to the directory,
+  // and are triggered when an atomic request is received that is not in TCC,
+  // and/or if SLC is set.
+  transition(V, AtomicPassOn, A) {TagArrayRead} {
+    p_profileHit;
+    i_invL2;
+    t_allocateTBE;
+    at_atomicThrough;
+    inpa_incrementNumPendingDirectoryAtomics;
+    p_popRequestQueue;
+  }
+
+  transition(I, {Atomic, AtomicPassOn}, A) {TagArrayRead} {
+    p_profileMiss;
+    i_invL2;
+    t_allocateTBE;
+    at_atomicThrough;
+    inpa_incrementNumPendingDirectoryAtomics;
+    p_popRequestQueue;
+  }
+
+  transition(A, AtomicPassOn) {
+    // don't profile as hit or miss since it will be tried again
+    // by putting the stalled requests in a buffer, we reduce resource contention
+    // since they won't try again every cycle and will instead only try again once
+    // woken up
+    st_stallAndWaitRequest;
+  }
+
+  transition({M, W}, AtomicPassOn, WI) {TagArrayRead, DataArrayRead} {
     t_allocateTBE;
     wb_writeBack;
     // after writing back the current line, we need to wait for it to be done
@@ -865,9 +1145,9 @@ transition(I, Atomic, A) {TagArrayRead} {
     p_popRequestQueue;
   }
 
-// Transition to be called when a write request with SLC bit set arrives at an
-// entry with state V. The entry has to be evicted and invalidated before the
-// request is forwarded to global memory
+  // Transition to be called when a write request with SLC bit set arrives at an
+  // entry with state V. The entry has to be evicted and invalidated before the
+  // request is forwarded to global memory
   transition(V, WrVicBlkEvict, I) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
     p_profileMiss;
     ut_updateTag;
@@ -877,9 +1157,9 @@ transition(I, Atomic, A) {TagArrayRead} {
     p_popRequestQueue;
   }
 
-// Transition to be called when a write request with SLC bit set arrives at an
-// entry with state W. The entry has to be evicted and invalidated before the
-// request is forwarded to global memory.
+  // Transition to be called when a write request with SLC bit set arrives at an
+  // entry with state W. The entry has to be evicted and invalidated before the
+  // request is forwarded to global memory.
   transition(W, WrVicBlkEvict, I) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
     p_profileMiss;
     ut_updateTag;
@@ -900,7 +1180,7 @@ transition(I, Atomic, A) {TagArrayRead} {
     i_invL2;
   }
 
-  transition({A, IV, WI}, L2_Repl) {
+  transition({A, IV, WI, WIB}, L2_Repl) {
     i_invL2;
   }
 
@@ -919,16 +1199,28 @@ transition(I, Atomic, A) {TagArrayRead} {
     pp_popProbeQueue;
   }
 
-  transition({A, IV, WI}, PrbInv) {
+  transition({A, IV, WI, WIB}, PrbInv) {
     pi_sendProbeResponseInv;
     pp_popProbeQueue;
   }
 
-// Transition to be called when the response for a request with SLC bit set
-// arrives. The request has to be forwarded to the core that needs it while
-// making sure no entry is allocated.
+  // Transition to be called when the response for a request with SLC bit set
+  // arrives. The request has to be forwarded to the core that needs it while
+  // making sure no entry is allocated.
   transition(I, Bypass, I) {
     rb_bypassDone;
+    pr_popResponseQueue;
+    wada_wakeUpAllDependentsAddr;
+    dt_deallocateTBE;
+  }
+
+  transition(A, Bypass) {TagArrayRead, TagArrayWrite} {
+    bapdr_sendBypassedAtomicPerformedInDirectoryResponse;
+    dnpa_decrementNumPendingDirectoryAtomics;
+    pr_popResponseQueue;
+  }
+
+  transition(WI, Bypass, I) {
     pr_popResponseQueue;
     wada_wakeUpAllDependentsAddr;
     dt_deallocateTBE;
@@ -939,15 +1231,49 @@ transition(I, Atomic, A) {TagArrayRead} {
     ut_updateTag;
     wcb_writeCacheBlock;
     sdr_sendDataResponse;
-    pr_popResponseQueue;
     wada_wakeUpAllDependentsAddr;
     dt_deallocateTBE;
+    pr_popResponseQueue;
   }
 
-  transition(A, Data) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
+  /*
+    Since the L2 now allows multiple loads from different CUs to proceed in
+    parallel to the directory, we may get Event:Data back when the line is
+    already in V.  In this case, send the response to the appropriate TCP
+    and update MRU/data in TCC, but don't need to allocate line.
+   */
+  transition(V, Data) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
+    ut_updateTag;
+    wcb_writeCacheBlock;
+    sdr_sendDataResponse;
+    wada_wakeUpAllDependentsAddr;
+    // tracks # pending requests, so need to decrement here too
+    dt_deallocateTBE;
+    pr_popResponseQueue;
+  }
+
+  /*
+    Since the L2 now allows multiple loads from different CUs to proceed in
+    parallel to the directory, we may get Event:Data back when the line is
+    now in I because it has been evicted by an intervening request to the same
+    set index.  In this case, send the response to the appropriate TCP without
+    affecting the TCC (essentially, treat it similar to a bypass request except
+    we also send the unblock back to the directory).
+   */
+  transition(I, Data) {
+    sdr_sendDataResponse;
+    wada_wakeUpAllDependentsAddr;
+    // tracks # pending requests, so need to decrement here too
+    dt_deallocateTBE;
+    pr_popResponseQueue;
+  }
+
+  transition(A, Data, M) {TagArrayRead, TagArrayWrite, DataArrayWrite, AtomicALUOperation} {
     a_allocateBlock;
-    ar_sendAtomicResponse;
-    dna_decrementNumAtomics;
+    wardb_writeAtomicResponseDirtyBytes;
+    pa_performAtomic;
+    baplr_sendBypassedAtomicPerformedLocallyResponse;
+    dt_deallocateTBE;
     pr_popResponseQueue;
   }
 
@@ -974,4 +1300,25 @@ transition(I, Atomic, A) {TagArrayRead} {
     wada_wakeUpAllDependentsAddr;
     pr_popResponseQueue;
   }
+
+  transition(WIB, WBAck,I) {
+    pr_popResponseQueue;
+  }
+
+  transition({A, IV, WI, WIB}, Flush) {
+    st_stallAndWaitRequest;
+  }
+
+  transition(I, Flush) {
+    fw_sendFlushResponse;
+    p_popRequestQueue;
+  }
+
+  transition({V, W}, Flush, I) {TagArrayRead, TagArrayWrite} {
+    t_allocateTBE;
+    ut_updateTag;
+    f_flush;
+    i_invL2;
+    p_popRequestQueue;
+   }
 }

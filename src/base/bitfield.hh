@@ -41,9 +41,12 @@
 #ifndef __BASE_BITFIELD_HH__
 #define __BASE_BITFIELD_HH__
 
+#include <bitset>
 #include <cassert>
+#include <climits>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <type_traits>
 
 namespace gem5
@@ -303,17 +306,31 @@ findMsbSet(uint64_t val)
     return msb;
 }
 
-/**
- * Returns the bit position of the LSB that is set in the input
- *
- * @ingroup api_bitfield
- */
+namespace {
+template<typename T>
+constexpr bool
+hasBuiltinCtz() {
+// Since the defined(__has_builtin) in the subsequent #if statement
+// won't short-circuit the macro expansion of
+// __has_builtin(__builtin_ctz), we must explicitly define it as zero
+// if it's undefined to avoid a preprocessor error.
+#ifndef __has_builtin
+#   define __has_builtin(foo) 0
+#endif
+#if defined(__has_builtin) && __has_builtin(__builtin_ctz)
+    return sizeof(unsigned long long) >= sizeof(T);
+#else
+    return false;
+#endif
+}
+
+[[maybe_unused]]
 constexpr int
-findLsbSet(uint64_t val)
-{
+findLsbSetFallback(uint64_t val) {
     int lsb = 0;
-    if (!val)
+    if (!val) {
         return sizeof(val) * 8;
+    }
     if (!bits(val, 31, 0)) {
         lsb += 32;
         val >>= 32;
@@ -334,9 +351,57 @@ findLsbSet(uint64_t val)
         lsb += 2;
         val >>= 2;
     }
-    if (!bits(val, 0, 0))
+    if (!bits(val, 0, 0)) {
         lsb += 1;
+    }
     return lsb;
+}
+} // anonymous namespace
+
+/**
+ * Returns the bit position of the LSB that is set in the input
+ * That function will either use a builtin that exploit a "count trailing
+ * zeros" instruction or use fall back method, `findLsbSetFallback`.
+ *
+ * @ingroup api_bitfield
+ */
+constexpr int
+findLsbSet(uint64_t val) {
+    if (val == 0) return 64;
+
+    if constexpr (hasBuiltinCtz<decltype(val)>()) {
+        return __builtin_ctzll(val);
+    } else {
+        return findLsbSetFallback(val);
+    }
+}
+
+
+template<size_t N>
+constexpr int
+findLsbSet(std::bitset<N> bs)
+{
+    if constexpr (N <= 64) {
+        return findLsbSet(bs.to_ullong());
+    } else {
+        if (bs.none()) return N;
+        // Mask of ones
+        constexpr std::bitset<N> mask(std::numeric_limits<uint64_t>::max());
+        // Is the lsb set in the rightmost 64 bits ?
+        auto nextQword{bs & mask};
+        int i{0};
+        while (nextQword.none()) {
+            // If no, shift by 64 bits and repeat
+            i += 64;
+            bs >>= 64;
+            nextQword = bs & mask;
+        }
+        // If yes, account for the bumber of 64-bit shifts and add the
+        // remaining using the uint64_t implementation. Store in intermediate
+        // variable to ensure valid conversion from ullong to uint64_t.
+        uint64_t remaining{nextQword.to_ullong()};
+        return i + findLsbSet(remaining);
+    }
 }
 
 /**

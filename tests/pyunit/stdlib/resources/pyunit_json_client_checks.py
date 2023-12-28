@@ -24,11 +24,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import unittest
-import tempfile
-import os
-from typing import Dict
 import json
+import os
+import tempfile
+import unittest
+from typing import Dict
 
 from gem5.resources.client_api.jsonclient import JSONClient
 
@@ -148,16 +148,16 @@ class JSONClientTestSuite(unittest.TestCase):
         "create_temp_resources_json" has been loaded correctly into a Python
         dictionary.
         """
-        self.assertEquals(4, len(json))
+        self.assertEqual(4, len(json))
         self.assertTrue("id" in json[0])
-        self.assertEquals("this-is-a-test-resource", json[0]["id"])
-        self.assertEquals("binary", json[0]["category"])
+        self.assertEqual("this-is-a-test-resource", json[0]["id"])
+        self.assertEqual("binary", json[0]["category"])
         self.assertTrue("id" in json[1])
-        self.assertEquals("this-is-a-test-resource", json[1]["id"])
+        self.assertEqual("this-is-a-test-resource", json[1]["id"])
         self.assertTrue("id" in json[2])
-        self.assertEquals("test-version", json[2]["id"])
+        self.assertEqual("test-version", json[2]["id"])
         self.assertTrue("id" in json[3])
-        self.assertEquals("test-version", json[3]["id"])
+        self.assertEqual("test-version", json[3]["id"])
 
     def test_get_resources_json_at_path(self) -> None:
         # Tests JSONClient.get_resources_json()

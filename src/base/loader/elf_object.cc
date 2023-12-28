@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013, 2019 ARM Limited
+ * Copyright (c) 2011-2013, 2019, 2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -178,27 +178,52 @@ ElfObject::ElfObject(ImageFileDataPtr ifd) : ObjectFile(ifd)
                 if (!sym_name || sym_name[0] == '$')
                     continue;
 
-                loader::Symbol symbol;
-                symbol.address = sym.st_value;
-                symbol.name = sym_name;
-
+                loader::Symbol::Binding binding =
+                    loader::Symbol::Binding::Global;
                 switch (GELF_ST_BIND(sym.st_info)) {
                   case STB_GLOBAL:
-                    symbol.binding = loader::Symbol::Binding::Global;
+                    binding = loader::Symbol::Binding::Global;
                     break;
                   case STB_LOCAL:
-                    symbol.binding = loader::Symbol::Binding::Local;
+                    binding = loader::Symbol::Binding::Local;
                     break;
                   case STB_WEAK:
-                    symbol.binding = loader::Symbol::Binding::Weak;
+                    binding = loader::Symbol::Binding::Weak;
                     break;
                   default:
                     continue;
                 }
 
+                loader::Symbol::SymbolType symbol_type =
+                    loader::Symbol::SymbolType::NoType;
+                switch (GELF_ST_TYPE(sym.st_info)) {
+                  case STT_NOTYPE:
+                    symbol_type = loader::Symbol::SymbolType::NoType;
+                    break;
+                  case STT_OBJECT:
+                    symbol_type = loader::Symbol::SymbolType::Object;
+                    break;
+                  case STT_FUNC:
+                    symbol_type = loader::Symbol::SymbolType::Function;
+                    break;
+                  case STT_SECTION:
+                    symbol_type = loader::Symbol::SymbolType::Section;
+                    break;
+                  case STT_FILE:
+                    symbol_type = loader::Symbol::SymbolType::File;
+                    break;
+                  default:
+                    symbol_type = loader::Symbol::SymbolType::Other;
+                    break;
+                }
+
+                loader::Symbol symbol(
+                    binding, symbol_type, sym_name, sym.st_value,
+                    sym.st_size);
+
                 if (_symtab.insert(symbol)) {
                     DPRINTF(Loader, "Symbol: %-40s value %#x.\n",
-                            symbol.name, symbol.address);
+                            symbol.name(), symbol.address());
                 }
             }
         }

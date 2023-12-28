@@ -579,7 +579,7 @@ DRAMInterface::doBurstAccess(MemPacket* mem_pkt, Tick next_burst_at,
         stats.readBursts++;
         if (row_hit)
             stats.readRowHits++;
-        stats.bytesRead += burstSize;
+        stats.dramBytesRead += burstSize;
         stats.perBankRdBursts[mem_pkt->bankId]++;
 
         // Update latency stats
@@ -608,7 +608,7 @@ DRAMInterface::doBurstAccess(MemPacket* mem_pkt, Tick next_burst_at,
         stats.writeBursts++;
         if (row_hit)
             stats.writeRowHits++;
-        stats.bytesWritten += burstSize;
+        stats.dramBytesWritten += burstSize;
         stats.perBankWrBursts[mem_pkt->bankId]++;
 
     }
@@ -1885,9 +1885,9 @@ DRAMInterface::DRAMStats::DRAMStats(DRAMInterface &_dram)
 
     ADD_STAT(bytesPerActivate, statistics::units::Byte::get(),
              "Bytes accessed per row activation"),
-    ADD_STAT(bytesRead, statistics::units::Byte::get(),
+    ADD_STAT(dramBytesRead, statistics::units::Byte::get(),
             "Total bytes read"),
-    ADD_STAT(bytesWritten, statistics::units::Byte::get(),
+    ADD_STAT(dramBytesWritten, statistics::units::Byte::get(),
             "Total bytes written"),
 
     ADD_STAT(avgRdBW, statistics::units::Rate<
@@ -1948,8 +1948,8 @@ DRAMInterface::DRAMStats::regStats()
     readRowHitRate = (readRowHits / readBursts) * 100;
     writeRowHitRate = (writeRowHits / writeBursts) * 100;
 
-    avgRdBW = (bytesRead / 1000000) / simSeconds;
-    avgWrBW = (bytesWritten / 1000000) / simSeconds;
+    avgRdBW = (dramBytesRead / 1000000) / simSeconds;
+    avgWrBW = (dramBytesWritten / 1000000) / simSeconds;
     peakBW = (sim_clock::Frequency / dram.burstDelay()) *
               dram.bytesPerBurst() / 1000000;
 

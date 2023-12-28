@@ -28,6 +28,7 @@
  */
 
 #include "arch/riscv/decoder.hh"
+#include "arch/riscv/isa.hh"
 #include "arch/riscv/types.hh"
 #include "base/bitfield.hh"
 #include "debug/Decode.hh"
@@ -37,6 +38,14 @@ namespace gem5
 
 namespace RiscvISA
 {
+
+Decoder::Decoder(const RiscvDecoderParams &p) : InstDecoder(p, &machInst)
+{
+    ISA *isa = dynamic_cast<ISA*>(p.isa);
+    vlen = isa->getVecLenInBits();
+    elen = isa->getVecElemLenInBits();
+    reset();
+}
 
 void Decoder::reset()
 {
@@ -90,6 +99,8 @@ Decoder::decode(ExtMachInst mach_inst, Addr addr)
     if (!si)
         si = decodeInst(mach_inst);
 
+    si->size(compressed(mach_inst) ? 2 : 4);
+
     DPRINTF(Decode, "Decode: Decoded %s instruction: %#x\n",
             si->getName(), mach_inst);
     return si;
@@ -112,7 +123,11 @@ Decoder::decode(PCStateBase &_next_pc)
         next_pc.compressed(false);
     }
 
+    emi.vl      = next_pc.vl();
+    emi.vtype8  = next_pc.vtype() & 0xff;
+    emi.vill    = next_pc.vtype().vill;
     emi.rv_type = static_cast<int>(next_pc.rvType());
+
     return decode(emi, next_pc.instAddr());
 }
 

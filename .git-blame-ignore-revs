@@ -29,3 +29,9 @@ c3bd8eb1214cbebbc92c7958b80aa06913bce3ba
 
 # A commit which ran flynt all Python files.
 e73655d038cdfa68964109044e33c9a6e7d85ac9
+
+# A commit which ran pre-commit on ext/testlib
+9e1afdecefaf910fa6e266f29dc480a32b0fa83e
+
+# Updated black from 22.6.0 to 23.9.1
+ddf6cb88e48df4ac7de4a9e4b612daf2e7e635c8

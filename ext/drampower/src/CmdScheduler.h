@@ -84,8 +84,7 @@ class cmdScheduler {
     std::string  name;
     physicalAddr PhysicalAddr;
     // sorting the commands according to their scheduling time.
-    struct commandItemSorter : public std::binary_function<commandItem&,
-                                                           commandItem&, bool>{
+    struct commandItemSorter {
       bool operator()(const commandItem& lhs,
                       const commandItem& rhs) const
       {

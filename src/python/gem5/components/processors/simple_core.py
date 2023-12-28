@@ -24,35 +24,24 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import importlib
+import platform
 from typing import Optional
+
+from ...isas import ISA
 from ...utils.requires import requires
 from .base_cpu_core import BaseCPUCore
 from .cpu_types import CPUTypes
-from ...isas import ISA
-from ...utils.requires import requires
-from ...runtime import get_runtime_isa
-import importlib
-import platform
 
 
 class SimpleCore(BaseCPUCore):
     """
-    A SimpleCore instantiates a core based on the CPUType enum pass. The
-    SimpleCore creates a single SimObject of that type.
+    A `SimpleCore` instantiates a core based on the CPUType enum pass. The
+    `SimpleCore` creates a single `SimObject` of that type.
     """
 
-    def __init__(
-        self, cpu_type: CPUTypes, core_id: int, isa: Optional[ISA] = None
-    ):
-
-        # If the ISA is not specified, we infer it via the `get_runtime_isa`
-        # function.
-        if isa:
-            requires(isa_required=isa)
-            isa = isa
-        else:
-            isa = get_runtime_isa()
-
+    def __init__(self, cpu_type: CPUTypes, core_id: int, isa: ISA):
+        requires(isa_required=isa)
         super().__init__(
             core=SimpleCore.cpu_simobject_factory(
                 isa=isa, cpu_type=cpu_type, core_id=core_id
@@ -66,15 +55,14 @@ class SimpleCore(BaseCPUCore):
         return self._cpu_type
 
     @classmethod
-    def cpu_simobject_factory(cls, cpu_type: CPUTypes, isa: ISA, core_id: int):
+    def cpu_class_factory(cls, cpu_type: CPUTypes, isa: ISA) -> type:
         """
-        A factory used to return the SimObject core object given the cpu type,
+        A factory used to return the SimObject type  given the cpu type,
         and ISA target. An exception will be thrown if there is an
         incompatibility.
 
         :param cpu_type: The target CPU type.
         :param isa: The target ISA.
-        :param core_id: The id of the core to be returned.
         """
 
         assert isa is not None
@@ -146,4 +134,22 @@ class SimpleCore(BaseCPUCore):
                 "gem5."
             )
 
-        return to_return_cls(cpu_id=core_id)
+        return to_return_cls
+
+    @classmethod
+    def cpu_simobject_factory(
+        cls, cpu_type: CPUTypes, isa: ISA, core_id: int
+    ) -> BaseCPUCore:
+        """
+        A factory used to return the SimObject core object given the cpu type,
+        and ISA target. An exception will be thrown if there is an
+        incompatibility.
+
+        :param cpu_type: The target CPU type.
+        :param isa: The target ISA.
+        :param core_id: The id of the core to be returned.
+        """
+
+        return cls.cpu_class_factory(cpu_type=cpu_type, isa=isa)(
+            cpu_id=core_id
+        )

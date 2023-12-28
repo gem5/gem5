@@ -1,0 +1,20 @@
+{% extends 'base.html' %} {% block head %}
+<title>Help</title>
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown-light.css"
+  integrity="sha512-n5zPz6LZB0QV1eraRj4OOxRbsV7a12eAGfFcrJ4bBFxxAwwYDp542z5M0w24tKPEhKk2QzjjIpR5hpOjJtGGoA=="
+  crossorigin="anonymous"
+  referrerpolicy="no-referrer"
+/>
+{% endblock %} {% block body %}
+<main class="container d-flex justify-content-center w-100">
+  <div
+    id="markdown-body-styling"
+    class="markdown-body mt-5"
+    style="width: inherit; margin-bottom: 5rem"
+  >
+    {{ rendered_html|safe }}
+  </div>
+</main>
+{% endblock %}

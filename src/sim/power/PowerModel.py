@@ -33,9 +33,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.SimObject import *
 from m5.params import *
 from m5.proxy import Parent
+from m5.SimObject import *
+
 
 # Enum for a type of  power model
 class PMType(Enum):

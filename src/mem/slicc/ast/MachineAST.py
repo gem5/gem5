@@ -26,7 +26,10 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from slicc.ast.DeclAST import DeclAST
-from slicc.symbols import StateMachine, Type
+from slicc.symbols import (
+    StateMachine,
+    Type,
+)
 
 
 class MachineAST(DeclAST):
@@ -42,15 +45,13 @@ class MachineAST(DeclAST):
         return f"[Machine: {self.ident!r}]"
 
     def files(self, parent=None):
-        s = set(
-            (
-                f"{self.ident}_Controller.cc",
-                f"{self.ident}_Controller.hh",
-                f"{self.ident}_Controller.py",
-                f"{self.ident}_Transitions.cc",
-                f"{self.ident}_Wakeup.cc",
-            )
-        )
+        s = {
+            f"{self.ident}_Controller.cc",
+            f"{self.ident}_Controller.hh",
+            f"{self.ident}_Controller.py",
+            f"{self.ident}_Transitions.cc",
+            f"{self.ident}_Wakeup.cc",
+        }
 
         s |= self.decls.files(self.ident)
         return s

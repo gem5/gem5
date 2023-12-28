@@ -46,8 +46,9 @@ It will not run if the build/ARM/gem5.opt has not been built. As this is not
 built prior to this test being processed during the Weekly run, this test is
 not run.
 """
-import re
 import os
+import re
+
 from testlib import *
 
 if config.bin_path:
@@ -96,14 +97,17 @@ if have_hdf5():
         verifiers=[ok_verifier, err_verifier, h5_verifier],
         fixtures=(),
         config=joinpath(
-            config.base_dir, "tests", "gem5", "configs", "simple_binary_run.py"
+            config.base_dir,
+            "tests",
+            "gem5",
+            "stats",
+            "configs",
+            "simple_binary_run.py",
         ),
         config_args=[
             "arm-hello64-static",
-            "atomic",
             "--resource-directory",
             resource_path,
-            "arm",
         ],
         gem5_args=["--stats-file=h5://stats.h5"],
         valid_isas=(constants.all_compiled_tag,),

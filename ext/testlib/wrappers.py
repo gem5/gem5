@@ -38,16 +38,20 @@
 #
 # Authors: Sean Wilson
 
-'''
+"""
 Module contains wrappers for test items that have been
 loaded by the testlib :class:`testlib.loader.Loader`.
-'''
+"""
 import itertools
 
 import testlib.uid as uid
-from testlib.state import Status, Result
+from testlib.state import (
+    Result,
+    Status,
+)
 
-class TestCaseMetadata():
+
+class TestCaseMetadata:
     def __init__(self, name, uid, path, result, status, suite_uid):
         self.name = name
         self.uid = uid
@@ -57,7 +61,7 @@ class TestCaseMetadata():
         self.suite_uid = suite_uid
 
 
-class TestSuiteMetadata():
+class TestSuiteMetadata:
     def __init__(self, name, uid, tags, path, status, result):
         self.name = name
         self.uid = uid
@@ -67,21 +71,22 @@ class TestSuiteMetadata():
         self.result = result
 
 
-class LibraryMetadata():
+class LibraryMetadata:
     def __init__(self, name, result, status):
         self.name = name
         self.result = result
         self.status = status
 
 
-class LoadedTestable(object):
-    '''
+class LoadedTestable:
+    """
     Base class for loaded test items.
 
     :property:`result` and :property:`status` setters
     notify testlib via the :func:`log_result` and :func:`log_status`
     of the updated status.
-    '''
+    """
+
     def __init__(self, obj):
         self.obj = obj
         self.metadata = self._generate_metadata()
@@ -135,10 +140,12 @@ class LoadedTestable(object):
     # TODO Change log to provide status_update, result_update for all types.
     def log_status(self, status):
         import testlib.log as log
+
         log.test_log.status_update(self, status)
 
     def log_result(self, result):
         import testlib.log as log
+
         log.test_log.result_update(self, result)
 
     def __iter__(self):
@@ -155,16 +162,18 @@ class LoadedTest(LoadedTestable):
         self.obj.test(*args, **kwargs)
 
     def _generate_metadata(self):
-        return TestCaseMetadata( **{
-            'name':self.obj.name,
-            'path': self._path,
-            'uid': uid.TestUID(self._path,
-                               self.obj.name,
-                               self.parent_suite.name),
-            'status': Status.Unscheduled,
-            'result': Result(Result.NotRun),
-            'suite_uid': self.parent_suite.metadata.uid
-        })
+        return TestCaseMetadata(
+            **{
+                "name": self.obj.name,
+                "path": self._path,
+                "uid": uid.TestUID(
+                    self._path, self.obj.name, self.parent_suite.name
+                ),
+                "status": Status.Unscheduled,
+                "result": Result(Result.NotRun),
+                "suite_uid": self.parent_suite.metadata.uid,
+            }
+        )
 
 
 class LoadedSuite(LoadedTestable):
@@ -174,18 +183,21 @@ class LoadedSuite(LoadedTestable):
         self.tests = self._wrap_children(suite_obj)
 
     def _wrap_children(self, suite_obj):
-        return [LoadedTest(test, self, self.metadata.path)
-                for test in suite_obj]
+        return [
+            LoadedTest(test, self, self.metadata.path) for test in suite_obj
+        ]
 
     def _generate_metadata(self):
-        return TestSuiteMetadata( **{
-            'name': self.obj.name,
-            'tags':self.obj.tags,
-            'path': self._path,
-            'uid': uid.SuiteUID(self._path, self.obj.name),
-            'status': Status.Unscheduled,
-            'result': Result(Result.NotRun)
-        })
+        return TestSuiteMetadata(
+            **{
+                "name": self.obj.name,
+                "tags": self.obj.tags,
+                "path": self._path,
+                "uid": uid.SuiteUID(self._path, self.obj.name),
+                "status": Status.Unscheduled,
+                "result": Result(Result.NotRun),
+            }
+        )
 
     def __iter__(self):
         return iter(self.tests)
@@ -196,41 +208,44 @@ class LoadedSuite(LoadedTestable):
 
 
 class LoadedLibrary(LoadedTestable):
-    '''
+    """
     Wraps a collection of all loaded test suites and
     provides utility functions for accessing fixtures.
-    '''
+    """
+
     def __init__(self, suites):
         LoadedTestable.__init__(self, suites)
 
     def _generate_metadata(self):
-        return LibraryMetadata( **{
-            'name': 'Test Library',
-            'status': Status.Unscheduled,
-            'result': Result(Result.NotRun)
-        })
+        return LibraryMetadata(
+            **{
+                "name": "Test Library",
+                "status": Status.Unscheduled,
+                "result": Result(Result.NotRun),
+            }
+        )
 
     def __iter__(self):
-        '''
+        """
         :returns: an iterator over contained :class:`TestSuite` objects.
-        '''
+        """
         return iter(self.obj)
 
     def all_fixtures(self):
-        '''
+        """
         :returns: an interator overall all global, suite,
           and test fixtures
-        '''
-        return itertools.chain(itertools.chain(
-            *(suite.fixtures for suite in self.obj)),
+        """
+        return itertools.chain(
+            itertools.chain(*(suite.fixtures for suite in self.obj)),
             *(self.test_fixtures(suite) for suite in self.obj)
         )
 
     def test_fixtures(self, suite):
-        '''
+        """
         :returns: an interator over all fixtures of each
           test contained in the given suite
-        '''
+        """
         return itertools.chain(*(test.fixtures for test in suite))
 
     @property

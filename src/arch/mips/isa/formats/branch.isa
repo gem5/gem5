@@ -194,7 +194,7 @@ output decoder {{
 
         loader::SymbolTable::const_iterator it;
         if (symtab && (it = symtab->find(target)) != symtab->end())
-            ss << it->name;
+            ss << it->name();
         else
             ccprintf(ss, "%#x", target);
 
@@ -214,7 +214,7 @@ output decoder {{
         } else if (_numSrcRegs == 0) {
             loader::SymbolTable::const_iterator it;
             if (symtab && (it = symtab->find(disp)) != symtab->end())
-                ss << it->name;
+                ss << it->name();
             else
                 ccprintf(ss, "0x%x", disp);
         } else if (_numSrcRegs == 1) {

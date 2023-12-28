@@ -42,8 +42,9 @@
 # protoc --python_out=. inst.proto
 # The ASCII trace format uses one line per request.
 
-import protolib
 import sys
+
+import protolib
 
 # Import the packet proto definitions
 try:
@@ -85,7 +86,7 @@ def main():
 
     try:
         ascii_out = open(sys.argv[2], "w")
-    except IOError:
+    except OSError:
         print("Failed to open ", sys.argv[2], " for writing")
         exit(-1)
 
@@ -153,7 +154,9 @@ def main():
 
         for mem_acc in inst.mem_access:
             ascii_out.write(
-                " %#x-%#x;" % (mem_acc.addr, mem_acc.addr + mem_acc.size)
+                " {:#x}-{:#x};".format(
+                    mem_acc.addr, mem_acc.addr + mem_acc.size
+                )
             )
 
         ascii_out.write("\n")

@@ -39,15 +39,18 @@
 import argparse
 import os
 
-import m5
-from m5.objects import MathExprPowerModel, PowerModel
-
 import fs_bigLITTLE as bL
+
+import m5
+from m5.objects import (
+    MathExprPowerModel,
+    PowerModel,
+)
 
 
 class CpuPowerOn(MathExprPowerModel):
     def __init__(self, cpu_path, **kwargs):
-        super(CpuPowerOn, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         # 2A per IPC, 3pA per cache miss
         # and then convert to Watt
         self.dyn = (
@@ -64,7 +67,7 @@ class CpuPowerOff(MathExprPowerModel):
 
 class CpuPowerModel(PowerModel):
     def __init__(self, cpu_path, **kwargs):
-        super(CpuPowerModel, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.pm = [
             CpuPowerOn(cpu_path),  # ON
             CpuPowerOff(),  # CLK_GATED
@@ -75,7 +78,7 @@ class CpuPowerModel(PowerModel):
 
 class L2PowerOn(MathExprPowerModel):
     def __init__(self, l2_path, **kwargs):
-        super(L2PowerOn, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         # Example to report l2 Cache overallAccesses
         # The estimated power is converted to Watt and will vary based
         # on the size of the cache
@@ -90,7 +93,7 @@ class L2PowerOff(MathExprPowerModel):
 
 class L2PowerModel(PowerModel):
     def __init__(self, l2_path, **kwargs):
-        super(L2PowerModel, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         # Choose a power model for every power state
         self.pm = [
             L2PowerOn(l2_path),  # ON

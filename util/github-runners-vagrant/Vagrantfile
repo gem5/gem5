@@ -1,0 +1,89 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Copyright (c) 2023 The Regents of the University of California
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+NUM_RUNNERS=0 # Set this to the desired number of runners.
+PERSONAL_ACCESS_TOKEN="<PERSONAL ACCESS TOKEN>"
+GITHUB_ORG="<GITHUB_ORG>"
+HOSTNAME="<VM NAME>"
+
+Vagrant.configure("2") do |config|
+  config.ssh.username = "vagrant"
+  config.ssh.password = "vagrant"
+
+  (1..NUM_RUNNERS).each do |i|
+
+    config.vm.define "#{HOSTNAME}-#{i}" do |runner|
+      runner.vm.hostname = "#{HOSTNAME}-#{i}"
+      runner.vm.box = "generic/ubuntu2204"
+      runner.vm.box_check_update = true
+
+      runner.vm.provider "libvirt" do |vb|
+        # Customize the amount of cpus, memory, and storage on the VM:
+        vb.cpus = "4".to_i
+        vb.memory = "16384".to_i
+        vb.machine_virtual_size = 128 # 128G is the minimum.
+      end
+
+      # sets up vm
+      runner.vm.provision :shell, path: "provision_root.sh"
+      runner.vm.provision :shell, privileged: false, path: "provision_nonroot.sh"
+      # The provision_root.sh adds the vagrant user to the docker group, so we need to reload the VM.
+      runner.vm.provision :reload
+      # Copy the "action-run.sh" script from the host to the VM.
+      runner.vm.provision "file", source: "./action-run.sh", destination: "/tmp/action-run.sh"
+      runner.vm.provision :shell, privileged: false,  inline: "cp /tmp/action-run.sh ."
+
+      # The following attempts to see if KVM can be used inside the docker
+      # container.
+      #
+      # Almost all github action jobs run within a docker container. Therefore
+      # to be compatible with KVM, KVM must be enabled inside the docker.
+      #
+      # We used existence of "kvm-works" in the VM home directory is how we
+      # indicate that KVM is working. It is created if the 'kvm-ok' command is
+      # successful. This is then passed to the action-run.sh script to indicate
+      # that the runner can be used for KVM via the `kvm` label.
+      runner.vm.provision :shell, privileged: false, run: 'always',  inline: <<-SHELL
+           rm -f kvm-works
+           docker run --device /dev/kvm -v$(pwd):/work -w /work --rm ubuntu:22.04 bash -c "apt update -y && apt install -y cpu-checker && kvm-ok"
+           status=$?
+           if [[ ${status} == 0 ]]; then
+                echo >&1 "Success. KVM enabled."
+                echo "success" > kvm-works
+           else
+                echo >&2 "Failure. KVM not enabled."
+           fi
+           exit 0
+      SHELL
+      # Execute the actions-run.sh script on every boot. This configures and starts the runner.
+      # Note the 'kvm' label is applied to this runner if the "kvm-works" file eixsts. See above.
+      runner.vm.provision :shell, privileged: false, run: 'always', inline: "./action-run.sh #{PERSONAL_ACCESS_TOKEN} #{GITHUB_ORG} $(if [ -f 'kvm-works' ]; then echo 'kvm'; fi) >> action-run.log 2>&1 &"
+    end
+  end
+end

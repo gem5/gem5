@@ -33,12 +33,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from m5.objects.Doorbell import Doorbell
+from m5.objects.Scp import Scp
 from m5.params import *
 from m5.proxy import *
-from m5.objects.Scp import Scp
-from m5.objects.Doorbell import Doorbell
-from m5.util.fdthelper import *
 from m5.SimObject import SimObject
+from m5.util.fdthelper import *
 
 
 class ScmiChannel(SimObject):

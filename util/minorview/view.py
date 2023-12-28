@@ -36,20 +36,28 @@
 import pygtk
 
 pygtk.require("2.0")
-import gtk
-import gobject
-import cairo
 import re
 
+import cairo
+import gobject
+import gtk
+
+from . import (
+    blobs,
+    colours,
+    model,
+    parse,
+)
+from .model import (
+    BlobDataSelect,
+    BlobModel,
+    Id,
+    special_state_chars,
+)
 from .point import Point
-from . import parse
-from . import colours
-from . import model
-from .model import Id, BlobModel, BlobDataSelect, special_state_chars
-from . import blobs
 
 
-class BlobView(object):
+class BlobView:
     """The canvas view of the pipeline"""
 
     def __init__(self, model):
@@ -189,7 +197,7 @@ class BlobView(object):
         self.da.set_size_request(10, int(self.initialHeight))
 
 
-class BlobController(object):
+class BlobController:
     """The controller bar for the viewer"""
 
     def __init__(
@@ -361,7 +369,7 @@ class BlobController(object):
         self.view.redraw()
 
 
-class Overlay(object):
+class Overlay:
     """An Overlay is a speech bubble explaining the data in a blob"""
 
     def __init__(self, model, view, point, blob):
@@ -456,7 +464,7 @@ class Overlay(object):
             text_point += text_step
 
 
-class BlobWindow(object):
+class BlobWindow:
     """The top-level window and its mouse control"""
 
     def __init__(self, model, view, controller):

@@ -24,12 +24,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.SimObject import *
+from m5.citations import add_citation
+from m5.objects.AbstractMemory import *
+from m5.objects.Tlm import TlmTargetSocket
 from m5.params import *
 from m5.proxy import *
-
-from m5.objects.Tlm import TlmTargetSocket
-from m5.objects.AbstractMemory import *
+from m5.SimObject import *
 
 
 class DRAMSys(AbstractMemory):
@@ -41,3 +41,30 @@ class DRAMSys(AbstractMemory):
     configuration = Param.String("Path to the DRAMSys configuration")
     resource_directory = Param.String("Path to the DRAMSys resource directory")
     recordable = Param.Bool(True, "Whether DRAMSys should record a trace file")
+
+
+add_citation(
+    DRAMSys,
+    r"""@inproceedings{Steiner:2020:dramsys4,
+  author       = {Lukas Steiner and
+                  Matthias Jung and
+                  Felipe S. Prado and
+                  Kirill Bykov and
+                  Norbert Wehn},
+  editor       = {Alex Orailoglu and
+                  Matthias Jung and
+                  Marc Reichenbach},
+  title        = {DRAMSys4.0: {A} Fast and Cycle-Accurate SystemC/TLM-Based {DRAM} Simulator},
+  booktitle    = {Embedded Computer Systems: Architectures, Modeling, and Simulation
+                  - 20th International Conference, {SAMOS} 2020, Samos, Greece, July
+                  5-9, 2020, Proceedings},
+  series       = {Lecture Notes in Computer Science},
+  volume       = {12471},
+  pages        = {110--126},
+  publisher    = {Springer},
+  year         = {2020},
+  url          = {https://doi.org/10.1007/978-3-030-60939-9\_8},
+  doi          = {10.1007/978-3-030-60939-9\_8}
+}
+""",
+)

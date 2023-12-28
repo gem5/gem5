@@ -58,6 +58,8 @@ class OutputStream;
 
 namespace trace {
 
+class TarmacTracer;
+
 /**
  * This object type is encapsulating the informations needed by
  * a Tarmac record to generate it's own entries.
@@ -65,15 +67,18 @@ namespace trace {
 class TarmacContext
 {
   public:
-    TarmacContext(ThreadContext* _thread,
+    TarmacContext(const TarmacTracer &_tracer,
+                  ThreadContext* _thread,
                   const StaticInstPtr _staticInst,
                   const PCStateBase &_pc)
-      : thread(_thread), staticInst(_staticInst), pc(_pc.clone())
+      : tracer(_tracer), thread(_thread), staticInst(_staticInst),
+        pc(_pc.clone())
     {}
 
     std::string tarmacCpuName() const;
 
   public:
+    const TarmacTracer &tracer;
     ThreadContext* thread;
     const StaticInstPtr staticInst;
     std::unique_ptr<PCStateBase> pc;

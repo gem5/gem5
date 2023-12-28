@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012,2016-2017, 2019-2020 ARM Limited
+ * Copyright (c) 2011-2012,2016-2017, 2019-2020 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -257,8 +257,8 @@ BaseCPU::mwait(ThreadID tid, PacketPtr pkt)
     AddressMonitor &monitor = addressMonitor[tid];
 
     if (!monitor.gotWakeup) {
-        int block_size = cacheLineSize();
-        uint64_t mask = ~((uint64_t)(block_size - 1));
+        Addr block_size = cacheLineSize();
+        Addr mask = ~(block_size - 1);
 
         assert(pkt->req->hasPaddr());
         monitor.pAddr = pkt->getAddr() & mask;
@@ -282,8 +282,8 @@ BaseCPU::mwaitAtomic(ThreadID tid, ThreadContext *tc, BaseMMU *mmu)
     RequestPtr req = std::make_shared<Request>();
 
     Addr addr = monitor.vAddr;
-    int block_size = cacheLineSize();
-    uint64_t mask = ~((uint64_t)(block_size - 1));
+    Addr block_size = cacheLineSize();
+    Addr mask = ~(block_size - 1);
     int size = block_size;
 
     //The address of the next line if it crosses a cache line boundary.
@@ -795,8 +795,8 @@ BaseCPU::traceFunctionsInternal(Addr pc)
             currentFunctionStart = pc;
             currentFunctionEnd = pc + 1;
         } else {
-            sym_str = it->name;
-            currentFunctionStart = it->address;
+            sym_str = it->name();
+            currentFunctionStart = it->address();
         }
 
         ccprintf(*functionTraceStream, " (%d)\n%d: %s",

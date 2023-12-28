@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2022-2023 The University of Edinburgh
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright 2019 Texas A&M University
  *
  * Redistribution and use in source and binary forms, with or without
@@ -547,10 +559,19 @@ MultiperspectivePerceptron::train(ThreadID tid, MPPBranchInfo &bi, bool taken)
     }
 }
 
+
 void
-MultiperspectivePerceptron::uncondBranch(ThreadID tid, Addr pc,
-                                         void * &bp_history)
+MultiperspectivePerceptron::updateHistories(ThreadID tid, Addr pc,
+                    bool uncond, bool taken, Addr target, void * &bp_history)
 {
+    assert(uncond || bp_history);
+
+    // For perceptron there is no speculative history correction.
+    // Conditional branches are done.
+    if (!uncond)
+        return;
+
+    // For uncondition branches create branch info.
     MPPBranchInfo *bi = new MPPBranchInfo(pc, pcshift, false);
     std::vector<unsigned int> &ghist_words = threadData[tid]->ghist_words;
 
@@ -613,10 +634,10 @@ MultiperspectivePerceptron::lookup(ThreadID tid, Addr instPC,
 }
 
 void
-MultiperspectivePerceptron::update(ThreadID tid, Addr instPC, bool taken,
-                                   void *bp_history, bool squashed,
+MultiperspectivePerceptron::update(ThreadID tid, Addr pc,  bool taken,
+                                   void * &bp_history, bool squashed,
                                    const StaticInstPtr & inst,
-                                   Addr corrTarget)
+                                   Addr target)
 {
     assert(bp_history);
     MPPBranchInfo *bi = static_cast<MPPBranchInfo*>(bp_history);
@@ -627,6 +648,7 @@ MultiperspectivePerceptron::update(ThreadID tid, Addr instPC, bool taken,
 
     if (bi->isUnconditional()) {
         delete bi;
+        bp_history = nullptr;
         return;
     }
 
@@ -693,7 +715,6 @@ MultiperspectivePerceptron::update(ThreadID tid, Addr instPC, bool taken,
 
     // four different styles of IMLI
     if (!bi->filtered || (record_mask & Imli)) {
-        unsigned int target = corrTarget;
         if (target < bi->getPC()) {
             if (taken) {
                 threadData[tid]->imli_counter[0] += 1;
@@ -813,20 +834,16 @@ MultiperspectivePerceptron::update(ThreadID tid, Addr instPC, bool taken,
     threadData[tid]->last_ghist_bit = taken;
 
     delete bi;
+    bp_history = nullptr;
 }
 
 void
-MultiperspectivePerceptron::btbUpdate(ThreadID tid, Addr branch_pc,
-                                      void* &bp_history)
-{
-}
-
-void
-MultiperspectivePerceptron::squash(ThreadID tid, void *bp_history)
+MultiperspectivePerceptron::squash(ThreadID tid, void * &bp_history)
 {
     assert(bp_history);
     MPPBranchInfo *bi = static_cast<MPPBranchInfo*>(bp_history);
     delete bi;
+    bp_history = nullptr;
 }
 
 } // namespace branch_prediction

@@ -39,6 +39,8 @@ enumeration(CoherenceRequestType, desc="Coherence Request Types") {
   VicClean,     desc="L2 clean eviction";
   VicDirty,     desc="L2 dirty eviction";
   Atomic,       desc="Upper level atomic";
+  AtomicReturn, desc="Upper level atomic";
+  AtomicNoReturn, desc="Upper level atomic";
   AtomicWriteBack, desc="Upper level atomic";
   WriteThrough, desc="Ordered WriteThrough w/Data";
   WriteThroughFifo, desc="WriteThrough with no data";
@@ -132,14 +134,14 @@ structure(CPURequestMsg, desc="...", interface="Message") {
   int Acks, default="0", desc="Acks that the dir (mem ctrl) should expect to receive";
   CoherenceRequestType OriginalType, default="CoherenceRequestType_NA",  desc="Type of request from core fwded through region buffer";
   WriteMask writeMask, desc="Write Through Data";
-  MachineID WTRequestor,            desc="Node who initiated the write through";
+  MachineID CURequestor,            desc="Node who initiated the request";
   int wfid,                         default="0", desc="wavefront id";
   uint64_t instSeqNum,              desc="instruction sequence number";
   bool NoWriteConflict,             default="true", desc="write collided with CAB entry";
   int ProgramCounter,               desc="PC that accesses to this block";
 
-  bool isGLCSet, default="false", desc="GLC flag value in the request";
-  bool isSLCSet, default="false", desc="SLC flag value in the request";
+  bool isGLCSet, default="false",   desc="GLC flag value in the request";
+  bool isSLCSet, default="false",   desc="SLC flag value in the request";
 
   bool functionalRead(Packet *pkt) {
     // Only PUTX messages contains the data block
@@ -168,6 +170,8 @@ structure(NBProbeRequestMsg, desc="...", interface="Message") {
   MachineID Requestor,          desc="Requestor id for 3-hop requests";
   bool NoAckNeeded, default="false", desc="For short circuting acks";
   int ProgramCounter,           desc="PC that accesses to this block";
+  bool isGLCSet, default="false", desc="GLC flag value in the request";
+  bool isSLCSet, default="false", desc="SLC flag value in the request";
 
   bool functionalRead(Packet *pkt) {
     return false;
@@ -238,7 +242,7 @@ structure(ResponseMsg, desc="...", interface="Message") {
 
   bool L3Hit, default="false", desc="Did memory or L3 supply the data?";
   MachineID OriginalResponder, desc="Mach which wrote the data to the L3";
-  MachineID WTRequestor,             desc="Node who started the writethrough";
+  MachineID CURequestor,             desc="Node who started the access";
 
   bool NotCached, default="false", desc="True when the Region buffer has already evicted the line";
 

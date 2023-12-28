@@ -26,7 +26,7 @@
 
 
 class FakeTQDM:
-    """This is a fake wrapper so that the tqdm calls work whether or not it
+    """This is a fake wrapper so that the ``tqdm`` calls work whether or not it
     has been installed.
     """
 
@@ -54,6 +54,7 @@ try:
 except ImportError:
     tqdm = FakeTQDM()
     _have_tqdm = False
+
 
 # Hook for the progress bar
 def progress_hook(t):

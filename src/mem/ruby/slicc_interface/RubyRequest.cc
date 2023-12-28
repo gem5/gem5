@@ -61,7 +61,9 @@ RubyRequest::print(std::ostream& out) const
   out << " " << "AccessMode = " << m_AccessMode << " ";
   out << "Size = " << m_Size << " ";
   out << "Prefetch = " << m_Prefetch << " ";
-//  out << "Time = " << getTime() << " ";
+  out << "isGLCSet = " << m_isGLCSet << "";
+  out << "isSLCSet = " << m_isSLCSet << "";
+  //  out << "Time = " << getTime() << " ";
   out << "]";
 }
 
@@ -122,6 +124,15 @@ RubyRequest::functionalWrite(Packet *pkt)
 
     return cBase < cTail;
 }
+
+void
+RubyRequest::setWriteMask(uint32_t offset, uint32_t len,
+        std::vector< std::pair<int,AtomicOpFunctor*>> atomicOps)
+{
+    m_writeMask.setMask(offset, len);
+    m_writeMask.setAtomicOps(atomicOps);
+}
+
 
 } // namespace ruby
 } // namespace gem5

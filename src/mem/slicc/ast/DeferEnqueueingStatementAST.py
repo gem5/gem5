@@ -41,7 +41,7 @@ class DeferEnqueueingStatementAST(StatementAST):
         self.statements = statements
 
     def __repr__(self):
-        return "[DeferEnqueueingStatementAst: %s %s %s]" % (
+        return "[DeferEnqueueingStatementAst: {} {} {}]".format(
             self.queue_name,
             self.type_ast.ident,
             self.statements,

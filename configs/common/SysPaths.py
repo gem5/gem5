@@ -24,13 +24,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import os, sys
+import os
+import sys
 
 config_path = os.path.dirname(os.path.abspath(__file__))
 config_root = os.path.dirname(config_path)
 
 
-class PathSearchFunc(object):
+class PathSearchFunc:
     _sys_paths = None
     environment_variable = "M5_PATH"
 
@@ -58,7 +59,7 @@ class PathSearchFunc(object):
                 paths = list(filter(os.path.isdir, paths))
 
                 if not paths:
-                    raise IOError(
+                    raise OSError(
                         "Can't find system files directory, "
                         "check your {} environment variable".format(
                             self.environment_variable
@@ -72,7 +73,7 @@ class PathSearchFunc(object):
             try:
                 return next(p for p in paths if os.path.exists(p))
             except StopIteration:
-                raise IOError(
+                raise OSError(
                     f"Can't find file '{filepath}' on {self.environment_variable}."
                 )
 

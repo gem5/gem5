@@ -38,12 +38,9 @@
 #
 # Authors: Sean Wilson
 
-'''
+"""
 Helper classes for writing tests with this test library.
-'''
-from collections import namedtuple
-from collections.abc import MutableSet
-
+"""
 import difflib
 import errno
 import os
@@ -54,8 +51,11 @@ import subprocess
 import tempfile
 import threading
 import time
+from collections import namedtuple
+from collections.abc import MutableSet
 
-class TimedWaitPID(object):
+
+class TimedWaitPID:
     """Utility to monkey-patch os.waitpid() with os.wait4().
 
     This allows process usage time to be obtained directly from the OS
@@ -69,9 +69,10 @@ class TimedWaitPID(object):
     it is read.
 
     """
-    TimeRecord = namedtuple( "_TimeRecord", "user_time system_time" )
 
-    class Wrapper(object):
+    TimeRecord = namedtuple("_TimeRecord", "user_time system_time")
+
+    class Wrapper:
         def __init__(self):
             self._time_for_pid = {}
             self._access_lock = threading.Lock()
@@ -79,11 +80,8 @@ class TimedWaitPID(object):
         def __call__(self, pid, options):
             pid, status, resource_usage = os.wait4(pid, options)
             with self._access_lock:
-                self._time_for_pid[pid] = (
-                    TimedWaitPID.TimeRecord(
-                        resource_usage.ru_utime,
-                        resource_usage.ru_stime
-                    )
+                self._time_for_pid[pid] = TimedWaitPID.TimeRecord(
+                    resource_usage.ru_utime, resource_usage.ru_stime
                 )
             return (pid, status)
 
@@ -94,7 +92,7 @@ class TimedWaitPID(object):
         def get_time_for_pid(self, pid):
             with self._access_lock:
                 if pid not in self._time_for_pid:
-                    raise Exception("No resource usage for pid {}".format(pid))
+                    raise Exception(f"No resource usage for pid {pid}")
                 time_for_pid = self._time_for_pid[pid]
                 del self._time_for_pid[pid]
                 return time_for_pid
@@ -108,14 +106,14 @@ class TimedWaitPID(object):
         with TimedWaitPID._wrapper_lock:
             if TimedWaitPID._wrapper is None:
                 TimedWaitPID._wrapper = TimedWaitPID.Wrapper()
-            if TimedWaitPID._original_os_waitpid is None :
+            if TimedWaitPID._original_os_waitpid is None:
                 TimedWaitPID._original_os_waitpid = os.waitpid
                 os.waitpid = TimedWaitPID._wrapper
 
     @staticmethod
     def restore():
         with TimedWaitPID._wrapper_lock:
-            if TimedWaitPID._original_os_waitpid is not None :
+            if TimedWaitPID._original_os_waitpid is not None:
                 os.waitpid = TimedWaitPID._original_os_waitpid
                 TimedWaitPID._original_os_waitpid = None
 
@@ -129,12 +127,14 @@ class TimedWaitPID(object):
         with TimedWaitPID._wrapper_lock:
             return TimedWaitPID._wrapper.get_time_for_pid(pid)
 
+
 # Patch os.waitpid()
 TimedWaitPID.install()
 
-#TODO Tear out duplicate logic from the sandbox IOManager
+
+# TODO Tear out duplicate logic from the sandbox IOManager
 def log_call(logger, command, time, *popenargs, **kwargs):
-    '''
+    """
     Calls the given process and automatically logs the command and output.
 
     If stdout or stderr are provided output will also be piped into those
@@ -145,7 +145,7 @@ def log_call(logger, command, time, *popenargs, **kwargs):
 
     :params stderr: Iterable of items to write to as we read from the
         subprocess.
-    '''
+    """
     if isinstance(command, str):
         cmdstr = command
     else:
@@ -159,33 +159,35 @@ def log_call(logger, command, time, *popenargs, **kwargs):
             raise e
 
     logger_callback = logger.trace
-    logger.trace('Logging call to command: %s' % cmdstr)
+    logger.trace("Logging call to command: %s" % cmdstr)
 
-    stdout_redirect = kwargs.get('stdout', tuple())
-    stderr_redirect = kwargs.get('stderr', tuple())
+    stdout_redirect = kwargs.get("stdout", tuple())
+    stderr_redirect = kwargs.get("stderr", tuple())
 
-    if hasattr(stdout_redirect, 'write'):
+    if hasattr(stdout_redirect, "write"):
         stdout_redirect = (stdout_redirect,)
-    if hasattr(stderr_redirect, 'write'):
+    if hasattr(stderr_redirect, "write"):
         stderr_redirect = (stderr_redirect,)
 
-    kwargs['stdout'] = subprocess.PIPE
-    kwargs['stderr'] = subprocess.PIPE
+    kwargs["stdout"] = subprocess.PIPE
+    kwargs["stderr"] = subprocess.PIPE
     p = subprocess.Popen(command, *popenargs, **kwargs)
 
     def log_output(log_callback, pipe, redirects=tuple()):
         # Read iteractively, don't allow input to fill the pipe.
-        for line in iter(pipe.readline, b''):
+        for line in iter(pipe.readline, b""):
             line = line.decode("utf-8")
             for r in redirects:
                 r.write(line)
             log_callback(line.rstrip())
 
-    stdout_thread = threading.Thread(target=log_output,
-                           args=(logger_callback, p.stdout, stdout_redirect))
+    stdout_thread = threading.Thread(
+        target=log_output, args=(logger_callback, p.stdout, stdout_redirect)
+    )
     stdout_thread.setDaemon(True)
-    stderr_thread = threading.Thread(target=log_output,
-                           args=(logger_callback, p.stderr, stderr_redirect))
+    stderr_thread = threading.Thread(
+        target=log_output, args=(logger_callback, p.stderr, stderr_redirect)
+    )
     stderr_thread.setDaemon(True)
 
     stdout_thread.start()
@@ -197,25 +199,26 @@ def log_call(logger, command, time, *popenargs, **kwargs):
 
     if time is not None and TimedWaitPID.has_time_for_pid(p.pid):
         resource_usage = TimedWaitPID.get_time_for_pid(p.pid)
-        time['user_time'] = resource_usage.user_time
-        time['system_time'] = resource_usage.system_time
+        time["user_time"] = resource_usage.user_time
+        time["system_time"] = resource_usage.system_time
 
     # Return the return exit code of the process.
     if retval != 0:
         raise subprocess.CalledProcessError(retval, cmdstr)
 
+
 # lru_cache stuff (Introduced in python 3.2+)
 # Renamed and modified to cacheresult
 class _HashedSeq(list):
-    '''
+    """
     This class guarantees that hash() will be called no more than once per
     element. This is important because the cacheresult() will hash the key
     multiple times on a cache miss.
 
     .. note:: From cpython 3.7
-    '''
+    """
 
-    __slots__ = 'hashvalue'
+    __slots__ = "hashvalue"
 
     def __init__(self, tup, hash=hash):
         self[:] = tup
@@ -224,11 +227,18 @@ class _HashedSeq(list):
     def __hash__(self):
         return self.hashvalue
 
-def _make_key(args, kwds, typed,
-             kwd_mark = (object(),),
-             fasttypes = {int, str, frozenset, type(None)},
-             tuple=tuple, type=type, len=len):
-    '''
+
+def _make_key(
+    args,
+    kwds,
+    typed,
+    kwd_mark=(object(),),
+    fasttypes={int, str, frozenset, type(None)},
+    tuple=tuple,
+    type=type,
+    len=len,
+):
+    """
     Make a cache key from optionally typed positional and keyword arguments.
     The key is constructed in a way that is flat as possible rather than as
     a nested structure that would take more memory.  If there is only a single
@@ -237,7 +247,7 @@ def _make_key(args, kwds, typed,
     lookup speed.
 
     .. note:: From cpython 3.7
-    '''
+    """
     key = args
     if kwds:
         key += kwd_mark
@@ -253,15 +263,16 @@ def _make_key(args, kwds, typed,
 
 
 def cacheresult(function, typed=False):
-    '''
+    """
     :param typed: If typed is True, arguments of different types will be
         cached separately. I.e. f(3.0) and f(3) will be treated as distinct
         calls with distinct results.
 
     .. note:: From cpython 3.7
-    '''
-    sentinel = object()          # unique object used to signal cache misses
+    """
+    sentinel = object()  # unique object used to signal cache misses
     cache = {}
+
     def wrapper(*args, **kwds):
         # Simple caching without ordering or size limit
         key = _make_key(args, kwds, typed)
@@ -271,19 +282,21 @@ def cacheresult(function, typed=False):
         result = function(*args, **kwds)
         cache[key] = result
         return result
+
     return wrapper
 
+
 class OrderedSet(MutableSet):
-    '''
+    """
     Maintain ordering of insertion in items to the set with quick iteration.
 
     http://code.activestate.com/recipes/576694/
-    '''
+    """
 
     def __init__(self, iterable=None):
         self.end = end = []
-        end += [None, end, end]         # sentinel node for doubly linked list
-        self.map = {}                   # key --> [key, prev, next]
+        end += [None, end, end]  # sentinel node for doubly linked list
+        self.map = {}  # key --> [key, prev, next]
         if iterable is not None:
             self |= iterable
 
@@ -325,35 +338,38 @@ class OrderedSet(MutableSet):
 
     def pop(self, last=True):
         if not self:
-            raise KeyError('set is empty')
+            raise KeyError("set is empty")
         key = self.end[1][0] if last else self.end[2][0]
         self.discard(key)
         return key
 
     def __repr__(self):
         if not self:
-            return '%s()' % (self.__class__.__name__,)
-        return '%s(%r)' % (self.__class__.__name__, list(self))
+            return f"{self.__class__.__name__}()"
+        return f"{self.__class__.__name__}({list(self)!r})"
 
     def __eq__(self, other):
         if isinstance(other, OrderedSet):
             return len(self) == len(other) and list(self) == list(other)
         return set(self) == set(other)
 
+
 def absdirpath(path):
-    '''
+    """
     Return the directory component of the absolute path of the given path.
-    '''
+    """
     return os.path.dirname(os.path.abspath(path))
+
 
 joinpath = os.path.join
 
+
 def mkdir_p(path):
-    '''
+    """
     Same thing as mkdir -p
 
     https://stackoverflow.com/a/600612
-    '''
+    """
     try:
         os.makedirs(path)
     except OSError as exc:  # Python >2.5
@@ -364,12 +380,14 @@ def mkdir_p(path):
 
 
 class FrozenSetException(Exception):
-    '''Signals one tried to set a value in a 'frozen' object.'''
+    """Signals one tried to set a value in a 'frozen' object."""
+
     pass
 
 
-class AttrDict(object):
-    '''Object which exposes its own internal dictionary through attributes.'''
+class AttrDict:
+    """Object which exposes its own internal dictionary through attributes."""
+
     def __init__(self, dict_={}):
         self.update(dict_)
 
@@ -377,7 +395,7 @@ class AttrDict(object):
         dict_ = self.__dict__
         if attr in dict_:
             return dict_[attr]
-        raise AttributeError('Could not find %s attribute' % attr)
+        raise AttributeError("Could not find %s attribute" % attr)
 
     def __setattr__(self, attr, val):
         self.__dict__[attr] = val
@@ -393,29 +411,33 @@ class AttrDict(object):
 
 
 class FrozenAttrDict(AttrDict):
-    '''An AttrDict whose attributes cannot be modified directly.'''
+    """An AttrDict whose attributes cannot be modified directly."""
+
     __initialized = False
+
     def __init__(self, dict_={}):
-        super(FrozenAttrDict, self).__init__(dict_)
+        super().__init__(dict_)
         self.__initialized = True
 
     def __setattr__(self, attr, val):
         if self.__initialized:
             raise FrozenSetException(
-                        'Cannot modify an attribute in a FozenAttrDict')
+                "Cannot modify an attribute in a FozenAttrDict"
+            )
         else:
-            super(FrozenAttrDict, self).__setattr__(attr, val)
+            super().__setattr__(attr, val)
 
     def update(self, items):
         if self.__initialized:
             raise FrozenSetException(
-                        'Cannot modify an attribute in a FozenAttrDict')
+                "Cannot modify an attribute in a FozenAttrDict"
+            )
         else:
-            super(FrozenAttrDict, self).update(items)
+            super().update(items)
 
 
-class InstanceCollector(object):
-    '''
+class InstanceCollector:
+    """
     A class used to simplify collecting of Classes.
 
     >> instance_list = collector.create()
@@ -423,7 +445,8 @@ class InstanceCollector(object):
     >> # instance_list contains all instances created since
     >> # collector.create was called
     >> collector.remove(instance_list)
-    '''
+    """
+
     def __init__(self):
         self.collectors = []
 
@@ -441,16 +464,17 @@ class InstanceCollector(object):
 
 
 def append_dictlist(dict_, key, value):
-    '''
+    """
     Append the `value` to a list associated with `key` in `dict_`.
     If `key` doesn't exist, create a new list in the `dict_` with value in it.
-    '''
+    """
     list_ = dict_.get(key, [])
     list_.append(value)
     dict_[key] = list_
 
+
 def _filter_file(fname, filters):
-    with open(fname, "r") as file_:
+    with open(fname) as file_:
         for line in file_:
             for regex in filters:
                 if re.match(regex, line):
@@ -460,19 +484,19 @@ def _filter_file(fname, filters):
 
 
 def _copy_file_keep_perms(source, target):
-    '''Copy a file keeping the original permisions of the target.'''
+    """Copy a file keeping the original permisions of the target."""
     st = os.stat(target)
     shutil.copy2(source, target)
     os.chown(target, st[stat.ST_UID], st[stat.ST_GID])
 
 
 def _filter_file_inplace(fname, dir, filters):
-    '''
+    """
     Filter the given file writing filtered lines out to a temporary file, then
     copy that tempfile back into the original file.
-    '''
+    """
     (_, tfname) = tempfile.mkstemp(dir=dir, text=True)
-    with open(tfname, 'w') as tempfile_:
+    with open(tfname, "w") as tempfile_:
         for line in _filter_file(fname, filters):
             tempfile_.write(line)
 
@@ -481,39 +505,45 @@ def _filter_file_inplace(fname, dir, filters):
 
 
 def diff_out_file(ref_file, out_file, logger, ignore_regexes=tuple()):
-    '''Diff two files returning the diff as a string.'''
+    """Diff two files returning the diff as a string."""
 
     if not os.path.exists(ref_file):
-        raise OSError("%s doesn't exist in reference directory"\
-                                     % ref_file)
+        raise OSError("%s doesn't exist in reference directory" % ref_file)
     if not os.path.exists(out_file):
         raise OSError("%s doesn't exist in output directory" % out_file)
 
     _filter_file_inplace(out_file, os.path.dirname(out_file), ignore_regexes)
     _filter_file_inplace(ref_file, os.path.dirname(out_file), ignore_regexes)
 
-    #try :
+    # try :
     (_, tfname) = tempfile.mkstemp(dir=os.path.dirname(out_file), text=True)
-    with open(tfname, 'r+') as tempfile_:
+    with open(tfname, "r+") as tempfile_:
         try:
-            log_call(logger, ['diff', out_file, ref_file],
-                time=None, stdout=tempfile_)
+            log_call(
+                logger,
+                ["diff", out_file, ref_file],
+                time=None,
+                stdout=tempfile_,
+            )
         except OSError:
             # Likely signals that diff does not exist on this system. fallback
             # to difflib
-            with open(out_file, 'r') as outf, open(ref_file, 'r') as reff:
-                diff = difflib.unified_diff(iter(reff.readline, ''),
-                                            iter(outf.readline, ''),
-                                            fromfile=ref_file,
-                                            tofile=out_file)
-                return ''.join(diff)
+            with open(out_file) as outf, open(ref_file) as reff:
+                diff = difflib.unified_diff(
+                    iter(reff.readline, ""),
+                    iter(outf.readline, ""),
+                    fromfile=ref_file,
+                    tofile=out_file,
+                )
+                return "".join(diff)
         except subprocess.CalledProcessError:
             tempfile_.seek(0)
-            return ''.join(tempfile_.readlines())
+            return "".join(tempfile_.readlines())
         else:
             return None
 
-class Timer():
+
+class Timer:
     def __init__(self):
         self.restart()
 

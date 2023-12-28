@@ -29,8 +29,8 @@
 
 # System includes
 import argparse
-import math
 import hashlib
+import math
 
 # gem5 related
 import m5
@@ -39,13 +39,15 @@ from m5.util import addToPath
 
 # gem5 options and objects
 addToPath("../../")
-from ruby import Ruby
-from common import Simulation
-from common import ObjectList
-from common import Options
-from common import GPUTLBOptions
-from common import GPUTLBConfig
 from amd import AmdGPUOptions
+from common import (
+    GPUTLBConfig,
+    GPUTLBOptions,
+    ObjectList,
+    Options,
+    Simulation,
+)
+from ruby import Ruby
 
 # GPU FS related
 from system.system import makeGpuFSSystem
@@ -137,6 +139,44 @@ def addRunFSOptions(parser):
         "MI200 (gfx90a)",
     )
 
+    parser.add_argument(
+        "--debug-at-gpu-kernel",
+        type=int,
+        default=-1,
+        help="Turn on debug flags starting with this kernel",
+    )
+
+    parser.add_argument(
+        "--exit-at-gpu-kernel",
+        type=int,
+        default=-1,
+        help="Exit simulation after running this many kernels",
+    )
+
+    parser.add_argument(
+        "--root-partition",
+        type=str,
+        default="/dev/sda1",
+        help="Root partition of disk image",
+    )
+
+    parser.add_argument(
+        "--disable-avx",
+        action="store_true",
+        default=False,
+        help="Disables AVX. AVX is used in some ROCm libraries but "
+        "does not have checkpointing support yet. If simulation either "
+        "creates a checkpoint or restores from one, then AVX needs to "
+        "be disabled for correct functionality ",
+    )
+
+    parser.add_argument(
+        "--no-kvm-perf",
+        default=False,
+        action="store_true",
+        help="Disable KVM perf counters (use this with LSF / ETX)",
+    )
+
 
 def runGpuFSSystem(args):
     """
@@ -148,7 +188,8 @@ def runGpuFSSystem(args):
     # GPUFS is primarily designed to use the X86 KVM CPU. This model needs to
     # use multiple event queues when more than one CPU is simulated. Force it
     # on if that is the case.
-    args.host_parallel = True if args.num_cpus > 1 else False
+    if ObjectList.is_kvm_cpu(ObjectList.cpu_list.get(args.cpu_type)):
+        args.host_parallel = True if args.num_cpus > 1 else False
 
     # These are used by the protocols. They should not be set by the user.
     n_cu = args.num_compute_units
@@ -157,10 +198,15 @@ def runGpuFSSystem(args):
         math.ceil(float(n_cu) / args.cu_per_scalar_cache)
     )
 
-    # Verify MMIO trace is valid
-    mmio_md5 = hashlib.md5(open(args.gpu_mmio_trace, "rb").read()).hexdigest()
-    if mmio_md5 != "c4ff3326ae8a036e329b8b595c83bd6d":
-        m5.util.panic("MMIO file does not match gem5 resources")
+    # Verify MMIO trace is valid. This is only needed for Vega10 simulations.
+    # The md5sum refers to the md5sum of the Vega10 MMIO hardware trace in
+    # the gem5-resources repository. By checking it here, we avoid potential
+    # errors that would cause the driver not to load and simulations to fail.
+    if args.gpu_device == "Vega10":
+        mmio_file = open(args.gpu_mmio_trace, "rb")
+        mmio_md5 = hashlib.md5(mmio_file.read()).hexdigest()
+        if mmio_md5 != "c4ff3326ae8a036e329b8b595c83bd6d":
+            m5.util.panic("MMIO file does not match gem5 resources")
 
     system = makeGpuFSSystem(args)
 
@@ -184,6 +230,9 @@ def runGpuFSSystem(args):
 
     print("Running the simulation")
     sim_ticks = args.abs_max_tick
+    kernels_launched = 0
+    if args.debug_at_gpu_kernel != -1:
+        m5.trace.disable()
 
     exit_event = m5.simulate(sim_ticks)
 
@@ -199,10 +248,20 @@ def runGpuFSSystem(args):
             assert args.checkpoint_dir is not None
             m5.checkpoint(args.checkpoint_dir)
             break
+        elif "GPU Kernel Completed" in exit_event.getCause():
+            kernels_launched += 1
         else:
             print(
                 f"Unknown exit event: {exit_event.getCause()}. Continuing..."
             )
+
+        if kernels_launched == args.debug_at_gpu_kernel:
+            m5.trace.enable()
+        if kernels_launched == args.exit_at_gpu_kernel:
+            print(f"Exiting @ GPU kernel {kernels_launched}")
+            break
+
+        exit_event = m5.simulate(sim_ticks - m5.curTick())
 
     print(
         "Exiting @ tick %i because %s" % (m5.curTick(), exit_event.getCause())

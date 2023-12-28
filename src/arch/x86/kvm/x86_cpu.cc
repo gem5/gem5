@@ -37,10 +37,12 @@
 #include "arch/x86/cpuid.hh"
 #include "arch/x86/faults.hh"
 #include "arch/x86/interrupts.hh"
+#include "arch/x86/isa.hh"
 #include "arch/x86/regs/float.hh"
 #include "arch/x86/regs/int.hh"
 #include "arch/x86/regs/msr.hh"
 #include "arch/x86/utility.hh"
+#include "base/bitunion.hh"
 #include "base/compiler.hh"
 #include "cpu/kvm/base.hh"
 #include "debug/Drain.hh"
@@ -72,6 +74,13 @@ using namespace X86ISA;
 // The lowest bit of the type field for normal segments (code and
 // data) is used to indicate that a segment has been accessed.
 #define SEG_TYPE_BIT_ACCESSED 1
+
+// Some linux distro s(e.g., RHEL7) define the KVM macros using "BIT" but do
+// not include where BIT is defined, so define it here in that case.
+#ifndef BIT
+#define BIT(nr)         (1UL << (nr))
+#endif
+
 
 struct GEM5_PACKED FXSave
 {
@@ -108,6 +117,32 @@ struct GEM5_PACKED FXSave
 };
 
 static_assert(sizeof(FXSave) == 512, "Unexpected size of FXSave");
+
+BitUnion64(XStateBV)
+    Bitfield<0> fpu;
+    Bitfield<1> sse;
+    Bitfield<2> avx;
+    Bitfield<4, 3> mpx;
+    Bitfield<7, 5> avx512;
+    Bitfield<8> pt;
+    Bitfield<9> pkru;
+    Bitfield<10> pasid;
+    Bitfield<12, 11> cet;
+    Bitfield<13> hdc;
+    Bitfield<14> uintr;
+    Bitfield<15> lbr;
+    Bitfield<16> hwp;
+    Bitfield<18, 17> amx;
+    Bitfield<63, 19> reserved;
+EndBitUnion(XStateBV)
+
+struct XSaveHeader
+{
+    XStateBV xstate_bv;
+    uint64_t reserved[7];
+};
+
+static_assert(sizeof(XSaveHeader) == 64, "Unexpected size of XSaveHeader");
 
 #define FOREACH_IREG() \
     do { \
@@ -904,6 +939,19 @@ X86KvmCPU::updateKvmStateFPUXSave()
 
     updateKvmStateFPUCommon(tc, xsave);
 
+    /**
+     * The xsave header (Vol. 1, Section 13.4.2 of the Intel Software
+     * Development Manual) directly follows the legacy xsave region
+     * (i.e., the FPU/SSE state). The first 8 bytes of the xsave header
+     * hold a state-component bitmap called xstate_bv. We need to set
+     * the state component bits corresponding to the FPU and SSE
+     * states.
+     */
+    XSaveHeader& xsave_hdr =
+      * (XSaveHeader *) ((char *) &kxsave + sizeof(FXSave));
+    xsave_hdr.xstate_bv.fpu = 1;
+    xsave_hdr.xstate_bv.sse = 1;
+
     if (tc->readMiscRegNoEffect(misc_reg::Fiseg))
         warn_once("misc_reg::Fiseg is non-zero.\n");
 
@@ -1419,12 +1467,12 @@ X86KvmCPU::ioctlRun()
 
 static struct kvm_cpuid_entry2
 makeKvmCpuid(uint32_t function, uint32_t index,
-             CpuidResult &result)
+             CpuidResult &result, uint32_t flags = 0)
 {
     struct kvm_cpuid_entry2 e;
     e.function = function;
     e.index = index;
-    e.flags = 0;
+    e.flags = flags;
     e.eax = (uint32_t)result.rax;
     e.ebx = (uint32_t)result.rbx;
     e.ecx = (uint32_t)result.rcx;
@@ -1437,33 +1485,76 @@ void
 X86KvmCPU::updateCPUID()
 {
     Kvm::CPUIDVector m5_supported;
-
-    /* TODO: We currently don't support any of the functions that
-     * iterate through data structures in the CPU using an index. It's
-     * currently not a problem since M5 doesn't expose any of them at
-     * the moment.
-     */
+    X86ISA::ISA *isa = dynamic_cast<X86ISA::ISA *>(tc->getIsaPtr());
 
     /* Basic features */
     CpuidResult func0;
-    X86ISA::doCpuid(tc, 0x0, 0, func0);
+    isa->cpuid->doCpuid(tc, 0x0, 0, func0);
     for (uint32_t function = 0; function <= func0.rax; ++function) {
         CpuidResult cpuid;
         uint32_t idx(0);
 
-        X86ISA::doCpuid(tc, function, idx, cpuid);
-        m5_supported.push_back(makeKvmCpuid(function, idx, cpuid));
+        if (!isa->cpuid->hasSignificantIndex(function)) {
+            isa->cpuid->doCpuid(tc, function, idx, cpuid);
+            m5_supported.push_back(makeKvmCpuid(function, idx, cpuid));
+        } else {
+            while (true) {
+                [[maybe_unused]] bool rv = isa->cpuid->doCpuid(
+                    tc, function, idx, cpuid);
+                assert(rv);
+
+                if (idx &&
+                    !cpuid.rax && !cpuid.rbx && !cpuid.rdx && !cpuid.rcx) {
+                    break;
+                }
+
+                /*
+                 * For functions in family 0, this flag tells Linux to compare
+                 * the index as well as the function number rather than only
+                 * the function number. Important: Do NOT set this flag if the
+                 * function does not take an index. Doing so will break SMP.
+                 */
+                uint32_t flag = KVM_CPUID_FLAG_SIGNIFCANT_INDEX;
+                m5_supported.push_back(
+                    makeKvmCpuid(function, idx, cpuid, flag));
+                idx++;
+            }
+        }
     }
 
     /* Extended features */
     CpuidResult efunc0;
-    X86ISA::doCpuid(tc, 0x80000000, 0, efunc0);
+    isa->cpuid->doCpuid(tc, 0x80000000, 0, efunc0);
     for (uint32_t function = 0x80000000; function <= efunc0.rax; ++function) {
         CpuidResult cpuid;
         uint32_t idx(0);
 
-        X86ISA::doCpuid(tc, function, idx, cpuid);
-        m5_supported.push_back(makeKvmCpuid(function, idx, cpuid));
+        if (!isa->cpuid->hasSignificantIndex(function)) {
+            isa->cpuid->doCpuid(tc, function, idx, cpuid);
+            m5_supported.push_back(makeKvmCpuid(function, idx, cpuid));
+        } else {
+            while (true) {
+                [[maybe_unused]] bool rv = isa->cpuid->doCpuid(
+                    tc, function, idx, cpuid);
+                assert(rv);
+
+                if (idx &&
+                    !cpuid.rax && !cpuid.rbx && !cpuid.rdx && !cpuid.rcx) {
+                    break;
+                }
+
+                /*
+                 * For functions in family 0, this flag tells Linux to compare
+                 * the index as well as the function number rather than only
+                 * the function number. Important: Do NOT set this flag if the
+                 * function does not take an index. Doing so will break SMP.
+                 */
+                uint32_t flag = KVM_CPUID_FLAG_SIGNIFCANT_INDEX;
+                m5_supported.push_back(
+                    makeKvmCpuid(function, idx, cpuid, flag));
+                idx++;
+            }
+        }
     }
 
     setCPUID(m5_supported);

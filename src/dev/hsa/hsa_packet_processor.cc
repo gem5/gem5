@@ -389,20 +389,16 @@ HSAPacketProcessor::processPkt(void* pkt, uint32_t rl_idx, Addr host_pkt_addr)
             dep_sgnl_rd_st->resetSigVals();
             // The completion signal is connected
             if (bar_and_pkt->completion_signal != 0) {
-                // HACK: The semantics of the HSA signal is to
-                // decrement the current signal value
-                // I'm going to cheat here and read out
-                // the value from main memory using functional
-                // access, and then just DMA the decremented value.
-                uint64_t signal_value = gpu_device->functionalReadHsaSignal(\
-                                            bar_and_pkt->completion_signal);
-
+                // The semantics of the HSA signal is to decrement the current
+                // signal value by one. Do this asynchronously via DMAs and
+                // callbacks as we can safely continue with this function
+                // while waiting for the next packet from the host.
                 DPRINTF(HSAPacketProcessor, "Triggering barrier packet" \
                        " completion signal! Addr: %x\n",
                        bar_and_pkt->completion_signal);
 
-                gpu_device->updateHsaSignal(bar_and_pkt->completion_signal,
-                                            signal_value - 1);
+                gpu_device->sendCompletionSignal(
+                    bar_and_pkt->completion_signal);
             }
         }
         if (dep_sgnl_rd_st->pendingReads > 0) {

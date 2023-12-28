@@ -64,9 +64,11 @@
 #
 
 
-import os, sys, re
-import subprocess
 import argparse
+import os
+import re
+import subprocess
+import sys
 
 parser = argparse.ArgumentParser()
 
@@ -102,7 +104,7 @@ print("===> Running initial simulation.")
 subprocess.call([m5_binary] + ["-red", cptdir] + args + checkpoint_args)
 
 dirs = os.listdir(cptdir)
-expr = re.compile("cpt\.([0-9]*)")
+expr = re.compile(r"cpt\.([0-9]*)")
 cpts = []
 for dir in dirs:
     match = expr.match(dir)

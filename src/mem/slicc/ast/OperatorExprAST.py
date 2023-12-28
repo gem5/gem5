@@ -1,3 +1,15 @@
+# Copyright (c) 2023 Arm Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
 # Copyright (c) 2009 The Hewlett-Packard Development Company
 # All rights reserved.
@@ -76,11 +88,14 @@ class InfixOperatorExprAST(ExprAST):
                     ("int", "int", "int"),
                     ("Cycles", "Cycles", "Cycles"),
                     ("Tick", "Tick", "Tick"),
+                    ("Addr", "Addr", "Addr"),
                     ("Cycles", "int", "Cycles"),
                     ("Scalar", "int", "Scalar"),
                     ("int", "bool", "int"),
                     ("bool", "int", "int"),
                     ("int", "Cycles", "Cycles"),
+                    ("Addr", "int", "Addr"),
+                    ("int", "Addr", "Addr"),
                 ]
             else:
                 self.error(f"No operator matched with {self.op}!")
@@ -94,8 +109,8 @@ class InfixOperatorExprAST(ExprAST):
 
             if output == None:
                 self.error(
-                    "Type mismatch: operands ({0}, {1}) for operator "
-                    "'{2}' failed to match with the expected types".format(
+                    "Type mismatch: operands ({}, {}) for operator "
+                    "'{}' failed to match with the expected types".format(
                         ltype, rtype, self.op
                     )
                 )

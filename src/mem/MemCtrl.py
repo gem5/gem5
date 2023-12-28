@@ -38,9 +38,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from m5.citations import add_citation
+from m5.objects.QoSMemCtrl import *
 from m5.params import *
 from m5.proxy import *
-from m5.objects.QoSMemCtrl import *
+
 
 # Enum for memory scheduling algorithms, currently First-Come
 # First-Served and a First-Row Hit then First-Come First-Served
@@ -99,3 +101,24 @@ class MemCtrl(QoSMemCtrl):
 
     command_window = Param.Latency("10ns", "Static backend latency")
     disable_sanity_check = Param.Bool(False, "Disable port resp Q size check")
+
+
+add_citation(
+    MemCtrl,
+    """@inproceedings{Hansson:2014:dram-controller,
+  author       = {Andreas Hansson and
+                  Neha Agarwal and
+                  Aasheesh Kolli and
+                  Thomas F. Wenisch and
+                  Aniruddha N. Udipi},
+  title        = {Simulating {DRAM} controllers for future system architecture exploration},
+  booktitle    = {2014 {IEEE} International Symposium on Performance Analysis of Systems
+                  and Software, {ISPASS} 2014, Monterey, CA, USA, March 23-25, 2014},
+  pages        = {201--210},
+  publisher    = {{IEEE} Computer Society},
+  year         = {2014},
+  url          = {https://doi.org/10.1109/ISPASS.2014.6844484},
+  doi          = {10.1109/ISPASS.2014.6844484}
+}
+""",
+)

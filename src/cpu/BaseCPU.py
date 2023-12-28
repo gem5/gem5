@@ -40,20 +40,19 @@
 
 import sys
 
-from m5.SimObject import *
 from m5.defines import buildEnv
-from m5.params import *
-from m5.proxy import *
-from m5.util.fdthelper import *
-
-from m5.objects.ClockedObject import ClockedObject
-from m5.objects.XBar import L2XBar
-from m5.objects.InstTracer import InstTracer
-from m5.objects.CPUTracers import ExeTracer
-from m5.objects.SubSystem import SubSystem
 from m5.objects.ClockDomain import *
+from m5.objects.ClockedObject import ClockedObject
+from m5.objects.CPUTracers import ExeTracer
+from m5.objects.InstTracer import InstTracer
 from m5.objects.Platform import Platform
 from m5.objects.ResetPort import ResetResponsePort
+from m5.objects.SubSystem import SubSystem
+from m5.objects.XBar import L2XBar
+from m5.params import *
+from m5.proxy import *
+from m5.SimObject import *
+from m5.util.fdthelper import *
 
 default_tracer = ExeTracer()
 
@@ -293,8 +292,7 @@ class BaseCPU(ClockedObject):
         # Generate nodes from the BaseCPU children (hence under the root node,
         # and don't add them as subnode). Please note: this is mainly needed
         # for the ISA class, to generate the PMU entry in the DTB.
-        for child_node in self.recurseDeviceTree(state):
-            yield child_node
+        yield from self.recurseDeviceTree(state)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

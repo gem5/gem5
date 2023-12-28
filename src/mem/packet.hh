@@ -1156,7 +1156,7 @@ class Packet : public Printable, public Extensible<Packet>
   public:
     /**
      * @{
-     * @name Data accessor mehtods
+     * @name Data accessor methods
      */
 
     /**
@@ -1435,6 +1435,15 @@ class Packet : public Printable, public Extensible<Packet>
     isCleanEviction() const
     {
         return cmd == MemCmd::CleanEvict || cmd == MemCmd::WritebackClean;
+    }
+
+    /**
+     * Is this packet a clean invalidate request, e.g., clflush/clflushopt?
+     */
+    bool
+    isCleanInvalidateRequest() const
+    {
+        return cmd == MemCmd::CleanInvalidReq;
     }
 
     bool

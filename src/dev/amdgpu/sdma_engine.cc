@@ -510,9 +510,12 @@ SDMAEngine::decodeHeader(SDMAQueue *q, uint32_t header)
         dmaReadVirt(q->rptr(), sizeof(sdmaAtomic), cb, dmaBuffer);
         } break;
       case SDMA_OP_CONST_FILL: {
-        q->incRptr(sizeof(sdmaConstFill));
-        warn("SDMA_OP_CONST_FILL not implemented");
-        decodeNext(q);
+        DPRINTF(SDMAEngine, "SDMA Constant fill packet\n");
+        dmaBuffer = new sdmaConstFill();
+        cb = new DmaVirtCallback<uint64_t>(
+            [ = ] (const uint64_t &)
+                { constFill(q, (sdmaConstFill *)dmaBuffer, header); });
+        dmaReadVirt(q->rptr(), sizeof(sdmaConstFill), cb, dmaBuffer);
         } break;
       case SDMA_OP_PTEPDE: {
         DPRINTF(SDMAEngine, "SDMA PTEPDE packet\n");
@@ -1022,6 +1025,68 @@ SDMAEngine::atomicDone(SDMAQueue *q, sdmaAtomicHeader *header, sdmaAtomic *pkt,
 
     delete dmaBuffer;
     delete header;
+    delete pkt;
+    decodeNext(q);
+}
+
+void
+SDMAEngine::constFill(SDMAQueue *q, sdmaConstFill *pkt, uint32_t header)
+{
+    q->incRptr(sizeof(sdmaConstFill));
+
+    sdmaConstFillHeader fill_header;
+    fill_header.ordinal = header;
+
+    DPRINTF(SDMAEngine, "ConstFill %lx srcData %x count %d size %d sw %d\n",
+            pkt->addr, pkt->srcData, pkt->count, fill_header.fillsize,
+            fill_header.sw);
+
+    // Count is number of <size> elements - 1. Size is log2 of byte size.
+    int fill_bytes = (pkt->count + 1) * (1 << fill_header.fillsize);
+    uint8_t *fill_data = new uint8_t[fill_bytes];
+
+    memset(fill_data, pkt->srcData, fill_bytes);
+
+    Addr device_addr = getDeviceAddress(pkt->addr);
+    if (device_addr) {
+        DPRINTF(SDMAEngine, "ConstFill %d bytes of %x to device at %lx\n",
+                fill_bytes, pkt->srcData, pkt->addr);
+
+        auto cb = new EventFunctionWrapper(
+            [ = ]{ constFillDone(q, pkt, fill_data); }, name());
+
+        // Copy the minimum page size at a time in case the physical addresses
+        // are not contiguous.
+        ChunkGenerator gen(pkt->addr, fill_bytes, AMDGPU_MMHUB_PAGE_SIZE);
+        for (; !gen.done(); gen.next()) {
+            Addr chunk_addr = getDeviceAddress(gen.addr());
+            assert(chunk_addr);
+
+            DPRINTF(SDMAEngine, "Copying chunk of %d bytes from %#lx (%#lx)\n",
+                    gen.size(), gen.addr(), chunk_addr);
+
+            gpuDevice->getMemMgr()->writeRequest(chunk_addr, fill_data,
+                                                 gen.size(), 0,
+                                                 gen.last() ? cb : nullptr);
+            fill_data += gen.size();
+        }
+    } else {
+        DPRINTF(SDMAEngine, "ConstFill %d bytes of %x to host at %lx\n",
+                fill_bytes, pkt->srcData, pkt->addr);
+
+        auto cb = new DmaVirtCallback<uint64_t>(
+            [ = ] (const uint64_t &)
+                { constFillDone(q, pkt, fill_data); });
+        dmaWriteVirt(pkt->addr, fill_bytes, cb, (void *)fill_data);
+    }
+}
+
+void
+SDMAEngine::constFillDone(SDMAQueue *q, sdmaConstFill *pkt, uint8_t *fill_data)
+{
+    DPRINTF(SDMAEngine, "ConstFill to %lx done\n", pkt->addr);
+
+    delete fill_data;
     delete pkt;
     decodeNext(q);
 }

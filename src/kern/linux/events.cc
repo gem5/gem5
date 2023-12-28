@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2016 ARM Limited
+ * Copyright (c) 2011, 2016, 2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -49,6 +49,7 @@
 #include "kern/linux/helpers.hh"
 #include "kern/system_events.hh"
 #include "sim/core.hh"
+#include "sim/sim_exit.hh"
 #include "sim/system.hh"
 
 namespace gem5
@@ -58,25 +59,22 @@ namespace linux
 {
 
 void
-DmesgDump::process(ThreadContext *tc)
+PanicOrOopsEvent::process(ThreadContext *tc)
 {
-    inform("Dumping kernel dmesg buffer to %s...\n", fname);
-    OutputStream *os = simout.create(fname);
-    dumpDmesg(tc, *os->stream());
-    simout.close(os);
-
     warn(descr());
-}
 
-void
-KernelPanic::process(ThreadContext *tc)
-{
-    inform("Dumping kernel dmesg buffer to %s...\n", fname);
-    OutputStream *os = simout.create(fname);
-    dumpDmesg(tc, *os->stream());
-    simout.close(os);
+    if (behaviour != KernelPanicOopsBehaviour::Continue) {
+        inform("Dumping kernel dmesg buffer to %s...\n", fname);
+        OutputStream *os = simout.create(fname);
+        dumpDmesg(tc, *os->stream());
+        simout.close(os);
+    }
 
-    panic(descr());
+    if (behaviour == KernelPanicOopsBehaviour::DumpDmesgAndExit) {
+        exitSimLoop(descr(), static_cast<int>(1), curTick(), false);
+    } else if (behaviour == KernelPanicOopsBehaviour::DumpDmesgAndPanic) {
+        panic(descr());
+    }
 }
 
 void

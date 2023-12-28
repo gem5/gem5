@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2015, 2019-2021 Arm Limited
+ * Copyright (c) 2012-2013, 2015, 2019-2021, 2023 Arm Limited
  * Copyright (c) 2015 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -866,7 +866,7 @@ openatFunc(SyscallDesc *desc, ThreadContext *tc,
     int sim_fd = -1;
     std::string used_path;
     std::vector<std::string> special_paths =
-            { "/proc/meminfo/", "/system/", "/platform/", "/etc/passwd",
+            { "/proc/meminfo", "/system/", "/platform/", "/etc/passwd",
               "/proc/self/maps", "/dev/urandom",
               "/sys/devices/system/cpu/online" };
     for (auto entry : special_paths) {
@@ -1375,7 +1375,7 @@ statFunc(SyscallDesc *desc, ThreadContext *tc,
 template <class OS>
 SyscallReturn
 newfstatatFunc(SyscallDesc *desc, ThreadContext *tc, int dirfd,
-               VPtr<> pathname, VPtr<typename OS::tgt_stat> tgt_stat,
+               VPtr<> pathname, VPtr<typename OS::tgt_stat64> tgt_stat,
                int flags)
 {
     std::string path;
@@ -1405,7 +1405,7 @@ newfstatatFunc(SyscallDesc *desc, ThreadContext *tc, int dirfd,
     if (result < 0)
         return -errno;
 
-    copyOutStatBuf<OS>(tgt_stat, &host_buf);
+    copyOutStat64Buf<OS>(tgt_stat, &host_buf);
 
     return 0;
 }
@@ -2409,7 +2409,7 @@ tgkillFunc(SyscallDesc *desc, ThreadContext *tc, int tgid, int tid, int sig)
         }
     }
 
-    if (sig != 0 || sig != OS::TGT_SIGABRT)
+    if (sig != 0 && sig != OS::TGT_SIGABRT)
         return -EINVAL;
 
     if (tgt_proc == nullptr)

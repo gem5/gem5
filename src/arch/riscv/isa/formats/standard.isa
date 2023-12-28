@@ -267,7 +267,7 @@ def template JumpConstructor {{
                 flags[IsCall] = true;
 
             // Handle "Jalr" instruction
-            if (FUNCT3 == 0x0) {
+            if (FUNCT3 == 0x0 && OPCODE5 == 0x19) {
                 // If RD is not link and RS1 is link, then pop RAS
                 if (!rd_link && rs1_link) flags[IsReturn] = true;
                 else if (rd_link) {
@@ -334,6 +334,7 @@ def template CSRExecute {{
         auto isa = static_cast<RiscvISA::ISA*>(xc->tcBase()->getIsaPtr());
         auto& csr_data = isa->getCSRDataMap();
         auto& csr_masks = isa->getCSRMaskMap();
+        MISA misa = isa->readMiscRegNoEffect(MISCREG_ISA);
 
         auto csr_data_it = csr_data.find(csr);
         if (csr_data_it == csr_data.end()) {
@@ -348,6 +349,14 @@ def template CSRExecute {{
                     csprintf("%s is not support in mode %d\n",
                              csrName,
                              machInst.rv_type),
+                    machInst);
+        }
+
+        MISA csr_exts = csr_data_it->second.isaExts;
+        if ((csr_exts & misa) != csr_exts) {
+            return std::make_shared<IllegalInstFault>(
+                    csprintf("%s is not support in the isa spec %d\n",
+                             csrName),
                     machInst);
         }
 

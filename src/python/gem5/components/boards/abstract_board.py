@@ -24,23 +24,33 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from abc import ABCMeta, abstractmethod
 import inspect
-
-from .mem_mode import MemMode, mem_mode_to_string
-from ...resources.workload import AbstractWorkload
+from abc import (
+    ABCMeta,
+    abstractmethod,
+)
+from typing import (
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+)
 
 from m5.objects import (
     AddrRange,
-    System,
-    Port,
-    IOXBar,
     ClockDomain,
+    IOXBar,
+    Port,
     SrcClockDomain,
+    System,
     VoltageDomain,
 )
 
-from typing import List, Optional, Sequence, Tuple
+from ...resources.resource import WorkloadResource
+from .mem_mode import (
+    MemMode,
+    mem_mode_to_string,
+)
 
 
 class AbstractBoard:
@@ -49,7 +59,7 @@ class AbstractBoard:
     Boards are used as the object which can connect together all other
     components. This abstract class defines the external interface that other
     boards must provide. Boards can be specialized for different ISAs or system
-    designs (e.g., core counts, cache types, memory channels, I/O devices, etc)
+    designs (e.g., core counts, cache types, memory channels, I/O devices, etc).
 
     In addition to providing the place that system components are connected,
     the board also exposes an interface for the caches, processor, and memory
@@ -58,7 +68,7 @@ class AbstractBoard:
     The board also exposes an interface to set up I/O devices which needs to be
     specialized for each ISA and/or platform.
 
-    Board inherits from System and can therefore be used as a System simobject
+    Board inherits from System and can therefore be used as a System SimObject
     when required.
     """
 
@@ -77,7 +87,7 @@ class AbstractBoard:
         :param memory: The memory for this board.
         :param cache_hierarchy: The Cache Hierarchy for this board.
                                 In some boards caches can be optional. If so,
-                                that board must override `_connect_things`.
+                                that board must override ``_connect_things``.
         """
 
         if not isinstance(self, System):
@@ -133,8 +143,10 @@ class AbstractBoard:
     def get_mem_ports(self) -> Sequence[Tuple[AddrRange, Port]]:
         """Get the memory ports exposed on this board
 
-        Note: The ports should be returned such that the address ranges are
-        in ascending order.
+        .. note::
+
+            The ports should be returned such that the address ranges are
+            in ascending order.
         """
         return self.get_memory().get_mem_ports()
 
@@ -165,6 +177,7 @@ class AbstractBoard:
 
     def get_clock_domain(self) -> ClockDomain:
         """Get the clock domain.
+
         :returns: The clock domain.
         """
         return self.clk_domain
@@ -182,7 +195,7 @@ class AbstractBoard:
 
     def is_fullsystem(self) -> bool:
         """
-        Returns True if the board is to be run in FS mode. Otherwise the board
+        Returns ``True`` if the board is to be run in FS mode. Otherwise the board
         is to be run in Se mode. An exception will be thrown if this has not
         been set.
 
@@ -198,15 +211,15 @@ class AbstractBoard:
             )
         return self._is_fs
 
-    def set_workload(self, workload: AbstractWorkload) -> None:
+    def set_workload(self, workload: WorkloadResource) -> None:
         """
         Set the workload for this board to run.
 
         This function will take the workload specified and run the correct
-        workload function (e.g., `set_kernel_disk_workload`) with the correct
+        workload function (e.g., ``set_kernel_disk_workload``) with the correct
         parameters
 
-        :params workload: The workload to be set to this board.
+        :param workload: The workload to be set to this board.
         """
 
         try:
@@ -234,7 +247,7 @@ class AbstractBoard:
         """
         This function is called in the AbstractBoard constructor, before the
         memory, processor, and cache hierarchy components are incorporated via
-        `_connect_thing()`, but after the `_setup_memory_ranges()` function.
+        ``_connect_thing()``, but after the ``_setup_memory_ranges()`` function.
         This function should be overridden by boards to specify components,
         connections unique to that board.
         """
@@ -247,7 +260,7 @@ class AbstractBoard:
     def has_dma_ports(self) -> bool:
         """Determine whether the board has DMA ports or not.
 
-        :returns: True if the board has DMA ports, otherwise False.
+        :returns: ``True`` if the board has DMA ports, otherwise ``False``.
         """
         raise NotImplementedError
 
@@ -266,13 +279,14 @@ class AbstractBoard:
     def has_io_bus(self) -> bool:
         """Determine whether the board has an IO bus or not.
 
-        :returns: True if the board has an IO bus, otherwise False.
+        :returns: ``True`` if the board has an IO bus, otherwise ``False``.
         """
         raise NotImplementedError
 
     @abstractmethod
     def get_io_bus(self) -> IOXBar:
         """Get the board's IO Bus.
+
         This abstract method must be implemented within the subclasses if they
         support DMA and/or full system simulation.
 
@@ -289,14 +303,15 @@ class AbstractBoard:
     def has_coherent_io(self) -> bool:
         """Determine whether the board needs coherent I/O
 
-        :returns: True if the board needs coherent I/O, false otherwise
+        :returns: ``True`` if the board needs coherent I/O, ``False`` otherwise.
         """
         raise NotImplementedError
 
     @abstractmethod
     def get_mem_side_coherent_io_port(self):
         """Get the memory-side coherent I/O port.
-        This abstract method must be implemented if has_coherent_io is true.
+
+        This abstract method must be implemented if ``has_coherent_io`` is ``True``.
 
         This returns a *port* (not a bus) that should be connected to a
         CPU-side port for which coherent I/O (DMA) is issued.
@@ -308,8 +323,8 @@ class AbstractBoard:
         """
         Set the memory ranges for this board and memory system.
 
-        This is called in the constructor, prior to `_setup_board` and
-        `_connect_things`. It should query the board's memory to determine the
+        This is called in the constructor, prior to ``_setup_board`` and
+        ``_connect_things``. It should query the board's memory to determine the
         size and the set the memory ranges on the memory system and on the
         board.
 
@@ -317,11 +332,11 @@ class AbstractBoard:
         of memory and memory system's range to be the same as the board. Full
         system implementations will likely need something more complicated.
 
-        Notes
-        -----
-        * This *must* be called prior to the incorporation of the cache
-        hierarchy (via `_connect_things`) as cache hierarchies depend upon
-        knowing the memory system's ranges.
+        .. note::
+
+            This *must* be called prior to the incorporation of the cache
+            hierarchy (via ``_connect_things``) as cache hierarchies depend upon
+            knowing the memory system's ranges.
         """
         raise NotImplementedError
 
@@ -336,14 +351,13 @@ class AbstractBoard:
 
         Developers may build upon this assumption when creating components.
 
-        Notes
-        -----
+        .. note::
 
-        * The processor is incorporated after the cache hierarchy due to a bug
-        noted here: https://gem5.atlassian.net/browse/GEM5-1113. Until this
-        bug is fixed, this ordering must be maintained.
-        * Once this function is called `_connect_things_called` *must* be set
-        to `True`.
+            * The processor is incorporated after the cache hierarchy due to a bug
+            noted here: https://gem5.atlassian.net/browse/GEM5-1113. Until this
+            bug is fixed, this ordering must be maintained.
+            * Once this function is called ``_connect_things_called`` *must* be set
+            to ``True``.
         """
 
         if self._connect_things_called:
@@ -364,15 +378,15 @@ class AbstractBoard:
         self._connect_things_called = True
 
     def _post_instantiate(self):
-        """Called to set up anything needed after m5.instantiate"""
+        """Called to set up anything needed after ``m5.instantiate``."""
         self.get_processor()._post_instantiate()
         if self.get_cache_hierarchy():
             self.get_cache_hierarchy()._post_instantiate()
         self.get_memory()._post_instantiate()
 
     def _pre_instantiate(self):
-        """To be called immediately before m5.instantiate. This is where
-        `_connect_things` is executed by default."""
+        """To be called immediately before ``m5.instantiate``. This is where
+        ``_connect_things`` is executed by default."""
 
         # Connect the memory, processor, and cache hierarchy.
         self._connect_things()
@@ -382,28 +396,28 @@ class AbstractBoard:
         Here we check that connect things has been called and throw an
         Exception if it has not.
 
-        Since v22.1 `_connect_things` function has
+        Since v22.1 ``_connect_things`` function has
         been moved from the AbstractBoard constructor to the
-        `_pre_instantation` function. Users who have used the gem5 stdlib
+        ``_pre_instantation`` function. Users who have used the gem5 stdlib
         components (i.e., boards which inherit from AbstractBoard) and the
         Simulator module should notice no change. Those who do not use the
-        Simulator module and instead called `m5.instantiate` directly must
-        call `AbstractBoard._pre_instantation` prior so `_connect_things` is
+        Simulator module and instead called ``m5.instantiate`` directly must
+        call ``AbstractBoard._pre_instantation`` prior to ``_connect_things`` is
         called. In order to avoid confusion, this check has been incorporated
         and the Exception thrown explains the fix needed to convert old scripts
-        to function with v22.1.
+        to function with `v22.1`.
 
-        This function is called in `AbstractSystemBoard.createCCObject` and
-        ArmBoard.createCCObject`. Both these functions override
-        `SimObject.createCCObject`. We can not do that here as AbstractBoard
+        This function is called in ``AbstractSystemBoard.createCCObject`` and
+        ``ArmBoard.createCCObject``. Both these functions override
+        ``SimObject.createCCObject``. We can not do that here as AbstractBoard
         does not inherit form System.
         """
         if not self._connect_things_called:
             raise Exception(
                 """
-AbstractBoard's `_connect_things` function has not been called. This is likely
+AbstractBoard's ``_connect_things`` function has not been called. This is likely
 due to not running a board outside of the gem5 Standard Library Simulator
 module. If this is the case, this can be resolved by calling
-`<AbstractBoard>._pre_instantiate()` prior to `m5.instantiate()`.
+``<AbstractBoard>._pre_instantiate()`` prior to ``m5.instantiate()``.
 """
             )

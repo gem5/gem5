@@ -240,7 +240,7 @@ let {{
                     regFormat = \
                         "printReg(out, intRegClass[%s], regSize);\n"
                     regSuffix = "_R"
-                env.addToDisassembly(regFormat % ModRMRegIndex)
+                env.addToDisassembly(regFormat % ModRMRMIndex)
                 return doSplitDecode("MODRM_MOD",
                     {"3" : (specializeInst, Name + regSuffix,
                             copy.copy(opTypes), regEnv)},
@@ -268,7 +268,7 @@ let {{
                     regFormat = \
                         "printReg(out, intRegClass[%s], regSize);\n"
                     Name += "_R"
-                env.addToDisassembly(regFormat % ModRMRegIndex)
+                env.addToDisassembly(regFormat % ModRMRMIndex)
             elif opType.tag in ("X", "Y"):
                 # This type of memory addressing is for string instructions.
                 # They'll use the right index and segment internally.

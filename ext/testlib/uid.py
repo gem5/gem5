@@ -26,13 +26,14 @@
 #
 # Authors: Sean Wilson
 
-import os
 import itertools
+import os
 
 import testlib.configuration as configuration
 
-class UID(object):
-    sep = ':'
+
+class UID:
+    sep = ":"
     type_idx, path_idx = range(2)
 
     def __init__(self, path, *args):
@@ -41,9 +42,10 @@ class UID(object):
 
     @staticmethod
     def _shorten_path(path):
-        return os.path.relpath(path,
-                os.path.commonprefix((configuration.constants.testing_base,
-                                      path)))
+        return os.path.relpath(
+            path,
+            os.path.commonprefix((configuration.constants.testing_base, path)),
+        )
 
     @staticmethod
     def _full_path(short_path):
@@ -75,11 +77,11 @@ class UID(object):
     def __str__(self):
         common_opts = {
             self.path_idx: self.path,
-            self.type_idx: self.__class__.__name__
+            self.type_idx: self.__class__.__name__,
         }
-        return self.sep.join(itertools.chain(
-            [common_opts[0], common_opts[1]],
-            self.attributes))
+        return self.sep.join(
+            itertools.chain([common_opts[0], common_opts[1]], self.attributes)
+        )
 
     def __hash__(self):
         return hash(str(self))

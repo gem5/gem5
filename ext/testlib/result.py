@@ -42,9 +42,10 @@ import os
 import pickle
 import xml.sax.saxutils
 
-from testlib.configuration import config
 import testlib.helper as helper
 import testlib.state as state
+from testlib.configuration import config
+
 
 def _create_uid_index(iterable):
     index = {}
@@ -58,12 +59,15 @@ class _CommonMetadataMixin:
     @property
     def name(self):
         return self._metadata.name
+
     @property
     def uid(self):
         return self._metadata.uid
+
     @property
     def result(self):
         return self._metadata.result
+
     @result.setter
     def result(self, result):
         self._metadata.result = result
@@ -83,12 +87,10 @@ class InternalTestResult(_CommonMetadataMixin):
         self.suite = suite
 
         self.stderr = os.path.join(
-            InternalSavedResults.output_path(self.uid, suite.uid),
-            'stderr'
+            InternalSavedResults.output_path(self.uid, suite.uid), "stderr"
         )
         self.stdout = os.path.join(
-            InternalSavedResults.output_path(self.uid, suite.uid),
-            'stdout'
+            InternalSavedResults.output_path(self.uid, suite.uid), "stdout"
         )
 
 
@@ -99,8 +101,9 @@ class InternalSuiteResult(_CommonMetadataMixin):
         self._wrap_tests(obj)
 
     def _wrap_tests(self, obj):
-        self._tests = [InternalTestResult(test, self, self.directory)
-                       for test in obj]
+        self._tests = [
+            InternalTestResult(test, self, self.directory) for test in obj
+        ]
         self._tests_index = _create_uid_index(self._tests)
 
     def get_test(self, uid):
@@ -129,13 +132,14 @@ class InternalLibraryResults(_CommonMetadataMixin):
         return iter(self._suites)
 
     def _wrap_suites(self, obj):
-        self._suites = [InternalSuiteResult(suite, self.directory)
-                        for suite in obj]
+        self._suites = [
+            InternalSuiteResult(suite, self.directory) for suite in obj
+        ]
         self._suites_index = _create_uid_index(self._suites)
 
     def add_suite(self, suite):
         if suite.uid in self._suites:
-            raise ValueError('Cannot have duplicate suite UIDs.')
+            raise ValueError("Cannot have duplicate suite UIDs.")
         self._suites[suite.uid] = suite
 
     def get_suite_result(self, suite_uid):
@@ -151,84 +155,85 @@ class InternalLibraryResults(_CommonMetadataMixin):
                 helper.append_dictlist(results, test.result.value, test)
         return results
 
+
 class InternalSavedResults:
     @staticmethod
     def output_path(test_uid, suite_uid, base=None):
-        '''
+        """
         Return the path which results for a specific test case should be
         stored.
-        '''
+        """
         if base is None:
             base = config.result_path
         return os.path.join(
-                base,
-                str(suite_uid).replace(os.path.sep, '-'),
-                str(test_uid).replace(os.path.sep, '-'))
+            base,
+            str(suite_uid).replace(os.path.sep, "-"),
+            str(test_uid).replace(os.path.sep, "-"),
+        )
 
     @staticmethod
     def save(results, path, protocol=pickle.HIGHEST_PROTOCOL):
         if not os.path.exists(os.path.dirname(path)):
-           try:
-               os.makedirs(os.path.dirname(path))
-           except OSError as exc: # Guard against race condition
-               if exc.errno != errno.EEXIST:
-                   raise
+            try:
+                os.makedirs(os.path.dirname(path))
+            except OSError as exc:  # Guard against race condition
+                if exc.errno != errno.EEXIST:
+                    raise
 
-        with open(path, 'wb') as f:
+        with open(path, "wb") as f:
             pickle.dump(results, f, protocol)
 
     @staticmethod
     def load(path):
-        with open(path, 'rb') as f:
+        with open(path, "rb") as f:
             return pickle.load(f)
 
 
-class XMLElement(object):
+class XMLElement:
     def write(self, file_):
         self.begin(file_)
         self.end(file_)
 
     def begin(self, file_):
-        file_.write('<')
+        file_.write("<")
         file_.write(self.name)
-        if hasattr(self, 'attributes'):
+        if hasattr(self, "attributes"):
             for attr in self.attributes:
-                file_.write(' ')
+                file_.write(" ")
                 attr.write(file_)
-        file_.write('>')
+        file_.write(">")
 
         self.body(file_)
 
     def body(self, file_):
-        if hasattr(self, 'elements'):
+        if hasattr(self, "elements"):
             for elem in self.elements:
-                file_.write('\n')
+                file_.write("\n")
                 elem.write(file_)
-        if hasattr(self, 'content'):
-                file_.write('\n')
-                file_.write(
-                    xml.sax.saxutils.escape(self.content))
-        file_.write('\n')
+        if hasattr(self, "content"):
+            file_.write("\n")
+            file_.write(xml.sax.saxutils.escape(self.content))
+        file_.write("\n")
 
     def end(self, file_):
-        file_.write('</%s>' % self.name)
+        file_.write("</%s>" % self.name)
 
-class XMLAttribute(object):
+
+class XMLAttribute:
     def __init__(self, name, value):
         self.name = name
         self.value = value
 
     def write(self, file_):
-        file_.write('%s=%s' % (self.name,
-                xml.sax.saxutils.quoteattr(self.value)))
+        file_.write(f"{self.name}={xml.sax.saxutils.quoteattr(self.value)}")
 
 
 class JUnitTestSuites(XMLElement):
-    name = 'testsuites'
+    name = "testsuites"
     result_map = {
-        state.Result.Errored: 'errors',
-        state.Result.Failed: 'failures',
-        state.Result.Passed: 'tests'
+        state.Result.Errored: "errors",
+        state.Result.Failed: "failures",
+        state.Result.Passed: "tests",
     }
 
     def __init__(self, internal_results):
@@ -236,8 +241,9 @@ class JUnitTestSuites(XMLElement):
 
         self.attributes = []
         for result, tests in results.items():
-            self.attributes.append(self.result_attribute(result,
-                    str(len(tests))))
+            self.attributes.append(
+                self.result_attribute(result, str(len(tests)))
+            )
 
         self.elements = []
         for suite in internal_results:
@@ -246,24 +252,24 @@ class JUnitTestSuites(XMLElement):
     def result_attribute(self, result, count):
         return XMLAttribute(self.result_map[result], count)
 
+
 class JUnitTestSuite(JUnitTestSuites):
-    name = 'testsuite'
+    name = "testsuite"
     result_map = {
-        state.Result.Errored: 'errors',
-        state.Result.Failed: 'failures',
-        state.Result.Passed: 'tests',
-        state.Result.Skipped: 'skipped'
+        state.Result.Errored: "errors",
+        state.Result.Failed: "failures",
+        state.Result.Passed: "tests",
+        state.Result.Skipped: "skipped",
     }
 
     def __init__(self, suite_result):
         results = suite_result.aggregate_test_results()
 
-        self.attributes = [
-            XMLAttribute('name', suite_result.name)
-        ]
+        self.attributes = [XMLAttribute("name", suite_result.name)]
         for result, tests in results.items():
-            self.attributes.append(self.result_attribute(result,
-                    str(len(tests))))
+            self.attributes.append(
+                self.result_attribute(result, str(len(tests)))
+            )
 
         self.elements = []
         for test in suite_result:
@@ -272,40 +278,42 @@ class JUnitTestSuite(JUnitTestSuites):
     def result_attribute(self, result, count):
         return XMLAttribute(self.result_map[result], count)
 
+
 class JUnitTestCase(XMLElement):
-    name = 'testcase'
+    name = "testcase"
+
     def __init__(self, test_result):
         self.attributes = [
-            XMLAttribute('name', test_result.name),
-             # TODO JUnit expects class of test.. add as test metadata.
-            XMLAttribute('classname', str(test_result.uid)),
-            XMLAttribute('status', str(test_result.result)),
-            XMLAttribute('time', str(test_result.time["user_time"])),
+            XMLAttribute("name", test_result.name),
+            # TODO JUnit expects class of test.. add as test metadata.
+            XMLAttribute("classname", str(test_result.uid)),
+            XMLAttribute("status", str(test_result.result)),
+            XMLAttribute("time", str(test_result.time["user_time"])),
         ]
 
         # TODO JUnit expects a message for the reason a test was
         # skipped or errored, save this with the test metadata.
         # http://llg.cubic.org/docs/junit/
         self.elements = [
-            LargeFileElement('system-err', test_result.stderr),
-            LargeFileElement('system-out', test_result.stdout),
+            LargeFileElement("system-err", test_result.stderr),
+            LargeFileElement("system-out", test_result.stdout),
         ]
 
-        if str(test_result.result) == 'Failed':
-            self.elements.append(JUnitFailure(
-                'Test failed',
-                str(test_result.result.reason))
+        if str(test_result.result) == "Failed":
+            self.elements.append(
+                JUnitFailure("Test failed", str(test_result.result.reason))
             )
 
 
 class JUnitFailure(XMLElement):
-    name = 'failure'
+    name = "failure"
+
     def __init__(self, message, cause):
         self.attributes = [
-            XMLAttribute('message', message),
+            XMLAttribute("message", message),
         ]
         cause_element = XMLElement()
-        cause_element.name = 'cause'
+        cause_element.name = "cause"
         cause_element.content = cause
         self.elements = [cause_element]
 
@@ -318,10 +326,10 @@ class LargeFileElement(XMLElement):
 
     def body(self, file_):
         try:
-            with open(self.filename, 'r') as f:
+            with open(self.filename) as f:
                 for line in f:
                     file_.write(xml.sax.saxutils.escape(line))
-        except IOError:
+        except OSError:
             # TODO Better error logic, this is sometimes O.K.
             # if there was no stdout/stderr captured for the test
             #
@@ -330,15 +338,13 @@ class LargeFileElement(XMLElement):
             pass
 
 
-
 class JUnitSavedResults:
     @staticmethod
     def save(results, path):
-        '''
+        """
         Compile the internal results into JUnit format writting it to the
         given file.
-        '''
+        """
         results = JUnitTestSuites(results)
-        with open(path, 'w') as f:
+        with open(path, "w") as f:
             results.write(f)
-

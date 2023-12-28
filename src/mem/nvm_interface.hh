@@ -125,8 +125,8 @@ class NVMInterface : public MemInterface
         statistics::Formula avgBusLat;
         statistics::Formula avgMemAccLat;
 
-        statistics::Scalar bytesRead;
-        statistics::Scalar bytesWritten;
+        statistics::Scalar nvmBytesRead;
+        statistics::Scalar nvmBytesWritten;
 
         // Average bandwidth
         statistics::Formula avgRdBW;

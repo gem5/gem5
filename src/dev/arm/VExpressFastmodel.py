@@ -23,9 +23,15 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects.FastModelGIC import FastModelGIC, SCFastModelGIC
+from m5.objects.FastModelGIC import (
+    FastModelGIC,
+    SCFastModelGIC,
+)
 from m5.objects.Gic import ArmSPI
-from m5.objects.RealView import VExpress_GEM5_Base, HDLcd
+from m5.objects.RealView import (
+    HDLcd,
+    VExpress_GEM5_Base,
+)
 from m5.objects.SubSystem import SubSystem
 
 

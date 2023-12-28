@@ -29,14 +29,16 @@
 import testlib.helper as helper
 import testlib.runner as runner_mod
 
-class TestCase(object):
-    '''
+
+class TestCase:
+    """
     Base class for all tests.
 
     ..note::
         The :func:`__new__` method enables collection of test cases, it must
         be called in order for test cases to be collected.
-    '''
+    """
+
     fixtures = []
 
     # TODO, remove explicit dependency. Use the loader to set the
@@ -45,7 +47,7 @@ class TestCase(object):
     collector = helper.InstanceCollector()
 
     def __new__(cls, *args, **kwargs):
-        obj = super(TestCase, cls).__new__(cls)
+        obj = super().__new__(cls)
         TestCase.collector.collect(obj)
         return obj
 
@@ -55,10 +57,12 @@ class TestCase(object):
             name = self.__class__.__name__
         self.name = name
 
+
 class TestFunction(TestCase):
-    '''
+    """
     TestCase implementation which uses a callable object as a test.
-    '''
+    """
+
     def __init__(self, function, name=None, **kwargs):
         self.test_function = function
         if name is None:

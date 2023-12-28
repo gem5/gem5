@@ -39,9 +39,10 @@
 # format.
 
 import os
-import protolib
 import subprocess
 import sys
+
+import protolib
 
 util_dir = os.path.dirname(os.path.realpath(__file__))
 # Make sure the proto definitions are up to date.
@@ -59,7 +60,7 @@ def main():
 
     try:
         ascii_out = open(sys.argv[2], "w")
-    except IOError:
+    except OSError:
         print("Failed to open ", sys.argv[2], " for writing")
         exit(-1)
 

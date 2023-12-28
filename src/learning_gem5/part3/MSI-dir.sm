@@ -448,7 +448,7 @@ machine(MachineType:Directory, "Directory protocol")
     }
 
     action(popMemQueue, "pM", desc="Pop the memory queue") {
-        memQueue_in.dequeue(clockEdge());
+        dequeueMemRespQueue();
     }
 
     // Stalling actions

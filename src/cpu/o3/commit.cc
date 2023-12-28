@@ -254,7 +254,7 @@ Commit::setActiveThreads(std::list<ThreadID> *at_ptr)
 }
 
 void
-Commit::setRenameMap(UnifiedRenameMap rm_ptr[])
+Commit::setRenameMap(UnifiedRenameMap rm_ptr[MaxThreads])
 {
     for (ThreadID tid = 0; tid < numThreads; tid++)
         renameMap[tid] = &rm_ptr[tid];

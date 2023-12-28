@@ -37,8 +37,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.params import *
 from m5.objects.ClockedObject import ClockedObject
+from m5.params import *
 
 # SerialLink is a simple variation of the Bridge class, with the ability to
 # account for the latency of packet serialization.

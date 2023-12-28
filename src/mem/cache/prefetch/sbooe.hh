@@ -153,13 +153,14 @@ class SBOOE : public Queued
         bool access(Addr line);
 
         /** Update the latency buffer after a prefetch fill */
-        void notifyFill(const PacketPtr& pkt) override;
+        void notifyFill(const CacheAccessProbeArg &arg) override;
 
     public:
         SBOOE(const SBOOEPrefetcherParams &p);
 
         void calculatePrefetch(const PrefetchInfo &pfi,
-                               std::vector<AddrPriority> &addresses) override;
+                               std::vector<AddrPriority> &addresses,
+                               const CacheAccessor &cache) override;
 };
 
 } // namespace prefetch

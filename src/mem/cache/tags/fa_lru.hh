@@ -85,6 +85,7 @@ class FALRUBlk : public CacheBlk
 {
   public:
     FALRUBlk() : CacheBlk(), prev(nullptr), next(nullptr), inCachesMask(0) {}
+    using CacheBlk::operator=;
 
     /** The previous block in LRU order. */
     FALRUBlk *prev;
@@ -251,12 +252,6 @@ class FALRU : public BaseTags
     Addr regenerateBlkAddr(const CacheBlk* blk) const override
     {
         return blk->getTag();
-    }
-
-    void forEachBlk(std::function<void(CacheBlk &)> visitor) override {
-        for (int i = 0; i < numBlocks; i++) {
-            visitor(blks[i]);
-        }
     }
 
     bool anyBlk(std::function<bool(CacheBlk &)> visitor) override {

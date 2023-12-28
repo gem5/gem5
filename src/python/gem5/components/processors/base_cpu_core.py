@@ -24,24 +24,25 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from typing import Optional, List
-from ...utils.requires import requires
-from .abstract_core import AbstractCore
-
-from ...isas import ISA
-from ...runtime import get_runtime_isa
-from ...utils.override import overrides
-from ...utils.requires import requires
+from typing import (
+    List,
+    Optional,
+)
 
 from m5.objects import (
-    BaseMMU,
-    Port,
     BaseCPU,
-    Process,
+    BaseMMU,
     PcCountTracker,
     PcCountTrackerManager,
+    Port,
+    Process,
 )
 from m5.params import PcCountPair
+
+from ...isas import ISA
+from ...utils.override import overrides
+from ...utils.requires import requires
+from .abstract_core import AbstractCore
 
 
 class BaseCPUCore(AbstractCore):
@@ -49,17 +50,19 @@ class BaseCPUCore(AbstractCore):
     An stdlib AbstractCore subclass which wraps a BaseCPU SimObject type.
     """
 
-    def __init__(self, core: BaseCPU, isa: Optional[ISA] = None):
+    def __init__(self, core: BaseCPU, isa: ISA):
         super().__init__()
 
         # There is some annoying redundancy here. The BaseCPU type already
         # defines the ISA, so here we are defining it twice. However, there
         # currently isn't a good way to get the ISA from the BaseCPU Type.
-        if isa:
-            requires(isa_required=isa)
-            self._isa = isa
-        else:
-            self._isa = get_runtime_isa()
+        #
+        # TODO: Have some helper function to get the ISA from a BaseCPU type.
+        # This may just be a cause of using `instanceof`:
+        # e.g., `if instanceof(cpu, X86Cpu): return ISA.X86`.
+        #
+        requires(isa_required=isa)
+        self._isa = isa
 
         self.core = core
         self.core.createThreads()
@@ -93,7 +96,6 @@ class BaseCPUCore(AbstractCore):
 
     @overrides(AbstractCore)
     def is_kvm_core(self) -> bool:
-
         try:
             from m5.objects import BaseKvmCPU
 
@@ -118,7 +120,6 @@ class BaseCPUCore(AbstractCore):
     @overrides(AbstractCore)
     def connect_walker_ports(self, port1: Port, port2: Port) -> None:
         if self.get_isa() == ISA.ARM:
-
             # Unlike X86 and RISCV MMU, the ARM MMU has two L1 TLB walker ports
             # named `walker` and `stage2_walker` for both data and instruction.
             # The gem5 standard library currently supports one TLB walker port
@@ -144,7 +145,6 @@ class BaseCPUCore(AbstractCore):
         interrupt_requestor: Optional[Port] = None,
         interrupt_responce: Optional[Port] = None,
     ) -> None:
-
         # TODO: This model assumes that we will only create an interrupt
         # controller as we require it. Not sure how true this is in all cases.
         self.core.createInterruptController()

@@ -62,8 +62,11 @@ Scoreboard::findIndex(const RegId& reg, Index &scoreboard_index)
         ret = true;
         break;
       case VecRegClass:
-      case VecElemClass:
         scoreboard_index = vecRegOffset + reg.index();
+        ret = true;
+        break;
+      case VecElemClass:
+        scoreboard_index = vecRegElemOffset + reg.index();
         ret = true;
         break;
       case VecPredRegClass:

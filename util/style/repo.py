@@ -35,15 +35,15 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from abc import *
 import os
 import subprocess
+from abc import *
 
 from .region import *
 from .style import modified_regions
 
 
-class AbstractRepo(object, metaclass=ABCMeta):
+class AbstractRepo(metaclass=ABCMeta):
     def file_path(self, fname):
         """Get the absolute path to a file relative within the repository. The
         input file name must be a valid path within the repository.
@@ -76,7 +76,7 @@ class AbstractRepo(object, metaclass=ABCMeta):
         to the repository root.
 
         """
-        with open(self.file_path(name), "r") as f:
+        with open(self.file_path(name)) as f:
             return f.read()
 
     @abstractmethod

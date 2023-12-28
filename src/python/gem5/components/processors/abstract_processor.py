@@ -24,17 +24,21 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from abc import ABCMeta, abstractmethod
-
-from ...utils.requires import requires
-from .abstract_core import AbstractCore
+from abc import (
+    ABCMeta,
+    abstractmethod,
+)
+from typing import (
+    List,
+    Optional,
+)
 
 from m5.objects import SubSystem
 
-from ..boards.abstract_board import AbstractBoard
 from ...isas import ISA
-
-from typing import List, Optional
+from ...utils.requires import requires
+from ..boards.abstract_board import AbstractBoard
+from .abstract_core import AbstractCore
 
 
 class AbstractProcessor(SubSystem):
@@ -46,15 +50,16 @@ class AbstractProcessor(SubSystem):
         isa: ISA = ISA.NULL,
     ) -> None:
         """Set the cores on the processor
+
         Cores are optional for some processor types. If a processor does not
-        set the cores here, it must override `get_num_cores` and `get_cores`
+        set the cores here, it must override ``get_num_cores`` and ``get_cores``.
         """
         super().__init__()
 
         if cores:
             # In the stdlib we assume the system processor conforms to a single
             # ISA target.
-            assert len(set(core.get_isa() for core in cores)) == 1
+            assert len({core.get_isa() for core in cores}) == 1
             self.cores = cores
             self._isa = cores[0].get_isa()
         else:
@@ -76,5 +81,5 @@ class AbstractProcessor(SubSystem):
         raise NotImplementedError
 
     def _post_instantiate(self) -> None:
-        """Called to set up anything needed after m5.instantiate"""
+        """Called to set up anything needed after ``m5.instantiate``."""
         pass

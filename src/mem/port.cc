@@ -197,7 +197,7 @@ RequestPort::addTrace(PacketPtr pkt) const
         ext = std::make_shared<TracingExtension>();
         pkt->setExtension(ext);
     }
-    ext->add(name(), _responsePort->name());
+    ext->add(name(), _responsePort->name(), pkt->getAddr());
 }
 
 void

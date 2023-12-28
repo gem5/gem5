@@ -1,3 +1,4 @@
+---
 version: '2'
 
 services:
@@ -13,7 +14,7 @@ services:
         image: gcr.io/gem5-test/gpu-fs:latest
     sst:
         build:
-            context: sst-11.1.0
+            context: sst
             dockerfile: Dockerfile
         image: gcr.io/gem5-test/sst-env:latest
     systemc:
@@ -21,11 +22,6 @@ services:
             context: systemc-2.3.3
             dockerfile: Dockerfile
         image: gcr.io/gem5-test/systemc-env:latest
-    ubuntu-18.04_all-dependencies:
-        build:
-            context: ubuntu-18.04_all-dependencies
-            dockerfile: Dockerfile
-        image: gcr.io/gem5-test/ubuntu-18.04_all-dependencies:latest
     ubuntu-20.04_all-dependencies:
         build:
             context: ubuntu-20.04_all-dependencies
@@ -41,27 +37,13 @@ services:
             context: ubuntu-22.04_min-dependencies
             dockerfile: Dockerfile
         image: gcr.io/gem5-test/ubuntu-22.04_min-dependencies:latest
-    gcc-7:
-        build:
-            context: ubuntu-18.04_gcc-version
-            dockerfile: Dockerfile
-            args:
-                - version=7
-        image: gcr.io/gem5-test/gcc-version-7:latest
     gcc-8:
-        build:
-            context: ubuntu-18.04_gcc-version
-            dockerfile: Dockerfile
-            args:
-                - version=8
-        image: gcr.io/gem5-test/gcc-version-8:latest
-    gcc-9:
         build:
             context: ubuntu-20.04_gcc-version
             dockerfile: Dockerfile
             args:
-                - version=9
-        image: gcr.io/gem5-test/gcc-version-9:latest
+                - version=8
+        image: gcr.io/gem5-test/gcc-version-8:latest
     gcc-10:
         build:
             context: ubuntu-20.04_gcc-version
@@ -83,30 +65,23 @@ services:
             args:
                 - version=12
         image: gcr.io/gem5-test/gcc-version-12:latest
-    clang-6:
-        build:
-            context: ubuntu-18.04_clang-version
-            dockerfile: Dockerfile
-            args:
-                - version=6.0
-        image: gcr.io/gem5-test/clang-version-6.0:latest
     clang-7:
         build:
-            context: ubuntu-18.04_clang-version
+            context: ubuntu-20.04_clang-version
             dockerfile: Dockerfile
             args:
                 - version=7
         image: gcr.io/gem5-test/clang-version-7:latest
     clang-8:
         build:
-            context: ubuntu-18.04_clang-version
+            context: ubuntu-20.04_clang-version
             dockerfile: Dockerfile
             args:
                 - version=8
         image: gcr.io/gem5-test/clang-version-8:latest
     clang-9:
         build:
-            context: ubuntu-18.04_clang-version
+            context: ubuntu-20.04_clang-version
             dockerfile: Dockerfile
             args:
                 - version=9
@@ -146,6 +121,18 @@ services:
             args:
                 - version=14
         image: gcr.io/gem5-test/clang-version-14:latest
+    clang-15:
+        build:
+            context: ubuntu-22.04_clang-version
+            dockerfile: Dockerfile
+            args:
+                - version=15
+        image: gcr.io/gem5-test/clang-version-15:latest
+    clang-16:
+        build:
+            context: ubuntu-22.04_clang-16
+            dockerfile: Dockerfile
+        image: gcr.io/gem5-test/clang-version-16:latest
     llvm-gnu-cross-compiler-riscv64:
         build:
             context: llvm-gnu-cross-compiler-riscv64

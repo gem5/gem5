@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2017, 2020 ARM Limited
+ * Copyright (c) 2014, 2017, 2020, 2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -48,6 +48,7 @@
 #include "cpu/inst_res.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/static_inst.hh"
+#include "params/InstTracer.hh"
 #include "sim/sim_object.hh"
 
 namespace gem5
@@ -286,10 +287,37 @@ class InstRecord
     bool getFaulting() const { return faulting; }
 };
 
+/**
+ * The base InstDisassembler class provides a one-API interface
+ * to disassemble the instruction passed as a first argument.
+ * It also provides a base implementation which is
+ * simply calling the StaticInst::disassemble method, which
+ * is the usual interface for disassembling
+ * a gem5 instruction.
+ */
+class InstDisassembler : public SimObject
+{
+  public:
+    InstDisassembler(const SimObjectParams &params)
+      : SimObject(params)
+    {}
+
+    virtual std::string
+    disassemble(StaticInstPtr inst,
+                const PCStateBase &pc,
+                const loader::SymbolTable *symtab) const
+    {
+        return inst->disassemble(pc.instAddr(), symtab);
+    }
+};
+
 class InstTracer : public SimObject
 {
   public:
-    InstTracer(const Params &p) : SimObject(p) {}
+    PARAMS(InstTracer);
+    InstTracer(const Params &p)
+      : SimObject(p), disassembler(p.disassembler)
+    {}
 
     virtual ~InstTracer() {}
 
@@ -297,6 +325,17 @@ class InstTracer : public SimObject
         getInstRecord(Tick when, ThreadContext *tc,
                 const StaticInstPtr staticInst, const PCStateBase &pc,
                 const StaticInstPtr macroStaticInst=nullptr) = 0;
+
+    std::string
+    disassemble(StaticInstPtr inst,
+                const PCStateBase &pc,
+                const loader::SymbolTable *symtab=nullptr) const
+    {
+        return disassembler->disassemble(inst, pc, symtab);
+    }
+
+  private:
+    InstDisassembler *disassembler;
 };
 
 } // namespace trace

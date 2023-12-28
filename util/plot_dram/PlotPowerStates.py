@@ -36,10 +36,11 @@
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-from matplotlib.font_manager import FontProperties
-import numpy as np
 import os
+
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.font_manager import FontProperties
 
 # global results dict
 results = {}
@@ -127,7 +128,7 @@ def plotLowPStates(
     @param delay_list: list of itt max multipliers (e.g. [1, 20, 200])
 
     """
-    stats_file = open(stats_fname, "r")
+    stats_file = open(stats_fname)
 
     global bankUtilValues
     bankUtilValues = bank_util_list
@@ -150,7 +151,6 @@ def plotLowPStates(
     for delay in delayValues:
         for bank_util in bankUtilValues:
             for seq_bytes in seqBytesValues:
-
                 for line in stats_file:
                     if "Begin" in line:
                         break
@@ -261,7 +261,6 @@ def plotStackedStates(delay, states_list, bottom_state, plot_name, ylabel_str):
     ind = np.arange(N)
 
     for sub_idx, bank_util in enumerate(bankUtilValues):
-
         l_states = {}
         p_states = {}
 

@@ -1,0 +1,242 @@
+{% extends 'base.html' %} {% block head %}
+<title>JSON Login</title>
+{% endblock %} {% block body %}
+<div
+  class="modal fade"
+  id="conflictResolutionModal"
+  tabindex="-1"
+  aria-labelledby="conflictResolutionModalLabel"
+  data-bs-backdrop="static"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header justify-content-center">
+        <h5 class="modal-title" id="conflictResolutionModalLabel">
+          File Conflict
+        </h5>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+          <div class="row">
+            <h4 class="main-text-semi">
+              <span id="header-filename">File</span>
+              <span
+                >already exists in the server. Select an option below to resolve
+                this conflict.</span
+              >
+            </h4>
+          </div>
+          <div class="row mt-1">
+            <div class="input-group flex-column main-text-regular">
+              <div class="form-check mt-1">
+                <input
+                  class="form-check-input"
+                  type="radio"
+                  name="conflictRadio"
+                  id="openExisting"
+                  checked
+                />
+                <label class="form-check-label" for="openExisting"
+                  >Open Existing</label
+                >
+              </div>
+              <div class="form-check mt-1">
+                <input
+                  class="form-check-input"
+                  type="radio"
+                  name="conflictRadio"
+                  id="clearInput"
+                />
+                <label class="form-check-label" for="clearInput"
+                  >Clear Input</label
+                >
+              </div>
+              <div class="form-check mt-1">
+                <input
+                  class="form-check-input"
+                  type="radio"
+                  name="conflictRadio"
+                  id="overwrite"
+                />
+                <label class="form-check-label" for="overwrite"
+                  >Overwrite Existing File</label
+                >
+              </div>
+              <div class="mt-1">
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="radio"
+                    name="conflictRadio"
+                    id="newFilename"
+                  />
+                  <label class="form-check-label" for="newFilename"
+                    >Enter New Filename</label
+                  >
+                </div>
+                <div class="d-flex flex-row align-items-center">
+                  <input
+                    class="form-control mt-1 main-text-regular"
+                    type="text"
+                    id="updatedFilename"
+                    name="updatedFilename"
+                    placeholder="Enter Filename..."
+                  />
+                  <span class="main-text-regular ms-3">.json</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button
+          id="confirm"
+          type="button"
+          class="btn btn-outline-primary"
+          onclick="saveConflictResolution()"
+        >
+          Save
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<main>
+  <div
+    class="container-fluid d-flex justify-content-center main-panel-container"
+  >
+    <div
+      class="d-flex flex-column align-items-center justify-content-between panel-container h-auto"
+    >
+      <div
+        class="d-flex flex-column align-items-center"
+        style="width: -webkit-fill-available"
+      >
+        <h2 class="page-title panel-text-styling mt-5">JSON</h2>
+        <div class="mt-3" style="width: 75%; margin-bottom: 5rem">
+          <ul
+            class="nav nav-tabs nav-fill login-nav main-text-semi panel-text-styling"
+            id="json-login-tabs"
+            role="tablist"
+          >
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link active login-nav-link"
+                id="remote-tab"
+                data-bs-toggle="tab"
+                data-bs-target="#remote-panel"
+                type="button"
+                role="tab"
+              >
+                Remote File
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link login-nav-link"
+                id="existing-tab"
+                data-bs-toggle="tab"
+                data-bs-target="#existing-panel"
+                type="button"
+                role="tab"
+              >
+                Existing File
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link login-nav-link"
+                id="upload-tab"
+                data-bs-toggle="tab"
+                data-bs-target="#upload-panel"
+                type="button"
+                role="tab"
+              >
+                Local File
+              </button>
+            </li>
+          </ul>
+          <div class="tab-content mt-5" id="tabContent">
+            <div
+              class="tab-pane fade show active"
+              id="remote-panel"
+              role="tabpanel"
+            >
+              <form class="form-outline d-flex flex-column mt-3">
+                <div class="d-flex flex-column">
+                  <label
+                    for="remoteFilename"
+                    class="main-text-semi panel-text-styling mt-3"
+                    >Filename</label
+                  >
+                  <div class="d-flex flex-row align-items-center">
+                    <input
+                      class="form-control mt-1 main-text-regular input-shadow"
+                      type="text"
+                      id="remoteFilename"
+                      name="remoteFilename"
+                      placeholder="Enter Filename..."
+                    />
+                    <span class="main-text-semi panel-text-styling ms-3"
+                      >.json</span
+                    >
+                  </div>
+                </div>
+                <label
+                  for="jsonRemoteURL"
+                  class="main-text-semi panel-text-styling mt-3"
+                  >URL to JSON File</label
+                >
+                <input
+                  class="form-control mt-1 main-text-regular input-shadow"
+                  type="text"
+                  id="jsonRemoteURL"
+                  name="jsonRemoteURL"
+                  placeholder="Enter URL..."
+                />
+              </form>
+            </div>
+            <div class="tab-pane fade" id="existing-panel" role="tabpanel">
+              <form class="form-outline d-flex flex-column mt-3">
+                <select
+                  id="existing-dropdown"
+                  class="form-select main-text-regular input-shadow"
+                  style="width: auto"
+                ></select>
+              </form>
+            </div>
+            <div class="tab-pane fade" id="upload-panel" role="tabpanel">
+              <form class="form-outline d-flex flex-column mt-3">
+                <label
+                  for="jsonFile"
+                  class="main-text-semi panel-text-styling mt-3"
+                  >Upload JSON File</label
+                >
+                <input
+                  class="form-control mt-1 main-text-regular input-shadow"
+                  type="file"
+                  id="jsonFile"
+                  accept=".json"
+                />
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="d-flex flex-row align-self-end me-3 mb-3 buttonGroup">
+        <button
+          type="button"
+          id="login"
+          class="btn btn-outline-primary btn-box-shadow mt-2 mb-2"
+          onclick="handleJSONLogin(event)"
+        >
+          Login
+        </button>
+      </div>
+    </div>
+  </div>
+</main>
+<script src="/static/js/login.js"></script>
+{% endblock %}

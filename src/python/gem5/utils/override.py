@@ -30,6 +30,7 @@ def overrides(interface_class):
     Function override annotation.
     Corollary to @abc.abstractmethod where the override is not of an
     abstractmethod.
+
     Modified from answer https://stackoverflow.com/a/8313042/471376
     """
 

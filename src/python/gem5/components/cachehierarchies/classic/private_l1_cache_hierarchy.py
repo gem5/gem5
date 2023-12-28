@@ -24,17 +24,22 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from m5.objects import (
+    BadAddr,
+    BaseXBar,
+    Cache,
+    Port,
+    SystemXBar,
+)
+
+from ....isas import ISA
+from ....utils.override import *
+from ...boards.abstract_board import AbstractBoard
 from ..abstract_cache_hierarchy import AbstractCacheHierarchy
 from .abstract_classic_cache_hierarchy import AbstractClassicCacheHierarchy
 from .caches.l1dcache import L1DCache
 from .caches.l1icache import L1ICache
 from .caches.mmu_cache import MMUCache
-from ...boards.abstract_board import AbstractBoard
-from ....isas import ISA
-
-from m5.objects import Cache, BaseXBar, SystemXBar, BadAddr, Port
-
-from ....utils.override import *
 
 
 class PrivateL1CacheHierarchy(AbstractClassicCacheHierarchy):
@@ -49,7 +54,7 @@ class PrivateL1CacheHierarchy(AbstractClassicCacheHierarchy):
         the PrivateL1CacheHierarchy.
 
         :returns: The default memory bus for the PrivateL1PrivateL2
-        CacheHierarchy.
+                  CacheHierarchy.
         """
         membus = SystemXBar(width=64)
         membus.badaddr_responder = BadAddr()
@@ -68,7 +73,7 @@ class PrivateL1CacheHierarchy(AbstractClassicCacheHierarchy):
         :param  l1i_size: The size of the L1 Instruction Cache (e.g., "32kB").
 
         :param membus: The memory bus. This parameter is optional parameter and
-        will default to a 64 bit width SystemXBar is not specified.
+                       will default to a 64 bit width SystemXBar is not specified.
         """
 
         AbstractClassicCacheHierarchy.__init__(self=self)
@@ -86,7 +91,6 @@ class PrivateL1CacheHierarchy(AbstractClassicCacheHierarchy):
 
     @overrides(AbstractCacheHierarchy)
     def incorporate_cache(self, board: AbstractBoard) -> None:
-
         # Set up the system port for functional access from the simulator.
         board.connect_system_port(self.membus.cpu_side_ports)
 
@@ -117,7 +121,6 @@ class PrivateL1CacheHierarchy(AbstractClassicCacheHierarchy):
             self._setup_io_cache(board)
 
         for i, cpu in enumerate(board.get_processor().get_cores()):
-
             cpu.connect_icache(self.l1icaches[i].cpu_side)
             cpu.connect_dcache(self.l1dcaches[i].cpu_side)
 

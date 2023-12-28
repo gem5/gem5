@@ -34,8 +34,9 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import m5
-from m5.objects import *
 from m5.defines import buildEnv
+from m5.objects import *
+
 from .Ruby import create_topology
 
 
@@ -53,8 +54,8 @@ def define_options(parser):
 
 def read_config_file(file):
     """Read file as a module and return it"""
-    import types
     import importlib.machinery
+    import types
 
     loader = importlib.machinery.SourceFileLoader("chi_configs", file)
     chi_configs = types.ModuleType(loader.name)
@@ -65,7 +66,6 @@ def read_config_file(file):
 def create_system(
     options, full_system, system, dma_ports, bootmem, ruby_system, cpus
 ):
-
     if buildEnv["PROTOCOL"] != "CHI":
         m5.panic("This script requires the CHI build")
 

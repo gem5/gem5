@@ -272,6 +272,111 @@ namespace VegaISA
         InstFormat extData;
         uint32_t varSize;
 
+        template<typename T>
+        T sdwaSrcHelper(GPUDynInstPtr gpuDynInst, T & src1)
+        {
+            T src0_sdwa(gpuDynInst, extData.iFmt_VOP_SDWA.SRC0);
+            // use copies of original src0, src1, and dest during selecting
+            T origSrc0_sdwa(gpuDynInst, extData.iFmt_VOP_SDWA.SRC0);
+            T origSrc1(gpuDynInst, instData.VSRC1);
+
+            src0_sdwa.read();
+            origSrc0_sdwa.read();
+            origSrc1.read();
+
+            DPRINTF(VEGA, "Handling %s SRC SDWA. SRC0: register v[%d], "
+                "DST_SEL: %d, DST_U: %d, CLMP: %d, SRC0_SEL: %d, SRC0_SEXT: "
+                "%d, SRC0_NEG: %d, SRC0_ABS: %d, SRC1_SEL: %d, SRC1_SEXT: %d, "
+                "SRC1_NEG: %d, SRC1_ABS: %d\n",
+                opcode().c_str(), extData.iFmt_VOP_SDWA.SRC0,
+                extData.iFmt_VOP_SDWA.DST_SEL, extData.iFmt_VOP_SDWA.DST_U,
+                extData.iFmt_VOP_SDWA.CLMP, extData.iFmt_VOP_SDWA.SRC0_SEL,
+                extData.iFmt_VOP_SDWA.SRC0_SEXT,
+                extData.iFmt_VOP_SDWA.SRC0_NEG, extData.iFmt_VOP_SDWA.SRC0_ABS,
+                extData.iFmt_VOP_SDWA.SRC1_SEL,
+                extData.iFmt_VOP_SDWA.SRC1_SEXT,
+                extData.iFmt_VOP_SDWA.SRC1_NEG,
+                extData.iFmt_VOP_SDWA.SRC1_ABS);
+
+            processSDWA_src(extData.iFmt_VOP_SDWA, src0_sdwa, origSrc0_sdwa,
+                            src1, origSrc1);
+
+            return src0_sdwa;
+        }
+
+        template<typename T>
+        void sdwaDstHelper(GPUDynInstPtr gpuDynInst, T & vdst)
+        {
+            T origVdst(gpuDynInst, instData.VDST);
+
+            Wavefront *wf = gpuDynInst->wavefront();
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (wf->execMask(lane)) {
+                    origVdst[lane] = vdst[lane]; // keep copy consistent
+                }
+            }
+
+            processSDWA_dst(extData.iFmt_VOP_SDWA, vdst, origVdst);
+        }
+
+        template<typename T>
+        T dppHelper(GPUDynInstPtr gpuDynInst, T & src1)
+        {
+            T src0_dpp(gpuDynInst, extData.iFmt_VOP_DPP.SRC0);
+            src0_dpp.read();
+
+            DPRINTF(VEGA, "Handling %s SRC DPP. SRC0: register v[%d], "
+                "DPP_CTRL: 0x%#x, SRC0_ABS: %d, SRC0_NEG: %d, SRC1_ABS: %d, "
+                "SRC1_NEG: %d, BC: %d, BANK_MASK: %d, ROW_MASK: %d\n",
+                opcode().c_str(), extData.iFmt_VOP_DPP.SRC0,
+                extData.iFmt_VOP_DPP.DPP_CTRL, extData.iFmt_VOP_DPP.SRC0_ABS,
+                extData.iFmt_VOP_DPP.SRC0_NEG, extData.iFmt_VOP_DPP.SRC1_ABS,
+                extData.iFmt_VOP_DPP.SRC1_NEG, extData.iFmt_VOP_DPP.BC,
+                extData.iFmt_VOP_DPP.BANK_MASK, extData.iFmt_VOP_DPP.ROW_MASK);
+
+            processDPP(gpuDynInst, extData.iFmt_VOP_DPP, src0_dpp, src1);
+
+            return src0_dpp;
+        }
+
+        template<typename ConstT, typename T>
+        void vop2Helper(GPUDynInstPtr gpuDynInst,
+                        void (*fOpImpl)(T&, T&, T&, Wavefront*))
+        {
+            Wavefront *wf = gpuDynInst->wavefront();
+            T src0(gpuDynInst, instData.SRC0);
+            T src1(gpuDynInst, instData.VSRC1);
+            T vdst(gpuDynInst, instData.VDST);
+
+            src0.readSrc();
+            src1.read();
+
+            if (isSDWAInst()) {
+                T src0_sdwa = sdwaSrcHelper(gpuDynInst, src1);
+                fOpImpl(src0_sdwa, src1, vdst, wf);
+                sdwaDstHelper(gpuDynInst, vdst);
+            } else if (isDPPInst()) {
+                T src0_dpp = dppHelper(gpuDynInst, src1);
+                fOpImpl(src0_dpp, src1, vdst, wf);
+            } else {
+                // src0 is unmodified. We need to use the const container
+                // type to allow reading scalar operands from src0. Only
+                // src0 can index scalar operands. We copy this to vdst
+                // temporarily to pass to the lambda so the instruction
+                // does not need to write two lambda functions (one for
+                // a const src0 and one of a mutable src0).
+                ConstT const_src0(gpuDynInst, instData.SRC0);
+                const_src0.readSrc();
+
+                for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                    vdst[lane] = const_src0[lane];
+                }
+                fOpImpl(vdst, src1, vdst, wf);
+            }
+
+            vdst.write();
+        }
+
       private:
         bool hasSecondDword(InFmt_VOP2 *);
     }; // Inst_VOP2
@@ -608,6 +713,19 @@ namespace VegaISA
             gpuDynInst->exec_mask = old_exec_mask;
         }
 
+        template<typename T>
+        void
+        initAtomicAccess(GPUDynInstPtr gpuDynInst)
+        {
+            // temporarily modify exec_mask to supress memory accesses to oob
+            // regions.  Only issue memory requests for lanes that have their
+            // exec_mask set and are not out of bounds.
+            VectorMask old_exec_mask = gpuDynInst->exec_mask;
+            gpuDynInst->exec_mask &= ~oobMask;
+            initMemReqHelper<T, 1>(gpuDynInst, MemCmd::SwapReq, true);
+            gpuDynInst->exec_mask = old_exec_mask;
+        }
+
         void
         injectGlobalMemFence(GPUDynInstPtr gpuDynInst)
         {
@@ -821,7 +939,8 @@ namespace VegaISA
         void
         initMemRead(GPUDynInstPtr gpuDynInst)
         {
-            if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
+            if (gpuDynInst->executedAs() == enums::SC_GLOBAL ||
+                gpuDynInst->executedAs() == enums::SC_PRIVATE) {
                 initMemReqHelper<T, 1>(gpuDynInst, MemCmd::ReadReq);
             } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
                 Wavefront *wf = gpuDynInst->wavefront();
@@ -839,7 +958,8 @@ namespace VegaISA
         void
         initMemRead(GPUDynInstPtr gpuDynInst)
         {
-            if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
+            if (gpuDynInst->executedAs() == enums::SC_GLOBAL ||
+                gpuDynInst->executedAs() == enums::SC_PRIVATE) {
                 initMemReqHelper<VecElemU32, N>(gpuDynInst, MemCmd::ReadReq);
             } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
                 Wavefront *wf = gpuDynInst->wavefront();
@@ -861,7 +981,8 @@ namespace VegaISA
         void
         initMemWrite(GPUDynInstPtr gpuDynInst)
         {
-            if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
+            if (gpuDynInst->executedAs() == enums::SC_GLOBAL ||
+                gpuDynInst->executedAs() == enums::SC_PRIVATE) {
                 initMemReqHelper<T, 1>(gpuDynInst, MemCmd::WriteReq);
             } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
                 Wavefront *wf = gpuDynInst->wavefront();
@@ -879,7 +1000,8 @@ namespace VegaISA
         void
         initMemWrite(GPUDynInstPtr gpuDynInst)
         {
-            if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
+            if (gpuDynInst->executedAs() == enums::SC_GLOBAL ||
+                gpuDynInst->executedAs() == enums::SC_PRIVATE) {
                 initMemReqHelper<VecElemU32, N>(gpuDynInst, MemCmd::WriteReq);
             } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
                 Wavefront *wf = gpuDynInst->wavefront();
@@ -901,6 +1023,10 @@ namespace VegaISA
         void
         initAtomicAccess(GPUDynInstPtr gpuDynInst)
         {
+            // Flat scratch requests may not be atomic according to ISA manual
+            // up to MI200. See MI200 manual Table 45.
+            assert(gpuDynInst->executedAs() != enums::SC_PRIVATE);
+
             if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
                 initMemReqHelper<T, 1>(gpuDynInst, MemCmd::SwapReq, true);
             } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
@@ -939,7 +1065,8 @@ namespace VegaISA
             // If saddr = 0x7f there is no scalar reg to read and address will
             // be a 64-bit address. Otherwise, saddr is the reg index for a
             // scalar reg used as the base address for a 32-bit address.
-            if ((saddr == 0x7f && isFlatGlobal()) || isFlat()) {
+            if ((saddr == 0x7f && (isFlatGlobal() || isFlatScratch()))
+                || isFlat()) {
                 ConstVecOperandU64 vbase(gpuDynInst, vaddr);
                 vbase.read();
 
@@ -958,9 +1085,13 @@ namespace VegaISA
 
             if (isFlat()) {
                 gpuDynInst->resolveFlatSegment(gpuDynInst->exec_mask);
-            } else {
+            } else if (isFlatGlobal()) {
                 gpuDynInst->staticInstruction()->executed_as =
                     enums::SC_GLOBAL;
+            } else {
+                assert(isFlatScratch());
+                gpuDynInst->staticInstruction()->executed_as =
+                    enums::SC_PRIVATE;
             }
         }
 
@@ -976,7 +1107,9 @@ namespace VegaISA
                 gpuDynInst->computeUnit()->localMemoryPipe
                     .issueRequest(gpuDynInst);
             } else {
-                fatal("Unsupported scope for flat instruction.\n");
+                assert(gpuDynInst->executedAs() == enums::SC_PRIVATE);
+                gpuDynInst->computeUnit()->globalMemoryPipe
+                    .issueRequest(gpuDynInst);
             }
         }
 
@@ -993,10 +1126,10 @@ namespace VegaISA
 
       private:
         void initFlatOperandInfo();
-        void initGlobalOperandInfo();
+        void initGlobalScratchOperandInfo();
 
         void generateFlatDisassembly();
-        void generateGlobalDisassembly();
+        void generateGlobalScratchDisassembly();
 
         void
         calcAddrSgpr(GPUDynInstPtr gpuDynInst, ConstVecOperandU32 &vaddr,

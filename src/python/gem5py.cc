@@ -51,6 +51,21 @@ namespace py = pybind11;
 int
 main(int argc, const char **argv)
 {
+#if PY_VERSION_HEX >= 0x03080000
+    // Preinitialize Python for Python 3.8+
+    // This ensures that the locale configuration takes effect
+    PyStatus status;
+    PyPreConfig preconfig;
+    PyPreConfig_InitPythonConfig(&preconfig);
+
+    preconfig.utf8_mode = 1;
+
+    status = Py_PreInitialize(&preconfig);
+    if (PyStatus_Exception(status)) {
+        Py_ExitStatusException(status);
+    }
+#endif
+
     py::scoped_interpreter guard;
 
     // Embedded python doesn't set up sys.argv, so we'll do that ourselves.

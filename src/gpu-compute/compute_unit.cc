@@ -383,6 +383,13 @@ ComputeUnit::startWavefront(Wavefront *w, int waveId, LdsChunk *ldsChunk,
 
     stats.waveLevelParallelism.sample(activeWaves);
     activeWaves++;
+
+    panic_if(w->wrGmReqsInPipe, "GM write counter for wavefront non-zero\n");
+    panic_if(w->rdGmReqsInPipe, "GM read counter for wavefront non-zero\n");
+    panic_if(w->wrLmReqsInPipe, "LM write counter for wavefront non-zero\n");
+    panic_if(w->rdLmReqsInPipe, "GM read counter for wavefront non-zero\n");
+    panic_if(w->outstandingReqs,
+             "Outstanding reqs counter for wavefront non-zero\n");
 }
 
 /**
@@ -1909,6 +1916,8 @@ ComputeUnit::updateInstStats(GPUDynInstPtr gpuDynInst)
                 stats.flatVMemInsts++;
             }
         } else if (gpuDynInst->isFlatGlobal()) {
+            stats.flatVMemInsts++;
+        } else if (gpuDynInst->isFlatScratch()) {
             stats.flatVMemInsts++;
         } else if (gpuDynInst->isLocalMem()) {
             stats.ldsNoFlatInsts++;

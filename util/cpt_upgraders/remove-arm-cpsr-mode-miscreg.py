@@ -5,7 +5,7 @@ def upgrader(cpt):
             import re
 
             # Search for all ISA sections
-            if re.search(".*sys.*\.cpu.*\.isa$", sec):
+            if re.search(r".*sys.*\.cpu.*\.isa$", sec):
                 mr = cpt.get(sec, "miscRegs").split()
                 # Remove MISCREG_CPSR_MODE
                 del mr[137]

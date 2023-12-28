@@ -24,19 +24,23 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from .....utils.override import *
-
-from m5.objects import Cache, BasePrefetcher, StridePrefetcher
-
 from typing import Type
+
+from m5.objects import (
+    BasePrefetcher,
+    Cache,
+    StridePrefetcher,
+)
+
+from .....utils.override import *
 
 
 class L1DCache(Cache):
     """
     A simple L1 data cache with default values.
 
-    If the cache has a mostly exclusive downstream cache, writeback_clean
-    should be set to True.
+    If the cache has a mostly exclusive downstream cache, ``writeback_clean``
+    should be set to ``True``.
     """
 
     def __init__(

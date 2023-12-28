@@ -37,13 +37,15 @@ import argparse
 
 import m5
 from m5.objects import *
-from m5.util import addToPath
 from m5.stats import periodicStatDump
+from m5.util import addToPath
 
 addToPath("../")
 
-from common import ObjectList
-from common import MemConfig
+from common import (
+    MemConfig,
+    ObjectList,
+)
 
 # This script aims at triggering low power state transitions in the DRAM
 # controller. The traffic generator is used in DRAM mode and traffic

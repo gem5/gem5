@@ -26,17 +26,28 @@
 
 import json
 from pathlib import Path
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    Union,
+)
 from urllib import request
-from typing import Optional, Dict, Union, Type, Tuple, List, Any
-from .abstract_client import AbstractClient
 from urllib.error import URLError
+
 from m5.util import warn
+
+from .abstract_client import AbstractClient
 
 
 class JSONClient(AbstractClient):
     def __init__(self, path: str):
         """
         Initializes a JSON client.
+
         :param path: The path to the Resource, either URL or local.
         """
         self.path = path

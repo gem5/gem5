@@ -32,6 +32,7 @@
 
 #include "arch/generic/decode_cache.hh"
 #include "arch/generic/decoder.hh"
+#include "arch/riscv/insts/vector.hh"
 #include "arch/riscv/types.hh"
 #include "base/logging.hh"
 #include "base/types.hh"
@@ -59,7 +60,10 @@ class Decoder : public InstDecoder
     ExtMachInst emi;
     uint32_t machInst;
 
-    StaticInstPtr decodeInst(ExtMachInst mach_inst);
+    uint32_t vlen;
+    uint32_t elen;
+
+    virtual StaticInstPtr decodeInst(ExtMachInst mach_inst);
 
     /// Decode a machine instruction.
     /// @param mach_inst The binary instruction to decode.
@@ -67,14 +71,11 @@ class Decoder : public InstDecoder
     StaticInstPtr decode(ExtMachInst mach_inst, Addr addr);
 
   public:
-    Decoder(const RiscvDecoderParams &p) : InstDecoder(p, &machInst)
-    {
-        reset();
-    }
+    Decoder(const RiscvDecoderParams &p);
 
     void reset() override;
 
-    inline bool compressed(ExtMachInst inst) { return (inst & 0x3) < 0x3; }
+    inline bool compressed(ExtMachInst inst) { return inst.quadRant < 0x3; }
 
     //Use this to give data to the decoder. This should be used
     //when there is control flow.

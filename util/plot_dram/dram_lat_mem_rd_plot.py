@@ -36,35 +36,35 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 try:
-    import matplotlib.pyplot as plt
     import matplotlib as mpl
+    import matplotlib.pyplot as plt
     import numpy as np
 except ImportError:
     print("Failed to import matplotlib and numpy")
     exit(-1)
 
-import sys
 import re
+import sys
+
 
 # This script is intended to post process and plot the output from
-# running configs/dram/lat_mem_rd.py, as such it parses the simout and
+# running configs/dram/lat_mem_rd.py, as such it parses the simout.txt and
 # stats.txt to get the relevant data points.
 def main():
-
     if len(sys.argv) != 2:
         print("Usage: ", sys.argv[0], "<simout directory>")
         exit(-1)
 
     try:
-        stats = open(sys.argv[1] + "/stats.txt", "r")
-    except IOError:
+        stats = open(sys.argv[1] + "/stats.txt")
+    except OSError:
         print("Failed to open ", sys.argv[1] + "/stats.txt", " for reading")
         exit(-1)
 
     try:
-        simout = open(sys.argv[1] + "/simout", "r")
-    except IOError:
-        print("Failed to open ", sys.argv[1] + "/simout", " for reading")
+        simout = open(sys.argv[1] + "/simout.txt")
+    except OSError:
+        print("Failed to open ", sys.argv[1] + "/simout.txt", " for reading")
         exit(-1)
 
     # Get the address ranges
@@ -77,7 +77,7 @@ def main():
         if got_ranges:
             ranges.append(int(line) / 1024)
 
-        match = re.match("lat_mem_rd with (\d+) iterations, ranges:.*", line)
+        match = re.match(r"lat_mem_rd with (\d+) iterations, ranges:.*", line)
         if match:
             got_ranges = True
             iterations = int(match.groups(0)[0])
@@ -85,14 +85,14 @@ def main():
     simout.close()
 
     if not got_ranges:
-        print("Failed to get address ranges, ensure simout is up-to-date")
+        print("Failed to get address ranges, ensure simout.txt is up-to-date")
         exit(-1)
 
     # Now parse the stats
     raw_rd_lat = []
 
     for line in stats:
-        match = re.match(".*readLatencyHist::mean\s+(.+)\s+#.*", line)
+        match = re.match(r".*readLatencyHist::mean\s+(.+)\s+#.*", line)
         if match:
             raw_rd_lat.append(float(match.groups(0)[0]) / 1000)
     stats.close()
@@ -122,7 +122,7 @@ def main():
         )
         exit(-1)
 
-    for (r, l) in zip(ranges, final_rd_lat):
+    for r, l in zip(ranges, final_rd_lat):
         print(r, round(l, 2))
 
     # lazy version to check if an integer is a power of two

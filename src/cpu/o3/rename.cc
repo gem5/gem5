@@ -286,7 +286,7 @@ Rename::setActiveThreads(std::list<ThreadID> *at_ptr)
 
 
 void
-Rename::setRenameMap(UnifiedRenameMap rm_ptr[])
+Rename::setRenameMap(UnifiedRenameMap rm_ptr[MaxThreads])
 {
     for (ThreadID tid = 0; tid < numThreads; tid++)
         renameMap[tid] = &rm_ptr[tid];
@@ -940,8 +940,11 @@ Rename::doSquash(const InstSeqNum &squashed_seq_num, ThreadID tid)
             // previous physical register that it was renamed to.
             renameMap[tid]->setEntry(hb_it->archReg, hb_it->prevPhysReg);
 
-            // Put the renamed physical register back on the free list.
-            freeList->addReg(hb_it->newPhysReg);
+            // The phys regs can still be owned by squashing but
+            // executing instructions in IEW at this moment. To avoid
+            // ownership hazard in SMT CPU, we delay the freelist update
+            // until they are indeed squashed in the commit stage.
+            freeingInProgress[tid].push_back(hb_it->newPhysReg);
         }
 
         // Notify potential listeners that the register mapping needs to be
@@ -1296,6 +1299,18 @@ Rename::checkSignalsAndUpdate(ThreadID tid)
         squash(fromCommit->commitInfo[tid].doneSeqNum, tid);
 
         return true;
+    } else if (!fromCommit->commitInfo[tid].robSquashing &&
+            !freeingInProgress[tid].empty()) {
+        DPRINTF(Rename, "[tid:%i] Freeing phys regs of misspeculated "
+                "instructions.\n", tid);
+
+        auto reg_it = freeingInProgress[tid].cbegin();
+        while ( reg_it != freeingInProgress[tid].cend()){
+            // Put the renamed physical register back on the free list.
+            freeList->addReg(*reg_it);
+            ++reg_it;
+        }
+        freeingInProgress[tid].clear();
     }
 
     if (checkStall(tid)) {

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020 ARM Limited
+ * Copyright (c) 2023 The University of Edinburgh
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -123,6 +124,13 @@ class PCStateBase : public Serializable
     virtual void
     uReset()
     {
+        _upc = 0;
+    }
+
+    virtual void
+    set(Addr val)
+    {
+        _pc = val;
         _upc = 0;
     }
 
@@ -310,6 +318,14 @@ class PCStateWithNext : public PCStateBase
     }
 
     void
+    set(Addr val) override
+    {
+        PCStateBase::set(val);
+        _npc = 0;
+        _nupc = 1;
+    }
+
+    void
     serialize(CheckpointOut &cp) const override
     {
         PCStateBase::serialize(cp);
@@ -359,9 +375,9 @@ class SimplePCState : public PCStateWithNext
      * @param val The value to set the PC to.
      */
     void
-    set(Addr val)
+    set(Addr val) override
     {
-        this->pc(val);
+        Base::set(val);
         this->npc(val + InstWidth);
     };
 
@@ -402,7 +418,7 @@ class UPCState : public SimplePCState<InstWidth>
     }
 
     void
-    set(Addr val)
+    set(Addr val) override
     {
         Base::set(val);
         this->upc(0);
@@ -473,7 +489,7 @@ class DelaySlotPCState : public SimplePCState<InstWidth>
     void nnpc(Addr val) { _nnpc = val; }
 
     void
-    set(Addr val)
+    set(Addr val) override
     {
         Base::set(val);
         nnpc(val + 2 * InstWidth);
@@ -547,7 +563,7 @@ class DelaySlotUPCState : public DelaySlotPCState<InstWidth>
     }
 
     void
-    set(Addr val)
+    set(Addr val) override
     {
         Base::set(val);
         this->upc(0);

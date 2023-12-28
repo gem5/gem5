@@ -36,11 +36,10 @@
 
 import math
 
-from m5.util import fatal
-from m5.params import *
-from m5.objects import *
-
 from m5.defines import buildEnv
+from m5.objects import *
+from m5.params import *
+from m5.util import fatal
 
 if buildEnv["PROTOCOL"] == "CHI":
     import ruby.CHI_config as CHI
@@ -67,7 +66,6 @@ class CustomMesh(SimpleTopology):
         cross_links,
         cross_link_latency,
     ):
-
         # East->West, West->East, North->South, South->North
         # XY routing weights
         link_weights = [1, 1, 2, 2]

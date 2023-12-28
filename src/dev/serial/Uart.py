@@ -36,13 +36,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from m5.defines import buildEnv
+from m5.objects.Device import BasicPioDevice
+from m5.objects.Serial import SerialDevice
 from m5.params import *
 from m5.proxy import *
 from m5.util.fdthelper import *
-from m5.defines import buildEnv
-
-from m5.objects.Device import BasicPioDevice
-from m5.objects.Serial import SerialDevice
 
 
 class Uart(BasicPioDevice):
@@ -82,5 +81,5 @@ class RiscvUart8250(Uart8250):
         node.append(FdtPropertyWords("interrupts", [platform.uart_int_id]))
         node.append(FdtPropertyWords("clock-frequency", [0x384000]))
         node.append(FdtPropertyWords("interrupt-parent", state.phandle(plic)))
-        node.appendCompatible(["ns8250"])
+        node.appendCompatible(["ns8250", "ns16550a"])
         yield node

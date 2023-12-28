@@ -33,8 +33,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.params import *
+from m5.citations import add_citation
 from m5.objects.AbstractMemory import *
+from m5.params import *
+
 
 # A wrapper for DRAMSim3 multi-channel memory controller
 class DRAMsim3(AbstractMemory):
@@ -54,3 +56,24 @@ class DRAMsim3(AbstractMemory):
     filePath = Param.String(
         "ext/dramsim3/DRAMsim3/", "Directory to prepend to file names"
     )
+
+
+add_citation(
+    DRAMsim3,
+    """@article{Li:2020:dramsim3,
+  author       = {Shang Li and
+                  Zhiyuan Yang and
+                  Dhiraj Reddy and
+                  Ankur Srivastava and
+                  Bruce L. Jacob},
+  title        = {DRAMsim3: {A} Cycle-Accurate, Thermal-Capable {DRAM} Simulator},
+  journal      = {{IEEE} Compututer Architecture Letters},
+  volume       = {19},
+  number       = {2},
+  pages        = {110--113},
+  year         = {2020},
+  url          = {https://doi.org/10.1109/LCA.2020.2973991},
+  doi          = {10.1109/LCA.2020.2973991}
+}
+""",
+)

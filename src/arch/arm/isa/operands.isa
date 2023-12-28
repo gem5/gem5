@@ -526,7 +526,6 @@ def operands {{
     'IWNPC': PCStateReg('instIWNPC', srtPC),
     'Thumb': PCStateReg('thumb', srtPC),
     'NextThumb': PCStateReg('nextThumb', srtMode),
-    'NextJazelle': PCStateReg('nextJazelle', srtMode),
     'NextItState': PCStateReg('nextItstate', srtMode),
     'Itstate': PCStateReg('itstate', srtMode),
     'NextAArch64': PCStateReg('nextAArch64', srtMode),

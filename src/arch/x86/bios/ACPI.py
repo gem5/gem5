@@ -36,6 +36,7 @@
 from m5.params import *
 from m5.SimObject import SimObject
 
+
 # ACPI description table header. Subclasses contain and handle the actual
 # contents as appropriate for that type of table.
 class X86ACPISysDescTable(SimObject):

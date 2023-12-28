@@ -30,6 +30,9 @@ if not env['CONF']['USE_SYSTEMC']:
 
 env.UseSystemcCheck(warn=True)
 
-env.Append(CPPPATH=Dir('ext'))
+systemc_home = Dir('#/src/systemc/ext/systemc_home')
+env['ENV']['SYSTEMC_HOME'] = systemc_home.abspath
+
+env.Append(CPPPATH=[systemc_home.Dir('include'),Dir('ext')])
 
 SimObject('Tlm.py', sim_objects=[])

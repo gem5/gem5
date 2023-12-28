@@ -1,5 +1,17 @@
 # -*- mode:python -*-
 
+# Copyright (c) 2022-2023 The University of Edinburgh
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2006 The Regents of The University of Michigan
 # All rights reserved.
 #
@@ -28,8 +40,13 @@
 
 Import('*')
 
-SimObject('BranchPredictor.py', sim_objects=[
-    'IndirectPredictor', 'SimpleIndirectPredictor', 'BranchPredictor',
+
+SimObject('BranchPredictor.py',
+    sim_objects=[
+    'BranchPredictor',
+    'IndirectPredictor', 'SimpleIndirectPredictor',
+    'BranchTargetBuffer', 'SimpleBTB',
+    'ReturnAddrStack',
     'LocalBP', 'TournamentBP', 'BiModeBP', 'TAGEBase', 'TAGE', 'LoopPredictor',
     'TAGE_SC_L_TAGE', 'TAGE_SC_L_TAGE_64KB', 'TAGE_SC_L_TAGE_8KB',
     'LTAGE', 'TAGE_SC_L_LoopPredictor', 'StatisticalCorrector', 'TAGE_SC_L',
@@ -41,17 +58,16 @@ SimObject('BranchPredictor.py', sim_objects=[
     'MultiperspectivePerceptronTAGE', 'MPP_StatisticalCorrector_64KB',
     'MultiperspectivePerceptronTAGE64KB', 'MPP_TAGE_8KB',
     'MPP_LoopPredictor_8KB', 'MPP_StatisticalCorrector_8KB',
-    'MultiperspectivePerceptronTAGE8KB'])
+    'MultiperspectivePerceptronTAGE8KB'],
+    enums=['BranchType', 'TargetProvider'])
 
-DebugFlag('Indirect')
 Source('bpred_unit.cc')
 Source('2bit_local.cc')
-Source('btb.cc')
 Source('simple_indirect.cc')
 Source('indirect.cc')
 Source('ras.cc')
 Source('tournament.cc')
-Source ('bi_mode.cc')
+Source('bi_mode.cc')
 Source('tage_base.cc')
 Source('tage.cc')
 Source('loop_predictor.cc')
@@ -66,6 +82,11 @@ Source('statistical_corrector.cc')
 Source('tage_sc_l.cc')
 Source('tage_sc_l_8KB.cc')
 Source('tage_sc_l_64KB.cc')
+Source('btb.cc')
+Source('simple_btb.cc')
+DebugFlag('Indirect')
+DebugFlag('BTB')
+DebugFlag('RAS')
 DebugFlag('FreeList')
 DebugFlag('Branch')
 DebugFlag('Tage')

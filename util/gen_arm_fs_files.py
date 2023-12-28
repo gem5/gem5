@@ -38,14 +38,16 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
-from subprocess import call
-from platform import machine
+import os
+import sys
+from argparse import (
+    ArgumentDefaultsHelpFormatter,
+    ArgumentParser,
+)
 from distutils import spawn
 from glob import glob
-
-import sys
-import os
+from platform import machine
+from subprocess import call
 
 
 def run_cmd(explanation, working_dir, cmd, stdout=None):

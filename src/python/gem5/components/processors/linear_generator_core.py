@@ -24,16 +24,22 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.ticks import fromSeconds
-from m5.util.convert import toLatency, toMemoryBandwidth
-from m5.objects import PyTrafficGen, Port, BaseTrafficGen
+from typing import Iterator
 
-from .abstract_core import AbstractCore
-from .abstract_generator_core import AbstractGeneratorCore
+from m5.objects import (
+    BaseTrafficGen,
+    Port,
+    PyTrafficGen,
+)
+from m5.ticks import fromSeconds
+from m5.util.convert import (
+    toLatency,
+    toMemoryBandwidth,
+)
 
 from ...utils.override import overrides
-
-from typing import Iterator
+from .abstract_core import AbstractCore
+from .abstract_generator_core import AbstractGeneratorCore
 
 
 class LinearGeneratorCore(AbstractGeneratorCore):
@@ -55,18 +61,19 @@ class LinearGeneratorCore(AbstractGeneratorCore):
         uses PyTrafficGen to create and inject the synthetic traffic.
 
         :param duration: The number of ticks for the generator core to generate
-        traffic.
+                         traffic.
         :param rate: The rate at which the synthetic data is read/written.
         :param block_size: The number of bytes to be read/written with each
-        request.
+                           request.
         :param min_addr: The lower bound of the address range the generator
-        will read/write from/to.
+                         will read/write from/to.
         :param max_addr: The upper bound of the address range the generator
-        will read/write from/to.
+                         will read/write from/to.
         :param rd_perc: The percentage of read requests among all the generated
-        requests. The write percentage would be equal to 100 - rd_perc.
+                        requests. The write percentage would be equal to
+                        ``100 - rd_perc``.
         :param data_limit: The amount of data in bytes to read/write by the
-        generator before stopping generation.
+                           generator before stopping generation.
         """
         self.generator = PyTrafficGen()
         self._duration = duration

@@ -26,10 +26,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from configparser import ConfigParser
 import gzip
-
-import sys, re, os
+import os
+import re
+import sys
+from configparser import ConfigParser
 
 
 class myCP(ConfigParser):
@@ -57,7 +58,7 @@ def aggregate(output_dir, cpts, no_compress, memory_size):
     max_curtick = 0
     num_digits = len(str(len(cpts) - 1))
 
-    for (i, arg) in enumerate(cpts):
+    for i, arg in enumerate(cpts):
         print(arg)
         merged_config = myCP()
         config = myCP()

@@ -34,7 +34,9 @@ class TerminalFormatter:
         self.__text_width = min(max_width, self.__terminal_size()[0])
 
     def __terminal_size(self):
-        import fcntl, termios, struct
+        import fcntl
+        import struct
+        import termios
 
         h, w, hp, wp = struct.unpack(
             "HHHH",
@@ -45,7 +47,6 @@ class TerminalFormatter:
         return w, h
 
     def __get_paragraphs(self, text, flatten=False):
-
         """
         This function takes a text and returns a list of constituent
         paragraphs, defining a paragraph as a block of text separated from

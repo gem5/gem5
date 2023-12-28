@@ -123,7 +123,8 @@ class MessageBuffer : public SimObject
 
     const MsgPtr &peekMsgPtr() const { return m_prio_heap.front(); }
 
-    void enqueue(MsgPtr message, Tick curTime, Tick delta);
+    void enqueue(MsgPtr message, Tick curTime, Tick delta,
+                bool bypassStrictFIFO = false);
 
     // Defer enqueueing a message to a later cycle by putting it aside and not
     // enqueueing it in this cycle
@@ -271,6 +272,9 @@ class MessageBuffer : public SimObject
 
     uint64_t m_msg_counter;
     int m_priority_rank;
+
+    bool m_last_message_strict_fifo_bypassed;
+
     const bool m_strict_fifo;
     const MessageRandomization m_randomization;
     const bool m_allow_zero_latency;

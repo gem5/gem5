@@ -757,6 +757,13 @@ class Request : public Extensible<Request>
         return atomicOpFunctor.get();
     }
 
+    void
+    setAtomicOpFunctor(AtomicOpFunctorPtr amo_op)
+    {
+        atomicOpFunctor = std::move(amo_op);
+    }
+
+
     /**
      * Accessor for hardware transactional memory abort cause.
      */

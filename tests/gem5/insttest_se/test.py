@@ -41,7 +41,9 @@ else:
 for isa in test_progs:
     for binary in test_progs[isa]:
         ref_path = joinpath(getcwd(), "ref")
-        verifiers = (verifier.MatchStdoutNoPerf(joinpath(ref_path, "simout")),)
+        verifiers = (
+            verifier.MatchStdoutNoPerf(joinpath(ref_path, "simout.txt")),
+        )
 
         for cpu in cpu_types[isa]:
             gem5_verify_config(
@@ -52,6 +54,7 @@ for isa in test_progs:
                     config.base_dir,
                     "tests",
                     "gem5",
+                    "insttest_se",
                     "configs",
                     "simple_binary_run.py",
                 ),

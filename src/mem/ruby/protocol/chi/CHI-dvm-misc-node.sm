@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 ARM Limited
+ * Copyright (c) 2021-2023 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -170,8 +170,8 @@ machine(MachineType:MiscNode, "CHI Misc Node for handling and distrbuting DVM op
     SendPCrdGrant,  desc="Send PCrdGrant";
     DoRetry,        desc="Resend the current pending request";
 
-    DvmTlbi_Initiate, desc="Initiate a DVM TLBI on the provided TBE";
-    DvmSync_Initiate, desc="Initiate a DVM Sync on the provided TBE";
+    DvmTlbi_Initiate, out_trans="yes", in_trans="yes", desc="Initiate a DVM TLBI on the provided TBE";
+    DvmSync_Initiate, out_trans="yes", in_trans="yes", desc="Initiate a DVM Sync on the provided TBE";
     DvmSendNextMessage_P1, desc="Trigger a SnpDvmOp_P1 message based on the TBE type";
     DvmSendNextMessage_P2, desc="Trigger a SnpDvmOp_P2 message based on the TBE type";
     DvmFinishDistributing, desc="Move the TBE out of the Distributing state into Waiting";

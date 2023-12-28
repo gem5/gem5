@@ -25,14 +25,29 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from abc import abstractmethod
+from typing import List
+
 from ...utils.override import overrides
+from ..boards.abstract_board import AbstractBoard
 from ..boards.mem_mode import MemMode
 from .abstract_generator_core import AbstractGeneratorCore
-
 from .abstract_processor import AbstractProcessor
-from ..boards.abstract_board import AbstractBoard
 
-from typing import List
+
+def partition_range(
+    min_addr: int, max_addr: int, num_partitions: int
+) -> List[tuple]:
+    assert (
+        isinstance(min_addr, int)
+        and isinstance(max_addr, int)
+        and isinstance(num_partitions, int)
+    )
+    assert ((max_addr - min_addr) % num_partitions) == 0
+    chunk_size = int((max_addr - min_addr) / num_partitions)
+    return [
+        (min_addr + chunk_size * i, min_addr + chunk_size * (i + 1))
+        for i in range(num_partitions)
+    ]
 
 
 class AbstractGenerator(AbstractProcessor):
@@ -45,11 +60,12 @@ class AbstractGenerator(AbstractProcessor):
         Create a list of AbstractGeneratorCore (which is an AbstractCore),
         to pass to the constructor of the AbstractProcessor. Due to the
         different prototypes for the constructor of different generator types
-        inputs are noted as *args. This way the abstract method _create_cores
+        inputs are noted as *args. This way the abstract ``method _create_cores``
         could be called without AbstractGenerator having to know what the
         prototype for the constructor of the inheriting class is. It also
-        limits the _create_cores function to only using positional arguments.
-        keyword (optional arguments) are still allowable in the constructor of
+        limits the ``_create_cores`` function to only using positional arguments.
+
+        Keyword (optional arguments) are still allowable in the constructor of
         the inheriting classes.
         """
         super().__init__(cores=cores)

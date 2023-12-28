@@ -1,4 +1,4 @@
-// Copyright (c) 2021 The Regents of the University of California
+// Copyright (c) 2021-2023 The Regents of the University of California
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -70,7 +70,6 @@
 
 #include <sst/core/sst_config.h>
 #include <sst/core/componentInfo.h>
-#include <sst/core/interfaces/simpleMem.h>
 #include <sst/elements/memHierarchy/memEvent.h>
 #include <sst/elements/memHierarchy/memTypes.h>
 #include <sst/elements/memHierarchy/util.h>
@@ -169,16 +168,29 @@ gem5Component::gem5Component(SST::ComponentId_t id, SST::Params& params):
     registerAsPrimaryComponent();
     primaryComponentDoNotEndSim();
 
-    systemPort = \
-        loadUserSubComponent<SSTResponderSubComponent>("system_port",0);
-    cachePort = \
-        loadUserSubComponent<SSTResponderSubComponent>("cache_port", 0);
-
-    systemPort->setTimeConverter(timeConverter);
-    systemPort->setOutputStream(&(output));
-    cachePort->setTimeConverter(timeConverter);
-    cachePort->setOutputStream(&(output));
-
+    // We need to add another parameter when invoking gem5 scripts from SST to
+    // keep a track of all the OutgoingBridges. This will allow to add or
+    // remove OutgoingBridges from gem5 configs without the need to recompile
+    // the ext/sst source everytime.
+    std::string ports = params.find<std::string>("ports", "");
+    if (ports.empty()) {
+        output.fatal(
+            CALL_INFO, -1, "Component %s must have a 'ports' parameter.\n",
+            getName().c_str()
+        );
+    }
+    // Split the port names using the util method defined.
+    splitPortNames(ports);
+    for (int i = 0 ; i < sstPortCount ; i++) {
+        std::cout << sstPortNames[i] << std::endl;
+        sstPorts.push_back(
+            loadUserSubComponent<SSTResponderSubComponent>(sstPortNames[i], 0)
+        );
+        // If the name defined in the `ports` is incorrect, then the program
+        // will crash when calling `setTimeConverter`.
+        sstPorts[i]->setTimeConverter(timeConverter);
+        sstPorts[i]->setOutputStream(&(output));
+    }
 }
 
 gem5Component::~gem5Component()
@@ -192,13 +204,7 @@ gem5Component::init(unsigned phase)
 
     if (phase == 0) {
         initPython(args.size(), &args[0]);
-
-        const std::vector<std::string> m5_instantiate_commands = {
-            "import m5",
-            "m5.instantiate()"
-        };
-        execPythonCommands(m5_instantiate_commands);
-
+        // m5.instantiate() was moved to the gem5 script.
         // calling SimObject.startup()
         const std::vector<std::string> simobject_setup_commands = {
             "import atexit",
@@ -216,8 +222,9 @@ gem5Component::init(unsigned phase)
 
         // find the corresponding SimObject for each SSTResponderSubComponent
         gem5::Root* gem5_root = gem5::Root::root();
-        systemPort->findCorrespondingSimObject(gem5_root);
-        cachePort->findCorrespondingSimObject(gem5_root);
+        for (auto &port : sstPorts) {
+            port->findCorrespondingSimObject(gem5_root);
+        }
 
         // initialize the gem5 event queue
         if (!(threadInitialized)) {
@@ -230,17 +237,18 @@ gem5Component::init(unsigned phase)
         }
 
     }
-
-    systemPort->init(phase);
-    cachePort->init(phase);
+    for (auto &port : sstPorts) {
+        port->init(phase);
+    }
 }
 
 void
 gem5Component::setup()
 {
     output.verbose(CALL_INFO, 1, 0, "Component is being setup.\n");
-    systemPort->setup();
-    cachePort->setup();
+    for (auto &port : sstPorts) {
+        port->setup();
+    }
 }
 
 void
@@ -426,4 +434,17 @@ gem5Component::splitCommandArgs(std::string &cmd, std::vector<char*> &args)
 
     for (auto part: parsed_args)
         args.push_back(strdup(part.c_str()));
+}
+
+void
+gem5Component::splitPortNames(std::string port_names)
+{
+    std::vector<std::string> parsed_args = tokenizeString(
+        port_names, {'\\', ' ', '\'', '\"'}
+    );
+    sstPortCount = 0;
+    for (auto part: parsed_args) {
+        sstPortNames.push_back(strdup(part.c_str()));
+        sstPortCount++;
+    }
 }

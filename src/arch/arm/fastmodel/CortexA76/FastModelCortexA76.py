@@ -23,20 +23,25 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from m5.objects.ArmInterrupts import ArmInterrupts
+from m5.objects.ArmISA import ArmISA
+from m5.objects.FastModel import (
+    AmbaInitiatorSocket,
+    AmbaTargetSocket,
+)
+from m5.objects.FastModelGIC import Gicv3CommsTargetSocket
+from m5.objects.Gic import ArmPPI
+from m5.objects.IntPin import IntSinkPin
+from m5.objects.Iris import IrisBaseCPU
+from m5.objects.ResetPort import ResetResponsePort
+from m5.objects.SystemC import SystemC_ScModule
 from m5.params import *
 from m5.proxy import *
 from m5.SimObject import SimObject
-
-from m5.objects.ArmInterrupts import ArmInterrupts
-from m5.objects.ArmISA import ArmISA
-from m5.objects.FastModel import AmbaInitiatorSocket, AmbaTargetSocket
-from m5.objects.FastModelGIC import Gicv3CommsTargetSocket
-from m5.objects.ResetPort import ResetResponsePort
-from m5.objects.IntPin import IntSinkPin
-from m5.objects.Gic import ArmPPI
-from m5.objects.Iris import IrisBaseCPU
-from m5.objects.SystemC import SystemC_ScModule
-from m5.util.fdthelper import FdtNode, FdtPropertyWords
+from m5.util.fdthelper import (
+    FdtNode,
+    FdtPropertyWords,
+)
 
 
 class FastModelCortexA76(IrisBaseCPU):

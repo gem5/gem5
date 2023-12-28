@@ -67,6 +67,7 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     if (FullSystem) {
         PrivilegeMode pp = (PrivilegeMode)tc->readMiscReg(MISCREG_PRV);
         PrivilegeMode prv = PRV_M;
+        MISA misa = tc->readMiscRegNoEffect(MISCREG_ISA);
         STATUS status = tc->readMiscReg(MISCREG_STATUS);
 
         // According to riscv-privileged-v1.11, if a NMI occurs at the middle
@@ -82,18 +83,18 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         } else if (isInterrupt()) {
             if (pp != PRV_M &&
                 bits(tc->readMiscReg(MISCREG_MIDELEG), _code) != 0) {
-                prv = PRV_S;
+                prv = (misa.rvs) ? PRV_S : ((misa.rvn) ? PRV_U : PRV_M);
             }
-            if (pp == PRV_U &&
+            if (pp == PRV_U && misa.rvs && misa.rvn &&
                 bits(tc->readMiscReg(MISCREG_SIDELEG), _code) != 0) {
                 prv = PRV_U;
             }
         } else {
             if (pp != PRV_M &&
                 bits(tc->readMiscReg(MISCREG_MEDELEG), _code) != 0) {
-                prv = PRV_S;
+                prv = (misa.rvs) ? PRV_S : ((misa.rvn) ? PRV_U : PRV_M);
             }
-            if (pp == PRV_U &&
+            if (pp == PRV_U && misa.rvs && misa.rvn &&
                 bits(tc->readMiscReg(MISCREG_SEDELEG), _code) != 0) {
                 prv = PRV_U;
             }
@@ -154,17 +155,14 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         }
 
         // Clear load reservation address
-        tc->getIsaPtr()->clearLoadReservation(tc->contextId());
+        auto isa = static_cast<RiscvISA::ISA*>(tc->getIsaPtr());
+        isa->clearLoadReservation(tc->contextId());
 
         // Set PC to fault handler address
-        Addr addr = mbits(tc->readMiscReg(tvec), 63, 2);
-        if (isInterrupt() && bits(tc->readMiscReg(tvec), 1, 0) == 1)
-            addr += 4 * _code;
+        Addr addr = isa->getFaultHandlerAddr(tvec, _code, isInterrupt());
         pc_state.set(addr);
         tc->pcState(pc_state);
     } else {
-        inst->advancePC(pc_state);
-        tc->pcState(pc_state);
         invokeSE(tc, inst);
     }
 }
@@ -184,6 +182,10 @@ Reset::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     std::unique_ptr<PCState> new_pc(dynamic_cast<PCState *>(
         tc->getIsaPtr()->newPCState(workload->getEntry())));
     panic_if(!new_pc, "Failed create new PCState from ISA pointer");
+    VTYPE vtype = 0;
+    vtype.vill = 1;
+    new_pc->vtype(vtype);
+    new_pc->vl(0);
     tc->pcState(*new_pc);
 
     // Reset PMP Cfg
@@ -206,9 +208,11 @@ UnknownInstFault::invokeSE(ThreadContext *tc, const StaticInstPtr &inst)
 void
 IllegalInstFault::invokeSE(ThreadContext *tc, const StaticInstPtr &inst)
 {
-    auto *rsi = static_cast<RiscvStaticInst *>(inst.get());
-    panic("Illegal instruction 0x%08x at pc %s: %s", rsi->machInst,
-        tc->pcState(), reason.c_str());
+    if (! tc->getSystemPtr()->trapToGdb(GDBSignal::ILL, tc->contextId()) ) {
+        auto *rsi = static_cast<RiscvStaticInst *>(inst.get());
+        panic("Illegal instruction 0x%08x at pc %s: %s", rsi->machInst,
+            tc->pcState(), reason.c_str());
+    }
 }
 
 void
@@ -227,12 +231,20 @@ IllegalFrmFault::invokeSE(ThreadContext *tc, const StaticInstPtr &inst)
 void
 BreakpointFault::invokeSE(ThreadContext *tc, const StaticInstPtr &inst)
 {
-    schedRelBreak(0);
+    if (! tc->getSystemPtr()->trapToGdb(GDBSignal::TRAP, tc->contextId()) ) {
+        schedRelBreak(0);
+    }
 }
 
 void
 SyscallFault::invokeSE(ThreadContext *tc, const StaticInstPtr &inst)
 {
+    /* Advance the PC to next instruction so - once (simulated) syscall
+       is executed - execution continues. */
+    auto pc_state = tc->pcState().as<PCState>();
+    inst->advancePC(pc_state);
+    tc->pcState(pc_state);
+
     tc->getSystemPtr()->workload->syscall(tc);
 }
 

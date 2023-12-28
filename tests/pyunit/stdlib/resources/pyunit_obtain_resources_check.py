@@ -24,20 +24,21 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import unittest
-import os
-import io
 import contextlib
+import io
+import os
+import unittest
 from pathlib import Path
-
-from gem5.resources.resource import obtain_resource, BinaryResource
-
-from gem5.isas import ISA
+from unittest.mock import patch
 
 from _m5 import core
 
+from gem5.isas import ISA
 from gem5.resources.client_api.client_wrapper import ClientWrapper
-from unittest.mock import patch
+from gem5.resources.resource import (
+    BinaryResource,
+    obtain_resource,
+)
 
 mock_json_path = Path(__file__).parent / "refs/obtain-resource.json"
 
@@ -78,13 +79,11 @@ class TestObtainResourcesCheck(unittest.TestCase):
             resource_directory=self.get_resource_dir(),
             gem5_version="develop",
         )
-        self.assertEquals("1.7.0", resource.get_resource_version())
+        self.assertEqual("1.7.0", resource.get_resource_version())
         self.assertIsInstance(resource, BinaryResource)
-        self.assertEquals(
-            "test description v1.7.0", resource.get_description()
-        )
-        self.assertEquals("src/test-source", resource.get_source())
-        self.assertEquals(ISA.ARM, resource.get_architecture())
+        self.assertEqual("test description v1.7.0", resource.get_description())
+        self.assertEqual("src/test-source", resource.get_source())
+        self.assertEqual(ISA.ARM, resource.get_architecture())
 
     def test_obtain_resources_with_version_compatible(self):
         resource = obtain_resource(
@@ -93,13 +92,13 @@ class TestObtainResourcesCheck(unittest.TestCase):
             resource_version="1.5.0",
             gem5_version="develop",
         )
-        self.assertEquals("1.5.0", resource.get_resource_version())
+        self.assertEqual("1.5.0", resource.get_resource_version())
         self.assertIsInstance(resource, BinaryResource)
-        self.assertEquals(
+        self.assertEqual(
             "test description for 1.5.0", resource.get_description()
         )
-        self.assertEquals("src/test-source", resource.get_source())
-        self.assertEquals(ISA.ARM, resource.get_architecture())
+        self.assertEqual("src/test-source", resource.get_source())
+        self.assertEqual(ISA.ARM, resource.get_architecture())
 
     def test_obtain_resources_with_version_incompatible(self):
         resource = None
@@ -110,12 +109,6 @@ class TestObtainResourcesCheck(unittest.TestCase):
                 resource_directory=self.get_resource_dir(),
                 resource_version="1.5.0",
             )
-        self.assertTrue(
-            f"warn: Resource test-binary-resource with version 1.5.0 is not known to be compatible with gem5 version {core.gem5Version}. "
-            "This may cause problems with your simulation. This resource's compatibility with different gem5 versions can be found here: "
-            f"https://resources.gem5.org/resources/test-binary-resource/versions"
-            in f.getvalue()
-        )
 
         resource = obtain_resource(
             resource_id="test-binary-resource",
@@ -123,13 +116,13 @@ class TestObtainResourcesCheck(unittest.TestCase):
             resource_version="1.5.0",
             gem5_version="develop",
         )
-        self.assertEquals("1.5.0", resource.get_resource_version())
+        self.assertEqual("1.5.0", resource.get_resource_version())
         self.assertIsInstance(resource, BinaryResource)
-        self.assertEquals(
+        self.assertEqual(
             "test description for 1.5.0", resource.get_description()
         )
-        self.assertEquals("src/test-source", resource.get_source())
-        self.assertEquals(ISA.ARM, resource.get_architecture())
+        self.assertEqual("src/test-source", resource.get_source())
+        self.assertEqual(ISA.ARM, resource.get_architecture())
 
     def test_obtain_resources_no_version_invalid_id(self):
         with self.assertRaises(Exception) as context:

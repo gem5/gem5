@@ -27,18 +27,18 @@
 # Authors: Sean Wilson
 
 
-from .state import *
-from .runner import *
-from .test_util import *
-from .suite import *
-from .loader import *
-from .fixture import *
-from .configuration import *
-from .main import main
+# TODO Remove this as an export, users should getcwd from os
+from os import getcwd
 
-#TODO Remove this awkward bootstrap
-#FIXME
+# TODO Remove this awkward bootstrap
+# FIXME
 from gem5 import *
 
-#TODO Remove this as an export, users should getcwd from os
-from os import getcwd
+from .configuration import *
+from .fixture import *
+from .loader import *
+from .main import main
+from .runner import *
+from .state import *
+from .suite import *
+from .test_util import *

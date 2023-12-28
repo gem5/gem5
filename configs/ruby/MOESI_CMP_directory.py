@@ -38,11 +38,17 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import math
+
 import m5
-from m5.objects import *
 from m5.defines import buildEnv
-from .Ruby import create_topology, create_directories
-from .Ruby import send_evicts
+from m5.objects import *
+
+from .Ruby import (
+    create_directories,
+    create_topology,
+    send_evicts,
+)
+
 
 #
 # Declare caches used by the protocol
@@ -64,7 +70,6 @@ def define_options(parser):
 def create_system(
     options, full_system, system, dma_ports, bootmem, ruby_system, cpus
 ):
-
     if buildEnv["PROTOCOL"] != "MOESI_CMP_directory":
         panic(
             "This script requires the MOESI_CMP_directory protocol to be built."

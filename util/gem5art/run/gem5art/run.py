@@ -35,13 +35,25 @@ experiment is reproducible and the output is saved to the database.
 import hashlib
 import json
 import os
-from pathlib import Path
 import signal
 import subprocess
 import time
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
-from uuid import UUID, uuid4
 import zipfile
+from pathlib import Path
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    Union,
+)
+from uuid import (
+    UUID,
+    uuid4,
+)
 
 from gem5art import artifact
 from gem5art.artifact import Artifact
@@ -672,7 +684,6 @@ def getRunsByNameLike(
 def getRerunnableRunsByNameLike(
     db: ArtifactDB, name: str, fs_only: bool = False, limit: int = 0
 ) -> Iterable[gem5Run]:
-
     """Returns a generator of gem5Run objects having rerunnable as true
     and the object "name" containing the name parameter as a substring. The
     parameter is case sensitive.

@@ -37,13 +37,11 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
-import sys
+import os.path
 import re
 import string
-
+import sys
 from os.path import join as joinpath
-import os.path
-import os
 
 import m5
 
@@ -161,6 +159,7 @@ test_progs = os.environ.get("M5_TEST_PROGS", "/dist/m5/regression/test-progs")
 if not os.path.isdir(test_progs):
     test_progs = joinpath(tests_root, "test-progs")
 
+
 # generate path to binary file
 def binpath(app, file=None):
     # executable has same name as app unless specified otherwise
@@ -188,7 +187,7 @@ def run_config(config, argv=None):
     src_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../"))
     abs_path = joinpath(src_root, config)
 
-    code = compile(open(abs_path, "r").read(), abs_path, "exec")
+    code = compile(open(abs_path).read(), abs_path, "exec")
     scope = {"__file__": config, "__name__": "__m5_main__"}
 
     # Set the working directory in case we are executing from
@@ -233,6 +232,7 @@ exec(
         "exec",
     )
 )
+
 
 # Initialize all CPUs in a system
 def initCPUs(sys):

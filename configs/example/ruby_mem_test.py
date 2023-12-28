@@ -25,11 +25,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import argparse
+import os
+import sys
+
 import m5
-from m5.objects import *
 from m5.defines import buildEnv
+from m5.objects import *
 from m5.util import addToPath
-import os, argparse, sys
 
 addToPath("../")
 
@@ -61,6 +64,12 @@ parser.add_argument(
     type=int,
     default=0,
     help="percentage of accesses that should be functional",
+)
+parser.add_argument(
+    "--atomic",
+    type=int,
+    default=0,
+    help="percentage of accesses that should be atomic",
 )
 parser.add_argument(
     "--suppress-func-errors",
@@ -105,6 +114,7 @@ cpus = [
         max_loads=args.maxloads,
         percent_functional=args.functional,
         percent_uncacheable=0,
+        percent_atomic=args.atomic,
         progress_interval=args.progress,
         suppress_func_errors=args.suppress_func_errors,
     )
@@ -133,7 +143,7 @@ else:
     dmas = []
 
 dma_ports = []
-for (i, dma) in enumerate(dmas):
+for i, dma in enumerate(dmas):
     dma_ports.append(dma.test)
 Ruby.create_system(args, False, system, dma_ports=dma_ports)
 
@@ -155,7 +165,7 @@ system.ruby.randomization = True
 
 assert len(cpus) == len(system.ruby._cpu_ports)
 
-for (i, cpu) in enumerate(cpus):
+for i, cpu in enumerate(cpus):
     #
     # Tie the cpu memtester ports to the correct system ports
     #

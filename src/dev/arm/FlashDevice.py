@@ -33,10 +33,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from m5.objects.AbstractNVM import *
 from m5.params import *
 from m5.proxy import *
 
-from m5.objects.AbstractNVM import *
 
 # Distribution of the data.
 # sequential: sequential (address n+1 is likely to be on the same plane as n)

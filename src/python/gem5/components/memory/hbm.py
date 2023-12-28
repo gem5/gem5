@@ -27,14 +27,29 @@
 """ HBM2 memory system using HBMCtrl
 """
 
-from .memory import ChanneledMemory
-from .abstract_memory_system import AbstractMemorySystem
 from math import log
+from typing import (
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    Union,
+)
+
+from m5.objects import (
+    AddrRange,
+    DRAMInterface,
+    HBMCtrl,
+    Port,
+)
+
 from ...utils.override import overrides
-from m5.objects import AddrRange, DRAMInterface, HBMCtrl, Port
-from typing import Type, Optional, Union, Sequence, Tuple
-from .memory import _try_convert
+from .abstract_memory_system import AbstractMemorySystem
 from .dram_interfaces.hbm import HBM_2000_4H_1x64
+from .memory import (
+    ChanneledMemory,
+    _try_convert,
+)
 
 
 class HighBandwidthMemory(ChanneledMemory):
@@ -55,17 +70,18 @@ class HighBandwidthMemory(ChanneledMemory):
     ) -> None:
         """
         :param dram_interface_class: The DRAM interface type to create with
-            this memory controller
+                                     this memory controller.
         :param num_channels: The number of channels that needs to be
-        simulated
+                             simulated.
         :param size: Optionally specify the size of the DRAM controller's
-            address space. By default, it starts at 0 and ends at the size of
-            the DRAM device specified
+                     address space. By default, it starts at 0 and ends at
+                     the size of the DRAM device specified.
         :param addr_mapping: Defines the address mapping scheme to be used.
-            If None, it is defaulted to addr_mapping from dram_interface_class.
+                             If ``None``, it is defaulted to ``addr_mapping``
+                             from ``dram_interface_class``.
         :param interleaving_size: Defines the interleaving size of the multi-
-            channel memory system. By default, it is equivalent to the atom
-            size, i.e., 64.
+                                  channel memory system. By default, it is
+                                  equivalent to the atom size, i.e., 64.
         """
         super().__init__(
             dram_interface_class,
@@ -137,7 +153,6 @@ class HighBandwidthMemory(ChanneledMemory):
 
     @overrides(ChanneledMemory)
     def get_mem_ports(self) -> Sequence[Tuple[AddrRange, Port]]:
-
         intlv_bits = log(self._num_channels, 2)
         mask_list = []
 

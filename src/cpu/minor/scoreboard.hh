@@ -71,6 +71,7 @@ class Scoreboard : public Named
     const unsigned floatRegOffset;
     const unsigned ccRegOffset;
     const unsigned vecRegOffset;
+    const unsigned vecRegElemOffset;
     const unsigned vecPredRegOffset;
     const unsigned matRegOffset;
 
@@ -115,7 +116,8 @@ class Scoreboard : public Named
         floatRegOffset(intRegOffset + reg_classes.at(IntRegClass)->numRegs()),
         ccRegOffset(floatRegOffset + reg_classes.at(FloatRegClass)->numRegs()),
         vecRegOffset(ccRegOffset + reg_classes.at(CCRegClass)->numRegs()),
-        vecPredRegOffset(vecRegOffset +
+        vecRegElemOffset(vecRegOffset + reg_classes.at(VecRegClass)->numRegs()),
+        vecPredRegOffset(vecRegElemOffset +
                 reg_classes.at(VecElemClass)->numRegs()),
         matRegOffset(vecPredRegOffset +
                 reg_classes.at(VecPredRegClass)->numRegs()),

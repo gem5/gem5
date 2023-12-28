@@ -26,18 +26,23 @@
 #
 # Authors: Sean Wilson
 
+from typing import Optional
+
 import testlib.helper as helper
+from testlib.configuration import constants
+
 
 class SkipException(Exception):
     def __init__(self, fixture, testitem):
-        self.msg = 'Fixture "%s" raised SkipException for "%s".' % (
-               fixture.name, testitem.name
+        self.msg = 'Fixture "{}" raised SkipException for "{}".'.format(
+            fixture.name,
+            testitem.name,
         )
-        super(SkipException, self).__init__(self.msg)
+        super().__init__(self.msg)
 
 
-class Fixture(object):
-    '''
+class Fixture:
+    """
     Base Class for a test Fixture.
 
     Fixtures are items which possibly require setup and/or tearing down after
@@ -50,11 +55,12 @@ class Fixture(object):
 
     .. note:: In order for Fixtures to be enumerated by the test system this
         class' :code:`__new__` method must be called.
-    '''
+    """
+
     collector = helper.InstanceCollector()
 
     def __new__(klass, *args, **kwargs):
-        obj = super(Fixture, klass).__new__(klass)
+        obj = super().__new__(klass)
         Fixture.collector.collect(obj)
         return obj
 
@@ -75,6 +81,21 @@ class Fixture(object):
 
     def teardown(self, testitem):
         pass
+
+    def get_get_build_info(self) -> Optional[dict]:
+        # If this is a gem5 build it will return the target gem5 build path
+        # and any additional build information. E.g.:
+        #
+        # /path/to/gem5/build/NULL/gem5.opt--default=NULL PROTOCOL=MI_example
+        #
+        # In this example this may be passed to scons to build gem5 in
+        # accordance to the test's build requirements.
+        #
+        # If this fixtures is not a build of gem5, None is returned.
+        return None
+
+    def __str__(self):
+        return f"{self.name} fixture"
 
     def set_global(self):
         self._is_global = True

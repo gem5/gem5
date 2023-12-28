@@ -26,57 +26,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BASE_STL_HELPERS_HH__
-#define __BASE_STL_HELPERS_HH__
+#ifndef BASE_STL_HELPERS_HH
+#define BASE_STL_HELPERS_HH
 
-#include <algorithm>
-#include <iostream>
-#include <type_traits>
-#include <vector>
+#include "base/stl_helpers/hash_helpers.hh"
+#include "base/stl_helpers/ostream_helpers.hh"
 
-#include "base/compiler.hh"
-
-namespace gem5
-{
-
-namespace stl_helpers
-{
-
-template <typename T, typename Enabled=void>
-struct IsHelpedContainer : public std::false_type {};
-
-template <typename ...Types>
-struct IsHelpedContainer<std::vector<Types...>> : public std::true_type {};
-
-template <typename ...Types>
-constexpr bool IsHelpedContainerV = IsHelpedContainer<Types...>::value;
-
-/**
- * Write out all elements in an stl container as a space separated
- * list enclosed in square brackets
- *
- * @ingroup api_base_utils
- */
-
-template <typename T>
-std::enable_if_t<IsHelpedContainerV<T>, std::ostream &>
-operator<<(std::ostream& out, const T &t)
-{
-    out << "[ ";
-    bool first = true;
-    auto printer = [&first, &out](const auto &elem) {
-        if (first)
-            out << elem;
-        else
-            out << " " << elem;
-    };
-    std::for_each(t.begin(), t.end(), printer);
-    out << " ]";
-    out << std::flush;
-    return out;
-}
-
-} // namespace stl_helpers
-} // namespace gem5
-
-#endif // __BASE_STL_HELPERS_HH__
+#endif // BASE_STL_HELPERS_HH

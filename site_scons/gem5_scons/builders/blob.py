@@ -39,12 +39,13 @@
 
 import os.path
 
-from gem5_scons import Transform, MakeAction
-from blob import bytesToCppArray
-
-from code_formatter import code_formatter
-
 import SCons.Node.Python
+from blob import bytesToCppArray
+from code_formatter import code_formatter
+from gem5_scons import (
+    MakeAction,
+    Transform,
+)
 
 
 def build_blob(target, source, env):

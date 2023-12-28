@@ -38,9 +38,9 @@
 # Pipeline activity viewer for the O3 CPU model.
 
 import argparse
+import copy
 import os
 import sys
-import copy
 
 # Temporary storage for instructions. The queue is filled in out-of-order
 # until it reaches 'max_threshold' number of instructions. It is then
@@ -511,7 +511,7 @@ def main():
         sys.exit(1)
     # Process trace
     print("Processing trace... ", end=" ")
-    with open(args.tracefile, "r") as trace:
+    with open(args.tracefile) as trace:
         with open(args.outfile, "w") as out:
             process_trace(
                 trace,

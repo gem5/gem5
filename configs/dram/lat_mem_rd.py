@@ -33,18 +33,20 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import gzip
 import argparse
+import gzip
 import os
 
 import m5
 from m5.objects import *
-from m5.util import addToPath
 from m5.stats import periodicStatDump
+from m5.util import addToPath
 
 addToPath("../")
-from common import ObjectList
-from common import MemConfig
+from common import (
+    MemConfig,
+    ObjectList,
+)
 
 addToPath("../../util")
 import protolib
@@ -150,6 +152,7 @@ cfg_file = open(cfg_file_name, "w")
 burst_size = 64
 system.cache_line_size = burst_size
 
+
 # lazy version to check if an integer is a power of two
 def is_pow2(num):
     return num != 0 and ((num & (num - 1)) == 0)
@@ -177,13 +180,14 @@ iterations = 2
 # do not pile up in the system, adjust if needed
 itt = 150 * 1000
 
+
 # for every data point, we create a trace containing a random address
 # sequence, so that we can play back the same sequence for warming and
 # the actual measurement
 def create_trace(filename, max_addr, burst_size, itt):
     try:
         proto_out = gzip.open(filename, "wb")
-    except IOError:
+    except OSError:
         print("Failed to open ", filename, " for writing")
         exit(-1)
 
@@ -275,6 +279,7 @@ system.tgen.port = system.monitor.cpu_side_port
 # create the actual cache hierarchy, for now just go with something
 # basic to explore some of the options
 from common.Caches import *
+
 
 # a starting point for an L3 cache
 class L3Cache(Cache):

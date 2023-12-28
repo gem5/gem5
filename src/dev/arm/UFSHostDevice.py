@@ -34,10 +34,11 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import sys
+
+from m5.objects.AbstractNVM import *
+from m5.objects.Device import DmaDevice
 from m5.params import *
 from m5.proxy import *
-from m5.objects.Device import DmaDevice
-from m5.objects.AbstractNVM import *
 
 
 class UFSHostDevice(DmaDevice):

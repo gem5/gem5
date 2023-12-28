@@ -39,7 +39,10 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from slicc.ast.ExprAST import ExprAST
-from slicc.symbols import Func, Type
+from slicc.symbols import (
+    Func,
+    Type,
+)
 
 
 class FuncCallExprAST(ExprAST):
@@ -282,7 +285,7 @@ if (!(${{cvec[0]}})) {
             params = ""
             first_param = True
 
-            for (param_code, type) in zip(cvec, type_vec):
+            for param_code, type in zip(cvec, type_vec):
                 if first_param:
                     params = str(param_code)
                     first_param = False

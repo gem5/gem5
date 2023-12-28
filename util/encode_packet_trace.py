@@ -51,8 +51,9 @@
 # This script can of course also be used as a template to convert
 # other trace formats into the gem5 protobuf format
 
-import protolib
 import sys
+
+import protolib
 
 # Import the packet proto definitions. If they are not found, attempt
 # to generate them automatically. This assumes that the script is
@@ -92,14 +93,14 @@ def main():
         exit(-1)
 
     try:
-        ascii_in = open(sys.argv[1], "r")
-    except IOError:
+        ascii_in = open(sys.argv[1])
+    except OSError:
         print("Failed to open ", sys.argv[1], " for reading")
         exit(-1)
 
     try:
         proto_out = open(sys.argv[2], "wb")
-    except IOError:
+    except OSError:
         print("Failed to open ", sys.argv[2], " for writing")
         exit(-1)
 

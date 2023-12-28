@@ -48,24 +48,24 @@ scons build/X86/gem5.opt
 """
 
 import argparse
-import time
 import sys
+import time
 
 import m5
 from m5.objects import Root
 
-from gem5.utils.requires import requires
+from gem5.coherence_protocol import CoherenceProtocol
 from gem5.components.boards.x86_board import X86Board
 from gem5.components.memory import DualChannelDDR4_2400
+from gem5.components.processors.cpu_types import CPUTypes
 from gem5.components.processors.simple_switchable_processor import (
     SimpleSwitchableProcessor,
 )
-from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
-from gem5.coherence_protocol import CoherenceProtocol
-from gem5.resources.resource import Resource
-from gem5.simulate.simulator import Simulator
+from gem5.resources.resource import obtain_resource
 from gem5.simulate.exit_event import ExitEvent
+from gem5.simulate.simulator import Simulator
+from gem5.utils.requires import requires
 
 requires(
     isa_required=ISA.X86,
@@ -73,35 +73,11 @@ requires(
     kvm_required=True,
 )
 
-# Following are the list of benchmark programs for gapbs
-
-benchmark_choices = ["cc", "bc", "tc", "pr", "bfs"]
-
-synthetic_choices = ["0", "1"]
-
-size_choices = [
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "10",
-    "11",
-    "12",
-    "13",
-    "14",
-    "15",
-    "16",
-    "USA-road-d.NY.gr",
-]
-
 parser = argparse.ArgumentParser(
     description="An example configuration script to run the gapbs benchmarks."
 )
+
+gapbs_suite = obtain_resource("gapbs-benchmark-suite")
 
 # The only positional argument accepted is the benchmark name in this script.
 
@@ -110,27 +86,11 @@ parser.add_argument(
     type=str,
     required=True,
     help="Input the benchmark program to execute.",
-    choices=benchmark_choices,
-)
-
-parser.add_argument(
-    "--synthetic",
-    type=str,
-    required=True,
-    help="Synthetic Graph:: 1: synthetic graph is True; 0: real graph",
-    choices=synthetic_choices,
-)
-
-parser.add_argument(
-    "--size",
-    type=str,
-    required=True,
-    help="Graph Size:: If synthetic is True, then specify a size [1 .. 15]. \
-    Otherwise, specify a graph name [USA-road-d.NY.gr]",
-    choices=size_choices,
+    choices=[workload.get_id() for workload in gapbs_suite],
 )
 
 args = parser.parse_args()
+
 
 # Setting up all the fixed system parameters here
 # Caches: MESI Two Level Cache Hierarchy
@@ -185,30 +145,7 @@ board = X86Board(
 # committed instructions till ROI ends (marked by `workend`). We then finish
 # executing the rest of the benchmark.
 
-# GAPBS benchmarks can be run using a synthetic graph
-
-if args.synthetic == "1":
-    if args.size == "USA-road-d.NY.gr":
-        print(
-            "fatal: cannot use a real graph with --synthetic 1",
-            file=sys.stderr,
-        )
-        exit(-1)
-
-    command = f"./{args.benchmark} -g {args.size}\n"
-else:
-    command = f"./{args.benchmark} -sf ../{args.size}"
-
-board.set_kernel_disk_workload(
-    # The x86 linux kernel will be automatically downloaded to the
-    # `~/.cache/gem5` directory if not already present.
-    # gapbs benchamarks was tested with kernel version 4.19.83
-    kernel=Resource("x86-linux-kernel-4.19.83"),
-    # The x86-gapbs image will be automatically downloaded to the
-    # `~/.cache/gem5` directory if not already present.
-    disk_image=Resource("x86-gapbs"),
-    readfile_contents=command,
-)
+board.set_workload(obtain_resource(args.benchmark))
 
 
 def handle_workbegin():

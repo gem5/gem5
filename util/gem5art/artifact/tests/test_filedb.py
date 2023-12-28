@@ -29,8 +29,8 @@
 
 import json
 import os
-from pathlib import Path
 import unittest
+from pathlib import Path
 from uuid import UUID
 
 from gem5art.artifact import Artifact
@@ -62,7 +62,7 @@ class TestArtifactFileDB(unittest.TestCase):
         self.assertTrue(Path("test.json").exists())
 
     def test_json_content(self):
-        with open("test.json", "r") as f:
+        with open("test.json") as f:
             artifacts = json.load(f)
         self.assertTrue(len(artifacts) == 1)
         artifact = artifacts[0]

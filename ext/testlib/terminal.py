@@ -24,10 +24,10 @@
 #
 # Author: Steve Reinhardt
 
-import sys
 import fcntl
-import termios
 import struct
+import sys
+import termios
 
 # Intended usage example:
 #
@@ -41,7 +41,7 @@ import struct
 
 # ANSI color names in index order
 color_names = "Black Red Green Yellow Blue Magenta Cyan White".split()
-default_separator = '='
+default_separator = "="
 
 # Character attribute capabilities.  Note that not all terminals
 # support all of these capabilities, or support them
@@ -54,38 +54,45 @@ default_separator = '='
 # Please feel free to add information about other terminals here.
 #
 capability_map = {
-         'Bold': 'bold',
-          'Dim': 'dim',
-        'Blink': 'blink',
-    'Underline': 'smul',
-      'Reverse': 'rev',
-     'Standout': 'smso',
-       'Normal': 'sgr0'
+    "Bold": "bold",
+    "Dim": "dim",
+    "Blink": "blink",
+    "Underline": "smul",
+    "Reverse": "rev",
+    "Standout": "smso",
+    "Normal": "sgr0",
 }
 
 capability_names = capability_map.keys()
 
+
 def null_cap_string(s, *args):
-    return ''
+    return ""
+
 
 try:
     import curses
+
     curses.setupterm()
+
     def cap_string(s, *args):
         cap = curses.tigetstr(s)
         if cap:
             return curses.tparm(cap, *args).decode("utf-8")
         else:
-            return ''
+            return ""
+
 except:
     cap_string = null_cap_string
 
-class ColorStrings(object):
+
+class ColorStrings:
     def __init__(self, cap_string):
         for i, c in enumerate(color_names):
-            setattr(self, c, cap_string('setaf', i))
+            setattr(self, c, cap_string("setaf", i))
         for name, cap in capability_map.items():
             setattr(self, name, cap_string(cap))
+
 
 termcap = ColorStrings(cap_string)
 no_termcap = ColorStrings(null_cap_string)
@@ -95,7 +102,8 @@ if sys.stdout.isatty():
 else:
     tty_termcap = no_termcap
 
-def get_termcap(use_colors = None):
+
+def get_termcap(use_colors=None):
     if use_colors:
         return termcap
     elif use_colors is None:
@@ -104,65 +112,78 @@ def get_termcap(use_colors = None):
     else:
         return no_termcap
 
+
 def terminal_size():
-    '''Return the (width, heigth) of the terminal screen.'''
+    """Return the (width, heigth) of the terminal screen."""
     try:
-        h, w, hp, wp = struct.unpack('HHHH',
-            fcntl.ioctl(0, termios.TIOCGWINSZ,
-            struct.pack('HHHH', 0, 0, 0, 0)))
+        h, w, hp, wp = struct.unpack(
+            "HHHH",
+            fcntl.ioctl(
+                0, termios.TIOCGWINSZ, struct.pack("HHHH", 0, 0, 0, 0)
+            ),
+        )
         return w, h
-    except IOError:
+    except OSError:
         # It's possible that in sandboxed environments the above ioctl is not
         # allowed (e.g., some jenkins setups)
         return 80, 24
 
 
 def separator(char=default_separator, color=None):
-    '''
+    """
     Return a separator of the given character that is the length of the full
     width of the terminal screen.
-    '''
+    """
     (w, h) = terminal_size()
     if color:
-        return color + char*w + termcap.Normal
+        return color + char * w + termcap.Normal
     else:
-        return char*w
+        return char * w
 
-def insert_separator(inside, char=default_separator,
-                     min_barrier=3, color=None):
-    '''
+
+def insert_separator(
+    inside, char=default_separator, min_barrier=3, color=None
+):
+    """
     Place the given string inside of the separator. If it does not fit inside,
     expand the separator to fit it with at least min_barrier.
 
     .. seealso:: :func:`separator`
-    '''
+    """
     # Use a bytearray so it's efficient to manipulate
-    string = bytearray(separator(char, color=color), 'utf-8')
+    string = bytearray(separator(char, color=color), "utf-8")
 
     # Check if we can fit inside with at least min_barrier.
     gap = (len(string) - len(inside)) - min_barrier * 2
     if gap > 0:
         # We'll need to expand the string to fit us.
-        string.extend([ char for _ in range(-gap)])
+        string.extend([char for _ in range(-gap)])
     # Emplace inside
-    middle = (len(string)-1)//2
-    start_idx = middle - len(inside)//2
-    string[start_idx:len(inside)+start_idx] = str.encode(inside)
+    middle = (len(string) - 1) // 2
+    start_idx = middle - len(inside) // 2
+    string[start_idx : len(inside) + start_idx] = str.encode(inside)
     return str(string.decode("utf-8"))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
+
     def test_termcap(obj):
         for c_name in color_names:
             c_str = getattr(obj, c_name)
             print(c_str + c_name + obj.Normal)
             for attr_name in capability_names:
-                if attr_name == 'Normal':
+                if attr_name == "Normal":
                     continue
                 attr_str = getattr(obj, attr_name)
                 print(attr_str + c_str + attr_name + " " + c_name + obj.Normal)
-            print(obj.Bold + obj.Underline + \
-                  c_name + "Bold Underline " + c_str + obj.Normal)
+            print(
+                obj.Bold
+                + obj.Underline
+                + c_name
+                + "Bold Underline "
+                + c_str
+                + obj.Normal
+            )
 
     print("=== termcap enabled ===")
     test_termcap(termcap)

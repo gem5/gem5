@@ -43,18 +43,21 @@ import traceback
 
 import testlib.helper as helper
 import testlib.log as log
-
-from testlib.state import Status, Result
 from testlib.fixture import SkipException
+from testlib.state import (
+    Result,
+    Status,
+)
+
 
 def compute_aggregate_result(iterable):
-    '''
+    """
     Status of the test suite by default is:
     * Passed if all contained tests passed
     * Errored if any contained tests errored
     * Failed if no tests errored, but one or more failed.
     * Skipped if all contained tests were skipped
-    '''
+    """
     failed = []
     skipped = []
     for testitem in iterable:
@@ -73,18 +76,18 @@ def compute_aggregate_result(iterable):
     else:
         return Result(Result.Passed)
 
-class TestParameters(object):
+
+class TestParameters:
     def __init__(self, test, suite):
         self.test = test
         self.suite = suite
         self.log = log.test_log
         self.log.test = test
-        self.time = {
-            "user_time" : 0, "system_time" : 0}
+        self.time = {"user_time": 0, "system_time": 0}
 
     @helper.cacheresult
     def _fixtures(self):
-        fixtures = {fixture.name:fixture for fixture in self.suite.fixtures}
+        fixtures = {fixture.name: fixture for fixture in self.suite.fixtures}
         for fixture in self.test.fixtures:
             fixtures[fixture.name] = fixture
         return fixtures
@@ -139,18 +142,18 @@ class RunnerPattern:
         else:
             self.testable.status = Status.Complete
 
+
 class TestRunner(RunnerPattern):
     def test(self):
-        test_params = TestParameters(
-            self.testable,
-            self.testable.parent_suite)
+        test_params = TestParameters(self.testable, self.testable.parent_suite)
 
         try:
             # Running the test
             test_params.test.test(test_params)
         except Exception:
-            self.testable.result = Result(Result.Failed,
-                    traceback.format_exc())
+            self.testable.result = Result(
+                Result.Failed, traceback.format_exc()
+            )
         else:
             self.testable.result = Result(Result.Passed)
 
@@ -161,8 +164,7 @@ class SuiteRunner(RunnerPattern):
     def test(self):
         for test in self.testable:
             test.runner(test).run()
-        self.testable.result = compute_aggregate_result(
-                iter(self.testable))
+        self.testable.result = compute_aggregate_result(iter(self.testable))
 
 
 class LibraryRunner(SuiteRunner):
@@ -175,23 +177,23 @@ class LibraryParallelRunner(RunnerPattern):
 
     def test(self):
         pool = multiprocessing.dummy.Pool(self.threads)
-        pool.map(lambda suite : suite.runner(suite).run(), self.testable)
-        self.testable.result = compute_aggregate_result(
-                iter(self.testable))
+        pool.map(lambda suite: suite.runner(suite).run(), self.testable)
+        self.testable.result = compute_aggregate_result(iter(self.testable))
 
 
 class BrokenFixtureException(Exception):
     def __init__(self, fixture, testitem, trace):
         self.trace = trace
 
-        self.msg = ('%s\n'
-                   'Exception raised building "%s" raised SkipException'
-                   ' for "%s".' %
-                   (trace, fixture.name, testitem.name)
+        self.msg = (
+            "%s\n"
+            'Exception raised building "%s" raised SkipException'
+            ' for "%s".' % (trace, fixture.name, testitem.name)
         )
-        super(BrokenFixtureException, self).__init__(self.msg)
+        super().__init__(self.msg)
 
-class FixtureBuilder(object):
+
+class FixtureBuilder:
     def __init__(self, fixtures):
         self.fixtures = fixtures
         self.built_fixtures = []
@@ -207,12 +209,15 @@ class FixtureBuilder(object):
                 raise
             except Exception as e:
                 exc = traceback.format_exc()
-                msg = 'Exception raised while setting up fixture for %s' %\
-                        testitem.uid
-                log.test_log.warn('%s\n%s' % (exc, msg))
+                msg = (
+                    "Exception raised while setting up fixture for %s"
+                    % testitem.uid
+                )
+                log.test_log.warn(f"{exc}\n{msg}")
 
-                raise BrokenFixtureException(fixture, testitem,
-                        traceback.format_exc())
+                raise BrokenFixtureException(
+                    fixture, testitem, traceback.format_exc()
+                )
 
     def post_test_procedure(self, testitem):
         for fixture in self.built_fixtures:
@@ -225,6 +230,8 @@ class FixtureBuilder(object):
             except Exception:
                 # Log exception but keep cleaning up.
                 exc = traceback.format_exc()
-                msg = 'Exception raised while tearing down fixture for %s' %\
-                        testitem.uid
-                log.test_log.warn('%s\n%s' % (exc, msg))
+                msg = (
+                    "Exception raised while tearing down fixture for %s"
+                    % testitem.uid
+                )
+                log.test_log.warn(f"{exc}\n{msg}")

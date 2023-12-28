@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2021 Arm Limited
+ * Copyright (c) 2010, 2012-2013, 2021, 2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -186,6 +186,12 @@ struct TlbEntry : public Serializable
     {
         // virtual address
         Addr va = 0;
+        // lookup size:
+        // * != 0 -> this is a range based lookup.
+        //           end_address = va + size
+        // * == 0 -> This is a normal lookup. size should
+        //           be ignored
+        Addr size = 0;
         // context id/address space id to use
         uint16_t asn = 0;
         // if on lookup asn should be ignored
@@ -219,6 +225,7 @@ struct TlbEntry : public Serializable
 
     uint16_t asid;          // Address Space Identifier
     vmid_t vmid;            // Virtual machine Identifier
+    GrainSize tg;           // Translation Granule Size
     uint8_t N;              // Number of bits in pagesize
     uint8_t innerAttrs;
     uint8_t outerAttrs;
@@ -263,7 +270,7 @@ struct TlbEntry : public Serializable
              bool uncacheable, bool read_only) :
          pfn(_paddr >> PageShift), size(PageBytes - 1), vpn(_vaddr >> PageShift),
          attributes(0), lookupLevel(LookupLevel::L1),
-         asid(_asn), vmid(0), N(0),
+         asid(_asn), vmid(0), tg(Grain4KB), N(0),
          innerAttrs(0), outerAttrs(0), ap(read_only ? 0x3 : 0), hap(0x3),
          domain(DomainType::Client),  mtype(MemoryType::StronglyOrdered),
          longDescFormat(false), isHyp(false), global(false), valid(true),
@@ -281,7 +288,7 @@ struct TlbEntry : public Serializable
 
     TlbEntry() :
          pfn(0), size(0), vpn(0), attributes(0), lookupLevel(LookupLevel::L1),
-         asid(0), vmid(0), N(0),
+         asid(0), vmid(0), tg(ReservedGrain), N(0),
          innerAttrs(0), outerAttrs(0), ap(0), hap(0x3),
          domain(DomainType::Client), mtype(MemoryType::StronglyOrdered),
          longDescFormat(false), isHyp(false), global(false), valid(false),
@@ -307,11 +314,24 @@ struct TlbEntry : public Serializable
     }
 
     bool
+    matchAddress(const Lookup &lookup) const
+    {
+        Addr page_addr = vpn << N;
+        if (lookup.size) {
+            // This is a range based loookup
+            return lookup.va <= page_addr + size &&
+                   lookup.va + lookup.size > page_addr;
+        } else {
+            // This is a normal lookup
+            return lookup.va >= page_addr && lookup.va <= page_addr + size;
+        }
+    }
+
+    bool
     match(const Lookup &lookup) const
     {
         bool match = false;
-        Addr v = vpn << N;
-        if (valid && lookup.va >= v && lookup.va <= v + size &&
+        if (valid && matchAddress(lookup) &&
             (lookup.secure == !nstid) && (lookup.hyp == isHyp))
         {
             match = checkELMatch(lookup.targetEL, lookup.inHost);
@@ -319,8 +339,8 @@ struct TlbEntry : public Serializable
             if (match && !lookup.ignoreAsn) {
                 match = global || (lookup.asn == asid);
             }
-            if (match && nstid) {
-                match = isHyp || (lookup.vmid == vmid);
+            if (match && useVMID(lookup.targetEL, lookup.inHost)) {
+                match = lookup.vmid == vmid;
             }
         }
         return match;

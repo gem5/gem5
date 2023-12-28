@@ -27,6 +27,7 @@
 import os
 
 from testlib.configuration import constants
+
 from gem5.suite import *
 
 """

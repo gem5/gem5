@@ -69,16 +69,15 @@ werror_env.Append(CCFLAGS=['-Werror'])
 with gem5_scons.Configure(werror_env) as conf:
 
     # Store result in the main environment
-    main['CONF']['HAVE_DEPRECATED_NAMESPACE'] = conf.TryCompile('''
-        int main() {return 0;}
-        namespace [[gnu::deprecated("Test namespace deprecation")]]
-        test_deprecated_namespace {}
-    ''', '.cc')
+    main['CONF']['HAVE_DEPRECATED_NAMESPACE'] = bool(
+        conf.TryCompile('''
+            int main() {return 0;}
+            namespace [[gnu::deprecated("Test namespace deprecation")]]
+            test_deprecated_namespace {}
+        ''', '.cc')
+    )
 
     if not main['CONF']['HAVE_DEPRECATED_NAMESPACE']:
         warning("Deprecated namespaces are not supported by this compiler.\n"
                 "Please make sure to check the mailing list for deprecation "
                 "announcements.")
-
-sticky_vars.Add(BoolVariable('USE_POSIX_CLOCK', 'Use POSIX Clocks',
-                             '${CONF["HAVE_POSIX_CLOCK"]}'))

@@ -44,7 +44,7 @@ def parse_gitcookies_line(raw):
 
 def parse_gitcookies(input_path):
     username_password_dict = {}
-    with open(input_path, "r") as input_stream:
+    with open(input_path) as input_stream:
         for line in input_stream:
             username, password = parse_gitcookies_line(line)
             if not username:

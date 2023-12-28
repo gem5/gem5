@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021,2022 ARM Limited
+ * Copyright (c) 2021-2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -164,6 +164,7 @@ machine(MachineType:Memory, "Memory controller interface") :
     int storSlot,   desc="Slot in the storage tracker occupied by this entry";
     Addr addr,      desc="Line address for this TBE";
     Addr accAddr,   desc="Original access address. Set only for Write*Ptl";
+    Addr txnId,     desc="Transaction ID";
     int  accSize,   desc="Access size. Set only for Write*Ptl";
     State state,    desc="Current line state";
     DataBlock dataBlk, desc="Transaction data";
@@ -503,6 +504,7 @@ machine(MachineType:Memory, "Memory controller interface") :
       }
       tbe.accAddr := in_msg.accAddr;
       tbe.accSize := in_msg.accSize;
+      tbe.txnId := in_msg.txnId;
     }
   }
 
@@ -608,6 +610,7 @@ machine(MachineType:Memory, "Memory controller interface") :
     assert(tbe.rxtxBytes < blockSize);
     enqueue(datOutPort, CHIDataMsg, data_latency) {
       out_msg.addr := tbe.addr;
+      out_msg.txnId := tbe.txnId;
       if (tbe.useDataSepResp) {
         out_msg.type := CHIDataType:DataSepResp_UC;
       } else {
@@ -663,7 +666,7 @@ machine(MachineType:Memory, "Memory controller interface") :
   }
 
   action(popMemoryQueue, "pmem", desc="Pop memory queue.") {
-    memQueue_in.dequeue(clockEdge());
+    dequeueMemRespQueue();
   }
 
   // Stall/wake-up only used for requests that arrive when we are on the

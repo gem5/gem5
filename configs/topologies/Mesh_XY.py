@@ -25,12 +25,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.params import *
-from m5.objects import *
-
 from common import FileSystemConfig
-
 from topologies.BaseTopology import SimpleTopology
+
+from m5.objects import *
+from m5.params import *
 
 # Creates a generic Mesh assuming an equal number of cache
 # and directory controllers.
@@ -87,7 +86,7 @@ class Mesh_XY(SimpleTopology):
 
         # Connect each node to the appropriate router
         ext_links = []
-        for (i, n) in enumerate(network_nodes):
+        for i, n in enumerate(network_nodes):
             cntrl_level, router_id = divmod(i, num_routers)
             assert cntrl_level < cntrls_per_router
             ext_links.append(
@@ -102,7 +101,7 @@ class Mesh_XY(SimpleTopology):
 
         # Connect the remainding nodes to router 0.  These should only be
         # DMA nodes.
-        for (i, node) in enumerate(remainder_nodes):
+        for i, node in enumerate(remainder_nodes):
             assert node.type == "DMA_Controller"
             assert i < remainder
             ext_links.append(

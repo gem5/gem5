@@ -24,13 +24,17 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.params import *
-from m5.proxy import *
-
-from m5.objects.Device import BasicPioDevice, PioDevice, IsaFake, BadAddr
+from m5.objects.Device import (
+    BadAddr,
+    BasicPioDevice,
+    IsaFake,
+    PioDevice,
+)
 from m5.objects.Platform import Platform
 from m5.objects.Terminal import Terminal
 from m5.objects.Uart import Uart8250
+from m5.params import *
+from m5.proxy import *
 
 
 class MmDisk(BasicPioDevice):
@@ -151,6 +155,7 @@ class T1000(Platform):
     puart0 = Uart8250(pio_addr=0x1F10000000)
 
     iob = Iob()
+
     # Attach I/O devices that are on chip
     def attachOnChipIO(self, bus):
         self.iob.pio = bus.mem_side_ports

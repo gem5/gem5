@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 ARM Limited
+ * Copyright (c) 2014-2015, 2023 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -94,7 +94,7 @@ Queued::DeferredPacket::finish(const Fault &fault,
     assert(ongoingTranslation);
     ongoingTranslation = false;
     bool failed = (fault != NoFault);
-    owner->translationComplete(this, failed);
+    owner->translationComplete(this, failed, *cache);
 }
 
 Queued::Queued(const QueuedPrefetcherParams &p)
@@ -169,10 +169,12 @@ Queued::getMaxPermittedPrefetches(size_t total) const
 }
 
 void
-Queued::notify(const PacketPtr &pkt, const PrefetchInfo &pfi)
+Queued::notify(const CacheAccessProbeArg &acc, const PrefetchInfo &pfi)
 {
     Addr blk_addr = blockAddress(pfi.getAddr());
     bool is_secure = pfi.isSecure();
+    const PacketPtr pkt = acc.pkt;
+    const CacheAccessor &cache = acc.cache;
 
     // Squash queued prefetches if demand miss to same line
     if (queueSquash) {
@@ -195,7 +197,7 @@ Queued::notify(const PacketPtr &pkt, const PrefetchInfo &pfi)
 
     // Calculate prefetches given this access
     std::vector<AddrPriority> addresses;
-    calculatePrefetch(pfi, addresses);
+    calculatePrefetch(pfi, addresses, cache);
 
     // Get the maximu number of prefetches that we are allowed to generate
     size_t max_pfs = getMaxPermittedPrefetches(addresses.size());
@@ -210,7 +212,7 @@ Queued::notify(const PacketPtr &pkt, const PrefetchInfo &pfi)
         if (!samePage(addr_prio.first, pfi.getAddr())) {
             statsQueued.pfSpanPage += 1;
 
-            if (hasBeenPrefetched(pkt->getAddr(), pkt->isSecure())) {
+            if (cache.hasBeenPrefetched(pkt->getAddr(), pkt->isSecure())) {
                 statsQueued.pfUsefulSpanPage += 1;
             }
         }
@@ -222,7 +224,7 @@ Queued::notify(const PacketPtr &pkt, const PrefetchInfo &pfi)
             DPRINTF(HWPrefetch, "Found a pf candidate addr: %#x, "
                     "inserting into prefetch queue.\n", new_pfi.getAddr());
             // Create and insert the request
-            insert(pkt, new_pfi, addr_prio.second);
+            insert(pkt, new_pfi, addr_prio.second, cache);
             num_pfs += 1;
             if (num_pfs == max_pfs) {
                 break;
@@ -298,7 +300,8 @@ Queued::processMissingTranslations(unsigned max)
 }
 
 void
-Queued::translationComplete(DeferredPacket *dp, bool failed)
+Queued::translationComplete(DeferredPacket *dp, bool failed,
+                            const CacheAccessor &cache)
 {
     auto it = pfqMissingTranslation.begin();
     while (it != pfqMissingTranslation.end()) {
@@ -315,8 +318,9 @@ Queued::translationComplete(DeferredPacket *dp, bool failed)
                 it->translationRequest->getPaddr());
         Addr target_paddr = it->translationRequest->getPaddr();
         // check if this prefetch is already redundant
-        if (cacheSnoop && (inCache(target_paddr, it->pfInfo.isSecure()) ||
-                    inMissQueue(target_paddr, it->pfInfo.isSecure()))) {
+        if (cacheSnoop &&
+                (cache.inCache(target_paddr, it->pfInfo.isSecure()) ||
+                 cache.inMissQueue(target_paddr, it->pfInfo.isSecure()))) {
             statsQueued.pfInCache++;
             DPRINTF(HWPrefetch, "Dropping redundant in "
                     "cache/MSHR prefetch addr:%#x\n", target_paddr);
@@ -382,7 +386,7 @@ Queued::createPrefetchRequest(Addr addr, PrefetchInfo const &pfi,
 
 void
 Queued::insert(const PacketPtr &pkt, PrefetchInfo &new_pfi,
-                         int32_t priority)
+               int32_t priority, const CacheAccessor &cache)
 {
     if (queueFilter) {
         if (alreadyInQueue(pfq, new_pfi, priority)) {
@@ -451,8 +455,8 @@ Queued::insert(const PacketPtr &pkt, PrefetchInfo &new_pfi,
         }
     }
     if (has_target_pa && cacheSnoop &&
-            (inCache(target_paddr, new_pfi.isSecure()) ||
-            inMissQueue(target_paddr, new_pfi.isSecure()))) {
+            (cache.inCache(target_paddr, new_pfi.isSecure()) ||
+             cache.inMissQueue(target_paddr, new_pfi.isSecure()))) {
         statsQueued.pfInCache++;
         DPRINTF(HWPrefetch, "Dropping redundant in "
                 "cache/MSHR prefetch addr:%#x\n", target_paddr);
@@ -460,7 +464,7 @@ Queued::insert(const PacketPtr &pkt, PrefetchInfo &new_pfi,
     }
 
     /* Create the packet and find the spot to insert it */
-    DeferredPacket dpp(this, new_pfi, 0, priority);
+    DeferredPacket dpp(this, new_pfi, 0, priority, cache);
     if (has_target_pa) {
         Tick pf_time = curTick() + clockPeriod() * latency;
         dpp.createPkt(target_paddr, blkSize, requestorId, tagPrefetch,
@@ -472,7 +476,7 @@ Queued::insert(const PacketPtr &pkt, PrefetchInfo &new_pfi,
     } else {
         // Add the translation request and try to resolve it later
         dpp.setTranslationRequest(translation_req);
-        dpp.tc = cache->system->threads[translation_req->contextId()];
+        dpp.tc = system->threads[translation_req->contextId()];
         DPRINTF(HWPrefetch, "Prefetch queued with no translation. "
                 "addr:%#x priority: %3d\n", new_pfi.getAddr(), priority);
         addToQueue(pfqMissingTranslation, dpp);

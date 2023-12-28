@@ -10,6 +10,15 @@ system software changes, and compile-time and run-time system optimizations.
 
 The main website can be found at <http://www.gem5.org>.
 
+## Testing status
+
+**Note**: These regard tests run on the develop branch of gem5:
+<https://github.com/gem5/gem5/tree/develop>.
+
+[![Daily Tests](https://github.com/gem5/gem5/actions/workflows/daily-tests.yaml/badge.svg)](https://github.com/gem5/gem5/actions/workflows/daily-tests.yaml)
+[![Weekly Tests](https://github.com/gem5/gem5/actions/workflows/weekly-tests.yaml/badge.svg)](https://github.com/gem5/gem5/actions/workflows/weekly-tests.yaml)
+[![Compiler Tests](https://github.com/gem5/gem5/actions/workflows/compiler-tests.yaml/badge.svg)](https://github.com/gem5/gem5/actions/workflows/compiler-tests.yaml)
+
 ## Getting started
 
 A good starting point is <http://www.gem5.org/about>, and for
@@ -29,8 +38,8 @@ Once you have all dependencies resolved, execute
 `scons build/ALL/gem5.opt` to build an optimized version of the gem5 binary
 (`gem5.opt`) containing all gem5 ISAs. If you only wish to compile gem5 to
 include a single ISA, you can replace `ALL` with the name of the ISA. Valid
-options include `ARM`, `NULL`, `MIPS`, `POWER`, `SPARC`, and `X86` The complete
-list of options can be found in the build_opts directory.
+options include `ARM`, `NULL`, `MIPS`, `POWER`, `RISCV`, `SPARC`, and `X86`
+The complete list of options can be found in the build_opts directory.
 
 See https://www.gem5.org/documentation/general_docs/building for more
 information on building gem5.

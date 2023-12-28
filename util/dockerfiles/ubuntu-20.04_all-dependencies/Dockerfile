@@ -24,7 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-FROM ubuntu:20.04
+FROM --platform=${BUILDPLATFORM} ubuntu:20.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt -y update && apt -y upgrade && \
@@ -32,6 +32,26 @@ RUN apt -y update && apt -y upgrade && \
     libprotobuf-dev protobuf-compiler libprotoc-dev libgoogle-perftools-dev \
     python3-dev python-is-python3 doxygen libboost-all-dev \
     libhdf5-serial-dev python3-pydot libpng-dev libelf-dev pkg-config pip \
-    python3-venv black
+    python3-venv black gcc-10 g++-10 cmake python3-tk wget libssl-dev
 
 RUN pip install mypy pre-commit
+
+RUN update-alternatives --install \
+    /usr/bin/g++ g++ /usr/bin/g++-10 100
+RUN update-alternatives --install \
+    /usr/bin/gcc gcc /usr/bin/gcc-10 100
+RUN update-alternatives --install \
+    /usr/bin/c++ c++ /usr/bin/g++-10 100
+RUN update-alternatives --install \
+    /usr/bin/cc cc /usr/bin/gcc-10 100
+
+
+# DRAMSys requires cmake >= 3.24.0.
+RUN wget https://github.com/Kitware/CMake/releases/download/v3.24.0/cmake-3.24.0.tar.gz \
+    && tar -xzf cmake-3.24.0.tar.gz \
+    && cd cmake-3.24.0 \
+    && ./bootstrap \
+    && make -j`nproc` \
+    && make install \
+    && cd .. \
+    && rm -rf cmake-3.24.0.tar.gz cmake-3.24.0

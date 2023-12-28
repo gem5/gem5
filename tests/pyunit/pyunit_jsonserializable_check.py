@@ -25,6 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import unittest
+
 from m5.ext.pystats.serializable_stat import SerializableStat
 
 
@@ -54,18 +55,18 @@ class JsonSerializableTestSuite(unittest.TestCase):
         obj_json = obj.to_json()
         self.assertTrue("child_1" in obj_json)
         self.assertTrue("stat1" in obj_json["child_1"])
-        self.assertEquals(2, obj_json["child_1"]["stat1"])
+        self.assertEqual(2, obj_json["child_1"]["stat1"])
         self.assertTrue("stat2" in obj_json["child_1"])
-        self.assertEquals("3", obj_json["child_1"]["stat2"])
+        self.assertEqual("3", obj_json["child_1"]["stat2"])
         self.assertTrue("child_list" in obj_json)
-        self.assertEquals(2, len(obj_json["child_list"]))
+        self.assertEqual(2, len(obj_json["child_list"]))
         self.assertTrue("stat1" in obj_json["child_list"][0])
         self.assertEqual("hello", obj_json["child_list"][0]["stat1"])
         self.assertTrue("list_stat2" in obj_json["child_list"][1])
-        self.assertEquals(6, len(obj_json["child_list"][1]["list_stat2"]))
-        self.assertEquals("1", obj_json["child_list"][1]["list_stat2"][0])
-        self.assertEquals(2, obj_json["child_list"][1]["list_stat2"][1])
-        self.assertEquals("3", obj_json["child_list"][1]["list_stat2"][2])
-        self.assertEquals(4, obj_json["child_list"][1]["list_stat2"][3])
-        self.assertEquals(5.2, obj_json["child_list"][1]["list_stat2"][4])
-        self.assertEquals(None, obj_json["child_list"][1]["list_stat2"][5])
+        self.assertEqual(6, len(obj_json["child_list"][1]["list_stat2"]))
+        self.assertEqual("1", obj_json["child_list"][1]["list_stat2"][0])
+        self.assertEqual(2, obj_json["child_list"][1]["list_stat2"][1])
+        self.assertEqual("3", obj_json["child_list"][1]["list_stat2"][2])
+        self.assertEqual(4, obj_json["child_list"][1]["list_stat2"][3])
+        self.assertEqual(5.2, obj_json["child_list"][1]["list_stat2"][4])
+        self.assertEqual(None, obj_json["child_list"][1]["list_stat2"][5])

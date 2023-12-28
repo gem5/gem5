@@ -24,10 +24,12 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.objects.SystemC import SystemC_ScModule
+from m5.objects.Tlm import (
+    TlmInitiatorSocket,
+    TlmTargetSocket,
+)
 from m5.params import *
 from m5.proxy import *
-
-from m5.objects.Tlm import TlmTargetSocket, TlmInitiatorSocket
 
 
 class Gem5ToTlmBridgeBase(SystemC_ScModule):

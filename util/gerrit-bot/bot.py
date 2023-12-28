@@ -26,14 +26,17 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from gerrit import GerritResponseParser as Parser
-from gerrit import GerritRestAPI
-from util import add_maintainers_to_change, convert_time_in_seconds
-
 import json
+import sys
 import time
 
-import sys
+from gerrit import GerritResponseParser as Parser
+from gerrit import GerritRestAPI
+
+from util import (
+    add_maintainers_to_change,
+    convert_time_in_seconds,
+)
 
 sys.path.append("..")
 import maint.lib.maintainers
@@ -97,7 +100,7 @@ class GerritBot:
     def __read_auth_file(self, auth_file_path):
         username = ""
         password = ""
-        with open(auth_file_path, "r") as f:
+        with open(auth_file_path) as f:
             lines = f.readlines()
             username = lines[0].strip()
             password = lines[1].strip()
@@ -107,7 +110,7 @@ class GerritBot:
         prev_query_time = 0
 
         try:
-            with open(file_path, "r") as f:
+            with open(file_path) as f:
                 lines = f.readlines()
                 prev_query_time = int(float(lines[0].strip()))
         except FileNotFoundError:
@@ -134,7 +137,7 @@ class GerritBot:
     def __read_maintainer_account_id_file(self, maintainers, file_path):
         account_ids = {}
         try:
-            with open(file_path, "r") as f:
+            with open(file_path) as f:
                 account_ids = json.load(f)
         except (FileNotFoundError, json.decoder.JSONDecodeError):
             # create a placeholder file
@@ -147,7 +150,7 @@ class GerritBot:
 
     def __update_maintainer_account_id_file(self, file_path, maintainers):
         # get the current map
-        with open(file_path, "r") as f:
+        with open(file_path) as f:
             account_ids = json.load(f)
         # get maintainer email addresses
         email_addresses = set()

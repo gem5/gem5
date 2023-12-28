@@ -23,7 +23,7 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-FROM ubuntu:20.04
+FROM --platform=${BUILDPLATFORM} ubuntu:20.04
 
 # Valid version values:
 # 6.0
@@ -40,7 +40,10 @@ RUN apt -y update && apt -y upgrade && \
     apt -y install git m4 scons zlib1g zlib1g-dev libprotobuf-dev \
     protobuf-compiler libprotoc-dev libgoogle-perftools-dev python3-dev \
     python-is-python3 doxygen libboost-all-dev libhdf5-serial-dev \
-    python3-pydot libpng-dev clang-${version} make
+    python3-pydot libpng-dev clang-${version} make \
+    # This is needed as clang-8 does not have the libstdc++-10-dev package.
+    # It is necessary for compilation.
+    libstdc++-10-dev
 
 RUN apt-get --purge -y remove gcc
 

@@ -30,8 +30,9 @@
 import testlib.helper as helper
 import testlib.runner as runner_mod
 
-class TestSuite(object):
-    '''
+
+class TestSuite:
+    """
     An object grouping a collection of tests. It provides tags which enable
     filtering during list and run selection. All tests held in the suite must
     have a unique name.
@@ -44,7 +45,8 @@ class TestSuite(object):
         To reduce test definition boilerplate, the :func:`init` method is
         forwarded all `*args` and `**kwargs`. This means derived classes can
         define init without boilerplate super().__init__(*args, **kwargs).
-    '''
+    """
+
     runner = runner_mod.SuiteRunner
     collector = helper.InstanceCollector()
     fixtures = []
@@ -52,12 +54,18 @@ class TestSuite(object):
     tags = set()
 
     def __new__(klass, *args, **kwargs):
-        obj = super(TestSuite, klass).__new__(klass)
+        obj = super().__new__(klass)
         TestSuite.collector.collect(obj)
         return obj
 
-    def __init__(self, name=None, fixtures=tuple(), tests=tuple(),
-                 tags=tuple(), **kwargs):
+    def __init__(
+        self,
+        name=None,
+        fixtures=tuple(),
+        tests=tuple(),
+        tags=tuple(),
+        **kwargs
+    ):
         self.fixtures = self.fixtures + list(fixtures)
         self.tags = self.tags | set(tags)
         self.tests = self.tests + list(tests)

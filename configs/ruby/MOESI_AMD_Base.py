@@ -28,13 +28,18 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import math
-import m5
-from m5.objects import *
-from m5.defines import buildEnv
-from m5.util import addToPath
-from .Ruby import create_topology
-from .Ruby import send_evicts
+
 from common import FileSystemConfig
+
+import m5
+from m5.defines import buildEnv
+from m5.objects import *
+from m5.util import addToPath
+
+from .Ruby import (
+    create_topology,
+    send_evicts,
+)
 
 addToPath("../")
 
@@ -327,7 +332,6 @@ def create_system(
     # For an odd number of CPUs, still create the right number of controllers
     cpuCluster = Cluster(extBW=512, intBW=512)  # 1 TB/s
     for i in range((options.num_cpus + 1) // 2):
-
         cp_cntrl = CPCntrl()
         cp_cntrl.create(options, ruby_system, system)
 

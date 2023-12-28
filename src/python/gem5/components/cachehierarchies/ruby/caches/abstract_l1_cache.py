@@ -24,18 +24,17 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import math
 from abc import abstractmethod
-from .....isas import ISA
-from ....processors.cpu_types import CPUTypes
-from ....processors.abstract_core import AbstractCore
 
 from m5.objects import L1Cache_Controller
 
-import math
+from .....isas import ISA
+from ....processors.abstract_core import AbstractCore
+from ....processors.cpu_types import CPUTypes
 
 
 class AbstractL1Cache(L1Cache_Controller):
-
     _version = 0
 
     @classmethod

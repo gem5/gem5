@@ -25,8 +25,11 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+import os
+import string
+import subprocess
+import sys
 from configparser import ConfigParser
-import string, sys, subprocess, os
 
 # Compile DSENT to generate the Python module and then import it.
 # This script assumes it is executed from the gem5 root.
@@ -54,6 +57,7 @@ print("Compiled dsent")
 os.chdir("../../../")
 sys.path.append("build/ext/dsent")
 import dsent
+
 
 # Parse gem5 config.ini file for the configuration parameters related to
 # the on-chip network.
@@ -182,13 +186,12 @@ def parseStats(
     buffers_per_control_vc,
     ni_flit_size_bits,
 ):
-
     # Open the stats.txt file and parse it to for the required numbers
     # and the number of routers.
     try:
-        stats_handle = open(stats_file, "r")
+        stats_handle = open(stats_file)
         stats_handle.close()
-    except IOError:
+    except OSError:
         print("Failed to open ", stats_file, " for reading")
         exit(-1)
 

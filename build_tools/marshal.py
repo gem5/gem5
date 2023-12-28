@@ -74,7 +74,7 @@ if "LC_CTYPE" in os.environ:
 
 _, cpp, python, modpath, abspath = sys.argv
 
-with open(python, "r") as f:
+with open(python) as f:
     src = f.read()
 
 compiled = compile(src, python, "exec")

@@ -84,7 +84,7 @@ except:
     cap_string = null_cap_string
 
 
-class ColorStrings(object):
+class ColorStrings:
     def __init__(self, cap_string):
         for i, c in enumerate(color_names):
             setattr(self, c, cap_string("setaf", i))

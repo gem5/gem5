@@ -32,13 +32,14 @@
 #include <iostream>
 #include <memory>
 
-#include "DRAMSysConfiguration.h"
+#include "DRAMSys/config/DRAMSysConfiguration.h"
+#include "DRAMSys/simulation/DRAMSysRecordable.h"
 #include "mem/abstract_mem.hh"
 #include "params/DRAMSys.hh"
 #include "sim/core.hh"
-#include "simulation/DRAMSysRecordable.h"
 #include "systemc/core/kernel.hh"
 #include "systemc/ext/core/sc_module_name.hh"
+
 #include "systemc/ext/systemc"
 #include "systemc/ext/tlm"
 #include "systemc/ext/tlm_utils/simple_target_socket.h"
@@ -57,14 +58,14 @@ class DRAMSysWrapper : public sc_core::sc_module
   public:
     SC_HAS_PROCESS(DRAMSysWrapper);
     DRAMSysWrapper(sc_core::sc_module_name name,
-                   DRAMSysConfiguration::Configuration const &config,
+                   ::DRAMSys::Config::Configuration const &config,
                    bool recordable,
                    AddrRange range);
 
   private:
-    static std::shared_ptr<::DRAMSys>
+    static std::shared_ptr<::DRAMSys::DRAMSys>
     instantiateDRAMSys(bool recordable,
-        DRAMSysConfiguration::Configuration const &config);
+        ::DRAMSys::Config::Configuration const &config);
 
     tlm::tlm_sync_enum nb_transport_fw(tlm::tlm_generic_payload &payload,
                                        tlm::tlm_phase &phase,
@@ -74,12 +75,15 @@ class DRAMSysWrapper : public sc_core::sc_module
                                        tlm::tlm_phase &phase,
                                        sc_core::sc_time &bwDelay);
 
+    void b_transport(tlm::tlm_generic_payload &payload,
+                     sc_core::sc_time &delay);
+
     unsigned int transport_dbg(tlm::tlm_generic_payload &trans);
 
     tlm_utils::simple_initiator_socket<DRAMSysWrapper> iSocket;
     tlm_utils::simple_target_socket<DRAMSysWrapper> tSocket;
 
-    std::shared_ptr<::DRAMSys> dramsys;
+    std::shared_ptr<::DRAMSys::DRAMSys> dramsys;
 
     AddrRange range;
 };

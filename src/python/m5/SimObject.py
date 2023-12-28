@@ -38,36 +38,39 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import sys
-from types import FunctionType, MethodType, ModuleType
-from functools import wraps
 import inspect
+import sys
+from functools import wraps
+from types import (
+    FunctionType,
+    MethodType,
+    ModuleType,
+)
 
 import m5
-from m5.util import *
-from m5.util.pybind import *
+from m5.citations import gem5_citations
 
 # Use the pyfdt and not the helper class, because the fdthelper
 # relies on the SimObject definition
 from m5.ext.pyfdt import pyfdt
 
+# There are a few things we need that aren't in params.__all__ since
+# normal users don't need them
 # Have to import params up top since Param is referenced on initial
 # load (when SimObject class references Param to create a class
 # variable, the 'name' param)...
 from m5.params import *
-
-# There are a few things we need that aren't in params.__all__ since
-# normal users don't need them
 from m5.params import (
     ParamDesc,
+    Port,
+    SimObjectVector,
     VectorParamDesc,
     isNullPointer,
-    SimObjectVector,
-    Port,
 )
-
 from m5.proxy import *
 from m5.proxy import isproxy
+from m5.util import *
+from m5.util.pybind import *
 
 #####################################################################
 #
@@ -215,6 +218,8 @@ class MetaSimObject(type):
         cls._instantiated = False  # really instantiated, cloned, or subclassed
         cls._init_called = False  # Used to check if __init__ overridden
 
+        cls._citations = gem5_citations  # Default to gem5's citations
+
         # We don't support multiple inheritance of sim objects.  If you want
         # to, you must fix multidict to deal with it properly. Non sim-objects
         # are ok, though
@@ -227,7 +232,10 @@ class MetaSimObject(type):
                     "SimObjects do not support multiple inheritance"
                 )
 
-        base = bases[0]
+        # If the base class is not set, we assume type `object`. This ensures
+        # `class Foo(object): pass` is considered equivalent to
+        # `class Foo: pass`.
+        base = bases[0] if len(bases) > 0 else object
 
         # Set up general inheritance via multidicts.  A subclass will
         # inherit all its settings from the base class.  The only time
@@ -517,7 +525,7 @@ def cxxMethod(*args, **kwargs):
 # This class holds information about each simobject parameter
 # that should be displayed on the command line for use in the
 # configuration system.
-class ParamInfo(object):
+class ParamInfo:
     def __init__(self, type, desc, type_str, example, default_val, access_str):
         self.type = type
         self.desc = desc
@@ -542,7 +550,7 @@ class SimObjectCliWrapperException(Exception):
         super().__init__(message)
 
 
-class SimObjectCliWrapper(object):
+class SimObjectCliWrapper:
     """
     Wrapper class to restrict operations that may be done
     from the command line on SimObjects.
@@ -605,7 +613,7 @@ class SimObjectCliWrapper(object):
 # The SimObject class is the root of the special hierarchy.  Most of
 # the code in this class deals with the configuration hierarchy itself
 # (parent/child node relationships).
-class SimObject(object, metaclass=MetaSimObject):
+class SimObject(metaclass=MetaSimObject):
     # Specify metaclass.  Any class inheriting from SimObject will
     # get this metaclass.
     type = "SimObject"
@@ -870,7 +878,7 @@ class SimObject(object, metaclass=MetaSimObject):
                 hr_value = value
                 value = param.convert(value)
             except Exception as e:
-                msg = "%s\nError setting param %s.%s to %s\n" % (
+                msg = "{}\nError setting param {}.{} to {}\n".format(
                     e,
                     self.__class__.__name__,
                     attr,
@@ -1248,9 +1256,8 @@ class SimObject(object, metaclass=MetaSimObject):
         # The order of the dict is implementation dependent, so sort
         # it based on the key (name) to ensure the order is the same
         # on all hosts
-        for (name, child) in sorted(self._children.items()):
-            for obj in child.descendants():
-                yield obj
+        for name, child in sorted(self._children.items()):
+            yield from child.descendants()
 
     # Call C++ to create C++ object corresponding to this object
     def createCCObject(self):
@@ -1271,7 +1278,7 @@ class SimObject(object, metaclass=MetaSimObject):
     def connectPorts(self):
         # Sort the ports based on their attribute name to ensure the
         # order is the same on all hosts
-        for (attr, portRef) in sorted(self._port_refs.items()):
+        for attr, portRef in sorted(self._port_refs.items()):
             portRef.ccConnect()
 
     # Default function for generating the device structure.
@@ -1283,8 +1290,7 @@ class SimObject(object, metaclass=MetaSimObject):
     def recurseDeviceTree(self, state):
         for child in self._children.values():
             for item in child:  # For looping over SimObjectVectors
-                for dt in item.generateDeviceTree(state):
-                    yield dt
+                yield from item.generateDeviceTree(state)
 
     # On a separate method otherwise certain buggy Python versions
     # would fail with: SyntaxError: unqualified exec is not allowed
@@ -1316,7 +1322,6 @@ class SimObject(object, metaclass=MetaSimObject):
         The format is the same as that supported by SimObjectCliWrapper.
 
         :param simobj_path: Current state to be in.
-        :type simobj_path: str
         """
         d = self._apply_config_get_dict()
         return eval(simobj_path, d)

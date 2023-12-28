@@ -68,7 +68,6 @@ TarmacBaseRecord::InstEntry::InstEntry(
         : taken(predicate) ,
           addr(pc.instAddr()) ,
           opcode(staticInst->getEMI() & 0xffffffff),
-          disassemble(staticInst->disassemble(addr)),
           isetstate(pcToISetState(pc)),
           mode(MODE_USER)
 {
@@ -76,11 +75,6 @@ TarmacBaseRecord::InstEntry::InstEntry(
     // Operating mode gained by reading the architectural register (CPSR)
     const CPSR cpsr = thread->readMiscRegNoEffect(MISCREG_CPSR);
     mode = (OperatingMode) (uint8_t)cpsr.mode;
-
-    // In Tarmac, instruction names are printed in capital
-    // letters.
-    std::for_each(disassemble.begin(), disassemble.end(),
-                  [](char& c) { c = toupper(c); });
 }
 
 TarmacBaseRecord::RegEntry::RegEntry(const PCStateBase &pc)
@@ -107,12 +101,12 @@ TarmacBaseRecord::pcToISetState(const PCStateBase &pc)
 
     if (apc.aarch64())
         isetstate = TarmacBaseRecord::ISET_A64;
-    else if (!apc.thumb() && !apc.jazelle())
+    else if (!apc.thumb())
         isetstate = TarmacBaseRecord::ISET_ARM;
-    else if (apc.thumb() && !apc.jazelle())
+    else if (apc.thumb())
         isetstate = TarmacBaseRecord::ISET_THUMB;
     else
-        // No Jazelle state in TARMAC
+        // Unsupported state in TARMAC
         isetstate = TarmacBaseRecord::ISET_UNSUPPORTED;
 
     return isetstate;

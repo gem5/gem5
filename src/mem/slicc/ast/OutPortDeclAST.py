@@ -27,8 +27,10 @@
 
 from slicc.ast.DeclAST import DeclAST
 from slicc.ast.TypeAST import TypeAST
-from slicc.symbols import Var
-from slicc.symbols import Type
+from slicc.symbols import (
+    Type,
+    Var,
+)
 
 
 class OutPortDeclAST(DeclAST):

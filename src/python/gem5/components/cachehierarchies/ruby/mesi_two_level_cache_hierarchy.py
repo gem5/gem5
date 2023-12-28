@@ -25,20 +25,24 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from .abstract_ruby_cache_hierarchy import AbstractRubyCacheHierarchy
-from ..abstract_two_level_cache_hierarchy import AbstractTwoLevelCacheHierarchy
+from m5.objects import (
+    DMASequencer,
+    RubyPortProxy,
+    RubySequencer,
+    RubySystem,
+)
+
 from ....coherence_protocol import CoherenceProtocol
 from ....isas import ISA
-from ...boards.abstract_board import AbstractBoard
 from ....utils.requires import requires
-
-from .topologies.simple_pt2pt import SimplePt2Pt
-from .caches.mesi_two_level.l1_cache import L1Cache
-from .caches.mesi_two_level.l2_cache import L2Cache
+from ...boards.abstract_board import AbstractBoard
+from ..abstract_two_level_cache_hierarchy import AbstractTwoLevelCacheHierarchy
+from .abstract_ruby_cache_hierarchy import AbstractRubyCacheHierarchy
 from .caches.mesi_two_level.directory import Directory
 from .caches.mesi_two_level.dma_controller import DMAController
-
-from m5.objects import RubySystem, RubySequencer, DMASequencer, RubyPortProxy
+from .caches.mesi_two_level.l1_cache import L1Cache
+from .caches.mesi_two_level.l2_cache import L2Cache
+from .topologies.simple_pt2pt import SimplePt2Pt
 
 
 class MESITwoLevelCacheHierarchy(
@@ -76,7 +80,6 @@ class MESITwoLevelCacheHierarchy(
         self._num_l2_banks = num_l2_banks
 
     def incorporate_cache(self, board: AbstractBoard) -> None:
-
         requires(coherence_protocol_required=CoherenceProtocol.MESI_TWO_LEVEL)
 
         cache_line_size = board.get_cache_line_size()

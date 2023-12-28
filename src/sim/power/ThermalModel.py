@@ -33,11 +33,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.SimObject import *
-from m5.objects.ClockedObject import ClockedObject
-
-from m5.params import *
 from m5.objects import ThermalDomain
+from m5.objects.ClockedObject import ClockedObject
+from m5.params import *
+from m5.SimObject import *
 
 
 # Represents a thermal node
@@ -74,7 +73,7 @@ class ThermalCapacitor(SimObject):
 
 
 # Represents a fixed temperature node (ie. air)
-class ThermalReference(SimObject, object):
+class ThermalReference(SimObject):
     type = "ThermalReference"
     cxx_header = "sim/power/thermal_model.hh"
     cxx_class = "gem5::ThermalReference"

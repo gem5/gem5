@@ -23,11 +23,15 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.params import Port, VectorPort
+from m5.params import (
+    Port,
+    VectorPort,
+)
 
 INT_SOURCE_ROLE = "Int Source Pin"
 INT_SINK_ROLE = "Int Sink Pin"
 Port.compat(INT_SOURCE_ROLE, INT_SINK_ROLE)
+
 
 # A source pin generally represents a single pin which might connect to
 # multiple sinks.

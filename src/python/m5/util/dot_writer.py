@@ -53,9 +53,18 @@
 #
 #####################################################################
 
-import m5, os, re
-from m5.SimObject import isRoot, isSimObjectVector
-from m5.params import PortRef, isNullPointer
+import os
+import re
+
+import m5
+from m5.params import (
+    PortRef,
+    isNullPointer,
+)
+from m5.SimObject import (
+    isRoot,
+    isSimObjectVector,
+)
 from m5.util import warn
 
 try:
@@ -82,7 +91,7 @@ def dot_create_nodes(simNode, callgraph):
         label = "root"
     else:
         label = simNode._name
-    full_path = re.sub("\.", "_", simNode.path())
+    full_path = re.sub(r"\.", "_", simNode.path())
     # add class name under the label
     label = '"' + label + " \\n: " + simNode.__class__.__name__ + '"'
 
@@ -109,7 +118,7 @@ def dot_create_edges(simNode, callgraph):
     for port_name in simNode._ports.keys():
         port = simNode._port_refs.get(port_name, None)
         if port != None:
-            full_path = re.sub("\.", "_", simNode.path())
+            full_path = re.sub(r"\.", "_", simNode.path())
             full_port_name = full_path + "_" + port_name
             port_node = dot_create_node(simNode, full_port_name, port_name)
             # create edges
@@ -128,7 +137,7 @@ def dot_create_edges(simNode, callgraph):
 
 def dot_add_edge(simNode, callgraph, full_port_name, port):
     peer = port.peer
-    full_peer_path = re.sub("\.", "_", peer.simobj.path())
+    full_peer_path = re.sub(r"\.", "_", peer.simobj.path())
     full_peer_port_name = full_peer_path + "_" + peer.name
 
     # Each edge is encountered twice, once for each peer. We only want one
@@ -290,9 +299,9 @@ def dot_rgb_to_html(r, g, b):
 # We need to create all of the clock domains. We abuse the alpha channel to get
 # the correct domain colouring.
 def dot_add_clk_domain(c_dom, v_dom):
-    label = '"' + str(c_dom) + "\ :\ " + str(v_dom) + '"'
-    label = re.sub("\.", "_", str(label))
-    full_path = re.sub("\.", "_", str(c_dom))
+    label = '"' + str(c_dom) + r"\ :\ " + str(v_dom) + '"'
+    label = re.sub(r"\.", "_", str(label))
+    full_path = re.sub(r"\.", "_", str(c_dom))
     return pydot.Cluster(
         full_path,
         shape="box",
@@ -311,7 +320,7 @@ def dot_create_dvfs_nodes(simNode, callgraph, domain=None):
         label = "root"
     else:
         label = simNode._name
-    full_path = re.sub("\.", "_", simNode.path())
+    full_path = re.sub(r"\.", "_", simNode.path())
     # add class name under the label
     label = '"' + label + " \\n: " + simNode.__class__.__name__ + '"'
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 ARM Limited
+ * Copyright (c) 2016, 2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -47,6 +47,7 @@
 #include "base/compiler.hh"
 #include "base/trace.hh"
 #include "debug/DebugPrintf.hh"
+#include "enums/KernelPanicOopsBehaviour.hh"
 #include "kern/linux/printk.hh"
 #include "kern/system_events.hh"
 #include "mem/se_translating_port_proxy.hh"
@@ -83,43 +84,25 @@ class DebugPrintk : public Base
 };
 
 /**
- * Dump the guest kernel's dmesg buffer to a file in gem5's output
- * directory and print a warning.
+ * Specify what to do on a Linux Kernel Panic or Oops.
  *
- * @warn This event uses linux::dumpDmesg() and comes with the same
+ * @warn This event may use linux::dumpDmesg() and comes with the same
  * limitations. Most importantly, the kernel's address mappings must
  * be available to the translating proxy.
  */
-class DmesgDump : public PCEvent
+class PanicOrOopsEvent : public PCEvent
 {
   protected:
     std::string fname;
+    KernelPanicOopsBehaviour behaviour;
 
   public:
-    DmesgDump(PCEventScope *s, const std::string &desc, Addr addr,
-              const std::string &_fname) :
-        PCEvent(s, desc, addr), fname(_fname)
-    {}
-    void process(ThreadContext *tc) override;
-};
-
-/**
- * Dump the guest kernel's dmesg buffer to a file in gem5's output
- * directory and panic.
- *
- * @warn This event uses linux::dumpDmesg() and comes with the same
- * limitations. Most importantly, the kernel's address mappings must
- * be available to the translating proxy.
- */
-class KernelPanic : public PCEvent
-{
-  protected:
-    std::string fname;
-
-  public:
-    KernelPanic(PCEventScope *s, const std::string &desc, Addr addr,
-                const std::string &_fname) :
-        PCEvent(s, desc, addr), fname(_fname)
+    PanicOrOopsEvent(PCEventScope *s, const std::string &desc, Addr addr,
+                     const std::string &_fname,
+                     const KernelPanicOopsBehaviour _behaviour)
+        : PCEvent(s, desc, addr)
+        , fname(_fname)
+        , behaviour(_behaviour)
     {}
     void process(ThreadContext *tc) override;
 };

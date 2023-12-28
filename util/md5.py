@@ -26,7 +26,11 @@
 
 import argparse
 from pathlib import Path
-from gem5.resources.md5_utils import md5_file, md5_dir
+
+from gem5.resources.md5_utils import (
+    md5_dir,
+    md5_file,
+)
 
 parser = argparse.ArgumentParser(
     description="A utility to determine the md5 hash of files and "

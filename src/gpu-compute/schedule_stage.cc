@@ -579,7 +579,7 @@ ScheduleStage::fillDispatchList()
                     // operation.
                     GPUDynInstPtr mp = schIter->first;
                     if (!mp->isMemSync() && !mp->isScalar() &&
-                        (mp->isGlobalMem() || mp->isFlat())) {
+                        mp->needsToken()) {
                         computeUnit.globalMemoryPipe.acqCoalescerToken(mp);
                     }
 

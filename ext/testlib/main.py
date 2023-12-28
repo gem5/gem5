@@ -26,8 +26,8 @@
 #
 # Authors: Sean Wilson
 
-import os
 import itertools
+import os
 
 import testlib.configuration as configuration
 import testlib.handlers as handlers
@@ -39,21 +39,26 @@ import testlib.runner as runner
 import testlib.terminal as terminal
 import testlib.uid as uid
 
+
 def entry_message():
     log.test_log.message("Running the new gem5 testing script.")
     log.test_log.message("For more information see TESTING.md.")
-    log.test_log.message("To see details as the testing scripts are"
-                         " running, use the option"
-                         " -v, -vv, or -vvv")
+    log.test_log.message(
+        "To see details as the testing scripts are"
+        " running, use the option"
+        " -v, -vv, or -vvv"
+    )
 
-class RunLogHandler():
+
+class RunLogHandler:
     def __init__(self):
         term_handler = handlers.TerminalHandler(
-            verbosity=configuration.config.verbose+log.LogLevel.Info
+            verbosity=configuration.config.verbose + log.LogLevel.Info
         )
         summary_handler = handlers.SummaryHandler()
         self.mp_handler = handlers.MultiprocessingHandlerWrapper(
-                summary_handler, term_handler)
+            summary_handler, term_handler
+        )
         self.mp_handler.async_process()
         log.test_log.add_handler(self.mp_handler)
         entry_message()
@@ -61,7 +66,8 @@ class RunLogHandler():
     def schedule_finalized(self, test_schedule):
         # Create the result handler object.
         self.result_handler = handlers.ResultHandler(
-                test_schedule, configuration.config.result_path)
+            test_schedule, configuration.config.result_path
+        )
         self.mp_handler.add_handler(self.result_handler)
 
     def finish_testing(self):
@@ -78,35 +84,43 @@ class RunLogHandler():
         self.mp_handler.close()
 
     def unsuccessful(self):
-        '''
+        """
         Performs an or reduce on all of the results.
         Returns true if at least one test is unsuccessful, false when all tests
         pass
-        '''
+        """
         return self.result_handler.unsuccessful()
 
+
 def get_config_tags():
-    return getattr(configuration.config,
-            configuration.StorePositionalTagsAction.position_kword)
+    return getattr(
+        configuration.config,
+        configuration.StorePositionalTagsAction.position_kword,
+    )
+
 
 def filter_with_config_tags(loaded_library):
     tags = get_config_tags()
     final_tags = []
-    regex_fmt = '^%s$'
+    regex_fmt = "^%s$"
     cfg = configuration.config
 
     def _append_inc_tag_filter(name):
         if hasattr(cfg, name):
             tag_opts = getattr(cfg, name)
             for tag in tag_opts:
-                final_tags.append(configuration.TagRegex(True, regex_fmt % tag))
+                final_tags.append(
+                    configuration.TagRegex(True, regex_fmt % tag)
+                )
 
     def _append_rem_tag_filter(name):
         if hasattr(cfg, name):
             tag_opts = getattr(cfg, name)
             for tag in cfg.constants.supported_tags[name]:
                 if tag not in tag_opts:
-                    final_tags.append(configuration.TagRegex(False, regex_fmt % tag))
+                    final_tags.append(
+                        configuration.TagRegex(False, regex_fmt % tag)
+                    )
 
     # Append additional tags for the isa, length, and variant options.
     # They apply last (they take priority)
@@ -114,7 +128,7 @@ def filter_with_config_tags(loaded_library):
         cfg.constants.isa_tag_type,
         cfg.constants.length_tag_type,
         cfg.constants.host_isa_tag_type,
-        cfg.constants.variant_tag_type
+        cfg.constants.variant_tag_type,
     )
 
     for tagname in special_tags:
@@ -126,15 +140,15 @@ def filter_with_config_tags(loaded_library):
         tags = tuple()
 
     filters = list(itertools.chain(final_tags, tags))
-    string = 'Filtering suites with tags as follows:\n'
-    filter_string = '\t\n'.join((str(f) for f in filters))
+    string = "Filtering suites with tags as follows:\n"
+    filter_string = "\t\n".join(str(f) for f in filters)
     log.test_log.trace(string + filter_string)
 
     return filter_with_tags(loaded_library, filters)
 
 
 def filter_with_tags(loaded_library, filters):
-    '''
+    """
     Filter logic supports two filter types:
     --include-tags <regex>
     --exclude-tags <regex>
@@ -168,7 +182,7 @@ def filter_with_tags(loaded_library, filters):
         set()               # Removed all suites which have tags
         # Process --include-tags "X86"
         set(suite_X86)
-    '''
+    """
     if not filters:
         return
 
@@ -182,6 +196,7 @@ def filter_with_tags(loaded_library, filters):
 
     def exclude(excludes):
         return suites - excludes
+
     def include(includes):
         return suites | includes
 
@@ -189,38 +204,65 @@ def filter_with_tags(loaded_library, filters):
         matched_tags = (tag for tag in tags if tag_regex.regex.search(tag))
         for tag in matched_tags:
             matched_suites = set(query_runner.suites_with_tag(tag))
-            suites = include(matched_suites) if tag_regex.include \
-                    else exclude(matched_suites)
+            suites = (
+                include(matched_suites)
+                if tag_regex.include
+                else exclude(matched_suites)
+            )
 
     # Set the library's suites to only those which where accepted by our filter
-    loaded_library.suites = [suite for suite in loaded_library.suites
-            if suite in suites]
+    loaded_library.suites = [
+        suite for suite in loaded_library.suites if suite in suites
+    ]
+
 
 # TODO Add results command for listing previous results.
 
+
 def load_tests():
-    '''
+    """
     Create a TestLoader and load tests for the directory given by the config.
-    '''
+    """
     testloader = loader_mod.Loader()
     log.test_log.message(terminal.separator())
-    log.test_log.message('Loading Tests', bold=True)
+    log.test_log.message("Loading Tests", bold=True)
 
     for root in configuration.config.directories:
         testloader.load_root(root)
 
     return testloader
 
+
 def do_list():
     term_handler = handlers.TerminalHandler(
-        verbosity=configuration.config.verbose+log.LogLevel.Info,
-        machine_only=configuration.config.quiet
+        verbosity=configuration.config.verbose + log.LogLevel.Info,
+        machine_only=configuration.config.quiet,
     )
     log.test_log.add_handler(term_handler)
 
     entry_message()
 
-    test_schedule = load_tests().schedule
+    if configuration.config.uid:
+        uid_ = uid.UID.from_uid(configuration.config.uid)
+        if isinstance(uid_, uid.TestUID):
+            log.test_log.error(
+                "Unable to list a standalone test.\n"
+                "Gem5 expects test suites to be the smallest unit "
+                " of test.\n\n"
+                "Pass a SuiteUID instead."
+            )
+            return
+        test_schedule = loader_mod.Loader().load_schedule_for_suites(uid_)
+        if get_config_tags():
+            log.test_log.warn(
+                "The '--uid' flag was supplied,"
+                " '--include-tags' and '--exclude-tags' will be ignored."
+            )
+    else:
+        test_schedule = load_tests().schedule
+        # Filter tests based on tags
+        filter_with_config_tags(test_schedule)
+
     filter_with_config_tags(test_schedule)
 
     qrunner = query.QueryRunner(test_schedule)
@@ -231,15 +273,21 @@ def do_list():
         qrunner.list_tests()
     elif configuration.config.all_tags:
         qrunner.list_tags()
+    elif configuration.config.fixtures:
+        qrunner.list_fixtures()
+    elif configuration.config.build_targets:
+        qrunner.list_build_targets()
     else:
         qrunner.list_suites()
         qrunner.list_tests()
         qrunner.list_tags()
+        qrunner.list_build_targets()
 
     return 0
 
+
 def run_schedule(test_schedule, log_handler):
-    '''
+    """
     Test Phases
     -----------
     * Test Collection
@@ -253,15 +301,18 @@ def run_schedule(test_schedule, log_handler):
           * Test Fixture Teardown
        * Suite Fixture Teardown
     * Global Fixture Teardown
-    '''
+    """
 
     log_handler.schedule_finalized(test_schedule)
 
     log.test_log.message(terminal.separator())
-    log.test_log.message('Running Tests from {} suites'
-            .format(len(test_schedule.suites)), bold=True)
-    log.test_log.message("Results will be stored in {}".format(
-                configuration.config.result_path))
+    log.test_log.message(
+        f"Running Tests from {len(test_schedule.suites)} suites",
+        bold=True,
+    )
+    log.test_log.message(
+        f"Results will be stored in {configuration.config.result_path}"
+    )
     log.test_log.message(terminal.separator())
 
     # Build global fixtures and exectute scheduled test suites.
@@ -278,16 +329,19 @@ def run_schedule(test_schedule, log_handler):
 
     return 1 if failed else 0
 
+
 def do_run():
     # Initialize early parts of the log.
     with RunLogHandler() as log_handler:
         if configuration.config.uid:
             uid_ = uid.UID.from_uid(configuration.config.uid)
             if isinstance(uid_, uid.TestUID):
-                log.test_log.error('Unable to run a standalone test.\n'
-                        'Gem5 expects test suites to be the smallest unit '
-                        ' of test.\n\n'
-                        'Pass a SuiteUID instead.')
+                log.test_log.error(
+                    "Unable to run a standalone test.\n"
+                    "Gem5 expects test suites to be the smallest unit "
+                    " of test.\n\n"
+                    "Pass a SuiteUID instead."
+                )
                 return
             test_schedule = loader_mod.Loader().load_schedule_for_suites(uid_)
             if get_config_tags():
@@ -302,13 +356,17 @@ def do_run():
         # Execute the tests
         return run_schedule(test_schedule, log_handler)
 
+
 def do_rerun():
     # Init early parts of log
     with RunLogHandler() as log_handler:
         # Load previous results
         results = result.InternalSavedResults.load(
-                os.path.join(configuration.config.result_path,
-                configuration.constants.pickle_filename))
+            os.path.join(
+                configuration.config.result_path,
+                configuration.constants.pickle_filename,
+            )
+        )
 
         rerun_suites = (suite.uid for suite in results if suite.unsuccessful)
 
@@ -319,16 +377,17 @@ def do_rerun():
         # Execute the tests
         return run_schedule(test_schedule, log_handler)
 
+
 def main():
-    '''
+    """
     Main entrypoint for the testlib test library.
     Returns 0 on success and 1 otherwise so it can be used as a return code
     for scripts.
-    '''
+    """
     configuration.initialize_config()
 
     # 'do' the given command.
-    result = globals()['do_'+configuration.config.command]()
+    result = globals()["do_" + configuration.config.command]()
     log.test_log.close()
 
     return result
