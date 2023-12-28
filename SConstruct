@@ -604,7 +604,6 @@ for variant_path in variant_paths:
                              '-Wno-error=deprecated-declarations',
                              '-Wno-error=deprecated',
                             ])
-
     else:
         error('\n'.join((
               "Don't know what compiler options to use for your compiler.",
