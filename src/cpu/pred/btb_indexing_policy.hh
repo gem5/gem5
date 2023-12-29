@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2022-2023 The University of Edinburgh
- * All rights reserved
+ * Copyright (c) 2024 Pranith Kumar
+ * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
  * not be construed as granting a license to any other intellectual
@@ -11,7 +11,7 @@
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
  *
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2003-2005,2014 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,99 +38,71 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "cpu/pred/simple_btb.hh"
+/**
+ * @file
+ * Declaration of a BTB indexing policy.
+ */
+
+#ifndef __SIMPLE_BTB_INDEXING_POLICY_HH__
+#define __SIMPLE_BTB_INDEXING_POLICY_HH__
+
+#include <vector>
 
 #include "base/intmath.hh"
-#include "base/trace.hh"
-#include "debug/BTB.hh"
+#include "mem/cache/tags/indexing_policies/set_associative.hh"
+#include "params/BTBIndexingPolicy.hh"
 
 namespace gem5
 {
 
-namespace branch_prediction
+class ReplaceableEntry;
+
+class BTBIndexingPolicy : public SetAssociative
 {
+  public:
+    /**
+     * Convenience typedef.
+     */
+    typedef BTBIndexingPolicyParams Params;
 
-SimpleBTB::SimpleBTB(const SimpleBTBParams &p)
-    : BranchTargetBuffer(p),
-      btb("simpleBTB", p.numEntries, p.associativity,
-          p.btbReplPolicy, p.btbIndexingPolicy)
-{
-    DPRINTF(BTB, "BTB: Creating BTB object.\n");
+    /**
+     * Construct and initialize this policy.
+     */
+    BTBIndexingPolicy(const Params &p);
 
-    if (!isPowerOf2(p.numEntries)) {
-        fatal("BTB entries is not a power of 2!");
-    }
-}
+    /**
+     * Destructor.
+     */
+    ~BTBIndexingPolicy() {};
 
-void
-SimpleBTB::memInvalidate()
-{
-    btb.clear();
-}
+  protected:
+    uint32_t extractSet(const Addr instPC, ThreadID tid) const;
 
-inline
-Addr
-SimpleBTB::getTag(Addr instPC)
-{
-    return btb.getTag(instPC);
-}
-
-BTBEntry *
-SimpleBTB::findEntry(Addr instPC, ThreadID tid)
-{
-    return btb.findEntry(instPC, tid);
-}
-
-bool
-SimpleBTB::valid(ThreadID tid, Addr instPC)
-{
-    BTBEntry *entry = btb.findEntry(instPC, tid);
-
-    return entry != nullptr;
-}
-
-// @todo Create some sort of return struct that has both whether or not the
-// address is valid, and also the address.  For now will just use addr = 0 to
-// represent invalid entry.
-const PCStateBase *
-SimpleBTB::lookup(ThreadID tid, Addr instPC, BranchType type)
-{
-    stats.lookups[type]++;
-
-    BTBEntry *entry = btb.accessEntry(instPC, tid);
-
-    if (entry) {
-        return entry->target.get();
+  public:
+    /**
+     * Find all possible entries for insertion and replacement of an address.
+     *
+     * @param addr The addr to a find possible entries for.
+     * @param tid The thread id
+     * @return The possible entries.
+     */
+    std::vector<ReplaceableEntry*>
+    getPossibleEntries(const Addr addr, ThreadID tid) const
+    {
+        return sets[extractSet(addr,tid)];
     }
 
-    stats.misses[type]++;
-    return nullptr;
-}
-
-const StaticInstPtr
-SimpleBTB::getInst(ThreadID tid, Addr instPC)
-{
-    BTBEntry *entry = btb.findEntry(instPC, tid);
-
-    if (entry) {
-        return entry->inst;
+    void setNumThreads(unsigned num_threads)
+    {
+        log2NumThreads = log2i(num_threads);
     }
 
-    return nullptr;
-}
+  private:
+    unsigned log2NumThreads;
+    using SetAssociative::extractSet;
+    using SetAssociative::getPossibleEntries;
+};
 
-void
-SimpleBTB::update(ThreadID tid, Addr instPC,
-                  const PCStateBase &target,
-                  BranchType type, StaticInstPtr inst)
-{
-    stats.updates[type]++;
-
-    BTBEntry *victim = btb.findVictim(instPC, tid);
-
-    btb.insertEntry(instPC, victim);
-    victim->update(tid, target, inst);
-}
-
-} // namespace branch_prediction
 } // namespace gem5
+
+#endif //__MEM_CACHE_INDEXING_POLICIES_SET_ASSOCIATIVE_HH__

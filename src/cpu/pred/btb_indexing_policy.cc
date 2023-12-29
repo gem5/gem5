@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2022-2023 The University of Edinburgh
- * All rights reserved
+ * Copyright (c) 2024 Pranith Kumar
+ * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
  * not be construed as granting a license to any other intellectual
@@ -11,7 +11,7 @@
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
  *
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2003-2005,2014 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,99 +38,28 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "cpu/pred/simple_btb.hh"
+/**
+ * @file
+ * Definitions of a set associative indexing policy.
+ */
 
-#include "base/intmath.hh"
-#include "base/trace.hh"
-#include "debug/BTB.hh"
+#include "cpu/pred/btb_indexing_policy.hh"
 
 namespace gem5
 {
 
-namespace branch_prediction
+BTBIndexingPolicy::BTBIndexingPolicy(const Params &p)
+    : SetAssociative(p)
 {
-
-SimpleBTB::SimpleBTB(const SimpleBTBParams &p)
-    : BranchTargetBuffer(p),
-      btb("simpleBTB", p.numEntries, p.associativity,
-          p.btbReplPolicy, p.btbIndexingPolicy)
-{
-    DPRINTF(BTB, "BTB: Creating BTB object.\n");
-
-    if (!isPowerOf2(p.numEntries)) {
-        fatal("BTB entries is not a power of 2!");
-    }
+    log2NumThreads = log2i(p.numThreads);
 }
 
-void
-SimpleBTB::memInvalidate()
+uint32_t
+BTBIndexingPolicy::extractSet(const Addr instPC, ThreadID tid) const
 {
-    btb.clear();
+    return ((instPC >> setShift)
+            ^ (tid << (tagShift - setShift - log2NumThreads)))
+        & setMask;
 }
 
-inline
-Addr
-SimpleBTB::getTag(Addr instPC)
-{
-    return btb.getTag(instPC);
-}
-
-BTBEntry *
-SimpleBTB::findEntry(Addr instPC, ThreadID tid)
-{
-    return btb.findEntry(instPC, tid);
-}
-
-bool
-SimpleBTB::valid(ThreadID tid, Addr instPC)
-{
-    BTBEntry *entry = btb.findEntry(instPC, tid);
-
-    return entry != nullptr;
-}
-
-// @todo Create some sort of return struct that has both whether or not the
-// address is valid, and also the address.  For now will just use addr = 0 to
-// represent invalid entry.
-const PCStateBase *
-SimpleBTB::lookup(ThreadID tid, Addr instPC, BranchType type)
-{
-    stats.lookups[type]++;
-
-    BTBEntry *entry = btb.accessEntry(instPC, tid);
-
-    if (entry) {
-        return entry->target.get();
-    }
-
-    stats.misses[type]++;
-    return nullptr;
-}
-
-const StaticInstPtr
-SimpleBTB::getInst(ThreadID tid, Addr instPC)
-{
-    BTBEntry *entry = btb.findEntry(instPC, tid);
-
-    if (entry) {
-        return entry->inst;
-    }
-
-    return nullptr;
-}
-
-void
-SimpleBTB::update(ThreadID tid, Addr instPC,
-                  const PCStateBase &target,
-                  BranchType type, StaticInstPtr inst)
-{
-    stats.updates[type]++;
-
-    BTBEntry *victim = btb.findVictim(instPC, tid);
-
-    btb.insertEntry(instPC, victim);
-    victim->update(tid, target, inst);
-}
-
-} // namespace branch_prediction
 } // namespace gem5

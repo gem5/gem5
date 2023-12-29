@@ -78,8 +78,9 @@ class BranchTargetBuffer : public ClockedObject
      *  @return The target of the branch or nullptr if the branch is not
      *          in the BTB.
      */
-    virtual const PCStateBase *lookup(ThreadID tid, Addr instPC,
-                            BranchType type = BranchType::NoBranch) = 0;
+    virtual const PCStateBase*
+    lookup(ThreadID tid, Addr instPC,
+           BranchType type = BranchType::NoBranch) = 0;
 
     /** Looks up an address in the BTB and return the instruction
      * information if existant. Does not update statistics.
@@ -94,14 +95,14 @@ class BranchTargetBuffer : public ClockedObject
      *  @param target_pc The target address of the branch.
      */
     virtual void update(ThreadID tid, Addr inst_pc,
-                          const PCStateBase &target_pc,
-                          BranchType type = BranchType::NoBranch,
-                          StaticInstPtr inst = nullptr) = 0;
+                        const PCStateBase &target_pc,
+                        BranchType type = BranchType::NoBranch,
+                        StaticInstPtr inst = nullptr) = 0;
 
     /** Update BTB statistics
      */
     virtual void incorrectTarget(Addr inst_pc,
-                                  BranchType type = BranchType::NoBranch)
+                                 BranchType type = BranchType::NoBranch)
     {
       stats.mispredict[type]++;
     }
