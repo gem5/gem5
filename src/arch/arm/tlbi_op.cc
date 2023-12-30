@@ -205,7 +205,6 @@ bool
 TLBIALLN::match(TlbEntry* te, vmid_t vmid) const
 {
     return te->valid && te->nstid &&
-        te->isHyp == (targetEL == EL2) &&
         te->checkELMatch(targetEL, false);
 }
 
@@ -216,7 +215,6 @@ TLBIMVAA::lookupGen(vmid_t vmid) const
     lookup_data.va = sext<56>(addr);
     lookup_data.ignoreAsn = true;
     lookup_data.vmid = vmid;
-    lookup_data.hyp = targetEL == EL2;
     lookup_data.secure = secureLookup;
     lookup_data.functional = true;
     lookup_data.targetEL = targetEL;
@@ -254,7 +252,6 @@ TLBIMVA::lookupGen(vmid_t vmid) const
     lookup_data.asn = asid;
     lookup_data.ignoreAsn = false;
     lookup_data.vmid = vmid;
-    lookup_data.hyp = targetEL == EL2;
     lookup_data.secure = secureLookup;
     lookup_data.functional = true;
     lookup_data.targetEL = targetEL;

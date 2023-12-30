@@ -164,7 +164,7 @@ TLB::lookup(const Lookup &lookup_data)
             "ppn %#x size: %#x pa: %#x ap:%d ns:%d nstid:%d g:%d asid: %d "
             "el: %d\n",
             lookup_data.va, lookup_data.asn, retval ? "hit" : "miss",
-            lookup_data.vmid, lookup_data.hyp, lookup_data.secure,
+            lookup_data.vmid, lookup_data.targetEL == EL2, lookup_data.secure,
             retval ? retval->pfn       : 0, retval ? retval->size  : 0,
             retval ? retval->pAddr(lookup_data.va) : 0,
             retval ? retval->ap        : 0,
@@ -246,15 +246,15 @@ TLB::insert(TlbEntry &entry)
             entry.size, entry.vpn, entry.asid, entry.vmid, entry.N,
             entry.global, entry.valid, entry.nonCacheable, entry.xn,
             entry.ap, static_cast<uint8_t>(entry.domain), entry.ns, entry.nstid,
-            entry.isHyp);
+            entry.el == EL2);
 
     if (table[size - 1].valid)
         DPRINTF(TLB, " - Replacing Valid entry %#x, asn %d vmn %d ppn %#x "
-                "size: %#x ap:%d ns:%d nstid:%d g:%d isHyp:%d el: %d\n",
+                "size: %#x ap:%d ns:%d nstid:%d g:%d isHyp: %d el: %d\n",
                 table[size-1].vpn << table[size-1].N, table[size-1].asid,
                 table[size-1].vmid, table[size-1].pfn << table[size-1].N,
                 table[size-1].size, table[size-1].ap, table[size-1].ns,
-                table[size-1].nstid, table[size-1].global, table[size-1].isHyp,
+                table[size-1].nstid, table[size-1].global, table[size-1].el == EL2,
                 table[size-1].el);
 
     // inserting to MRU position and evicting the LRU one

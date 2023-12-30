@@ -822,7 +822,6 @@ class TableWalker : public ClockedObject
         /** ASID that we're servicing the request under */
         uint16_t asid;
         vmid_t vmid;
-        bool    isHyp;
 
         /** Translation state for delayed requests */
         BaseMMU::Translation *transState;
@@ -1105,7 +1104,7 @@ class TableWalker : public ClockedObject
 
     Fault walk(const RequestPtr &req, ThreadContext *tc,
                uint16_t asid, vmid_t _vmid,
-               bool hyp, BaseMMU::Mode mode, BaseMMU::Translation *_trans,
+               BaseMMU::Mode mode, BaseMMU::Translation *_trans,
                bool timing, bool functional, bool secure,
                MMU::ArmTranslationType tran_type, bool stage2,
                const TlbEntry *walk_entry);

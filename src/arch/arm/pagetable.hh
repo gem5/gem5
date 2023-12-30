@@ -198,8 +198,6 @@ struct TlbEntry : public Serializable
         bool ignoreAsn = false;
         // The virtual machine ID used for stage 2 translation
         vmid_t vmid = 0;
-        // if the lookup is done from hyp mode
-        bool hyp = false;
         // if the lookup is secure
         bool secure = false;
         // if the lookup should modify state
@@ -238,7 +236,6 @@ struct TlbEntry : public Serializable
     // True if the long descriptor format is used for this entry (LPAE only)
     bool longDescFormat; // @todo use this in the update attribute bethod
 
-    bool isHyp;
     bool global;
     bool valid;
 
@@ -273,7 +270,7 @@ struct TlbEntry : public Serializable
          asid(_asn), vmid(0), tg(Grain4KB), N(0),
          innerAttrs(0), outerAttrs(0), ap(read_only ? 0x3 : 0), hap(0x3),
          domain(DomainType::Client),  mtype(MemoryType::StronglyOrdered),
-         longDescFormat(false), isHyp(false), global(false), valid(true),
+         longDescFormat(false), global(false), valid(true),
          ns(true), nstid(true), el(EL0), type(TypeTLB::unified),
          partial(false),
          nonCacheable(uncacheable),
@@ -291,7 +288,7 @@ struct TlbEntry : public Serializable
          asid(0), vmid(0), tg(ReservedGrain), N(0),
          innerAttrs(0), outerAttrs(0), ap(0), hap(0x3),
          domain(DomainType::Client), mtype(MemoryType::StronglyOrdered),
-         longDescFormat(false), isHyp(false), global(false), valid(false),
+         longDescFormat(false), global(false), valid(false),
          ns(true), nstid(true), el(EL0), type(TypeTLB::unified),
          partial(false), nonCacheable(false),
          shareable(false), outerShareable(false), xn(0), pxn(0)
@@ -332,7 +329,7 @@ struct TlbEntry : public Serializable
     {
         bool match = false;
         if (valid && matchAddress(lookup) &&
-            (lookup.secure == !nstid) && (lookup.hyp == isHyp))
+            lookup.secure == !nstid)
         {
             match = checkELMatch(lookup.targetEL, lookup.inHost);
 
@@ -424,7 +421,7 @@ struct TlbEntry : public Serializable
     {
         return csprintf("%#x, asn %d vmn %d hyp %d ppn %#x size: %#x ap:%d "
                         "ns:%d nstid:%d g:%d el:%d", vpn << N, asid, vmid,
-                        isHyp, pfn << N, size, ap, ns, nstid, global, el);
+                        el == EL2, pfn << N, size, ap, ns, nstid, global, el);
     }
 
     void
@@ -436,7 +433,6 @@ struct TlbEntry : public Serializable
         SERIALIZE_SCALAR(vpn);
         SERIALIZE_SCALAR(asid);
         SERIALIZE_SCALAR(vmid);
-        SERIALIZE_SCALAR(isHyp);
         SERIALIZE_SCALAR(N);
         SERIALIZE_SCALAR(global);
         SERIALIZE_SCALAR(valid);
@@ -467,7 +463,6 @@ struct TlbEntry : public Serializable
         UNSERIALIZE_SCALAR(vpn);
         UNSERIALIZE_SCALAR(asid);
         UNSERIALIZE_SCALAR(vmid);
-        UNSERIALIZE_SCALAR(isHyp);
         UNSERIALIZE_SCALAR(N);
         UNSERIALIZE_SCALAR(global);
         UNSERIALIZE_SCALAR(valid);

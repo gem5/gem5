@@ -178,10 +178,9 @@ MMU::translateFunctional(ThreadContext *tc, Addr va, Addr &pa)
     lookup_data.asn = state.asid;
     lookup_data.ignoreAsn = false;
     lookup_data.vmid = state.vmid;
-    lookup_data.hyp = state.isHyp;
     lookup_data.secure = state.isSecure;
     lookup_data.functional = true;
-    lookup_data.targetEL = state.aarch64 ? state.aarch64EL : EL1;
+    lookup_data.targetEL = state.aarch64EL;
     lookup_data.inHost = false;
     lookup_data.mode = BaseMMU::Read;
 
@@ -839,9 +838,7 @@ MMU::translateMmuOff(ThreadContext *tc, const RequestPtr &req, Mode mode,
     bool dc = (HaveExt(tc, ArmExtension::FEAT_VHE) &&
                state.hcr.e2h == 1 && state.hcr.tge == 1) ? 0: state.hcr.dc;
     bool i_cacheability = state.sctlr.i && !state.sctlr.m;
-    if (state.isStage2 || !dc || state.isSecure ||
-       (state.isHyp && !(tran_type & S1CTran))) {
-
+    if (state.isStage2 || !dc || state.aarch64EL == EL2) {
         temp_te.mtype      = is_fetch ? TlbEntry::MemoryType::Normal
                                       : TlbEntry::MemoryType::StronglyOrdered;
         temp_te.innerAttrs = i_cacheability? 0x2: 0x0;
@@ -1217,8 +1214,6 @@ MMU::CachedState::updateMiscReg(ThreadContext *tc,
         ELIs64(tc, EL2) :
         ELIs64(tc, aarch64EL == EL0 ? EL1 : aarch64EL);
 
-    isHyp = aarch64EL == EL2;
-
     if (aarch64) {  // AArch64
         // determine EL we need to translate in
         switch (aarch64EL) {
@@ -1288,7 +1283,6 @@ MMU::CachedState::updateMiscReg(ThreadContext *tc,
 
             if (hcr.e2h == 1 && (aarch64EL == EL2
                                   || (hcr.tge ==1 && aarch64EL == EL0))) {
-                isHyp = true;
                 directToStage2 = false;
                 stage2Req      = false;
                 stage2DescReq  = false;
@@ -1296,18 +1290,17 @@ MMU::CachedState::updateMiscReg(ThreadContext *tc,
             // Work out if we should skip the first stage of translation and go
             // directly to stage 2. This value is cached so we don't have to
             // compute it for every translation.
-                bool sec = !isSecure || (isSecure && IsSecureEL2Enabled(tc));
+                const bool el2_enabled = EL2Enabled(tc);
                 stage2Req = isStage2 ||
-                            (vm && !isHyp && sec &&
-                             !(tran_type & S1CTran) && (aarch64EL < EL2) &&
-                             !(tran_type & S1E1Tran)); // <--- FIX THIS HACK
-                stage2DescReq = isStage2 ||  (vm && !isHyp && sec &&
-                                (aarch64EL < EL2));
+                    (vm && aarch64EL < EL2 && el2_enabled &&
+                        !(tran_type & S1CTran) &&
+                        !(tran_type & S1E1Tran)); // <--- FIX THIS HACK
+                stage2DescReq = isStage2 ||
+                    (vm && aarch64EL < EL2 && el2_enabled);
                 directToStage2 = !isStage2 && stage2Req && !sctlr.m;
             }
         } else {
             vmid           = 0;
-            isHyp          = false;
             directToStage2 = false;
             stage2Req      = false;
             stage2DescReq  = false;
@@ -1338,21 +1331,22 @@ MMU::CachedState::updateMiscReg(ThreadContext *tc,
 
         if (mmu->release()->has(ArmExtension::VIRTUALIZATION)) {
             vmid   = bits(tc->readMiscReg(MISCREG_VTTBR), 55, 48);
-            if (isHyp) {
+            if (aarch64EL == EL2) {
                 sctlr = tc->readMiscReg(MISCREG_HSCTLR);
             }
             // Work out if we should skip the first stage of translation and go
             // directly to stage 2. This value is cached so we don't have to
             // compute it for every translation.
-            bool sec = !isSecure || (isSecure && IsSecureEL2Enabled(tc));
-            stage2Req      = hcr.vm && !isStage2 && !isHyp && sec &&
-                             !(tran_type & S1CTran);
-            stage2DescReq  = hcr.vm && !isStage2 && !isHyp && sec;
-            directToStage2 = stage2Req && !sctlr.m;
+            const bool el2_enabled = EL2Enabled(tc);
+            stage2Req = isStage2 ||
+                (hcr.vm && aarch64EL < EL2 && el2_enabled &&
+                    !(tran_type & S1CTran));
+            stage2DescReq  = isStage2 ||
+                (hcr.vm && aarch64EL < EL2 && el2_enabled);
+            directToStage2 = !isStage2 && stage2Req && !sctlr.m;
         } else {
             vmid           = 0;
             stage2Req      = false;
-            isHyp          = false;
             directToStage2 = false;
             stage2DescReq  = false;
         }
@@ -1404,7 +1398,7 @@ MMU::getTE(TlbEntry **te, const RequestPtr &req, ThreadContext *tc, Mode mode,
 }
 
 TlbEntry*
-MMU::lookup(Addr va, uint16_t asid, vmid_t vmid, bool hyp, bool secure,
+MMU::lookup(Addr va, uint16_t asid, vmid_t vmid, bool secure,
             bool functional, bool ignore_asn, ExceptionLevel target_el,
             bool in_host, bool stage2, BaseMMU::Mode mode)
 {
@@ -1416,7 +1410,6 @@ MMU::lookup(Addr va, uint16_t asid, vmid_t vmid, bool hyp, bool secure,
     lookup_data.asn = asid;
     lookup_data.ignoreAsn = ignore_asn;
     lookup_data.vmid = vmid;
-    lookup_data.hyp = hyp;
     lookup_data.secure = secure;
     lookup_data.functional = functional;
     lookup_data.targetEL = target_el;
@@ -1440,7 +1433,7 @@ MMU::getTE(TlbEntry **te, const RequestPtr &req, ThreadContext *tc, Mode mode,
 
     Addr vaddr_tainted = req->getVaddr();
     Addr vaddr = 0;
-    ExceptionLevel target_el = state.aarch64 ? state.aarch64EL : EL1;
+    ExceptionLevel target_el = state.aarch64EL;
     if (state.aarch64) {
         vaddr = purifyTaggedAddr(vaddr_tainted, tc, target_el,
             static_cast<TCR>(state.ttbcr), mode==Execute, state);
@@ -1448,7 +1441,7 @@ MMU::getTE(TlbEntry **te, const RequestPtr &req, ThreadContext *tc, Mode mode,
         vaddr = vaddr_tainted;
     }
 
-    *te = lookup(vaddr, state.asid, state.vmid, state.isHyp, is_secure, false,
+    *te = lookup(vaddr, state.asid, state.vmid, is_secure, false,
                  false, target_el, false, state.isStage2, mode);
 
     if (!isCompleteTranslation(*te)) {
@@ -1469,7 +1462,7 @@ MMU::getTE(TlbEntry **te, const RequestPtr &req, ThreadContext *tc, Mode mode,
 
         Fault fault;
         fault = getTableWalker(mode, state.isStage2)->walk(
-            req, tc, state.asid, state.vmid, state.isHyp, mode,
+            req, tc, state.asid, state.vmid, mode,
             translation, timing, functional, is_secure,
             tran_type, state.stage2DescReq, *te);
 
@@ -1478,7 +1471,7 @@ MMU::getTE(TlbEntry **te, const RequestPtr &req, ThreadContext *tc, Mode mode,
             return fault;
         }
 
-        *te = lookup(vaddr, state.asid, state.vmid, state.isHyp, is_secure,
+        *te = lookup(vaddr, state.asid, state.vmid, is_secure,
                      true, false, target_el, false, state.isStage2, mode);
         assert(*te);
     }

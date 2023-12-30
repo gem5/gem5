@@ -124,7 +124,7 @@ TableWalker::setMmu(MMU *_mmu)
 
 TableWalker::WalkerState::WalkerState() :
     tc(nullptr), aarch64(false), el(EL0), physAddrRange(0), req(nullptr),
-    asid(0), vmid(0), isHyp(false), transState(nullptr),
+    asid(0), vmid(0), transState(nullptr),
     vaddr(0), vaddr_tainted(0),
     sctlr(0), scr(0), cpsr(0), tcr(0),
     htcr(0), hcr(0), vtcr(0),
@@ -288,7 +288,7 @@ TableWalker::drainResume()
 
 Fault
 TableWalker::walk(const RequestPtr &_req, ThreadContext *_tc, uint16_t _asid,
-                  vmid_t _vmid, bool _isHyp, MMU::Mode _mode,
+                  vmid_t _vmid, MMU::Mode _mode,
                   MMU::Translation *_trans, bool _timing, bool _functional,
                   bool secure, MMU::ArmTranslationType tranType,
                   bool _stage2Req, const TlbEntry *walk_entry)
@@ -339,7 +339,9 @@ TableWalker::walk(const RequestPtr &_req, ThreadContext *_tc, uint16_t _asid,
         currState->aarch64 = ELIs64(_tc, EL2);
     } else {
         currState->el =
-            MMU::tranTypeEL(_tc->readMiscReg(MISCREG_CPSR), tranType);
+            MMU::tranTypeEL(_tc->readMiscReg(MISCREG_CPSR),
+                _tc->readMiscReg(MISCREG_SCR_EL3),
+                tranType);
         currState->aarch64 =
             ELIs64(_tc, currState->el == EL0 ? EL1 : currState->el);
     }
@@ -353,7 +355,6 @@ TableWalker::walk(const RequestPtr &_req, ThreadContext *_tc, uint16_t _asid,
     currState->fault = NoFault;
     currState->asid = _asid;
     currState->vmid = _vmid;
-    currState->isHyp = _isHyp;
     currState->timing = _timing;
     currState->functional = _functional;
     currState->mode = _mode;
@@ -429,7 +430,8 @@ TableWalker::walk(const RequestPtr &_req, ThreadContext *_tc, uint16_t _asid,
 
     currState->stage2Req = _stage2Req && !isStage2;
 
-    bool long_desc_format = currState->aarch64 || _isHyp || isStage2 ||
+    bool hyp = currState->el == EL2;
+    bool long_desc_format = currState->aarch64 || hyp || isStage2 ||
                             longDescFormatInUse(currState->tc);
 
     if (long_desc_format) {
@@ -492,7 +494,7 @@ TableWalker::processWalkWrapper()
     // Check if a previous walk filled this request already
     // @TODO Should this always be the TLB or should we look in the stage2 TLB?
     TlbEntry* te = mmu->lookup(currState->vaddr, currState->asid,
-        currState->vmid, currState->isHyp, currState->isSecure, true, false,
+        currState->vmid, currState->isSecure, true, false,
         currState->el, false, isStage2, currState->mode);
 
     // Check if we still need to have a walk for this request. If the requesting
@@ -513,8 +515,9 @@ TableWalker::processWalkWrapper()
         Fault f;
         if (currState->aarch64)
             f = processWalkAArch64();
-        else if (longDescFormatInUse(currState->tc) ||
-                 currState->isHyp || isStage2)
+        else if (bool hyp = currState->el == EL2;
+                 longDescFormatInUse(currState->tc) ||
+                 hyp || isStage2)
             f = processWalkLPAE();
         else
             f = processWalk();
@@ -563,7 +566,7 @@ TableWalker::processWalkWrapper()
         if (pendingQueue.size()) {
             currState = pendingQueue.front();
             te = mmu->lookup(currState->vaddr, currState->asid,
-                currState->vmid, currState->isHyp, currState->isSecure, true,
+                currState->vmid, currState->isSecure, true,
                 false, currState->el, false, isStage2, currState->mode);
         } else {
             // Terminate the loop, nothing more to do
@@ -713,7 +716,7 @@ TableWalker::processWalkLPAE()
         start_lookup_level = currState->vtcr.sl0 ?
             LookupLevel::L1 : LookupLevel::L2;
         currState->isUncacheable = currState->vtcr.irgn0 == 0;
-    } else if (currState->isHyp) {
+    } else if (currState->el == EL2) {
         DPRINTF(TLB, " - Selecting HTTBR (long-desc.)\n");
         ttbr = currState->tc->readMiscReg(MISCREG_HTTBR);
         tsz  = currState->htcr.t0sz;
@@ -2301,7 +2304,6 @@ TableWalker::insertPartialTableEntry(LongDescriptor &descriptor)
     // to differentiate translation contexts
     te.global         = !mmu->hasUnprivRegime(
         currState->el, currState->hcr.e2h);
-    te.isHyp          = currState->isHyp;
     te.asid           = currState->asid;
     te.vmid           = currState->vmid;
     te.N              = descriptor.offsetBits();
@@ -2315,10 +2317,7 @@ TableWalker::insertPartialTableEntry(LongDescriptor &descriptor)
     te.nstid          = !currState->isSecure;
     te.type           = TypeTLB::unified;
 
-    if (currState->aarch64)
-        te.el         = currState->el;
-    else
-        te.el         = EL1;
+    te.el         = currState->el;
 
     te.xn = currState->xnTable;
     te.pxn = currState->pxnTable;
@@ -2330,8 +2329,8 @@ TableWalker::insertPartialTableEntry(LongDescriptor &descriptor)
             te.N, te.pfn, te.size, te.global, te.valid);
     DPRINTF(TLB, " - vpn:%#x xn:%d pxn:%d ap:%d domain:%d asid:%d "
             "vmid:%d hyp:%d nc:%d ns:%d\n", te.vpn, te.xn, te.pxn,
-            te.ap, static_cast<uint8_t>(te.domain), te.asid, te.vmid, te.isHyp,
-            te.nonCacheable, te.ns);
+            te.ap, static_cast<uint8_t>(te.domain), te.asid, te.vmid,
+            te.el == EL2, te.nonCacheable, te.ns);
     DPRINTF(TLB, " - domain from L%d desc:%d data:%#x\n",
             descriptor.lookupLevel, static_cast<uint8_t>(descriptor.domain()),
             descriptor.getRawData());
@@ -2349,7 +2348,6 @@ TableWalker::insertTableEntry(DescriptorBase &descriptor, bool long_descriptor)
     // Create and fill a new page table entry
     te.valid          = true;
     te.longDescFormat = long_descriptor;
-    te.isHyp          = currState->isHyp;
     te.asid           = currState->asid;
     te.vmid           = currState->vmid;
     te.N              = descriptor.offsetBits();
@@ -2364,10 +2362,7 @@ TableWalker::insertTableEntry(DescriptorBase &descriptor, bool long_descriptor)
     te.type           = currState->mode == BaseMMU::Execute ?
         TypeTLB::instruction : TypeTLB::data;
 
-    if (currState->aarch64)
-        te.el         = currState->el;
-    else
-        te.el         = EL1;
+    te.el         = currState->el;
 
     stats.pageSizes[pageSizeNtoStatBin(te.N)]++;
     stats.requestOrigin[COMPLETED][currState->isFetch]++;
@@ -2405,8 +2400,8 @@ TableWalker::insertTableEntry(DescriptorBase &descriptor, bool long_descriptor)
     DPRINTF(TLB, " - N:%d pfn:%#x size:%#x global:%d valid:%d\n",
             te.N, te.pfn, te.size, te.global, te.valid);
     DPRINTF(TLB, " - vpn:%#x xn:%d pxn:%d ap:%d domain:%d asid:%d "
-            "vmid:%d hyp:%d nc:%d ns:%d\n", te.vpn, te.xn, te.pxn,
-            te.ap, static_cast<uint8_t>(te.domain), te.asid, te.vmid, te.isHyp,
+            "vmid:%d nc:%d ns:%d\n", te.vpn, te.xn, te.pxn,
+            te.ap, static_cast<uint8_t>(te.domain), te.asid, te.vmid,
             te.nonCacheable, te.ns);
     DPRINTF(TLB, " - domain from L%d desc:%d data:%#x\n",
             descriptor.lookupLevel, static_cast<uint8_t>(descriptor.domain()),

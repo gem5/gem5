@@ -149,7 +149,6 @@ class MMU : public BaseMMU
             scr = rhs.scr;
             isPriv = rhs.isPriv;
             isSecure = rhs.isSecure;
-            isHyp = rhs.isHyp;
             ttbcr = rhs.ttbcr;
             asid = rhs.asid;
             vmid = rhs.vmid;
@@ -184,7 +183,6 @@ class MMU : public BaseMMU
         SCR scr = 0;
         bool isPriv = false;
         bool isSecure = false;
-        bool isHyp = false;
         TTBCR ttbcr = 0;
         uint16_t asid = 0;
         vmid_t vmid = 0;
@@ -398,7 +396,6 @@ class MMU : public BaseMMU
      * @param asn context id/address space id to use
      * @param vmid The virtual machine ID used for stage 2 translation
      * @param secure if the lookup is secure
-     * @param hyp if the lookup is done from hyp mode
      * @param functional if the lookup should modify state
      * @param ignore_asn if on lookup asn should be ignored
      * @param target_el selecting the translation regime
@@ -406,7 +403,7 @@ class MMU : public BaseMMU
      * @param mode to differentiate between read/writes/fetches.
      * @return pointer to TLB entry if it exists
      */
-    TlbEntry *lookup(Addr vpn, uint16_t asn, vmid_t vmid, bool hyp,
+    TlbEntry *lookup(Addr vpn, uint16_t asn, vmid_t vmid,
                      bool secure, bool functional,
                      bool ignore_asn, ExceptionLevel target_el,
                      bool in_host, bool stage2, BaseMMU::Mode mode);
