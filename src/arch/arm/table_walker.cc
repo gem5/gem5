@@ -1560,19 +1560,18 @@ TableWalker::memAttrsAArch64(ThreadContext *tc, TlbEntry &te,
         uint8_t attrIndx = l_descriptor.attrIndx();
 
         DPRINTF(TLBVerbose, "memAttrsAArch64 AttrIndx:%#x sh:%#x\n", attrIndx, sh);
-        ExceptionLevel regime =  s1TranslationRegime(tc, currState->el);
 
         // Select MAIR
         uint64_t mair;
-        switch (regime) {
-          case EL0:
-          case EL1:
+        switch (currState->regime) {
+          case TranslationRegime::EL10:
             mair = tc->readMiscReg(MISCREG_MAIR_EL1);
             break;
-          case EL2:
+          case TranslationRegime::EL20:
+          case TranslationRegime::EL2:
             mair = tc->readMiscReg(MISCREG_MAIR_EL2);
             break;
-          case EL3:
+          case TranslationRegime::EL3:
             mair = tc->readMiscReg(MISCREG_MAIR_EL3);
             break;
           default:
