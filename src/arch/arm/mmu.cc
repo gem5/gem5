@@ -238,7 +238,7 @@ MMU::translateSe(const RequestPtr &req, ThreadContext *tc, Mode mode,
     Addr vaddr_tainted = req->getVaddr();
     Addr vaddr = 0;
     if (state.aarch64) {
-        vaddr = purifyTaggedAddr(vaddr_tainted, tc, state.aarch64EL,
+        vaddr = purifyTaggedAddr(vaddr_tainted, tc, state.exceptionLevel,
             static_cast<TCR>(state.ttbcr), mode==Execute, state);
     } else {
         vaddr = vaddr_tainted;
@@ -478,12 +478,12 @@ MMU::checkPermissions64(TlbEntry *te, const RequestPtr &req, Mode mode,
     // * It is a data cache invalidate (dc ivac) which requires write
     //   permissions to the VA, or
     // * It is executed from EL0
-    if (req->isCacheClean() && state.aarch64EL != EL0 && !state.isStage2) {
+    if (req->isCacheClean() && state.exceptionLevel != EL0 && !state.isStage2) {
         return NoFault;
     }
 
     Addr vaddr_tainted = req->getVaddr();
-    Addr vaddr = purifyTaggedAddr(vaddr_tainted, tc, state.aarch64EL,
+    Addr vaddr = purifyTaggedAddr(vaddr_tainted, tc, state.exceptionLevel,
         static_cast<TCR>(state.ttbcr), mode==Execute, state);
 
     Request::Flags flags = req->getFlags();
@@ -580,7 +580,7 @@ std::pair<bool, bool>
 MMU::s2PermBits64(TlbEntry *te, const RequestPtr &req, Mode mode,
                   ThreadContext *tc, CachedState &state, bool r, bool w, bool x)
 {
-    assert(ArmSystem::haveEL(tc, EL2) && state.aarch64EL != EL2);
+    assert(ArmSystem::haveEL(tc, EL2) && state.exceptionLevel != EL2);
 
     // In stage 2 we use the hypervisor access permission bits.
     // The following permissions are described in ARM DDI 0487A.f
@@ -716,7 +716,7 @@ MMU::faultPAN(ThreadContext *tc, uint8_t ap, const RequestPtr &req, Mode mode,
               const bool is_priv, CachedState &state)
 {
     bool exception = false;
-    switch (state.aarch64EL) {
+    switch (state.exceptionLevel) {
       case EL0:
         break;
       case EL1:
@@ -827,7 +827,7 @@ MMU::translateMmuOff(ThreadContext *tc, const RequestPtr &req, Mode mode,
     bool dc = (HaveExt(tc, ArmExtension::FEAT_VHE) &&
                state.hcr.e2h == 1 && state.hcr.tge == 1) ? 0: state.hcr.dc;
     bool i_cacheability = state.sctlr.i && !state.sctlr.m;
-    if (state.isStage2 || !dc || state.aarch64EL == EL2) {
+    if (state.isStage2 || !dc || state.exceptionLevel == EL2) {
         temp_te.mtype      = is_fetch ? TlbEntry::MemoryType::Normal
                                       : TlbEntry::MemoryType::StronglyOrdered;
         temp_te.innerAttrs = i_cacheability? 0x2: 0x0;
@@ -935,7 +935,7 @@ MMU::translateFs(const RequestPtr &req, ThreadContext *tc, Mode mode,
     Addr vaddr_tainted = req->getVaddr();
     Addr vaddr = 0;
     if (state.aarch64) {
-        vaddr = purifyTaggedAddr(vaddr_tainted, tc, state.aarch64EL,
+        vaddr = purifyTaggedAddr(vaddr_tainted, tc, state.exceptionLevel,
             static_cast<TCR>(state.ttbcr), mode==Execute, state);
     } else {
         vaddr = vaddr_tainted;
@@ -1198,8 +1198,8 @@ MMU::CachedState::updateMiscReg(ThreadContext *tc,
     isSecure = ArmISA::isSecure(tc) &&
         !(tran_type & HypMode) && !(tran_type & S1S2NsTran);
 
-    aarch64EL = tranTypeEL(cpsr, scr, tran_type);
-    currRegime = translationRegime(tc, aarch64EL);
+    exceptionLevel = tranTypeEL(cpsr, scr, tran_type);
+    currRegime = translationRegime(tc, exceptionLevel);
     aarch64 = isStage2 ?
         ELIs64(tc, EL2) :
         ELIs64(tc, translationEl(currRegime));
@@ -1242,7 +1242,7 @@ MMU::CachedState::updateMiscReg(ThreadContext *tc,
             break;
         }
 
-        isPriv = aarch64EL != EL0;
+        isPriv = exceptionLevel != EL0;
         if (mmu->release()->has(ArmExtension::VIRTUALIZATION)) {
             vmid = getVMID(tc);
             bool vm = hcr.vm;
@@ -1251,8 +1251,8 @@ MMU::CachedState::updateMiscReg(ThreadContext *tc,
                 vm = 0;
             }
 
-            if (hcr.e2h == 1 && (aarch64EL == EL2
-                                  || (hcr.tge ==1 && aarch64EL == EL0))) {
+            if (hcr.e2h == 1 && (exceptionLevel == EL2
+                                  || (hcr.tge ==1 && exceptionLevel == EL0))) {
                 directToStage2 = false;
                 stage2Req      = false;
                 stage2DescReq  = false;
@@ -1262,11 +1262,11 @@ MMU::CachedState::updateMiscReg(ThreadContext *tc,
             // compute it for every translation.
                 const bool el2_enabled = EL2Enabled(tc);
                 stage2Req = isStage2 ||
-                    (vm && aarch64EL < EL2 && el2_enabled &&
+                    (vm && exceptionLevel < EL2 && el2_enabled &&
                         !(tran_type & S1CTran) &&
                         !(tran_type & S1E1Tran)); // <--- FIX THIS HACK
                 stage2DescReq = isStage2 ||
-                    (vm && aarch64EL < EL2 && el2_enabled);
+                    (vm && exceptionLevel < EL2 && el2_enabled);
                 directToStage2 = !isStage2 && stage2Req && !sctlr.m;
             }
         } else {
@@ -1301,7 +1301,7 @@ MMU::CachedState::updateMiscReg(ThreadContext *tc,
 
         if (mmu->release()->has(ArmExtension::VIRTUALIZATION)) {
             vmid   = bits(tc->readMiscReg(MISCREG_VTTBR), 55, 48);
-            if (aarch64EL == EL2) {
+            if (exceptionLevel == EL2) {
                 sctlr = tc->readMiscReg(MISCREG_HSCTLR);
             }
             // Work out if we should skip the first stage of translation and go
@@ -1309,10 +1309,10 @@ MMU::CachedState::updateMiscReg(ThreadContext *tc,
             // compute it for every translation.
             const bool el2_enabled = EL2Enabled(tc);
             stage2Req = isStage2 ||
-                (hcr.vm && aarch64EL < EL2 && el2_enabled &&
+                (hcr.vm && exceptionLevel < EL2 && el2_enabled &&
                     !(tran_type & S1CTran));
             stage2DescReq  = isStage2 ||
-                (hcr.vm && aarch64EL < EL2 && el2_enabled);
+                (hcr.vm && exceptionLevel < EL2 && el2_enabled);
             directToStage2 = !isStage2 && stage2Req && !sctlr.m;
         } else {
             vmid           = 0;
@@ -1405,7 +1405,7 @@ MMU::getTE(TlbEntry **te, const RequestPtr &req, ThreadContext *tc, Mode mode,
     TranslationRegime regime = state.currRegime;
 
     if (state.aarch64) {
-        vaddr = purifyTaggedAddr(vaddr_tainted, tc, state.aarch64EL,
+        vaddr = purifyTaggedAddr(vaddr_tainted, tc, state.exceptionLevel,
             static_cast<TCR>(state.ttbcr), mode==Execute, state);
     } else {
         vaddr = vaddr_tainted;

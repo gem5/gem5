@@ -144,7 +144,7 @@ class MMU : public BaseMMU
             isStage2 = rhs.isStage2;
             cpsr = rhs.cpsr;
             aarch64 = rhs.aarch64;
-            aarch64EL = rhs.aarch64EL;
+            exceptionLevel = rhs.exceptionLevel;
             currRegime = rhs.currRegime;
             sctlr = rhs.sctlr;
             scr = rhs.scr;
@@ -179,7 +179,7 @@ class MMU : public BaseMMU
         bool isStage2 = false;
         CPSR cpsr = 0;
         bool aarch64 = false;
-        ExceptionLevel aarch64EL = EL0;
+        ExceptionLevel exceptionLevel = EL0;
         TranslationRegime currRegime = TranslationRegime::EL10;
         SCTLR sctlr = 0;
         SCR scr = 0;
