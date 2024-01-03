@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2014, 2016-2020, 2022-2023 Arm Limited
+ * Copyright (c) 2009-2014, 2016-2020, 2022-2024 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -1382,6 +1382,22 @@ translationRegime(ThreadContext *tc, ExceptionLevel el)
             TranslationRegime::EL20 : TranslationRegime::EL10;
       default:
         panic("Invalid ExceptionLevel\n");
+    }
+}
+
+ExceptionLevel
+translationEl(TranslationRegime regime)
+{
+    switch (regime) {
+      case TranslationRegime::EL10:
+        return EL1;
+      case TranslationRegime::EL20:
+      case TranslationRegime::EL2:
+        return EL2;
+      case TranslationRegime::EL3:
+        return EL3;
+      default:
+        return EL1;
     }
 }
 

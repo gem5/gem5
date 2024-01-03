@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2016-2023 Arm Limited
+ * Copyright (c) 2010-2013, 2016-2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -1202,7 +1202,7 @@ MMU::CachedState::updateMiscReg(ThreadContext *tc,
     currRegime = translationRegime(tc, aarch64EL);
     aarch64 = isStage2 ?
         ELIs64(tc, EL2) :
-        ELIs64(tc, aarch64EL == EL0 ? EL1 : aarch64EL);
+        ELIs64(tc, translationEl(currRegime));
 
     if (aarch64) {  // AArch64
         // determine EL we need to translate in

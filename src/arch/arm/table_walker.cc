@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2019, 2021-2023 Arm Limited
+ * Copyright (c) 2010, 2012-2019, 2021-2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -347,7 +347,7 @@ TableWalker::walk(const RequestPtr &_req, ThreadContext *_tc, uint16_t _asid,
         currState->regime =
             translationRegime(_tc, currState->el);
         currState->aarch64 =
-            ELIs64(_tc, currState->el == EL0 ? EL1 : currState->el);
+            ELIs64(_tc, translationEl(currState->regime));
     }
     currState->transState = _trans;
     currState->req = _req;

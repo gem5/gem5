@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2016-2020, 2022-2023 Arm Limited
+ * Copyright (c) 2010, 2012-2013, 2016-2020, 2022-2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -368,6 +368,7 @@ bool fgtEnabled(ThreadContext *tc);
 bool isHcrxEL2Enabled(ThreadContext *tc);
 
 TranslationRegime translationRegime(ThreadContext *tc, ExceptionLevel el);
+ExceptionLevel translationEl(TranslationRegime regime);
 
 static inline bool
 useVMID(TranslationRegime regime)
