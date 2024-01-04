@@ -2572,14 +2572,14 @@ decodeAArch64SysReg(const MiscRegNum64 &sys_reg)
     }
 }
 
-MiscRegNum64
+std::optional<MiscRegNum64>
 encodeAArch64SysReg(MiscRegIndex misc_reg)
 {
     if (auto it = idxToMiscRegNum.find(misc_reg);
         it != idxToMiscRegNum.end()) {
         return it->second;
     } else {
-        panic("Invalid MiscRegIndex: %d\n", misc_reg);
+        return std::nullopt;
     }
 }
 

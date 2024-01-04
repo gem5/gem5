@@ -43,6 +43,7 @@
 
 #include <array>
 #include <bitset>
+#include <optional>
 #include <tuple>
 
 #include "arch/arm/regs/misc_types.hh"
@@ -1778,7 +1779,7 @@ namespace ArmISA
                                      unsigned crn, unsigned crm,
                                      unsigned op2);
     MiscRegIndex decodeAArch64SysReg(const MiscRegNum64 &misc_reg);
-    MiscRegNum64 encodeAArch64SysReg(MiscRegIndex misc_reg);
+    std::optional<MiscRegNum64> encodeAArch64SysReg(MiscRegIndex misc_reg);
 
     // Whether a particular AArch64 system register is -always- read only.
     bool aarch64SysRegReadOnly(MiscRegIndex miscReg);
