@@ -236,6 +236,7 @@ action(AllocateTBE_PfRequest, desc="Allocate TBE for prefetch request") {
       assert(in_msg.Prefetch != PrefetchBit:No);
       out_msg.is_local_pf := true;
       out_msg.is_remote_pf := false;
+      out_msg.txnId := max_outstanding_transactions;
 
       if (in_msg.Type == RubyRequestType:LD) {
         out_msg.type := CHIRequestType:Load;
