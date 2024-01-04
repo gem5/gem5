@@ -331,6 +331,12 @@ parser.add_argument(
     default="dynamic",
     help="register allocation policy (simple/dynamic)",
 )
+parser.add_argument(
+    "--register-file-cache-size",
+    type=int,
+    default=0,
+    help="number of registers in cache",
+)
 
 parser.add_argument(
     "--dgpu",
@@ -489,6 +495,7 @@ for i in range(n_cu):
     vrfs = []
     vrf_pool_mgrs = []
     srfs = []
+    rfcs = []
     srf_pool_mgrs = []
     for j in range(args.simds_per_cu):
         for k in range(shader.n_wf):
@@ -533,10 +540,16 @@ for i in range(n_cu):
                 simd_id=j, wf_size=args.wf_size, num_regs=args.sreg_file_size
             )
         )
+        rfcs.append(
+            RegisterFileCache(
+                simd_id=j, cache_size=args.register_file_cache_size
+            )
+        )
 
     compute_units[-1].wavefronts = wavefronts
     compute_units[-1].vector_register_file = vrfs
     compute_units[-1].scalar_register_file = srfs
+    compute_units[-1].register_file_cache = rfcs
     compute_units[-1].register_manager = RegisterManager(
         policy=args.registerManagerPolicy,
         vrf_pool_managers=vrf_pool_mgrs,
