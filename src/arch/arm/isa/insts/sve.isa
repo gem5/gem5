@@ -325,6 +325,28 @@ output header {{
         }
     }
 
+
+    // Decodes binary with immediate operand, destructive, unpredicated
+    // SVE instructions, handling unsigned variants only.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveBinImmDestrUnpredU(unsigned size, ExtMachInst machInst,
+            RegIndex dest, RegIndex op1, unsigned immediate)
+    {
+        switch (size) {
+          case 0:
+            return new Base<uint8_t>(machInst, dest, op1, immediate);
+          case 1:
+            return new Base<uint16_t>(machInst, dest, op1, immediate);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, op1, immediate);
+          case 3:
+            return new Base<uint64_t>(machInst, dest, op1, immediate);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
     // Decodes binary with immediate operand, destructive, predicated (merging)
     // SVE instructions, handling unsigned variants only.
     template <template <typename T> class Base>
@@ -612,6 +634,44 @@ output header {{
     }
 
     // Decodes binary, constructive, unpredicated SVE instructions.
+    // unsigned limited variants
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveBinUnpredUnsigned(unsigned size, ExtMachInst machInst,
+                               RegIndex dest, RegIndex op1, RegIndex op2)
+    {
+        switch (size) {
+          case 1:
+            return new Base<uint8_t>(machInst, dest, op1, op2);
+          case 2:
+            return new Base<uint16_t>(machInst, dest, op1, op2);
+          case 3:
+            return new Base<uint32_t>(machInst, dest, op1, op2);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes binary, constructive, unpredicated SVE instructions.
+    // signed limited variants
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveBinUnpredSigned(unsigned size, ExtMachInst machInst,
+                             RegIndex dest, RegIndex op1, RegIndex op2)
+    {
+        switch (size) {
+          case 1:
+            return new Base<int8_t>(machInst, dest, op1, op2);
+          case 2:
+            return new Base<int16_t>(machInst, dest, op1, op2);
+          case 3:
+            return new Base<int32_t>(machInst, dest, op1, op2);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes binary, constructive, unpredicated SVE instructions.
     // Unsigned instructions only.
     template <template <typename T> class Base>
     StaticInstPtr
@@ -671,6 +731,25 @@ output header {{
             return new Base<int32_t>(machInst, dest, op1, op2);
           case 3:
             return new Base<int64_t>(machInst, dest, op1, op2);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes binary, constructive, unpredicated SVE instructions.
+    // unsigned instructions only, limited variants.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveBinUnpredS2(unsigned size, ExtMachInst machInst, RegIndex dest,
+            RegIndex op1, RegIndex op2)
+    {
+        switch (size) {
+          case 0:
+            return new Base<uint64_t>(machInst, dest, op1, op2);
+          case 1:
+            return new Base<uint8_t>(machInst, dest, op1, op2);
+          case 3:
+            return new Base<uint32_t>(machInst, dest, op1, op2);
           default:
             return new Unknown64(machInst);
         }
@@ -1934,8 +2013,7 @@ let {{
     def sveBinInst(name, Name, opClass, types, op, predType=PredType.NONE,
                    isDestructive=False, customIterCode=None,
                    decoder='Generic'):
-        assert not (predType in (PredType.NONE, PredType.SELECT) and
-                    isDestructive)
+        assert not ((predType == PredType.SELECT) and isDestructive)
         global header_output, exec_output, decoders
         code = sveEnabledCheckCode + '''
         unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
@@ -1950,7 +2028,12 @@ let {{
                 code += '''
                 const Element& srcElem1 = AA64FpOp1_x[i];'''
             code += '''
-                const Element& srcElem2 = AA64FpOp2_x[i];
+                const Element& srcElem2 = AA64FpOp2_x[i];'''
+            if (predType == PredType.NONE) and isDestructive:
+                code += '''
+                Element destElem = AA64FpDestMerge_x[i];'''
+            else:
+                code += '''
                 Element destElem = 0;'''
             if predType != PredType.NONE:
                 code += '''
@@ -2762,8 +2845,8 @@ let {{
                      'class_name' : 'Sve' + Name}
         exec_output += SveOpExecDeclare.subst(substDict)
 
-    # Generate definitions for SVE TBL instructions
-    def sveTblInst(name, Name, opClass, decoder = 'Generic'):
+    # Generate definitions for SVE table lookup instructions with 2 sources
+    def sveTblInst(name, Name, opClass, decoder = 'Generic', merging = False):
         global header_output, exec_output, decoders
         code = sveEnabledCheckCode + '''
         unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
@@ -2774,15 +2857,72 @@ let {{
             if (idx < eCount) {
                 val = AA64FpOp1_x[idx];
             } else {
-                val = 0;
+                val = %(dest_elem)s;;
             }
             AA64FpDest_x[i] = val;
-        }'''
+        }''' % {'dest_elem': 'AA64FpDestMerge_x[i]' if merging else '0'}
         iop = ArmInstObjParams(name, 'Sve' + Name, 'SveTblOp',
                 {'code': code, 'op_class': opClass}, [])
         header_output += SveBinUnpredOpDeclare.subst(iop)
         exec_output += SveOpExecute.subst(iop)
         for type in unsignedTypes:
+            substDict = {'targs' : type,
+                         'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generate definitions for integer add/subtract long with carry
+    def sveLongCarryInst(name, Name, opClass, decoder = 'Generic',
+            uptTop = False, subtract = False):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());
+        for (int i = 0; i < eCount/2; ++i) {
+            const Element& srcElem1 = AA64FpOp1_x[2*i+%(offset)s];
+            const Element& srcElem2 = AA64FpOp2_x[2*i+1];
+            const Element& srcElem3 = AA64FpDestMerge_x[2*i];
+            __uint128_t unsigned_sum = (__uint128_t)srcElem3 +
+                                       (%(op)ssrcElem1) +
+                                       (srcElem2 & 0x1);
+            AA64FpDest_x[2*i] = (Element)unsigned_sum;
+            AA64FpDest_x[2*i+1] = (Element)unsigned_sum !=
+                                  (__uint128_t)unsigned_sum;
+        }
+        ''' % {'offset': 1 if uptTop else 0,
+               'op': '~' if subtract else '',
+              }
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SveBinUnpredOp',
+                               {'code': code, 'op_class': opClass}, [])
+        header_output += SveBinUnpredOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in ('uint32_t', 'uint64_t'):
+            substDict = {'targs' : type,
+                         'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generate definitions for long integer/poly multiplication instruction
+    def sveLongMulInst(name, Name, opClass, types, op, decoder = 'Generic',
+            uptTop = False):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());
+        for (int i = 0; i < eCount/2; ++i) {
+            const Element& srcElem1 = AA64FpOp1_x[2*i+%(offset)s];
+            const Element& srcElem2 = AA64FpOp2_x[2*i+%(offset)s];
+            %(op)s
+            AA64FpDest_x[2*i] = (Element)destElem;
+            AA64FpDest_x[2*i+1] = (Element)(destElem >>
+                                   (sizeof(Element) << 3));
+        }
+        ''' % {'offset': 1 if uptTop else 0,
+               'op': op,
+              }
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SveBinUnpredOp',
+                               {'code': code, 'op_class': opClass}, [])
+        header_output += SveBinUnpredOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
             substDict = {'targs' : type,
                          'class_name' : 'Sve' + Name}
             exec_output += SveOpExecDeclare.subst(substDict)
@@ -3352,6 +3492,10 @@ let {{
     absCode = 'destElem = (Element) std::abs(srcElem1);'
     sveUnaryInst('abs', 'Abs', 'SimdAluOp', signedTypes, absCode,
                  PredType.MERGE)
+    # ADCLB
+    sveLongCarryInst('adclb', 'Adclb', 'SimdAluOp')
+    # ADCLT
+    sveLongCarryInst('adclt', 'Adclt', 'SimdAluOp', uptTop = True)
     # ADD (immediate)
     sveWideImmInst('add', 'AddImm', 'SimdAddOp', unsignedTypes, addCode, False)
     # ADD (vectors, predicated)
@@ -3457,6 +3601,29 @@ let {{
     '''
     sveBinInst('asrr', 'Asrr', 'SimdAluOp', unsignedTypes, asrrCode,
                PredType.MERGE, True)
+    # BCAX
+    bcaxCode = 'destElem ^= srcElem1 & (~srcElem2);'
+    sveBinInst('bcax', 'Bcax', 'SimdAluOp', ('uint64_t',), bcaxCode,
+                isDestructive=True)
+    # BGRP
+    bgrpCode = '''
+            int k = 0;
+            int len = sizeof(Element) * 8;
+            for(int j = 0; j < len; j++) {
+                if(((srcElem2>>j) & (Element)0x1) == ((Element)0x1)){
+                    destElem |= (((srcElem1>>j) & (Element)0x1) << k);
+                    k++;
+                }
+            }
+            k = len-1;
+            for(int j = len-1; j >= 0; j--) {
+                if(((srcElem2>>j) & ((Element)0x1)) == ((Element)0x0)){
+                    destElem |= (((srcElem1>>j) & (Element)0x1) << k);
+                    k--;
+                }
+            }
+    '''
+    sveBinInst('bgrp', 'Bgrp', 'SimdAluOp', unsignedTypes, bgrpCode)
     # BIC (vectors, predicated)
     bicCode = 'destElem = srcElem1 & ~srcElem2;'
     sveBinInst('bic', 'BicPred', 'SimdAluOp', unsignedTypes, bicCode,
@@ -3740,6 +3907,10 @@ let {{
                        eorCode)
     svePredLogicalInst('eors', 'PredEors', 'SimdPredAluOp', ('uint8_t',),
                        eorCode, isFlagSetting=True)
+    # EOR3
+    eorCode = 'destElem ^= srcElem1 ^ srcElem2;'
+    sveBinInst('eor', 'Eor3', 'SimdAluOp', ('uint64_t',), eorCode,
+                isDestructive=True)
     # EORV
     eorvCode = 'destElem ^= srcElem1;'
     sveAssocReducInst('eorv', 'Eorv', 'SimdReduceAluOp', unsignedTypes,
@@ -4355,6 +4526,30 @@ let {{
             pfalseCode)
     # PFIRST
     svePFirstInst('pfirst', 'Pfirst', 'SimdPredAluOp')
+    # PMUL
+    exec_output += '''
+    __uint128_t poly_mul(uint64_t srcElem1, uint64_t srcElem2)
+    {
+        __uint128_t destElem = 0;
+        __uint128_t extendedElem2 = srcElem2;
+        int i;
+        for (i=0; i < 64; i++) {
+            if (((srcElem1 >> i) & 0x1) == 0x1) {
+                destElem ^= (extendedElem2 << i);
+            }
+        }
+        return destElem;
+    }'''
+    pmulCode = 'destElem = (uint8_t)poly_mul(srcElem1, srcElem2);'
+    sveBinInst('pmul', 'Pmul', 'SimdAluOp', ('uint8_t',), pmulCode)
+    # PMULLB
+    pmullCode = '__uint128_t destElem = poly_mul(srcElem1, srcElem2);'
+    sveLongMulInst('pmullb', 'Pmullb', 'SimdAluOp',
+                   ('uint8_t','uint32_t','uint64_t',), pmullCode)
+    # PMULLT
+    sveLongMulInst('pmullt', 'Pmullt', 'SimdAluOp',
+                    ('uint8_t','uint32_t','uint64_t',),
+                    pmullCode, uptTop = True)
     # PNEXT
     svePNextInst('pnext', 'Pnext', 'SimdPredAluOp', unsignedTypes)
     # PSEL
@@ -4371,6 +4566,9 @@ let {{
     # PUNPKLO
     sveUnpackInst('punpklo', 'Punpklo', 'SimdPredAluOp', unsignedWideSDTypes,
             unpackHalf = Unpack.Low, regType = SrcRegType.Predicate)
+    # RAX1
+    rax1Code = 'destElem = srcElem1 ^ ((srcElem2 << 1) | (srcElem2 >> 63));'
+    sveBinInst('rax', 'Rax1', 'SimdAluOp', ('uint64_t',), rax1Code)
     # RBIT
     rbitCode = '''
         destElem = reverseBits(srcElem1);'''
@@ -4447,6 +4645,11 @@ let {{
     '''
     sveBinInst('sabd', 'Sabd', 'SimdAddOp', signedTypes, abdCode,
                PredType.MERGE, True)
+    # SBCLB
+    sveLongCarryInst('sbclb', 'Sbclb', 'SimdAluOp', subtract = True)
+    # SBCLT
+    sveLongCarryInst('sbclt', 'Sbclt', 'SimdAluOp', uptTop = True,
+                     subtract = True)
     # SADDV
     addvCode = 'destElem += srcElem1;'
     sveWideningAssocReducInst('saddv', 'Saddv', 'SimdReduceAddOp',
@@ -4608,6 +4811,13 @@ let {{
     destElem = do_mulh(srcElem1, srcElem2);'''
     sveBinInst('smulh', 'Smulh', 'SimdMultOp', signedTypes, mulhCode,
                PredType.MERGE, True)
+    # SMULLB
+    smullCode = 'int64_t destElem = (int64_t)srcElem1 * (int64_t)srcElem2;'
+    sveLongMulInst('smullb', 'Smullb', 'SimdAluOp',
+                   ('int8_t','int16_t','int32_t',), smullCode)
+    # SMULLT
+    sveLongMulInst('smullt', 'Smullt', 'SimdAluOp',
+                   ('int8_t','int16_t','int32_t',), smullCode, uptTop = True)
     # SPLICE
     sveSpliceInst('splice', 'Splice', 'SimdAluOp', unsignedTypes)
     # SQADD (immediate)
@@ -4793,6 +5003,8 @@ let {{
             sxtCode, PredType.MERGE)
     # TBL
     sveTblInst('tbl', 'Tbl', 'SimdAluOp')
+    # TBX
+    sveTblInst('tbx', 'Tbx', 'SimdAluOp', merging=True)
     # TRN1, TRN2 (predicates)
     trnPredIterCode = '''
         constexpr unsigned sz = sizeof(Element);
@@ -4909,6 +5121,14 @@ let {{
     # UMULH
     sveBinInst('umulh', 'Umulh', 'SimdMultOp', unsignedTypes, mulhCode,
                PredType.MERGE, True)
+    # UMULLB
+    umullCode = 'uint64_t destElem = (uint64_t)srcElem1 * (uint64_t)srcElem2;'
+    sveLongMulInst('umullb', 'Umullb', 'SimdAluOp',
+                   ('uint8_t','uint16_t','uint32_t',), umullCode)
+    # UMULLT
+    sveLongMulInst('umullt', 'Umullt', 'SimdAluOp',
+                   ('uint8_t','uint16_t','uint32_t',), umullCode,
+                    uptTop = True)
     # UQADD (immediate)
     uqaddCode = '''
             destElem = srcElem1 + srcElem2;
@@ -5129,6 +5349,13 @@ let {{
             Ffr_ub[i] = POp1_ub[i];
         }'''
     svePredWriteFfrInst('wrffr', 'Wrffr', 'SimdPredAluOp', wrffrCode, False)
+    # XAR
+    xarCode = '''
+            destElem = AA64FpDestMerge_x[i] ^ srcElem1;
+            destElem = ((destElem >> srcElem2) |
+                    (destElem << (sizeof(Element) * 8 - srcElem2)));
+    '''
+    sveBinImmInst('xar', 'Xar', 'SimdAluOp', unsignedTypes, xarCode)
     # ZIP1, ZIP2 (predicates)
     zipPredIterCode = '''
         constexpr unsigned sz = sizeof(Element);

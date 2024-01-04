@@ -1194,7 +1194,16 @@ bool isWriteReqType(CHIRequestType type) {
       type == CHIRequestType:StoreLine ||
       type == CHIRequestType:WriteUniquePtl ||
       type == CHIRequestType:WriteUniqueFull ||
+      type == CHIRequestType:WriteUniqueZero ||
       type == CHIRequestType:ReadUnique) {
+    return true;
+  }
+  return false;
+}
+
+bool isStashReqType(CHIRequestType type) {
+  if (type == CHIRequestType:StashOnceShared ||
+      type == CHIRequestType:StashOnceUnique) {
     return true;
   }
   return false;
@@ -1254,6 +1263,12 @@ Event reqToEvent(CHIRequestType type, bool is_prefetch) {
     } else {
       return Event:WriteUnique; // all WriteUnique handled the same when ~PoC
     }
+  } else if (type == CHIRequestType:WriteUniqueZero) {
+      return Event:WriteUniqueZero;
+  } else if (type == CHIRequestType:StashOnceShared) {
+      return Event:StashOnceShared;
+  } else if (type == CHIRequestType:StashOnceUnique) {
+      return Event:StashOnceUnique;
   } else if (type == CHIRequestType:DvmTlbi_Initiate) {
     return Event:DvmTlbi_Initiate;
   } else if (type == CHIRequestType:DvmSync_Initiate) {

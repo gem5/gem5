@@ -186,8 +186,9 @@ MiscRegRegImmOp64::generateDisassembly(
 uint32_t
 MiscRegRegImmOp64::iss() const
 {
-    const MiscRegNum64 &misc_reg = encodeAArch64SysReg(dest);
-    return _iss(misc_reg, op1);
+    const auto misc_reg = encodeAArch64SysReg(dest);
+    assert(misc_reg.has_value());
+    return _iss(misc_reg.value(), op1);
 }
 
 std::string
@@ -205,8 +206,9 @@ RegMiscRegImmOp64::generateDisassembly(
 uint32_t
 RegMiscRegImmOp64::iss() const
 {
-    const MiscRegNum64 &misc_reg = encodeAArch64SysReg(op1);
-    return _iss(misc_reg, dest);
+    const auto misc_reg = encodeAArch64SysReg(op1);
+    assert(misc_reg.has_value());
+    return _iss(misc_reg.value(), dest);
 }
 
 Fault

@@ -538,7 +538,7 @@ NVMInterface::doBurstAccess(MemPacket* pkt, Tick next_burst_at,
     // Update the stats
     if (pkt->isRead()) {
         stats.readBursts++;
-        stats.bytesRead += burstSize;
+        stats.nvmBytesRead += burstSize;
         stats.perBankRdBursts[pkt->bankId]++;
         stats.pendingReads.sample(numPendingReads);
 
@@ -548,7 +548,7 @@ NVMInterface::doBurstAccess(MemPacket* pkt, Tick next_burst_at,
         stats.totQLat += cmd_at - pkt->entryTime;
     } else {
         stats.writeBursts++;
-        stats.bytesWritten += burstSize;
+        stats.nvmBytesWritten += burstSize;
         stats.perBankWrBursts[pkt->bankId]++;
     }
 
@@ -650,6 +650,11 @@ NVMInterface::NVMStats::NVMStats(NVMInterface &_nvm)
                 statistics::units::Tick, statistics::units::Count>::get(),
              "Average memory access latency per NVM burst"),
 
+    ADD_STAT(nvmBytesRead, statistics::units::Byte::get(),
+            "Total bytes read"),
+    ADD_STAT(nvmBytesWritten, statistics::units::Byte::get(),
+            "Total bytes written"),
+
     ADD_STAT(avgRdBW, statistics::units::Rate<
                 statistics::units::Byte, statistics::units::Second>::get(),
              "Average DRAM read bandwidth in MiBytes/s"),
@@ -715,8 +720,8 @@ NVMInterface::NVMStats::regStats()
     avgBusLat = totBusLat / readBursts;
     avgMemAccLat = totMemAccLat / readBursts;
 
-    avgRdBW = (bytesRead / 1000000) / simSeconds;
-    avgWrBW = (bytesWritten / 1000000) / simSeconds;
+    avgRdBW = (nvmBytesRead / 1000000) / simSeconds;
+    avgWrBW = (nvmBytesWritten / 1000000) / simSeconds;
     peakBW = (sim_clock::Frequency / nvm.tBURST) *
               nvm.burstSize / 1000000;
 

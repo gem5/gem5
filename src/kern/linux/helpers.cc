@@ -37,7 +37,25 @@
 
 #include "kern/linux/helpers.hh"
 
+/* The following pragmas are to fix a bug in GCC \w the CPP standard library,
+ * outlined here: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105562.
+ * This ignores the 'maybe-unitialized' warning when importing regex for
+ * GCC 12.1.
+ */
+
+// ignore 'maybe-uniitialized' warnings for GCC 12.1.
+#if __GNUC__ &&  __GNUC__ == 12 && __GNUC_MINOR__ == 1
+    #define SUPPRESSING_MAYBE_UNINITIALIZED_WARNING
+    // save diagnostic state.
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
 #include <regex>
+#ifdef SUPPRESSING_MAYBE_UNINITIALIZED_WARNING
+    // restore the diagnostic state.
+    #pragma GCC diagnostic pop
+#endif
+
 #include <string>
 #include <type_traits>
 #include <vector>

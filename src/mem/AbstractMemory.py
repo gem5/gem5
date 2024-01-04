@@ -76,3 +76,12 @@ class AbstractMemory(ClockedObject):
     )
 
     writeable = Param.Bool(True, "Allow writes to this memory")
+
+    collect_stats = Param.Bool(
+        True,
+        "Collect statistics per requestor for "
+        "each type of access. Set this to `False` if "
+        "requestors may be unknown or when running "
+        "with multiple `System` objects without a "
+        "`SysBridge`.",
+    )

@@ -578,7 +578,9 @@ class LooppointCsvResource(FileResource, LooppointCsvLoader):
             resource_version=resource_version,
             downloader=downloader,
         )
-        LooppointCsvLoader.__init__(self, pinpoints_file=Path(local_path))
+        LooppointCsvLoader.__init__(
+            self, pinpoints_file=Path(self.get_local_path())
+        )
 
     def get_category_name(cls) -> str:
         return "LooppointCsvResource"
@@ -606,7 +608,7 @@ class LooppointJsonResource(FileResource, LooppointJsonLoader):
             downloader=downloader,
         )
         LooppointJsonLoader.__init__(
-            self, looppoint_file=local_path, region_id=region_id
+            self, looppoint_file=self.get_local_path(), region_id=region_id
         )
 
     def get_category_name(cls) -> str:
@@ -1098,7 +1100,6 @@ def obtain_resource(
             for key in resource_json["additional_params"].keys():
                 assert isinstance(key, str)
                 value = resource_json["additional_params"][key]
-                assert isinstance(value, str)
                 params[key] = value
         resource_json["parameters"] = params
     # Once we know what AbstractResource subclass we are using, we create it.

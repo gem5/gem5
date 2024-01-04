@@ -200,8 +200,19 @@ Walker::startWalkWrapper()
 {
     unsigned num_squashed = 0;
     WalkerState *currState = currStates.front();
+
+    // check if we get a tlb hit to skip the walk
+    Addr vaddr = Addr(sext<VADDR_BITS>(currState->req->getVaddr()));
+    TlbEntry *e = tlb->lookup(vaddr, currState->satp.asid, currState->mode,
+                              true);
+    Fault fault = NoFault;
+    if (e) {
+       fault = tlb->checkPermissions(currState->status, currState->pmode,
+                                     vaddr, currState->mode, e->pte);
+    }
+
     while ((num_squashed < numSquashable) && currState &&
-        currState->translation->squashed()) {
+           (currState->translation->squashed() || (e && fault == NoFault))) {
         currStates.pop_front();
         num_squashed++;
 
@@ -209,9 +220,14 @@ Walker::startWalkWrapper()
             currState->req->getVaddr());
 
         // finish the translation which will delete the translation object
-        currState->translation->finish(
-            std::make_shared<UnimpFault>("Squashed Inst"),
-            currState->req, currState->tc, currState->mode);
+        if (currState->translation->squashed()) {
+            currState->translation->finish(
+                std::make_shared<UnimpFault>("Squashed Inst"),
+                currState->req, currState->tc, currState->mode);
+        } else {
+            tlb->translateTiming(currState->req, currState->tc,
+                                 currState->translation, currState->mode);
+        }
 
         // delete the current request if there are no inflight packets.
         // if there is something in flight, delete when the packets are
@@ -223,13 +239,26 @@ Walker::startWalkWrapper()
         }
 
         // check the next translation request, if it exists
-        if (currStates.size())
+        if (currStates.size()) {
             currState = currStates.front();
-        else
+            vaddr = Addr(sext<VADDR_BITS>(currState->req->getVaddr()));
+            e = tlb->lookup(vaddr, currState->satp.asid, currState->mode,
+                            true);
+            if (e) {
+               fault = tlb->checkPermissions(currState->status,
+                                             currState->pmode, vaddr,
+                                             currState->mode, e->pte);
+            }
+        } else {
             currState = NULL;
+        }
     }
-    if (currState && !currState->wasStarted())
-        currState->startWalk();
+    if (currState && !currState->wasStarted()) {
+        if (!e || fault != NoFault)
+            currState->startWalk();
+        else
+            schedule(startWalkWrapperEvent, clockEdge(Cycles(1)));
+    }
 }
 
 Fault

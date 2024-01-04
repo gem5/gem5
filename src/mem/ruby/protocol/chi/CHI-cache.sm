@@ -321,6 +321,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     WriteUniquePtl_PoC,          desc="", in_trans="yes";
     WriteUniqueFull_PoC,         desc="", in_trans="yes";
     WriteUniqueFull_PoC_Alloc,   desc="", in_trans="yes";
+    WriteUniqueZero,             desc="", in_trans="yes";
     AtomicReturn,                desc="", in_trans="yes";
     AtomicNoReturn,              desc="", in_trans="yes";
     AtomicReturn_PoC,            desc="", in_trans="yes";
@@ -334,6 +335,8 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     SnpOnce,                     desc="", in_trans="yes";
     SnpOnceFwd,                  desc="", in_trans="yes";
     SnpStalled, desc="", in_trans="yes"; // A snoop stall triggered from the inport
+    StashOnceShared,             desc="", in_trans="yes"; // Just discarding the hint
+    StashOnceUnique,             desc="", in_trans="yes"; // Just discarding the hint
 
     // DVM sequencer requests
     DvmTlbi_Initiate, desc="", out_trans="yes", in_trans="yes"; // triggered when a CPU core wants to send a TLBI
@@ -480,6 +483,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     SendCompDBIDResp_WU,       desc="Ack WU with CompDBIDResp and set expected data";
     SendDBIDResp_WU,           desc="Ack WU with DBIDResp and set expected data";
     SendComp_WU,               desc="Ack WU completion";
+    SendDBIDResp_WUZ,          desc="Ack WUZ with DBIDResp and set expected data";
 
     // Send an atomic request downstream.
     SendAtomicReturn,          out_trans="yes", desc="Send atomic request with return";
@@ -493,7 +497,6 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     SendCompDBIDResp_ANR,  desc="Ack ANR with CompDBIDResp and set expected data";
     SendDBIDResp_ANR,      desc="Ack ANR with DBIDResp and set expected data";
     SendComp_ANR,          desc="Ack ANR completion";
-
 
     // Dataless requests
     SendEvict,      out_trans="yes", desc="Send a Evict";
@@ -550,6 +553,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     FinishCleanUnique, desc="Sends acks and perform any writeback after a CleanUnique";
     FinishCopyBack_Stale, desc="Check if a Evict needs to be sent";
     ActionStalledOnHazard, desc="Stall a trigger action because until finish handling snoop hazard";
+    WriteZero, desc="Stall a trigger action because until finish handling snoop hazard";
 
     // This is triggered once a transaction doesn't have
     // any queued action and is not expecting responses/data. The transaction
