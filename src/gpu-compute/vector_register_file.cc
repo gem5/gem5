@@ -59,6 +59,7 @@ VectorRegisterFile::VectorRegisterFile(const VectorRegisterFileParams &p)
 bool
 VectorRegisterFile::operandsReady(Wavefront *w, GPUDynInstPtr ii) const
 {
+    bool src_ready = true, dst_ready=true;
     for (const auto& srcVecOp : ii->srcVecRegOperands()) {
         for (const auto& physIdx : srcVecOp.physIndices()) {
             if (regBusy(physIdx) &&
@@ -66,8 +67,12 @@ VectorRegisterFile::operandsReady(Wavefront *w, GPUDynInstPtr ii) const
                 DPRINTF(GPUVRF, "RAW stall: WV[%d]: %s: physReg[%d]\n",
                         w->wfDynId, ii->disassemble(), physIdx);
                 w->stats.numTimesBlockedDueRAWDependencies++;
-                return false;
+                src_ready = false;
+                break;
             }
+        }
+        if (!src_ready) {
+            break;
         }
     }
 
@@ -78,12 +83,16 @@ VectorRegisterFile::operandsReady(Wavefront *w, GPUDynInstPtr ii) const
                 DPRINTF(GPUVRF, "WAX stall: WV[%d]: %s: physReg[%d]\n",
                         w->wfDynId, ii->disassemble(), physIdx);
                 w->stats.numTimesBlockedDueWAXDependencies++;
-                return false;
+                dst_ready = false;
+                break;
             }
+        }
+        if (!dst_ready) {
+            break;
         }
     }
 
-    return true;
+    return src_ready && dst_ready;
 }
 
 void
