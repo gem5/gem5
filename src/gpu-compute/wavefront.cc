@@ -37,6 +37,7 @@
 #include "debug/WavefrontStack.hh"
 #include "gpu-compute/compute_unit.hh"
 #include "gpu-compute/gpu_dyn_inst.hh"
+#include "gpu-compute/register_file_cache.hh"
 #include "gpu-compute/scalar_register_file.hh"
 #include "gpu-compute/shader.hh"
 #include "gpu-compute/simple_pool_manager.hh"
@@ -933,6 +934,7 @@ Wavefront::exec()
     // inform VRF of instruction execution to schedule write-back
     // and scoreboard ready for registers
     if (!ii->isScalar()) {
+        computeUnit->rfc[simdId]->waveExecuteInst(this, ii);
         computeUnit->vrf[simdId]->waveExecuteInst(this, ii);
     }
     computeUnit->srf[simdId]->waveExecuteInst(this, ii);
