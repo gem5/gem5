@@ -64,6 +64,8 @@ class libDRAMPower {
   void calcEnergy();
 
   void calcWindowEnergy(int64_t timestamp);
+  
+  void updateCounters(bool lastUpdate, int64_t timestamp = 0);
 
   const Data::MemoryPowerModel::Energy& getEnergy() const;
   const Data::MemoryPowerModel::Power& getPower() const;
@@ -71,7 +73,7 @@ class libDRAMPower {
   // list of all commands
   std::vector<Data::MemCommand> cmdList;
  private:
-  void updateCounters(bool lastUpdate, int64_t timestamp = 0);
+  
 
   void clearCounters(int64_t timestamp);
 

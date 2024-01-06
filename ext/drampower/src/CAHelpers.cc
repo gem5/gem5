@@ -75,18 +75,19 @@ int64_t CommandAnalysis::timeToCompletion(MemCommand::cmds type)
 // Returns the number of active banks based on the bank_state vector.
 unsigned CommandAnalysis::get_num_active_banks(void)
 {
-  return (unsigned)std::count(bank_state.begin(), bank_state.end(), BANK_ACTIVE);
+  return bank_state.get_num_active_banks();
+  //return (unsigned)std::count(bank_state.begin(), bank_state.end(), BANK_ACTIVE);
 }
 
 // Naming-standard compliant wrapper
 unsigned CommandAnalysis::nActiveBanks(void)
 {
-  return CommandAnalysis::get_num_active_banks();
+  return get_num_active_banks();
 }
 
 bool CommandAnalysis::isPrecharged(unsigned bank)
 {
-    return bank_state[bank] == BANK_PRECHARGED;
+    return bank_state.GetByIndex(bank) == BANK_PRECHARGED;
 }
 
 void CommandAnalysis::printWarningIfActive(const string& warning, int type, int64_t timestamp, unsigned bank)
