@@ -25,9 +25,11 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 FROM --platform=${BUILDPLATFORM} ghcr.io/gem5/ubuntu-22.04_min-dependencies:latest as source
-RUN apt -y update && apt -y install git
-RUN git clone -b develop https://github.com/gem5/gem5/ /gem5
+
+# Make sure to get the most recent code
+ADD . /gem5
 WORKDIR /gem5
+
 RUN scons -j`nproc` build/ALL/gem5.fast
 
 FROM ghcr.io/gem5/ubuntu-22.04_min-dependencies:latest

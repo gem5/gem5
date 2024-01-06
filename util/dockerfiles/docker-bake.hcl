@@ -64,58 +64,58 @@ target "common" {
 
 target "gcn-gpu" {
   inherits = ["common"]
-  dockerfile = "Dockerfile"
-  context = "gcn-gpu"
+  dockerfile = "util/dockerfiles/gcn-gpu/Dockerfile"
+  context = "."
   tags = ["${IMAGE_URI}/gcn-gpu:${TAG}"]
 }
 
 target "gpu-fs" {
   inherits = ["common"]
-  dockerfile = "Dockerfile"
-  context = "gpu-fs"
+  dockerfile = "util/dockerfiles/gpu-fs/Dockerfile"
+  context = "."
   tags = ["${IMAGE_URI}/gpu-fs:${TAG}"]
 }
 
 target "sst" {
   inherits = ["common"]
-  dockerfile = "Dockerfile"
-  context = "sst-11.1.0"
+  dockerfile = "util/dockerfiles/sst-11.1.0/Dockerfile"
+  context = "."
   tags = ["${IMAGE_URI}/sst-env:${TAG}"]
 }
 
 target "systemc" {
   inherits = ["common"]
-  dockerfile = "Dockerfile"
-  context = "systemc-2.3.3"
+  dockerfile = "util/dockerfiles/systemc-2.3.3/Dockerfile"
+  context = "."
   tags = ["${IMAGE_URI}/systemc-env:${TAG}"]
 }
 
 target "ubuntu-22-04_all-dependencies" {
   inherits = ["common"]
-  dockerfile = "Dockerfile"
-  context = "ubuntu-22.04_all-dependencies"
+  dockerfile = "util/dockerfiles/ubuntu-22.04_all-dependencies/Dockerfile"
+  context = "."
   tags = ["${IMAGE_URI}/ubuntu-22.04_all-dependencies:${TAG}"]
 }
 
 target "ubuntu-20-04_all-dependencies" {
   inherits = ["common"]
-  dockerfile = "Dockerfile"
-  context = "ubuntu-20.04_all-dependencies"
+  dockerfile = "util/dockerfiles/ubuntu-20.04_all-dependenciesDockerfile"
+  context = "."
   tags = ["${IMAGE_URI}/ubuntu-20.04_all-dependencies:${TAG}"]
 }
 
 target "ubuntu-22-04_min-dependencies" {
   inherits = ["common"]
-  dockerfile = "Dockerfile"
-  context = "ubuntu-22.04_min-dependencies"
+  dockerfile = "util/dockerfiles/ubuntu-22.04_min-dependencies/Dockerfile"
+  context = "."
   tags = ["${IMAGE_URI}/ubuntu-22.04_min-dependencies:${TAG}"]
 }
 
 target "gcc-compilers-base-20-04" {
   name = "gcc-compilers-${replace(ver, ".", "-")}"
   inherits = ["common"]
-  context = "ubuntu-20.04_gcc-version"
-  dockerfile = "Dockerfile"
+  context = "."
+  dockerfile = "util/dockerfiles/ubuntu-20.04_gcc-version/Dockerfile"
   matrix = {
     ver = ["8", "9", "10"]
   }
@@ -128,8 +128,8 @@ target "gcc-compilers-base-20-04" {
 target "gcc-compilers-base-22-04" {
   name = "gcc-compilers-${replace(ver, ".", "-")}"
   inherits = ["common"]
-  context = "ubuntu-22.04_gcc-version"
-  dockerfile = "Dockerfile"
+  context = "."
+  dockerfile = "util/dockerfiles/ubuntu-22.04_gcc-version/Dockerfile"
   matrix = {
     ver = ["11", "12"]
   }
@@ -142,8 +142,8 @@ target "gcc-compilers-base-22-04" {
 target "clang-compilers-base-20-04" {
   name = "clang-compilers-${replace(ver, ".", "-")}"
   inherits = ["common"]
-  context = "ubuntu-20.04_clang-version"
-  dockerfile = "Dockerfile"
+  context = "."
+  dockerfile = "util/dockerfiles/ubuntu-20.04_clang-version/Dockerfile"
   matrix = {
     ver = ["7", "8", "9", "10", "11", "12"]
   }
@@ -156,8 +156,8 @@ target "clang-compilers-base-20-04" {
 target "clang-compilers-base-22-04" {
   name = "clang-compilers-${replace(ver, ".", "-")}"
   inherits = ["common"]
-  context = "ubuntu-22.04_clang-version"
-  dockerfile = "Dockerfile"
+  context = "."
+  dockerfile = "util/dockerfiles/ubuntu-22.04_clang-version/Dockerfile"
   matrix = {
     ver = ["13", "14", "15"]
   }
@@ -169,21 +169,21 @@ target "clang-compilers-base-22-04" {
 
 target "clang-compilers-16" {
   inherits = ["common"]
-  dockerfile = "Dockerfile"
-  context = "ubuntu-22.04_clang_16"
+  dockerfile = "util/dockerfiles/ubuntu-22.04_clang_16/Dockerfile"
+  context = "."
   tags = ["${IMAGE_URI}/clang-version-16:${TAG}"]
 }
 
 target "llvm-gnu-cross-compiler-riscv64" {
   inherits = ["common"]
-  dockerfile = "Dockerfile"
-  context = "llvm-gnu-cross-compiler-riscv64"
+  dockerfile = "util/dockerfiles/llvm-gnu-cross-compiler-riscv64/Dockerfile"
+  context = "."
   tags = ["${IMAGE_URI}/llvm-gnu-cross-compiler-riscv64:${TAG}"]
 }
 
 target "gem5-all-min-dependencies" {
   inherits = ["common"]
-  dockerfile = "Dockerfile"
-  context = "gem5-all-min-dependencies"
+  dockerfile = "util/dockerfiles/gem5-all-min-dependencies/Dockerfile"
+  context = "."
   tags = ["${IMAGE_URI}/gem5-all-min-dependencies:${TAG}"]
 }
