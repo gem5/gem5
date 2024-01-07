@@ -34,13 +34,13 @@
 #include <memory>
 #include <vector>
 
+#include "base/associative_cache.hh"
 #include "base/sat_counter.hh"
 #include "base/types.hh"
 #include "mem/cache/base.hh"
 #include "mem/cache/cache_probe_arg.hh"
 #include "mem/cache/compressors/base.hh"
 #include "mem/cache/compressors/encoders/huffman.hh"
-#include "mem/cache/prefetch/associative_set.hh"
 #include "sim/eventq.hh"
 #include "sim/probe/probe.hh"
 
@@ -112,7 +112,7 @@ class FrequentValues : public Base
     enum Phase {SAMPLING, CODE_GENERATION, COMPRESSING};
     Phase phase;
 
-    class VFTEntry : public TaggedEntry
+    class VFTEntry : public CacheEntry
     {
       public:
         /**
@@ -130,14 +130,14 @@ class FrequentValues : public Base
         SatCounter32 counter;
 
         VFTEntry(std::size_t num_bits)
-          : TaggedEntry(), value(0), counter(num_bits)
+          : CacheEntry(), value(0), counter(num_bits)
         {
         }
 
         void
         invalidate() override
         {
-            TaggedEntry::invalidate();
+            CacheEntry::invalidate();
             value = 0;
             counter.reset();
         }
@@ -147,7 +147,7 @@ class FrequentValues : public Base
      * The Value Frequency Table, a small cache that keeps track and estimates
      * the frequency distribution of values in the cache.
      */
-    AssociativeSet<VFTEntry> VFT;
+    AssociativeCache<VFTEntry> VFT;
 
     /**
      * A pseudo value is used as the representation of uncompressed values.
