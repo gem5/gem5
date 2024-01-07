@@ -31,8 +31,9 @@
 
 #include <cassert>
 
-#include "base/cache/replacement_policies/replaceable_entry.hh"
+#include "base/cache/cache_entry.hh"
 #include "base/cprintf.hh"
+#include "base/logging.hh"
 #include "base/types.hh"
 
 namespace gem5
@@ -43,18 +44,11 @@ namespace gem5
  * secure bit, which informs whether it belongs to a secure address space.
  * A tagged entry's contents are only relevant if it is marked as valid.
  */
-class TaggedEntry : public ReplaceableEntry
+class TaggedEntry : public CacheEntry
 {
   public:
-    TaggedEntry() : _valid(false), _secure(false), _tag(MaxAddr) {}
+    TaggedEntry() : CacheEntry(), _secure(false) {}
     ~TaggedEntry() = default;
-
-    /**
-     * Checks if the entry is valid.
-     *
-     * @return True if the entry is valid.
-     */
-    virtual bool isValid() const { return _valid; }
 
     /**
      * Check if this block holds data from the secure memory space.
@@ -62,13 +56,6 @@ class TaggedEntry : public ReplaceableEntry
      * @return True if the block holds data from the secure memory space.
      */
     bool isSecure() const { return _secure; }
-
-    /**
-     * Get tag associated to this block.
-     *
-     * @return The tag value.
-     */
-    virtual Addr getTag() const { return _tag; }
 
     /**
      * Checks if the given tag information corresponds to this entry's.
@@ -100,10 +87,9 @@ class TaggedEntry : public ReplaceableEntry
     }
 
     /** Invalidate the block. Its contents are no longer valid. */
-    virtual void invalidate()
+    void invalidate() override
     {
-        _valid = false;
-        setTag(MaxAddr);
+        CacheEntry::invalidate();
         clearSecure();
     }
 
@@ -114,41 +100,27 @@ class TaggedEntry : public ReplaceableEntry
             isSecure(), isValid(), ReplaceableEntry::print());
     }
 
-  protected:
-    /**
-     * Set tag associated to this block.
-     *
-     * @param tag The tag value.
-     */
-    virtual void setTag(Addr tag) { _tag = tag; }
+    using CacheEntry::matchTag;
+    bool matchTag(const Addr tag) const override {
+        panic("Need is_secure arg");
+        return false;
+    }
 
+    using CacheEntry::insert;
+    void insert(const Addr tag) override {
+        panic("Need is_secure arg");
+        return;
+    }
+  protected:
     /** Set secure bit. */
     virtual void setSecure() { _secure = true; }
 
-    /** Set valid bit. The block must be invalid beforehand. */
-    virtual void
-    setValid()
-    {
-        assert(!isValid());
-        _valid = true;
-    }
-
   private:
-    /**
-     * Valid bit. The contents of this entry are only valid if this bit is set.
-     * @sa invalidate()
-     * @sa insert()
-     */
-    bool _valid;
-
     /**
      * Secure bit. Marks whether this entry refers to an address in the secure
      * memory space. Must always be modified along with the tag.
      */
     bool _secure;
-
-    /** The entry's tag. */
-    Addr _tag;
 
     /** Clear secure bit. Should be only used by the invalidation function. */
     void clearSecure() { _secure = false; }
