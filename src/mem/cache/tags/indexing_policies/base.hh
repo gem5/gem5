@@ -96,6 +96,12 @@ class BaseIndexingPolicy : public SimObject
      */
     const int tagShift;
 
+    /**
+     * The mask to be applied to the address to generate a tag.
+     * If this masks out unique bits, we can have aliases.
+     */
+    const uint64_t tagMask;
+
   public:
     /**
      * Convenience typedef.
