@@ -42,15 +42,15 @@ namespace prefetch
 DeltaCorrelatingPredictionTables::DeltaCorrelatingPredictionTables(
    const DeltaCorrelatingPredictionTablesParams &p) : SimObject(p),
    deltaBits(p.delta_bits), deltaMaskBits(p.delta_mask_bits),
-   table(p.table_assoc, p.table_entries, p.table_indexing_policy,
-         p.table_replacement_policy, DCPTEntry(p.deltas_per_entry))
+   table("DCPT", p.table_entries, p.table_assoc, p.table_replacement_policy,
+         p.table_indexing_policy, DCPTEntry(p.deltas_per_entry))
 {
 }
 
 void
 DeltaCorrelatingPredictionTables::DCPTEntry::invalidate()
 {
-    TaggedEntry::invalidate();
+    CacheEntry::invalidate();
 
     deltas.flush();
     while (!deltas.full()) {
@@ -134,9 +134,8 @@ DeltaCorrelatingPredictionTables::calculatePrefetch(
     }
     Addr address = pfi.getAddr();
     Addr pc = pfi.getPC();
-    // Look up table entry, is_secure is unused in findEntry because we
-    // index using the pc
-    DCPTEntry *entry = table.findEntry(pc, false /* unused */);
+    // Look up table entry
+    DCPTEntry *entry = table.findEntry(pc);
     if (entry != nullptr) {
         entry->addAddress(address, deltaBits);
         //Delta correlating
@@ -144,7 +143,7 @@ DeltaCorrelatingPredictionTables::calculatePrefetch(
     } else {
         entry = table.findVictim(pc);
 
-        table.insertEntry(pc, false /* unused */, entry);
+        table.insertEntry(pc, entry);
 
         entry->lastAddress = address;
     }
