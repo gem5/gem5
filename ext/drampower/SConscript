@@ -49,6 +49,7 @@ drampower_files = []
 def DRAMPowerFile(filename):
     drampower_files.append(File('./src/' + filename))
 
+DRAMPowerFile('BankStateVector.cc')
 DRAMPowerFile('CommandAnalysis.cc')
 DRAMPowerFile('MemArchitectureSpec.cc')
 DRAMPowerFile('MemCommand.cc')
