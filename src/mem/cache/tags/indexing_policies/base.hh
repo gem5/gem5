@@ -96,6 +96,11 @@ class BaseIndexingPolicy : public SimObject
      */
     const int tagShift;
 
+    /**
+     * The tag mask.
+     */
+    const uint64_t tagMask;
+
   public:
     /**
      * Convenience typedef.
