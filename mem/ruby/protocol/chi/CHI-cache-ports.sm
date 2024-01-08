@@ -1,0 +1,490 @@
+/*
+ * Copyright (c) 2021 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+// Outbound port definitions
+
+out_port(reqOutPort, CHIRequestMsg, reqOut);
+out_port(snpOutPort, CHIRequestMsg, snpOut);
+out_port(rspOutPort, CHIResponseMsg, rspOut);
+out_port(datOutPort, CHIDataMsg, datOut);
+out_port(triggerOutPort, TriggerMsg, triggerQueue);
+out_port(retryTriggerOutPort, RetryTriggerMsg, retryTriggerQueue);
+out_port(replTriggerOutPort, TriggerMsg, replTriggerQueue);
+out_port(reqRdyOutPort, CHIRequestMsg, reqRdy);
+out_port(snpRdyOutPort, CHIRequestMsg, snpRdy);
+
+
+// Include helper functions here. Some of them require the outports to be
+// already defined
+// Notice 'processNextState' and 'wakeupPending*' functions are defined after
+// the required input ports. Currently the SLICC compiler does not support
+// separate declaration and definition of functions in the .sm files.
+include "CHI-cache-funcs.sm";
+
+
+// Inbound port definitions and internal triggers queues
+// Notice we never stall input ports connected to the network
+// Incoming data and responses are always consumed.
+// Incoming requests/snoop are moved to the respective internal rdy queue
+// if a TBE can be allocated, or retried otherwise.
+
+// Trigger events from the UD_T state
+in_port(useTimerTable_in, Addr, useTimerTable, rank=11) {
+  if (useTimerTable_in.isReady(clockEdge())) {
+      Addr readyAddress := useTimerTable.nextAddress();
+      trigger(Event:UseTimeout, readyAddress, getCacheEntry(readyAddress),
+              getCurrentActiveTBE(readyAddress));
+  }
+}
+
+
+// Response
+in_port(rspInPort, CHIResponseMsg, rspIn, rank=10,
+        rsc_stall_handler=rspInPort_rsc_stall_handler) {
+  if (rspInPort.isReady(clockEdge())) {
+    printResources();
+    peek(rspInPort, CHIResponseMsg) {
+      if (in_msg.usesTxnId) {
+        // A ResponseMsg that uses transaction ID
+        // is separate from the memory system,
+        // uses a separate TBE table and doesn't have a cache entry
+        TBE tbe := getDvmTBE(in_msg.txnId);
+        trigger(respToEvent(in_msg.type, tbe), in_msg.txnId,
+                nullCacheEntry(), tbe);
+      } else {
+        TBE tbe := getCurrentActiveTBE(in_msg.addr);
+        trigger(respToEvent(in_msg.type, tbe), in_msg.addr,
+                getCacheEntry(in_msg.addr), tbe);
+      }
+    }
+  }
+}
+bool rspInPort_rsc_stall_handler() {
+  error("rspInPort must never stall\n");
+  return false;
+}
+
+
+// Data
+in_port(datInPort, CHIDataMsg, datIn, rank=9,
+        rsc_stall_handler=datInPort_rsc_stall_handler) {
+  if (datInPort.isReady(clockEdge())) {
+    printResources();
+    peek(datInPort, CHIDataMsg) {
+      // We don't have any transactions that use data requests
+      assert(!in_msg.usesTxnId);
+      assert((in_msg.bitMask.count() <= data_channel_size) && (in_msg.bitMask.count() > 0));
+      trigger(dataToEvent(in_msg.type), in_msg.addr,
+              getCacheEntry(in_msg.addr), getCurrentActiveTBE(in_msg.addr));
+    }
+  }
+}
+bool datInPort_rsc_stall_handler() {
+  error("datInPort must never stall\n");
+  return false;
+}
+
+
+// Snoops with an allocated TBE
+in_port(snpRdyPort, CHIRequestMsg, snpRdy, rank=8,
+        rsc_stall_handler=snpRdyPort_rsc_stall_handler) {
+  if (snpRdyPort.isReady(clockEdge())) {
+    printResources();
+    peek(snpRdyPort, CHIRequestMsg) {
+      assert(in_msg.allowRetry == false);
+      if (in_msg.usesTxnId) {
+        TBE tbe := getDvmTBE(in_msg.txnId);
+        if (is_valid(tbe)) {
+          assert(tbe.is_dvm_snp_tbe);
+        }
+        // TBE may be valid or invalid
+        trigger(snpToEvent(in_msg.type), in_msg.txnId,
+                nullCacheEntry(), tbe);
+      } else {
+        TBE tbe := getCurrentActiveTBE(in_msg.addr);
+        if (is_valid(tbe) && tbe.hasUseTimeout) {
+          // we may be in the BUSY_INTR waiting for a cache block, but if
+          // the timeout is set the snoop must still wait, so trigger the
+          // stall form here to prevent creating other states
+          trigger(Event:SnpStalled, in_msg.addr,
+                  getCacheEntry(in_msg.addr), tbe);
+        } else {
+          trigger(snpToEvent(in_msg.type), in_msg.addr,
+                  getCacheEntry(in_msg.addr), tbe);
+        }
+      }
+    }
+  }
+}
+bool snpRdyPort_rsc_stall_handler() {
+  error("snpRdyPort must never stall\n");
+  return false;
+}
+void wakeupPendingSnps(TBE tbe) {
+  if (tbe.wakeup_pending_snp) {
+    Addr addr := tbe.addr;
+    wakeup_port(snpRdyPort, addr);
+    tbe.wakeup_pending_snp := false;
+  }
+}
+
+
+// Incoming snoops
+// Not snoops are not retried, so the snoop channel is stalled if no
+// Snp TBEs available
+in_port(snpInPort, CHIRequestMsg, snpIn, rank=7) {
+  if (snpInPort.isReady(clockEdge())) {
+    assert(is_HN == false);
+    printResources();
+    peek(snpInPort, CHIRequestMsg) {
+      assert(in_msg.allowRetry == false);
+      if (in_msg.usesTxnId) {
+        TBE preexistingTBE := getDvmTBE(in_msg.txnId);
+        // If this is just building on another transaction invoke the thing directly
+        if (is_valid(preexistingTBE)){
+          assert(preexistingTBE.is_dvm_snp_tbe);
+          trigger(snpToEvent(in_msg.type), in_msg.txnId,
+                  nullCacheEntry(), preexistingTBE);
+        } else {
+          trigger(Event:AllocDvmSnoop, in_msg.txnId,
+                  nullCacheEntry(), nullTBE());
+        }
+      } else {
+        trigger(Event:AllocSnoop, in_msg.addr,
+                getCacheEntry(in_msg.addr), getCurrentActiveTBE(in_msg.addr));
+      }
+    }
+  }
+}
+
+
+// Retry action triggers
+// These are handled before other triggers since a retried request should
+// be enqueued ahead of a new request
+// TODO: consider moving DoRetry to the triggerQueue
+in_port(retryTriggerInPort, RetryTriggerMsg, retryTriggerQueue, rank=6,
+        rsc_stall_handler=retryTriggerInPort_rsc_stall_handler) {
+  if (retryTriggerInPort.isReady(clockEdge())) {
+    printResources();
+    peek(retryTriggerInPort, RetryTriggerMsg) {
+      Event ev := in_msg.event;
+      assert((ev == Event:SendRetryAck) || (ev == Event:SendPCrdGrant) ||
+              (ev == Event:DoRetry));
+      if (in_msg.usesTxnId) {
+        TBE tbe := getDvmTBE(in_msg.addr);
+        CacheEntry entry := nullCacheEntry();
+        assert(is_valid(tbe));
+        trigger(ev, in_msg.addr, entry, tbe);
+      } else {
+        TBE tbe := getCurrentActiveTBE(in_msg.addr);
+        CacheEntry entry := getCacheEntry(in_msg.addr);
+        if (ev == Event:DoRetry) {
+          assert(is_valid(tbe));
+          if (tbe.is_req_hazard || tbe.is_repl_hazard) {
+            ev := Event:DoRetry_Hazard;
+          }
+        }
+        trigger(ev, in_msg.addr, entry, tbe);
+      }
+    }
+  }
+}
+bool retryTriggerInPort_rsc_stall_handler() {
+  DPRINTF(RubySlicc, "Retry trigger queue resource stall\n");
+  retryTriggerInPort.recycle(clockEdge(), cyclesToTicks(stall_recycle_lat));
+  return true;
+}
+
+
+// Action triggers
+in_port(triggerInPort, TriggerMsg, triggerQueue, rank=5,
+        rsc_stall_handler=triggerInPort_rsc_stall_handler) {
+  if (triggerInPort.isReady(clockEdge())) {
+    printResources();
+    peek(triggerInPort, TriggerMsg) {
+      if (in_msg.usesTxnId) {
+        TBE tbe := getDvmTBE(in_msg.addr);
+        assert(is_valid(tbe));
+        trigger(tbe.pendAction, in_msg.addr, nullCacheEntry(), tbe);
+      } else {
+        TBE tbe := getCurrentActiveTBE(in_msg.addr);
+        assert(is_valid(tbe));
+        if (in_msg.from_hazard != (tbe.is_req_hazard || tbe.is_repl_hazard)) {
+          // possible when handling a snoop hazard and an action from the
+          // the initial transaction got woken up. Stall the action until the
+          // hazard ends
+          assert(in_msg.from_hazard == false);
+          assert(tbe.is_req_hazard || tbe.is_repl_hazard);
+          trigger(Event:ActionStalledOnHazard, in_msg.addr,
+                  getCacheEntry(in_msg.addr), tbe);
+        } else {
+          trigger(tbe.pendAction, in_msg.addr, getCacheEntry(in_msg.addr), tbe);
+        }
+      }
+    }
+  }
+}
+bool triggerInPort_rsc_stall_handler() {
+  DPRINTF(RubySlicc, "Trigger queue resource stall\n");
+  triggerInPort.recycle(clockEdge(), cyclesToTicks(stall_recycle_lat));
+  return true;
+}
+void wakeupPendingTgrs(TBE tbe) {
+  if (tbe.wakeup_pending_tgr) {
+    Addr addr := tbe.addr;
+    wakeup_port(triggerInPort, addr);
+    tbe.wakeup_pending_tgr := false;
+  }
+}
+
+
+// internally triggered evictions
+// no stall handler for this one since it doesn't make sense try the next
+// request when out of TBEs
+in_port(replTriggerInPort, ReplacementMsg, replTriggerQueue, rank=4) {
+  if (replTriggerInPort.isReady(clockEdge())) {
+    printResources();
+    peek(replTriggerInPort, ReplacementMsg) {
+      TBE tbe := getCurrentActiveTBE(in_msg.addr);
+      CacheEntry cache_entry := getCacheEntry(in_msg.addr);
+      Event trigger := Event:null;
+      if (is_valid(cache_entry) &&
+          ((upstreamHasUnique(cache_entry.state) && dealloc_backinv_unique) ||
+          (upstreamHasShared(cache_entry.state) && dealloc_backinv_shared))) {
+        trigger := Event:Global_Eviction;
+      } else {
+        if (is_HN) {
+          trigger := Event:LocalHN_Eviction;
+        } else {
+          trigger := Event:Local_Eviction;
+        }
+      }
+      trigger(trigger, in_msg.addr, cache_entry, tbe);
+    }
+  }
+}
+
+
+// Requests with an allocated TBE
+in_port(reqRdyPort, CHIRequestMsg, reqRdy, rank=3,
+        rsc_stall_handler=reqRdyPort_rsc_stall_handler) {
+  if (reqRdyPort.isReady(clockEdge())) {
+    printResources();
+    peek(reqRdyPort, CHIRequestMsg) {
+      if (in_msg.usesTxnId) {
+        TBE preexistingTBE := getDvmTBE(in_msg.txnId);
+
+        // DVM transactions do not directly relate to the Cache,
+        // and do not have cache entries
+        trigger(
+          reqToEvent(in_msg.type, in_msg.is_local_pf),
+          in_msg.txnId,
+          nullCacheEntry(),
+          preexistingTBE);
+      } else {
+        CacheEntry cache_entry := getCacheEntry(in_msg.addr);
+        TBE tbe := getCurrentActiveTBE(in_msg.addr);
+
+        DirEntry dir_entry := getDirEntry(in_msg.addr);
+
+        // Special case for possibly stale writebacks or evicts
+        if (in_msg.type == CHIRequestType:WriteBackFull) {
+          if (is_invalid(dir_entry) || (dir_entry.ownerExists == false) ||
+              (dir_entry.owner != in_msg.requestor)) {
+            trigger(Event:WriteBackFull_Stale, in_msg.addr, cache_entry, tbe);
+          }
+        } else if (in_msg.type == CHIRequestType:WriteEvictFull) {
+          if (is_invalid(dir_entry) || (dir_entry.ownerExists == false) ||
+              (dir_entry.ownerIsExcl == false) || (dir_entry.owner != in_msg.requestor)) {
+            trigger(Event:WriteEvictFull_Stale, in_msg.addr, cache_entry, tbe);
+          }
+        } else if (in_msg.type == CHIRequestType:WriteCleanFull) {
+          if (is_invalid(dir_entry) || (dir_entry.ownerExists == false) ||
+              (dir_entry.owner != in_msg.requestor)) {
+            trigger(Event:WriteCleanFull_Stale, in_msg.addr, cache_entry, tbe);
+          }
+        } else if (in_msg.type == CHIRequestType:Evict) {
+          if (is_invalid(dir_entry) ||
+              (dir_entry.sharers.isElement(in_msg.requestor) == false)) {
+            trigger(Event:Evict_Stale, in_msg.addr, cache_entry, tbe);
+          }
+        } else if (in_msg.type == CHIRequestType:CleanUnique) {
+          if (is_invalid(dir_entry) ||
+              (dir_entry.sharers.isElement(in_msg.requestor) == false)) {
+            trigger(Event:CleanUnique_Stale, in_msg.addr, cache_entry, tbe);
+          }
+        }
+
+        // Normal request path
+        trigger(reqToEvent(in_msg.type, in_msg.is_local_pf), in_msg.addr, cache_entry, tbe);
+      }
+    }
+  }
+}
+bool reqRdyPort_rsc_stall_handler() {
+  DPRINTF(RubySlicc, "ReqRdy queue resource stall\n");
+  reqRdyPort.recycle(clockEdge(), cyclesToTicks(stall_recycle_lat));
+  return true;
+}
+void wakeupPendingReqs(TBE tbe) {
+  if (tbe.wakeup_pending_req) {
+    Addr addr := tbe.addr;
+    wakeup_port(reqRdyPort, addr);
+    tbe.wakeup_pending_req := false;
+  }
+}
+
+
+// Incoming new requests
+in_port(reqInPort, CHIRequestMsg, reqIn, rank=2,
+        rsc_stall_handler=reqInPort_rsc_stall_handler) {
+  if (reqInPort.isReady(clockEdge())) {
+    printResources();
+    peek(reqInPort, CHIRequestMsg) {
+      // DVM Sync and TLBIs from external sources will use txnId requests,
+      // but they aren't implemented yet.
+      assert(!in_msg.usesTxnId);
+      if (in_msg.allowRetry) {
+        trigger(Event:AllocRequest, in_msg.addr,
+              getCacheEntry(in_msg.addr), getCurrentActiveTBE(in_msg.addr));
+      } else {
+        trigger(Event:AllocRequestWithCredit, in_msg.addr,
+              getCacheEntry(in_msg.addr), getCurrentActiveTBE(in_msg.addr));
+      }
+    }
+  }
+}
+bool reqInPort_rsc_stall_handler() {
+  error("reqInPort must never stall\n");
+  return false;
+}
+
+
+// Incoming new sequencer requests
+in_port(seqInPort, RubyRequest, mandatoryQueue, rank=1) {
+  if (seqInPort.isReady(clockEdge())) {
+    printResources();
+    peek(seqInPort, RubyRequest) {
+      if (in_msg.isTlbi) {
+        TBE tbe := getDvmTBE(in_msg.tlbiTransactionUid);
+
+        if (in_msg.Type == RubyRequestType:TLBI_EXT_SYNC_COMP) {
+          assert(is_valid(tbe));
+          // Trigger the relevant event on the TBE for this ID
+          trigger(Event:DvmSync_ExternCompleted,
+            in_msg.tlbiTransactionUid,  // "Address" equivalent
+            nullCacheEntry(), // no cache entry
+            tbe, // TBE exists already, the event should be invoked on it
+          );
+        } else {
+          // There shouldn't be a transaction with the same ID
+          assert(!is_valid(tbe));
+          // Allocate a new TBE
+          trigger(Event:AllocSeqDvmRequest,
+            in_msg.tlbiTransactionUid,  // "Address" equivalent
+            nullCacheEntry(), // no cache entry
+            nullTBE(), // TBE isn't allocated yet
+          );
+        }
+      } else {
+        trigger(Event:AllocSeqRequest, in_msg.LineAddress,
+                getCacheEntry(in_msg.LineAddress),
+                getCurrentActiveTBE(in_msg.LineAddress));
+      }
+    }
+  }
+}
+
+
+// Incoming new prefetch requests
+in_port(pfInPort, RubyRequest, prefetchQueue, rank=0) {
+  if (pfInPort.isReady(clockEdge())) {
+    printResources();
+    peek(pfInPort, RubyRequest) {
+      trigger(Event:AllocPfRequest, in_msg.LineAddress,
+              getCacheEntry(in_msg.LineAddress),
+              getCurrentActiveTBE(in_msg.LineAddress));
+    }
+  }
+}
+
+void processNextState(Addr address, TBE tbe, CacheEntry cache_entry) {
+  assert(is_valid(tbe));
+  DPRINTF(RubySlicc, "GoToNextState expected_req_resp=%d expected_snp_resp=%d snd_pendEv=%d snd_pendBytes=%d\n",
+                      tbe.expected_req_resp.expected(),
+                      tbe.expected_snp_resp.expected(),
+                      tbe.snd_pendEv, tbe.snd_pendBytes.count());
+
+  // if no pending trigger and not expecting to receive anything, enqueue
+  // next
+  bool has_nb_trigger := (tbe.actions.empty() == false) &&
+                          tbe.actions.frontNB() &&
+                          (tbe.snd_pendEv == false);
+  int expected_msgs := tbe.expected_req_resp.expected() +
+                        tbe.expected_snp_resp.expected() +
+                        tbe.snd_pendBytes.count();
+  if ((tbe.pendAction == Event:null) && ((expected_msgs == 0) || has_nb_trigger)) {
+    Cycles trigger_latency := intToCycles(0);
+    if (tbe.delayNextAction > curTick()) {
+      trigger_latency := ticksToCycles(tbe.delayNextAction) -
+                          ticksToCycles(curTick());
+      tbe.delayNextAction := intToTick(0);
+    }
+
+    tbe.pendAction := Event:null;
+    if (tbe.actions.empty()) {
+      // time to go to the final state
+      tbe.pendAction := Event:Final;
+    } else {
+      tbe.pendAction := tbe.actions.front();
+      tbe.actions.pop();
+    }
+    assert(tbe.pendAction != Event:null);
+    enqueue(triggerOutPort, TriggerMsg, trigger_latency) {
+      out_msg.addr := tbe.addr;
+      // TODO - put usesTxnId on the TBE?
+      out_msg.usesTxnId := tbe.is_dvm_tbe || tbe.is_dvm_snp_tbe;
+      out_msg.from_hazard := tbe.is_req_hazard || tbe.is_repl_hazard;
+    }
+  }
+
+  printTBEState(tbe);
+
+  // we might be going to BUSY_INTERRUPTABLE so wakeup pending snoops
+  // if any
+  wakeupPendingSnps(tbe);
+}

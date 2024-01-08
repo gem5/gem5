@@ -33,18 +33,18 @@ Characteristics
 * Automatically generates the DTB file
 """
 
-import argparse
-
 import m5
 from m5.objects import Root
 
 from gem5.components.boards.experimental.lupv_board import LupvBoard
 from gem5.components.memory.single_channel import SingleChannelDDR3_1600
-from gem5.components.processors.cpu_types import CPUTypes
 from gem5.components.processors.simple_processor import SimpleProcessor
+from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
-from gem5.resources.resource import obtain_resource
 from gem5.utils.requires import requires
+from gem5.resources.resource import Resource, CustomResource
+
+import argparse
 
 # Run a check to ensure the right version of gem5 is being used.
 requires(isa_required=ISA.RISCV)
@@ -98,8 +98,8 @@ board = LupvBoard(
 # Set the Full System workload.
 
 board.set_kernel_disk_workload(
-    kernel=obtain_resource("riscv-lupio-linux-kernel"),
-    disk_image=obtain_resource("riscv-lupio-busybox-img"),
+    kernel=Resource("riscv-lupio-linux-kernel"),
+    disk_image=Resource("riscv-lupio-busybox-img"),
 )
 
 

@@ -1,0 +1,395 @@
+/*
+ * Copyright (c) 2020-2021 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
+ * Copyright (c) 1999-2012 Mark D. Hill and David A. Wood
+ * Copyright (c) 2011 Advanced Micro Devices, Inc.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+// Declarations of external types that are common to all protocols
+external_type(int, primitive="yes", default="0");
+external_type(bool, primitive="yes", default="false");
+external_type(std::string, primitive="yes");
+external_type(uint32_t, primitive="yes");
+external_type(uint64_t, primitive="yes");
+external_type(PacketPtr, primitive="yes");
+external_type(Packet, primitive="yes");
+external_type(Addr, primitive="yes");
+external_type(Cycles, primitive="yes", default="Cycles(0)");
+external_type(Tick, primitive="yes", default="0");
+external_type(RequestPtr, primitive="yes", default="nullptr");
+
+structure(WriteMask, external="yes", desc="...") {
+  void clear();
+  bool containsMask(WriteMask);
+  bool isEmpty();
+  bool isFull();
+  bool isOverlap(WriteMask);
+  void andMask(WriteMask);
+  void orMask(WriteMask);
+  void setInvertedMask(WriteMask);
+  void fillMask();
+  void setMask(int,int);
+  bool getMask(int,int);
+  void setMask(int,int,bool);
+  int firstBitSet(bool);
+  int firstBitSet(bool,int);
+  int count();
+  int count(int);
+  bool test(int);
+}
+
+structure(DataBlock, external = "yes", desc="..."){
+  void clear();
+  void copyPartial(DataBlock, int, int);
+  void copyPartial(DataBlock, WriteMask);
+  void atomicPartial(DataBlock, WriteMask);
+}
+
+bool testAndRead(Addr addr, DataBlock datablk, Packet *pkt);
+bool testAndReadMask(Addr addr, DataBlock datablk, WriteMask mask, Packet *pkt);
+bool testAndWrite(Addr addr, DataBlock datablk, Packet *pkt);
+
+// AccessPermission
+// The following five states define the access permission of all memory blocks.
+// These permissions have multiple uses.  They coordinate locking and
+// synchronization primitives, as well as enable functional accesses.
+// One should not need to add any additional permission values and it is very
+// risky to do so.
+enumeration(AccessPermission, desc="...", default="AccessPermission_NotPresent") {
+  // Valid data
+  Read_Only,  desc="block is Read Only (modulo functional writes)";
+  Read_Write, desc="block is Read/Write";
+
+  // Possibly Invalid data
+  // The maybe stale permission indicates that accordingly to the protocol,
+  // there is no guarantee the block contains valid data.  However, functional
+  // writes should update the block because a dataless PUT request may
+  // revalidate the block's data.
+  Maybe_Stale, desc="block can be stale or revalidated by a dataless PUT";
+  // In Broadcast/Snoop protocols, memory has no idea if it is exclusive owner
+  // or not of a block, making it hard to make the logic of having only one
+  // read_write block in the system impossible. This is to allow the memory to
+  // say, "I have the block" and for the RubyPort logic to know that this is a
+  // last-resort block if there are no writable copies in the caching hierarchy.
+  // This is not supposed to be used in directory or token protocols where
+  // memory/NB has an idea of what is going on in the whole system.
+  Backing_Store, desc="for memory in Broadcast/Snoop protocols";
+  Backing_Store_Busy, desc="Backing_Store + cntrl is busy waiting for data";
+
+  // Invalid data
+  Invalid,    desc="block is in an Invalid base state";
+  NotPresent, desc="block is NotPresent";
+  Busy,       desc="block is in a transient state, currently invalid";
+}
+
+// TesterStatus
+enumeration(TesterStatus, desc="...") {
+  Idle,            desc="Idle";
+  Action_Pending,  desc="Action Pending";
+  Ready,           desc="Ready";
+  Check_Pending,   desc="Check Pending";
+}
+
+// InvalidateGeneratorStatus
+enumeration(InvalidateGeneratorStatus, desc="...") {
+  Load_Waiting,    desc="Load waiting to be issued";
+  Load_Pending,    desc="Load issued";
+  Inv_Waiting,     desc="Store (invalidate) waiting to be issued";
+  Inv_Pending,     desc="Store (invalidate) issued";
+}
+
+// SeriesRequestGeneratorStatus
+enumeration(SeriesRequestGeneratorStatus, desc="...") {
+  Thinking,        desc="Doing work before next action";
+  Request_Pending, desc="Request pending";
+}
+
+// LockStatus
+enumeration(LockStatus, desc="...") {
+  Unlocked,        desc="Lock is not held";
+  Locked,          desc="Lock is held";
+}
+
+// SequencerStatus
+enumeration(SequencerStatus, desc="...") {
+  Idle,            desc="Idle";
+  Pending,         desc="Pending";
+}
+
+enumeration(TransitionResult, desc="...") {
+  Valid,         desc="Valid transition";
+  ResourceStall, desc="Stalled due to insufficient resources";
+  ProtocolStall, desc="Protocol specified stall";
+  Reject,        desc="Rejected because of a type mismatch";
+}
+
+// RubyRequestType
+enumeration(RubyRequestType, desc="...", default="RubyRequestType_NULL") {
+  LD,                desc="Load";
+  ST,                desc="Store";
+  ATOMIC,            desc="Atomic Load/Store -- depricated. use ATOMIC_RETURN or ATOMIC_NO_RETURN";
+  ATOMIC_RETURN,     desc="Atomic Load/Store, return data";
+  ATOMIC_NO_RETURN,  desc="Atomic Load/Store, do not return data";
+  IFETCH,            desc="Instruction fetch";
+  IO,                desc="I/O";
+  REPLACEMENT,       desc="Replacement";
+  Load_Linked,       desc="";
+  Store_Conditional, desc="";
+  RMW_Read,          desc="";
+  RMW_Write,         desc="";
+  Locked_RMW_Read,   desc="";
+  Locked_RMW_Write,  desc="";
+  COMMIT,            desc="Commit version";
+  NULL,              desc="Invalid request type";
+  FLUSH,             desc="Flush request type";
+  Release,           desc="Release operation";
+  Acquire,           desc="Acquire opertion";
+  AcquireRelease,    desc="Acquire and Release opertion";
+  HTM_Start,         desc="hardware memory transaction: begin";
+  HTM_Commit,        desc="hardware memory transaction: commit";
+  HTM_Cancel,        desc="hardware memory transaction: cancel";
+  HTM_Abort,         desc="hardware memory transaction: abort";
+  TLBI,              desc="TLB Invalidation - Initiation";
+  TLBI_SYNC,         desc="TLB Invalidation Sync operation - Potential initiation";
+  TLBI_EXT_SYNC,      desc="TLB Invalidation Sync operation - External Sync has been requested";
+  TLBI_EXT_SYNC_COMP, desc="TLB Invalidation Sync operation - External Sync has been completed";
+}
+
+bool isWriteRequest(RubyRequestType type);
+bool isDataReadRequest(RubyRequestType type);
+bool isReadRequest(RubyRequestType type);
+bool isHtmCmdRequest(RubyRequestType type);
+bool isTlbiRequest(RubyRequestType type);
+
+// hardware transactional memory
+RubyRequestType htmCmdToRubyRequestType(Packet *pkt);
+
+RubyRequestType tlbiCmdToRubyRequestType(Packet *pkt);
+
+enumeration(HtmCallbackMode, desc="...", default="HtmCallbackMode_NULL") {
+  HTM_CMD,          desc="htm command";
+  LD_FAIL,          desc="htm transaction failed - inform via read";
+  ST_FAIL,          desc="htm transaction failed - inform via write";
+}
+
+enumeration(HtmFailedInCacheReason, desc="...", default="HtmFailedInCacheReason_NO_FAIL") {
+  NO_FAIL,          desc="no failure in cache";
+  FAIL_SELF,        desc="failed due local cache's replacement policy";
+  FAIL_REMOTE,      desc="failed due remote invalidation";
+  FAIL_OTHER,       desc="failed due other circumstances";
+}
+
+enumeration(SequencerRequestType, desc="...", default="SequencerRequestType_NULL") {
+  Default,     desc="Replace this with access_types passed to the DMA Ruby object";
+  LD,          desc="Load";
+  ST,          desc="Store";
+  ATOMIC,      desc="Atomic Load/Store";
+  REPLACEMENT, desc="Replacement";
+  FLUSH,       desc="Flush request type";
+  NULL,        desc="Invalid request type";
+}
+
+enumeration(CacheRequestType, desc="...", default="CacheRequestType_NULL") {
+  DataArrayRead,    desc="Read access to the cache's data array";
+  DataArrayWrite,   desc="Write access to the cache's data array";
+  TagArrayRead,     desc="Read access to the cache's tag array";
+  TagArrayWrite,    desc="Write access to the cache's tag array";
+}
+
+enumeration(CacheResourceType, desc="...", default="CacheResourceType_NULL") {
+  DataArray,    desc="Access to the cache's data array";
+  TagArray,     desc="Access to the cache's tag array";
+}
+
+enumeration(DirectoryRequestType, desc="...", default="DirectoryRequestType_NULL") {
+  Default,    desc="Replace this with access_types passed to the Directory Ruby object";
+}
+
+enumeration(DMASequencerRequestType, desc="...", default="DMASequencerRequestType_NULL") {
+  Default,    desc="Replace this with access_types passed to the DMA Ruby object";
+}
+
+enumeration(MemoryControlRequestType, desc="...", default="MemoryControlRequestType_NULL") {
+  Default,    desc="Replace this with access_types passed to the DMA Ruby object";
+}
+
+
+// These are statically defined types of states machines that we can have.
+// If you want to add a new machine type, edit this enum.  It is not necessary
+// for a protocol to have state machines defined for the all types here.  But
+// you cannot use anything other than the ones defined here.  Also, a protocol
+// can have only one state machine for a given type.
+enumeration(MachineType, desc="...", default="MachineType_NULL") {
+    L0Cache,     desc="L0 Cache Mach";
+    L1Cache,     desc="L1 Cache Mach";
+    L2Cache,     desc="L2 Cache Mach";
+    L3Cache,     desc="L3 Cache Mach";
+    Directory,   desc="Directory Mach";
+    DMA,         desc="DMA Mach";
+    Collector,   desc="Collector Mach";
+    L1Cache_wCC, desc="L1 Cache Mach to track cache-to-cache transfer (used for miss latency profile)";
+    L2Cache_wCC, desc="L2 Cache Mach to track cache-to-cache transfer (used for miss latency profile)";
+    CorePair,    desc="Cache Mach (2 cores, Private L1Ds, Shared L1I & L2)";
+    TCP,         desc="GPU L1 Data Cache (Texture Cache per Pipe)";
+    TCC,         desc="GPU L2 Shared Cache (Texture Cache per Channel)";
+    TCCdir,      desc="Directory at the GPU L2 Cache (TCC)";
+    SQC,         desc="GPU L1 Instr Cache (Sequencer Cache)";
+    RegionDir,   desc="Region-granular directory";
+    RegionBuffer, desc="Region buffer for CPU and GPU";
+    Cache,       desc="Generic coherent cache controller";
+    Memory,      desc="Memory controller interface";
+    MiscNode,    desc="CHI protocol Misc Node";
+    NULL,        desc="null mach type";
+}
+
+// MessageSizeType
+enumeration(MessageSizeType, desc="...") {
+  Control,    desc="Control Message";
+  Data,       desc="Data Message";
+  Request_Control, desc="Request";
+  Reissue_Control, desc="Reissued request";
+  Response_Data, desc="data response";
+  ResponseL2hit_Data, desc="data response";
+  ResponseLocal_Data, desc="data response";
+  Response_Control, desc="non-data response";
+  Writeback_Data, desc="Writeback data";
+  Writeback_Control, desc="Writeback control";
+  Broadcast_Control, desc="Broadcast control";
+  Multicast_Control, desc="Multicast control";
+  Forwarded_Control, desc="Forwarded control";
+  Invalidate_Control, desc="Invalidate control";
+  Unblock_Control, desc="Unblock control";
+  Persistent_Control, desc="Persistent request activation messages";
+  Completion_Control, desc="Completion messages";
+}
+
+// AccessType
+enumeration(AccessType, desc="...") {
+  Read, desc="Reading from cache";
+  Write, desc="Writing to cache";
+}
+
+// RubyAccessMode
+enumeration(RubyAccessMode, default="RubyAccessMode_User", desc="...") {
+  Supervisor, desc="Supervisor mode";
+  User,       desc="User mode";
+  Device, desc="Device mode";
+}
+
+enumeration(PrefetchBit, default="PrefetchBit_No", desc="...") {
+  No,    desc="No, not a prefetch";
+  Yes,   desc="Yes, a prefetch";
+  L1_HW, desc="This is a L1 hardware prefetch";
+  L2_HW, desc="This is a L2 hardware prefetch";
+}
+
+// CacheMsg
+structure(SequencerMsg, desc="...", interface="Message") {
+  Addr LineAddress,       desc="Line address for this request";
+  Addr PhysicalAddress,   desc="Physical address for this request";
+  SequencerRequestType Type,     desc="Type of request (LD, ST, etc)";
+  Addr ProgramCounter,    desc="Program counter of the instruction that caused the miss";
+  RubyAccessMode AccessMode, desc="user/supervisor access type";
+  WriteMask writeMask,       desc="WriteMask for atomics";
+  DataBlock DataBlk,         desc="Data";
+  int Len,                   desc="size in bytes of access";
+  PrefetchBit Prefetch,      desc="Is this a prefetch request";
+  MessageSizeType MessageSize, default="MessageSizeType_Request_Control";
+
+  bool functionalRead(Packet *pkt) {
+    return false;
+  }
+
+  bool functionalWrite(Packet *pkt) {
+    return testAndWrite(PhysicalAddress, DataBlk, pkt);
+  }
+}
+
+// MaskPredictorType
+enumeration(MaskPredictorType, "MaskPredictorType_Undefined", desc="...") {
+  Undefined, desc="Undefined";
+  AlwaysUnicast, desc="AlwaysUnicast";
+  TokenD, desc="TokenD";
+  AlwaysBroadcast, desc="AlwaysBroadcast";
+  TokenB, desc="TokenB";
+  TokenNull, desc="TokenNull";
+  Random, desc="Random";
+  Pairwise, desc="Pairwise";
+  Owner, desc="Owner";
+  BroadcastIfShared, desc="Broadcast-If-Shared";
+  BroadcastCounter, desc="Broadcast Counter";
+  Group, desc="Group";
+  Counter, desc="Counter";
+  StickySpatial, desc="StickySpatial";
+  OwnerBroadcast, desc="Owner/Broadcast Hybrid";
+  OwnerGroup, desc="Owner/Group Hybrid";
+  OwnerBroadcastMod, desc="Owner/Broadcast Hybrid-Mod";
+  OwnerGroupMod, desc="Owner/Group Hybrid-Mod";
+  LastNMasks, desc="Last N Masks";
+  BandwidthAdaptive, desc="Bandwidth Adaptive";
+}
+
+// MaskPredictorIndex
+enumeration(MaskPredictorIndex, "MaskPredictorIndex_Undefined", desc="...") {
+  Undefined, desc="Undefined";
+  DataBlock, desc="Data Block";
+  PC, desc="Program Counter";
+}
+
+// MaskPredictorTraining
+enumeration(MaskPredictorTraining, "MaskPredictorTraining_Undefined", desc="...") {
+  Undefined, desc="Undefined";
+  None, desc="None";
+  Implicit, desc="Implicit";
+  Explicit, desc="Explicit";
+  Both, desc="Both";
+}
+
+// Request Status
+enumeration(RequestStatus, desc="...", default="RequestStatus_NULL")  {
+  Ready, desc="The sequencer is ready and the request does not alias";
+  Issued, desc="The sequencer successfully issued the request";
+  BufferFull, desc="Can not issue because the sequencer is full";
+  Aliased, desc="This request aliased with a currently outstanding request";
+  NULL, desc="";
+}
+
+// LinkDirection
+enumeration(LinkDirection, desc="...") {
+  In, desc="Inward link direction";
+  Out, desc="Outward link direction";
+}

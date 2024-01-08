@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2015 Jason Power
 # All rights reserved.
 #
@@ -33,13 +34,13 @@ IMPORTANT: If you modify this file, it's likely that the Learning gem5 book
 
 """
 
-from test_caches import TestCacheSystem
-
 # import the m5 (gem5) library created when gem5 is built
 import m5
 
 # import all of the SimObjects
 from m5.objects import *
+
+from test_caches import TestCacheSystem
 
 # create the system we are going to simulate
 system = System()

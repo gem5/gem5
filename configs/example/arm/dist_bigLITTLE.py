@@ -39,10 +39,10 @@
 import argparse
 import os
 
-import fs_bigLITTLE as bL
-
 import m5
 from m5.objects import *
+
+import fs_bigLITTLE as bL
 
 m5.util.addToPath("../../dist")
 import sw

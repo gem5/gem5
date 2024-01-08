@@ -260,7 +260,6 @@ system.memchecker = MemChecker()
 # For each level, track the next subsys index to use
 next_subsys_index = [0] * (len(cachespec) + 1)
 
-
 # Recursive function to create a sub-tree of the cache and tester
 # hierarchy
 def make_cache_level(ncaches, prototypes, level, next_cache):

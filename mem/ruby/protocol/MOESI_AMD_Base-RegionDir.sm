@@ -1,0 +1,1182 @@
+/*
+ * Copyright (c) 2012-2015 Advanced Micro Devices, Inc.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+
+machine(MachineType:RegionDir, "Region Directory for AMD_Base-like protocol")
+: CacheMemory *cacheMemory; // stores only region addresses. Must set block size same as below
+  NodeID cpuRegionBufferNum;
+  NodeID gpuRegionBufferNum;
+  int blocksPerRegion := 64; // 4k regions
+  Cycles toDirLatency := 10;    // Latency to fwd requests and send invs to directory
+  bool always_migrate := "False";
+  bool sym_migrate := "False";
+  bool asym_migrate := "False";
+  bool noTCCdir := "False";
+  int TCC_select_num_bits := 1;
+
+  // To the directory
+  MessageBuffer * requestToDir, network="To", virtual_network="5", vnet_type="request";
+
+  // To the region buffers
+  MessageBuffer * notifyToRBuffer, network="To", virtual_network="7", vnet_type="request";
+  MessageBuffer * probeToRBuffer, network="To", virtual_network="8", vnet_type="request";
+
+  // From the region buffers
+  MessageBuffer * responseFromRBuffer, network="From", virtual_network="2", vnet_type="response";
+  MessageBuffer * requestFromRegBuf, network="From", virtual_network="0", vnet_type="request";
+
+  MessageBuffer * triggerQueue;
+{
+
+  // States
+  state_declaration(State, desc="Region states", default="RegionDir_State_NP") {
+    NP, AccessPermission:Invalid,       desc="Not present in region directory";
+    P,  AccessPermission:Invalid,       desc="Region is private to owner";
+    S,  AccessPermission:Invalid,       desc="Region is shared between CPU and GPU";
+
+    P_NP,  AccessPermission:Invalid,    desc="Evicting the region";
+    NP_P,  AccessPermission:Invalid,    desc="Must wait for ack from R-buf";
+    NP_S,  AccessPermission:Invalid,    desc="Must wait for ack from R-buf";
+    P_P,   AccessPermission:Invalid,    desc="Waiting for ack from R-buf";
+    S_S,   AccessPermission:Invalid,    desc="Waiting for ack from R-buf";
+    P_S,   AccessPermission:Invalid,    desc="Downgrading the region";
+    S_P,   AccessPermission:Invalid,    desc="Upgrading the region";
+    P_AS,  AccessPermission:Invalid,    desc="Sent invalidates, waiting for acks";
+    S_AP,  AccessPermission:Invalid,    desc="Sent invalidates, waiting for acks";
+    P_AP,  AccessPermission:Invalid,    desc="Sent invalidates, waiting for acks";
+
+    SP_NP_W, AccessPermission:Invalid,   desc="Last sharer writing back, waiting for ack";
+    S_W,   AccessPermission:Invalid,   desc="Sharer writing back, waiting for ack";
+
+    P_AP_W, AccessPermission:Invalid,   desc="Fwded request to dir, waiting for ack";
+    P_AS_W, AccessPermission:Invalid,   desc="Fwded request to dir, waiting for ack";
+    S_AP_W, AccessPermission:Invalid,   desc="Fwded request to dir, waiting for ack";
+  }
+
+  enumeration(Event, desc="Region directory events") {
+    SendInv,        desc="Send inv message to any machine that has a region buffer";
+    SendUpgrade,    desc="Send upgrade message to any machine that has a region buffer";
+    SendDowngrade,  desc="Send downgrade message to any machine that has a region buffer";
+
+    Evict,          desc="Evict this region";
+
+    UpgradeRequest, desc="Request from r-buf for an upgrade";
+    SharedRequest,  desc="Request from r-buf for read";
+    PrivateRequest, desc="Request from r-buf for write";
+
+    InvAckCore,     desc="Ack from region buffer to order the invalidate";
+    InvAckCoreNoShare,     desc="Ack from region buffer to order the invalidate, and it does not have the region";
+    CPUPrivateAck,  desc="Ack from region buffer to order private notification";
+
+    LastAck,      desc="Done eviciting all the blocks";
+
+    StaleCleanWbRequest, desc="stale clean writeback reqeust";
+    StaleCleanWbRequestNoShare, desc="stale clean wb req from a cache which should be removed from sharers";
+    CleanWbRequest, desc="clean writeback reqeust, multiple sharers";
+    CleanWbRequest_LastSharer, desc="clean writeback reqeust, last sharer";
+    WritebackAck,   desc="Writeback Ack from region buffer";
+    DirReadyAck,   desc="Directory is ready, waiting Ack from region buffer";
+
+    TriggerInv,   desc="trigger invalidate message";
+    TriggerDowngrade, desc="trigger downgrade message";
+  }
+
+  enumeration(RequestType, desc="To communicate stats from transitions to recordStats") {
+    DataArrayRead,    desc="Read the data array";
+    DataArrayWrite,   desc="Write the data array";
+    TagArrayRead,     desc="Read the data array";
+    TagArrayWrite,    desc="Write the data array";
+  }
+
+  structure(BoolVec, external="yes") {
+    bool at(int);
+    void resize(int);
+    void clear();
+  }
+
+  structure(Entry, desc="Region entry", interface="AbstractCacheEntry") {
+    Addr addr,        desc="Base address of this region";
+    NetDest Sharers,        desc="Set of machines that are sharing, but not owners";
+    State RegionState,      desc="Region state";
+    DataBlock DataBlk,      desc="Data for the block (always empty in region dir)";
+    MachineID Owner,        desc="Machine which owns all blocks in this region";
+    Cycles ProbeStart,        desc="Time when the first probe request was issued";
+    bool LastWriten, default="false", desc="The last time someone accessed this region, it wrote it";
+    bool LastWritenByCpu, default="false", desc="The last time the CPU accessed this region, it wrote it";
+    bool LastWritenByGpu, default="false", desc="The last time the GPU accessed this region, it wrote it";
+  }
+
+  structure(TBE, desc="...") {
+    State TBEState,         desc="Transient state";
+    MachineID Owner,        desc="Machine which owns all blocks in this region";
+    NetDest Sharers,        desc="Set of machines to send evicts";
+    int NumValidBlocks,     desc="Number of blocks valid so we don't have to count a BoolVec";
+    bool AllAcksReceived,   desc="Got all necessary acks from dir";
+    CoherenceRequestType MsgType, desc="Msg type for the evicts could be inv or dwngrd";
+    Cycles ProbeRequestTime, default="Cycles(0)", desc="Start of probe request";
+    Cycles InitialRequestTime, default="Cycles(0)", desc="To forward back on out msg";
+    Addr DemandAddress, desc="Demand address from original request";
+    uint64_t probe_id,        desc="probe id for lifetime profiling";
+  }
+
+  structure(TBETable, external="yes") {
+    TBE lookup(Addr);
+    void allocate(Addr);
+    void deallocate(Addr);
+    bool isPresent(Addr);
+  }
+
+  // Stores only region addresses
+  TBETable TBEs, template="<RegionDir_TBE>", constructor="m_number_of_TBEs";
+  int TCC_select_low_bit, default="RubySystem::getBlockSizeBits()";
+
+  Tick clockEdge();
+  Tick cyclesToTicks(Cycles c);
+
+  void set_cache_entry(AbstractCacheEntry b);
+  void unset_cache_entry();
+  void set_tbe(TBE b);
+  void unset_tbe();
+  void wakeUpAllBuffers();
+  void wakeUpBuffers(Addr a);
+  Cycles curCycle();
+  MachineID mapAddressToMachine(Addr addr, MachineType mtype);
+
+  int blockBits,  default="RubySystem::getBlockSizeBits()";
+  int blockBytes, default="RubySystem::getBlockSizeBytes()";
+  int regionBits, default="log2(m_blocksPerRegion)";
+
+  // Functions
+
+  MachineID getCoreMachine(MachineID rBuf, Addr address) {
+    if (machineIDToNodeID(rBuf) == cpuRegionBufferNum) {
+      return createMachineID(MachineType:CorePair, intToID(0));
+    } else if (machineIDToNodeID(rBuf) == gpuRegionBufferNum) {
+      if (noTCCdir) {
+        return mapAddressToRange(address,MachineType:TCC,
+                                    TCC_select_low_bit, TCC_select_num_bits);
+      } else {
+        return createMachineID(MachineType:TCCdir, intToID(0));
+      }
+    } else {
+      error("Unexpected region buffer number");
+    }
+  }
+
+  bool isCpuMachine(MachineID rBuf) {
+    if (machineIDToNodeID(rBuf) == cpuRegionBufferNum) {
+      return true;
+    } else if (machineIDToNodeID(rBuf) == gpuRegionBufferNum) {
+      return false;
+    } else {
+      error("Unexpected region buffer number");
+    }
+  }
+
+  bool symMigrate(Entry cache_entry) {
+      return cache_entry.LastWriten;
+  }
+
+  bool asymMigrate(Entry cache_entry, MachineID requestor) {
+      if (isCpuMachine(requestor)) {
+          return cache_entry.LastWritenByCpu;
+      } else {
+          return cache_entry.LastWritenByGpu;
+      }
+  }
+
+  int getRegionOffset(Addr addr) {
+    if (blocksPerRegion > 1) {
+      Addr offset := bitSelect(addr, blockBits, regionBits+blockBits-1);
+      int ret := addressToInt(offset);
+      assert(ret < blocksPerRegion);
+      return ret;
+    } else {
+      return 0;
+    }
+  }
+
+  Addr getRegionBase(Addr addr) {
+    return maskLowOrderBits(addr, blockBits+regionBits);
+  }
+
+  Addr getNextBlock(Addr addr) {
+    Addr a := addr;
+    makeNextStrideAddress(a, 1);
+    return a;
+  }
+
+  bool presentOrAvail(Addr addr) {
+    DPRINTF(RubySlicc, "Present? %s, avail? %s\n", cacheMemory.isTagPresent(getRegionBase(addr)), cacheMemory.cacheAvail(getRegionBase(addr)));
+    return cacheMemory.isTagPresent(getRegionBase(addr)) || cacheMemory.cacheAvail(getRegionBase(addr));
+  }
+
+  // Returns a region entry!
+  Entry getCacheEntry(Addr addr), return_by_pointer="yes" {
+    return static_cast(Entry, "pointer", cacheMemory.lookup(getRegionBase(addr)));
+  }
+
+  TBE getTBE(Addr addr), return_by_pointer="yes" {
+    return TBEs.lookup(getRegionBase(addr));
+  }
+
+  DataBlock getDataBlock(Addr addr), return_by_ref="yes" {
+    return getCacheEntry(getRegionBase(addr)).DataBlk;
+  }
+
+  State getState(TBE tbe, Entry cache_entry, Addr addr) {
+    if (is_valid(tbe)) {
+      return tbe.TBEState;
+    } else if (is_valid(cache_entry)) {
+      return cache_entry.RegionState;
+    }
+    return State:NP;
+  }
+
+  void setState(TBE tbe, Entry cache_entry, Addr addr, State state) {
+    if (is_valid(tbe)) {
+        tbe.TBEState := state;
+    }
+    if (is_valid(cache_entry)) {
+        cache_entry.RegionState := state;
+    }
+  }
+
+  AccessPermission getAccessPermission(Addr addr) {
+    TBE tbe := getTBE(addr);
+    if(is_valid(tbe)) {
+      return RegionDir_State_to_permission(tbe.TBEState);
+    }
+    Entry cache_entry := getCacheEntry(addr);
+    if(is_valid(cache_entry)) {
+      return RegionDir_State_to_permission(cache_entry.RegionState);
+    }
+    return AccessPermission:NotPresent;
+  }
+
+  void setAccessPermission(Entry cache_entry, Addr addr, State state) {
+    if (is_valid(cache_entry)) {
+      cache_entry.changePermission(RegionDir_State_to_permission(state));
+    }
+  }
+
+  void functionalRead(Addr addr, Packet *pkt) {
+    functionalMemoryRead(pkt);
+  }
+
+  int functionalWrite(Addr addr, Packet *pkt) {
+    if (functionalMemoryWrite(pkt)) {
+      return 1;
+    } else {
+      return 0;
+    }
+  }
+
+  void recordRequestType(RequestType request_type, Addr addr) {
+    if (request_type == RequestType:DataArrayRead) {
+      cacheMemory.recordRequestType(CacheRequestType:DataArrayRead, addr);
+    } else if (request_type == RequestType:DataArrayWrite) {
+      cacheMemory.recordRequestType(CacheRequestType:DataArrayWrite, addr);
+    } else if (request_type == RequestType:TagArrayRead) {
+      cacheMemory.recordRequestType(CacheRequestType:TagArrayRead, addr);
+    } else if (request_type == RequestType:TagArrayWrite) {
+      cacheMemory.recordRequestType(CacheRequestType:TagArrayWrite, addr);
+    }
+  }
+
+  bool checkResourceAvailable(RequestType request_type, Addr addr) {
+    if (request_type == RequestType:DataArrayRead) {
+      return cacheMemory.checkResourceAvailable(CacheResourceType:DataArray, addr);
+    } else if (request_type == RequestType:DataArrayWrite) {
+      return cacheMemory.checkResourceAvailable(CacheResourceType:DataArray, addr);
+    } else if (request_type == RequestType:TagArrayRead) {
+      return cacheMemory.checkResourceAvailable(CacheResourceType:TagArray, addr);
+    } else if (request_type == RequestType:TagArrayWrite) {
+      return cacheMemory.checkResourceAvailable(CacheResourceType:TagArray, addr);
+    } else {
+      error("Invalid RequestType type in checkResourceAvailable");
+      return true;
+    }
+  }
+
+  out_port(triggerQueue_out, TriggerMsg, triggerQueue);
+
+  out_port(requestNetwork_out, CPURequestMsg, requestToDir);
+  out_port(notifyNetwork_out, CPURequestMsg, notifyToRBuffer);
+  out_port(probeNetwork_out, NBProbeRequestMsg, probeToRBuffer);
+
+  in_port(triggerQueue_in, TriggerMsg, triggerQueue, rank=2) {
+    if (triggerQueue_in.isReady(clockEdge())) {
+      peek(triggerQueue_in, TriggerMsg) {
+        assert(in_msg.addr == getRegionBase(in_msg.addr));
+        Entry cache_entry := getCacheEntry(in_msg.addr);
+        TBE tbe := getTBE(in_msg.addr);
+        DPRINTF(RubySlicc, "trigger msg: %s (%s)\n", in_msg, getRegionBase(in_msg.addr));
+        if (in_msg.Type == TriggerType:AcksComplete) {
+          assert(is_valid(tbe));
+          trigger(Event:LastAck, in_msg.addr, cache_entry, tbe);
+        } else if (in_msg.Type == TriggerType:InvRegion) {
+          assert(is_valid(tbe));
+          trigger(Event:TriggerInv, in_msg.addr, cache_entry, tbe);
+        } else if (in_msg.Type == TriggerType:DowngradeRegion) {
+          assert(is_valid(tbe));
+          trigger(Event:TriggerDowngrade, in_msg.addr, cache_entry, tbe);
+        } else {
+          error("Unknown trigger message");
+        }
+      }
+    }
+  }
+
+  in_port(responseNetwork_in, ResponseMsg, responseFromRBuffer, rank=1) {
+    if (responseNetwork_in.isReady(clockEdge())) {
+      peek(responseNetwork_in, ResponseMsg) {
+        TBE tbe := getTBE(in_msg.addr);
+        Entry cache_entry := getCacheEntry(in_msg.addr);
+        if (in_msg.Type == CoherenceResponseType:CPUPrbResp) {
+          assert(in_msg.addr == getRegionBase(in_msg.addr));
+          assert(is_valid(tbe));
+          if (in_msg.NotCached) {
+            trigger(Event:InvAckCoreNoShare, in_msg.addr, cache_entry, tbe);
+          } else {
+            trigger(Event:InvAckCore, in_msg.addr, cache_entry, tbe);
+          }
+        } else if (in_msg.Type == CoherenceResponseType:PrivateAck) {
+          assert(in_msg.addr == getRegionBase(in_msg.addr));
+          assert(is_valid(cache_entry));
+          //Fix Me...add back in: assert(cache_entry.Sharers.isElement(in_msg.Sender));
+          trigger(Event:CPUPrivateAck, in_msg.addr, cache_entry, tbe);
+        } else if (in_msg.Type == CoherenceResponseType:RegionWbAck) {
+            //Fix Me...add back in: assert(cache_entry.Sharers.isElement(in_msg.Sender) == false);
+          assert(in_msg.addr == getRegionBase(in_msg.addr));
+          trigger(Event:WritebackAck, in_msg.addr, cache_entry, tbe);
+        } else if (in_msg.Type == CoherenceResponseType:DirReadyAck) {
+            assert(is_valid(tbe));
+            trigger(Event:DirReadyAck, getRegionBase(in_msg.addr), cache_entry, tbe);
+        } else {
+          error("Invalid response type");
+        }
+      }
+    }
+  }
+
+  // In from cores
+  // NOTE: We get the cache / TBE entry based on the region address,
+  //       but pass the block address to the actions
+  in_port(requestNetwork_in, CPURequestMsg, requestFromRegBuf, rank=0) {
+    if (requestNetwork_in.isReady(clockEdge())) {
+      peek(requestNetwork_in, CPURequestMsg) {
+        //assert(in_msg.addr == getRegionBase(in_msg.addr));
+        Addr address := getRegionBase(in_msg.addr);
+        DPRINTF(RubySlicc, "Got %s, base %s\n", in_msg.addr, address);
+        if (presentOrAvail(address)) {
+          TBE tbe := getTBE(address);
+          Entry cache_entry := getCacheEntry(address);
+          if (in_msg.Type == CoherenceRequestType:PrivateRequest) {
+            if (is_valid(cache_entry) && (cache_entry.Owner != in_msg.Requestor ||
+                getState(tbe, cache_entry, address) == State:S)) {
+              trigger(Event:SendInv, address, cache_entry, tbe);
+            } else {
+              trigger(Event:PrivateRequest, address, cache_entry, tbe);
+            }
+          } else if (in_msg.Type == CoherenceRequestType:SharedRequest) {
+            if (is_invalid(cache_entry)) {
+              // If no one has ever requested this region give private permissions
+              trigger(Event:PrivateRequest, address, cache_entry, tbe);
+            } else {
+                if (always_migrate ||
+                    (sym_migrate && symMigrate(cache_entry)) ||
+                    (asym_migrate && asymMigrate(cache_entry, in_msg.Requestor))) {
+                    if (cache_entry.Sharers.count() == 1 &&
+                        cache_entry.Sharers.isElement(in_msg.Requestor)) {
+                        trigger(Event:UpgradeRequest, address, cache_entry, tbe);
+                    } else {
+                        trigger(Event:SendInv, address, cache_entry, tbe);
+                    }
+                } else { // don't migrate
+                    if(cache_entry.Sharers.isElement(in_msg.Requestor) ||
+                       getState(tbe, cache_entry, address) == State:S) {
+                        trigger(Event:SharedRequest, address, cache_entry, tbe);
+                    } else {
+                        trigger(Event:SendDowngrade, address, cache_entry, tbe);
+                    }
+                }
+            }
+          } else if (in_msg.Type == CoherenceRequestType:UpgradeRequest) {
+            if (is_invalid(cache_entry)) {
+              trigger(Event:PrivateRequest, address, cache_entry, tbe);
+            } else if (cache_entry.Sharers.count() == 1 && cache_entry.Sharers.isElement(in_msg.Requestor)) {
+              trigger(Event:UpgradeRequest, address, cache_entry, tbe);
+            } else {
+              trigger(Event:SendUpgrade, address, cache_entry, tbe);
+            }
+          } else if (in_msg.Type == CoherenceRequestType:CleanWbRequest) {
+            if (is_invalid(cache_entry) || cache_entry.Sharers.isElement(in_msg.Requestor) == false) {
+              trigger(Event:StaleCleanWbRequest, address, cache_entry, tbe);
+            } else {
+                DPRINTF(RubySlicc, "wb address %s(%s) owner %s sharers %s requestor %s %d %d\n", in_msg.addr, getRegionBase(in_msg.addr), cache_entry.Owner, cache_entry.Sharers, in_msg.Requestor, cache_entry.Sharers.isElement(in_msg.Requestor), cache_entry.Sharers.count());
+                if (cache_entry.Sharers.isElement(in_msg.Requestor) && cache_entry.Sharers.count() == 1) {
+                    DPRINTF(RubySlicc, "last wb\n");
+                    trigger(Event:CleanWbRequest_LastSharer, address, cache_entry, tbe);
+                } else {
+                    DPRINTF(RubySlicc, "clean wb\n");
+                    trigger(Event:CleanWbRequest, address, cache_entry, tbe);
+                }
+            }
+          } else {
+            error("unknown region dir request type");
+          }
+        } else {
+          Addr victim := cacheMemory.cacheProbe(getRegionBase(in_msg.addr));
+          TBE victim_tbe := getTBE(victim);
+          Entry victim_entry := getCacheEntry(victim);
+          DPRINTF(RubySlicc, "Evicting address %s for new region at address %s(%s)\n", victim, in_msg.addr, getRegionBase(in_msg.addr));
+          assert(is_valid(victim_entry));
+          trigger(Event:Evict, victim, victim_entry, victim_tbe);
+        }
+      }
+    }
+  }
+
+  // Actions
+
+  action(f_fwdReqToDir, "f", desc="Forward CPU request to directory") {
+    peek(requestNetwork_in, CPURequestMsg) {
+      enqueue(requestNetwork_out, CPURequestMsg, toDirLatency) {
+        out_msg.addr := in_msg.addr;  // This is the block address. "address" is the region address
+        out_msg.Type := in_msg.OriginalType;
+        out_msg.DataBlk := in_msg.DataBlk;
+        out_msg.Dirty := in_msg.Dirty;
+        out_msg.Requestor := getCoreMachine(in_msg.Requestor,address);
+        out_msg.WTRequestor := in_msg.WTRequestor;
+        out_msg.Destination.add(mapAddressToMachine(in_msg.addr, MachineType:Directory));
+        out_msg.Shared := in_msg.Shared;
+        out_msg.MessageSize := in_msg.MessageSize;
+        out_msg.Private := in_msg.Private;
+        out_msg.NoAckNeeded := true;
+        out_msg.InitialRequestTime := in_msg.InitialRequestTime;
+        out_msg.ProbeRequestStartTime := curCycle();
+        out_msg.DemandRequest := true;
+        if (is_valid(cache_entry) && getState(tbe, cache_entry, address) != State:S) {
+            out_msg.Acks := cache_entry.Sharers.count();
+        } else {
+            out_msg.Acks := 0;
+        }
+      }
+    }
+  }
+
+  action(f_fwdReqToDirShared, "fs", desc="Forward CPU request to directory (shared)") {
+    peek(requestNetwork_in, CPURequestMsg) {
+      enqueue(requestNetwork_out, CPURequestMsg, toDirLatency) {
+        out_msg.addr := in_msg.addr;  // This is the block address. "address" is the region address
+        out_msg.Type := in_msg.OriginalType;
+        out_msg.DataBlk := in_msg.DataBlk;
+        out_msg.Dirty := in_msg.Dirty;
+        out_msg.Requestor := getCoreMachine(in_msg.Requestor,address);
+        out_msg.WTRequestor := in_msg.WTRequestor;
+        out_msg.Destination.add(mapAddressToMachine(in_msg.addr, MachineType:Directory));
+        out_msg.Shared := in_msg.Shared;
+        out_msg.MessageSize := in_msg.MessageSize;
+        out_msg.Private := in_msg.Private;
+        out_msg.NoAckNeeded := true;
+        out_msg.InitialRequestTime := in_msg.InitialRequestTime;
+        out_msg.ProbeRequestStartTime := curCycle();
+        out_msg.DemandRequest := true;
+        out_msg.ForceShared := true;
+        if (is_valid(cache_entry) && getState(tbe, cache_entry, address) != State:S) {
+            out_msg.Acks := cache_entry.Sharers.count();
+        } else {
+            out_msg.Acks := 0;
+        }
+      }
+    }
+  }
+
+  action(f_fwdReqToDirWithAck, "fa", desc="Forward CPU request to directory with ack request") {
+    peek(requestNetwork_in, CPURequestMsg) {
+      enqueue(requestNetwork_out, CPURequestMsg, toDirLatency) {
+        out_msg.addr := in_msg.addr; // This is the block address. "address" is the region address
+        out_msg.Type := in_msg.OriginalType;
+        out_msg.DataBlk := in_msg.DataBlk;
+        out_msg.Dirty := in_msg.Dirty;
+        out_msg.Requestor := getCoreMachine(in_msg.Requestor,address);
+        out_msg.WTRequestor := in_msg.WTRequestor;
+        out_msg.Destination.add(mapAddressToMachine(in_msg.addr, MachineType:Directory));
+        out_msg.Shared := in_msg.Shared;
+        out_msg.MessageSize := in_msg.MessageSize;
+        out_msg.Private := in_msg.Private;
+        out_msg.NoAckNeeded := false;
+        out_msg.InitialRequestTime := in_msg.InitialRequestTime;
+        out_msg.ProbeRequestStartTime := curCycle();
+        out_msg.DemandRequest := true;
+        if (is_valid(cache_entry)) {
+            out_msg.Acks := cache_entry.Sharers.count();
+            // Don't need an ack from the requestor!
+            if (cache_entry.Sharers.isElement(in_msg.Requestor)) {
+                out_msg.Acks := out_msg.Acks - 1;
+            }
+        } else {
+            out_msg.Acks := 0;
+        }
+      }
+    }
+  }
+
+  action(f_fwdReqToDirWithAckShared, "fas", desc="Forward CPU request to directory with ack request") {
+    peek(requestNetwork_in, CPURequestMsg) {
+      enqueue(requestNetwork_out, CPURequestMsg, toDirLatency) {
+        out_msg.addr := in_msg.addr; // This is the block address. "address" is the region address
+        out_msg.Type := in_msg.OriginalType;
+        out_msg.DataBlk := in_msg.DataBlk;
+        out_msg.Dirty := in_msg.Dirty;
+        out_msg.Requestor := getCoreMachine(in_msg.Requestor,address);
+        out_msg.WTRequestor := in_msg.WTRequestor;
+        out_msg.Destination.add(mapAddressToMachine(in_msg.addr, MachineType:Directory));
+        out_msg.Shared := in_msg.Shared;
+        out_msg.MessageSize := in_msg.MessageSize;
+        out_msg.Private := in_msg.Private;
+        out_msg.NoAckNeeded := false;
+        out_msg.InitialRequestTime := in_msg.InitialRequestTime;
+        out_msg.ProbeRequestStartTime := curCycle();
+        out_msg.DemandRequest := true;
+        out_msg.ForceShared := true;
+        if (is_valid(cache_entry)) {
+            out_msg.Acks := cache_entry.Sharers.count();
+            // Don't need an ack from the requestor!
+            if (cache_entry.Sharers.isElement(in_msg.Requestor)) {
+                out_msg.Acks := out_msg.Acks - 1;
+            }
+        } else {
+            out_msg.Acks := 0;
+        }
+      }
+    }
+  }
+
+  action(a_allocateRegionEntry, "a", desc="Allocate a new entry") {
+    set_cache_entry(cacheMemory.allocate(getRegionBase(address), new Entry));
+    peek(requestNetwork_in, CPURequestMsg) {
+      APPEND_TRANSITION_COMMENT(in_msg.Requestor);
+    }
+  }
+
+  action(d_deallocateRegionEntry, "d", desc="Deallocate region entry") {
+    cacheMemory.deallocate(getRegionBase(address));
+    unset_cache_entry();
+  }
+
+  action(ra_receiveAck, "ra", desc="Mark TBE entry as received this ack") {
+    //assert(tbe.ValidBlocks.at(getRegionOffset(address)));
+    DPRINTF(RubySlicc, "received ack for %s reg: %s\n", address, getRegionBase(address));
+    tbe.NumValidBlocks := tbe.NumValidBlocks - 1;
+    assert(tbe.NumValidBlocks >= 0);
+    if (tbe.NumValidBlocks == 0) {
+      tbe.AllAcksReceived := true;
+      enqueue(triggerQueue_out, TriggerMsg, 1) {
+        out_msg.Type := TriggerType:AcksComplete;
+        out_msg.addr := address;
+      }
+    }
+    APPEND_TRANSITION_COMMENT(getRegionBase(address));
+    APPEND_TRANSITION_COMMENT(" Acks left receive ");
+    APPEND_TRANSITION_COMMENT(tbe.NumValidBlocks);
+  }
+
+  action(ca_checkAcks, "ca", desc="Check to see if we need more acks") {
+    if (tbe.NumValidBlocks == 0) {
+      tbe.AllAcksReceived := true;
+      enqueue(triggerQueue_out, TriggerMsg, 1) {
+        out_msg.Type := TriggerType:AcksComplete;
+        out_msg.addr := address;
+      }
+    }
+  }
+
+  action(ti_triggerInv, "ti", desc="") {
+      enqueue(triggerQueue_out, TriggerMsg, 1) {
+          out_msg.Type := TriggerType:InvRegion;
+          out_msg.addr := address;
+      }
+  }
+
+  action(td_triggerDowngrade, "td", desc="") {
+      enqueue(triggerQueue_out, TriggerMsg, 1) {
+        out_msg.Type := TriggerType:DowngradeRegion;
+        out_msg.addr := address;
+      }
+  }
+
+  action(t_allocateTBE, "t", desc="allocate TBE Entry") {
+    check_allocate(TBEs);
+    TBEs.allocate(getRegionBase(address));
+    set_tbe(getTBE(address));
+    if (is_valid(cache_entry)) {
+      tbe.Owner := cache_entry.Owner;
+      tbe.Sharers := cache_entry.Sharers;
+      tbe.AllAcksReceived := true; // assume no acks are required
+    }
+    tbe.ProbeRequestTime := curCycle();
+    peek(requestNetwork_in, CPURequestMsg) {
+      tbe.InitialRequestTime := in_msg.InitialRequestTime;
+      tbe.DemandAddress := in_msg.addr;
+    }
+    APPEND_TRANSITION_COMMENT(getRegionBase(address));
+    APPEND_TRANSITION_COMMENT(" Acks left ");
+    APPEND_TRANSITION_COMMENT(tbe.NumValidBlocks);
+    APPEND_TRANSITION_COMMENT(" Owner, ");
+    APPEND_TRANSITION_COMMENT(tbe.Owner);
+    APPEND_TRANSITION_COMMENT(" sharers, ");
+    APPEND_TRANSITION_COMMENT(tbe.Sharers);
+  }
+
+  action(ss_setSharers, "ss", desc="Add requestor to sharers") {
+    peek(requestNetwork_in, CPURequestMsg) {
+        cache_entry.Sharers.add(in_msg.Requestor);
+        APPEND_TRANSITION_COMMENT(cache_entry.Sharers);
+    }
+  }
+
+  action(rs_removeSharer, "rs", desc="Remove requestor to sharers") {
+    peek(requestNetwork_in, CPURequestMsg) {
+        cache_entry.Sharers.remove(in_msg.Requestor);
+        APPEND_TRANSITION_COMMENT(" removing ");
+        APPEND_TRANSITION_COMMENT(in_msg.Requestor);
+        APPEND_TRANSITION_COMMENT(" sharers ");
+        APPEND_TRANSITION_COMMENT(cache_entry.Sharers);
+    }
+  }
+
+  action(rsr_removeSharerResponse, "rsr", desc="Remove requestor to sharers") {
+    peek(responseNetwork_in, ResponseMsg) {
+        cache_entry.Sharers.remove(in_msg.Sender);
+        APPEND_TRANSITION_COMMENT(cache_entry.Sharers);
+    }
+  }
+
+  action(cs_clearSharers, "cs", desc="Add requestor to sharers") {
+    cache_entry.Sharers.clear();
+  }
+
+  action(so_setOwner, "so", desc="Set the owner to the requestor") {
+    peek(requestNetwork_in, CPURequestMsg) {
+      cache_entry.Owner := in_msg.Requestor;
+      APPEND_TRANSITION_COMMENT(" Owner now: ");
+      APPEND_TRANSITION_COMMENT(cache_entry.Owner);
+    }
+  }
+
+  action(rr_removeRequestorFromTBE, "rr", desc="Remove requestor from TBE sharers") {
+    peek(requestNetwork_in, CPURequestMsg) {
+      tbe.Sharers.remove(in_msg.Requestor);
+    }
+  }
+
+  action(ur_updateDirtyStatusOnRequest, "ur", desc="Update dirty status on demand request") {
+      peek(requestNetwork_in, CPURequestMsg) {
+          if (is_valid(cache_entry)) {
+              if ((in_msg.Type == CoherenceRequestType:SharedRequest) &&
+                  (cache_entry.Sharers.isElement(in_msg.Requestor) == false)) {
+                  cache_entry.LastWriten := false;
+                  if (isCpuMachine(in_msg.Requestor)) {
+                      cache_entry.LastWritenByCpu := false;
+                  } else {
+                      cache_entry.LastWritenByGpu := false;
+                  }
+              } else if ((in_msg.Type == CoherenceRequestType:PrivateRequest) ||
+                         (in_msg.Type == CoherenceRequestType:UpgradeRequest)) {
+                  cache_entry.LastWriten := true;
+                  if (isCpuMachine(in_msg.Requestor)) {
+                      cache_entry.LastWritenByCpu := true;
+                  } else {
+                      cache_entry.LastWritenByGpu := true;
+                  }
+              }
+          }
+      }
+  }
+
+  action(ud_updateDirtyStatusWithWb, "ud", desc="Update dirty status on writeback") {
+      peek(requestNetwork_in, CPURequestMsg) {
+          if (is_valid(cache_entry) && in_msg.Dirty) {
+              cache_entry.LastWriten := true;
+              if (isCpuMachine(in_msg.Requestor)) {
+                  cache_entry.LastWritenByCpu := true;
+              } else {
+                  cache_entry.LastWritenByGpu := true;
+              }
+          }
+      }
+  }
+
+  action(sns_setNumAcksSharers, "sns", desc="Set number of acks to one per shared region buffer") {
+    assert(is_valid(tbe));
+    assert(is_valid(cache_entry));
+    tbe.NumValidBlocks := tbe.Sharers.count();
+  }
+
+  action(sno_setNumAcksOne, "sno", desc="Set number of acks to one per shared region buffer") {
+    assert(is_valid(tbe));
+    assert(is_valid(cache_entry));
+    tbe.NumValidBlocks := 1;
+  }
+
+  action(dt_deallocateTBE, "dt", desc="deallocate TBE Entry") {
+    TBEs.deallocate(getRegionBase(address));
+    APPEND_TRANSITION_COMMENT(" reg: ");
+    APPEND_TRANSITION_COMMENT(getRegionBase(address));
+    unset_tbe();
+  }
+
+  action(wb_sendWbNotice, "wb", desc="Send notice to cache that writeback is acknowledged") {
+    peek(requestNetwork_in, CPURequestMsg) {
+      enqueue(notifyNetwork_out, CPURequestMsg, 1) {
+        out_msg.addr := getRegionBase(address);
+        out_msg.Type := CoherenceRequestType:WbNotify;
+        out_msg.Destination.add(in_msg.Requestor);
+        out_msg.Requestor := machineID;
+        out_msg.MessageSize := MessageSizeType:Request_Control;
+        out_msg.InitialRequestTime := in_msg.InitialRequestTime;
+      }
+    }
+  }
+
+  action(wbn_sendWbNoticeNoAck, "wbn", desc="Send notice to cache that writeback is acknowledged (no ack needed)") {
+    peek(requestNetwork_in, CPURequestMsg) {
+      enqueue(notifyNetwork_out, CPURequestMsg, 1) {
+        out_msg.addr := getRegionBase(address);
+        out_msg.Type := CoherenceRequestType:WbNotify;
+        out_msg.Destination.add(in_msg.Requestor);
+        out_msg.Requestor := machineID;
+        out_msg.MessageSize := MessageSizeType:Request_Control;
+        out_msg.InitialRequestTime := in_msg.InitialRequestTime;
+        out_msg.NoAckNeeded := true;
+      }
+    }
+  }
+
+  action(b_sendPrivateNotice, "b", desc="Send notice to private cache that it has private access") {
+    peek(requestNetwork_in, CPURequestMsg) {
+      enqueue(notifyNetwork_out, CPURequestMsg, 1) {
+        out_msg.addr := getRegionBase(address);
+        out_msg.Type := CoherenceRequestType:PrivateNotify;
+        out_msg.Destination.add(in_msg.Requestor);
+        out_msg.Requestor := machineID;
+        out_msg.MessageSize := MessageSizeType:Request_Control;
+        out_msg.InitialRequestTime := in_msg.InitialRequestTime;
+      }
+    }
+  }
+
+  action(bs_sendSharedNotice, "bs", desc="Send notice to private cache that it has private access") {
+    peek(requestNetwork_in, CPURequestMsg) {
+      enqueue(notifyNetwork_out, CPURequestMsg, 1) {
+        out_msg.addr := getRegionBase(address);
+        out_msg.Type := CoherenceRequestType:SharedNotify;
+        out_msg.Destination.add(in_msg.Requestor);
+        out_msg.Requestor := machineID;
+        out_msg.MessageSize := MessageSizeType:Request_Control;
+        out_msg.InitialRequestTime := in_msg.InitialRequestTime;
+      }
+    }
+  }
+
+  action(c_sendSharedNoticeToOrigReq, "c", desc="Send notice to private cache that it has shared access") {
+    assert(is_valid(tbe));
+    enqueue(notifyNetwork_out, CPURequestMsg, 1) {
+      out_msg.addr := getRegionBase(address);
+      out_msg.Type := CoherenceRequestType:SharedNotify;
+      out_msg.Destination.add(tbe.Owner);
+      out_msg.Requestor := machineID;
+      out_msg.MessageSize := MessageSizeType:Request_Control;
+      out_msg.ProbeRequestStartTime := tbe.ProbeRequestTime;
+      out_msg.InitialRequestTime := tbe.InitialRequestTime;
+      APPEND_TRANSITION_COMMENT("dest: ");
+      APPEND_TRANSITION_COMMENT(out_msg.Destination);
+    }
+  }
+
+  action(sp_sendPrivateNoticeToOrigReq, "sp", desc="Send notice to private cache that it has private access") {
+    assert(is_valid(tbe));
+    enqueue(notifyNetwork_out, CPURequestMsg, 1) {
+      out_msg.addr := getRegionBase(address);
+      out_msg.Type := CoherenceRequestType:PrivateNotify;
+      out_msg.Destination.add(tbe.Owner);
+      out_msg.Requestor := machineID;
+      out_msg.MessageSize := MessageSizeType:Request_Control;
+      out_msg.ProbeRequestStartTime := tbe.ProbeRequestTime;
+      out_msg.InitialRequestTime := tbe.InitialRequestTime;
+      APPEND_TRANSITION_COMMENT("dest: ");
+      APPEND_TRANSITION_COMMENT(out_msg.Destination);
+    }
+  }
+
+  action(i_RegionInvNotify, "i", desc="Send notice to private cache that it no longer has private access") {
+      enqueue(probeNetwork_out, NBProbeRequestMsg, 1) {
+          out_msg.addr := address;
+          out_msg.DemandAddress := tbe.DemandAddress;
+          //out_msg.Requestor := tbe.Requestor;
+          out_msg.Requestor := machineID;
+          out_msg.Type := ProbeRequestType:PrbInv;
+          //Fix me: assert(tbe.Sharers.count() > 0);
+          out_msg.DemandRequest := true;
+          out_msg.Destination := tbe.Sharers;
+          out_msg.MessageSize := MessageSizeType:Request_Control;
+          APPEND_TRANSITION_COMMENT("dest: ");
+          APPEND_TRANSITION_COMMENT(out_msg.Destination);
+      }
+  }
+
+  action(i0_RegionInvNotifyDemand0, "i0", desc="Send notice to private cache that it no longer has private access") {
+      enqueue(probeNetwork_out, NBProbeRequestMsg, 1) {
+          out_msg.addr := address;
+          // Demand address should default to 0 -> out_msg.DemandAddress := 0;
+          out_msg.Requestor := machineID;
+          out_msg.Type := ProbeRequestType:PrbInv;
+          out_msg.Destination := tbe.Sharers;
+          out_msg.MessageSize := MessageSizeType:Request_Control;
+          APPEND_TRANSITION_COMMENT("dest: ");
+          APPEND_TRANSITION_COMMENT(out_msg.Destination);
+      }
+  }
+
+  action(rd_RegionDowngrade, "rd", desc="Send notice to private cache that it only has shared access") {
+        enqueue(probeNetwork_out, NBProbeRequestMsg, 1) {
+            out_msg.addr := address;
+            out_msg.DemandAddress := tbe.DemandAddress;
+            out_msg.Requestor := machineID;
+            out_msg.Type := ProbeRequestType:PrbDowngrade;
+            out_msg.DemandRequest := true;
+            out_msg.Destination := tbe.Sharers;
+            out_msg.MessageSize := MessageSizeType:Request_Control;
+            APPEND_TRANSITION_COMMENT("dest: ");
+            APPEND_TRANSITION_COMMENT(out_msg.Destination);
+        }
+  }
+
+  action(p_popRequestQueue, "p", desc="Pop the request queue") {
+    requestNetwork_in.dequeue(clockEdge());
+  }
+
+  action(pt_popTriggerQueue, "pt", desc="Pop the trigger queue") {
+    triggerQueue_in.dequeue(clockEdge());
+  }
+
+  action(pr_popResponseQueue, "pr", desc="Pop the response queue") {
+    responseNetwork_in.dequeue(clockEdge());
+  }
+
+  action(s_stallAndWaitRequest, "s", desc="Stall and wait on the region address") {
+    Addr regAddr := getRegionBase(address);
+    stall_and_wait(requestNetwork_in, regAddr);
+  }
+
+  action(w_wakeUpRegionDependents, "w", desc="Wake up any requests waiting for this region") {
+    wakeUpBuffers(getRegionBase(address));
+  }
+
+  action(wa_wakeUpAllDependents, "wa", desc="Wake up any requests waiting for this region") {
+    wakeUpAllBuffers();
+  }
+
+  action(zz_recycleRequestQueue, "\z", desc="...") {
+    requestNetwork_in.recycle(clockEdge(), cyclesToTicks(recycle_latency));
+  }
+
+  action(z_stall, "z", desc="stall request queue") {
+    // fake state
+  }
+
+  action(mru_setMRU, "mru", desc="set MRU") {
+    cacheMemory.setMRU(address);
+  }
+
+ // Transistions
+
+  transition({NP_P, P_P, NP_S, S_S, S_P, P_S, P_NP, S_AP, P_AS, P_AP, SP_NP_W, S_W, P_AP_W, P_AS_W, S_AP_W}, {PrivateRequest, SharedRequest, UpgradeRequest, SendInv, SendUpgrade, SendDowngrade, CleanWbRequest, CleanWbRequest_LastSharer, StaleCleanWbRequest}) {
+    s_stallAndWaitRequest
+  }
+
+  transition({NP_P, P_P, NP_S, S_S, S_P, S_W, P_S, P_NP, S_AP, P_AS, P_AP, P_AP_W, P_AS_W, S_AP_W}, Evict) {
+    zz_recycleRequestQueue;
+  }
+
+  transition(NP, {PrivateRequest, SendUpgrade}, NP_P) {TagArrayRead, TagArrayWrite} {
+    a_allocateRegionEntry;
+    ur_updateDirtyStatusOnRequest;
+    f_fwdReqToDir;
+    b_sendPrivateNotice;
+    so_setOwner;
+    ss_setSharers;
+    t_allocateTBE;
+    p_popRequestQueue;
+  }
+
+  transition(P, {PrivateRequest, UpgradeRequest}, P_P) {TagArrayRead} {
+    mru_setMRU;
+    ur_updateDirtyStatusOnRequest;
+    f_fwdReqToDir;
+    b_sendPrivateNotice;
+    t_allocateTBE;
+    p_popRequestQueue;
+  }
+
+  transition({NP_P, P_P}, CPUPrivateAck, P) {
+    dt_deallocateTBE;
+    w_wakeUpRegionDependents;
+    pr_popResponseQueue;
+  }
+
+  transition({NP, P, S}, StaleCleanWbRequest) {TagArrayRead, TagArrayWrite} {
+      wbn_sendWbNoticeNoAck;
+      ud_updateDirtyStatusWithWb;
+      p_popRequestQueue;
+  }
+
+  transition(NP, SharedRequest, NP_S) {TagArrayRead, TagArrayWrite} {
+    a_allocateRegionEntry;
+    ur_updateDirtyStatusOnRequest;
+    f_fwdReqToDirShared;
+    bs_sendSharedNotice;
+    so_setOwner;
+    ss_setSharers;
+    t_allocateTBE;
+    p_popRequestQueue;
+  }
+
+  // Could probably do this in parallel with other shared requests
+  transition(S, SharedRequest, S_S) {TagArrayRead, TagArrayWrite} {
+    mru_setMRU;
+    ur_updateDirtyStatusOnRequest;
+    f_fwdReqToDirShared;
+    bs_sendSharedNotice;
+    ss_setSharers;
+    t_allocateTBE;
+    p_popRequestQueue;
+  }
+
+  transition({P, S}, CleanWbRequest_LastSharer, SP_NP_W) {TagArrayRead, TagArrayWrite} {
+    ud_updateDirtyStatusWithWb;
+    wb_sendWbNotice;
+    rs_removeSharer;
+    t_allocateTBE;
+    d_deallocateRegionEntry;
+    p_popRequestQueue;
+  }
+
+  transition(S, CleanWbRequest, S_W) {TagArrayRead, TagArrayWrite} {
+    ud_updateDirtyStatusWithWb;
+    wb_sendWbNotice;
+    rs_removeSharer;
+    t_allocateTBE;
+    p_popRequestQueue;
+  }
+
+  transition(SP_NP_W, WritebackAck, NP) {
+    dt_deallocateTBE;
+    w_wakeUpRegionDependents;
+    pr_popResponseQueue;
+  }
+
+  transition(S_W, WritebackAck, S) {
+    dt_deallocateTBE;
+    w_wakeUpRegionDependents;
+    pr_popResponseQueue;
+  }
+
+  transition({NP_S, S_S}, CPUPrivateAck, S) {
+    dt_deallocateTBE;
+    w_wakeUpRegionDependents;
+    pr_popResponseQueue;
+  }
+
+  transition(S, UpgradeRequest, S_P) {TagArrayRead, TagArrayWrite} {
+    mru_setMRU;
+    ur_updateDirtyStatusOnRequest;
+    f_fwdReqToDir;
+    b_sendPrivateNotice;
+    so_setOwner;
+    t_allocateTBE;
+    p_popRequestQueue;
+  }
+
+  transition(S_P, CPUPrivateAck, P) {
+    dt_deallocateTBE;
+    w_wakeUpRegionDependents;
+    pr_popResponseQueue;
+  }
+
+  transition(P, SendInv, P_AP_W) {TagArrayRead, TagArrayWrite} {
+    mru_setMRU;
+    ur_updateDirtyStatusOnRequest;
+    f_fwdReqToDirWithAck;
+    so_setOwner;
+    t_allocateTBE;
+    rr_removeRequestorFromTBE;
+    sns_setNumAcksSharers;
+    cs_clearSharers;
+    ss_setSharers;
+    //i_RegionInvNotify;
+    p_popRequestQueue;
+  }
+
+  transition({P_AP_W, S_AP_W}, DirReadyAck) {
+      ti_triggerInv;
+      pr_popResponseQueue;
+  }
+
+  transition(P_AS_W, DirReadyAck) {
+      td_triggerDowngrade;
+      pr_popResponseQueue;
+  }
+
+  transition(P_AS_W, TriggerDowngrade, P_AS) {
+      rd_RegionDowngrade;
+      pt_popTriggerQueue;
+  }
+
+  transition(P_AP_W, TriggerInv, P_AP) {
+      i_RegionInvNotify;
+      pt_popTriggerQueue;
+  }
+
+  transition(S_AP_W, TriggerInv, S_AP) {
+      i_RegionInvNotify;
+      pt_popTriggerQueue;
+  }
+
+  transition(P, SendUpgrade, P_AP_W) {TagArrayRead, TagArrayWrite} {
+    mru_setMRU;
+    ur_updateDirtyStatusOnRequest;
+    f_fwdReqToDirWithAck;
+    so_setOwner;
+    t_allocateTBE;
+    rr_removeRequestorFromTBE;
+    sns_setNumAcksSharers;
+    cs_clearSharers;
+    ss_setSharers;
+    p_popRequestQueue;
+  }
+
+  transition(P, Evict, P_NP) {TagArrayRead, TagArrayWrite} {
+    t_allocateTBE;
+    sns_setNumAcksSharers;
+    i0_RegionInvNotifyDemand0;
+    d_deallocateRegionEntry;
+  }
+
+  transition(S, SendInv, P_AP_W) {TagArrayRead, TagArrayWrite} {
+    mru_setMRU;
+    ur_updateDirtyStatusOnRequest;
+    f_fwdReqToDirWithAck;
+    so_setOwner;
+    t_allocateTBE;
+    rr_removeRequestorFromTBE;
+    sns_setNumAcksSharers;
+    cs_clearSharers;
+    ss_setSharers;
+    p_popRequestQueue;
+  }
+
+  transition(S, Evict, P_NP) {TagArrayRead, TagArrayWrite} {
+    t_allocateTBE;
+    sns_setNumAcksSharers;
+    i0_RegionInvNotifyDemand0;
+    d_deallocateRegionEntry;
+  }
+
+  transition(P_NP, LastAck, NP) {
+    dt_deallocateTBE;
+    wa_wakeUpAllDependents;
+    pt_popTriggerQueue;
+  }
+
+  transition(S, SendUpgrade, S_AP_W) {TagArrayRead, TagArrayWrite} {
+    mru_setMRU;
+    ur_updateDirtyStatusOnRequest;
+    f_fwdReqToDirWithAck;
+    so_setOwner;
+    t_allocateTBE;
+    rr_removeRequestorFromTBE;
+    sns_setNumAcksSharers;
+    cs_clearSharers;
+    ss_setSharers;
+    p_popRequestQueue;
+  }
+
+  transition(S_AP, LastAck, S_P) {
+    sp_sendPrivateNoticeToOrigReq;
+    pt_popTriggerQueue;
+  }
+
+  transition(P_AP, LastAck, P_P) {
+    sp_sendPrivateNoticeToOrigReq;
+    pt_popTriggerQueue;
+  }
+
+  transition(P, SendDowngrade, P_AS_W) {TagArrayRead, TagArrayWrite} {
+    mru_setMRU;
+    ur_updateDirtyStatusOnRequest;
+    f_fwdReqToDirWithAckShared;
+    so_setOwner;
+    t_allocateTBE;
+    sns_setNumAcksSharers;
+    ss_setSharers; //why do we set the sharers before sending the downgrade?  Are we sending a downgrade to the requestor?
+    p_popRequestQueue;
+  }
+
+  transition(P_AS, LastAck, P_S) {
+    c_sendSharedNoticeToOrigReq;
+    pt_popTriggerQueue;
+  }
+
+  transition(P_S, CPUPrivateAck, S) {
+    dt_deallocateTBE;
+    w_wakeUpRegionDependents;
+    pr_popResponseQueue;
+  }
+
+  transition({P_NP, P_AS, S_AP, P_AP}, InvAckCore) {} {
+    ra_receiveAck;
+    pr_popResponseQueue;
+  }
+
+  transition({P_NP, S_AP, P_AP}, InvAckCoreNoShare) {} {
+    ra_receiveAck;
+    pr_popResponseQueue;
+  }
+
+  transition(P_AS, InvAckCoreNoShare) {} {
+    ra_receiveAck;
+    rsr_removeSharerResponse;
+    pr_popResponseQueue;
+  }
+
+}

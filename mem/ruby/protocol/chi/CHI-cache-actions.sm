@@ -1,0 +1,3409 @@
+/*
+ * Copyright (c) 2021-2022 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+////////////////////////////////////////////////////////////////////////////
+// CHI-cache actions definitions
+////////////////////////////////////////////////////////////////////////////
+
+action(AllocateTBE_Request, desc="") {
+  if (storTBEs.areNSlotsAvailable(1)) {
+    // reserve a slot for this request
+    storTBEs.incrementReserved();
+
+    // Move request to rdy queue
+    peek(reqInPort, CHIRequestMsg) {
+      enqueue(reqRdyOutPort, CHIRequestMsg, allocation_latency) {
+        assert(in_msg.addr == address);
+        assert(in_msg.is_local_pf == false);
+        out_msg := in_msg;
+      }
+    }
+
+  } else {
+    // we don't have resources to track this request; enqueue a retry
+    peek(reqInPort, CHIRequestMsg) {
+      assert(in_msg.allowRetry);
+      enqueue(retryTriggerOutPort, RetryTriggerMsg, 0) {
+        out_msg.addr := in_msg.addr;
+        out_msg.usesTxnId := false;
+        out_msg.event := Event:SendRetryAck;
+        out_msg.retryDest := in_msg.requestor;
+        retryQueue.emplace(in_msg.addr,false,in_msg.requestor);
+      }
+    }
+  }
+
+  reqInPort.dequeue(clockEdge());
+}
+
+action(AllocateTBE_Request_WithCredit, desc="") {
+  // TBE slot already reserved
+  // Move request to rdy queue
+  peek(reqInPort, CHIRequestMsg) {
+    assert(in_msg.allowRetry == false);
+    enqueue(reqRdyOutPort, CHIRequestMsg, allocation_latency) {
+      assert(in_msg.addr == address);
+      out_msg := in_msg;
+    }
+  }
+  reqInPort.dequeue(clockEdge());
+}
+
+action(AllocateTBE_Snoop, desc="") {
+  // No retry for snoop requests; just create resource stall
+  check_allocate(storSnpTBEs);
+
+  storSnpTBEs.incrementReserved();
+
+  // Move request to rdy queue
+  peek(snpInPort, CHIRequestMsg) {
+    enqueue(snpRdyOutPort, CHIRequestMsg, allocation_latency) {
+      assert(in_msg.addr == address);
+      out_msg := in_msg;
+    }
+
+    // also remove snoop source from waiting retry destinations to prevent
+    // deadlocks in which this snoop is blocked by a transaction that needs to
+    // send a request to the snoop destination before going to BUSY_INTR,
+    // but the destination needs the snoop to complete before sending retry
+    // credit
+    destsWaitingRetry.remove(in_msg.requestor);
+  }
+  snpInPort.dequeue(clockEdge());
+}
+
+action(AllocateTBE_DvmSnoop, desc="") {
+  // No retry for snoop requests; just create resource stall
+  check_allocate(storDvmSnpTBEs);
+
+  storDvmSnpTBEs.incrementReserved();
+
+  // Move request to rdy queue
+  peek(snpInPort, CHIRequestMsg) {
+    enqueue(snpRdyOutPort, CHIRequestMsg, allocation_latency) {
+      assert(in_msg.usesTxnId);
+      assert(in_msg.addr == address);
+      out_msg := in_msg;
+    }
+  }
+  snpInPort.dequeue(clockEdge());
+}
+
+action(AllocateTBE_SeqRequest, desc="") {
+  // No retry for sequencer requests; just create resource stall
+  check_allocate(storTBEs);
+
+  // reserve a slot for this request
+  storTBEs.incrementReserved();
+
+  // Move request to rdy queue
+  peek(seqInPort, RubyRequest) {
+    enqueue(reqRdyOutPort, CHIRequestMsg, allocation_latency) {
+      out_msg.addr := in_msg.LineAddress;
+      assert((in_msg.Size > 0) && (in_msg.Size <= blockSize));
+      out_msg.accAddr := in_msg.PhysicalAddress;
+      out_msg.accSize := in_msg.Size;
+      out_msg.requestor := machineID;
+      out_msg.fwdRequestor := machineID;
+      out_msg.seqReq := in_msg.getRequestPtr();
+      out_msg.isSeqReqValid := true;
+      assert(in_msg.Prefetch == PrefetchBit:No);
+      out_msg.is_local_pf := false;
+      out_msg.is_remote_pf := false;
+
+      if ((in_msg.Type == RubyRequestType:LD) ||
+          (in_msg.Type == RubyRequestType:IFETCH)) {
+        out_msg.type := CHIRequestType:Load;
+      } else  if (in_msg.Type == RubyRequestType:ST) {
+        if (in_msg.Size == blockSize) {
+          out_msg.type := CHIRequestType:StoreLine;
+        } else {
+          out_msg.type := CHIRequestType:Store;
+        }
+      } else {
+        error("Invalid RubyRequestType");
+      }
+    }
+  }
+  seqInPort.dequeue(clockEdge());
+}
+
+action(AllocateTBE_SeqDvmRequest, desc="") {
+  // No retry for sequencer requests; just create resource stall
+  check_allocate(storDvmTBEs);
+
+  // reserve a slot for this request
+  storDvmTBEs.incrementReserved();
+
+  // Move request to rdy queue
+  peek(seqInPort, RubyRequest) {
+    enqueue(reqRdyOutPort, CHIRequestMsg, allocation_latency) {
+      // DVM operations do not relate to memory addresses
+      // Use the DVM transaction ID instead
+      out_msg.usesTxnId := true;
+      out_msg.txnId := in_msg.tlbiTransactionUid;
+
+      // TODO - zero these out?
+      out_msg.addr := in_msg.tlbiTransactionUid;
+      out_msg.accAddr := in_msg.tlbiTransactionUid;
+      out_msg.accSize := blockSize;
+      assert(in_msg.Prefetch == PrefetchBit:No);
+      out_msg.is_local_pf := false;
+      out_msg.is_remote_pf := false;
+
+      out_msg.requestor := machineID;
+      out_msg.fwdRequestor := machineID;
+      out_msg.seqReq := in_msg.getRequestPtr();
+      out_msg.isSeqReqValid := true;
+
+
+      if (in_msg.Type == RubyRequestType:TLBI) {
+        out_msg.type := CHIRequestType:DvmTlbi_Initiate;
+      } else if (in_msg.Type == RubyRequestType:TLBI_SYNC) {
+        out_msg.type := CHIRequestType:DvmSync_Initiate;
+      } else if (in_msg.Type == RubyRequestType:TLBI_EXT_SYNC_COMP) {
+        out_msg.type := CHIRequestType:DvmSync_ExternCompleted;
+      } else {
+        error("Invalid RubyRequestType");
+      }
+    }
+  }
+  seqInPort.dequeue(clockEdge());
+}
+
+action(AllocateTBE_PfRequest, desc="Allocate TBE for prefetch request") {
+  // No retry for prefetch requests; just create resource stall
+  check_allocate(storTBEs);
+
+  // reserve a slot for this request
+  storTBEs.incrementReserved();
+
+  // Move request to rdy queue
+  peek(pfInPort, RubyRequest) {
+    enqueue(reqRdyOutPort, CHIRequestMsg, 0) {
+      out_msg.addr := in_msg.LineAddress;
+      assert((in_msg.Size > 0) && (in_msg.Size <= blockSize));
+      out_msg.accAddr := in_msg.PhysicalAddress;
+      out_msg.accSize := in_msg.Size;
+      out_msg.requestor := machineID;
+      out_msg.fwdRequestor := machineID;
+      out_msg.seqReq := in_msg.getRequestPtr();
+      out_msg.isSeqReqValid := true;
+      assert(in_msg.Prefetch != PrefetchBit:No);
+      out_msg.is_local_pf := true;
+      out_msg.is_remote_pf := false;
+
+      if (in_msg.Type == RubyRequestType:LD) {
+        out_msg.type := CHIRequestType:Load;
+      } else if (in_msg.Type == RubyRequestType:ST) {
+        error("CHI is not supporting prefetch store requests");
+      } else {
+        error("Invalid RubyRequestType");
+      }
+    }
+  }
+  pfInPort.dequeue(clockEdge());
+}
+
+action(Initiate_Request, desc="") {
+  State initial := getState(tbe, cache_entry, address);
+  bool was_retried := false;
+  peek(reqRdyPort, CHIRequestMsg) {
+    set_tbe(allocateRequestTBE(address, in_msg));
+    // only a msg that was already retried doesn't allow a retry
+    was_retried := in_msg.allowRetry == false;
+  }
+  DirEntry dir_entry := getDirEntry(address);
+  copyCacheAndDir(cache_entry, dir_entry, tbe, initial);
+
+  tbe.use_DMT := is_HN && enable_DMT;
+  tbe.use_DCT := enable_DCT;
+
+  bool alloc_entry := needCacheEntry(tbe.reqType,
+                                     cache_entry, dir_entry,
+                                     tbe.is_local_pf);
+  bool dealloc_entry := needDeallocCacheEntry(tbe.reqType);
+  assert((alloc_entry && dealloc_entry) == false);
+
+  // always drops any data when not caching it or when this transaction
+  // requires deallocation
+  tbe.dataToBeInvalid := dealloc_entry ||
+                         (is_invalid(cache_entry) && (alloc_entry == false));
+  tbe.doCacheFill := alloc_entry || is_valid(cache_entry);
+
+  // model the initial tag array read
+  tbe.actions.pushNB(Event:TagArrayRead);
+
+  incomingTransactionStart(address, curTransitionEvent(), initial, was_retried);
+}
+
+action(Initiate_Request_DVM, desc="") {
+  peek(reqRdyPort, CHIRequestMsg) {
+    // "address" for DVM = transaction ID
+    TBE tbe := allocateDvmRequestTBE(address, in_msg);
+    set_tbe(tbe);
+  }
+}
+
+action(Initiate_Request_Stale, desc="") {
+  State initial := getState(tbe, cache_entry, address);
+  bool was_retried := false;
+  peek(reqRdyPort, CHIRequestMsg) {
+    set_tbe(allocateRequestTBE(address, in_msg));
+    was_retried := in_msg.allowRetry == false;
+  }
+  copyCacheAndDir(cache_entry, getDirEntry(address), tbe, initial);
+
+  // usually we consider data locally invalid on RU states even if we
+  // have a copy; so it override it to valid so we can comeback to UD_RU/UC_RU
+  // at the end of this transaction
+  if (tbe.dir_ownerExists && tbe.dir_ownerIsExcl && is_valid(cache_entry)) {
+    // treat the data we got from the cache as valid
+    tbe.dataBlk := cache_entry.DataBlk;
+    tbe.dataBlkValid.fillMask();
+    tbe.dataValid := true;
+  }
+
+  incomingTransactionStart(address, curTransitionEvent(), initial, was_retried);
+}
+
+action(Initiate_Snoop, desc="") {
+  State initial := getState(tbe, cache_entry, address);
+  peek(snpRdyPort, CHIRequestMsg) {
+    set_tbe(allocateSnoopTBE(address, in_msg));
+  }
+  copyCacheAndDir(cache_entry, getDirEntry(address), tbe, initial);
+
+  // if we end up with valid data drop it if no entry allocated
+  tbe.dataToBeInvalid := is_invalid(cache_entry);
+
+  // model the initial tag array read
+  tbe.actions.pushNB(Event:TagArrayRead);
+
+  incomingTransactionStart(address, curTransitionEvent(), initial, false);
+}
+
+action(Initiate_Snoop_Hazard, desc="") {
+  assert(is_valid(tbe));
+  assert(tbe.is_req_tbe || tbe.is_repl_tbe);
+
+  // Switch to the new snoop TBE
+  TBE prev_tbe := tbe;
+  peek(snpRdyPort, CHIRequestMsg) {
+    set_tbe(allocateSnoopTBE(address, in_msg));
+  }
+  assert(tbe.is_snp_tbe);
+  if (prev_tbe.is_req_tbe) {
+    assert(prev_tbe.is_repl_tbe == false);
+    tbe.is_req_hazard := true;
+  } else {
+    assert(prev_tbe.is_repl_tbe);
+    tbe.is_repl_hazard := true;
+  }
+
+  // Use state from prev TBE
+  tbe.pendReqType := prev_tbe.pendReqType;
+  copyCacheAndDirTBEs(prev_tbe, tbe);
+  tbe.wakeup_pending_req := prev_tbe.wakeup_pending_req;
+  tbe.wakeup_pending_snp := prev_tbe.wakeup_pending_snp;
+  tbe.wakeup_pending_tgr := prev_tbe.wakeup_pending_tgr;
+}
+
+action(RestoreFromHazard, desc="") {
+  TBE hazard_tbe := getHazardTBE(tbe);
+
+  // update
+  setDataToBeStates(tbe);
+
+  copyCacheAndDirTBEs(tbe, hazard_tbe);
+  hazard_tbe.wakeup_pending_req := tbe.wakeup_pending_req;
+  hazard_tbe.wakeup_pending_snp := tbe.wakeup_pending_snp;
+  hazard_tbe.wakeup_pending_tgr := tbe.wakeup_pending_tgr;
+
+  deallocateSnpTBE(tbe);
+  set_tbe(hazard_tbe);
+
+  // if the pending request is a WB or Evict then it becomes a stale request
+  // if data is no longer in the expected state
+  if (tbe.pendReqType == CHIRequestType:WriteBackFull) {
+    tbe.is_stale := (tbe.dataValid && tbe.dataDirty) == false;
+  } else if (tbe.pendReqType == CHIRequestType:WriteCleanFull) {
+    tbe.is_stale := (tbe.dataValid && tbe.dataDirty) == false;
+  } else if (hazard_tbe.pendReqType == CHIRequestType:WriteEvictFull) {
+    tbe.is_stale := (tbe.dataValid && tbe.dataUnique) == false;
+  } else if (hazard_tbe.pendReqType == CHIRequestType:Evict) {
+    tbe.is_stale := tbe.dataValid == false;
+  } else if (hazard_tbe.pendReqType == CHIRequestType:CleanUnique) {
+    tbe.is_stale := tbe.dataValid == false;
+  }
+
+  // a pending action from the original request may have been stalled during
+  // the hazard and needs to wakeup up now
+  wakeupPendingTgrs(tbe);
+}
+
+action(Initiate_Replacement, desc="") {
+  assert(is_invalid(tbe));
+  State initial := getState(tbe, cache_entry, address);
+  if (unify_repl_TBEs) {
+    peek(replTriggerInPort, ReplacementMsg) {
+      set_tbe(allocateReplacementTBEOnSlot(address, in_msg.slot));
+      DPRINTF(RubySlicc, "Allocated replacement TBE on slot %d\n", tbe.storSlot);
+    }
+  } else {
+    set_tbe(allocateReplacementTBE(address));
+    DPRINTF(RubySlicc, "Allocated replacement TBE on new slot %d\n", tbe.storSlot);
+  }
+  copyCacheAndDir(cache_entry, getDirEntry(address), tbe, initial);
+
+  // model the initial tag array read
+  tbe.actions.pushNB(Event:TagArrayRead);
+
+  incomingTransactionStart(address, curTransitionEvent(), initial, false);
+}
+
+
+
+action(StallRequest, desc="") {
+  // was stalled because of an existing request
+  assert(is_valid(tbe));
+  assert(tbe.addr == address);
+  // tracks pending
+  tbe.wakeup_pending_req := true;
+  stall_and_wait(reqRdyPort, address);
+}
+
+action(StallSnoop, desc="") {
+  // was stalled because of an existing request
+  assert(is_valid(tbe));
+  assert(tbe.addr == address);
+  // tracks pending
+  tbe.wakeup_pending_snp := true;
+  stall_and_wait(snpRdyPort, address);
+}
+
+action(StallLocalEviction, desc="") {
+  // was stalled because of an existing request
+  assert(is_valid(tbe));
+  assert(tbe.addr == address);
+
+  // Just pop the queue and When this transaction finishes wake-up the original
+  // msgs that caused this eviction
+  tbe.wakeup_pending_tgr := true;
+  replTriggerInPort.dequeue(clockEdge());
+}
+
+action(StallSnoop_NoTBE, desc="") {
+  stall_and_wait(snpRdyPort, address);
+}
+
+action(StallActionOnHazard, desc="") {
+  assert(is_valid(tbe));
+  assert(tbe.is_req_hazard || tbe.is_repl_hazard);
+  tbe.wakeup_pending_tgr := true;
+  stall_and_wait(triggerInPort, address);
+}
+
+action(Initiate_ReadShared_Miss, desc="") {
+  tbe.actions.push(Event:ReadMissPipe);
+  if (is_HN && tbe.use_DMT) {
+    tbe.requestorToBeExclusiveOwner := true;
+    tbe.dataMaybeDirtyUpstream := true; // SNF always replies with CompData_UC
+    if (enable_DMT_early_dealloc) {
+      tbe.actions.push(Event:SendRespSepData);
+    }
+    tbe.actions.push(Event:WaitCompAck);
+    tbe.actions.pushNB(Event:SendReadNoSnpDMT);
+  } else if (is_HN) {
+    tbe.actions.push(Event:SendReadNoSnp);
+    tbe.actions.push(Event:WaitCompAck);
+    tbe.actions.pushNB(Event:SendCompData);
+  } else {
+    tbe.actions.push(Event:SendReadShared);
+    tbe.actions.push(Event:WaitCompAck);
+    tbe.actions.pushNB(Event:SendCompData);
+  }
+  tbe.actions.push(Event:CheckCacheFill);
+  tbe.actions.push(Event:TagArrayWrite);
+}
+
+action(Initiate_ReadShared_Hit, desc="") {
+  tbe.actions.push(Event:ReadHitPipe);
+  tbe.actions.push(Event:DataArrayRead);
+  tbe.actions.push(Event:WaitCompAck);
+  tbe.actions.pushNB(Event:SendCompData);
+  tbe.actions.pushNB(Event:TagArrayWrite);
+}
+
+action(Initiate_ReadShared_HitUpstream, desc="") {
+  tbe.actions.push(Event:ReadMissPipe);
+  if (tbe.use_DCT) {
+    tbe.actions.push(Event:SendSnpSharedFwdToOwner);
+    tbe.actions.pushNB(Event:WaitCompAck);
+    tbe.updateDirOnCompAck := false;
+  } else {
+    tbe.actions.push(Event:SendSnpShared);
+    tbe.actions.push(Event:WaitCompAck);
+    tbe.actions.pushNB(Event:SendCompData);
+  }
+  tbe.actions.push(Event:MaintainCoherence);
+}
+
+action(Initiate_ReadShared_HitUpstream_NoOwner, desc="") {
+  tbe.actions.push(Event:ReadMissPipe);
+  if (tbe.use_DCT) {
+    tbe.actions.push(Event:SendSnpSharedFwdToSharer);
+    tbe.actions.pushNB(Event:WaitCompAck);
+    tbe.updateDirOnCompAck := false;
+  } else {
+    tbe.actions.push(Event:SendSnpOnce);
+    tbe.actions.push(Event:WaitCompAck);
+    tbe.actions.pushNB(Event:SendCompData);
+  }
+  tbe.actions.push(Event:MaintainCoherence);
+}
+
+
+action(Initiate_ReadOnce_Miss, desc="") {
+  // drop at the end if not doing a fill
+  tbe.dataToBeInvalid := tbe.doCacheFill == false;
+
+  tbe.actions.push(Event:ReadMissPipe);
+  if (is_HN && tbe.use_DMT) {
+    assert(is_invalid(cache_entry));
+    tbe.requestorToBeExclusiveOwner := true;
+    tbe.dataMaybeDirtyUpstream := true; // SNF always replies with CompData_UC
+    if (enable_DMT_early_dealloc) {
+      tbe.actions.push(Event:SendRespSepData);
+    }
+    tbe.actions.push(Event:WaitCompAck);
+    tbe.actions.pushNB(Event:SendReadNoSnpDMT);
+  } else if (is_HN) {
+    tbe.actions.push(Event:SendReadNoSnp);
+    tbe.actions.push(Event:WaitCompAck);
+    tbe.actions.pushNB(Event:SendCompData);
+  } else {
+    // if not allocating an entry send a ReadOnce
+    if (tbe.dataToBeInvalid) {
+      tbe.actions.push(Event:SendReadOnce);
+    } else {
+      tbe.actions.push(Event:SendReadShared);
+    }
+    tbe.actions.push(Event:WaitCompAck);
+    tbe.actions.pushNB(Event:SendCompData);
+  }
+
+  tbe.updateDirOnCompAck := false;
+
+  tbe.actions.push(Event:CheckCacheFill);
+  tbe.actions.push(Event:TagArrayWrite);
+}
+
+action(Initiate_ReadOnce_Hit, desc="") {
+  tbe.actions.push(Event:ReadHitPipe);
+  tbe.actions.push(Event:DataArrayRead);
+  tbe.actions.push(Event:WaitCompAck);
+  tbe.actions.pushNB(Event:SendCompData);
+  tbe.updateDirOnCompAck := false;
+}
+
+action(Initiate_ReadOnce_HitUpstream, desc="") {
+  tbe.actions.push(Event:ReadMissPipe);
+  if (tbe.use_DCT) {
+    tbe.actions.push(Event:SendSnpOnceFwd);
+    tbe.actions.pushNB(Event:WaitCompAck);
+  } else {
+    tbe.actions.push(Event:SendSnpOnce);
+    tbe.actions.push(Event:WaitCompAck);
+    tbe.actions.pushNB(Event:SendCompData);
+  }
+  tbe.updateDirOnCompAck := false;
+  // no need to update or access tags/data on ReadOnce served from upstream
+
+  if (is_invalid(cache_entry)) {
+    // if we receive data, invalidate at the end so it can be dropped
+    tbe.dataToBeInvalid := true;
+  } else if (tbe.dataValid == false) {
+    // possible on UD_RU,UC_RU where cache_entry valid but tbe.dataValid == false
+    // this prevents going to RU if no data is received from snoop
+    tbe.dataValid := true;
+  }
+}
+
+
+
+action(Initiate_ReadUnique_Miss, desc="") {
+  tbe.actions.push(Event:ReadMissPipe);
+  if (is_HN && tbe.use_DMT) {
+    tbe.requestorToBeExclusiveOwner := true;
+    tbe.dataMaybeDirtyUpstream := true; // SNF always replies with CompData_UC
+    if (enable_DMT_early_dealloc) {
+      tbe.actions.push(Event:SendRespSepData);
+    }
+    tbe.actions.push(Event:WaitCompAck);
+    tbe.actions.pushNB(Event:SendReadNoSnpDMT);
+  } else if (is_HN) {
+    tbe.actions.push(Event:SendReadNoSnp);
+    tbe.actions.push(Event:WaitCompAck);
+    tbe.actions.pushNB(Event:SendCompData);
+  } else {
+    tbe.actions.push(Event:SendReadUnique);
+    tbe.actions.push(Event:WaitCompAck);
+    tbe.actions.pushNB(Event:SendCompData);
+  }
+  tbe.actions.push(Event:CheckCacheFill);
+  tbe.actions.push(Event:TagArrayWrite);
+}
+
+action(Initiate_ReadUnique_AutoUpgrade, desc="") {
+  assert(is_HN);
+  tbe.dataUnique := true;
+}
+
+action(Initiate_ReadUnique_Upgrade, desc="") {
+  // must use the transitions with auto upgrade otherwise
+  assert(is_HN == false);
+  assert(tbe.use_DCT == false);
+  assert((tbe.dataValid && tbe.dataUnique) == false);
+  assert((tbe.dir_ownerExists && tbe.dir_ownerIsExcl) == false);
+
+  tbe.actions.push(Event:ReadMissPipe);
+  if (tbe.dataMaybeDirtyUpstream) {
+    tbe.actions.push(Event:SendSnpUnique);
+  } else if (tbe.dir_sharers.count() > 0) {
+    // no one will send us data unless we explicitly ask
+    tbe.actions.push(Event:SendSnpUniqueRetToSrc);
+  } else {
+    assert(tbe.dataValid);
+  }
+  // then attempt to upgrade our data
+  tbe.actions.push(Event:SendCleanUnique);
+  tbe.actions.push(Event:CheckUpgrade_FromRU);
+
+  // send up the upgraded data or fresh data if we failed, see CheckUpgrade_FromRU
+  tbe.actions.push(Event:WaitCompAck);
+  tbe.actions.pushNB(Event:SendCompData);
+  tbe.actions.push(Event:CheckCacheFill);
+  tbe.actions.push(Event:TagArrayWrite);
+}
+
+action(Initiate_ReadUnique_Hit, desc="") {
+  tbe.actions.push(Event:ReadHitPipe);
+  tbe.actions.push(Event:DataArrayRead);
+  tbe.actions.push(Event:WaitCompAck);
+  tbe.actions.pushNB(Event:SendCompData);
+  tbe.actions.pushNB(Event:TagArrayWrite);
+}
+
+action(Initiate_ReadUnique_HitUpstream, desc="") {
+  tbe.actions.push(Event:ReadMissPipe);
+  // SnpUniqueFwd can be used only if the line is cached at a single
+  // requester; so force it off if that's the case
+  tbe.use_DCT := tbe.use_DCT && (tbe.dir_sharers.count() == 1) &&
+                 (tbe.dir_sharers.isElement(tbe.requestor) == false);
+  if (tbe.use_DCT) {
+    tbe.actions.push(Event:SendSnpUniqueFwd);
+    tbe.actions.pushNB(Event:WaitCompAck);
+    tbe.updateDirOnCompAck := false;
+  } else if (tbe.dataMaybeDirtyUpstream) {
+    tbe.actions.push(Event:SendSnpUnique);
+    tbe.actions.push(Event:WaitCompAck);
+    tbe.actions.pushNB(Event:SendCompData);
+  } else {
+    // no one will send us data unless we explicitly ask
+    tbe.actions.push(Event:SendSnpUniqueRetToSrc);
+    tbe.actions.push(Event:WaitCompAck);
+    tbe.actions.pushNB(Event:SendCompData);
+  }
+  // just tag update since data any data would become stale
+  tbe.actions.pushNB(Event:TagArrayWrite);
+}
+
+action(Initiate_ReadUnique_Hit_InvUpstream, desc="") {
+  tbe.actions.push(Event:ReadHitPipe);
+  tbe.actions.push(Event:SendSnpCleanInvalid);
+  tbe.actions.pushNB(Event:DataArrayRead);
+  tbe.actions.push(Event:WaitCompAck);
+  tbe.actions.pushNB(Event:SendCompData);
+  tbe.actions.pushNB(Event:TagArrayWrite);
+}
+
+action(Initiate_CleanUnique, desc="") {
+  tbe.actions.push(Event:ReadMissPipe); // TODO need another latency pipe ??
+
+  // invalidates everyone except requestor
+  if (tbe.dir_sharers.count() > 1) {
+    tbe.actions.push(Event:SendSnpCleanInvalidNoReq);
+  }
+  // auto upgrade if HN
+  tbe.dataUnique := tbe.dataUnique || is_HN;
+  // get unique permission
+  if (tbe.dataUnique == false) {
+    tbe.actions.push(Event:SendCleanUnique);
+    tbe.actions.push(Event:CheckUpgrade_FromCU);
+  }
+  // next actions will depend on the data state after snoops+CleanUnique
+  tbe.actions.push(Event:FinishCleanUnique);
+}
+
+action(Initiate_CleanUnique_Stale, desc="") {
+  // requestor don't have the line anymore; send response but don't update the
+  // directory on CompAck. The requestor knows we are not tracking it and will
+  // send a ReadUnique later
+  tbe.actions.push(Event:SendCompUCRespStale);
+  tbe.actions.push(Event:WaitCompAck);
+  tbe.updateDirOnCompAck := false;
+}
+
+action(Finish_CleanUnique, desc="") {
+  // This is should be executed at the end of a transaction
+  assert(tbe.actions.empty());
+
+  // everyone may have been hit by an invalidation so check again
+  if (tbe.dir_sharers.isElement(tbe.requestor) == false) {
+    tbe.updateDirOnCompAck := false;
+    assert(tbe.dataValid == false);
+    assert(tbe.is_stale);
+    tbe.is_stale := false;
+    tbe.actions.push(Event:SendCompUCRespStale);
+    tbe.actions.push(Event:WaitCompAck);
+    tbe.actions.push(Event:TagArrayWrite);
+  } else {
+    // must be the only one in sharers map
+    assert(tbe.dir_sharers.count() == 1);
+    assert(tbe.dataUnique);
+
+    // needed by UpdateDirState_FromReqResp triggered by the expected CompAck
+    tbe.dataMaybeDirtyUpstream := true;
+    tbe.requestorToBeExclusiveOwner := true;
+    tbe.dir_ownerExists := false;
+
+    tbe.actions.push(Event:SendCompUCResp);
+    tbe.actions.push(Event:WaitCompAck);
+
+    // Ensure we writeback or update the cache if the owner has data as
+    // clean data and we have it dirty.
+    // MaintainCoherence queues the TagArrayWrite
+    tbe.actions.push(Event:MaintainCoherence);
+  }
+}
+
+
+action(Initiate_LoadHit, desc="") {
+  // Local prefetch requests do not read data array
+  if (tbe.is_local_pf == false) {
+    tbe.actions.push(Event:DataArrayRead);
+  }
+  tbe.actions.push(Event:LoadHit);
+}
+
+action(Initiate_LoadMiss, desc="") {
+  if (tbe.doCacheFill) {
+    tbe.actions.push(Event:SendReadShared);
+    tbe.actions.push(Event:CheckCacheFill);
+    tbe.actions.push(Event:TagArrayWrite);
+  } else {
+    tbe.actions.push(Event:SendReadOnce);
+    tbe.dataToBeInvalid := true;
+  }
+}
+
+
+
+action(Initiate_StoreHit, desc="") {
+  tbe.actions.push(Event:DataArrayRead);
+  tbe.actions.push(Event:StoreHit);
+  tbe.actions.push(Event:CheckCacheFill);
+  tbe.actions.push(Event:TagArrayWrite);
+}
+
+action(Initiate_StoreMiss, desc="") {
+  if (tbe.doCacheFill) {
+    tbe.actions.push(Event:SendReadUnique);
+    tbe.actions.push(Event:CheckCacheFill);
+    tbe.actions.push(Event:TagArrayWrite);
+  } else {
+    tbe.actions.push(Event:SendWriteUnique);
+    tbe.actions.push(Event:SendWUDataCB);
+    tbe.dataToBeInvalid := true;
+  }
+}
+
+action(Initiate_StoreUpgrade, desc="") {
+  assert(tbe.dataValid);
+  assert(is_valid(cache_entry));
+  tbe.actions.push(Event:SendCleanUnique);
+  tbe.actions.push(Event:CheckUpgrade_FromStore);
+  tbe.actions.push(Event:CheckCacheFill);
+  tbe.actions.push(Event:TagArrayWrite);
+}
+
+action(Initiate_WriteUnique_LocalWrite, desc="") {
+  // auto-upgrade if hn but state was not unique
+  assert(is_HN || tbe.dataUnique);
+  tbe.dataUnique := true;
+  if (tbe.dir_sharers.count() > 0) {
+    tbe.actions.push(Event:SendSnpCleanInvalid);
+  }
+  if (comp_wu) {
+    tbe.actions.push(Event:SendDBIDResp_WU);
+    tbe.actions.pushNB(Event:WriteFEPipe);
+    tbe.actions.pushNB(Event:SendComp_WU);
+  } else {
+    tbe.actions.push(Event:SendCompDBIDResp_WU);
+    tbe.actions.pushNB(Event:WriteFEPipe);
+  }
+  tbe.actions.push(Event:CheckCacheFill);
+  tbe.actions.push(Event:TagArrayWrite);
+}
+
+action(Initiate_WriteUnique_LocalWrite_AfterUpgrade, desc="") {
+  assert(is_HN == false);
+  assert((tbe.dataValid && tbe.dataUnique) == false);
+  tbe.actions.push(Event:SendReadUnique);
+  if (comp_wu) {
+    tbe.actions.push(Event:SendDBIDResp_WU);
+    tbe.actions.pushNB(Event:WriteFEPipe);
+    tbe.actions.pushNB(Event:SendComp_WU);
+  } else {
+    tbe.actions.push(Event:SendCompDBIDResp_WU);
+    tbe.actions.pushNB(Event:WriteFEPipe);
+  }
+  tbe.actions.push(Event:CheckCacheFill);
+  tbe.actions.push(Event:TagArrayWrite);
+}
+
+action(Initiate_WriteUnique_Writeback, desc="") {
+  assert(is_HN);
+  assert(tbe.dir_sharers.count() > 0);
+  tbe.actions.push(Event:SendSnpUnique);
+  if (comp_wu) {
+    tbe.actions.push(Event:SendDBIDResp_WU);
+    tbe.actions.pushNB(Event:WriteFEPipe);
+    tbe.actions.pushNB(Event:SendWriteNoSnp);
+    tbe.actions.pushNB(Event:SendComp_WU);
+  } else {
+    tbe.actions.push(Event:SendCompDBIDResp_WU);
+    tbe.actions.pushNB(Event:WriteFEPipe);
+    tbe.actions.pushNB(Event:SendWriteNoSnp);
+  }
+  tbe.actions.push(Event:WriteBEPipe);
+  tbe.actions.push(Event:SendWBData);
+  tbe.dataToBeInvalid := true;
+  tbe.actions.pushNB(Event:TagArrayWrite);
+}
+
+action(Initiate_WriteUnique_PartialWrite, desc="") {
+  assert(is_HN);
+  if (tbe.dir_sharers.count() > 0) {
+    tbe.actions.push(Event:SendSnpCleanInvalid);
+  }
+  if (comp_wu) {
+    tbe.actions.push(Event:SendDBIDResp_WU);
+    tbe.actions.pushNB(Event:WriteFEPipe);
+    tbe.actions.pushNB(Event:SendWriteNoSnpPartial);
+    tbe.actions.pushNB(Event:SendComp_WU);
+  } else {
+    tbe.actions.push(Event:SendCompDBIDResp_WU);
+    tbe.actions.pushNB(Event:WriteFEPipe);
+    tbe.actions.pushNB(Event:SendWriteNoSnpPartial);
+  }
+  tbe.actions.push(Event:WriteBEPipe);
+  tbe.actions.push(Event:SendWUData);
+  tbe.dataToBeInvalid := true;
+
+  tbe.actions.pushNB(Event:TagArrayWrite);
+}
+
+action(Initiate_WriteUnique_Forward, desc="") {
+  tbe.actions.push(Event:WriteFEPipe);
+  tbe.actions.push(Event:SendWriteUnique);
+  tbe.actions.push(Event:SendCompDBIDResp_WU);
+  tbe.actions.push(Event:WriteBEPipe);
+  tbe.actions.push(Event:SendWUData);
+  tbe.dataToBeInvalid := true;
+  tbe.actions.pushNB(Event:TagArrayWrite);
+}
+
+
+
+action(Initiate_CopyBack, desc="") {
+  // expect to receive this data after Send_CompDBIDResp
+  if (tbe.reqType == CHIRequestType:WriteBackFull) {
+    tbe.expected_req_resp.addExpectedDataType(CHIDataType:CBWrData_UD_PD);
+    tbe.expected_req_resp.addExpectedDataType(CHIDataType:CBWrData_SD_PD);
+  } else if (tbe.reqType == CHIRequestType:WriteEvictFull) {
+    assert(tbe.reqType == CHIRequestType:WriteEvictFull);
+    tbe.expected_req_resp.addExpectedDataType(CHIDataType:CBWrData_UC);
+    tbe.expected_req_resp.addExpectedDataType(CHIDataType:CBWrData_SC);
+  } else {
+    assert(tbe.reqType == CHIRequestType:WriteCleanFull);
+    tbe.expected_req_resp.addExpectedDataType(CHIDataType:CBWrData_UD_PD);
+    tbe.expected_req_resp.addExpectedDataType(CHIDataType:CBWrData_SD_PD);
+  }
+  tbe.expected_req_resp.setExpectedCount(1);
+
+  tbe.actions.pushNB(Event:SendCompDBIDResp);
+  tbe.actions.pushNB(Event:WriteFEPipe);
+  tbe.actions.push(Event:MaintainCoherence);
+  // MaintainCoherence queues the Tag/Data updates
+}
+
+action(Initiate_CopyBack_Stale, desc="") {
+  tbe.expected_req_resp.addExpectedDataType(CHIDataType:CBWrData_SC);
+  tbe.expected_req_resp.addExpectedDataType(CHIDataType:CBWrData_I);
+  tbe.expected_req_resp.setExpectedCount(1);
+
+  tbe.actions.pushNB(Event:SendCompDBIDRespStale);
+  tbe.actions.pushNB(Event:WriteFEPipe);
+
+  // eviction condition should be examined if it is the last sharer
+  if (tbe.dir_sharers.count() == 1) {
+    tbe.actions.push(Event:FinishCopyBack_Stale);
+  }
+
+  assert((tbe.dir_ownerExists == false) || (tbe.dir_owner != tbe.requestor));
+}
+
+action(Finish_CopyBack_Stale, desc="") {
+  // if it was the last known sharer and we don't have the data do the same
+  // the Initiate_Evict
+  if ((is_HN == false) && (tbe.dir_sharers.count() == 0) &&
+      (tbe.dataValid == false)) {
+    tbe.actions.push(Event:SendEvict);
+  }
+}
+
+action(Initiate_Evict, desc="") {
+  if ((is_HN == false) && (tbe.dir_sharers.count() == 1) &&
+      (tbe.dataValid == false)) {
+    // last sharer and we also don't have a copy the line, so we also need to
+    // send an eviction downstream
+    if (tbe.dataUnique) {
+      // we need to send a WriteEvictFull so need the upstream data before
+      // we ack the evict
+      tbe.actions.push(Event:SendSnpOnce);
+      tbe.actions.push(Event:SendCompIResp);
+      tbe.actions.push(Event:SendWriteBackOrWriteEvict);
+      tbe.actions.push(Event:WriteBEPipe);
+      tbe.actions.push(Event:SendWBData);
+    } else {
+      tbe.actions.push(Event:SendCompIResp);
+      tbe.actions.push(Event:SendEvict);
+    }
+  } else {
+    tbe.actions.push(Event:SendCompIResp);
+  }
+  tbe.actions.push(Event:TagArrayWrite);
+}
+
+action(Initiate_MaintainCoherence, desc="") {
+  // issue a copy back if necessary to maintain coherence for data we are
+  // droping. This is should be executed at the end of a transaction
+  assert(tbe.actions.empty());
+  // go through either the fill or the writeback pipeline
+  if (tbe.dataValid && tbe.dataToBeInvalid) {
+    // we don't need to WB if the upstream is SD, because the
+    // owner is responsible for the WB
+    bool has_non_ex_owner := tbe.dir_ownerExists && !tbe.dir_ownerIsExcl;
+    if (is_HN) {
+      if (tbe.dataDirty && !has_non_ex_owner) {
+        tbe.actions.push(Event:SendWriteNoSnp);
+        tbe.actions.push(Event:WriteBEPipe);
+        tbe.actions.push(Event:SendWBData);
+      }
+    } else {
+      if (tbe.dir_sharers.isEmpty() && (tbe.dataDirty || tbe.dataUnique)) {
+        assert(!has_non_ex_owner);
+        tbe.actions.push(Event:SendWriteBackOrWriteEvict);
+        tbe.actions.push(Event:WriteBEPipe);
+        tbe.actions.push(Event:SendWBData);
+      } else if (tbe.dataDirty && !has_non_ex_owner) {
+        assert(!tbe.dir_sharers.isEmpty());
+        tbe.actions.push(Event:SendWriteClean);
+        tbe.actions.push(Event:WriteBEPipe);
+        tbe.actions.push(Event:SendWBData);
+      }
+    }
+  } else if (tbe.dataValid) {
+    tbe.actions.push(Event:CheckCacheFill);
+  }
+  tbe.actions.push(Event:TagArrayWrite);
+}
+
+
+
+// Too many common stuff between SnpUnique/SnpUniqueFwd/SnpCleanInvalid
+// so do one action for all of them here
+action(Initiate_InvalidationSnoop, desc="") {
+  tbe.actions.push(Event:SnpInvPipe);
+  // Propagate a snoop upwards depending on the type
+  if (tbe.dir_sharers.count() > 0) {
+    if ((tbe.reqType == CHIRequestType:SnpUniqueFwd) ||
+        (tbe.reqType == CHIRequestType:SnpUnique)) {
+      if ((tbe.snpNeedsData && (tbe.dataMaybeDirtyUpstream == false)) ||
+          (tbe.dataValid == false)) {
+        tbe.actions.push(Event:SendSnpUniqueRetToSrc);
+      } else {
+        tbe.actions.push(Event:SendSnpUnique);
+      }
+    } else {
+      assert(tbe.reqType == CHIRequestType:SnpCleanInvalid);
+      tbe.actions.push(Event:SendSnpCleanInvalid);
+    }
+  }
+
+  if (tbe.reqType == CHIRequestType:SnpUniqueFwd) {
+    tbe.actions.push(Event:SendSnpUniqueFwdCompData);
+  } else {
+    tbe.actions.push(Event:SendInvSnpResp);
+  }
+
+  if(tbe.is_req_hazard || tbe.is_repl_hazard) {
+    tbe.actions.push(Event:RestoreFromHazard);
+  } else {
+    tbe.actions.pushNB(Event:TagArrayWrite);
+  }
+
+  tbe.dataToBeInvalid := true;
+}
+
+action(Initiate_SnpShared, desc="") {
+  // Handles both SnpShared,SnpSharedFwd,SnpNotSharedDirtyFwd
+  tbe.actions.push(Event:SnpSharedPipe);
+  if (tbe.dir_ownerExists) {
+    assert(tbe.dataMaybeDirtyUpstream);
+    tbe.actions.push(Event:SendSnpShared);
+  } else if (tbe.dataValid == false) {
+    // must get a copy of shared data upstream
+    assert(tbe.dataMaybeDirtyUpstream == false);
+    assert(tbe.dir_sharers.count() > 0);
+    tbe.actions.push(Event:SendSnpOnce);
+  } else {
+    tbe.actions.push(Event:DataArrayRead);
+  }
+
+  if (tbe.reqType == CHIRequestType:SnpSharedFwd) {
+    tbe.actions.push(Event:SendSnpSharedFwdCompData);
+  } else if (tbe.reqType == CHIRequestType:SnpNotSharedDirtyFwd) {
+    tbe.actions.push(Event:SendSnpNotSharedDirtyFwdCompData);
+  } else {
+    assert(tbe.reqType == CHIRequestType:SnpShared);
+    tbe.actions.push(Event:SendSnpData);
+  }
+  if (tbe.is_req_hazard || tbe.is_repl_hazard) {
+    tbe.actions.push(Event:RestoreFromHazard);
+  } else {
+    tbe.actions.pushNB(Event:TagArrayWrite);
+  }
+  tbe.dataToBeSharedClean := true;
+}
+
+action(Initiate_SnpOnce, desc="") {
+  tbe.actions.push(Event:SnpOncePipe);
+  if (tbe.dataValid == false) {
+    assert(tbe.dir_sharers.count() > 0);
+    tbe.actions.push(Event:SendSnpOnce);
+  } else {
+    tbe.actions.push(Event:DataArrayRead);
+  }
+
+  if (tbe.reqType == CHIRequestType:SnpOnceFwd) {
+    tbe.actions.push(Event:SendSnpOnceFwdCompData);
+  } else {
+    assert(tbe.reqType == CHIRequestType:SnpOnce);
+    assert(tbe.snpNeedsData);
+    tbe.actions.push(Event:SendSnpData);
+  }
+
+  if (tbe.is_req_hazard || tbe.is_repl_hazard) {
+    tbe.actions.push(Event:RestoreFromHazard);
+  } else {
+    tbe.actions.pushNB(Event:TagArrayWrite);
+  }
+}
+
+
+
+action(Initiate_Replacement_Evict_BackInvalidte, desc="") {
+  assert(is_HN == false);
+  tbe.actions.push(Event:SendSnpCleanInvalid);
+  tbe.actions.push(Event:SendEvict);
+  tbe.dataToBeInvalid := true;
+  tbe.actions.pushNB(Event:TagArrayWrite);
+}
+
+action(Initiate_Replacement_Evict, desc="") {
+  assert(is_HN == false);
+  assert(tbe.dir_sharers.isEmpty());
+  tbe.actions.push(Event:SendEvict);
+  tbe.dataToBeInvalid := true;
+  tbe.actions.pushNB(Event:TagArrayWrite);
+}
+
+action(Initiate_Replacement_JustDrop, desc="") {
+  tbe.dataToBeInvalid := true;
+  tbe.actions.pushNB(Event:TagArrayWrite);
+}
+
+action(Initiate_Replacement_WB_BackInvalidate, desc="") {
+  assert(tbe.dataDirty || tbe.dataUnique || tbe.dataMaybeDirtyUpstream);
+  tbe.actions.push(Event:SendSnpCleanInvalid);
+  tbe.actions.push(Event:WriteFEPipe);
+  if (is_HN) {
+    if (tbe.dataDirty || tbe.dataMaybeDirtyUpstream) {
+      tbe.actions.push(Event:SendWriteNoSnp);
+    }
+  } else {
+    tbe.actions.push(Event:SendWriteBackOrWriteEvict);
+  }
+  tbe.actions.pushNB(Event:DataArrayRead);
+  tbe.actions.push(Event:WriteBEPipe);
+  tbe.actions.push(Event:SendWBData);
+  tbe.dataToBeInvalid := true;
+
+  tbe.actions.pushNB(Event:TagArrayWrite);
+}
+
+action(Initiate_Replacement_WB, desc="") {
+  tbe.actions.push(Event:WriteFEPipe);
+  if (is_HN) {
+    assert(tbe.dataDirty);
+    tbe.actions.push(Event:SendWriteNoSnp);
+  } else if (tbe.dir_sharers.isEmpty()) {
+    assert(tbe.dataDirty || tbe.dataUnique);
+    tbe.actions.push(Event:SendWriteBackOrWriteEvict);
+  } else {
+    assert(tbe.dataDirty);
+    tbe.actions.push(Event:SendWriteClean);
+  }
+  tbe.actions.pushNB(Event:DataArrayRead);
+  tbe.actions.push(Event:WriteBEPipe);
+  tbe.actions.push(Event:SendWBData);
+  tbe.dataToBeInvalid := true;
+  tbe.actions.pushNB(Event:TagArrayWrite);
+}
+
+
+
+action(Send_ReadShared, desc="") {
+  assert(is_HN == false);
+  assert(tbe.dataValid == false);
+
+  clearExpectedReqResp(tbe);
+  tbe.expected_req_resp.addExpectedDataType(CHIDataType:DataSepResp_UC);
+  tbe.expected_req_resp.addExpectedDataType(CHIDataType:CompData_UC);
+  tbe.expected_req_resp.addExpectedDataType(CHIDataType:CompData_UD_PD);
+  tbe.expected_req_resp.addExpectedDataType(CHIDataType:CompData_SC);
+  if (allow_SD) {
+    tbe.expected_req_resp.addExpectedDataType(CHIDataType:CompData_SD_PD);
+  }
+  // NOTE: the first CompData received counts as RespSepData
+  tbe.expected_req_resp.addExpectedRespType(CHIResponseType:RespSepData);
+  tbe.expected_req_resp.setExpectedCount(2);
+  tbe.dataBlkValid.clear();
+
+  enqueue(reqOutPort, CHIRequestMsg, request_latency) {
+    if (allow_SD) {
+      prepareRequest(tbe, CHIRequestType:ReadShared, out_msg);
+    } else {
+      prepareRequest(tbe, CHIRequestType:ReadNotSharedDirty, out_msg);
+    }
+    out_msg.Destination.add(mapAddressToDownstreamMachine(tbe.addr));
+    out_msg.dataToFwdRequestor := false;
+    allowRequestRetry(tbe, out_msg);
+  }
+}
+
+action(Send_ReadNoSnp, desc="") {
+  assert(is_HN);
+  assert(tbe.use_DMT == false);
+
+  clearExpectedReqResp(tbe);
+  tbe.expected_req_resp.addExpectedDataType(CHIDataType:CompData_UC);
+  // NOTE: the first CompData received counts as RespSepData
+  tbe.expected_req_resp.addExpectedRespType(CHIResponseType:RespSepData);
+  tbe.expected_req_resp.setExpectedCount(2);
+  tbe.dataBlkValid.clear();
+  outgoingTransactionStart(address, curTransitionEvent());
+
+  enqueue(reqOutPort, CHIRequestMsg, request_latency) {
+    prepareRequest(tbe, CHIRequestType:ReadNoSnp, out_msg);
+    out_msg.Destination.add(mapAddressToDownstreamMachine(tbe.addr));
+    out_msg.dataToFwdRequestor := false;
+    allowRequestRetry(tbe, out_msg);
+  }
+}
+
+action(Send_ReadNoSnpDMT, desc="") {
+  assert(is_HN);
+  assert(tbe.use_DMT);
+
+  CHIRequestType req := CHIRequestType:ReadNoSnp;
+  if (enable_DMT_early_dealloc) {
+    req := CHIRequestType:ReadNoSnpSep;
+    tbe.expected_req_resp.addExpectedRespType(CHIResponseType:ReadReceipt);
+    tbe.expected_req_resp.addExpectedCount(1);
+  }
+
+  enqueue(reqOutPort, CHIRequestMsg, request_latency) {
+    prepareRequest(tbe, req, out_msg);
+    out_msg.Destination.add(mapAddressToDownstreamMachine(tbe.addr));
+    out_msg.dataToFwdRequestor := true;
+    allowRequestRetry(tbe, out_msg);
+  }
+}
+
+action(Send_ReadOnce, desc="") {
+  assert(is_HN == false);
+  assert(tbe.dataValid == false);
+
+  clearExpectedReqResp(tbe);
+  tbe.expected_req_resp.addExpectedDataType(CHIDataType:DataSepResp_UC);
+  tbe.expected_req_resp.addExpectedDataType(CHIDataType:CompData_UC);
+  tbe.expected_req_resp.addExpectedDataType(CHIDataType:CompData_I);
+  // NOTE: the first CompData received counts as RespSepData
+  tbe.expected_req_resp.addExpectedRespType(CHIResponseType:RespSepData);
+  tbe.expected_req_resp.setExpectedCount(2);
+  tbe.dataBlkValid.clear();
+
+  enqueue(reqOutPort, CHIRequestMsg, request_latency) {
+    prepareRequest(tbe, CHIRequestType:ReadOnce, out_msg);
+    out_msg.Destination.add(mapAddressToDownstreamMachine(tbe.addr));
+    out_msg.dataToFwdRequestor := false;
+    allowRequestRetry(tbe, out_msg);
+  }
+}
+
+action(Send_ReadUnique, desc="") {
+  assert((tbe.dataValid && tbe.dataUnique) == false);
+
+  assert(tbe.expected_req_resp.hasExpected() == false);
+  clearExpectedReqResp(tbe);
+  tbe.expected_req_resp.addExpectedDataType(CHIDataType:DataSepResp_UC);
+  tbe.expected_req_resp.addExpectedDataType(CHIDataType:CompData_UC);
+  tbe.expected_req_resp.addExpectedDataType(CHIDataType:CompData_UD_PD);
+  // NOTE: the first CompData received counts as RespSepData
+  tbe.expected_req_resp.addExpectedRespType(CHIResponseType:RespSepData);
+  tbe.expected_req_resp.setExpectedCount(2);
+
+  enqueue(reqOutPort, CHIRequestMsg, request_latency) {
+    prepareRequest(tbe, CHIRequestType:ReadUnique, out_msg);
+    out_msg.Destination.add(mapAddressToDownstreamMachine(tbe.addr));
+    out_msg.dataToFwdRequestor := false;
+    allowRequestRetry(tbe, out_msg);
+  }
+}
+
+action(Send_CleanUnique, desc="") {
+  assert(tbe.dataValid || (tbe.dir_sharers.count() > 0));
+  assert(tbe.dataUnique == false);
+
+  assert(tbe.expected_req_resp.hasExpected() == false);
+  clearExpectedReqResp(tbe);
+  tbe.expected_req_resp.addExpectedRespType(CHIResponseType:Comp_UC);
+  tbe.expected_req_resp.setExpectedCount(1);
+
+  enqueue(reqOutPort, CHIRequestMsg, request_latency) {
+    prepareRequest(tbe, CHIRequestType:CleanUnique, out_msg);
+    out_msg.Destination.add(mapAddressToDownstreamMachine(tbe.addr));
+    allowRequestRetry(tbe, out_msg);
+  }
+}
+
+action(Send_Evict, desc="") {
+  assert(is_valid(tbe));
+  assert(is_HN == false);
+  assert(tbe.expected_req_resp.hasExpected() == false);
+  clearExpectedReqResp(tbe);
+  enqueue(reqOutPort, CHIRequestMsg, request_latency) {
+    prepareRequest(tbe, CHIRequestType:Evict, out_msg);
+    out_msg.Destination.add(mapAddressToDownstreamMachine(tbe.addr));
+    allowRequestRetry(tbe, out_msg);
+  }
+  tbe.expected_req_resp.addExpectedRespType(CHIResponseType:Comp_I);
+  tbe.expected_req_resp.setExpectedCount(1);
+}
+
+action(Send_InvSnpResp, desc="") {
+  assert(is_valid(tbe));
+  assert(tbe.dataMaybeDirtyUpstream == false);
+  if (tbe.dataDirty || tbe.snpNeedsData ||
+      (tbe.dataUnique && (tbe.reqType == CHIRequestType:SnpUnique))) {
+    tbe.actions.pushFront(Event:SendSnpData);
+  } else {
+    tbe.actions.pushFront(Event:SendSnpIResp);
+  }
+}
+
+action(Send_WriteBackOrWriteEvict, desc="") {
+  assert(is_valid(tbe));
+  assert(tbe.dataBlkValid.isFull());
+  assert(tbe.dataValid);
+  assert(is_HN == false);
+
+  assert(tbe.dataUnique || tbe.dataDirty);
+  assert(tbe.dir_sharers.isEmpty());
+
+  enqueue(reqOutPort, CHIRequestMsg, request_latency) {
+    if (tbe.dataDirty) {
+      prepareRequest(tbe, CHIRequestType:WriteBackFull, out_msg);
+    } else {
+      prepareRequest(tbe, CHIRequestType:WriteEvictFull, out_msg);
+    }
+    out_msg.Destination.add(mapAddressToDownstreamMachine(tbe.addr));
+    allowRequestRetry(tbe, out_msg);
+  }
+  clearExpectedReqResp(tbe);
+  tbe.expected_req_resp.addExpectedRespType(CHIResponseType:CompDBIDResp);
+  tbe.expected_req_resp.setExpectedCount(1);
+}
+
+action(Send_WriteCleanFull, desc="") {
+  assert(is_valid(tbe));
+  assert(tbe.dataBlkValid.isFull());
+  assert(tbe.dataValid);
+  assert(is_HN == false);
+  assert(tbe.dataDirty);
+
+  enqueue(reqOutPort, CHIRequestMsg, request_latency) {
+    prepareRequest(tbe, CHIRequestType:WriteCleanFull, out_msg);
+    out_msg.Destination.add(mapAddressToDownstreamMachine(tbe.addr));
+    allowRequestRetry(tbe, out_msg);
+  }
+  clearExpectedReqResp(tbe);
+  tbe.expected_req_resp.addExpectedRespType(CHIResponseType:CompDBIDResp);
+  tbe.expected_req_resp.setExpectedCount(1);
+}
+
+action(Send_WriteNoSnp, desc="") {
+  assert(is_valid(tbe));
+
+  enqueue(reqOutPort, CHIRequestMsg, request_latency) {
+    prepareRequest(tbe, CHIRequestType:WriteNoSnp, out_msg);
+    out_msg.Destination.add(mapAddressToDownstreamMachine(tbe.addr));
+    allowRequestRetry(tbe, out_msg);
+  }
+  // allow to expect this on top of data coming from upstream;
+  // so addExpectedCount
+  tbe.expected_req_resp.addExpectedRespType(CHIResponseType:CompDBIDResp);
+  tbe.expected_req_resp.addExpectedCount(1);
+}
+
+action(Send_WriteNoSnp_Partial, desc="") {
+  assert(is_valid(tbe));
+
+  enqueue(reqOutPort, CHIRequestMsg, request_latency) {
+    prepareRequest(tbe, CHIRequestType:WriteNoSnpPtl, out_msg);
+    out_msg.accAddr := tbe.accAddr;
+    out_msg.accSize := tbe.accSize;
+    out_msg.Destination.add(mapAddressToDownstreamMachine(tbe.addr));
+    allowRequestRetry(tbe, out_msg);
+  }
+  // allow to expect this on top of data coming from upstream;
+  // so addExpectedCount
+  tbe.expected_req_resp.addExpectedRespType(CHIResponseType:CompDBIDResp);
+  tbe.expected_req_resp.addExpectedCount(1);
+}
+
+action(Send_WriteUnique, desc="") {
+  assert(is_valid(tbe));
+
+  enqueue(reqOutPort, CHIRequestMsg, request_latency) {
+    if (tbe.accSize == blockSize) {
+      prepareRequest(tbe, CHIRequestType:WriteUniqueFull, out_msg);
+    } else {
+      prepareRequest(tbe, CHIRequestType:WriteUniquePtl, out_msg);
+      out_msg.accAddr := tbe.accAddr;
+      out_msg.accSize := tbe.accSize;
+    }
+    out_msg.Destination.add(mapAddressToDownstreamMachine(tbe.addr));
+    allowRequestRetry(tbe, out_msg);
+  }
+  // allow to expect this on top of data coming from upstream;
+  // so addExpectedCount
+  tbe.expected_req_resp.addExpectedRespType(CHIResponseType:CompDBIDResp);
+  // if receive only DBIDResp then will expect Comp later
+  tbe.expected_req_resp.addExpectedRespType(CHIResponseType:DBIDResp);
+  tbe.expected_req_resp.addExpectedCount(1);
+}
+
+action(Send_SnpCleanInvalid, desc="") {
+  assert(is_valid(tbe));
+  assert(tbe.expected_snp_resp.hasExpected() == false);
+  // at least one sharer or owner othrwise should not execute this
+  assert(tbe.dir_sharers.count() > 0);
+  enqueue(snpOutPort, CHIRequestMsg, snoop_latency) {
+    prepareRequest(tbe, CHIRequestType:SnpCleanInvalid, out_msg);
+    out_msg.Destination.addNetDest(tbe.dir_sharers);
+    out_msg.retToSrc := false;
+  }
+  setExpectedForInvSnoop(tbe, false);
+}
+
+action(Send_SnpCleanInvalid_NoReq, desc="") {
+  assert(is_valid(tbe));
+  assert(tbe.expected_snp_resp.hasExpected() == false);
+  enqueue(snpOutPort, CHIRequestMsg, snoop_latency) {
+    prepareRequest(tbe, CHIRequestType:SnpCleanInvalid, out_msg);
+    out_msg.Destination.addNetDest(tbe.dir_sharers);
+    out_msg.Destination.remove(tbe.requestor);
+    // at least one sharer other than requestor
+    assert(out_msg.Destination.count() > 0);
+    out_msg.retToSrc := false;
+    setExpectedForInvSnoop(tbe, false);
+    tbe.expected_snp_resp.setExpectedCount(out_msg.Destination.count());
+  }
+}
+
+action(Send_SnpUnique, desc="") {
+  assert(is_valid(tbe));
+  // at least one sharer or owner othrwise should not execute this
+  assert(tbe.dir_sharers.count() > 0);
+
+  setExpectedForInvSnoop(tbe, true);
+
+  enqueue(snpOutPort, CHIRequestMsg, snoop_latency) {
+    prepareRequest(tbe, CHIRequestType:SnpUnique, out_msg);
+    out_msg.Destination.addNetDest(tbe.dir_sharers);
+    out_msg.retToSrc := false;
+  }
+}
+
+action(Send_SnpUnique_RetToSrc, desc="") {
+  assert(is_valid(tbe));
+  // at least one sharer or owner othrwise should not execute this
+  assert(tbe.dir_sharers.count() > 0);
+
+  setExpectedForInvSnoop(tbe, true);
+
+  MachineID dest;
+  if (tbe.dir_ownerExists) {
+    dest := tbe.dir_owner;
+  } else {
+    // TODO should be random or the closest one
+    dest := tbe.dir_sharers.smallestElement();
+  }
+  enqueue(snpOutPort, CHIRequestMsg, snoop_latency) {
+    prepareRequest(tbe, CHIRequestType:SnpUnique, out_msg);
+    out_msg.Destination.add(dest);
+    out_msg.retToSrc := true;
+  }
+  // if other sharers send with retToSrc=false to others
+  if (tbe.dir_sharers.count() > 1) {
+    enqueue(snpOutPort, CHIRequestMsg, snoop_latency) {
+      prepareRequest(tbe, CHIRequestType:SnpUnique, out_msg);
+      out_msg.Destination.addNetDest(tbe.dir_sharers);
+      out_msg.Destination.remove(dest);
+      out_msg.retToSrc := false;
+    }
+  }
+}
+
+action(Send_SnpUniqueFwd, desc="") {
+  assert(is_valid(tbe));
+  // single sharer or owner otherwise should not execute this
+  assert(tbe.dir_sharers.count() == 1);
+
+  assert(tbe.expected_snp_resp.expected() == 0);
+  clearExpectedSnpResp(tbe);
+  tbe.expected_snp_resp.addExpectedRespType(CHIResponseType:SnpResp_I_Fwded_UC);
+  tbe.expected_snp_resp.addExpectedRespType(CHIResponseType:SnpResp_I_Fwded_UD_PD);
+  tbe.expected_snp_resp.addExpectedCount(1);
+
+  enqueue(snpOutPort, CHIRequestMsg, snoop_latency) {
+    prepareRequest(tbe, CHIRequestType:SnpUniqueFwd, out_msg);
+    out_msg.Destination.addNetDest(tbe.dir_sharers);
+    out_msg.retToSrc := false;
+  }
+}
+
+action(Send_SnpShared, desc="") {
+  assert(is_valid(tbe));
+
+  // only sent to a dirty or exclusive snoopee
+  assert(tbe.dataMaybeDirtyUpstream);
+  assert(tbe.dir_ownerExists);
+  assert(tbe.dir_sharers.count() > 0);
+
+  assert(tbe.expected_snp_resp.expected() == 0);
+  clearExpectedSnpResp(tbe);
+  tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_SC);
+  tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_SC_PD);
+  tbe.expected_snp_resp.setExpectedCount(1);
+
+  enqueue(snpOutPort, CHIRequestMsg, snoop_latency) {
+    prepareRequest(tbe, CHIRequestType:SnpShared, out_msg);
+    out_msg.Destination.add(tbe.dir_owner);
+    out_msg.retToSrc := false;
+  }
+}
+
+action(Send_SnpSharedFwd_ToOwner, desc="") {
+  assert(is_valid(tbe));
+
+  // the dirty snoopee must go to SC and send data
+  assert(tbe.dataMaybeDirtyUpstream);
+  assert(tbe.dir_ownerExists);
+  assert(tbe.dir_sharers.count() > 0);
+
+  assert(tbe.expected_snp_resp.expected() == 0);
+  clearExpectedSnpResp(tbe);
+
+  bool allowFwdSD := tbe.reqType != CHIRequestType:ReadNotSharedDirty;
+
+  // get us a copy if we have allocated a cache entry for this block
+  bool retToSrc := tbe.doCacheFill && (tbe.dataToBeInvalid == false);
+
+  if (allowFwdSD) {
+    if (retToSrc) {
+      tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_SC_Fwded_SC);
+      tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_SC_Fwded_SD_PD);
+      tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_I_Fwded_SC);
+      tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_I_Fwded_SD_PD);
+    } else {
+      tbe.expected_snp_resp.addExpectedRespType(CHIResponseType:SnpResp_SC_Fwded_SC);
+      tbe.expected_snp_resp.addExpectedRespType(CHIResponseType:SnpResp_SC_Fwded_SD_PD);
+    }
+  } else {
+    if (retToSrc) {
+      tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_SC_Fwded_SC);
+      tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_I_Fwded_SC);
+    } else {
+      tbe.expected_snp_resp.addExpectedRespType(CHIResponseType:SnpResp_SC_Fwded_SC);
+    }
+    tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_SC_PD_Fwded_SC);
+    tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_I_PD_Fwded_SC);
+  }
+  tbe.expected_snp_resp.addExpectedCount(1);
+
+  enqueue(snpOutPort, CHIRequestMsg, snoop_latency) {
+    if (allowFwdSD) {
+      prepareRequest(tbe, CHIRequestType:SnpSharedFwd, out_msg);
+    } else {
+      prepareRequest(tbe, CHIRequestType:SnpNotSharedDirtyFwd, out_msg);
+    }
+    out_msg.Destination.add(tbe.dir_owner);
+    out_msg.retToSrc := retToSrc;
+  }
+}
+
+action(Send_SnpSharedFwd_ToSharer, desc="") {
+  assert(is_valid(tbe));
+  // send to onde of the sharers with shared clean data
+  assert(tbe.dataMaybeDirtyUpstream == false);
+  assert(tbe.dir_ownerExists == false);
+  assert(tbe.dir_sharers.count() > 0);
+
+  assert(tbe.expected_snp_resp.expected() == 0);
+  clearExpectedSnpResp(tbe);
+  // if we have a block allocated for this line, asks snoopee to forward
+  // data to us as well
+  bool retToSrc := tbe.doCacheFill;
+  if (retToSrc) {
+    tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_SC_Fwded_SC);
+  } else {
+    tbe.expected_snp_resp.addExpectedRespType(CHIResponseType:SnpResp_SC_Fwded_SC);
+  }
+  tbe.expected_snp_resp.addExpectedCount(1);
+
+  enqueue(snpOutPort, CHIRequestMsg, snoop_latency) {
+    prepareRequest(tbe, CHIRequestType:SnpSharedFwd, out_msg);
+    // TODO should be random or the closest one to the fwd dest
+    out_msg.Destination.add(tbe.dir_sharers.smallestElement());
+    out_msg.retToSrc := retToSrc;
+  }
+}
+
+action(Send_SnpOnce, desc="") {
+  assert(is_valid(tbe));
+
+  // send to one of the sharers or owner to get a copy of the line
+  assert(tbe.dir_sharers.count() > 0);
+
+  assert(tbe.expected_snp_resp.expected() == 0);
+  clearExpectedSnpResp(tbe);
+
+  if (tbe.dir_ownerExists) {
+    if (tbe.dir_ownerIsExcl) {
+      tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_UC);
+      tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_UD);
+    } else {
+      tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_SD);
+    }
+  } else {
+    tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_SC);
+  }
+  tbe.expected_snp_resp.addExpectedCount(1);
+
+  enqueue(snpOutPort, CHIRequestMsg, snoop_latency) {
+    prepareRequest(tbe, CHIRequestType:SnpOnce, out_msg);
+    if (tbe.dir_ownerExists) {
+      out_msg.Destination.add(tbe.dir_owner);
+    } else {
+      // TODO should be random or the closest one
+      out_msg.Destination.add(tbe.dir_sharers.smallestElement());
+    }
+    out_msg.retToSrc := true;
+  }
+}
+
+action(Send_SnpOnceFwd, desc="") {
+  assert(is_valid(tbe));
+
+  // send to one of the sharers or owner to get a copy of the line
+  assert(tbe.dir_sharers.count() > 0);
+
+  assert(tbe.expected_snp_resp.expected() == 0);
+  clearExpectedSnpResp(tbe);
+
+  if (tbe.dir_ownerExists) {
+    if (tbe.dir_ownerIsExcl) {
+      tbe.expected_snp_resp.addExpectedRespType(CHIResponseType:SnpResp_UC_Fwded_I);
+      tbe.expected_snp_resp.addExpectedRespType(CHIResponseType:SnpResp_UD_Fwded_I);
+    } else {
+      tbe.expected_snp_resp.addExpectedRespType(CHIResponseType:SnpResp_SD_Fwded_I);
+    }
+  } else {
+    tbe.expected_snp_resp.addExpectedRespType(CHIResponseType:SnpResp_SC_Fwded_I);
+  }
+  tbe.expected_snp_resp.addExpectedCount(1);
+
+  enqueue(snpOutPort, CHIRequestMsg, snoop_latency) {
+    prepareRequest(tbe, CHIRequestType:SnpOnceFwd, out_msg);
+    if (tbe.dir_ownerExists) {
+      out_msg.Destination.add(tbe.dir_owner);
+    } else {
+      // TODO should be random or the closest one
+      out_msg.Destination.add(tbe.dir_sharers.smallestElement());
+    }
+    out_msg.retToSrc := false;
+  }
+}
+
+
+action(ExpectNCBWrData, desc="") {
+  // Expected data
+  int num_msgs := tbe.accSize / data_channel_size;
+  if ((tbe.accSize % data_channel_size) != 0) {
+    num_msgs := num_msgs + 1;
+  }
+  tbe.expected_req_resp.clear(num_msgs);
+  tbe.expected_req_resp.addExpectedDataType(CHIDataType:NCBWrData);
+  tbe.expected_req_resp.setExpectedCount(1);
+
+  // Clear the mask bits we expect to receive
+  tbe.dataBlkValid.setMask(addressOffset(tbe.accAddr, tbe.addr), tbe.accSize, false);
+}
+
+action(ExpectCompAck, desc="") {
+  assert(is_valid(tbe));
+  tbe.expected_req_resp.addExpectedRespType(CHIResponseType:CompAck);
+  tbe.expected_req_resp.addExpectedCount(1);
+}
+
+action(ExpectComp, desc="") {
+  assert(is_valid(tbe));
+  tbe.expected_req_resp.addExpectedRespType(CHIResponseType:Comp);
+  tbe.expected_req_resp.addExpectedCount(1);
+}
+
+action(Receive_ReqDataResp, desc="") {
+  assert(is_valid(tbe));
+  assert(tbe.expected_req_resp.hasExpected());
+  peek(datInPort, CHIDataMsg) {
+    // Decrement pending
+    if (tbe.expected_req_resp.receiveData(in_msg.type) == false) {
+      error("Received unexpected message");
+    }
+    // Copy data to tbe only if we didn't have valid data or the received
+    // data is dirty
+    if ((tbe.dataBlkValid.isFull() == false) ||
+        (in_msg.type == CHIDataType:CompData_UD_PD) ||
+        (in_msg.type == CHIDataType:CompData_SD_PD) ||
+        (in_msg.type == CHIDataType:CBWrData_UD_PD) ||
+        (in_msg.type == CHIDataType:CBWrData_SD_PD) ||
+        (in_msg.type == CHIDataType:NCBWrData)) {
+      // clear mask if started to receive new data
+      if(tbe.dataBlkValid.isFull()){
+        tbe.dataBlkValid.clear();
+      }
+      tbe.dataBlk.copyPartial(in_msg.dataBlk, in_msg.bitMask);
+      assert(tbe.dataBlkValid.isOverlap(in_msg.bitMask) == false);
+      tbe.dataBlkValid.orMask(in_msg.bitMask);
+    }
+  }
+}
+
+action(Receive_RespSepDataFromCompData, desc="") {
+  assert(is_valid(tbe));
+  assert(tbe.expected_req_resp.hasExpected());
+  // check if a previous CompData msg already counted as a RespSepData
+  if (tbe.expected_req_resp.receivedRespType(CHIResponseType:RespSepData) == false) {
+    if (tbe.expected_req_resp.receiveResp(CHIResponseType:RespSepData) == false) {
+      error("Received unexpected message");
+    }
+    if (is_HN == false) {
+      // must now ack the responder
+      tbe.actions.pushFrontNB(Event:SendCompAck);
+    }
+  }
+}
+
+action(Receive_RespSepData, desc="") {
+  assert(is_valid(tbe));
+  assert(tbe.expected_req_resp.hasExpected());
+  if (tbe.expected_req_resp.receiveResp(CHIResponseType:RespSepData) == false) {
+    error("Received unexpected message");
+  }
+  if (is_HN == false) {
+      // must now ack the responder
+      tbe.actions.pushFrontNB(Event:SendCompAck);
+  }
+}
+
+action(Receive_ReadReceipt, desc="") {
+  assert(is_valid(tbe));
+  assert(tbe.expected_req_resp.hasExpected());
+  if (tbe.expected_req_resp.receiveResp(CHIResponseType:ReadReceipt) == false) {
+    error("Received unexpected message");
+  }
+}
+
+action(Receive_SnpDataResp, desc="") {
+  assert(is_valid(tbe));
+  assert(tbe.expected_snp_resp.hasExpected());
+  peek(datInPort, CHIDataMsg) {
+    // Decrement pending
+    if (tbe.expected_snp_resp.receiveData(in_msg.type) == false) {
+      error("Received unexpected message");
+    }
+    // Copy data to tbe only if we didn't have valid data or the received
+    // data is dirty
+    if ((tbe.dataBlkValid.isFull() == false) ||
+        (in_msg.type == CHIDataType:SnpRespData_I_PD) ||
+        (in_msg.type == CHIDataType:SnpRespData_SC_PD) ||
+        (in_msg.type == CHIDataType:SnpRespData_SC_Fwded_SD_PD) ||
+        (in_msg.type == CHIDataType:SnpRespData_SC_PD_Fwded_SC) ||
+        (in_msg.type == CHIDataType:SnpRespData_I_Fwded_SD_PD) ||
+        (in_msg.type == CHIDataType:SnpRespData_I_PD_Fwded_SC)) {
+      // clear mask if started to receive new data
+      if(tbe.dataBlkValid.isFull()){
+        tbe.dataBlkValid.clear();
+      }
+      tbe.dataBlk.copyPartial(in_msg.dataBlk, in_msg.bitMask);
+      assert(tbe.dataBlkValid.isOverlap(in_msg.bitMask) == false);
+      tbe.dataBlkValid.orMask(in_msg.bitMask);
+    }
+  }
+}
+
+action(UpdateDirState_FromReqDataResp, desc="") {
+  assert(is_valid(tbe));
+  // only perform the update once we received all chunks
+  if (tbe.expected_req_resp.hasReceivedData()) {
+    assert(tbe.dataBlkValid.isFull());
+    peek(datInPort, CHIDataMsg) {
+
+      if (in_msg.type == CHIDataType:CBWrData_UC) {
+        assert(tbe.dir_ownerExists && tbe.dir_ownerIsExcl && (tbe.dir_owner == in_msg.responder));
+        assert(tbe.dir_sharers.isElement(in_msg.responder));
+        tbe.dir_ownerExists := false;
+        tbe.dir_ownerIsExcl := false;
+        tbe.dir_sharers.remove(in_msg.responder);
+
+      } else if (in_msg.type == CHIDataType:CBWrData_UD_PD) {
+        assert(tbe.dir_ownerExists && tbe.dir_ownerIsExcl && (tbe.dir_owner == in_msg.responder));
+        assert(tbe.dir_sharers.isElement(in_msg.responder));
+        if (tbe.reqType != CHIRequestType:WriteCleanFull) {
+          tbe.dir_ownerExists := false;
+          tbe.dir_ownerIsExcl := false;
+          tbe.dir_sharers.remove(in_msg.responder);
+        }
+
+      } else if (in_msg.type == CHIDataType:CBWrData_SC) {
+        assert((tbe.dir_ownerExists == false) || (tbe.dir_owner != in_msg.responder));
+        // Do not remove the responder in case of stale WriteCleanFull
+        if (tbe.reqType != CHIRequestType:WriteCleanFull) {
+          tbe.dir_sharers.remove(in_msg.responder);
+        }
+
+      } else if (in_msg.type == CHIDataType:CBWrData_SD_PD) {
+        assert(tbe.dir_ownerExists && (tbe.dir_ownerIsExcl == false) && (tbe.dir_owner == in_msg.responder));
+        assert(tbe.dir_sharers.isElement(in_msg.responder));
+        tbe.dir_ownerExists := false;
+        tbe.dir_ownerIsExcl := false;
+        if (tbe.reqType != CHIRequestType:WriteCleanFull) {
+          tbe.dir_sharers.remove(in_msg.responder);
+        }
+
+      } else if (in_msg.type == CHIDataType:CBWrData_I) {
+        // nothing to do here; just check
+        assert((tbe.dir_ownerExists == false) || (tbe.dir_owner != in_msg.responder));
+        assert(tbe.dir_sharers.isElement(in_msg.responder) == false);
+
+      } else {
+        error("Unsuported data type");
+      }
+    }
+  }
+  printTBEState(tbe);
+}
+
+action(UpdateDirState_FromSnpDataResp, desc="") {
+  assert(is_valid(tbe));
+  // only perform the update once we received all chunks
+  if (tbe.expected_snp_resp.hasReceivedData()) {
+    assert(tbe.dataBlkValid.isFull());
+    peek(datInPort, CHIDataMsg) {
+
+      if (in_msg.type == CHIDataType:SnpRespData_I) {
+        assert(tbe.dir_sharers.isElement(in_msg.responder));
+        tbe.dir_ownerExists := false;
+        tbe.dir_ownerIsExcl := false;
+        tbe.dir_sharers.remove(in_msg.responder);
+
+      } else if (in_msg.type == CHIDataType:SnpRespData_I_PD) {
+        assert(tbe.dir_ownerExists && (tbe.dir_owner == in_msg.responder));
+        assert(tbe.dir_sharers.isElement(in_msg.responder));
+        tbe.dir_ownerExists := false;
+        tbe.dir_ownerIsExcl := false;
+        tbe.dir_sharers.remove(in_msg.responder);
+
+      } else if ((in_msg.type == CHIDataType:SnpRespData_SC_PD) ||
+                 (in_msg.type == CHIDataType:SnpRespData_SC) ||
+                 (in_msg.type == CHIDataType:SnpRespData_SC_Fwded_SC) ||
+                 (in_msg.type == CHIDataType:SnpRespData_SC_Fwded_SD_PD) ||
+                 (in_msg.type == CHIDataType:SnpRespData_SC_PD_Fwded_SC)) {
+        // the owner must have been the responder, if there was one
+        assert((tbe.dir_ownerExists == false) ||
+             (tbe.dir_ownerExists && (tbe.dir_owner == in_msg.responder)));
+        assert(tbe.dir_sharers.isElement(in_msg.responder));
+        tbe.dir_ownerExists := false;
+        tbe.dir_ownerIsExcl := false;
+        if ((in_msg.type == CHIDataType:SnpRespData_SC_Fwded_SC) ||
+            (in_msg.type == CHIDataType:SnpRespData_SC_PD_Fwded_SC) ||
+            (in_msg.type == CHIDataType:SnpRespData_SC_Fwded_SD_PD)) {
+          tbe.dir_sharers.add(tbe.requestor);
+        }
+        if (in_msg.type == CHIDataType:SnpRespData_SC_Fwded_SD_PD) {
+          tbe.dir_ownerExists := true;
+          tbe.dir_owner := tbe.requestor;
+        }
+
+      } else if ((in_msg.type == CHIDataType:SnpRespData_I_Fwded_SD_PD) ||
+                 (in_msg.type == CHIDataType:SnpRespData_I_PD_Fwded_SC) ||
+                 (in_msg.type == CHIDataType:SnpRespData_I_Fwded_SC)) {
+        // the owner must have been the responder, if there was one
+        assert((tbe.dir_ownerExists == false) ||
+             (tbe.dir_ownerExists && (tbe.dir_owner == in_msg.responder)));
+        assert(tbe.dir_sharers.isElement(in_msg.responder));
+        tbe.dir_ownerExists := false;
+        tbe.dir_ownerIsExcl := false;
+        tbe.dir_sharers.remove(in_msg.responder);
+        tbe.dir_sharers.add(tbe.requestor);
+        if (in_msg.type == CHIDataType:SnpRespData_I_Fwded_SD_PD) {
+          tbe.dir_ownerExists := true;
+          tbe.dir_owner := tbe.requestor;
+        }
+
+      } else if ((in_msg.type == CHIDataType:SnpRespData_SD) ||
+                 (in_msg.type == CHIDataType:SnpRespData_UC) ||
+                 (in_msg.type == CHIDataType:SnpRespData_UD)) {
+        // expected only in response to a SnpOnce; just do some checks
+        // also may get SnpRespData_SC, but handled properly above
+        assert(tbe.dir_ownerExists && (tbe.dir_owner == in_msg.responder));
+        assert(tbe.dir_sharers.isElement(in_msg.responder));
+
+      } else {
+        error("Unsuported data type");
+      }
+    }
+  }
+  printTBEState(tbe);
+}
+
+action(UpdateDataState_FromReqDataResp, desc="") {
+  assert(is_valid(tbe));
+  // only perform the update once we received all chunks
+  if (tbe.expected_req_resp.hasReceivedData()) {
+    assert(tbe.dataBlkValid.isFull());
+    peek(datInPort, CHIDataMsg) {
+
+      if ((in_msg.type == CHIDataType:CompData_UC) ||
+          (in_msg.type == CHIDataType:DataSepResp_UC)) {
+        assert(tbe.dataUnique == false);
+        assert((tbe.dataValid && tbe.dataDirty) == false);
+        tbe.dataDirty := false;
+        tbe.dataUnique := true;
+        tbe.dataValid := true;
+        assert(tbe.dataMaybeDirtyUpstream == false);
+
+      } else if (in_msg.type == CHIDataType:CompData_UD_PD) {
+        assert(tbe.dataUnique == false);
+        assert((tbe.dataValid && tbe.dataDirty) == false);
+        tbe.dataDirty := true;
+        tbe.dataUnique := true;
+        tbe.dataValid := true;
+        assert(tbe.dataMaybeDirtyUpstream == false);
+
+      } else if (in_msg.type == CHIDataType:CompData_SC) {
+        assert(tbe.dataUnique == false);
+        assert((tbe.dataValid && tbe.dataDirty) == false);
+        tbe.dataDirty := false;
+        tbe.dataUnique := false;
+        tbe.dataValid := true;
+        assert(tbe.dataMaybeDirtyUpstream == false);
+
+      } else if (in_msg.type == CHIDataType:CompData_SD_PD) {
+        assert(tbe.dataUnique == false);
+        assert((tbe.dataValid && tbe.dataDirty) == false);
+        tbe.dataDirty := true;
+        tbe.dataUnique := false;
+        tbe.dataValid := true;
+        assert(tbe.dataMaybeDirtyUpstream == false);
+
+      } else if (in_msg.type == CHIDataType:CompData_I) {
+        tbe.dataValid := true;
+        tbe.dataToBeInvalid := true;
+        assert(tbe.dataMaybeDirtyUpstream == false);
+
+      } else if (in_msg.type == CHIDataType:CBWrData_UC) {
+        assert(tbe.dataUnique);
+        tbe.dataMaybeDirtyUpstream := false;
+        tbe.dataValid := true;
+
+      } else if (in_msg.type == CHIDataType:CBWrData_SC) {
+        // stale WB, nothing to do ??
+
+      } else if (in_msg.type == CHIDataType:CBWrData_UD_PD) {
+        assert(tbe.dataUnique);
+        tbe.dataDirty := true;
+        tbe.dataValid := true;
+        if (tbe.reqType == CHIRequestType:WriteCleanFull) {
+          // upstream data can still be UC if this is a WriteCleanFull
+          assert(tbe.dir_ownerExists && tbe.dir_ownerIsExcl);
+          tbe.dataMaybeDirtyUpstream := true;
+        } else {
+          tbe.dataMaybeDirtyUpstream := false;
+        }
+
+      } else if (in_msg.type == CHIDataType:CBWrData_SD_PD) {
+        tbe.dataDirty := true;
+        tbe.dataValid := true;
+        tbe.dataMaybeDirtyUpstream := false;
+
+      } else if (in_msg.type == CHIDataType:CBWrData_I) {
+        // stale WB, nothing to do ??
+
+      } else {
+        error("Unsuported data type");
+      }
+    }
+  }
+  printTBEState(tbe);
+}
+
+action(UpdateDataState_FromWUDataResp, desc="") {
+  assert(is_valid(tbe));
+  if (tbe.expected_req_resp.hasReceivedData()) {
+    assert(tbe.dataBlkValid.test(addressOffset(tbe.accAddr, tbe.addr)));
+    assert(tbe.dataBlkValid.test(addressOffset(tbe.accAddr, tbe.addr)
+                                  + tbe.accSize - 1));
+    peek(datInPort, CHIDataMsg) {
+      assert(in_msg.type == CHIDataType:NCBWrData);
+      tbe.dataDirty := true;
+      if (tbe.reqType == CHIRequestType:WriteUniquePtl) {
+        // we are just updating any valid data we already had
+        tbe.dataValid := tbe.dataValid || (tbe.accSize == blockSize);
+      } else {
+        tbe.dataValid := tbe.accSize == blockSize;
+      }
+    }
+  }
+  printTBEState(tbe);
+}
+
+action(UpdateDataState_FromCUResp, desc="") {
+  assert(is_valid(tbe));
+  peek(rspInPort, CHIResponseMsg) {
+    assert(in_msg.type == CHIResponseType:Comp_UC);
+    assert(tbe.dataUnique == false);
+    tbe.dataUnique := tbe.dataValid || (tbe.dir_sharers.count() > 0);
+    // self and upstream may have been invalidated while waiting for this
+    // expect to follow up with a ReadUnique
+  }
+  printTBEState(tbe);
+}
+
+action(UpdateDataState_FromSnpDataResp, desc="") {
+  assert(is_valid(tbe));
+  // only perform the update once we received all chunks
+  if (tbe.expected_snp_resp.hasReceivedData()) {
+    assert(tbe.dataBlkValid.isFull());
+    peek(datInPort, CHIDataMsg) {
+
+      if ((in_msg.type == CHIDataType:SnpRespData_I_PD) ||
+          (in_msg.type == CHIDataType:SnpRespData_SC_PD) ||
+          (in_msg.type == CHIDataType:SnpRespData_SC_PD_Fwded_SC) ||
+          (in_msg.type == CHIDataType:SnpRespData_I_PD_Fwded_SC)) {
+        tbe.dataDirty := true;
+        tbe.dataValid := true;
+        tbe.dataMaybeDirtyUpstream := false;
+
+      } else if ((in_msg.type == CHIDataType:SnpRespData_SD) ||
+                 (in_msg.type == CHIDataType:SnpRespData_SC_Fwded_SD_PD) ||
+                 (in_msg.type == CHIDataType:SnpRespData_I_Fwded_SD_PD)) {
+        tbe.dataDirty := true;
+        tbe.dataValid := true;
+        tbe.dataMaybeDirtyUpstream := true;
+
+      } else if ((in_msg.type == CHIDataType:SnpRespData_I) ||
+                 (in_msg.type == CHIDataType:SnpRespData_SC) ||
+                 (in_msg.type == CHIDataType:SnpRespData_SC_Fwded_SC) ||
+                 (in_msg.type == CHIDataType:SnpRespData_I_Fwded_SC)) {
+        tbe.dataValid := true;
+        tbe.dataMaybeDirtyUpstream := false;
+
+      } else if ((in_msg.type == CHIDataType:SnpRespData_UC) ||
+                 (in_msg.type == CHIDataType:SnpRespData_UD)) {
+        tbe.dataValid := true;
+        tbe.dataUnique := true;
+        tbe.dataMaybeDirtyUpstream := true;
+        if (in_msg.type == CHIDataType:SnpRespData_UD){
+          tbe.dataDirty := true;
+        }
+
+      } else {
+        error("Unsuported data type");
+      }
+    }
+  }
+  printTBEState(tbe);
+}
+
+action(UpdateDirState_FromReqResp, desc="") {
+  peek(rspInPort, CHIResponseMsg) {
+    if ((in_msg.type == CHIResponseType:CompAck) && tbe.updateDirOnCompAck) {
+      assert(tbe.requestor == in_msg.responder);
+
+      tbe.dir_sharers.add(in_msg.responder);
+
+      if (tbe.requestorToBeOwner) {
+        assert(tbe.dataMaybeDirtyUpstream);
+        assert(tbe.dir_ownerExists == false);
+        assert(tbe.requestorToBeExclusiveOwner == false);
+        tbe.dir_owner := in_msg.responder;
+        tbe.dir_ownerExists := true;
+        tbe.dir_ownerIsExcl := false;
+
+      } else if (tbe.requestorToBeExclusiveOwner) {
+        assert(tbe.dataMaybeDirtyUpstream);
+        assert(tbe.dir_ownerExists == false);
+        assert(tbe.dir_sharers.count() == 1);
+        tbe.dir_owner := in_msg.responder;
+        tbe.dir_ownerExists := true;
+        tbe.dir_ownerIsExcl := true;
+      }
+    }
+  }
+  printTBEState(tbe);
+}
+
+action(UpdateDirState_FromSnpResp, desc="") {
+  peek(rspInPort, CHIResponseMsg) {
+
+    if (in_msg.type == CHIResponseType:SnpResp_I) {
+      // must have been a known sharer otherwise we would receive data
+      assert(tbe.dir_sharers.isElement(in_msg.responder));
+      tbe.dir_sharers.remove(in_msg.responder);
+      if (tbe.dir_ownerExists && (tbe.dir_owner == in_msg.responder)){
+        tbe.dir_ownerExists := false;
+      }
+
+    } else if (in_msg.type == CHIResponseType:SnpResp_SC) {
+      // expected from a sharer that already has it in shared state
+      assert(tbe.dir_sharers.isElement(in_msg.responder));
+      assert((tbe.dir_ownerExists == false) || (tbe.dir_owner != in_msg.responder));
+
+    } else if ((in_msg.type == CHIResponseType:SnpResp_SC_Fwded_SC) ||
+               (in_msg.type == CHIResponseType:SnpResp_SC_Fwded_SD_PD)) {
+      // the SnpSharedFwd must have been sent to the owner if there was one
+      assert((tbe.dir_ownerExists == false) ||
+             (tbe.dir_ownerExists && (tbe.dir_owner == in_msg.responder)));
+      assert(tbe.dir_sharers.isElement(in_msg.responder));
+      tbe.dir_ownerExists := false;
+      tbe.dir_ownerIsExcl := false;
+      tbe.dir_sharers.add(tbe.requestor);
+      if (in_msg.type == CHIResponseType:SnpResp_SC_Fwded_SD_PD) {
+        // Requestor is new owner
+        tbe.dir_ownerExists := true;
+        tbe.dir_owner := tbe.requestor;
+      }
+
+    } else if ((in_msg.type == CHIResponseType:SnpResp_I_Fwded_UC) ||
+               (in_msg.type == CHIResponseType:SnpResp_I_Fwded_UD_PD)) {
+      // must have been a single sharer that received SnpUniqueFwd
+      assert(tbe.dir_sharers.isElement(in_msg.responder));
+      assert(tbe.dir_sharers.count() == 1);
+      tbe.dir_sharers.remove(in_msg.responder);
+      // requestor is the new owner
+      tbe.dir_sharers.add(tbe.requestor);
+      tbe.dir_ownerExists := true;
+      tbe.dir_ownerIsExcl := true;
+      tbe.dir_owner := tbe.requestor;
+
+    } else if ((in_msg.type == CHIResponseType:SnpResp_UC_Fwded_I) ||
+               (in_msg.type == CHIResponseType:SnpResp_UD_Fwded_I) ||
+               (in_msg.type == CHIResponseType:SnpResp_SD_Fwded_I)) {
+      // SnpSharedFwd; just confirm
+      assert(tbe.dir_sharers.isElement(in_msg.responder));
+      assert(tbe.dir_ownerExists && (tbe.dir_owner == in_msg.responder));
+
+    } else if (in_msg.type == CHIResponseType:SnpResp_SC_Fwded_I) {
+      // SnpSharedFwd; just confirm
+      assert(tbe.dir_sharers.isElement(in_msg.responder));
+      assert((tbe.dir_ownerExists == false) || (tbe.dir_owner != in_msg.responder));
+    }
+
+    tbe.dataMaybeDirtyUpstream := tbe.dir_ownerExists;
+
+  }
+  printTBEState(tbe);
+}
+
+action(Receive_ReqResp, desc="") {
+  assert(tbe.expected_req_resp.hasExpected());
+  peek(rspInPort, CHIResponseMsg) {
+    // Decrement pending
+    if (tbe.expected_req_resp.receiveResp(in_msg.type) == false) {
+      error("Received unexpected message");
+    }
+    assert(in_msg.stale == tbe.is_stale);
+  }
+}
+
+action(Receive_ReqResp_WUNeedComp, desc="") {
+  tbe.defer_expected_comp := true;
+}
+
+action(Receive_ReqResp_WUComp, desc="") {
+  if (tbe.defer_expected_comp) {
+    tbe.defer_expected_comp := false;
+  } else if (tbe.expected_req_resp.receiveResp(CHIResponseType:Comp) == false) {
+    error("Received unexpected message");
+  }
+}
+
+action(Receive_SnpResp, desc="") {
+  assert(tbe.expected_snp_resp.hasExpected());
+  peek(rspInPort, CHIResponseMsg) {
+    // Decrement pending
+    if (tbe.expected_snp_resp.receiveResp(in_msg.type) == false) {
+      error("Received unexpected message");
+    }
+    assert(in_msg.stale == tbe.is_stale);
+  }
+}
+
+action(Receive_RetryAck, desc="") {
+  assert(is_valid(tbe));
+  assert(tbe.pendReqAllowRetry);
+  assert(tbe.rcvdRetryAck == false);
+  tbe.rcvdRetryAck := true;
+  destsWaitingRetry.addNetDest(tbe.pendReqDest);
+  enqueueDoRetry(tbe);
+}
+
+action(Receive_PCrdGrant, desc="") {
+  assert(tbe.pendReqAllowRetry);
+  assert(tbe.rcvdRetryCredit == false);
+  tbe.rcvdRetryCredit := true;
+  enqueueDoRetry(tbe);
+}
+
+action(Send_Retry, desc="") {
+  assert(tbe.pendReqAllowRetry);
+  assert(tbe.rcvdRetryCredit);
+  assert(tbe.rcvdRetryAck);
+  enqueue(reqOutPort, CHIRequestMsg, request_latency) {
+    prepareRequestRetry(tbe, out_msg);
+  }
+}
+
+action(Send_Retry_DVM, desc="") {
+  assert(tbe.pendReqAllowRetry);
+  assert(tbe.rcvdRetryCredit);
+  assert(tbe.rcvdRetryAck);
+  enqueue(reqOutPort, CHIRequestMsg, request_latency) {
+    prepareRequestRetryDVM(tbe, out_msg);
+  }
+  destsWaitingRetry.removeNetDest(tbe.pendReqDest);
+}
+
+action(Receive_RetryAck_Hazard, desc="") {
+  TBE hazard_tbe := getHazardTBE(tbe);
+  assert(hazard_tbe.pendReqAllowRetry);
+  assert(hazard_tbe.rcvdRetryAck == false);
+  hazard_tbe.rcvdRetryAck := true;
+  destsWaitingRetry.addNetDest(hazard_tbe.pendReqDest);
+  enqueueDoRetry(hazard_tbe);
+}
+
+action(Receive_PCrdGrant_Hazard, desc="") {
+  TBE hazard_tbe := getHazardTBE(tbe);
+  assert(hazard_tbe.pendReqAllowRetry);
+  assert(hazard_tbe.rcvdRetryCredit == false);
+  hazard_tbe.rcvdRetryCredit := true;
+  enqueueDoRetry(hazard_tbe);
+}
+
+action(Send_Retry_Hazard, desc="") {
+  TBE hazard_tbe := getHazardTBE(tbe);
+  assert(hazard_tbe.pendReqAllowRetry);
+  assert(hazard_tbe.rcvdRetryCredit);
+  assert(hazard_tbe.rcvdRetryAck);
+  enqueue(reqOutPort, CHIRequestMsg, request_latency) {
+    prepareRequestRetry(hazard_tbe, out_msg);
+  }
+}
+
+action(Send_CompData, desc="") {
+  assert(is_valid(tbe));
+  assert(tbe.dataValid);
+
+  bool is_rd_once := tbe.reqType == CHIRequestType:ReadOnce;
+  bool is_rd_shared := (tbe.reqType == CHIRequestType:ReadShared) ||
+                       (tbe.reqType == CHIRequestType:ReadNotSharedDirty);
+  bool is_rd_nsd := tbe.reqType == CHIRequestType:ReadNotSharedDirty;
+  bool is_rd_unique := tbe.reqType == CHIRequestType:ReadUnique;
+
+  // if the config allows (or not caching the data) and line has no sharers
+  bool snd_unique_on_rs := (fwd_unique_on_readshared || tbe.dataToBeInvalid)
+                          && tbe.dataUnique && tbe.dir_sharers.isEmpty();
+  // if the request type allows and we won't be caching the data
+  bool snd_dirty_on_rs := is_rd_shared && !is_rd_nsd && tbe.dataToBeInvalid;
+
+  if (is_rd_once) {
+    tbe.snd_msgType := CHIDataType:CompData_I;
+  } else if (is_rd_unique || (is_rd_shared && snd_unique_on_rs)) {
+    assert(tbe.dataUnique);
+    if (tbe.dataDirty) {
+      tbe.snd_msgType := CHIDataType:CompData_UD_PD;
+    } else {
+      tbe.snd_msgType := CHIDataType:CompData_UC;
+    }
+  } else if (is_rd_shared) {
+    if (tbe.dataDirty && snd_dirty_on_rs) {
+      tbe.snd_msgType := CHIDataType:CompData_SD_PD;
+    } else {
+      // notice the MaintainCoherence will send WriteClean if the line
+      // is dirty and we won't be caching the data
+      tbe.snd_msgType := CHIDataType:CompData_SC;
+    }
+  } else {
+    error("Invalid request type");
+  }
+
+  tbe.dataMaybeDirtyUpstream := tbe.dataMaybeDirtyUpstream ||
+                            (tbe.snd_msgType == CHIDataType:CompData_UD_PD) ||
+                            (tbe.snd_msgType == CHIDataType:CompData_SD_PD) ||
+                            (tbe.snd_msgType == CHIDataType:CompData_UC);
+  tbe.requestorToBeExclusiveOwner := tbe.requestorToBeExclusiveOwner ||
+                            (tbe.snd_msgType == CHIDataType:CompData_UD_PD) ||
+                            (tbe.snd_msgType == CHIDataType:CompData_UC);
+  tbe.requestorToBeOwner := tbe.requestorToBeOwner ||
+                            (tbe.snd_msgType == CHIDataType:CompData_SD_PD);
+
+  tbe.snd_destination := tbe.requestor;
+  setupPendingSend(tbe);
+  printTBEState(tbe);
+}
+
+action(Send_WBData, desc="") {
+  assert(is_valid(tbe));
+  if (is_HN) {
+    assert(tbe.dataBlkValid.isFull());
+    assert(tbe.dataDirty);
+    assert(tbe.dataValid);
+    tbe.snd_msgType := CHIDataType:NCBWrData;
+  } else {
+    if (tbe.dataValid == false) {
+      // only possible when the WB was made stale by a snoop
+      assert(tbe.is_stale);
+      tbe.dataBlkValid.fillMask();
+      tbe.snd_msgType := CHIDataType:CBWrData_I;
+    } else if (tbe.dataUnique) {
+      assert(tbe.dataBlkValid.isFull());
+      if (tbe.dataDirty) {
+        tbe.snd_msgType := CHIDataType:CBWrData_UD_PD;
+      } else {
+        tbe.snd_msgType := CHIDataType:CBWrData_UC;
+      }
+    } else {
+      assert(tbe.dataBlkValid.isFull());
+      if (tbe.dataDirty) {
+        tbe.snd_msgType := CHIDataType:CBWrData_SD_PD;
+      } else {
+        tbe.snd_msgType := CHIDataType:CBWrData_SC;
+      }
+    }
+  }
+  tbe.snd_destination := mapAddressToDownstreamMachine(tbe.addr);
+  setupPendingSend(tbe);
+}
+
+action(Send_WUData, desc="") {
+  assert(is_valid(tbe));
+  assert(tbe.dataBlkValid.count() > 0);
+  tbe.snd_msgType := CHIDataType:NCBWrData;
+  tbe.snd_destination := mapAddressToDownstreamMachine(tbe.addr);
+  setupPendingPartialSend(tbe);
+}
+
+action(CheckWUComp, desc="") {
+  assert(is_valid(tbe));
+  if (tbe.defer_expected_comp) {
+    tbe.defer_expected_comp := false;
+    tbe.expected_req_resp.addExpectedCount(1);
+    tbe.expected_req_resp.addExpectedRespType(CHIResponseType:Comp);
+  }
+}
+
+action(Send_SnpRespData, desc="") {
+  assert(is_HN == false);
+  assert(is_valid(tbe));
+  assert(tbe.dataBlkValid.isFull());
+  assert(tbe.dataValid);
+
+  assert(tbe.snpNeedsData ||
+         (tbe.dataDirty && (tbe.reqType == CHIRequestType:SnpCleanInvalid)) ||
+         ((tbe.dataDirty || tbe.dataUnique) && (tbe.reqType == CHIRequestType:SnpShared)) ||
+         ((tbe.dataDirty || tbe.dataUnique) && (tbe.reqType == CHIRequestType:SnpUnique)));
+
+  if (tbe.dataToBeInvalid) {
+    assert(tbe.dataMaybeDirtyUpstream == false);
+    if (tbe.dataDirty) {
+      tbe.snd_msgType := CHIDataType:SnpRespData_I_PD;
+    } else {
+      tbe.snd_msgType := CHIDataType:SnpRespData_I;
+    }
+  } else if (tbe.dataToBeSharedClean) {
+    assert(tbe.dataMaybeDirtyUpstream == false);
+    if (tbe.dataDirty) {
+      tbe.snd_msgType := CHIDataType:SnpRespData_SC_PD;
+    } else {
+      tbe.snd_msgType := CHIDataType:SnpRespData_SC;
+    }
+  } else {
+    assert(tbe.reqType == CHIRequestType:SnpOnce);
+    if (tbe.dataDirty && tbe.dataUnique) {
+      tbe.snd_msgType := CHIDataType:SnpRespData_UD;
+    } else if (tbe.dataDirty) {
+      tbe.snd_msgType := CHIDataType:SnpRespData_SD;
+    } else if (tbe.dataUnique) {
+      tbe.snd_msgType := CHIDataType:SnpRespData_UC;
+    } else {
+      tbe.snd_msgType := CHIDataType:SnpRespData_SC;
+    }
+  }
+
+  tbe.snd_destination := tbe.requestor;
+  setupPendingSend(tbe);
+}
+
+action(Send_CompData_SnpUniqueFwd, desc="") {
+  assert(tbe.dataValid);
+  assert(tbe.dataToBeInvalid);
+  assert(tbe.dataMaybeDirtyUpstream == false);
+
+  if (tbe.dataDirty) {
+    tbe.fwdedState := State:UD;
+    tbe.snd_msgType := CHIDataType:CompData_UD_PD;
+  } else {
+    tbe.fwdedState := State:UC;
+    tbe.snd_msgType := CHIDataType:CompData_UC;
+  }
+  tbe.actions.pushFront(Event:SendSnpFwdedResp);
+
+  tbe.snd_destination := tbe.fwdRequestor;
+  setupPendingSend(tbe);
+}
+
+action(Send_CompData_SnpSharedFwd, desc="") {
+  assert(tbe.dataValid);
+  assert(tbe.dataToBeSharedClean);
+  assert(tbe.dataMaybeDirtyUpstream == false);
+
+  if (tbe.dataDirty) {
+    tbe.fwdedState := State:SD;
+    tbe.snd_msgType := CHIDataType:CompData_SD_PD;
+  } else {
+    tbe.fwdedState := State:SC;
+    tbe.snd_msgType := CHIDataType:CompData_SC;
+  }
+  if (tbe.snpNeedsData) {
+    tbe.actions.pushFront(Event:SendSnpFwdedData);
+  } else {
+    tbe.actions.pushFront(Event:SendSnpFwdedResp);
+  }
+
+  tbe.snd_destination := tbe.fwdRequestor;
+  setupPendingSend(tbe);
+}
+
+action(Send_CompData_SnpNSDFwd, desc="") {
+  assert(tbe.dataValid);
+  assert(tbe.dataToBeSharedClean);
+  assert(tbe.dataMaybeDirtyUpstream == false);
+
+  tbe.snd_msgType := CHIDataType:CompData_SC;
+  tbe.fwdedState := State:SC;
+  if (tbe.dataDirty || tbe.snpNeedsData) {
+    tbe.actions.pushFront(Event:SendSnpFwdedData);
+  } else {
+    tbe.actions.pushFront(Event:SendSnpFwdedResp);
+  }
+
+  tbe.snd_destination := tbe.fwdRequestor;
+  setupPendingSend(tbe);
+}
+
+action(Send_CompData_SnpOnceFwd, desc="") {
+  assert(tbe.dataValid);
+
+  tbe.fwdedState := State:I;
+  tbe.snd_msgType := CHIDataType:CompData_I;
+  tbe.actions.pushFront(Event:SendSnpFwdedResp);
+
+  tbe.snd_destination := tbe.fwdRequestor;
+  setupPendingSend(tbe);
+}
+
+action(Send_SnpRespDataFwded, desc="") {
+  assert(tbe.dataValid);
+
+  // right only using this for the SnpShared/SnpNSD, so check
+  assert(tbe.dataToBeSharedClean);
+  assert(tbe.dataMaybeDirtyUpstream == false);
+
+  // We have the data (locally or upstream) or are dropping it
+  bool keepData := (tbe.dir_sharers.count() > 0) ||
+                   (tbe.dataToBeInvalid == false);
+
+  if (keepData) {
+    if (tbe.fwdedState == State:SD) {
+      tbe.snd_msgType := CHIDataType:SnpRespData_SC_Fwded_SD_PD;
+    } else if (tbe.dataDirty && (tbe.fwdedState == State:SC)) {
+      tbe.snd_msgType := CHIDataType:SnpRespData_SC_PD_Fwded_SC;
+    } else {
+      tbe.snd_msgType := CHIDataType:SnpRespData_SC_Fwded_SC;
+    }
+  } else {
+    if (tbe.fwdedState == State:SD) {
+      tbe.snd_msgType := CHIDataType:SnpRespData_I_Fwded_SD_PD;
+    } else if (tbe.dataDirty && (tbe.fwdedState == State:SC)) {
+      tbe.snd_msgType := CHIDataType:SnpRespData_I_PD_Fwded_SC;
+    } else {
+      tbe.snd_msgType := CHIDataType:SnpRespData_I_Fwded_SC;
+    }
+  }
+
+  tbe.snd_destination := tbe.requestor;
+  setupPendingSend(tbe);
+}
+
+action(Send_FwdSnpResp, desc="") {
+  assert(is_valid(tbe));
+  assert(tbe.dataValid);
+
+  enqueue(rspOutPort, CHIResponseMsg, response_latency) {
+    out_msg.addr := address;
+    out_msg.responder := machineID;
+    out_msg.Destination.add(tbe.requestor);
+
+    // We have the data (locally or upstream) or are dropping it
+    bool keepData := (tbe.dir_sharers.count() > 0) ||
+                     (tbe.dataToBeInvalid == false);
+
+    if (keepData && tbe.dataToBeSharedClean) {
+      assert((tbe.reqType == CHIRequestType:SnpSharedFwd) ||
+             (tbe.reqType == CHIRequestType:SnpNotSharedDirtyFwd));
+      assert(tbe.dataMaybeDirtyUpstream == false);
+      if (tbe.fwdedState == State:SD) {
+        out_msg.type := CHIResponseType:SnpResp_SC_Fwded_SD_PD;
+      } else {
+        assert(tbe.fwdedState == State:SC);
+        out_msg.type := CHIResponseType:SnpResp_SC_Fwded_SC;
+      }
+
+    } else if (keepData) {
+      assert(tbe.reqType == CHIRequestType:SnpOnceFwd);
+      assert(tbe.fwdedState == State:I);
+      if (tbe.dataUnique && (tbe.dataDirty || tbe.dataMaybeDirtyUpstream)) {
+        out_msg.type := CHIResponseType:SnpResp_UD_Fwded_I;
+      } else if (tbe.dataUnique) {
+        out_msg.type := CHIResponseType:SnpResp_UC_Fwded_I;
+      } else if (tbe.dataDirty || tbe.dataMaybeDirtyUpstream) {
+        out_msg.type := CHIResponseType:SnpResp_SD_Fwded_I;
+      } else {
+        out_msg.type := CHIResponseType:SnpResp_SC_Fwded_I;
+      }
+
+    } else {
+      assert(tbe.reqType == CHIRequestType:SnpUniqueFwd);
+      assert(tbe.dataMaybeDirtyUpstream == false);
+      if (tbe.fwdedState == State:UD) {
+        out_msg.type := CHIResponseType:SnpResp_I_Fwded_UD_PD;
+      } else {
+        assert(tbe.fwdedState == State:UC);
+        out_msg.type := CHIResponseType:SnpResp_I_Fwded_UC;
+      }
+    }
+  }
+}
+
+action(Send_Data, desc="") {
+  assert(tbe.snd_pendEv);
+  assert(tbe.snd_pendBytes.count() > 0);
+  tbe.snd_pendEv := false;
+  enqueue(datOutPort, CHIDataMsg, data_latency) {
+    out_msg.addr := tbe.addr;
+    out_msg.type := tbe.snd_msgType;
+
+    int offset := tbe.snd_pendBytes.firstBitSet(true);
+    assert(offset < blockSize);
+    int range := tbe.snd_pendBytes.firstBitSet(false, offset) - offset;
+    assert((range > 0) && (range <= blockSize));
+    if (range > data_channel_size) {
+      range := data_channel_size;
+    }
+    tbe.snd_pendBytes.setMask(offset, range, false);
+
+    out_msg.dataBlk := tbe.dataBlk;
+    out_msg.bitMask.setMask(offset, range);
+
+    out_msg.responder := machineID;
+
+    out_msg.Destination.add(tbe.snd_destination);
+  }
+
+  // send next chunk (if any) next cycle
+  scheduleSendData(tbe, 1);
+}
+
+action(Send_RespSepData, desc="") {
+  assert(is_valid(tbe));
+  enqueue(rspOutPort, CHIResponseMsg, response_latency) {
+    out_msg.addr := address;
+    out_msg.type := CHIResponseType:RespSepData;
+    out_msg.responder := machineID;
+    out_msg.Destination.add(tbe.requestor);
+  }
+}
+
+action(Send_CompI, desc="") {
+  assert(is_valid(tbe));
+
+  // Used to ack Evict request
+  assert(tbe.dir_sharers.isElement(tbe.requestor));
+  assert((tbe.dir_ownerExists == false) || (tbe.dir_owner != tbe.requestor));
+
+  tbe.dir_sharers.remove(tbe.requestor);
+
+  enqueue(rspOutPort, CHIResponseMsg, response_latency) {
+    out_msg.addr := address;
+    out_msg.type := CHIResponseType:Comp_I;
+    out_msg.responder := machineID;
+    out_msg.Destination.add(tbe.requestor);
+  }
+}
+
+action(Send_CompUC, desc="") {
+  assert(is_valid(tbe));
+  enqueue(rspOutPort, CHIResponseMsg, response_latency) {
+    out_msg.addr := address;
+    out_msg.type := CHIResponseType:Comp_UC;
+    out_msg.responder := machineID;
+    out_msg.Destination.add(tbe.requestor);
+  }
+}
+
+action(Send_CompUC_Stale, desc="") {
+  assert(is_valid(tbe));
+  enqueue(rspOutPort, CHIResponseMsg, response_latency) {
+    out_msg.addr := address;
+    out_msg.type := CHIResponseType:Comp_UC;
+    out_msg.responder := machineID;
+    out_msg.Destination.add(tbe.requestor);
+    // We don't know if this is a stale clean unique or a bug, so flag the
+    // reponse so the requestor can make further checks
+    out_msg.stale := true;
+  }
+}
+
+action(Send_CompAck, desc="") {
+  assert(is_valid(tbe));
+  enqueue(rspOutPort, CHIResponseMsg, response_latency) {
+    out_msg.addr := address;
+    out_msg.type := CHIResponseType:CompAck;
+    out_msg.responder := machineID;
+    out_msg.Destination.add(mapAddressToDownstreamMachine(tbe.addr));
+  }
+}
+
+action(Send_CompI_Stale, desc="") {
+  assert(is_valid(tbe));
+  enqueue(rspOutPort, CHIResponseMsg, response_latency) {
+    out_msg.addr := address;
+    out_msg.type := CHIResponseType:Comp_I;
+    out_msg.responder := machineID;
+    out_msg.Destination.add(tbe.requestor);
+    // We don't know if this is a stale writeback or a bug, so flag the
+    // reponse so the requestor can make further checks
+    out_msg.stale := true;
+  }
+}
+
+action(Send_CompDBIDResp, desc="") {
+  assert(is_valid(tbe));
+  enqueue(rspOutPort, CHIResponseMsg, response_latency) {
+    out_msg.addr := address;
+    out_msg.type := CHIResponseType:CompDBIDResp;
+    out_msg.responder := machineID;
+    out_msg.Destination.add(tbe.requestor);
+  }
+}
+
+action(Send_CompDBIDResp_Stale, desc="") {
+  assert(is_valid(tbe));
+  enqueue(rspOutPort, CHIResponseMsg, response_latency) {
+    out_msg.addr := address;
+    out_msg.type := CHIResponseType:CompDBIDResp;
+    out_msg.responder := machineID;
+    out_msg.Destination.add(tbe.requestor);
+    // We don't know if this is a stale writeback or a bug, so flag the
+    // reponse so the requestor can make further checks
+    out_msg.stale := true;
+  }
+}
+
+action(Send_DBIDResp, desc="") {
+  assert(is_valid(tbe));
+  enqueue(rspOutPort, CHIResponseMsg, response_latency) {
+    out_msg.addr := address;
+    out_msg.type := CHIResponseType:DBIDResp;
+    out_msg.responder := machineID;
+    out_msg.Destination.add(tbe.requestor);
+  }
+}
+
+action(Send_Comp_WU, desc="") {
+  assert(is_valid(tbe));
+  enqueue(rspOutPort, CHIResponseMsg, comp_wu_latency + response_latency) {
+    out_msg.addr := address;
+    out_msg.type := CHIResponseType:Comp;
+    out_msg.responder := machineID;
+    out_msg.Destination.add(tbe.requestor);
+  }
+}
+
+action(Send_SnpRespI, desc="") {
+  enqueue(rspOutPort, CHIResponseMsg, response_latency) {
+    out_msg.addr := address;
+    if (tbe.is_dvm_tbe || tbe.is_dvm_snp_tbe) {
+      out_msg.usesTxnId := true;
+      out_msg.txnId := tbe.addr;
+    }
+    out_msg.type := CHIResponseType:SnpResp_I;
+    out_msg.responder := machineID;
+    out_msg.Destination.add(tbe.requestor);
+  }
+}
+
+action(Send_RetryAck, desc="") {
+  peek(retryTriggerInPort, RetryTriggerMsg) {
+    enqueue(rspOutPort, CHIResponseMsg, response_latency) {
+      out_msg.addr := in_msg.addr;
+      out_msg.usesTxnId := in_msg.usesTxnId;
+      out_msg.type := CHIResponseType:RetryAck;
+      out_msg.responder := machineID;
+      out_msg.Destination.add(in_msg.retryDest);
+    }
+  }
+}
+
+action(Send_PCrdGrant, desc="") {
+  peek(retryTriggerInPort, RetryTriggerMsg) {
+    enqueue(rspOutPort, CHIResponseMsg, response_latency) {
+      out_msg.addr := in_msg.addr;
+      out_msg.usesTxnId := in_msg.usesTxnId;
+      out_msg.type := CHIResponseType:PCrdGrant;
+      out_msg.responder := machineID;
+      out_msg.Destination.add(in_msg.retryDest);
+    }
+  }
+}
+
+// Note on CheckUpgrade_FromStoreOrRU/CheckUpgrade_FromCU
+// We will always get Comp_UC; but if our data is invalidated before
+// Comp_UC we would need to go to UCE. Since we don't use the UCE state
+// we remain in the transient state and follow-up with ReadUnique.
+// Note this assumes the responder knows we have invalid data when sending
+// us Comp_UC and does not register us as owner.
+
+action(CheckUpgrade_FromStoreOrRU, desc="") {
+  assert(is_HN == false);
+  if (tbe.dataUnique) {
+    // success, just send CompAck next
+    assert(tbe.dataValid);
+  } else {
+    // will need to get data instead
+    tbe.actions.pushFront(Event:SendReadUnique);
+    // we must have received an invalidation snoop that marked
+    // the req as stale
+    assert(tbe.is_stale);
+    tbe.is_stale := false;
+  }
+  tbe.actions.pushFront(Event:SendCompAck);
+}
+
+action(CheckUpgrade_FromCU, desc="") {
+  assert(is_HN == false);
+  if (tbe.dataUnique == false) {
+    // actually failed, so just cancel the directory update
+    assert(tbe.dir_sharers.isElement(tbe.requestor) == false);
+    tbe.requestorToBeExclusiveOwner := false;
+    tbe.updateDirOnCompAck := false;
+  }
+  // otherwise nothing else to do here other than acking the CleanUnique
+  tbe.actions.pushFront(Event:SendCompAck);
+}
+
+
+action(Finalize_UpdateCacheFromTBE, desc="") {
+  assert(is_valid(tbe));
+  State final := tbe.finalState;
+  if ((final == State:UD_RSC) || (final == State:SD_RSC) || (final == State:UC_RSC) ||
+      (final == State:SC_RSC) || (final == State:UD)     || (final == State:UD_T) ||
+      (final == State:SD)     || (final == State:UC)     || (final == State:SC) ||
+      (final == State:UC_RU)  || (final == State:UD_RU)  || (final == State:UD_RSD) ||
+      (final == State:SD_RSD)) {
+    assert(tbe.dataBlkValid.isFull());
+    assert(tbe.dataValid);
+    assert(is_valid(cache_entry));
+    cache_entry.DataBlk := tbe.dataBlk;
+    DPRINTF(RubySlicc, "Cached data %s pfb %s\n", tbe.dataBlk, cache_entry.HWPrefetched);
+  } else {
+    // make sure only deallocate the cache entry if data is invalid
+    assert(tbe.dataValid == false);
+    if (is_valid(cache_entry)) {
+      cache.deallocate(address);
+      unset_cache_entry();
+    }
+  }
+}
+
+action(Finalize_UpdateDirectoryFromTBE, desc="") {
+  assert(is_valid(tbe));
+  State final := tbe.finalState;
+  if ((final == State:UD_RSC) || (final == State:SD_RSC) || (final == State:UC_RSC) ||
+      (final == State:SC_RSC) || (final == State:UC_RU)  || (final == State:UD_RU) ||
+      (final == State:UD_RSD) || (final == State:SD_RSD) || (final == State:RU) ||
+      (final == State:RSC)    || (final == State:RSD)    || (final == State:RUSD) ||
+      (final == State:RUSC)) {
+    DirEntry dir_entry := getDirEntry(address);
+    assert(is_valid(dir_entry));
+    assert(tbe.dir_sharers.count() > 0);
+    dir_entry.ownerExists := tbe.dir_ownerExists;
+    dir_entry.ownerIsExcl := tbe.dir_ownerIsExcl;
+    dir_entry.owner := tbe.dir_owner;
+    dir_entry.sharers := tbe.dir_sharers;
+  } else {
+    assert((tbe.dir_ownerExists == false) && tbe.dir_sharers.isEmpty());
+    if(directory.isTagPresent(address)) {
+      directory.deallocate(address);
+    }
+  }
+}
+
+action(Deallocate_CacheBlock, desc="") {
+  assert(is_valid(cache_entry));
+  cache.deallocate(address);
+  unset_cache_entry();
+}
+
+action(Allocate_DirEntry, desc="") {
+  assert(directory.isTagPresent(address) == false);
+  directory.allocate(address);
+}
+
+action(Deallocate_DirEntry, desc="") {
+  assert(directory.isTagPresent(address));
+  directory.deallocate(address);
+}
+
+action(CheckCacheFill, desc="") {
+  assert(is_valid(tbe));
+
+  // only perform the write if we have valid data and need to write
+  bool need_fill := tbe.dataValid && (tbe.dataToBeInvalid == false) && tbe.doCacheFill;
+  bool execute_next := true;
+
+  if (need_fill && is_valid(cache_entry)) {
+    // can write
+    tbe.actions.pushFront(Event:DataArrayWrite);
+    tbe.actions.pushFront(Event:FillPipe);
+
+  } else if (need_fill && cache.cacheAvail(address)) {
+    // don't have a cache block, but there is space to allocate one
+    set_cache_entry(cache.allocate(address, new CacheEntry));
+    tbe.actions.pushFront(Event:DataArrayWriteOnFill);
+    tbe.actions.pushFront(Event:FillPipe);
+
+  } else if (need_fill) {
+    // performs a cache block replacement. CheckCacheFill executes again
+    // after the replacement
+    execute_next := false;
+
+    // pick a victim to deallocate
+    Addr victim_addr := cache.cacheProbe(address);
+    CacheEntry victim_entry := getCacheEntry(victim_addr);
+    assert(is_valid(victim_entry));
+    TBE victim_tbe := getCurrentActiveTBE(victim_addr);
+
+    // The `is_valid(victim_entry)` condition here is to avoid an unused
+    // variable error when compiling to gem5.fast.
+    if (is_invalid(victim_tbe) && is_valid(victim_entry)) {
+      DPRINTF(RubySlicc, "Eviction for %#x victim: %#x state=%s\n",
+                          address, victim_addr, victim_entry.state);
+      enqueue(replTriggerOutPort, ReplacementMsg, 0) {
+        out_msg.addr := victim_addr;
+        out_msg.from_addr := address;
+        if (unify_repl_TBEs) {
+          out_msg.slot := tbe.storSlot;
+          DPRINTF(RubySlicc, "Reusing slot %d\n", out_msg.slot);
+        }
+      }
+    } else {
+      DPRINTF(RubySlicc, "Eviction for %#x victim: %#x state=%s\n",
+                          address, victim_addr, victim_tbe.state);
+      // just wait until the transaction finishes to try again
+      victim_tbe.wakeup_pending_tgr := true;
+    }
+
+    // wait until we can deallocate the victim_addr
+    stall_and_wait(triggerInPort, victim_addr);
+  }
+
+  // only do the usual Pop_TriggerQueue+ProcessNextState if we have a block
+  if (execute_next) {
+    triggerInPort.dequeue(clockEdge());
+    clearPendingAction(tbe);
+    processNextState(address, tbe, cache_entry);
+  } else {
+    wakeupPendingSnps(tbe); // might have stalled snoops that can execute now
+  }
+}
+
+
+action(Finalize_DeallocateRequest, desc="") {
+  assert(is_valid(tbe));
+  assert(tbe.actions.empty());
+  wakeupPendingReqs(tbe);
+  wakeupPendingSnps(tbe);
+  wakeupPendingTgrs(tbe);
+
+  if (tbe.is_req_tbe) {
+    deallocateReqTBE(tbe);
+    processRetryQueue();
+
+  } else if (tbe.is_snp_tbe) {
+    deallocateSnpTBE(tbe);
+
+  } else {
+    deallocateReplacementTBE(tbe);
+    if (unify_repl_TBEs) {
+      processRetryQueue();
+    }
+  }
+  unset_tbe();
+
+  incomingTransactionEnd(address, curTransitionNextState());
+}
+
+action(Finalize_DeallocateDvmRequest, desc="") {
+  assert(is_valid(tbe));
+  assert(tbe.actions.empty());
+  wakeupPendingReqs(tbe);
+  wakeupPendingSnps(tbe);
+  wakeupPendingTgrs(tbe);
+
+  // Don't call processRetryQueue() because DVM ops don't interact with the retry queue
+
+  assert(tbe.is_dvm_tbe);
+  deallocateDvmTBE(tbe);
+  unset_tbe();
+}
+
+action(Finalize_DeallocateDvmSnoop, desc="") {
+  assert(is_valid(tbe));
+  assert(tbe.actions.empty());
+  wakeupPendingReqs(tbe);
+  wakeupPendingSnps(tbe);
+  wakeupPendingTgrs(tbe);
+
+  // Don't call processRetryQueue() because DVM ops don't interact with the retry queue
+
+  assert(tbe.is_dvm_snp_tbe);
+  deallocateDvmSnoopTBE(tbe);
+  unset_tbe();
+
+  // Last argument = false, so it uses a "unique ID" rather than an address
+  incomingTransactionEnd(address, curTransitionNextState(), false);
+}
+
+action(Pop_ReqRdyQueue, desc="") {
+  reqRdyPort.dequeue(clockEdge());
+}
+
+action(Pop_RespInQueue, desc="") {
+  rspInPort.dequeue(clockEdge());
+}
+
+action(Pop_SnoopRdyQueue, desc="") {
+  snpRdyPort.dequeue(clockEdge());
+}
+
+action(Pop_DataInQueue, desc="") {
+  datInPort.dequeue(clockEdge());
+}
+
+// NOTICE a trigger event may wakeup another stalled trigger event so
+// this is always called first in the transitions so we don't pop the
+// wrong message
+action(Pop_TriggerQueue, desc="") {
+  triggerInPort.dequeue(clockEdge());
+}
+
+action(Pop_ReplTriggerQueue, desc="") {
+  replTriggerInPort.dequeue(clockEdge());
+  // wakeup the transaction that triggered this eviction
+  wakeup_port(triggerInPort, address);
+}
+
+action(Pop_RetryTriggerQueue, desc="") {
+  retryTriggerInPort.dequeue(clockEdge());
+}
+
+action(Pop_SnpInPort, desc="") {
+  snpInPort.dequeue(clockEdge());
+}
+action(Pop_SeqInPort, desc="") {
+  seqInPort.dequeue(clockEdge());
+}
+
+action(ProcessNextState, desc="") {
+  assert(is_valid(tbe));
+  processNextState(address, tbe, cache_entry);
+}
+
+action(ProcessNextState_ClearPending, desc="") {
+  assert(is_valid(tbe));
+  clearPendingAction(tbe);
+  processNextState(address, tbe, cache_entry);
+}
+
+action(Callback_LoadHit, desc="") {
+  assert(is_valid(tbe));
+  assert(tbe.reqType == CHIRequestType:Load);
+  if (tbe.is_local_pf == false) {
+    assert(tbe.dataValid);
+    DPRINTF(RubySlicc, "Read data %s\n", tbe.dataBlk);
+    sequencer.readCallback(tbe.addr, tbe.dataBlk, false);
+  }
+}
+
+action(Callback_StoreHit, desc="") {
+  assert(is_valid(tbe));
+  assert((tbe.reqType == CHIRequestType:StoreLine) ||
+         (tbe.reqType == CHIRequestType:Store));
+  if (tbe.is_local_pf == false) {
+    assert(tbe.dataValid);
+    DPRINTF(RubySlicc, "Write before %s\n", tbe.dataBlk);
+    sequencer.writeCallback(tbe.addr, tbe.dataBlk, false);
+    DPRINTF(RubySlicc, "Write after %s\n", tbe.dataBlk);
+    tbe.dataDirty := true;
+  }
+}
+
+action(Callback_ExpressPrefetchHit, desc="") {
+  // have not allocated TBE, but must clear the reservation
+  assert(is_invalid(tbe));
+  storTBEs.decrementReserved();
+  assert(storTBEs.areNSlotsAvailable(1));
+  assert(use_prefetcher);
+
+  cache.profilePrefetchHit();
+  peek(reqRdyPort, CHIRequestMsg) {
+    assert(in_msg.is_local_pf);
+    notifyPfComplete(in_msg.addr);
+  }
+}
+
+// This is called everytime a data message is received but only goes
+// though once all the blocks are present (tbe.dataValid)
+// NOTE: should create a separate trigger for this callback ?
+action(Callback_Miss, desc="") {
+  assert(is_valid(tbe));
+  if (tbe.dataValid && tbe.is_local_pf) {
+    assert(use_prefetcher);
+    notifyPfComplete(tbe.addr);
+
+  } else if (tbe.dataValid && (tbe.reqType == CHIRequestType:Load)) {
+    DPRINTF(RubySlicc, "Read data %s\n", tbe.dataBlk);
+    sequencer.readCallback(tbe.addr, tbe.dataBlk, true);
+
+  } else if (tbe.dataValid && ((tbe.reqType == CHIRequestType:Store) ||
+                               (tbe.reqType == CHIRequestType:StoreLine))) {
+    DPRINTF(RubySlicc, "Write before %s\n", tbe.dataBlk);
+    sequencer.writeCallback(tbe.addr, tbe.dataBlk, true);
+    DPRINTF(RubySlicc, "Write after %s\n", tbe.dataBlk);
+    tbe.dataDirty := true;
+
+    // sets a use time out for store misses to prevent LL/SC livelocks
+    int use_timeout_latency := scLockLatency();
+    if (use_timeout_latency > 0) {
+      if (tbe.hasUseTimeout) {
+        assert(useTimerTable.isSet(tbe.addr));
+      } else {
+        useTimerTable.set(
+                tbe.addr,
+                clockEdge() + cyclesToTicks(intToCycles(use_timeout_latency)));
+        tbe.hasUseTimeout := true;
+      }
+      // also decay the timeout
+      scLockDecayLatency();
+    }
+  }
+}
+
+action(Unset_Timeout_TBE, desc="") {
+  assert(is_valid(tbe));
+  assert(tbe.hasUseTimeout);
+  assert(useTimerTable.isSet(tbe.addr));
+  useTimerTable.unset(tbe.addr);
+  tbe.hasUseTimeout := false;
+  // A snoop may have been stalled without setting the TBE flag
+  wakeup_port(snpRdyPort, address);
+}
+
+action(Unset_Timeout_Cache, desc="") {
+  assert(useTimerTable.isSet(address));
+  useTimerTable.unset(address);
+  wakeup_port(snpRdyPort, address);
+}
+
+action(Callback_WriteUnique, desc="") {
+  assert(is_valid(tbe));
+  assert((tbe.is_local_pf || tbe.is_remote_pf) == false);
+  assert((tbe.reqType == CHIRequestType:StoreLine) ||
+         (tbe.reqType == CHIRequestType:Store));
+  assert(tbe.dataValid == false);
+  sequencer.writeUniqueCallback(tbe.addr, tbe.dataBlk);
+  DPRINTF(RubySlicc, "WriteUnique data %s\n", tbe.dataBlk);
+  // set mask; note data is never considered valid
+  assert(tbe.dataBlkValid.isEmpty());
+  tbe.dataBlkValid.setMask(addressOffset(tbe.accAddr, tbe.addr), tbe.accSize);
+}
+
+action(Profile_Miss, desc="") {
+  assert(is_valid(tbe));
+  bool is_demand := (tbe.is_local_pf || tbe.is_remote_pf) == false;
+  bool is_remote_can_notify := tbe.is_remote_pf && upstream_prefetch_trains_prefetcher;
+  if (is_demand) {
+    cache.profileDemandMiss();
+  } else {
+    assert(use_prefetcher || tbe.is_remote_pf);
+    cache.profilePrefetchMiss();
+  }
+  // notify prefetcher about this demand miss
+  if (use_prefetcher && tbe.isSeqReqValid && (is_demand || is_remote_can_notify)) {
+    bool is_read := false;
+    if (isReadReqType(tbe.reqType)) {
+      is_read := true;
+    } else {
+      assert(isWriteReqType(tbe.reqType));
+    }
+
+    // FIXME: this dataBlk is likely to have stale data. This should be fixed
+    // if our prefetcher uses cached data to make prefetch decisions.
+    notifyPfMiss(tbe.seqReq, is_read, tbe.dataBlk);
+  }
+}
+
+action(Profile_Hit, desc="") {
+  assert(is_valid(tbe));
+  assert(is_valid(cache_entry));
+  assert(tbe.dataValid);
+  bool is_demand := (tbe.is_local_pf || tbe.is_remote_pf) == false;
+  bool is_remote_can_notify := tbe.is_remote_pf && upstream_prefetch_trains_prefetcher;
+  if (is_demand) {
+    cache.profileDemandHit();
+  } else {
+    assert(use_prefetcher || tbe.is_remote_pf);
+    cache.profilePrefetchHit();
+  }
+  // notify prefetcher about this demand hit
+  if (use_prefetcher && tbe.isSeqReqValid && (is_demand || is_remote_can_notify)) {
+    bool is_read := false;
+    if (isReadReqType(tbe.reqType)) {
+      is_read := true;
+    } else {
+      assert(isWriteReqType(tbe.reqType));
+    }
+    notifyPfHit(tbe.seqReq, is_read, tbe.dataBlk);
+
+    cache_entry.HWPrefetched := false;
+  }
+}
+
+action(Profile_Fill, desc="") {
+  assert(is_valid(tbe));
+  assert(is_valid(cache_entry));
+  if (use_prefetcher && tbe.isSeqReqValid) {
+
+    cache_entry.HWPrefetched := tbe.is_local_pf ||
+                          (tbe.is_remote_pf &&
+                            (upstream_prefetch_trains_prefetcher == false));
+
+    // Prefetchers that use this info require notifications from both
+    // demand and pf fills (unlike notifyPfHit/notifyPfMiss)
+    notifyPfFill(tbe.seqReq, tbe.dataBlk, tbe.is_local_pf);
+  }
+}
+
+action(Profile_Eviction, desc="") {
+  if (sc_lock_enabled && sequencer.llscCheckMonitor(address)) {
+    DPRINTF(LLSC, "Invalidating monitored address %#x\n", address);
+    scLockIncLatency();
+  }
+  if (send_evictions) {
+    DPRINTF(RubySlicc, "Sending invalidation for %#x to the sequencer\n", address);
+    sequencer.evictionCallback(address);
+  }
+  if (use_prefetcher && is_valid(cache_entry)) {
+    notifyPfEvict(address, cache_entry.HWPrefetched);
+  }
+}
+
+action(Profile_OutgoingStart, desc="") {
+  outgoingTransactionStart(address, curTransitionEvent());
+}
+
+action(Profile_OutgoingEnd_DataResp, desc="") {
+  assert(is_valid(tbe));
+  // completes once all data is received
+  if (tbe.expected_req_resp.hasReceivedData()) {
+    outgoingTransactionEnd(address, tbe.rcvdRetryAck);
+  }
+}
+
+action(Profile_OutgoingEnd_DatalessResp, desc="") {
+  assert(is_valid(tbe));
+  outgoingTransactionEnd(address, tbe.rcvdRetryAck);
+}
+
+action(TagArrayRead, desc="") {
+  assert(is_valid(tbe));
+  tbe.delayNextAction := curTick() + cyclesToTicks(
+                            tagLatency((tbe.reqType == CHIRequestType:Load) ||
+                                      (tbe.reqType == CHIRequestType:Store) ||
+                                      (tbe.reqType == CHIRequestType:StoreLine)));
+}
+
+action(TagArrayWrite, desc="") {
+  assert(is_valid(tbe));
+  // when hasUseTimeout is set the final state is UD_T, but adding a delay
+  // between now and triggering Fin_UD_T may allow the timer to expire and then
+  // we end up in the wrong state
+  if (dealloc_wait_for_tag && (tbe.hasUseTimeout == false)) {
+    tbe.delayNextAction := curTick() + cyclesToTicks(tagLatency(false));
+  }
+}
+
+action(DataArrayRead, desc="") {
+  assert(is_valid(tbe));
+  tbe.delayNextAction := curTick() + cyclesToTicks(dataLatency());
+}
+
+action(DataArrayWrite, desc="") {
+  assert(is_valid(tbe));
+  assert(is_valid(cache_entry));
+  assert(tbe.doCacheFill);
+  if(wait_for_cache_wr) {
+    tbe.delayNextAction := curTick() + cyclesToTicks(dataLatency());
+  }
+}
+
+action(ReadHitPipe, desc="") {
+  assert(is_valid(tbe));
+  tbe.delayNextAction := curTick() + cyclesToTicks(read_hit_latency);
+}
+
+action(ReadMissPipe, desc="") {
+  assert(is_valid(tbe));
+  tbe.delayNextAction := curTick() + cyclesToTicks(read_miss_latency);
+}
+
+action(WriteFEPipe, desc="") {
+  assert(is_valid(tbe));
+  tbe.delayNextAction := curTick() + cyclesToTicks(write_fe_latency);
+}
+
+action(WriteBEPipe, desc="") {
+  assert(is_valid(tbe));
+  tbe.delayNextAction := curTick() + cyclesToTicks(write_be_latency);
+}
+
+action(FillPipe, desc="") {
+  assert(is_valid(tbe));
+  tbe.delayNextAction := curTick() + cyclesToTicks(fill_latency);
+}
+
+action(SnpSharedPipe, desc="") {
+  assert(is_valid(tbe));
+  tbe.delayNextAction := curTick() + cyclesToTicks(snp_latency);
+}
+
+action(SnpInvPipe, desc="") {
+  assert(is_valid(tbe));
+  tbe.delayNextAction := curTick() + cyclesToTicks(snp_latency + snp_inv_latency);
+}
+
+action(SnpOncePipe, desc="") {
+  assert(is_valid(tbe));
+  tbe.delayNextAction := curTick() + cyclesToTicks(snp_latency);
+}
+
+//////////////////////////////////
+// DVM Actions
+
+action(Send_DvmTlbi, desc="") {
+  enqueue(reqOutPort, CHIRequestMsg, request_latency) {
+    prepareRequest(tbe, CHIRequestType:DvmOpNonSync, out_msg);
+    DPRINTF(RubyProtocol, "Sending DvmOpNonSync to %d\n", getMiscNodeMachine());
+
+    out_msg.usesTxnId := true;
+    out_msg.txnId := tbe.addr; // for DVM TBEs addr = txnId
+
+    out_msg.Destination.clear();
+    out_msg.Destination.add(getMiscNodeMachine());
+    out_msg.dataToFwdRequestor := false;
+
+    // Don't set message size, we don't use the data inside the messages
+
+    allowRequestRetry(tbe, out_msg);
+  }
+
+  // TLBIs can be ended early if the MN chooses to send CompDBIDResp.
+  // Otherwise, the MN sends a plain DBIDResp, and then sends a Comp later.
+  // => We add two possible response types, then add 1 to the count
+  // e.g. "expect exactly 1 (CompDBIDResp OR DBIDResp)"
+  clearExpectedReqResp(tbe);
+  tbe.expected_req_resp.addExpectedRespType(CHIResponseType:CompDBIDResp);
+  tbe.expected_req_resp.addExpectedRespType(CHIResponseType:DBIDResp);
+  tbe.expected_req_resp.addExpectedCount(1);
+  // If a plain DBIDResp is recieved, then Comp will be manually expected.
+  // (expect_sep_wu_comp also sort of handles this, but it's WU specific,
+  // and ProcessNextState doesn't respect it).
+
+  // Push a value to the list of pending NonSyncs
+  // The actual value doesn't matter, but we have to pick
+  // a type which already has function signatures
+  // e.g. TriggerQueue has push(Event) specified in SLICC but not push(addr)
+  DPRINTF(RubyProtocol, "Pushing pending nonsync to blocklist %16x\n", tbe.addr);
+  dvmPendingNonSyncsBlockingSync.push(Event:DvmTlbi_Initiate);
+}
+
+// Try to send a DVM Sync, but put it in the pending slot
+// if there are pending Non-Syncs blocking it.
+action(Try_Send_DvmSync, desc="") {
+  if (dvmPendingNonSyncsBlockingSync.empty()){
+    DPRINTF(RubyProtocol, "Nonsync queue is empty so %016x can proceed\n", tbe.addr);
+    tbe.actions.push(Event:DvmSync_Send);
+  } else {
+    assert(!dvmHasPendingSyncOp);
+    DPRINTF(RubyProtocol, "Nonsync queue is not empty so %016x is now pending\n", tbe.addr);
+    dvmHasPendingSyncOp := true;
+    dvmPendingSyncOp := address;
+  }
+}
+
+// Try to send a DVM sync that was put in the pending slot
+// due to pending Non-Syncs blocking it. Those Non-Syncs may not be
+// blocking it anymore.
+action(Try_Send_Pending_DvmSync, desc="") {
+  // Pop an element off the list of pending NonSyncs
+  // It won't necessarily be ours, but that doesn't matter.
+  assert(!dvmPendingNonSyncsBlockingSync.empty());
+  DPRINTF(RubyProtocol, "Popping nonsync from blocklist %16x\n", tbe.addr);
+  dvmPendingNonSyncsBlockingSync.pop();
+
+  if (dvmPendingNonSyncsBlockingSync.empty() && dvmHasPendingSyncOp) {
+    DPRINTF(RubyProtocol, "Blocklist now empty, pending op %16x can proceed\n", dvmPendingSyncOp);
+    TBE syncTBE := getDvmTBE(dvmPendingSyncOp);
+    assert(is_valid(syncTBE));
+    syncTBE.actions.push(Event:DvmSync_Send);
+
+    dvmHasPendingSyncOp := false;
+  }
+}
+
+action(Send_DvmSync, desc="") {
+  enqueue(reqOutPort, CHIRequestMsg, request_latency) {
+    prepareRequest(tbe, CHIRequestType:DvmOpSync, out_msg);
+    DPRINTF(RubyProtocol, "Sending DvmOpSync to %d\n", getMiscNodeMachine());
+
+    out_msg.usesTxnId := true;
+    out_msg.txnId := tbe.addr; // for DVM TBEs addr = txnId
+
+    out_msg.Destination.clear();
+    out_msg.Destination.add(getMiscNodeMachine());
+    out_msg.dataToFwdRequestor := false;
+
+    // Don't set message size, we don't use the data inside the messages
+
+    allowRequestRetry(tbe, out_msg);
+  }
+
+  clearExpectedReqResp(tbe);
+  tbe.expected_req_resp.addExpectedRespType(CHIResponseType:DBIDResp);
+  tbe.expected_req_resp.addExpectedCount(1);
+  // Comp will be expected later
+}
+
+action(Send_DvmTlbi_NCBWrData, desc="") {
+  enqueue(datOutPort, CHIDataMsg, data_latency) {
+    out_msg.addr := tbe.addr;
+    out_msg.type := CHIDataType:NCBWrData;
+
+    out_msg.usesTxnId := true;
+    out_msg.txnId := tbe.addr; // for DVM TBEs addr = txnId
+
+    // Set dataBlk to all 0 - we don't actually use the contents
+    out_msg.dataBlk.clear();
+    // Data should be 8 bytes - this function is (offset, range)
+    out_msg.bitMask.setMask(0, 8);
+
+    out_msg.responder := machineID;
+
+    out_msg.Destination.clear();
+    out_msg.Destination.add(getMiscNodeMachine());
+  }
+}
+
+action(Send_DvmSync_NCBWrData, desc="") {
+  enqueue(datOutPort, CHIDataMsg, data_latency) {
+    out_msg.addr := tbe.addr;
+    out_msg.type := CHIDataType:NCBWrData;
+
+    out_msg.usesTxnId := true;
+    out_msg.txnId := tbe.addr; // for DVM TBEs addr = txnId
+
+    // Set dataBlk to all 0 - we don't actually use the contents
+    out_msg.dataBlk.clear();
+    // Data should be 8 bytes - this function is (offset, range)
+    // I assume the range is in bytes...
+    out_msg.bitMask.setMask(0, 8);
+
+    out_msg.responder := machineID;
+
+    out_msg.Destination.clear();
+    out_msg.Destination.add(getMiscNodeMachine());
+  }
+}
+
+action(DvmTlbi_CompCallback, desc="") {
+  assert(is_valid(tbe));
+  assert(tbe.is_dvm_tbe);
+  assert(tbe.reqType == CHIRequestType:DvmTlbi_Initiate);
+  sequencer.unaddressedCallback(tbe.addr, RubyRequestType:TLBI);
+}
+
+action(DvmSync_CompCallback, desc="") {
+  assert(is_valid(tbe));
+  assert(tbe.is_dvm_tbe);
+  assert(tbe.reqType == CHIRequestType:DvmSync_Initiate);
+  sequencer.unaddressedCallback(tbe.addr, RubyRequestType:TLBI_SYNC);
+}
+
+//////////////////////////////////
+// DVM Snoop Actions
+
+action(Initiate_DvmSnoop, desc="") {
+  // DvmSnoop cannot be retried
+  bool was_retried := false;
+  peek(snpRdyPort, CHIRequestMsg) {
+    set_tbe(allocateDvmSnoopTBE(address, in_msg));
+  }
+  // Last argument = false, so it uses a "unique ID" rather than an address
+  // "Incoming" transactions for DVM = time between receiving a Snooped DVM op
+  // and sending the SnpResp_I
+  incomingTransactionStart(address, curTransitionEvent(), State:I, was_retried, false);
+}
+
+action(DvmExtTlbi_EnqueueSnpResp, desc=""){
+  tbe.delayNextAction := curTick() + cyclesToTicks(dvm_ext_tlbi_latency);
+  tbe.actions.push(Event:SendSnpIResp);
+}
+
+action(DvmExtSync_TriggerCallback, desc=""){
+  assert(is_valid(tbe));
+  assert(tbe.is_dvm_snp_tbe);
+  sequencer.unaddressedCallback(tbe.addr, RubyRequestType:TLBI_EXT_SYNC);
+}
+
+action(Profile_OutgoingStart_DVM, desc="") {
+  outgoingTransactionStart(address, curTransitionEvent(), false);
+}
+
+action(Profile_OutgoingEnd_DVM, desc="") {
+  assert(is_valid(tbe));
+  outgoingTransactionEnd(address, tbe.rcvdRetryAck, false);
+}

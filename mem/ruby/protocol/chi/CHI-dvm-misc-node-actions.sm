@@ -1,0 +1,394 @@
+/*
+ * Copyright (c) 2021-2022 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+////////////////////////////////////////////////////////////////////////////
+// CHI-dvm-misc-node actions definitions
+////////////////////////////////////////////////////////////////////////////
+
+action(AllocateTBE_Request, desc="") {
+  peek(reqInPort, CHIRequestMsg) {
+    assert(in_msg.usesTxnId);
+    assert(in_msg.txnId == address);
+    assert(in_msg.is_local_pf == false);
+    assert(in_msg.allowRetry);
+
+    bool isNonSync := (in_msg.type == CHIRequestType:DvmOpNonSync);
+
+    if (storDvmTBEs.areNSlotsAvailable(1, tbePartition(isNonSync))) {
+      // reserve a slot for this request
+      storDvmTBEs.incrementReserved(tbePartition(isNonSync));
+
+      // Move request to rdy queue
+      peek(reqInPort, CHIRequestMsg) {
+        enqueue(reqRdyOutPort, CHIRequestMsg, allocation_latency) {
+          out_msg := in_msg;
+        }
+      }
+
+    } else {
+      // we don't have resources to track this request; enqueue a retry
+      enqueue(retryTriggerOutPort, RetryTriggerMsg, retry_ack_latency) {
+        out_msg.txnId := in_msg.txnId;
+        out_msg.event := Event:SendRetryAck;
+        out_msg.retryDest := in_msg.requestor;
+
+        RetryQueueEntry en;
+        en.txnId := in_msg.txnId;
+        en.retryDest := in_msg.requestor;
+        en.isNonSync := isNonSync;
+        storDvmTBEs.emplaceRetryEntry(en);
+      }
+    }
+  }
+
+
+  reqInPort.dequeue(clockEdge());
+}
+
+action(AllocateTBE_Request_WithCredit, desc="") {
+  // TBE slot already reserved
+  // Move request to rdy queue
+  peek(reqInPort, CHIRequestMsg) {
+    assert(in_msg.allowRetry == false);
+    assert(in_msg.usesTxnId);
+    enqueue(reqRdyOutPort, CHIRequestMsg, allocation_latency) {
+      assert(in_msg.txnId == address);
+      out_msg := in_msg;
+    }
+  }
+  reqInPort.dequeue(clockEdge());
+}
+
+action(Initiate_Request_DVM, desc="") {
+  bool was_retried := false;
+  peek(reqRdyPort, CHIRequestMsg) {
+    // "address" for DVM = transaction ID
+    TBE tbe := allocateDvmRequestTBE(address, in_msg);
+    set_tbe(tbe);
+    // only a msg that was already retried doesn't allow a retry
+    was_retried := in_msg.allowRetry == false;
+  }
+
+  // Last argument = false, so it isn't treated as a memory request
+  incomingTransactionStart(address, curTransitionEvent(), State:Unallocated, was_retried, false);
+}
+
+action(Pop_ReqRdyQueue, desc="") {
+  reqRdyPort.dequeue(clockEdge());
+}
+
+
+action(Receive_ReqDataResp, desc="") {
+  assert(is_valid(tbe));
+  assert(tbe.expected_req_resp.hasExpected());
+  peek(datInPort, CHIDataMsg) {
+    // Decrement pending
+    if (tbe.expected_req_resp.receiveData(in_msg.type) == false) {
+      error("Received unexpected message");
+    }
+    assert(!tbe.expected_req_resp.hasExpected());
+
+    DPRINTF(RubyProtocol, "Misc Node has receieved NCBWrData\n");
+    // Clear the "expected types" list to prepare for the snooping
+    tbe.expected_snp_resp.clear(1);
+    assert(!tbe.expected_snp_resp.hasExpected());
+
+    // We don't actually use the data contents
+  }
+}
+
+action(Pop_DataInQueue, desc="") {
+  datInPort.dequeue(clockEdge());
+}
+
+action(Receive_SnpResp, desc="") {
+  assert(tbe.expected_snp_resp.hasExpected());
+  peek(rspInPort, CHIResponseMsg) {
+    // Decrement pending
+    if (tbe.expected_snp_resp.receiveResp(in_msg.type) == false) {
+      error("Received unexpected message");
+    }
+    assert(in_msg.stale == false);
+    // assert(in_msg.stale == tbe.is_stale);
+
+    DPRINTF(RubyProtocol, "Misc Node has receieved SnpResp_I\n");
+
+    assert(tbe.pendingTargets.isElement(in_msg.responder));
+    tbe.pendingTargets.remove(in_msg.responder);
+    tbe.receivedTargets.add(in_msg.responder);
+  }
+}
+action(Pop_RespInQueue, desc="") {
+  rspInPort.dequeue(clockEdge());
+}
+
+action(ProcessNextState, desc="") {
+  assert(is_valid(tbe));
+  processNextState(tbe);
+}
+
+// If ProcessNextState invokes a new action, it sets tbe.pendingAction.
+// If you call ProcessNextState again without clearing this variable,
+// nothing will happen. This Action clears the pending state, ensuring
+// a new state is processed.
+action(ProcessNextState_ClearPending, desc="") {
+  assert(is_valid(tbe));
+  clearPendingAction(tbe);
+  processNextState(tbe);
+}
+
+action(Send_Comp, desc="") {
+  assert(is_valid(tbe));
+  Cycles latency := response_latency;
+  CHIResponseType type := CHIResponseType:Comp;
+
+  enqueue(rspOutPort, CHIResponseMsg, latency) {
+    out_msg.addr := address;
+    out_msg.type := type;
+    out_msg.responder := machineID;
+    out_msg.txnId := address;
+    out_msg.usesTxnId := true;
+    out_msg.Destination.add(tbe.requestor);
+  }
+  DPRINTF(RubyProtocol, "Misc Node Sending Comp (for either)\n");
+}
+
+action(Send_Comp_NonSync, desc="") {
+  assert(is_valid(tbe));
+
+  // In the NonSync case, if early_nonsync_comp is set then
+  // we will have already sent a CompDBIDResp.
+  // Thus, only send Comp if !early_nonsync_comp
+
+  if (!early_nonsync_comp) {
+    Cycles latency := response_latency;
+    CHIResponseType type := CHIResponseType:Comp;
+    enqueue(rspOutPort, CHIResponseMsg, latency) {
+        out_msg.addr := address;
+        out_msg.type := type;
+        out_msg.responder := machineID;
+        out_msg.txnId := address;
+        out_msg.usesTxnId := true;
+        out_msg.Destination.add(tbe.requestor);
+    }
+    DPRINTF(RubyProtocol, "Misc Node Sending TLBI Comp\n");
+  }
+}
+
+// NOTICE a trigger event may wakeup another stalled trigger event so
+// this is always called first in the transitions so we don't pop the
+// wrong message
+action(Pop_TriggerQueue, desc="") {
+  triggerInPort.dequeue(clockEdge());
+}
+
+action(Pop_RetryTriggerQueue, desc="") {
+  retryTriggerInPort.dequeue(clockEdge());
+}
+
+action(Finalize_DeallocateRequest, desc="") {
+  assert(is_valid(tbe));
+  assert(tbe.actions.empty());
+  wakeupPendingReqs(tbe);
+  wakeupPendingTgrs(tbe);
+
+  DPRINTF(RubyProtocol, "Deallocating DVM request\n");
+  deallocateDvmTBE(tbe);
+  processRetryQueue();
+  unset_tbe();
+
+  // Last argument = false, so this isn't treated as a memory transaction
+  incomingTransactionEnd(address, curTransitionNextState(), false);
+}
+
+action(Send_DvmNonSyncDBIDResp, desc="") {
+  Cycles latency := response_latency;
+  CHIResponseType type := CHIResponseType:DBIDResp;
+  if (early_nonsync_comp) {
+    type := CHIResponseType:CompDBIDResp;
+  }
+  enqueue(rspOutPort, CHIResponseMsg, latency) {
+    out_msg.addr := address;
+    out_msg.type := type;
+    out_msg.responder := machineID;
+    out_msg.txnId := address;
+    out_msg.usesTxnId := true;
+    out_msg.Destination.add(tbe.requestor);
+  }
+  tbe.expected_req_resp.clear(1);
+  tbe.expected_req_resp.addExpectedDataType(CHIDataType:NCBWrData);
+  tbe.expected_req_resp.setExpectedCount(1);
+  DPRINTF(RubyProtocol, "Misc Node Sending TLBI DBIDResp\n");
+}
+
+action(Send_DvmSyncDBIDResp, desc="") {
+  Cycles latency := response_latency;
+  CHIResponseType type := CHIResponseType:DBIDResp;
+  enqueue(rspOutPort, CHIResponseMsg, latency) {
+    out_msg.addr := address;
+    out_msg.type := type;
+    out_msg.responder := machineID;
+    out_msg.txnId := address;
+    out_msg.usesTxnId := true;
+    out_msg.Destination.add(tbe.requestor);
+  }
+  tbe.expected_req_resp.clear(1);
+  tbe.expected_req_resp.addExpectedDataType(CHIDataType:NCBWrData);
+  tbe.expected_req_resp.setExpectedCount(1);
+  DPRINTF(RubyProtocol, "Misc Node Sending Sync DBIDResp\n");
+}
+
+action(Send_RetryAck, desc="") {
+  peek(retryTriggerInPort, RetryTriggerMsg) {
+    enqueue(rspOutPort, CHIResponseMsg, response_latency) {
+      out_msg.txnId := in_msg.txnId;
+      out_msg.usesTxnId := true;
+      out_msg.type := CHIResponseType:RetryAck;
+      out_msg.responder := machineID;
+      out_msg.Destination.add(in_msg.retryDest);
+    }
+    DPRINTF(RubyProtocol, "Misc Node Sending RetryAck (for either)\n");
+  }
+}
+
+action(Send_PCrdGrant, desc="") {
+  peek(retryTriggerInPort, RetryTriggerMsg) {
+    enqueue(rspOutPort, CHIResponseMsg, response_latency) {
+      out_msg.txnId := in_msg.txnId;
+      out_msg.usesTxnId := true;
+      out_msg.type := CHIResponseType:PCrdGrant;
+      out_msg.responder := machineID;
+      out_msg.Destination.add(in_msg.retryDest);
+    }
+    DPRINTF(RubyProtocol, "Misc Node Sending PCrdGrant (for either)\n");
+  }
+}
+
+action(Send_DvmSnoop_P1, desc="") {
+  Cycles latency := response_latency;
+
+  CHIRequestType type := CHIRequestType:SnpDvmOpSync_P1;
+  if (tbe.isNonSync) {
+    type := CHIRequestType:SnpDvmOpNonSync_P1;
+  }
+
+  assert(tbe.notSentTargets.count() > 0);
+  MachineID target := tbe.notSentTargets.smallestElement();
+
+  enqueue(snpOutPort, CHIRequestMsg, latency) {
+    prepareRequest(tbe, type, out_msg);
+    DPRINTF(RubyProtocol, "Misc Node Sending %d to %d\n", type, target);
+
+    out_msg.usesTxnId := true;
+    out_msg.txnId := tbe.txnId; // for DVM TBEs addr = txnId
+    out_msg.allowRetry := false;
+    out_msg.Destination.clear();
+    out_msg.Destination.add(target);
+
+    out_msg.dataToFwdRequestor := false;
+  }
+
+  tbe.actions.pushNB(Event:DvmSendNextMessage_P2);
+  tbe.delayNextAction := curTick() + cyclesToTicks(intToCycles(1));
+
+  // We are no longer waiting on other transaction activity
+  tbe.waiting_on_other_txns := false;
+}
+
+action(Send_DvmSnoop_P2, desc="") {
+  Cycles latency := response_latency;
+
+  CHIRequestType type := CHIRequestType:SnpDvmOpSync_P2;
+  if (tbe.isNonSync) {
+    type := CHIRequestType:SnpDvmOpNonSync_P2;
+  }
+
+  assert(tbe.notSentTargets.count() > 0);
+  MachineID target := tbe.notSentTargets.smallestElement();
+
+  enqueue(snpOutPort, CHIRequestMsg, latency) {
+    prepareRequest(tbe, type, out_msg);
+    DPRINTF(RubyProtocol, "Misc Node Sending %d to %d\n", type, target);
+
+    out_msg.usesTxnId := true;
+    out_msg.txnId := tbe.txnId; // for DVM TBEs addr = txnId
+    out_msg.allowRetry := false;
+    out_msg.Destination.clear();
+    out_msg.Destination.add(target);
+
+    out_msg.dataToFwdRequestor := false;
+  }
+
+  // Expect a SnpResp_I now we have sent both
+  tbe.expected_snp_resp.addExpectedRespType(CHIResponseType:SnpResp_I);
+  tbe.expected_snp_resp.addExpectedCount(1);
+
+  // Pop the target we just completed off the list
+  tbe.notSentTargets.remove(target);
+  tbe.pendingTargets.add(target);
+  // If we have more targets, enqueue another send
+  if (tbe.notSentTargets.count() > 0) {
+    tbe.actions.pushNB(Event:DvmSendNextMessage_P1);
+  } else {
+    // otherwise enqueue a DvmFinishDistributing, then a blocking DvmFinishWaiting
+    // DvmFinishDistributing will be called immediately,
+    // DvmFinishWaiting will be called once all responses are received
+    tbe.actions.pushNB(Event:DvmFinishDistributing);
+    tbe.actions.push(Event:DvmFinishWaiting);
+  }
+  tbe.delayNextAction := curTick() + cyclesToTicks(intToCycles(1));
+}
+
+action(Enqueue_UpdatePendingOps, desc="") {
+  // The next time updatePendingOps runs
+  // it will check this variable and decide
+  // to actually check for a new sender
+  DPRINTF(RubyProtocol, "Enqueue_UpdatePendingOps from %016x\n", address);
+  needsToCheckPendingOps := true;
+  // Schedule a generic event to make sure we wake up
+  // on the next tick
+  scheduleEvent(intToCycles(1));
+}
+
+action(Profile_OutgoingEnd_DVM, desc="") {
+  assert(is_valid(tbe));
+  // Outgoing transactions = time to send all snoops
+  // Is never rejected by recipient => never received retry ack
+  bool rcvdRetryAck := false;
+  outgoingTransactionEnd(address, rcvdRetryAck, false);
+}

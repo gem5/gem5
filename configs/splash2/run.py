@@ -27,8 +27,8 @@
 # Splash2 Run Script
 #
 
-import argparse
 import os
+import argparse
 import sys
 
 import m5
@@ -65,7 +65,6 @@ args = parser.parse_args()
 if not args.numcpus:
     print("Specify the number of cpus with -n")
     sys.exit(1)
-
 
 # --------------------
 # Define Splash2 Benchmarks

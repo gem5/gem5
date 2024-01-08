@@ -39,29 +39,21 @@
 import argparse
 import os
 import sys
-
 import m5
 import m5.util
 from m5.objects import *
 
 m5.util.addToPath("../../")
 
+from common import FSConfig
+from common import SysPaths
+from common import ObjectList
+from common import Options
+from common.cores.arm import ex5_big, ex5_LITTLE
+
 import devices
-from common import (
-    FSConfig,
-    ObjectList,
-    Options,
-    SysPaths,
-)
-from common.cores.arm import (
-    ex5_big,
-    ex5_LITTLE,
-)
-from devices import (
-    AtomicCluster,
-    FastmodelCluster,
-    KvmCluster,
-)
+from devices import AtomicCluster, KvmCluster, FastmodelCluster
+
 
 default_disk = "aarch64-ubuntu-trusty-headless.img"
 
@@ -418,8 +410,7 @@ def build(options):
         system.generateDtb(system.workload.dtb_filename)
 
     if devices.have_fastmodel and issubclass(big_model, FastmodelCluster):
-        from m5 import arm_fast_model as fm
-        from m5 import systemc as sc
+        from m5 import arm_fast_model as fm, systemc as sc
 
         # setup FastModels for simulation
         fm.setup_simulation("cortexa76")

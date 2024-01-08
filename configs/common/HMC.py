@@ -430,6 +430,7 @@ def add_options(parser):
 
 # configure HMC host controller
 def config_hmc_host_ctrl(opt, system):
+
     # create HMC host controller
     system.hmc_host = SubSystem()
 
@@ -532,6 +533,7 @@ def config_hmc_host_ctrl(opt, system):
 
 # Create an HMC device
 def config_hmc_dev(opt, system, hmc_host):
+
     # create HMC device
     system.hmc_dev = SubSystem()
 

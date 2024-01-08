@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2015 Jason Power
 # All rights reserved.
 #
@@ -42,6 +43,7 @@ import m5
 
 # import all of the SimObjects
 from m5.objects import *
+from gem5.runtime import get_runtime_isa
 
 # Add the common scripts to our path
 m5.util.addToPath("../../")
@@ -58,7 +60,7 @@ thispath = os.path.dirname(os.path.realpath(__file__))
 default_binary = os.path.join(
     thispath,
     "../../../",
-    "tests/test-progs/hello/bin/x86/linux/hello",
+    "attack/spectre_full",
 )
 
 # Binary to execute
@@ -80,22 +82,42 @@ system.mem_mode = "timing"  # Use timing accesses
 system.mem_ranges = [AddrRange("512MB")]  # Create an address range
 
 # Create a simple CPU
-system.cpu = X86TimingSimpleCPU()
+# system.cpu = X86TimingSimpleCPU()
+system.cpu = DerivO3CPU(branchPred=LTAGE())
+
+# -------------------------------------------------------------------------------------------------------------------------
+
+system.bridge = L1DBridge()   ################
 
 # Create an L1 instruction and data cache
 system.cpu.icache = L1ICache(args)
-system.cpu.dcache = L1DCache(args)
+system.main_dcache = L1_main_cache(args)
+system.shadow_dcache = L1_shadow_cache(args)
+# system.dcache = L1DCache(args)
+# system.cpu.back_dcache = L1DCache(args)
 
 # Connect the instruction and data caches to the CPU
 system.cpu.icache.connectCPU(system.cpu)
-system.cpu.dcache.connectCPU(system.cpu)
+# system.dache.connectCPU(system.cpu)
+# system.cpu.back_dcache.connectCPU(system.cpu)
 
 # Create a memory bus, a coherent crossbar, in this case
 system.l2bus = L2XBar()
 
 # Hook the CPU ports up to the l2bus
 system.cpu.icache.connectBus(system.l2bus)
-system.cpu.dcache.connectBus(system.l2bus)
+
+
+system.bridge.connectCPU(system.cpu)        ##############
+system.bridge.connectMainMEM(system.main_dcache)     ##############
+system.bridge.connectShadowMEM(system.shadow_dcache)     ##############
+
+
+# sdcache.connectBUS(system.l2bus)
+system.main_dcache.connectBus(system.l2bus)   ###########
+system.shadow_dcache.connectBus(system.l2bus)    ############
+
+# system.dcache.connectBus(system.l2bus)
 
 # Create an L2 cache and connect it to the l2bus
 system.l2cache = L2Cache(args)
@@ -106,6 +128,11 @@ system.membus = SystemXBar()
 
 # Connect the L2 cache to the membus
 system.l2cache.connectMemSideBus(system.membus)
+
+# system.bridge.connectCPU(system.cpu)        ##############
+# system.bridge.connectMainMEM(system.main_dcache)     ##############
+# system.bridge.connectShadowMEM(system.shadow_dcache)     ##############
+# system.bridge.connectShadowBUS(system.membus)
 
 # create the interrupt controller for the CPU
 system.cpu.createInterruptController()
@@ -138,6 +165,6 @@ root = Root(full_system=False, system=system)
 # instantiate all of the objects we've created above
 m5.instantiate()
 
-print(f"Beginning simulation!")
+print("Beginning simulation!")
 exit_event = m5.simulate()
-print(f"Exiting @ tick {m5.curTick()} because {exit_event.getCause()}")
+print("Exiting @ tick %i because %s" % (m5.curTick(), exit_event.getCause()))

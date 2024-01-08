@@ -41,10 +41,8 @@ import sys
 from os import getcwd
 from os.path import join as joinpath
 
-from common import (
-    CpuConfig,
-    ObjectList,
-)
+from common import CpuConfig
+from common import ObjectList
 
 import m5
 from m5.defines import buildEnv
@@ -81,10 +79,7 @@ def setCPUClass(options):
             TmpClass, test_mem_mode = getCPUClass(options.restore_with_cpu)
     elif options.fast_forward:
         CPUClass = TmpClass
-        CPUISA = ObjectList.cpu_list.get_isa(options.cpu_type)
-        TmpClass = getCPUClass(
-            CpuConfig.isa_string_map[CPUISA] + "AtomicSimpleCPU"
-        )
+        TmpClass = AtomicSimpleCPU
         test_mem_mode = "atomic"
 
     # Ruby only supports atomic accesses in noncaching mode
@@ -133,12 +128,9 @@ def findCptDir(options, cptdir, testsys):
     the appropriate directory.
     """
 
-    import re
+    from os.path import isdir, exists
     from os import listdir
-    from os.path import (
-        exists,
-        isdir,
-    )
+    import re
 
     if not isdir(cptdir):
         fatal("checkpoint dir %s does not exist!", cptdir)
@@ -161,8 +153,8 @@ def findCptDir(options, cptdir, testsys):
         # Assumes that the checkpoint dir names are formatted as follows:
         dirs = listdir(cptdir)
         expr = re.compile(
-            r"cpt\.simpoint_(\d+)_inst_(\d+)"
-            + r"_weight_([\d\.e\-]+)_interval_(\d+)_warmup_(\d+)"
+            "cpt\.simpoint_(\d+)_inst_(\d+)"
+            + "_weight_([\d\.e\-]+)_interval_(\d+)_warmup_(\d+)"
         )
         cpts = []
         for dir in dirs:
@@ -198,7 +190,7 @@ def findCptDir(options, cptdir, testsys):
 
     else:
         dirs = listdir(cptdir)
-        expr = re.compile(r"cpt\.([0-9]+)")
+        expr = re.compile("cpt\.([0-9]+)")
         cpts = []
         for dir in dirs:
             match = expr.match(dir)
@@ -333,7 +325,7 @@ def parseSimpointAnalysisFile(options, testsys):
         line = simpoint_file.readline()
         if not line:
             break
-        m = re.match(r"(\d+)\s+(\d+)", line)
+        m = re.match("(\d+)\s+(\d+)", line)
         if m:
             interval = int(m.group(1))
         else:
@@ -342,7 +334,7 @@ def parseSimpointAnalysisFile(options, testsys):
         line = weight_file.readline()
         if not line:
             fatal("not enough lines in simpoint weight file!")
-        m = re.match(r"([0-9\.e\-]+)\s+(\d+)", line)
+        m = re.match("([0-9\.e\-]+)\s+(\d+)", line)
         if m:
             weight = float(m.group(1))
         else:
@@ -779,6 +771,7 @@ def run(options, root, testsys, cpu_class):
     if (
         options.take_checkpoints or options.take_simpoint_checkpoints
     ) and options.checkpoint_restore:
+
         if m5.options.outdir:
             cptdir = m5.options.outdir
         else:

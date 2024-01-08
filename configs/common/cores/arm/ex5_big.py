@@ -31,7 +31,6 @@ from m5.objects import *
 #                ex5 big core (based on the ARM Cortex-A15)
 # -----------------------------------------------------------------------
 
-
 # Simple ALU Instructions have a latency of 1
 class ex5_big_Simple_Int(FUDesc):
     opList = [OpDesc(opClass="IntAlu", opLat=1)]
@@ -105,19 +104,15 @@ class ex5_big_FUP(FUPool):
     ]
 
 
-class ex5_big_BTB(SimpleBTB):
-    numEntries = 4096
-    tagBits = 18
-
-
 # Bi-Mode Branch Predictor
 class ex5_big_BP(BiModeBP):
-    btb = ex5_big_BTB()
-    ras = ReturnAddrStack(numEntries=48)
     globalPredictorSize = 4096
     globalCtrBits = 2
     choicePredictorSize = 1024
     choiceCtrBits = 3
+    BTBEntries = 4096
+    BTBTagSize = 18
+    RASSize = 48
     instShiftAmt = 2
 
 
@@ -200,8 +195,9 @@ class L2(Cache):
     size = "2MB"
     assoc = 16
     write_buffers = 8
+    prefetch_on_access = True
     clusivity = "mostly_excl"
     # Simple stride prefetcher
-    prefetcher = StridePrefetcher(degree=8, latency=1, prefetch_on_access=True)
+    prefetcher = StridePrefetcher(degree=8, latency=1)
     tags = BaseSetAssoc()
     replacement_policy = RandomRP()

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2017 Jason Power
 # All rights reserved.
 #
@@ -34,15 +35,12 @@ IMPORTANT: If you modify this file, it's likely that the Learning gem5 book
 
 """
 
-from msi_caches import (
-    DirController,
-    L1Cache,
-    MyNetwork,
-)
-
 from m5.defines import buildEnv
-from m5.objects import *
 from m5.util import fatal
+
+from m5.objects import *
+
+from msi_caches import L1Cache, DirController, MyNetwork
 
 
 class TestCacheSystem(RubySystem):
@@ -50,7 +48,7 @@ class TestCacheSystem(RubySystem):
         if buildEnv["PROTOCOL"] != "MSI":
             fatal("This system assumes MSI from learning gem5!")
 
-        super().__init__()
+        super(TestCacheSystem, self).__init__()
 
     def setup(self, system, tester, mem_ctrls):
         """Set up the Ruby cache subsystem. Note: This can't be done in the

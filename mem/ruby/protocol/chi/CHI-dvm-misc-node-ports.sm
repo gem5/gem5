@@ -1,0 +1,316 @@
+/*
+ * Copyright (c) 2021 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+// ---- Outbound port definitions ----
+// Network interfaces
+out_port(reqOutPort, CHIRequestMsg, reqOut);
+out_port(snpOutPort, CHIRequestMsg, snpOut);
+out_port(rspOutPort, CHIResponseMsg, rspOut);
+out_port(datOutPort, CHIDataMsg, datOut);
+// Internal output ports
+out_port(triggerOutPort, TriggerMsg, triggerQueue);
+out_port(retryTriggerOutPort, RetryTriggerMsg, retryTriggerQueue);
+out_port(schedRspTriggerOutPort, CHIResponseMsg, schedRspTriggerQueue);
+out_port(reqRdyOutPort, CHIRequestMsg, reqRdy);
+out_port(snpRdyOutPort, CHIRequestMsg, snpRdy);
+
+
+// Include helper functions here. Some of them require the outports to be
+// already defined
+// Notice 'processNextState' and 'wakeupPending*' functions are defined after
+// the required input ports. Currently the SLICC compiler does not support
+// separate declaration and definition of functions in the .sm files.
+include "CHI-dvm-misc-node-funcs.sm";
+
+
+// Inbound port definitions and internal triggers queues
+// Notice we never stall input ports connected to the network
+// Incoming data and responses are always consumed.
+// Incoming requests/snoop are moved to the respective internal rdy queue
+// if a TBE can be allocated, or retried otherwise.
+
+// Response
+in_port(rspInPort, CHIResponseMsg, rspIn, rank=11,
+        rsc_stall_handler=rspInPort_rsc_stall_handler) {
+  if (rspInPort.isReady(clockEdge())) {
+    printResources();
+    peek(rspInPort, CHIResponseMsg) {
+      assert(in_msg.usesTxnId);
+      TBE tbe := getCurrentActiveTBE(in_msg.txnId);
+      trigger(respToEvent(in_msg.type), in_msg.txnId, tbe);
+    }
+  }
+}
+bool rspInPort_rsc_stall_handler() {
+  error("rspInPort must never stall\n");
+  return false;
+}
+
+
+// Data
+in_port(datInPort, CHIDataMsg, datIn, rank=10,
+        rsc_stall_handler=datInPort_rsc_stall_handler) {
+  if (datInPort.isReady(clockEdge())) {
+    printResources();
+    peek(datInPort, CHIDataMsg) {
+      assert((in_msg.bitMask.count() <= data_channel_size) && (in_msg.bitMask.count() > 0));
+      assert(in_msg.usesTxnId);
+      trigger(dataToEvent(in_msg.type), in_msg.txnId, getCurrentActiveTBE(in_msg.txnId));
+    }
+  }
+}
+bool datInPort_rsc_stall_handler() {
+  error("datInPort must never stall\n");
+  return false;
+}
+
+// Incoming snoops - should never be used
+in_port(snpInPort, CHIRequestMsg, snpIn, rank=8) {
+  if (snpInPort.isReady(clockEdge())) {
+    printResources();
+    peek(snpInPort, CHIRequestMsg) {
+      error("MN should not receive snoops");
+    }
+  }
+}
+bool snpInPort_rsc_stall_handler() {
+  error("snpInPort must never stall\n");
+  return false;
+}
+
+// Incoming new requests
+in_port(reqInPort, CHIRequestMsg, reqIn, rank=2,
+        rsc_stall_handler=reqInPort_rsc_stall_handler) {
+  if (reqInPort.isReady(clockEdge())) {
+    printResources();
+    peek(reqInPort, CHIRequestMsg) {
+      assert(in_msg.usesTxnId);
+      // Make sure we aren't already processing this
+      assert(!is_valid(getCurrentActiveTBE(in_msg.txnId)));
+      if (in_msg.allowRetry) {
+        trigger(Event:AllocRequest, in_msg.txnId, nullTBE());
+      } else {
+        trigger(Event:AllocRequestWithCredit, in_msg.txnId, nullTBE());
+      }
+    }
+  }
+}
+bool reqInPort_rsc_stall_handler() {
+  error("reqInPort must never stall\n");
+  return false;
+}
+
+
+// Incoming new sequencer requests
+in_port(seqInPort, RubyRequest, mandatoryQueue, rank=1) {
+  if (seqInPort.isReady(clockEdge())) {
+    printResources();
+    peek(seqInPort, RubyRequest) {
+      error("MN should not have sequencer");
+    }
+  }
+}
+
+
+// Action triggers
+in_port(triggerInPort, TriggerMsg, triggerQueue, rank=5,
+        rsc_stall_handler=triggerInPort_rsc_stall_handler) {
+  if (triggerInPort.isReady(clockEdge())) {
+    printResources();
+    peek(triggerInPort, TriggerMsg) {
+      TBE tbe := getCurrentActiveTBE(in_msg.txnId);
+      assert(is_valid(tbe));
+      assert(!in_msg.from_hazard);
+      trigger(tbe.pendAction, in_msg.txnId, tbe);
+    }
+  }
+}
+bool triggerInPort_rsc_stall_handler() {
+  DPRINTF(RubySlicc, "Trigger queue resource stall\n");
+  triggerInPort.recycle(clockEdge(), cyclesToTicks(stall_recycle_lat));
+  return true;
+}
+void wakeupPendingTgrs(TBE tbe) {
+  if (tbe.wakeup_pending_tgr) {
+    Addr txnId := tbe.txnId;
+    wakeup_port(triggerInPort, txnId);
+    tbe.wakeup_pending_tgr := false;
+  }
+}
+
+// Requests with an allocated TBE
+in_port(reqRdyPort, CHIRequestMsg, reqRdy, rank=3,
+        rsc_stall_handler=reqRdyPort_rsc_stall_handler) {
+  if (reqRdyPort.isReady(clockEdge())) {
+    printResources();
+    peek(reqRdyPort, CHIRequestMsg) {
+      assert(in_msg.usesTxnId);
+      TBE tbe := getCurrentActiveTBE(in_msg.txnId);
+      assert(!in_msg.is_local_pf);
+      // Normal request path
+      trigger(reqToEvent(in_msg.type), in_msg.txnId, tbe);
+    }
+  }
+}
+bool reqRdyPort_rsc_stall_handler() {
+  DPRINTF(RubySlicc, "ReqRdy queue resource stall\n");
+  reqRdyPort.recycle(clockEdge(), cyclesToTicks(stall_recycle_lat));
+  return true;
+}
+void wakeupPendingReqs(TBE tbe) {
+  if (tbe.wakeup_pending_req) {
+    Addr txnId := tbe.txnId;
+    wakeup_port(reqRdyPort, txnId);
+    tbe.wakeup_pending_req := false;
+  }
+}
+
+
+// Retry action triggers
+// These are handled separately from other triggers since these events are
+// not tied to a TBE
+in_port(retryTriggerInPort, RetryTriggerMsg, retryTriggerQueue, rank=7) {
+  if (retryTriggerInPort.isReady(clockEdge())) {
+    printResources();
+    peek(retryTriggerInPort, RetryTriggerMsg) {
+      Event ev := in_msg.event;
+      TBE tbe := getCurrentActiveTBE(in_msg.txnId);
+      assert((ev == Event:SendRetryAck) || (ev == Event:SendPCrdGrant));
+      trigger(ev, in_msg.txnId, tbe);
+    }
+  }
+}
+
+// Trigger queue for scheduled responses so transactions don't need to
+// block on a response when the rspOutPort is busy
+in_port(schedRspTriggerInPort, CHIResponseMsg, schedRspTriggerQueue, rank=6) {
+  if (schedRspTriggerInPort.isReady(clockEdge())) {
+    printResources();
+    peek(schedRspTriggerInPort, CHIResponseMsg) {
+      error("Misc Node shouldn't have schedResp");
+    }
+  }
+}
+
+// Enqueues next event depending on the pending actions and the event queue
+void processNextState(TBE tbe) {
+  assert(is_valid(tbe));
+  DPRINTF(RubyProtocol, "GoToNextState state=%d expected_req_resp=%d expected_snp_resp=%d sched_rsp=%d(block=%d) pendAction: %d\n",
+                      tbe.state,
+                      tbe.expected_req_resp.expected(),
+                      tbe.expected_snp_resp.expected(),
+                      tbe.sched_responses, tbe.block_on_sched_responses,
+                      tbe.pendAction);
+
+  // if no pending trigger and not expecting to receive anything, enqueue
+  // next
+  bool has_nb_trigger := (tbe.actions.empty() == false) &&
+                          tbe.actions.frontNB();
+  int expected_msgs := tbe.expected_req_resp.expected() +
+                        tbe.expected_snp_resp.expected();
+  if (tbe.block_on_sched_responses) {
+    expected_msgs := expected_msgs + tbe.sched_responses;
+    tbe.block_on_sched_responses := tbe.sched_responses > 0;
+  }
+
+  // If we are waiting on other transactions to finish, we shouldn't enqueue Final
+  bool would_enqueue_final := tbe.actions.empty();
+  bool allowed_to_enqueue_final := !tbe.waiting_on_other_txns;
+  // if (would_enqueue_final && !allowed) then DON'T enqueue anything
+  // => if (!would_enqueue_final || allowed_to_enqueue_final) then DO
+  bool allowed_to_enqueue_action := !would_enqueue_final || allowed_to_enqueue_final;
+
+  if ((tbe.pendAction == Event:null) &&
+      ((expected_msgs == 0) || has_nb_trigger) &&
+      allowed_to_enqueue_action) {
+    Cycles trigger_latency := intToCycles(0);
+    if (tbe.delayNextAction > curTick()) {
+      trigger_latency := ticksToCycles(tbe.delayNextAction) -
+                          ticksToCycles(curTick());
+      tbe.delayNextAction := intToTick(0);
+    }
+
+    tbe.pendAction := Event:null;
+    if (tbe.actions.empty()) {
+      // time to go to the final state
+      tbe.pendAction := Event:Final;
+    } else {
+      tbe.pendAction := tbe.actions.front();
+      tbe.actions.pop();
+    }
+    assert(tbe.pendAction != Event:null);
+    enqueue(triggerOutPort, TriggerMsg, trigger_latency) {
+      out_msg.txnId := tbe.txnId;
+      out_msg.from_hazard := false;
+    }
+  }
+
+  printTBEState(tbe);
+}
+
+// Runs at the end of every cycle that takes input, checks `needsToCheckPendingOps`.
+// if true, will call updatePendingOps() to check if a new snoop-sender should start.
+// We could return bools if we want to be sure we run on the next cycle,
+// but we have no reason to do that
+void updatePendingOps(), run_on_input_cycle_end="yes" {
+  if (needsToCheckPendingOps) {
+    needsToCheckPendingOps := false;
+    DPRINTF(RubyProtocol, "Misc Node updating pending ops\n");
+    TBE newDistributor := dvmTBEs.chooseNewDistributor();
+    DPRINTF(RubyProtocol, "Misc Node selected %p\n", newDistributor);
+    if (is_valid(newDistributor)) {
+      // can return the current distributor, check for that
+      if (!hasCurrentDistributor || newDistributor.txnId != currentDistributor) {
+        currentDistributor := newDistributor.txnId;
+        hasCurrentDistributor := true;
+
+        // make the new distributor start distributing
+        // by simply telling it to send the next message
+        newDistributor.actions.pushNB(Event:DvmSendNextMessage_P1);
+        processNextState(newDistributor);
+
+        // TODO could move into Profile_OutgoingStart_DVM
+        // Use a useful event name for profiling
+        Event usefulEvent := Event:DvmSync_Initiate;
+        if (newDistributor.isNonSync) {
+          usefulEvent := Event:DvmTlbi_Initiate;
+        }
+        outgoingTransactionStart(newDistributor.txnId, usefulEvent, false);
+      }
+    }
+  }
+}

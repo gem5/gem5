@@ -33,20 +33,18 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import argparse
 import math
+import argparse
 
 import m5
 from m5.objects import *
-from m5.stats import periodicStatDump
 from m5.util import addToPath
+from m5.stats import periodicStatDump
 
 addToPath("../")
 
-from common import (
-    MemConfig,
-    ObjectList,
-)
+from common import ObjectList
+from common import MemConfig
 
 # this script is helpful to sweep the efficiency of a specific memory
 # controller configuration, by varying the number of banks accessed,

@@ -1,0 +1,165 @@
+# -*- mode:python -*-
+#
+# Copyright (c) 2018-2020 ARM Limited
+# All rights reserved
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
+# Copyright (c) 2006 The Regents of The University of Michigan
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+Import('*')
+
+SimObject('CommMonitor.py', sim_objects=['CommMonitor'])
+Source('comm_monitor.cc')
+
+SimObject('AbstractMemory.py', sim_objects=['AbstractMemory'])
+SimObject('AddrMapper.py', sim_objects=['AddrMapper', 'RangeAddrMapper'])
+SimObject('Bridge.py', sim_objects=['Bridge'])
+SimObject('SysBridge.py', sim_objects=['SysBridge'])
+DebugFlag('SysBridge')
+SimObject('MemCtrl.py', sim_objects=['MemCtrl'],
+        enums=['MemSched'])
+SimObject('HeteroMemCtrl.py', sim_objects=['HeteroMemCtrl'])
+SimObject('HBMCtrl.py', sim_objects=['HBMCtrl'])
+SimObject('MemInterface.py', sim_objects=['MemInterface'], enums=['AddrMap'])
+SimObject('DRAMInterface.py', sim_objects=['DRAMInterface'],
+        enums=['PageManage'])
+SimObject('NVMInterface.py', sim_objects=['NVMInterface'])
+SimObject('ExternalMaster.py', sim_objects=['ExternalMaster'])
+SimObject('ExternalSlave.py', sim_objects=['ExternalSlave'])
+SimObject('CfiMemory.py', sim_objects=['CfiMemory'])
+SimObject('SharedMemoryServer.py', sim_objects=['SharedMemoryServer'])
+SimObject('SimpleMemory.py', sim_objects=['SimpleMemory'])
+SimObject('XBar.py', sim_objects=[
+    'BaseXBar', 'NoncoherentXBar', 'CoherentXBar', 'SnoopFilter'])
+SimObject('HMCController.py', sim_objects=['HMCController'])
+SimObject('SerialLink.py', sim_objects=['SerialLink'])
+SimObject('MemDelay.py', sim_objects=['MemDelay', 'SimpleMemDelay'])
+SimObject('PortTerminator.py', sim_objects=['PortTerminator'])
+SimObject('ThreadBridge.py', sim_objects=['ThreadBridge'])
+
+Source('abstract_mem.cc')
+Source('addr_mapper.cc')
+Source('bridge.cc')
+Source('coherent_xbar.cc')
+Source('cfi_mem.cc')
+Source('drampower.cc')
+Source('external_master.cc')
+Source('external_slave.cc')
+Source('mem_ctrl.cc')
+Source('hetero_mem_ctrl.cc')
+Source('hbm_ctrl.cc')
+Source('mem_interface.cc')
+Source('dram_interface.cc')
+Source('nvm_interface.cc')
+Source('noncoherent_xbar.cc')
+Source('packet.cc')
+Source('port.cc')
+Source('packet_queue.cc')
+Source('port_proxy.cc')
+Source('port_wrapper.cc')
+Source('physical.cc')
+Source('shared_memory_server.cc')
+Source('simple_mem.cc')
+Source('snoop_filter.cc')
+Source('stack_dist_calc.cc')
+Source('sys_bridge.cc')
+Source('thread_bridge.cc')
+Source('token_port.cc')
+Source('tport.cc')
+Source('xbar.cc')
+Source('hmc_controller.cc')
+Source('htm.cc')
+Source('serial_link.cc')
+Source('mem_delay.cc')
+Source('port_terminator.cc')
+
+GTest('translation_gen.test', 'translation_gen.test.cc')
+
+Source('translating_port_proxy.cc')
+Source('se_translating_port_proxy.cc')
+Source('page_table.cc')
+
+if env['HAVE_DRAMSIM']:
+    SimObject('DRAMSim2.py', sim_objects=['DRAMSim2'])
+    Source('dramsim2_wrapper.cc')
+    Source('dramsim2.cc')
+
+if env['HAVE_DRAMSIM3']:
+    SimObject('DRAMsim3.py', sim_objects=['DRAMsim3'])
+    Source('dramsim3_wrapper.cc')
+    Source('dramsim3.cc')
+
+if env['HAVE_DRAMSYS']:
+    SimObject('DRAMSys.py', sim_objects=['DRAMSys'])
+    Source('dramsys_wrapper.cc')
+
+SimObject('MemChecker.py', sim_objects=['MemChecker', 'MemCheckerMonitor'])
+Source('mem_checker.cc')
+Source('mem_checker_monitor.cc')
+
+DebugFlag('AddrRanges')
+DebugFlag('BaseXBar')
+DebugFlag('CoherentXBar')
+DebugFlag('CFI')
+DebugFlag('NoncoherentXBar')
+DebugFlag('SnoopFilter')
+CompoundFlag('XBar', ['BaseXBar', 'CoherentXBar', 'NoncoherentXBar',
+                      'SnoopFilter'])
+
+DebugFlag('Bridge')
+DebugFlag('CommMonitor')
+DebugFlag('DRAM')
+DebugFlag('DRAMPower')
+DebugFlag('DRAMState')
+DebugFlag('NVM')
+DebugFlag('ExternalPort')
+DebugFlag('HtmMem', 'Hardware Transactional Memory (Mem side)')
+DebugFlag('LLSC')
+DebugFlag('MemCtrl')
+DebugFlag('MMU')
+DebugFlag('MemoryAccess')
+DebugFlag('PacketQueue')
+DebugFlag("PortTrace")
+DebugFlag('ResponsePort')
+DebugFlag('StackDist')
+DebugFlag("DRAMSim2")
+DebugFlag("DRAMsim3")
+DebugFlag('HMCController')
+DebugFlag('SerialLink')
+DebugFlag('TokenPort')
+
+DebugFlag("MemChecker")
+DebugFlag("MemCheckerMonitor")
+DebugFlag("QOS")

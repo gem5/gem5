@@ -1,0 +1,201 @@
+/*
+ * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * AMD's contributions to the MOESI hammer protocol do not constitute an
+ * endorsement of its similarity to any AMD products.
+ */
+
+// CoherenceRequestType
+enumeration(CoherenceRequestType, desc="...") {
+  GETX,      desc="Get eXclusive";
+  GETS,      desc="Get Shared";
+  MERGED_GETS, desc="Get Shared";
+  PUT,       desc="Put Ownership";
+  WB_ACK,    desc="Writeback ack";
+  WB_NACK,   desc="Writeback neg. ack";
+  PUTF,      desc="PUT on a Flush";
+  GETF,      desc="Issue exclusive for Flushing";
+  BLOCK_ACK, desc="Dir Block ack";
+  INV,       desc="Invalidate";
+}
+
+// CoherenceResponseType
+enumeration(CoherenceResponseType, desc="...") {
+  ACK,                desc="ACKnowledgment, responder does not have a copy";
+  ACK_SHARED,         desc="ACKnowledgment, responder has a shared copy";
+  DATA,               desc="Data, responder does not have a copy";
+  DATA_SHARED,        desc="Data, responder has a shared copy";
+  DATA_EXCLUSIVE,     desc="Data, responder was exclusive, gave us a copy, and they went to invalid";
+  WB_CLEAN,           desc="Clean writeback";
+  WB_DIRTY,           desc="Dirty writeback";
+  WB_EXCLUSIVE_CLEAN, desc="Clean writeback of exclusive data";
+  WB_EXCLUSIVE_DIRTY, desc="Dirty writeback of exclusive data";
+  UNBLOCK,            desc="Unblock for writeback";
+  UNBLOCKS,            desc="Unblock now in S";
+  UNBLOCKM,            desc="Unblock now in M/O/E";
+  NULL,               desc="Null value";
+}
+
+// TriggerType
+enumeration(TriggerType, desc="...") {
+  L2_to_L1,            desc="L2 to L1 transfer";
+  ALL_ACKS,            desc="See corresponding event";
+  ALL_ACKS_OWNER_EXISTS,desc="See corresponding event";
+  ALL_ACKS_NO_SHARERS, desc="See corresponding event";
+  ALL_UNBLOCKS,        desc="all unblockS received";
+}
+
+// TriggerMsg
+structure(TriggerMsg, desc="...", interface="Message") {
+  Addr addr,             desc="Physical address for this request";
+  TriggerType Type,            desc="Type of trigger";
+
+  bool functionalRead(Packet *pkt) {
+    // Trigger messages do not hold any data!
+    return false;
+  }
+
+  bool functionalWrite(Packet *pkt) {
+    // Trigger messages do not hold any data!
+    return false;
+  }
+}
+
+// RequestMsg (and also forwarded requests)
+structure(RequestMsg, desc="...", interface="Message") {
+  Addr addr,             desc="Physical address for this request";
+  CoherenceRequestType Type,   desc="Type of request (GetS, GetX, PutX, etc)";
+  MachineID Requestor,            desc="Node who initiated the request";
+  NetDest MergedRequestors,    desc="Merge set of read requestors";
+  NetDest Destination,             desc="Multicast destination mask";
+  MessageSizeType MessageSize, desc="size category of the message";
+  bool DirectedProbe, default="false", desc="probe filter directed probe";
+
+  Cycles InitialRequestTime, default="Cycles(0)",
+        desc="time the initial requests was sent from the L1Cache";
+  Cycles ForwardRequestTime, default="Cycles(0)",
+        desc="time the dir forwarded the request";
+  int SilentAcks, default="0", desc="silent acks from the full-bit directory";
+
+  bool functionalRead(Packet *pkt) {
+    // Request messages do not hold any data
+    return false;
+  }
+
+  bool functionalWrite(Packet *pkt) {
+    // Request messages do not hold any data
+    return false;
+  }
+}
+
+// ResponseMsg (and also unblock requests)
+structure(ResponseMsg, desc="...", interface="Message") {
+  Addr addr,             desc="Physical address for this request";
+  CoherenceResponseType Type,  desc="Type of response (Ack, Data, etc)";
+  MachineID Sender,               desc="Node who sent the data";
+  MachineID CurOwner,      desc="current owner of the block, used for UnblockS responses";
+  NetDest Destination,             desc="Node to whom the data is sent";
+  DataBlock DataBlk,           desc="data for the cache line";
+  bool Dirty,                  desc="Is the data dirty (different than memory)?";
+  int Acks, default="0",    desc="How many messages this counts as";
+  MessageSizeType MessageSize, desc="size category of the message";
+
+  Cycles InitialRequestTime, default="Cycles(0)",
+        desc="time the initial requests was sent from the L1Cache";
+  Cycles ForwardRequestTime, default="Cycles(0)",
+        desc="time the dir forwarded the request";
+  int SilentAcks, default="0", desc="silent acks from the full-bit directory";
+
+  bool functionalRead(Packet *pkt) {
+    // The check below ensures that data is read only from messages that
+    // actually hold data.
+    if (Type == CoherenceResponseType:DATA ||
+        Type == CoherenceResponseType:DATA_SHARED ||
+        Type == CoherenceResponseType:DATA_EXCLUSIVE ||
+        Type == CoherenceResponseType:WB_DIRTY ||
+        Type == CoherenceResponseType:WB_EXCLUSIVE_DIRTY) {
+        return testAndRead(addr, DataBlk, pkt);
+    }
+
+    return false;
+  }
+
+  bool functionalWrite(Packet *pkt) {
+    // Message type does not matter since all messages are written.
+    // If a protocol reads data from a packet that is not supposed
+    // to hold the data, then the fault lies with the protocol.
+    return testAndWrite(addr, DataBlk, pkt);
+  }
+}
+
+enumeration(DMARequestType, desc="...", default="DMARequestType_NULL") {
+  READ,          desc="Memory Read";
+  WRITE,         desc="Memory Write";
+  NULL,          desc="Invalid";
+}
+
+enumeration(DMAResponseType, desc="...", default="DMAResponseType_NULL") {
+  DATA,          desc="DATA read";
+  ACK,           desc="ACK write";
+  NULL,          desc="Invalid";
+}
+
+structure(DMARequestMsg, desc="...", interface="Message") {
+  DMARequestType Type,       desc="Request type (read/write)";
+  Addr PhysicalAddress,   desc="Physical address for this request";
+  Addr LineAddress,       desc="Line address for this request";
+  MachineID Requestor,            desc="Node who initiated the request";
+  NetDest Destination,       desc="Destination";
+  DataBlock DataBlk,         desc="DataBlk attached to this request";
+  int Len,                   desc="The length of the request";
+  MessageSizeType MessageSize, desc="size category of the message";
+
+  bool functionalRead(Packet *pkt) {
+    return testAndRead(LineAddress, DataBlk, pkt);
+  }
+
+  bool functionalWrite(Packet *pkt) {
+    return testAndWrite(LineAddress, DataBlk, pkt);
+  }
+}
+
+structure(DMAResponseMsg, desc="...", interface="Message") {
+  DMAResponseType Type,      desc="Response type (DATA/ACK)";
+  Addr PhysicalAddress,   desc="Physical address for this request";
+  Addr LineAddress,       desc="Line address for this request";
+  NetDest Destination,       desc="Destination";
+  DataBlock DataBlk,         desc="DataBlk attached to this request";
+  MessageSizeType MessageSize, desc="size category of the message";
+
+  bool functionalRead(Packet *pkt) {
+    return testAndRead(LineAddress, DataBlk, pkt);
+  }
+
+  bool functionalWrite(Packet *pkt) {
+    return testAndWrite(LineAddress, DataBlk, pkt);
+  }
+}

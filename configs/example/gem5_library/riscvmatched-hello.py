@@ -37,10 +37,10 @@ scons build/RISCV/gem5.opt
 ```
 """
 
-from gem5.isas import ISA
-from gem5.prebuilt.riscvmatched.riscvmatched_board import RISCVMatchedBoard
-from gem5.resources.resource import obtain_resource
+from gem5.resources.resource import Resource
 from gem5.simulate.simulator import Simulator
+from gem5.prebuilt.riscvmatched.riscvmatched_board import RISCVMatchedBoard
+from gem5.isas import ISA
 from gem5.utils.requires import requires
 
 requires(isa_required=ISA.RISCV)
@@ -49,7 +49,7 @@ requires(isa_required=ISA.RISCV)
 board = RISCVMatchedBoard()
 
 # set the hello world riscv binary as the board workload
-board.set_se_binary_workload(obtain_resource("riscv-hello"))
+board.set_se_binary_workload(Resource("riscv-hello"))
 
 # run the simulation with the RISCV Matched board
 simulator = Simulator(board=board, full_system=False)

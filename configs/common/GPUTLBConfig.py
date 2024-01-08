@@ -36,6 +36,7 @@ from m5.objects import *
 
 
 def TLB_constructor(options, level, gpu_ctrl=None, full_system=False):
+
     if full_system:
         constructor_call = (
             "VegaGPUTLB(\
@@ -70,6 +71,7 @@ def TLB_constructor(options, level, gpu_ctrl=None, full_system=False):
 
 
 def Coalescer_constructor(options, level, full_system):
+
     if full_system:
         constructor_call = (
             "VegaTLBCoalescer(probesPerCycle = \

@@ -1,0 +1,338 @@
+/*
+ * Copyright (c) 2012-2015 Advanced Micro Devices, Inc.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Author: Blake Hechtman
+ */
+
+machine(MachineType:SQC, "GPU SQC (L1 I Cache)")
+ : Sequencer* sequencer;
+   CacheMemory * L1cache;
+   int TCC_select_num_bits;
+   Cycles issue_latency := 80;  // time to send data down to TCC
+   Cycles l2_hit_latency := 18; // for 1MB L2, 20 for 2MB
+
+  MessageBuffer * requestFromSQC, network="To", virtual_network="1", vnet_type="request";
+
+  MessageBuffer * probeToSQC, network="From", virtual_network="1", vnet_type="request";
+  MessageBuffer * responseToSQC, network="From", virtual_network="3", vnet_type="response";
+
+  MessageBuffer * mandatoryQueue;
+{
+  state_declaration(State, desc="SQC Cache States", default="SQC_State_I") {
+    I, AccessPermission:Invalid, desc="Invalid";
+    V, AccessPermission:Read_Only, desc="Valid";
+  }
+
+  enumeration(Event, desc="SQC Events") {
+    // Core initiated
+    Fetch,          desc="Fetch";
+    // Mem sys initiated
+    Repl,           desc="Replacing block from cache";
+    Data,           desc="Received Data";
+  }
+
+  enumeration(RequestType, desc="To communicate stats from transitions to recordStats") {
+    DataArrayRead,    desc="Read the data array";
+    DataArrayWrite,   desc="Write the data array";
+    TagArrayRead,     desc="Read the data array";
+    TagArrayWrite,    desc="Write the data array";
+  }
+
+
+  structure(Entry, desc="...", interface="AbstractCacheEntry") {
+    State CacheState,           desc="cache state";
+    bool Dirty,                 desc="Is the data dirty (diff than memory)?";
+    DataBlock DataBlk,          desc="data for the block";
+    bool FromL2, default="false", desc="block just moved from L2";
+  }
+
+  structure(TBE, desc="...") {
+    State TBEState,             desc="Transient state";
+    DataBlock DataBlk,       desc="data for the block, required for concurrent writebacks";
+    bool Dirty,              desc="Is the data dirty (different than memory)?";
+    int NumPendingMsgs,      desc="Number of acks/data messages that this processor is waiting for";
+    bool Shared,             desc="Victim hit by shared probe";
+   }
+
+  structure(TBETable, external="yes") {
+    TBE lookup(Addr);
+    void allocate(Addr);
+    void deallocate(Addr);
+    bool isPresent(Addr);
+  }
+
+  TBETable TBEs, template="<SQC_TBE>", constructor="m_number_of_TBEs";
+  int TCC_select_low_bit, default="RubySystem::getBlockSizeBits()";
+
+  void set_cache_entry(AbstractCacheEntry b);
+  void unset_cache_entry();
+  void set_tbe(TBE b);
+  void unset_tbe();
+  void wakeUpAllBuffers();
+  void wakeUpBuffers(Addr a);
+  Cycles curCycle();
+
+  // Internal functions
+  Tick clockEdge();
+
+  Entry getCacheEntry(Addr address), return_by_pointer="yes" {
+    Entry cache_entry := static_cast(Entry, "pointer", L1cache.lookup(address));
+    return cache_entry;
+  }
+
+  DataBlock getDataBlock(Addr addr), return_by_ref="yes" {
+    TBE tbe := TBEs.lookup(addr);
+    if(is_valid(tbe)) {
+      return tbe.DataBlk;
+    } else {
+      return getCacheEntry(addr).DataBlk;
+    }
+  }
+
+  State getState(TBE tbe, Entry cache_entry, Addr addr) {
+    if(is_valid(tbe)) {
+      return tbe.TBEState;
+    } else if (is_valid(cache_entry)) {
+      return cache_entry.CacheState;
+    }
+    return State:I;
+  }
+
+  void setState(TBE tbe, Entry cache_entry, Addr addr, State state) {
+    if (is_valid(tbe)) {
+      tbe.TBEState := state;
+    }
+
+    if (is_valid(cache_entry)) {
+      cache_entry.CacheState := state;
+    }
+  }
+
+  void functionalRead(Addr addr, Packet *pkt) {
+    TBE tbe := TBEs.lookup(addr);
+    if(is_valid(tbe)) {
+      testAndRead(addr, tbe.DataBlk, pkt);
+    } else {
+      functionalMemoryRead(pkt);
+    }
+  }
+
+  int functionalWrite(Addr addr, Packet *pkt) {
+    int num_functional_writes := 0;
+
+    TBE tbe := TBEs.lookup(addr);
+    if(is_valid(tbe)) {
+      num_functional_writes := num_functional_writes +
+            testAndWrite(addr, tbe.DataBlk, pkt);
+    }
+
+    num_functional_writes := num_functional_writes +
+        functionalMemoryWrite(pkt);
+    return num_functional_writes;
+  }
+
+  AccessPermission getAccessPermission(Addr addr) {
+    TBE tbe := TBEs.lookup(addr);
+    if(is_valid(tbe)) {
+      return SQC_State_to_permission(tbe.TBEState);
+    }
+
+    Entry cache_entry := getCacheEntry(addr);
+    if(is_valid(cache_entry)) {
+      return SQC_State_to_permission(cache_entry.CacheState);
+    }
+
+    return AccessPermission:NotPresent;
+  }
+
+  void setAccessPermission(Entry cache_entry, Addr addr, State state) {
+    if (is_valid(cache_entry)) {
+      cache_entry.changePermission(SQC_State_to_permission(state));
+    }
+  }
+
+  void recordRequestType(RequestType request_type, Addr addr) {
+    if (request_type == RequestType:DataArrayRead) {
+        L1cache.recordRequestType(CacheRequestType:DataArrayRead, addr);
+    } else if (request_type == RequestType:DataArrayWrite) {
+        L1cache.recordRequestType(CacheRequestType:DataArrayWrite, addr);
+    } else if (request_type == RequestType:TagArrayRead) {
+        L1cache.recordRequestType(CacheRequestType:TagArrayRead, addr);
+    } else if (request_type == RequestType:TagArrayWrite) {
+        L1cache.recordRequestType(CacheRequestType:TagArrayWrite, addr);
+    }
+  }
+
+  bool checkResourceAvailable(RequestType request_type, Addr addr) {
+    if (request_type == RequestType:DataArrayRead) {
+      return L1cache.checkResourceAvailable(CacheResourceType:DataArray, addr);
+    } else if (request_type == RequestType:DataArrayWrite) {
+      return L1cache.checkResourceAvailable(CacheResourceType:DataArray, addr);
+    } else if (request_type == RequestType:TagArrayRead) {
+      return L1cache.checkResourceAvailable(CacheResourceType:TagArray, addr);
+    } else if (request_type == RequestType:TagArrayWrite) {
+      return L1cache.checkResourceAvailable(CacheResourceType:TagArray, addr);
+    } else {
+      error("Invalid RequestType type in checkResourceAvailable");
+      return true;
+    }
+  }
+
+  // Out Ports
+
+  out_port(requestNetwork_out, CPURequestMsg, requestFromSQC);
+
+  // In Ports
+
+  in_port(responseToSQC_in, ResponseMsg, responseToSQC) {
+    if (responseToSQC_in.isReady(clockEdge())) {
+      peek(responseToSQC_in, ResponseMsg, block_on="addr") {
+
+        Entry cache_entry := getCacheEntry(in_msg.addr);
+        TBE tbe := TBEs.lookup(in_msg.addr);
+
+        if (in_msg.Type == CoherenceResponseType:TDSysResp) {
+          if (is_valid(cache_entry) || L1cache.cacheAvail(in_msg.addr)) {
+            trigger(Event:Data, in_msg.addr, cache_entry, tbe);
+          } else {
+            Addr victim := L1cache.cacheProbe(in_msg.addr);
+            trigger(Event:Repl, victim, getCacheEntry(victim), TBEs.lookup(victim));
+          }
+        } else {
+          error("Unexpected Response Message to Core");
+        }
+      }
+    }
+  }
+
+  in_port(mandatoryQueue_in, RubyRequest, mandatoryQueue, desc="...") {
+    if (mandatoryQueue_in.isReady(clockEdge())) {
+      peek(mandatoryQueue_in, RubyRequest, block_on="LineAddress") {
+        Entry cache_entry := getCacheEntry(in_msg.LineAddress);
+        TBE tbe := TBEs.lookup(in_msg.LineAddress);
+        trigger(Event:Fetch, in_msg.LineAddress, cache_entry, tbe);
+      }
+    }
+  }
+
+  // Actions
+
+  action(ic_invCache, "ic", desc="invalidate cache") {
+    if(is_valid(cache_entry)) {
+      L1cache.deallocate(address);
+    }
+    unset_cache_entry();
+  }
+
+  action(nS_issueRdBlkS, "nS", desc="Issue RdBlkS") {
+    enqueue(requestNetwork_out, CPURequestMsg, issue_latency) {
+      out_msg.addr := address;
+      out_msg.Type := CoherenceRequestType:RdBlk;
+      out_msg.Requestor := machineID;
+      out_msg.Destination.add(mapAddressToRange(address,MachineType:TCC,
+                              TCC_select_low_bit, TCC_select_num_bits));
+      out_msg.MessageSize := MessageSizeType:Request_Control;
+      out_msg.InitialRequestTime := curCycle();
+    }
+  }
+
+  action(a_allocate, "a", desc="allocate block") {
+    if (is_invalid(cache_entry)) {
+      set_cache_entry(L1cache.allocate(address, new Entry));
+    }
+  }
+
+  action(p_popMandatoryQueue, "pm", desc="Pop Mandatory Queue") {
+    mandatoryQueue_in.dequeue(clockEdge());
+  }
+
+  action(pr_popResponseQueue, "pr", desc="Pop Response Queue") {
+    responseToSQC_in.dequeue(clockEdge());
+  }
+
+  action(l_loadDoneHit, "ldh", desc="local load done (hits in SQC)") {
+    assert(is_valid(cache_entry));
+    sequencer.readCallback(address, cache_entry.DataBlk, true, MachineType:L1Cache);
+    APPEND_TRANSITION_COMMENT(cache_entry.DataBlk);
+  }
+
+  action(l_loadDoneMiss, "ldm", desc="local load done (misses in SQC)") {
+    assert(is_valid(cache_entry));
+    sequencer.readCallback(address, cache_entry.DataBlk, false, MachineType:L1Cache);
+    APPEND_TRANSITION_COMMENT(cache_entry.DataBlk);
+  }
+
+  action(w_writeCache, "w", desc="write data to cache") {
+    peek(responseToSQC_in, ResponseMsg) {
+      assert(is_valid(cache_entry));
+      cache_entry.DataBlk := in_msg.DataBlk;
+      cache_entry.Dirty := false;
+    }
+  }
+
+  // added for profiling
+  action(uu_profileDataMiss, "\udm", desc="Profile SQC demand miss"){
+    L1cache.profileDemandMiss();
+  }
+
+  action(uu_profileDataHit, "\udh", desc="Profile SQC demand hit"){
+    L1cache.profileDemandHit();
+  }
+
+  // Transitions
+
+  // transitions from base
+  transition({I, V}, Repl, I) {TagArrayRead, TagArrayWrite} {
+    // since we're evicting something, don't bother classifying as hit/miss
+    ic_invCache;
+  }
+
+  transition(I, Data, V) {TagArrayRead, TagArrayWrite, DataArrayRead} {
+    a_allocate;
+    // don't profile this as a hit/miss since it's a reponse from L2,
+    // so we already counted it
+    w_writeCache;
+    l_loadDoneMiss;
+    pr_popResponseQueue;
+  }
+
+  transition(I, Fetch) {TagArrayRead, TagArrayWrite} {
+    nS_issueRdBlkS;
+    uu_profileDataMiss; // since line wasn't in SQC, we missed
+    p_popMandatoryQueue;
+  }
+
+  // simple hit transitions
+  transition(V, Fetch) {TagArrayRead, DataArrayRead} {
+    l_loadDoneHit;
+    uu_profileDataHit; // line was in SQC, so we hit
+    p_popMandatoryQueue;
+  }
+}

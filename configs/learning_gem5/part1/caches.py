@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2015 Jason Power
 # All rights reserved.
 #
@@ -33,6 +34,8 @@ line options from each individual class.
 
 import m5
 from m5.objects import Cache
+from m5.objects import CacheSelector
+from m5.objects import Bridge
 
 # Add the common scripts to our path
 m5.util.addToPath("../../")
@@ -41,6 +44,27 @@ from common import SimpleOpts
 
 # Some specific options for caches
 # For all options see src/mem/cache/BaseCache.py
+
+class L1DBridge(Bridge):
+    def __init__(self):
+        super(L1DBridge, self).__init__()
+
+    def connectCPU(self, cpu):
+        self.cpu_side_port = cpu.dcache_port
+
+    def connectMainMEM(self, bus):
+        self.mem_side_port = bus.cpu_side
+
+    def connectShadowMEM(self, bus):
+        self.mem_shadow_port = bus.cpu_side
+
+    def connectShadowBUS(self, bus):
+        self.mem_shadow_port = bus.cpu_side_ports
+
+class L1DCacheSelector(CacheSelector):
+
+    def __init__(self):
+        super(L1DCacheSelector, self).__init__()
 
 
 class L1Cache(Cache):
@@ -54,14 +78,14 @@ class L1Cache(Cache):
     tgts_per_mshr = 20
 
     def __init__(self, options=None):
-        super().__init__()
+        super(L1Cache, self).__init__()
         pass
 
     def connectBus(self, bus):
         """Connect this cache to a memory-side bus"""
         self.mem_side = bus.cpu_side_ports
 
-    def connectCPU(self, cpu):
+    def connectBUS(self, cpu):
         """Connect this cache's port to a CPU-side port
         This must be defined in a subclass"""
         raise NotImplementedError
@@ -78,7 +102,7 @@ class L1ICache(L1Cache):
     )
 
     def __init__(self, opts=None):
-        super().__init__(opts)
+        super(L1ICache, self).__init__(opts)
         if not opts or not opts.l1i_size:
             return
         self.size = opts.l1i_size
@@ -88,25 +112,45 @@ class L1ICache(L1Cache):
         self.cpu_side = cpu.icache_port
 
 
-class L1DCache(L1Cache):
+class L1_main_cache(L1Cache):
     """Simple L1 data cache with default values"""
 
     # Set the default size
-    size = "64kB"
+    size = "32kB"
 
     SimpleOpts.add_option(
-        "--l1d_size", help=f"L1 data cache size. Default: {size}"
+        "--l1md_size", help=f"L1 data cache size. Default: {size}"
     )
 
     def __init__(self, opts=None):
-        super().__init__(opts)
-        if not opts or not opts.l1d_size:
+        super(L1_main_cache, self).__init__(opts)
+        if not opts or not opts.l1md_size:
             return
-        self.size = opts.l1d_size
+        self.size = opts.l1md_size
 
     def connectCPU(self, cpu):
         """Connect this cache's port to a CPU dcache port"""
-        self.cpu_side = cpu.dcache_port
+        self.cpu_side = cpu.mem_side_port
+
+class L1_shadow_cache(L1Cache):
+    """Simple L1 data cache with default values"""
+
+    # Set the default size
+    size = "32kB"
+
+    SimpleOpts.add_option(
+        "--l1sd_size", help=f"L1 data cache size. Default: {size}"
+    )
+
+    def __init__(self, opts=None):
+        super(L1_shadow_cache, self).__init__(opts)
+        if not opts or not opts.l1sd_size:
+            return
+        self.size = opts.l1sd_size
+
+    def connectCPU(self, cpu):
+        """Connect this cache's port to a CPU dcache port"""
+        self.cpu_side = cpu.mem_side_port
 
 
 class L2Cache(Cache):
@@ -124,7 +168,7 @@ class L2Cache(Cache):
     SimpleOpts.add_option("--l2_size", help=f"L2 cache size. Default: {size}")
 
     def __init__(self, opts=None):
-        super().__init__()
+        super(L2Cache, self).__init__()
         if not opts or not opts.l2_size:
             return
         self.size = opts.l2_size

@@ -1,0 +1,109 @@
+
+/*
+ * Copyright (c) 2021 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
+ * Copyright (c) 1999-2005 Mark D. Hill and David A. Wood
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+ * $Id$
+ *
+ */
+
+// MemoryRequestType used in MemoryMsg
+
+enumeration(MemoryRequestType, desc="...") {
+
+  // Southbound request: from directory to memory cache
+  // or directory to memory or memory cache to memory
+  MEMORY_READ,     desc="Read request to memory";
+  MEMORY_WB,       desc="Write back data to memory";
+
+  // response from memory to directory
+  // (These are currently unused!)
+  MEMORY_DATA, desc="Data read from memory";
+  MEMORY_ACK,  desc="Write to memory acknowledgement";
+}
+
+
+// Message to and from Memory Control
+
+structure(MemoryMsg, desc="...", interface="Message") {
+  Addr addr,              desc="Physical address for this request";
+  MemoryRequestType Type,       desc="Type of memory request (MEMORY_READ or MEMORY_WB)";
+  MachineID Sender,             desc="What component sent the data";
+  MachineID OriginalRequestorMachId, desc="What component originally requested";
+  DataBlock DataBlk,            desc="Data to writeback";
+  MessageSizeType MessageSize,  desc="size category of the message";
+  int Len,                      desc="size of the memory/dma request";
+  // Not all fields used by all protocols:
+  PrefetchBit Prefetch,         desc="Is this a prefetch request";
+  bool ReadX,                   desc="Exclusive";
+  int Acks,                     desc="How many acks to expect";
+  bool isGLCSet,                desc="Bypass L1 Cache";
+  bool isSLCSet,                desc="Bypass L1 and L2 Caches";
+
+  bool functionalRead(Packet *pkt) {
+    if ((MessageSize == MessageSizeType:Response_Data) ||
+        (MessageSize == MessageSizeType:Writeback_Data))  {
+      return testAndRead(addr, DataBlk, pkt);
+    }
+    return false;
+  }
+
+  bool functionalRead(Packet *pkt, WriteMask &mask) {
+    if ((MessageSize == MessageSizeType:Response_Data) ||
+        (MessageSize == MessageSizeType:Writeback_Data))  {
+      WriteMask read_mask;
+      read_mask.setMask(addressOffset(addr, makeLineAddress(addr)), Len, true);
+      if (MessageSize != MessageSizeType:Writeback_Data) {
+        read_mask.setInvertedMask(mask);
+      }
+      if (read_mask.isEmpty()) {
+        return false;
+      } else if (testAndReadMask(addr, DataBlk, read_mask, pkt)) {
+        mask.orMask(read_mask);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool functionalWrite(Packet *pkt) {
+    return testAndWrite(addr, DataBlk, pkt);
+  }
+}

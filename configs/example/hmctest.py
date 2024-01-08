@@ -1,6 +1,6 @@
+import sys
 import argparse
 import subprocess
-import sys
 from pprint import pprint
 
 import m5
@@ -9,10 +9,8 @@ from m5.util import *
 
 addToPath("../")
 
-from common import (
-    HMC,
-    MemConfig,
-)
+from common import MemConfig
+from common import HMC
 
 
 def add_options(parser):

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2017 Jason Lowe-Power
 # All rights reserved.
 #
@@ -49,6 +50,6 @@ root.hello.goodbye_object = GoodbyeObject(buffer_size="100B")
 # instantiate all of the objects we've created above
 m5.instantiate()
 
-print(f"Beginning simulation!")
+print("Beginning simulation!")
 exit_event = m5.simulate()
-print(f"Exiting @ tick {m5.curTick()} because {exit_event.getCause()}")
+print("Exiting @ tick %i because %s" % (m5.curTick(), exit_event.getCause()))

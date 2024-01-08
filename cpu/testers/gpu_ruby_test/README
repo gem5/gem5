@@ -1,0 +1,127 @@
+/*
+ * Copyright (c) 2017-2021 Advanced Micro Devices, Inc.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+
+This directory contains a tester for gem5 GPU protocols. Unlike the Ruby random
+teter, this tester does not rely on sequential consistency. Instead, it
+assumes tested protocols supports release consistency.
+
+----- Getting Started -----
+
+To start using the tester quickly, you can use the following example command
+line to get running immediately:
+
+build/GCN3_X86/gem5.opt configs/example/ruby_gpu_random_test.py \
+            --test-length=1000 --system-size=medium --cache-size=small
+
+An overview of the main command line options is as follows. For all options
+use `build/GCN3_X86/gem5.opt configs/example/ruby_gpu_random_test.py --help`
+or see the configuration file.
+
+ * --cache-size (small, large): Use smaller sizes for testing evict, etc.
+ * --system-size (small, medium, large): Effectively the number of threads in
+                 the GPU model. Large size will have more contention. Larger
+                 sizes are useful for checking contention.
+ * --episode-length (short, medium, long): Number of loads and stores in an
+                 episode. Episodes will also have atomics mixed in. See below
+                 for a definition of episode.
+ * --test-length (int): Number of episodes to execute. This will determine the
+                 amount of time the tester runs for. Longer time will stress
+                 the protocol harder.
+
+The remainder of this file describes the theory behind the tester design and
+a link to a more detailed research paper is provided at the end.
+
+----- Theory Overview -----
+
+The GPU Ruby tester creates a system consisting of both CPU threads and GPU
+wavefronts. CPU threads are scalar, so there is one lane per CPU thread. GPU
+wavefront may have multiple lanes. The number of lanes is initialized when
+a thread/wavefront is created.
+
+Each thread/wavefront executes a number of episodes. Each episode is a series
+of memory actions (i.e., atomic, load, store, acquire and release). In a
+wavefront, all lanes execute the same sequence of actions, but they may target
+different addresses. One can think of an episode as a critical section which
+is bounded by a lock acquire in the beginning and a lock release at the end. An
+episode consists of actions in the following order:
+
+1 - Atomic action
+2 - Acquire action
+3 - A number of load and store actions
+4 - Release action
+5 - Atomic action that targets the same address as (1) does
+
+There are two separate set of addresses: atomic and non-atomic. Atomic actions
+target only atomic addresses. Load and store actions target only non-atomic
+addresses. Memory addresses are all 4-byte aligned in the tester.
+
+To test false sharing cases in which both atomic and non-atomic addresses are
+placed in the same cache line, we abstract out the concept of memory addresses
+from the tester's perspective by introducing the concept of location. Locations
+are numbered from 0 to N-1 (if there are N addresses). The first X locations
+[0..X-1] are atomic locations, and the rest are non-atomic locations.
+The 1-1 mapping between locations and addresses are randomly created when the
+tester is initialized.
+
+Per load and store action, its target location is selected so that there is no
+data race in the generated stream of memory requests at any time during the
+test. Since in Data-Race-Free model, the memory system's behavior is undefined
+in data race cases, we exclude data race scenarios from our protocol test.
+
+Once location per load/store action is determined, each thread/wavefront either
+loads current value at the location or stores an incremental value to that
+location. The tester maintains a table tracking all last writers and their
+written values, so we know what value should be returned from a load and what
+value should be written next at a particular location. Value returned from a
+load must match with the value written by the last writer.
+
+----- Directory Structure -----
+
+ProtocolTester.hh/cc -- This is the main tester class that orchestrates the
+                        entire test.
+AddressManager.hh/cc -- This manages address space, randomly maps address to
+                        location, generates locations for all episodes,
+                        maintains per-location last writer and validates
+                        values returned from load actions.
+TesterThread.hh/cc   -- This is abstract class for CPU threads and GPU
+                        wavefronts. It generates and executes a series of
+                        episodes.
+CpuThread.hh/cc      -- Thread class for CPU threads. Not fully implemented yet
+GpuWavefront.hh/cc   -- Thread class for GPU wavefronts.
+Episode.hh/cc        -- Class to encapsulate an episode, notably including
+                        episode load/store structure and ordering.
+
+For more detail, please see the following paper:
+
+T. Ta, X. Zhang, A. Gutierrez and B. M. Beckmann, "Autonomous Data-Race-Free
+GPU Testing," 2019 IEEE International Symposium on Workload Characterization
+(IISWC), Orlando, FL, USA, 2019, pp. 81-92, doi:
+10.1109/IISWC47752.2019.9042019.

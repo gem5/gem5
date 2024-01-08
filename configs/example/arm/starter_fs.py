@@ -38,26 +38,22 @@ Research Starter Kit on System Modeling. More information can be found
 at: http://www.arm.com/ResearchEnablement/SystemModeling
 """
 
-import argparse
 import os
-
 import m5
+from m5.util import addToPath
 from m5.objects import *
 from m5.options import *
-from m5.util import addToPath
+import argparse
 
 m5.util.addToPath("../..")
 
+from common import SysPaths
+from common import ObjectList
+from common import MemConfig
+from common.cores.arm import O3_ARM_v7a, HPI
+
 import devices
-from common import (
-    MemConfig,
-    ObjectList,
-    SysPaths,
-)
-from common.cores.arm import (
-    HPI,
-    O3_ARM_v7a,
-)
+
 
 default_kernel = "vmlinux.arm64"
 default_disk = "linaro-minimal-aarch64.img"

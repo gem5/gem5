@@ -44,7 +44,6 @@ at: http://www.arm.com/ResearchEnablement/SystemModeling
 
 from m5.objects import *
 
-
 # Simple function to allow a string of [01x_] to be converted into a
 # mask and value for use with MinorFUTiming
 def make_implicant(implicant_string):
@@ -1680,14 +1679,7 @@ class HPI_MMU(ArmMMU):
     dtb = ArmTLB(entry_type="data", size=256)
 
 
-class HPI_BTB(SimpleBTB):
-    numEntries = 128
-    tagBits = 18
-
-
 class HPI_BP(TournamentBP):
-    btb = HPI_BTB()
-    ras = ReturnAddrStack(numEntries=8)
     localPredictorSize = 64
     localCtrBits = 2
     localHistoryTableSize = 64
@@ -1695,6 +1687,9 @@ class HPI_BP(TournamentBP):
     globalCtrBits = 2
     choicePredictorSize = 1024
     choiceCtrBits = 2
+    BTBEntries = 128
+    BTBTagSize = 18
+    RASSize = 8
     instShiftAmt = 2
 
 

@@ -24,16 +24,17 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from topologies.BaseTopology import SimpleTopology
-
-from m5.objects import *
 from m5.params import *
+from m5.objects import *
+
+from topologies.BaseTopology import SimpleTopology
 
 
 class Crossbar(SimpleTopology):
     description = "Crossbar"
 
     def makeTopology(self, options, network, IntLink, ExtLink, Router):
+
         # default values for link latency and router latency.
         # Can be over-ridden on a per link/router basis
         link_latency = options.link_latency  # used by simple and garnet

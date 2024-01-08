@@ -34,18 +34,15 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from gem5.runtime import get_supported_isas
+import m5.objects
+import m5.internal.params
 import inspect
 import sys
 from textwrap import TextWrapper
 
-import m5.internal.params
-import m5.objects
 
-from gem5.isas import ISA
-from gem5.runtime import get_supported_isas
-
-
-class ObjectList:
+class ObjectList(object):
     """Creates a list of objects that are sub-classes of a given class."""
 
     def _is_obj_class(self, cls):
@@ -89,7 +86,7 @@ class ObjectList:
                     print(line)
 
         if self._aliases:
-            print(r"\Aliases:")
+            print("\Aliases:")
             for alias, target in list(self._aliases.items()):
                 print(f"\t{alias} => {target}")
 
@@ -130,14 +127,14 @@ class CPUList(ObjectList):
         # We can't use the normal inspect.isclass because the ParamFactory
         # and ProxyFactory classes have a tendency to confuse it.
         try:
-            return super()._is_obj_class(cls) and not issubclass(
+            return super(CPUList, self)._is_obj_class(cls) and not issubclass(
                 cls, m5.objects.CheckerCPU
             )
         except (TypeError, AttributeError):
             return False
 
     def _add_objects(self):
-        super()._add_objects()
+        super(CPUList, self)._add_objects()
 
         from importlib import import_module
 
@@ -160,27 +157,6 @@ class CPUList(ObjectList):
                 ):
                     self._sub_classes[name] = cls
 
-    def get_isa(self, name: str) -> ISA:
-        """For a given CPU (string representation) determine the ISA of the
-        CPU."""
-
-        cls = self.get(name)
-
-        if hasattr(m5.objects, "X86CPU") and issubclass(
-            cls, m5.objects.X86CPU
-        ):
-            return ISA.X86
-        elif hasattr(m5.objects, "ArmCPU") and issubclass(
-            cls, m5.objects.ArmCPU
-        ):
-            return ISA.ARM
-        elif hasattr(m5.objects, "RiscvCPU") and issubclass(
-            cls, m5.objects.RiscvCPU
-        ):
-            return ISA.RISCV
-        else:
-            raise ValueError("Unable to determine CPU ISA.")
-
 
 class EnumList(ObjectList):
     """Creates a list of possible values for a given enum class."""
@@ -188,7 +164,7 @@ class EnumList(ObjectList):
     def _add_objects(self):
         """Add all enum values to the ObjectList"""
         self._sub_classes = {}
-        for key, value in list(self.base_cls.__members__.items()):
+        for (key, value) in list(self.base_cls.__members__.items()):
             # All Enums have a value Num_NAME at the end which we
             # do not want to include
             if not key.startswith("Num_"):
@@ -228,4 +204,3 @@ def _subclass_tester(name):
 
 is_kvm_cpu = _subclass_tester("BaseKvmCPU")
 is_noncaching_cpu = _subclass_tester("NonCachingSimpleCPU")
-is_o3_cpu = _subclass_tester("BaseO3CPU")

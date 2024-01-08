@@ -1,0 +1,806 @@
+/*
+ * Copyright (c) 2021,2022 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+machine(MachineType:Memory, "Memory controller interface") :
+
+  // no explicit modeling of allocation latency like the Caches, so add one
+  // cycle to the response enqueue latency as default
+  Cycles response_latency := 2;
+  Cycles data_latency := 1;
+  Cycles to_memory_controller_latency := 1;
+
+  int data_channel_size;
+
+  // Interface to the network
+  // Note vnet_type is used by Garnet only. "response" type is assumed to
+  // have data, so use it for data channels and "none" for the rest.
+  // network="To" for outbound queue; network="From" for inbound
+  // virtual networks: 0=request, 1=snoop, 2=response, 3=data
+
+  MessageBuffer * reqOut,   network="To", virtual_network="0", vnet_type="none";
+  MessageBuffer * snpOut,   network="To", virtual_network="1", vnet_type="none";
+  MessageBuffer * rspOut,   network="To", virtual_network="2", vnet_type="none";
+  MessageBuffer * datOut,   network="To", virtual_network="3", vnet_type="response";
+
+  MessageBuffer * reqIn,   network="From", virtual_network="0", vnet_type="none";
+  MessageBuffer * snpIn,   network="From", virtual_network="1", vnet_type="none";
+  MessageBuffer * rspIn,   network="From", virtual_network="2", vnet_type="none";
+  MessageBuffer * datIn,   network="From", virtual_network="3", vnet_type="response";
+
+  // Requests that can allocate a TBE
+  MessageBuffer * reqRdy;
+
+  // Data/ack to/from memory
+  MessageBuffer * requestToMemory;
+  MessageBuffer * responseFromMemory;
+
+  // Trigger queue for internal events
+  MessageBuffer * triggerQueue;
+
+{
+
+  ////////////////////////////////////////////////////////////////////////////
+  // States
+  ////////////////////////////////////////////////////////////////////////////
+
+  state_declaration(State, desc="Transaction states", default="Memory_State_READY") {
+    // We don't know if the line is cached, so the memory copy is maybe stable
+    READY, AccessPermission:Backing_Store, desc="Ready to transfer the line";
+
+    WAITING_NET_DATA, AccessPermission:Backing_Store_Busy, desc="Waiting data from the network";
+    SENDING_NET_DATA, AccessPermission:Backing_Store_Busy, desc="Sending data to the network";
+    READING_MEM, AccessPermission:Backing_Store_Busy, desc="Waiting data from memory";
+
+    // Null state for debugging; allow writes
+    null, AccessPermission:Backing_Store, desc="Null state";
+  }
+
+
+  ////////////////////////////////////////////////////////////////////////////
+  // Events
+  ////////////////////////////////////////////////////////////////////////////
+
+  enumeration(Event, desc="Memory events") {
+    // Checks if a request can allocate a TBE be moved to reqRdy
+    CheckAllocTBE, desc="";
+    CheckAllocTBE_WithCredit, desc="";
+
+    // Requests
+    WriteNoSnpPtl, desc="";
+    WriteNoSnp, desc="";
+    ReadNoSnp, desc="";
+    ReadNoSnpSep, desc="";
+
+    // Data
+    WriteData, desc="";
+
+    // Memory side
+    MemoryData, desc="";
+    MemoryAck, desc="";
+
+    // Internal event triggers
+    Trigger_Send, desc="";
+    Trigger_SendDone, desc="";
+    Trigger_ReceiveDone, desc="";
+    Trigger_SendRetry, desc="";
+    Trigger_SendPCrdGrant, desc="";
+    Trigger_SendMemoryRead, desc="";
+  }
+
+
+  // Is there a less tedious way to convert messages to events ??
+
+  Event reqToEvent (CHIRequestType type) {
+    if (type == CHIRequestType:WriteNoSnpPtl) {
+      return Event:WriteNoSnpPtl;
+    } else if (type == CHIRequestType:WriteNoSnp) {
+      return Event:WriteNoSnp;
+    } else if (type == CHIRequestType:ReadNoSnp) {
+      return Event:ReadNoSnp;
+    } else if (type == CHIRequestType:ReadNoSnpSep) {
+      return Event:ReadNoSnpSep;
+    } else {
+      error("Invalid CHIRequestType");
+    }
+  }
+
+  Event respToEvent (CHIResponseType type) {
+    error("Invalid CHIResponseType");
+  }
+
+  Event dataToEvent (CHIDataType type) {
+    if (type == CHIDataType:NCBWrData) {
+      return Event:WriteData;
+    } else {
+      error("Invalid CHIDataType");
+    }
+  }
+
+
+  ////////////////////////////////////////////////////////////////////////////
+  // Data structures
+  ////////////////////////////////////////////////////////////////////////////
+
+  // Cache block size
+  int blockSize, default="RubySystem::getBlockSizeBytes()";
+
+  // TBE fields
+  structure(TBE, desc="...") {
+    int storSlot,   desc="Slot in the storage tracker occupied by this entry";
+    Addr addr,      desc="Line address for this TBE";
+    Addr accAddr,   desc="Original access address. Set only for Write*Ptl";
+    int  accSize,   desc="Access size. Set only for Write*Ptl";
+    State state,    desc="Current line state";
+    DataBlock dataBlk, desc="Transaction data";
+    WriteMask dataBlkValid, desc="valid bytes in dataBlk";
+    int rxtxBytes, desc="Bytes sent or received";
+    MachineID requestor, desc="Requestor that originated this request";
+    MachineID destination, desc="Where we are sending data";
+    bool useDataSepResp, desc="Replies with DataSepResp instead of CompData";
+  }
+
+  structure(TBETable, external ="yes") {
+    TBE lookup(Addr);
+    void allocate(Addr);
+    void deallocate(Addr);
+    bool isPresent(Addr);
+    bool areNSlotsAvailable(int n, Tick curTime);
+  }
+
+  structure(TBEStorage, external ="yes") {
+    int size();
+    int capacity();
+    int reserved();
+    int slotsAvailable();
+    bool areNSlotsAvailable(int n);
+    void incrementReserved();
+    void decrementReserved();
+    int addEntryToNewSlot();
+    void removeEntryFromSlot(int slot);
+  }
+
+  TBETable TBEs, template="<Memory_TBE>", constructor="m_number_of_TBEs";
+  TBEStorage storTBEs, constructor="this, m_number_of_TBEs";
+
+  // Tracks all pending MemoryAcks (debug purposes only)
+  int pendingWrites, default="0";
+
+  structure(TriggerMsg, desc="...", interface="Message") {
+    Addr addr;
+    Event event;
+    MachineID retryDest;
+
+    bool functionalRead(Packet *pkt) { return false; }
+    bool functionalRead(Packet *pkt, WriteMask &mask) { return false; }
+    bool functionalWrite(Packet *pkt) { return false; }
+  }
+
+  // Tracks a pending credit request from a retry
+  structure(RetryQueueEntry) {
+    Addr addr,           desc="Line address";
+    MachineID retryDest, desc="Retry destination";
+  }
+
+  structure(TriggerQueue, external ="yes") {
+    void pop();
+    bool empty();
+    void emplace(Addr,MachineID);
+    RetryQueueEntry next();
+  }
+
+  TriggerQueue retryQueue, template="<Memory_RetryQueueEntry>";
+
+  ////////////////////////////////////////////////////////////////////////////
+  // External functions
+  ////////////////////////////////////////////////////////////////////////////
+
+  Tick clockEdge();
+  Tick curTick();
+  Tick cyclesToTicks(Cycles c);
+  void set_tbe(TBE b);
+  void unset_tbe();
+  void wakeUpAllBuffers(Addr a);
+  bool respondsTo(Addr addr);
+
+  ////////////////////////////////////////////////////////////////////////////
+  // Interface functions required by SLICC
+  ////////////////////////////////////////////////////////////////////////////
+
+  State getState(TBE tbe, Addr addr) {
+    if (is_valid(tbe)) {
+        assert(tbe.addr == addr);
+        return tbe.state;
+    } else {
+        return State:READY;
+    }
+  }
+
+  void setState(TBE tbe, Addr addr, State state) {
+    if (is_valid(tbe)) {
+      assert(tbe.addr == addr);
+      tbe.state := state;
+    }
+  }
+
+  AccessPermission getAccessPermission(Addr addr) {
+    if (respondsTo(addr)) {
+      TBE tbe := TBEs[addr];
+      if (is_valid(tbe)) {
+        DPRINTF(RubySlicc, "%x %s,%s\n", addr, tbe.state, Memory_State_to_permission(tbe.state));
+        return Memory_State_to_permission(tbe.state);
+      } else {
+        DPRINTF(RubySlicc, "%x %s\n", addr, AccessPermission:Backing_Store);
+        return AccessPermission:Backing_Store;
+      }
+    } else {
+      DPRINTF(RubySlicc, "%x %s\n", addr, AccessPermission:NotPresent);
+      return AccessPermission:NotPresent;
+    }
+  }
+
+  void setAccessPermission(Addr addr, State state) {
+  }
+
+  void functionalRead(Addr addr, Packet *pkt, WriteMask &mask) {
+    if (respondsTo(addr)) {
+      DPRINTF(RubySlicc, "functionalRead %x\n", addr);
+      TBE tbe := TBEs[addr];
+
+      if (mask.isEmpty()) {
+        functionalMemoryRead(pkt);
+        mask.fillMask();
+        DPRINTF(RubySlicc, "functionalRead mem %x %s\n", addr, mask);
+      }
+
+      // Update with any transient data
+      //TODO additional handling of partial data ??
+      if (is_valid(tbe)) {
+        WriteMask read_mask;
+        read_mask.setMask(addressOffset(tbe.accAddr, tbe.addr), tbe.accSize);
+        read_mask.andMask(tbe.dataBlkValid);
+        if (read_mask.isEmpty() == false) {
+          testAndReadMask(addr, tbe.dataBlk, read_mask, pkt);
+          DPRINTF(RubySlicc, "functionalRead tbe %x %s %s %s\n", addr, tbe.dataBlk, read_mask, mask);
+          mask.orMask(read_mask);
+        }
+      }
+    }
+  }
+
+  int functionalWrite(Addr addr, Packet *pkt) {
+    if(respondsTo(addr)) {
+      int num_functional_writes := 0;
+      TBE tbe := TBEs[addr];
+      if (is_valid(tbe)) {
+        num_functional_writes := num_functional_writes +
+          testAndWrite(addr, tbe.dataBlk, pkt);
+        DPRINTF(RubySlicc, "functionalWrite tbe %x %s\n", addr, tbe.dataBlk);
+      }
+      num_functional_writes := num_functional_writes + functionalMemoryWrite(pkt);
+      DPRINTF(RubySlicc, "functionalWrite mem %x\n", addr);
+      return num_functional_writes;
+    } else {
+      return 0;
+    }
+  }
+
+
+  ////////////////////////////////////////////////////////////////////////////
+  // Helper functions
+  ////////////////////////////////////////////////////////////////////////////
+
+  void printResources() {
+    DPRINTF(RubySlicc, "Resources(avail/max): TBEs=%d/%d\n",
+                  storTBEs.size(), storTBEs.capacity());
+    DPRINTF(RubySlicc, "Resources(in/out size): rdy=%d req=%d/%d rsp=%d/%d dat=%d/%d snp=%d/%d\n",
+                  reqRdy.getSize(curTick()),
+                  reqIn.getSize(curTick()), reqOut.getSize(curTick()),
+                  rspIn.getSize(curTick()), rspOut.getSize(curTick()),
+                  datIn.getSize(curTick()), datOut.getSize(curTick()),
+                  snpIn.getSize(curTick()), snpOut.getSize(curTick()));
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+  // Input/output port definitions
+  ////////////////////////////////////////////////////////////////////////////
+
+  // Outbound port definitions
+
+  out_port(reqOutPort, CHIRequestMsg, reqOut);
+  out_port(snpOutPort, CHIRequestMsg, snpOut);
+  out_port(rspOutPort, CHIResponseMsg, rspOut);
+  out_port(datOutPort, CHIDataMsg, datOut);
+  out_port(triggerOutPort, TriggerMsg, triggerQueue);
+  out_port(memQueue_out, MemoryMsg, requestToMemory);
+  out_port(reqRdyOutPort, CHIRequestMsg, reqRdy);
+
+  // Inbound port definitions
+
+  // Response
+  in_port(rspInPort, CHIResponseMsg, rspIn, rank=6) {
+    if (rspInPort.isReady(clockEdge())) {
+      printResources();
+      peek(rspInPort, CHIResponseMsg) {
+        error("Unexpected message");
+      }
+    }
+  }
+
+  // Data
+  in_port(datInPort, CHIDataMsg, datIn, rank=5) {
+    if (datInPort.isReady(clockEdge())) {
+      printResources();
+      peek(datInPort, CHIDataMsg) {
+        assert((in_msg.bitMask.count() <= data_channel_size)
+                && (in_msg.bitMask.count() > 0));
+        trigger(dataToEvent(in_msg.type), in_msg.addr, TBEs[in_msg.addr]);
+      }
+    }
+  }
+
+  // Data/Ack from memory
+
+  in_port(memQueue_in, MemoryMsg, responseFromMemory, rank=4) {
+    if (memQueue_in.isReady(clockEdge())) {
+      printResources();
+      peek(memQueue_in, MemoryMsg) {
+        Addr addr := makeLineAddress(in_msg.addr);
+        if (in_msg.Type == MemoryRequestType:MEMORY_READ) {
+          trigger(Event:MemoryData, addr, TBEs[addr]);
+        } else if (in_msg.Type == MemoryRequestType:MEMORY_WB) {
+          trigger(Event:MemoryAck, addr, TBEs[addr]);
+        } else {
+          error("Invalid message");
+        }
+      }
+    }
+  }
+
+   // Trigger
+  in_port(triggerInPort, TriggerMsg, triggerQueue, rank=3) {
+    if (triggerInPort.isReady(clockEdge())) {
+      printResources();
+      peek(triggerInPort, TriggerMsg) {
+        trigger(in_msg.event, in_msg.addr, TBEs[in_msg.addr]);
+      }
+    }
+  }
+
+  // Snoops
+  in_port(snpInPort, CHIRequestMsg, snpIn, rank=2) {
+    if (snpInPort.isReady(clockEdge())) {
+      printResources();
+      peek(snpInPort, CHIRequestMsg) {
+        error("Unexpected message");
+      }
+    }
+  }
+
+  // Requests
+  in_port(reqRdyInPort, CHIRequestMsg, reqRdy, rank=1) {
+    if (reqRdyInPort.isReady(clockEdge())) {
+      printResources();
+      peek(reqRdyInPort, CHIRequestMsg) {
+        trigger(reqToEvent(in_msg.type), in_msg.addr, TBEs[in_msg.addr]);
+      }
+    }
+  }
+
+  in_port(reqInPort, CHIRequestMsg, reqIn, rank=0) {
+    if (reqInPort.isReady(clockEdge())) {
+      printResources();
+      peek(reqInPort, CHIRequestMsg) {
+        if (in_msg.allowRetry) {
+          trigger(Event:CheckAllocTBE, in_msg.addr, TBEs[in_msg.addr]);
+        } else {
+          // Only expected requests that do not allow retry are the ones that
+          // are being retried after receiving credit
+          trigger(Event:CheckAllocTBE_WithCredit,
+                  in_msg.addr, TBEs[in_msg.addr]);
+        }
+      }
+    }
+  }
+
+
+
+  ////////////////////////////////////////////////////////////////////////////
+  // Actions
+  ////////////////////////////////////////////////////////////////////////////
+
+  action(checkAllocateTBE, desc="") {
+    // Move to reqRdy if resources available, otherwise send retry
+    if (storTBEs.areNSlotsAvailable(1)) {
+      // reserve a slot for this request
+      storTBEs.incrementReserved();
+
+      peek(reqInPort, CHIRequestMsg) {
+        enqueue(reqRdyOutPort, CHIRequestMsg, 0) {
+          out_msg := in_msg;
+        }
+      }
+
+    } else {
+      peek(reqInPort, CHIRequestMsg) {
+        assert(in_msg.allowRetry);
+        enqueue(triggerOutPort, TriggerMsg, 0) {
+          out_msg.addr := in_msg.addr;
+          out_msg.event := Event:Trigger_SendRetry;
+          out_msg.retryDest := in_msg.requestor;
+          retryQueue.emplace(in_msg.addr,in_msg.requestor);
+        }
+      }
+    }
+    reqInPort.dequeue(clockEdge());
+  }
+
+  action(checkAllocateTBE_withCredit, desc="") {
+    // We must have reserved resources for this request
+    peek(reqInPort, CHIRequestMsg) {
+      assert(in_msg.allowRetry == false);
+      enqueue(reqRdyOutPort, CHIRequestMsg, 0) {
+        out_msg := in_msg;
+      }
+    }
+    reqInPort.dequeue(clockEdge());
+  }
+
+  action(allocateTBE, "atbe", desc="Allocate TBEs for a miss") {
+    // We must have reserved resources for this allocation
+    storTBEs.decrementReserved();
+    assert(storTBEs.areNSlotsAvailable(1));
+
+    TBEs.allocate(address);
+    set_tbe(TBEs[address]);
+    tbe.storSlot := storTBEs.addEntryToNewSlot();
+    tbe.addr := address;
+    tbe.rxtxBytes := 0;
+    tbe.useDataSepResp := false;
+  }
+
+  action(initializeFromReqTBE, "itbe", desc="Initialize TBE fields") {
+    peek(reqRdyInPort, CHIRequestMsg) {
+      tbe.requestor := in_msg.requestor;
+      if (in_msg.dataToFwdRequestor) {
+        tbe.destination := in_msg.fwdRequestor;
+      } else {
+        tbe.destination := in_msg.requestor;
+      }
+      tbe.accAddr := in_msg.accAddr;
+      tbe.accSize := in_msg.accSize;
+    }
+  }
+
+  action(decWritePending, "dwp", desc="Decrement pending writes") {
+    assert(pendingWrites >= 1);
+    pendingWrites := pendingWrites - 1;
+  }
+
+  action(deallocateTBE, "dtbe", desc="Deallocate TBEs") {
+    assert(is_valid(tbe));
+    storTBEs.removeEntryFromSlot(tbe.storSlot);
+    TBEs.deallocate(address);
+    unset_tbe();
+    // send credit if requestor waiting for it
+    if (retryQueue.empty() == false) {
+      assert(storTBEs.areNSlotsAvailable(1));
+      storTBEs.incrementReserved();
+      RetryQueueEntry e := retryQueue.next();
+      retryQueue.pop();
+      enqueue(triggerOutPort, TriggerMsg, 0) {
+        out_msg.addr := e.addr;
+        out_msg.retryDest := e.retryDest;
+        out_msg.event := Event:Trigger_SendPCrdGrant;
+      }
+    }
+  }
+
+  action(sendReadReceipt, "sRR", desc="Send receipt to requestor") {
+    assert(is_valid(tbe));
+    enqueue(rspOutPort, CHIResponseMsg, response_latency) {
+      out_msg.addr := address;
+      out_msg.type := CHIResponseType:ReadReceipt;
+      out_msg.responder := machineID;
+      out_msg.Destination.add(tbe.requestor);
+    }
+    // also send different type of data when ready
+    tbe.useDataSepResp := true;
+  }
+
+  action(sendCompDBIDResp, "sCbid", desc="Send ack to requestor") {
+    assert(is_valid(tbe));
+    enqueue(rspOutPort, CHIResponseMsg, response_latency) {
+      out_msg.addr := address;
+      out_msg.type := CHIResponseType:CompDBIDResp;
+      out_msg.responder := machineID;
+      out_msg.Destination.add(tbe.requestor);
+    }
+  }
+
+  action(triggerSendMemoryRead, "tsmr", desc="Trigger sendMemoryRead") {
+    assert(is_valid(tbe));
+    enqueue(triggerOutPort, TriggerMsg, 0) {
+      out_msg.addr := address;
+      out_msg.event := Event:Trigger_SendMemoryRead;
+    }
+  }
+
+  action(sendMemoryRead, "smr", desc="Send request to memory") {
+    assert(is_valid(tbe));
+    enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
+      out_msg.addr := address;
+      out_msg.Type := MemoryRequestType:MEMORY_READ;
+      out_msg.Sender := tbe.requestor;
+      out_msg.MessageSize := MessageSizeType:Request_Control;
+      out_msg.Len := 0;
+    }
+  }
+
+  action(sendMemoryWrite, "smw", desc="Send request to memory") {
+    assert(is_valid(tbe));
+    enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
+      out_msg.addr := tbe.accAddr;
+      out_msg.Type := MemoryRequestType:MEMORY_WB;
+      out_msg.Sender := tbe.requestor;
+      out_msg.MessageSize := MessageSizeType:Writeback_Data;
+      out_msg.DataBlk := tbe.dataBlk;
+      out_msg.Len := tbe.accSize;
+    }
+    tbe.dataBlkValid.clear();
+    pendingWrites := pendingWrites + 1;
+  }
+
+  action(prepareSend, "ps", desc="Copies received memory data to TBE") {
+    assert(is_valid(tbe));
+    peek(memQueue_in, MemoryMsg) {
+      tbe.dataBlk := in_msg.DataBlk;
+    }
+    tbe.rxtxBytes := 0;
+    tbe.dataBlkValid.setMask(addressOffset(tbe.accAddr, tbe.addr), tbe.accSize);
+  }
+
+  action(copyWriteDataToTBE, "cpWDat", desc="Copies received net data to TBE") {
+    peek(datInPort, CHIDataMsg) {
+      assert(is_valid(tbe));
+      tbe.dataBlk.copyPartial(in_msg.dataBlk, in_msg.bitMask);
+      tbe.dataBlkValid.orMask(in_msg.bitMask);
+      tbe.rxtxBytes := tbe.rxtxBytes + in_msg.bitMask.count();
+    }
+  }
+
+  action(sendDataAndCheck, "sd", desc="Send received data to requestor") {
+    assert(is_valid(tbe));
+    assert(tbe.rxtxBytes < blockSize);
+    enqueue(datOutPort, CHIDataMsg, data_latency) {
+      out_msg.addr := tbe.addr;
+      if (tbe.useDataSepResp) {
+        out_msg.type := CHIDataType:DataSepResp_UC;
+      } else {
+        out_msg.type := CHIDataType:CompData_UC;
+      }
+      out_msg.dataBlk := tbe.dataBlk;
+      // Called in order for the whole block so use rxtxBytes as offset
+      out_msg.bitMask.setMask(tbe.rxtxBytes, data_channel_size);
+      out_msg.Destination.add(tbe.destination);
+    }
+
+    //DPRINTF(RubySlicc, "rxtxBytes=%d\n", tbe.rxtxBytes);
+
+    tbe.rxtxBytes := tbe.rxtxBytes + data_channel_size;
+
+    // end or send next chunk next cycle
+    Event next := Event:Trigger_SendDone;
+    Cycles delay := intToCycles(0);
+    if (tbe.rxtxBytes < blockSize) {
+        next := Event:Trigger_Send;
+        delay := intToCycles(1);
+    }
+    enqueue(triggerOutPort, TriggerMsg, delay) {
+      out_msg.addr := address;
+      out_msg.event := next;
+    }
+  }
+
+  action(checkForReceiveCompletion, "cWc", desc="Check if all data is received") {
+    assert(is_valid(tbe));
+    DPRINTF(RubySlicc, "rxtxBytes=%d\n", tbe.rxtxBytes);
+    assert((tbe.rxtxBytes <= tbe.accSize) && (tbe.rxtxBytes > 0));
+    if (tbe.rxtxBytes == tbe.accSize) {
+      enqueue(triggerOutPort, TriggerMsg, 0) {
+        out_msg.addr := address;
+        out_msg.event := Event:Trigger_ReceiveDone;
+      }
+      tbe.rxtxBytes := 0;
+      assert(tbe.dataBlkValid.getMask(addressOffset(tbe.accAddr, tbe.addr), tbe.accSize));
+    }
+  }
+
+  action(popReqInQueue, "preq", desc="Pop request queue.") {
+    reqRdyInPort.dequeue(clockEdge());
+  }
+
+  action(popDataInQueue, "pdata", desc="Pop data queue.") {
+    datInPort.dequeue(clockEdge());
+  }
+
+  action(popTriggerQueue, "ptrigger", desc="Pop trigger queue.") {
+    triggerInPort.dequeue(clockEdge());
+  }
+
+  action(popMemoryQueue, "pmem", desc="Pop memory queue.") {
+    memQueue_in.dequeue(clockEdge());
+  }
+
+  // Stall/wake-up only used for requests that arrive when we are on the
+  // WAITING_NET_DATA state. For all other case the line should be either
+  // ready or we can overlap
+  action(stallRequestQueue, "str", desc="Stall and wait on the address") {
+    peek(reqRdyInPort, CHIRequestMsg){
+      stall_and_wait(reqRdyInPort, address);
+    }
+  }
+  action(wakeUpStalled, "wa", desc="Wake up any requests waiting for this address") {
+    wakeUpAllBuffers(address);
+  }
+
+  action(sendRetryAck, desc="") {
+    peek(triggerInPort, TriggerMsg) {
+      enqueue(rspOutPort, CHIResponseMsg, response_latency) {
+        out_msg.addr := in_msg.addr;
+        out_msg.type := CHIResponseType:RetryAck;
+        out_msg.responder := machineID;
+        out_msg.Destination.add(in_msg.retryDest);
+      }
+    }
+  }
+
+  action(sendPCrdGrant, desc="") {
+    peek(triggerInPort, TriggerMsg) {
+      enqueue(rspOutPort, CHIResponseMsg, response_latency) {
+        out_msg.addr := in_msg.addr;
+        out_msg.type := CHIResponseType:PCrdGrant;
+        out_msg.responder := machineID;
+        out_msg.Destination.add(in_msg.retryDest);
+      }
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+  // Transitions
+  ////////////////////////////////////////////////////////////////////////////
+
+  transition(READY, ReadNoSnp, READING_MEM) {
+    allocateTBE;
+    initializeFromReqTBE;
+    triggerSendMemoryRead;
+    popReqInQueue;
+  }
+
+  transition(READY, ReadNoSnpSep, READING_MEM) {
+    allocateTBE;
+    initializeFromReqTBE;
+    triggerSendMemoryRead;
+    sendReadReceipt;
+    popReqInQueue;
+  }
+
+  transition(READING_MEM, Trigger_SendMemoryRead) {
+    sendMemoryRead;
+    popTriggerQueue;
+  }
+
+  transition(READING_MEM, MemoryData, SENDING_NET_DATA) {
+    prepareSend;
+    sendDataAndCheck;
+    popMemoryQueue;
+  }
+
+  transition(SENDING_NET_DATA, Trigger_Send) {
+    sendDataAndCheck;
+    popTriggerQueue;
+  }
+
+  transition(READY, WriteNoSnpPtl, WAITING_NET_DATA) {
+    allocateTBE;
+    initializeFromReqTBE;
+    sendCompDBIDResp;
+    popReqInQueue;
+  }
+
+  transition(READY, WriteNoSnp, WAITING_NET_DATA) {
+    allocateTBE;
+    initializeFromReqTBE;
+    sendCompDBIDResp;
+    popReqInQueue;
+  }
+
+  transition(WAITING_NET_DATA, WriteData) {
+    copyWriteDataToTBE;
+    checkForReceiveCompletion;
+    popDataInQueue;
+  }
+
+  transition(WAITING_NET_DATA, Trigger_ReceiveDone, READY) {
+    sendMemoryWrite;
+    deallocateTBE;
+    wakeUpStalled;
+    popTriggerQueue;
+  }
+
+  transition(SENDING_NET_DATA, Trigger_SendDone, READY) {
+    deallocateTBE;
+    wakeUpStalled;
+    popTriggerQueue;
+  }
+
+  // Just sanity check against counter of pending acks
+  transition({READING_MEM,WAITING_NET_DATA,SENDING_NET_DATA,READY},
+              MemoryAck) {
+    decWritePending;
+    popMemoryQueue;
+  }
+
+  // Notice we only use this here and call wakeUp when leaving this state
+  transition({READING_MEM,WAITING_NET_DATA,SENDING_NET_DATA},
+             {ReadNoSnp, ReadNoSnpSep, WriteNoSnpPtl, WriteNoSnp}) {
+    stallRequestQueue;
+  }
+
+  transition({READING_MEM,WAITING_NET_DATA,SENDING_NET_DATA,READY},
+              Trigger_SendRetry) {
+    sendRetryAck;
+    popTriggerQueue;
+  }
+
+  transition({READING_MEM,WAITING_NET_DATA,SENDING_NET_DATA,READY},
+              Trigger_SendPCrdGrant) {
+    sendPCrdGrant;
+    popTriggerQueue;
+  }
+
+  transition({READING_MEM,WAITING_NET_DATA,SENDING_NET_DATA,READY},
+              CheckAllocTBE) {
+    checkAllocateTBE;
+  }
+
+  transition({READING_MEM,WAITING_NET_DATA,SENDING_NET_DATA,READY},
+              CheckAllocTBE_WithCredit) {
+    checkAllocateTBE_withCredit;
+  }
+
+}

@@ -62,7 +62,7 @@ def build_switch(args):
         for i in range(args.dist_size)
     ]
 
-    for i, link in enumerate(switch.portlink):
+    for (i, link) in enumerate(switch.portlink):
         link.int0 = switch.interface[i]
 
     return switch

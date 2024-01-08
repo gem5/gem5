@@ -1,0 +1,73 @@
+# Copyright 2020 Google, Inc.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+Import('*')
+
+from gem5_scons import warning
+
+import gem5_scons
+
+# ISA code can set this to indicate what ISA KVM can target.
+main['CONF'].setdefault('KVM_ISA', '')
+
+with gem5_scons.Configure(main) as conf:
+    # Check if we should enable KVM-based hardware virtualization. The
+    # API we rely on exists since version 2.6.36 of the kernel, but
+    # somehow the KVM_API_VERSION does not reflect the change. We test
+    # for one of the types as a fall back.
+
+    main['CONF']['HAVE_KVM'] = False
+
+    if not conf.CheckHeader('linux/kvm.h', '<>'):
+        warning("Info: Compatible header file <linux/kvm.h> not found, "
+                "disabling KVM support.")
+    elif not conf.CheckLibWithHeader([None, 'rt'], [ 'time.h', 'signal.h' ],
+            'C', 'timer_create(CLOCK_MONOTONIC, NULL, NULL);'):
+        warning("Cannot enable KVM, host doesn't support POSIX timers")
+    else:
+        # Generic support is available. We'll let the ISAs figure out if
+        # it's really supported.
+        conf.env['CONF']['HAVE_KVM'] = True
+
+        # Check if the exclude_host attribute is available. We want this to
+        # get accurate instruction counts in KVM.
+        conf.env['CONF']['HAVE_PERF_ATTR_EXCLUDE_HOST'] = conf.CheckMember(
+            'linux/perf_event.h', 'struct perf_event_attr', 'exclude_host')
+
+        # Warn about missing optional functionality
+        if not conf.env['CONF']['HAVE_PERF_ATTR_EXCLUDE_HOST']:
+            warning("perf_event headers lack support for the exclude_host "
+                    "attribute. KVM instruction counts will be inaccurate.")
+
+
+def create_use_kvm_var():
+    if main['CONF']['HAVE_KVM'] and main['CONF']['KVM_ISA']:
+        sticky_vars.Add(BoolVariable('USE_KVM',
+                    'Enable hardware virtualized (KVM) CPU models', True))
+    else:
+        main['CONF']['USE_KVM'] = False
+        warning("Cannot enable KVM, host seems to lack KVM support")
+
+AfterSConsopts(create_use_kvm_var)

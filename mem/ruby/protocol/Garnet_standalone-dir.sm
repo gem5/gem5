@@ -1,0 +1,149 @@
+/*
+ * Copyright (c) 2009 Advanced Micro Devices, Inc.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+machine(MachineType:Directory, "Garnet_standalone Directory")
+    : MessageBuffer * requestToDir, network="From", virtual_network="0",
+            vnet_type = "request";
+      MessageBuffer * forwardToDir, network="From", virtual_network="1",
+            vnet_type = "forward";
+      MessageBuffer * responseToDir, network="From", virtual_network="2",
+            vnet_type = "response";
+{
+  // STATES
+  state_declaration(State, desc="Directory states", default="Directory_State_I") {
+    // Base states
+    I, AccessPermission:Invalid, desc="Invalid";
+  }
+
+  // Events
+  enumeration(Event, desc="Directory events") {
+    // processor requests
+    Receive_Request, desc="Receive Message";
+    Receive_Forward, desc="Receive Message";
+    Receive_Response, desc="Receive Message";
+  }
+
+  // TYPES
+  // DirectoryEntry
+  structure(Entry, desc="...", interface="AbstractCacheEntry", main="false") {
+    State DirectoryState,          desc="Directory state";
+    DataBlock DataBlk,             desc="data for the block";
+  }
+
+  // ** FUNCTIONS **
+  Tick clockEdge();
+
+  State getState(Addr addr) {
+    return State:I;
+  }
+
+  void setState(Addr addr, State state) {
+
+  }
+
+  AccessPermission getAccessPermission(Addr addr) {
+    return AccessPermission:NotPresent;
+  }
+
+  void setAccessPermission(Addr addr, State state) {
+  }
+
+  void functionalRead(Addr addr, Packet *pkt) {
+    error("Garnet_standalone does not support functional read.");
+  }
+
+  int functionalWrite(Addr addr, Packet *pkt) {
+    error("Garnet_standalone does not support functional write.");
+  }
+
+  // ** IN_PORTS **
+
+  in_port(requestQueue_in, RequestMsg, requestToDir) {
+    if (requestQueue_in.isReady(clockEdge())) {
+      peek(requestQueue_in, RequestMsg) {
+        if (in_msg.Type == CoherenceRequestType:MSG) {
+          trigger(Event:Receive_Request, in_msg.addr);
+        } else {
+          error("Invalid message");
+        }
+      }
+    }
+  }
+  in_port(forwardQueue_in, RequestMsg, forwardToDir) {
+    if (forwardQueue_in.isReady(clockEdge())) {
+      peek(forwardQueue_in, RequestMsg) {
+        if (in_msg.Type == CoherenceRequestType:MSG) {
+          trigger(Event:Receive_Forward, in_msg.addr);
+        } else {
+          error("Invalid message");
+        }
+      }
+    }
+  }
+  in_port(responseQueue_in, RequestMsg, responseToDir) {
+    if (responseQueue_in.isReady(clockEdge())) {
+      peek(responseQueue_in, RequestMsg) {
+        if (in_msg.Type == CoherenceRequestType:MSG) {
+          trigger(Event:Receive_Response, in_msg.addr);
+        } else {
+          error("Invalid message");
+        }
+      }
+    }
+  }
+
+  // Actions
+
+  action(i_popIncomingRequestQueue, "i", desc="Pop incoming request queue") {
+    requestQueue_in.dequeue(clockEdge());
+  }
+
+  action(f_popIncomingForwardQueue, "f", desc="Pop incoming forward queue") {
+    forwardQueue_in.dequeue(clockEdge());
+  }
+
+  action(r_popIncomingResponseQueue, "r", desc="Pop incoming response queue") {
+    responseQueue_in.dequeue(clockEdge());
+  }
+
+  // TRANSITIONS
+
+  // The directory simply drops the received packets.
+  // The goal of Garnet_standalone is only to track network stats.
+
+  transition(I, Receive_Request) {
+    i_popIncomingRequestQueue;
+  }
+  transition(I, Receive_Forward) {
+    f_popIncomingForwardQueue;
+  }
+  transition(I, Receive_Response) {
+    r_popIncomingResponseQueue;
+  }
+}

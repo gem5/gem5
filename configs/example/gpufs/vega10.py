@@ -27,21 +27,19 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import argparse
-import base64
-import os
-import sys
-import tempfile
-
+import m5
 import runfs
+import base64
+import tempfile
+import argparse
+import sys
+import os
+
 from amd import AmdGPUOptions
-from common import (
-    GPUTLBOptions,
-    Options,
-)
+from common import Options
+from common import GPUTLBOptions
 from ruby import Ruby
 
-import m5
 
 demo_runscript_without_checkpoint = """\
 export LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH

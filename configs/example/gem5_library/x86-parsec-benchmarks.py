@@ -43,6 +43,11 @@ scons build/X86/gem5.opt
     --benchmark <benchmark_name> \
     --size <simulation_size>
 ```
+./build/X86/gem5.opt \
+    configs/example/gem5_library/x86-parsec-benchmarks.py \
+    --benchmark ferret \
+    --size simsmall
+
 """
 import argparse
 import time
@@ -50,18 +55,18 @@ import time
 import m5
 from m5.objects import Root
 
-from gem5.coherence_protocol import CoherenceProtocol
+from gem5.utils.requires import requires
 from gem5.components.boards.x86_board import X86Board
 from gem5.components.memory import DualChannelDDR4_2400
-from gem5.components.processors.cpu_types import CPUTypes
 from gem5.components.processors.simple_switchable_processor import (
     SimpleSwitchableProcessor,
 )
+from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
+from gem5.coherence_protocol import CoherenceProtocol
 from gem5.resources.resource import obtain_resource
-from gem5.simulate.exit_event import ExitEvent
 from gem5.simulate.simulator import Simulator
-from gem5.utils.requires import requires
+from gem5.simulate.exit_event import ExitEvent
 
 # We check for the required gem5 build.
 
@@ -175,7 +180,7 @@ board = X86Board(
 
 
 command = (
-    f"cd /home/gem5/parsec-benchmark;"
+    "cd /home/gem5/parsec-benchmark;".format(args.benchmark)
     + "source env.sh;"
     + f"parsecmgmt -a run -p {args.benchmark} -c gcc-hooks -i {args.size}         -n 2;"
     + "sleep 5;"
@@ -191,7 +196,6 @@ board.set_kernel_disk_workload(
     disk_image=obtain_resource("x86-parsec"),
     readfile_contents=command,
 )
-
 
 # functions to handle different exit events during the simuation
 def handle_workbegin():
@@ -236,7 +240,7 @@ print("Done with the simulation")
 print()
 print("Performance statistics:")
 
-print("Simulated time in ROI: " + (str(simulator.get_roi_ticks()[0])))
+print("Simulated time in ROI: " + ((str(simulator.get_roi_ticks()[0]))))
 print(
     "Ran a total of", simulator.get_current_tick() / 1e12, "simulated seconds"
 )

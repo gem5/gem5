@@ -33,19 +33,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import m5.objects
 from m5 import fatal
-
-from gem5.isas import ISA
-
-isa_string_map = {
-    ISA.X86: "X86",
-    ISA.ARM: "Arm",
-    ISA.RISCV: "Riscv",
-    ISA.SPARC: "Sparc",
-    ISA.POWER: "Power",
-    ISA.MIPS: "Mips",
-}
+import m5.objects
 
 
 def config_etrace(cpu_cls, cpu_list, options):

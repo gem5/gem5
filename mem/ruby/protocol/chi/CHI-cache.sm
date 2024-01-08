@@ -1,0 +1,833 @@
+/*
+ * Copyright (c) 2021-2022 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+machine(MachineType:Cache, "Cache coherency protocol") :
+  // Sequencer to insert Load/Store requests.
+  // May be null if this is not a L1 cache
+  Sequencer * sequencer;
+
+  // Cache for storing local lines.
+  // NOTE: it is assumed that a cache tag and directory lookups and updates
+  // happen in parallel. The cache tag latency is used for both cases.
+  CacheMemory * cache;
+
+  // Additional pipeline latency modeling for the different request types
+  // When defined, these are applied after the initial tag array read and
+  // sending necessary snoops.
+  Cycles read_hit_latency := 0;
+  Cycles read_miss_latency := 0;
+  Cycles write_fe_latency := 0; // Front-end: Rcv req -> Snd req
+  Cycles write_be_latency := 0; // Back-end: Rcv ack -> Snd data
+  Cycles fill_latency := 0; // Fill latency
+  Cycles snp_latency := 0; // Applied before handling any snoop
+  Cycles snp_inv_latency := 0; // Additional latency for invalidating snoops
+
+  // Waits for cache data array write to complete before executing next action
+  // Note a new write will always block if bank stalls are enabled in the cache
+  bool wait_for_cache_wr := "False";
+
+  // Request TBE allocation latency
+  Cycles allocation_latency := 0;
+
+  // Enqueue latencies for outgoing messages
+  // NOTE: should remove this and only use parameters above?
+  Cycles request_latency := 1;
+  Cycles response_latency := 1;
+  Cycles snoop_latency := 1;
+  Cycles data_latency := 1;
+  Cycles dvm_ext_tlbi_latency := 6;
+
+  // When an SC fails, unique lines are locked to this controller for a period
+  // proportional to the number of consecutive failed SC requests. See
+  // the usage of sc_lock_multiplier and llscCheckMonitor for details
+  int sc_lock_base_latency_cy  := 4;
+  int sc_lock_multiplier_inc   := 4;
+  int sc_lock_multiplier_decay := 1;
+  int sc_lock_multiplier_max   := 256;
+  bool sc_lock_enabled;
+
+  // Recycle latency on resource stalls
+  Cycles stall_recycle_lat := 1;
+
+  // Notify the sequencer when a line is evicted. This should be set is the
+  // sequencer is not null and handled LL/SC request types.
+  bool send_evictions;
+
+  // Number of entries in the snoop, replacement, and DVM TBE tables
+  // notice the "number_of_TBEs" parameter is defined by AbstractController
+  int number_of_snoop_TBEs;
+  int number_of_repl_TBEs;
+  int number_of_DVM_TBEs;
+  int number_of_DVM_snoop_TBEs;
+
+  // replacements use the same TBE slot as the request that triggered it
+  // in this case the number_of_repl_TBEs parameter is ignored
+  bool unify_repl_TBEs;
+
+  // wait for the final tag update to complete before deallocating TBE and
+  // going to final stable state
+  bool dealloc_wait_for_tag := "False";
+
+  // Width of the data channel. Data transfer are split in multiple messages
+  // at the protocol level when this is less than the cache line size.
+  int data_channel_size;
+
+  // Set when this is used as the home node and point of coherency of the
+  // system. Must be false for every other cache level.
+  bool is_HN;
+
+  // Enables direct memory transfers between SNs and RNs when the data is
+  // not cache in the HN.
+  bool enable_DMT;
+
+  // Use ReadNoSnpSep instead of ReadNoSnp for DMT requests, which allows
+  // the TBE to be deallocated at HNFs before the requester receives the data
+  bool enable_DMT_early_dealloc := "False";
+
+  // Enables direct cache transfers, i.e., use forwarding snoops whenever
+  // possible.
+  bool enable_DCT;
+
+  // Use separate Comp/DBIDResp responses for WriteUnique
+  bool comp_wu := "False";
+  // additional latency for the WU Comp response
+  Cycles comp_wu_latency := 0;
+
+  // Controls cache clusivity for different request types.
+  // set all alloc_on* to false to completelly disable caching
+  bool alloc_on_readshared;
+  bool alloc_on_readunique;
+  bool alloc_on_readonce;
+  bool alloc_on_writeback;
+  bool alloc_on_seq_acc;
+  bool alloc_on_seq_line_write;
+  // Controls if the clusivity is strict.
+  bool dealloc_on_unique;
+  bool dealloc_on_shared;
+  bool dealloc_backinv_unique;
+  bool dealloc_backinv_shared;
+
+  // If the responder has the line in UC or UD state, propagate this state
+  // on a ReadShared. Notice data won't be deallocated if dealloc_on_unique is
+  // set
+  bool fwd_unique_on_readshared := "False";
+
+  // Allow receiving data in SD state.
+  bool allow_SD;
+
+  // stall new requests to destinations with a pending retry
+  bool throttle_req_on_retry := "True";
+
+  // Use prefetcher
+  bool use_prefetcher, default="false";
+
+  // Message Queues
+
+  // Interface to the network
+  // Note vnet_type is used by Garnet only. "response" type is assumed to
+  // have data, so use it for data channels and "none" for the rest.
+  // network="To" for outbound queue; network="From" for inbound
+  // virtual networks: 0=request, 1=snoop, 2=response, 3=data
+
+  MessageBuffer * reqOut,   network="To", virtual_network="0", vnet_type="none";
+  MessageBuffer * snpOut,   network="To", virtual_network="1", vnet_type="none";
+  MessageBuffer * rspOut,   network="To", virtual_network="2", vnet_type="none";
+  MessageBuffer * datOut,   network="To", virtual_network="3", vnet_type="response";
+
+  MessageBuffer * reqIn,   network="From", virtual_network="0", vnet_type="none";
+  MessageBuffer * snpIn,   network="From", virtual_network="1", vnet_type="none";
+  MessageBuffer * rspIn,   network="From", virtual_network="2", vnet_type="none";
+  MessageBuffer * datIn,   network="From", virtual_network="3", vnet_type="response";
+
+  // Mandatory queue for receiving requests from the sequencer
+  MessageBuffer * mandatoryQueue;
+
+  // Internal queue for trigger events
+  MessageBuffer * triggerQueue;
+
+  // Internal queue for retry trigger events
+  MessageBuffer * retryTriggerQueue;
+
+  // Internal queue for accepted requests
+  MessageBuffer * reqRdy;
+
+  // Internal queue for accepted snoops
+  MessageBuffer * snpRdy;
+
+  // Internal queue for eviction requests
+  MessageBuffer * replTriggerQueue;
+
+  // Prefetch queue for receiving prefetch requests from prefetcher
+  MessageBuffer * prefetchQueue;
+
+  // Requests that originated from a prefetch in a upstream cache are treated
+  // as demand access in this cache. Notice the demand access stats are still
+  // updated only on true demand requests.
+  bool upstream_prefetch_trains_prefetcher := "False";
+
+{
+
+  ////////////////////////////////////////////////////////////////////////////
+  // States
+  ////////////////////////////////////////////////////////////////////////////
+
+  state_declaration(State, default="Cache_State_null") {
+    // Stable states
+
+    I, AccessPermission:Invalid,    desc="Invalid / not present locally or upstream";
+
+    // States when block is present in local cache only
+    SC, AccessPermission:Read_Only,     desc="Shared Clean";
+    UC, AccessPermission:Read_Write,    desc="Unique Clean";
+    SD, AccessPermission:Read_Only,     desc="Shared Dirty";
+    UD, AccessPermission:Read_Write,    desc="Unique Dirty";
+    UD_T, AccessPermission:Read_Write,  desc="UD with use timeout";
+
+    // Invalid in local cache but present in upstream caches
+    RU, AccessPermission:Invalid,   desc="Upstream requester has line in UD/UC";
+    RSC, AccessPermission:Invalid,  desc="Upstream requester has line in SC";
+    RSD, AccessPermission:Invalid,  desc="Upstream requester has line in SD and maybe SC";
+    RUSC, AccessPermission:Invalid, desc="RSC + this node stills has exclusive access";
+    RUSD, AccessPermission:Invalid, desc="RSD + this node stills has exclusive access";
+
+    // Both in local and upstream caches. In some cases local maybe stale
+    SC_RSC, AccessPermission:Read_Only,    desc="SC + RSC";
+    SD_RSC, AccessPermission:Read_Only,    desc="SD + RSC";
+    SD_RSD, AccessPermission:Read_Only,    desc="SD + RSD";
+    UC_RSC, AccessPermission:Read_Write,   desc="UC + RSC";
+    UC_RU, AccessPermission:Invalid,       desc="UC + RU";
+    UD_RU, AccessPermission:Invalid,       desc="UD + RU";
+    UD_RSD, AccessPermission:Read_Write,   desc="UD + RSD";
+    UD_RSC, AccessPermission:Read_Write,   desc="UD + RSC";
+
+    // DVM states - use AccessPermission:Invalid because this prevents "functional reads"
+    DvmTlbi_Unconfirmed, AccessPermission:Invalid,  desc="DVM TLBI waiting for confirmation from MN";
+    DvmSync_Unsent, AccessPermission:Invalid,  desc="DVM Sync waiting for previous TLBIs to complete";
+    DvmSync_Unconfirmed, AccessPermission:Invalid,  desc="DVM Sync waiting for confirmation from MN";
+    DvmTlbi_Waiting, AccessPermission:Invalid,  desc="DVM TLBI confirmed by MN, waiting for completion";
+    DvmSync_Waiting, AccessPermission:Invalid,  desc="DVM Sync confirmed by MN, waiting for completion";
+    DvmOp_Finished, AccessPermission:Invalid,  desc="DVM operation that has completed, about to be deallocated";
+
+    DvmExtTlbi_Partial, AccessPermission:Invalid, desc="External DVM TLBI waiting for second packet from MN";
+    DvmExtTlbi_Executing, AccessPermission:Invalid, desc="External DVM TLBI being executed by this machine";
+    DvmExtSync_Partial, AccessPermission:Invalid, desc="External DVM Sync waiting for second packet from MN";
+    DvmExtSync_Executing, AccessPermission:Invalid, desc="External DVM Sync being executed by this machine";
+    DvmExtOp_Finished, AccessPermission:Invalid, desc="External DVM operation that has completed, about to be deallocated";
+
+    // Generic transient state
+    // There is only a transient "BUSY" state. The actions taken at this state
+    // and the final stable state are defined by information in the TBE.
+    // While on BUSY_INTR, we will reply to incoming snoops and the
+    // state of the cache line may change. While on BUSY_BLKD snoops
+    // are blocked
+    BUSY_INTR, AccessPermission:Busy, desc="Waiting for data and/or ack";
+    BUSY_BLKD, AccessPermission:Busy, desc="Waiting for data and/or ack; blocks snoops";
+
+    // Null state for debugging
+    null, AccessPermission:Invalid, desc="Null state";
+  }
+
+
+  ////////////////////////////////////////////////////////////////////////////
+  // Events
+  ////////////////////////////////////////////////////////////////////////////
+
+  enumeration(Event) {
+    // Events triggered by incoming requests. Allocate TBE and move
+    // request or snoop to the ready queue
+    AllocRequest,           desc="Allocates a TBE for a request. Triggers a retry if table is full";
+    AllocRequestWithCredit, desc="Allocates a TBE for a request. Always succeeds.";
+    AllocSeqRequest,        desc="Allocates a TBE for a sequencer request. Stalls requests if table is full";
+    AllocSeqDvmRequest,     desc="Allocates a TBE for a sequencer DVM request. Stalls requests if table is full";
+    AllocPfRequest,         desc="Allocates a TBE for a prefetch request. Stalls requests if table is full";
+    AllocSnoop,             desc="Allocates a TBE for a snoop. Stalls snoop if table is full";
+    AllocDvmSnoop,          desc="Allocated a TBE for a DVM snoop. Stalls snoop if table is full";
+
+    // Events triggered by sequencer requests or snoops in the rdy queue
+    // See CHIRequestType in CHi-msg.sm for descriptions
+    Load,                        desc="";
+    Store,                       desc="";
+    Prefetch,                    desc="";
+    ReadShared,                  desc="";
+    ReadNotSharedDirty,          desc="";
+    ReadUnique,                  desc="";
+    ReadUnique_PoC,              desc="";
+    ReadOnce,                    desc="";
+    CleanUnique,                 desc="";
+    Evict,                       desc="";
+    WriteBackFull,               desc="";
+    WriteEvictFull,              desc="";
+    WriteCleanFull,              desc="";
+    WriteUnique,                 desc="";
+    WriteUniquePtl_PoC,          desc="";
+    WriteUniqueFull_PoC,         desc="";
+    WriteUniqueFull_PoC_Alloc,   desc="";
+    SnpCleanInvalid,             desc="";
+    SnpShared,                   desc="";
+    SnpSharedFwd,                desc="";
+    SnpNotSharedDirtyFwd,        desc="";
+    SnpUnique,                   desc="";
+    SnpUniqueFwd,                desc="";
+    SnpOnce,                     desc="";
+    SnpOnceFwd,                  desc="";
+    SnpStalled, desc=""; // A snoop stall triggered from the inport
+
+    // DVM sequencer requests
+    DvmTlbi_Initiate, desc=""; // triggered when a CPU core wants to send a TLBI
+    // TLBIs are handled entirely within Ruby, so there's no ExternCompleted message
+    DvmSync_Initiate, desc=""; // triggered when a CPU core wants to send a sync
+    DvmSync_ExternCompleted, desc=""; // triggered when an externally requested Sync is completed
+
+    // Events triggered by incoming response messages
+    // See CHIResponseType in CHi-msg.sm for descriptions
+    CompAck,                 desc="";
+    Comp_I,                  desc="";
+    Comp_UC,                 desc="";
+    Comp_SC,                 desc="";
+    CompDBIDResp,            desc="";
+    DBIDResp,                desc="";
+    Comp,                    desc="";
+    ReadReceipt,             desc="";
+    RespSepData,             desc="";
+    SnpResp_I,               desc="";
+    SnpResp_I_Fwded_UC,      desc="";
+    SnpResp_I_Fwded_UD_PD,   desc="";
+    SnpResp_SC,              desc="";
+    SnpResp_SC_Fwded_SC,     desc="";
+    SnpResp_SC_Fwded_SD_PD,  desc="";
+    SnpResp_UC_Fwded_I,      desc="";
+    SnpResp_UD_Fwded_I,      desc="";
+    SnpResp_SC_Fwded_I,      desc="";
+    SnpResp_SD_Fwded_I,      desc="";
+    RetryAck,                desc="";
+    RetryAck_PoC,            desc="";
+    PCrdGrant,               desc="";
+    PCrdGrant_PoC,           desc="";
+    RetryAck_Hazard,         desc="";
+    RetryAck_PoC_Hazard,     desc="";
+    PCrdGrant_Hazard,        desc="";
+    PCrdGrant_PoC_Hazard,    desc="";
+
+    // Events triggered by incoming DVM messages
+    SnpDvmOpSync_P1,         desc="";
+    SnpDvmOpSync_P2,         desc="";
+    SnpDvmOpNonSync_P1,      desc="";
+    SnpDvmOpNonSync_P2,      desc="";
+
+    // Events triggered by incoming data response messages
+    // See CHIDataType in CHi-msg.sm for descriptions
+    CompData_I,                    desc="";
+    CompData_UC,                   desc="";
+    CompData_SC,                   desc="";
+    CompData_UD_PD,                desc="";
+    CompData_SD_PD,                desc="";
+    DataSepResp_UC,                desc="";
+    CBWrData_I,                    desc="";
+    CBWrData_UC,                   desc="";
+    CBWrData_SC,                   desc="";
+    CBWrData_UD_PD,                desc="";
+    CBWrData_SD_PD,                desc="";
+    NCBWrData,                     desc="";
+    SnpRespData_I,                 desc="";
+    SnpRespData_I_PD,              desc="";
+    SnpRespData_SC,                desc="";
+    SnpRespData_SC_PD,             desc="";
+    SnpRespData_SD,                desc="";
+    SnpRespData_UC,                desc="";
+    SnpRespData_UD,                desc="";
+    SnpRespData_SC_Fwded_SC,       desc="";
+    SnpRespData_SC_Fwded_SD_PD,    desc="";
+    SnpRespData_SC_PD_Fwded_SC,    desc="";
+    SnpRespData_I_Fwded_SD_PD,     desc="";
+    SnpRespData_I_PD_Fwded_SC,     desc="";
+    SnpRespData_I_Fwded_SC,        desc="";
+
+    // We use special events for requests that we detect to be stale. This is
+    // done for debugging only. We sent a stale response so the requester can
+    // confirm the request is indeed stale and this is not a protocol bug.
+    // A Write or Evict becomes stale when the requester receives a snoop that
+    // changes the state of the data while the request was pending.
+    // Actual CHI implementations don't have this check.
+    Evict_Stale,            desc="";
+    WriteBackFull_Stale,    desc="";
+    WriteEvictFull_Stale,   desc="";
+    WriteCleanFull_Stale,   desc="";
+    CleanUnique_Stale,   desc="";
+
+    // Cache fill handling
+    CheckCacheFill,   desc="Check if need to write or update the cache and trigger any necessary allocation and evictions";
+
+    // Internal requests generated to evict or writeback a local copy
+    // to free-up cache space
+    Local_Eviction,   desc="Evicts/WB the local copy of the line";
+    LocalHN_Eviction, desc="Local_Eviction triggered when is HN";
+    Global_Eviction,  desc="Local_Eviction + back-invalidate line in all upstream requesters";
+
+    // Events triggered from tbe.actions
+    // In general, for each event we define a single transition from
+    // BUSY_BLKD and/or BUSY_INTR.
+    // See processNextState functions and Initiate_* actions.
+    // All triggered transitions execute in the same cycle until it has to wait
+    // for pending pending responses or data (set by expected_req_resp and
+    // expected_snp_resp). Triggers queued with pushNB are executed even if
+    // there are pending messages.
+
+    // Cache/directory access events. Notice these only model the latency.
+    TagArrayRead,         desc="Read the cache and directory tag array";
+    TagArrayWrite,        desc="Write the cache and directory tag array";
+    DataArrayRead,        desc="Read the cache data array";
+    DataArrayWrite,       desc="Write the cache data array";
+    DataArrayWriteOnFill, desc="Write the cache data array (cache fill)";
+
+    // Events for modeling the pipeline latency
+    ReadHitPipe,  desc="Latency of reads served from local cache";
+    ReadMissPipe, desc="Latency of reads not served from local cache";
+    WriteFEPipe,  desc="Front-end latency of write requests";
+    WriteBEPipe,  desc="Back-end latency of write requests";
+    FillPipe,     desc="Cache fill latency";
+    SnpSharedPipe, desc="Latency for SnpShared requests";
+    SnpInvPipe,    desc="Latency for SnpUnique and SnpCleanInv requests";
+    SnpOncePipe,   desc="Latency for SnpOnce requests";
+
+    // Send a read request downstream.
+    SendReadShared,       desc="Send a ReadShared or ReadNotSharedDirty is allow_SD is false";
+    SendReadOnce,         desc="Send a ReadOnce";
+    SendReadNoSnp,        desc="Send a SendReadNoSnp";
+    SendReadNoSnpDMT,     desc="Send a SendReadNoSnp using DMT";
+    SendReadUnique,       desc="Send a ReadUnique";
+    SendCompAck,          desc="Send CompAck";
+    // Read handling at the completer
+    SendCompData,    desc="Send CompData";
+    WaitCompAck,     desc="Expect to receive CompAck";
+    SendRespSepData, desc="Send RespSepData for a DMT request";
+
+    // Send a write request downstream.
+    SendWriteBackOrWriteEvict, desc="Send a WriteBackFull (if line is UD or SD) or WriteEvictFull (if UC)";
+    SendWriteClean,            desc="Send a WriteCleanFull";
+    SendWriteNoSnp,            desc="Send a WriteNoSnp for a full line";
+    SendWriteNoSnpPartial,     desc="Send a WriteNoSnpPtl";
+    SendWriteUnique,           desc="Send a WriteUniquePtl";
+    SendWBData,                desc="Send writeback data";
+    SendWUData,                desc="Send write unique data";
+    SendWUDataCB,              desc="Send write unique data from a sequencer callback";
+    // Write handling at the completer
+    SendCompDBIDResp,      desc="Ack WB with CompDBIDResp";
+    SendCompDBIDRespStale, desc="Ack stale WB with CompDBIDResp";
+    SendCompDBIDResp_WU,   desc="Ack WU with CompDBIDResp and set expected data";
+    SendDBIDResp_WU,       desc="Ack WU with DBIDResp and set expected data";
+    SendComp_WU,           desc="Ack WU completion";
+
+    // Dataless requests
+    SendEvict,      desc="Send a Evict";
+    SendCompIResp,  desc="Ack Evict with Comp_I";
+    SendCleanUnique,desc="Send a CleanUnique";
+    SendCompUCResp, desc="Ack CleanUnique with Comp_UC";
+    SendCompUCRespStale, desc="Ack stale CleanUnique with Comp_UC";
+
+    // Checks if an upgrade using a CleanUnique was sucessfull
+    CheckUpgrade_FromStore, desc="Upgrade needed by a Store";
+    CheckUpgrade_FromCU,    desc="Upgrade needed by an upstream CleanUnique";
+    CheckUpgrade_FromRU,    desc="Upgrade needed by an upstream ReadUnique";
+
+    // Snoop requests
+    // SnpNotSharedDirty are sent instead of SnpShared for ReadNotSharedDirty
+    SendSnpShared,            desc="Send a SnpShared/SnpNotSharedDirty to sharer in UC,UD, or SD state";
+    SendSnpSharedFwdToOwner,  desc="Send a SnpSharedFwd/SnpNotSharedDirtyFwd to sharer in UC,UD, or SD state";
+    SendSnpSharedFwdToSharer, desc="Send a SnpSharedFwd/SnpNotSharedDirtyFwd to a sharer in SC state";
+    SendSnpOnce,              desc="Send a SnpOnce to a sharer";
+    SendSnpOnceFwd,           desc="Send a SnpOnceFwd to a sharer";
+    SendSnpUnique,            desc="Send a SnpUnique to all sharers";
+    SendSnpUniqueRetToSrc,    desc="Send a SnpUnique to all sharers. Sets RetToSrc for only one sharer.";
+    SendSnpUniqueFwd,         desc="Send a SnpUniqueFwd to a single sharer";
+    SendSnpCleanInvalid,      desc="Send a SnpCleanInvalid to all sharers";
+    SendSnpCleanInvalidNoReq, desc="Send a SnpCleanInvalid to all sharers except requestor";
+    // Snoop responses
+    SendSnpData,                      desc="Send SnpRespData as snoop reply";
+    SendSnpIResp,                     desc="Send SnpResp_I as snoop reply";
+    SendInvSnpResp,                   desc="Check data state and queue either SendSnpIResp or SendSnpData";
+    SendSnpUniqueFwdCompData,         desc="Send CompData to SnpUniqueFwd target and queue either SendSnpFwdedData or SendSnpFwdedResp";
+    SendSnpSharedFwdCompData,         desc="Send CompData to SnpUniqueFwd target and queue either SendSnpFwdedData or SendSnpFwdedResp";
+    SendSnpNotSharedDirtyFwdCompData, desc="Send CompData to SnpNotSharedDirtyFwd target and queue either SendSnpFwdedData or SendSnpFwdedResp";
+    SendSnpOnceFwdCompData,           desc="Send CompData to SnpOnceFwd target and queue either SendSnpFwdedData or SendSnpFwdedResp";
+    SendSnpFwdedData,                 desc="Send SnpResp for a forwarding snoop";
+    SendSnpFwdedResp,                 desc="Send SnpRespData for a forwarding snoop";
+
+    // DVM sends
+    DvmSync_Send, desc="Send an unstarted DVM Sync";
+
+    // Retry handling
+    SendRetryAck,   desc="Send RetryAck";
+    SendPCrdGrant,  desc="Send PCrdGrant";
+    DoRetry,        desc="Resend the current pending request";
+    DoRetry_Hazard,        desc="DoRetry during a hazard";
+
+    // Misc triggers
+    LoadHit,  desc="Complete a load hit";
+    StoreHit, desc="Complete a store hit";
+    UseTimeout, desc="Transition from UD_T -> UD";
+    RestoreFromHazard, desc="Restore from a snoop hazard";
+    TX_Data, desc="Transmit pending data messages";
+    MaintainCoherence, desc="Queues a WriteBack or Evict before droping the only valid copy of the block";
+    FinishCleanUnique, desc="Sends acks and perform any writeback after a CleanUnique";
+    FinishCopyBack_Stale, desc="Check if a Evict needs to be sent";
+    ActionStalledOnHazard, desc="Stall a trigger action because until finish handling snoop hazard";
+
+    // This is triggered once a transaction doesn't have
+    // any queued action and is not expecting responses/data. The transaction
+    // is finalized and the next stable state is stored in the cache/directory
+    // See the processNextState and makeFinalState functions
+    Final, desc="";
+
+    null, desc="";
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+  // Data structures
+  ////////////////////////////////////////////////////////////////////////////
+
+  // Cache block size
+  int blockSize, default="RubySystem::getBlockSizeBytes()";
+
+  // CacheEntry
+  structure(CacheEntry, interface="AbstractCacheEntry") {
+    State state,        desc="SLICC line state";
+    DataBlock DataBlk,  desc="data for the block";
+    bool HWPrefetched,  default="false", desc="Set if this cache entry was prefetched";
+  }
+
+  // Directory entry
+  structure(DirEntry, interface="AbstractCacheEntry", main="false") {
+    NetDest sharers,   desc="All upstream controllers that have this line (includes ownwer)";
+    MachineID owner,   desc="Controller that has the line in UD,UC, or SD state";
+    bool ownerExists, default="false", desc="true if owner exists";
+    bool ownerIsExcl, default="false", desc="true if owner is UD or UC";
+    State state,       desc="SLICC line state";
+  }
+
+  // Helper class for tracking expected response and data messages
+  structure(ExpectedMap, external ="yes") {
+    void clear(int dataChunks);
+    void addExpectedRespType(CHIResponseType);
+    void addExpectedDataType(CHIDataType);
+    void setExpectedCount(int val);
+    void addExpectedCount(int val);
+    bool hasExpected();
+    bool hasReceivedResp();
+    bool hasReceivedData();
+    int expected();
+    int received();
+    bool receiveResp(CHIResponseType);
+    bool receiveData(CHIDataType);
+    bool receivedDataType(CHIDataType);
+    bool receivedRespType(CHIResponseType);
+  }
+
+  // Tracks a pending retry
+  structure(RetryQueueEntry) {
+    Addr addr,           desc="Line address";
+    bool usesTxnId,      desc="Uses a transaction ID instead of a memory address";
+    MachineID retryDest, desc="Retry destination";
+  }
+
+  // Queue for event triggers. Used to specify a list of actions that need
+  // to be performed across multiple transitions.
+  // This class is also used to track pending retries
+  structure(TriggerQueue, external ="yes") {
+    Event front();
+    Event back();
+    bool frontNB();
+    bool backNB();
+    bool empty();
+    void push(Event);
+    void pushNB(Event);
+    void pushFront(Event);
+    void pushFrontNB(Event);
+    void pop();
+    // For the retry queue
+    void emplace(Addr,bool,MachineID);
+    RetryQueueEntry next(); //SLICC won't allow to reuse front()
+  }
+
+  // TBE fields
+  structure(TBE, desc="Transaction buffer entry definition") {
+    // in which table was this allocated
+    bool is_req_tbe, desc="Allocated in the request table";
+    bool is_snp_tbe, desc="Allocated in the snoop table";
+    bool is_repl_tbe, desc="Allocated in the replacements table";
+    bool is_dvm_tbe, desc="Allocated in the DVM table";
+    bool is_dvm_snp_tbe, desc="Allocated in the DVM snoop table";
+
+    int storSlot, desc="Slot in the storage tracker occupied by this entry";
+
+    // Transaction info mostly extracted from the request message
+    Addr addr,              desc="Line address for this TBE";
+    Addr accAddr,           desc="Access address for Load/Store/WriteUniquePtl; otherwisse == addr";
+    int accSize,            desc="Access size for Load/Store/WriteUniquePtl; otherwisse == blockSize";
+    CHIRequestType reqType, desc="Request type that initiated this transaction";
+    MachineID requestor,    desc="Requestor ID";
+    MachineID fwdRequestor, desc="Requestor to receive data on fwding snoops";
+    bool use_DMT,           desc="Use DMT for this transaction";
+    bool use_DCT,           desc="Use DCT for this transaction";
+
+    // if either is set prefetchers are not notified on miss/hit/fill and
+    // demand hit/miss stats are not incremented
+    bool is_local_pf,       desc="Request generated by a local prefetcher";
+    bool is_remote_pf,      desc="Request generated a prefetcher in another cache";
+
+    // NOTE: seqReq is a smart pointer pointing to original CPU request object
+    // that triggers transactions associated with this TBE. seqReq carries some
+    // information (e.g., PC of requesting instruction, virtual address of this
+    // request, etc.). Not all transactions have this field set if they are not
+    // triggered directly by a demand request from CPU.
+    RequestPtr seqReq,      default="nullptr", desc="Pointer to original request from CPU/sequencer";
+    bool isSeqReqValid,     default="false",   desc="Set if seqReq is valid (not nullptr)";
+
+    // Transaction state information
+    State state,    desc="SLICC line state";
+
+    // Transient state information. These are set at the beggining of a
+    // transactions and updated as data and responses are received. After
+    // finalizing the transactions these are used to create the next SLICC
+    // stable state.
+    bool hasUseTimeout,           desc="Line is locked under store/use timeout";
+    DataBlock dataBlk,            desc="Local copy of the line";
+    WriteMask dataBlkValid,       desc="Marks which bytes in the DataBlock are valid";
+    bool dataValid,               desc="Local copy is valid";
+    bool dataDirty,               desc="Local copy is dirtry";
+    bool dataMaybeDirtyUpstream,  desc="Line maybe dirty upstream";
+    bool dataUnique,              desc="Line is unique either locally or upsatream";
+    bool dataToBeInvalid,         desc="Local copy will be invalidated at the end of transaction";
+    bool dataToBeSharedClean,     desc="Local copy will become SC at the end of transaction";
+    NetDest dir_sharers,          desc="Upstream controllers that have the line (includes owner)";
+    MachineID dir_owner,          desc="Owner ID";
+    bool dir_ownerExists,         desc="Owner ID is valid";
+    bool dir_ownerIsExcl,         desc="Owner is UD or UC; SD otherwise";
+    bool doCacheFill,             desc="Write valid data to the cache when completing transaction";
+    // NOTE: dataMaybeDirtyUpstream and dir_ownerExists are the same except
+    // when we had just sent dirty data upstream and are waiting for ack to set
+    // dir_ownerExists
+
+    // Helper structures to track expected events and additional transient
+    // state info
+
+    // List of actions to be performed while on a transient state
+    // See the processNextState function for details
+    TriggerQueue actions, template="<Cache_Event>", desc="List of actions";
+    Event pendAction,         desc="Current pending action";
+    Tick delayNextAction,     desc="Delay next action until given tick";
+    State finalState,         desc="Final state; set when pendAction==Final";
+
+    // List of expected responses and data. Checks the type of data against the
+    // expected ones for debugging purposes
+    // See the processNextState function for details
+    ExpectedMap expected_req_resp, template="<CHIResponseType,CHIDataType>";
+    ExpectedMap expected_snp_resp, template="<CHIResponseType,CHIDataType>";
+    bool defer_expected_comp; // expect to receive Comp before the end of transaction
+    CHIResponseType slicchack1; // fix compiler not including headers
+    CHIDataType slicchack2; // fix compiler not including headers
+
+    // Tracks pending data messages that need to be generated when sending
+    // a line
+    bool snd_pendEv,            desc="Is there a pending tx event ?";
+    WriteMask snd_pendBytes,    desc="Which bytes are pending transmission";
+    CHIDataType snd_msgType,    desc="Type of message being sent";
+    MachineID snd_destination,  desc="Data destination";
+
+    // Tracks how to update the directory when receiving a CompAck
+    bool updateDirOnCompAck,          desc="Update directory on CompAck";
+    bool requestorToBeOwner,          desc="Sets dir_ownerExists";
+    bool requestorToBeExclusiveOwner, desc="Sets dir_ownerIsExcl";
+    // NOTE: requestor always added to dir_sharers if updateDirOnCompAck is set
+
+    // Set for incoming snoop requests
+    bool snpNeedsData,  desc="Set if snoop requires data as response";
+    State fwdedState,   desc="State of CompData sent due to a forwarding snoop";
+    bool is_req_hazard, desc="Snoop hazard with an outstanding request";
+    bool is_repl_hazard, desc="Snoop hazard with an outstanding writeback request";
+    bool is_stale,      desc="Request is now stale because of a snoop hazard";
+
+    // Tracks requests sent downstream
+    CHIRequestType pendReqType, desc="Sent request type";
+    bool pendReqAllowRetry,     desc="Sent request can be retried";
+    bool rcvdRetryAck,          desc="Received a RetryAck";
+    bool rcvdRetryCredit,       desc="Received a PCrdGrant";
+    // NOTE: the message is retried only after receiving both RetryAck and
+    // PCrdGrant. A request can be retried only once.
+    // These are a copy of the retry msg fields in case we need to retry
+    Addr pendReqAccAddr;
+    int pendReqAccSize;
+    NetDest pendReqDest;
+    bool pendReqD2OrigReq;
+    bool pendReqRetToSrc;
+
+    // This TBE stalled a message and thus we need to call wakeUpBuffers
+    // at some point
+    bool wakeup_pending_req;
+    bool wakeup_pending_snp;
+    bool wakeup_pending_tgr;
+  }
+
+  // TBE table definition
+  structure(TBETable, external ="yes") {
+    TBE lookup(Addr);
+    void allocate(Addr);
+    void deallocate(Addr);
+    bool isPresent(Addr);
+  }
+
+  structure(TBEStorage, external ="yes") {
+    int size();
+    int capacity();
+    int reserved();
+    int slotsAvailable();
+    bool areNSlotsAvailable(int n);
+    void incrementReserved();
+    void decrementReserved();
+    int addEntryToNewSlot();
+    void addEntryToSlot(int slot);
+    void removeEntryFromSlot(int slot);
+  }
+
+  // Directory memory definition
+  structure(PerfectCacheMemory, external = "yes") {
+    void allocate(Addr);
+    void deallocate(Addr);
+    DirEntry lookup(Addr);
+    bool isTagPresent(Addr);
+  }
+
+  // Directory
+  PerfectCacheMemory directory, template="<Cache_DirEntry>";
+
+  // Tracks unique lines locked after a store miss
+  TimerTable useTimerTable;
+
+  // Multiplies sc_lock_base_latency to obtain the lock timeout.
+  // This is incremented at Profile_Eviction and decays on
+  // store miss completion
+  int sc_lock_multiplier, default="0";
+
+  // Definitions of the TBE tables
+
+  // Main TBE table used for incoming requests
+  TBETable TBEs,      template="<Cache_TBE>", constructor="m_number_of_TBEs";
+  TBEStorage storTBEs, constructor="this, m_number_of_TBEs";
+
+  // TBE table for WriteBack/Evict requests generated by a replacement
+  // Notice storTBEs will be used when unify_repl_TBEs is set
+  TBETable replTBEs,      template="<Cache_TBE>", constructor="m_unify_repl_TBEs ? m_number_of_TBEs : m_number_of_repl_TBEs";
+  TBEStorage storReplTBEs, constructor="this, m_number_of_repl_TBEs";
+
+  // TBE table for incoming snoops
+  TBETable snpTBEs,      template="<Cache_TBE>", constructor="m_number_of_snoop_TBEs";
+  TBEStorage storSnpTBEs, constructor="this, m_number_of_snoop_TBEs";
+
+  // TBE table for outgoing DVM requests
+  TBETable dvmTBEs,      template="<Cache_TBE>", constructor="m_number_of_DVM_TBEs";
+  TBEStorage storDvmTBEs, constructor="this, m_number_of_DVM_TBEs";
+
+  // TBE table for incoming DVM snoops
+  TBETable dvmSnpTBEs,      template="<Cache_TBE>", constructor="m_number_of_DVM_snoop_TBEs";
+  TBEStorage storDvmSnpTBEs, constructor="this, m_number_of_DVM_snoop_TBEs";
+
+  // DVM data
+  // Queue of non-sync operations that haven't been Comp-d yet.
+  // Before a Sync operation can start, this queue must be emptied
+  TriggerQueue dvmPendingNonSyncsBlockingSync, template="<Cache_Event>";
+  // Used to record if a Sync op is pending
+  bool dvmHasPendingSyncOp, default="false";
+  Addr dvmPendingSyncOp, default="0";
+
+  // Retry handling
+
+  // Destinations that will be sent PCrdGrant when a TBE becomes available
+  TriggerQueue retryQueue, template="<Cache_RetryQueueEntry>";
+
+
+  // Pending RetryAck/PCrdGrant/DoRetry
+  structure(RetryTriggerMsg, interface="Message") {
+    Addr addr;
+    Event event;
+    MachineID retryDest;
+    bool usesTxnId;
+
+    bool functionalRead(Packet *pkt) { return false; }
+    bool functionalRead(Packet *pkt, WriteMask &mask) { return false; }
+    bool functionalWrite(Packet *pkt) { return false; }
+  }
+
+  // Destinations from we received a RetryAck. Sending new requests to these
+  // destinations will be blocked until a PCrdGrant is received if
+  // throttle_req_on_retry is set
+  NetDest destsWaitingRetry;
+
+  // Pending transaction actions (generated by TBE:actions)
+  structure(TriggerMsg, interface="Message") {
+    Addr addr;
+    bool usesTxnId;
+    bool from_hazard; // this actions was generate during a snoop hazard
+    bool functionalRead(Packet *pkt) { return false; }
+    bool functionalRead(Packet *pkt, WriteMask &mask) { return false; }
+    bool functionalWrite(Packet *pkt) { return false; }
+  }
+
+  // Internal replacement request
+  structure(ReplacementMsg, interface="Message") {
+    Addr addr;
+    Addr from_addr;
+    int slot; // set only when unify_repl_TBEs is set
+    bool functionalRead(Packet *pkt) { return false; }
+    bool functionalRead(Packet *pkt, WriteMask &mask) { return false; }
+    bool functionalWrite(Packet *pkt) { return false; }
+  }
+
+
+  ////////////////////////////////////////////////////////////////////////////
+  // Input/output port definitions
+  ////////////////////////////////////////////////////////////////////////////
+
+  include "CHI-cache-ports.sm";
+  // CHI-cache-ports.sm also includes CHI-cache-funcs.sm
+
+  ////////////////////////////////////////////////////////////////////////////
+  // Actions and transitions
+  ////////////////////////////////////////////////////////////////////////////
+
+  include "CHI-cache-actions.sm";
+  include "CHI-cache-transitions.sm";
+}

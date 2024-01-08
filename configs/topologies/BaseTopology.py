@@ -27,7 +27,7 @@
 import m5
 
 
-class BaseTopology:
+class BaseTopology(object):
     description = "BaseTopology"
 
     def __init__(self):

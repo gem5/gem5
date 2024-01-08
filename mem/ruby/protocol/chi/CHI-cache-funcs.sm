@@ -1,0 +1,1422 @@
+/*
+ * Copyright (c) 2021-2022 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+////////////////////////////////////////////////////////////////////////////
+// CHI-cache function definitions
+////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////
+// External functions
+
+Tick clockEdge();
+Tick curTick();
+Tick cyclesToTicks(Cycles c);
+Cycles ticksToCycles(Tick t);
+void set_cache_entry(AbstractCacheEntry b);
+void unset_cache_entry();
+void set_tbe(TBE b);
+void unset_tbe();
+MachineID mapAddressToDownstreamMachine(Addr addr);
+MachineID mapAddressToMachine(Addr addr, MachineType mtype);
+
+void incomingTransactionStart(Addr, Event, State, bool);
+void incomingTransactionEnd(Addr, State);
+void outgoingTransactionStart(Addr, Event);
+void outgoingTransactionEnd(Addr, bool);
+// Overloads for transaction-measuring functions
+// final bool = isAddressed
+// if false, uses a "unaddressed" table with unique IDs
+void incomingTransactionStart(Addr, Event, State, bool, bool);
+void incomingTransactionEnd(Addr, State, bool);
+void outgoingTransactionStart(Addr, Event, bool);
+void outgoingTransactionEnd(Addr, bool, bool);
+Event curTransitionEvent();
+State curTransitionNextState();
+
+// Placeholders for future prefetch support
+void notifyPfHit(RequestPtr req, bool is_read, DataBlock blk) { }
+void notifyPfMiss(RequestPtr req, bool is_read, DataBlock blk) { }
+void notifyPfFill(RequestPtr req, DataBlock blk, bool from_pf) { }
+void notifyPfEvict(Addr blkAddr, bool hwPrefetched) { }
+void notifyPfComplete(Addr addr) { }
+
+////////////////////////////////////////////////////////////////////////////
+// Interface functions required by SLICC
+
+CacheEntry getCacheEntry(Addr addr), return_by_pointer="yes" {
+  return static_cast(CacheEntry, "pointer", cache.lookup(addr));
+}
+
+CacheEntry nullCacheEntry(), return_by_pointer="yes" {
+  return OOD;
+}
+
+DirEntry getDirEntry(Addr addr), return_by_pointer = "yes" {
+  if (directory.isTagPresent(addr)) {
+    return directory.lookup(addr);
+  } else {
+    return OOD;
+  }
+}
+
+State getState(TBE tbe, CacheEntry cache_entry, Addr addr) {
+  if (is_valid(tbe)) {
+      return tbe.state;
+  } else if (is_valid(cache_entry)) {
+    return cache_entry.state;
+  } else {
+      DirEntry dir_entry := getDirEntry(addr);
+      if (is_valid(dir_entry)) {
+        return dir_entry.state;
+      } else {
+        return State:I;
+      }
+  }
+}
+
+void setState(TBE tbe, CacheEntry cache_entry, Addr addr, State state) {
+  if (is_valid(tbe)) {
+    tbe.state := state;
+  }
+  if (is_valid(cache_entry)) {
+    cache_entry.state := state;
+  }
+  DirEntry dir_entry := getDirEntry(addr);
+  if (is_valid(dir_entry)) {
+    dir_entry.state := state;
+  }
+}
+
+TBE nullTBE(), return_by_pointer="yes" {
+  return OOD;
+}
+
+TBE getDvmTBE(Addr txnId), return_by_pointer="yes" {
+  TBE dvm_tbe := dvmTBEs[txnId];
+  if (is_valid(dvm_tbe)) {
+    return dvm_tbe;
+  }
+  TBE dvm_snp_tbe := dvmSnpTBEs[txnId];
+  if (is_valid(dvm_snp_tbe)) {
+    return dvm_snp_tbe;
+  }
+  return OOD;
+}
+
+TBE getCurrentActiveTBE(Addr addr), return_by_pointer="yes" {
+  // snoops take precedence over wbs and reqs
+  // it's invalid to have a replacement and a req active at the same time
+  // for the same line
+  TBE snp_tbe := snpTBEs[addr];
+  if (is_valid(snp_tbe)) {
+    return snp_tbe;
+  }
+  TBE req_tbe := TBEs[addr];
+  TBE repl_tbe := replTBEs[addr];
+  if (is_valid(req_tbe)) {
+    assert(is_invalid(repl_tbe));
+    return req_tbe;
+  }
+  if (is_valid(repl_tbe)) {
+    assert(is_invalid(req_tbe));
+    return repl_tbe;
+  }
+  return OOD;
+}
+
+AccessPermission getAccessPermission(Addr addr) {
+  TBE tbe := getCurrentActiveTBE(addr);
+  if(is_valid(tbe)) {
+    assert(Cache_State_to_permission(tbe.state) == AccessPermission:Busy);
+    // It's assumed that if all caches are in transient state, the latest data
+    // is 1) within an inflight message, then 2 ) in memory. But with
+    // CleanUnique there may be no inflight messages with data, so it needs
+    // special handling.
+    bool cu_requester_or_responder :=
+      (tbe.reqType == CHIRequestType:CleanUnique) ||
+      (tbe.pendReqType == CHIRequestType:CleanUnique);
+    if ((tbe.expected_req_resp.hasExpected() ||
+        tbe.expected_snp_resp.hasExpected()) && !cu_requester_or_responder) {
+      DPRINTF(RubySlicc, "%x %s,%s\n", addr, tbe.state, AccessPermission:Busy);
+      return AccessPermission:Busy;
+    }
+    else if (tbe.dataValid && (tbe.dataMaybeDirtyUpstream == false)) {
+      if (tbe.dataUnique) {
+        DPRINTF(RubySlicc, "%x %s,%s\n", addr, tbe.state, AccessPermission:Read_Write);
+        return AccessPermission:Read_Write;
+      } else {
+        DPRINTF(RubySlicc, "%x %s,%s\n", addr, tbe.state, AccessPermission:Read_Only);
+        return AccessPermission:Read_Only;
+      }
+    } else {
+      DPRINTF(RubySlicc, "%x %s,%s\n", addr, tbe.state, AccessPermission:Busy);
+      return AccessPermission:Busy;
+    }
+  }
+  CacheEntry cache_entry := getCacheEntry(addr);
+  if(is_valid(cache_entry)) {
+      DPRINTF(RubySlicc, "%x %s,%s\n", addr, cache_entry.state, Cache_State_to_permission(cache_entry.state));
+      return Cache_State_to_permission(cache_entry.state);
+  }
+  DPRINTF(RubySlicc, "%x %s,%s\n", addr, State:I, AccessPermission:NotPresent);
+  return AccessPermission:NotPresent;
+}
+
+void setAccessPermission(CacheEntry cache_entry, Addr addr, State state) {
+  if (is_valid(cache_entry)) {
+      cache_entry.changePermission(Cache_State_to_permission(state));
+  }
+}
+
+void functionalRead(Addr addr, Packet *pkt, WriteMask &mask) {
+  // read if bitmask has bytes not in mask or if data is dirty
+
+  TBE tbe := getCurrentActiveTBE(addr);
+  CacheEntry cache_entry := getCacheEntry(addr);
+  DPRINTF(RubySlicc, "functionalRead %x\n", addr);
+  WriteMask read_mask;
+  bool dirty := false;
+  bool from_tbe := false;
+
+  if (is_valid(tbe)) {
+    from_tbe := true;
+    dirty := tbe.dataDirty;
+    if (tbe.dataValid) {
+      read_mask.fillMask();
+    } else {
+      read_mask := tbe.dataBlkValid;
+      // could have received dirty data but tbe.dataDirty not set yet because
+      // some data is pending, so check for dirty received message types
+      dirty := dirty ||
+            tbe.expected_req_resp.receivedDataType(CHIDataType:CompData_UD_PD) ||
+            tbe.expected_req_resp.receivedDataType(CHIDataType:CompData_SD_PD) ||
+            tbe.expected_req_resp.receivedDataType(CHIDataType:CBWrData_UD_PD) ||
+            tbe.expected_req_resp.receivedDataType(CHIDataType:CBWrData_SD_PD) ||
+            tbe.expected_req_resp.receivedDataType(CHIDataType:NCBWrData) ||
+            tbe.expected_snp_resp.receivedDataType(CHIDataType:SnpRespData_I_PD) ||
+            tbe.expected_snp_resp.receivedDataType(CHIDataType:SnpRespData_SC_PD) ||
+            tbe.expected_snp_resp.receivedDataType(CHIDataType:SnpRespData_SD) ||
+            tbe.expected_snp_resp.receivedDataType(CHIDataType:SnpRespData_UD) ||
+            tbe.expected_snp_resp.receivedDataType(CHIDataType:SnpRespData_SC_Fwded_SD_PD) ||
+            tbe.expected_snp_resp.receivedDataType(CHIDataType:SnpRespData_SC_PD_Fwded_SC) ||
+            tbe.expected_snp_resp.receivedDataType(CHIDataType:SnpRespData_I_Fwded_SD_PD) ||
+            tbe.expected_snp_resp.receivedDataType(CHIDataType:SnpRespData_I_PD_Fwded_SC);
+    }
+  } else if (is_valid(cache_entry) &&
+             ((Cache_State_to_permission(cache_entry.state) == AccessPermission:Read_Write) ||
+              (Cache_State_to_permission(cache_entry.state) == AccessPermission:Read_Only))) {
+    from_tbe := false;
+    read_mask.fillMask();
+    dirty := (cache_entry.state == State:UD) || (cache_entry.state == State:UD_RSC) ||
+             (cache_entry.state == State:SD) || (cache_entry.state == State:SD_RSC) ||
+             (cache_entry.state == State:UD_RU) || (cache_entry.state == State:UD_RSD) ||
+             (cache_entry.state == State:SD_RSD) || (cache_entry.state == State:UD_T);
+  }
+
+  WriteMask test_mask := mask;
+  test_mask.orMask(read_mask);
+  if ((mask.containsMask(test_mask) == false) || dirty) {
+    if (from_tbe) {
+      if(testAndReadMask(addr, tbe.dataBlk, read_mask, pkt)) {
+        DPRINTF(RubySlicc, "functionalRead tbe %x %s dirty=%d %s %s\n", addr, tbe.dataBlk, tbe.dataDirty, read_mask, mask);
+        mask.orMask(read_mask);
+      }
+    } else {
+      if (testAndReadMask(addr, cache_entry.DataBlk, read_mask, pkt)) {
+        DPRINTF(RubySlicc, "functionalRead cache %x %s dirty=%d %s %s\n", addr, cache_entry.DataBlk, dirty, read_mask, mask);
+        mask.orMask(read_mask);
+      }
+    }
+  }
+}
+
+int functionalWrite(Addr addr, Packet *pkt) {
+  int num_functional_writes := 0;
+  TBE tbe := getCurrentActiveTBE(addr);
+  if(is_valid(tbe)) {
+    num_functional_writes := num_functional_writes +
+      testAndWrite(addr, tbe.dataBlk, pkt);
+    DPRINTF(RubySlicc, "functionalWrite tbe %x %s\n", addr, tbe.dataBlk);
+  }
+  CacheEntry cache_entry := getCacheEntry(addr);
+  if (is_valid(cache_entry)) {
+    num_functional_writes := num_functional_writes +
+      testAndWrite(addr, cache_entry.DataBlk, pkt);
+    DPRINTF(RubySlicc, "functionalWrite cache %x %s\n", addr, cache_entry.DataBlk);
+  }
+  return num_functional_writes;
+}
+
+Cycles mandatoryQueueLatency(RubyRequestType type) {
+  return intToCycles(1);
+}
+
+Cycles tagLatency(bool from_sequencer) {
+  if (from_sequencer) {
+    //mandatoryQueueLatency accounts for 1 cy
+    return cache.getTagLatency() - intToCycles(1);
+  } else {
+    return cache.getTagLatency();
+  }
+}
+
+Cycles dataLatency() {
+  return cache.getDataLatency();
+}
+
+bool inCache(Addr addr) {
+  CacheEntry entry := getCacheEntry(makeLineAddress(addr));
+  // NOTE: we consider data for the addr to be in cache if it exists in local,
+  // upstream, or both caches.
+  if ((is_valid(entry) == false) || (entry.state == State:I)) {
+    return false;
+  } else {
+    return true;
+  }
+}
+
+bool hasBeenPrefetched(Addr addr) {
+  CacheEntry entry := getCacheEntry(makeLineAddress(addr));
+  if (is_valid(entry)) {
+    return entry.HWPrefetched;
+  } else {
+    return false;
+  }
+}
+
+bool inMissQueue(Addr addr) {
+  Addr line_addr := makeLineAddress(addr);
+  TBE tbe := getCurrentActiveTBE(line_addr);
+  return is_valid(tbe);
+}
+
+void notifyCoalesced(Addr addr, RubyRequestType type, RequestPtr req,
+                     DataBlock data_blk, bool was_miss) {
+  DPRINTF(RubySlicc, "notifyCoalesced(addr=%#x, type=%s, was_miss=%d)\n",
+                      addr, type, was_miss);
+  if (was_miss) {
+    cache.profileDemandMiss();
+  } else {
+    cache.profileDemandHit();
+  }
+  if (use_prefetcher) {
+    bool is_read := (type == RubyRequestType:LD) ||
+                    (type == RubyRequestType:Load_Linked) ||
+                    (type == RubyRequestType:IFETCH);
+    if (was_miss) {
+      notifyPfMiss(req, is_read, data_blk);
+    } else {
+      notifyPfHit(req, is_read, data_blk);
+    }
+  }
+}
+
+
+////////////////////////////////////////////////////////////////////////////
+// Helper functions
+
+
+void clearExpectedReqResp(TBE tbe) {
+  assert(blockSize >= data_channel_size);
+  assert((blockSize % data_channel_size) == 0);
+  tbe.expected_req_resp.clear(blockSize / data_channel_size);
+}
+
+void clearExpectedSnpResp(TBE tbe) {
+  assert(blockSize >= data_channel_size);
+  assert((blockSize % data_channel_size) == 0);
+  tbe.expected_snp_resp.clear(blockSize / data_channel_size);
+}
+
+void initializeTBE(TBE tbe, Addr addr, int storSlot) {
+  assert(is_valid(tbe));
+
+  tbe.wakeup_pending_req := false;
+  tbe.wakeup_pending_snp := false;
+  tbe.wakeup_pending_tgr := false;
+
+  tbe.addr := addr;
+
+  tbe.storSlot := storSlot;
+
+  clearExpectedReqResp(tbe);
+  clearExpectedSnpResp(tbe);
+  tbe.defer_expected_comp := false;
+
+  tbe.requestorToBeOwner := false;
+  tbe.requestorToBeExclusiveOwner := false;
+  tbe.updateDirOnCompAck := true;
+
+  tbe.dataToBeInvalid := false;
+  tbe.dataToBeSharedClean := false;
+
+  tbe.doCacheFill := false;
+
+  tbe.pendReqType := CHIRequestType:null;
+
+  tbe.pendAction := Event:null;
+  tbe.finalState := State:null;
+  tbe.delayNextAction := intToTick(0);
+
+  tbe.is_stale := false;
+}
+
+TBE allocateRequestTBE(Addr addr, CHIRequestMsg in_msg), return_by_pointer="yes" {
+  // We must have reserved resources for this allocation
+  storTBEs.decrementReserved();
+  assert(storTBEs.areNSlotsAvailable(1));
+
+  TBEs.allocate(addr);
+  TBE tbe := TBEs[addr];
+
+  initializeTBE(tbe, addr, storTBEs.addEntryToNewSlot());
+
+  assert(tbe.is_snp_tbe == false);
+  assert(tbe.is_repl_tbe == false);
+  assert(tbe.is_dvm_tbe == false);
+  assert(tbe.is_dvm_snp_tbe == false);
+  tbe.is_req_tbe := true;
+
+  tbe.accAddr := in_msg.accAddr;
+  tbe.accSize := in_msg.accSize;
+  tbe.requestor := in_msg.requestor;
+  tbe.reqType := in_msg.type;
+
+  tbe.isSeqReqValid := in_msg.isSeqReqValid;
+  tbe.seqReq := in_msg.seqReq;
+  tbe.is_local_pf := in_msg.is_local_pf;
+  tbe.is_remote_pf := in_msg.is_remote_pf;
+
+  tbe.use_DMT := false;
+  tbe.use_DCT := false;
+
+  tbe.hasUseTimeout := false;
+
+  return tbe;
+}
+
+TBE allocateDvmRequestTBE(Addr txnId, CHIRequestMsg in_msg), return_by_pointer="yes" {
+  // We must have reserved resources for this allocation
+  storDvmTBEs.decrementReserved();
+  assert(storDvmTBEs.areNSlotsAvailable(1));
+
+  dvmTBEs.allocate(txnId);
+  TBE tbe := dvmTBEs[txnId];
+
+  // Setting .addr = txnId
+  initializeTBE(tbe, txnId, storDvmTBEs.addEntryToNewSlot());
+
+  assert(tbe.is_snp_tbe == false);
+  assert(tbe.is_repl_tbe == false);
+  assert(tbe.is_req_tbe == false);
+  assert(tbe.is_dvm_snp_tbe == false);
+  tbe.is_dvm_tbe := true;
+
+  // TODO - zero these out?
+  tbe.accAddr := txnId;
+  tbe.accSize := blockSize;
+  tbe.requestor := in_msg.requestor;
+  tbe.reqType := in_msg.type;
+
+  tbe.isSeqReqValid := in_msg.isSeqReqValid;
+  tbe.seqReq := in_msg.seqReq;
+  tbe.is_local_pf := in_msg.is_local_pf;
+  tbe.is_remote_pf := in_msg.is_remote_pf;
+
+  tbe.use_DMT := false;
+  tbe.use_DCT := false;
+
+  tbe.hasUseTimeout := false;
+
+  return tbe;
+}
+
+TBE allocateSnoopTBE(Addr addr, CHIRequestMsg in_msg), return_by_pointer="yes" {
+  // We must have reserved resources for this allocation
+  storSnpTBEs.decrementReserved();
+  assert(storSnpTBEs.areNSlotsAvailable(1));
+
+  snpTBEs.allocate(addr);
+  TBE tbe := snpTBEs[addr];
+  initializeTBE(tbe, addr, storSnpTBEs.addEntryToNewSlot());
+
+  assert(tbe.is_req_tbe == false);
+  assert(tbe.is_repl_tbe == false);
+  assert(tbe.is_dvm_tbe == false);
+  assert(tbe.is_dvm_snp_tbe == false);
+  tbe.is_snp_tbe := true;
+
+  tbe.accAddr := addr;
+  tbe.accSize := blockSize;
+  tbe.requestor := in_msg.requestor;
+  tbe.fwdRequestor := in_msg.fwdRequestor;
+  tbe.reqType := in_msg.type;
+
+  tbe.snpNeedsData := in_msg.retToSrc;
+
+  tbe.use_DMT := false;
+  tbe.use_DCT := false;
+
+  return tbe;
+}
+
+TBE allocateDvmSnoopTBE(Addr txnId, CHIRequestMsg in_msg), return_by_pointer="yes" {
+  // We must have reserved resources for this allocation
+  storDvmSnpTBEs.decrementReserved();
+  assert(storDvmSnpTBEs.areNSlotsAvailable(1));
+
+  dvmSnpTBEs.allocate(txnId);
+  TBE tbe := dvmSnpTBEs[txnId];
+  initializeTBE(tbe, txnId, storDvmSnpTBEs.addEntryToNewSlot());
+
+  assert(tbe.is_req_tbe == false);
+  assert(tbe.is_repl_tbe == false);
+  assert(tbe.is_dvm_tbe == false);
+  assert(tbe.is_snp_tbe == false);
+  tbe.is_dvm_snp_tbe := true;
+
+  // TODO - zero these out?
+  tbe.accAddr := txnId;
+  tbe.accSize := blockSize;
+  tbe.requestor := in_msg.requestor;
+  tbe.fwdRequestor := in_msg.fwdRequestor;
+  tbe.reqType := in_msg.type;
+
+  tbe.snpNeedsData := in_msg.retToSrc;
+
+  tbe.use_DMT := false;
+  tbe.use_DCT := false;
+
+  return tbe;
+}
+
+TBE _allocateReplacementTBE(Addr addr, int storSlot), return_by_pointer="yes" {
+  TBE tbe := replTBEs[addr];
+  initializeTBE(tbe, addr, storSlot);
+
+  assert(tbe.is_req_tbe == false);
+  assert(tbe.is_snp_tbe == false);
+  assert(tbe.is_dvm_tbe == false);
+  tbe.is_repl_tbe := true;
+
+  tbe.accAddr := addr;
+  tbe.accSize := blockSize;
+  tbe.requestor := machineID;
+  tbe.reqType := CHIRequestType:null;
+
+  tbe.use_DMT := false;
+  tbe.use_DCT := false;
+
+  return tbe;
+}
+
+TBE allocateReplacementTBE(Addr addr), return_by_pointer="yes" {
+  // We must have resources for this allocation
+  assert(storReplTBEs.areNSlotsAvailable(1));
+
+  replTBEs.allocate(addr);
+  return _allocateReplacementTBE(addr, storReplTBEs.addEntryToNewSlot());
+}
+
+TBE allocateReplacementTBEOnSlot(Addr addr, int slot), return_by_pointer="yes" {
+  // only when reusing slot from main TBE table
+  assert(unify_repl_TBEs);
+  storTBEs.addEntryToSlot(slot);
+
+  replTBEs.allocate(addr);
+  return _allocateReplacementTBE(addr, slot);
+}
+
+TBE getHazardTBE(TBE tbe), return_by_pointer="yes" {
+  assert(is_valid(tbe));
+  assert(tbe.is_snp_tbe);
+  TBE hazard_tbe := TBEs[tbe.addr];
+  if (tbe.is_req_hazard) {
+    assert(tbe.is_repl_hazard == false);
+  } else {
+    assert(tbe.is_repl_hazard);
+    hazard_tbe := replTBEs[tbe.addr];
+  }
+  assert(is_valid(hazard_tbe));
+  return hazard_tbe;
+}
+
+void scheduleSendData(TBE tbe, int when) {
+  if (tbe.snd_pendBytes.count() > 0) {
+    assert(tbe.snd_pendEv == false);
+    tbe.snd_pendEv := true;
+    // enqueue send event
+    tbe.pendAction := Event:TX_Data;
+    enqueue(triggerOutPort, TriggerMsg, intToCycles(when)) {
+      out_msg.addr := tbe.addr;
+      out_msg.from_hazard := tbe.is_req_hazard || tbe.is_repl_hazard;
+    }
+  }
+}
+
+void setupPendingSend(TBE tbe) {
+  assert(blockSize >= data_channel_size);
+  assert((blockSize % data_channel_size) == 0);
+  // data must be complete in the TBE
+  assert(tbe.dataBlkValid.isFull());
+  tbe.snd_pendBytes.fillMask();
+  scheduleSendData(tbe, 0);
+}
+
+void setupPendingPartialSend(TBE tbe) {
+  assert(blockSize >= data_channel_size);
+  assert((blockSize % data_channel_size) == 0);
+  // data must be complete in the TBE
+  assert(tbe.dataBlkValid.count() > 0);
+  tbe.snd_pendBytes := tbe.dataBlkValid;
+  scheduleSendData(tbe, 0);
+}
+
+// common code for downstream requests
+void prepareRequest(TBE tbe, CHIRequestType type, CHIRequestMsg & out_msg) {
+  out_msg.addr := tbe.addr;
+  out_msg.accAddr := tbe.addr;
+  out_msg.accSize := blockSize;
+  out_msg.requestor := machineID;
+  out_msg.fwdRequestor := tbe.requestor;
+  out_msg.type := type;
+  out_msg.allowRetry := false;
+  tbe.pendReqAllowRetry := false;
+  tbe.rcvdRetryAck := false;
+  tbe.rcvdRetryCredit := false;
+  tbe.pendReqType := type;
+  out_msg.isSeqReqValid := tbe.isSeqReqValid;
+  out_msg.seqReq := tbe.seqReq;
+  out_msg.is_local_pf := false;
+  out_msg.is_remote_pf := tbe.is_local_pf || tbe.is_remote_pf;
+}
+
+void allowRequestRetry(TBE tbe, CHIRequestMsg & out_msg) {
+  out_msg.allowRetry := true;
+  tbe.pendReqAllowRetry := true;
+  tbe.pendReqAccAddr := out_msg.accAddr;
+  tbe.pendReqAccSize := out_msg.accSize;
+  tbe.pendReqDest := out_msg.Destination;
+  tbe.pendReqD2OrigReq := out_msg.dataToFwdRequestor;
+  tbe.pendReqRetToSrc := out_msg.retToSrc;
+}
+
+void prepareRequestRetry(TBE tbe, CHIRequestMsg & out_msg) {
+  assert(tbe.pendReqAllowRetry);
+  tbe.pendReqAllowRetry := false;
+  out_msg.allowRetry := false;
+
+  out_msg.addr := tbe.addr;
+  out_msg.requestor := machineID;
+  out_msg.fwdRequestor := tbe.requestor;
+  out_msg.accAddr := tbe.pendReqAccAddr;
+  out_msg.accSize := tbe.pendReqAccSize;
+  out_msg.type := tbe.pendReqType;
+  out_msg.Destination := tbe.pendReqDest;
+  out_msg.dataToFwdRequestor := tbe.pendReqD2OrigReq;
+  out_msg.retToSrc := tbe.pendReqRetToSrc;
+  out_msg.isSeqReqValid := tbe.isSeqReqValid;
+  out_msg.seqReq := tbe.seqReq;
+  out_msg.is_local_pf := false;
+  out_msg.is_remote_pf := tbe.is_local_pf || tbe.is_remote_pf;
+}
+
+void prepareRequestRetryDVM(TBE tbe, CHIRequestMsg & out_msg) {
+  assert(tbe.pendReqAllowRetry);
+  tbe.pendReqAllowRetry := false;
+  out_msg.allowRetry := false;
+
+  out_msg.addr := tbe.addr;
+  out_msg.usesTxnId := true;
+  out_msg.txnId := tbe.addr;
+  out_msg.requestor := machineID;
+  out_msg.fwdRequestor := tbe.requestor;
+  out_msg.accAddr := tbe.pendReqAccAddr;
+  out_msg.accSize := tbe.pendReqAccSize;
+  out_msg.type := tbe.pendReqType;
+  out_msg.Destination := tbe.pendReqDest;
+  out_msg.dataToFwdRequestor := tbe.pendReqD2OrigReq;
+  out_msg.retToSrc := tbe.pendReqRetToSrc;
+  out_msg.isSeqReqValid := tbe.isSeqReqValid;
+  out_msg.seqReq := tbe.seqReq;
+  out_msg.is_local_pf := false;
+  out_msg.is_remote_pf := tbe.is_local_pf || tbe.is_remote_pf;
+}
+
+void enqueueDoRetry(TBE tbe) {
+  if (tbe.rcvdRetryAck && tbe.rcvdRetryCredit) {
+    enqueue(retryTriggerOutPort, RetryTriggerMsg, 0) {
+      out_msg.addr := tbe.addr;
+      out_msg.usesTxnId := tbe.is_dvm_tbe || tbe.is_dvm_snp_tbe;
+      out_msg.event := Event:DoRetry;
+    }
+    destsWaitingRetry.removeNetDest(tbe.pendReqDest);
+  }
+}
+
+void processRetryQueue() {
+  // send credit if requestor waiting for it and we have resources
+  bool has_avail := storTBEs.areNSlotsAvailable(1);
+  assert(unify_repl_TBEs || has_avail);
+  // the slot might still be used by a replacement if unify_repl_TBEs is set
+  if (retryQueue.empty() == false && has_avail) {
+    storTBEs.incrementReserved();
+    RetryQueueEntry e := retryQueue.next();
+    retryQueue.pop();
+    enqueue(retryTriggerOutPort, RetryTriggerMsg, 0) {
+      out_msg.addr := e.addr;
+      out_msg.usesTxnId := e.usesTxnId;
+      out_msg.retryDest := e.retryDest;
+      out_msg.event := Event:SendPCrdGrant;
+    }
+  }
+}
+
+void printResources() {
+  if (unify_repl_TBEs) {
+    assert(storReplTBEs.size() == 0);
+    assert(storReplTBEs.reserved() == 0);
+    DPRINTF(RubySlicc, "Resources(used/rsvd/max): TBEs=%d/%d/%d snpTBEs=%d/%d/%d replTBEs=%d/%d/%d dvmTBEs=%d/%d/%d\n",
+                  storTBEs.size(), storTBEs.reserved(), storTBEs.capacity(),
+                  storSnpTBEs.size(), storSnpTBEs.reserved(), storSnpTBEs.capacity(),
+                  storTBEs.size(), storTBEs.reserved(), storTBEs.capacity(),
+                  storDvmTBEs.size(), storDvmTBEs.reserved(), storDvmTBEs.capacity());
+  } else {
+    DPRINTF(RubySlicc, "Resources(used/rsvd/max): TBEs=%d/%d/%d snpTBEs=%d/%d/%d replTBEs=%d/%d/%d dvmTBEs=%d/%d/%d\n",
+                  storTBEs.size(), storTBEs.reserved(), storTBEs.capacity(),
+                  storSnpTBEs.size(), storSnpTBEs.reserved(), storSnpTBEs.capacity(),
+                  storReplTBEs.size(), storReplTBEs.reserved(), storReplTBEs.capacity(),
+                  storDvmTBEs.size(), storDvmTBEs.reserved(), storDvmTBEs.capacity());
+  }
+  DPRINTF(RubySlicc, "Resources(in/out size): req=%d/%d rsp=%d/%d dat=%d/%d snp=%d/%d trigger=%d\n",
+                reqIn.getSize(curTick()), reqOut.getSize(curTick()),
+                rspIn.getSize(curTick()), rspOut.getSize(curTick()),
+                datIn.getSize(curTick()), datOut.getSize(curTick()),
+                snpIn.getSize(curTick()), snpOut.getSize(curTick()),
+                triggerQueue.getSize(curTick()));
+}
+
+bool needCacheEntry(CHIRequestType req_type,
+                    CacheEntry cache_entry, DirEntry dir_entry,
+                    bool is_prefetch) {
+  // never allocates:
+  // - if entry already valid
+  // - if using DMT; the request is a Read*; and dir entry is invalid
+  // oterwise follow config params
+  if (is_valid(cache_entry) ||
+      (enable_DMT && is_invalid(dir_entry) &&
+       ((req_type == CHIRequestType:ReadShared) ||
+        (req_type == CHIRequestType:ReadUnique) ||
+        (req_type == CHIRequestType:ReadOnce)))) {
+    return false;
+  } else {
+    return is_prefetch ||
+           (alloc_on_readshared && ((req_type == CHIRequestType:ReadShared) ||
+                                    (req_type == CHIRequestType:ReadNotSharedDirty))) ||
+           (alloc_on_readunique && (req_type == CHIRequestType:ReadUnique)) ||
+           (alloc_on_readonce && (req_type == CHIRequestType:ReadOnce)) ||
+           (alloc_on_writeback && ((req_type == CHIRequestType:WriteBackFull) ||
+                                   (req_type == CHIRequestType:WriteCleanFull) ||
+                                   (req_type == CHIRequestType:WriteEvictFull) ||
+                                   (is_HN && (req_type == CHIRequestType:WriteUniqueFull)))) ||
+           (alloc_on_seq_acc && ((req_type == CHIRequestType:Load) ||
+                                 (req_type == CHIRequestType:Store))) ||
+           (alloc_on_seq_line_write && (req_type == CHIRequestType:StoreLine));
+  }
+}
+
+bool needDeallocCacheEntry(CHIRequestType req_type) {
+  return (dealloc_on_shared && ((req_type == CHIRequestType:ReadShared) ||
+                                (req_type == CHIRequestType:ReadNotSharedDirty))) ||
+         (dealloc_on_unique && ((req_type == CHIRequestType:ReadUnique) ||
+                                (req_type == CHIRequestType:CleanUnique)));
+}
+
+bool upstreamHasUnique(State state) {
+  return (state == State:RU) || (state == State:UD_RU) || (state == State:UC_RU);
+}
+
+bool upstreamHasShared(State state) {
+  return (state == State:RSC) || (state == State:RSD) ||
+         (state == State:RUSD) || (state == State:RUSC) ||
+         (state == State:UD_RSD) || (state == State:SD_RSD) ||
+         (state == State:UD_RSC) || (state == State:SD_RSC) ||
+         (state == State:UC_RSC) || (state == State:SC_RSC);
+}
+
+void printTBEState(TBE tbe) {
+  DPRINTF(RubySlicc, "STATE: addr: %#x data present=%d valid=%d unique=%d dirty=%d mu_dirty=%d dir ownerV=%d ownerE=%d sharers=%d tobe_I=%d tobe_SC=%d doFill=%d pendAction=%s\n",
+                      tbe.addr, tbe.dataBlkValid.isFull(), tbe.dataValid, tbe.dataUnique,
+                      tbe.dataDirty, tbe.dataMaybeDirtyUpstream, tbe.dir_ownerExists,
+                      tbe.dir_ownerIsExcl,tbe.dir_sharers.count(),
+                      tbe.dataToBeInvalid, tbe.dataToBeSharedClean,
+                      tbe.doCacheFill, tbe.pendAction);
+  DPRINTF(RubySlicc, "dataBlkValid = %s\n", tbe.dataBlkValid);
+}
+
+void printDvmTBEState(TBE tbe) {
+  DPRINTF(RubySlicc, "STATE: addr=%#x reqType=%d state=%d pendAction=%s isDvmTBE=%d isReplTBE=%d isReqTBE=%d isSnpTBE=%d\n",
+                      tbe.addr, tbe.reqType, tbe.state, tbe.pendAction,
+                      tbe.is_dvm_tbe, tbe.is_repl_tbe, tbe.is_req_tbe, tbe.is_snp_tbe);
+}
+
+MachineID getMiscNodeMachine() {
+  // return the MachineID of the misc node
+  return mapAddressToMachine(intToAddress(0), MachineType:MiscNode);
+}
+
+void copyCacheAndDir(CacheEntry cache_entry, DirEntry dir_entry,
+                     TBE tbe, State initialState) {
+  assert(is_valid(tbe));
+
+  // have dir entry
+  if (is_valid(dir_entry)) {
+    assert((initialState == State:UD_RSC) || (initialState == State:SD_RSC) ||
+            (initialState == State:UC_RSC) || (initialState == State:SC_RSC) ||
+            (initialState == State:UD_RU) || (initialState == State:UC_RU) ||
+            (initialState == State:RU) || (initialState == State:RSC) ||
+            (initialState == State:RSD) || (initialState == State:RUSD) ||
+            (initialState == State:RUSC) ||
+            (initialState == State:UD_RSD) || (initialState == State:SD_RSD));
+    tbe.dir_sharers := dir_entry.sharers;
+    tbe.dir_owner := dir_entry.owner;
+    tbe.dir_ownerExists := dir_entry.ownerExists;
+    tbe.dir_ownerIsExcl := dir_entry.ownerIsExcl;
+    assert(tbe.dir_sharers.count() > 0);
+  } else {
+    tbe.dir_sharers.clear();
+    tbe.dir_ownerExists := false;
+  }
+  // Sanity checks
+  assert((tbe.dir_ownerExists && tbe.dir_ownerIsExcl) ==
+          ((initialState == State:UD_RU) || (initialState == State:UC_RU) ||
+          (initialState == State:RU)));
+  assert((tbe.dir_ownerExists && (tbe.dir_ownerIsExcl == false)) ==
+          ((initialState == State:RSD) || (initialState == State:RUSD) ||
+           (initialState == State:UD_RSD) || (initialState == State:SD_RSD)));
+
+  // have usable data
+  if (is_valid(cache_entry) &&
+      ((initialState == State:UD) || (initialState == State:SD) ||
+        (initialState == State:UC) || (initialState == State:SC) ||
+        (initialState == State:UD_RSC) || (initialState == State:SD_RSC) ||
+        (initialState == State:UC_RSC) || (initialState == State:SC_RSC) ||
+        (initialState == State:UD_RSD) || (initialState == State:SD_RSD) ||
+        (initialState == State:UD_T))) {
+    tbe.dataBlk := cache_entry.DataBlk;
+    tbe.dataBlkValid.fillMask();
+    tbe.dataValid := true;
+    DPRINTF(RubySlicc, "Cached data %s\n", tbe.dataBlk);
+  } else {
+    assert(is_invalid(cache_entry) ||
+            (is_valid(cache_entry) && (initialState == State:UD_RU) ||
+                                      (initialState == State:UC_RU)));
+    tbe.dataBlkValid.clear();
+    tbe.dataValid := false;
+  }
+
+  // set MRU for accessed block
+  if (is_valid(cache_entry) && ((tbe.is_local_pf || tbe.is_remote_pf) == false)) {
+    cache.setMRU(cache_entry);
+  }
+
+  // data is dirty here
+  tbe.dataDirty := (initialState == State:UD) || (initialState == State:UD_RSC) ||
+                   (initialState == State:SD) || (initialState == State:SD_RSC) ||
+                   (initialState == State:UD_RU) || (initialState == State:UD_RSD) ||
+                   (initialState == State:SD_RSD) || (initialState == State:UD_T);
+
+  // maybe dirty upstream
+  tbe.dataMaybeDirtyUpstream := (initialState == State:UD_RU) || (initialState == State:UC_RU) ||
+                                (initialState == State:UD_RSD) || (initialState == State:SD_RSD) ||
+                                (initialState == State:RU) || (initialState == State:RSD) ||
+                                (initialState == State:RUSD);
+  assert(tbe.dir_ownerExists == tbe.dataMaybeDirtyUpstream);
+
+  // data is unique here or upstream
+  tbe.dataUnique := (initialState == State:UD) || (initialState == State:UD_RSC) ||
+                    (initialState == State:UD_RU) || (initialState == State:UC) ||
+                    (initialState == State:UC_RSC) || (initialState == State:UC_RU) ||
+                    (initialState == State:RU) || (initialState == State:RUSD) ||
+                    (initialState == State:RUSC) ||
+                    (initialState == State:UD_RSD) || (initialState == State:UD_T);
+
+  // it is locked until timeout ?
+  tbe.hasUseTimeout := initialState == State:UD_T;
+
+  tbe.dataToBeSharedClean := false;
+  tbe.dataToBeInvalid := false;
+
+  printTBEState(tbe);
+}
+
+void copyCacheAndDirTBEs(TBE src, TBE dst) {
+  assert(is_valid(src));
+  assert(is_valid(dst));
+  dst.dataBlk := src.dataBlk;
+  dst.dataBlkValid := src.dataBlkValid;
+  dst.dataValid := src.dataValid;
+  dst.dataDirty := src.dataDirty;
+  dst.dataMaybeDirtyUpstream := src.dataMaybeDirtyUpstream;
+  dst.dataUnique := src.dataUnique;
+  dst.dir_sharers := src.dir_sharers;
+  dst.dir_owner := src.dir_owner;
+  dst.dir_ownerExists := src.dir_ownerExists;
+  dst.dir_ownerIsExcl := src.dir_ownerIsExcl;
+  printTBEState(dst);
+}
+
+void deallocateReqTBE(TBE tbe) {
+  assert(is_valid(tbe));
+  assert(tbe.is_req_tbe);
+  storTBEs.removeEntryFromSlot(tbe.storSlot);
+  TBEs.deallocate(tbe.addr);
+}
+
+void deallocateSnpTBE(TBE tbe) {
+  assert(is_valid(tbe));
+  assert(tbe.is_snp_tbe);
+  storSnpTBEs.removeEntryFromSlot(tbe.storSlot);
+  snpTBEs.deallocate(tbe.addr);
+}
+
+void deallocateReplacementTBE(TBE tbe) {
+  assert(is_valid(tbe));
+  assert(tbe.is_repl_tbe);
+  if (unify_repl_TBEs) {
+    storTBEs.removeEntryFromSlot(tbe.storSlot);
+  } else {
+    storReplTBEs.removeEntryFromSlot(tbe.storSlot);
+  }
+  replTBEs.deallocate(tbe.addr);
+}
+
+void deallocateDvmTBE(TBE tbe) {
+  assert(is_valid(tbe));
+  assert(tbe.is_dvm_tbe);
+  storDvmTBEs.removeEntryFromSlot(tbe.storSlot);
+  dvmTBEs.deallocate(tbe.addr);
+}
+
+void deallocateDvmSnoopTBE(TBE tbe) {
+  assert(is_valid(tbe));
+  assert(tbe.is_dvm_snp_tbe);
+  storDvmSnpTBEs.removeEntryFromSlot(tbe.storSlot);
+  dvmSnpTBEs.deallocate(tbe.addr);
+}
+
+void setDataToBeStates(TBE tbe) {
+  assert(is_valid(tbe));
+  if (tbe.dataToBeInvalid) {
+    tbe.dataValid := false;
+    tbe.dataBlkValid.clear();
+  }
+  if (tbe.dataToBeSharedClean) {
+    tbe.dataUnique := false;
+    tbe.dataDirty := false;
+    assert(tbe.dataMaybeDirtyUpstream == false);
+  }
+  tbe.dataToBeInvalid := false;
+  tbe.dataToBeSharedClean := false;
+}
+
+void setExpectedForInvSnoop(TBE tbe, bool expectCleanWB) {
+  assert(tbe.expected_snp_resp.hasExpected() == false);
+  assert(tbe.dir_sharers.count() > 0);
+  clearExpectedSnpResp(tbe);
+  if (expectCleanWB) {
+    tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_I);
+  }
+  if (tbe.dataMaybeDirtyUpstream) {
+    assert(tbe.dir_ownerExists);
+    tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_I_PD);
+    if ((expectCleanWB == false) || (tbe.dir_sharers.count() > 1)) {
+      tbe.expected_snp_resp.addExpectedRespType(CHIResponseType:SnpResp_I);
+    }
+  } else {
+    tbe.expected_snp_resp.addExpectedRespType(CHIResponseType:SnpResp_I);
+  }
+  tbe.expected_snp_resp.setExpectedCount(tbe.dir_sharers.count());
+}
+
+State makeFinalStateHelper(State cs, State ds) {
+  if (ds == State:RSC) {
+    if (cs == State:UD) {
+      return State:UD_RSC;
+    } else if (cs == State:SD) {
+      return State:SD_RSC;
+    } else if (cs == State:UC) {
+      return State:UC_RSC;
+    } else if (cs == State:SC) {
+      return State:SC_RSC;
+    } else {
+      return State:RSC;
+    }
+  } else if (ds == State:RU) {
+    if (cs == State:UD) {
+      return State:UD_RU;
+    } else if (cs == State:UC) {
+      return State:UC_RU;
+    } else {
+      assert(cs != State:SC);
+      assert(cs != State:SD);
+      return State:RU;
+    }
+  } else if (ds == State:RSD) {
+    if (cs == State:UD) {
+      return State:UD_RSD;
+    } else if (cs == State:SD) {
+      return State:SD_RSD;
+    } else {
+      assert(cs == State:I);
+      return State:RSD;
+    }
+  } else if (ds == State:RUSD) {
+    if (cs == State:UD) {
+      return State:UD_RSD;
+    } else {
+      assert(cs == State:I);
+      return State:RUSD;
+    }
+  } else if (ds == State:RUSC) {
+    if (cs == State:UC) {
+      return State:UC_RSC;
+    } else if (cs == State:UD) {
+      return State:UD_RSC;
+    } else {
+      assert(cs == State:I);
+      return State:RUSC;
+    }
+  } else {
+    assert(ds == State:I);
+    return cs;
+  }
+}
+
+State makeFinalState(TBE tbe, CacheEntry cache_entry, DirEntry dir_entry) {
+  setDataToBeStates(tbe);
+  printTBEState(tbe);
+
+  State cache_state := State:I;
+  State dir_state := State:I;
+
+  if (tbe.dir_ownerExists) {
+    assert(is_valid(dir_entry));
+    assert(tbe.dataMaybeDirtyUpstream);
+    if (tbe.dir_ownerIsExcl) {
+      assert(tbe.dir_sharers.count() == 1);
+      dir_state := State:RU;
+    } else {
+      assert(tbe.dir_sharers.count() >= 1);
+      if (tbe.dataUnique) {
+        dir_state := State:RUSD;
+      } else {
+        dir_state := State:RSD;
+      }
+    }
+  } else if (tbe.dir_sharers.count() > 0) {
+    assert(is_valid(dir_entry));
+    assert(tbe.dataMaybeDirtyUpstream == false);
+    if (tbe.dataUnique) {
+      dir_state := State:RUSC;
+    } else {
+      dir_state := State:RSC;
+    }
+  }
+
+  if (tbe.dataValid && is_valid(cache_entry)) {
+    if (tbe.dataUnique && tbe.dataDirty) {
+      if (tbe.hasUseTimeout) {
+        cache_state := State:UD_T;
+      } else {
+        cache_state := State:UD;
+      }
+    } else if (tbe.dataUnique && (tbe.dataDirty == false)) {
+      cache_state := State:UC;
+    } else if ((tbe.dataUnique == false) && tbe.dataDirty) {
+      assert(allow_SD);
+      cache_state := State:SD;
+    } else {
+      cache_state := State:SC;
+    }
+  }
+
+  return makeFinalStateHelper(cache_state, dir_state);
+}
+
+// This is used only with the finalization transitions
+State getNextState(Addr address) {
+  TBE tbe := getCurrentActiveTBE(address);
+  assert(is_valid(tbe));
+  assert(tbe.pendAction == Event:Final);
+  tbe.finalState := makeFinalState(tbe, getCacheEntry(address), getDirEntry(address));
+  assert(tbe.finalState != State:null);
+  return tbe.finalState;
+}
+
+
+int scLockLatency() {
+  return sc_lock_multiplier * sc_lock_base_latency_cy;
+}
+
+void scLockIncLatency()
+{
+  sc_lock_multiplier := sc_lock_multiplier + sc_lock_multiplier_inc;
+  if (sc_lock_multiplier > sc_lock_multiplier_max) {
+    sc_lock_multiplier := sc_lock_multiplier_max;
+  }
+  DPRINTF(LLSC, "SC lock latency increased to %d cy\n", scLockLatency());
+}
+
+void scLockDecayLatency()
+{
+  sc_lock_multiplier := sc_lock_multiplier - sc_lock_multiplier_decay;
+  if (sc_lock_multiplier < 0) {
+    sc_lock_multiplier := 0;
+  }
+  DPRINTF(LLSC, "SC lock latency decayed to %d cy\n", scLockLatency());
+}
+
+void clearPendingAction(TBE tbe) {
+  // only clear pendAction if snd_pendEv not set
+  if (tbe.snd_pendEv) {
+    assert(tbe.pendAction == Event:TX_Data);
+  } else {
+    tbe.pendAction := Event:null;
+  }
+}
+
+bool isReadReqType(CHIRequestType type) {
+  if (type == CHIRequestType:Load ||
+      type == CHIRequestType:ReadShared ||
+      type == CHIRequestType:ReadNotSharedDirty ||
+      type == CHIRequestType:ReadOnce) {
+    return true;
+  }
+  return false;
+}
+
+bool isWriteReqType(CHIRequestType type) {
+  if (type == CHIRequestType:Store ||
+      type == CHIRequestType:StoreLine ||
+      type == CHIRequestType:WriteUniquePtl ||
+      type == CHIRequestType:WriteUniqueFull ||
+      type == CHIRequestType:ReadUnique) {
+    return true;
+  }
+  return false;
+}
+
+////////////////////////////////////////////////////////////////////////////
+// State->Event converters
+
+Event reqToEvent(CHIRequestType type, bool is_prefetch) {
+  if (type == CHIRequestType:Load) {
+    if (is_prefetch == false) {
+      return Event:Load;
+    } else {
+      return Event:Prefetch;
+    }
+  } else if (type == CHIRequestType:Store) {
+    return Event:Store;
+  } else if (type == CHIRequestType:StoreLine) {
+    return Event:Store;
+  } else if (type == CHIRequestType:ReadShared) {
+    return Event:ReadShared;
+  } else if (type == CHIRequestType:ReadNotSharedDirty) {
+    return Event:ReadNotSharedDirty;
+  } else if (type == CHIRequestType:ReadUnique) {
+    if (is_HN) {
+      return Event:ReadUnique_PoC;
+    } else {
+      return Event:ReadUnique;
+    }
+  } else if (type == CHIRequestType:CleanUnique) {
+    return Event:CleanUnique;
+  } else if (type == CHIRequestType:ReadOnce) {
+    return Event:ReadOnce;
+  } else if (type == CHIRequestType:Evict) {
+    return Event:Evict;
+  } else if (type == CHIRequestType:WriteBackFull) {
+    return Event:WriteBackFull;
+  } else if (type == CHIRequestType:WriteEvictFull) {
+    return Event:WriteEvictFull;
+  } else if (type == CHIRequestType:WriteCleanFull) {
+    return Event:WriteCleanFull;
+  } else if (type == CHIRequestType:WriteUniquePtl) {
+    if (is_HN) {
+      return Event:WriteUniquePtl_PoC;
+    } else {
+      return Event:WriteUnique; // all WriteUnique handled the same when ~PoC
+    }
+  } else if (type == CHIRequestType:WriteUniqueFull) {
+    if (is_HN && alloc_on_writeback) {
+      return Event:WriteUniqueFull_PoC_Alloc;
+    } else if (is_HN) {
+      return Event:WriteUniqueFull_PoC;
+    } else {
+      return Event:WriteUnique; // all WriteUnique handled the same when ~PoC
+    }
+  } else if (type == CHIRequestType:DvmTlbi_Initiate) {
+    return Event:DvmTlbi_Initiate;
+  } else if (type == CHIRequestType:DvmSync_Initiate) {
+    return Event:DvmSync_Initiate;
+  } else {
+    error("Invalid CHIRequestType");
+  }
+}
+
+Event respToEvent (CHIResponseType type, TBE tbe) {
+  bool on_hazard := is_valid(tbe) && (tbe.is_req_hazard || tbe.is_repl_hazard);
+  if (type == CHIResponseType:Comp_I) {
+    return Event:Comp_I;
+  } else if (type == CHIResponseType:Comp_UC) {
+    return Event:Comp_UC;
+  } else if (type == CHIResponseType:Comp_SC) {
+    return Event:Comp_SC;
+  } else if (type == CHIResponseType:CompDBIDResp) {
+    return Event:CompDBIDResp;
+  } else if (type == CHIResponseType:DBIDResp) {
+    return Event:DBIDResp;
+  } else if (type == CHIResponseType:Comp) {
+    return Event:Comp;
+  } else if (type == CHIResponseType:CompAck) {
+    return Event:CompAck;
+  } else if (type == CHIResponseType:ReadReceipt) {
+    return Event:ReadReceipt;
+  } else if (type == CHIResponseType:RespSepData) {
+    return Event:RespSepData;
+  } else if (type == CHIResponseType:SnpResp_I) {
+    return Event:SnpResp_I;
+  } else if (type == CHIResponseType:SnpResp_I_Fwded_UC) {
+    return Event:SnpResp_I_Fwded_UC;
+  } else if (type == CHIResponseType:SnpResp_I_Fwded_UD_PD) {
+    return Event:SnpResp_I_Fwded_UD_PD;
+  } else if (type == CHIResponseType:SnpResp_SC) {
+    return Event:SnpResp_SC;
+  } else if (type == CHIResponseType:SnpResp_SC_Fwded_SC) {
+    return Event:SnpResp_SC_Fwded_SC;
+  } else if (type == CHIResponseType:SnpResp_SC_Fwded_SD_PD) {
+    return Event:SnpResp_SC_Fwded_SD_PD;
+  } else if (type == CHIResponseType:SnpResp_SD_Fwded_I) {
+    return Event:SnpResp_SD_Fwded_I;
+  } else if (type == CHIResponseType:SnpResp_SC_Fwded_I) {
+    return Event:SnpResp_SC_Fwded_I;
+  } else if (type == CHIResponseType:SnpResp_UD_Fwded_I) {
+    return Event:SnpResp_UD_Fwded_I;
+  } else if (type == CHIResponseType:SnpResp_UC_Fwded_I) {
+    return Event:SnpResp_UC_Fwded_I;
+  } else if (type == CHIResponseType:RetryAck) {
+    if (is_HN) {
+      if (on_hazard) {
+        return Event:RetryAck_PoC_Hazard;
+      } else {
+        return Event:RetryAck_PoC;
+      }
+    } else {
+      if (on_hazard) {
+        return Event:RetryAck_Hazard;
+      } else {
+        return Event:RetryAck;
+      }
+    }
+  } else if (type == CHIResponseType:PCrdGrant) {
+    if (is_HN) {
+      if (on_hazard) {
+        return Event:PCrdGrant_PoC_Hazard;
+      } else {
+        return Event:PCrdGrant_PoC;
+      }
+    } else {
+      if (on_hazard) {
+        return Event:PCrdGrant_Hazard;
+      } else {
+        return Event:PCrdGrant;
+      }
+    }
+  } else {
+    error("Invalid CHIResponseType");
+  }
+}
+
+Event dataToEvent (CHIDataType type) {
+  if (type == CHIDataType:CompData_I) {
+    return Event:CompData_I;
+  } else if (type == CHIDataType:CompData_UC) {
+    return Event:CompData_UC;
+  } else if (type == CHIDataType:CompData_SC) {
+    return Event:CompData_SC;
+  } else if (type == CHIDataType:CompData_UD_PD) {
+    return Event:CompData_UD_PD;
+  } else if (type == CHIDataType:CompData_SD_PD) {
+    return Event:CompData_SD_PD;
+  } else if (type == CHIDataType:DataSepResp_UC) {
+    return Event:DataSepResp_UC;
+  } else if (type == CHIDataType:CBWrData_I) {
+    return Event:CBWrData_I;
+  } else if (type == CHIDataType:CBWrData_UC) {
+    return Event:CBWrData_UC;
+  } else if (type == CHIDataType:CBWrData_SC) {
+    return Event:CBWrData_SC;
+  } else if (type == CHIDataType:CBWrData_UD_PD) {
+    return Event:CBWrData_UD_PD;
+  } else if (type == CHIDataType:CBWrData_SD_PD) {
+    return Event:CBWrData_SD_PD;
+  } else if (type == CHIDataType:NCBWrData) {
+    return Event:NCBWrData;
+  } else if (type == CHIDataType:SnpRespData_I_PD) {
+    return Event:SnpRespData_I_PD;
+  } else if (type == CHIDataType:SnpRespData_I) {
+    return Event:SnpRespData_I;
+  } else if (type == CHIDataType:SnpRespData_SC_PD) {
+    return Event:SnpRespData_SC_PD;
+  } else if (type == CHIDataType:SnpRespData_SC) {
+    return Event:SnpRespData_SC;
+  } else if (type == CHIDataType:SnpRespData_SD) {
+    return Event:SnpRespData_SD;
+  } else if (type == CHIDataType:SnpRespData_UC) {
+    return Event:SnpRespData_UC;
+  } else if (type == CHIDataType:SnpRespData_UD) {
+    return Event:SnpRespData_UD;
+  } else if (type == CHIDataType:SnpRespData_SC_Fwded_SC) {
+    return Event:SnpRespData_SC_Fwded_SC;
+  } else if (type == CHIDataType:SnpRespData_SC_Fwded_SD_PD) {
+    return Event:SnpRespData_SC_Fwded_SD_PD;
+  } else if (type == CHIDataType:SnpRespData_SC_PD_Fwded_SC) {
+    return Event:SnpRespData_SC_PD_Fwded_SC;
+  } else if (type == CHIDataType:SnpRespData_I_Fwded_SD_PD) {
+    return Event:SnpRespData_I_Fwded_SD_PD;
+  } else if (type == CHIDataType:SnpRespData_I_PD_Fwded_SC) {
+    return Event:SnpRespData_I_PD_Fwded_SC;
+  } else if (type == CHIDataType:SnpRespData_I_Fwded_SC) {
+    return Event:SnpRespData_I_Fwded_SC;
+  } else {
+    error("Invalid CHIDataType");
+  }
+}
+
+Event snpToEvent (CHIRequestType type) {
+  if (type == CHIRequestType:SnpCleanInvalid) {
+    return Event:SnpCleanInvalid;
+  } else if (type == CHIRequestType:SnpShared) {
+    return Event:SnpShared;
+  } else if (type == CHIRequestType:SnpUnique) {
+    return Event:SnpUnique;
+  } else if (type == CHIRequestType:SnpSharedFwd) {
+    return Event:SnpSharedFwd;
+  } else if (type == CHIRequestType:SnpNotSharedDirtyFwd) {
+    return Event:SnpNotSharedDirtyFwd;
+  } else if (type == CHIRequestType:SnpUniqueFwd) {
+    return Event:SnpUniqueFwd;
+  } else if (type == CHIRequestType:SnpOnce) {
+    return Event:SnpOnce;
+  } else if (type == CHIRequestType:SnpOnceFwd) {
+    return Event:SnpOnceFwd;
+  } else if (type == CHIRequestType:SnpDvmOpSync_P1) {
+    return Event:SnpDvmOpSync_P1;
+  } else if (type == CHIRequestType:SnpDvmOpSync_P2) {
+    return Event:SnpDvmOpSync_P2;
+  } else if (type == CHIRequestType:SnpDvmOpNonSync_P1) {
+    return Event:SnpDvmOpNonSync_P1;
+  } else if (type == CHIRequestType:SnpDvmOpNonSync_P2) {
+    return Event:SnpDvmOpNonSync_P2;
+  } else {
+    error("Invalid CHIRequestType");
+  }
+}
+
+//////////////////////////////////////////
+// Cache bank utilization tracking
+
+enumeration(RequestType, desc="To communicate stats from transitions to recordStats") {
+  TagArrayRead,    desc="Read or write the dir/cache tag/data array";
+  TagArrayWrite,    desc="Read or write the dir/cache tag/data array";
+  DataArrayRead,    desc="Read or write the dir/cache tag/data array";
+  DataArrayWrite,    desc="Read or write the dir/cache tag/data array";
+
+  DestinationAvailable, desc="Check if there is a pending retry from the destination";
+
+  ReplTBEAvailable, desc="Check if a replacement TBE is available";
+}
+
+void recordRequestType(RequestType request_type, Addr addr) {
+  if (request_type == RequestType:DataArrayRead) {
+    cache.recordRequestType(CacheRequestType:DataArrayRead, addr);
+  } else if (request_type == RequestType:DataArrayWrite) {
+    cache.recordRequestType(CacheRequestType:DataArrayWrite, addr);
+  } else if (request_type == RequestType:TagArrayRead) {
+    cache.recordRequestType(CacheRequestType:TagArrayRead, addr);
+  } else if (request_type == RequestType:TagArrayWrite) {
+    cache.recordRequestType(CacheRequestType:TagArrayWrite, addr);
+  }
+}
+
+bool _checkResourceAvailable(RequestType request_type, Addr addr) {
+  if (request_type == RequestType:DataArrayRead) {
+    return cache.checkResourceAvailable(CacheResourceType:DataArray, addr);
+  } else if (request_type == RequestType:DataArrayWrite) {
+    return cache.checkResourceAvailable(CacheResourceType:DataArray, addr);
+  } else if (request_type == RequestType:TagArrayRead) {
+    return cache.checkResourceAvailable(CacheResourceType:TagArray, addr);
+  } else if (request_type == RequestType:TagArrayWrite) {
+    return cache.checkResourceAvailable(CacheResourceType:TagArray, addr);
+  } else if (request_type == RequestType:DestinationAvailable) {
+    if (throttle_req_on_retry) {
+      MachineID dest := mapAddressToDownstreamMachine(addr);
+      DPRINTF(RubySlicc, "Checking %s for addr %#x dest %s\n", request_type, addr, dest);
+      return destsWaitingRetry.isElement(dest) == false;
+    } else {
+      return true;
+    }
+  } else if (request_type == RequestType:ReplTBEAvailable) {
+    // if unify_repl_TBEs the replacement uses the same slot as the request
+    // that initiated it, so the resource is always available
+    return unify_repl_TBEs || storReplTBEs.areNSlotsAvailable(1);
+  } else {
+    error("Invalid RequestType type in checkResourceAvailable");
+    return true;
+  }
+}
+
+bool checkResourceAvailable(RequestType request_type, Addr addr) {
+  bool avail := _checkResourceAvailable(request_type, addr);
+  if (avail == false) {
+    DPRINTF(RubySlicc, "Resource %s not available for addr: %#x\n", request_type, addr);
+  }
+  return avail;
+}

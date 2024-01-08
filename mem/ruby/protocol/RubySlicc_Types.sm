@@ -1,0 +1,254 @@
+/*
+ * Copyright (c) 2020-2021 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
+ * Copyright (c) 1999-2005 Mark D. Hill and David A. Wood
+ * Copyright (c) 2013 Advanced Micro Devices, Inc.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+// External Types
+
+//
+// **PLEASE NOTE!**  When adding objects to this file you must also add a line
+// in the src/mem/ruby/SConscript file.  Otherwise the external object's .hh
+// file will not be copied to the protocol directory and you will encounter a
+// undefined declaration error.
+//
+
+structure(MessageBuffer, buffer="yes", inport="yes", outport="yes",
+                         external = "yes", primitive="yes") {
+  // NOTE: it's recommended to use SLICC's built in resource stall management.
+  // These functions are mostly for including resource utilization info
+  // in debug traces dumped by the protocol.
+  bool areNSlotsAvailable(int n, Tick curTime);
+  int getSize(Tick curTime);
+}
+
+external_type(Scalar, primitive="yes");
+
+structure(OutPort, external = "yes", primitive="yes") {
+    void enqueueDeferredMessages(Addr addr, Tick curTime, Tick delay);
+    bool isDeferredMsgMapEmpty(Addr addr);
+}
+
+structure(InPort, external = "yes", primitive="yes") {
+  bool isReady(Tick current_time);
+  Tick dequeue(Tick current_time);
+  void recycle(Tick current_time, Tick recycle_latency);
+  bool isEmpty();
+  bool isStallMapEmpty();
+  int getStallMapSize();
+  bool hasStalledMsg(Addr addr);
+}
+
+external_type(NodeID, default="0", primitive="yes");
+external_type(MachineID);
+
+structure (Set, external = "yes", non_obj="yes") {
+  void setSize(int);
+  void add(NodeID);
+  void addSet(Set);
+  void remove(NodeID);
+  void removeSet(Set);
+  void broadcast();
+  void addRandom();
+  void clear();
+  int count();
+  bool isElement(NodeID);
+  bool isEqual(Set);
+  bool isSuperset(Set);
+  bool intersectionIsEmpty(Set);
+  NodeID smallestElement();
+}
+
+structure (NetDest, external = "yes", non_obj="yes") {
+  void setSize(int);
+  void setSize(int, int);
+  void add(NodeID);
+  void add(MachineID);
+  void addSet(Set);
+  void addNetDest(NetDest);
+  void setNetDest(MachineType, Set);
+  void remove(NodeID);
+  void remove(MachineID);
+  void removeSet(Set);
+  void removeNetDest(NetDest);
+  void broadcast();
+  void broadcast(MachineType);
+  void addRandom();
+  void clear();
+  Set toSet();
+  int count();
+  bool isElement(NodeID);
+  bool isElement(MachineID);
+  bool isSuperset(Set);
+  bool isSuperset(NetDest);
+  bool isEmpty();
+  bool intersectionIsEmpty(Set);
+  bool intersectionIsEmpty(NetDest);
+  MachineID smallestElement();
+  MachineID smallestElement(MachineType);
+  NetDest OR(NetDest);
+  NetDest AND(NetDest);
+}
+
+structure (Sequencer, external = "yes") {
+  void readCallback(Addr, DataBlock);
+  void readCallback(Addr, DataBlock, bool);
+  void readCallback(Addr, DataBlock, bool, MachineType);
+  void readCallback(Addr, DataBlock, bool, MachineType,
+                    Cycles, Cycles, Cycles);
+
+  void writeCallback(Addr, DataBlock);
+  void writeCallback(Addr, DataBlock, bool);
+  void writeCallback(Addr, DataBlock, bool, MachineType);
+  void writeCallback(Addr, DataBlock, bool, MachineType,
+                     Cycles, Cycles, Cycles);
+  void writeUniqueCallback(Addr, DataBlock);
+
+  void unaddressedCallback(Addr, RubyRequestType);
+  void unaddressedCallback(Addr, RubyRequestType, MachineType);
+  void unaddressedCallback(Addr, RubyRequestType, MachineType,
+                    Cycles, Cycles, Cycles);
+
+  // ll/sc support
+  void writeCallbackScFail(Addr, DataBlock);
+  bool llscCheckMonitor(Addr);
+  void llscClearLocalMonitor();
+
+  void evictionCallback(Addr);
+  void recordRequestType(SequencerRequestType);
+  bool checkResourceAvailable(CacheResourceType, Addr);
+}
+
+structure (HTMSequencer, interface="Sequencer", external = "yes") {
+  // hardware transactional memory
+  void htmCallback(Addr, HtmCallbackMode, HtmFailedInCacheReason);
+}
+
+structure(RubyRequest, desc="...", interface="Message", external="yes") {
+  Addr LineAddress,       desc="Line address for this request";
+  Addr PhysicalAddress,   desc="Physical address for this request";
+  RubyRequestType Type,      desc="Type of request (LD, ST, etc)";
+  Addr ProgramCounter,    desc="Program counter of the instruction that caused the miss";
+  RubyAccessMode AccessMode, desc="user/supervisor access type";
+  int Size,                  desc="size in bytes of access";
+  PrefetchBit Prefetch,      desc="Is this a prefetch request";
+  int contextId,             desc="this goes away but must be replace with Nilay";
+  WriteMask writeMask,       desc="Writethrough mask";
+  DataBlock WTData,          desc="Writethrough data block";
+  int wfid,                  desc="Writethrough wavefront";
+  uint64_t instSeqNum,       desc="Instruction sequence number";
+  PacketPtr pkt,             desc="Packet associated with this request";
+  bool htmFromTransaction,   desc="Memory request originates within a HTM transaction";
+  int htmTransactionUid,     desc="Used to identify the unique HTM transaction that produced this request";
+  bool isTlbi,               desc="Memory request is a TLB shootdown (invalidation) operation";
+  Addr tlbiTransactionUid,   desc="Unique identifier of the TLB shootdown operation that produced this request";
+  bool isGLCSet,             default="false",desc="If flag is set, bypass GPU L1 cache";
+  bool isSLCSet,             default="false",desc="If flag is set, bypass GPU L1 and L2 caches";
+
+  RequestPtr getRequestPtr();
+}
+
+structure(AbstractCacheEntry, primitive="yes", external = "yes") {
+  void changePermission(AccessPermission);
+}
+
+structure (DirectoryMemory, external = "yes") {
+  AbstractCacheEntry allocate(Addr, AbstractCacheEntry);
+  AbstractCacheEntry lookup(Addr);
+  void deallocate(Addr);
+  bool isPresent(Addr);
+  void invalidateBlock(Addr);
+  void recordRequestType(DirectoryRequestType);
+}
+
+structure (CacheMemory, external = "yes") {
+  bool cacheAvail(Addr);
+  Addr cacheProbe(Addr);
+  AbstractCacheEntry getNullEntry();
+  AbstractCacheEntry allocate(Addr, AbstractCacheEntry);
+  AbstractCacheEntry allocate(Addr, AbstractCacheEntry, bool);
+  void allocateVoid(Addr, AbstractCacheEntry);
+  void deallocate(Addr);
+  AbstractCacheEntry lookup(Addr);
+  bool isTagPresent(Addr);
+  Cycles getTagLatency();
+  Cycles getDataLatency();
+  void setMRU(Addr);
+  void setMRU(Addr, int);
+  void setMRU(AbstractCacheEntry);
+  void recordRequestType(CacheRequestType, Addr);
+  bool checkResourceAvailable(CacheResourceType, Addr);
+
+  // hardware transactional memory
+  void htmCommitTransaction();
+  void htmAbortTransaction();
+
+  int getCacheSize();
+  int getNumBlocks();
+  Addr getAddressAtIdx(int);
+
+  void profileDemandHit();
+  void profileDemandMiss();
+  void profilePrefetchHit();
+  void profilePrefetchMiss();
+}
+
+structure (WireBuffer, inport="yes", outport="yes", external = "yes") {
+
+}
+
+structure (DMASequencer, external = "yes") {
+  void ackCallback(Addr);
+  void dataCallback(DataBlock,Addr);
+  void atomicCallback(DataBlock,Addr);
+  void recordRequestType(CacheRequestType);
+}
+
+structure (TimerTable, inport="yes", external = "yes") {
+  bool isReady(Tick);
+  Addr nextAddress();
+  void set(Addr, Tick);
+  void unset(Addr);
+  bool isSet(Addr);
+}
+
+structure (RubyPrefetcher, external = "yes") {
+    void observeMiss(Addr, RubyRequestType);
+    void observePfHit(Addr);
+    void observePfMiss(Addr);
+}

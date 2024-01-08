@@ -1,0 +1,335 @@
+/*
+ * Copyright (c) 2019 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
+ * Copyright (c) 2009-2013 Mark D. Hill and David A. Wood
+ * Copyright (c) 2010-2011 Advanced Micro Devices, Inc.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+machine(MachineType:DMA, "DMA Controller")
+    : DMASequencer * dma_sequencer;
+      Cycles request_latency := 14;
+      Cycles response_latency := 14;
+
+      MessageBuffer * responseFromDir, network="From", virtual_network="2",
+            vnet_type="response";
+
+      MessageBuffer * reqToDir, network="To", virtual_network="1",
+            vnet_type="request";
+      MessageBuffer * respToDir, network="To", virtual_network="2",
+            vnet_type="dmaresponse";
+
+      MessageBuffer * mandatoryQueue;
+      MessageBuffer * triggerQueue;
+{
+  state_declaration(State, desc="DMA states", default="DMA_State_READY") {
+    READY, AccessPermission:Invalid, desc="Ready to accept a new request";
+    BUSY_RD, AccessPermission:Busy, desc="Busy: currently processing a request";
+    BUSY_WR, AccessPermission:Busy, desc="Busy: currently processing a request";
+  }
+
+  enumeration(Event, desc="DMA events") {
+    ReadRequest,  desc="A new read request";
+    WriteRequest, desc="A new write request";
+    Data,         desc="Data from a DMA memory read";
+    DMA_Ack,      desc="DMA write to memory completed";
+    Inv_Ack,      desc="Invalidation Ack from a sharer";
+    All_Acks,     desc="All acks received";
+  }
+
+  structure(TBE, desc="...") {
+    Addr address, desc="Physical address";
+    int NumAcks, default="0", desc="Number of Acks pending";
+    DataBlock DataBlk, desc="Data";
+  }
+
+  structure(TBETable, external = "yes") {
+    TBE lookup(Addr);
+    void allocate(Addr);
+    void deallocate(Addr);
+    bool isPresent(Addr);
+  }
+
+  TBETable TBEs, template="<DMA_TBE>", constructor="m_number_of_TBEs";
+  State cur_state;
+
+  Tick clockEdge();
+  void set_tbe(TBE b);
+  void unset_tbe();
+  void wakeUpAllBuffers();
+  MachineID mapAddressToMachine(Addr addr, MachineType mtype);
+
+  State getState(TBE tbe, Addr addr) {
+    return cur_state;
+  }
+  void setState(TBE tbe, Addr addr, State state) {
+  cur_state := state;
+  }
+
+  AccessPermission getAccessPermission(Addr addr) {
+    DPRINTF(RubySlicc, "AccessPermission_NotPresent\n");
+    return AccessPermission:NotPresent;
+  }
+
+  void setAccessPermission(Addr addr, State state) {
+  }
+
+  void functionalRead(Addr addr, Packet *pkt) {
+    error("DMA does not support functional read.");
+  }
+
+  int functionalWrite(Addr addr, Packet *pkt) {
+    error("DMA does not support functional write.");
+  }
+
+  out_port(reqToDirectory_out, RequestMsg, reqToDir, desc="...");
+  out_port(respToDirectory_out, ResponseMsg, respToDir, desc="...");
+  out_port(triggerQueue_out, TriggerMsg, triggerQueue, desc="...");
+
+  in_port(dmaResponseQueue_in, ResponseMsg, responseFromDir, rank=2) {
+    if (dmaResponseQueue_in.isReady(clockEdge())) {
+      peek( dmaResponseQueue_in, ResponseMsg) {
+        if (in_msg.Type == CoherenceResponseType:DMA_ACK) {
+          trigger(Event:DMA_Ack, makeLineAddress(in_msg.addr),
+                  TBEs[makeLineAddress(in_msg.addr)]);
+        } else if (in_msg.Type == CoherenceResponseType:DATA_EXCLUSIVE ||
+       in_msg.Type == CoherenceResponseType:DATA) {
+          trigger(Event:Data, makeLineAddress(in_msg.addr),
+                  TBEs[makeLineAddress(in_msg.addr)]);
+        } else if (in_msg.Type == CoherenceResponseType:ACK) {
+          trigger(Event:Inv_Ack, makeLineAddress(in_msg.addr),
+                  TBEs[makeLineAddress(in_msg.addr)]);
+        } else {
+          error("Invalid response type");
+        }
+      }
+    }
+  }
+
+  // Trigger Queue
+  in_port(triggerQueue_in, TriggerMsg, triggerQueue, rank=1) {
+    if (triggerQueue_in.isReady(clockEdge())) {
+      peek(triggerQueue_in, TriggerMsg) {
+        if (in_msg.Type == TriggerType:ALL_ACKS) {
+          trigger(Event:All_Acks, in_msg.addr, TBEs[in_msg.addr]);
+        } else {
+          error("Unexpected message");
+        }
+      }
+    }
+  }
+
+  in_port(dmaRequestQueue_in, SequencerMsg, mandatoryQueue, rank=0) {
+    if (dmaRequestQueue_in.isReady(clockEdge())) {
+      peek(dmaRequestQueue_in, SequencerMsg) {
+        if (in_msg.Type == SequencerRequestType:LD ) {
+          trigger(Event:ReadRequest, in_msg.LineAddress,
+                  TBEs[in_msg.LineAddress]);
+        } else if (in_msg.Type == SequencerRequestType:ST) {
+          trigger(Event:WriteRequest, in_msg.LineAddress,
+                  TBEs[in_msg.LineAddress]);
+        } else {
+          error("Invalid request type");
+        }
+      }
+    }
+  }
+
+  action(s_sendReadRequest, "s", desc="Send a DMA read request to memory") {
+    peek(dmaRequestQueue_in, SequencerMsg) {
+      enqueue(reqToDirectory_out, RequestMsg, request_latency) {
+        out_msg.addr := in_msg.PhysicalAddress;
+        out_msg.Type := CoherenceRequestType:DMA_READ;
+        out_msg.DataBlk := in_msg.DataBlk;
+        out_msg.Len := in_msg.Len;
+        out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
+        out_msg.Requestor := machineID;
+        out_msg.RequestorMachine := MachineType:DMA;
+        out_msg.MessageSize := MessageSizeType:Writeback_Control;
+      }
+    }
+  }
+
+  action(s_sendWriteRequest, "\s", desc="Send a DMA write request to memory") {
+    peek(dmaRequestQueue_in, SequencerMsg) {
+      enqueue(reqToDirectory_out, RequestMsg, request_latency) {
+          out_msg.addr := in_msg.PhysicalAddress;
+          out_msg.Type := CoherenceRequestType:DMA_WRITE;
+          out_msg.DataBlk := in_msg.DataBlk;
+          out_msg.Len := in_msg.Len;
+          out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
+          out_msg.Requestor := machineID;
+          out_msg.RequestorMachine := MachineType:DMA;
+          out_msg.MessageSize := MessageSizeType:Data;
+        }
+      }
+  }
+
+  action(a_ackCallback, "a", desc="Notify dma controller that write request completed") {
+      dma_sequencer.ackCallback(address);
+  }
+
+  action(o_checkForCompletion, "o", desc="Check if we have received all the messages required for completion") {
+    assert(is_valid(tbe));
+    if (tbe.NumAcks == 0) {
+      enqueue(triggerQueue_out, TriggerMsg) {
+        out_msg.addr := address;
+        out_msg.Type := TriggerType:ALL_ACKS;
+      }
+    }
+  }
+
+  action(u_updateAckCount, "u", desc="Update ack count") {
+    peek(dmaResponseQueue_in, ResponseMsg) {
+      assert(is_valid(tbe));
+      tbe.NumAcks := tbe.NumAcks - in_msg.Acks;
+    }
+  }
+
+  action( u_sendExclusiveUnblockToDir, "\u", desc="send exclusive unblock to directory") {
+    enqueue(respToDirectory_out, ResponseMsg, response_latency) {
+      out_msg.addr := address;
+      out_msg.Type := CoherenceResponseType:UNBLOCK_EXCLUSIVE;
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
+      out_msg.Sender := machineID;
+      out_msg.SenderMachine := MachineType:DMA;
+      out_msg.MessageSize := MessageSizeType:Writeback_Control;
+    }
+  }
+
+  action(p_popRequestQueue, "p", desc="Pop request queue") {
+    dmaRequestQueue_in.dequeue(clockEdge());
+  }
+
+  action(p_popResponseQueue, "\p", desc="Pop request queue") {
+    dmaResponseQueue_in.dequeue(clockEdge());
+  }
+
+  action(p_popTriggerQueue, "pp", desc="Pop trigger queue") {
+    triggerQueue_in.dequeue(clockEdge());
+  }
+
+  action(t_updateTBEData, "t", desc="Update TBE Data") {
+    peek(dmaResponseQueue_in, ResponseMsg) {
+      assert(is_valid(tbe));
+      tbe.DataBlk := in_msg.DataBlk;
+    }
+  }
+
+  action(d_dataCallbackFromTBE, "/d", desc="data callback with data from TBE") {
+    assert(is_valid(tbe));
+    dma_sequencer.dataCallback(tbe.DataBlk, address);
+  }
+
+  action(v_allocateTBE, "v", desc="Allocate TBE entry") {
+    check_allocate(TBEs);
+    TBEs.allocate(address);
+    set_tbe(TBEs[address]);
+  }
+
+  action(w_deallocateTBE, "w", desc="Deallocate TBE entry") {
+    TBEs.deallocate(address);
+    unset_tbe();
+  }
+
+  action(zz_stallAndWaitRequestQueue, "zz", desc="...") {
+    stall_and_wait(dmaRequestQueue_in, address);
+  }
+
+  action(wkad_wakeUpAllDependents, "wkad", desc="wake-up all dependents") {
+    wakeUpAllBuffers();
+  }
+
+  transition(READY, ReadRequest, BUSY_RD) {
+    s_sendReadRequest;
+    v_allocateTBE;
+    p_popRequestQueue;
+  }
+
+  transition(BUSY_RD, Inv_Ack) {
+    u_updateAckCount;
+    o_checkForCompletion;
+    p_popResponseQueue;
+  }
+
+  transition(BUSY_RD, Data, READY) {
+    t_updateTBEData;
+    d_dataCallbackFromTBE;
+    w_deallocateTBE;
+    //u_updateAckCount;
+    //o_checkForCompletion;
+    p_popResponseQueue;
+    wkad_wakeUpAllDependents;
+  }
+
+  transition(BUSY_RD, All_Acks, READY) {
+    d_dataCallbackFromTBE;
+    //u_sendExclusiveUnblockToDir;
+    w_deallocateTBE;
+    p_popTriggerQueue;
+    wkad_wakeUpAllDependents;
+  }
+
+  transition(READY, WriteRequest, BUSY_WR) {
+    s_sendWriteRequest;
+    v_allocateTBE;
+    p_popRequestQueue;
+  }
+
+  transition(BUSY_WR, Inv_Ack) {
+    u_updateAckCount;
+    o_checkForCompletion;
+    p_popResponseQueue;
+  }
+
+  transition(BUSY_WR, DMA_Ack) {
+    u_updateAckCount; // actually increases
+    o_checkForCompletion;
+    p_popResponseQueue;
+  }
+
+  transition(BUSY_WR, All_Acks, READY) {
+    a_ackCallback;
+    u_sendExclusiveUnblockToDir;
+    w_deallocateTBE;
+    p_popTriggerQueue;
+    wkad_wakeUpAllDependents;
+  }
+
+  transition({BUSY_RD,BUSY_WR}, {ReadRequest,WriteRequest}) {
+    zz_stallAndWaitRequestQueue;
+  }
+}

@@ -27,17 +27,18 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from example.gpufs.DisjointNetwork import *
-from ruby import Ruby
-from ruby.GPU_VIPER import *
-
 from m5.defines import buildEnv
 from m5.objects import *
 from m5.util import fatal
 
+from example.gpufs.DisjointNetwork import *
+from ruby.GPU_VIPER import *
+from ruby import Ruby
+
 
 class DummySystem:
     def __init__(self, mem_ranges):
+
         self.mem_ctrls = []
         self.mem_ranges = mem_ranges
 
@@ -47,9 +48,10 @@ class Disjoint_VIPER(RubySystem):
         if buildEnv["PROTOCOL"] != "GPU_VIPER":
             fatal("This ruby config only supports the GPU_VIPER protocol")
 
-        super().__init__()
+        super(Disjoint_VIPER, self).__init__()
 
     def create(self, options, system, piobus, dma_devices):
+
         # Disjoint network topology
         if "garnet" in options.network:
             self.network_cpu = DisjointGarnet(self)

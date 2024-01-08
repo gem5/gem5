@@ -33,17 +33,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from common import (
-    HMC,
-    ObjectList,
-)
-
 import m5.objects
+from common import ObjectList
+from common import HMC
 
 
 def create_mem_intf(intf, r, i, intlv_bits, intlv_size, xor_low_bit):
     """
-    Helper function for creating a single memory controller from the given
+    Helper function for creating a single memoy controller from the given
     options.  This function is invoked multiple times in config_mem function
     to create an array of controllers.
     """
@@ -177,7 +174,6 @@ def config_mem(options, system):
     nbr_mem_ctrls = opt_mem_channels
 
     import math
-
     from m5.util import fatal
 
     intlv_bits = int(math.log(nbr_mem_ctrls, 2))

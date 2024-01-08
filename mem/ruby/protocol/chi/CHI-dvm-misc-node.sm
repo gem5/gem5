@@ -1,0 +1,380 @@
+/*
+ * Copyright (c) 2021-2022 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+machine(MachineType:MiscNode, "CHI Misc Node for handling and distrbuting DVM operations") :
+
+  // Additional pipeline latency modeling for the different request types
+  // When defined, these are applied after the initial tag array read and
+  // sending necessary snoops.
+  Cycles snp_latency := 0; // Applied before handling any snoop
+  Cycles snp_inv_latency := 0; // Additional latency for invalidating snoops
+
+  // Request TBE allocation latency
+  Cycles allocation_latency := 0;
+
+  // Enqueue latencies for outgoing messages
+  // NOTE: should remove this and only use parameters above?
+  Cycles request_latency := 1;
+  Cycles response_latency := 1;
+  Cycles sched_response_latency := 1;
+  Cycles snoop_latency := 1;
+  Cycles data_latency := 1;
+
+  // Recycle latency on resource stalls
+  Cycles stall_recycle_lat := 1;
+
+  // Number of entries in the TBE tables
+  int number_of_DVM_TBEs;
+  int number_of_non_sync_TBEs;
+
+  // wait for the final tag update to complete before deallocating TBE and
+  // going to final stable state
+  bool dealloc_wait_for_tag := "False";
+
+  // Width of the data channel. Data transfer are split in multiple messages
+  // at the protocol level when this is less than the cache line size.
+  int data_channel_size;
+
+  // Combine Comp+DBIDResp responses for DvmOp(Non-sync)
+  // CHI-D and later only!
+  bool early_nonsync_comp;
+
+  // additional latency for the WU Comp response
+  Cycles comp_wu_latency := 0;
+
+  // Additional latency for sending RetryAck
+  Cycles retry_ack_latency := 0;
+
+  // Additional latency for sending PCrdGrant
+  Cycles crd_grant_latency := 0;
+
+  // Additional latency for retrying a request
+  Cycles retry_req_latency := 0;
+
+  // stall new requests to destinations with a pending retry
+  bool throttle_req_on_retry := "True";
+
+  // Message Queues
+
+  // Interface to the network
+  // Note vnet_type is used by Garnet only. "response" type is assumed to
+  // have data, so use it for data channels and "none" for the rest.
+  // network="To" for outbound queue; network="From" for inbound
+  // virtual networks: 0=request, 1=snoop, 2=response, 3=data
+
+  MessageBuffer * reqOut,   network="To", virtual_network="0", vnet_type="none";
+  MessageBuffer * snpOut,   network="To", virtual_network="1", vnet_type="none";
+  MessageBuffer * rspOut,   network="To", virtual_network="2", vnet_type="none";
+  MessageBuffer * datOut,   network="To", virtual_network="3", vnet_type="response";
+
+  MessageBuffer * reqIn,   network="From", virtual_network="0", vnet_type="none";
+  MessageBuffer * snpIn,   network="From", virtual_network="1", vnet_type="none";
+  MessageBuffer * rspIn,   network="From", virtual_network="2", vnet_type="none";
+  MessageBuffer * datIn,   network="From", virtual_network="3", vnet_type="response";
+
+  // Mandatory queue for receiving requests from the sequencer
+  MessageBuffer * mandatoryQueue;
+
+  // Internal queue for trigger events
+  MessageBuffer * triggerQueue;
+
+  // Internal queue for retry trigger events
+  MessageBuffer * retryTriggerQueue;
+
+  // Internal queue for scheduled response messages
+  MessageBuffer * schedRspTriggerQueue;
+
+  // Internal queue for accepted requests
+  MessageBuffer * reqRdy;
+
+  // Internal queue for accepted snoops
+  MessageBuffer * snpRdy;
+
+{
+
+  ////////////////////////////////////////////////////////////////////////////
+  // States
+  ////////////////////////////////////////////////////////////////////////////
+
+  // Should only involve states relevant to TLBI or Sync operations
+  state_declaration(State, default="MiscNode_State_null") {
+    Unallocated, AccessPermission:Invalid, desc="TBE is not associated with a DVM op";
+
+    DvmSync_Partial, AccessPermission:Invalid, desc="DvmSync which is waiting for extra data";
+    DvmSync_ReadyToDist, AccessPermission:Invalid, desc="DvmSync which has all data, ready to distribute to other cores";
+    DvmSync_Distributing, AccessPermission:Invalid, desc="DvmSync which is distributing snoops to the rest of the cores";
+    DvmSync_Waiting, AccessPermission:Invalid, desc="DvmSync which is waiting for snoop responses to come back";
+
+    DvmNonSync_Partial, AccessPermission:Invalid, desc="DVM non-sync waiting for extra data from initiator";
+    DvmNonSync_ReadyToDist, AccessPermission:Invalid, desc="DVM non-sync with all data, ready to distribute to other cores";
+    DvmNonSync_Distributing, AccessPermission:Invalid, desc="DVM non-sync distributing snoops to the rest of the cores";
+    DvmNonSync_Waiting, AccessPermission:Invalid, desc="DVM non-sync waiting for snoop responses to come back";
+
+    DvmOp_Complete, AccessPermission:Invalid, desc="A completed DVM op";
+
+    // Null state for debugging
+    null, AccessPermission:Invalid, desc="Null state";
+  }
+
+
+  ////////////////////////////////////////////////////////////////////////////
+  // Events
+  ////////////////////////////////////////////////////////////////////////////
+
+  enumeration(Event) {
+    // Events triggered by incoming requests. Allocate TBE and move
+    // request or snoop to the ready queue
+    AllocRequest,           desc="Allocates a TBE for a request. Triggers a retry if table is full";
+    AllocRequestWithCredit, desc="Allocates a TBE for a request. Always succeeds. Used when a client is retrying after being denied.";
+
+    SnpResp_I,      desc="";
+    NCBWrData,      desc="";
+
+    // Retry handling
+    SendRetryAck,   desc="Send RetryAck";
+    SendPCrdGrant,  desc="Send PCrdGrant";
+    DoRetry,        desc="Resend the current pending request";
+
+    DvmTlbi_Initiate, desc="Initiate a DVM TLBI on the provided TBE";
+    DvmSync_Initiate, desc="Initiate a DVM Sync on the provided TBE";
+    DvmSendNextMessage_P1, desc="Trigger a SnpDvmOp_P1 message based on the TBE type";
+    DvmSendNextMessage_P2, desc="Trigger a SnpDvmOp_P2 message based on the TBE type";
+    DvmFinishDistributing, desc="Move the TBE out of the Distributing state into Waiting";
+    DvmFinishWaiting, desc="Move the TBE out of the Waiting state and complete it";
+    DvmUpdatePendingOps, desc="Update which operation is currently distributing";
+
+    // This is triggered once a transaction doesn't have
+    // any queued action and is not expecting responses/data. The transaction
+    // is finalized and the next stable state is stored in the cache/directory
+    // See the processNextState and makeFinalState functions
+    Final,          desc="";
+
+    null,           desc="";
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+  // Data structures
+  ////////////////////////////////////////////////////////////////////////////
+
+  // Cache block size
+  int blockSize, default="RubySystem::getBlockSizeBytes()";
+
+  // Helper class for tracking expected response and data messages
+  structure(ExpectedMap, external ="yes") {
+    void clear(int dataChunks);
+    void addExpectedRespType(CHIResponseType);
+    void addExpectedDataType(CHIDataType);
+    void setExpectedCount(int val);
+    void addExpectedCount(int val);
+    bool hasExpected();
+    bool hasReceivedResp();
+    bool hasReceivedData();
+    int expected();
+    int received();
+    bool receiveResp(CHIResponseType);
+    bool receiveData(CHIDataType);
+    bool receivedDataType(CHIDataType);
+    bool receivedRespType(CHIResponseType);
+  }
+
+  // Tracks a pending retry
+  structure(RetryQueueEntry) {
+    Addr txnId,           desc="Transaction ID";
+    MachineID retryDest, desc="Retry destination";
+    bool isNonSync, desc="Is a NonSync operation";
+  }
+
+  // Queue for event triggers. Used to specify a list of actions that need
+  // to be performed across multiple transitions.
+  // This class is also used to track pending retries
+  structure(TriggerQueue, external ="yes") {
+    Event front();
+    Event back();
+    bool frontNB();
+    bool backNB();
+    bool empty();
+    void push(Event);
+    void pushNB(Event);
+    void pushFront(Event);
+    void pushFrontNB(Event);
+    void pop();
+  }
+
+  // TBE fields
+  structure(TBE, desc="Transaction buffer entry definition") {
+    Tick timestamp, desc="Time this entry was allocated. Affects order of trigger events";
+
+    int storSlot, desc="Slot in the storage tracker occupied by this entry";
+
+    // Transaction info mostly extracted from the request message
+    Addr txnId, desc="Unique Transaction ID";
+    CHIRequestType reqType, desc="Request type that initiated this transaction";
+    bool isNonSync, desc="Is a non-sync DVM operation";
+    MachineID requestor,    desc="Requestor ID";
+
+    // Transaction state information
+    State state,    desc="SLICC line state";
+
+    NetDest notSentTargets, desc="Set of MachineIDs we haven't snooped yet";
+    NetDest pendingTargets, desc="Set of MachineIDs that were snooped, but haven't responded";
+    NetDest receivedTargets, desc="Set of MachineIDs that have responded to snoops";
+
+    // Helper structures to track expected events and additional transient
+    // state info
+
+    // List of actions to be performed while on a transient state
+    // See the processNextState function for details
+    TriggerQueue actions, template="<MiscNode_Event>", desc="List of actions";
+    Event pendAction,         desc="Current pending action";
+    Tick delayNextAction,     desc="Delay next action until given tick";
+    State finalState,         desc="Final state; set when pendAction==Final";
+
+    // List of expected responses and data. Checks the type of data against the
+    // expected ones for debugging purposes
+    // See the processNextState function for details
+    ExpectedMap expected_req_resp, template="<CHIResponseType,CHIDataType>";
+    ExpectedMap expected_snp_resp, template="<CHIResponseType,CHIDataType>";
+    bool waiting_on_other_txns, desc="Is waiting for other transactions to update before finishing.";
+    CHIResponseType slicchack1; // fix compiler not including headers
+    CHIDataType slicchack2; // fix compiler not including headers
+
+    // Tracks pending scheduled responses
+    int sched_responses;
+    bool block_on_sched_responses;
+
+    // This TBE stalled a message and thus we need to call wakeUpBuffers
+    // at some point
+    bool wakeup_pending_req;
+    bool wakeup_pending_snp;
+    bool wakeup_pending_tgr;
+  }
+
+  // TBE table definition
+  structure(MN_TBETable, external ="yes") {
+    TBE lookup(Addr);
+    void allocate(Addr);
+    void deallocate(Addr);
+    bool isPresent(Addr);
+
+    TBE chooseNewDistributor();
+  }
+
+  structure(TBEStorage, external ="yes") {
+    int size();
+    int capacity();
+    int reserved();
+    int slotsAvailable();
+    bool areNSlotsAvailable(int n);
+    void incrementReserved();
+    void decrementReserved();
+    int addEntryToNewSlot();
+    void removeEntryFromSlot(int slot);
+  }
+
+  structure(MN_TBEStorage, external ="yes") {
+    int size();
+    int capacity();
+    int reserved();
+    int slotsAvailable(int partition);
+    bool areNSlotsAvailable(int n, int partition);
+    void incrementReserved(int partition);
+    void decrementReserved(int partition);
+    int addEntryToNewSlot(int partition);
+    void removeEntryFromSlot(int slot, int partition);
+
+    // Which operation to retry depends on the current available storage.
+    // If there's a NonSync op waiting for PCrdGrant and the Nonsync reserved space is free,
+    // the NonSync takes priority.
+    // => Make the MN_TBEStorage responsible for calculating this.
+    void emplaceRetryEntry(RetryQueueEntry ret);
+    bool hasPossibleRetry();
+    RetryQueueEntry popNextRetryEntry();
+  }
+
+  // Definitions of the TBE tables
+
+  // TBE table for DVM requests
+  MN_TBETable dvmTBEs, constructor="m_number_of_DVM_TBEs";
+  TBEStorage nonSyncTBEs, constructor="this, m_number_of_non_sync_TBEs";
+  TBEStorage genericTBEs, constructor="this, (m_number_of_DVM_TBEs - m_number_of_non_sync_TBEs)";
+  MN_TBEStorage storDvmTBEs, template="<MiscNode_RetryQueueEntry>", constructor="this, {m_genericTBEs_ptr, m_nonSyncTBEs_ptr}";
+
+  // txnId of the current TBE which is distributing snoops
+  // NOTE - this is a safety measure for making sure we don't
+  // tell the same person to start snooping twice.
+  // Don't rely on it, if someone stops distributing and no-one starts
+  // this variable will not be updated.
+  Addr currentDistributor, default="0";
+  bool hasCurrentDistributor, default="false";
+  bool needsToCheckPendingOps, default="false";
+
+  // Pending RetryAck/PCrdGrant
+  structure(RetryTriggerMsg, interface="Message") {
+    Addr txnId;
+    Event event;
+    MachineID retryDest;
+
+    bool functionalRead(Packet *pkt) { return false; }
+    bool functionalRead(Packet *pkt, WriteMask &mask) { return false; }
+    bool functionalWrite(Packet *pkt) { return false; }
+  }
+
+  // Pending transaction actions (generated by TBE:actions)
+  structure(TriggerMsg, interface="Message") {
+    Addr txnId;
+    bool from_hazard; // this actions was generate during a snoop hazard
+    bool functionalRead(Packet *pkt) { return false; }
+    bool functionalRead(Packet *pkt, WriteMask &mask) { return false; }
+    bool functionalWrite(Packet *pkt) { return false; }
+  }
+
+
+  ////////////////////////////////////////////////////////////////////////////
+  // Input/output port definitions
+  ////////////////////////////////////////////////////////////////////////////
+
+  include "CHI-dvm-misc-node-ports.sm";
+  // CHI-dvm-misc-node-ports.sm also includes CHI-dvm-misc-node-funcs.sm
+
+  ////////////////////////////////////////////////////////////////////////////
+  // Actions and transitions
+  ////////////////////////////////////////////////////////////////////////////
+
+  include "CHI-dvm-misc-node-actions.sm";
+  include "CHI-dvm-misc-node-transitions.sm";
+}

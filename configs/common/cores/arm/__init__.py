@@ -33,8 +33,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from importlib import import_module
 from pkgutil import iter_modules
+from importlib import import_module
 
 _cpu_modules = [name for _, name, ispkg in iter_modules(__path__) if not ispkg]
 

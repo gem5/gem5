@@ -1,0 +1,7 @@
+protocol "MOESI_CMP_token";
+include "RubySlicc_interfaces.slicc";
+include "MOESI_CMP_token-msg.sm";
+include "MOESI_CMP_token-L1cache.sm";
+include "MOESI_CMP_token-L2cache.sm";
+include "MOESI_CMP_token-dir.sm";
+include "MOESI_CMP_token-dma.sm";

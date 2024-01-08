@@ -24,11 +24,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from common import FileSystemConfig
-from topologies.BaseTopology import SimpleTopology
-
-from m5.objects import *
 from m5.params import *
+from m5.objects import *
+
+from common import FileSystemConfig
+
+from topologies.BaseTopology import SimpleTopology
 
 # Creates a Mesh topology with 4 directories, one at each corner.
 # One L1 (and L2, depending on the protocol) are connected to each router.
@@ -90,7 +91,7 @@ class MeshDirCorners_XY(SimpleTopology):
 
         # Connect each cache controller to the appropriate router
         ext_links = []
-        for i, n in enumerate(cache_nodes):
+        for (i, n) in enumerate(cache_nodes):
             cntrl_level, router_id = divmod(i, num_routers)
             assert cntrl_level < caches_per_router
             ext_links.append(
@@ -160,7 +161,7 @@ class MeshDirCorners_XY(SimpleTopology):
         link_count += 1
 
         # Connect the dma nodes to router 0.  These should only be DMA nodes.
-        for i, node in enumerate(dma_nodes):
+        for (i, node) in enumerate(dma_nodes):
             assert node.type == "DMA_Controller"
             ext_links.append(
                 ExtLink(

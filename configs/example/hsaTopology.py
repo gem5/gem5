@@ -27,26 +27,14 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import operator
-from os import (
-    fsync,
-    getpid,
-    listdir,
-    makedirs,
-    mkdir,
-)
-from os.path import isdir
-from os.path import join as joinpath
-from shutil import (
-    copyfile,
-    rmtree,
-)
-
 import m5
-from m5.util.convert import (
-    toFrequency,
-    toMemorySize,
-)
+
+import operator
+from os import mkdir, makedirs, getpid, listdir, fsync
+from os.path import join as joinpath
+from os.path import isdir
+from shutil import rmtree, copyfile
+from m5.util.convert import toFrequency, toMemorySize
 
 
 def file_append(path, contents):

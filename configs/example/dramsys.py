@@ -25,6 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import m5
+
 from m5.objects import *
 
 traffic_gen = PyTrafficGen()
@@ -36,8 +37,9 @@ system.mem_mode = "timing"
 system.cpu = traffic_gen
 
 dramsys = DRAMSys(
-    configuration="ext/dramsys/DRAMSys/configs/ddr4-example.json",
-    resource_directory="ext/dramsys/DRAMSys/configs",
+    configuration="ext/dramsys/DRAMSys/DRAMSys/"
+    "library/resources/simulations/ddr4-example.json",
+    resource_directory="ext/dramsys/DRAMSys/DRAMSys/library/resources",
 )
 
 system.target = dramsys

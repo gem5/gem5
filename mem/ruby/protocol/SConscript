@@ -1,0 +1,120 @@
+# -*- mode:python -*-
+
+# Copyright (c) 2009 The Hewlett-Packard Development Company
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+import os.path
+import re
+import sys
+
+from SCons.Scanner import Classic
+
+from gem5_scons import Transform
+
+Import('*')
+
+if env['CONF']['PROTOCOL'] == 'None':
+    Return()
+
+output_dir = Dir('.')
+html_dir = Dir('html')
+slicc_dir = Dir('../slicc')
+
+sys.path[1:1] = [ Dir('..').Dir('..').srcnode().abspath ]
+from slicc.parser import SLICC
+
+slicc_depends = []
+for root,dirs,files in os.walk(slicc_dir.srcnode().abspath):
+    for f in files:
+        if f.endswith('.py'):
+            slicc_depends.append(File(os.path.join(root, f)))
+
+#
+# Use SLICC
+#
+env["SLICC_PATH"] = env["PROTOCOL_DIRS"]
+slicc_scanner = Classic("SliccScanner", ['.sm', '.slicc'], "SLICC_PATH",
+                        r'''include[ \t]["'](.*)["'];''')
+env.Append(SCANNERS=slicc_scanner)
+
+slicc_includes = ['mem/ruby/slicc_interface/RubySlicc_includes.hh'] + \
+        env['SLICC_INCLUDES']
+def slicc_emitter(target, source, env):
+    assert len(source) == 1
+    filepath = source[0].srcnode().abspath
+
+    slicc = SLICC(filepath, protocol_base.abspath, verbose=False)
+    slicc.process()
+    slicc.writeCodeFiles(output_dir.abspath, slicc_includes)
+    if env['CONF']['SLICC_HTML']:
+        slicc.writeHTMLFiles(html_dir.abspath)
+
+    target.extend([output_dir.File(f) for f in sorted(slicc.files())])
+    return target, source
+
+def slicc_action(target, source, env):
+    assert len(source) == 1
+    filepath = source[0].srcnode().abspath
+
+    slicc = SLICC(filepath, protocol_base.abspath, verbose=True)
+    slicc.process()
+    slicc.writeCodeFiles(output_dir.abspath, slicc_includes)
+    if env['CONF']['SLICC_HTML']:
+        slicc.writeHTMLFiles(html_dir.abspath)
+
+slicc_builder = Builder(action=MakeAction(slicc_action, Transform("SLICC")),
+                        emitter=slicc_emitter)
+
+protocol = env['CONF']['PROTOCOL']
+protocol_dir = None
+for path in env['PROTOCOL_DIRS']:
+    if os.path.exists(path.File("%s.slicc" % protocol).abspath):
+        protocol_dir = Dir(path)
+        break
+
+if not protocol_dir:
+    raise ValueError("Could not find {}.slicc in PROTOCOL_DIRS".format(
+        protocol))
+
+sources = [ protocol_dir.File("%s.slicc" % protocol) ]
+
+env.Append(BUILDERS={'SLICC' : slicc_builder})
+nodes = env.SLICC([], sources)
+env.Depends(nodes, slicc_depends)
+
+append = {}
+if env['CLANG']:
+    append['CCFLAGS'] = '-Wno-parentheses'
+for f in nodes:
+    s = str(f)
+    if s.endswith('.cc'):
+        Source(f, append=append)
+    elif s.endswith('.py'):
+        filename = os.path.basename(s)
+        # We currently only expect ${ident}_Controller.py to be generated, and
+        # for it to contain a single SimObject with the same name.
+        assert(filename.endswith('_Controller.py'))
+        SimObject(f, sim_objects=[os.path.splitext(filename)[0]])

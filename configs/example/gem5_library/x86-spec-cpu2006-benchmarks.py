@@ -49,33 +49,29 @@ scons build/X86/gem5.opt
 """
 
 import argparse
-import json
-import os
 import time
+import os
+import json
 
 import m5
 from m5.objects import Root
-from m5.stats.gem5stats import get_simstat
-from m5.util import (
-    fatal,
-    warn,
-)
 
-from gem5.coherence_protocol import CoherenceProtocol
+from gem5.utils.requires import requires
 from gem5.components.boards.x86_board import X86Board
 from gem5.components.memory import DualChannelDDR4_2400
-from gem5.components.processors.cpu_types import CPUTypes
 from gem5.components.processors.simple_switchable_processor import (
     SimpleSwitchableProcessor,
 )
+from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
-from gem5.resources.resource import (
-    DiskImageResource,
-    Resource,
-)
-from gem5.simulate.exit_event import ExitEvent
+from gem5.coherence_protocol import CoherenceProtocol
+from gem5.resources.resource import Resource, CustomDiskImageResource
 from gem5.simulate.simulator import Simulator
-from gem5.utils.requires import requires
+from gem5.simulate.exit_event import ExitEvent
+
+from m5.stats.gem5stats import get_simstat
+from m5.util import warn
+from m5.util import fatal
 
 # We check for the required gem5 build.
 
@@ -265,7 +261,9 @@ board.set_kernel_disk_workload(
     # 5.4.49
     kernel=Resource("x86-linux-kernel-4.19.83"),
     # The location of the x86 SPEC CPU 2017 image
-    disk_image=DiskImageResource(args.image, root_partition=args.partition),
+    disk_image=CustomDiskImageResource(
+        args.image, root_partition=args.partition
+    ),
     readfile_contents=command,
 )
 

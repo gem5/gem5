@@ -1,0 +1,8 @@
+Import('*')
+
+# Only build TraceCPU if we have support for protobuf as TraceCPU relies on it
+SimObject('TraceCPU.py', sim_objects=['TraceCPU'], tags='protobuf')
+Source('trace_cpu.cc', tags='protobuf')
+
+DebugFlag('TraceCPUData')
+DebugFlag('TraceCPUInst')

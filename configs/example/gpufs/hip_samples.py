@@ -27,20 +27,17 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import argparse
-import os
-import sys
-import tempfile
-
-import runfs
-from amd import AmdGPUOptions
-from common import (
-    GPUTLBOptions,
-    Options,
-)
-from ruby import Ruby
-
 import m5
+import runfs
+import tempfile
+import argparse
+import sys
+import os
+
+from amd import AmdGPUOptions
+from common import Options
+from common import GPUTLBOptions
+from ruby import Ruby
 
 samples_runscript = """\
 export LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH

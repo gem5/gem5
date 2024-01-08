@@ -1,0 +1,116 @@
+
+/*
+ * Copyright (c) 1999-2005 Mark D. Hill and David A. Wood
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+// CoherenceRequestType
+enumeration(CoherenceRequestType, desc="...") {
+  GETX,      desc="Get eXclusive";
+  UPGRADE,   desc="UPGRADE to exclusive";
+  GETS,      desc="Get Shared";
+  GET_INSTR, desc="Get Instruction";
+  INV,       desc="INValidate";
+  PUTX,      desc="Replacement message";
+
+  WB_ACK,    desc="Writeback ack";
+
+  DMA_READ, desc="DMA Read";
+  DMA_WRITE, desc="DMA Write";
+}
+
+// CoherenceResponseType
+enumeration(CoherenceResponseType, desc="...") {
+  MEMORY_ACK, desc="Ack from memory controller";
+  DATA, desc="Data block for L1 cache in S state";
+  DATA_EXCLUSIVE, desc="Data block for L1 cache in M/E state";
+  MEMORY_DATA, desc="Data block from / to main memory";
+  ACK, desc="Generic invalidate ack";
+  WB_ACK, desc="writeback ack";
+  UNBLOCK, desc="unblock";
+  EXCLUSIVE_UNBLOCK, desc="exclusive unblock";
+  INV, desc="Invalidate from directory";
+}
+
+// RequestMsg
+structure(RequestMsg, desc="...", interface="Message") {
+  Addr addr,              desc="Physical address for this request";
+  CoherenceRequestType Type,    desc="Type of request (GetS, GetX, PutX, etc)";
+  RubyAccessMode AccessMode,    desc="user/supervisor access type";
+  MachineID Requestor      ,    desc="What component request";
+  NetDest Destination,          desc="What components receive the request, includes MachineType and num";
+  MessageSizeType MessageSize,  desc="size category of the message";
+  DataBlock DataBlk,            desc="Data for the cache line (if PUTX)";
+  int Len;
+  bool Dirty, default="false",  desc="Dirty bit";
+  PrefetchBit Prefetch,         desc="Is this a prefetch request";
+
+  bool functionalRead(Packet *pkt) {
+    // Only PUTX messages contains the data block
+    if (Type == CoherenceRequestType:PUTX) {
+        return testAndRead(addr, DataBlk, pkt);
+    }
+
+    return false;
+  }
+
+  bool functionalWrite(Packet *pkt) {
+    // No check on message type required since the protocol should
+    // read data from those messages that contain the block
+    return testAndWrite(addr, DataBlk, pkt);
+  }
+}
+
+// ResponseMsg
+structure(ResponseMsg, desc="...", interface="Message") {
+  Addr addr,              desc="Physical address for this request";
+  CoherenceResponseType Type,   desc="Type of response (Ack, Data, etc)";
+  MachineID Sender,             desc="What component sent the data";
+  NetDest Destination,          desc="Node to whom the data is sent";
+  DataBlock DataBlk,            desc="Data for the cache line";
+  bool Dirty, default="false",  desc="Dirty bit";
+  int AckCount, default="0",  desc="number of acks in this message";
+  MessageSizeType MessageSize,  desc="size category of the message";
+
+  bool functionalRead(Packet *pkt) {
+    // Valid data block is only present in message with following types
+    if (Type == CoherenceResponseType:DATA ||
+        Type == CoherenceResponseType:DATA_EXCLUSIVE ||
+        Type == CoherenceResponseType:MEMORY_DATA) {
+
+        return testAndRead(addr, DataBlk, pkt);
+    }
+
+    return false;
+  }
+
+  bool functionalWrite(Packet *pkt) {
+    // No check on message type required since the protocol should
+    // read data from those messages that contain the block
+    return testAndWrite(addr, DataBlk, pkt);
+  }
+}
