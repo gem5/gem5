@@ -359,20 +359,6 @@ TLB::translate(const RequestPtr &req, ThreadContext *tc,
             fault = doTranslate(req, tc, translation, mode, delayed);
         }
 
-        // according to the RISC-V tests, negative physical addresses trigger
-        // an illegal address exception.
-        // TODO where is that written in the manual?
-        if (!delayed && fault == NoFault && bits(req->getPaddr(), 63)) {
-            ExceptionCode code;
-            if (mode == BaseMMU::Read)
-                code = ExceptionCode::LOAD_ACCESS;
-            else if (mode == BaseMMU::Write)
-                code = ExceptionCode::STORE_ACCESS;
-            else
-                code = ExceptionCode::INST_ACCESS;
-            fault = std::make_shared<AddressFault>(req->getVaddr(), code);
-        }
-
         if (!delayed && fault == NoFault) {
             pma->check(req);
 
