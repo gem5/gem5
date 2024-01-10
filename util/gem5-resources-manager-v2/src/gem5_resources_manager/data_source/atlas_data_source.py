@@ -119,6 +119,7 @@ class AtlasDataSource(AbstractDataSource):
         )
         json_resource = json_util.dumps(resource)
         res = json.loads(json_resource)
+        print("res", res)
         if res == []:
             raise Gem5DataSourceEntryNotFound(resource_id)
         return res[0]
@@ -141,11 +142,26 @@ class AtlasDataSource(AbstractDataSource):
         return self.validator.get_changed_fields(resource)
 
     def get_all_resources_by_category(self, category):
-        resources = self.collection.find(
+        pipeline = [
+            # Match Stage: Filter by category
+            {"$match": {"category": category}},
+            # Sort Stage: Sort by 'id' and 'resource_version' in descending order
+            {"$sort": {"id": 1, "resource_version": -1}},
+            # Group Stage: Group by 'id' and take the first document
             {
-                "category": category,
+                "$group": {
+                    "_id": "$id",
+                    "document": {
+                        "$first": "$$ROOT"
+                    },  # '$$ROOT' represents the whole document
+                }
             },
-            {"_id": 0},
+            # Replace Root Stage: Replace the root to bring the document to the top level
+            {"$replaceRoot": {"newRoot": "$document"}},
+        ]
+
+        resources = self.collection.aggregate(
+            pipeline,
         )
         json_resource = json_util.dumps(resources)
         res = json.loads(json_resource)

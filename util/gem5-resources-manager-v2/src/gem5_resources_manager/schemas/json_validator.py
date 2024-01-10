@@ -12,6 +12,31 @@ class JSONValidator(AbstractValidator):
         self.schema = json.loads(requests.get(filelink).content)
         super().__init__(self.schema)
 
+    def get_category_specific_fields(
+        self, category: str, optional: Dict[str, object], required: Dict[str, object]
+    ):
+        for field, field_value in self.schema["definitions"][category][
+            "properties"
+        ].items():
+            if field in optional.keys():
+                required[field] = optional[field]
+                del optional[field]
+            elif (
+                "required" in self.schema["definitions"][category]
+                and field in self.schema["definitions"][category]["required"]
+            ):
+                required[field] = field_value
+            else:
+                optional[field] = field_value
+
+        parent_category = self.schema["definitions"][category].get("allOf")
+        print("parent_category:", parent_category)
+        if not parent_category:
+            return
+
+        parent_category = parent_category[0]["$ref"].split("/")[-1]
+        self.get_category_specific_fields(parent_category, optional, required)
+
     def get_fields(self, category) -> [Dict, Dict]:
         optional = {}
         required = {}
@@ -22,23 +47,8 @@ class JSONValidator(AbstractValidator):
             else:
                 optional[field] = default
 
-        definitions = []
-        for definition in self.schema["definitions"][category]["allOf"]:
-            definitions.append(definition["$ref"].split("/")[-1])
+        self.get_category_specific_fields(category, optional, required)
 
-        for definition in definitions:
-            for field in self.schema["definitions"][definition]["properties"]:
-                default = self.schema["definitions"][definition]["properties"][field]
-                if field in optional.keys():
-                    required[field] = optional[field]
-                    del optional[field]
-                elif (
-                    "required" not in self.schema["definitions"][definition]
-                    or field in self.schema["definitions"][definition]["required"]
-                ):
-                    required[field] = default
-                else:
-                    optional[field] = default
         if "architecture" in required:
             required["architecture"] = self.schema["definitions"]["architecture"]
         if "architecture" in optional:
