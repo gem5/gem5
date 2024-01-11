@@ -44,12 +44,12 @@
 #include "base/compiler.hh"
 #include "base/intmath.hh"
 #include "base/logging.hh"
+#include "base/replacement_policies/weighted_lru_rp.hh"
 #include "debug/HtmMem.hh"
 #include "debug/RubyCache.hh"
 #include "debug/RubyCacheTrace.hh"
 #include "debug/RubyResourceStalls.hh"
 #include "debug/RubyStats.hh"
-#include "mem/cache/replacement_policies/weighted_lru_rp.hh"
 #include "mem/ruby/protocol/AccessPermission.hh"
 #include "mem/ruby/system/RubySystem.hh"
 

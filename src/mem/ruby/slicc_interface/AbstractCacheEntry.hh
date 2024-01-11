@@ -48,7 +48,7 @@
 #include <iostream>
 
 #include "base/logging.hh"
-#include "mem/cache/replacement_policies/replaceable_entry.hh"
+#include "base/replacement_policies/replaceable_entry.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/DataBlock.hh"
 #include "mem/ruby/protocol/AccessPermission.hh"

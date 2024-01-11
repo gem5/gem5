@@ -29,8 +29,8 @@
 #ifndef __CACHE_PREFETCH_ASSOCIATIVE_SET_HH__
 #define __CACHE_PREFETCH_ASSOCIATIVE_SET_HH__
 
-#include "mem/cache/replacement_policies/base.hh"
-#include "mem/cache/tags/indexing_policies/base.hh"
+#include "base/indexing_policies/base.hh"
+#include "base/replacement_policies/base.hh"
 #include "mem/cache/tags/tagged_entry.hh"
 
 namespace gem5

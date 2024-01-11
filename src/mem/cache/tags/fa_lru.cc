@@ -52,8 +52,8 @@
 #include "base/compiler.hh"
 #include "base/intmath.hh"
 #include "base/logging.hh"
+#include "base/replacement_policies/replaceable_entry.hh"
 #include "mem/cache/base.hh"
-#include "mem/cache/replacement_policies/replaceable_entry.hh"
 
 namespace gem5
 {

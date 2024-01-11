@@ -46,17 +46,17 @@
 #include <unordered_map>
 #include <vector>
 
+#include "base/replacement_policies/base.hh"
+#include "base/replacement_policies/replaceable_entry.hh"
 #include "base/statistics.hh"
-#include "mem/cache/replacement_policies/base.hh"
-#include "mem/cache/replacement_policies/replaceable_entry.hh"
 #include "mem/ruby/common/DataBlock.hh"
 #include "mem/ruby/protocol/CacheRequestType.hh"
 #include "mem/ruby/protocol/CacheResourceType.hh"
 #include "mem/ruby/protocol/RubyRequest.hh"
 #include "mem/ruby/slicc_interface/AbstractCacheEntry.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
-#include "mem/ruby/structures/BankedArray.hh"
 #include "mem/ruby/structures/ALUFreeListArray.hh"
+#include "mem/ruby/structures/BankedArray.hh"
 #include "mem/ruby/system/CacheRecorder.hh"
 #include "params/RubyCache.hh"
 #include "sim/sim_object.hh"

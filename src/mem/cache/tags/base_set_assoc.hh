@@ -51,14 +51,14 @@
 #include <string>
 #include <vector>
 
+#include "base/indexing_policies/base.hh"
 #include "base/logging.hh"
+#include "base/replacement_policies/base.hh"
+#include "base/replacement_policies/replaceable_entry.hh"
 #include "base/types.hh"
 #include "mem/cache/base.hh"
 #include "mem/cache/cache_blk.hh"
-#include "mem/cache/replacement_policies/base.hh"
-#include "mem/cache/replacement_policies/replaceable_entry.hh"
 #include "mem/cache/tags/base.hh"
-#include "mem/cache/tags/indexing_policies/base.hh"
 #include "mem/packet.hh"
 #include "params/BaseSetAssoc.hh"
 

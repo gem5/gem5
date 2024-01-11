@@ -33,11 +33,11 @@
 
 #include "mem/cache/tags/compressed_tags.hh"
 
+#include "base/indexing_policies/base.hh"
+#include "base/replacement_policies/base.hh"
+#include "base/replacement_policies/replaceable_entry.hh"
 #include "base/trace.hh"
 #include "debug/CacheComp.hh"
-#include "mem/cache/replacement_policies/base.hh"
-#include "mem/cache/replacement_policies/replaceable_entry.hh"
-#include "mem/cache/tags/indexing_policies/base.hh"
 #include "mem/packet.hh"
 #include "params/CompressedTags.hh"
 
