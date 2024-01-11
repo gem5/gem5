@@ -63,7 +63,7 @@ FastmodelRemoteGDB::AArch64GdbRegCache::setRegs(ThreadContext *context) const
 
 FastmodelRemoteGDB::FastmodelRemoteGDB(System *_system,
         ListenSocketConfig _listen_config)
-    : gem5::ArmISA::RemoteGDB(_system, _listen_config)
+    : gem5::ArmISA::RemoteGDB(_system, _listen_config), regCache64(this)
 {
 }
 
