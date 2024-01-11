@@ -44,6 +44,9 @@
 namespace gem5
 {
 
+namespace RiscvISA
+{
+
 PMP::PMP(const Params &params) :
     SimObject(params),
     pmpEntries(params.pmp_entries),
@@ -55,8 +58,7 @@ PMP::PMP(const Params &params) :
 
 Fault
 PMP::pmpCheck(const RequestPtr &req, BaseMMU::Mode mode,
-              RiscvISA::PrivilegeMode pmode, ThreadContext *tc,
-              Addr vaddr)
+              PrivilegeMode pmode, ThreadContext *tc, Addr vaddr)
 {
     // First determine if pmp table should be consulted
     if (!shouldCheckPMP(pmode, tc))
@@ -91,7 +93,7 @@ PMP::pmpCheck(const RequestPtr &req, BaseMMU::Mode mode,
             && (PMP_OFF != pmpGetAField(pmpTable[match_index].pmpCfg))) {
             uint8_t this_cfg = pmpTable[match_index].pmpCfg;
 
-            if ((pmode == RiscvISA::PrivilegeMode::PRV_M) &&
+            if ((pmode == PrivilegeMode::PRV_M) &&
                                     (PMP_LOCK & this_cfg) == 0) {
                 return NoFault;
             } else if ((mode == BaseMMU::Mode::Read) &&
@@ -113,7 +115,7 @@ PMP::pmpCheck(const RequestPtr &req, BaseMMU::Mode mode,
         }
     }
     // if no entry matched and we are not in M mode return fault
-    if (pmode == RiscvISA::PrivilegeMode::PRV_M) {
+    if (pmode == PrivilegeMode::PRV_M) {
         return NoFault;
     } else if (req->hasVaddr()) {
         return createAddrfault(req->getVaddr(), mode);
@@ -125,16 +127,16 @@ PMP::pmpCheck(const RequestPtr &req, BaseMMU::Mode mode,
 Fault
 PMP::createAddrfault(Addr vaddr, BaseMMU::Mode mode)
 {
-    RiscvISA::ExceptionCode code;
+    ExceptionCode code;
     if (mode == BaseMMU::Read) {
-        code = RiscvISA::ExceptionCode::LOAD_ACCESS;
+        code = ExceptionCode::LOAD_ACCESS;
     } else if (mode == BaseMMU::Write) {
-        code = RiscvISA::ExceptionCode::STORE_ACCESS;
+        code = ExceptionCode::STORE_ACCESS;
     } else {
-        code = RiscvISA::ExceptionCode::INST_ACCESS;
+        code = ExceptionCode::INST_ACCESS;
     }
     warn("pmp access fault.\n");
-    return std::make_shared<RiscvISA::AddressFault>(vaddr, code);
+    return std::make_shared<AddressFault>(vaddr, code);
 }
 
 inline uint8_t
@@ -270,14 +272,13 @@ PMP::pmpUpdateAddr(uint32_t pmp_index, Addr this_addr)
 }
 
 bool
-PMP::shouldCheckPMP(RiscvISA::PrivilegeMode pmode, ThreadContext *tc)
+PMP::shouldCheckPMP(PrivilegeMode pmode, ThreadContext *tc)
 {
     // The privilege mode of memory read and write
     // is modified by TLB. It can just simply check if
     // the numRule is not zero, then return true if
     // privilege mode is not M or has any lock entry
-    return numRules != 0 && (
-        pmode != RiscvISA::PrivilegeMode::PRV_M || hasLockEntry);
+    return numRules != 0 && (pmode != PrivilegeMode::PRV_M || hasLockEntry);
 }
 
 AddrRange
@@ -298,4 +299,5 @@ PMP::pmpDecodeNapot(Addr pmpaddr)
     }
 }
 
+} // namespace RiscvISA
 } // namespace gem5

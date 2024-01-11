@@ -47,6 +47,9 @@
 namespace gem5
 {
 
+namespace RiscvISA
+{
+
 /**
  * Based on the RISC-V ISA privileged specifications
  * V1.11, there is no implementation guidelines on the
@@ -81,6 +84,7 @@ class PMAChecker : public SimObject
     void takeOverFrom(PMAChecker *old);
 };
 
+} // namespace RiscvISA
 } // namespace gem5
 
 #endif // __ARCH_RISCV_PMA_CHECKER_HH__
