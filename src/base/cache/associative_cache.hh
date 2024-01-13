@@ -246,6 +246,27 @@ class AssociativeCache : public Named
         replPolicy->reset(entry->replacementData);
     }
 
+    /**
+     * Find the set of entries that could be replaced given
+     * that we want to add a new entry with the provided key
+     * @param addr key to select the set of entries
+     * @result vector of candidates matching with the provided key
+     */
+    std::vector<Entry *>
+    getPossibleEntries(const Addr addr) const
+    {
+        std::vector<ReplaceableEntry *> selected_entries =
+            indexingPolicy->getPossibleEntries(addr);
+        std::vector<Entry *> entries(selected_entries.size(), nullptr);
+
+        unsigned int idx = 0;
+        for (auto &entry : selected_entries) {
+            entries[idx++] = static_cast<Entry *>(entry);
+        }
+
+        return entries;
+    }
+
     /** Iterator types */
     using const_iterator = typename std::vector<Entry>::const_iterator;
     using iterator = typename std::vector<Entry>::iterator;

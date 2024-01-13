@@ -85,7 +85,7 @@ Stride::Stride(const StridePrefetcherParams &p)
     useRequestorId(p.use_requestor_id),
     degree(p.degree),
     pcTableInfo(p.table_assoc, p.table_entries, p.table_indexing_policy,
-        p.table_replacement_policy)
+		p.table_replacement_policy)
 {
 }
 
@@ -95,7 +95,7 @@ Stride::findTable(int context)
     // Check if table for given context exists
     auto it = pcTables.find(context);
     if (it != pcTables.end())
-        return &it->second;
+        return it->second;
 
     // If table does not exist yet, create one
     return allocateNewContext(context);
@@ -105,15 +105,16 @@ Stride::PCTable*
 Stride::allocateNewContext(int context)
 {
     // Create new table
-    auto insertion_result = pcTables.insert(std::make_pair(context,
-        PCTable(pcTableInfo.assoc, pcTableInfo.numEntries,
-        pcTableInfo.indexingPolicy, pcTableInfo.replacementPolicy,
-        StrideEntry(initConfidence))));
+    auto insertion_result = pcTables.emplace(std::make_pair(context,
+        new PCTable("PCTable", pcTableInfo.numEntries, pcTableInfo.assoc,
+                    pcTableInfo.replacementPolicy,
+                    pcTableInfo.indexingPolicy,
+                    StrideEntry(initConfidence))));
 
     DPRINTF(HWPrefetch, "Adding context %i with stride entries\n", context);
 
     // Get iterator to new pc table, and then return a pointer to the new table
-    return &(insertion_result.first->second);
+    return (insertion_result.first->second);
 }
 
 void
