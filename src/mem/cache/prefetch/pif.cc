@@ -46,8 +46,9 @@ PIF::PIF(const PIFPrefetcherParams &p)
       succSize(p.succ_spatial_region_bits),
       maxCompactorEntries(p.compactor_entries),
       historyBuffer(p.history_buffer_size),
-      index(p.index_assoc, p.index_entries, p.index_indexing_policy,
-            p.index_replacement_policy),
+      index("PIFIndex", p.index_entries, p.index_assoc,
+            p.index_replacement_policy,
+	    p.index_indexing_policy),
       streamAddressBuffer(p.stream_address_buffer_entries),
       listenersPC()
 {

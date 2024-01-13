@@ -44,11 +44,15 @@ IndirectMemory::IndirectMemory(const IndirectMemoryPrefetcherParams &p)
     shiftValues(p.shift_values), prefetchThreshold(p.prefetch_threshold),
     streamCounterThreshold(p.stream_counter_threshold),
     streamingDistance(p.streaming_distance),
-    prefetchTable(p.pt_table_assoc, p.pt_table_entries,
-                  p.pt_table_indexing_policy, p.pt_table_replacement_policy,
+    prefetchTable("PrefetchTable",
+		  p.pt_table_entries,
+		  p.pt_table_assoc,
+		  p.pt_table_replacement_policy,
+                  p.pt_table_indexing_policy,
                   PrefetchTableEntry(p.num_indirect_counter_bits)),
-    ipd(p.ipd_table_assoc, p.ipd_table_entries, p.ipd_table_indexing_policy,
+    ipd("IPD", p.ipd_table_entries, p.ipd_table_assoc,
         p.ipd_table_replacement_policy,
+	p.ipd_table_indexing_policy,
         IndirectPatternDetectorEntry(p.addr_array_len, shiftValues.size())),
     ipdEntryTrackingMisses(nullptr), byteOrder(p.sys->getGuestByteOrder())
 {
