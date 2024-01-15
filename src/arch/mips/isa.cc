@@ -105,7 +105,7 @@ constexpr RegClass vecElemClass(VecElemClass, VecElemClassName, 2,
         debug::IntRegs);
 constexpr RegClass vecPredRegClass(VecPredRegClass, VecPredRegClassName, 1,
         debug::IntRegs);
-constexpr RegClass matRegClass(MatRegClass, MatRegClassName, 1, debug::MatRegs);
+constexpr RegClass matRegClass(MatRegClass, MatRegClassName, 0, debug::MatRegs);
 constexpr RegClass ccRegClass(CCRegClass, CCRegClassName, 0, debug::IntRegs);
 
 } // anonymous namespace
