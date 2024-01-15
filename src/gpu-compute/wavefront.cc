@@ -127,7 +127,6 @@ Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
 
         if (task->sgprBitEnabled(en_bit)) {
             int physSgprIdx = 0;
-            uint32_t wiCount = 0;
             uint32_t firstWave = 0;
             int orderedAppendTerm = 0;
             int numWfsInWg = 0;
@@ -342,48 +341,6 @@ Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
                         wfSlotId, wfDynId, physSgprIdx,
                         task->privMemPerItem());
                 break;
-              case GridWorkgroupCountX:
-                physSgprIdx =
-                    computeUnit->registerManager->mapSgpr(this, regInitIdx);
-                wiCount = ((task->gridSize(0) +
-                           task->wgSize(0) - 1) /
-                           task->wgSize(0));
-                computeUnit->srf[simdId]->write(physSgprIdx, wiCount);
-
-                ++regInitIdx;
-                DPRINTF(GPUInitAbi, "CU%d: WF[%d][%d]: wave[%d] "
-                        "Setting num WG X: s[%d] = %x\n",
-                        computeUnit->cu_id, simdId,
-                        wfSlotId, wfDynId, physSgprIdx, wiCount);
-                break;
-              case GridWorkgroupCountY:
-                physSgprIdx =
-                    computeUnit->registerManager->mapSgpr(this, regInitIdx);
-                wiCount = ((task->gridSize(1) +
-                           task->wgSize(1) - 1) /
-                           task->wgSize(1));
-                computeUnit->srf[simdId]->write(physSgprIdx, wiCount);
-
-                ++regInitIdx;
-                DPRINTF(GPUInitAbi, "CU%d: WF[%d][%d]: wave[%d] "
-                        "Setting num WG Y: s[%d] = %x\n",
-                        computeUnit->cu_id, simdId,
-                        wfSlotId, wfDynId, physSgprIdx, wiCount);
-                break;
-              case GridWorkgroupCountZ:
-                physSgprIdx =
-                    computeUnit->registerManager->mapSgpr(this, regInitIdx);
-                wiCount = ((task->gridSize(2) +
-                           task->wgSize(2) - 1) /
-                           task->wgSize(2));
-                computeUnit->srf[simdId]->write(physSgprIdx, wiCount);
-
-                ++regInitIdx;
-                DPRINTF(GPUInitAbi, "CU%d: WF[%d][%d]: wave[%d] "
-                        "Setting num WG Z: s[%d] = %x\n",
-                        computeUnit->cu_id, simdId,
-                        wfSlotId, wfDynId, physSgprIdx, wiCount);
-                break;
               case WorkgroupIdX:
                 physSgprIdx =
                     computeUnit->registerManager->mapSgpr(this, regInitIdx);
@@ -475,8 +432,48 @@ Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
 
     regInitIdx = 0;
 
-    // iterate over all the init fields and check which
-    // bits are enabled
+    // VGPRs are initialized to the work item IDs for a given thread. There
+    // are two ways to initialize the IDs based on number of dimensions. ISAs
+    // will either have packed work-item IDs or not. LLVM lists them here:
+    // https://llvm.org/docs/AMDGPUUsage.html#amdgpu-processor-table
+    // Default to false and set to true for gem5 supported ISAs.
+    bool packed_work_item_id = false;
+
+    if (task->gfxVersion() == GfxVersion::gfx90a) {
+        packed_work_item_id = true;
+    }
+
+    // For ISAs with packed work item IDs, only one VGPR is used and the
+    // (X,Y,Z) dimensions are packed into a single 32-bit VGPR with 10-bits
+    // for each dimension
+    if (packed_work_item_id) {
+        TheGpuISA::VecRegContainerU32 raw_vgpr;
+        TheGpuISA::VecElemU32 *packed_vgpr
+            = raw_vgpr.as<TheGpuISA::VecElemU32>();
+
+        uint32_t physVgprIdx = computeUnit->registerManager
+            ->mapVgpr(this, regInitIdx);
+        for (int lane = 0; lane < workItemId[0].size(); ++lane) {
+            packed_vgpr[lane] = workItemId[0][lane] & 0x3ff;
+        }
+        if (task->vgprBitEnabled(1)) {
+            for (int lane = 0; lane < workItemId[1].size(); ++lane) {
+                packed_vgpr[lane] |= ((workItemId[1][lane] & 0x3ff) << 10);
+            }
+        }
+        if (task->vgprBitEnabled(2)) {
+            for (int lane = 0; lane < workItemId[2].size(); ++lane) {
+                packed_vgpr[lane] |= ((workItemId[2][lane] & 0x3ff) << 20);
+            }
+        }
+        computeUnit->vrf[simdId]->write(physVgprIdx, raw_vgpr);
+
+        return;
+    }
+
+    // For ISAs with non-packed work item IDs, map and initialize one VGPR
+    // per dimensions. Do this by iterating over all the init fields and
+    // checking which bits are enabled.
     for (int en_bit = 0; en_bit < NumVectorInitFields; ++en_bit) {
         if (task->vgprBitEnabled(en_bit)) {
             uint32_t physVgprIdx = 0;

@@ -148,6 +148,7 @@ class GPUCommandProcessor : public DmaVirtDevice
     // Typedefing dmaRead and dmaWrite function pointer
     typedef void (DmaDevice::*DmaFnPtr)(Addr, int, Event*, uint8_t*, Tick);
     void initABI(HSAQueueEntry *task);
+    void sanityCheckAKC(AMDKernelCode *akc);
     HSAPacketProcessor *hsaPP;
     TranslationGenPtr translate(Addr vaddr, Addr size) override;
 
