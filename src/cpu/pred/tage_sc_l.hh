@@ -117,10 +117,6 @@ class TAGE_SC_L_TAGE : public TAGEBase
 
     unsigned getUseAltIdx(TAGEBase::BranchInfo* bi, Addr branch_pc) override;
 
-    void updateHistories(ThreadID tid, Addr branch_pc, bool speculative,
-                         bool taken, Addr target, const StaticInstPtr & inst,
-                         TAGEBase::BranchInfo* bi) override;
-
     int bindex(Addr pc_in) const override;
     int gindex(ThreadID tid, Addr pc, int bank) const override;
     virtual int gindex_ext(int index, int bank) const = 0;
@@ -128,12 +124,10 @@ class TAGE_SC_L_TAGE : public TAGEBase
 
     virtual uint16_t gtag(ThreadID tid, Addr pc, int bank) const override = 0;
 
-    void squash(ThreadID tid, bool taken, Addr target,
-                const StaticInstPtr &inst, TAGEBase::BranchInfo *bi) override;
-
-    void updatePathAndGlobalHistory(
-        ThreadID tid, int brtype, bool taken,
-        Addr branch_pc, Addr target);
+    int branchTypeExtra(const StaticInstPtr & inst) override;
+    void updatePathAndGlobalHistory(ThreadID tid, int brtype, bool taken,
+                                    Addr branch_pc, Addr target,
+                                    TAGEBase::BranchInfo* bi) override;
 
     void adjustAlloc(bool & alloc, bool taken, bool pred_taken) override;
 

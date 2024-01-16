@@ -238,9 +238,20 @@ TAGE_SC_L_TAGE::bindex(Addr pc) const
             ((1ULL << (logTagTableSizes[0])) - 1));
 }
 
+int
+TAGE_SC_L_TAGE::branchTypeExtra(const StaticInstPtr & inst)
+{
+    int brtype = inst->isDirectCtrl() ? 0 : 2;
+    if (! inst->isUncondCtrl()) {
+        ++brtype;
+    }
+    return brtype;
+}
+
 void
-TAGE_SC_L_TAGE::updatePathAndGlobalHistory(
-    ThreadID tid, int brtype, bool taken, Addr branch_pc, Addr target)
+TAGE_SC_L_TAGE::updatePathAndGlobalHistory(ThreadID tid, int brtype,
+                                    bool taken, Addr branch_pc, Addr target,
+                                    TAGEBase::BranchInfo* bi)
 {
     ThreadHistory& tHist = threadHistory[tid];
     // TAGE update
@@ -264,40 +275,10 @@ TAGE_SC_L_TAGE::updatePathAndGlobalHistory(
             tHist.pathHist = (tHist.pathHist & ((1ULL << pathHistBits) - 1));
         }
     }
-
+    // Record the update to be able to squash it later
+    bi->ghist = tmp;
+    bi->nGhist = maxt;
     updateGHist(tid, tmp, maxt);
-}
-
-void
-TAGE_SC_L_TAGE::updateHistories(ThreadID tid, Addr branch_pc,
-                            bool speculative, bool taken,
-                            Addr target, const StaticInstPtr &inst,
-                            TAGEBase::BranchInfo* bi)
-{
-    if (speculative != speculativeHistUpdate) {
-        return;
-    }
-    // speculation is not implemented
-    assert(! speculative);
-
-    ThreadHistory& tHist = threadHistory[tid];
-
-    int brtype = inst->isDirectCtrl() ? 0 : 2;
-    if (! inst->isUncondCtrl()) {
-        ++brtype;
-    }
-    updatePathAndGlobalHistory(tid, brtype, taken, branch_pc, target);
-
-    DPRINTF(TageSCL, "Updating global histories with branch:%lx; taken?:%d, "
-            "path Hist: %x; pointer:%d\n", branch_pc, taken, tHist.pathHist,
-            tHist.ptGhist);
-}
-
-void
-TAGE_SC_L_TAGE::squash(ThreadID tid, bool taken, Addr target,
-                        const StaticInstPtr &inst, TAGEBase::BranchInfo *bi)
-{
-    fatal("Speculation is not implemented");
 }
 
 void
@@ -463,17 +444,15 @@ TAGE_SC_L::update(ThreadID tid, Addr pc, bool taken, void *&bp_history,
                                nrand, target, bi->lpBranchInfo->predTaken);
     }
 
-    if (!tage->isSpeculativeUpdateEnabled()) {
-        statisticalCorrector->scHistoryUpdate(pc, inst, taken,
-                                              bi->scBranchInfo, target);
+    statisticalCorrector->scHistoryUpdate(pc, inst, taken,
+                                            bi->scBranchInfo, target);
 
-        tage->updateHistories(tid, pc, false, taken, target,
-                              inst, bi->tageBranchInfo);
-    }
-
+    tage->updateHistories(tid, pc, false, taken, target,
+                            inst, bi->tageBranchInfo);
     delete bi;
     bp_history = nullptr;
 }
+
 
 } // namespace branch_prediction
 } // namespace gem5
