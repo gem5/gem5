@@ -155,24 +155,35 @@ class AtlasClient(AbstractClient):
 
     def get_resources(
         self,
-        resource_id: Optional[str] = None,
-        resource_version: Optional[str] = None,
+        resource_info: List[Dict[str, str]],
         gem5_version: Optional[str] = None,
-    ) -> List[Dict[str, Any]]:
+    ) -> Dict[str, Any]:
         url = f"{self.url}/action/find"
         data = {
             "dataSource": self.dataSource,
             "collection": self.collection,
             "database": self.database,
         }
-        filter = {}
-        if resource_id:
-            filter["id"] = resource_id
-            if resource_version is not None:
-                filter["resource_version"] = resource_version
+        filter = []
+
+        for resource in resource_info:
+            if resource["resource_id"] is not None:
+                if (
+                    not resource["resource_version"]
+                    or resource["resource_version"] is None
+                ):
+                    filter.append({"resource_id": resource["resource_id"]})
+                else:
+                    filter.append(
+                        {
+                            "resource_id": resource["resource_id"],
+                            "resource_version": resource["resource_version"],
+                        }
+                    )
 
         if filter:
-            data["filter"] = filter
+            query = {"$or": filter}
+            data["filter"] = query
 
         headers = {
             "Authorization": f"Bearer {self.get_token()}",
@@ -188,6 +199,14 @@ class AtlasClient(AbstractClient):
 
         # I do this as a lazy post-processing step because I can't figure out
         # how to do this via an Atlas query, which may be more efficient.
-        return self.filter_incompatible_resources(
+        filtered_resources = self.filter_incompatible_resources(
             resources_to_filter=resources, gem5_version=gem5_version
         )
+
+        resources_by_id = {}
+        for resource in filtered_resources:
+            if resource["resource_id"] in resources_by_id.keys():
+                resources_by_id[resource["resource_id"]].append(resource)
+            else:
+                resources_by_id[resource["resource_id"]] = [resource]
+        return resources_by_id

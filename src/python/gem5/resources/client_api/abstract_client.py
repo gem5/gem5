@@ -55,8 +55,7 @@ class AbstractClient(ABC):
     @abstractmethod
     def get_resources(
         self,
-        resource_id: Optional[str] = None,
-        resource_version: Optional[str] = None,
+        resource_info: List[Dict[str, str]],
         gem5_version: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         """
@@ -111,10 +110,12 @@ class AbstractClient(ABC):
                     filtered_resources.append(resource)
         return filtered_resources
 
-    def get_resources_by_id(self, resource_id: str) -> List[Dict[str, Any]]:
+    def get_resources_by_id(
+        self, resource_info: List[Dict[str, str]]
+    ) -> List[Dict[str, Any]]:
         """
         :param resource_id: The ID of the Resource.
 
         :return: A list of all the Resources with the given ID.
         """
-        return self.get_resources(resource_id=resource_id)
+        return self.get_resources(resource_info=resource_info)

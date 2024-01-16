@@ -163,7 +163,9 @@ def get_resource_json_obj(
                          current build. If ``None``, filtering based on compatibility
                          is not performed.
     """
-
+    resource_info = [
+        {"resource_id": resource_id, "resource_version": resource_version}
+    ]
     return _get_clientwrapper().get_resource_json_obj_from_client(
-        resource_id, resource_version, clients, gem5_version
+        resource_info, clients, gem5_version
     )

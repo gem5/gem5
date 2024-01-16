@@ -102,7 +102,7 @@ class ClientWrapper:
 
     def get_all_resources_by_id(
         self,
-        resource_id: str,
+        resource_info: str,
         clients: Optional[List[str]] = None,
     ) -> List[Dict]:
         """
@@ -122,11 +122,11 @@ class ClientWrapper:
                 raise Exception(f"Client: {client} does not exist")
             try:
                 resources.extend(
-                    self.clients[client].get_resources_by_id(resource_id)
+                    self.clients[client].get_resources_by_id(resource_info)
                 )
             except Exception as e:
                 print(
-                    f"Exception thrown while getting resource '{resource_id}' "
+                    f"Exception thrown while getting resource '{resource_info}' "
                     f"from client '{client}'\n",
                     file=sys.stderr,
                 )
@@ -135,15 +135,14 @@ class ClientWrapper:
         for res1, res2 in itertools.combinations(resources, 2):
             if res1["resource_version"] == res2["resource_version"]:
                 raise Exception(
-                    f"Resource {resource_id} has multiple resources with "
+                    f"Resource {resource_info} has multiple resources with "
                     f"the same version: {res1['resource_version']}"
                 )
         return resources
 
     def get_resource_json_obj_from_client(
         self,
-        resource_id: str,
-        resource_version: Optional[str] = None,
+        resource_info: List[Dict[str, str]],
         clients: Optional[List[str]] = None,
         gem5_version: Optional[str] = core.gem5Version,
     ) -> Dict:
@@ -162,10 +161,10 @@ class ClientWrapper:
                  If not found, exception is thrown.
         """
         # getting all the resources with the given id from the dictionary
-        resources = self.get_all_resources_by_id(resource_id, clients)
+        resources = self.get_all_resources_by_id(resource_info, clients)
         # if no resource with the given id is found, return None
         if len(resources) == 0:
-            raise Exception(f"Resource with ID '{resource_id}' not found.")
+            raise Exception(f"Resource with ID '{resource_info}' not found.")
 
         resource_to_return = None
 
