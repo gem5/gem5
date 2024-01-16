@@ -46147,10 +46147,10 @@ namespace VegaISA
                                         *reinterpret_cast<float*>(&s1h),
                                         *reinterpret_cast<float*>(&s2h));
 
-                uint64_t result1 = *reinterpret_cast<uint64_t*>(&dword1);
-                uint64_t result2 = *reinterpret_cast<uint64_t*>(&dword2);
+                uint32_t result1 = *reinterpret_cast<uint32_t*>(&dword1);
+                uint32_t result2 = *reinterpret_cast<uint32_t*>(&dword2);
 
-                vdst[lane] = (result2 << 32) | result1;
+                vdst[lane] = (static_cast<uint64_t>(result2) << 32) | result1;
             }
         }
 
@@ -46206,10 +46206,10 @@ namespace VegaISA
                 float dword2 = *reinterpret_cast<float*>(&lower_dword)
                              * *reinterpret_cast<float*>(&upper_dword);
 
-                uint64_t result1 = *reinterpret_cast<uint64_t*>(&dword1);
-                uint64_t result2 = *reinterpret_cast<uint64_t*>(&dword2);
+                uint32_t result1 = *reinterpret_cast<uint32_t*>(&dword1);
+                uint32_t result2 = *reinterpret_cast<uint32_t*>(&dword2);
 
-                vdst[lane] = (result2 << 32) | result1;
+                vdst[lane] = (static_cast<uint64_t>(result2) << 32) | result1;
             }
         }
 
@@ -46265,10 +46265,10 @@ namespace VegaISA
                 float dword2 = *reinterpret_cast<float*>(&lower_dword)
                              + *reinterpret_cast<float*>(&upper_dword);
 
-                uint64_t result1 = *reinterpret_cast<uint64_t*>(&dword1);
-                uint64_t result2 = *reinterpret_cast<uint64_t*>(&dword2);
+                uint32_t result1 = *reinterpret_cast<uint32_t*>(&dword1);
+                uint32_t result2 = *reinterpret_cast<uint32_t*>(&dword2);
 
-                vdst[lane] = (result2 << 32) | result1;
+                vdst[lane] = (static_cast<uint64_t>(result2) << 32) | result1;
             }
         }
 
