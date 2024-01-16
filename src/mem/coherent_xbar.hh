@@ -136,13 +136,6 @@ class CoherentXBar : public BaseXBar
             xbar.recvFunctional(pkt, id);
         }
 
-        void
-        recvMemBackdoorReq(const MemBackdoorReq &req,
-                MemBackdoorPtr &backdoor) override
-        {
-            xbar.recvMemBackdoorReq(req, backdoor);
-        }
-
         AddrRangeList
         getAddrRanges() const override
         {
@@ -380,11 +373,6 @@ class CoherentXBar : public BaseXBar
     /** Function called by the port when the crossbar is receiving a Functional
         transaction.*/
     void recvFunctional(PacketPtr pkt, PortID cpu_side_port_id);
-
-    /** Function called by the port when the crossbar receives a request for
-        a memory backdoor.*/
-    void recvMemBackdoorReq(const MemBackdoorReq &req,
-            MemBackdoorPtr &backdoor);
 
     /** Function called by the port when the crossbar is receiving a functional
         snoop transaction.*/

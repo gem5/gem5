@@ -126,13 +126,6 @@ class NoncoherentXBar : public BaseXBar
             xbar.recvFunctional(pkt, id);
         }
 
-        void
-        recvMemBackdoorReq(const MemBackdoorReq &req,
-                MemBackdoorPtr &backdoor) override
-        {
-            xbar.recvMemBackdoorReq(req, backdoor);
-        }
-
         AddrRangeList
         getAddrRanges() const override
         {
@@ -186,8 +179,6 @@ class NoncoherentXBar : public BaseXBar
     Tick recvAtomicBackdoor(PacketPtr pkt, PortID cpu_side_port_id,
                             MemBackdoorPtr *backdoor=nullptr);
     void recvFunctional(PacketPtr pkt, PortID cpu_side_port_id);
-    void recvMemBackdoorReq(const MemBackdoorReq &req,
-            MemBackdoorPtr &backdoor);
 
   public:
 

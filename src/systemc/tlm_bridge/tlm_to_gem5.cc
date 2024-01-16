@@ -394,26 +394,13 @@ bool
 TlmToGem5Bridge<BITWIDTH>::get_direct_mem_ptr(tlm::tlm_generic_payload &trans,
                                               tlm::tlm_dmi &dmi_data)
 {
-    MemBackdoor::Flags flags;
-    switch (trans.get_command()) {
-      case tlm::TLM_READ_COMMAND:
-        flags = MemBackdoor::Readable;
-        break;
-      case tlm::TLM_WRITE_COMMAND:
-        flags = MemBackdoor::Writeable;
-        break;
-      default:
-        panic("TlmToGem5Bridge: "
-                "received transaction with unsupported command");
-    }
-    Addr start_addr = trans.get_address();
-    Addr length = trans.get_data_length();
+    auto [pkt, pkt_created] = payload2packet(_id, trans);
+    pkt->pushSenderState(new Gem5SystemC::TlmSenderState(trans));
+    if (pkt_created)
+        pkt->req->setFlags(Request::NO_ACCESS);
 
-    MemBackdoorReq req({start_addr, start_addr + length}, flags);
     MemBackdoorPtr backdoor = nullptr;
-
-    bmp.sendMemBackdoorReq(req, backdoor);
-
+    bmp.sendAtomicBackdoor(pkt, backdoor);
     if (backdoor) {
         trans.set_dmi_allowed(true);
         dmi_data.set_dmi_ptr(backdoor->ptr());
@@ -440,7 +427,17 @@ TlmToGem5Bridge<BITWIDTH>::get_direct_mem_ptr(tlm::tlm_generic_payload &trans,
         }
     }
 
-    trans.set_response_status(tlm::TLM_OK_RESPONSE);
+    gem5::Packet::SenderState *senderState = pkt->popSenderState();
+    sc_assert(
+        nullptr != dynamic_cast<Gem5SystemC::TlmSenderState*>(senderState));
+
+    // clean up
+    delete senderState;
+
+    setPayloadResponse(trans, pkt);
+
+    if (pkt_created)
+        destroyPacket(pkt);
 
     return backdoor != nullptr;
 }

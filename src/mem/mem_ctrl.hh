@@ -267,8 +267,6 @@ class MemCtrl : public qos::MemCtrl
                 PacketPtr pkt, MemBackdoorPtr &backdoor) override;
 
         void recvFunctional(PacketPtr pkt) override;
-        void recvMemBackdoorReq(const MemBackdoorReq &req,
-                MemBackdoorPtr &backdoor) override;
 
         bool recvTimingReq(PacketPtr) override;
 
@@ -784,8 +782,6 @@ class MemCtrl : public qos::MemCtrl
     virtual Tick recvAtomic(PacketPtr pkt);
     virtual Tick recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor);
     virtual void recvFunctional(PacketPtr pkt);
-    virtual void recvMemBackdoorReq(const MemBackdoorReq &req,
-            MemBackdoorPtr &backdoor);
     virtual bool recvTimingReq(PacketPtr pkt);
 
     bool recvFunctionalLogic(PacketPtr pkt, MemInterface* mem_intr);

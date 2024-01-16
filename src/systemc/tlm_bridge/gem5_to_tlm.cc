@@ -516,31 +516,6 @@ Gem5ToTlmBridge<BITWIDTH>::recvFunctional(PacketPtr packet)
 }
 
 template <unsigned int BITWIDTH>
-void
-Gem5ToTlmBridge<BITWIDTH>::recvMemBackdoorReq(const MemBackdoorReq &req,
-        MemBackdoorPtr &backdoor)
-{
-    // Create a transaction to send along to TLM's get_direct_mem_ptr.
-    tlm::tlm_generic_payload *trans = mm.allocate();
-    trans->acquire();
-    trans->set_address(req.range().start());
-    trans->set_data_length(req.range().size());
-    trans->set_streaming_width(req.range().size());
-    trans->set_data_ptr(nullptr);
-
-    if (req.writeable())
-        trans->set_command(tlm::TLM_WRITE_COMMAND);
-    else if (req.readable())
-        trans->set_command(tlm::TLM_READ_COMMAND);
-    else
-        trans->set_command(tlm::TLM_IGNORE_COMMAND);
-
-    backdoor = getBackdoor(*trans);
-
-    trans->release();
-}
-
-template <unsigned int BITWIDTH>
 tlm::tlm_sync_enum
 Gem5ToTlmBridge<BITWIDTH>::nb_transport_bw(tlm::tlm_generic_payload &trans,
     tlm::tlm_phase &phase, sc_core::sc_time &delay)

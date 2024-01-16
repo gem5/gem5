@@ -285,14 +285,6 @@ NoncoherentXBar::recvAtomicBackdoor(PacketPtr pkt, PortID cpu_side_port_id,
 }
 
 void
-NoncoherentXBar::recvMemBackdoorReq(const MemBackdoorReq &req,
-        MemBackdoorPtr &backdoor)
-{
-    PortID dest_id = findPort(req.range());
-    memSidePorts[dest_id]->sendMemBackdoorReq(req, backdoor);
-}
-
-void
 NoncoherentXBar::recvFunctional(PacketPtr pkt, PortID cpu_side_port_id)
 {
     if (!pkt->isPrint()) {
