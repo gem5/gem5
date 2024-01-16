@@ -55,10 +55,14 @@ class ThreadBridge : public SimObject
         void recvRespRetry() override;
 
         // AtomicResponseProtocol
+        Tick recvAtomicBackdoor(PacketPtr pkt,
+                                MemBackdoorPtr &backdoor) override;
         Tick recvAtomic(PacketPtr pkt) override;
 
         // FunctionalResponseProtocol
         void recvFunctional(PacketPtr pkt) override;
+        void recvMemBackdoorReq(const MemBackdoorReq &req,
+                                MemBackdoorPtr &backdoor) override;
 
       private:
         ThreadBridge &device_;
