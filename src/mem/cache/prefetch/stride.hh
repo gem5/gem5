@@ -51,12 +51,12 @@
 #include <unordered_map>
 #include <vector>
 
+#include "base/cache/indexing_policies/set_associative.hh"
+#include "base/cache/replacement_policies/replaceable_entry.hh"
 #include "base/sat_counter.hh"
 #include "base/types.hh"
 #include "mem/cache/prefetch/associative_set.hh"
 #include "mem/cache/prefetch/queued.hh"
-#include "mem/cache/replacement_policies/replaceable_entry.hh"
-#include "mem/cache/tags/indexing_policies/set_associative.hh"
 #include "mem/packet.hh"
 #include "params/StridePrefetcherHashedSetAssociative.hh"
 

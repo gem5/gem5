@@ -47,9 +47,9 @@
 
 #include <cassert>
 
+#include "base/cache/indexing_policies/base.hh"
+#include "base/cache/replacement_policies/replaceable_entry.hh"
 #include "base/types.hh"
-#include "mem/cache/replacement_policies/replaceable_entry.hh"
-#include "mem/cache/tags/indexing_policies/base.hh"
 #include "mem/request.hh"
 #include "sim/core.hh"
 #include "sim/sim_exit.hh"

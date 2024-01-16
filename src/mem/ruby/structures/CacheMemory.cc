@@ -41,6 +41,7 @@
 
 #include "mem/ruby/structures/CacheMemory.hh"
 
+#include "base/cache/replacement_policies/weighted_lru_rp.hh"
 #include "base/compiler.hh"
 #include "base/intmath.hh"
 #include "base/logging.hh"
@@ -49,7 +50,6 @@
 #include "debug/RubyCacheTrace.hh"
 #include "debug/RubyResourceStalls.hh"
 #include "debug/RubyStats.hh"
-#include "mem/cache/replacement_policies/weighted_lru_rp.hh"
 #include "mem/ruby/protocol/AccessPermission.hh"
 #include "mem/ruby/system/RubySystem.hh"
 

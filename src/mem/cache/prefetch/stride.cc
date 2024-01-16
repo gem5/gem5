@@ -48,13 +48,13 @@
 
 #include <cassert>
 
+#include "base/cache/replacement_policies/base.hh"
 #include "base/intmath.hh"
 #include "base/logging.hh"
 #include "base/random.hh"
 #include "base/trace.hh"
 #include "debug/HWPrefetch.hh"
 #include "mem/cache/prefetch/associative_set_impl.hh"
-#include "mem/cache/replacement_policies/base.hh"
 #include "params/StridePrefetcher.hh"
 
 namespace gem5

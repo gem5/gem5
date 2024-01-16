@@ -31,9 +31,9 @@
 
 #include <cassert>
 
+#include "base/cache/replacement_policies/replaceable_entry.hh"
 #include "base/cprintf.hh"
 #include "base/types.hh"
-#include "mem/cache/replacement_policies/replaceable_entry.hh"
 
 namespace gem5
 {

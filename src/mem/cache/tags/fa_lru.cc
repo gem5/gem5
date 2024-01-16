@@ -49,11 +49,11 @@
 #include <cassert>
 #include <sstream>
 
+#include "base/cache/replacement_policies/replaceable_entry.hh"
 #include "base/compiler.hh"
 #include "base/intmath.hh"
 #include "base/logging.hh"
 #include "mem/cache/base.hh"
-#include "mem/cache/replacement_policies/replaceable_entry.hh"
 
 namespace gem5
 {
