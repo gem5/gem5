@@ -84,14 +84,6 @@ ThreadBridge::IncomingPort::recvFunctional(PacketPtr pkt)
     device_.out_port_.sendFunctional(pkt);
 }
 
-void
-ThreadBridge::IncomingPort::recvMemBackdoorReq(const MemBackdoorReq &req,
-                                               MemBackdoorPtr &backdoor)
-{
-    EventQueue::ScopedMigration migrate(device_.eventQueue());
-    device_.out_port_.sendMemBackdoorReq(req, backdoor);
-}
-
 ThreadBridge::OutgoingPort::OutgoingPort(const std::string &name,
                                          ThreadBridge &device)
     : RequestPort(name), device_(device)

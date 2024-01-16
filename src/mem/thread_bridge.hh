@@ -61,8 +61,6 @@ class ThreadBridge : public SimObject
 
         // FunctionalResponseProtocol
         void recvFunctional(PacketPtr pkt) override;
-        void recvMemBackdoorReq(const MemBackdoorReq &req,
-                                MemBackdoorPtr &backdoor) override;
 
       private:
         ThreadBridge &device_;

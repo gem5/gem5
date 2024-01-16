@@ -140,21 +140,6 @@ HBMCtrl::recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor)
     return latency;
 }
 
-void
-HBMCtrl::recvMemBackdoorReq(const MemBackdoorReq &req,
-        MemBackdoorPtr &backdoor)
-{
-    auto &range = req.range();
-    if (pc0Int && pc0Int->getAddrRange().isSubset(range)) {
-        pc0Int->getBackdoor(backdoor);
-    } else if (pc1Int && pc1Int->getAddrRange().isSubset(range)) {
-        pc1Int->getBackdoor(backdoor);
-    }
-    else {
-        panic("Can't handle address range for range %s\n", range.to_string());
-    }
-}
-
 bool
 HBMCtrl::writeQueueFullPC0(unsigned int neededEntries) const
 {
