@@ -65,6 +65,21 @@ namespace gem5
 namespace RiscvISA
 {
 
+template<typename Type> struct double_width;
+template<> struct double_width<uint8_t>     { using type = uint16_t;};
+template<> struct double_width<uint16_t>    { using type = uint32_t;};
+template<> struct double_width<uint32_t>    { using type = uint64_t;};
+template<> struct double_width<uint64_t>    { using type = __uint128_t;};
+template<> struct double_width<int8_t>      { using type = int16_t; };
+template<> struct double_width<int16_t>     { using type = int32_t; };
+template<> struct double_width<int32_t>     { using type = int64_t; };
+template<> struct double_width<int64_t>     { using type = __int128_t; };
+template<> struct double_width<float32_t>   { using type = float64_t;};
+
+template<typename Type> struct double_widthf;
+template<> struct double_widthf<uint32_t>    { using type = float64_t;};
+template<> struct double_widthf<int32_t>     { using type = float64_t;};
+
 template<typename T> inline bool
 isquietnan(T val)
 {
@@ -146,57 +161,25 @@ registerName(RegId reg)
     }
 }
 
-inline uint32_t
-mulhu_32(uint32_t rs1, uint32_t rs2)
+template <typename T> inline std::make_unsigned_t<T>
+mulhu(std::make_unsigned_t<T> rs1, std::make_unsigned_t<T> rs2)
 {
-    return ((uint64_t)rs1 * rs2) >> 32;
+    using WideT = typename double_width<std::make_unsigned_t<T>>::type;
+    return ((WideT)rs1 * rs2) >> (sizeof(T) * 8);
 }
 
-inline uint64_t
-mulhu_64(uint64_t rs1, uint64_t rs2)
+template <typename T> inline std::make_signed_t<T>
+mulh(std::make_signed_t<T> rs1, std::make_signed_t<T> rs2)
 {
-    uint64_t rs1_lo = (uint32_t)rs1;
-    uint64_t rs1_hi = rs1 >> 32;
-    uint64_t rs2_lo = (uint32_t)rs2;
-    uint64_t rs2_hi = rs2 >> 32;
-
-    uint64_t hi = rs1_hi * rs2_hi;
-    uint64_t mid1 = rs1_hi * rs2_lo;
-    uint64_t mid2 = rs1_lo * rs2_hi;
-    uint64_t lo = rs1_lo * rs2_lo;
-    uint64_t carry = ((uint64_t)(uint32_t)mid1
-            + (uint64_t)(uint32_t)mid2
-            + (lo >> 32)) >> 32;
-
-    return hi + (mid1 >> 32) + (mid2 >> 32) + carry;
+    using WideT = typename double_width<std::make_signed_t<T>>::type;
+    return ((WideT)rs1 * rs2) >> (sizeof(T) * 8);
 }
 
-inline int32_t
-mulh_32(int32_t rs1, int32_t rs2)
+template <typename T> inline std::make_signed_t<T>
+mulhsu(std::make_signed_t<T> rs1, std::make_unsigned_t<T> rs2)
 {
-    return ((int64_t)rs1 * rs2) >> 32;
-}
-
-inline int64_t
-mulh_64(int64_t rs1, int64_t rs2)
-{
-    bool negate = (rs1 < 0) != (rs2 < 0);
-    uint64_t res = mulhu_64(std::abs(rs1), std::abs(rs2));
-    return negate ? ~res + (rs1 * rs2 == 0 ? 1 : 0) : res;
-}
-
-inline int32_t
-mulhsu_32(int32_t rs1, uint32_t rs2)
-{
-    return ((int64_t)rs1 * rs2) >> 32;
-}
-
-inline int64_t
-mulhsu_64(int64_t rs1, uint64_t rs2)
-{
-    bool negate = rs1 < 0;
-    uint64_t res = mulhu_64(std::abs(rs1), rs2);
-    return negate ? ~res + (rs1 * rs2 == 0 ? 1 : 0) : res;
+    using WideT = typename double_width<std::make_signed_t<T>>::type;
+    return ((WideT)rs1 * rs2) >> (sizeof(T) * 8);
 }
 
 template<typename T> inline T
@@ -322,19 +305,6 @@ elem_mask(const T* vs, const int index)
     int pos = index % (sizeof(T)*8);
     return (vs[idx] >> pos) & 1;
 }
-
-template<typename Type> struct double_width;
-template<> struct double_width<uint8_t>     { using type = uint16_t;};
-template<> struct double_width<uint16_t>    { using type = uint32_t;};
-template<> struct double_width<uint32_t>    { using type = uint64_t;};
-template<> struct double_width<int8_t>      { using type = int16_t; };
-template<> struct double_width<int16_t>     { using type = int32_t; };
-template<> struct double_width<int32_t>     { using type = int64_t; };
-template<> struct double_width<float32_t>   { using type = float64_t;};
-
-template<typename Type> struct double_widthf;
-template<> struct double_widthf<uint32_t>    { using type = float64_t;};
-template<> struct double_widthf<int32_t>     { using type = float64_t;};
 
 template<typename FloatType, typename IntType = decltype(FloatType::v)> auto
 ftype(IntType a) -> FloatType
