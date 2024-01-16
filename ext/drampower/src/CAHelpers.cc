@@ -76,7 +76,6 @@ int64_t CommandAnalysis::timeToCompletion(MemCommand::cmds type)
 unsigned CommandAnalysis::get_num_active_banks(void)
 {
   return bank_state.get_num_active_banks();
-  //return (unsigned)std::count(bank_state.begin(), bank_state.end(), BANK_ACTIVE);
 }
 
 // Naming-standard compliant wrapper
