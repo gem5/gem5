@@ -454,6 +454,9 @@ RubySystem::startup()
         Tick curtick_original = curTick();
         // save the event queue head
         Event* eventq_head = eventq->replaceHead(NULL);
+        // save the exit event pointer
+        GlobalSimLoopExitEvent *original_simulate_limit_event = nullptr;
+        original_simulate_limit_event = simulate_limit_event;
         // set curTick to 0 and reset Ruby System's clock
         setCurTick(0);
         resetClock();
@@ -471,6 +474,8 @@ RubySystem::startup()
 
         // Restore eventq head
         eventq->replaceHead(eventq_head);
+        // Restore exit event pointer
+        simulate_limit_event = original_simulate_limit_event;
         // Restore curTick and Ruby System's clock
         setCurTick(curtick_original);
         resetClock();
