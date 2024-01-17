@@ -1225,9 +1225,6 @@ Rename::checkStall(ThreadID tid)
     } else if (calcFreeLQEntries(tid) <= 0 && calcFreeSQEntries(tid) <= 0) {
         DPRINTF(Rename,"[tid:%i] Stall: LSQ has 0 free entries.\n", tid);
         ret_val = true;
-    } else if (renameMap[tid]->numFreeEntries() <= 0) {
-        DPRINTF(Rename,"[tid:%i] Stall: RenameMap has 0 free entries.\n", tid);
-        ret_val = true;
     } else if (renameStatus[tid] == SerializeStall &&
                (!emptyROB[tid] || instsInProgress[tid])) {
         DPRINTF(Rename,"[tid:%i] Stall: Serialize stall and ROB is not "
