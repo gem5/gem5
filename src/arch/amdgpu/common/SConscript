@@ -34,7 +34,7 @@ Import('*')
 if not env['CONF']['BUILD_GPU']:
     Return()
 
-if env['CONF']['TARGET_GPU_ISA'] in ('gcn3', 'vega'):
+if env['CONF']['TARGET_GPU_ISA'] in ('vega'):
     SimObject('X86GPUTLB.py', sim_objects=['X86GPUTLB', 'TLBCoalescer'])
 
     Source('tlb.cc')
