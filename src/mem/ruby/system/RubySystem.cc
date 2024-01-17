@@ -475,7 +475,7 @@ RubySystem::startup()
         // Restore eventq head
         eventq->replaceHead(eventq_head);
         // Restore exit event pointer
-        simulate_limit_event = simulate_limit_event_copy;
+        simulate_limit_event = original_simulate_limit_event;
         // Restore curTick and Ruby System's clock
         setCurTick(curtick_original);
         resetClock();
