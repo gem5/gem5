@@ -1260,7 +1260,7 @@ Rename::readFreeEntries(ThreadID tid)
             freeEntries[tid].robEntries,
             freeEntries[tid].lqEntries,
             freeEntries[tid].sqEntries,
-            renameMap[tid]->numFreeEntries(),
+            renameMap[tid]->minFreeEntries(),
             renameMap[tid]->numFreeEntries(IntRegClass),
             renameMap[tid]->numFreeEntries(FloatRegClass),
             renameMap[tid]->numFreeEntries(VecRegClass),
