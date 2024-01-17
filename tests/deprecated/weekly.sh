@@ -42,10 +42,10 @@ tag="latest"
 # We assume the first three arguments are the number of threads to use for
 # compilation followed by the GPU ISA to test, and finally, the number of
 # "run threads", the maximum number of tests to be run at once. By default the
-# number of compile threads 1 and the GPU ISA is GCN3_X86. The number of
+# number of compile threads 1 and the GPU ISA is VEGA_X86. The number of
 # "run threads" is equal to the number of compile threads by default.
 threads=1
-gpu_isa=GCN3_X86
+gpu_isa=VEGA_X86
 run_threads=1
 if [[ $# -eq 1 ]]; then
     threads=$1
@@ -64,7 +64,7 @@ else
     fi
 fi
 
-if [[ "$gpu_isa" != "GCN3_X86" ]] && [[ "$gpu_isa" != "VEGA_X86" ]]; then
+if [[ "$gpu_isa" != "VEGA_X86" ]]; then
     echo "Invalid GPU ISA: $gpu_isa"
     exit 1
 fi
@@ -170,13 +170,13 @@ docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
      --memory="${docker_mem_limit}" hacc-test-weekly bash -c \
      "make -j${threads}"
 
-# generate cachefiles -- since we are testing gfx801 and 4 CUs (default config)
+# generate cachefiles -- since we are testing gfx902 and 4 CUs (default config)
 # in tester, we want cachefiles for this setup
 docker run --rm --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}/gem5-resources/src/gpu/DNNMark" \
     "-v${gem5_root}/gem5-resources/src/gpu/DNNMark/cachefiles:/root/.cache/miopen/2.9.0" \
     --memory="${docker_mem_limit}" hacc-test-weekly bash -c \
-    "python3 generate_cachefiles.py cachefiles.csv --gfx-version=gfx801 \
+    "python3 generate_cachefiles.py cachefiles.csv --gfx-version=gfx902 \
     --num-cus=4"
 
 # generate mmap data for DNNMark (makes simulation much faster)
