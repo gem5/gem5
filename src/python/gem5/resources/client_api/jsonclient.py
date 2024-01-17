@@ -75,25 +75,40 @@ class JSONClient(AbstractClient):
 
     def get_resources(
         self,
-        resource_id: Optional[str] = None,
-        resource_version: Optional[str] = None,
+        resource_info: List[Dict[str, str]],
         gem5_version: Optional[str] = None,
-    ) -> List[Dict[str, Any]]:
-        filter = self.resources  # Unfiltered.
-        if resource_id:
-            filter = [  # Filter by resource_id.
-                resource
-                for resource in filter
-                if resource["id"] == resource_id
-            ]
-            if resource_version:
-                filter = [  # Filter by resource_version.
-                    resource
-                    for resource in filter
-                    if resource["resource_version"] == resource_version
-                ]
+    ) -> Dict[str, Any]:
+        filtered_resources = []  # Unfiltered.
+
+        for resource in resource_info:
+            if "resource_version" in resource.keys():
+                filtered_resources.append(
+                    [
+                        res
+                        for res in self.resources
+                        if res["id"] == resource["id"]
+                        and res["resource_version"]
+                        == resource["resource_version"]
+                    ]
+                )
+            else:
+                filtered_resources.append(
+                    [
+                        res
+                        for res in self.resources
+                        if res["id"] == resource["id"]
+                    ]
+                )
 
         # Filter by gem5_version.
-        return self.filter_incompatible_resources(
-            resources_to_filter=filter, gem5_version=gem5_version
+        filtered_compatible_resources = self.filter_incompatible_resources(
+            resources_to_filter=filtered_resources, gem5_version=gem5_version
         )
+
+        resources_by_id = {}
+        for resource in filtered_compatible_resources:
+            if resource["resource_id"] in resources_by_id.keys():
+                resources_by_id[resource["resource_id"]].append(resource)
+            else:
+                resources_by_id[resource["resource_id"]] = [resource]
+        return resources_by_id
