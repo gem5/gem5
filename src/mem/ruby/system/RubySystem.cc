@@ -455,8 +455,8 @@ RubySystem::startup()
         // save the event queue head
         Event* eventq_head = eventq->replaceHead(NULL);
         // save the exit event pointer
-        GlobalSimLoopExitEvent *simulate_limit_event_copy = nullptr;
-        simulate_limit_event_copy = simulate_limit_event;
+        GlobalSimLoopExitEvent *original_simulate_limit_event = nullptr;
+        original_simulate_limit_event = simulate_limit_event;
         // set curTick to 0 and reset Ruby System's clock
         setCurTick(0);
         resetClock();
