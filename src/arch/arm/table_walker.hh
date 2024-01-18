@@ -662,8 +662,9 @@ class TableWalker : public ClockedObject
         global(WalkerState *currState) const override
         {
             assert(currState && (type() == Block || type() == Page));
-            if (!currState->aarch64 && (currState->isSecure &&
-                                        !currState->secureLookup)) {
+            const bool secure_state = currState->ss == SecurityState::Secure;
+            if (!currState->aarch64 && secure_state &&
+                !currState->secureLookup) {
                 return false;  // ARM ARM issue C B3.6.3
             } else if (currState->aarch64) {
                 if (!MMU::hasUnprivRegime(currState->regime)) {
@@ -671,7 +672,7 @@ class TableWalker : public ClockedObject
                     // in AArch64 for regimes without an unpriviledged
                     // component
                     return true;
-                } else if (currState->isSecure && !currState->secureLookup) {
+                } else if (secure_state && !currState->secureLookup) {
                     return false;
                 }
             }
@@ -896,8 +897,8 @@ class TableWalker : public ClockedObject
         /** If the access is a fetch (for execution, and no-exec) must be checked?*/
         bool isFetch;
 
-        /** If the access comes from the secure state. */
-        bool isSecure;
+        /** Security State of the access */
+        SecurityState ss;
         /** Whether lookups should be treated as using the secure state.
          * This is usually the same as isSecure, but can be set to false by the
          * long descriptor table attributes. */
@@ -1139,7 +1140,7 @@ class TableWalker : public ClockedObject
     Fault walk(const RequestPtr &req, ThreadContext *tc,
                uint16_t asid, vmid_t _vmid,
                BaseMMU::Mode mode, BaseMMU::Translation *_trans,
-               bool timing, bool functional, bool secure,
+               bool timing, bool functional, SecurityState ss,
                MMU::ArmTranslationType tran_type, bool stage2,
                const TlbEntry *walk_entry);
 

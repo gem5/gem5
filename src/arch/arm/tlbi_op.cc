@@ -69,7 +69,7 @@ TLBIALL::operator()(ThreadContext* tc)
 bool
 TLBIALL::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
-    return te->valid && secureLookup == !te->nstid &&
+    return te->valid && ss == te->ss &&
         (te->vmid == vmid || el2Enabled) &&
         te->checkRegime(targetRegime);
 }
@@ -115,7 +115,7 @@ TLBIALLEL::operator()(ThreadContext* tc)
 bool
 TLBIALLEL::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
-    return te->valid && secureLookup == !te->nstid &&
+    return te->valid && ss == te->ss &&
         te->checkRegime(targetRegime);
 }
 
@@ -136,7 +136,7 @@ TLBIVMALL::operator()(ThreadContext* tc)
 bool
 TLBIVMALL::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
-    return te->valid && secureLookup == !te->nstid &&
+    return te->valid && ss == te->ss &&
         te->checkRegime(targetRegime) &&
         (te->vmid == vmid || !el2Enabled || !useVMID(targetRegime));
 }
@@ -157,7 +157,7 @@ bool
 TLBIASID::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
     return te->valid && te->asid == asid &&
-        secureLookup == !te->nstid &&
+        ss == te->ss &&
         te->checkRegime(targetRegime) &&
         (te->vmid == vmid || !el2Enabled || !useVMID(targetRegime));
 }
@@ -202,7 +202,7 @@ TLBIALLN::operator()(ThreadContext* tc)
 bool
 TLBIALLN::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
-    return te->valid && te->nstid &&
+    return te->valid && te->ss == SecurityState::NonSecure &&
         te->checkRegime(targetRegime);
 }
 
@@ -213,7 +213,7 @@ TLBIMVAA::lookupGen(vmid_t vmid) const
     lookup_data.va = sext<56>(addr);
     lookup_data.ignoreAsn = true;
     lookup_data.vmid = vmid;
-    lookup_data.secure = secureLookup;
+    lookup_data.ss = ss;
     lookup_data.functional = true;
     lookup_data.targetRegime = targetRegime;
     lookup_data.mode = BaseMMU::Read;
@@ -247,7 +247,7 @@ TLBIMVA::lookupGen(vmid_t vmid) const
     lookup_data.asn = asid;
     lookup_data.ignoreAsn = false;
     lookup_data.vmid = vmid;
-    lookup_data.secure = secureLookup;
+    lookup_data.ss = ss;
     lookup_data.functional = true;
     lookup_data.targetRegime = targetRegime;
     lookup_data.mode = BaseMMU::Read;

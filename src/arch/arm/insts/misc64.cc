@@ -247,10 +247,10 @@ RegNone::generateDisassembly(
 
 void
 TlbiOp64::tlbiAll(ThreadContext *tc, RegVal value,
-    bool secure, TranslationRegime regime, bool shareable,
+    SecurityState ss, TranslationRegime regime, bool shareable,
     TlbiAttr attrs)
 {
-    TLBIALLEL tlbi_op(regime, secure, attrs);
+    TLBIALLEL tlbi_op(regime, ss, attrs);
     if (shareable) {
         tlbi_op.broadcast(tc);
     } else {
@@ -260,10 +260,10 @@ TlbiOp64::tlbiAll(ThreadContext *tc, RegVal value,
 
 void
 TlbiOp64::tlbiVmall(ThreadContext *tc, RegVal value,
-    bool secure, TranslationRegime regime, bool shareable, bool stage2,
-    TlbiAttr attrs)
+    SecurityState ss, TranslationRegime regime, bool shareable,
+    bool stage2, TlbiAttr attrs)
 {
-    TLBIVMALL tlbi_op(regime, secure, stage2, attrs);
+    TLBIVMALL tlbi_op(regime, ss, stage2, attrs);
     if (shareable) {
         tlbi_op.broadcast(tc);
     } else {
@@ -273,8 +273,8 @@ TlbiOp64::tlbiVmall(ThreadContext *tc, RegVal value,
 
 void
 TlbiOp64::tlbiVa(ThreadContext *tc, RegVal value,
-    bool secure, TranslationRegime regime, bool shareable, bool last_level,
-    TlbiAttr attrs)
+    SecurityState ss, TranslationRegime regime, bool shareable,
+    bool last_level, TlbiAttr attrs)
 {
     if (MMU::hasUnprivRegime(regime)) {
         // The asid will only be used when e2h == 1
@@ -282,7 +282,7 @@ TlbiOp64::tlbiVa(ThreadContext *tc, RegVal value,
         auto asid = asid_16bits ? bits(value, 63, 48) :
                                   bits(value, 55, 48);
 
-        TLBIMVA tlbi_op(regime, secure, static_cast<Addr>(bits(value, 43, 0)) << 12,
+        TLBIMVA tlbi_op(regime, ss, static_cast<Addr>(bits(value, 43, 0)) << 12,
                         asid, last_level, attrs);
         if (shareable) {
             tlbi_op.broadcast(tc);
@@ -290,7 +290,7 @@ TlbiOp64::tlbiVa(ThreadContext *tc, RegVal value,
             tlbi_op(tc);
         }
     } else {
-        TLBIMVAA tlbi_op(regime, secure,
+        TLBIMVAA tlbi_op(regime, ss,
             static_cast<Addr>(bits(value, 43, 0)) << 12, last_level,
             attrs);
         if (shareable) {
@@ -303,13 +303,12 @@ TlbiOp64::tlbiVa(ThreadContext *tc, RegVal value,
 
 void
 TlbiOp64::tlbiVaa(ThreadContext *tc, RegVal value,
-    bool secure, TranslationRegime regime, bool shareable, bool last_level,
-    TlbiAttr attrs)
+    SecurityState ss, TranslationRegime regime, bool shareable,
+    bool last_level, TlbiAttr attrs)
 {
-    TLBIMVAA tlbi_op(regime, secure,
+    TLBIMVAA tlbi_op(regime, ss,
         static_cast<Addr>(bits(value, 43, 0)) << 12, last_level,
         attrs);
-
     if (shareable) {
         tlbi_op.broadcast(tc);
     } else {
@@ -319,14 +318,14 @@ TlbiOp64::tlbiVaa(ThreadContext *tc, RegVal value,
 
 void
 TlbiOp64::tlbiAsid(ThreadContext *tc, RegVal value,
-    bool secure, TranslationRegime regime, bool shareable,
+    SecurityState ss, TranslationRegime regime, bool shareable,
     TlbiAttr attrs)
 {
     bool asid_16bits = ArmSystem::haveLargeAsid64(tc);
     auto asid = asid_16bits ? bits(value, 63, 48) :
                               bits(value, 55, 48);
 
-    TLBIASID tlbi_op(regime, secure, asid, attrs);
+    TLBIASID tlbi_op(regime, ss, asid, attrs);
     if (shareable) {
         tlbi_op.broadcast(tc);
     } else {
@@ -336,20 +335,17 @@ TlbiOp64::tlbiAsid(ThreadContext *tc, RegVal value,
 
 void
 TlbiOp64::tlbiIpaS2(ThreadContext *tc, RegVal value,
-    bool secure, TranslationRegime regime, bool shareable, bool last_level,
-    TlbiAttr attrs)
+    SecurityState ss, TranslationRegime regime, bool shareable,
+    bool last_level, TlbiAttr attrs)
 {
     if (EL2Enabled(tc)) {
-        auto isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
-        auto release = isa->getRelease();
-
-        SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-        bool secure = release->has(ArmExtension::SECURITY) &&
-            !scr.ns && !bits(value, 63);
+        if (ss == SecurityState::Secure && bits(value, 63)) {
+            ss = SecurityState::NonSecure;
+        }
 
         const int top_bit = ArmSystem::physAddrRange(tc) == 52 ?
             39 : 35;
-        TLBIIPA tlbi_op(TranslationRegime::EL10, secure,
+        TLBIIPA tlbi_op(TranslationRegime::EL10, ss,
             static_cast<Addr>(bits(value, top_bit, 0)) << 12,
             last_level, attrs);
 
@@ -363,10 +359,10 @@ TlbiOp64::tlbiIpaS2(ThreadContext *tc, RegVal value,
 
 void
 TlbiOp64::tlbiRvaa(ThreadContext *tc, RegVal value,
-    bool secure, TranslationRegime regime, bool shareable, bool last_level,
-    TlbiAttr attrs)
+    SecurityState ss, TranslationRegime regime, bool shareable,
+    bool last_level, TlbiAttr attrs)
 {
-    TLBIRMVAA tlbi_op(regime, secure, value, last_level, attrs);
+    TLBIRMVAA tlbi_op(regime, ss, value, last_level, attrs);
     if (shareable) {
         tlbi_op.broadcast(tc);
     } else {
@@ -376,7 +372,7 @@ TlbiOp64::tlbiRvaa(ThreadContext *tc, RegVal value,
 
 void
 TlbiOp64::tlbiRva(ThreadContext *tc, RegVal value,
-    bool secure, TranslationRegime regime, bool shareable, bool last_level,
+    SecurityState ss, TranslationRegime regime, bool shareable, bool last_level,
     TlbiAttr attrs)
 {
     if (MMU::hasUnprivRegime(regime)) {
@@ -385,30 +381,28 @@ TlbiOp64::tlbiRva(ThreadContext *tc, RegVal value,
         auto asid = asid_16bits ? bits(value, 63, 48) :
                                   bits(value, 55, 48);
 
-        TLBIRMVA tlbi_op(regime, secure, value, asid, last_level, attrs);
+        TLBIRMVA tlbi_op(regime, ss, value, asid, last_level, attrs);
         if (shareable) {
             tlbi_op.broadcast(tc);
         } else {
             tlbi_op(tc);
         }
     } else {
-        tlbiRvaa(tc, value, secure, regime, shareable, last_level, attrs);
+        tlbiRvaa(tc, value, ss, regime, shareable, last_level, attrs);
     }
 }
 
 void
 TlbiOp64::tlbiRipaS2(ThreadContext *tc, RegVal value,
-    bool secure, TranslationRegime regime, bool shareable, bool last_level,
-    TlbiAttr attrs)
+    SecurityState ss, TranslationRegime regime, bool shareable,
+    bool last_level, TlbiAttr attrs)
 {
     if (EL2Enabled(tc)) {
-        auto isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
-        auto release = isa->getRelease();
-        SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-        bool secure = release->has(ArmExtension::SECURITY) &&
-            !scr.ns && !bits(value, 63);
+        if (ss == SecurityState::Secure && bits(value, 63)) {
+            ss = SecurityState::NonSecure;
+        }
 
-        TLBIRIPA tlbi_op(TranslationRegime::EL10, secure, value,
+        TLBIRIPA tlbi_op(TranslationRegime::EL10, ss, value,
             last_level, attrs);
 
         if (shareable) {
@@ -433,7 +427,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_ALLE3, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiAll(tc, value,
-                true, // secure
+                SecurityState::Secure, // secure
                 TranslationRegime::EL3, // regime
                 false); // shareable
         }
@@ -442,7 +436,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_ALLE3NXS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiAll(tc, value,
-                true, // secure
+                SecurityState::Secure, // secure
                 TranslationRegime::EL3, // regime
                 false, // shareable
                 TlbiAttr::ExcludeXS); // attrs
@@ -452,7 +446,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_ALLE3IS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiAll(tc, value,
-                true, // secure
+                SecurityState::Secure, // secure
                 TranslationRegime::EL3, // regime
                 true); // shareable
         }
@@ -461,7 +455,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_ALLE3ISNXS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiAll(tc, value,
-                true, // secure
+                SecurityState::Secure, // secure
                 TranslationRegime::EL3, // regime
                 true, // shareable
                 TlbiAttr::ExcludeXS); // attrs
@@ -471,7 +465,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_ALLE3OS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiAll(tc, value,
-                true, // secure
+                SecurityState::Secure, // secure
                 TranslationRegime::EL3, // regime
                 true); // shareable
         }
@@ -480,7 +474,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_ALLE3OSNXS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiAll(tc, value,
-                true, // secure
+                SecurityState::Secure, // secure
                 TranslationRegime::EL3, // regime
                 true, // shareable
                 TlbiAttr::ExcludeXS); // attrs
@@ -494,7 +488,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
             TlbiOp64::tlbiAll(tc, value,
-                isSecureAtEL(tc, EL2), // secure
+                securityStateAtEL(tc, EL2), // secure
                 regime, // regime
                 false); // shareable
         }
@@ -506,7 +500,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
             TlbiOp64::tlbiAll(tc, value,
-                isSecureAtEL(tc, EL2), // secure
+                securityStateAtEL(tc, EL2), // secure
                 regime, // regime
                 false, // shareable
                 TlbiAttr::ExcludeXS); // attrs
@@ -519,7 +513,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
             TlbiOp64::tlbiAll(tc, value,
-                isSecureAtEL(tc, EL2), // secure
+                securityStateAtEL(tc, EL2), // secure
                 regime, // regime
                 true); // shareable
         }
@@ -531,7 +525,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
             TlbiOp64::tlbiAll(tc, value,
-                isSecureAtEL(tc, EL2), // secure
+                securityStateAtEL(tc, EL2), // secure
                 regime, // regime
                 true, // shareable
                 TlbiAttr::ExcludeXS); // attrs
@@ -544,7 +538,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
             TlbiOp64::tlbiAll(tc, value,
-                isSecureAtEL(tc, EL2), // secure
+                securityStateAtEL(tc, EL2), // secure
                 regime, // regime
                 true); // shareable
         }
@@ -556,7 +550,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
             TlbiOp64::tlbiAll(tc, value,
-                isSecureAtEL(tc, EL2), // secure
+                securityStateAtEL(tc, EL2), // secure
                 regime, // regime
                 true, // shareable
                 TlbiAttr::ExcludeXS); // attrs
@@ -566,7 +560,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_ALLE1, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiAll(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 false); // shareable
         }
@@ -575,7 +569,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_ALLE1NXS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiAll(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 false, // shareable
                 TlbiAttr::ExcludeXS); // attrs
@@ -585,7 +579,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_ALLE1IS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiAll(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true); // shareable
         }
@@ -594,7 +588,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_ALLE1ISNXS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiAll(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true, // shareable
                 TlbiAttr::ExcludeXS); // attrs
@@ -604,7 +598,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_ALLE1OS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiAll(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true); // shareable
         }
@@ -613,7 +607,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_ALLE1OSNXS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiAll(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true, // shareable
                 TlbiAttr::ExcludeXS); // attrs
@@ -635,7 +629,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 hcr.fb && !hcr.tge;
 
             TlbiOp64::tlbiVmall(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 shareable, // shareable
                 false, // stage2
@@ -654,7 +648,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 hcr.fb && !hcr.tge;
 
             TlbiOp64::tlbiVmall(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 shareable, // shareable
                 false, // stage2
@@ -671,7 +665,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TlbiAttr::ExcludeXS : TlbiAttr::None;
 
             TlbiOp64::tlbiVmall(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 false, // stage2
@@ -685,7 +679,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
             TlbiOp64::tlbiVmall(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 false, // stage2
@@ -702,7 +696,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TlbiAttr::ExcludeXS : TlbiAttr::None;
 
             TlbiOp64::tlbiVmall(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 false, // stage2
@@ -716,7 +710,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
             TlbiOp64::tlbiVmall(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 false, // stage2
@@ -727,7 +721,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_VMALLS12E1, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiVmall(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 false, // shareable
                 true); // stage2
@@ -737,7 +731,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_VMALLS12E1NXS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiVmall(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 false, // shareable
                 true, // stage2
@@ -748,7 +742,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_VMALLS12E1IS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiVmall(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true, // shareable
                 true); // stage2
@@ -758,7 +752,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_VMALLS12E1ISNXS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiVmall(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true, // shareable
                 true, // stage2
@@ -769,7 +763,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_VMALLS12E1OS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiVmall(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true, // shareable
                 true); // stage2
@@ -779,7 +773,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_VMALLS12E1OSNXS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiVmall(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true, // shareable
                 true, // stage2
@@ -791,7 +785,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_VAE3, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiVa(tc, value,
-                true, // secure
+                SecurityState::Secure, // secure
                 TranslationRegime::EL3, // regime
                 false, // shareable
                 false); // last level only
@@ -801,7 +795,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_VAE3NXS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiVa(tc, value,
-                true, // secure
+                SecurityState::Secure, // secure
                 TranslationRegime::EL3, // regime
                 false, // shareable
                 false, // last level only
@@ -813,7 +807,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_VAE3IS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiVa(tc, value,
-                true, // secure
+                SecurityState::Secure, // secure
                 TranslationRegime::EL3, // regime
                 true, // shareable
                 false); // last level only
@@ -823,7 +817,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_VAE3ISNXS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiVa(tc, value,
-                true, // secure
+                SecurityState::Secure, // secure
                 TranslationRegime::EL3, // regime
                 true, // shareable
                 false, // last level only
@@ -834,7 +828,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_VAE3OS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiVa(tc, value,
-                true, // secure
+                SecurityState::Secure, // secure
                 TranslationRegime::EL3, // regime
                 true, // shareable
                 false); // last level only
@@ -844,7 +838,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_VAE3OSNXS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiVa(tc, value,
-                true,           // secure
+                SecurityState::Secure, // secure
                 TranslationRegime::EL3,            // regime
                 true,           // shareable
                 false,         // last level only
@@ -856,7 +850,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_VALE3, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiVa(tc, value,
-                true, // secure
+                SecurityState::Secure, // secure
                 TranslationRegime::EL3, // regime
                 false, // shareable
                 true); // last level only
@@ -866,7 +860,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_VALE3NXS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiVa(tc, value,
-                true,           // secure
+                SecurityState::Secure, // secure
                 TranslationRegime::EL3,            // regime
                 false,          // shareable
                 true,          // last level only
@@ -878,7 +872,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_VALE3IS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiVa(tc, value,
-                true, // secure
+                SecurityState::Secure, // secure
                 TranslationRegime::EL3, // regime
                 true, // shareable
                 true); // last level only
@@ -888,7 +882,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_VALE3ISNXS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiVa(tc, value,
-                true,           // secure
+                SecurityState::Secure, // secure
                 TranslationRegime::EL3,            // regime
                 true,           // shareable
                 true,          // last level only
@@ -900,7 +894,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_VALE3OS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiVa(tc, value,
-                true, // secure
+                SecurityState::Secure, // secure
                 TranslationRegime::EL3, // regime
                 true, // shareable
                 true); // last level only
@@ -910,7 +904,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_VALE3OSNXS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiVa(tc, value,
-                true,           // secure
+                SecurityState::Secure,           // secure
                 TranslationRegime::EL3,            // regime
                 true,           // shareable
                 true,          // last level only
@@ -924,7 +918,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
             TlbiOp64::tlbiVa(tc, value,
-                isSecureAtEL(tc, EL2), // secure
+                securityStateAtEL(tc, EL2), // secure
                 regime, // regime
                 false, // shareable
                 false); // last level only
@@ -937,7 +931,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
             TlbiOp64::tlbiVa(tc, value,
-                isSecureAtEL(tc, EL2), // secure
+                securityStateAtEL(tc, EL2), // secure
                 regime,               // regime
                 false,             // shareable
                 false,            // last level only
@@ -948,7 +942,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_VAE2IS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiVa(tc, value,
-                isSecureAtEL(tc, EL2), // secure
+                securityStateAtEL(tc, EL2), // secure
                 TranslationRegime::EL2, // regime
                 true, // shareable
                 false); // last level only
@@ -958,7 +952,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_VAE2ISNXS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiVa(tc, value,
-                isSecureAtEL(tc, EL2), // secure
+                securityStateAtEL(tc, EL2), // secure
                 TranslationRegime::EL2,               // regime
                 true,              // shareable
                 false,            // last level only
@@ -970,7 +964,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_VAE2OS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiVa(tc, value,
-                isSecureAtEL(tc,EL2), // secure
+                securityStateAtEL(tc,EL2), // secure
                 TranslationRegime::EL2, // regime
                 true, // shareable
                 false); // last level only
@@ -980,7 +974,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_VAE2OSNXS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiVa(tc, value,
-                isSecureAtEL(tc,EL2), // secure
+                securityStateAtEL(tc,EL2), // secure
                 TranslationRegime::EL2,               // regime
                 true,              // shareable
                 false,            // last level only
@@ -995,7 +989,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
             TlbiOp64::tlbiVa(tc, value,
-                isSecureAtEL(tc, EL2), // secure
+                securityStateAtEL(tc, EL2), // secure
                 regime, // regime
                 false, // shareable
                 true); // last level only
@@ -1008,7 +1002,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
             TlbiOp64::tlbiVa(tc, value,
-                isSecureAtEL(tc, EL2), // secure
+                securityStateAtEL(tc, EL2), // secure
                 regime,               // regime
                 false,             // shareable
                 true,            // last level only
@@ -1022,7 +1016,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
             TlbiOp64::tlbiVa(tc, value,
-                isSecureAtEL(tc, EL2), // secure
+                securityStateAtEL(tc, EL2), // secure
                 regime, // regime
                 true, // shareable
                 true); // last level only
@@ -1035,7 +1029,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
             TlbiOp64::tlbiVa(tc, value,
-                isSecureAtEL(tc, EL2), // secure
+                securityStateAtEL(tc, EL2), // secure
                 regime,               // regime
                 true,             // shareable
                 true,            // last level only
@@ -1049,7 +1043,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
             TlbiOp64::tlbiVa(tc, value,
-                isSecureAtEL(tc, EL2), // secure
+                securityStateAtEL(tc, EL2), // secure
                 regime, // regime
                 true, // shareable
                 true); // last level only
@@ -1062,7 +1056,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
             TlbiOp64::tlbiVa(tc, value,
-                isSecureAtEL(tc, EL2), // secure
+                securityStateAtEL(tc, EL2), // secure
                 regime,               // regime
                 true,             // shareable
                 true,            // last level only
@@ -1084,7 +1078,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 hcr.fb && !hcr.tge;
 
             TlbiOp64::tlbiVa(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 shareable, // shareable
                 false, // last level only
@@ -1103,7 +1097,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 hcr.fb && !hcr.tge;
 
             TlbiOp64::tlbiVa(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 shareable, // shareable
                 false, // last level only
@@ -1120,7 +1114,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TlbiAttr::ExcludeXS : TlbiAttr::None;
 
             TlbiOp64::tlbiVa(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 false, // last level only
@@ -1134,7 +1128,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
             TlbiOp64::tlbiVa(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 false, // last level only
@@ -1151,7 +1145,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TlbiAttr::ExcludeXS : TlbiAttr::None;
 
             TlbiOp64::tlbiVa(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 false, // last level only
@@ -1165,7 +1159,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
             TlbiOp64::tlbiVa(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 false, // last level only
@@ -1182,7 +1176,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TlbiAttr::ExcludeXS : TlbiAttr::None;
 
             TlbiOp64::tlbiVa(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 false, // shareable
                 true, // last level only
@@ -1201,7 +1195,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 hcr.fb && !hcr.tge;
 
             TlbiOp64::tlbiVa(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 shareable, // shareable
                 true, // last level only
@@ -1218,7 +1212,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TlbiAttr::ExcludeXS : TlbiAttr::None;
 
             TlbiOp64::tlbiVa(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 true, // last level only
@@ -1232,7 +1226,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
             TlbiOp64::tlbiVa(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 true, // last level only
@@ -1249,7 +1243,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TlbiAttr::ExcludeXS : TlbiAttr::None;
 
             TlbiOp64::tlbiVa(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 true, // last level only
@@ -1263,7 +1257,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
             TlbiOp64::tlbiVa(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 true, // last level only
@@ -1285,7 +1279,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 hcr.fb && !hcr.tge;
 
             TlbiOp64::tlbiAsid(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 shareable, // shareable
                 attrs); // attrs
@@ -1303,7 +1297,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 hcr.fb && !hcr.tge;
 
             TlbiOp64::tlbiAsid(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 shareable, // shareable
                 TlbiAttr::ExcludeXS); // attrs
@@ -1319,7 +1313,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TlbiAttr::ExcludeXS : TlbiAttr::None;
 
             TlbiOp64::tlbiAsid(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 attrs); // attrs
@@ -1332,7 +1326,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
             TlbiOp64::tlbiAsid(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 TlbiAttr::ExcludeXS); // attrs
@@ -1348,7 +1342,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TlbiAttr::ExcludeXS : TlbiAttr::None;
 
             TlbiOp64::tlbiAsid(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 attrs); // attrs
@@ -1361,7 +1355,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
             TlbiOp64::tlbiAsid(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 TlbiAttr::ExcludeXS); // attrs
@@ -1382,7 +1376,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 hcr.fb && !hcr.tge;
 
             TlbiOp64::tlbiVaa(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 shareable, // shareable
                 false, // last level only
@@ -1401,7 +1395,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 hcr.fb && !hcr.tge;
 
             TlbiOp64::tlbiVaa(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 shareable, // shareable
                 false, // last level
@@ -1418,7 +1412,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TlbiAttr::ExcludeXS : TlbiAttr::None;
 
             TlbiOp64::tlbiVaa(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 false, // last level only
@@ -1432,7 +1426,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
             TlbiOp64::tlbiVaa(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 false, // last level
@@ -1449,7 +1443,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TlbiAttr::ExcludeXS : TlbiAttr::None;
 
             TlbiOp64::tlbiVaa(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 false, // last level only
@@ -1463,7 +1457,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
             TlbiOp64::tlbiVaa(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 false, // last level
@@ -1485,7 +1479,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 hcr.fb && !hcr.tge;
 
             TlbiOp64::tlbiVaa(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 shareable, // shareable
                 true, // last level only
@@ -1504,7 +1498,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 hcr.fb && !hcr.tge;
 
             TlbiOp64::tlbiVaa(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 shareable, // shareable
                 true, // last level
@@ -1521,7 +1515,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TlbiAttr::ExcludeXS : TlbiAttr::None;
 
             TlbiOp64::tlbiVaa(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 true, // last level only
@@ -1535,7 +1529,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
             TlbiOp64::tlbiVaa(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 true, // last level
@@ -1552,7 +1546,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TlbiAttr::ExcludeXS : TlbiAttr::None;
 
             TlbiOp64::tlbiVaa(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 true, // last level only
@@ -1566,7 +1560,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
             TlbiOp64::tlbiVaa(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 true, // last level
@@ -1577,7 +1571,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_IPAS2E1, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiIpaS2(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 false, // shareable
                 false); // last level
@@ -1587,7 +1581,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_IPAS2E1NXS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiIpaS2(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 false, // shareable
                 false, // last level
@@ -1598,7 +1592,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_IPAS2E1IS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiIpaS2(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true, // shareable
                 false); // last level
@@ -1608,7 +1602,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_IPAS2E1ISNXS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiIpaS2(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true, // shareable
                 false, // last level
@@ -1620,7 +1614,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_IPAS2E1OS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiIpaS2(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true, // shareable
                 false); // last level
@@ -1630,7 +1624,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_IPAS2E1OSNXS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiIpaS2(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true, // shareable
                 false, // last level
@@ -1641,7 +1635,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_IPAS2LE1, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiIpaS2(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 false, // shareable
                 true); // last level
@@ -1651,7 +1645,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_IPAS2LE1NXS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiIpaS2(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 false, // shareable
                 true, // last level
@@ -1663,7 +1657,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_IPAS2LE1IS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiIpaS2(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true, // shareable
                 true); // last level
@@ -1673,7 +1667,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_IPAS2LE1ISNXS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiIpaS2(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true, // shareable
                 true, // last level
@@ -1685,7 +1679,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_IPAS2LE1OS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiIpaS2(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true, // shareable
                 true); // last level
@@ -1695,7 +1689,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_IPAS2LE1OSNXS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiIpaS2(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true, // shareable
                 true, // last level
@@ -1718,7 +1712,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 hcr.fb && !hcr.tge;
 
             TlbiOp64::tlbiRva(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 shareable, // shareable
                 false, // last level only
@@ -1737,7 +1731,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 hcr.fb && !hcr.tge;
 
             TlbiOp64::tlbiRva(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 shareable, // shareable
                 false, // last level only
@@ -1754,7 +1748,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TlbiAttr::ExcludeXS : TlbiAttr::None;
 
             TlbiOp64::tlbiRva(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 false, // last level only
@@ -1768,7 +1762,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
             TlbiOp64::tlbiRva(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 false, // last level only
@@ -1785,7 +1779,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TlbiAttr::ExcludeXS : TlbiAttr::None;
 
             TlbiOp64::tlbiRva(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 false, // last level only
@@ -1799,7 +1793,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
             TlbiOp64::tlbiRva(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 false, // last level only
@@ -1821,7 +1815,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 hcr.fb && !hcr.tge;
 
             TlbiOp64::tlbiRvaa(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 shareable, // shareable
                 false, // last level only
@@ -1840,7 +1834,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 hcr.fb && !hcr.tge;
 
             TlbiOp64::tlbiRvaa(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 shareable, // shareable
                 false, // last level only
@@ -1857,7 +1851,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TlbiAttr::ExcludeXS : TlbiAttr::None;
 
             TlbiOp64::tlbiRvaa(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 false, // last level only
@@ -1871,7 +1865,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
             TlbiOp64::tlbiRvaa(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 false, // last level only
@@ -1889,7 +1883,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TlbiAttr::ExcludeXS : TlbiAttr::None;
 
             TlbiOp64::tlbiRvaa(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 false, // last level only
@@ -1903,7 +1897,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
             TlbiOp64::tlbiRvaa(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 false, // last level only
@@ -1925,7 +1919,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 hcr.fb && !hcr.tge;
 
             TlbiOp64::tlbiRva(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 shareable, // shareable
                 true, // last level only
@@ -1944,7 +1938,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 hcr.fb && !hcr.tge;
 
             TlbiOp64::tlbiRva(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 shareable, // shareable
                 true, // last level only
@@ -1961,7 +1955,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TlbiAttr::ExcludeXS : TlbiAttr::None;
 
             TlbiOp64::tlbiRva(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 true, // last level only
@@ -1975,7 +1969,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
             TlbiOp64::tlbiRva(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 true, // last level only
@@ -1992,7 +1986,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TlbiAttr::ExcludeXS : TlbiAttr::None;
 
             TlbiOp64::tlbiRva(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 true, // last level only
@@ -2006,7 +2000,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
             TlbiOp64::tlbiRva(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 true, // last level only
@@ -2028,7 +2022,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 hcr.fb && !hcr.tge;
 
             TlbiOp64::tlbiRvaa(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 shareable, // shareable
                 true, // last level only
@@ -2047,7 +2041,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 hcr.fb && !hcr.tge;
 
             TlbiOp64::tlbiRvaa(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 shareable, // shareable
                 true, // last level only
@@ -2064,7 +2058,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TlbiAttr::ExcludeXS : TlbiAttr::None;
 
             TlbiOp64::tlbiRvaa(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 true, // last level only
@@ -2078,7 +2072,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
             TlbiOp64::tlbiRvaa(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 true, // last level only
@@ -2095,7 +2089,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TlbiAttr::ExcludeXS : TlbiAttr::None;
 
             TlbiOp64::tlbiRvaa(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 true, // last level only
@@ -2109,7 +2103,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL10;
 
             TlbiOp64::tlbiRvaa(tc, value,
-                isSecureAtEL(tc, translationEl(regime)), // secure
+                securityStateAtEL(tc, translationEl(regime)), // secure
                 regime, // regime
                 true, // shareable
                 true, // last level only
@@ -2120,7 +2114,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_RIPAS2E1, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiRipaS2(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 false, // shareable
                 false); // last level only
@@ -2130,7 +2124,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_RIPAS2E1NXS, [](ThreadContext *tc, RegVal value)
         {
             tlbiRipaS2(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 false, // shareable
                 false, // last level only
@@ -2142,7 +2136,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_RIPAS2E1IS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiRipaS2(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true, // shareable
                 false); // last level only
@@ -2152,7 +2146,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_RIPAS2E1ISNXS, [](ThreadContext *tc, RegVal value)
         {
             tlbiRipaS2(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true, // shareable
                 false, // last level only
@@ -2163,7 +2157,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_RIPAS2E1OS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiRipaS2(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true, // shareable
                 false); // last level only
@@ -2173,7 +2167,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_RIPAS2E1OSNXS, [](ThreadContext *tc, RegVal value)
         {
             tlbiRipaS2(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true, // shareable
                 false, // last level only
@@ -2184,7 +2178,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_RIPAS2E1OS, [](ThreadContext *tc, RegVal value)
         {
             tlbiRipaS2(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true, // shareable
                 false); // last level only
@@ -2194,7 +2188,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_RIPAS2E1OSNXS, [](ThreadContext *tc, RegVal value)
         {
             tlbiRipaS2(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true, // shareable
                 false, // last level only
@@ -2205,7 +2199,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_RIPAS2LE1, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiRipaS2(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 false, // shareable
                 true); // last level only
@@ -2215,7 +2209,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_RIPAS2LE1NXS, [](ThreadContext *tc, RegVal value)
         {
             tlbiRipaS2(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 false, // shareable
                 true, // last level only
@@ -2226,7 +2220,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_RIPAS2LE1IS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiRipaS2(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true, // shareable
                 true); // last level only
@@ -2236,7 +2230,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_RIPAS2LE1ISNXS, [](ThreadContext *tc, RegVal value)
         {
             tlbiRipaS2(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true, // shareable
                 true, // last level only
@@ -2247,7 +2241,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_RIPAS2LE1OS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiRipaS2(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true, // shareable
                 true); // last level only
@@ -2257,7 +2251,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_RIPAS2LE1OSNXS, [](ThreadContext *tc, RegVal value)
         {
             tlbiRipaS2(tc, value,
-                isSecureAtEL(tc, EL1), // secure
+                securityStateAtEL(tc, EL1), // secure
                 TranslationRegime::EL10, // regime
                 true, // shareable
                 true, // last level only
@@ -2271,7 +2265,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
             TlbiOp64::tlbiRva(tc, value,
-                isSecureAtEL(tc, EL2), // secure
+                securityStateAtEL(tc, EL2), // secure
                 regime, // regime
                 false, // shareable
                 false); // last level only
@@ -2284,7 +2278,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
             TlbiOp64::tlbiRva(tc, value,
-                isSecureAtEL(tc, EL2), // secure
+                securityStateAtEL(tc, EL2), // secure
                 regime, // regime
                 false, // shareable
                 false, // last level only
@@ -2298,7 +2292,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
             TlbiOp64::tlbiRva(tc, value,
-                isSecureAtEL(tc, EL2), // secure
+                securityStateAtEL(tc, EL2), // secure
                 regime, // regime
                 true, // shareable
                 false); // last level only
@@ -2311,7 +2305,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
             TlbiOp64::tlbiRva(tc, value,
-                isSecureAtEL(tc, EL2), // secure
+                securityStateAtEL(tc, EL2), // secure
                 regime, // regime
                 true, // shareable
                 false, // last level only
@@ -2325,7 +2319,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
             TlbiOp64::tlbiRva(tc, value,
-                isSecureAtEL(tc, EL2), // secure
+                securityStateAtEL(tc, EL2), // secure
                 regime, // regime
                 true, // shareable
                 false); // last level only
@@ -2338,7 +2332,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
             TlbiOp64::tlbiRva(tc, value,
-                isSecureAtEL(tc, EL2), // secure
+                securityStateAtEL(tc, EL2), // secure
                 regime, // regime
                 true, // shareable
                 false, // last level only
@@ -2352,7 +2346,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
             TlbiOp64::tlbiRva(tc, value,
-                isSecureAtEL(tc, EL2), // secure
+                securityStateAtEL(tc, EL2), // secure
                 regime, // regime
                 false, // shareable
                 true); // last level only
@@ -2365,7 +2359,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
             TlbiOp64::tlbiRva(tc, value,
-                isSecureAtEL(tc, EL2), // secure
+                securityStateAtEL(tc, EL2), // secure
                 regime, // regime
                 false, // shareable
                 true, // last level only
@@ -2379,7 +2373,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
             TlbiOp64::tlbiRva(tc, value,
-                isSecureAtEL(tc, EL2), // secure
+                securityStateAtEL(tc, EL2), // secure
                 regime, // regime
                 true, // shareable
                 true); // last level only
@@ -2392,7 +2386,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
             TlbiOp64::tlbiRva(tc, value,
-                isSecureAtEL(tc, EL2), // secure
+                securityStateAtEL(tc, EL2), // secure
                 regime, // regime
                 true, // shareable
                 true, // last level only
@@ -2406,7 +2400,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
             TlbiOp64::tlbiRva(tc, value,
-                isSecureAtEL(tc, EL2), // secure
+                securityStateAtEL(tc, EL2), // secure
                 regime, // regime
                 true, // shareable
                 true); // last level only
@@ -2419,7 +2413,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
                 TranslationRegime::EL20 : TranslationRegime::EL2;
 
             TlbiOp64::tlbiRva(tc, value,
-                isSecureAtEL(tc, EL2), // secure
+                securityStateAtEL(tc, EL2), // secure
                 regime, // regime
                 true, // shareable
                 true, // last level only
@@ -2430,7 +2424,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_RVAE3, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiRva(tc, value,
-                isSecureAtEL(tc, EL3), // secure
+                securityStateAtEL(tc, EL3), // secure
                 TranslationRegime::EL3, // regime
                 false, // shareable
                 false); // last level only
@@ -2440,7 +2434,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_RVAE3NXS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiRva(tc, value,
-                isSecureAtEL(tc, EL3), // secure
+                securityStateAtEL(tc, EL3), // secure
                 TranslationRegime::EL3, // regime
                 false, // shareable
                 false, // last level only
@@ -2451,7 +2445,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_RVAE3IS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiRva(tc, value,
-                isSecureAtEL(tc, EL3), // secure
+                securityStateAtEL(tc, EL3), // secure
                 TranslationRegime::EL3, // regime
                 true, // shareable
                 false); // last level only
@@ -2461,7 +2455,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_RVAE3ISNXS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiRva(tc, value,
-                isSecureAtEL(tc, EL3), // secure
+                securityStateAtEL(tc, EL3), // secure
                 TranslationRegime::EL3, // regime
                 true, // shareable
                 false, // last level only
@@ -2472,7 +2466,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_RVAE3OS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiRva(tc, value,
-                isSecureAtEL(tc, EL3), // secure
+                securityStateAtEL(tc, EL3), // secure
                 TranslationRegime::EL3, // regime
                 true, // shareable
                 false); // last level only
@@ -2482,7 +2476,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_RVAE3OSNXS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiRva(tc, value,
-                isSecureAtEL(tc, EL3), // secure
+                securityStateAtEL(tc, EL3), // secure
                 TranslationRegime::EL3, // regime
                 true, // shareable
                 false, // last level only
@@ -2493,7 +2487,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_RVALE3, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiRva(tc, value,
-                isSecureAtEL(tc, EL3), // secure
+                securityStateAtEL(tc, EL3), // secure
                 TranslationRegime::EL3, // regime
                 false, // shareable
                 true); // last level only
@@ -2503,7 +2497,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_RVALE3NXS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiRva(tc, value,
-                isSecureAtEL(tc, EL3), // secure
+                securityStateAtEL(tc, EL3), // secure
                 TranslationRegime::EL3, // regime
                 false, // shareable
                 true, // last level only
@@ -2514,7 +2508,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_RVALE3IS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiRva(tc, value,
-                isSecureAtEL(tc, EL3), // secure
+                securityStateAtEL(tc, EL3), // secure
                 TranslationRegime::EL3, // regime
                 true, // shareable
                 true); // last level only
@@ -2524,7 +2518,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_RVALE3ISNXS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiRva(tc, value,
-                isSecureAtEL(tc, EL3), // secure
+                securityStateAtEL(tc, EL3), // secure
                 TranslationRegime::EL3, // regime
                 true, // shareable
                 true, // last level only
@@ -2535,7 +2529,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_RVALE3OS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiRva(tc, value,
-                isSecureAtEL(tc, EL3), // secure
+                securityStateAtEL(tc, EL3), // secure
                 TranslationRegime::EL3, // regime
                 true, // shareable
                 true); // last level only
@@ -2545,7 +2539,7 @@ std::unordered_map<MiscRegIndex, TlbiOp64::TlbiFunc> TlbiOp64::tlbiOps = {
     { MISCREG_TLBI_RVALE3OSNXS, [](ThreadContext *tc, RegVal value)
         {
             TlbiOp64::tlbiRva(tc, value,
-                isSecureAtEL(tc, EL3), // secure
+                securityStateAtEL(tc, EL3), // secure
                 TranslationRegime::EL3, // regime
                 true, // shareable
                 true, // last level only

@@ -160,15 +160,16 @@ TLB::lookup(const Lookup &lookup_data)
 
     TlbEntry *retval = match(lookup_data);
 
-    DPRINTF(TLBVerbose, "Lookup %#x, asn %#x -> %s vmn 0x%x secure %d "
-            "ppn %#x size: %#x pa: %#x ap:%d ns:%d nstid:%d g:%d asid: %d "
+    DPRINTF(TLBVerbose, "Lookup %#x, asn %#x -> %s vmn 0x%x ss %s "
+            "ppn %#x size: %#x pa: %#x ap:%d ns:%d ss:%s g:%d asid: %d "
             "xs: %d regime: %s\n",
             lookup_data.va, lookup_data.asn, retval ? "hit" : "miss",
-            lookup_data.vmid, lookup_data.secure,
+            lookup_data.vmid, lookup_data.ss,
             retval ? retval->pfn       : 0, retval ? retval->size  : 0,
             retval ? retval->pAddr(lookup_data.va) : 0,
             retval ? retval->ap        : 0,
-            retval ? retval->ns        : 0, retval ? retval->nstid : 0,
+            retval ? retval->ns        : 0,
+            retval ? retval->ss : SecurityState::NonSecure,
             retval ? retval->global    : 0, retval ? retval->asid  : 0,
             retval ? retval->xs : 0,
             retval ? regimeToStr(retval->regime) : "None");
@@ -243,19 +244,19 @@ TLB::insert(TlbEntry &entry)
 {
     DPRINTF(TLB, "Inserting entry into TLB with pfn:%#x size:%#x vpn: %#x"
             " asid:%d vmid:%d N:%d global:%d valid:%d nc:%d xn:%d"
-            " ap:%#x domain:%#x ns:%d nstid:%d, xs:%d regime: %s\n", entry.pfn,
+            " ap:%#x domain:%#x ns:%d ss:%s xs:%d regime: %s\n", entry.pfn,
             entry.size, entry.vpn, entry.asid, entry.vmid, entry.N,
             entry.global, entry.valid, entry.nonCacheable, entry.xn,
             entry.ap, static_cast<uint8_t>(entry.domain), entry.ns,
-            entry.nstid, entry.xs, regimeToStr(entry.regime));
+            entry.ss, entry.xs, regimeToStr(entry.regime));
 
     if (table[size - 1].valid)
         DPRINTF(TLB, " - Replacing Valid entry %#x, asn %d vmn %d ppn %#x "
-                "size: %#x ap:%d ns:%d nstid:%d g:%d xs:%d regime: %s\n",
+                "size: %#x ap:%d ns:%d ss:%s g:%d xs:%d regime: %s\n",
                 table[size-1].vpn << table[size-1].N, table[size-1].asid,
                 table[size-1].vmid, table[size-1].pfn << table[size-1].N,
                 table[size-1].size, table[size-1].ap, table[size-1].ns,
-                table[size-1].nstid, table[size-1].global,
+                table[size-1].ss, table[size-1].global,
                 table[size-1].xs, regimeToStr(table[size-1].regime));
 
     // inserting to MRU position and evicting the LRU one

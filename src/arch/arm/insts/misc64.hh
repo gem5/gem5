@@ -292,40 +292,40 @@ class TlbiOp64 : public MiscRegRegImmOp64
     static std::unordered_map<ArmISA::MiscRegIndex, TlbiFunc> tlbiOps;
 
     static void tlbiAll(ThreadContext *tc, RegVal value,
-        bool secure, ArmISA::TranslationRegime regime, bool shareable,
-        TlbiAttr attrs=TlbiAttr::None);
+        ArmISA::SecurityState ss, ArmISA::TranslationRegime regime,
+        bool shareable, TlbiAttr attrs=TlbiAttr::None);
 
     static void tlbiVmall(ThreadContext *tc, RegVal value,
-        bool secure, ArmISA::TranslationRegime regime, bool shareable,
-        bool stage2=false, TlbiAttr attrs=TlbiAttr::None);
+        ArmISA::SecurityState ss, ArmISA::TranslationRegime regime,
+        bool shareable, bool stage2=false, TlbiAttr attrs=TlbiAttr::None);
 
     static void tlbiVa(ThreadContext *tc, RegVal value,
-        bool secure, ArmISA::TranslationRegime regime, bool shareable,
-        bool last_level, TlbiAttr attrs=TlbiAttr::None);
+        ArmISA::SecurityState ss, ArmISA::TranslationRegime regime,
+        bool shareable, bool last_level, TlbiAttr attrs=TlbiAttr::None);
 
     static void tlbiVaa(ThreadContext *tc, RegVal value,
-        bool secure, ArmISA::TranslationRegime regime, bool shareable,
-        bool last_level, TlbiAttr attrs=TlbiAttr::None);
+        ArmISA::SecurityState ss, ArmISA::TranslationRegime regime,
+        bool shareable, bool last_level, TlbiAttr attrs=TlbiAttr::None);
 
     static void tlbiAsid(ThreadContext *tc, RegVal value,
-        bool secure, ArmISA::TranslationRegime regime, bool shareable,
-        TlbiAttr attrs=TlbiAttr::None);
+        ArmISA::SecurityState ss, ArmISA::TranslationRegime regime,
+        bool shareable, TlbiAttr attrs=TlbiAttr::None);
 
     static void tlbiIpaS2(ThreadContext *tc, RegVal value,
-        bool secure, ArmISA::TranslationRegime regime, bool shareable,
-        bool last_level, TlbiAttr attrs=TlbiAttr::None);
+        ArmISA::SecurityState ss, ArmISA::TranslationRegime regime,
+        bool shareable, bool last_level, TlbiAttr attrs=TlbiAttr::None);
 
     static void tlbiRvaa(ThreadContext *tc, RegVal value,
-        bool secure, ArmISA::TranslationRegime regime, bool shareable,
-        bool last_level, TlbiAttr attrs=TlbiAttr::None);
+        ArmISA::SecurityState ss, ArmISA::TranslationRegime regime,
+        bool shareable, bool last_level, TlbiAttr attrs=TlbiAttr::None);
 
     static void tlbiRva(ThreadContext *tc, RegVal value,
-        bool secure, ArmISA::TranslationRegime regime, bool shareable,
-        bool last_level, TlbiAttr attrs=TlbiAttr::None);
+        ArmISA::SecurityState ss, ArmISA::TranslationRegime regime,
+        bool shareable,  bool last_level, TlbiAttr attrs=TlbiAttr::None);
 
     static void tlbiRipaS2(ThreadContext *tc, RegVal value,
-        bool secure, ArmISA::TranslationRegime regime, bool shareable,
-        bool last_level, TlbiAttr attrs=TlbiAttr::None);
+        ArmISA::SecurityState ss, ArmISA::TranslationRegime regime,
+        bool shareable, bool last_level, TlbiAttr attrs=TlbiAttr::None);
 
     static bool fnxsAttrs(ThreadContext *tc);
 
