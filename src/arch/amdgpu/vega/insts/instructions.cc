@@ -8129,6 +8129,40 @@ namespace VegaISA
 
         vdst.write();
     } // execute
+    // --- Inst_VOP2__V_FMAC_F32 class methods ---
+
+    Inst_VOP2__V_FMAC_F32::Inst_VOP2__V_FMAC_F32(InFmt_VOP2 *iFmt)
+        : Inst_VOP2(iFmt, "v_fmac_f32")
+    {
+        setFlag(ALU);
+    } // Inst_VOP2__V_FMAC_F32
+
+    Inst_VOP2__V_FMAC_F32::~Inst_VOP2__V_FMAC_F32()
+    {
+    } // ~Inst_VOP2__V_FMAC_F32
+
+    // --- description from .arch file ---
+    // D.u = S1.u - S0.u;
+    void
+    Inst_VOP2__V_FMAC_F32::execute(GPUDynInstPtr gpuDynInst)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+        ConstVecOperandU32 src0(gpuDynInst, instData.SRC0);
+        ConstVecOperandU32 src1(gpuDynInst, instData.VSRC1);
+        VecOperandU32 vdst(gpuDynInst, instData.VDST);
+
+        src0.readSrc();
+        src1.read();
+        vdst.read();
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                vdst[lane] = std::fma(src0[lane], src1[lane], vdst[lane]);
+            }
+        }
+
+        vdst.write();
+    } // execute
     // --- Inst_VOP1__V_NOP class methods ---
 
     Inst_VOP1__V_NOP::Inst_VOP1__V_NOP(InFmt_VOP1 *iFmt)
@@ -32671,7 +32705,7 @@ namespace VegaISA
                 for (int i = 0; i < 4 ; ++i) {
                     VecElemU32 permuted_val = permute(selector, 0xFF
                         & ((VecElemU32)src2[lane] >> (8 * i)));
-                    vdst[lane] |= (permuted_val << i);
+                    vdst[lane] |= (permuted_val << (8 * i));
                 }
 
                 DPRINTF(VEGA, "v_perm result: 0x%08x\n", vdst[lane]);
@@ -44497,6 +44531,66 @@ namespace VegaISA
     Inst_FLAT__FLAT_STORE_SHORT::completeAcc(GPUDynInstPtr gpuDynInst)
     {
     } // completeAcc
+    // --- Inst_FLAT__FLAT_STORE_SHORT_D16_HI class methods ---
+
+    Inst_FLAT__FLAT_STORE_SHORT_D16_HI::
+        Inst_FLAT__FLAT_STORE_SHORT_D16_HI(InFmt_FLAT *iFmt)
+        : Inst_FLAT(iFmt, "flat_store_short_d16_hi")
+    {
+        setFlag(MemoryRef);
+        setFlag(Store);
+    } // Inst_FLAT__FLAT_STORE_SHORT_D16_HI
+
+    Inst_FLAT__FLAT_STORE_SHORT_D16_HI::~Inst_FLAT__FLAT_STORE_SHORT_D16_HI()
+    {
+    } // ~Inst_FLAT__FLAT_STORE_SHORT_D16_HI
+
+    // --- description from .arch file ---
+    // Untyped buffer store short.
+    void
+    Inst_FLAT__FLAT_STORE_SHORT_D16_HI::execute(GPUDynInstPtr gpuDynInst)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        if (gpuDynInst->exec_mask.none()) {
+            wf->decVMemInstsIssued();
+            if (isFlat()) {
+                wf->decLGKMInstsIssued();
+            }
+            wf->decExpInstsIssued();
+            return;
+        }
+
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
+
+        ConstVecOperandU32 data(gpuDynInst, extData.DATA);
+
+        data.read();
+
+        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                (reinterpret_cast<VecElemU16*>(gpuDynInst->d_data))[lane]
+                    = (data[lane] >> 16);
+            }
+        }
+
+        issueRequestHelper(gpuDynInst);
+    } // execute
+
+    void
+    Inst_FLAT__FLAT_STORE_SHORT_D16_HI::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initMemWrite<VecElemU16>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_STORE_SHORT_D16_HI::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+    } // completeAcc
     // --- Inst_FLAT__FLAT_STORE_DWORD class methods ---
 
     Inst_FLAT__FLAT_STORE_DWORD::Inst_FLAT__FLAT_STORE_DWORD(InFmt_FLAT *iFmt)
@@ -44782,34 +44876,7 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_SWAP::execute(GPUDynInstPtr gpuDynInst)
     {
-        Wavefront *wf = gpuDynInst->wavefront();
-
-        if (gpuDynInst->exec_mask.none()) {
-            wf->decVMemInstsIssued();
-            if (isFlat()) {
-                wf->decLGKMInstsIssued();
-            }
-            return;
-        }
-
-        gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->latency.init(gpuDynInst->computeUnit());
-        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
-
-        ConstVecOperandU32 data(gpuDynInst, extData.DATA);
-
-        data.read();
-
-        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (gpuDynInst->exec_mask[lane]) {
-                (reinterpret_cast<VecElemU32*>(gpuDynInst->a_data))[lane]
-                    = data[lane];
-            }
-        }
-
-        issueRequestHelper(gpuDynInst);
+        atomicExecute<ConstVecOperandU32, VecElemU32>(gpuDynInst);
     } // execute
 
     void
@@ -44821,18 +44888,7 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_SWAP::completeAcc(GPUDynInstPtr gpuDynInst)
     {
-        if (isAtomicRet()) {
-            VecOperandU32 vdst(gpuDynInst, extData.VDST);
-
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (gpuDynInst->exec_mask[lane]) {
-                    vdst[lane] = (reinterpret_cast<VecElemU32*>(
-                        gpuDynInst->d_data))[lane];
-                }
-            }
-
-            vdst.write();
-        }
+        atomicComplete<VecOperandU32, VecElemU32>(gpuDynInst);
     } // completeAcc
 
     // --- Inst_FLAT__FLAT_ATOMIC_CMPSWAP class methods ---
@@ -44864,38 +44920,7 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_CMPSWAP::execute(GPUDynInstPtr gpuDynInst)
     {
-        Wavefront *wf = gpuDynInst->wavefront();
-
-        if (gpuDynInst->exec_mask.none()) {
-            wf->decVMemInstsIssued();
-            if (isFlat()) {
-                wf->decLGKMInstsIssued();
-            }
-            return;
-        }
-
-        gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->latency.init(gpuDynInst->computeUnit());
-        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
-
-        ConstVecOperandU32 data(gpuDynInst, extData.DATA);
-        ConstVecOperandU32 cmp(gpuDynInst, extData.DATA + 1);
-
-        data.read();
-        cmp.read();
-
-        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (gpuDynInst->exec_mask[lane]) {
-                (reinterpret_cast<VecElemU32*>(gpuDynInst->x_data))[lane]
-                    = data[lane];
-                (reinterpret_cast<VecElemU32*>(gpuDynInst->a_data))[lane]
-                    = cmp[lane];
-            }
-        }
-
-        issueRequestHelper(gpuDynInst);
+        atomicExecute<ConstVecOperandU32, VecElemU32, 1>(gpuDynInst);
     } // execute
 
     void
@@ -44907,18 +44932,7 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_CMPSWAP::completeAcc(GPUDynInstPtr gpuDynInst)
     {
-        if (isAtomicRet()) {
-            VecOperandU32 vdst(gpuDynInst, extData.VDST);
-
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (gpuDynInst->exec_mask[lane]) {
-                    vdst[lane] = (reinterpret_cast<VecElemU32*>(
-                        gpuDynInst->d_data))[lane];
-                }
-            }
-
-            vdst.write();
-        }
+        atomicComplete<VecOperandU32, VecElemU32>(gpuDynInst);
     } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_ADD class methods ---
 
@@ -44946,34 +44960,7 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_ADD::execute(GPUDynInstPtr gpuDynInst)
     {
-        Wavefront *wf = gpuDynInst->wavefront();
-
-        if (gpuDynInst->exec_mask.none()) {
-            wf->decVMemInstsIssued();
-            if (isFlat()) {
-                wf->decLGKMInstsIssued();
-            }
-            return;
-        }
-
-        gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->latency.init(gpuDynInst->computeUnit());
-        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
-
-        ConstVecOperandU32 data(gpuDynInst, extData.DATA);
-
-        data.read();
-
-        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (gpuDynInst->exec_mask[lane]) {
-                (reinterpret_cast<VecElemU32*>(gpuDynInst->a_data))[lane]
-                    = data[lane];
-            }
-        }
-
-        issueRequestHelper(gpuDynInst);
+        atomicExecute<ConstVecOperandU32, VecElemU32>(gpuDynInst);
     } // execute
 
     void
@@ -44985,18 +44972,7 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_ADD::completeAcc(GPUDynInstPtr gpuDynInst)
     {
-        if (isAtomicRet()) {
-            VecOperandU32 vdst(gpuDynInst, extData.VDST);
-
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (gpuDynInst->exec_mask[lane]) {
-                    vdst[lane] = (reinterpret_cast<VecElemU32*>(
-                        gpuDynInst->d_data))[lane];
-                }
-            }
-
-            vdst.write();
-        }
+        atomicComplete<VecOperandU32, VecElemU32>(gpuDynInst);
     } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_SUB class methods ---
 
@@ -45024,8 +45000,20 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_SUB::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        atomicExecute<ConstVecOperandU32, VecElemU32>(gpuDynInst);
     } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_SUB::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU32>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_SUB::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandU32, VecElemU32>(gpuDynInst);
+    } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_SMIN class methods ---
 
     Inst_FLAT__FLAT_ATOMIC_SMIN::Inst_FLAT__FLAT_ATOMIC_SMIN(InFmt_FLAT *iFmt)
@@ -45052,55 +45040,19 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_SMIN::execute(GPUDynInstPtr gpuDynInst)
     {
-        Wavefront *wf = gpuDynInst->wavefront();
-
-        if (gpuDynInst->exec_mask.none()) {
-            wf->decVMemInstsIssued();
-            wf->decLGKMInstsIssued();
-            return;
-        }
-
-        gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->latency.init(gpuDynInst->computeUnit());
-        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
-
-        ConstVecOperandU32 data(gpuDynInst, extData.DATA);
-
-        data.read();
-
-        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (gpuDynInst->exec_mask[lane]) {
-                (reinterpret_cast<VecElemU32*>(gpuDynInst->a_data))[lane]
-                    = data[lane];
-            }
-        }
-
-        issueRequestHelper(gpuDynInst);
+        atomicExecute<ConstVecOperandI32, VecElemI32>(gpuDynInst);
     } // execute
 
     void
     Inst_FLAT__FLAT_ATOMIC_SMIN::initiateAcc(GPUDynInstPtr gpuDynInst)
     {
-        initAtomicAccess<VecElemU32>(gpuDynInst);
+        initAtomicAccess<VecElemI32>(gpuDynInst);
     } // initiateAcc
 
     void
     Inst_FLAT__FLAT_ATOMIC_SMIN::completeAcc(GPUDynInstPtr gpuDynInst)
     {
-        if (isAtomicRet()) {
-            VecOperandU32 vdst(gpuDynInst, extData.VDST);
-
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (gpuDynInst->exec_mask[lane]) {
-                    vdst[lane] = (reinterpret_cast<VecElemU32*>(
-                        gpuDynInst->d_data))[lane];
-                }
-            }
-
-            vdst.write();
-        }
+        atomicComplete<VecOperandI32, VecElemI32>(gpuDynInst);
     } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_UMIN class methods ---
 
@@ -45128,8 +45080,20 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_UMIN::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        atomicExecute<ConstVecOperandU32, VecElemU32>(gpuDynInst);
     } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_UMIN::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU32>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_UMIN::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandU32, VecElemU32>(gpuDynInst);
+    } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_SMAX class methods ---
 
     Inst_FLAT__FLAT_ATOMIC_SMAX::Inst_FLAT__FLAT_ATOMIC_SMAX(InFmt_FLAT *iFmt)
@@ -45156,55 +45120,19 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_SMAX::execute(GPUDynInstPtr gpuDynInst)
     {
-        Wavefront *wf = gpuDynInst->wavefront();
-
-        if (gpuDynInst->exec_mask.none()) {
-            wf->decVMemInstsIssued();
-            wf->decLGKMInstsIssued();
-            return;
-        }
-
-        gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->latency.init(gpuDynInst->computeUnit());
-        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
-
-        ConstVecOperandU32 data(gpuDynInst, extData.DATA);
-
-        data.read();
-
-        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (gpuDynInst->exec_mask[lane]) {
-                (reinterpret_cast<VecElemU32*>(gpuDynInst->a_data))[lane]
-                    = data[lane];
-            }
-        }
-
-        issueRequestHelper(gpuDynInst);
+        atomicExecute<ConstVecOperandI32, VecElemI32>(gpuDynInst);
     } // execute
 
     void
     Inst_FLAT__FLAT_ATOMIC_SMAX::initiateAcc(GPUDynInstPtr gpuDynInst)
     {
-        initAtomicAccess<VecElemU32>(gpuDynInst);
+        initAtomicAccess<VecElemI32>(gpuDynInst);
     } // initiateAcc
 
     void
     Inst_FLAT__FLAT_ATOMIC_SMAX::completeAcc(GPUDynInstPtr gpuDynInst)
     {
-        if (isAtomicRet()) {
-            VecOperandU32 vdst(gpuDynInst, extData.VDST);
-
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (gpuDynInst->exec_mask[lane]) {
-                    vdst[lane] = (reinterpret_cast<VecElemU32*>(
-                        gpuDynInst->d_data))[lane];
-                }
-            }
-
-            vdst.write();
-        }
+        atomicComplete<VecOperandI32, VecElemI32>(gpuDynInst);
     } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_UMAX class methods ---
 
@@ -45232,8 +45160,20 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_UMAX::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        atomicExecute<ConstVecOperandU32, VecElemU32>(gpuDynInst);
     } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_UMAX::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU32>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_UMAX::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandU32, VecElemU32>(gpuDynInst);
+    } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_AND class methods ---
 
     Inst_FLAT__FLAT_ATOMIC_AND::Inst_FLAT__FLAT_ATOMIC_AND(InFmt_FLAT *iFmt)
@@ -45260,8 +45200,20 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_AND::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        atomicExecute<ConstVecOperandU32, VecElemU32>(gpuDynInst);
     } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_AND::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU32>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_AND::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandU32, VecElemU32>(gpuDynInst);
+    } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_OR class methods ---
 
     Inst_FLAT__FLAT_ATOMIC_OR::Inst_FLAT__FLAT_ATOMIC_OR(InFmt_FLAT *iFmt)
@@ -45288,32 +45240,7 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_OR::execute(GPUDynInstPtr gpuDynInst)
     {
-        Wavefront *wf = gpuDynInst->wavefront();
-
-        if (gpuDynInst->exec_mask.none()) {
-            wf->decVMemInstsIssued();
-            wf->decLGKMInstsIssued();
-            return;
-        }
-
-        gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->latency.init(gpuDynInst->computeUnit());
-        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
-
-        ConstVecOperandU32 data(gpuDynInst, extData.DATA);
-
-        data.read();
-
-        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (gpuDynInst->exec_mask[lane]) {
-                (reinterpret_cast<VecElemU32*>(gpuDynInst->a_data))[lane]
-                    = data[lane];
-            }
-        }
-
-        issueRequestHelper(gpuDynInst);
+        atomicExecute<ConstVecOperandU32, VecElemU32>(gpuDynInst);
     } // execute
 
     void
@@ -45325,18 +45252,7 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_OR::completeAcc(GPUDynInstPtr gpuDynInst)
     {
-        if (isAtomicRet()) {
-            VecOperandU32 vdst(gpuDynInst, extData.VDST);
-
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (gpuDynInst->exec_mask[lane]) {
-                    vdst[lane] = (reinterpret_cast<VecElemU32*>(
-                        gpuDynInst->d_data))[lane];
-                }
-            }
-
-            vdst.write();
-        }
+        atomicComplete<VecOperandU32, VecElemU32>(gpuDynInst);
     } // completeAcc
 
     // --- Inst_FLAT__FLAT_ATOMIC_XOR class methods ---
@@ -45365,8 +45281,20 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_XOR::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        atomicExecute<ConstVecOperandU32, VecElemU32>(gpuDynInst);
     } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_XOR::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU32>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_XOR::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandU32, VecElemU32>(gpuDynInst);
+    } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_INC class methods ---
 
     Inst_FLAT__FLAT_ATOMIC_INC::Inst_FLAT__FLAT_ATOMIC_INC(InFmt_FLAT *iFmt)
@@ -45393,8 +45321,20 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_INC::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        atomicExecute<ConstVecOperandU32, VecElemU32>(gpuDynInst);
     } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_INC::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU32>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_INC::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandU32, VecElemU32>(gpuDynInst);
+    } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_DEC class methods ---
 
     Inst_FLAT__FLAT_ATOMIC_DEC::Inst_FLAT__FLAT_ATOMIC_DEC(InFmt_FLAT *iFmt)
@@ -45421,8 +45361,20 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_DEC::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        atomicExecute<ConstVecOperandU32, VecElemU32>(gpuDynInst);
     } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_DEC::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU32>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_DEC::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandU32, VecElemU32>(gpuDynInst);
+    } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_SWAP_X2 class methods ---
 
     Inst_FLAT__FLAT_ATOMIC_SWAP_X2::Inst_FLAT__FLAT_ATOMIC_SWAP_X2(
@@ -45450,8 +45402,20 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_SWAP_X2::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        atomicExecute<ConstVecOperandU64, VecElemU64>(gpuDynInst);
     } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_SWAP_X2::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU64>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_SWAP_X2::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandU64, VecElemU64>(gpuDynInst);
+    } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_CMPSWAP_X2 class methods ---
 
     Inst_FLAT__FLAT_ATOMIC_CMPSWAP_X2::Inst_FLAT__FLAT_ATOMIC_CMPSWAP_X2(
@@ -45481,38 +45445,7 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_CMPSWAP_X2::execute(GPUDynInstPtr gpuDynInst)
     {
-        Wavefront *wf = gpuDynInst->wavefront();
-
-        if (gpuDynInst->exec_mask.none()) {
-            wf->decVMemInstsIssued();
-            if (isFlat()) {
-                wf->decLGKMInstsIssued();
-            }
-            return;
-        }
-
-        gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->latency.init(gpuDynInst->computeUnit());
-        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
-
-        ConstVecOperandU64 data(gpuDynInst, extData.DATA);
-        ConstVecOperandU64 cmp(gpuDynInst, extData.DATA + 2);
-
-        data.read();
-        cmp.read();
-
-        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (gpuDynInst->exec_mask[lane]) {
-                (reinterpret_cast<VecElemU64*>(gpuDynInst->x_data))[lane]
-                    = data[lane];
-                (reinterpret_cast<VecElemU64*>(gpuDynInst->a_data))[lane]
-                    = cmp[lane];
-            }
-        }
-
-        issueRequestHelper(gpuDynInst);
+        atomicExecute<ConstVecOperandU64, VecElemU64, 2>(gpuDynInst);
     } // execute
 
     void
@@ -45524,18 +45457,7 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_CMPSWAP_X2::completeAcc(GPUDynInstPtr gpuDynInst)
     {
-        if (isAtomicRet()) {
-            VecOperandU64 vdst(gpuDynInst, extData.VDST);
-
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (gpuDynInst->exec_mask[lane]) {
-                    vdst[lane] = (reinterpret_cast<VecElemU64*>(
-                        gpuDynInst->d_data))[lane];
-                }
-            }
-
-            vdst.write();
-        }
+        atomicComplete<VecOperandU64, VecElemU64>(gpuDynInst);
     } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_ADD_X2 class methods ---
 
@@ -45564,34 +45486,7 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_ADD_X2::execute(GPUDynInstPtr gpuDynInst)
     {
-        Wavefront *wf = gpuDynInst->wavefront();
-
-        if (gpuDynInst->exec_mask.none()) {
-            wf->decVMemInstsIssued();
-            if (isFlat()) {
-                wf->decLGKMInstsIssued();
-            }
-            return;
-        }
-
-        gpuDynInst->execUnitId = wf->execUnitId;
-        gpuDynInst->latency.init(gpuDynInst->computeUnit());
-        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
-
-        ConstVecOperandU64 data(gpuDynInst, extData.DATA);
-
-        data.read();
-
-        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (gpuDynInst->exec_mask[lane]) {
-                (reinterpret_cast<VecElemU64*>(gpuDynInst->a_data))[lane]
-                    = data[lane];
-            }
-        }
-
-        issueRequestHelper(gpuDynInst);
+        atomicExecute<ConstVecOperandU64, VecElemU64>(gpuDynInst);
     } // execute
 
     void
@@ -45603,19 +45498,7 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_ADD_X2::completeAcc(GPUDynInstPtr gpuDynInst)
     {
-        if (isAtomicRet()) {
-            VecOperandU64 vdst(gpuDynInst, extData.VDST);
-
-
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (gpuDynInst->exec_mask[lane]) {
-                    vdst[lane] = (reinterpret_cast<VecElemU64*>(
-                        gpuDynInst->d_data))[lane];
-                }
-            }
-
-            vdst.write();
-        }
+        atomicComplete<VecOperandU64, VecElemU64>(gpuDynInst);
     } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_SUB_X2 class methods ---
 
@@ -45644,8 +45527,20 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_SUB_X2::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        atomicExecute<ConstVecOperandU64, VecElemU64>(gpuDynInst);
     } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_SUB_X2::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU64>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_SUB_X2::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandU64, VecElemU64>(gpuDynInst);
+    } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_SMIN_X2 class methods ---
 
     Inst_FLAT__FLAT_ATOMIC_SMIN_X2::Inst_FLAT__FLAT_ATOMIC_SMIN_X2(
@@ -45673,8 +45568,20 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_SMIN_X2::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        atomicExecute<ConstVecOperandI64, VecElemI64>(gpuDynInst);
     } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_SMIN_X2::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemI64>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_SMIN_X2::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandI64, VecElemI64>(gpuDynInst);
+    } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_UMIN_X2 class methods ---
 
     Inst_FLAT__FLAT_ATOMIC_UMIN_X2::Inst_FLAT__FLAT_ATOMIC_UMIN_X2(
@@ -45702,8 +45609,20 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_UMIN_X2::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        atomicExecute<ConstVecOperandU64, VecElemU64>(gpuDynInst);
     } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_UMIN_X2::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU64>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_UMIN_X2::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandU64, VecElemU64>(gpuDynInst);
+    } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_SMAX_X2 class methods ---
 
     Inst_FLAT__FLAT_ATOMIC_SMAX_X2::Inst_FLAT__FLAT_ATOMIC_SMAX_X2(
@@ -45731,8 +45650,20 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_SMAX_X2::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        atomicExecute<ConstVecOperandI64, VecElemI64>(gpuDynInst);
     } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_SMAX_X2::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemI64>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_SMAX_X2::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandI64, VecElemI64>(gpuDynInst);
+    } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_UMAX_X2 class methods ---
 
     Inst_FLAT__FLAT_ATOMIC_UMAX_X2::Inst_FLAT__FLAT_ATOMIC_UMAX_X2(
@@ -45760,8 +45691,20 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_UMAX_X2::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        atomicExecute<ConstVecOperandU64, VecElemU64>(gpuDynInst);
     } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_UMAX_X2::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU64>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_UMAX_X2::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandU64, VecElemU64>(gpuDynInst);
+    } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_AND_X2 class methods ---
 
     Inst_FLAT__FLAT_ATOMIC_AND_X2::Inst_FLAT__FLAT_ATOMIC_AND_X2(
@@ -45789,8 +45732,20 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_AND_X2::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        atomicExecute<ConstVecOperandU64, VecElemU64>(gpuDynInst);
     } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_AND_X2::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU64>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_AND_X2::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandU64, VecElemU64>(gpuDynInst);
+    } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_OR_X2 class methods ---
 
     Inst_FLAT__FLAT_ATOMIC_OR_X2::Inst_FLAT__FLAT_ATOMIC_OR_X2(
@@ -45818,8 +45773,20 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_OR_X2::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        atomicExecute<ConstVecOperandU64, VecElemU64>(gpuDynInst);
     } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_OR_X2::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU64>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_OR_X2::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandU64, VecElemU64>(gpuDynInst);
+    } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_XOR_X2 class methods ---
 
     Inst_FLAT__FLAT_ATOMIC_XOR_X2::Inst_FLAT__FLAT_ATOMIC_XOR_X2(
@@ -45847,8 +45814,20 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_XOR_X2::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        atomicExecute<ConstVecOperandU64, VecElemU64>(gpuDynInst);
     } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_XOR_X2::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU64>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_XOR_X2::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandU64, VecElemU64>(gpuDynInst);
+    } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_INC_X2 class methods ---
 
     Inst_FLAT__FLAT_ATOMIC_INC_X2::Inst_FLAT__FLAT_ATOMIC_INC_X2(
@@ -45876,8 +45855,20 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_INC_X2::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        atomicExecute<ConstVecOperandU64, VecElemU64>(gpuDynInst);
     } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_INC_X2::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU64>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_INC_X2::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandU64, VecElemU64>(gpuDynInst);
+    } // completeAcc
     // --- Inst_FLAT__FLAT_ATOMIC_DEC_X2 class methods ---
 
     Inst_FLAT__FLAT_ATOMIC_DEC_X2::Inst_FLAT__FLAT_ATOMIC_DEC_X2(
@@ -45906,7 +45897,643 @@ namespace VegaISA
     void
     Inst_FLAT__FLAT_ATOMIC_DEC_X2::execute(GPUDynInstPtr gpuDynInst)
     {
+        atomicExecute<ConstVecOperandU64, VecElemU64>(gpuDynInst);
+    } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_DEC_X2::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU64>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_DEC_X2::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandU64, VecElemU64>(gpuDynInst);
+    } // completeAcc
+    // --- Inst_FLAT__FLAT_ATOMIC_ADD_F32 class methods ---
+
+    Inst_FLAT__FLAT_ATOMIC_ADD_F32::Inst_FLAT__FLAT_ATOMIC_ADD_F32(
+        InFmt_FLAT *iFmt)
+        : Inst_FLAT(iFmt, "flat_atomic_add_f32")
+    {
+        setFlag(AtomicAdd);
+        if (instData.GLC) {
+            setFlag(AtomicReturn);
+        } else {
+            setFlag(AtomicNoReturn);
+        }
+        setFlag(MemoryRef);
+    } // Inst_FLAT__FLAT_ATOMIC_ADD_F32
+
+    Inst_FLAT__FLAT_ATOMIC_ADD_F32::~Inst_FLAT__FLAT_ATOMIC_ADD_F32()
+    {
+    } // ~Inst_FLAT__FLAT_ATOMIC_ADD_F32
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_ADD_F32::execute(GPUDynInstPtr gpuDynInst)
+    {
+        atomicExecute<ConstVecOperandF32, VecElemF32>(gpuDynInst);
+    } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_ADD_F32::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemF32>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_ADD_F32::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandF32, VecElemF32>(gpuDynInst);
+    } // completeAcc
+    // --- Inst_FLAT__FLAT_ATOMIC_PK_ADD_F16 class methods ---
+
+    Inst_FLAT__FLAT_ATOMIC_PK_ADD_F16::Inst_FLAT__FLAT_ATOMIC_PK_ADD_F16(
+        InFmt_FLAT *iFmt)
+        : Inst_FLAT(iFmt, "flat_atomic_pk_add_f16")
+    {
+        setFlag(AtomicAdd);
+        if (instData.GLC) {
+            setFlag(AtomicReturn);
+        } else {
+            setFlag(AtomicNoReturn);
+        }
+        setFlag(MemoryRef);
+    } // Inst_FLAT__FLAT_ATOMIC_PK_ADD_F16
+
+    Inst_FLAT__FLAT_ATOMIC_PK_ADD_F16::~Inst_FLAT__FLAT_ATOMIC_PK_ADD_F16()
+    {
+    } // ~Inst_FLAT__FLAT_ATOMIC_PK_ADD_F16
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_PK_ADD_F16::execute(GPUDynInstPtr gpuDynInst)
+    {
         panicUnimplemented();
+    } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_PK_ADD_F16::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_PK_ADD_F16::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+    } // completeAcc
+    // --- Inst_FLAT__FLAT_ATOMIC_ADD_F64 class methods ---
+
+    Inst_FLAT__FLAT_ATOMIC_ADD_F64::Inst_FLAT__FLAT_ATOMIC_ADD_F64(
+        InFmt_FLAT *iFmt)
+        : Inst_FLAT(iFmt, "flat_atomic_add_f64")
+    {
+        setFlag(AtomicAdd);
+        if (instData.GLC) {
+            setFlag(AtomicReturn);
+        } else {
+            setFlag(AtomicNoReturn);
+        }
+        setFlag(MemoryRef);
+    } // Inst_FLAT__FLAT_ATOMIC_ADD_F64
+
+    Inst_FLAT__FLAT_ATOMIC_ADD_F64::~Inst_FLAT__FLAT_ATOMIC_ADD_F64()
+    {
+    } // ~Inst_FLAT__FLAT_ATOMIC_ADD_F64
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_ADD_F64::execute(GPUDynInstPtr gpuDynInst)
+    {
+        atomicExecute<ConstVecOperandF64, VecElemF64>(gpuDynInst);
+    } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_ADD_F64::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemF64>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_ADD_F64::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandF64, VecElemF64>(gpuDynInst);
+    } // completeAcc
+    // --- Inst_FLAT__FLAT_ATOMIC_MIN_F64 class methods ---
+
+    Inst_FLAT__FLAT_ATOMIC_MIN_F64::Inst_FLAT__FLAT_ATOMIC_MIN_F64(
+        InFmt_FLAT *iFmt)
+        : Inst_FLAT(iFmt, "flat_atomic_min_f64")
+    {
+        setFlag(AtomicMin);
+        if (instData.GLC) {
+            setFlag(AtomicReturn);
+        } else {
+            setFlag(AtomicNoReturn);
+        }
+        setFlag(MemoryRef);
+    } // Inst_FLAT__FLAT_ATOMIC_MIN_F64
+
+    Inst_FLAT__FLAT_ATOMIC_MIN_F64::~Inst_FLAT__FLAT_ATOMIC_MIN_F64()
+    {
+    } // ~Inst_FLAT__FLAT_ATOMIC_MIN_F64
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_MIN_F64::execute(GPUDynInstPtr gpuDynInst)
+    {
+        atomicExecute<ConstVecOperandF64, VecElemF64>(gpuDynInst);
+    } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_MIN_F64::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemF64>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_MIN_F64::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandF64, VecElemF64>(gpuDynInst);
+    } // completeAcc
+    // --- Inst_FLAT__FLAT_ATOMIC_MAX_F64 class methods ---
+
+    Inst_FLAT__FLAT_ATOMIC_MAX_F64::Inst_FLAT__FLAT_ATOMIC_MAX_F64(
+        InFmt_FLAT *iFmt)
+        : Inst_FLAT(iFmt, "flat_atomic_max_f64")
+    {
+        setFlag(AtomicMax);
+        if (instData.GLC) {
+            setFlag(AtomicReturn);
+        } else {
+            setFlag(AtomicNoReturn);
+        }
+        setFlag(MemoryRef);
+    } // Inst_FLAT__FLAT_ATOMIC_MAX_F64
+
+    Inst_FLAT__FLAT_ATOMIC_MAX_F64::~Inst_FLAT__FLAT_ATOMIC_MAX_F64()
+    {
+    } // ~Inst_FLAT__FLAT_ATOMIC_MAX_F64
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_MAX_F64::execute(GPUDynInstPtr gpuDynInst)
+    {
+        atomicExecute<ConstVecOperandF64, VecElemF64>(gpuDynInst);
+    } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_MAX_F64::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemF64>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_MAX_F64::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        atomicComplete<VecOperandF64, VecElemF64>(gpuDynInst);
+    } // completeAcc
+    // --- Inst_VOP3P__V_PK_FMA_F32 class methods ---
+
+    Inst_VOP3P__V_PK_FMA_F32::Inst_VOP3P__V_PK_FMA_F32(InFmt_VOP3P *iFmt)
+        : Inst_VOP3P(iFmt, "v_pk_fma_f32")
+    {
+        setFlag(ALU);
+    } // Inst_VOP3P__V_PK_FMA_F32
+
+    Inst_VOP3P__V_PK_FMA_F32::~Inst_VOP3P__V_PK_FMA_F32()
+    {
+    } // ~Inst_VOP3P__V_PK_FMA_F32
+
+    // D.f[63:32] = S0.f[63:32] * S1.f[63:32] + S2.f[63:32] . D.f[31:0] =
+    //     S0.f[31:0] * S1.f[31:0] + S2.f[31:0] .
+    void
+    Inst_VOP3P__V_PK_FMA_F32::execute(GPUDynInstPtr gpuDynInst)
+    {
+        // This is a special case of packed instructions which operates on
+        // 64-bit inputs/outputs and not 32-bit. U64 is used here as float
+        // values cannot use bitwise operations. Consider the U64 to imply
+        // untyped 64-bits of data.
+        Wavefront *wf = gpuDynInst->wavefront();
+        ConstVecOperandU64 src0(gpuDynInst, extData.SRC0);
+        ConstVecOperandU64 src1(gpuDynInst, extData.SRC1);
+        ConstVecOperandU64 src2(gpuDynInst, extData.SRC2);
+        VecOperandU64 vdst(gpuDynInst, instData.VDST);
+
+        src0.readSrc();
+        src1.readSrc();
+        src2.readSrc();
+
+        int opsel = instData.OPSEL;
+        int opsel_hi = extData.OPSEL_HI | (instData.OPSEL_HI2 << 2);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                uint32_t s0l = (opsel & 1) ? bits(src0[lane], 63, 32)
+                                           : bits(src0[lane], 31, 0);
+                uint32_t s1l = (opsel & 2) ? bits(src1[lane], 63, 32)
+                                           : bits(src1[lane], 31, 0);
+                uint32_t s2l = (opsel & 4) ? bits(src2[lane], 63, 32)
+                                           : bits(src2[lane], 31, 0);
+
+                float dword1 = std::fma(*reinterpret_cast<float*>(&s0l),
+                                        *reinterpret_cast<float*>(&s1l),
+                                        *reinterpret_cast<float*>(&s2l));
+
+                uint32_t s0h = (opsel_hi & 1) ? bits(src0[lane], 63, 32)
+                                              : bits(src0[lane], 31, 0);
+                uint32_t s1h = (opsel_hi & 2) ? bits(src1[lane], 63, 32)
+                                              : bits(src1[lane], 31, 0);
+                uint32_t s2h = (opsel_hi & 4) ? bits(src2[lane], 63, 32)
+                                              : bits(src2[lane], 31, 0);
+
+                float dword2 = std::fma(*reinterpret_cast<float*>(&s0h),
+                                        *reinterpret_cast<float*>(&s1h),
+                                        *reinterpret_cast<float*>(&s2h));
+
+                uint32_t result1 = *reinterpret_cast<uint32_t*>(&dword1);
+                uint32_t result2 = *reinterpret_cast<uint32_t*>(&dword2);
+
+                vdst[lane] = (static_cast<uint64_t>(result2) << 32) | result1;
+            }
+        }
+
+        vdst.write();
+    } // execute
+    // --- Inst_VOP3P__V_PK_MUL_F32 class methods ---
+
+    Inst_VOP3P__V_PK_MUL_F32::Inst_VOP3P__V_PK_MUL_F32(InFmt_VOP3P *iFmt)
+        : Inst_VOP3P(iFmt, "v_pk_mul_f32")
+    {
+        setFlag(ALU);
+    } // Inst_VOP3P__V_PK_MUL_F32
+
+    Inst_VOP3P__V_PK_MUL_F32::~Inst_VOP3P__V_PK_MUL_F32()
+    {
+    } // ~Inst_VOP3P__V_PK_MUL_F32
+
+    // D.f[63:32] = S0.f[63:32] * S1.f[63:32] . D.f[31:0] = S0.f[31:0] *
+    //              S1.f[31:0]
+    void
+    Inst_VOP3P__V_PK_MUL_F32::execute(GPUDynInstPtr gpuDynInst)
+    {
+        // This is a special case of packed instructions which operates on
+        // 64-bit inputs/outputs and not 32-bit. U64 is used here as float
+        // values cannot use bitwise operations. Consider the U64 to imply
+        // untyped 64-bits of data.
+        Wavefront *wf = gpuDynInst->wavefront();
+        ConstVecOperandU64 src0(gpuDynInst, extData.SRC0);
+        ConstVecOperandU64 src1(gpuDynInst, extData.SRC1);
+        VecOperandU64 vdst(gpuDynInst, instData.VDST);
+
+        src0.readSrc();
+        src1.readSrc();
+
+        int opsel = instData.OPSEL;
+        int opsel_hi = extData.OPSEL_HI;
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                uint32_t lower_dword = (opsel & 1) ? bits(src0[lane], 63, 32)
+                                                   : bits(src0[lane], 31, 0);
+                uint32_t upper_dword = (opsel & 2) ? bits(src1[lane], 63, 32)
+                                                   : bits(src1[lane], 31, 0);
+
+                float dword1 = *reinterpret_cast<float*>(&lower_dword)
+                             * *reinterpret_cast<float*>(&upper_dword);
+
+                lower_dword = (opsel_hi & 1) ? bits(src0[lane], 63, 32)
+                                             : bits(src0[lane], 31, 0);
+                upper_dword = (opsel_hi & 2) ? bits(src1[lane], 63, 32)
+                                             : bits(src1[lane], 31, 0);
+
+                float dword2 = *reinterpret_cast<float*>(&lower_dword)
+                             * *reinterpret_cast<float*>(&upper_dword);
+
+                uint32_t result1 = *reinterpret_cast<uint32_t*>(&dword1);
+                uint32_t result2 = *reinterpret_cast<uint32_t*>(&dword2);
+
+                vdst[lane] = (static_cast<uint64_t>(result2) << 32) | result1;
+            }
+        }
+
+        vdst.write();
+    } // execute
+    // --- Inst_VOP3P__V_PK_ADD_F32 class methods ---
+
+    Inst_VOP3P__V_PK_ADD_F32::Inst_VOP3P__V_PK_ADD_F32(InFmt_VOP3P *iFmt)
+        : Inst_VOP3P(iFmt, "v_pk_add_f32")
+    {
+        setFlag(ALU);
+    } // Inst_VOP3P__V_PK_ADD_F32
+
+    Inst_VOP3P__V_PK_ADD_F32::~Inst_VOP3P__V_PK_ADD_F32()
+    {
+    } // ~Inst_VOP3P__V_PK_ADD_F32
+
+    // D.f[63:32] = S0.f[63:32] + S1.f[63:32] . D.f[31:0] = S0.f[31:0] +
+    //              S1.f[31:0]
+    void
+    Inst_VOP3P__V_PK_ADD_F32::execute(GPUDynInstPtr gpuDynInst)
+    {
+        // This is a special case of packed instructions which operates on
+        // 64-bit inputs/outputs and not 32-bit. U64 is used here as float
+        // values cannot use bitwise operations. Consider the U64 to imply
+        // untyped 64-bits of data.
+        Wavefront *wf = gpuDynInst->wavefront();
+        ConstVecOperandU64 src0(gpuDynInst, extData.SRC0);
+        ConstVecOperandU64 src1(gpuDynInst, extData.SRC1);
+        VecOperandU64 vdst(gpuDynInst, instData.VDST);
+
+        src0.readSrc();
+        src1.readSrc();
+
+        int opsel = instData.OPSEL;
+        int opsel_hi = extData.OPSEL_HI;
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                uint32_t lower_dword = (opsel & 1) ? bits(src0[lane], 63, 32)
+                                                   : bits(src0[lane], 31, 0);
+                uint32_t upper_dword = (opsel & 2) ? bits(src1[lane], 63, 32)
+                                                   : bits(src1[lane], 31, 0);
+
+                float dword1 = *reinterpret_cast<float*>(&lower_dword)
+                             + *reinterpret_cast<float*>(&upper_dword);
+
+                lower_dword = (opsel_hi & 1) ? bits(src0[lane], 63, 32)
+                                             : bits(src0[lane], 31, 0);
+                upper_dword = (opsel_hi & 2) ? bits(src1[lane], 63, 32)
+                                             : bits(src1[lane], 31, 0);
+
+                float dword2 = *reinterpret_cast<float*>(&lower_dword)
+                             + *reinterpret_cast<float*>(&upper_dword);
+
+                uint32_t result1 = *reinterpret_cast<uint32_t*>(&dword1);
+                uint32_t result2 = *reinterpret_cast<uint32_t*>(&dword2);
+
+                vdst[lane] = (static_cast<uint64_t>(result2) << 32) | result1;
+            }
+        }
+
+        vdst.write();
+    } // execute
+    // --- Inst_VOP3P__V_PK_MOV_B32 class methods ---
+
+    Inst_VOP3P__V_PK_MOV_B32::Inst_VOP3P__V_PK_MOV_B32(InFmt_VOP3P *iFmt)
+        : Inst_VOP3P(iFmt, "v_pk_mov_b32")
+    {
+        setFlag(ALU);
+    } // Inst_VOP3P__V_PK_MOV_B32
+
+    Inst_VOP3P__V_PK_MOV_B32::~Inst_VOP3P__V_PK_MOV_B32()
+    {
+    } // ~Inst_VOP3P__V_PK_MOV_B32
+
+    // D.u[63:32] = S1.u[31:0]; D.u[31:0] = S0.u[31:0].
+    void
+    Inst_VOP3P__V_PK_MOV_B32::execute(GPUDynInstPtr gpuDynInst)
+    {
+        // This is a special case of packed instructions which operates on
+        // 64-bit inputs/outputs and not 32-bit.
+        Wavefront *wf = gpuDynInst->wavefront();
+        ConstVecOperandU64 src0(gpuDynInst, extData.SRC0);
+        ConstVecOperandU64 src1(gpuDynInst, extData.SRC1);
+        VecOperandU64 vdst(gpuDynInst, instData.VDST);
+
+        src0.readSrc();
+        src1.readSrc();
+
+        // Only OPSEL[1:0] are used
+        // OPSEL[0] 0/1: Lower dest dword = lower/upper dword of src0
+
+        int opsel = instData.OPSEL;
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                // OPSEL[1] 0/1: Lower dest dword = lower/upper dword of src1
+                uint64_t lower_dword = (opsel & 1) ? bits(src0[lane], 63, 32)
+                                                   : bits(src0[lane], 31, 0);
+                uint64_t upper_dword = (opsel & 2) ? bits(src1[lane], 63, 32)
+                                                   : bits(src1[lane], 31, 0);
+
+                vdst[lane] = upper_dword << 32 | lower_dword;
+            }
+        }
+
+        vdst.write();
+    } // execute
+    // --- Inst_VOP3P_MAI__V_MFMA_I32_16X16X16I8 class methods ---
+
+    Inst_VOP3P_MAI__V_MFMA_I32_16X16X16I8::
+        Inst_VOP3P_MAI__V_MFMA_I32_16X16X16I8(InFmt_VOP3P_MAI *iFmt)
+        : Inst_VOP3P_MAI(iFmt, "v_mfma_i32_16x16x16i8")
+    {
+        setFlag(ALU);
+    } // Inst_VOP3P_MAI__V_MFMA_I32_16X16X16I8
+
+    Inst_VOP3P_MAI__V_MFMA_I32_16X16X16I8::
+        ~Inst_VOP3P_MAI__V_MFMA_I32_16X16X16I8()
+    {
+    } // ~Inst_VOP3P_MAI__V_MFMA_I32_16X16X16I8
+
+    // D(16x16I32) = A(16x16I8) x B(16x16I8) + C(16x16I32), 1 Blocks, 8
+    // pass, srcA/srcB 1 archVgpr, srcC/D 4 accVGPR
+    void
+    Inst_VOP3P_MAI__V_MFMA_I32_16X16X16I8::execute(GPUDynInstPtr gpuDynInst)
+    {
+        int acc_offset = 0;
+        if (instData.ACC_CD) {
+            warn("ACC_CD not yet implemented\n");
+        }
+
+        // int8 size allows for 4 elements per lane. At 16x16 this means 4
+        // lanes per column (A matrix) / (B matrix). This whole matrix fits
+        // in one VGPR. The C matrix with size int32 requires 4 VGPRs.
+        // Handle the C matrix by using a delta. This is set to 1 normally to
+        // move to the next VGPR (1 dword away) and 0 if the input is a scalar
+        // reg (e.g., a constant).
+        int delta = isVectorReg(extData.SRC2) ? 1 : 0;
+
+        // VecOperandI8 will read 8 bits and sign extend, so used U32 to read
+        // as "untyped" 32-bit values.
+        ConstVecOperandU32 src0(gpuDynInst, extData.SRC0);
+        ConstVecOperandU32 src1(gpuDynInst, extData.SRC1);
+        ConstVecOperandI32 src2a(gpuDynInst, extData.SRC2+acc_offset);
+        ConstVecOperandI32 src2b(gpuDynInst, extData.SRC2+acc_offset+1*delta);
+        ConstVecOperandI32 src2c(gpuDynInst, extData.SRC2+acc_offset+2*delta);
+        ConstVecOperandI32 src2d(gpuDynInst, extData.SRC2+acc_offset+3*delta);
+
+        VecOperandI32 vdsta(gpuDynInst, instData.VDST+acc_offset);
+        VecOperandI32 vdstb(gpuDynInst, instData.VDST+acc_offset+1);
+        VecOperandI32 vdstc(gpuDynInst, instData.VDST+acc_offset+2);
+        VecOperandI32 vdstd(gpuDynInst, instData.VDST+acc_offset+3);
+
+        src0.readSrc();
+        src1.readSrc();
+        src2a.readSrc();
+        src2b.readSrc();
+        src2c.readSrc();
+        src2d.readSrc();
+
+        int32_t A[16][16];
+        for (int i = 0; i < 64; ++i) {
+            // src0[0:15] contains columns 1 - 4 packed for rows 0 - 15,
+            // src0[16:31] contains columns 5 - 8 packed for rows 0 - 15,
+            // src0[32:47] contains columns 9 - 12 packed for rows 0 - 15,
+            // src0[48:63] contains columns 13 - 16 packed for rows 0 - 15,
+            int row = i % 16;
+            int start_col = (i / 16) * 4;
+
+            A[row][start_col+0] = sext<8>(bits(src0[i], 7, 0));
+            A[row][start_col+1] = sext<8>(bits(src0[i], 15, 8));
+            A[row][start_col+2] = sext<8>(bits(src0[i], 23, 16));
+            A[row][start_col+3] = sext<8>(bits(src0[i], 31, 24));
+        }
+
+        int32_t B[16][16];
+        for (int i = 0; i < 64; ++i) {
+            // src1[0:15] contains rows 1 - 4 packed for columns 0 - 15
+            // src1[16:31] contains rows 5 - 8 packed for columns 0 - 15
+            // src1[32:47] contains rows 9 - 12 packed for columns 0 - 15
+            // src1[48:63] contains rows 13 - 16 packed for columns 0 - 15
+            int start_row = (i / 16) * 4;
+            int col = i % 16;
+
+            B[start_row+0][col] = sext<8>(bits(src1[i], 7, 0));
+            B[start_row+1][col] = sext<8>(bits(src1[i], 15, 8));
+            B[start_row+2][col] = sext<8>(bits(src1[i], 23, 16));
+            B[start_row+3][col] = sext<8>(bits(src1[i], 31, 24));
+        }
+
+        int32_t result[16][16];
+
+        // Load accumulation matrix C into result
+        for (int i = 0; i < 64; ++i) {
+            // src2a contains rows 0, 4, 8, 12
+            result[(i/16)*4][(i%16)] = src2a[i];
+            // src2b contains rows 1, 5, 9, 13
+            result[(i/16)*4+1][(i%16)] = src2b[i];
+            // src2c contains rows 2, 6, 10, 14
+            result[(i/16)*4+2][(i%16)] = src2c[i];
+            // src2d contains rows 3, 7, 11, 15
+            result[(i/16)*4+3][(i%16)] = src2d[i];
+        }
+
+        // Compute new result - This is (obviously) not optimized
+        for (int i = 0; i < 16; ++i) {
+            for (int j = 0; j < 16; ++j) {
+                for (int k = 0; k < 16; ++k) {
+                    result[i][j] += A[i][k] * B[k][j];
+                }
+            }
+        }
+
+        // Put result in dest VGPRs
+        for (int i = 0; i < 64; ++i) {
+            // vdsta contains rows 0, 4, 8, 12
+            vdsta[i] = result[(i/16)*4][(i%16)];
+            // vdstb contains rows 1, 5, 9, 13
+            vdstb[i] = result[(i/16)*4+1][(i%16)];
+            // vdstc contains rows 2, 6, 10, 14
+            vdstc[i] = result[(i/16)*4+2][(i%16)];
+            // vdstd contains rows 3, 7, 11, 15
+            vdstd[i] = result[(i/16)*4+3][(i%16)];
+        }
+
+        vdsta.write();
+        vdstb.write();
+        vdstc.write();
+        vdstd.write();
+    } // execute
+    // --- Inst_VOP3P_MAI__V_MFMA_F64_16X16X4F64 class methods ---
+
+    Inst_VOP3P_MAI__V_MFMA_F64_16X16X4F64::
+        Inst_VOP3P_MAI__V_MFMA_F64_16X16X4F64(InFmt_VOP3P_MAI *iFmt)
+        : Inst_VOP3P_MAI(iFmt, "v_mfma_f64_16x16x4f64")
+    {
+        setFlag(ALU);
+    } // Inst_VOP3P_MAI__V_MFMA_F64_16X16X4F64
+
+    Inst_VOP3P_MAI__V_MFMA_F64_16X16X4F64::
+        ~Inst_VOP3P_MAI__V_MFMA_F64_16X16X4F64()
+    {
+    } // ~Inst_VOP3P_MAI__V_MFMA_F64_16X16X4F64
+
+    // D(16x16F64) = A(16x4F64) x B(4x16F64) + C(16x16F64), 1 Blocks, 8
+    // pass, srcA/srcB 2 VGPR, srcC/D 8 VGPR
+    void
+    Inst_VOP3P_MAI__V_MFMA_F64_16X16X4F64::execute(GPUDynInstPtr gpuDynInst)
+    {
+        int acc_offset = 0;
+        if (instData.ACC_CD) {
+            warn("ACC_CD not yet implemented\n");
+        }
+
+        // Handling of src2 is a bit tricky. The operator[] overload cannot
+        // be used for dword count > 2, and the dword count here is 8. Usually
+        // src2 is a VGPR/AccGPR, but it might also be constant. In order to
+        // use operator[] and handle constants, check for VGPR here and set
+        // a delta for each of the pairs of src2 GPRs.
+        int delta = isVectorReg(extData.SRC2) ? 2 : 0;
+
+        ConstVecOperandF64 src0(gpuDynInst, extData.SRC0);
+        ConstVecOperandF64 src1(gpuDynInst, extData.SRC1);
+        ConstVecOperandF64 src2a(gpuDynInst, extData.SRC2+acc_offset);
+        ConstVecOperandF64 src2b(gpuDynInst, extData.SRC2+acc_offset+1*delta);
+        ConstVecOperandF64 src2c(gpuDynInst, extData.SRC2+acc_offset+2*delta);
+        ConstVecOperandF64 src2d(gpuDynInst, extData.SRC2+acc_offset+3*delta);
+
+        VecOperandF64 vdsta(gpuDynInst, instData.VDST+acc_offset);
+        VecOperandF64 vdstb(gpuDynInst, instData.VDST+acc_offset+2);
+        VecOperandF64 vdstc(gpuDynInst, instData.VDST+acc_offset+4);
+        VecOperandF64 vdstd(gpuDynInst, instData.VDST+acc_offset+6);
+
+        src0.readSrc();
+        src1.readSrc();
+        src2a.readSrc();
+        src2b.readSrc();
+        src2c.readSrc();
+        src2d.readSrc();
+
+        double result[16][16];
+
+        // Load src2 into result. src2 is row major
+        for (int i = 0; i < 64; ++i) {
+            // src2a contains rows 0 - 3
+            result[(i/16)][(i%16)] = src2a[i];
+            // src2b contains rows 4 - 7
+            result[(i/16)+4][(i%16)] = src2b[i];
+            // src2c contains rows 8 - 11
+            result[(i/16)+8][(i%16)] = src2c[i];
+            // src2d contains rows 12 - 15
+            result[(i/16)+12][(i%16)] = src2d[i];
+        }
+
+        // Compute new result
+        for (int i = 0; i < 16; ++i) {
+            for (int j = 0; j < 16; ++j) {
+                for (int k = 0; k < 4; ++k) {
+                    // src0 is column major, src1 is row major
+                    int lane_A = 16*k + i;
+                    int lane_B = 16*k + j;
+                    result[i][j] += src0[lane_A] * src1[lane_B];
+                }
+            }
+        }
+
+        // Put result in dest VGPRs
+        for (int i = 0; i < 64; ++i) {
+            // vdsta contains rows 0 - 3
+            vdsta[i] = result[(i/16)][(i%16)];
+            // src2b contains rows 4 - 7
+            vdstb[i] = result[(i/16)+4][(i%16)];
+            // src2c contains rows 8 - 11
+            vdstc[i] = result[(i/16)+8][(i%16)];
+            // src2d contains rows 12 - 15
+            vdstd[i] = result[(i/16)+12][(i%16)];
+        }
+
+        vdsta.write();
+        vdstb.write();
+        vdstc.write();
+        vdstd.write();
     } // execute
 } // namespace VegaISA
 } // namespace gem5

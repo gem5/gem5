@@ -60,7 +60,7 @@ class ThreadInfo
             return false;
         }
 
-        data = TranslatingPortProxy(tc).read<T>(it->address, byteOrder);
+        data = TranslatingPortProxy(tc).read<T>(it->address(), byteOrder);
 
         return true;
     }

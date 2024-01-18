@@ -37,13 +37,11 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
-import sys
+import os.path
 import re
 import string
-
+import sys
 from os.path import join as joinpath
-import os.path
-import os
 
 import m5
 

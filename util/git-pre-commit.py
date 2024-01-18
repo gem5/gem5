@@ -36,16 +36,21 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from tempfile import TemporaryFile
+import argparse
 import os
 import subprocess
 import sys
+from tempfile import TemporaryFile
 
 from style.repo import GitRepo
-from style.verifiers import all_verifiers, all_regions
-from style.style import StdioUI, check_ignores
-
-import argparse
+from style.style import (
+    StdioUI,
+    check_ignores,
+)
+from style.verifiers import (
+    all_regions,
+    all_verifiers,
+)
 
 parser = argparse.ArgumentParser(description="gem5 git style checker hook")
 

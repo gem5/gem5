@@ -34,8 +34,9 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import m5
-import _m5
 from m5.objects import *
+
+import _m5
 
 m5.util.addToPath("../configs/")
 from base_caches import *

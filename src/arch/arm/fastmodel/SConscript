@@ -48,15 +48,9 @@ from gem5_scons import Transform, warning, error
 import os.path
 
 if env['CONF']['USE_ARM_FASTMODEL']:
-    if env['CONF']['USE_SYSTEMC']:
-        env.TagImplies('arm fastmodel', 'arm isa')
-    else:
-        warning('ARM Fast Models require systemc support')
-        env['CONF']['USE_ARM_FASTMODEL'] = False
-
-
-systemc_home = Dir('#/src/systemc/ext/systemc_home')
-env['ENV']['SYSTEMC_HOME'] = systemc_home.abspath
+    env.TagImplies('arm fastmodel', 'arm isa')
+else:
+    Return()
 
 def extract_var(name):
     val = env['CONF'].get(name, None)
@@ -117,8 +111,6 @@ cpppaths = (
     pvlib_home.Dir('include/fmruntime'),
     pvlib_home.Dir('include/fmruntime/eslapi'),
     pvlib_home.Dir('Iris/include'),
-
-    systemc_home.Dir('include'),
 
     maxcore_home.Dir('AMBA-PV/include'),
 )
@@ -301,6 +293,10 @@ for header in common_headers:
     header_target = gic_protocol_dest.Dir('include').File(header)
     header_src = examples_common_dir.Dir('include').File(header)
     Command(header_target, header_src, Copy('${TARGET}', '${SOURCE}'))
+
+if not env['CONF']['SIMGEN']:
+    env['CONF']['SIMGEN'] = os.path.join(
+            env['CONF']['MAXCORE_HOME'], 'bin', 'simgen')
 
 class ArmFastModelComponent(object):
     def __init__(self, project_file, *extra_deps, tags=None):

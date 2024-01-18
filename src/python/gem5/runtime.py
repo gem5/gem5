@@ -28,12 +28,17 @@
 This file contains functions to extract gem5 runtime information.
 """
 
+from typing import Set
+
 from m5.defines import buildEnv
 from m5.util import warn
 
-from .isas import ISA, get_isa_from_str, get_isas_str_set
 from .coherence_protocol import CoherenceProtocol
-from typing import Set
+from .isas import (
+    ISA,
+    get_isa_from_str,
+    get_isas_str_set,
+)
 
 
 def get_supported_isas() -> Set[ISA]:
@@ -41,6 +46,9 @@ def get_supported_isas() -> Set[ISA]:
     Returns the set of all the ISAs compiled into the current binary.
     """
     supported_isas = set()
+
+    if not buildEnv["BUILD_ISA"]:
+        return {ISA.NULL}
 
     if "TARGET_ISA" in buildEnv.keys():
         supported_isas.add(get_isa_from_str(buildEnv["TARGET_ISA"]))
@@ -52,44 +60,9 @@ def get_supported_isas() -> Set[ISA]:
     return supported_isas
 
 
-def get_runtime_isa() -> ISA:
-    """
-    Returns a single target ISA at runtime.
-
-    This determined via the "TARGET_ISA" parameter, which is set at
-    compilation. If not set, but only one ISA is compiled, we assume it's the
-    one ISA. If neither the "TARGET_ISA" parameter is set and there are
-    multiple ISA targets, an exception is thrown.
-
-    **WARNING**: This function is deprecated and may be removed in future
-    versions of gem5. This function should not be relied upon to run gem5
-    simulations.
-
-    :returns: The target ISA.
-    """
-
-    warn(
-        "The `get_runtime_isa` function is deprecated. Please migrate away "
-        "from using this function."
-    )
-
-    if "TARGET_ISA" in buildEnv.keys():
-        return get_isa_from_str(buildEnv["TARGET_ISA"])
-
-    supported_isas = get_supported_isas()
-
-    if len(supported_isas) == 1:
-        return next(iter(supported_isas))
-
-    raise Exception(
-        "Cannot determine the the runtime ISA. Either the "
-        "'TARGET_ISA' parameter must be set or the binary only "
-        "compiled to one ISA."
-    )
-
-
 def get_runtime_coherence_protocol() -> CoherenceProtocol:
     """Gets the cache coherence protocol.
+
     This can be inferred at runtime.
 
     :returns: The cache coherence protocol.

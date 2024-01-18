@@ -40,10 +40,10 @@
 
 """Interfaces for HBM memory devices
 
-These memory "interfaces" contain the timing,energy,etc parameters for each
+These memory "interfaces" contain the timing, energy, etc parameters for each
 memory type and are usually based on datasheets for the memory devices.
 
-You can use these interfaces in the MemCtrl object as the `dram` timing
+You can use these interfaces in the MemCtrl object as the ``dram`` timing
 interface.
 """
 
@@ -56,15 +56,18 @@ class HBM_1000_4H_1x128(DRAMInterface):
     default timings based on data publically released
     ("HBM: Memory Solution for High Performance Processors", MemCon, 2014),
     IDD measurement values, and by extrapolating data from other classes.
-    Architecture values based on published HBM spec
+
+    Architecture values based on published HBM spec.
+
     A 4H stack is defined, 2Gb per die for a total of 1GiB of memory.
 
     **IMPORTANT**
     HBM gen1 supports up to 8 128-bit physical channels
     Configuration defines a single channel, with the capacity
-    set to (full_ stack_capacity / 8) based on 2Gb dies
-    To use all 8 channels, set 'channels' parameter to 8 in
-    system configuration
+    set to (full_ stack_capacity / 8) based on 2Gb dies.
+
+    To use all 8 channels, set ``channels`` parameter to 8 in
+    system configuration.
     """
 
     # 128-bit interface legacy mode
@@ -149,16 +152,17 @@ class HBM_1000_4H_1x64(HBM_1000_4H_1x128):
     default timings based on HBM gen1 and data publically released
     A 4H stack is defined, 8Gb per die for a total of 4GiB of memory.
     Note: This defines a pseudo-channel with a unique controller
-    instantiated per pseudo-channel
+    instantiated per pseudo-channel.
+
     Stay at same IO rate (1Gbps) to maintain timing relationship with
-    HBM gen1 class (HBM_1000_4H_x128) where possible
+    HBM gen1 class (HBM_1000_4H_x128) where possible.
 
     **IMPORTANT**
     For HBM gen2 with pseudo-channel mode, configure 2X channels.
     Configuration defines a single pseudo channel, with the capacity
-    set to (full_ stack_capacity / 16) based on 8Gb dies
-    To use all 16 pseudo channels, set 'channels' parameter to 16 in
-    system configuration
+    set to (full_ stack_capacity / 16) based on 8Gb dies.
+    To use all 16 pseudo channels, set ``channels`` parameter to 16 in
+    system configuration.
     """
 
     # 64-bit pseudo-channel interface

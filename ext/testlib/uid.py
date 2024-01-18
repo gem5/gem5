@@ -26,8 +26,8 @@
 #
 # Authors: Sean Wilson
 
-import os
 import itertools
+import os
 
 import testlib.configuration as configuration
 

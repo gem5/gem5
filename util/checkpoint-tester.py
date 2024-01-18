@@ -64,9 +64,11 @@
 #
 
 
-import os, sys, re
-import subprocess
 import argparse
+import os
+import re
+import subprocess
+import sys
 
 parser = argparse.ArgumentParser()
 

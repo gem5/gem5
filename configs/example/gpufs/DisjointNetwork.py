@@ -27,12 +27,12 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects import *
-from m5.util import fatal
-
 from importlib import *
 
 from network import Network
+
+from m5.objects import *
+from m5.util import fatal
 
 
 class DisjointSimple(SimpleNetwork):

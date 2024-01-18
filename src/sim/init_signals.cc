@@ -84,7 +84,8 @@ setupAltStack()
 
 static void
 installSignalHandler(int signal, void (*handler)(int sigtype),
-                     int flags = SA_RESTART)
+                     int flags = SA_RESTART,
+                     struct sigaction *old_sa = NULL)
 {
     struct sigaction sa;
 
@@ -93,7 +94,7 @@ installSignalHandler(int signal, void (*handler)(int sigtype),
     sa.sa_handler = handler;
     sa.sa_flags = flags;
 
-    if (sigaction(signal, &sa, NULL) == -1)
+    if (sigaction(signal, &sa, old_sa) == -1)
         panic("Failed to setup handler for signal %i\n", signal);
 }
 
@@ -196,9 +197,6 @@ initSignals()
     // Dump intermediate stats and reset them
     installSignalHandler(SIGUSR2, dumprstStatsHandler);
 
-    // Exit cleanly on Interrupt (Ctrl-C)
-    installSignalHandler(SIGINT, exitNowHandler);
-
     // Print the current cycle number and a backtrace on abort. Make
     // sure the signal is unmasked and the handler reset when a signal
     // is delivered to be able to invoke the default handler.
@@ -217,5 +215,20 @@ initSignals()
     // PollQueue class.
     installSignalHandler(SIGIO, ioHandler);
 }
+
+struct sigaction old_int_sa;
+
+void initSigInt()
+{
+    // Exit cleanly on Interrupt (Ctrl-C)
+    installSignalHandler(SIGINT, exitNowHandler, SA_RESTART, &old_int_sa);
+}
+
+void restoreSigInt()
+{
+    // Restore the old SIGINT handler
+    sigaction(SIGINT, &old_int_sa, NULL);
+}
+
 
 } // namespace gem5

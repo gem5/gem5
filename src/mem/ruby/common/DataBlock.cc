@@ -110,12 +110,13 @@ DataBlock::copyPartial(const DataBlock &dblk, const WriteMask &mask)
 }
 
 void
-DataBlock::atomicPartial(const DataBlock &dblk, const WriteMask &mask)
+DataBlock::atomicPartial(const DataBlock &dblk, const WriteMask &mask,
+        bool isAtomicNoReturn)
 {
     for (int i = 0; i < RubySystem::getBlockSizeBytes(); i++) {
         m_data[i] = dblk.m_data[i];
     }
-    mask.performAtomic(m_data, m_atomicLog);
+    mask.performAtomic(m_data, m_atomicLog, isAtomicNoReturn);
 }
 
 void

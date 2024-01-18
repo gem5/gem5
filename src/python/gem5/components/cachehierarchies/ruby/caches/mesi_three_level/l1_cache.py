@@ -24,20 +24,20 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from .....processors.abstract_core import AbstractCore
-from ......isas import ISA
-from ......utils.override import *
+import math
 
 from m5.objects import (
-    MessageBuffer,
-    RubyPrefetcher,
-    RubyCache,
-    ClockDomain,
     LRURP,
+    ClockDomain,
     L0Cache_Controller,
+    MessageBuffer,
+    RubyCache,
+    RubyPrefetcher,
 )
 
-import math
+from ......isas import ISA
+from ......utils.override import *
+from .....processors.abstract_core import AbstractCore
 
 
 # L0Cache_Controller is the ruby backend's terminology corresponding to

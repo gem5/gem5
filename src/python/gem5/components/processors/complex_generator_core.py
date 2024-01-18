@@ -24,22 +24,31 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from typing import Iterator, Any
-from m5.ticks import fromSeconds
-from m5.util.convert import toLatency, toMemoryBandwidth
-from m5.objects import PyTrafficGen, Port
+from enum import Enum
+from typing import (
+    Any,
+    Iterator,
+)
 
-from .abstract_core import AbstractCore
-from .abstract_generator_core import AbstractGeneratorCore
+from m5.objects import (
+    Port,
+    PyTrafficGen,
+)
+from m5.ticks import fromSeconds
+from m5.util.convert import (
+    toLatency,
+    toMemoryBandwidth,
+)
 
 from ...utils.override import overrides
-
-from enum import Enum
+from .abstract_core import AbstractCore
+from .abstract_generator_core import AbstractGeneratorCore
 
 
 class TrafficModes(Enum):
     """The traffic mode class
-    This class is an enum to store traffic mode in a more meaningful way
+
+    This class is an enum to store traffic mode in a more meaningful way.
     """
 
     linear = 0
@@ -59,9 +68,10 @@ class ComplexTrafficParams:
         data_limit: int,
     ):
         """The complex traffic params class
+
         This class is a container for parameters to create either a linear or
         random traffic. The complex generator core stores a list of complex
-        traffic params for resolution after m5.instantiate is called.
+        traffic params for resolution after ``m5.instantiate`` is called.
         """
         self._mode = mode
         self._duration = duration
@@ -78,7 +88,7 @@ class ComplexGeneratorCore(AbstractGeneratorCore):
         """The complex generator core interface.
 
         This class defines the interface for a generator core that will create
-        a series of different types of traffic. This core uses PyTrafficGen to
+        a series of different types of traffic. This core uses `PyTrafficGen` to
         create and inject the synthetic traffic. This generator could be used
         to create more complex traffics that consist of linear and random
         traffic in different phases.
@@ -106,22 +116,23 @@ class ComplexGeneratorCore(AbstractGeneratorCore):
         """
         This function will add the params for a linear traffic to the list of
         traffic params in this generator core. These params will be later
-        resolved by the start_traffic call. This core uses a PyTrafficGen to
+        resolved by the ``start_traffic`` call. This core uses a `PyTrafficGen` to
         create the traffic based on the specified params below.
 
         :param duration: The number of ticks for the generator core to generate
-        traffic.
+                         traffic.
         :param rate: The rate at which the synthetic data is read/written.
         :param block_size: The number of bytes to be read/written with each
-        request.
+                           request.
         :param min_addr: The lower bound of the address range the generator
-        will read/write from/to.
+                         will read/write from/to.
         :param max_addr: The upper bound of the address range the generator
-        will read/write from/to.
+                         will read/write from/to.
         :param rd_perc: The percentage of read requests among all the generated
-        requests. The write percentage would be equal to 100 - rd_perc.
+                        requests. The write percentage would be equal to
+                        ``100 - rd_perc``.
         :param data_limit: The amount of data in bytes to read/write by the
-        generator before stopping generation.
+                           generator before stopping generation.
         """
         param = ComplexTrafficParams(
             TrafficModes.linear,
@@ -149,22 +160,23 @@ class ComplexGeneratorCore(AbstractGeneratorCore):
         """
         This function will add the params for a random traffic to the list of
         traffic params in this generator core. These params will be later
-        resolved by the start_traffic call. This core uses a PyTrafficGen to
+        resolved by the ``start_traffic`` call. This core uses a PyTrafficGen to
         create the traffic based on the specified params below.
 
         :param duration: The number of ticks for the generator core to generate
-        traffic.
+                         traffic.
         :param rate: The rate at which the synthetic data is read/written.
         :param block_size: The number of bytes to be read/written with each
-        request.
+                           request.
         :param min_addr: The lower bound of the address range the generator
-        will read/write from/to.
+                         will read/write from/to.
         :param max_addr: The upper bound of the address range the generator
-        will read/write from/to.
+                         will read/write from/to.
         :param rd_perc: The percentage of read requests among all the generated
-        requests. The write percentage would be equal to 100 - rd_perc.
+                        requests. The write percentage would be equal to
+                        ``100 - rd_perc``.
         :param data_limit: The amount of data in bytes to read/write by the
-        generator before stopping generation.
+                           generator before stopping generation.
         """
         param = ComplexTrafficParams(
             TrafficModes.random,
@@ -184,13 +196,13 @@ class ComplexGeneratorCore(AbstractGeneratorCore):
         """
         This function first checks if there are any pending traffics that
         require creation, if so it will create the pending traffics based on
-        traffic_params list and adds  them to the traffic list, then it starts
+        ``traffic_params`` list and adds  them to the traffic list, then it starts
         generating the traffic at the top of the traffic list. It also pops the
         first element in the list so that every time this function is called a
         new traffic is generated, each instance of a call to this function
-        should happen before each instance of the call to m5.simulate(). All
+        should happen before each instance of the call to ``m5.simulate()``. All
         the instances of calls to this function should happen after
-        m5.instantiate()
+        ``m5.instantiate()``.
         """
         if not self._traffic_set:
             self._set_traffic()
@@ -246,15 +258,15 @@ class ComplexGeneratorCore(AbstractGeneratorCore):
     ) -> None:
         """
         Function to set the traffic from a user defined python generator.
-        The generator should only only assume one input argument (positional)
+        The generator should only assume one input argument (positional)
         for the actual PyTrafficGen object to create the traffic. This is possible
         either through using a generator with hardcoded parameters in the
         function calls to PyTrafficGen methods or by compiling a flexible
         python generator into a generator object with only one
-        input argument (positional) using functools.partial.
+        input argument (positional) using ``functools.partial``.
 
         :param generator: A python generator object that creates traffic
-        patterns through calls to methods of PyTrafficGen.
+                          patterns through calls to methods of PyTrafficGen.
         """
         if not self._traffic_set:
             self._set_traffic()
@@ -276,18 +288,19 @@ class ComplexGeneratorCore(AbstractGeneratorCore):
         used to exit the simulation).
 
         :param duration: The number of ticks for the generator core to generate
-        traffic.
+                         traffic.
         :param rate: The rate at which the synthetic data is read/written.
         :param block_size: The number of bytes to be read/written with each
-        request.
+                           request.
         :param min_addr: The lower bound of the address range the generator
-        will read/write from/to.
+                         will read/write from/to.
         :param max_addr: The upper bound of the address range the generator
-        will read/write from/to.
+                         will read/write from/to.
         :param rd_perc: The percentage of read requests among all the generated
-        requests. The write percentage would be equal to 100 - rd_perc.
+                        requests. The write percentage would be equal to
+                        ``100 - rd_perc``.
         :param data_limit: The amount of data in bytes to read/write by the
-        generator before stopping generation.
+                           generator before stopping generation.
         """
         duration = fromSeconds(toLatency(duration))
         rate = toMemoryBandwidth(rate)
@@ -322,18 +335,19 @@ class ComplexGeneratorCore(AbstractGeneratorCore):
         used to exit the simulation).
 
         :param duration: The number of ticks for the generator core to generate
-        traffic.
+                         traffic.
         :param rate: The rate at which the synthetic data is read/written.
         :param block_size: The number of bytes to be read/written with each
-        request.
+                           request.
         :param min_addr: The lower bound of the address range the generator
-        will read/write from/to.
+                         will read/write from/to.
         :param max_addr: The upper bound of the address range the generator
-        will read/write from/to.
+                         will read/write from/to.
         :param rd_perc: The percentage of read requests among all the generated
-        requests. The write percentage would be equal to 100 - rd_perc.
+                        requests. The write percentage would be equal to
+                        ``100 - rd_perc``.
         :param data_limit: The amount of data in bytes to read/write by the
-        generator before stopping generation.
+                           generator before stopping generation.
         """
         duration = fromSeconds(toLatency(duration))
         rate = toMemoryBandwidth(rate)

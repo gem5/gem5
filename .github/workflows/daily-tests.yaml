@@ -28,26 +28,37 @@ jobs:
         # the default is to add -j $(nproc), but some images
         # require more specifications when built
                 include:
-                    - command-line: -j $(nproc)
+                    - setconfig-option: ''
+                    - isa-option: ''
                     - image: ALL_CHI
-                      command-line: --default=ALL PROTOCOL=CHI -j $(nproc)
+                      setconfig-option: RUBY_PROTOCOL_CHI=y
+                      isa-option: ALL
                     - image: ALL_MSI
-                      command-line: --default=ALL PROTOCOL=MSI -j $(nproc)
+                      setconfig-option: RUBY_PROTOCOL_MSI=y
+                      isa-option: ALL
                     - image: ALL_MESI_Two_Level
-                      command-line: --default=ALL PROTOCOL=MESI_Two_Level -j $(nproc)
+                      setconfig-option: RUBY_PROTOCOL_MESI_TWO_LEVEL=y
+                      isa-option: ALL
                     - image: NULL_MI_example
-                      command-line: --default=NULL PROTOCOL=MI_example -j $(nproc)
+                      setconfig-option: RUBY_PROTOCOL_MI_EXAMPLE=y
+                      isa-option: 'NULL'
         runs-on: [self-hosted, linux, x64]
         needs: name-artifacts
-        container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
+        container: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
         steps:
             - uses: actions/checkout@v3
               with:
           # Scheduled workflows run on the default branch by default. We
           # therefore need to explicitly checkout the develop branch.
                   ref: develop
+            - name: defconfig gem5
+              if: ${{ matrix.setconfig-option  != '' }}
+              run: scons defconfig build/${{ matrix.image }} build_opts/${{ matrix.isa-option }}
+            - name: setconfig gem5
+              if: ${{ matrix.setconfig-option  != '' }}
+              run: scons setconfig build/${{ matrix.image }} ${{ matrix.setconfig-option }}
             - name: Build gem5
-              run: scons build/${{ matrix.image }}/gem5.opt ${{ matrix.command-line }}
+              run: scons build/${{ matrix.image }}/gem5.opt -j $(nproc)
             - uses: actions/upload-artifact@v3
               with:
                   name: ${{ needs.name-artifacts.outputs.build-name }}${{ matrix.image }}
@@ -61,7 +72,7 @@ jobs:
             matrix:
                 type: [fast, debug]
         runs-on: [self-hosted, linux, x64]
-        container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
+        container: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
         timeout-minutes: 60
         steps:
             - uses: actions/checkout@v3
@@ -80,7 +91,7 @@ jobs:
                 test-type: [arm_boot_tests, fs, gpu, insttest_se, learning_gem5, m5threads_test_atomic, memory, multi_isa, replacement_policies, riscv_boot_tests,
                     stdlib, x86_boot_tests]
         runs-on: [self-hosted, linux, x64]
-        container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
+        container: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
         needs: [name-artifacts, build-gem5]
         timeout-minutes: 1440 # 24 hours for entire matrix to run
         steps:
@@ -169,7 +180,7 @@ jobs:
             matrix:
                 test-type: [gem5-library-example-x86-ubuntu-run-ALL-x86_64-opt, gem5-library-example-riscv-ubuntu-run-ALL-x86_64-opt, lupv-example-ALL-x86_64-opt,
                     gem5-library-example-arm-ubuntu-run-test-ALL-x86_64-opt, gem5-library-example-riscvmatched-hello-ALL-x86_64-opt]
-        container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
+        container: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
         needs: [name-artifacts, build-gem5]
         timeout-minutes: 1440 # 24 hours
         steps:
@@ -209,7 +220,7 @@ jobs:
   # ext/sst/sst/example.py.
     sst-test:
         runs-on: [self-hosted, linux, x64]
-        container: gcr.io/gem5-test/sst-env:latest
+        container: ghcr.io/gem5/sst-env:latest
         timeout-minutes: 180
 
         steps:
@@ -234,7 +245,7 @@ jobs:
   # simulation with it.
     systemc-test:
         runs-on: [self-hosted, linux, x64]
-        container: gcr.io/gem5-test/systemc-env:latest
+        container: ghcr.io/gem5/systemc-env:latest
         timeout-minutes: 180
 
         steps:
@@ -245,8 +256,10 @@ jobs:
                   ref: develop
             - name: Build ARM/gem5.opt
               run: scons build/ARM/gem5.opt --ignore-style --duplicate-sources -j$(nproc)
+            - name: disable systemc
+              run: scons setconfig build/ARM --ignore-style USE_SYSTEMC=n
             - name: Build ARM/libgem5_opt.so
-              run: scons build/ARM/libgem5_opt.so --with-cxx-config --without-python --without-tcmalloc USE_SYSTEMC=0 -j$(nproc) --duplicate-sources
+              run: scons build/ARM/libgem5_opt.so --with-cxx-config --without-python --without-tcmalloc -j$(nproc) --duplicate-sources
             - name: Compile gem5 withing SystemC
               working-directory: ${{ github.workspace }}/util/systemc/gem5_within_systemc
               run: make
@@ -258,7 +271,7 @@ jobs:
   # Runs the gem5 Nighyly GPU tests.
     gpu-tests:
         runs-on: [self-hosted, linux, x64]
-        container: gcr.io/gem5-test/gcn-gpu:latest
+        container: ghcr.io/gem5/gcn-gpu:latest
         timeout-minutes: 720 # 12 hours
 
         steps:

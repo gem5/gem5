@@ -244,9 +244,10 @@ loadsymbol(ThreadContext *tc)
             continue;
 
         if (!tc->getSystemPtr()->workload->insertSymbol(
-                    { loader::Symbol::Binding::Global, symbol, addr })) {
-            continue;
-        }
+            { loader::Symbol::Binding::Global,
+              loader::Symbol::SymbolType::Function, symbol, addr })) {
+                continue;
+              }
 
 
         DPRINTF(Loader, "Loaded symbol: %s @ %#llx\n", symbol, addr);
@@ -270,9 +271,13 @@ addsymbol(ThreadContext *tc, Addr addr, Addr symbolAddr)
     DPRINTF(Loader, "Loaded symbol: %s @ %#llx\n", symbol, addr);
 
     tc->getSystemPtr()->workload->insertSymbol(
-            { loader::Symbol::Binding::Global, symbol, addr });
+        { loader::Symbol::Binding::Global,
+          loader::Symbol::SymbolType::Function, symbol, addr }
+    );
     loader::debugSymbolTable.insert(
-            { loader::Symbol::Binding::Global, symbol, addr });
+        { loader::Symbol::Binding::Global,
+          loader::Symbol::SymbolType::Function, symbol, addr }
+    );
 }
 
 uint64_t

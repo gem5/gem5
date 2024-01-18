@@ -69,7 +69,9 @@ commentRE = re.compile(
 # destination.  basically we're looking for an '=' that's not '=='.
 # The heinous tangle before that handles the case where the operand
 # has an array subscript.
-assignRE = re.compile(r"(\[[^\]]+\])?\s*=(?!=)", re.MULTILINE)
+assignRE = re.compile(
+    r"((\.as<[^>]+>\(\s*\))?\[[^\]]+\])?\s*=(?!=)", re.MULTILINE
+)
 
 #
 # Munge a somewhat arbitrarily formatted piece of Python code

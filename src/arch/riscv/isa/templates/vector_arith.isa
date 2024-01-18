@@ -35,8 +35,8 @@ output header {{
     [[maybe_unused]] RiscvISA::vreg_t old_vd;                        \
     [[maybe_unused]] decltype(Vd) old_Vd = nullptr;                  \
     xc->getRegOperand(this, (idx), &old_vd);                           \
-    old_Vd = old_vd.as<std::remove_reference_t<decltype(Vd[0])> >(); \
-    memcpy(Vd, old_Vd, VLENB);
+    old_Vd = old_vd.as<std::remove_reference_t<decltype(Vd[0])> >();    \
+    memcpy(Vd, old_Vd, vlenb);
 
 #define VRM_REQUIRED                                                         \
         uint_fast8_t frm = xc->readMiscReg(MISCREG_FRM);                     \
@@ -73,7 +73,7 @@ class %(class_name)s : public %(base_class)s {
 private:
     %(reg_idx_arr_decl)s;
 public:
-    %(class_name)s(ExtMachInst _machInst);
+    %(class_name)s(ExtMachInst _machInst, uint32_t _vlen);
     using %(base_class)s::generateDisassembly;
 };
 
@@ -82,14 +82,14 @@ public:
 def template VectorIntMacroConstructor {{
 
 template<typename ElemType>
-%(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst)
-    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s)
+%(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst, uint32_t _vlen)
+    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _vlen)
 {
     %(set_reg_idx_arr)s;
     %(constructor)s;
     const uint32_t num_microops = vtype_regs_per_group(vtype);
     int32_t tmp_vl = this->vl;
-    const int32_t micro_vlmax = vtype_VLMAX(_machInst.vtype8, true);
+    const int32_t micro_vlmax = vtype_VLMAX(_machInst.vtype8, vlen, true);
     int32_t micro_vl = std::min(tmp_vl, micro_vlmax);
     StaticInstPtr microop;
 
@@ -107,6 +107,9 @@ template<typename ElemType>
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
 }
+
+%(declare_varith_template)s;
+
 }};
 
 def template VectorIntMicroDeclare {{
@@ -121,8 +124,8 @@ private:
     RegId destRegIdxArr[1];
     bool vm;
 public:
-    %(class_name)s(ExtMachInst _machInst, uint8_t _microVl,
-                   uint8_t _microIdx);
+    %(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
+                   uint32_t _microIdx);
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
     using %(base_class)s::generateDisassembly;
 };
@@ -133,7 +136,7 @@ def template VectorIntMicroConstructor {{
 
 template<typename ElemType>
 %(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst,
-                                         uint8_t _microVl, uint8_t _microIdx)
+                                         uint32_t _microVl, uint32_t _microIdx)
     : %(base_class)s("%(mnemonic)s", _machInst,
                      %(op_class)s, _microVl, _microIdx)
 {
@@ -144,6 +147,8 @@ template<typename ElemType>
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -173,6 +178,7 @@ Fault
 
     %(op_decl)s;
     %(op_rd)s;
+    %(set_vlenb)s;
     %(vm_decl_rd)s;
     %(copy_old_vd)s;
     %(code)s;
@@ -180,6 +186,8 @@ Fault
 
     return NoFault;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -190,16 +198,9 @@ class %(class_name)s : public %(base_class)s {
 private:
     %(reg_idx_arr_decl)s;
 public:
-    %(class_name)s(ExtMachInst _machInst);
+    %(class_name)s(ExtMachInst _machInst, uint32_t _vlen);
     std::string generateDisassembly(Addr pc,
-        const loader::SymbolTable *symtab) const override
-    {
-        std::stringstream ss;
-        ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", "
-            << registerName(srcRegIdx(0));
-        if (machInst.vm == 0) ss << ", v0.t";
-        return ss.str();
-    }
+        const loader::SymbolTable *symtab) const override;
 };
 
 }};
@@ -214,18 +215,11 @@ private:
     RegId destRegIdxArr[1];
     bool vm;
 public:
-    %(class_name)s(ExtMachInst _machInst, uint8_t _microVl,
-                   uint8_t _microIdx);
+    %(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
+                   uint32_t _microIdx);
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
     std::string generateDisassembly(Addr pc,
-        const loader::SymbolTable *symtab) const override
-    {
-        std::stringstream ss;
-        ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", "
-            << registerName(srcRegIdx(0));
-        if (machInst.vm == 0) ss << ", v0.t";
-        return ss.str();
-    }
+        const loader::SymbolTable *symtab) const override;
 };
 
 }};
@@ -254,13 +248,16 @@ Fault
     xc->setMiscReg(MISCREG_STATUS, status);
 
     auto SEW = vtype_SEW(vtype);
-    auto offset = (VLEN / SEW) * (microIdx % %(ext_div)d);
+    auto index = (microIdx % %(ext_div)d);
+
     switch (SEW / %(ext_div)d) {
       case 8: {
         using vext  [[maybe_unused]] = int8_t;
         using vextu [[maybe_unused]] = uint8_t;
         %(op_decl)s;
         %(op_rd)s;
+        %(set_vlenb)s;
+        %(set_vlen)s;
         %(vm_decl_rd)s;
         %(copy_old_vd)s;
         %(code)s;
@@ -272,6 +269,8 @@ Fault
         using vextu [[maybe_unused]] = uint16_t;
         %(op_decl)s;
         %(op_rd)s;
+        %(set_vlenb)s;
+        %(set_vlen)s;
         %(vm_decl_rd)s;
         %(copy_old_vd)s;
         %(code)s;
@@ -283,6 +282,8 @@ Fault
         using vextu [[maybe_unused]] = uint32_t;
         %(op_decl)s;
         %(op_rd)s;
+        %(set_vlenb)s;
+        %(set_vlen)s;
         %(vm_decl_rd)s;
         %(copy_old_vd)s;
         %(code)s;
@@ -295,15 +296,47 @@ Fault
     return NoFault;
 }
 
+template <typename ElemType>
+std::string
+%(class_name)s<ElemType>::generateDisassembly(Addr pc,
+    const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", "
+        << registerName(srcRegIdx(0));
+    if (machInst.vm == 0) ss << ", v0.t";
+    return ss.str();
+}
+
+%(declare_varith_template)s;
+
+}};
+
+def template VectorIntExtMacroExecute {{
+
+template <typename ElemType>
+std::string
+%(class_name)s<ElemType>::generateDisassembly(Addr pc,
+    const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", "
+        << registerName(srcRegIdx(0));
+    if (machInst.vm == 0) ss << ", v0.t";
+    return ss.str();
+}
+
+%(declare_varith_template)s;
+
 }};
 
 def template VectorIntDecodeBlock {{
 
 switch(machInst.vtype8.vsew) {
-case 0b000: return new %(class_name)s<uint8_t>(machInst);
-case 0b001: return new %(class_name)s<uint16_t>(machInst);
-case 0b010: return new %(class_name)s<uint32_t>(machInst);
-case 0b011: return new %(class_name)s<uint64_t>(machInst);
+case 0b000: return new %(class_name)s<uint8_t>(machInst, vlen);
+case 0b001: return new %(class_name)s<uint16_t>(machInst, vlen);
+case 0b010: return new %(class_name)s<uint32_t>(machInst, vlen);
+case 0b011: return new %(class_name)s<uint64_t>(machInst, vlen);
 default: GEM5_UNREACHABLE;
 }
 
@@ -316,7 +349,7 @@ class %(class_name)s : public %(base_class)s {
 private:
     %(reg_idx_arr_decl)s;
 public:
-    %(class_name)s(ExtMachInst _machInst);
+    %(class_name)s(ExtMachInst _machInst, uint32_t _vlen);
     using %(base_class)s::generateDisassembly;
 };
 
@@ -325,8 +358,8 @@ public:
 def template VectorIntWideningMacroConstructor {{
 
 template<typename ElemType>
-%(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst)
-    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s)
+%(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst, uint32_t _vlen)
+    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _vlen)
 {
     %(set_reg_idx_arr)s;
     %(constructor)s;
@@ -337,7 +370,7 @@ template<typename ElemType>
     const uint32_t num_microops = 1 << std::max<int64_t>(0, vlmul + 1);
 
     int32_t tmp_vl = this->vl;
-    const int32_t t_micro_vlmax = vtype_VLMAX(_machInst.vtype8, true);
+    const int32_t t_micro_vlmax = vtype_VLMAX(_machInst.vtype8, vlen, true);
     const int32_t micro_vlmax = vlmul < 0 ? t_micro_vlmax : t_micro_vlmax / 2;
     int32_t micro_vl = std::min(tmp_vl, micro_vlmax);
     StaticInstPtr microop;
@@ -357,6 +390,8 @@ template<typename ElemType>
     this->microops.back()->setLastMicroop();
 }
 
+%(declare_varith_template)s;
+
 }};
 
 def template VectorIntWideningMicroDeclare {{
@@ -370,8 +405,8 @@ private:
     RegId destRegIdxArr[1];
     bool vm;
 public:
-    %(class_name)s(ExtMachInst _machInst, uint8_t _microVl,
-                   uint8_t _microIdx);
+    %(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
+                   uint32_t _microIdx);
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
     using %(base_class)s::generateDisassembly;
 };
@@ -382,7 +417,7 @@ def template VectorIntWideningMicroConstructor {{
 
 template<typename ElemType>
 %(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst,
-        uint8_t _microVl, uint8_t _microIdx)
+        uint32_t _microVl, uint32_t _microIdx)
     : %(base_class)s("%(mnemonic)s", _machInst,
                      %(op_class)s, _microVl, _microIdx)
 {
@@ -393,6 +428,8 @@ template<typename ElemType>
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -415,6 +452,10 @@ Fault
         return std::make_shared<IllegalInstFault>(
             "RVV is disabled or VPU is off", machInst);
     }
+    %(op_decl)s;
+    %(op_rd)s;
+    %(set_vlenb)s;
+    %(set_vlen)s;
 
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
@@ -423,19 +464,19 @@ Fault
     xc->setMiscReg(MISCREG_STATUS, status);
 
     const int64_t vlmul = vtype_vlmul(machInst.vtype8);
-    const int32_t t_micro_vlmax = vtype_VLMAX(machInst.vtype8, true);
+    const int32_t t_micro_vlmax = vtype_VLMAX(machInst.vtype8, vlen, true);
     const int32_t micro_vlmax = vlmul < 0 ? t_micro_vlmax : t_micro_vlmax / 2;
     [[maybe_unused]] const size_t offset =
         (this->microIdx % 2 == 0) ? 0 : micro_vlmax;
 
-    %(op_decl)s;
-    %(op_rd)s;
     %(vm_decl_rd)s;
     %(copy_old_vd)s;
     %(code)s;
     %(op_wb)s;
     return NoFault;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -459,6 +500,11 @@ Fault
             "RVV is disabled or VPU is off", machInst);
     }
 
+    %(op_decl)s;
+    %(op_rd)s;
+    %(set_vlenb)s;
+    %(set_vlen)s;
+
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
 
@@ -466,13 +512,11 @@ Fault
     xc->setMiscReg(MISCREG_STATUS, status);
 
     const int64_t vlmul = vtype_vlmul(machInst.vtype8);
-    const int32_t t_micro_vlmax = vtype_VLMAX(machInst.vtype8, true);
+    const int32_t t_micro_vlmax = vtype_VLMAX(machInst.vtype8, vlen, true);
     const int32_t micro_vlmax = vlmul < 0 ? t_micro_vlmax : t_micro_vlmax / 2;
     [[maybe_unused]] const size_t offset =
         (this->microIdx % 2 == 0) ? 0 : micro_vlmax;
 
-    %(op_decl)s;
-    %(op_rd)s;
     %(vm_decl_rd)s;
     %(copy_old_vd)s;
     %(code)s;
@@ -480,14 +524,16 @@ Fault
     return NoFault;
 }
 
+%(declare_varith_template)s;
+
 }};
 
 def template VectorIntWideningDecodeBlock {{
 
 switch(machInst.vtype8.vsew) {
-case 0b000: return new %(class_name)s<uint8_t>(machInst);
-case 0b001: return new %(class_name)s<uint16_t>(machInst);
-case 0b010: return new %(class_name)s<uint32_t>(machInst);
+case 0b000: return new %(class_name)s<uint8_t>(machInst, vlen);
+case 0b001: return new %(class_name)s<uint16_t>(machInst, vlen);
+case 0b010: return new %(class_name)s<uint32_t>(machInst, vlen);
 default: GEM5_UNREACHABLE;
 }
 
@@ -500,7 +546,7 @@ class %(class_name)s : public %(base_class)s {
 private:
     %(reg_idx_arr_decl)s;
 public:
-    %(class_name)s(ExtMachInst _machInst);
+    %(class_name)s(ExtMachInst _machInst, uint32_t _vlen);
     using %(base_class)s::generateDisassembly;
 };
 
@@ -508,14 +554,14 @@ public:
 
 def template VectorFloatMacroConstructor {{
 template<typename ElemType>
-%(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst)
-    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s)
+%(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst, uint32_t _vlen)
+    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _vlen)
 {
     %(set_reg_idx_arr)s;
     %(constructor)s;
     const uint32_t num_microops = vtype_regs_per_group(vtype);
     int32_t tmp_vl = this->vl;
-    const int32_t micro_vlmax = vtype_VLMAX(_machInst.vtype8, true);
+    const int32_t micro_vlmax = vtype_VLMAX(_machInst.vtype8, vlen, true);
     int32_t micro_vl = std::min(tmp_vl, micro_vlmax);
     StaticInstPtr microop;
 
@@ -533,6 +579,9 @@ template<typename ElemType>
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
 }
+
+%(declare_varith_template)s;
+
 }};
 
 def template VectorFloatMicroDeclare {{
@@ -547,7 +596,7 @@ private:
     bool vm;
 public:
     %(class_name)s(ExtMachInst _machInst,
-        uint8_t _microVl, uint8_t _microIdx);
+        uint32_t _microVl, uint32_t _microIdx);
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
     using %(base_class)s::generateDisassembly;
 };
@@ -557,7 +606,7 @@ public:
 def template VectorFloatMicroConstructor {{
 template<typename ElemType>
 %(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst,
-                                         uint8_t _microVl, uint8_t _microIdx)
+                                         uint32_t _microVl, uint32_t _microIdx)
     : %(base_class)s("%(mnemonic)s", _machInst,
                      %(op_class)s, _microVl, _microIdx)
 {
@@ -568,6 +617,8 @@ template<typename ElemType>
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -598,6 +649,7 @@ Fault
 
     %(op_decl)s;
     %(op_rd)s;
+    %(set_vlenb)s;
     %(vm_decl_rd)s;
     %(copy_old_vd)s;
     %(code)s;
@@ -606,13 +658,15 @@ Fault
     return NoFault;
 }
 
+%(declare_varith_template)s;
+
 }};
 
 def template VectorFloatDecodeBlock {{
 
 switch(machInst.vtype8.vsew) {
-case 0b010: return new %(class_name)s<float32_t>(machInst);
-case 0b011: return new %(class_name)s<float64_t>(machInst);
+case 0b010: return new %(class_name)s<float32_t>(machInst, vlen);
+case 0b011: return new %(class_name)s<float64_t>(machInst, vlen);
 default: GEM5_UNREACHABLE;
 }
 
@@ -625,7 +679,7 @@ class %(class_name)s : public %(base_class)s {
 private:
     %(reg_idx_arr_decl)s;
 public:
-    %(class_name)s(ExtMachInst _machInst);
+    %(class_name)s(ExtMachInst _machInst, uint32_t _vlen);
     std::string generateDisassembly(Addr pc,
         const loader::SymbolTable *symtab) const override
     {
@@ -650,7 +704,7 @@ private:
     bool vm;
 public:
     %(class_name)s(ExtMachInst _machInst,
-        uint8_t _microVl, uint8_t _microIdx);
+        uint32_t _microVl, uint32_t _microIdx);
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
     std::string generateDisassembly(Addr pc,
         const loader::SymbolTable *symtab) const override
@@ -693,20 +747,25 @@ Fault
 
     VRM_REQUIRED;
 
+    %(op_decl)s;
+    %(op_rd)s;
+    %(set_vlenb)s;
+    %(set_vlen)s;
+
     const int64_t vlmul = vtype_vlmul(machInst.vtype8);
-    const int32_t t_micro_vlmax = vtype_VLMAX(machInst.vtype8, true);
+    const int32_t t_micro_vlmax = vtype_VLMAX(machInst.vtype8, vlen, true);
     const int32_t micro_vlmax = vlmul < 0 ? t_micro_vlmax : t_micro_vlmax / 2;
     [[maybe_unused]] const size_t offset =
         (this->microIdx % 2 == 0) ? 0 : micro_vlmax;
 
-    %(op_decl)s;
-    %(op_rd)s;
     %(vm_decl_rd)s;
     %(copy_old_vd)s;
     %(code)s;
     %(op_wb)s;
     return NoFault;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -737,14 +796,17 @@ Fault
 
     VRM_REQUIRED;
 
+    %(op_decl)s;
+    %(op_rd)s;
+    %(set_vlenb)s;
+    %(set_vlen)s;
+
     const int64_t vlmul = vtype_vlmul(machInst.vtype8);
-    const int32_t t_micro_vlmax = vtype_VLMAX(machInst.vtype8, true);
+    const int32_t t_micro_vlmax = vtype_VLMAX(machInst.vtype8, vlen, true);
     const int32_t micro_vlmax = vlmul < 0 ? t_micro_vlmax : t_micro_vlmax / 2;
     [[maybe_unused]] const size_t offset =
         (this->microIdx % 2 == 0) ? 0 : micro_vlmax;
 
-    %(op_decl)s;
-    %(op_rd)s;
     %(vm_decl_rd)s;
     %(copy_old_vd)s;
     %(code)s;
@@ -752,12 +814,14 @@ Fault
     return NoFault;
 }
 
+%(declare_varith_template)s;
+
 }};
 
 def template VectorFloatWideningDecodeBlock {{
 
 switch(machInst.vtype8.vsew) {
-case 0b010: return new %(class_name)s<float32_t>(machInst);
+case 0b010: return new %(class_name)s<float32_t>(machInst, vlen);
 default: GEM5_UNREACHABLE;
 }
 
@@ -771,7 +835,7 @@ private:
     int cnt = 0;
     %(reg_idx_arr_decl)s;
 public:
-    %(class_name)s(ExtMachInst _machInst);
+    %(class_name)s(ExtMachInst _machInst, uint32_t _vlen);
     using %(base_class)s::generateDisassembly;
 };
 
@@ -781,14 +845,14 @@ public:
 def template ViotaMacroConstructor {{
 
 template<typename ElemType>
-%(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst)
-    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s)
+%(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst, uint32_t _vlen)
+    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _vlen)
 {
     %(set_reg_idx_arr)s;
     %(constructor)s;
     const uint32_t num_microops = vtype_regs_per_group(vtype);
     int32_t tmp_vl = this->vl;
-    const int32_t micro_vlmax = vtype_VLMAX(_machInst.vtype8, true);
+    const int32_t micro_vlmax = vtype_VLMAX(_machInst.vtype8, vlen, true);
     int32_t micro_vl = std::min(tmp_vl, micro_vlmax);
 
     StaticInstPtr microop;
@@ -806,6 +870,8 @@ template<typename ElemType>
     this->microops.back()->setLastMicroop();
 }
 
+%(declare_varith_template)s;
+
 }};
 
 def template ViotaMicroDeclare {{
@@ -819,8 +885,8 @@ private:
     bool vm;
     int* cnt;
 public:
-    %(class_name)s(ExtMachInst _machInst, uint8_t _microVl,
-                   uint8_t _microIdx, int* cnt);
+    %(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
+                   uint32_t _microIdx, int* cnt);
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
     using %(base_class)s::generateDisassembly;
 };
@@ -831,7 +897,7 @@ def template ViotaMicroConstructor {{
 
 template<typename ElemType>
 %(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst,
-    uint8_t _microVl, uint8_t _microIdx, int* cnt)
+    uint32_t _microVl, uint32_t _microIdx, int* cnt)
     : %(base_class)s("%(mnemonic)s", _machInst,
                      %(op_class)s, _microVl, _microIdx)
 {
@@ -844,6 +910,8 @@ template<typename ElemType>
     %(set_src_reg_idx)s;
     setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs2]);
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -871,12 +939,15 @@ Fault
 
     %(op_decl)s;
     %(op_rd)s;
+    %(set_vlenb)s;
     %(vm_decl_rd)s;
     %(copy_old_vd)s;
     %(code)s;
     %(op_wb)s;
     return NoFault;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -893,6 +964,8 @@ template<typename ElemType>
     %(set_src_reg_idx)s;
     %(set_vm_idx)s;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -919,12 +992,15 @@ Fault
 
     %(op_decl)s;
     %(op_rd)s;
+    %(set_vlenb)s;
     %(vm_decl_rd)s;
     %(copy_old_vd)s;
     %(code)s;
     %(op_wb)s;
     return NoFault;
 };
+
+%(declare_varith_template)s;
 
 }};
 
@@ -955,6 +1031,8 @@ template<typename ElemType>
     %(constructor)s;
     %(set_vm_idx)s;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -988,6 +1066,8 @@ Fault
     return NoFault;
 };
 
+%(declare_varith_template)s;
+
 }};
 
 def template VectorIntMaskMacroDeclare {{
@@ -997,7 +1077,7 @@ class %(class_name)s : public %(base_class)s {
 private:
     %(reg_idx_arr_decl)s;
 public:
-    %(class_name)s(ExtMachInst _machInst);
+    %(class_name)s(ExtMachInst _machInst, uint32_t _vlen);
     using %(base_class)s::generateDisassembly;
 };
 
@@ -1006,34 +1086,32 @@ public:
 def template VectorIntMaskMacroConstructor {{
 
 template<typename ElemType>
-%(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst)
-    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s)
+%(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst, uint32_t _vlen)
+    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _vlen)
 {
     %(set_reg_idx_arr)s;
     %(constructor)s;
     const uint32_t num_microops = vtype_regs_per_group(vtype);
     int32_t tmp_vl = this->vl;
-    const int32_t micro_vlmax = vtype_VLMAX(_machInst.vtype8, true);
+    const int32_t micro_vlmax = vtype_VLMAX(_machInst.vtype8, vlen, true);
     int32_t micro_vl = std::min(tmp_vl, micro_vlmax);
     StaticInstPtr microop;
 
-    if (micro_vl == 0) {
-        microop = new VectorNopMicroInst(_machInst);
-        this->microops.push_back(microop);
-    }
-    for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
+    for (int i = 0; i < num_microops && micro_vl >= 0; ++i) {
         microop = new %(class_name)sMicro<ElemType>(_machInst, micro_vl, i);
         microop->setDelayedCommit();
         this->microops.push_back(microop);
         micro_vl = std::min(tmp_vl -= micro_vlmax, micro_vlmax);
     }
-    microop = new VMaskMergeMicroInst<ElemType>(_machInst, _machInst.vd,
-        this->microops.size());
+    microop = new VMaskMergeMicroInst(_machInst, _machInst.vd,
+        this->microops.size(), _vlen, sizeof(ElemType));
     this->microops.push_back(microop);
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -1050,7 +1128,7 @@ private:
     bool vm;
 public:
     %(class_name)s(ExtMachInst _machInst,
-                   uint8_t _microVl, uint8_t _microIdx);
+                   uint32_t _microVl, uint32_t _microIdx);
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
     using %(base_class)s::generateDisassembly;
 };
@@ -1061,7 +1139,7 @@ def template VectorIntMaskMicroConstructor {{
 
 template<typename ElemType>
 %(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst,
-                                         uint8_t _microVl, uint8_t _microIdx)
+                                         uint32_t _microVl, uint32_t _microIdx)
 : %(base_class)s("%(mnemonic)s", _machInst,
                  %(op_class)s, _microVl, _microIdx)
 {
@@ -1072,6 +1150,8 @@ template<typename ElemType>
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -1099,16 +1179,19 @@ Fault
 
     %(op_decl)s;
     %(op_rd)s;
+    %(set_vlenb)s;
     %(vm_decl_rd)s;
     %(copy_old_vd)s;
 
-    constexpr uint16_t bit_offset = VLENB / sizeof(ElemType);
-    const uint16_t offset = bit_offset * microIdx;
+    const uint32_t bit_offset = vlenb / sizeof(ElemType);
+    const uint32_t offset = bit_offset * microIdx;
 
     %(code)s;
     %(op_wb)s;
     return NoFault;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -1119,7 +1202,7 @@ class %(class_name)s : public %(base_class)s {
 private:
     %(reg_idx_arr_decl)s;
 public:
-    %(class_name)s(ExtMachInst _machInst);
+    %(class_name)s(ExtMachInst _machInst, uint32_t _vlen);
     using %(base_class)s::generateDisassembly;
 };
 
@@ -1128,14 +1211,14 @@ public:
 def template VectorFloatMaskMacroConstructor {{
 
 template<typename ElemType>
-%(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst)
-    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s)
+%(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst, uint32_t _vlen)
+    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _vlen)
 {
     %(set_reg_idx_arr)s;
     %(constructor)s;
     const uint32_t num_microops = vtype_regs_per_group(vtype);
     int32_t tmp_vl = this->vl;
-    const int32_t micro_vlmax = vtype_VLMAX(_machInst.vtype8, true);
+    const int32_t micro_vlmax = vtype_VLMAX(_machInst.vtype8, vlen, true);
     int32_t micro_vl = std::min(tmp_vl, micro_vlmax);
     StaticInstPtr microop;
 
@@ -1149,13 +1232,15 @@ template<typename ElemType>
         this->microops.push_back(microop);
         micro_vl = std::min(tmp_vl -= micro_vlmax, micro_vlmax);
     }
-    microop = new VMaskMergeMicroInst<ElemType>(_machInst, _machInst.vd,
-        this->microops.size());
+    microop = new VMaskMergeMicroInst(_machInst, _machInst.vd,
+        this->microops.size(), _vlen, sizeof(ElemType));
     this->microops.push_back(microop);
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -1171,7 +1256,7 @@ private:
     bool vm;
 public:
     %(class_name)s(ExtMachInst _machInst,
-                   uint8_t _microVl, uint8_t _microIdx);
+                   uint32_t _microVl, uint32_t _microIdx);
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
     using %(base_class)s::generateDisassembly;
 };
@@ -1182,7 +1267,7 @@ def template VectorFloatMaskMicroConstructor {{
 
 template<typename ElemType>
 %(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst,
-                                         uint8_t _microVl, uint8_t _microIdx)
+                                         uint32_t _microVl, uint32_t _microIdx)
 : %(base_class)s("%(mnemonic)s", _machInst,
                  %(op_class)s, _microVl, _microIdx)
 {
@@ -1193,6 +1278,8 @@ template<typename ElemType>
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -1220,16 +1307,19 @@ Fault
 
     %(op_decl)s;
     %(op_rd)s;
+    %(set_vlenb)s;
     %(vm_decl_rd)s;
     %(copy_old_vd)s;
 
-    constexpr uint16_t bit_offset = VLENB / sizeof(ElemType);
-    const uint16_t offset = bit_offset * microIdx;
+    const uint32_t bit_offset = vlenb / sizeof(ElemType);
+    const uint32_t offset = bit_offset * microIdx;
 
     %(code)s;
     %(op_wb)s;
     return NoFault;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -1276,8 +1366,8 @@ private:
     RegId destRegIdxArr[1];
     bool vm;
 public:
-    %(class_name)s(ExtMachInst _machInst, uint8_t _microVl,
-                   uint8_t _microIdx);
+    %(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
+                   uint32_t _microIdx);
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
     using %(base_class)s::generateDisassembly;
 };
@@ -1287,7 +1377,7 @@ public:
 def template VMvWholeMicroConstructor {{
 
 %(class_name)s::%(class_name)s(ExtMachInst _machInst,
-                               uint8_t _microVl, uint8_t _microIdx)
+                               uint32_t _microVl, uint32_t _microIdx)
     : %(base_class)s("%(mnemonic)s", _machInst,
                      %(op_class)s, _microVl, _microIdx)
 {
@@ -1321,7 +1411,8 @@ Fault
 
     %(op_decl)s;
     %(op_rd)s;
-    for (size_t i = 0; i < (VLEN / 64); i++) {
+    %(set_vlen)s;
+    for (size_t i = 0; i < (vlen / 64); i++) {
         %(code)s;
     }
     %(op_wb)s;
@@ -1356,6 +1447,8 @@ template<typename ElemType>
     %(set_src_reg_idx)s;
 }
 
+%(declare_varith_template)s;
+
 }};
 
 def template VectorMaskExecute {{
@@ -1382,12 +1475,15 @@ Fault
     %(op_decl)s;
     %(op_rd)s;
     // TODO: remove it
+    %(set_vlenb)s;
     %(copy_old_vd)s;
     %(code)s;
     %(op_wb)s;
 
     return NoFault;
 };
+
+%(declare_varith_template)s;
 
 }};
 
@@ -1423,6 +1519,8 @@ template<typename ElemType>
     %(set_vm_idx)s;
 }
 
+%(declare_varith_template)s;
+
 }};
 
 def template VectorIntNonSplitExecute {{
@@ -1454,6 +1552,8 @@ Fault
     %(op_wb)s;
     return NoFault;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -1487,6 +1587,30 @@ Fault
     return NoFault;
 }
 
+%(declare_varith_template)s;
+
+}};
+
+def template VectorFloatNonSplitDecodeBlock {{
+
+switch(machInst.vtype8.vsew) {
+case 0b010: return new %(class_name)s<float32_t>(machInst);
+case 0b011: return new %(class_name)s<float64_t>(machInst);
+default: GEM5_UNREACHABLE;
+}
+
+}};
+
+def template VectorIntNonSplitDecodeBlock {{
+
+switch(machInst.vtype8.vsew) {
+case 0b000: return new %(class_name)s<uint8_t>(machInst);
+case 0b001: return new %(class_name)s<uint16_t>(machInst);
+case 0b010: return new %(class_name)s<uint32_t>(machInst);
+case 0b011: return new %(class_name)s<uint64_t>(machInst);
+default: GEM5_UNREACHABLE;
+}
+
 }};
 
 def template VectorReduceMacroDeclare {{
@@ -1496,7 +1620,7 @@ class %(class_name)s : public %(base_class)s {
 private:
     %(reg_idx_arr_decl)s;
 public:
-    %(class_name)s(ExtMachInst _machInst);
+    %(class_name)s(ExtMachInst _machInst, uint32_t _vlen);
     using %(base_class)s::generateDisassembly;
 };
 
@@ -1505,14 +1629,14 @@ public:
 def template VectorReduceMacroConstructor {{
 
 template<typename ElemType>
-%(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst)
-    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s)
+%(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst, uint32_t _vlen)
+    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _vlen)
 {
     %(set_reg_idx_arr)s;
     %(constructor)s;
     const uint32_t num_microops = vtype_regs_per_group(vtype);
     int32_t tmp_vl = this->vl;
-    const int32_t micro_vlmax = vtype_VLMAX(_machInst.vtype8, true);
+    const int32_t micro_vlmax = vtype_VLMAX(_machInst.vtype8, vlen, true);
     int32_t micro_vl = std::min(tmp_vl, micro_vlmax);
     StaticInstPtr microop;
 
@@ -1530,6 +1654,8 @@ template<typename ElemType>
     this->microops.back()->setLastMicroop();
 }
 
+%(declare_varith_template)s;
+
 }};
 
 def template VectorReduceMicroDeclare {{
@@ -1544,7 +1670,7 @@ private:
     bool vm;
 public:
     %(class_name)s(ExtMachInst _machInst,
-                   uint8_t _microVl, uint8_t _microIdx);
+                   uint32_t _microVl, uint32_t _microIdx);
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
     using %(base_class)s::generateDisassembly;
 };
@@ -1555,7 +1681,7 @@ def template VectorReduceMicroConstructor {{
 
 template<typename ElemType>
 %(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst,
-                                         uint8_t _microVl, uint8_t _microIdx)
+                                         uint32_t _microVl, uint32_t _microIdx)
 : %(base_class)s("%(mnemonic)s", _machInst,
                  %(op_class)s, _microVl, _microIdx)
 {
@@ -1566,6 +1692,8 @@ template<typename ElemType>
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -1593,6 +1721,8 @@ Fault
 
     %(op_decl)s;
     %(op_rd)s;
+    %(set_vlenb)s;
+    %(set_vlen)s;
     %(vm_decl_rd)s;
     %(copy_old_vd)s;
 
@@ -1600,7 +1730,8 @@ Fault
         [&, this](const auto& f, const auto* _, const auto* vs2) {
             ElemType microop_result = this->microIdx != 0 ? old_Vd[0] : Vs1[0];
             for (uint32_t i = 0; i < this->microVl; i++) {
-                uint32_t ei = i + vtype_VLMAX(vtype, true) * this->microIdx;
+                uint32_t ei = i + vtype_VLMAX(vtype, vlen, true) *
+                    this->microIdx;
                 if (this->vm || elem_mask(v0, ei)) {
                     microop_result = f(microop_result, Vs2[i]);
                 }
@@ -1612,6 +1743,8 @@ Fault
     %(op_wb)s;
     return NoFault;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -1625,6 +1758,7 @@ Fault
     %(type_def)s;
     MISA misa = xc->readMiscReg(MISCREG_ISA);
     STATUS status = xc->readMiscReg(MISCREG_STATUS);
+
     if (!misa.rvv || status.vs == VPUStatus::OFF) {
         return std::make_shared<IllegalInstFault>(
             "RVV is disabled or VPU is off", machInst);
@@ -1638,6 +1772,8 @@ Fault
 
     %(op_decl)s;
     %(op_rd)s;
+    %(set_vlenb)s;
+    %(set_vlen)s;
     %(vm_decl_rd)s;
     %(copy_old_vd)s;
 
@@ -1647,7 +1783,8 @@ Fault
         [&, this](const auto& f, const auto* _, const auto* vs2) {
             vu tmp_val = Vd[0];
             for (uint32_t i = 0; i < this->microVl; i++) {
-                uint32_t ei = i + vtype_VLMAX(vtype, true) * this->microIdx;
+                uint32_t ei = i + vtype_VLMAX(vtype, vlen, true) *
+                    this->microIdx;
                 if (this->vm || elem_mask(v0, ei)) {
                     tmp_val = f(tmp_val, Vs2[i]).v;
                 }
@@ -1659,6 +1796,8 @@ Fault
     %(op_wb)s;
     return NoFault;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -1685,6 +1824,8 @@ Fault
 
     %(op_decl)s;
     %(op_rd)s;
+    %(set_vlenb)s;
+    %(set_vlen)s;
     %(vm_decl_rd)s;
     %(copy_old_vd)s;
 
@@ -1694,7 +1835,8 @@ Fault
         [&, this](const auto& f, const auto* _, const auto* vs2) {
             vwu tmp_val = Vd[0];
             for (uint32_t i = 0; i < this->microVl; i++) {
-                uint32_t ei = i + vtype_VLMAX(vtype, true) * this->microIdx;
+                uint32_t ei = i + vtype_VLMAX(vtype, vlen, true) *
+                    this->microIdx;
                 if (this->vm || elem_mask(v0, ei)) {
                     tmp_val = f(tmp_val, Vs2[i]).v;
                 }
@@ -1707,6 +1849,8 @@ Fault
     return NoFault;
 }
 
+%(declare_varith_template)s;
+
 }};
 
 def template VectorGatherMacroDeclare {{
@@ -1716,7 +1860,7 @@ class %(class_name)s : public %(base_class)s{
 private:
     %(reg_idx_arr_decl)s;
 public:
-    %(class_name)s(ExtMachInst _machInst);
+    %(class_name)s(ExtMachInst _machInst, uint32_t _vlen);
     using %(base_class)s::generateDisassembly;
 };
 
@@ -1725,8 +1869,9 @@ public:
 def template VectorGatherMacroConstructor {{
 
 template<typename ElemType, typename IndexType>
-%(class_name)s<ElemType, IndexType>::%(class_name)s(ExtMachInst _machInst)
-    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s)
+%(class_name)s<ElemType, IndexType>::%(class_name)s(ExtMachInst _machInst,
+    uint32_t _vlen)
+    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _vlen)
 {
     %(set_reg_idx_arr)s;
     %(constructor)s;
@@ -1740,7 +1885,8 @@ template<typename ElemType, typename IndexType>
     const uint8_t vs2_vregs = lmul < 0 ? 1 : 1 << lmul;
     const uint8_t vs1_vregs = vs1_emul < 0 ? 1 : 1 << vs1_emul;
     const uint8_t vd_vregs = vs2_vregs;
-    const int32_t micro_vlmax = VLENB / std::max(vd_eewb, vs1_eewb);
+    uint32_t vlenb = vlen >> 3;
+    const int32_t micro_vlmax = vlenb / std::max(vd_eewb, vs1_eewb);
     int32_t remaining_vl = this->vl;
     int32_t micro_vl = std::min(remaining_vl, micro_vlmax);
     StaticInstPtr microop;
@@ -1749,7 +1895,7 @@ template<typename ElemType, typename IndexType>
         microop = new VectorNopMicroInst(_machInst);
         this->microops.push_back(microop);
     }
-    for (uint8_t i = 0; i < std::max(vs1_vregs, vd_vregs) && micro_vl > 0;
+    for (uint32_t i = 0; i < std::max(vs1_vregs, vd_vregs) && micro_vl > 0;
             i++) {
         for (uint8_t j = 0; j < vs2_vregs; j++) {
             microop = new %(class_name)sMicro<ElemType, IndexType>(
@@ -1763,6 +1909,8 @@ template<typename ElemType, typename IndexType>
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -1778,7 +1926,7 @@ private:
     bool vm;
 public:
     %(class_name)s(ExtMachInst _machInst,
-                   uint8_t _microVl, uint8_t _microIdx);
+                   uint32_t _microVl, uint32_t _microIdx);
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
     using %(base_class)s::generateDisassembly;
 };
@@ -1789,7 +1937,7 @@ def template VectorGatherMicroConstructor {{
 
 template<typename ElemType, typename IndexType>
 %(class_name)s<ElemType, IndexType>::%(class_name)s(ExtMachInst _machInst,
-    uint8_t _microVl, uint8_t _microIdx)
+    uint32_t _microVl, uint32_t _microIdx)
 : %(base_class)s("%(mnemonic)s", _machInst,
                  %(op_class)s, _microVl, _microIdx)
 {
@@ -1800,18 +1948,20 @@ template<typename ElemType, typename IndexType>
     [[maybe_unused]] constexpr uint32_t vd_eewb = sizeof(ElemType);
     [[maybe_unused]] constexpr uint32_t vs2_eewb = sizeof(ElemType);
     [[maybe_unused]] constexpr uint32_t vs1_eewb = sizeof(IndexType);
-    constexpr uint8_t vs1_split_num = (vd_eewb + vs1_eewb - 1) / vs1_eewb;
-    constexpr uint8_t vd_split_num = (vs1_eewb + vd_eewb - 1) / vd_eewb;
+    constexpr uint32_t vs1_split_num = (vd_eewb + vs1_eewb - 1) / vs1_eewb;
+    constexpr uint32_t vd_split_num = (vs1_eewb + vd_eewb - 1) / vd_eewb;
     const int8_t lmul = vtype_vlmul(vtype);
     const uint8_t vs2_vregs = lmul < 0 ? 1 : 1 << lmul;
-    [[maybe_unused]] const uint8_t vs2_idx = _microIdx % vs2_vregs;
-    [[maybe_unused]] const uint8_t vs1_idx =
+    [[maybe_unused]] const uint32_t vs2_idx = _microIdx % vs2_vregs;
+    [[maybe_unused]] const uint32_t vs1_idx =
         _microIdx / vs2_vregs / vs1_split_num;
-    [[maybe_unused]] const uint8_t vd_idx =
+    [[maybe_unused]] const uint32_t vd_idx =
         _microIdx / vs2_vregs / vd_split_num;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -1839,27 +1989,29 @@ Fault
 
     %(op_decl)s;
     %(op_rd)s;
+    %(set_vlenb)s;
+    %(set_vlen)s;
     %(vm_decl_rd)s;
     %(copy_old_vd)s;
-    const uint32_t vlmax = vtype_VLMAX(vtype);
-    constexpr uint8_t vd_eewb = sizeof(ElemType);
-    constexpr uint8_t vs1_eewb = sizeof(IndexType);
-    constexpr uint8_t vs2_eewb = sizeof(ElemType);
-    constexpr uint8_t vs1_split_num = (vd_eewb + vs1_eewb - 1) / vs1_eewb;
-    constexpr uint8_t vd_split_num = (vs1_eewb + vd_eewb - 1) / vd_eewb;
-    [[maybe_unused]] constexpr uint16_t vd_elems = VLENB / vd_eewb;
-    [[maybe_unused]] constexpr uint16_t vs1_elems = VLENB / vs1_eewb;
-    [[maybe_unused]] constexpr uint16_t vs2_elems = VLENB / vs2_eewb;
+    const uint32_t vlmax = vtype_VLMAX(vtype,vlen);
+    constexpr uint32_t vd_eewb = sizeof(ElemType);
+    constexpr uint32_t vs1_eewb = sizeof(IndexType);
+    constexpr uint32_t vs2_eewb = sizeof(ElemType);
+    constexpr uint32_t vs1_split_num = (vd_eewb + vs1_eewb - 1) / vs1_eewb;
+    constexpr uint32_t vd_split_num = (vs1_eewb + vd_eewb - 1) / vd_eewb;
+    [[maybe_unused]] const uint32_t vd_elems = vlenb / vd_eewb;
+    [[maybe_unused]] const uint32_t vs1_elems = vlenb / vs1_eewb;
+    [[maybe_unused]] const uint32_t vs2_elems = vlenb / vs2_eewb;
     [[maybe_unused]] const int8_t lmul = vtype_vlmul(vtype);
     [[maybe_unused]] const uint8_t vs2_vregs = lmul < 0 ? 1 : 1 << lmul;
-    [[maybe_unused]] const uint8_t vs2_idx = microIdx % vs2_vregs;
-    [[maybe_unused]] const uint8_t vs1_idx =
+    [[maybe_unused]] const uint32_t vs2_idx = microIdx % vs2_vregs;
+    [[maybe_unused]] const uint32_t vs1_idx =
         microIdx / vs2_vregs / vs1_split_num;
-    [[maybe_unused]] const uint8_t vd_idx =
+    [[maybe_unused]] const uint32_t vd_idx =
         microIdx / vs2_vregs / vd_split_num;
-    [[maybe_unused]] const uint16_t vs1_bias =
+    [[maybe_unused]] const uint32_t vs1_bias =
         vs1_elems * (vd_idx % vs1_split_num) / vs1_split_num;
-    [[maybe_unused]] const uint16_t vd_bias =
+    [[maybe_unused]] const uint32_t vd_bias =
         vd_elems * (vs1_idx % vd_split_num) / vd_split_num;
 
     %(code)s;
@@ -1868,6 +2020,8 @@ Fault
     return NoFault;
 }
 
+%(declare_varith_template)s;
+
 }};
 
 def template VectorGatherDecodeBlock {{
@@ -1875,19 +2029,19 @@ def template VectorGatherDecodeBlock {{
 switch(machInst.vtype8.vsew) {
     case 0b000: {
         using elem_type [[maybe_unused]] = uint8_t;
-        return new %(class_name)s<uint8_t, %(idx_type)s>(machInst);
+        return new %(class_name)s<uint8_t, %(idx_type)s>(machInst, vlen);
     }
     case 0b001: {
         using elem_type [[maybe_unused]] = uint16_t;
-        return new %(class_name)s<uint16_t, %(idx_type)s>(machInst);
+        return new %(class_name)s<uint16_t, %(idx_type)s>(machInst, vlen);
     }
     case 0b010: {
         using elem_type [[maybe_unused]] = uint32_t;
-        return new %(class_name)s<uint32_t, %(idx_type)s>(machInst);
+        return new %(class_name)s<uint32_t, %(idx_type)s>(machInst, vlen);
     }
     case 0b011: {
         using elem_type [[maybe_unused]] = uint64_t;
-        return new %(class_name)s<uint64_t, %(idx_type)s>(machInst);
+        return new %(class_name)s<uint64_t, %(idx_type)s>(machInst, vlen);
     }
     default: GEM5_UNREACHABLE;
 }
@@ -1902,7 +2056,7 @@ private:
     %(reg_idx_arr_decl)s;
     bool vxsat = false;
 public:
-    %(class_name)s(ExtMachInst _machInst);
+    %(class_name)s(ExtMachInst _machInst, uint32_t _vlen);
     using %(base_class)s::generateDisassembly;
 };
 
@@ -1911,14 +2065,14 @@ public:
 def template VectorIntVxsatMacroConstructor {{
 
 template<typename ElemType>
-%(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst)
-    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s)
+%(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst, uint32_t _vlen)
+    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _vlen)
 {
     %(set_reg_idx_arr)s;
     %(constructor)s;
     const uint32_t num_microops = vtype_regs_per_group(vtype);
     int32_t tmp_vl = this->vl;
-    const int32_t micro_vlmax = vtype_VLMAX(_machInst.vtype8, true);
+    const int32_t micro_vlmax = vtype_VLMAX(_machInst.vtype8, vlen, true);
     int32_t micro_vl = std::min(tmp_vl, micro_vlmax);
     StaticInstPtr microop;
 
@@ -1941,6 +2095,9 @@ template<typename ElemType>
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
 }
+
+%(declare_varith_template)s;
+
 }};
 
 def template VectorIntVxsatMicroDeclare {{
@@ -1954,8 +2111,8 @@ private:
     bool vm;
     bool* vxsatptr;
 public:
-    %(class_name)s(ExtMachInst _machInst, uint8_t _microVl,
-                   uint8_t _microIdx, bool* vxsatptr);
+    %(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
+                   uint32_t _microIdx, bool* vxsatptr);
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
     using %(base_class)s::generateDisassembly;
 };
@@ -1966,7 +2123,7 @@ def template VectorIntVxsatMicroConstructor {{
 
 template<typename ElemType>
 %(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst,
-    uint8_t _microVl, uint8_t _microIdx, bool* vxsatptr)
+    uint32_t _microVl, uint32_t _microIdx, bool* vxsatptr)
     : %(base_class)s("%(mnemonic)s", _machInst,
                      %(op_class)s, _microVl, _microIdx)
 {
@@ -1978,6 +2135,8 @@ template<typename ElemType>
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -2007,6 +2166,8 @@ Fault
 
     %(op_decl)s;
     %(op_rd)s;
+    %(set_vlenb)s;
+    %(set_vlen)s;
     %(vm_decl_rd)s;
     %(copy_old_vd)s;
 
@@ -2016,7 +2177,8 @@ Fault
         [&, this](const auto& f, const auto* _, const auto* vs2) {
             vwu tmp_val = Vd[0];
             for (uint32_t i = 0; i < this->microVl; i++) {
-                uint32_t ei = i + vtype_VLMAX(vtype, true) * this->microIdx;
+                uint32_t ei = i + vtype_VLMAX(vtype, vlen, true) *
+                    this->microIdx;
                 if (this->vm || elem_mask(v0, ei)) {
                     tmp_val = f(tmp_val, Vs2[i]);
                 }
@@ -2029,6 +2191,8 @@ Fault
     return NoFault;
 }
 
+%(declare_varith_template)s;
+
 }};
 
 def template VectorSlideMacroDeclare {{
@@ -2038,7 +2202,7 @@ class %(class_name)s : public %(base_class)s {
 private:
     %(reg_idx_arr_decl)s;
 public:
-    %(class_name)s(ExtMachInst _machInst);
+    %(class_name)s(ExtMachInst _machInst, uint32_t _vlen);
     using %(base_class)s::generateDisassembly;
 };
 
@@ -2047,14 +2211,14 @@ public:
 def template VectorSlideUpMacroConstructor {{
 
 template<typename ElemType>
-%(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst)
-    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s)
+%(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst, uint32_t _vlen)
+    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _vlen)
 {
     %(set_reg_idx_arr)s;
     %(constructor)s;
     const uint32_t num_microops = vtype_regs_per_group(vtype);
     int32_t tmp_vl = this->vl;
-    const int32_t micro_vlmax = vtype_VLMAX(_machInst.vtype8, true);
+    const int32_t micro_vlmax = vtype_VLMAX(_machInst.vtype8, vlen, true);
     int32_t micro_vl = std::min(tmp_vl, micro_vlmax);
     StaticInstPtr microop;
 
@@ -2077,19 +2241,21 @@ template<typename ElemType>
     this->microops.back()->setLastMicroop();
 }
 
+%(declare_varith_template)s;
+
 }};
 
 def template VectorSlideDownMacroConstructor {{
 
 template<typename ElemType>
-%(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst)
-    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s)
+%(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst, uint32_t _vlen)
+    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _vlen)
 {
     %(set_reg_idx_arr)s;
     %(constructor)s;
     const uint32_t num_microops = vtype_regs_per_group(vtype);
     int32_t tmp_vl = this->vl;
-    const int32_t micro_vlmax = vtype_VLMAX(_machInst.vtype8, true);
+    const int32_t micro_vlmax = vtype_VLMAX(_machInst.vtype8, vlen, true);
     int32_t micro_vl = std::min(tmp_vl, micro_vlmax);
     StaticInstPtr microop;
 
@@ -2112,6 +2278,8 @@ template<typename ElemType>
     this->microops.back()->setLastMicroop();
 }
 
+%(declare_varith_template)s;
+
 }};
 
 def template VectorSlideMicroDeclare {{
@@ -2126,8 +2294,8 @@ private:
     RegId destRegIdxArr[1];
     bool vm;
 public:
-    %(class_name)s(ExtMachInst _machInst, uint8_t _microVl,
-        uint8_t _microIdx, uint8_t _vdIdx, uint8_t _vs2Idx);
+    %(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
+        uint32_t _microIdx, uint32_t _vdIdx, uint32_t _vs2Idx);
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
     using %(base_class)s::generateDisassembly;
 };
@@ -2138,7 +2306,8 @@ def template VectorSlideMicroConstructor {{
 
 template<typename ElemType>
 %(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst,
-        uint8_t _microVl, uint8_t _microIdx, uint8_t _vdIdx, uint8_t _vs2Idx)
+        uint32_t _microVl, uint32_t _microIdx, uint32_t _vdIdx,
+        uint32_t _vs2Idx)
     : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _microVl,
         _microIdx, _vdIdx, _vs2Idx)
 {
@@ -2149,6 +2318,8 @@ template<typename ElemType>
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
 }
+
+%(declare_varith_template)s;
 
 }};
 
@@ -2174,10 +2345,13 @@ Fault
     status.vs = VPUStatus::DIRTY;
     xc->setMiscReg(MISCREG_STATUS, status);
 
-    [[maybe_unused]]const uint32_t vlmax = vtype_VLMAX(vtype);
-
     %(op_decl)s;
     %(op_rd)s;
+    %(set_vlenb)s;
+    %(set_vlen)s;
+
+    [[maybe_unused]]const uint32_t vlmax = vtype_VLMAX(vtype, vlen);
+
     %(vm_decl_rd)s;
     %(copy_old_vd)s;
     %(code)s;
@@ -2185,6 +2359,8 @@ Fault
 
     return NoFault;
 };
+
+%(declare_varith_template)s;
 
 }};
 
@@ -2210,10 +2386,13 @@ Fault
     status.vs = VPUStatus::DIRTY;
     xc->setMiscReg(MISCREG_STATUS, status);
 
-    [[maybe_unused]]const uint32_t vlmax = vtype_VLMAX(vtype);
-
     %(op_decl)s;
     %(op_rd)s;
+    %(set_vlenb)s;
+    %(set_vlen)s;
+
+    [[maybe_unused]]const uint32_t vlmax = vtype_VLMAX(vtype, vlen);
+
     %(vm_decl_rd)s;
     %(copy_old_vd)s;
     %(code)s;
@@ -2221,5 +2400,7 @@ Fault
 
     return NoFault;
 };
+
+%(declare_varith_template)s;
 
 }};

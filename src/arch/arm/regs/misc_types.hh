@@ -75,6 +75,12 @@ namespace ArmISA
         Bitfield<0> sp;         // AArch64
     EndBitUnion(CPSR)
 
+    BitUnion32(ISR)
+        Bitfield<8> a;
+        Bitfield<7> i;
+        Bitfield<6> f;
+    EndBitUnion(ISR)
+
     BitUnion32(ISAR5)
         Bitfield<31, 28> vcma;
         Bitfield<27, 24> rdm;

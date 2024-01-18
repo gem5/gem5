@@ -35,18 +35,17 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects.Platform import Platform
-from m5.objects.PMAChecker import PMAChecker
 from m5.objects.Clint import Clint
+from m5.objects.PciHost import GenericPciHost
+from m5.objects.Platform import Platform
 from m5.objects.Plic import Plic
+from m5.objects.PMAChecker import PMAChecker
 from m5.objects.RTC import RiscvRTC
-from m5.objects.Uart import RiscvUart8250
 from m5.objects.Terminal import Terminal
+from m5.objects.Uart import RiscvUart8250
 from m5.params import *
 from m5.proxy import *
 from m5.util.fdthelper import *
-
-from m5.objects.PciHost import GenericPciHost
 
 
 class GenericRiscvPciHost(GenericPciHost):
@@ -251,7 +250,7 @@ class HiFive(HiFiveBase):
     def annotateCpuDeviceNode(self, cpu, state):
         cpu.append(FdtPropertyStrings("mmu-type", "riscv,sv48"))
         cpu.append(FdtPropertyStrings("status", "okay"))
-        cpu.append(FdtPropertyStrings("riscv,isa", "rv64imafdcsu"))
+        cpu.append(FdtPropertyStrings("riscv,isa", "rv64imafdc"))
         cpu.appendCompatible(["riscv"])
 
         int_node = FdtNode("interrupt-controller")

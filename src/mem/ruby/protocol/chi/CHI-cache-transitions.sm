@@ -351,6 +351,28 @@ transition({I, SC, UC, SD, UD, RU, RSC, RSD, RUSD, RUSC,
   ProcessNextState;
 }
 
+// WriteUniqueZero cacheline not present
+transition({I,RU,RSC,RSD,RUSD,RUSC},
+           WriteUniqueZero,
+           BUSY_BLKD) {
+  Initiate_Request;
+  Initiate_WriteUnique_Zero;
+  Profile_Miss;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
+// WriteUniqueZero cacheline available
+transition({SC,UC,SD,UD,SC_RSC,UC_RSC,SD_RSC,UD_RSC,UC_RU,UD_RU,UD_RSD,SD_RSD},
+           WriteUniqueZero,
+           BUSY_BLKD) {
+  Initiate_Request;
+  Initiate_WriteUnique_Zero;
+  Profile_Hit;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
 // WriteUniquePtl
 
 transition({UD,UD_RSD,UD_RSC,UC,UC_RSC},
@@ -515,7 +537,7 @@ transition({UD,UD_T,SD,UC,SC}, Load, BUSY_BLKD) {
 // the local cache entry at the end since our data is stale. If the cache is
 // inclusive for unique data we need to keep the block, so just bypass the
 // normal path.
-transition({UD,UD_T,SD,UC,SC,RU,RSC,RSD,RUSD,SC_RSC,SD_RSC,SD_RSD,UC_RSC,UC_RU,UD_RU,UD_RSD,UD_RSC}, Prefetch) {
+transition({UD,UD_T,SD,UC,SC,RU,RSC,RSD,RUSC,RUSD,SC_RSC,SD_RSC,SD_RSD,UC_RSC,UC_RU,UD_RU,UD_RSD,UD_RSC}, Prefetch) {
   Callback_ExpressPrefetchHit;
   Pop_ReqRdyQueue;
 }
@@ -836,6 +858,14 @@ transition(BUSY_INTR, {SnpOnce,SnpOnceFwd}, BUSY_BLKD) {
   ProcessNextState;
 }
 
+// Stash
+transition({I,SC,UC,SD,UD,RU,RSC,RSD,RUSD,SC_RSC,UC_RSC,SD_RSC,UD_RSC,UC_RU,UD_RU,UD_RSD,SD_RSD,RUSC},
+           {StashOnceShared,StashOnceUnique}, BUSY_BLKD) {
+  Initiate_Request;
+  Send_CompI;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
 
 // Stalls
 
@@ -848,9 +878,11 @@ transition({BUSY_BLKD,BUSY_INTR},
             WriteCleanFull, WriteCleanFull_Stale,
             Evict, Evict_Stale,
             WriteUnique,WriteUniquePtl_PoC,
-            WriteUniqueFull_PoC,WriteUniqueFull_PoC_Alloc
+            WriteUniqueFull_PoC,WriteUniqueFull_PoC_Alloc,
+            WriteUniqueZero,
             AtomicReturn,AtomicReturn_PoC,
-            AtomicNoReturn,AtomicNoReturn_PoC}) {
+            AtomicNoReturn,AtomicNoReturn_PoC,
+            StashOnceShared,StashOnceUnique}) {
   StallRequest;
 }
 
@@ -1203,6 +1235,12 @@ transition(BUSY_BLKD, SendCompDBIDResp_WU) {
   ProcessNextState_ClearPending;
 }
 
+transition(BUSY_BLKD, SendDBIDResp_WUZ) {
+  Pop_TriggerQueue;
+  Send_DBIDResp;
+  ProcessNextState_ClearPending;
+}
+
 transition(BUSY_BLKD, SendDBIDResp_WU) {
   Pop_TriggerQueue;
   ExpectNCBWrData;
@@ -1468,6 +1506,12 @@ transition(BUSY_BLKD, Comp) {
 transition(BUSY_BLKD, TX_Data) {
   Pop_TriggerQueue;
   Send_Data;
+  ProcessNextState_ClearPending;
+}
+
+transition(BUSY_INTR, WriteZero) {
+  Pop_TriggerQueue;
+  WriteZero;
   ProcessNextState_ClearPending;
 }
 

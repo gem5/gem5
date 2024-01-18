@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019 ARM Limited
+ * Copyright (c) 2017-2019, 2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -123,7 +123,8 @@ TarmacTracerRecord::TarmacTracerRecord(Tick _when, ThreadContext *_thread,
 TarmacTracerRecord::TraceInstEntry::TraceInstEntry(
     const TarmacContext& tarmCtx,
     bool predicate)
-      : InstEntry(tarmCtx.thread, *tarmCtx.pc, tarmCtx.staticInst, predicate)
+      : InstEntry(tarmCtx.thread, *tarmCtx.pc, tarmCtx.staticInst, predicate),
+        disassemble(tarmCtx.tracer.disassemble(tarmCtx.staticInst, *tarmCtx.pc))
 {
     secureMode = isSecure(tarmCtx.thread);
 
@@ -139,6 +140,11 @@ TarmacTracerRecord::TraceInstEntry::TraceInstEntry(
     // opcode field will otherwise be 32 bit wide even
     // for 16bit (Thumb) instruction.
     opcode = arm_inst->encoding();
+
+    // In Tarmac, instruction names are printed in capital
+    // letters.
+    std::for_each(disassemble.begin(), disassemble.end(),
+                  [](char& c) { c = toupper(c); });
 
     // Update the instruction count: number of executed
     // instructions.
@@ -332,6 +338,7 @@ TarmacTracerRecord::dump()
     auto &regQueue = tracer.regQueue;
 
     const TarmacContext tarmCtx(
+        tracer,
         thread,
         staticInst->isMicroop()? macroStaticInst : staticInst,
         *pc

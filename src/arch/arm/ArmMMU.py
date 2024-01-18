@@ -36,7 +36,10 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.objects.ArmSystem import ArmRelease
-from m5.objects.ArmTLB import ArmTLB, ArmStage2TLB
+from m5.objects.ArmTLB import (
+    ArmStage2TLB,
+    ArmTLB,
+)
 from m5.objects.BaseMMU import BaseMMU
 from m5.objects.ClockedObject import ClockedObject
 from m5.params import *

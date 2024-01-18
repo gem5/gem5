@@ -379,18 +379,24 @@ def _check_tracing():
 
 def main():
     import m5
+    from m5.util.terminal_formatter import TerminalFormatter
+
     import _m5.core
 
-    from . import core
-    from . import debug
-    from . import defines
-    from . import event
-    from . import info
-    from . import stats
-    from . import trace
-
-    from .util import inform, panic, isInteractive
-    from m5.util.terminal_formatter import TerminalFormatter
+    from . import (
+        core,
+        debug,
+        defines,
+        event,
+        info,
+        stats,
+        trace,
+    )
+    from .util import (
+        inform,
+        isInteractive,
+        panic,
+    )
 
     options, arguments = parse_options()
 
@@ -632,7 +638,9 @@ def main():
             if not options.P:
                 sys.path = [os.path.dirname(sys.argv[0])] + sys.path
             filename = sys.argv[0]
-            filedata = open(filename).read()
+            with open(filename, "rb") as fd:
+                # Handle config files with unicode characters
+                filedata = fd.read().decode("utf-8")
             filecode = compile(filedata, filename, "exec")
             scope = {"__file__": filename, "__name__": "__m5_main__"}
 

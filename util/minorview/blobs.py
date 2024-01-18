@@ -41,17 +41,23 @@
 import pygtk
 
 pygtk.require("2.0")
-import gtk
-import gobject
-import cairo
-import re
 import math
+import re
 
+import cairo
+import gobject
+import gtk
+
+from . import (
+    colours,
+    model,
+    parse,
+)
+from .colours import (
+    backgroundColour,
+    black,
+)
 from .point import Point
-from . import parse
-from . import colours
-from .colours import backgroundColour, black
-from . import model
 
 
 def centre_size_to_sides(centre, size):

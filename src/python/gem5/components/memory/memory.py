@@ -28,12 +28,26 @@
 """
 
 from math import log
-from ...utils.override import overrides
+from typing import (
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    Union,
+)
+
+from m5.objects import (
+    AddrRange,
+    DRAMInterface,
+    MemCtrl,
+    Port,
+)
 from m5.util.convert import toMemorySize
+
+from ...utils.override import overrides
 from ..boards.abstract_board import AbstractBoard
 from .abstract_memory_system import AbstractMemorySystem
-from m5.objects import AddrRange, DRAMInterface, MemCtrl, Port
-from typing import Type, Sequence, Tuple, List, Optional, Union
 
 
 def _try_convert(val, cls):
@@ -68,17 +82,18 @@ class ChanneledMemory(AbstractMemorySystem):
     ) -> None:
         """
         :param dram_interface_class: The DRAM interface type to create with
-            this memory controller
+                                     this memory controller.
         :param num_channels: The number of channels that needs to be
-        simulated
+                             simulated.
         :param size: Optionally specify the size of the DRAM controller's
-            address space. By default, it starts at 0 and ends at the size of
-            the DRAM device specified
+                     address space. By default, it starts at 0 and ends at
+                     the size of the DRAM device specified.
         :param addr_mapping: Defines the address mapping scheme to be used.
-            If None, it is defaulted to addr_mapping from dram_interface_class.
+                             If ``None``, it is defaulted to ``addr_mapping`` from
+                             ``dram_interface_class``.
         :param interleaving_size: Defines the interleaving size of the multi-
-            channel memory system. By default, it is equivalent to the atom
-            size, i.e., 64.
+                                  channel memory system. By default, it is
+                                  equivalent to the atom size, i.e., 64.
         """
         num_channels = _try_convert(num_channels, int)
         interleaving_size = _try_convert(interleaving_size, int)

@@ -41,9 +41,6 @@
 """
 Helper classes for writing tests with this test library.
 """
-from collections import namedtuple
-from collections.abc import MutableSet
-
 import difflib
 import errno
 import os
@@ -54,6 +51,8 @@ import subprocess
 import tempfile
 import threading
 import time
+from collections import namedtuple
+from collections.abc import MutableSet
 
 
 class TimedWaitPID:

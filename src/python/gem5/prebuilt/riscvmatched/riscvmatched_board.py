@@ -27,42 +27,30 @@
 
 import os
 import re
-
-from typing import List, Optional
-
-from gem5.utils.override import overrides
-from gem5.components.boards.abstract_system_board import AbstractSystemBoard
-from gem5.components.boards.kernel_disk_workload import KernelDiskWorkload
-from gem5.components.boards.se_binary_workload import SEBinaryWorkload
-from gem5.resources.resource import AbstractResource
-from gem5.components.memory import SingleChannelDDR4_2400
-from gem5.utils.requires import requires
-from gem5.isas import ISA
-from .riscvmatched_cache import RISCVMatchedCacheHierarchy
-from .riscvmatched_processor import U74Processor
-from gem5.isas import ISA
-
-import m5
-
-from m5.objects import (
-    BadAddr,
-    Bridge,
-    PMAChecker,
-    RiscvLinux,
-    AddrRange,
-    IOXBar,
-    RiscvRTC,
-    HiFive,
-    IGbE_e1000,
-    CowDiskImage,
-    RawDiskImage,
-    RiscvMmioVirtIO,
-    VirtIOBlock,
-    VirtIORng,
-    Frequency,
-    Port,
+from typing import (
+    List,
+    Optional,
 )
 
+import m5
+from m5.objects import (
+    AddrRange,
+    BadAddr,
+    Bridge,
+    CowDiskImage,
+    Frequency,
+    HiFive,
+    IGbE_e1000,
+    IOXBar,
+    PMAChecker,
+    Port,
+    RawDiskImage,
+    RiscvBootloaderKernelWorkload,
+    RiscvMmioVirtIO,
+    RiscvRTC,
+    VirtIOBlock,
+    VirtIORng,
+)
 from m5.util.fdthelper import (
     Fdt,
     FdtNode,
@@ -72,15 +60,30 @@ from m5.util.fdthelper import (
     FdtState,
 )
 
+from gem5.components.boards.abstract_system_board import AbstractSystemBoard
+from gem5.components.boards.kernel_disk_workload import KernelDiskWorkload
+from gem5.components.boards.se_binary_workload import SEBinaryWorkload
+from gem5.components.memory import SingleChannelDDR4_2400
+from gem5.isas import ISA
+from gem5.resources.resource import AbstractResource
+from gem5.utils.override import overrides
+from gem5.utils.requires import requires
+
+from .riscvmatched_cache import RISCVMatchedCacheHierarchy
+from .riscvmatched_processor import U74Processor
+
 
 def U74Memory():
     """
     Memory for the U74 board.
+
     DDR4 Subsystem with 16GB of memory.
+
     Starts at 0x80000000.
+
     Details at: Section 23, page 195 of the datasheet.
 
-    return: ChanneledMemory
+    :return: ChanneledMemory
     """
     memory = SingleChannelDDR4_2400("16GB")
     memory.set_memory_range(
@@ -96,14 +99,15 @@ class RISCVMatchedBoard(
     A board capable of full system simulation for RISC-V
 
     At a high-level, this is based on the HiFive Unmatched board from SiFive.
-    Based on : src/python/gem5/components/boards/riscv_board.py
+    Based on : ``src/python/gem5/components/boards/riscv_board.py``
 
     This board assumes that you will be booting Linux for fullsystem emulation.
 
     The frequency of the RTC for the system is set to 1MHz.
     Details can be found on page 77, section 7.1 of the datasheet.
 
-    Datasheet for inbuilt params can be found here: https://sifive.cdn.prismic.io/sifive/1a82e600-1f93-4f41-b2d8-86ed8b16acba_fu740-c000-manual-v1p6.pdf
+    Datasheet for inbuilt params can be found here:
+    https://sifive.cdn.prismic.io/sifive/1a82e600-1f93-4f41-b2d8-86ed8b16acba_fu740-c000-manual-v1p6.pdf
     """
 
     def __init__(
@@ -140,7 +144,7 @@ class RISCVMatchedBoard(
     @overrides(AbstractSystemBoard)
     def _setup_board(self) -> None:
         if self._fs:
-            self.workload = RiscvLinux()
+            self.workload = RiscvBootloaderKernelWorkload()
 
             # Contains a CLINT, PLIC, UART, and some functions for the dtb, etc.
             self.platform = HiFive()
@@ -306,10 +310,26 @@ class RISCVMatchedBoard(
             self.mem_ranges = [AddrRange(memory.get_size())]
             memory.set_memory_range(self.mem_ranges)
 
-    def generate_device_tree(self, outdir: str) -> None:
-        """Creates the dtb and dts files.
+    @overrides(AbstractSystemBoard)
+    def _pre_instantiate(self):
+        if self._fs:
+            if len(self._bootloader) > 0:
+                self.workload.bootloader_addr = 0x0
+                self.workload.bootloader_filename = self._bootloader[0]
+                self.workload.kernel_addr = 0x80200000
+                self.workload.entry_point = (
+                    0x80000000  # Bootloader starting point
+                )
+            else:
+                self.workload.kernel_addr = 0x0
+                self.workload.entry_point = 0x80000000
 
-        Creates two files in the outdir: 'device.dtb' and 'device.dts'
+        self._connect_things()
+
+    def generate_device_tree(self, outdir: str) -> None:
+        """Creates the ``dtb`` and ``dts`` files.
+
+        Creates two files in the outdir: ``device.dtb`` and ``device.dts``
 
         :param outdir: Directory to output the files
         """
@@ -331,6 +351,12 @@ class RISCVMatchedBoard(
                 )
             )
             root.append(node)
+
+        node = FdtNode(f"chosen")
+        bootargs = self.workload.command_line
+        node.append(FdtPropertyStrings("bootargs", [bootargs]))
+        node.append(FdtPropertyStrings("stdout-path", ["/uart@10000000"]))
+        root.append(node)
 
         # See Documentation/devicetree/bindings/riscv/cpus.txt for details.
         cpus_node = FdtNode("cpus")
@@ -504,7 +530,7 @@ class RISCVMatchedBoard(
         uart_node.append(
             FdtPropertyWords("interrupt-parent", soc_state.phandle(plic))
         )
-        uart_node.appendCompatible(["ns8250"])
+        uart_node.appendCompatible(["ns8250", "ns16550a"])
         soc_node.append(uart_node)
 
         # VirtIO MMIO disk node
@@ -584,7 +610,7 @@ class RISCVMatchedBoard(
         kernel_args: Optional[List[str]] = None,
         exit_on_work_items: bool = True,
     ) -> None:
-        self.workload = RiscvLinux()
+        self.workload = RiscvBootloaderKernelWorkload()
         KernelDiskWorkload.set_kernel_disk_workload(
             self=self,
             kernel=kernel,

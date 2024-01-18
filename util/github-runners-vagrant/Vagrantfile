@@ -58,8 +58,32 @@ Vagrant.configure("2") do |config|
       # Copy the "action-run.sh" script from the host to the VM.
       runner.vm.provision "file", source: "./action-run.sh", destination: "/tmp/action-run.sh"
       runner.vm.provision :shell, privileged: false,  inline: "cp /tmp/action-run.sh ."
-      # Execute the actions-run.sh script on every boot. This configures the and starts the runner.
-      runner.vm.provision :shell, privileged: false, run: 'always', inline: "./action-run.sh #{PERSONAL_ACCESS_TOKEN} #{GITHUB_ORG} >> action-run.log 2>&1 &"
+
+      # The following attempts to see if KVM can be used inside the docker
+      # container.
+      #
+      # Almost all github action jobs run within a docker container. Therefore
+      # to be compatible with KVM, KVM must be enabled inside the docker.
+      #
+      # We used existence of "kvm-works" in the VM home directory is how we
+      # indicate that KVM is working. It is created if the 'kvm-ok' command is
+      # successful. This is then passed to the action-run.sh script to indicate
+      # that the runner can be used for KVM via the `kvm` label.
+      runner.vm.provision :shell, privileged: false, run: 'always',  inline: <<-SHELL
+           rm -f kvm-works
+           docker run --device /dev/kvm -v$(pwd):/work -w /work --rm ubuntu:22.04 bash -c "apt update -y && apt install -y cpu-checker && kvm-ok"
+           status=$?
+           if [[ ${status} == 0 ]]; then
+                echo >&1 "Success. KVM enabled."
+                echo "success" > kvm-works
+           else
+                echo >&2 "Failure. KVM not enabled."
+           fi
+           exit 0
+      SHELL
+      # Execute the actions-run.sh script on every boot. This configures and starts the runner.
+      # Note the 'kvm' label is applied to this runner if the "kvm-works" file eixsts. See above.
+      runner.vm.provision :shell, privileged: false, run: 'always', inline: "./action-run.sh #{PERSONAL_ACCESS_TOKEN} #{GITHUB_ORG} $(if [ -f 'kvm-works' ]; then echo 'kvm'; fi) >> action-run.log 2>&1 &"
     end
   end
 end

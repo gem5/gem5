@@ -66,8 +66,8 @@ KernelWorkload::KernelWorkload(const Params &p) : Workload(p),
         kernelSymtab = kernelObj->symtab();
         auto initKernelSymtab = kernelSymtab.mask(_loadAddrMask)
             ->offset(_loadAddrOffset)
-            ->rename([](std::string &name) {
-                name = "kernel_init." + name;
+            ->rename([](const std::string &name) {
+                return "kernel_init." + name;
             });
 
         loader::debugSymbolTable.insert(*initKernelSymtab);

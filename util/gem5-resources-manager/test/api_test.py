@@ -24,17 +24,18 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import flask
 import contextlib
-import unittest
-from server import app
-import server
 import json
-from bson import json_util
+import unittest
 from unittest.mock import patch
+
+import flask
 import mongomock
-from api.mongo_client import MongoDBClient
 import requests
+import server
+from api.mongo_client import MongoDBClient
+from bson import json_util
+from server import app
 
 
 @contextlib.contextmanager

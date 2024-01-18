@@ -36,10 +36,11 @@
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-from matplotlib.font_manager import FontProperties
-import numpy as np
 import os
+
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.font_manager import FontProperties
 
 # global results dict
 results = {}

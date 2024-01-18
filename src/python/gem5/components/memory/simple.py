@@ -27,12 +27,23 @@
 """Simple memory controllers
 """
 
-from ...utils.override import overrides
+from typing import (
+    List,
+    Sequence,
+    Tuple,
+)
+
+from m5.objects import (
+    AddrRange,
+    MemCtrl,
+    Port,
+    SimpleMemory,
+)
 from m5.util.convert import toMemorySize
-from typing import List, Sequence, Tuple
+
+from ...utils.override import overrides
 from ..boards.abstract_board import AbstractBoard
 from .abstract_memory_system import AbstractMemorySystem
-from m5.objects import AddrRange, MemCtrl, Port, SimpleMemory
 
 
 class SingleChannelSimpleMemory(AbstractMemorySystem):

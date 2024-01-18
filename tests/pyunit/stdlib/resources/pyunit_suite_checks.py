@@ -26,18 +26,19 @@
 
 import contextlib
 import io
-import unittest
-import tempfile
 import os
 import shutil
+import tempfile
+import unittest
 from pathlib import Path
+from unittest.mock import patch
+
+from gem5.resources.client_api.client_wrapper import ClientWrapper
 from gem5.resources.resource import (
-    obtain_resource,
     SuiteResource,
     WorkloadResource,
+    obtain_resource,
 )
-from gem5.resources.client_api.client_wrapper import ClientWrapper
-from unittest.mock import patch
 
 mock_config_json = {
     "sources": {

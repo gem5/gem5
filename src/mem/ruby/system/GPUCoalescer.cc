@@ -344,7 +344,8 @@ GPUCoalescer::printRequestTable(std::stringstream& ss)
                << "\t\tIssue time: "
                << request->getIssueTime() * clockPeriod() << "\n"
                << "\t\tDifference from current tick: "
-               << (curCycle() - request->getIssueTime()) * clockPeriod();
+               << (curCycle() - request->getIssueTime()) * clockPeriod()
+               << "\n";
         }
     }
 
@@ -525,26 +526,16 @@ GPUCoalescer::readCallback(Addr address,
     fatal_if(crequest->getRubyType() != RubyRequestType_LD,
              "readCallback received non-read type response\n");
 
-    // Iterate over the coalesced requests to respond to as many loads as
-    // possible until another request type is seen. Models MSHR for TCP.
-    while (crequest->getRubyType() == RubyRequestType_LD) {
-        hitCallback(crequest, mach, data, true, crequest->getIssueTime(),
-                    forwardRequestTime, firstResponseTime, isRegion);
+    hitCallback(crequest, mach, data, true, crequest->getIssueTime(),
+                forwardRequestTime, firstResponseTime, isRegion);
 
-        delete crequest;
-        coalescedTable.at(address).pop_front();
-        if (coalescedTable.at(address).empty()) {
-            break;
-        }
-
-        crequest = coalescedTable.at(address).front();
-    }
-
+    delete crequest;
+    coalescedTable.at(address).pop_front();
     if (coalescedTable.at(address).empty()) {
-        coalescedTable.erase(address);
+      coalescedTable.erase(address);
     } else {
-        auto nextRequest = coalescedTable.at(address).front();
-        issueRequest(nextRequest);
+      auto nextRequest = coalescedTable.at(address).front();
+      issueRequest(nextRequest);
     }
 }
 
@@ -599,8 +590,8 @@ GPUCoalescer::hitCallback(CoalescedRequest* crequest,
                 // data response is not needed.
                 case RubyRequestType_ATOMIC_NO_RETURN:
                     assert(pkt->isAtomicOp());
+                    break;
                 case RubyRequestType_ST:
-                    data.setData(pkt->getPtr<uint8_t>(), offset, pkt_size);
                     break;
                 case RubyRequestType_LD:
                     pkt->setData(data.getData(offset, pkt_size));

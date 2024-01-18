@@ -37,14 +37,13 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.defines import buildEnv
-from m5.params import *
-from m5.proxy import *
-
 from m5.objects.BaseCPU import BaseCPU
-from m5.objects.FUPool import *
 
 # from m5.objects.O3Checker import O3Checker
 from m5.objects.BranchPredictor import *
+from m5.objects.FUPool import *
+from m5.params import *
+from m5.proxy import *
 
 
 class SMTFetchPolicy(ScopedEnum):

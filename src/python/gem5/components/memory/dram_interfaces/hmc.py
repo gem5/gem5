@@ -40,10 +40,10 @@
 
 """Interfaces for HMC memory devices
 
-These memory "interfaces" contain the timing,energy,etc parameters for each
+These memory "interfaces" contain the timing, energy, etc parameters for each
 memory type and are usually based on datasheets for the memory devices.
 
-You can use these interfaces in the MemCtrl object as the `dram` timing
+You can use these interfaces in the MemCtrl object as the ``dram`` timing
 interface.
 
 Note that HMC is configured differently than some other DRAM interfaces.
@@ -58,22 +58,29 @@ class HMC_2500_1x32(DDR3_1600_8x8):
     uses RC (resistance-capacitance) and CV (capacitance-voltage) models to
     estimate the DRAM bank latency and power numbers.
     [2] High performance AXI-4.0 based interconnect for extensible smart memory
-    cubes (E. Azarkhish et. al)
+    cubes (E. Azarkhish et. al).
     Assumed for the HMC model is a 30 nm technology node.
     The modelled HMC consists of 4 Gbit layers which sum up to 2GiB of memory
     (4 layers).
     Each layer has 16 vaults and each vault consists of 2 banks per layer.
     In order to be able to use the same controller used for 2D DRAM generations
     for HMC, the following analogy is done:
+
     Channel (DDR) => Vault (HMC)
+
     device_size (DDR) => size of a single layer in a vault
+
     ranks per channel (DDR) => number of layers
+
     banks per rank (DDR) => banks per layer
+
     devices per rank (DDR) => devices per layer ( 1 for HMC).
+
     The parameters for which no input is available are inherited from the DDR3
     configuration.
+
     This configuration includes the latencies from the DRAM to the logic layer
-    of the HMC
+    of the HMC.
     """
 
     # size of device

@@ -1,3 +1,12 @@
 [tool.black]
 line-length = 79
 include = '\.pyi?$'
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 79
+force_grid_wrap = 2
+known_m5 = "m5"
+known_underscore_m5 = "_m5,slicc"
+known_gem5 = "gem5"
+sections="FUTURE,STDLIB,THIRDPARTY,FIRSTPARTY,M5,UNDERSCORE_M5,GEM5,LOCALFOLDER"

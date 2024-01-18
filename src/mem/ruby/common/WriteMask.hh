@@ -230,7 +230,8 @@ class WriteMask
      * specific atomic operation.
      */
     void performAtomic(uint8_t * p,
-            std::deque<uint8_t*>& atomicChangeLog) const;
+            std::deque<uint8_t*>& atomicChangeLog,
+            bool isAtomicNoReturn=true) const;
 
     const AtomicOpVector&
     getAtomicOps() const

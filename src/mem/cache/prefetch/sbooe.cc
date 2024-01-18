@@ -91,8 +91,10 @@ SBOOE::access(Addr access_line)
 }
 
 void
-SBOOE::notifyFill(const PacketPtr& pkt)
+SBOOE::notifyFill(const CacheAccessProbeArg &arg)
 {
+    const PacketPtr& pkt = arg.pkt;
+
     // (1) Look for the address in the demands list
     // (2) Calculate the elapsed cycles until it was filled (curTick)
     // (3) Insert the latency into the latency buffer (FIFO)
@@ -117,7 +119,8 @@ SBOOE::notifyFill(const PacketPtr& pkt)
 
 void
 SBOOE::calculatePrefetch(const PrefetchInfo &pfi,
-                                   std::vector<AddrPriority> &addresses)
+                                   std::vector<AddrPriority> &addresses,
+                                   const CacheAccessor &cache)
 {
     const Addr pfi_addr = pfi.getAddr();
     const Addr pfi_line = pfi_addr >> lBlkSize;

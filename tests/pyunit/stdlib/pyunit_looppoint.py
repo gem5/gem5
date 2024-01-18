@@ -24,21 +24,20 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import os
 import unittest
 
 from m5.params import PcCountPair
 
 from gem5.resources.looppoint import (
     Looppoint,
+    LooppointCsvLoader,
+    LooppointJsonLoader,
+    LooppointRegion,
     LooppointRegionPC,
     LooppointRegionWarmup,
     LooppointSimulation,
-    LooppointRegion,
-    LooppointCsvLoader,
-    LooppointJsonLoader,
 )
-
-import os
 
 
 class LooppointRegionPCTestSuite(unittest.TestCase):

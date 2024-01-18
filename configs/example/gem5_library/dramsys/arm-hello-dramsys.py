@@ -33,17 +33,17 @@ DRRAMSys simulator. Please consult 'ext/dramsys/README' on how to compile
 correctly. If this is not done correctly this script will run with error.
 """
 
-from gem5.isas import ISA
-from gem5.utils.requires import requires
-from gem5.resources.resource import obtain_resource
-from gem5.components.memory import DRAMSysDDR3_1600
-from gem5.components.processors.cpu_types import CPUTypes
 from gem5.components.boards.simple_board import SimpleBoard
 from gem5.components.cachehierarchies.classic.private_l1_cache_hierarchy import (
     PrivateL1CacheHierarchy,
 )
+from gem5.components.memory import DRAMSysDDR3_1600
+from gem5.components.processors.cpu_types import CPUTypes
 from gem5.components.processors.simple_processor import SimpleProcessor
+from gem5.isas import ISA
+from gem5.resources.resource import obtain_resource
 from gem5.simulate.simulator import Simulator
+from gem5.utils.requires import requires
 
 # This check ensures the gem5 binary is compiled to the ARM ISA target. If not,
 # an exception will be thrown.

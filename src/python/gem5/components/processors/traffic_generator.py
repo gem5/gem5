@@ -24,12 +24,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from ...utils.override import overrides
-from .traffic_generator_core import TrafficGeneratorCore
-
-from .abstract_generator import AbstractGenerator
-
 from typing import List
+
+from ...utils.override import overrides
+from .abstract_generator import AbstractGenerator
+from .traffic_generator_core import TrafficGeneratorCore
 
 
 class TrafficGenerator(AbstractGenerator):
@@ -46,8 +45,8 @@ class TrafficGenerator(AbstractGenerator):
         generator cores that could replace the processing cores in a board.
 
         :param config_file_list: A list containing the path to configuration
-        file each describing the traffic pattern that should be created by
-        each core of the generator.
+                                 file each describing the traffic pattern that
+                                 should be created by each core of the generator.
         """
 
     def _create_cores(

@@ -147,9 +147,8 @@ class L2(Cache):
     size = "512kB"
     assoc = 8
     write_buffers = 16
-    prefetch_on_access = True
     clusivity = "mostly_excl"
     # Simple stride prefetcher
-    prefetcher = StridePrefetcher(degree=1, latency=1)
+    prefetcher = StridePrefetcher(degree=1, latency=1, prefetch_on_access=True)
     tags = BaseSetAssoc()
     replacement_policy = RandomRP()

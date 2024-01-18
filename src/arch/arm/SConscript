@@ -40,7 +40,9 @@
 
 Import('*')
 
-if env['USE_ARM_ISA']:
+Source('insts/fplib.cc')
+
+if env['CONF']['USE_ARM_ISA']:
     env.TagImplies('arm isa', 'gem5 lib')
 
 # The GTest function does not have a 'tags' parameter. We therefore apply this
@@ -48,7 +50,7 @@ if env['USE_ARM_ISA']:
 #
 # Note: This will need reconfigured for multi-isa. E.g., if this is
 # incorporated: https://gem5-review.googlesource.com/c/public/gem5/+/52491
-if env['USE_ARM_ISA']:
+if env['CONF']['USE_ARM_ISA']:
     GTest('aapcs64.test', 'aapcs64.test.cc',
           '../../base/debug.cc',
           '../../cpu/reg_class.cc',
@@ -73,7 +75,6 @@ Source('insts/static_inst.cc', tags='arm isa')
 Source('insts/sve.cc', tags='arm isa')
 Source('insts/sve_mem.cc', tags='arm isa')
 Source('insts/vfp.cc', tags='arm isa')
-Source('insts/fplib.cc', tags='arm isa')
 Source('insts/crypto.cc', tags='arm isa')
 Source('insts/tme64.cc', tags='arm isa')
 if env['CONF']['PROTOCOL'] == 'MESI_Three_Level_HTM':

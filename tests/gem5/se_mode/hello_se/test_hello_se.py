@@ -43,9 +43,9 @@
 Tests which run simple binaries in gem5's SE mode. The stdlib's SimpleBoard
 is used to run these tests.
 """
-from testlib import *
-
 import re
+
+from testlib import *
 
 isa_str_map = {
     constants.gcn3_x86_tag: "x86",

@@ -610,8 +610,8 @@ class DRAMInterface : public MemInterface
         statistics::Formula writeRowHitRate;
         statistics::Histogram bytesPerActivate;
         // Number of bytes transferred to/from DRAM
-        statistics::Scalar bytesRead;
-        statistics::Scalar bytesWritten;
+        statistics::Scalar dramBytesRead;
+        statistics::Scalar dramBytesWritten;
 
         // Average bandwidth
         statistics::Formula avgRdBW;

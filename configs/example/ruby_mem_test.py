@@ -25,11 +25,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import argparse
+import os
+import sys
+
 import m5
-from m5.objects import *
 from m5.defines import buildEnv
+from m5.objects import *
 from m5.util import addToPath
-import os, argparse, sys
 
 addToPath("../")
 
@@ -65,7 +68,7 @@ parser.add_argument(
 parser.add_argument(
     "--atomic",
     type=int,
-    default=30,
+    default=0,
     help="percentage of accesses that should be atomic",
 )
 parser.add_argument(

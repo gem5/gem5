@@ -25,11 +25,14 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from m5.objects import Port, TrafficGen
+from m5.objects import (
+    Port,
+    TrafficGen,
+)
 
+from ...utils.override import overrides
 from .abstract_core import AbstractCore
 from .abstract_generator_core import AbstractGeneratorCore
-from ...utils.override import overrides
 
 
 class TrafficGeneratorCore(AbstractGeneratorCore):
@@ -39,8 +42,8 @@ class TrafficGeneratorCore(AbstractGeneratorCore):
     a compound traffic specified by the parameters below. It uses
     TrafficGen to create the traffic.
 
-    :param config_file: path to the configuration file specifying the
-    pattern of traffic.
+    :param config_file: Path to the configuration file specifying the
+                        pattern of traffic.
     """
 
     def __init__(self, config_file: str):

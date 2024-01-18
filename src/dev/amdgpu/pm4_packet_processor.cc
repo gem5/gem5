@@ -168,7 +168,7 @@ PM4PacketProcessor::decodeNext(PM4Queue *q)
     DPRINTF(PM4PacketProcessor, "PM4 decode queue %d rptr %p, wptr %p\n",
             q->id(), q->rptr(), q->wptr());
 
-    if (q->rptr() < q->wptr()) {
+    if (q->rptr() != q->wptr()) {
         /* Additional braces here are needed due to a clang compilation bug
            falsely throwing a "suggest braces around initialization of
            subject" error. More info on this bug is available here:
@@ -181,10 +181,27 @@ PM4PacketProcessor::decodeNext(PM4Queue *q)
         dmaReadVirt(getGARTAddr(q->rptr()), sizeof(uint32_t), cb,
                     &cb->dmaBuffer);
     } else {
+        // Reached the end of processable data in the queue. Switch out of IB
+        // if this is an indirect buffer.
+        assert(q->rptr() == q->wptr());
         q->processing(false);
         if (q->ib()) {
             q->ib(false);
             decodeNext(q);
+        }
+
+        // Write back rptr when the queue is empty. For static queues which
+        // are not unmapped, this is how the driver knows there is enough
+        // space in the queue to continue writing packets to the ring buffer.
+        if (q->getMQD()->aqlRptr) {
+            Addr addr = getGARTAddr(q->getMQD()->aqlRptr);
+            uint32_t *data = new uint32_t;
+            // gem5 stores rptr as a bytes offset while the driver expects
+            // a dword offset. Convert the offset to dword count.
+            *data = q->getRptr() >> 2;
+            auto cb = new DmaVirtCallback<uint32_t>(
+                [data](const uint32_t &) { delete data; });
+            dmaWriteVirt(addr, sizeof(uint32_t), cb, data);
         }
     }
 }
@@ -384,7 +401,10 @@ PM4PacketProcessor::mapQueues(PM4Queue *q, PM4MapQueues *pkt)
                 "Mapping mqd from %p %p (vmid %d - last vmid %d).\n",
                 addr, pkt->mqdAddr, pkt->vmid, gpuDevice->lastVMID());
 
-        gpuDevice->mapDoorbellToVMID(pkt->doorbellOffset,
+        // The doorbellOffset is a dword address. We shift by two / multiply
+        // by four to get the byte address to match doorbell addresses in
+        // the GPU device.
+        gpuDevice->mapDoorbellToVMID(pkt->doorbellOffset << 2,
                                      gpuDevice->lastVMID());
 
         QueueDesc *mqd = new QueueDesc();
@@ -444,6 +464,8 @@ PM4PacketProcessor::processMQD(PM4MapQueues *pkt, PM4Queue *q, Addr addr,
 
     DPRINTF(PM4PacketProcessor, "PM4 mqd read completed, base %p, mqd %p, "
             "hqdAQL %d.\n", mqd->base, mqd->mqdBase, mqd->aql);
+
+    gpuDevice->processPendingDoorbells(offset);
 }
 
 void
@@ -472,6 +494,8 @@ PM4PacketProcessor::processSDMAMQD(PM4MapQueues *pkt, PM4Queue *q, Addr addr,
     // Register doorbell with GPU device
     gpuDevice->setSDMAEngine(pkt->doorbellOffset << 2, sdma_eng);
     gpuDevice->setDoorbellType(pkt->doorbellOffset << 2, RLC);
+
+    gpuDevice->processPendingDoorbells(pkt->doorbellOffset << 2);
 }
 
 void
@@ -576,6 +600,7 @@ PM4PacketProcessor::unmapQueues(PM4Queue *q, PM4UnmapQueues *pkt)
         gpuDevice->deallocatePasid(pkt->pasid);
         break;
       case 2:
+        panic("Unmapping queue selection 2 unimplemented\n");
         break;
       case 3: {
         auto &hsa_pp = gpuDevice->CP()->hsaPacketProc();

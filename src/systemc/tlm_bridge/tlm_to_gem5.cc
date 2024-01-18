@@ -540,6 +540,7 @@ TlmToGem5Bridge<BITWIDTH>::recvReqRetry()
         trans.release();
 
         pendingRequest = nullptr;
+        pendingPacket = nullptr;
     }
 }
 

@@ -1687,6 +1687,7 @@ class HPI_BTB(SimpleBTB):
 
 class HPI_BP(TournamentBP):
     btb = HPI_BTB()
+    ras = ReturnAddrStack(numEntries=8)
     localPredictorSize = 64
     localCtrBits = 2
     localHistoryTableSize = 64
@@ -1694,7 +1695,6 @@ class HPI_BP(TournamentBP):
     globalCtrBits = 2
     choicePredictorSize = 1024
     choiceCtrBits = 2
-    RASSize = 8
     instShiftAmt = 2
 
 

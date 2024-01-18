@@ -124,6 +124,24 @@ readMemAtomic(XC *xc, trace::InstRecord *traceData, Addr addr, MemT &mem,
     return fault;
 }
 
+/// Read from memory in atomic mode.
+template <ByteOrder Order, class XC, class MemT>
+Fault
+readMemAtomic(XC *xc, trace::InstRecord *traceData, Addr addr, MemT &mem,
+              size_t size, Request::Flags flags)
+{
+    memset(&mem, 0, size);
+    static const std::vector<bool> byte_enable(size, true);
+    Fault fault = readMemAtomic(xc, addr, (uint8_t*)&mem,
+                                size, flags, byte_enable);
+    if (fault == NoFault) {
+        mem = gtoh(mem, Order);
+        if (traceData)
+            traceData->setData(mem);
+    }
+    return fault;
+}
+
 template <class XC, class MemT>
 Fault
 readMemAtomicLE(XC *xc, trace::InstRecord *traceData, Addr addr, MemT &mem,
@@ -132,6 +150,16 @@ readMemAtomicLE(XC *xc, trace::InstRecord *traceData, Addr addr, MemT &mem,
     return readMemAtomic<ByteOrder::little>(
             xc, traceData, addr, mem, flags);
 }
+
+template <class XC, class MemT>
+Fault
+readMemAtomicLE(XC *xc, trace::InstRecord *traceData, Addr addr, MemT &mem,
+                size_t size, Request::Flags flags)
+{
+    return readMemAtomic<ByteOrder::little>(
+            xc, traceData, addr, mem, size, flags);
+}
+
 
 template <class XC, class MemT>
 Fault
@@ -165,6 +193,20 @@ writeMemTiming(XC *xc, trace::InstRecord *traceData, MemT mem, Addr addr,
                           sizeof(MemT), flags, res, byte_enable);
 }
 
+template <ByteOrder Order, class XC, class MemT>
+Fault
+writeMemTiming(XC *xc, trace::InstRecord *traceData, MemT mem, Addr addr,
+               size_t size, Request::Flags flags, uint64_t *res)
+{
+    if (traceData) {
+        traceData->setData(mem);
+    }
+    mem = htog(mem, Order);
+    static const std::vector<bool> byte_enable(size, true);
+    return writeMemTiming(xc, (uint8_t*)&mem, addr,
+                          size, flags, res, byte_enable);
+}
+
 template <class XC, class MemT>
 Fault
 writeMemTimingLE(XC *xc, trace::InstRecord *traceData, MemT mem, Addr addr,
@@ -172,6 +214,15 @@ writeMemTimingLE(XC *xc, trace::InstRecord *traceData, MemT mem, Addr addr,
 {
     return writeMemTiming<ByteOrder::little>(
             xc, traceData, mem, addr, flags, res);
+}
+
+template <class XC, class MemT>
+Fault
+writeMemTimingLE(XC *xc, trace::InstRecord *traceData, MemT mem, Addr addr,
+               size_t size, Request::Flags flags, uint64_t *res)
+{
+    return writeMemTiming<ByteOrder::little>(
+            xc, traceData, mem, addr, size, flags, res);
 }
 
 template <class XC, class MemT>
@@ -214,6 +265,27 @@ writeMemAtomic(XC *xc, trace::InstRecord *traceData, const MemT &mem,
     return fault;
 }
 
+template <ByteOrder Order, class XC, class MemT>
+Fault
+writeMemAtomic(XC *xc, trace::InstRecord *traceData, const MemT &mem,
+               Addr addr, size_t size, Request::Flags flags, uint64_t *res)
+{
+    if (traceData) {
+        traceData->setData(mem);
+    }
+    MemT host_mem = htog(mem, Order);
+    static const std::vector<bool> byte_enable(size, true);
+    Fault fault = writeMemAtomic(xc, (uint8_t*)&host_mem,
+                                 addr, size, flags, res, byte_enable);
+    if (fault == NoFault && res != NULL) {
+        if (flags & Request::MEM_SWAP || flags & Request::MEM_SWAP_COND)
+            *(MemT *)res = gtoh(*(MemT *)res, Order);
+        else
+            *res = gtoh(*res, Order);
+    }
+    return fault;
+}
+
 template <class XC, class MemT>
 Fault
 writeMemAtomicLE(XC *xc, trace::InstRecord *traceData, const MemT &mem,
@@ -221,6 +293,15 @@ writeMemAtomicLE(XC *xc, trace::InstRecord *traceData, const MemT &mem,
 {
     return writeMemAtomic<ByteOrder::little>(
             xc, traceData, mem, addr, flags, res);
+}
+
+template <class XC, class MemT>
+Fault
+writeMemAtomicLE(XC *xc, trace::InstRecord *traceData, const MemT &mem,
+                 size_t size, Addr addr, Request::Flags flags, uint64_t *res)
+{
+    return writeMemAtomic<ByteOrder::little>(
+            xc, traceData, mem, addr, size, flags, res);
 }
 
 template <class XC, class MemT>

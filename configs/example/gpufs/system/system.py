@@ -27,17 +27,17 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from common import (
+    GPUTLBConfig,
+    Simulation,
+)
+from common.Benchmarks import *
+from common.FSConfig import *
+from example.gpufs.Disjoint_VIPER import *
+from ruby import Ruby
 from system.amdgpu import *
 
 from m5.util import panic
-
-from common.Benchmarks import *
-from common.FSConfig import *
-from common import GPUTLBConfig
-from common import Simulation
-from ruby import Ruby
-
-from example.gpufs.Disjoint_VIPER import *
 
 
 def makeGpuFSSystem(args):

@@ -25,10 +25,15 @@
 
 
 import argparse
-import m5
 import sys
 
-from m5.objects import SystemC_Kernel, Root, SystemC_Printer, Gem5_Feeder
+import m5
+from m5.objects import (
+    Gem5_Feeder,
+    Root,
+    SystemC_Kernel,
+    SystemC_Printer,
+)
 
 # pylint:disable=unused-variable
 

@@ -24,9 +24,9 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from m5.objects.ReplacementPolicies import *
 from m5.params import *
 from m5.proxy import *
-from m5.objects.ReplacementPolicies import *
 from m5.SimObject import SimObject
 
 
@@ -43,6 +43,11 @@ class RubyCache(SimObject):
     block_size = Param.MemorySize(
         "0B", "block size in bytes. 0 means default RubyBlockSize"
     )
+
+    # Atomic parameters only applicable to GPU atomics
+    # Zero atomic latency corresponds to instantanous atomic ALU operations
+    atomicLatency = Param.Cycles(0, "Cycles for an atomic ALU operation")
+    atomicALUs = Param.Int(64, "Number of atomic ALUs")
 
     dataArrayBanks = Param.Int(1, "Number of banks for the data array")
     tagArrayBanks = Param.Int(1, "Number of banks for the tag array")

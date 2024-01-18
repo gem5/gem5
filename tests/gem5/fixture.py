@@ -36,24 +36,33 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import os
-import tempfile
-import shutil
-import sys
-import socket
-import threading
 import gzip
-
+import os
+import shutil
+import socket
+import sys
+import tempfile
+import threading
 import urllib.error
 import urllib.request
+from typing import (
+    List,
+    Optional,
+)
 
-from testlib.fixture import Fixture
-from testlib.configuration import config, constants
-from testlib.helper import log_call, cacheresult, joinpath, absdirpath
 import testlib.log as log
+from testlib.configuration import (
+    config,
+    constants,
+)
+from testlib.fixture import Fixture
+from testlib.helper import (
+    absdirpath,
+    cacheresult,
+    joinpath,
+    log_call,
+)
 from testlib.state import Result
-
-from typing import Optional, List
 
 
 class VariableFixture(Fixture):
@@ -151,9 +160,44 @@ class SConsFixture(UniqueFixture):
         if config.skip_build:
             return
 
-    def _setup(self, testitem):
-        if config.skip_build:
-            return
+        if not self.targets:
+            log.test_log.error("No SCons targets specified.")
+        else:
+            log.test_log.message(
+                "Building the following targets. This may take a while."
+            )
+            log.test_log.message(f"{', '.join(self.targets)}")
+            log.test_log.message(
+                "You may want to use --skip-build, or use 'rerun'."
+            )
+
+        if self.protocol:
+            defconfig_command = [
+                "scons",
+                "-C",
+                self.directory,
+                "--ignore-style",
+                "--no-compress-debug",
+                "defconfig",
+                self.target_dir,
+                joinpath(self.directory, "build_opts", self.isa.upper()),
+            ]
+            setconfig_command = [
+                "scons",
+                "-C",
+                self.directory,
+                "--ignore-style",
+                "--no-compress-debug",
+                "setconfig",
+                self.target_dir,
+                f"RUBY_PROTOCOL_{self.protocol.upper()}=y",
+            ]
+            log_call(
+                log.test_log, defconfig_command, time=None, stderr=sys.stderr
+            )
+            log_call(
+                log.test_log, setconfig_command, time=None, stderr=sys.stderr
+            )
 
         command = [
             "scons",
@@ -164,26 +208,7 @@ class SConsFixture(UniqueFixture):
             "--ignore-style",
             "--no-compress-debug",
         ]
-
-        if not self.targets:
-            log.test_log.warn(
-                "No SCons targets specified, this will"
-                " build the default all target.\n"
-                "This is likely unintended, and you"
-                " may wish to kill testlib and reconfigure."
-            )
-        else:
-            log.test_log.message(
-                "Building the following targets. This may take a while."
-            )
-            log.test_log.message(f"{', '.join(self.targets)}")
-            log.test_log.message(
-                "You may want to use --skip-build, or use 'rerun'."
-            )
-
         command.extend(self.targets)
-        if self.options:
-            command.extend(self.options)
         log_call(log.test_log, command, time=None, stderr=sys.stderr)
 
 
@@ -194,6 +219,7 @@ class Gem5Fixture(SConsFixture):
             target_dir += "_" + protocol
         target = joinpath(target_dir, f"gem5.{variant}")
         obj = super().__new__(cls, target)
+        obj.target_dir = target_dir
         return obj
 
     def _init(self, isa, variant, protocol=None):
@@ -203,15 +229,12 @@ class Gem5Fixture(SConsFixture):
         self.path = self.target
         self.directory = config.base_dir
 
-        self.options = []
-        if protocol:
-            self.options = ["--default=" + isa.upper(), "PROTOCOL=" + protocol]
+        self.isa = isa
+        self.protocol = protocol
         self.set_global()
 
     def get_get_build_info(self) -> Optional[str]:
         build_target = self.target
-        if self.options:
-            build_target += " ".join(self.options)
         return build_target
 
 
@@ -328,7 +351,9 @@ class DownloadedProgram(UniqueFixture):
             urllib.request.urlretrieve(self.url, self.filename)
 
     def _getremotetime(self):
-        import datetime, time
+        import datetime
+        import time
+
         import _strptime  # Needed for python threading bug
 
         u = urllib.request.urlopen(self.url, timeout=10)

@@ -36,8 +36,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.params import *
 from m5.objects.ClockedObject import ClockedObject
+from m5.params import *
 
 
 class AbstractMemory(ClockedObject):
@@ -76,3 +76,12 @@ class AbstractMemory(ClockedObject):
     )
 
     writeable = Param.Bool(True, "Allow writes to this memory")
+
+    collect_stats = Param.Bool(
+        True,
+        "Collect statistics per requestor for "
+        "each type of access. Set this to `False` if "
+        "requestors may be unknown or when running "
+        "with multiple `System` objects without a "
+        "`SysBridge`.",
+    )

@@ -34,6 +34,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.objects import *
+
 from .O3_ARM_v7a import O3_ARM_v7a_3
 
 

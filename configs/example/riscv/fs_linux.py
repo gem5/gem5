@@ -45,23 +45,33 @@ from os import path
 import m5
 from m5.defines import buildEnv
 from m5.objects import *
-from m5.util import addToPath, fatal, warn
+from m5.util import (
+    addToPath,
+    fatal,
+    warn,
+)
 from m5.util.fdthelper import *
+
+from gem5.utils.requires import requires
 
 addToPath("../../")
 
-from ruby import Ruby
-
+from common import (
+    CacheConfig,
+    CpuConfig,
+    MemConfig,
+    ObjectList,
+    Options,
+    Simulation,
+)
+from common.Benchmarks import *
+from common.Caches import *
 from common.FSConfig import *
 from common.SysPaths import *
-from common.Benchmarks import *
-from common import Simulation
-from common import CacheConfig
-from common import CpuConfig
-from common import MemConfig
-from common import ObjectList
-from common.Caches import *
-from common import Options
+from ruby import Ruby
+
+# Run a check to ensure the RISC-V ISA is complied into gem5.
+requires(isa_required=ISA.RISCV)
 
 # ------------------------- Usage Instructions ------------------------- #
 # Common system confirguration options (cpu types, num cpus, checkpointing
@@ -130,20 +140,8 @@ def generateDtb(system):
 
 # ----------------------------- Add Options ---------------------------- #
 parser = argparse.ArgumentParser()
-Options.addCommonOptions(parser)
+Options.addCommonOptions(parser, ISA.RISCV)
 Options.addFSOptions(parser)
-parser.add_argument(
-    "--bare-metal",
-    action="store_true",
-    help="Provide the raw system without the linux specific bits",
-)
-parser.add_argument(
-    "--dtb-filename",
-    action="store",
-    type=str,
-    help="Specifies device tree blob file to use with device-tree-"
-    "enabled kernels",
-)
 parser.add_argument(
     "--virtio-rng", action="store_true", help="Enable VirtIORng device"
 )
@@ -153,6 +151,7 @@ args = parser.parse_args()
 
 # CPU and Memory
 (CPUClass, mem_mode, FutureClass) = Simulation.setCPUClass(args)
+assert issubclass(CPUClass, RiscvCPU)
 MemClass = Simulation.setMemClass(args)
 
 np = args.num_cpus

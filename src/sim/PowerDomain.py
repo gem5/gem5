@@ -36,8 +36,8 @@
 
 import sys
 
-from m5.params import *
 from m5.objects.PowerState import PowerState
+from m5.params import *
 
 
 # A power domain groups multiple ClockedObjects and creates a

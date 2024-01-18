@@ -34,12 +34,15 @@ IMPORTANT: If you modify this file, it's likely that the Learning gem5 book
 
 """
 
+from msi_caches import (
+    DirController,
+    L1Cache,
+    MyNetwork,
+)
+
 from m5.defines import buildEnv
-from m5.util import fatal
-
 from m5.objects import *
-
-from msi_caches import L1Cache, DirController, MyNetwork
+from m5.util import fatal
 
 
 class TestCacheSystem(RubySystem):

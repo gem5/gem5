@@ -45,7 +45,9 @@ namespace Aarch64
     StaticInstPtr decodeSveIntArithUnaryPred(ExtMachInst machInst);
     StaticInstPtr decodeSveIntMulAdd(ExtMachInst machInst);
     StaticInstPtr decodeSveIntMatMulAdd(ExtMachInst machInst);
+    StaticInstPtr decodeSveIntMulUnpred(ExtMachInst machInst);
     StaticInstPtr decodeSveIntArithUnpred(ExtMachInst machInst);
+    StaticInstPtr decodeSveIntTerUnpred(ExtMachInst machInst);
     StaticInstPtr decodeSveIntLogUnpred(ExtMachInst machInst);
     StaticInstPtr decodeSveIndexGen(ExtMachInst machInst);
     StaticInstPtr decodeSveStackAlloc(ExtMachInst machInst);
@@ -71,6 +73,12 @@ namespace Aarch64
     StaticInstPtr decodeSveIntWideImmUnpred(ExtMachInst machInst);
     StaticInstPtr decodeSveClamp(ExtMachInst machInst);
     StaticInstPtr decodeSve2Accum(ExtMachInst machInst);
+    StaticInstPtr decodeSveIntRotImm(ExtMachInst machInst);
+    StaticInstPtr decodeSve2CryptBinConstr(ExtMachInst machInst);
+    StaticInstPtr decodeSve2BitPerm(ExtMachInst machInst);
+    StaticInstPtr decodeSve2IntMulLong(ExtMachInst machInst);
+    StaticInstPtr decodeSve2WideIntArith(ExtMachInst machInst);
+    StaticInstPtr decodeSve2Crypto(ExtMachInst machInst);
 
     StaticInstPtr decodeSveIntegerDotProductUnpred(ExtMachInst machInst);
     StaticInstPtr decodeSveIntegerDotProductIndexed(ExtMachInst machInst);
@@ -129,10 +137,14 @@ namespace Aarch64
                   break;
               case 0b10:
               case 0b11:
-                  if (bits(machInst, 21) == 0b0 && op2 == 0b10) {
+                  if (bits(machInst, 21) == 0b0 && bits(op2, 1) == 0b0) {
+                      return decodeSve2WideIntArith(machInst);
+                  } else if (bits(machInst, 21) == 0b0 && op2 == 0b10) {
                       return decodeSveMisc(machInst);
                   } else if (bits(machInst, 21) == 0b0 && op2 == 0b11) {
                       return decodeSve2Accum(machInst);
+                  } else if (bits(machInst, 21) == 0b1 && bits(machInst, 15, 13) == 0b111) {
+                      return decodeSve2Crypto(machInst);
                   } else {
                       return new Unknown64(machInst);
                   }
@@ -180,7 +192,15 @@ namespace Aarch64
                 switch (b_15_14) {
                   case 0x0:
                     if (b_13) {
-                        return decodeSveIntLogUnpred(machInst);
+                        if (bits(machInst, 11)) {
+                            return decodeSveIntTerUnpred(machInst);
+                        } else {
+                            if (bits(machInst, 10)) {
+                                return decodeSveIntRotImm(machInst);
+                            } else {
+                                return decodeSveIntLogUnpred(machInst);
+                            }
+                        }
                     } else {
                         if (!bits(machInst, 30)) {
                             return decodeSveIntArithUnpred(machInst);
@@ -189,7 +209,7 @@ namespace Aarch64
                     break;
                   case 0x1:
                     if (b_13) {
-                        return new Unknown64(machInst);
+                        return decodeSveIntMulUnpred(machInst);
                     } else if (b_12) {
                         return decodeSveStackAlloc(machInst);
                     } else {

@@ -24,9 +24,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from ......utils.override import overrides
+from m5.objects import (
+    DMA_Controller,
+    MessageBuffer,
+)
 
-from m5.objects import MessageBuffer, DMA_Controller
+from ......utils.override import overrides
 
 
 class DMAController(DMA_Controller):

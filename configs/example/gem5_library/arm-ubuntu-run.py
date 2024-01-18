@@ -40,18 +40,20 @@ scons build/ARM/gem5.opt -j<NUM_CPUS>
 
 """
 
-from gem5.isas import ISA
-from m5.objects import ArmDefaultRelease
-from gem5.utils.requires import requires
-from gem5.resources.resource import obtain_resource
-from gem5.simulate.simulator import Simulator
-from m5.objects import VExpress_GEM5_Foundation
+from m5.objects import (
+    ArmDefaultRelease,
+    VExpress_GEM5_Foundation,
+)
+
 from gem5.coherence_protocol import CoherenceProtocol
 from gem5.components.boards.arm_board import ArmBoard
 from gem5.components.memory import DualChannelDDR4_2400
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.components.processors.simple_processor import SimpleProcessor
-
+from gem5.isas import ISA
+from gem5.resources.resource import obtain_resource
+from gem5.simulate.simulator import Simulator
+from gem5.utils.requires import requires
 
 # This runs a check to ensure the gem5 binary is compiled for ARM and the
 # protocol is CHI.

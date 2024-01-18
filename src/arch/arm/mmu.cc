@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2016-2022 Arm Limited
+ * Copyright (c) 2010-2013, 2016-2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -263,14 +263,17 @@ MMU::translateSe(const RequestPtr &req, ThreadContext *tc, Mode mode,
         }
     }
 
-    Addr paddr;
     Process *p = tc->getProcessPtr();
-
-    if (!p->pTable->translate(vaddr, paddr))
+    if (const auto pte = p->pTable->lookup(vaddr); !pte) {
         return std::make_shared<GenericPageTableFault>(vaddr_tainted);
-    req->setPaddr(paddr);
+    } else {
+        req->setPaddr(pte->paddr + p->pTable->pageOffset(vaddr));
 
-    return finalizePhysical(req, tc, mode);
+        if (pte->flags & EmulationPageTable::Uncacheable)
+            req->setFlags(Request::UNCACHEABLE);
+
+        return finalizePhysical(req, tc, mode);
+    }
 }
 
 Fault

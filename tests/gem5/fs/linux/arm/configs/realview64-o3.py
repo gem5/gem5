@@ -33,9 +33,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects import *
 from arm_generic import *
 from common.cores.arm.O3_ARM_v7a import O3_ARM_v7a_3
+
+from m5.objects import *
 
 root = LinuxArmFSSystemUniprocessor(
     mem_mode="timing", mem_class=DDR3_1600_8x8, cpu_class=O3_ARM_v7a_3

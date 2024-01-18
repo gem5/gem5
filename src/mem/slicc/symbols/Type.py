@@ -39,9 +39,9 @@
 
 from collections import OrderedDict
 
-from slicc.util import PairContainer
 from slicc.symbols.Symbol import Symbol
 from slicc.symbols.Var import Var
+from slicc.util import PairContainer
 
 
 class DataMember(Var):

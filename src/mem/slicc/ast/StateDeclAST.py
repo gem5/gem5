@@ -25,7 +25,10 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from slicc.ast.DeclAST import DeclAST
-from slicc.symbols import Func, Type
+from slicc.symbols import (
+    Func,
+    Type,
+)
 
 
 class StateDeclAST(DeclAST):

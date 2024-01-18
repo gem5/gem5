@@ -44,6 +44,7 @@
 
 #include "arch/generic/pcstate.hh"
 #include "arch/riscv/regs/vector.hh"
+#include "enums/PrivilegeModeSet.hh"
 #include "enums/RiscvType.hh"
 
 namespace gem5
@@ -55,6 +56,8 @@ using RiscvType = enums::RiscvType;
 constexpr enums::RiscvType RV32 = enums::RV32;
 constexpr enums::RiscvType RV64 = enums::RV64;
 
+using PrivilegeModeSet = enums::PrivilegeModeSet;
+
 class PCState : public GenericISA::UPCState<4>
 {
   protected:
@@ -62,7 +65,7 @@ class PCState : public GenericISA::UPCState<4>
 
     bool _compressed = false;
     RiscvType _rvType = RV64;
-    uint64_t _vlenb = VLENB;
+    uint64_t _vlenb = 32;
     VTYPE _vtype = (1ULL << 63); // vtype.vill = 1 at initial;
     uint32_t _vl = 0;
 
@@ -74,7 +77,7 @@ class PCState : public GenericISA::UPCState<4>
     PCState &operator=(const PCState &other) = default;
     PCState() = default;
     explicit PCState(Addr addr) { set(addr); }
-    explicit PCState(Addr addr, RiscvType rvType, uint64_t vlenb = VLENB)
+    explicit PCState(Addr addr, RiscvType rvType, uint64_t vlenb)
     {
         set(addr);
         _rvType = rvType;

@@ -236,6 +236,7 @@ action(AllocateTBE_PfRequest, desc="Allocate TBE for prefetch request") {
       assert(in_msg.Prefetch != PrefetchBit:No);
       out_msg.is_local_pf := true;
       out_msg.is_remote_pf := false;
+      out_msg.txnId := max_outstanding_transactions;
 
       if (in_msg.Type == RubyRequestType:LD) {
         out_msg.type := CHIRequestType:Load;
@@ -927,6 +928,25 @@ action(Initiate_StoreUpgrade, desc="") {
   tbe.actions.push(Event:TagArrayWrite);
 }
 
+action(Initiate_WriteUnique_Zero, desc="") {
+  assert(is_HN);
+  tbe.dataUnique := true;
+  if (tbe.dir_sharers.count() > 0) {
+    tbe.actions.push(Event:SendSnpCleanInvalid);
+  }
+  tbe.actions.push(Event:WriteZero);
+  if (comp_wu) {
+    tbe.actions.push(Event:SendDBIDResp_WUZ);
+    tbe.actions.pushNB(Event:WriteFEPipe);
+    tbe.actions.pushNB(Event:SendComp_WU);
+  } else {
+    tbe.actions.push(Event:SendCompDBIDResp);
+    tbe.actions.pushNB(Event:WriteFEPipe);
+  }
+  tbe.actions.push(Event:CheckCacheFill);
+  tbe.actions.push(Event:TagArrayWrite);
+}
+
 action(Initiate_WriteUnique_LocalWrite, desc="") {
   // auto-upgrade if hn but state was not unique
   assert(is_HN || tbe.dataUnique);
@@ -1039,7 +1059,7 @@ action(Initiate_AtomicNoReturn_LocalWrite, desc="") {
     // no one will send us data unless we explicitly ask
     tbe.actions.push(Event:SendSnpUniqueRetToSrc);
   }
-  if (comp_wu) {
+  if (comp_anr) {
     tbe.actions.push(Event:SendDBIDResp_ANR);
     tbe.actions.pushNB(Event:WriteFEPipe);
     tbe.actions.pushNB(Event:SendComp_ANR);
@@ -1072,7 +1092,7 @@ action(Initiate_AtomicNoReturn_Forward, desc="") {
      (tbe.dir_sharers.isElement(tbe.requestor))){
     tbe.dir_sharers.remove(tbe.requestor);
   }
-  if (comp_wu) {
+  if (comp_anr) {
     tbe.actions.push(Event:SendAtomicNoReturn);
     tbe.actions.push(Event:SendDBIDResp_ANR);
     tbe.actions.pushNB(Event:SendComp_ANR);
@@ -1103,7 +1123,7 @@ action(Initiate_AtomicReturn_Miss, desc="") {
 action(Initiate_AtomicNoReturn_Miss, desc="") {
   assert(is_HN);
   tbe.actions.push(Event:SendReadNoSnp);
-  if (comp_wu) {
+  if (comp_anr) {
     tbe.actions.push(Event:SendDBIDResp_ANR);
     tbe.actions.pushNB(Event:WriteFEPipe);
     tbe.actions.pushNB(Event:SendComp_ANR);
@@ -1955,6 +1975,11 @@ action(ExpectComp, desc="") {
   tbe.expected_req_resp.addExpectedCount(1);
 }
 
+action(WriteZero, desc="") {
+  tbe.dataBlkValid.fillMask();
+  tbe.dataBlk.clear();
+}
+
 action(Receive_ReqDataResp, desc="") {
   assert(is_valid(tbe));
   assert(tbe.expected_req_resp.hasExpected());
@@ -2299,6 +2324,7 @@ action(UpdateDataState_FromADataResp, desc="") {
 
     tbe.oldDataBlk := tbe.dataBlk;
     tbe.dataBlk.atomicPartial(tbe.dataBlk, tbe.atomic_op);
+    tbe.dataBlk.clearAtomicLogEntries();
     tbe.dataDirty := true;
 
     DPRINTF(RubySlicc, "Atomic after %s\n", tbe.dataBlk);
@@ -2937,17 +2963,18 @@ action(Send_RespSepData, desc="") {
 action(Send_CompI, desc="") {
   assert(is_valid(tbe));
 
-  // Used to ack Evict request
-  assert(tbe.dir_sharers.isElement(tbe.requestor));
-  assert((tbe.dir_ownerExists == false) || (tbe.dir_owner != tbe.requestor));
+  if (!isStashReqType(tbe.reqType)) {
+    // Used to ack Evict request
+    assert(tbe.dir_sharers.isElement(tbe.requestor));
+    assert((tbe.dir_ownerExists == false) || (tbe.dir_owner != tbe.requestor));
 
-  tbe.dir_sharers.remove(tbe.requestor);
+    tbe.dir_sharers.remove(tbe.requestor);
+  }
 
   enqueue(rspOutPort, CHIResponseMsg, response_latency) {
     out_msg.addr := address;
     out_msg.type := CHIResponseType:Comp_I;
     out_msg.responder := machineID;
-    out_msg.Destination.add(tbe.requestor);
     out_msg.Destination.add(tbe.requestor);
     out_msg.txnId := tbe.txnId;
     out_msg.dbid := tbe.txnId;
@@ -3424,6 +3451,7 @@ action(Callback_AtomicHit, desc="") {
   DataBlock oldDataBlk;
   oldDataBlk := tbe.dataBlk;
   tbe.dataBlk.atomicPartial(tbe.dataBlk, tbe.atomic_op);
+  tbe.dataBlk.clearAtomicLogEntries();
 
   sequencer.atomicCallback(tbe.addr, oldDataBlk, false);
   DPRINTF(RubySlicc, "Atomic after %s\n", tbe.dataBlk);
@@ -3440,7 +3468,7 @@ action(Callback_ExpressPrefetchHit, desc="") {
   cache.profilePrefetchHit();
   peek(reqRdyPort, CHIRequestMsg) {
     assert(in_msg.is_local_pf);
-    notifyPfComplete(in_msg.addr);
+    pfProxy.completePrefetch(in_msg.addr);
   }
 }
 
@@ -3451,7 +3479,7 @@ action(Callback_Miss, desc="") {
   assert(is_valid(tbe));
   if (tbe.dataValid && tbe.is_local_pf) {
     assert(use_prefetcher);
-    notifyPfComplete(tbe.addr);
+    pfProxy.completePrefetch(tbe.addr);
 
   } else if (tbe.dataValid && (tbe.reqType == CHIRequestType:Load)) {
     DPRINTF(RubySlicc, "Read data %s\n", tbe.dataBlk);
@@ -3490,6 +3518,7 @@ action(Callback_Miss, desc="") {
     DataBlock oldDataBlk;
     oldDataBlk := tbe.dataBlk;
     tbe.dataBlk.atomicPartial(tbe.dataBlk, tbe.atomic_op);
+    tbe.dataBlk.clearAtomicLogEntries();
 
     sequencer.atomicCallback(tbe.addr, oldDataBlk, false);
     DPRINTF(RubySlicc, "Atomic after %s\n", tbe.dataBlk);
@@ -3562,7 +3591,7 @@ action(Profile_Miss, desc="") {
 
     // FIXME: this dataBlk is likely to have stale data. This should be fixed
     // if our prefetcher uses cached data to make prefetch decisions.
-    notifyPfMiss(tbe.seqReq, is_read, tbe.dataBlk);
+    pfProxy.notifyPfMiss(tbe.seqReq, is_read, tbe.dataBlk);
   }
 }
 
@@ -3586,7 +3615,7 @@ action(Profile_Hit, desc="") {
     } else {
       assert(isWriteReqType(tbe.reqType));
     }
-    notifyPfHit(tbe.seqReq, is_read, tbe.dataBlk);
+    pfProxy.notifyPfHit(tbe.seqReq, is_read, tbe.dataBlk);
 
     cache_entry.HWPrefetched := false;
   }
@@ -3600,10 +3629,11 @@ action(Profile_Fill, desc="") {
     cache_entry.HWPrefetched := tbe.is_local_pf ||
                           (tbe.is_remote_pf &&
                             (upstream_prefetch_trains_prefetcher == false));
+    cache_entry.requestor := getRequestorID(tbe.seqReq);
 
     // Prefetchers that use this info require notifications from both
     // demand and pf fills (unlike notifyPfHit/notifyPfMiss)
-    notifyPfFill(tbe.seqReq, tbe.dataBlk, tbe.is_local_pf);
+    pfProxy.notifyPfFill(tbe.seqReq, tbe.dataBlk, tbe.is_local_pf);
   }
 }
 
@@ -3617,7 +3647,7 @@ action(Profile_Eviction, desc="") {
     sequencer.evictionCallback(address);
   }
   if (use_prefetcher && is_valid(cache_entry)) {
-    notifyPfEvict(address, cache_entry.HWPrefetched);
+    pfProxy.notifyPfEvict(address, cache_entry.HWPrefetched, cache_entry.requestor);
   }
 }
 

@@ -29,6 +29,7 @@ import os
 import socket
 
 from m5.defines import buildEnv
+
 import _m5.arm_fast_model
 
 ARM_LICENSE_ENV = "ARMLMD_LICENSE_FILE"

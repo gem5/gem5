@@ -41,30 +41,35 @@
 # "m5 test.py"
 
 import argparse
-import sys
 import os
+import sys
 
 import m5
 from m5.defines import buildEnv
 from m5.objects import *
 from m5.params import NULL
-from m5.util import addToPath, fatal, warn
+from m5.util import (
+    addToPath,
+    fatal,
+    warn,
+)
+
 from gem5.isas import ISA
-from gem5.runtime import get_runtime_isa
 
 addToPath("../../")
 
-from ruby import Ruby
-
-from common import Options
-from common import Simulation
-from common import CacheConfig
-from common import CpuConfig
-from common import ObjectList
-from common import MemConfig
-from common.FileSystemConfig import config_filesystem
+from common import (
+    CacheConfig,
+    CpuConfig,
+    MemConfig,
+    ObjectList,
+    Options,
+    Simulation,
+)
 from common.Caches import *
 from common.cpu2000 import *
+from common.FileSystemConfig import config_filesystem
+from ruby import Ruby
 
 
 def get_processes(args):
@@ -113,7 +118,8 @@ def get_processes(args):
         idx += 1
 
     if args.smt:
-        assert args.cpu_type == "DerivO3CPU"
+        cpu_type = ObjectList.cpu_list.get(args.cpu_type)
+        assert ObjectList.is_o3_cpu(cpu_type), "SMT requires an O3CPU"
         return multiprocesses, idx
     else:
         return multiprocesses, 1
@@ -144,7 +150,7 @@ if args.bench:
 
     for app in apps:
         try:
-            if get_runtime_isa() == ISA.ARM:
+            if ObjectList.cpu_list.get_isa(args.cpu_type) == ISA.ARM:
                 exec(
                     "workload = %s('arm_%s', 'linux', '%s')"
                     % (app, args.arm_iset, args.spec_input)
@@ -159,7 +165,7 @@ if args.bench:
             multiprocesses.append(workload.makeProcess())
         except:
             print(
-                f"Unable to find workload for {get_runtime_isa().name()}: {app}",
+                f"Unable to find workload for ISA: {app}",
                 file=sys.stderr,
             )
             sys.exit(1)

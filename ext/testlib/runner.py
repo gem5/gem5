@@ -43,9 +43,11 @@ import traceback
 
 import testlib.helper as helper
 import testlib.log as log
-
-from testlib.state import Status, Result
 from testlib.fixture import SkipException
+from testlib.state import (
+    Result,
+    Status,
+)
 
 
 def compute_aggregate_result(iterable):

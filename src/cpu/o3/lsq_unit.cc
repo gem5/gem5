@@ -451,7 +451,7 @@ LSQUnit::checkSnoop(PacketPtr pkt)
     LSQRequest *request = iter->request();
 
     // Check that this snoop didn't just invalidate our lock flag
-    if (ld_inst->effAddrValid() &&
+    if (ld_inst->effAddrValid() && request &&
         request->isCacheBlockHit(invalidate_addr, cacheBlockMask)
         && ld_inst->memReqFlags & Request::LLSC) {
         ld_inst->tcBase()->getIsaPtr()->handleLockedSnoopHit(ld_inst.get());
@@ -463,7 +463,7 @@ LSQUnit::checkSnoop(PacketPtr pkt)
         ld_inst = iter->instruction();
         assert(ld_inst);
         request = iter->request();
-        if (!ld_inst->effAddrValid() || ld_inst->strictlyOrdered())
+        if (!ld_inst->effAddrValid() || ld_inst->strictlyOrdered() || !request)
             continue;
 
         DPRINTF(LSQUnit, "-- inst [sn:%lli] to pktAddr:%#x\n",
@@ -1510,6 +1510,8 @@ LSQUnit::read(LSQRequest *request, ssize_t load_idx)
                     // first time this load got executed. Signal the senderSate
                     // that response packets should be discarded.
                     request->discard();
+                    // Avoid checking snoops on this discarded request.
+                    load_entry.setRequest(nullptr);
                 }
 
                 WritebackEvent *wb = new WritebackEvent(load_inst, data_pkt,

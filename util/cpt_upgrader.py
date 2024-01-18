@@ -70,8 +70,11 @@
 
 
 import configparser
-import glob, types, sys, os
+import glob
+import os
 import os.path as osp
+import sys
+import types
 
 verbose_print = False
 
@@ -277,7 +280,10 @@ def process_file(path, **kwargs):
 
 
 if __name__ == "__main__":
-    from argparse import ArgumentParser, SUPPRESS
+    from argparse import (
+        SUPPRESS,
+        ArgumentParser,
+    )
 
     parser = ArgumentParser(usage="%(prog)s [args] <filename or directory>")
     parser.add_argument(

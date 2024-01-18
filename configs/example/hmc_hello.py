@@ -30,22 +30,30 @@
 #
 # Author: Éder F. Zulian
 
-import sys
 import argparse
+import sys
 
 import m5
 from m5.objects import *
 from m5.util import *
-from gem5.runtime import get_runtime_isa
 
 addToPath("../")
 
-from common import MemConfig
-from common import HMC
-
+from common import (
+    HMC,
+    MemConfig,
+    ObjectList,
+)
 
 pd = "Simple 'hello world' example using HMC as main memory"
 parser = argparse.ArgumentParser(description=pd)
+parser.add_argument(
+    "--cpu-type",
+    type=str,
+    default="X86TimingSimpleCPU",
+    choices=ObjectList.cpu_list.get_names(),
+    help="CPU model to use",
+)
 HMC.add_options(parser)
 options = parser.parse_args()
 # create the system we are going to simulate
@@ -56,8 +64,8 @@ system.mem_mode = "timing"
 clk = "1GHz"
 vd = VoltageDomain(voltage="1V")
 system.clk_domain = SrcClockDomain(clock=clk, voltage_domain=vd)
-# create a simple CPU
-system.cpu = TimingSimpleCPU()
+# create a CPU
+system.cpu = ObjectList.cpu_list.get(options.cpu_type)()
 # config memory system
 MemConfig.config_mem(options, system)
 # hook the CPU ports up to the membus
@@ -68,10 +76,15 @@ system.cpu.createInterruptController()
 # connect special port in the system to the membus. This port is a
 # functional-only port to allow the system to read and write memory.
 system.system_port = system.membus.cpu_side_ports
-# get ISA for the binary to run.
-isa = get_runtime_isa()
 # run 'hello' and use the compiled ISA to find the binary
-binary = "tests/test-progs/hello/bin/" + isa.name.lower() + "/linux/hello"
+
+
+binary = (
+    "tests/test-progs/hello/bin/"
+    + ObjectList.cpu_list.get_isa(options.cpu_type).name.lower()
+    + "/linux/hello"
+)
+
 # create a process for a simple "Hello World" application
 process = Process()
 # cmd is a list which begins with the executable (like argv)

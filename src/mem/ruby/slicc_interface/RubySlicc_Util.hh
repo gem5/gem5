@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 ARM Limited
+ * Copyright (c) 2020-2021,2023 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -314,6 +314,12 @@ countBoolVec(BoolVec bVec)
         }
     }
     return count;
+}
+
+inline RequestorID
+getRequestorID(RequestPtr req)
+{
+    return req->requestorId();
 }
 
 } // namespace ruby

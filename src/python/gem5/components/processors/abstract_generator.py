@@ -25,14 +25,13 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from abc import abstractmethod
+from typing import List
+
 from ...utils.override import overrides
+from ..boards.abstract_board import AbstractBoard
 from ..boards.mem_mode import MemMode
 from .abstract_generator_core import AbstractGeneratorCore
-
 from .abstract_processor import AbstractProcessor
-from ..boards.abstract_board import AbstractBoard
-
-from typing import List
 
 
 def partition_range(
@@ -61,11 +60,12 @@ class AbstractGenerator(AbstractProcessor):
         Create a list of AbstractGeneratorCore (which is an AbstractCore),
         to pass to the constructor of the AbstractProcessor. Due to the
         different prototypes for the constructor of different generator types
-        inputs are noted as *args. This way the abstract method _create_cores
+        inputs are noted as *args. This way the abstract ``method _create_cores``
         could be called without AbstractGenerator having to know what the
         prototype for the constructor of the inheriting class is. It also
-        limits the _create_cores function to only using positional arguments.
-        keyword (optional arguments) are still allowable in the constructor of
+        limits the ``_create_cores`` function to only using positional arguments.
+
+        Keyword (optional arguments) are still allowable in the constructor of
         the inheriting classes.
         """
         super().__init__(cores=cores)

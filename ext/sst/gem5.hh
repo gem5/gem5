@@ -80,7 +80,6 @@
 #include <sst/core/component.h>
 
 #include <sst/core/interfaces/stringEvent.h>
-#include <sst/core/interfaces/simpleMem.h>
 
 #include <sim/simulate.hh>
 

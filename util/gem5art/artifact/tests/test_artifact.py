@@ -27,14 +27,20 @@
 """Tests for the Artifact object and associated functions"""
 
 import hashlib
-from pathlib import Path
-import unittest
-from uuid import uuid4, UUID
-import sys
 import io
+import sys
+import unittest
+from pathlib import Path
+from uuid import (
+    UUID,
+    uuid4,
+)
 
 from gem5art import artifact
-from gem5art.artifact._artifactdb import ArtifactDB, getDBConnection
+from gem5art.artifact._artifactdb import (
+    ArtifactDB,
+    getDBConnection,
+)
 
 
 class MockDB(ArtifactDB):

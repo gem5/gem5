@@ -292,7 +292,7 @@ TLB::doTranslate(const RequestPtr &req, ThreadContext *tc,
             delayed = true;
             return fault;
         }
-        e = lookup(vaddr, satp.asid, mode, false);
+        e = lookup(vaddr, satp.asid, mode, true);
         assert(e != nullptr);
     }
 
@@ -341,9 +341,12 @@ TLB::translate(const RequestPtr &req, ThreadContext *tc,
 
     if (FullSystem) {
         PrivilegeMode pmode = getMemPriv(tc, mode);
+        MISA misa = tc->readMiscRegNoEffect(MISCREG_ISA);
         SATP satp = tc->readMiscReg(MISCREG_SATP);
-        if (pmode == PrivilegeMode::PRV_M || satp.mode == AddrXlateMode::BARE)
+        if (!misa.rvs || pmode == PrivilegeMode::PRV_M ||
+            satp.mode == AddrXlateMode::BARE) {
             req->setFlags(Request::PHYSICAL);
+        }
 
         Fault fault;
         if (req->getFlags() & Request::PHYSICAL) {
@@ -354,20 +357,6 @@ TLB::translate(const RequestPtr &req, ThreadContext *tc,
             fault = NoFault;
         } else {
             fault = doTranslate(req, tc, translation, mode, delayed);
-        }
-
-        // according to the RISC-V tests, negative physical addresses trigger
-        // an illegal address exception.
-        // TODO where is that written in the manual?
-        if (!delayed && fault == NoFault && bits(req->getPaddr(), 63)) {
-            ExceptionCode code;
-            if (mode == BaseMMU::Read)
-                code = ExceptionCode::LOAD_ACCESS;
-            else if (mode == BaseMMU::Write)
-                code = ExceptionCode::STORE_ACCESS;
-            else
-                code = ExceptionCode::INST_ACCESS;
-            fault = std::make_shared<AddressFault>(req->getVaddr(), code);
         }
 
         if (!delayed && fault == NoFault) {
@@ -434,8 +423,9 @@ TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc,
         MMU *mmu = static_cast<MMU *>(tc->getMMUPtr());
 
         PrivilegeMode pmode = mmu->getMemPriv(tc, mode);
+        MISA misa = tc->readMiscRegNoEffect(MISCREG_ISA);
         SATP satp = tc->readMiscReg(MISCREG_SATP);
-        if (pmode != PrivilegeMode::PRV_M &&
+        if (misa.rvs && pmode != PrivilegeMode::PRV_M &&
             satp.mode != AddrXlateMode::BARE) {
             Walker *walker = mmu->getDataWalker();
             unsigned logBytes;

@@ -170,6 +170,9 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     bool MemData,       desc="Got MemData?",default="false";
     bool wtData,       desc="Got write through data?",default="false";
     bool atomicData,   desc="Got Atomic op?",default="false";
+    // Note, protocol invariant: atomicData = atomicDataReturn || atomicDataNoReturn;
+    bool atomicDataReturn, desc="Got Atomic op and need return value?",default="false";
+    bool atomicDataNoReturn, desc="Got Atomic op and don't need return value?",default="false";
     Cycles InitialRequestTime, desc="...";
     Cycles ForwardRequestTime, desc="...";
     Cycles ProbeRequestStartTime, desc="...";
@@ -451,7 +454,9 @@ machine(MachineType:Directory, "AMD Baseline protocol")
           trigger(Event:RdBlkM, in_msg.addr, entry, tbe);
         } else if (in_msg.Type == CoherenceRequestType:WriteThrough) {
           trigger(Event:WriteThrough, in_msg.addr, entry, tbe);
-        } else if (in_msg.Type == CoherenceRequestType:Atomic) {
+        } else if (in_msg.Type == CoherenceRequestType:Atomic ||
+                   in_msg.Type == CoherenceRequestType:AtomicReturn ||
+                   in_msg.Type == CoherenceRequestType:AtomicNoReturn) {
           trigger(Event:Atomic, in_msg.addr, entry, tbe);
         } else if (in_msg.Type == CoherenceRequestType:VicDirty) {
           if (getDirectoryEntry(in_msg.addr).VicDirtyIgnore.isElement(in_msg.Requestor)) {
@@ -656,7 +661,9 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         // add relevant TCC node to list. This replaces all TCPs and SQCs
         if(isGPUSharer(address)) {
           if ((in_msg.Type == CoherenceRequestType:WriteThrough ||
-               in_msg.Type == CoherenceRequestType:Atomic) &&
+               in_msg.Type == CoherenceRequestType:Atomic ||
+               in_msg.Type == CoherenceRequestType:AtomicReturn ||
+               in_msg.Type == CoherenceRequestType:AtomicNoReturn) &&
                in_msg.NoWriteConflict) {
           // Don't Include TCCs unless there was write-CAB conflict in the TCC
           } else if(noTCCdir) {
@@ -814,6 +821,8 @@ machine(MachineType:Directory, "AMD Baseline protocol")
       tbe.writeMask.clear();
       tbe.wtData := false;
       tbe.atomicData := false;
+      tbe.atomicDataReturn := false;
+      tbe.atomicDataNoReturn := false;
       tbe.DataBlk := getDirectoryEntry(address).DataBlk; // Data only for WBs
       tbe.Dirty := false;
       tbe.NumPendingAcks := 0;
@@ -831,10 +840,18 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         tbe.WTRequestor := in_msg.WTRequestor;
         tbe.LastSender := in_msg.Requestor;
       }
-      if (in_msg.Type == CoherenceRequestType:Atomic) {
+      if (in_msg.Type == CoherenceRequestType:Atomic ||
+          in_msg.Type == CoherenceRequestType:AtomicReturn ||
+          in_msg.Type == CoherenceRequestType:AtomicNoReturn) {
         tbe.writeMask.clear();
         tbe.writeMask.orMask(in_msg.writeMask);
         tbe.atomicData := true;
+        if (in_msg.Type == CoherenceRequestType:AtomicReturn) {
+          tbe.atomicDataReturn = true;
+        } else {
+          assert(in_msg.Type == CoherenceRequestType:AtomicNoReturn);
+          tbe.atomicDataNoReturn = true;
+        }
         tbe.WTRequestor := in_msg.WTRequestor;
         tbe.LastSender := in_msg.Requestor;
       }
@@ -866,8 +883,14 @@ machine(MachineType:Directory, "AMD Baseline protocol")
       tbe.DataBlk := tmp;
       getDirectoryEntry(address).DataBlk := tbe.DataBlk;
     } else if (tbe.atomicData) {
-      tbe.DataBlk.atomicPartial(getDirectoryEntry(address).DataBlk,
-                                tbe.writeMask);
+      if (tbe.atomicDataReturn) {
+        tbe.DataBlk.atomicPartial(getDirectoryEntry(address).DataBlk,
+                                tbe.writeMask, false);
+      } else {
+          assert(tbe.atomicDataNoReturn);
+        tbe.DataBlk.atomicPartial(getDirectoryEntry(address).DataBlk,
+                                tbe.writeMask, true);
+      }
       getDirectoryEntry(address).DataBlk := tbe.DataBlk;
     } else if (tbe.Dirty == false) {
       getDirectoryEntry(address).DataBlk := tbe.DataBlk;
@@ -896,6 +919,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
           tbe.DataBlk := tmp;
         } else if (tbe.Dirty) {
           if(tbe.atomicData == false && tbe.wtData == false) {
+            assert(atomicDataReturn == false && atomicDataNoReturn);
             DPRINTF(RubySlicc, "Got double data for %s from %s\n", address, in_msg.Sender);
             assert(tbe.DataBlk == in_msg.DataBlk);  // in case of double data
           }
@@ -1050,7 +1074,9 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         entry.pfState := ProbeFilterState:T;
         entry.isOnCPU := false;
         entry.isOnGPU := false;
-      } else if (in_msg.Type == CoherenceRequestType:Atomic) {
+      } else if (in_msg.Type == CoherenceRequestType:Atomic ||
+                 in_msg.Type == CoherenceRequestType:AtomicReturn ||
+                 in_msg.Type == CoherenceRequestType:AtomicNoReturn) {
         entry.pfState := ProbeFilterState:T;
         entry.isOnCPU := false;
         entry.isOnGPU := false;

@@ -39,7 +39,10 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from slicc.ast.ExprAST import ExprAST
-from slicc.symbols import Func, Type
+from slicc.symbols import (
+    Func,
+    Type,
+)
 
 
 class FuncCallExprAST(ExprAST):

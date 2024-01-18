@@ -59,13 +59,15 @@ def CheckCxxFlag(context, flag, autoadd=True):
     return ret
 
 
-def CheckLinkFlag(context, flag, autoadd=True, set_for_shared=True):
+def CheckLinkFlag(context, flag, autoadd=True, set_for_shared=True, code=None):
     context.Message(f"Checking for linker {flag} support... ")
     last_linkflags = context.env["LINKFLAGS"]
     context.env.Append(LINKFLAGS=[flag])
     pre_werror = context.env["LINKFLAGS"]
     context.env.Append(LINKFLAGS=["-Werror"])
-    ret = context.TryLink("int main(int, char *[]) { return 0; }", ".cc")
+    if not code:
+        code = "int main(int, char *[]) { return 0; }"
+    ret = context.TryLink(code, ".cc")
     context.env["LINKFLAGS"] = pre_werror
     if not (ret and autoadd):
         context.env["LINKFLAGS"] = last_linkflags

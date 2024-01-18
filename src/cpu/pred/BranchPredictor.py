@@ -37,11 +37,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.SimObject import *
+from m5.objects.ClockedObject import ClockedObject
 from m5.params import *
 from m5.proxy import *
-
-from m5.objects.ClockedObject import ClockedObject
+from m5.SimObject import *
 
 
 class BranchType(Enum):
@@ -55,6 +54,24 @@ class BranchType(Enum):
         "IndirectCond",
         "IndirectUncond",  #'Indirect',
     ]
+
+
+class TargetProvider(Enum):
+    vals = [
+        "NoTarget",
+        "BTB",
+        "RAS",
+        "Indirect",
+    ]
+
+
+class ReturnAddrStack(SimObject):
+    type = "ReturnAddrStack"
+    cxx_class = "gem5::branch_prediction::ReturnAddrStack"
+    cxx_header = "cpu/pred/ras.hh"
+
+    numThreads = Param.Unsigned(Parent.numThreads, "Number of threads")
+    numEntries = Param.Unsigned(16, "Number of RAS entries")
 
 
 class BranchTargetBuffer(ClockedObject):
@@ -119,11 +136,20 @@ class BranchPredictor(SimObject):
 
     numThreads = Param.Unsigned(Parent.numThreads, "Number of threads")
     instShiftAmt = Param.Unsigned(2, "Number of bits to shift instructions by")
-
-    RASSize = Param.Unsigned(16, "RAS size")
+    requiresBTBHit = Param.Bool(
+        False,
+        "Requires the BTB to hit for returns and indirect branches. For an"
+        "advanced front-end there is no other way than a BTB hit to know "
+        "that the branch exists in the first place. Furthermore, the BPU "
+        "needs to know the branch type to make the correct RAS operations. "
+        "This info is only available from the BTB. "
+        "Low-end CPUs predecoding might be used to identify branches. ",
+    )
 
     btb = Param.BranchTargetBuffer(SimpleBTB(), "Branch target buffer (BTB)")
-
+    ras = Param.ReturnAddrStack(
+        ReturnAddrStack(), "Return address stack, set to NULL to disable RAS."
+    )
     indirectBranchPred = Param.IndirectPredictor(
         SimpleIndirectPredictor(),
         "Indirect branch predictor, set to NULL to disable "

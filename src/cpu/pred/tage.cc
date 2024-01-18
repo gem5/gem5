@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2022-2023 The University of Edinburgh
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2014 The University of Wisconsin
  *
  * Copyright (c) 2006 INRIA (Institut National de Recherche en
@@ -56,8 +68,8 @@ TAGE::TAGE(const TAGEParams &params) : BPredUnit(params), tage(params.tage)
 
 // PREDICTOR UPDATE
 void
-TAGE::update(ThreadID tid, Addr branch_pc, bool taken, void* bp_history,
-              bool squashed, const StaticInstPtr & inst, Addr corrTarget)
+TAGE::update(ThreadID tid, Addr pc, bool taken, void * &bp_history,
+              bool squashed, const StaticInstPtr & inst, Addr target)
 {
     assert(bp_history);
 
@@ -67,69 +79,65 @@ TAGE::update(ThreadID tid, Addr branch_pc, bool taken, void* bp_history,
     if (squashed) {
         // This restores the global history, then update it
         // and recomputes the folded histories.
-        tage->squash(tid, taken, tage_bi, corrTarget);
+        tage->squash(tid, taken, tage_bi, target);
         return;
     }
 
     int nrand = random_mt.random<int>() & 3;
     if (bi->tageBranchInfo->condBranch) {
         DPRINTF(Tage, "Updating tables for branch:%lx; taken?:%d\n",
-                branch_pc, taken);
+                pc, taken);
         tage->updateStats(taken, bi->tageBranchInfo);
-        tage->condBranchUpdate(tid, branch_pc, taken, tage_bi, nrand,
-                               corrTarget, bi->tageBranchInfo->tagePred);
+        tage->condBranchUpdate(tid, pc, taken, tage_bi, nrand,
+                               target, bi->tageBranchInfo->tagePred);
     }
 
     // optional non speculative update of the histories
-    tage->updateHistories(tid, branch_pc, taken, tage_bi, false, inst,
-                          corrTarget);
+    tage->updateHistories(tid, pc, taken, tage_bi, false, inst, target);
     delete bi;
+    bp_history = nullptr;
 }
 
 void
-TAGE::squash(ThreadID tid, void *bp_history)
+TAGE::squash(ThreadID tid, void * &bp_history)
 {
     TageBranchInfo *bi = static_cast<TageBranchInfo*>(bp_history);
     DPRINTF(Tage, "Deleting branch info: %lx\n", bi->tageBranchInfo->branchPC);
     delete bi;
+    bp_history = nullptr;
 }
 
 bool
-TAGE::predict(ThreadID tid, Addr branch_pc, bool cond_branch, void* &b)
+TAGE::predict(ThreadID tid, Addr pc, bool cond_branch, void* &b)
 {
     TageBranchInfo *bi = new TageBranchInfo(*tage);//nHistoryTables+1);
     b = (void*)(bi);
-    return tage->tagePredict(tid, branch_pc, cond_branch, bi->tageBranchInfo);
+    return tage->tagePredict(tid, pc, cond_branch, bi->tageBranchInfo);
 }
 
 bool
-TAGE::lookup(ThreadID tid, Addr branch_pc, void* &bp_history)
+TAGE::lookup(ThreadID tid, Addr pc, void* &bp_history)
 {
-    bool retval = predict(tid, branch_pc, true, bp_history);
+    bool retval = predict(tid, pc, true, bp_history);
 
-    TageBranchInfo *bi = static_cast<TageBranchInfo*>(bp_history);
-
-    DPRINTF(Tage, "Lookup branch: %lx; predict:%d\n", branch_pc, retval);
-
-    tage->updateHistories(tid, branch_pc, retval, bi->tageBranchInfo, true);
+    DPRINTF(Tage, "Lookup branch: %lx; predict:%d\n", pc, retval);
 
     return retval;
 }
 
 void
-TAGE::btbUpdate(ThreadID tid, Addr branch_pc, void* &bp_history)
+TAGE::updateHistories(ThreadID tid, Addr pc, bool uncond,
+                         bool taken, Addr target, void * &bp_history)
 {
-    TageBranchInfo *bi = static_cast<TageBranchInfo*>(bp_history);
-    tage->btbUpdate(tid, branch_pc, bi->tageBranchInfo);
-}
+    assert(uncond || bp_history);
+    if (uncond) {
+        DPRINTF(Tage, "UnConditionalBranch: %lx\n", pc);
+        predict(tid, pc, false, bp_history);
+    }
 
-void
-TAGE::uncondBranch(ThreadID tid, Addr br_pc, void* &bp_history)
-{
-    DPRINTF(Tage, "UnConditionalBranch: %lx\n", br_pc);
-    predict(tid, br_pc, false, bp_history);
+    // Update the global history for all branches
     TageBranchInfo *bi = static_cast<TageBranchInfo*>(bp_history);
-    tage->updateHistories(tid, br_pc, true, bi->tageBranchInfo, true);
+    tage->updateHistories(tid, pc, taken, bi->tageBranchInfo, true);
 }
 
 } // namespace branch_prediction

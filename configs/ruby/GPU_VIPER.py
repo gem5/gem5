@@ -28,15 +28,22 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import math
+
+from common import (
+    FileSystemConfig,
+    MemConfig,
+    ObjectList,
+)
+
 import m5
-from m5.objects import *
 from m5.defines import buildEnv
+from m5.objects import *
 from m5.util import addToPath
-from .Ruby import create_topology
-from .Ruby import send_evicts
-from common import ObjectList
-from common import MemConfig
-from common import FileSystemConfig
+
+from .Ruby import (
+    create_topology,
+    send_evicts,
+)
 
 addToPath("../")
 
@@ -122,7 +129,7 @@ class CPCntrl(CorePair_Controller, CntrlBase):
         self.sequencer1.is_cpu_sequencer = True
 
         self.issue_latency = options.cpu_to_dir_latency
-        self.send_evictions = send_evicts(options)
+        self.send_evictions = True if options.cpu_type == "X86O3CPU" else False
 
         self.ruby_system = ruby_system
 
@@ -275,6 +282,8 @@ class TCC(RubyCache):
 
     def create(self, options):
         self.assoc = options.tcc_assoc
+        self.atomicLatency = options.atomic_alu_latency
+        self.atomicALUs = options.tcc_num_atomic_alus
         if hasattr(options, "bw_scalor") and options.bw_scalor > 0:
             s = options.num_compute_units
             tcc_size = s * 128
@@ -336,6 +345,7 @@ class L3Cache(RubyCache):
         self.replacement_policy = TreePLRURP()
 
 
+# unused in GPU_VIPER; see git blame for discussion
 class L3Cntrl(L3Cache_Controller, CntrlBase):
     def create(self, options, ruby_system, system):
         self.version = self.versionCount()
@@ -496,6 +506,15 @@ def define_options(parser):
     )
     parser.add_argument(
         "--glc-atomic-latency", type=int, default=1, help="GLC Atomic Latency"
+    )
+    parser.add_argument(
+        "--atomic-alu-latency", type=int, default=0, help="Atomic ALU Latency"
+    )
+    parser.add_argument(
+        "--tcc-num-atomic-alus",
+        type=int,
+        default=64,
+        help="Number of atomic ALUs in the TCC",
     )
     parser.add_argument(
         "--tcp-num-banks",

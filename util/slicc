@@ -27,7 +27,10 @@
 
 if __name__ == "__main__":
     import sys
-    from os.path import dirname, join
+    from os.path import (
+        dirname,
+        join,
+    )
 
     base = dirname(__file__)
     sys.path.insert(1, join(base, "../src/mem"))

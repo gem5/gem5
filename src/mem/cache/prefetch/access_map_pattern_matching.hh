@@ -190,7 +190,8 @@ class AccessMapPatternMatching : public ClockedObject
 
     void startup() override;
     void calculatePrefetch(const Base::PrefetchInfo &pfi,
-        std::vector<Queued::AddrPriority> &addresses);
+        std::vector<Queued::AddrPriority> &addresses,
+        const CacheAccessor &cache);
 };
 
 class AMPM : public Queued
@@ -201,7 +202,8 @@ class AMPM : public Queued
     ~AMPM() = default;
 
     void calculatePrefetch(const PrefetchInfo &pfi,
-                           std::vector<AddrPriority> &addresses) override;
+                           std::vector<AddrPriority> &addresses,
+                           const CacheAccessor &cache) override;
 };
 
 } // namespace prefetch

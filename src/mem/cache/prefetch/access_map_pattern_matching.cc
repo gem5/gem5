@@ -156,7 +156,8 @@ AccessMapPatternMatching::setEntryState(AccessMapEntry &entry,
 
 void
 AccessMapPatternMatching::calculatePrefetch(const Base::PrefetchInfo &pfi,
-    std::vector<Queued::AddrPriority> &addresses)
+    std::vector<Queued::AddrPriority> &addresses,
+    const CacheAccessor &cache)
 {
     assert(addresses.empty());
 
@@ -262,9 +263,10 @@ AMPM::AMPM(const AMPMPrefetcherParams &p)
 
 void
 AMPM::calculatePrefetch(const PrefetchInfo &pfi,
-    std::vector<AddrPriority> &addresses)
+    std::vector<AddrPriority> &addresses,
+    const CacheAccessor &cache)
 {
-    ampm.calculatePrefetch(pfi, addresses);
+    ampm.calculatePrefetch(pfi, addresses, cache);
 }
 
 } // namespace prefetch

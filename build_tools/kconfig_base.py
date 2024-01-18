@@ -1,4 +1,6 @@
-# Copyright 2021 Google, Inc.
+#! /usr/bin/env python3
+#
+# Copyright 2022 Google LLC
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -23,5 +25,31 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
-sticky_vars.Add(BoolVariable('USE_NULL_ISA', 'Enable NULL ISA support', False))
+import argparse
+
+from code_formatter import code_formatter
+
+parser = argparse.ArgumentParser()
+parser.add_argument("output", help="path of generated base Kconfig file")
+parser.add_argument("main", help="relative path to the main gem5 Kconfig file")
+parser.add_argument("extras_dirs", nargs="*", help="EXTRAS paths")
+
+args = parser.parse_args()
+
+code = code_formatter()
+
+code(
+    f"""# Automatically generated base Kconfig file, DO NOT EDIT!
+
+source "{args.main}"
+"""
+)
+
+for extras_dir in args.extras_dirs:
+    code(
+        f"""
+osource "{extras_dir}/Kconfig"
+"""
+    )
+
+code.write(args.output)

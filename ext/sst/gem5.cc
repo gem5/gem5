@@ -204,13 +204,7 @@ gem5Component::init(unsigned phase)
 
     if (phase == 0) {
         initPython(args.size(), &args[0]);
-
-        const std::vector<std::string> m5_instantiate_commands = {
-            "import m5",
-            "m5.instantiate()"
-        };
-        execPythonCommands(m5_instantiate_commands);
-
+        // m5.instantiate() was moved to the gem5 script.
         // calling SimObject.startup()
         const std::vector<std::string> simobject_setup_commands = {
             "import atexit",

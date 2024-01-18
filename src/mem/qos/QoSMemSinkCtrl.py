@@ -35,9 +35,9 @@
 #
 # Author: Matteo Andreozzi
 
-from m5.params import *
 from m5.objects.QoSMemCtrl import *
 from m5.objects.QoSMemSinkInterface import *
+from m5.params import *
 
 
 class QoSMemSinkCtrl(QoSMemCtrl):

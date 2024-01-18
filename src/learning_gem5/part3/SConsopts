@@ -2,8 +2,5 @@ Import('*')
 
 # NOTE: All SLICC setup code found in src/mem/ruby/protocol/SConscript
 
-# Register this protocol with gem5/SCons
-main.Append(ALL_PROTOCOLS=['MSI'])
-
 # Add this directory to the search path for SLICC
 main.Append(PROTOCOL_DIRS=[Dir('.')])

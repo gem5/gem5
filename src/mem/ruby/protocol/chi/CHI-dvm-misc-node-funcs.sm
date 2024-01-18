@@ -137,15 +137,19 @@ Cycles dataLatency() {
   return intToCycles(0);
 }
 
-bool inCache(Addr txnId) {
+bool inCache(Addr txnId, bool is_secure) {
   return false;
 }
 
-bool hasBeenPrefetched(Addr txnId) {
+bool hasBeenPrefetched(Addr txnId, bool is_secure, RequestorID requestor) {
   return false;
 }
 
-bool inMissQueue(Addr txnId) {
+bool hasBeenPrefetched(Addr txnId, bool is_secure) {
+  return false;
+}
+
+bool inMissQueue(Addr txnId, bool is_secure) {
   return false;
 }
 

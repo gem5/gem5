@@ -1,6 +1,6 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2021 Arm Limited
+# Copyright (c) 2021,2023 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -49,7 +49,7 @@ from gem5_scons import Transform
 
 Import('*')
 
-if env['CONF']['PROTOCOL'] == 'None':
+if not env['CONF']['RUBY']:
     Return()
 
 DebugFlag('ProtocolTrace')
@@ -111,8 +111,9 @@ MakeInclude('structures/DirectoryMemory.hh')
 MakeInclude('structures/PerfectCacheMemory.hh')
 MakeInclude('structures/PersistentTable.hh')
 MakeInclude('structures/RubyPrefetcher.hh')
+MakeInclude('structures/RubyPrefetcherProxy.hh')
 MakeInclude('structures/TBEStorage.hh')
-if env['PROTOCOL'] == 'CHI':
+if env['CONF']['PROTOCOL'] == 'CHI':
     MakeInclude('structures/MN_TBEStorage.hh')
     MakeInclude('structures/MN_TBETable.hh')
 MakeInclude('structures/TBETable.hh')

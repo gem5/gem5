@@ -38,10 +38,10 @@ class MemMode(Enum):
 
 def mem_mode_to_string(mem_mode: MemMode) -> str:
     """
-    Returns the string form of the mem_mode, compatible with the gem5
+    Returns the string form of the ``mem_mode``, compatible with the gem5
     simulator.
 
-    :returns: The string form of the mem_mode
+    :returns: The string form of the ``mem_mode``.
     """
     if mem_mode == MemMode.TIMING:
         return "timing"

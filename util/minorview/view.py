@@ -36,17 +36,25 @@
 import pygtk
 
 pygtk.require("2.0")
-import gtk
-import gobject
-import cairo
 import re
 
+import cairo
+import gobject
+import gtk
+
+from . import (
+    blobs,
+    colours,
+    model,
+    parse,
+)
+from .model import (
+    BlobDataSelect,
+    BlobModel,
+    Id,
+    special_state_chars,
+)
 from .point import Point
-from . import parse
-from . import colours
-from . import model
-from .model import Id, BlobModel, BlobDataSelect, special_state_chars
-from . import blobs
 
 
 class BlobView:

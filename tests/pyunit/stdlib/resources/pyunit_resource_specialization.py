@@ -27,18 +27,15 @@
 import os
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
-from gem5.resources.resource import *
-
+from gem5.isas import ISA
+from gem5.resources.client_api.client_wrapper import ClientWrapper
 from gem5.resources.looppoint import (
     LooppointCsvLoader,
     LooppointJsonLoader,
 )
-
-from gem5.isas import ISA
-
-from gem5.resources.client_api.client_wrapper import ClientWrapper
-from unittest.mock import patch
+from gem5.resources.resource import *
 
 mock_json_path = Path(__file__).parent / "refs/resource-specialization.json"
 

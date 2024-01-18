@@ -25,72 +25,68 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
+import subprocess
 
-Import('env')
+from shutil import which
 
-build_root = Dir('../..').abspath
-src_root = Dir('DRAMSys/DRAMSys/library').srcnode().abspath
+from gem5_scons import warning
+
+Import("env")
+
+build_root = Dir("../..").abspath
+build_current = Dir(".").abspath
+src_root = Dir(".").srcnode().abspath
+scons_root = Dir("#").abspath
 
 # See if we got a cloned DRAMSys repo as a subdirectory and set the
 # HAVE_DRAMSys flag accordingly
-if not os.path.exists(Dir('.').srcnode().abspath + '/DRAMSys'):
-    env['HAVE_DRAMSYS'] = False
+if not os.path.exists(Dir(".").srcnode().abspath + "/DRAMSys"):
+    env["HAVE_DRAMSYS"] = False
     Return()
 
-env['HAVE_DRAMSYS'] = True
+# DRAMSys requires CMake to build but this is is not a dependency for
+# gem5 outside of this DRAMSys integration. Therefore, we do not fail the
+# entire gem5 build if CMake is not found. Instead we just skip the building of
+# DRAMSys and print a warning.
+if which("cmake") is None:
+    warning("The DRAMSys repo is present but CMake cannot be found. "
+            "DRAMSys will not be built.")
+    env["HAVE_DRAMSYS"] = False
+    Return()
 
-dramsys_files = []
-dramsys_configuration_files = []
+env["HAVE_DRAMSYS"] = True
 
-dramsys_files.extend(Glob("%s/*.cpp" % f"{src_root}/src/controller"))
-for root, dirs, files in os.walk(f"{src_root}/src/controller", topdown=False):
-    for dir in dirs:
-        dramsys_files.extend(Glob("%s/*.cpp" % os.path.join(root, dir)))
+subprocess.run(
+    [
+        "cmake",
+        f"-S{src_root}",
+        f"-B{build_current}",
+        "-DCMAKE_BUILD_TYPE=Release",
+        f"-DSCONS_SOURCE_DIR:STRING={scons_root}",
+        "-DDRAMSYS_BUILD_CLI=OFF"
+    ],
+    check=True
+)
 
-dramsys_files.extend(Glob("%s/*.cpp" % f"{src_root}/src/simulation"))
-for root, dirs, files in os.walk(f"{src_root}/src/simulation", topdown=False):
-    for dir in dirs:
-        dramsys_files.extend(Glob("%s/*.cpp" % os.path.join(root, dir)))
+subprocess.run(
+    ["cmake", "--build", build_current],
+    check=True
+)
 
-dramsys_files.extend(Glob("%s/*.cpp" % f"{src_root}/src/configuration"))
-for root, dirs, files in os.walk(f"{src_root}/src/configuration", topdown=False):
-    for dir in dirs:
-        dramsys_files.extend(Glob("%s/*.cpp" % os.path.join(root, dir)))
+env.Append(LIBS="DRAMSys_libdramsys")
+env.Append(LIBPATH=Dir("./DRAMSys/src/libdramsys").abspath)
 
-dramsys_files.extend(Glob("%s/*.cpp" % f"{src_root}/src/error"))
-dramsys_files.extend(Glob(f"{src_root}/src/error/ECC/Bit.cpp"))
-dramsys_files.extend(Glob(f"{src_root}/src/error/ECC/ECC.cpp"))
-dramsys_files.extend(Glob(f"{src_root}/src/error/ECC/Word.cpp"))
+env.Append(LIBS="DRAMSys_Configuration")
+env.Append(LIBPATH=Dir("./DRAMSys/src/configuration").abspath)
 
-dramsys_files.extend(Glob("%s/*.cpp" % f"{src_root}/src/common"))
-dramsys_files.extend(Glob("%s/*.cpp" % f"{src_root}/src/common/configuration"))
-dramsys_files.extend(Glob("%s/*.cpp" % f"{src_root}/src/common/configuration/memspec"))
-dramsys_files.extend(Glob("%s/*.c" % f"{src_root}/src/common/third_party/sqlite-amalgamation"))
+env.Append(LIBS="sqlite3")
+env.Append(LIBPATH=Dir("./DRAMSys/lib/sqlite3").abspath)
 
-env.Prepend(CPPPATH=[
-    src_root + "/src",
-    src_root + "/src/common/configuration",
-    src_root + "/src/common/third_party/nlohmann/include",
-])
+env.Append(CPPPATH=src_root + "/DRAMSys/src/libdramsys")
+env.Append(CPPPATH=src_root + "/DRAMSys/src/configuration")
+env.Append(CPPPATH=src_root + "/DRAMSys/src/util")
+env.Append(CPPPATH=src_root + "/DRAMSys/lib/nlohmann_json/include")
 
-env.Prepend(CPPDEFINES=[("DRAMSysResourceDirectory", '\\"' + os.getcwd() + '/resources' + '\\"')])
 env.Prepend(CPPDEFINES=[("SYSTEMC_VERSION", 20191203)])
-
-dramsys = env.Clone()
-
-if '-Werror' in dramsys['CCFLAGS']:
-    dramsys['CCFLAGS'].remove('-Werror')
-
-dramsys.Prepend(CPPPATH=[
-    src_root + "/src/common/third_party/sqlite-amalgamation",
-    build_root + "/systemc/ext"
-])
-
-dramsys.Prepend(CPPDEFINES=[("SQLITE_ENABLE_RTREE", "1")])
-
-dramsys_configuration = env.Clone()
-
-dramsys.Library('dramsys', dramsys_files)
-
-env.Append(LIBS=['dramsys', 'dl'])
-env.Append(LIBPATH=[Dir('.')])
+env.Prepend(CPPDEFINES=[("DRAMSYS_RESOURCE_DIR",
+                         '\\"' + os.getcwd() + '/DRAMSys/configs' + '\\"')])

@@ -1178,6 +1178,158 @@ namespace VegaISA
         disassembly = dis_stream.str();
     }
 
+    // --- Inst_VOP3P base class methods ---
+
+    Inst_VOP3P::Inst_VOP3P(InFmt_VOP3P *iFmt, const std::string &opcode)
+        : VEGAGPUStaticInst(opcode)
+    {
+        // copy first instruction DWORD
+        instData = iFmt[0];
+        // copy second instruction DWORD
+        extData = ((InFmt_VOP3P_1 *)iFmt)[1];
+    } // Inst_VOP3P
+
+    Inst_VOP3P::~Inst_VOP3P()
+    {
+    } // ~Inst_VOP3P
+
+    void
+    Inst_VOP3P::initOperandInfo()
+    {
+        // Also takes care of bitfield addr issue
+        unsigned int srcs[3] = {extData.SRC0, extData.SRC1, extData.SRC2};
+
+        int opNum = 0;
+
+        int numSrc = numSrcRegOperands();
+
+        for (opNum = 0; opNum < numSrc; opNum++) {
+            srcOps.emplace_back(srcs[opNum], getOperandSize(opNum), true,
+                                  isScalarReg(srcs[opNum]),
+                                  isVectorReg(srcs[opNum]), false);
+        }
+
+        // There is always one dest
+        // Needed because can't take addr of bitfield
+        int reg = instData.VDST;
+        dstOps.emplace_back(reg, getOperandSize(opNum), false,
+                              false, true, false);
+        opNum++;
+
+        assert(srcOps.size() == numSrcRegOperands());
+        assert(dstOps.size() == numDstRegOperands());
+    }
+
+    int
+    Inst_VOP3P::instSize() const
+    {
+        return 8;
+    } // instSize
+
+    void
+    Inst_VOP3P::generateDisassembly()
+    {
+        std::stringstream dis_stream;
+        dis_stream << _opcode << " ";
+
+        // There is always a dest and the index is after the src operands
+        // The output size much be a multiple of dword size
+        int dst_size = getOperandSize(numSrcRegOperands());
+
+        dis_stream << opSelectorToRegSym(instData.VDST + 0x100, dst_size / 4);
+
+        unsigned int srcs[3] = {extData.SRC0, extData.SRC1, extData.SRC2};
+        for (int opnum = 0; opnum < numSrcRegOperands(); opnum++) {
+            int num_regs = getOperandSize(opnum) / 4;
+            dis_stream << ", " << opSelectorToRegSym(srcs[opnum], num_regs);
+        }
+
+        // Print op_sel only if one is non-zero
+        if (instData.OPSEL) {
+            int opsel = instData.OPSEL;
+
+            dis_stream << " op_sel:[" << bits(opsel, 0, 0) << ","
+                    << bits(opsel, 1, 1) << "," << bits(opsel, 2, 2) << "]";
+        }
+
+        disassembly = dis_stream.str();
+    }
+
+    // --- Inst_VOP3P_MAI base class methods ---
+
+    Inst_VOP3P_MAI::Inst_VOP3P_MAI(InFmt_VOP3P_MAI *iFmt,
+                                   const std::string &opcode)
+        : VEGAGPUStaticInst(opcode)
+    {
+        // copy first instruction DWORD
+        instData = iFmt[0];
+        // copy second instruction DWORD
+        extData = ((InFmt_VOP3P_MAI_1 *)iFmt)[1];
+    } // Inst_VOP3P_MAI
+
+    Inst_VOP3P_MAI::~Inst_VOP3P_MAI()
+    {
+    } // ~Inst_VOP3P_MAI
+
+    void
+    Inst_VOP3P_MAI::initOperandInfo()
+    {
+        // Also takes care of bitfield addr issue
+        unsigned int srcs[3] = {extData.SRC0, extData.SRC1, extData.SRC2};
+
+        int opNum = 0;
+
+        int numSrc = numSrcRegOperands();
+
+        for (opNum = 0; opNum < numSrc; opNum++) {
+            srcOps.emplace_back(srcs[opNum], getOperandSize(opNum), true,
+                                  isScalarReg(srcs[opNum]),
+                                  isVectorReg(srcs[opNum]), false);
+        }
+
+        // There is always one dest
+        // Needed because can't take addr of bitfield
+        int reg = instData.VDST;
+        dstOps.emplace_back(reg, getOperandSize(opNum), false,
+                              false, true, false);
+        opNum++;
+
+        assert(srcOps.size() == numSrcRegOperands());
+        assert(dstOps.size() == numDstRegOperands());
+    }
+
+    int
+    Inst_VOP3P_MAI::instSize() const
+    {
+        return 8;
+    } // instSize
+
+    void
+    Inst_VOP3P_MAI::generateDisassembly()
+    {
+        std::stringstream dis_stream;
+        dis_stream << _opcode << " ";
+
+        // There is always a dest and the index is after the src operands
+        // The output size much be a multiple of dword size
+        int dst_size = getOperandSize(numSrcRegOperands());
+
+        // opSelectorToRegSym handles formating for us. VDST is always VGPR
+        // so only the last 8 bits are used. This adds the implicit 9th bit
+        // which is 1 for VGPRs as VGPR op nums are from 256-255.
+        int dst_opnum = instData.VDST + 0x100;
+
+        dis_stream << opSelectorToRegSym(dst_opnum, dst_size / 4);
+
+        unsigned int srcs[3] = {extData.SRC0, extData.SRC1, extData.SRC2};
+        for (int opnum = 0; opnum < numSrcRegOperands(); opnum++) {
+            int num_regs = getOperandSize(opnum) / 4;
+            dis_stream << ", " << opSelectorToRegSym(srcs[opnum], num_regs);
+        }
+
+        disassembly = dis_stream.str();
+    }
+
     // --- Inst_DS base class methods ---
 
     Inst_DS::Inst_DS(InFmt_DS *iFmt, const std::string &opcode)
@@ -1695,10 +1847,10 @@ namespace VegaISA
         // One of the flat subtypes should be specified via flags
         assert(isFlat() ^ isFlatGlobal() ^ isFlatScratch());
 
-        if (isFlat()) {
-            generateFlatDisassembly();
-        } else if (isFlatGlobal() || isFlatScratch()) {
+        if (isFlatGlobal() || isFlatScratch()) {
             generateGlobalScratchDisassembly();
+        } else if (isFlat()) {
+            generateFlatDisassembly();
         } else {
             panic("Unknown flat subtype!\n");
         }
@@ -1710,13 +1862,19 @@ namespace VegaISA
         std::stringstream dis_stream;
         dis_stream << _opcode << " ";
 
-        if (isLoad())
-            dis_stream << "v" << extData.VDST << ", ";
+        if (isLoad() || isAtomic()) {
+            int dst_size = getOperandSize(numSrcRegOperands()) / 4;
+            dis_stream << opSelectorToRegSym(extData.VDST + 0x100, dst_size)
+                       << ", ";
+        }
 
-        dis_stream << "v[" << extData.ADDR << ":" << extData.ADDR + 1 << "]";
+        dis_stream << opSelectorToRegSym(extData.ADDR + 0x100, 2);
 
-        if (isStore())
-            dis_stream << ", v" << extData.DATA;
+        if (isStore() || isAtomic()) {
+            int src_size = getOperandSize(1) / 4;
+            dis_stream << ", "
+                << opSelectorToRegSym(extData.DATA + 0x100, src_size);
+        }
 
         disassembly = dis_stream.str();
     }
@@ -1736,25 +1894,38 @@ namespace VegaISA
         std::stringstream dis_stream;
         dis_stream << global_opcode << " ";
 
-        if (isLoad())
-            dis_stream << "v" << extData.VDST << ", ";
+        if (isLoad() || isAtomic()) {
+            // dest is the first operand after all the src operands
+            int dst_size = getOperandSize(numSrcRegOperands()) / 4;
+            dis_stream << opSelectorToRegSym(extData.VDST + 0x100, dst_size)
+                       << ", ";
+        }
 
-        if (extData.SADDR == 0x7f)
-            dis_stream << "v[" << extData.ADDR << ":" << extData.ADDR+1 << "]";
-        else
-            dis_stream << "v" << extData.ADDR;
+        if (extData.SADDR == 0x7f) {
+            dis_stream << opSelectorToRegSym(extData.ADDR + 0x100, 2);
+        } else {
+            dis_stream << opSelectorToRegSym(extData.ADDR + 0x100, 1);
+        }
 
-        if (isStore())
-            dis_stream << ", v" << extData.DATA;
+        if (isStore() || isAtomic()) {
+            int src_size = getOperandSize(1) / 4;
+            dis_stream << ", "
+                << opSelectorToRegSym(extData.DATA + 0x100, src_size);
+        }
 
-        if (extData.SADDR == 0x7f)
+        if (extData.SADDR == 0x7f) {
             dis_stream << ", off";
-        else
-            dis_stream << ", s[" << extData.SADDR << ":" << extData.SADDR+1
-                       << "]";
+        } else {
+            dis_stream << ", " << opSelectorToRegSym(extData.SADDR, 2);
+        }
 
-        if (instData.OFFSET)
+        if (instData.OFFSET) {
             dis_stream << " offset:" << instData.OFFSET;
+        }
+
+        if (instData.GLC) {
+            dis_stream << " glc";
+        }
 
         disassembly = dis_stream.str();
     }

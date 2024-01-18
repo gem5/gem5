@@ -23,7 +23,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.SimObject import SimObject, cxxMethod
+from m5.SimObject import (
+    SimObject,
+    cxxMethod,
+)
 
 
 # This class represents the systemc kernel. There should be exactly one in the

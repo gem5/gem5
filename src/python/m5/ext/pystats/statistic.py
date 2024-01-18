@@ -25,7 +25,13 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from abc import ABC
-from typing import Any, Iterable, Optional, Union, List
+from typing import (
+    Any,
+    Iterable,
+    List,
+    Optional,
+    Union,
+)
 
 from .abstract_stat import AbstractStat
 from .storagetype import StorageType
@@ -110,10 +116,7 @@ class BaseScalarVector(Statistic):
         """
         Returns the mean of the value vector.
 
-        Returns
-        -------
-        float
-            The mean value across all bins.
+        :returns: The mean value across all bins.
         """
         assert self.value != None
         assert isinstance(self.value, List)
@@ -126,10 +129,7 @@ class BaseScalarVector(Statistic):
         """
         Returns the count across all the bins.
 
-        Returns
-        -------
-        float
-            The sum of all bin values.
+        :returns: The sum of all bin values.
         """
         assert self.value != None
         return sum(self.value)
@@ -140,7 +140,7 @@ class Distribution(BaseScalarVector):
     A statistic type that stores information relating to distributions. Each
     distribution has a number of bins (>=1)
     between this range. The values correspond to the value of each bin.
-    E.g., value[3]` is the value of the 4th bin.
+    E.g., ``value[3]`` is the value of the 4th bin.
 
     It is assumed each bucket is of equal size.
     """

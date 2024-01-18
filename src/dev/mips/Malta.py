@@ -24,13 +24,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.params import *
-from m5.proxy import *
-
 from m5.objects.BadDevice import BadDevice
 from m5.objects.Device import BasicPioDevice
 from m5.objects.Platform import Platform
 from m5.objects.Uart import Uart8250
+from m5.params import *
+from m5.proxy import *
 
 
 class MaltaCChip(BasicPioDevice):

@@ -158,6 +158,10 @@ class RegisterFile : public SimObject
 
         // Total number of register reads per DWORD per thread
         statistics::Scalar registerReads;
+
+        statistics::Scalar rfc_cache_read_hits;
+        statistics::Scalar rfc_cache_write_hits;
+
         // Total number of register writes per DWORD per thread
         statistics::Scalar registerWrites;
 

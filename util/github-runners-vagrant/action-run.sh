@@ -62,6 +62,15 @@ while true; do
 
     token=$(echo ${token_curl} | jq -r '.token')
 
+    if [[ "${token}" == "null" ]];
+    then
+        # If "null" is returned, this can be because the GitHub API rate limit
+        # has been exceeded. To be safe we wait for 15 mintues before
+        # continuing.
+        sleep 900 # 15 minutes.
+        continue
+    fi
+
     # 2. Configure the runner.
     ./config.sh --unattended \
                 --url https://github.com/${GITHUB_ORG} \
@@ -76,6 +85,11 @@ while true; do
     ./run.sh # This will complete with the runner being destroyed
 
     # 4. Cleanup the machine
-    rm -rf "${WORK_DIR}"
-    docker system prune --force --volumes
+    sudo rm -rf "${WORK_DIR}"
+    docker system prune --force --volumes --all
+
+    # 5. Sleep for a few minutes
+    #    GitHub has a api rate limit. This sleep ensures we dont ping GitHub
+    #    too frequently.
+    sleep 180 # 3 minutes.
 done

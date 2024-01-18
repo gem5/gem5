@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2022-2023 The University of Edinburgh
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -67,10 +79,10 @@ LocalBP::LocalBP(const LocalBPParams &params)
 }
 
 void
-LocalBP::btbUpdate(ThreadID tid, Addr branch_addr, void * &bp_history)
+LocalBP::updateHistories(ThreadID tid, Addr pc, bool uncond,
+                         bool taken, Addr target, void * &bp_history)
 {
-// Place holder for a function that is called to update predictor history when
-// a BTB entry is invalid or not found.
+// Place holder for a function that is called to update predictor history
 }
 
 
@@ -94,8 +106,8 @@ LocalBP::lookup(ThreadID tid, Addr branch_addr, void * &bp_history)
 }
 
 void
-LocalBP::update(ThreadID tid, Addr branch_addr, bool taken, void *bp_history,
-                bool squashed, const StaticInstPtr & inst, Addr corrTarget)
+LocalBP::update(ThreadID tid, Addr branch_addr, bool taken, void *&bp_history,
+                bool squashed, const StaticInstPtr & inst, Addr target)
 {
     assert(bp_history == NULL);
     unsigned local_predictor_idx;
@@ -135,10 +147,6 @@ LocalBP::getLocalIndex(Addr &branch_addr)
     return (branch_addr >> instShiftAmt) & indexMask;
 }
 
-void
-LocalBP::uncondBranch(ThreadID tid, Addr pc, void *&bp_history)
-{
-}
 
 } // namespace branch_prediction
 } // namespace gem5

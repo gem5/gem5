@@ -44,7 +44,4 @@ def use_systemc_check(env, warn=False):
 
 main.AddMethod(use_systemc_check, 'UseSystemcCheck')
 
-main['CONF']['USE_SYSTEMC'] = main.UseSystemcCheck()
-
-sticky_vars.Add(BoolVariable('USE_SYSTEMC', 'Enable SystemC API support',
-                             main.UseSystemcCheck()))
+main['CONF']['HAVE_SYSTEMC'] = main.UseSystemcCheck()

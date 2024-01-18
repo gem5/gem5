@@ -40,12 +40,14 @@
 import os
 import re
 import sys
-
 from functools import wraps
 
 from . import convert
-
-from .attrdict import attrdict, multiattrdict, optiondict
+from .attrdict import (
+    attrdict,
+    multiattrdict,
+    optiondict,
+)
 from .multidict import multidict
 
 

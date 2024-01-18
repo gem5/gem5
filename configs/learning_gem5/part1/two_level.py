@@ -42,7 +42,6 @@ import m5
 
 # import all of the SimObjects
 from m5.objects import *
-from gem5.runtime import get_runtime_isa
 
 # Add the common scripts to our path
 m5.util.addToPath("../../")
