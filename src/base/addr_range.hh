@@ -455,7 +455,18 @@ class AddrRange
             return r.contains(_start) && r.contains(_end - 1) &&
                 size() <= r.granularity();
         } else {
-            return _start >= r._start && _end <= r._end;
+
+            if (_end <= _start){
+                // Special case: if our range wraps around that is
+                // _end is 2^64 so it wraps to 0.
+                // In this case r will be a subset only if its _end
+                // also wraps around.
+                return _start >= r._start && r._end == 0;
+            } else {
+                // Normal case: Check if our range is completely within 'r'.
+                return _start >= r._start && _end <= r._end;
+            }
+
         }
     }
 
