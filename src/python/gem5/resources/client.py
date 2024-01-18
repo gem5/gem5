@@ -163,9 +163,16 @@ def get_resource_json_obj(
                          current build. If ``None``, filtering based on compatibility
                          is not performed.
     """
-    resource_info = [
-        {"resource_id": resource_id, "resource_version": resource_version}
-    ]
+    # this will be removed when obtain resources is refactored
+    if resource_version:
+        resource_info = [
+            {"id": resource_id, "resource_version": resource_version}
+        ]
+    else:
+        resource_info = [{"id": resource_id}]
+
+    # We will return a list when we refactor ontain_resources to handle multiple
+    # resources
     return _get_clientwrapper().get_resource_json_obj_from_client(
         resource_info, clients, gem5_version
-    )
+    )[0]

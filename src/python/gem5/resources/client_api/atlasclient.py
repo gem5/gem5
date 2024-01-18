@@ -164,26 +164,9 @@ class AtlasClient(AbstractClient):
             "collection": self.collection,
             "database": self.database,
         }
-        filter = []
 
-        for resource in resource_info:
-            if resource["resource_id"] is not None:
-                if (
-                    not resource["resource_version"]
-                    or resource["resource_version"] is None
-                ):
-                    filter.append({"resource_id": resource["resource_id"]})
-                else:
-                    filter.append(
-                        {
-                            "resource_id": resource["resource_id"],
-                            "resource_version": resource["resource_version"],
-                        }
-                    )
-
-        if filter:
-            query = {"$or": filter}
-            data["filter"] = query
+        filter = {"$or": resource_info}
+        data["filter"] = filter
 
         headers = {
             "Authorization": f"Bearer {self.get_token()}",
@@ -196,7 +179,6 @@ class AtlasClient(AbstractClient):
             headers=headers,
             purpose_of_request="Get Resources",
         )["documents"]
-
         # I do this as a lazy post-processing step because I can't figure out
         # how to do this via an Atlas query, which may be more efficient.
         filtered_resources = self.filter_incompatible_resources(
@@ -205,8 +187,9 @@ class AtlasClient(AbstractClient):
 
         resources_by_id = {}
         for resource in filtered_resources:
-            if resource["resource_id"] in resources_by_id.keys():
-                resources_by_id[resource["resource_id"]].append(resource)
+            if resource["id"] in resources_by_id.keys():
+                resources_by_id[resource["id"]].append(resource)
             else:
-                resources_by_id[resource["resource_id"]] = [resource]
+                resources_by_id[resource["id"]] = [resource]
+
         return resources_by_id

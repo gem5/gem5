@@ -27,6 +27,7 @@
 import itertools
 import sys
 from typing import (
+    Any,
     Dict,
     List,
     Optional,
@@ -104,40 +105,56 @@ class ClientWrapper:
         self,
         resource_info: str,
         clients: Optional[List[str]] = None,
-    ) -> List[Dict]:
+    ) -> Dict[str, Any]:
         """
         This function returns all the resources with the given id from all the
         sources.
 
-        :param resource_id: The id of the resource to search for.
+        :param resource_info: List of dictionaries containing information about the
+                              resources to fetch from datasources.
         :param clients: A list of clients to search through. If ``None``, all
                         clients are searched.
         :return: A list of resources as Python dictionaries.
         """
-        resources = []
+
+        # creating a dictionary with the resource id as the key and an empty
+        # list as the value, the list will be populated with different versions
+        # of the resource
+        resources = {}
+        for resource in resource_info:
+            resources[resource["id"]] = []
+
         if not clients:
             clients = list(self.clients.keys())
         for client in clients:
             if client not in self.clients:
                 raise Exception(f"Client: {client} does not exist")
             try:
-                resources.extend(
-                    self.clients[client].get_resources_by_id(resource_info)
+                filtered_resources = self.clients[client].get_resources_by_id(
+                    resource_info
                 )
+                for k in resources.keys():
+                    if k in filtered_resources.keys():
+                        resources[k].extend(filtered_resources[k])
+
             except Exception as e:
                 print(
-                    f"Exception thrown while getting resource '{resource_info}' "
+                    f"Exception thrown while getting resources '{resource_info}' "
                     f"from client '{client}'\n",
                     file=sys.stderr,
                 )
                 raise e
         # check if no 2 resources have the same id and version
-        for res1, res2 in itertools.combinations(resources, 2):
-            if res1["resource_version"] == res2["resource_version"]:
-                raise Exception(
-                    f"Resource {resource_info} has multiple resources with "
-                    f"the same version: {res1['resource_version']}"
-                )
+        for resource_id, different_version_of_resource in resources.items():
+            for res1, res2 in itertools.combinations(
+                different_version_of_resource, 2
+            ):
+                if res1["resource_version"] == res2["resource_version"]:
+                    raise Exception(
+                        f"Resource {resource_id} has multiple resources with "
+                        f"the same version: {res1['resource_version']}"
+                    )
+
         return resources
 
     def get_resource_json_obj_from_client(
@@ -150,7 +167,8 @@ class ClientWrapper:
         This function returns the resource object from the client with the
         given id and version.
 
-        :param resource_id: The id of the resource to search for.
+        :param resource_info: List of dictionaries containing information about the
+                              resources to fetch from datasources.
         :param resource_version: The version of the resource to search for.
         :param clients: A list of clients to search through. If ``None``, all
                         clients are searched.
@@ -166,30 +184,27 @@ class ClientWrapper:
         if len(resources) == 0:
             raise Exception(f"Resource with ID '{resource_info}' not found.")
 
-        resource_to_return = None
+        resource_to_return = []
 
-        if resource_version:
-            resource_to_return = self._search_version_in_resources(
-                resources, resource_id, resource_version
+        compatible_resources = (
+            self._get_resources_compatible_with_gem5_version(
+                resources, resource_info, gem5_version=gem5_version
             )
+        )
 
-        else:
-            compatible_resources = (
-                self._get_resources_compatible_with_gem5_version(
-                    resources, gem5_version=gem5_version
+        for id, resource in compatible_resources.items():
+            if len(resource) == 0:
+                resource_to_return.append(
+                    self._sort_resources(resources[id])[0]
                 )
-            )
-            if len(compatible_resources) == 0:
-                resource_to_return = self._sort_resources(resources)[0]
             else:
-                resource_to_return = self._sort_resources(
-                    compatible_resources
-                )[0]
+                resource_to_return.append(self._sort_resources(resource)[0])
 
         if gem5_version:
-            self._check_resource_version_compatibility(
-                resource_to_return, gem5_version=gem5_version
-            )
+            for resource in resource_to_return:
+                self._check_resource_version_compatibility(
+                    resource, gem5_version=gem5_version
+                )
 
         return resource_to_return
 
@@ -226,8 +241,11 @@ class ClientWrapper:
         return return_resource
 
     def _get_resources_compatible_with_gem5_version(
-        self, resources: List, gem5_version: str = core.gem5Version
-    ) -> List:
+        self,
+        resources: Dict[str, Any],
+        resource_info: List[Dict[str, str]],
+        gem5_version: str = core.gem5Version,
+    ) -> Dict[str, Any]:
         """
         Returns a list of compatible resources with the current gem5 version.
 
@@ -245,7 +263,9 @@ class ClientWrapper:
         * '21.5.2' would be compatible with gem5 '21.5.2.0' and '21.5.2.0'.
         * '22.3.2.4' would only be compatible with gem5 '22.3.2.4'.
 
-        :param resources: A list of resources to filter.
+        :param resources: A dictionary of resources to filter.
+        :param resource_info: List of dictionaries containing information about the
+                              resources to fetch from datasources.
 
         :return: A list of compatible resources as Python dictionaries.
 
@@ -255,12 +275,28 @@ class ClientWrapper:
             exists in the `AbstractClient` class. This code should be refactored
             to avoid this duplication.
         """
+        compatible_resources = {}
 
-        compatible_resources = []
-        for resource in resources:
-            for version in resource["gem5_versions"]:
-                if gem5_version.startswith(version):
-                    compatible_resources.append(resource)
+        for resource_id_ver in resource_info:
+            # If resource version is specified then we just add the specific
+            # resource version to the compatible resources as we don't need to
+            # check for compatibility which will be done later
+            if "resource_version" not in resource_id_ver.keys():
+                compatible_resource_versions = []
+
+                for resource in resources[resource_id_ver["id"]]:
+                    for version in resource["gem5_versions"]:
+                        if gem5_version.startswith(version):
+                            compatible_resource_versions.append(resource)
+
+                compatible_resources[
+                    resource_id_ver["id"]
+                ] = compatible_resource_versions
+            else:
+                compatible_resources[resource_id_ver["id"]] = resources[
+                    resource_id_ver["id"]
+                ]
+
         return compatible_resources
 
     def _sort_resources(self, resources: List) -> List:
