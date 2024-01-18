@@ -412,12 +412,14 @@ class MMU : public BaseMMU
     Fault getTE(TlbEntry **te, const RequestPtr &req,
                 ThreadContext *tc, Mode mode,
                 Translation *translation, bool timing, bool functional,
-                SecurityState ss, ArmTranslationType tran_type,
+                SecurityState ss, PASpace ipaspace,
+                ArmTranslationType tran_type,
                 bool stage2);
     Fault getTE(TlbEntry **te, const RequestPtr &req,
                 ThreadContext *tc, Mode mode,
                 Translation *translation, bool timing, bool functional,
-                SecurityState ss, ArmTranslationType tran_type,
+                SecurityState ss, PASpace ipaspace,
+                ArmTranslationType tran_type,
                 CachedState &state);
 
     Fault getResultTe(TlbEntry **te, const RequestPtr &req,

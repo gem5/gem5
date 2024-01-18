@@ -275,6 +275,13 @@ namespace ArmISA
         Secure
     };
 
+    /** Physical Address Space */
+    enum class PASpace
+    {
+        NonSecure,
+        Secure
+    };
+
     enum ExceptionLevel
     {
         EL0 = 0,

@@ -295,7 +295,8 @@ Fault
 TableWalker::walk(const RequestPtr &_req, ThreadContext *_tc, uint16_t _asid,
                   vmid_t _vmid, MMU::Mode _mode,
                   MMU::Translation *_trans, bool _timing, bool _functional,
-                  SecurityState ss, MMU::ArmTranslationType tranType,
+                  SecurityState ss, PASpace ipaspace,
+                  MMU::ArmTranslationType tranType,
                   bool _stage2Req, const TlbEntry *walk_entry)
 {
     assert(!(_functional && _timing));
@@ -344,6 +345,7 @@ TableWalker::walk(const RequestPtr &_req, ThreadContext *_tc, uint16_t _asid,
     if (isStage2) {
         currState->regime = TranslationRegime::EL10;
         currState->aarch64 = ELIs64(_tc, EL2);
+        currState->ipaSpace = ipaspace;
     } else {
         currState->regime =
             translationRegime(_tc, currState->el);
@@ -382,7 +384,8 @@ TableWalker::walk(const RequestPtr &_req, ThreadContext *_tc, uint16_t _asid,
         currState->hcr = currState->tc->readMiscReg(MISCREG_HCR_EL2);
         if (isStage2) {
             currState->sctlr = currState->tc->readMiscReg(MISCREG_SCTLR_EL1);
-            if (currState->secureLookup) {
+            if (currState->ss == SecurityState::Secure &&
+                currState->ipaSpace == PASpace::Secure) {
                 currState->vtcr =
                     currState->tc->readMiscReg(MISCREG_VSTCR_EL2);
             } else {
@@ -905,12 +908,19 @@ TableWalker::processWalkAArch64()
     switch (currState->regime) {
       case TranslationRegime::EL10:
         if (isStage2) {
-            if (currState->secureLookup) {
+            if (currState->ss == SecurityState::Secure &&
+                currState->ipaSpace == PASpace::Secure) {
+                // Secure EL1&0 Secure IPA
                 DPRINTF(TLB, " - Selecting VSTTBR_EL2 (AArch64 stage 2)\n");
                 ttbr = currState->tc->readMiscReg(MISCREG_VSTTBR_EL2);
+                currState->secureLookup = !currState->vtcr.sw;
             } else {
+                // Secure EL1&0 NonSecure IPA or NonSecure EL1&0
                 DPRINTF(TLB, " - Selecting VTTBR_EL2 (AArch64 stage 2)\n");
                 ttbr = currState->tc->readMiscReg(MISCREG_VTTBR_EL2);
+                currState->secureLookup = currState->ss == SecurityState::Secure ?
+                    !currState->vtcr.nsw : // Secure EL1&0 NonSecure IPA
+                    false;                 // NonSecure EL1&0
             }
             tsz = 64 - currState->vtcr.t0sz64;
             tg = GrainMap_tg0[currState->vtcr.tg0];
@@ -1809,8 +1819,10 @@ TableWalker::doLongDescriptor()
       case LongDescriptor::Table:
         {
             // Set hierarchical permission flags
-            currState->secureLookup = currState->secureLookup &&
-                currState->longDesc.secureTable();
+            if (!isStage2) {
+                currState->secureLookup = currState->secureLookup &&
+                    currState->longDesc.secureTable();
+            }
             currState->longDescData->rwTable =
                 currState->longDescData->rwTable &&
                 (currState->longDesc.rwTable() || currState->hpd);
@@ -2246,6 +2258,7 @@ TableWalker::insertPartialTableEntry(LongDescriptor &descriptor)
     te.lookupLevel    = descriptor.lookupLevel;
     te.ns             = !descriptor.secure(have_security, currState);
     te.ss             = currState->ss;
+    te.ipaSpace       = currState->ipaSpace; // Used by stage2 entries only
     te.type           = TypeTLB::unified;
 
     te.regime = currState->regime;
@@ -2292,6 +2305,7 @@ TableWalker::insertTableEntry(DescriptorBase &descriptor, bool long_descriptor)
     te.lookupLevel    = descriptor.lookupLevel;
     te.ns             = !descriptor.secure(have_security, currState);
     te.ss             = currState->ss;
+    te.ipaSpace       = currState->ipaSpace; // Used by stage2 entries only
     te.xn             = descriptor.xn();
     te.type           = currState->mode == BaseMMU::Execute ?
         TypeTLB::instruction : TypeTLB::data;

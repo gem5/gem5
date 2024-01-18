@@ -241,6 +241,8 @@ struct TlbEntry : public Serializable
     bool ns;
     // Security state of the translation regime
     SecurityState ss;
+    // IPA Space (stage2 entries only)
+    PASpace ipaSpace;
     // Translation regime on insert, AARCH64 EL0&1, AARCH32 -> el=1
     TranslationRegime regime;
     // This is used to distinguish between instruction and data entries
@@ -272,6 +274,7 @@ struct TlbEntry : public Serializable
          domain(DomainType::Client),  mtype(MemoryType::StronglyOrdered),
          longDescFormat(false), global(false), valid(true),
          ns(true), ss(SecurityState::NonSecure),
+         ipaSpace(PASpace::NonSecure),
          regime(TranslationRegime::EL10),
          type(TypeTLB::unified), partial(false),
          nonCacheable(uncacheable),
@@ -292,6 +295,7 @@ struct TlbEntry : public Serializable
          domain(DomainType::Client), mtype(MemoryType::StronglyOrdered),
          longDescFormat(false), global(false), valid(false),
          ns(true), ss(SecurityState::NonSecure),
+         ipaSpace(PASpace::NonSecure),
          regime(TranslationRegime::EL10),
          type(TypeTLB::unified), partial(false), nonCacheable(false),
          shareable(false), outerShareable(false), xn(0), pxn(0),

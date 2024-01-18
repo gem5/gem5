@@ -339,14 +339,7 @@ TlbiOp64::tlbiIpaS2(ThreadContext *tc, RegVal value,
     bool last_level, TlbiAttr attrs)
 {
     if (EL2Enabled(tc)) {
-        if (ss == SecurityState::Secure && bits(value, 63)) {
-            ss = SecurityState::NonSecure;
-        }
-
-        const int top_bit = ArmSystem::physAddrRange(tc) == 52 ?
-            39 : 35;
-        TLBIIPA tlbi_op(TranslationRegime::EL10, ss,
-            static_cast<Addr>(bits(value, top_bit, 0)) << 12,
+        TLBIIPA tlbi_op(tc, TranslationRegime::EL10, ss, value,
             last_level, attrs);
 
         if (shareable) {
@@ -398,11 +391,7 @@ TlbiOp64::tlbiRipaS2(ThreadContext *tc, RegVal value,
     bool last_level, TlbiAttr attrs)
 {
     if (EL2Enabled(tc)) {
-        if (ss == SecurityState::Secure && bits(value, 63)) {
-            ss = SecurityState::NonSecure;
-        }
-
-        TLBIRIPA tlbi_op(TranslationRegime::EL10, ss, value,
+        TLBIRIPA tlbi_op(tc, TranslationRegime::EL10, ss, value,
             last_level, attrs);
 
         if (shareable) {

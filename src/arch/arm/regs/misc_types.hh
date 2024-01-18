@@ -655,6 +655,10 @@ namespace ArmISA
         Bitfield<19> vs;     // Only defined for VTCR_EL2
         Bitfield<21> ha;     // Only defined for VTCR_EL2
         Bitfield<22> hd;     // Only defined for VTCR_EL2
+        Bitfield<29> nsw;    // Only defined for VTCR_EL2
+        Bitfield<29> sw;     // Only defined for VSTCR_EL2
+        Bitfield<30> nsa;    // Only defined for VTCR_EL2
+        Bitfield<30> sa;     // Only defined for VSTCR_EL2
     EndBitUnion(VTCR_t)
 
     BitUnion32(PRRR)

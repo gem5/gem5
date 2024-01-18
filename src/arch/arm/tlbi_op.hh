@@ -409,8 +409,36 @@ class TLBIIPA : public TLBIOp
   public:
     TLBIIPA(TranslationRegime _target_regime, SecurityState _ss, Addr _addr,
             bool last_level, Attr _attr=Attr::None)
-      : TLBIOp(_target_regime, _ss, _attr), addr(_addr), lastLevel(last_level)
+      : TLBIOp(_target_regime, _ss, _attr),
+        addr(_addr),
+        lastLevel(last_level),
+        ipaSpace(PASpace::NonSecure)
     {}
+
+    TLBIIPA(ThreadContext *tc, TranslationRegime _target_regime,
+            SecurityState _ss, RegVal val,
+            bool last_level, Attr _attr=Attr::None)
+      : TLBIOp(_target_regime, _ss, _attr),
+        addr(0),
+        lastLevel(last_level),
+        ipaSpace(PASpace::NonSecure)
+    {
+        const int top_bit = ArmSystem::physAddrRange(tc) == 52 ?
+            39 : 35;
+        addr = static_cast<Addr>(bits(val, top_bit, 0)) << 12;
+
+        switch (ss) {
+          case SecurityState::NonSecure:
+            ipaSpace = PASpace::NonSecure;
+            break;
+          case SecurityState::Secure:
+            ipaSpace = bits(val, 63) ?
+                PASpace::NonSecure : PASpace::Secure;
+            break;
+          default:
+            panic("Invalid SecurityState\n");
+        }
+    }
 
     void operator()(ThreadContext* tc) override;
 
@@ -424,6 +452,7 @@ class TLBIIPA : public TLBIOp
 
     Addr addr;
     bool lastLevel;
+    PASpace ipaSpace;
 };
 
 /** TLB Range Invalidate by VA */
@@ -456,11 +485,13 @@ class TLBIRMVAA : public TLBIRange, public TLBIMVAA
 class TLBIRIPA : public TLBIRange, public TLBIIPA
 {
   public:
-    TLBIRIPA(TranslationRegime _target_regime, SecurityState _ss,
+    TLBIRIPA(ThreadContext *tc, TranslationRegime _target_regime, SecurityState _ss,
              RegVal val, bool last_level, Attr _attr)
       : TLBIRange(val),
-        TLBIIPA(_target_regime, _ss, startAddress(), last_level, _attr)
-    {}
+        TLBIIPA(tc, _target_regime, _ss, val, last_level, _attr)
+    {
+        addr = startAddress();
+    }
 
     bool matchEntry(TlbEntry *entry, vmid_t curr_vmid) const override;
 };

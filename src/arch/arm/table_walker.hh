@@ -493,8 +493,13 @@ class TableWalker : public ClockedObject
         secure(bool have_security, WalkerState *currState) const override
         {
             if (type() == Block || type() == Page) {
-                return have_security &&
-                    (currState->secureLookup && !bits(data, 5));
+                if (isStage2) {
+                    return have_security && currState->secureLookup &&
+                        !currState->vtcr.nsa;
+                } else {
+                    return have_security &&
+                        (currState->secureLookup && !bits(data, 5));
+                }
             } else {
                 return have_security && currState->secureLookup;
             }
@@ -906,6 +911,11 @@ class TableWalker : public ClockedObject
          * long descriptor table attributes. */
         bool secureLookup = false;
 
+        /** IPA space (Secure vs NonSecure); stage2 only.
+         * This depends on whether the stage1 translation targeted
+         * a secure or non-secure IPA space */
+        PASpace ipaSpace;
+
         /** True if table walks are uncacheable (for table descriptors) */
         bool isUncacheable;
 
@@ -1143,6 +1153,7 @@ class TableWalker : public ClockedObject
                uint16_t asid, vmid_t _vmid,
                BaseMMU::Mode mode, BaseMMU::Translation *_trans,
                bool timing, bool functional, SecurityState ss,
+               PASpace ipaspace,
                MMU::ArmTranslationType tran_type, bool stage2,
                const TlbEntry *walk_entry);
 

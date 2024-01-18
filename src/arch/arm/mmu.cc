@@ -1385,11 +1385,11 @@ MMU::tranTypeEL(CPSR cpsr, SCR scr, ArmTranslationType type)
 Fault
 MMU::getTE(TlbEntry **te, const RequestPtr &req, ThreadContext *tc, Mode mode,
         Translation *translation, bool timing, bool functional,
-        SecurityState ss, ArmTranslationType tran_type,
+        SecurityState ss, PASpace ipaspace, ArmTranslationType tran_type,
         bool stage2)
 {
     return getTE(te, req, tc, mode, translation, timing, functional,
-        ss, tran_type, stage2 ? s2State : s1State);
+        ss, ipaspace, tran_type, stage2 ? s2State : s1State);
 }
 
 TlbEntry*
@@ -1416,7 +1416,7 @@ MMU::lookup(Addr va, uint16_t asid, vmid_t vmid, SecurityState ss,
 Fault
 MMU::getTE(TlbEntry **te, const RequestPtr &req, ThreadContext *tc, Mode mode,
         Translation *translation, bool timing, bool functional,
-        SecurityState ss, ArmTranslationType tran_type,
+        SecurityState ss, PASpace ipaspace, ArmTranslationType tran_type,
         CachedState& state)
 {
     // In a 2-stage system, the IPA->PA translation can be started via this
@@ -1459,7 +1459,7 @@ MMU::getTE(TlbEntry **te, const RequestPtr &req, ThreadContext *tc, Mode mode,
         fault = getTableWalker(mode, state.isStage2)->walk(
             req, tc, state.asid, state.vmid, mode,
             translation, timing, functional, ss,
-            tran_type, state.stage2DescReq, *te);
+            ipaspace, tran_type, state.stage2DescReq, *te);
 
         // for timing mode, return and wait for table walk,
         if (timing || fault != NoFault) {
@@ -1482,12 +1482,16 @@ MMU::getResultTe(TlbEntry **te, const RequestPtr &req,
     Fault fault;
 
     if (state.isStage2) {
+        PASpace ipaspace = state.securityState == SecurityState::Secure ?
+            PASpace::Secure : PASpace::NonSecure;
+
         // We are already in the stage 2 TLB. Grab the table entry for stage
         // 2 only. We are here because stage 1 translation is disabled.
         TlbEntry *s2_te = nullptr;
         // Get the stage 2 table entry
         fault = getTE(&s2_te, req, tc, mode, translation, timing, functional,
-                      state.securityState, state.curTranType, state);
+                      state.securityState, ipaspace,
+                      state.curTranType, state);
         // Check permissions of stage 2
         if (isCompleteTranslation(s2_te) && (fault == NoFault)) {
             if (state.aarch64)
@@ -1505,7 +1509,8 @@ MMU::getResultTe(TlbEntry **te, const RequestPtr &req,
 
     // Get the stage 1 table entry
     fault = getTE(&s1_te, req, tc, mode, translation, timing, functional,
-                  state.securityState, state.curTranType, state);
+                  state.securityState, PASpace::NonSecure,
+                  state.curTranType, state);
     // only proceed if we have a valid table entry
     if (isCompleteTranslation(s1_te) && (fault == NoFault)) {
         // Check stage 1 permissions before checking stage 2

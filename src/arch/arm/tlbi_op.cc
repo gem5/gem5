@@ -328,7 +328,8 @@ TLBIIPA::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
     TlbEntry::Lookup lookup_data = lookupGen(vmid);
 
-    return te->match(lookup_data) && (!lastLevel || !te->partial);
+    return te->match(lookup_data) && (!lastLevel || !te->partial) &&
+        ipaSpace == te->ipaSpace;
 }
 
 bool
@@ -371,9 +372,10 @@ TLBIRIPA::matchEntry(TlbEntry* te, vmid_t vmid) const
 
     auto addr_match = te->match(lookup_data) && (!lastLevel || !te->partial);
     if (addr_match) {
-        return tgMap[rangeData.tg] == te->tg &&
-        (resTLBIttl(rangeData.tg, rangeData.ttl) ||
-            rangeData.ttl == te->lookupLevel);
+        return ipaSpace == te->ipaSpace &&
+            tgMap[rangeData.tg] == te->tg &&
+            (resTLBIttl(rangeData.tg, rangeData.ttl) ||
+                rangeData.ttl == te->lookupLevel);
     } else {
         return false;
     }
