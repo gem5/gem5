@@ -4,10 +4,10 @@
 name: Weekly Tests
 
 on:
-  # Runs every Sunday from 7AM UTC
+    # Runs every Sunday from 7AM UTC
     schedule:
         - cron: 00 7 * * 6
-  # Allows us to manually start workflow for testing
+    # Allows us to manually start workflow for testing
     workflow_dispatch:
 
 jobs:
@@ -17,8 +17,8 @@ jobs:
         steps:
             - uses: actions/checkout@v3
               with:
-          # Scheduled workflows run on the default branch by default. We
-          # therefore need to explicitly checkout the develop branch.
+                  # Scheduled workflows run on the default branch by default. We
+                  # therefore need to explicitly checkout the develop branch.
                   ref: develop
             - name: Build gem5
               run: scons build/VEGA_X86/gem5.opt -j $(nproc) --ignore-style
@@ -37,8 +37,8 @@ jobs:
         steps:
             - uses: actions/checkout@v3
               with:
-                # Scheduled workflows run on the default branch by default. We
-                # therefore need to explicitly checkout the develop branch.
+                  # Scheduled workflows run on the default branch by default. We
+                  # therefore need to explicitly checkout the develop branch.
                   ref: develop
 
             - name: Download build/VEGA_X86/gem5.opt
@@ -46,8 +46,8 @@ jobs:
               with:
                   name: weekly-test-${{ github.run_number }}-attempt-${{ github.run_attempt }}-gem5-build-vega
                   path: build/VEGA_X86
-                # `download-artifact` does not preserve permissions so we need to set
-                # them again.
+              # `download-artifact` does not preserve permissions so we need to set
+              # them again.
             - run: chmod u+x build/VEGA_X86/gem5.opt
 
             - name: Obtain LULESH
@@ -69,8 +69,8 @@ jobs:
         steps:
             - uses: actions/checkout@v3
               with:
-          # Scheduled workflows run on the default branch by default. We
-          # therefore need to explicitly checkout the develop branch.
+                  # Scheduled workflows run on the default branch by default. We
+                  # therefore need to explicitly checkout the develop branch.
                   ref: develop
             - uses: actions/download-artifact@v3
               with:
@@ -100,8 +100,8 @@ jobs:
         steps:
             - uses: actions/checkout@v3
               with:
-          # Scheduled workflows run on the default branch by default. We
-          # therefore need to explicitly checkout the develop branch.
+                  # Scheduled workflows run on the default branch by default. We
+                  # therefore need to explicitly checkout the develop branch.
                   ref: develop
             - id: artifact-name
               run: echo "name=$(date +"%Y-%m-%d_%H.%M.%S")-ALL" >> $GITHUB_OUTPUT
@@ -115,7 +115,7 @@ jobs:
                   retention-days: 5
             - run: echo "This job's status is ${{ job.status }}."
 
-  # start running the very-long tests
+    # start running the very-long tests
     testlib-very-long-tests:
         strategy:
             fail-fast: false
@@ -130,8 +130,8 @@ jobs:
               run: rm -rf ./* || true rm -rf ./.??* || true rm -rf ~/.cache || true
             - uses: actions/checkout@v3
               with:
-        # Scheduled workflows run on the default branch by default. We
-        # therefore need to explicitly checkout the develop branch.
+                  # Scheduled workflows run on the default branch by default. We
+                  # therefore need to explicitly checkout the develop branch.
                   ref: develop
             - uses: actions/download-artifact@v3
               with:
@@ -164,15 +164,15 @@ jobs:
         steps:
             - uses: actions/checkout@v3
               with:
-          # Scheduled workflows run on the default branch by default. We
-          # therefore need to explicitly checkout the develop branch.
+                  # Scheduled workflows run on the default branch by default. We
+                  # therefore need to explicitly checkout the develop branch.
                   ref: develop
 
             - name: Checkout DRAMSys
               working-directory: ${{ github.workspace }}/ext/dramsys
               run: git clone https://github.com/tukl-msd/DRAMSys --branch v5.0 --depth 1 DRAMSys
 
-      # gem5 is built separately because it depends on the DRAMSys library
+              # gem5 is built separately because it depends on the DRAMSys library
             - name: Build gem5
               working-directory: ${{ github.workspace }}
               run: scons build/ALL/gem5.opt -j $(nproc)
