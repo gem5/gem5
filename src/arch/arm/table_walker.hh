@@ -436,7 +436,7 @@ class TableWalker : public ClockedObject
 
         LongDescriptor()
           : data(0), _dirty(false), aarch64(false), grainSize(Grain4KB),
-            physAddrRange(0)
+            physAddrRange(0), isStage2(false)
         {}
 
         /** The raw bits of the entry */
@@ -453,6 +453,8 @@ class TableWalker : public ClockedObject
         GrainSize grainSize;
 
         uint8_t physAddrRange;
+
+        bool isStage2;
 
         uint8_t*
         getRawPtr() override

@@ -843,6 +843,7 @@ TableWalker::processWalkLPAE()
     currState->longDesc.lookupLevel = start_lookup_level;
     currState->longDesc.aarch64 = false;
     currState->longDesc.grainSize = Grain4KB;
+    currState->longDesc.isStage2 = isStage2;
 
     fetchDescriptor(
         desc_addr, currState->longDesc,
@@ -1095,6 +1096,7 @@ TableWalker::processWalkAArch64()
     currState->longDesc.aarch64 = true;
     currState->longDesc.grainSize = tg;
     currState->longDesc.physAddrRange = _physAddrRange;
+    currState->longDesc.isStage2 = isStage2;
 
     fetchDescriptor(desc_addr, currState->longDesc,
                     sizeof(uint64_t), flag, start_lookup_level,
