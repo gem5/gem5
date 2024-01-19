@@ -306,7 +306,7 @@ class MMU : public BaseMMU
         }
 
         if (tlbi_op.stage2Flush()) {
-            flushStage2(tlbi_op.makeStage2());
+            flushStage2(tlbi_op);
         }
     }
 

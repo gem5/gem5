@@ -135,12 +135,6 @@ class TLBIALL : public TLBIOp
         return currentEL == EL2;
     }
 
-    TLBIALL
-    makeStage2() const
-    {
-        return TLBIALL(targetRegime, ss, attr);
-    }
-
     bool el2Enabled;
     ExceptionLevel currentEL;
 };
@@ -190,13 +184,6 @@ class TLBIALLEL : public TLBIOp
         return targetRegime == TranslationRegime::EL10 ||
                targetRegime == TranslationRegime::EL20;
     }
-
-    TLBIALLEL
-    makeStage2() const
-    {
-        return TLBIALLEL(targetRegime, ss, attr);
-    }
-
 };
 
 /** Implementaton of AArch64 TLBI VMALLE1(IS)/VMALLS112E1(IS) instructions */
@@ -217,12 +204,6 @@ class TLBIVMALL : public TLBIOp
     stage2Flush() const override
     {
         return stage2;
-    }
-
-    TLBIVMALL
-    makeStage2() const
-    {
-        return TLBIVMALL(targetRegime, ss, false, attr);
     }
 
     bool el2Enabled;
@@ -291,12 +272,6 @@ class TLBIALLN : public TLBIOp
     stage2Flush() const override
     {
         return targetRegime != TranslationRegime::EL2;
-    }
-
-    TLBIALLN
-    makeStage2() const
-    {
-        return TLBIALLN(targetRegime);
     }
 };
 
@@ -429,6 +404,8 @@ class TLBIRange
 /** TLB Invalidate by Intermediate Physical Address */
 class TLBIIPA : public TLBIOp
 {
+  protected:
+    TlbEntry::Lookup lookupGen(vmid_t vmid) const;
   public:
     TLBIIPA(TranslationRegime _target_regime, SecurityState _ss, Addr _addr,
             bool last_level, Attr _attr=Attr::None)
@@ -437,23 +414,12 @@ class TLBIIPA : public TLBIOp
 
     void operator()(ThreadContext* tc) override;
 
-    bool
-    matchEntry(TlbEntry *entry, vmid_t curr_vmid) const override
-    {
-        panic("This shouldn't be called\n");
-    }
+    bool matchEntry(TlbEntry *entry, vmid_t curr_vmid) const override;
 
     bool
     stage1Flush() const override
     {
         return false;
-    }
-
-    /** TLBIIPA is basically a TLBIMVAA for stage2 TLBs */
-    virtual TLBIMVAA
-    makeStage2() const
-    {
-        return TLBIMVAA(targetRegime, ss, addr, lastLevel, attr);
     }
 
     Addr addr;
@@ -496,11 +462,7 @@ class TLBIRIPA : public TLBIRange, public TLBIIPA
         TLBIIPA(_target_regime, _ss, startAddress(), last_level, _attr)
     {}
 
-    virtual TLBIMVAA
-    makeStage2() const
-    {
-        return TLBIRMVAA(targetRegime, ss, rangeData, lastLevel, attr);
-    }
+    bool matchEntry(TlbEntry *entry, vmid_t curr_vmid) const override;
 };
 
 } // namespace ArmISA
