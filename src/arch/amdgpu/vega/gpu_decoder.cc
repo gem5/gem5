@@ -29,9 +29,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "arch/amdgpu/vega/gpu_decoder.hh"
+
 #include <vector>
 
-#include "arch/amdgpu/vega/gpu_decoder.hh"
 #include "arch/amdgpu/vega/insts/gpu_static_inst.hh"
 #include "arch/amdgpu/vega/insts/instructions.hh"
 #include "arch/amdgpu/vega/insts/vop3p.hh"

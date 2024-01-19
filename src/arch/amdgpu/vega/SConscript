@@ -49,12 +49,12 @@ Source('tlb_coalescer.cc')
 DebugFlag('GPUPTWalker', 'Debug flag for GPU page table walker')
 
 if env['CONF']['TARGET_GPU_ISA'] == 'vega':
-    Source('decoder.cc')
+    Source('gpu_decoder.cc')
     Source('insts/gpu_static_inst.cc')
     Source('insts/instructions.cc')
     Source('insts/op_encodings.cc')
-    Source('isa.cc')
-    Source('registers.cc')
+    Source('gpu_isa.cc')
+    Source('gpu_registers.cc')
 
     Source('insts/sop2.cc')
     Source('insts/sopk.cc')
