@@ -710,10 +710,10 @@ transition({UD_RSC, UC_RSC, SC_RSC, SD_RSC, UD, RU, RSD, RUSD, RUSC, UD_RSD, SD_
 
 // Cache Replacement
 
-// When in UD_RU,UC_RU,UD_RSD,SD_RSD we also just drop the line since an upstream
+// When in UC_RU,UD_RSD,SD_RSD we also just drop the line since an upstream
 // cache has an up-to-data line that it will either WriteBack or WriteEvict
 transition({SC,UC,SC_RSC,UC_RSC,
-            UD_RU,UC_RU,UD_RSD,SD_RSD}, LocalHN_Eviction, BUSY_BLKD) {ReplTBEAvailable} {
+            UC_RU,UD_RSD,SD_RSD}, LocalHN_Eviction, BUSY_BLKD) {ReplTBEAvailable} {
   Initiate_Replacement;
   Initiate_Replacement_JustDrop;
   Profile_Eviction;
@@ -722,7 +722,7 @@ transition({SC,UC,SC_RSC,UC_RSC,
   ProcessNextState;
 }
 
-transition({UD,SD,UD_RSC,SD_RSC}, LocalHN_Eviction, BUSY_BLKD) {ReplTBEAvailable} {
+transition({UD,SD,UD_RU,UD_RSC,SD_RSC}, LocalHN_Eviction, BUSY_BLKD) {ReplTBEAvailable} {
   Initiate_Replacement;
   Initiate_Replacement_WB;
   Profile_Eviction;
@@ -749,7 +749,7 @@ transition({UD,SD,UC}, Local_Eviction, BUSY_BLKD) {ReplTBEAvailable} {
   ProcessNextState;
 }
 
-transition({UD_RU,UC_RU,UD_RSD,SD_RSD,SC_RSC,UC_RSC}, Local_Eviction, BUSY_BLKD) {ReplTBEAvailable} {
+transition({UC_RU,UD_RSD,SD_RSD,SC_RSC,UC_RSC}, Local_Eviction, BUSY_BLKD) {ReplTBEAvailable} {
   Initiate_Replacement;
   Initiate_Replacement_JustDrop;
   Profile_Eviction;
@@ -758,7 +758,7 @@ transition({UD_RU,UC_RU,UD_RSD,SD_RSD,SC_RSC,UC_RSC}, Local_Eviction, BUSY_BLKD)
   ProcessNextState;
 }
 
-transition({UD_RSC,SD_RSC}, Local_Eviction, BUSY_BLKD) {ReplTBEAvailable} {
+transition({UD_RU,UD_RSC,SD_RSC}, Local_Eviction, BUSY_BLKD) {ReplTBEAvailable} {
   Initiate_Replacement;
   Initiate_Replacement_WB;
   Profile_Eviction;

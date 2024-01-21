@@ -892,10 +892,10 @@ void copyCacheAndDir(CacheEntry cache_entry, DirEntry dir_entry,
   if (is_valid(cache_entry) &&
       ((initialState == State:UD) || (initialState == State:SD) ||
         (initialState == State:UC) || (initialState == State:SC) ||
-        (initialState == State:UD_RSC) || (initialState == State:SD_RSC) ||
-        (initialState == State:UC_RSC) || (initialState == State:SC_RSC) ||
-        (initialState == State:UD_RSD) || (initialState == State:SD_RSD) ||
-        (initialState == State:UD_T))) {
+        (initialState == State:UD_RU) || (initialState == State:UD_RSC) ||
+        (initialState == State:SD_RSC) || (initialState == State:UC_RSC) ||
+        (initialState == State:SC_RSC) || (initialState == State:UD_RSD) ||
+        (initialState == State:SD_RSD) || (initialState == State:UD_T))) {
     tbe.dataBlk := cache_entry.DataBlk;
     tbe.dataBlkValid.fillMask();
     tbe.dataValid := true;
