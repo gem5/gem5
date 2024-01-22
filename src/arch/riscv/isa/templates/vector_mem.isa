@@ -82,6 +82,12 @@ def template VleConstructor {{
         micro_vl = std::min(remaining_vl -= micro_vlmax, micro_vlmax);
     }
 
+    if (_opClass == VectorUnitStrideFaultOnlyFirstLoadOp) {
+        microop = new VlFFTrimVlMicroOp(_machInst, this->vl, num_microops,
+                                        vlen, microops);
+        this->microops.push_back(microop);
+    }
+
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
 }
@@ -168,11 +174,14 @@ Fault
     const std::vector<bool> byte_enable(mem_size, true);
     Fault fault = xc->readMem(EA, Mem.as<uint8_t>(), mem_size, memAccessFlags,
                               byte_enable);
-    if (fault != NoFault)
-        return fault;
+
+    %(fault_code)s;
 
     const size_t micro_vlmax = vtype_VLMAX(machInst.vtype8, vlen, true);
     const size_t micro_elems = vlen / width_EEW(machInst.width);
+
+    if (fault != NoFault)
+        return fault;
 
     size_t ei;
 
@@ -215,6 +224,9 @@ Fault
     const std::vector<bool> byte_enable(mem_size, true);
     Fault fault = initiateMemRead(xc, EA, mem_size, memAccessFlags,
                                   byte_enable);
+
+    %(fault_code)s;
+
     return fault;
 }
 
@@ -241,7 +253,9 @@ Fault
         v0 = tmp_v0.as<uint8_t>();
     }
 
-    memcpy(Mem.as<uint8_t>(), pkt->getPtr<uint8_t>(), pkt->getSize());
+    if (xc->readMemAccPredicate()) {
+        memcpy(Mem.as<uint8_t>(), pkt->getPtr<uint8_t>(), pkt->getSize());
+    }
 
     const size_t micro_vlmax = vtype_VLMAX(machInst.vtype8, vlen, true);
     const size_t micro_elems = vlen / width_EEW(machInst.width);
