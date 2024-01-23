@@ -143,6 +143,8 @@ class TlmToGem5Bridge : public TlmToGem5BridgeBase
 
     void invalidateDmi(const gem5::MemBackdoor &backdoor);
 
+    void cacheBackdoor(gem5::MemBackdoorPtr backdoor);
+
   protected:
     // payload event call back
     void peq_cb(tlm::tlm_generic_payload &trans, const tlm::tlm_phase &phase);
