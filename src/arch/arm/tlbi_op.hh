@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, 2022-2023 Arm Limited
+ * Copyright (c) 2018-2020, 2022-2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -143,8 +143,6 @@ class ITLBIALL : public TLBIALL
       : TLBIALL(_target_regime, _secure)
     {}
 
-    void broadcast(ThreadContext *tc) = delete;
-
     void operator()(ThreadContext* tc) override;
 
     bool match(TlbEntry *entry, vmid_t curr_vmid) const override;
@@ -157,8 +155,6 @@ class DTLBIALL : public TLBIALL
     DTLBIALL(TranslationRegime _target_regime, bool _secure)
       : TLBIALL(_target_regime, _secure)
     {}
-
-    void broadcast(ThreadContext *tc) = delete;
 
     void operator()(ThreadContext* tc) override;
 
@@ -247,8 +243,6 @@ class ITLBIASID : public TLBIASID
       : TLBIASID(_target_regime, _secure, _asid)
     {}
 
-    void broadcast(ThreadContext *tc) = delete;
-
     void operator()(ThreadContext* tc) override;
 
     bool match(TlbEntry *entry, vmid_t curr_vmid) const override;
@@ -261,8 +255,6 @@ class DTLBIASID : public TLBIASID
     DTLBIASID(TranslationRegime _target_regime, bool _secure, uint16_t _asid)
       : TLBIASID(_target_regime, _secure, _asid)
     {}
-
-    void broadcast(ThreadContext *tc) = delete;
 
     void operator()(ThreadContext* tc) override;
 
@@ -345,8 +337,6 @@ class ITLBIMVA : public TLBIMVA
       : TLBIMVA(_target_regime, _secure, _addr, _asid, false)
     {}
 
-    void broadcast(ThreadContext *tc) = delete;
-
     void operator()(ThreadContext* tc) override;
 
     bool match(TlbEntry *entry, vmid_t curr_vmid) const override;
@@ -360,8 +350,6 @@ class DTLBIMVA : public TLBIMVA
              Addr _addr, uint16_t _asid)
       : TLBIMVA(_target_regime, _secure, _addr, _asid, false)
     {}
-
-    void broadcast(ThreadContext *tc) = delete;
 
     void operator()(ThreadContext* tc) override;
 

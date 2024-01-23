@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2011-2013, 2016-2023 Arm Limited
+// Copyright (c) 2011-2013, 2016-2024 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -361,15 +361,8 @@ let {{
     tlbiCode = msr_check_code + '''
         performTlbi(xc, flat_idx, XOp1);
     '''
-    msrTlbiIop = ArmInstObjParams("msr", "Tlbi64LocalHub", "TlbiOp64",
-                                  tlbiCode,
-                                  ["IsSerializeAfter", "IsNonSpeculative"])
-    header_output += MiscRegRegOp64Declare.subst(msrTlbiIop)
-    decoder_output += MiscRegRegOp64Constructor.subst(msrTlbiIop)
-    exec_output += BasicExecute.subst(msrTlbiIop)
-
     dvmCode = '''
-    if (dvmEnabled) {
+    if (%(dvmCheck)s) {
         Request::Flags memAccessFlags =
             Request::STRICT_ORDER | Request::TLBI;
 
@@ -378,9 +371,30 @@ let {{
         PendingDvm = true;
     }
     '''
+    msrTlbiIop = ArmInstObjParams("msr", "Tlbi64LocalHub", "TlbiOp64",
+        {
+            "code" : tlbiCode,
+            "dvm_code" : dvmCode %
+            {
+                "dvmCheck" : "HCR hcr = Hcr64; hcr.fb && dvmEnabled"
+            }
+        },
+        ["IsSerializeAfter", "IsNonSpeculative"])
+    header_output += DvmTlbiDeclare.subst(msrTlbiIop)
+    decoder_output += DvmTlbiConstructor.subst(msrTlbiIop)
+    exec_output += BasicExecute.subst(msrTlbiIop)
+    exec_output += DvmInitiateAcc.subst(msrTlbiIop)
+    exec_output += DvmCompleteAcc.subst(msrTlbiIop)
+
     msrTlbiSIop = ArmInstObjParams("msr", "Tlbi64ShareableHub", "TlbiOp64",
-                                  { "code" : tlbiCode, "dvm_code" : dvmCode },
-                                  ["IsSerializeAfter", "IsNonSpeculative"])
+        {
+            "code" : tlbiCode,
+            "dvm_code" : dvmCode %
+            {
+                "dvmCheck" : "dvmEnabled"
+            }
+        },
+        ["IsSerializeAfter", "IsNonSpeculative"])
     header_output += DvmTlbiDeclare.subst(msrTlbiSIop)
     decoder_output += DvmTlbiConstructor.subst(msrTlbiSIop)
     exec_output += BasicExecute.subst(msrTlbiSIop)
