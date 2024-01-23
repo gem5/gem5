@@ -32,6 +32,6 @@ from m5.SimObject import SimObject
 class PMP(SimObject):
     type = "PMP"
     cxx_header = "arch/riscv/pmp.hh"
-    cxx_class = "gem5::PMP"
+    cxx_class = "gem5::RiscvISA::PMP"
 
     pmp_entries = Param.Int(16, "Maximum PMP Entries Supported")

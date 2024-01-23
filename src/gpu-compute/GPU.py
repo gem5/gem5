@@ -95,6 +95,14 @@ class VectorRegisterFile(RegisterFile):
     cxx_header = "gpu-compute/vector_register_file.hh"
 
 
+class RegisterFileCache(SimObject):
+    type = "RegisterFileCache"
+    cxx_class = "gem5::RegisterFileCache"
+    cxx_header = "gpu-compute/register_file_cache.hh"
+    simd_id = Param.Int("SIMD ID associated with this Register File Cache")
+    cache_size = Param.Int(0, "number of entries of rfc")
+
+
 class RegisterManager(SimObject):
     type = "RegisterManager"
     cxx_class = "gem5::RegisterManager"
@@ -149,6 +157,11 @@ class ComputeUnit(ClockedObject):
     dpbypass_pipe_length = Param.Int(
         4, "vector ALU Double Precision bypass latency"
     )
+
+    rfc_pipe_length = Param.Int(
+        2, "number of cycles per register file cache access"
+    )
+
     scalar_pipe_length = Param.Int(1, "number of pipe stages per scalar ALU")
     issue_period = Param.Int(4, "number of cycles per issue period")
 
@@ -260,6 +273,9 @@ class ComputeUnit(ClockedObject):
     scalar_register_file = VectorParam.ScalarRegisterFile(
         "Scalar register file"
     )
+
+    register_file_cache = VectorParam.RegisterFileCache("Register file cache")
+
     out_of_order_data_delivery = Param.Bool(
         False, "enable OoO data delivery in the GM pipeline"
     )

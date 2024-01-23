@@ -40,6 +40,8 @@
 
 Import('*')
 
+Source('insts/fplib.cc')
+
 if env['CONF']['USE_ARM_ISA']:
     env.TagImplies('arm isa', 'gem5 lib')
 
@@ -73,7 +75,6 @@ Source('insts/static_inst.cc', tags='arm isa')
 Source('insts/sve.cc', tags='arm isa')
 Source('insts/sve_mem.cc', tags='arm isa')
 Source('insts/vfp.cc', tags='arm isa')
-Source('insts/fplib.cc', tags='arm isa')
 Source('insts/crypto.cc', tags='arm isa')
 Source('insts/tme64.cc', tags='arm isa')
 if env['CONF']['PROTOCOL'] == 'MESI_Three_Level_HTM':

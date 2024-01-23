@@ -66,6 +66,7 @@ class LdsChunk;
 class ScalarRegisterFile;
 class Shader;
 class VectorRegisterFile;
+class RegisterFileCache;
 
 struct ComputeUnitParams;
 
@@ -296,6 +297,8 @@ class ComputeUnit : public ClockedObject
     // array of scalar register files, one per SIMD
     std::vector<ScalarRegisterFile*> srf;
 
+    std::vector<RegisterFileCache*> rfc;
+
     // Width per VALU/SIMD unit: number of work items that can be executed
     // on the vector ALU simultaneously in a SIMD unit
     int simdWidth;
@@ -305,6 +308,8 @@ class ComputeUnit : public ClockedObject
     // number of pipe stages for bypassing data to next dependent double
     // precision vector instruction inside the vector ALU pipeline
     int dpBypassPipeLength;
+    // number of pipe stages for register file cache
+    int rfcPipeLength;
     // number of pipe stages for scalar ALU
     int scalarPipeStages;
     // number of pipe stages for operand collection & distribution network
@@ -390,6 +395,7 @@ class ComputeUnit : public ClockedObject
     int simdUnitWidth() const { return simdWidth; }
     int spBypassLength() const { return spBypassPipeLength; }
     int dpBypassLength() const { return dpBypassPipeLength; }
+    int rfcLength() const { return rfcPipeLength; }
     int scalarPipeLength() const { return scalarPipeStages; }
     int storeBusLength() const { return numCyclesPerStoreTransfer; }
     int loadBusLength() const { return numCyclesPerLoadTransfer; }

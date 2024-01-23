@@ -43,6 +43,6 @@ from m5.SimObject import SimObject
 class PMAChecker(SimObject):
     type = "PMAChecker"
     cxx_header = "arch/riscv/pma_checker.hh"
-    cxx_class = "gem5::PMAChecker"
+    cxx_class = "gem5::RiscvISA::PMAChecker"
 
     uncacheable = VectorParam.AddrRange([], "Uncacheable address ranges")

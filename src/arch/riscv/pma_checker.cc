@@ -47,6 +47,9 @@
 namespace gem5
 {
 
+namespace RiscvISA
+{
+
 PMAChecker::PMAChecker(const Params &params) :
 SimObject(params),
 uncacheable(params.uncacheable.begin(), params.uncacheable.end())
@@ -91,4 +94,5 @@ PMAChecker::takeOverFrom(PMAChecker *old)
     uncacheable = old->uncacheable;
 }
 
+} // namespace RiscvISA
 } // namespace gem5
