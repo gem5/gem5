@@ -43,11 +43,12 @@ SlimAMPM::SlimAMPM(const SlimAMPMPrefetcherParams &p)
 
 void
 SlimAMPM::calculatePrefetch(const PrefetchInfo &pfi,
-                  std::vector<AddrPriority> &addresses)
+                  std::vector<AddrPriority> &addresses,
+                  const CacheAccessor &cache)
 {
-    dcpt.calculatePrefetch(pfi, addresses);
+    dcpt.calculatePrefetch(pfi, addresses, cache);
     if (addresses.empty()) {
-        ampm.calculatePrefetch(pfi, addresses);
+        ampm.calculatePrefetch(pfi, addresses, cache);
     }
 }
 

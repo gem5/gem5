@@ -24,27 +24,32 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from .abstract_board import AbstractBoard
-
-from ...resources.resource import (
-    FileResource,
-    AbstractResource,
-    BinaryResource,
-    CheckpointResource,
-    SimpointResource,
-    SimpointDirectoryResource,
+from pathlib import Path
+from typing import (
+    List,
+    Optional,
+    Union,
 )
 
-from ..processors.switchable_processor import SwitchableProcessor
+from m5.objects import (
+    Process,
+    SEWorkload,
+)
+from m5.util import warn
 
 from gem5.resources.elfie import ELFieInfo
 from gem5.resources.looppoint import Looppoint
 
-from m5.objects import SEWorkload, Process
-
-from typing import Optional, List, Union
-from m5.util import warn
-from pathlib import Path
+from ...resources.resource import (
+    AbstractResource,
+    BinaryResource,
+    CheckpointResource,
+    FileResource,
+    SimpointDirectoryResource,
+    SimpointResource,
+)
+from ..processors.switchable_processor import SwitchableProcessor
+from .abstract_board import AbstractBoard
 
 
 class SEBinaryWorkload:
@@ -52,13 +57,15 @@ class SEBinaryWorkload:
     This class is used to enable simple Syscall-Execution (SE) mode execution
     of a binary.
 
-    For this to function correctly the SEBinaryWorkload class should be added
+    For this to function correctly the `SEBinaryWorkload` class should be added
     as a superclass to a board (i.e., something that inherits from
-    AbstractBoard).
+    `AbstractBoard`).
 
-    **Important Notes:** At present this implementation is limited. A single
-    process is added to all cores as the workload. Therefore, despite allowing
-    for multi-core setups, multi-program workloads are not presently supported.
+    .. note::
+
+        At present this implementation is limited. A single
+        process is added to all cores as the workload. Therefore, despite allowing
+        for multi-core setups, multi-program workloads are not presently supported.
     """
 
     def set_se_binary_workload(
@@ -80,14 +87,14 @@ class SEBinaryWorkload:
 
         :param binary: The resource encapsulating the binary to be run.
         :param exit_on_work_items: Whether the simulation should exit on work
-        items. True by default.
+                                   items. ``True`` by default.
         :param stdin_file: The input file for the binary
         :param stdout_file: The output file for the binary
         :param stderr_file: The error output file for the binary
         :param env_list: The environment variables defined for the binary
         :param arguments: The input arguments for the binary
         :param checkpoint: The checkpoint directory. Used to restore the
-        simulation to that checkpoint.
+                           simulation to that checkpoint.
         """
 
         # We assume this this is in a multiple-inheritance setup with an
@@ -161,15 +168,17 @@ class SEBinaryWorkload:
         * Dynamically linked executables are partially supported when the host
           ISA and the simulated ISA are the same.
 
-        **Warning:** Simpoints only works with one core
+        .. warning::
+
+            SimPoints only works with one core
 
         :param binary: The resource encapsulating the binary to be run.
-        :param arguments: The input arguments for the binary
+        :param arguments: The input arguments for the binary.
         :param simpoint: The SimpointResource that contains the list of
-        SimPoints starting instructions, the list of weights, and the SimPoints
-        interval
+                         SimPoints starting instructions, the list of
+                         weights, and the SimPoints interval.
         :param checkpoint: The checkpoint directory. Used to restore the
-        simulation to that checkpoint.
+                           simulation to that checkpoint.
         """
 
         self._simpoint_resource = simpoint
@@ -213,11 +222,11 @@ class SEBinaryWorkload:
 
         :param binary: The resource encapsulating the binary to be run.
         :param looppoint: The LoopPoint object that contain all the information
-        gather from the LoopPoint files and a LoopPointManager that will raise
-        exit events for LoopPoints
-        :param arguments: The input arguments for the binary
+                          gather from the LoopPoint files and a LoopPointManager
+                          that will raise exit events for LoopPoints.
+        :param arguments: The input arguments for the binary.
         :param region_id: If set, will only load the Looppoint region
-        corresponding to that ID.
+                          corresponding to that ID.
         """
 
         assert isinstance(looppoint, Looppoint)
@@ -246,10 +255,10 @@ class SEBinaryWorkload:
         * Dynamically linked executables are partially supported when the host
           ISA and the simulated ISA are the same.
 
-        :param elfie: The resource encapsulating the binary elfie to be run.
+        :param elfie: The resource encapsulating the binary ELFie to be run.
         :param elfie_info: The ELFieInfo object that contain all the
-        information for the ELFie
-        :param arguments: The input arguments for the binary
+                           information for the ELFie.
+        :param arguments: The input arguments for the binary.
         """
 
         assert isinstance(elfie_info, ELFieInfo)

@@ -27,3 +27,9 @@ config HAVE_CAPSTONE
     def_bool $(HAVE_CAPSTONE)
 
 rsource "kvm/Kconfig"
+
+config USE_CAPSTONE
+    depends on HAVE_CAPSTONE
+    depends on USE_ARM_ISA
+    bool "Use CapstoneDisassembler"
+    default y

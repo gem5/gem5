@@ -44,11 +44,30 @@ namespace RiscvISA
 
 class FsLinux : public KernelWorkload
 {
+  private:
+    /**
+     * Event to halt the simulator if the kernel calls panic() or
+     * oops_exit()
+     **/
+    PCEvent *kernelPanicPcEvent = nullptr;
+    PCEvent *kernelOopsPcEvent = nullptr;
+    void addExitOnKernelPanicEvent();
+    void addExitOnKernelOopsEvent();
   public:
     PARAMS(RiscvLinux);
     FsLinux(const Params &p) : KernelWorkload(p) {}
+    ~FsLinux()
+    {
+        if (kernelPanicPcEvent != nullptr) {
+            delete kernelPanicPcEvent;
+        }
+        if (kernelOopsPcEvent != nullptr) {
+            delete kernelOopsPcEvent;
+        }
+    }
 
     void initState() override;
+    void startup() override;
 
     void
     setSystem(System *sys) override
@@ -71,23 +90,43 @@ class BootloaderKernelWorkload: public Workload
     loader::SymbolTable bootloaderSymbolTable;
     const std::string bootArgs;
 
+    /**
+     * Event to halt the simulator if the kernel calls panic() or
+     * oops_exit()
+     **/
+    PCEvent *kernelPanicPcEvent = nullptr;
+    PCEvent *kernelOopsPcEvent = nullptr;
+
   private:
     void loadBootloaderSymbolTable();
     void loadKernelSymbolTable();
     void loadBootloader();
     void loadKernel();
     void loadDtb();
+    void addExitOnKernelPanicEvent();
+    void addExitOnKernelOopsEvent();
 
   public:
     PARAMS(RiscvBootloaderKernelWorkload);
     BootloaderKernelWorkload(const Params &p)
-        : Workload(p), entryPoint(p.entry_point), bootArgs(p.boot_args)
+        : Workload(p), entryPoint(p.entry_point), bootArgs(p.command_line)
     {
         loadBootloaderSymbolTable();
         loadKernelSymbolTable();
     }
 
+    ~BootloaderKernelWorkload()
+    {
+        if (kernelPanicPcEvent != nullptr) {
+            delete kernelPanicPcEvent;
+        }
+        if (kernelOopsPcEvent != nullptr) {
+            delete kernelOopsPcEvent;
+        }
+    }
+
     void initState() override;
+    void startup() override;
 
     void
     setSystem(System *sys) override

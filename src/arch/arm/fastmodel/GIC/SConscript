@@ -25,6 +25,9 @@
 
 Import('*')
 
+if not env['CONF']['USE_ARM_FASTMODEL']:
+    Return()
+
 protocol_dir = Dir('..').Dir('protocol')
 
 ArmFastModelComponent(File('GIC.sgproj'), File('GIC.lisa'),

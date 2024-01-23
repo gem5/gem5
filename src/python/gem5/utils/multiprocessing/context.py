@@ -30,7 +30,10 @@ Some code inspired by the Python standard library implementation of the
 multiprocessing module (i.e., cpython/Lib/multiprocessing/).
 """
 
-from multiprocessing import context, process
+from multiprocessing import (
+    context,
+    process,
+)
 from multiprocessing.context import DefaultContext
 
 

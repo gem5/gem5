@@ -24,17 +24,20 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from ..boards.mem_mode import MemMode
-from ..boards.abstract_board import AbstractBoard
-from ..processors.simple_core import SimpleCore
-from ..processors.cpu_types import CPUTypes, get_mem_mode
-from .switchable_processor import SwitchableProcessor
-from ...isas import ISA
+from typing import Optional
+
 from m5.util import warn
 
+from ...isas import ISA
 from ...utils.override import *
-
-from typing import Optional
+from ..boards.abstract_board import AbstractBoard
+from ..boards.mem_mode import MemMode
+from ..processors.cpu_types import (
+    CPUTypes,
+    get_mem_mode,
+)
+from ..processors.simple_core import SimpleCore
+from .switchable_processor import SwitchableProcessor
 
 
 class SimpleSwitchableProcessor(SwitchableProcessor):
@@ -50,30 +53,17 @@ class SimpleSwitchableProcessor(SwitchableProcessor):
         starting_core_type: CPUTypes,
         switch_core_type: CPUTypes,
         num_cores: int,
-        isa: Optional[ISA] = None,
+        isa: ISA = None,
     ) -> None:
         """
         :param starting_core_type: The CPU type for each type in the processor
-        to start with (i.e., when the simulation has just started).
-
+                                   to start with (i.e., when the simulation has
+                                   just started).
         :param switch_core_types: The CPU type for each core, to be switched
-        to..
+        to.
 
-        :param isa: The ISA of the processor. This argument is optional. If not
-        set the `runtime.get_runtime_isa` is used to determine the ISA at
-        runtime. **WARNING**: This functionality is deprecated. It is
-        recommended you explicitly set your ISA via SimpleSwitchableProcessor
-        construction.
+        :param isa: The ISA of the processor.
         """
-
-        if not isa:
-            warn(
-                "An ISA for the SimpleSwitchableProcessor was not set. This "
-                "will result in usage of `runtime.get_runtime_isa` to obtain "
-                "the ISA. This function is deprecated and will be removed in "
-                "future releases of gem5. Please explicitly state the ISA "
-                "via the processor constructor."
-            )
 
         if num_cores <= 0:
             raise AssertionError("Number of cores must be a positive integer!")

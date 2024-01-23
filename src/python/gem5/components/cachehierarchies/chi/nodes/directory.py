@@ -24,9 +24,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from .abstract_node import AbstractNode
+from m5.objects import (
+    NULL,
+    ClockDomain,
+    RubyCache,
+    RubyNetwork,
+)
 
-from m5.objects import ClockDomain, NULL, RubyCache, RubyNetwork
+from .abstract_node import AbstractNode
 
 
 class SimpleDirectory(AbstractNode):
@@ -56,6 +61,7 @@ class SimpleDirectory(AbstractNode):
         self.sequencer = NULL
 
         self.use_prefetcher = False
+        self.prefetcher = NULL
 
         # Set up home node that allows three hop protocols
         self.is_HN = True

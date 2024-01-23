@@ -24,12 +24,17 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from m5.objects import (
+    NULL,
+    ClockDomain,
+    RubyCache,
+    RubyNetwork,
+)
+
 from gem5.components.processors.abstract_core import AbstractCore
 from gem5.isas import ISA
 
 from .abstract_node import AbstractNode
-
-from m5.objects import ClockDomain, RubyCache, RubyNetwork
 
 
 class PrivateL1MOESICache(AbstractNode):
@@ -52,6 +57,7 @@ class PrivateL1MOESICache(AbstractNode):
         self.clk_domain = clk_domain
         self.send_evictions = core.requires_send_evicts()
         self.use_prefetcher = False
+        self.prefetcher = NULL
 
         # Only applies to home nodes
         self.is_HN = False

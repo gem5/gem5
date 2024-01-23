@@ -32,8 +32,8 @@
 import os
 import re
 import sys
-from maint.lib import maintainers
 
+from maint.lib import maintainers
 from style.repo import GitRepo
 
 

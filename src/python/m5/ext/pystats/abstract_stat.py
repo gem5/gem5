@@ -24,8 +24,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from .serializable_stat import SerializableStat
-
 import re
 from typing import (
     Callable,
@@ -34,6 +32,8 @@ from typing import (
     Pattern,
     Union,
 )
+
+from .serializable_stat import SerializableStat
 
 
 class AbstractStat(SerializableStat):
@@ -50,15 +50,16 @@ class AbstractStat(SerializableStat):
     ) -> List["AbstractStat"]:
         """Iterate through all of the children, optionally with a predicate
 
-        ```
-        >>> system.children(lambda _name: 'cpu' in name)
-        [cpu0, cpu1, cpu2]
-        ```
+        .. code-block::
 
-        :param: predicate(str) -> bool: Optional. Each child's name is passed
-                to this function. If it returns true, then the child is
-                yielded. Otherwise, the child is skipped.
-                If not provided then all children are returned.
+            >>> system.children(lambda _name: 'cpu' in name)
+            [cpu0, cpu1, cpu2]
+
+
+        :param predicate: Optional. Each child's name is passed to this function.
+                          If it returns ``True``, then the child is yielded.
+                          Otherwise, the child is skipped. If not provided then
+                          all children are returned.
         """
 
         to_return = []
@@ -78,15 +79,18 @@ class AbstractStat(SerializableStat):
         """Find all stats that match the name, recursively through all the
         SimStats.
 
+        .. code-block::
 
-        ```
-        >>> system.find('cpu[0-9]')
-        [cpu0, cpu1, cpu2]
-        ```
-        Note: The above will not match `cpu_other`.
+            >>> system.find('cpu[0-9]')
+            [cpu0, cpu1, cpu2]
 
-        :param: regex: The regular expression used to search. Can be a
-                precompiled regex or a string in regex format
+
+        .. note::
+
+            The above will not match ``cpu_other``.
+
+        :param regex: The regular expression used to search. Can be a
+                precompiled regex or a string in regex format.
         """
         if isinstance(regex, str):
             pattern = re.compile(regex)

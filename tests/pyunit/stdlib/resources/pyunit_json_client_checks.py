@@ -24,11 +24,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import unittest
-import tempfile
-import os
-from typing import Dict
 import json
+import os
+import tempfile
+import unittest
+from typing import Dict
 
 from gem5.resources.client_api.jsonclient import JSONClient
 

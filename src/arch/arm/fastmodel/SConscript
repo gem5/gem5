@@ -49,10 +49,8 @@ import os.path
 
 if env['CONF']['USE_ARM_FASTMODEL']:
     env.TagImplies('arm fastmodel', 'arm isa')
-
-
-systemc_home = Dir('#/src/systemc/ext/systemc_home')
-env['ENV']['SYSTEMC_HOME'] = systemc_home.abspath
+else:
+    Return()
 
 def extract_var(name):
     val = env['CONF'].get(name, None)
@@ -113,8 +111,6 @@ cpppaths = (
     pvlib_home.Dir('include/fmruntime'),
     pvlib_home.Dir('include/fmruntime/eslapi'),
     pvlib_home.Dir('Iris/include'),
-
-    systemc_home.Dir('include'),
 
     maxcore_home.Dir('AMBA-PV/include'),
 )

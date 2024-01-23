@@ -26,14 +26,14 @@
 
 """This is the gem5 artifact package"""
 
+from ._artifactdb import getDBConnection
 from .artifact import Artifact
 from .common_queries import (
     getByName,
     getDiskImages,
-    getLinuxBinaries,
     getgem5Binaries,
+    getLinuxBinaries,
 )
-from ._artifactdb import getDBConnection
 
 __all__ = [
     "Artifact",

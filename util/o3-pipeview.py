@@ -38,9 +38,9 @@
 # Pipeline activity viewer for the O3 CPU model.
 
 import argparse
+import copy
 import os
 import sys
-import copy
 
 # Temporary storage for instructions. The queue is filled in out-of-order
 # until it reaches 'max_threshold' number of instructions. It is then

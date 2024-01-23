@@ -24,11 +24,13 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import argparse
+import sys
+
+from caches import *
+
 import m5
 from m5.objects import *
-from caches import *
-import sys
-import argparse
 
 parser = argparse.ArgumentParser(description="m5threads atomic tester")
 parser.add_argument("--cpu-type", default="DerivO3CPU")

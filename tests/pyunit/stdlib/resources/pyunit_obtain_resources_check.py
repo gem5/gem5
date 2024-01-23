@@ -24,20 +24,21 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import unittest
-import os
-import io
 import contextlib
+import io
+import os
+import unittest
 from pathlib import Path
-
-from gem5.resources.resource import obtain_resource, BinaryResource
-
-from gem5.isas import ISA
+from unittest.mock import patch
 
 from _m5 import core
 
+from gem5.isas import ISA
 from gem5.resources.client_api.client_wrapper import ClientWrapper
-from unittest.mock import patch
+from gem5.resources.resource import (
+    BinaryResource,
+    obtain_resource,
+)
 
 mock_json_path = Path(__file__).parent / "refs/obtain-resource.json"
 

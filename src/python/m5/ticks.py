@@ -25,8 +25,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import decimal
-
 import sys
+
 from m5.util import warn
 
 
@@ -39,6 +39,7 @@ def fixGlobalFrequency():
 
 def setGlobalFrequency(ticksPerSecond):
     from m5.util import convert
+
     import _m5.core
 
     if isinstance(ticksPerSecond, int):

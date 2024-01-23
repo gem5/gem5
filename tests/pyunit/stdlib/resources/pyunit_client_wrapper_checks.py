@@ -24,19 +24,19 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import unittest
-from gem5.resources.client import get_resource_json_obj
-from gem5.resources.client_api.client_wrapper import ClientWrapper
-from unittest.mock import patch
-import json
-from urllib.error import HTTPError
-import io
 import contextlib
+import io
+import json
+import unittest
 from pathlib import Path
+from unittest.mock import patch
+from urllib.error import HTTPError
 
+from gem5.resources.client import get_resource_json_obj
 from gem5.resources.client_api.atlasclient import (
     AtlasClientHttpJsonRequestError,
 )
+from gem5.resources.client_api.client_wrapper import ClientWrapper
 
 mock_json_path = Path(__file__).parent / "refs/resources.json"
 mock_config_json = {

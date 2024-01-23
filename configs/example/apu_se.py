@@ -27,28 +27,32 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import argparse, os, re, getpass
-import math
+import argparse
+import getpass
 import glob
 import inspect
+import math
+import os
+import re
 
 import m5
 from m5.objects import *
 from m5.util import addToPath
+
 from gem5.isas import ISA
-from gem5.runtime import get_runtime_isa
+from gem5.runtime import get_supported_isas
 
 addToPath("../")
 
-from ruby import Ruby
-
-from common import Options
-from common import Simulation
-from common import GPUTLBOptions, GPUTLBConfig
-
 import hsaTopology
-from common import FileSystemConfig
-
+from common import (
+    FileSystemConfig,
+    GPUTLBConfig,
+    GPUTLBOptions,
+    Options,
+    Simulation,
+)
+from ruby import Ruby
 
 # Adding script options
 parser = argparse.ArgumentParser()
@@ -394,8 +398,8 @@ if buildEnv["PROTOCOL"] == "None":
     fatal("GPU model requires ruby")
 
 # Currently the gpu model requires only timing or detailed CPU
-if not (args.cpu_type == "TimingSimpleCPU" or args.cpu_type == "DerivO3CPU"):
-    fatal("GPU model requires TimingSimpleCPU or DerivO3CPU")
+if not (args.cpu_type == "X86TimingSimpleCPU" or args.cpu_type == "X86O3CPU"):
+    fatal("GPU model requires X86TimingSimpleCPU or X86O3CPU.")
 
 # This file can support multiple compute units
 assert args.num_compute_units >= 1
@@ -567,7 +571,7 @@ cp_list = []
 cpu_list = []
 
 CpuClass, mem_mode = Simulation.getCPUClass(args.cpu_type)
-if CpuClass == AtomicSimpleCPU:
+if CpuClass == X86AtomicSimpleCPU or CpuClass == AtomicSimpleCPU:
     fatal("AtomicSimpleCPU is not supported")
 if mem_mode != "timing":
     fatal("Only the timing memory mode is supported")
@@ -782,7 +786,7 @@ system.clk_domain = SrcClockDomain(
 
 if fast_forward:
     have_kvm_support = "BaseKvmCPU" in globals()
-    if have_kvm_support and get_runtime_isa() == ISA.X86:
+    if have_kvm_support and get_supported_isas().contains(ISA.X86):
         system.vm = KvmVM()
         system.m5ops_base = 0xFFFF0000
         for i in range(len(host_cpu.workload)):
@@ -821,18 +825,15 @@ for i in range(args.num_cpus):
     system.cpu[i].dcache_port = ruby_port.in_ports
 
     ruby_port.mem_request_port = system.piobus.cpu_side_ports
-    if get_runtime_isa() == ISA.X86:
-        system.cpu[i].interrupts[0].pio = system.piobus.mem_side_ports
-        system.cpu[i].interrupts[
-            0
-        ].int_requestor = system.piobus.cpu_side_ports
-        system.cpu[i].interrupts[
-            0
-        ].int_responder = system.piobus.mem_side_ports
-        if fast_forward:
-            system.cpu[i].mmu.connectWalkerPorts(
-                ruby_port.in_ports, ruby_port.in_ports
-            )
+
+    # X86 ISA is implied from cpu type check above
+    system.cpu[i].interrupts[0].pio = system.piobus.mem_side_ports
+    system.cpu[i].interrupts[0].int_requestor = system.piobus.cpu_side_ports
+    system.cpu[i].interrupts[0].int_responder = system.piobus.mem_side_ports
+    if fast_forward:
+        system.cpu[i].mmu.connectWalkerPorts(
+            ruby_port.in_ports, ruby_port.in_ports
+        )
 
 # attach CU ports to Ruby
 # Because of the peculiarities of the CP core, you may have 1 CPU but 2

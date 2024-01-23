@@ -33,14 +33,17 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from . import parse
-from . import colours
+import os
+import re
+from time import time as wall_time
+
+from . import (
+    blobs,
+    colours,
+    parse,
+)
 from .colours import unknownColour
 from .point import Point
-import re
-from . import blobs
-from time import time as wall_time
-import os
 
 id_parts = "TSPLFE"
 

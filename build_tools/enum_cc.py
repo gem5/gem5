@@ -42,7 +42,6 @@ import os.path
 import sys
 
 import importer
-
 from code_formatter import code_formatter
 
 parser = argparse.ArgumentParser()

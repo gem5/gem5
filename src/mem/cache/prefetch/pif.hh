@@ -182,7 +182,8 @@ class PIF : public Queued
         ~PIF() = default;
 
         void calculatePrefetch(const PrefetchInfo &pfi,
-                               std::vector<AddrPriority> &addresses);
+                               std::vector<AddrPriority> &addresses,
+                               const CacheAccessor &cache);
 
         /**
          * Add a SimObject and a probe name to monitor the retired instructions

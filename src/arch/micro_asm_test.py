@@ -24,7 +24,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from micro_asm import MicroAssembler, CombinationalMacroop, RomMacroop, Rom
+from micro_asm import (
+    CombinationalMacroop,
+    MicroAssembler,
+    Rom,
+    RomMacroop,
+)
 
 
 class Bah:

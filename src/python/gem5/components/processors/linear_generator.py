@@ -24,12 +24,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from ...utils.override import overrides
-from .linear_generator_core import LinearGeneratorCore
-from .abstract_generator import AbstractGenerator
-from .abstract_generator import partition_range
-
 from typing import List
+
+from ...utils.override import overrides
+from .abstract_generator import (
+    AbstractGenerator,
+    partition_range,
+)
+from .linear_generator_core import LinearGeneratorCore
 
 
 class LinearGenerator(AbstractGenerator):
@@ -63,18 +65,19 @@ class LinearGenerator(AbstractGenerator):
 
         :param num_cores: The number of linear generator cores to create.
         :param duration: The number of ticks for the generator to generate
-        traffic.
+                         traffic.
         :param rate: The rate at which the synthetic data is read/written.
         :param block_size: The number of bytes to be read/written with each
-        request.
+                           request.
         :param min_addr: The lower bound of the address range the generator
-        will read/write from/to.
+                         will read/write from/to.
         :param max_addr: The upper bound of the address range the generator
-        will read/write from/to.
+                         will read/write from/to.
         :param rd_perc: The percentage of read requests among all the generated
-        requests. The write percentage would be equal to 100 - rd_perc.
+                        requests. The write percentage would be equal to
+                        ``100 - rd_perc``.
         :param data_limit: The amount of data in bytes to read/write by the
-        generator before stopping generation.
+                           generator before stopping generation.
         """
 
     def _create_cores(

@@ -35,15 +35,17 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.params import *
-from m5.util.fdthelper import *
-from m5.SimObject import SimObject
-
-from m5.objects.FastModel import AmbaInitiatorSocket, AmbaTargetSocket
+from m5.objects.FastModel import (
+    AmbaInitiatorSocket,
+    AmbaTargetSocket,
+)
 from m5.objects.Gic import BaseGic
 from m5.objects.IntPin import VectorIntSourcePin
 from m5.objects.ResetPort import ResetResponsePort
 from m5.objects.SystemC import SystemC_ScModule
+from m5.params import *
+from m5.SimObject import SimObject
+from m5.util.fdthelper import *
 
 GICV3_COMMS_TARGET_ROLE = "GICV3 COMMS TARGET"
 GICV3_COMMS_INITIATOR_ROLE = "GICV3 COMMS INITIATOR"

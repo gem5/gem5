@@ -36,8 +36,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-import subprocess
 import re
+import subprocess
 from functools import wraps
 
 

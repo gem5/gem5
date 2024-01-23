@@ -24,15 +24,20 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from typing import Tuple, Sequence, List, Optional
 from pathlib import Path
+from typing import (
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+)
 
 from m5.objects import (
-    DRAMSys,
     AddrRange,
-    Port,
-    MemCtrl,
+    DRAMSys,
     Gem5ToTlmBridge32,
+    MemCtrl,
+    Port,
     SystemC_Kernel,
 )
 from m5.util.convert import toMemorySize
@@ -40,7 +45,6 @@ from m5.util.convert import toMemorySize
 from ...utils.override import overrides
 from ..boards.abstract_board import AbstractBoard
 from .abstract_memory_system import AbstractMemorySystem
-
 
 DEFAULT_DRAMSYS_DIRECTORY = Path("ext/dramsys/DRAMSys")
 

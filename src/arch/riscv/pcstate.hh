@@ -44,6 +44,7 @@
 
 #include "arch/generic/pcstate.hh"
 #include "arch/riscv/regs/vector.hh"
+#include "enums/PrivilegeModeSet.hh"
 #include "enums/RiscvType.hh"
 
 namespace gem5
@@ -54,6 +55,8 @@ namespace RiscvISA
 using RiscvType = enums::RiscvType;
 constexpr enums::RiscvType RV32 = enums::RV32;
 constexpr enums::RiscvType RV64 = enums::RV64;
+
+using PrivilegeModeSet = enums::PrivilegeModeSet;
 
 class PCState : public GenericISA::UPCState<4>
 {

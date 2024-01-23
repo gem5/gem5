@@ -35,12 +35,16 @@
 #
 
 import inspect
+
+from common.ObjectList import ObjectList
+from common.SysPaths import (
+    binary,
+    disk,
+)
+
 import m5
 from m5.objects import *
 from m5.options import *
-
-from common.ObjectList import ObjectList
-from common.SysPaths import binary, disk
 
 
 class ArmBaremetal(ArmFsWorkload):

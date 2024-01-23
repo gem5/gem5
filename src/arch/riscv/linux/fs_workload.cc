@@ -32,7 +32,10 @@
 #include "base/loader/dtb_file.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
+#include "cpu/pc_event.hh"
+#include "kern/linux/events.hh"
 #include "sim/kernel_workload.hh"
+#include "sim/sim_exit.hh"
 #include "sim/system.hh"
 
 namespace gem5
@@ -76,6 +79,42 @@ FsLinux::initState()
 }
 
 void
+FsLinux::startup()
+{
+    KernelWorkload::startup();
+
+    addExitOnKernelPanicEvent();
+    addExitOnKernelOopsEvent();
+}
+
+void
+FsLinux::addExitOnKernelPanicEvent()
+{
+    const std::string dmesg_output = name() + ".dmesg";
+    if (params().exit_on_kernel_panic) {
+        kernelPanicPcEvent = addKernelFuncEvent<linux::PanicOrOopsEvent>(
+            "panic", "Kernel panic in simulated system.",
+            dmesg_output, params().on_panic
+        );
+        warn_if(!kernelPanicPcEvent, "Failed to find kernel symbol 'panic'");
+    }
+}
+
+void
+FsLinux::addExitOnKernelOopsEvent()
+{
+    const std::string dmesg_output = name() + ".dmesg";
+    if (params().exit_on_kernel_oops) {
+        kernelOopsPcEvent = addKernelFuncEvent<linux::PanicOrOopsEvent>(
+            "oops_exit", "Kernel oops in simulated system.",
+            dmesg_output, params().on_oops
+        );
+        warn_if(!kernelOopsPcEvent,
+                "Failed to find kernel symbol 'oops_exit'");
+    }
+}
+
+void
 BootloaderKernelWorkload::loadBootloaderSymbolTable()
 {
     if (params().bootloader_filename != "") {
@@ -86,8 +125,8 @@ BootloaderKernelWorkload::loadBootloaderSymbolTable()
             bootloaderSymbolTable.offset(
                 bootloader_paddr_offset
             )->functionSymbols()->rename(
-                [](std::string &name) {
-                    name = "bootloader." + name;
+                [](const std::string &name) {
+                    return "bootloader." + name;
                 }
             );
         loader::debugSymbolTable.insert(*renamedBootloaderSymbolTable);
@@ -97,13 +136,13 @@ BootloaderKernelWorkload::loadBootloaderSymbolTable()
 void
 BootloaderKernelWorkload::loadKernelSymbolTable()
 {
-    if (params().kernel_filename != "") {
-        kernel = loader::createObjectFile(params().kernel_filename);
+    if (params().object_file != "") {
+        kernel = loader::createObjectFile(params().object_file);
         kernelSymbolTable = kernel->symtab();
         auto renamedKernelSymbolTable = \
             kernelSymbolTable.functionSymbols()->rename(
-                [](std::string &name) {
-                    name = "kernel." + name;
+                [](const std::string &name) {
+                    return "kernel." + name;
                 }
             );
         loader::debugSymbolTable.insert(*renamedKernelSymbolTable);
@@ -131,7 +170,7 @@ BootloaderKernelWorkload::loadBootloader()
 void
 BootloaderKernelWorkload::loadKernel()
 {
-    if (params().kernel_filename != "") {
+    if (params().object_file != "") {
         Addr kernel_paddr_offset = params().kernel_addr;
         kernel->buildImage().offset(kernel_paddr_offset).write(
             system->physProxy
@@ -139,7 +178,7 @@ BootloaderKernelWorkload::loadKernel()
         delete kernel;
 
         inform("Loaded kernel \'%s\' at 0x%llx\n",
-                params().kernel_filename,
+                params().object_file,
                 kernel_paddr_offset);
     } else {
         inform("Kernel is not specified.\n");
@@ -170,6 +209,30 @@ BootloaderKernelWorkload::loadDtb()
 }
 
 void
+BootloaderKernelWorkload::addExitOnKernelPanicEvent()
+{
+    const std::string dmesg_output = name() + ".dmesg";
+    if (params().exit_on_kernel_panic) {
+        kernelPanicPcEvent = addFuncEvent<linux::PanicOrOopsEvent>(
+            kernelSymbolTable, "panic", "Kernel panic in simulated system.",
+            dmesg_output, params().on_panic
+        );
+    }
+}
+
+void
+BootloaderKernelWorkload::addExitOnKernelOopsEvent()
+{
+    const std::string dmesg_output = name() + ".dmesg";
+    if (params().exit_on_kernel_oops) {
+        kernelOopsPcEvent = addFuncEvent<linux::PanicOrOopsEvent>(
+            kernelSymbolTable, "oops_exit", "Kernel oops in simulated system.",
+            dmesg_output, params().on_oops
+        );
+    }
+}
+
+void
 BootloaderKernelWorkload::initState()
 {
     loadBootloader();
@@ -180,6 +243,15 @@ BootloaderKernelWorkload::initState()
         RiscvISA::Reset().invoke(tc);
         tc->activate();
     }
+}
+
+void
+BootloaderKernelWorkload::startup()
+{
+    Workload::startup();
+
+    addExitOnKernelPanicEvent();
+    addExitOnKernelOopsEvent();
 }
 
 void

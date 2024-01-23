@@ -24,14 +24,14 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.objects.BaseAtomicSimpleCPU import BaseAtomicSimpleCPU
-from m5.objects.BaseNonCachingSimpleCPU import BaseNonCachingSimpleCPU
-from m5.objects.BaseTimingSimpleCPU import BaseTimingSimpleCPU
-from m5.objects.BaseO3CPU import BaseO3CPU
 from m5.objects.BaseMinorCPU import BaseMinorCPU
+from m5.objects.BaseNonCachingSimpleCPU import BaseNonCachingSimpleCPU
+from m5.objects.BaseO3CPU import BaseO3CPU
+from m5.objects.BaseTimingSimpleCPU import BaseTimingSimpleCPU
 from m5.objects.PowerDecoder import PowerDecoder
-from m5.objects.PowerMMU import PowerMMU
 from m5.objects.PowerInterrupts import PowerInterrupts
 from m5.objects.PowerISA import PowerISA
+from m5.objects.PowerMMU import PowerMMU
 
 
 class PowerCPU:

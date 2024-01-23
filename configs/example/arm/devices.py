@@ -39,8 +39,8 @@ import m5
 from m5.objects import *
 
 m5.util.addToPath("../../")
-from common.Caches import *
 from common import ObjectList
+from common.Caches import *
 
 have_kvm = "ArmV8KvmCPU" in ObjectList.cpu_list.get_names()
 have_fastmodel = "FastModelCortexA76" in ObjectList.cpu_list.get_names()

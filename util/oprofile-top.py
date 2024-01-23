@@ -28,9 +28,10 @@
 
 # Parse sampled function profile output (quick hack).
 
-import sys
-import re
 import getopt
+import re
+import sys
+
 from categories import *
 
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014 ARM Limited
+ * Copyright (c) 2013-2014, 2023 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -52,7 +52,7 @@
 #include "base/compiler.hh"
 #include "base/statistics.hh"
 #include "base/types.hh"
-#include "mem/cache/cache_blk.hh"
+#include "mem/cache/cache_probe_arg.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
 #include "sim/byteswap.hh"
@@ -62,15 +62,16 @@
 namespace gem5
 {
 
-class BaseCache;
 struct BasePrefetcherParams;
+class ProbeManager;
+class System;
 
 namespace prefetch
 {
 
 class Base : public ClockedObject
 {
-    class PrefetchListener : public ProbeListenerArgBase<PacketPtr>
+    class PrefetchListener : public ProbeListenerArgBase<CacheAccessProbeArg>
     {
       public:
         PrefetchListener(Base &_parent, ProbeManager *pm,
@@ -78,14 +79,27 @@ class Base : public ClockedObject
                          bool _miss = false)
             : ProbeListenerArgBase(pm, name),
               parent(_parent), isFill(_isFill), miss(_miss) {}
-        void notify(const PacketPtr &pkt) override;
+        void notify(const CacheAccessProbeArg &arg) override;
       protected:
         Base &parent;
         const bool isFill;
         const bool miss;
     };
 
-    std::vector<PrefetchListener *> listeners;
+    using EvictionInfo = CacheDataUpdateProbeArg;
+
+    class PrefetchEvictListener : public ProbeListenerArgBase<EvictionInfo>
+    {
+      public:
+        PrefetchEvictListener(Base &_parent, ProbeManager *pm,
+                              const std::string &name)
+            : ProbeListenerArgBase(pm, name), parent(_parent) {}
+        void notify(const EvictionInfo &info) override;
+      protected:
+        Base &parent;
+    };
+
+    std::vector<ProbeListener *> listeners;
 
   public:
 
@@ -262,8 +276,11 @@ class Base : public ClockedObject
 
     // PARAMETERS
 
-    /** Pointr to the parent cache. */
-    BaseCache* cache;
+    /** Pointer to the parent system. */
+    System* system;
+
+    /** Pointer to the parent cache's probe manager. */
+    ProbeManager *probeManager;
 
     /** The block size of the parent cache. */
     unsigned blkSize;
@@ -304,16 +321,9 @@ class Base : public ClockedObject
      * Determine if this access should be observed
      * @param pkt The memory request causing the event
      * @param miss whether this event comes from a cache miss
+     * @param prefetched on a hit, this indicates the block was prefetched
      */
-    bool observeAccess(const PacketPtr &pkt, bool miss) const;
-
-    /** Determine if address is in cache */
-    bool inCache(Addr addr, bool is_secure) const;
-
-    /** Determine if address is in cache miss queue */
-    bool inMissQueue(Addr addr, bool is_secure) const;
-
-    bool hasBeenPrefetched(Addr addr, bool is_secure) const;
+    bool observeAccess(const PacketPtr &pkt, bool miss, bool prefetched) const;
 
     /** Determine if addresses are on the same page */
     bool samePage(Addr a, Addr b) const;
@@ -370,16 +380,22 @@ class Base : public ClockedObject
     Base(const BasePrefetcherParams &p);
     virtual ~Base() = default;
 
-    virtual void setCache(BaseCache *_cache);
+    virtual void
+    setParentInfo(System *sys, ProbeManager *pm, unsigned blk_size);
 
     /**
      * Notify prefetcher of cache access (may be any access or just
      * misses, depending on cache parameters.)
      */
-    virtual void notify(const PacketPtr &pkt, const PrefetchInfo &pfi) = 0;
+    virtual void
+    notify(const CacheAccessProbeArg &acc, const PrefetchInfo &pfi) = 0;
 
     /** Notify prefetcher of cache fill */
-    virtual void notifyFill(const PacketPtr &pkt)
+    virtual void notifyFill(const CacheAccessProbeArg &acc)
+    {}
+
+    /** Notify prefetcher of cache eviction */
+    virtual void notifyEvict(const EvictionInfo &info)
     {}
 
     virtual PacketPtr getPacket() = 0;
@@ -423,10 +439,10 @@ class Base : public ClockedObject
 
     /**
      * Process a notification event from the ProbeListener.
-     * @param pkt The memory request causing the event
+     * @param acc probe arg encapsulating the memory request causing the event
      * @param miss whether this event comes from a cache miss
      */
-    void probeNotify(const PacketPtr &pkt, bool miss);
+    void probeNotify(const CacheAccessProbeArg &acc, bool miss);
 
     /**
      * Add a SimObject and a probe name to listen events from

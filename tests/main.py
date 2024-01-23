@@ -6,8 +6,8 @@ loaders.
 Discovers and runs all tests from a given root directory.
 """
 
-import sys
 import os
+import sys
 
 os.environ["PYTHONUNBUFFERED"] = "1"
 
@@ -17,9 +17,9 @@ ext_path = os.path.join(base_dir, os.pardir, "ext")
 sys.path.insert(0, base_dir)
 sys.path.insert(0, ext_path)
 
-import testlib.main as testlib
 import testlib.configuration as config
 import testlib.helper as helper
+import testlib.main as testlib
 
 config.basedir = helper.absdirpath(__file__)
 sys.exit(testlib())

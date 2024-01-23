@@ -30,9 +30,9 @@ from importlib.machinery import SourceFileLoader
 from cache_hierarchies import ModMIExampleCacheHierarchy
 
 import m5
-
 from m5.debug import flags
 from m5.objects import Root
+
 from gem5.components.boards.test_board import TestBoard
 from gem5.components.memory.simple import SingleChannelSimpleMemory
 from gem5.components.processors.complex_generator import ComplexGenerator

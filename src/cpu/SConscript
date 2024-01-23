@@ -115,9 +115,11 @@ Source('simple_thread.cc')
 Source('thread_context.cc')
 Source('thread_state.cc')
 Source('timing_expr.cc')
-SourceLib('capstone', tags='capstone')
-Source('capstone.cc', tags='capstone')
-SimObject('Capstone.py', sim_objects=['CapstoneDisassembler'], tags='capstone')
+
+if env['CONF']['USE_CAPSTONE']:
+    SourceLib('capstone')
+    Source('capstone.cc')
+    SimObject('Capstone.py', sim_objects=['CapstoneDisassembler'])
 
 SimObject('DummyChecker.py', sim_objects=['DummyChecker'])
 Source('checker/cpu.cc')

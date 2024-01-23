@@ -39,9 +39,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.params import Enum, UInt32
-from m5.params import Param
 from m5.objects.BaseISA import BaseISA
+from m5.params import (
+    Enum,
+    Param,
+    UInt32,
+)
 
 
 class RiscvVectorLength(UInt32):
@@ -74,6 +77,16 @@ class RiscvType(Enum):
     vals = ["RV32", "RV64"]
 
 
+class PrivilegeModeSet(Enum):
+    vals = [
+        "M",  # Machine privilege mode only
+        "MU",  # Machine and user privlege modes implemented
+        "MNU",  # MU privilege modes with user-mode trap
+        "MSU",  # Machine, supervisor and user modes implemented
+        "MNSU",  # MSU privilege modes with user-mode trap
+    ]
+
+
 class RiscvISA(BaseISA):
     type = "RiscvISA"
     cxx_class = "gem5::RiscvISA::ISA"
@@ -94,6 +107,11 @@ class RiscvISA(BaseISA):
         64,
         "Length of each vector element in bits. \
         ELEN in Ch. 2 of RISC-V vector spec",
+    )
+    privilege_mode_set = Param.PrivilegeModeSet(
+        "MSU",
+        "The combination of privilege modes \
+        in Privilege Levels section of RISC-V privileged spec",
     )
 
     enable_Zicbom_fs = Param.Bool(True, "Enable Zicbom extension in FS mode")

@@ -24,14 +24,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from gem5.utils.override import overrides
-from gem5.components.boards.mem_mode import MemMode
-
 from m5.util import warn
 
+from gem5.components.boards.abstract_board import AbstractBoard
+from gem5.components.boards.mem_mode import MemMode
 from gem5.components.processors.base_cpu_processor import BaseCPUProcessor
 from gem5.components.processors.cpu_types import CPUTypes
-from gem5.components.boards.abstract_board import AbstractBoard
+from gem5.utils.override import overrides
+
 from .riscvmatched_core import U74Core
 
 

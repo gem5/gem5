@@ -39,10 +39,13 @@
 import argparse
 import os
 
-import m5
-from m5.objects import MathExprPowerModel, PowerModel
-
 import fs_bigLITTLE as bL
+
+import m5
+from m5.objects import (
+    MathExprPowerModel,
+    PowerModel,
+)
 
 
 class CpuPowerOn(MathExprPowerModel):

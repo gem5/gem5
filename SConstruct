@@ -131,6 +131,8 @@ AddOption('--with-systemc-tests', action='store_true',
           help='Build systemc tests')
 AddOption('--install-hooks', action='store_true',
           help='Install revision control hooks non-interactively')
+AddOption('--limit-ld-memory-usage', action='store_true',
+          help='Tell ld, the linker, to reduce memory usage.')
 AddOption('--gprof', action='store_true',
           help='Enable support for the gprof profiler')
 AddOption('--pprof', action='store_true',
@@ -588,13 +590,13 @@ for variant_path in variant_paths:
                     conf.CheckLinkFlag(
                             '-Wl,--thread-count=%d' % GetOption('num_jobs'))
 
-        # Treat warnings as errors but white list some warnings that we
-        # want to allow (e.g., deprecation warnings).
-        env.Append(CCFLAGS=['-Werror',
-                             '-Wno-error=deprecated-declarations',
-                             '-Wno-error=deprecated',
-                            ])
-
+        with gem5_scons.Configure(env) as conf:
+            ld_optimize_memory_usage = GetOption('limit_ld_memory_usage')
+            if ld_optimize_memory_usage:
+                if conf.CheckLinkFlag('-Wl,--no-keep-memory'):
+                    env.Append(LINKFLAGS=['-Wl,--no-keep-memory'])
+                else:
+                    error("Unable to use --no-keep-memory with the linker")
     else:
         error('\n'.join((
               "Don't know what compiler options to use for your compiler.",

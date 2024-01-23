@@ -28,11 +28,10 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 from m5.defines import buildEnv
+from m5.objects.AMDGPU import AMDGPUDevice
+from m5.objects.ClockedObject import ClockedObject
 from m5.params import *
 from m5.proxy import *
-
-from m5.objects.ClockedObject import ClockedObject
-from m5.objects.AMDGPU import AMDGPUDevice
 from m5.SimObject import SimObject
 
 

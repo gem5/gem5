@@ -27,10 +27,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.params import *
-
 from m5.objects.System import System
-from m5.objects.Workload import Workload, KernelWorkload
+from m5.objects.Workload import (
+    KernelWorkload,
+    Workload,
+)
+from m5.params import *
 
 
 class RiscvBareMetal(Workload):
@@ -53,6 +55,16 @@ class RiscvLinux(KernelWorkload):
     )
     dtb_addr = Param.Addr(0x87E00000, "DTB address")
 
+    # gem5 event upon guest's kernel panic
+    # Default to false because when the kernel is compiled into the bootloader
+    # it will not have symbols
+    exit_on_kernel_panic = Param.Bool(
+        False, "Generate gem5 panic upon the guest's kernel panic."
+    )
+    exit_on_kernel_oops = Param.Bool(
+        False, "Generate gem5 panic upon the guest's kernel oops."
+    )
+
 
 class RiscvBootloaderKernelWorkload(Workload):
     type = "RiscvBootloaderKernelWorkload"
@@ -65,9 +77,7 @@ class RiscvBootloaderKernelWorkload(Workload):
     bootloader_addr = Param.Addr(
         0x0, "Where to place the bootloader in memory."
     )
-    kernel_filename = Param.String(
-        "", "vmlinux file. Don't use kernel if empty."
-    )
+    object_file = Param.String("", "vmlinux file. Don't use kernel if empty.")
     kernel_addr = Param.Addr(
         0x80200000,
         "Where to place the kernel in memory. Typically, after the first "
@@ -83,6 +93,29 @@ class RiscvBootloaderKernelWorkload(Workload):
     dtb_addr = Param.Addr(0x87E00000, "Where to place the DTB in memory.")
 
     # booting parameters
-    boot_args = Param.String(
-        "", "Booting arguments, to be passed to the kernel"
+    command_line = Param.String(
+        "", "Booting arguments, to be passed to the kernel."
+    )
+
+    # gem5 event upon guest's kernel panic
+    # Note that if the kernel doesn't have symbols there will be a warning and
+    # gem5 will not exit
+    exit_on_kernel_panic = Param.Bool(
+        True, "Generate gem5 exit upon the guest's kernel panic."
+    )
+    exit_on_kernel_oops = Param.Bool(
+        False, "Generate gem5 exit upon the guest's kernel oops."
+    )
+
+    # Note: Duplicated from KernelWorkload for now
+    on_panic = Param.KernelPanicOopsBehaviour(
+        "DumpDmesgAndExit",
+        "Define how gem5 should behave after a Linux Kernel Panic. "
+        "Handler might not be implemented for all architectures.",
+    )
+
+    on_oops = Param.KernelPanicOopsBehaviour(
+        "DumpDmesgAndExit",
+        "Define how gem5 should behave after a Linux Kernel Oops. "
+        "Handler might not be implemented for all architectures.",
     )

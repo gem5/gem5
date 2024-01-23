@@ -33,15 +33,22 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from abc import ABCMeta, abstractmethod
 import argparse
+from abc import (
+    ABCMeta,
+    abstractmethod,
+)
+
+from base_caches import *
+from common import (
+    FSConfig,
+    Options,
+)
+from ruby import Ruby
+
 import m5
 from m5.objects import *
 from m5.proxy import *
-from common import FSConfig
-from common import Options
-from base_caches import *
-from ruby import Ruby
 
 _have_kvm_support = "BaseKvmCPU" in globals()
 

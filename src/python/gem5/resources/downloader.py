@@ -24,29 +24,36 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import urllib.request
-import urllib.parse
-import os
-import shutil
 import gzip
-import time
+import os
 import random
-from pathlib import Path
+import shutil
 import tarfile
+import time
+import urllib.parse
+import urllib.request
+from pathlib import Path
+from typing import (
+    Dict,
+    List,
+    Optional,
+)
 from urllib.error import HTTPError
 from urllib.parse import urlparse
-from typing import List, Optional, Dict
 
 from _m5 import core
 
-from .client import (
-    get_resource_json_obj,
-    list_resources as client_list_resources,
-)
-from .md5_utils import md5_file, md5_dir
-from ..utils.progress_bar import tqdm, progress_hook
-
 from ..utils.filelock import FileLock
+from ..utils.progress_bar import (
+    progress_hook,
+    tqdm,
+)
+from .client import get_resource_json_obj
+from .client import list_resources as client_list_resources
+from .md5_utils import (
+    md5_dir,
+    md5_file,
+)
 
 """
 This Python module contains functions used to download, list, and obtain
@@ -66,8 +73,8 @@ def _download(url: str, download_to: str, max_attempts: int = 6) -> None:
     :param download_to: The location the downloaded file is to be stored.
 
     :param max_attempts: The max number of download attempts before stopping.
-    The default is 6. This translates to roughly 1 minute of retrying before
-    stopping.
+                         The default is 6. This translates to roughly 1 minute
+                         of retrying before stopping.
     """
 
     # TODO: This whole setup will only work for single files we can get via
@@ -86,9 +93,10 @@ def _download(url: str, download_to: str, max_attempts: int = 6) -> None:
                 # If the "use_proxy" variable is specified we setup a socks5
                 # connection.
 
-                import socks
                 import socket
                 import ssl
+
+                import socks
 
                 IP_ADDR, host_port = use_proxy.split(":")
                 PORT = int(host_port)
@@ -180,16 +188,18 @@ def list_resources(
     Lists all available resources. Returns a dictionary where the key is the
     id of the resources and the value is a list of that resource's versions.
 
-    :param clients: A list of clients to use when listing resources. If None,
-    all clients will be used. None by default.
+    :param clients: A list of clients to use when listing resources. If ``None``,
+                    all clients will be used. ``None`` by default.
 
     :param gem5_version: The gem5 version to which all resources should be
-    compatible with. If None, compatibility of resources is not considered and
-    all resources will be returned.
+                         compatible with. If ``None``, compatibility of resources
+                         is not considered and all resources will be returned.
 
-    **Note**: This function is here for legacy reasons. The `list_resources`
-    function was originally stored here. In order to remain backwards
-    compatible, this function will call the `client_list_resources` function
+    .. note::
+
+        This function is here for legacy reasons. The ``list_resources``
+        function was originally stored here. In order to remain backwards
+        compatible, this function will call the ``client_list_resources`` function.
 
     """
     return client_list_resources(clients=clients, gem5_version=gem5_version)
@@ -213,36 +223,39 @@ def get_resource(
     :param resource_name: The resource to be obtained.
 
     :param to_path: The location in the file system the resource is to be
-    stored. The filename should be included.
+                    stored. The filename should be included.
 
-    :param unzip: If true, gzipped resources will be unzipped prior to saving
-    to `to_path`. True by default.
+    :param unzip: If ``True``, gzipped resources will be unzipped prior to saving
+                  to ``to_path``. ``True`` by default.
 
-    :param untar: If true, tar achieve resource will be unpacked prior to
-    saving to `to_path`. True by default.
+    :param untar: If ``True``, tar achieve resource will be unpacked prior to
+                  saving to ``to_path``. ``True`` by default.
 
     :param download_md5_mismatch: If a resource is present with an incorrect
-    hash (e.g., an outdated version of the resource is present), `get_resource`
-    will delete this local resource and re-download it if this parameter is
-    True. True by default.
+                                  hash (e.g., an outdated version of the resource
+                                  is present), ``get_resource`` will delete this
+                                  local resource and re-download it if this parameter
+                                  is ``True``. ``True`` by default.
 
     :param resource_version: The version of the resource to be obtained. If
-    None, the latest version of the resource compatible with the working
-    directory's gem5 version will be obtained. None by default.
+                             ``None``, the latest version of the resource compatible
+                             with the working directory's gem5 version will be obtained.
+                             ``None`` by default.
 
     :param clients: A list of clients to use when obtaining the resource. If
-    None, all clients will be used. None by default.
+                    ``None``, all clients will be used. ``None`` by default.
 
     :param gem5_version: The gem5 version to use when obtaining the resource.
-    By default, the version of gem5 being used is used. This is used primarily
-    for testing purposes.
+                         By default, the version of gem5 being used is used. This
+                         is used primarily for testing purposes.
 
-    :param quiet: If true, no output will be printed to the console (baring
-    exceptions). False by default.
+    :param quiet: If ``True``, no output will be printed to the console (baring
+                  exceptions). ``False`` by default.
 
     :raises Exception: An exception is thrown if a file is already present at
-    `to_path` but it does not have the correct md5 sum. An exception will also
-    be thrown is a directory is present at `to_path`
+                       ``to_path`` but it does not have the correct md5 sum. An
+                       exception will also be thrown is a directory is present
+                       at ``to_path``.
     """
 
     # We apply a lock for a specific resource. This is to avoid circumstances
@@ -394,11 +407,12 @@ def get_resource(
 
 def _file_uri_to_path(uri: str) -> Optional[Path]:
     """
-    If the URI uses the File scheme (e.g, `file://host/path`) then
-    a Path object for the local path is returned, otherwise None.
+    If the URI uses the File scheme (e.g, ``file://host/path``) then
+    a Path object for the local path is returned, otherwise ``None``.
 
-    **Note:** Only files from localhost are permitted. An exception
-    is thrown otherwise.
+    .. note::
+
+        Only files from localhost are permitted. An exception is thrown otherwise.
 
     :param uri: The file URI to convert.
 

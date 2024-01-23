@@ -42,10 +42,11 @@ class ISA(Enum):
 
     E.g., to check if the X86 ISA is compiled:
 
-    ```
-    if buildEnv[f"USE_{ISA.X86.value}_ISA"]:
+    .. code-block::
+
+            if buildEnv[f"USE_{ISA.X86.value}_ISA"]:
         ...
-    ```
+
     """
 
     X86 = "x86"
@@ -70,7 +71,7 @@ def get_isa_from_str(input: str) -> ISA:
     the enum's value. E.g., "x86" will return ISA.X86. Throws an exception if
     the input string is invalid.
 
-    `get_isas_str_set()` can be used to determine the valid strings.
+    ``get_isas_str_set()`` can be used to determine the valid strings.
 
     This is for parsing text inputs that specify ISA targets.
 

@@ -26,9 +26,10 @@
 
 import copy
 import json
-import requests
 from types import SimpleNamespace
 from urllib.parse import urljoin
+
+import requests
 
 
 class GerritResponseParser:

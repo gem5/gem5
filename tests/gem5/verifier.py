@@ -40,13 +40,16 @@
 """
 Built in test cases that verify particular details about a gem5 run.
 """
-import re
-import os
 import json
+import os
+import re
 
 from testlib import test_util
 from testlib.configuration import constants
-from testlib.helper import joinpath, diff_out_file
+from testlib.helper import (
+    diff_out_file,
+    joinpath,
+)
 
 
 class Verifier:

@@ -41,8 +41,10 @@ import sys
 from os import getcwd
 from os.path import join as joinpath
 
-from common import CpuConfig
-from common import ObjectList
+from common import (
+    CpuConfig,
+    ObjectList,
+)
 
 import m5
 from m5.defines import buildEnv
@@ -79,7 +81,10 @@ def setCPUClass(options):
             TmpClass, test_mem_mode = getCPUClass(options.restore_with_cpu)
     elif options.fast_forward:
         CPUClass = TmpClass
-        TmpClass = AtomicSimpleCPU
+        CPUISA = ObjectList.cpu_list.get_isa(options.cpu_type)
+        TmpClass = getCPUClass(
+            CpuConfig.isa_string_map[CPUISA] + "AtomicSimpleCPU"
+        )
         test_mem_mode = "atomic"
 
     # Ruby only supports atomic accesses in noncaching mode
@@ -128,9 +133,12 @@ def findCptDir(options, cptdir, testsys):
     the appropriate directory.
     """
 
-    from os.path import isdir, exists
-    from os import listdir
     import re
+    from os import listdir
+    from os.path import (
+        exists,
+        isdir,
+    )
 
     if not isdir(cptdir):
         fatal("checkpoint dir %s does not exist!", cptdir)

@@ -40,18 +40,19 @@ except ImportError:
     in_gem5 = False
 
 if in_gem5:
-    from . import SimObject
-    from . import core
-    from . import defines
-    from . import objects
-    from . import params
-    from . import stats
+    from . import (
+        SimObject,
+        core,
+        defines,
+        objects,
+        params,
+        stats,
+    )
 
     if defines.buildEnv["USE_SYSTEMC"]:
         from . import systemc
         from . import tlm
     from . import util
-
     from .event import *
     from .main import main
     from .simulate import *

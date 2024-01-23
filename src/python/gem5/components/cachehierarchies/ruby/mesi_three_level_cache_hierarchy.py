@@ -25,23 +25,27 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from .abstract_ruby_cache_hierarchy import AbstractRubyCacheHierarchy
+from m5.objects import (
+    DMASequencer,
+    RubyPortProxy,
+    RubySequencer,
+    RubySystem,
+)
+
+from ....coherence_protocol import CoherenceProtocol
+from ....isas import ISA
+from ....utils.requires import requires
+from ...boards.abstract_board import AbstractBoard
 from ..abstract_three_level_cache_hierarchy import (
     AbstractThreeLevelCacheHierarchy,
 )
-from ....coherence_protocol import CoherenceProtocol
-from ....isas import ISA
-from ...boards.abstract_board import AbstractBoard
-from ....utils.requires import requires
-
-from .topologies.simple_pt2pt import SimplePt2Pt
+from .abstract_ruby_cache_hierarchy import AbstractRubyCacheHierarchy
+from .caches.mesi_three_level.directory import Directory
+from .caches.mesi_three_level.dma_controller import DMAController
 from .caches.mesi_three_level.l1_cache import L1Cache
 from .caches.mesi_three_level.l2_cache import L2Cache
 from .caches.mesi_three_level.l3_cache import L3Cache
-from .caches.mesi_three_level.directory import Directory
-from .caches.mesi_three_level.dma_controller import DMAController
-
-from m5.objects import RubySystem, RubySequencer, DMASequencer, RubyPortProxy
+from .topologies.simple_pt2pt import SimplePt2Pt
 
 
 class MESIThreeLevelCacheHierarchy(

@@ -8,4 +8,4 @@ include "GPU_VIPER-msg.sm";
 include "GPU_VIPER-TCP.sm";
 include "GPU_VIPER-SQC.sm";
 include "GPU_VIPER-TCC.sm";
-include "MOESI_AMD_Base-L3cache.sm";
+include "MOESI_AMD_Base-L3cache.sm"; // unused in GPU_VIPER; see git blame for discussion

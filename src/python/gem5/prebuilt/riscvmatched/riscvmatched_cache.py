@@ -24,25 +24,33 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from typing import Type
+
+from m5.objects import (
+    BadAddr,
+    BaseXBar,
+    Cache,
+    L2XBar,
+    Port,
+    SystemXBar,
+)
+
+from gem5.components.boards.abstract_board import AbstractBoard
 from gem5.components.cachehierarchies.abstract_cache_hierarchy import (
     AbstractCacheHierarchy,
 )
-from gem5.components.cachehierarchies.classic.abstract_classic_cache_hierarchy import (
-    AbstractClassicCacheHierarchy,
-)
 from gem5.components.cachehierarchies.abstract_two_level_cache_hierarchy import (
     AbstractTwoLevelCacheHierarchy,
+)
+from gem5.components.cachehierarchies.classic.abstract_classic_cache_hierarchy import (
+    AbstractClassicCacheHierarchy,
 )
 from gem5.components.cachehierarchies.classic.caches.l1dcache import L1DCache
 from gem5.components.cachehierarchies.classic.caches.l1icache import L1ICache
 from gem5.components.cachehierarchies.classic.caches.l2cache import L2Cache
 from gem5.components.cachehierarchies.classic.caches.mmu_cache import MMUCache
-from gem5.components.boards.abstract_board import AbstractBoard
 from gem5.isas import ISA
-from m5.objects import Cache, L2XBar, BaseXBar, SystemXBar, BadAddr, Port
-
 from gem5.utils.override import *
-from typing import Type
 
 
 class RISCVMatchedCacheHierarchy(
@@ -52,7 +60,9 @@ class RISCVMatchedCacheHierarchy(
 
     A cache setup where each core has a private L1 Data and Instruction Cache,
     and a shared L2 cache.
+
     The HiFive board has a partially inclusive cache hierarchy, hence this hierarchy is chosen.
+
     The details of the cache hierarchy are in Table 7, page 36 of the datasheet.
 
     - L1 Instruction Cache:
@@ -70,7 +80,6 @@ class RISCVMatchedCacheHierarchy(
     ) -> None:
         """
         :param l2_size: The size of the L2 Cache (e.g., "256kB").
-        :type l2_size: str
         """
         AbstractClassicCacheHierarchy.__init__(self=self)
         AbstractTwoLevelCacheHierarchy.__init__(
@@ -157,7 +166,7 @@ class RISCVMatchedCacheHierarchy(
         self.membus.cpu_side_ports = self.l2cache.mem_side
 
     def _setup_io_cache(self, board: AbstractBoard) -> None:
-        """Create a cache for coherent I/O connections"""
+        """Create a cache for coherent I/O connections."""
         self.iocache = Cache(
             assoc=8,
             tag_latency=50,

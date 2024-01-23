@@ -69,7 +69,7 @@ class multiattrdict(attrdict):
 
 
 class optiondict(attrdict):
-    """Modify attrdict so that a missing attribute just returns None"""
+    """Modify attrdict so that a missing attribute just returns ``None``."""
 
     def __getattr__(self, attr):
         try:

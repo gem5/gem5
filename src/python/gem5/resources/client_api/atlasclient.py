@@ -24,13 +24,26 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from urllib import request, parse
-from typing import Optional, Dict, Union, Type, Tuple, List, Any
+import itertools
 import json
 import time
-import itertools
-from .abstract_client import AbstractClient
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    Union,
+)
+from urllib import (
+    parse,
+    request,
+)
+
 from m5.util import warn
+
+from .abstract_client import AbstractClient
 
 
 class AtlasClientHttpJsonRequestError(Exception):
@@ -63,6 +76,7 @@ class AtlasClient(AbstractClient):
     def __init__(self, config: Dict[str, str]):
         """
         Initializes a connection to a MongoDB Atlas database.
+
         :param uri: The URI for connecting to the MongoDB server.
         :param db: The name of the database to connect to.
         :param collection: The name of the collection within the database.

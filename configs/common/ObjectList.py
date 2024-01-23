@@ -34,12 +34,15 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from gem5.runtime import get_supported_isas
-import m5.objects
-import m5.internal.params
 import inspect
 import sys
 from textwrap import TextWrapper
+
+import m5.internal.params
+import m5.objects
+
+from gem5.isas import ISA
+from gem5.runtime import get_supported_isas
 
 
 class ObjectList:
@@ -157,6 +160,27 @@ class CPUList(ObjectList):
                 ):
                     self._sub_classes[name] = cls
 
+    def get_isa(self, name: str) -> ISA:
+        """For a given CPU (string representation) determine the ISA of the
+        CPU."""
+
+        cls = self.get(name)
+
+        if hasattr(m5.objects, "X86CPU") and issubclass(
+            cls, m5.objects.X86CPU
+        ):
+            return ISA.X86
+        elif hasattr(m5.objects, "ArmCPU") and issubclass(
+            cls, m5.objects.ArmCPU
+        ):
+            return ISA.ARM
+        elif hasattr(m5.objects, "RiscvCPU") and issubclass(
+            cls, m5.objects.RiscvCPU
+        ):
+            return ISA.RISCV
+        else:
+            raise ValueError("Unable to determine CPU ISA.")
+
 
 class EnumList(ObjectList):
     """Creates a list of possible values for a given enum class."""
@@ -204,3 +228,4 @@ def _subclass_tester(name):
 
 is_kvm_cpu = _subclass_tester("BaseKvmCPU")
 is_noncaching_cpu = _subclass_tester("NonCachingSimpleCPU")
+is_o3_cpu = _subclass_tester("BaseO3CPU")

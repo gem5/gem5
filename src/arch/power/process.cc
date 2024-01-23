@@ -122,8 +122,8 @@ PowerProcess::initState()
         loader::Symbol symbol = sym;
 
         // Try to read entry point from function descriptor
-        if (initVirtMem->tryReadBlob(sym.address, &entry, sizeof(Addr)))
-            symbol.address = gtoh(entry, byteOrder);
+        if (initVirtMem->tryReadBlob(sym.address(), &entry, sizeof(Addr)))
+            symbol.relocate(gtoh(entry, byteOrder));
 
         symbolTable->insert(symbol);
     }

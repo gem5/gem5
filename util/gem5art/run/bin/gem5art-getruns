@@ -35,7 +35,10 @@ from json import dump
 
 import gem5art.artifact
 from gem5art.artifact import getDBConnection
-from gem5art.run import getRunsByNameLike, getRuns
+from gem5art.run import (
+    getRuns,
+    getRunsByNameLike,
+)
 
 
 def parseArgs():

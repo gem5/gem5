@@ -1,4 +1,4 @@
-# Copyright (c) 2012, 2014, 2019 ARM Limited
+# Copyright (c) 2012, 2014, 2019, 2023 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -36,13 +36,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.SimObject import *
-from m5.params import *
-from m5.proxy import *
-
 from m5.objects.ClockedObject import ClockedObject
 from m5.objects.IndexingPolicies import *
 from m5.objects.ReplacementPolicies import *
+from m5.params import *
+from m5.proxy import *
+from m5.SimObject import *
 
 
 class HWPProbeEvent:
@@ -76,11 +75,11 @@ class BasePrefetcher(ClockedObject):
     on_data = Param.Bool(True, "Notify prefetcher on data accesses")
     on_inst = Param.Bool(True, "Notify prefetcher on instruction accesses")
     prefetch_on_access = Param.Bool(
-        Parent.prefetch_on_access,
+        False,
         "Notify the hardware prefetcher on every access (not just misses)",
     )
     prefetch_on_pf_hit = Param.Bool(
-        Parent.prefetch_on_pf_hit,
+        False,
         "Notify the hardware prefetcher on hit on prefetched lines",
     )
     use_virtual_addresses = Param.Bool(

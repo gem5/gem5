@@ -35,14 +35,13 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.params import *
-from m5.proxy import *
-
 from m5.objects.BaseCPU import BaseCPU
 from m5.objects.BaseInterrupts import BaseInterrupts
 from m5.objects.BaseISA import BaseISA
-from m5.objects.BaseTLB import BaseTLB
 from m5.objects.BaseMMU import BaseMMU
+from m5.objects.BaseTLB import BaseTLB
+from m5.params import *
+from m5.proxy import *
 
 
 class IrisTLB(BaseTLB):

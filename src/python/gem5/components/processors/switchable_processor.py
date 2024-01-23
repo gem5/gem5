@@ -25,17 +25,19 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from .simple_core import SimpleCore
-from .abstract_core import AbstractCore
-from .cpu_types import CPUTypes
+from typing import (
+    Dict,
+    List,
+)
 
 import m5
 
-from typing import Dict, List
-
-from .abstract_processor import AbstractProcessor
-from ..boards.abstract_board import AbstractBoard
 from ...utils.override import *
+from ..boards.abstract_board import AbstractBoard
+from .abstract_core import AbstractCore
+from .abstract_processor import AbstractProcessor
+from .cpu_types import CPUTypes
+from .simple_core import SimpleCore
 
 
 class SwitchableProcessor(AbstractProcessor):
@@ -44,7 +46,7 @@ class SwitchableProcessor(AbstractProcessor):
     system using SimpleCores.
 
     Though this class can be used directly, it is best inherited from. See
-    "SimpleSwitchableCPU" for an example of this.
+    SimpleSwitchableCPU for an example of this.
     """
 
     def __init__(

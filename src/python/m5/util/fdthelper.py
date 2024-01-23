@@ -35,9 +35,10 @@
 #
 # Author: Glenn Bergmans
 
-from m5.ext.pyfdt import pyfdt
-import re
 import os
+import re
+
+from m5.ext.pyfdt import pyfdt
 from m5.SimObject import SimObject
 from m5.util import fatal
 

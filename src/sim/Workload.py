@@ -1,3 +1,15 @@
+# Copyright (c) 2023 Arm Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright 2019 Google Inc.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,10 +35,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.params import *
-from m5.SimObject import SimObject, cxxMethod
-
 from m5.objects.SimpleMemory import *
+from m5.params import *
+from m5.SimObject import (
+    SimObject,
+    cxxMethod,
+)
 
 
 class Workload(SimObject):
@@ -60,6 +74,16 @@ class StubWorkload(Workload):
     )
 
 
+class KernelPanicOopsBehaviour(ScopedEnum):
+    "Define what gem5 should do after a Kernel Panic or Oops."
+    vals = [
+        "Continue",
+        "DumpDmesgAndContinue",
+        "DumpDmesgAndExit",
+        "DumpDmesgAndPanic",
+    ]
+
+
 class KernelWorkload(Workload):
     type = "KernelWorkload"
     cxx_header = "sim/kernel_workload.hh"
@@ -83,6 +107,18 @@ class KernelWorkload(Workload):
     load_addr_offset = Param.UInt64(0, "Address to offset the kernel with")
 
     command_line = Param.String("a", "boot flags to pass to the kernel")
+
+    on_panic = Param.KernelPanicOopsBehaviour(
+        "DumpDmesgAndExit",
+        "Define how gem5 should behave after a Linux Kernel Panic. "
+        "Handler might not be implemented for all architectures.",
+    )
+
+    on_oops = Param.KernelPanicOopsBehaviour(
+        "DumpDmesgAndExit",
+        "Define how gem5 should behave after a Linux Kernel Oops. "
+        "Handler might not be implemented for all architectures.",
+    )
 
 
 class SEWorkloadMeta(type(Workload)):

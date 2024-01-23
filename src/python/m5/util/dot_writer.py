@@ -53,9 +53,18 @@
 #
 #####################################################################
 
-import m5, os, re
-from m5.SimObject import isRoot, isSimObjectVector
-from m5.params import PortRef, isNullPointer
+import os
+import re
+
+import m5
+from m5.params import (
+    PortRef,
+    isNullPointer,
+)
+from m5.SimObject import (
+    isRoot,
+    isSimObjectVector,
+)
 from m5.util import warn
 
 try:

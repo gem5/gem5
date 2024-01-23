@@ -63,7 +63,7 @@ STeMS::STeMS(const STeMSPrefetcherParams &p)
 }
 
 void
-STeMS::checkForActiveGenerationsEnd()
+STeMS::checkForActiveGenerationsEnd(const CacheAccessor &cache)
 {
     // This prefetcher operates attached to the L1 and it observes all
     // accesses, this guarantees that no evictions are missed
@@ -79,8 +79,8 @@ STeMS::checkForActiveGenerationsEnd()
                 if (seq_entry.counter > 0) {
                     Addr cache_addr =
                         agt_entry.paddress + seq_entry.offset * blkSize;
-                    if (!inCache(cache_addr, sr_is_secure) &&
-                            !inMissQueue(cache_addr, sr_is_secure)) {
+                    if (!cache.inCache(cache_addr, sr_is_secure) &&
+                            !cache.inMissQueue(cache_addr, sr_is_secure)) {
                         generation_ended = true;
                         pst_addr = (agt_entry.pc << spatialRegionSizeBits)
                                     + seq_entry.offset;
@@ -135,7 +135,8 @@ STeMS::addToRMOB(Addr sr_addr, Addr pst_addr, unsigned int delta)
 
 void
 STeMS::calculatePrefetch(const PrefetchInfo &pfi,
-                                   std::vector<AddrPriority> &addresses)
+                                   std::vector<AddrPriority> &addresses,
+                                   const CacheAccessor &cache)
 {
     if (!pfi.hasPC()) {
         DPRINTF(HWPrefetch, "Ignoring request with no PC.\n");
@@ -152,7 +153,7 @@ STeMS::calculatePrefetch(const PrefetchInfo &pfi,
     Addr sr_offset = (pfi.getAddr() % spatialRegionSize) / blkSize;
 
     // Check if any active generation has ended
-    checkForActiveGenerationsEnd();
+    checkForActiveGenerationsEnd(cache);
 
     ActiveGenerationTableEntry *agt_entry =
         activeGenerationTable.findEntry(sr_addr, is_secure);

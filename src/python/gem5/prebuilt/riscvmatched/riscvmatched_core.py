@@ -25,20 +25,21 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from typing import Optional
-from gem5.utils.requires import requires
+
+from m5.objects import (
+    BaseCPU,
+    BaseMMU,
+    Port,
+    Process,
+)
+from m5.objects.BaseMinorCPU import *
+from m5.objects.RiscvCPU import RiscvMinorCPU
+
 from gem5.components.processors.base_cpu_core import BaseCPUCore
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
 from gem5.utils.override import overrides
-from m5.objects.RiscvCPU import RiscvMinorCPU
-from m5.objects import (
-    BaseMMU,
-    Port,
-    BaseCPU,
-    Process,
-)
-from m5.objects.BaseMinorCPU import *
-from gem5.isas import ISA
+from gem5.utils.requires import requires
 
 
 class U74IntFU(MinorDefaultIntFU):
@@ -112,7 +113,7 @@ class U74CPU(RiscvMinorCPU):
     """
     The fetch, decode, and execute stage parameters from the ARM HPI CPU
     This information about the CPU can be found on page 15 of
-    gem5_rsk_gem5-21.2.pdf at https://github.com/arm-university/arm-gem5-rsk
+    `gem5_rsk_gem5-21.2.pdf` at https://github.com/arm-university/arm-gem5-rsk
 
     The parameters that are changed are:
     - threadPolicy:
@@ -205,8 +206,11 @@ class U74Core(BaseCPUCore):
       - globalCtrBits: 4
       - choiceCtrBits: 4
       - localHistoryTableSize: 4096 B
-    NOTE: The TournamentBP deviates from the actual BP.
-    This configuration performs the best in relation to the hardware.
+
+    .. note::
+
+        The TournamentBP deviates from the actual BP.
+        This configuration performs the best in relation to the hardware.
     """
 
     def __init__(

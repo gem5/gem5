@@ -24,17 +24,20 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.params import *
-from m5.proxy import *
 from m5.objects.Cmos import Cmos
 from m5.objects.I8042 import I8042
-from m5.objects.I82094AA import I82094AA
 from m5.objects.I8237 import I8237
 from m5.objects.I8254 import I8254
 from m5.objects.I8259 import I8259
-from m5.objects.PciDevice import PciLegacyIoBar, PciIoBar
+from m5.objects.I82094AA import I82094AA
+from m5.objects.PciDevice import (
+    PciIoBar,
+    PciLegacyIoBar,
+)
 from m5.objects.PcSpeaker import PcSpeaker
 from m5.objects.X86Ide import X86IdeController
+from m5.params import *
+from m5.proxy import *
 from m5.SimObject import SimObject
 
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012,2016-2017, 2019-2020 ARM Limited
+ * Copyright (c) 2011-2012,2016-2017, 2019-2020 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -795,8 +795,8 @@ BaseCPU::traceFunctionsInternal(Addr pc)
             currentFunctionStart = pc;
             currentFunctionEnd = pc + 1;
         } else {
-            sym_str = it->name;
-            currentFunctionStart = it->address;
+            sym_str = it->name();
+            currentFunctionStart = it->address();
         }
 
         ccprintf(*functionTraceStream, " (%d)\n%d: %s",

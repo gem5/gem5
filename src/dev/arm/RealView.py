@@ -37,48 +37,66 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.defines import buildEnv
+from m5.objects.ArmSystem import ArmExtension
+from m5.objects.CfiMemory import CfiMemory
+from m5.objects.ClockDomain import (
+    ClockDomain,
+    SrcClockDomain,
+)
+from m5.objects.ClockedObject import ClockedObject
+from m5.objects.Device import (
+    BadAddr,
+    BasicPioDevice,
+    DmaDevice,
+    IsaFake,
+    PioDevice,
+)
+from m5.objects.Display import (
+    Display,
+    Display1080p,
+)
+from m5.objects.EnergyCtrl import EnergyCtrl
+from m5.objects.Ethernet import (
+    IGbE_e1000,
+    IGbE_igb,
+    NSGigE,
+)
+from m5.objects.GenericTimer import *
+from m5.objects.Gic import *
+from m5.objects.Graphics import ImageFormat
+from m5.objects.Ide import *
+from m5.objects.MHU import (
+    MHU,
+    Ap2ScpDoorbell,
+    Scp2ApDoorbell,
+)
+from m5.objects.PciDevice import (
+    PciIoBar,
+    PciLegacyIoBar,
+)
+from m5.objects.PciHost import *
+from m5.objects.Platform import Platform
+from m5.objects.PS2 import *
+from m5.objects.Scmi import *
+from m5.objects.SimpleMemory import SimpleMemory
+from m5.objects.SMMUv3 import SMMUv3
+from m5.objects.SubSystem import SubSystem
+from m5.objects.Terminal import Terminal
+from m5.objects.Uart import Uart
+from m5.objects.VirtIOMMIO import MmioVirtIO
+from m5.objects.VoltageDomain import VoltageDomain
 from m5.params import *
 from m5.proxy import *
 from m5.util.fdthelper import *
-from m5.objects.ArmSystem import ArmExtension
-from m5.objects.ClockDomain import ClockDomain, SrcClockDomain
-from m5.objects.VoltageDomain import VoltageDomain
-from m5.objects.Device import (
-    BasicPioDevice,
-    PioDevice,
-    IsaFake,
-    BadAddr,
-    DmaDevice,
-)
-from m5.objects.PciHost import *
-from m5.objects.Ethernet import NSGigE, IGbE_igb, IGbE_e1000
-from m5.objects.Ide import *
-from m5.objects.Platform import Platform
-from m5.objects.Terminal import Terminal
-from m5.objects.Uart import Uart
-from m5.objects.SimpleMemory import SimpleMemory
-from m5.objects.GenericTimer import *
-from m5.objects.Gic import *
-from m5.objects.MHU import MHU, Scp2ApDoorbell, Ap2ScpDoorbell
-from m5.objects.EnergyCtrl import EnergyCtrl
-from m5.objects.ClockedObject import ClockedObject
-from m5.objects.SubSystem import SubSystem
-from m5.objects.Graphics import ImageFormat
-from m5.objects.ClockedObject import ClockedObject
-from m5.objects.PS2 import *
-from m5.objects.VirtIOMMIO import MmioVirtIO
-from m5.objects.Display import Display, Display1080p
-from m5.objects.Scmi import *
-from m5.objects.SMMUv3 import SMMUv3
-from m5.objects.PciDevice import PciLegacyIoBar, PciIoBar
-
-from m5.objects.CfiMemory import CfiMemory
 
 # Platforms with KVM support should generally use in-kernel GIC
 # emulation. Use a GIC model that automatically switches between
 # gem5's GIC model and KVM's GIC model if KVM is available.
 try:
-    from m5.objects.KvmGic import MuxingKvmGicV2, MuxingKvmGicV3
+    from m5.objects.KvmGic import (
+        MuxingKvmGicV2,
+        MuxingKvmGicV3,
+    )
 
     kvm_gicv2_class = MuxingKvmGicV2
     kvm_gicv3_class = MuxingKvmGicV3
