@@ -5348,47 +5348,47 @@ ISA::initializeMiscRegMetadata()
       .faultWrite(EL1, faultHcrFgtInstEL1<&HCR::ttlb, &HFGITR::tlbivaale1>)
       .writes(1).exceptUserMode();
     InitReg(MISCREG_TLBI_IPAS2E1OS)
-      .hypWrite().monSecureWrite().monNonSecureWrite();
+      .monWrite().hypWrite();
     InitReg(MISCREG_TLBI_IPAS2LE1OS)
-      .hypWrite().monSecureWrite().monNonSecureWrite();
+      .monWrite().hypWrite();
     InitReg(MISCREG_TLBI_ALLE2OS)
       .monWrite().hypWrite();
     InitReg(MISCREG_TLBI_VAE2OS)
       .monWrite().hypWrite();
     InitReg(MISCREG_TLBI_ALLE1OS)
-      .hypWrite().monSecureWrite().monNonSecureWrite();
+      .monWrite().hypWrite();
     InitReg(MISCREG_TLBI_VALE2OS)
       .monWrite().hypWrite();
     InitReg(MISCREG_TLBI_VMALLS12E1OS)
-      .hypWrite().monSecureWrite().monNonSecureWrite();
+      .monWrite().hypWrite();
     InitReg(MISCREG_TLBI_IPAS2E1IS)
-      .hypWrite().monSecureWrite().monNonSecureWrite();
+      .monWrite().hypWrite();
     InitReg(MISCREG_TLBI_IPAS2LE1IS)
-      .hypWrite().monSecureWrite().monNonSecureWrite();
+      .monWrite().hypWrite();
     InitReg(MISCREG_TLBI_ALLE2IS)
       .monWrite().hypWrite();
     InitReg(MISCREG_TLBI_VAE2IS)
       .monWrite().hypWrite();
     InitReg(MISCREG_TLBI_ALLE1IS)
-      .hypWrite().monSecureWrite().monNonSecureWrite();
+      .monWrite().hypWrite();
     InitReg(MISCREG_TLBI_VALE2IS)
       .monWrite().hypWrite();
     InitReg(MISCREG_TLBI_VMALLS12E1IS)
-      .hypWrite().monSecureWrite().monNonSecureWrite();
+      .monWrite().hypWrite();
     InitReg(MISCREG_TLBI_IPAS2E1)
-      .hypWrite().monSecureWrite().monNonSecureWrite();
+      .monWrite().hypWrite();
     InitReg(MISCREG_TLBI_IPAS2LE1)
-      .hypWrite().monSecureWrite().monNonSecureWrite();
+      .monWrite().hypWrite();
     InitReg(MISCREG_TLBI_ALLE2)
       .monWrite().hypWrite();
     InitReg(MISCREG_TLBI_VAE2)
       .monWrite().hypWrite();
     InitReg(MISCREG_TLBI_ALLE1)
-      .hypWrite().monSecureWrite().monNonSecureWrite();
+      .monWrite().hypWrite();
     InitReg(MISCREG_TLBI_VALE2)
       .monWrite().hypWrite();
     InitReg(MISCREG_TLBI_VMALLS12E1)
-      .hypWrite().monSecureWrite().monNonSecureWrite();
+      .monWrite().hypWrite();
     InitReg(MISCREG_TLBI_ALLE3OS)
       .monSecureWrite().monNonSecureWrite();
     InitReg(MISCREG_TLBI_VAE3OS)
