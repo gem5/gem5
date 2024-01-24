@@ -3503,11 +3503,11 @@ decode QUADRANT default Unknown::unknown() {
                 }
                 format VectorIntVxsatFormat{
                     0x20: vsaddu_vi({{
-                        Vd_vu[i] = sat_addu<vu>(Vs2_vu[i], (vu)SIMM5,
+                        Vd_vu[i] = sat_addu<vu>(Vs2_vu[i], (vu)sext<5>(SIMM5),
                             vxsatptr);
                     }}, OPIVI, VectorIntegerArithOp);
                     0x21: vsadd_vi({{
-                        Vd_vu[i] = sat_add<vi>(Vs2_vu[i], (vu)SIMM5,
+                        Vd_vi[i] = sat_add<vi>(Vs2_vi[i], (vi)sext<5>(SIMM5),
                             vxsatptr);
                     }}, OPIVI, VectorIntegerArithOp);
                 }
