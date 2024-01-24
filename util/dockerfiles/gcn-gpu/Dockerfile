@@ -104,7 +104,7 @@ RUN apt install rocm-cmake
 RUN git clone -b rocm-4.0.0 \
     https://github.com/ROCmSoftwarePlatform/rocBLAS.git && mkdir rocBLAS/build
 
-ENV HCC_AMDGPU_TARGET=gfx801,gfx803,gfx900,gfx902
+ENV HCC_AMDGPU_TARGET=gfx900,gfx902
 WORKDIR rocBLAS
 # rocBLAS needs to be built from source otherwise certain gfx versions get errors in HIP
 # about there being no GPU binary available
@@ -124,8 +124,6 @@ RUN mkdir -p /root/.cache/miopen/2.9.0.8252-rocm-rel-4.0-26-64506314 && \
 
 # Add commands from halofinder Dockerfile
 RUN apt-get update && apt-get -y install libopenmpi-dev libomp-dev
-
-ENV HCC_AMDGPU_TARGET="gfx801,gfx803,gfx900"
 
 ENV HIPCC_BIN=/opt/rocm/bin
 ENV MPI_INCLUDE=/usr/lib/x86_64-linux-gnu/openmpi/include
