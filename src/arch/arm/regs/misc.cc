@@ -5352,13 +5352,13 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_TLBI_IPAS2LE1OS)
       .hypWrite().monSecureWrite().monNonSecureWrite();
     InitReg(MISCREG_TLBI_ALLE2OS)
-      .monNonSecureWrite().hypWrite();
+      .monWrite().hypWrite();
     InitReg(MISCREG_TLBI_VAE2OS)
-      .monNonSecureWrite().hypWrite();
+      .monWrite().hypWrite();
     InitReg(MISCREG_TLBI_ALLE1OS)
       .hypWrite().monSecureWrite().monNonSecureWrite();
     InitReg(MISCREG_TLBI_VALE2OS)
-      .monNonSecureWrite().hypWrite();
+      .monWrite().hypWrite();
     InitReg(MISCREG_TLBI_VMALLS12E1OS)
       .hypWrite().monSecureWrite().monNonSecureWrite();
     InitReg(MISCREG_TLBI_IPAS2E1IS)
@@ -5366,13 +5366,13 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_TLBI_IPAS2LE1IS)
       .hypWrite().monSecureWrite().monNonSecureWrite();
     InitReg(MISCREG_TLBI_ALLE2IS)
-      .monNonSecureWrite().hypWrite();
+      .monWrite().hypWrite();
     InitReg(MISCREG_TLBI_VAE2IS)
-      .monNonSecureWrite().hypWrite();
+      .monWrite().hypWrite();
     InitReg(MISCREG_TLBI_ALLE1IS)
       .hypWrite().monSecureWrite().monNonSecureWrite();
     InitReg(MISCREG_TLBI_VALE2IS)
-      .monNonSecureWrite().hypWrite();
+      .monWrite().hypWrite();
     InitReg(MISCREG_TLBI_VMALLS12E1IS)
       .hypWrite().monSecureWrite().monNonSecureWrite();
     InitReg(MISCREG_TLBI_IPAS2E1)
@@ -5380,13 +5380,13 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_TLBI_IPAS2LE1)
       .hypWrite().monSecureWrite().monNonSecureWrite();
     InitReg(MISCREG_TLBI_ALLE2)
-      .monNonSecureWrite().hypWrite();
+      .monWrite().hypWrite();
     InitReg(MISCREG_TLBI_VAE2)
-      .monNonSecureWrite().hypWrite();
+      .monWrite().hypWrite();
     InitReg(MISCREG_TLBI_ALLE1)
       .hypWrite().monSecureWrite().monNonSecureWrite();
     InitReg(MISCREG_TLBI_VALE2)
-      .monNonSecureWrite().hypWrite();
+      .monWrite().hypWrite();
     InitReg(MISCREG_TLBI_VMALLS12E1)
       .hypWrite().monSecureWrite().monNonSecureWrite();
     InitReg(MISCREG_TLBI_ALLE3OS)
