@@ -5446,9 +5446,9 @@ ISA::initializeMiscRegMetadata()
       .faultWrite(EL1, faultHcrFgtInstEL1<&HCR::tpc, &HFGITR::dccivac>)
       .writes(1);
     InitReg(MISCREG_AT_S1E2R_Xt)
-      .monNonSecureWrite().hypWrite();
+      .monWrite().hypWrite();
     InitReg(MISCREG_AT_S1E2W_Xt)
-      .monNonSecureWrite().hypWrite();
+      .monWrite().hypWrite();
     InitReg(MISCREG_AT_S12E1R_Xt)
       .hypWrite().monSecureWrite().monNonSecureWrite();
     InitReg(MISCREG_AT_S12E1W_Xt)
