@@ -89,6 +89,18 @@ namespace VegaISA
           case REG_ZERO:
             reg_sym = "0";
             break;
+          case REG_SHARED_BASE:
+            reg_sym = "src_shared_base";
+            break;
+          case REG_SHARED_LIMIT:
+            reg_sym = "src_shared_limit";
+            break;
+          case REG_PRIVATE_BASE:
+            reg_sym = "src_private_base";
+            break;
+          case REG_PRIVATE_LIMIT:
+            reg_sym = "src_private_limit";
+            break;
           case REG_POS_HALF:
             reg_sym = "0.5";
             break;
