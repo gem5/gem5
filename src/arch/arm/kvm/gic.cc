@@ -252,8 +252,11 @@ RegVal
 KvmKernelGicV3::readCpu(const ArmISA::Affinity &aff,
                         ArmISA::MiscRegIndex misc_reg)
 {
-    auto sys_reg = ArmISA::encodeAArch64SysReg(misc_reg).packed();
-    return getGicReg<RegVal>(KVM_DEV_ARM_VGIC_GRP_CPU_SYSREGS, aff, sys_reg);
+    std::optional<ArmISA::MiscRegNum64> sys_reg =
+        ArmISA::encodeAArch64SysReg(misc_reg);
+    panic_if(!sys_reg.has_value(), "Invalid system register");
+    return getGicReg<RegVal>(KVM_DEV_ARM_VGIC_GRP_CPU_SYSREGS, aff,
+                             sys_reg.value().packed());
 }
 
 void
@@ -274,8 +277,11 @@ KvmKernelGicV3::writeCpu(const ArmISA::Affinity &aff,
                          ArmISA::MiscRegIndex misc_reg,
                          RegVal data)
 {
-    auto sys_reg = ArmISA::encodeAArch64SysReg(misc_reg).packed();
-    setGicReg<RegVal>(KVM_DEV_ARM_VGIC_GRP_CPU_SYSREGS, aff, sys_reg, data);
+    std::optional<ArmISA::MiscRegNum64> sys_reg =
+        ArmISA::encodeAArch64SysReg(misc_reg);
+    panic_if(!sys_reg.has_value(), "Invalid system register");
+    setGicReg<RegVal>(KVM_DEV_ARM_VGIC_GRP_CPU_SYSREGS, aff,
+                      sys_reg.value().packed(), data);
 }
 
 template <class Types>
