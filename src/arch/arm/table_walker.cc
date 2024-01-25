@@ -857,22 +857,51 @@ TableWalker::processWalkLPAE()
     return currState->fault;
 }
 
-bool
-TableWalker::checkVAddrSizeFaultAArch64(Addr addr, int top_bit,
-    GrainSize tg, int tsz, bool low_range)
+Addr
+TableWalker::s1MinTxSz(GrainSize tg) const
 {
     // The effective maximum input size is 48 if ARMv8.2-LVA is not
     // supported or if the translation granule that is in use is 4KB or
     // 16KB in size. When ARMv8.2-LVA is supported, for the 64KB
     // translation granule size only, the effective minimum value of
     // 52.
-    const bool have_lva = HaveExt(currState->tc, ArmExtension::FEAT_LVA);
-    int in_max = (have_lva && tg == Grain64KB) ? 52 : 48;
-    int in_min = 64 - (tg == Grain64KB ? 47 : 48);
+    if (HaveExt(currState->tc, ArmExtension::FEAT_LVA) && tg == Grain64KB) {
+        return 12;
+    } else {
+        return 16;
+    }
+}
 
-    return tsz > in_max || tsz < in_min || (low_range ?
+Addr
+TableWalker::maxTxSz(GrainSize tg) const
+{
+    if (HaveExt(currState->tc, ArmExtension::FEAT_TTST)) {
+        switch (tg) {
+          case Grain4KB: return 48;
+          case Grain16KB: return 48;
+          case Grain64KB: return 47;
+          default:
+            panic("Invalid grain size\n");
+        }
+    }
+    return 39;
+}
+
+bool
+TableWalker::s1TxSzFault(GrainSize tg, int tsz) const
+{
+    Addr min_txsz = s1MinTxSz(tg);
+    Addr max_txsz = maxTxSz(tg);
+
+    return tsz > max_txsz || tsz < min_txsz;
+}
+
+bool
+TableWalker::checkVAOutOfRange(Addr vaddr, int top_bit, int tsz, bool low_range)
+{
+    return low_range ?
         bits(currState->vaddr, top_bit, tsz) != 0x0 :
-        bits(currState->vaddr, top_bit, tsz) != mask(top_bit - tsz + 1));
+        bits(currState->vaddr, top_bit, tsz) != mask(top_bit - tsz + 1);
 }
 
 bool
@@ -940,8 +969,8 @@ TableWalker::processWalkAArch64()
                 currState->sh = currState->tcr.sh0;
                 currState->irgn = currState->tcr.irgn0;
                 currState->orgn = currState->tcr.orgn0;
-                vaddr_fault = checkVAddrSizeFaultAArch64(currState->vaddr,
-                    top_bit, tg, tsz, true);
+                vaddr_fault = s1TxSzFault(tg, currState->tcr.t0sz) ||
+                    checkVAOutOfRange(currState->vaddr, top_bit, tsz, true);
 
                 if (vaddr_fault || currState->tcr.epd0)
                     fault = true;
@@ -955,8 +984,8 @@ TableWalker::processWalkAArch64()
                 currState->sh = currState->tcr.sh1;
                 currState->irgn = currState->tcr.irgn1;
                 currState->orgn = currState->tcr.orgn1;
-                vaddr_fault = checkVAddrSizeFaultAArch64(currState->vaddr,
-                    top_bit, tg, tsz, false);
+                vaddr_fault = s1TxSzFault(tg, currState->tcr.t1sz) ||
+                    checkVAOutOfRange(currState->vaddr, top_bit, tsz, false);
 
                 if (vaddr_fault || currState->tcr.epd1)
                     fault = true;
@@ -981,8 +1010,8 @@ TableWalker::processWalkAArch64()
             currState->sh = currState->tcr.sh0;
             currState->irgn = currState->tcr.irgn0;
             currState->orgn = currState->tcr.orgn0;
-            vaddr_fault = checkVAddrSizeFaultAArch64(currState->vaddr,
-                top_bit, tg, tsz, true);
+            vaddr_fault = s1TxSzFault(tg, currState->tcr.t0sz) ||
+                checkVAOutOfRange(currState->vaddr, top_bit, tsz, true);
 
             if (vaddr_fault || (currState->hcr.e2h && currState->tcr.epd0))
                 fault = true;
@@ -997,8 +1026,8 @@ TableWalker::processWalkAArch64()
             currState->sh = currState->tcr.sh1;
             currState->irgn = currState->tcr.irgn1;
             currState->orgn = currState->tcr.orgn1;
-            vaddr_fault = checkVAddrSizeFaultAArch64(currState->vaddr,
-                top_bit, tg, tsz, false);
+            vaddr_fault = s1TxSzFault(tg, currState->tcr.t1sz) ||
+                checkVAOutOfRange(currState->vaddr, top_bit, tsz, false);
 
             if (vaddr_fault || !currState->hcr.e2h || currState->tcr.epd1)
                 fault = true;
@@ -1021,8 +1050,8 @@ TableWalker::processWalkAArch64()
             currState->sh = currState->tcr.sh0;
             currState->irgn = currState->tcr.irgn0;
             currState->orgn = currState->tcr.orgn0;
-            vaddr_fault = checkVAddrSizeFaultAArch64(currState->vaddr,
-                top_bit, tg, tsz, true);
+            vaddr_fault = s1TxSzFault(tg, currState->tcr.t0sz) ||
+                checkVAOutOfRange(currState->vaddr, top_bit, tsz, true);
 
             if (vaddr_fault)
                 fault = true;

@@ -4976,6 +4976,7 @@ ISA::initializeMiscRegMetadata()
           AA64MMFR2 mmfr2_el1 = p.id_aa64mmfr2_el1;
           mmfr2_el1.uao = release->has(ArmExtension::FEAT_UAO) ? 0x1 : 0x0;
           mmfr2_el1.varange = release->has(ArmExtension::FEAT_LVA) ? 0x1 : 0x0;
+          mmfr2_el1.st = release->has(ArmExtension::FEAT_TTST) ? 0x1 : 0x0;
           mmfr2_el1.ids = release->has(ArmExtension::FEAT_IDST) ? 0x1 : 0x0;
           mmfr2_el1.evt = release->has(ArmExtension::FEAT_EVT) ? 0x2 : 0x0;
           return mmfr2_el1;

@@ -1216,8 +1216,11 @@ class TableWalker : public ClockedObject
     Fault processWalk();
     Fault processWalkLPAE();
 
-    bool checkVAddrSizeFaultAArch64(Addr addr, int top_bit,
-        GrainSize granule, int tsz, bool low_range);
+    Addr maxTxSz(GrainSize tg) const;
+    Addr s1MinTxSz(GrainSize tg) const;
+    bool s1TxSzFault(GrainSize tg, int tsz) const;
+    bool checkVAOutOfRange(Addr addr, int top_bit,
+        int tsz, bool low_range);
 
     /// Returns true if the address exceeds the range permitted by the
     /// system-wide setting or by the TCR_ELx IPS/PS setting
