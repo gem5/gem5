@@ -85,6 +85,8 @@ Sequencer::Sequencer(const Params &p)
 
     m_runningGarnetStandalone = p.garnet_standalone;
 
+    m_num_pending_invs = 0;
+    m_cache_inv_pkt = nullptr;
 
     // These statistical variables are not for display.
     // The profiler will collate these across different
@@ -348,6 +350,10 @@ Sequencer::insertRequest(PacketPtr pkt, RubyRequestType primary_type,
         return RequestStatus_Ready;
     }
 
+    if (pkt->cmd == MemCmd::MemSyncReq) {
+        return RequestStatus_Aliased;
+    }
+
     Addr line_addr = makeLineAddress(pkt->getAddr());
     // Check if there is any outstanding request for the same cache line.
     auto &seq_req_list = m_RequestTable[line_addr];
@@ -576,7 +582,8 @@ Sequencer::readCallback(Addr address, DataBlock& data,
         }
         if ((seq_req.m_type != RubyRequestType_LD) &&
             (seq_req.m_type != RubyRequestType_Load_Linked) &&
-            (seq_req.m_type != RubyRequestType_IFETCH)) {
+            (seq_req.m_type != RubyRequestType_IFETCH) &&
+            (seq_req.m_type != RubyRequestType_REPLACEMENT)) {
             // Write request: reissue request to the cache hierarchy
             issueRequest(seq_req.pkt, seq_req.m_second_type);
             break;
@@ -811,6 +818,86 @@ Sequencer::unaddressedCallback(Addr unaddressedReqId,
     }
 }
 
+void
+Sequencer::completeHitCallback(std::vector<PacketPtr> & mylist)
+{
+    for (auto& pkt : mylist) {
+        // When Ruby is in warmup or cooldown phase, the requests come
+        // from the cache recorder. They do not track which port to use
+        // and do not need to send the response back
+        if (!RubySystem::getWarmupEnabled()
+                && !RubySystem::getCooldownEnabled()) {
+            RubyPort::SenderState *ss =
+                safe_cast<RubyPort::SenderState *>(pkt->senderState);
+            MemResponsePort *port = ss->port;
+            assert(port != NULL);
+
+            pkt->senderState = ss->predecessor;
+
+            if (pkt->cmd != MemCmd::WriteReq) {
+                // for WriteReq, we keep the original senderState until
+                // writeCompleteCallback
+                delete ss;
+            }
+
+            port->hitCallback(pkt);
+            trySendRetries();
+        }
+    }
+
+    RubySystem *rs = m_ruby_system;
+    if (RubySystem::getWarmupEnabled()) {
+        rs->m_cache_recorder->enqueueNextFetchRequest();
+    } else if (RubySystem::getCooldownEnabled()) {
+        rs->m_cache_recorder->enqueueNextFlushRequest();
+    } else {
+        testDrainComplete();
+    }
+}
+
+void
+Sequencer::invL1Callback()
+{
+    // Since L1 invalidate is currently done with paddr = 0
+    assert(m_cache_inv_pkt && m_num_pending_invs > 0);
+
+    m_num_pending_invs--;
+
+    if (m_num_pending_invs == 0) {
+        std::vector<PacketPtr> pkt_list { m_cache_inv_pkt };
+        m_cache_inv_pkt = nullptr;
+        completeHitCallback(pkt_list);
+    }
+}
+
+void
+Sequencer::invL1()
+{
+    int size = m_dataCache_ptr->getNumBlocks();
+    DPRINTF(RubySequencer,
+            "There are %d Invalidations outstanding before Cache Walk\n",
+            m_num_pending_invs);
+    // Walk the cache
+    for (int i = 0; i < size; i++) {
+        Addr addr = m_dataCache_ptr->getAddressAtIdx(i);
+        // Evict Read-only data
+        RubyRequestType request_type = RubyRequestType_REPLACEMENT;
+        std::shared_ptr<RubyRequest> msg = std::make_shared<RubyRequest>(
+            clockEdge(), addr, 0, 0,
+            request_type, RubyAccessMode_Supervisor,
+            nullptr);
+        DPRINTF(RubySequencer, "Evicting addr 0x%x\n", addr);
+        assert(m_mandatory_q_ptr != NULL);
+        Tick latency = cyclesToTicks(
+            m_controller->mandatoryQueueLatency(request_type));
+        m_mandatory_q_ptr->enqueue(msg, clockEdge(), latency);
+        m_num_pending_invs++;
+    }
+    DPRINTF(RubySequencer,
+            "There are %d Invalidations outstanding after Cache Walk\n",
+            m_num_pending_invs);
+}
+
 bool
 Sequencer::empty() const
 {
@@ -915,6 +1002,11 @@ Sequencer::makeRequest(PacketPtr pkt)
             }
         } else if (pkt->isFlush()) {
           primary_type = secondary_type = RubyRequestType_FLUSH;
+        } else if (pkt->cmd == MemCmd::MemSyncReq) {
+            primary_type = secondary_type = RubyRequestType_REPLACEMENT;
+            assert(!m_cache_inv_pkt);
+            m_cache_inv_pkt = pkt;
+            invL1();
         } else {
             panic("Unsupported ruby packet type\n");
         }
