@@ -160,4 +160,55 @@ ScalarMemPipeline::issueRequest(GPUDynInstPtr gpuDynInst)
     issuedRequests.push(gpuDynInst);
 }
 
+void
+ScalarMemPipeline::injectScalarMemFence(GPUDynInstPtr gpuDynInst,
+                                        bool kernelMemSync,
+                                        RequestPtr req)
+{
+    assert(gpuDynInst->isScalar());
+
+    if (!req) {
+        req = std::make_shared<Request>(
+                0, 0, 0, computeUnit.requestorId(), 0, gpuDynInst->wfDynId);
+    } else {
+        req->requestorId(computeUnit.requestorId());
+    }
+
+    req->setPaddr(0);
+
+    PacketPtr pkt = nullptr;
+
+    if (kernelMemSync) {
+        req->setCacheCoherenceFlags(Request::INV_L1);
+        req->setReqInstSeqNum(gpuDynInst->seqNum());
+        req->setFlags(Request::KERNEL);
+        pkt = new Packet(req, MemCmd::MemSyncReq);
+        pkt->pushSenderState(
+                new ComputeUnit::SQCPort::SenderState(
+                    gpuDynInst->wavefront(), nullptr));
+        ComputeUnit::SQCPort::MemReqEvent *sqc_event =
+                new ComputeUnit::SQCPort::MemReqEvent
+                (computeUnit.sqcPort, pkt);
+
+        computeUnit.schedule(
+                sqc_event, curTick() + computeUnit.scalar_req_tick_latency);
+    } else {
+        gpuDynInst->setRequestFlags(req);
+
+        req->setReqInstSeqNum(gpuDynInst->seqNum());
+
+        pkt = new Packet(req, MemCmd::MemSyncReq);
+        pkt->pushSenderState(
+                new ComputeUnit::SQCPort::SenderState(
+                    gpuDynInst->wavefront(), nullptr));
+
+        ComputeUnit::SQCPort::MemReqEvent *sqc_event =
+                new ComputeUnit::SQCPort::MemReqEvent
+                (computeUnit.sqcPort, pkt);
+
+        computeUnit.schedule(
+                sqc_event, curTick() + computeUnit.scalar_req_tick_latency);
+    }
+}
+
 } // namespace gem5

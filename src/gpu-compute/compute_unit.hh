@@ -680,6 +680,41 @@ class ComputeUnit : public ClockedObject
                 kernId(_kernId){ }
         };
 
+        class MemReqEvent : public Event
+        {
+          private:
+            SQCPort &sqcPort;
+            PacketPtr pkt;
+
+          public:
+            MemReqEvent(SQCPort &_sqc_port, PacketPtr _pkt)
+                : Event(), sqcPort(_sqc_port), pkt(_pkt)
+            {
+              setFlags(Event::AutoDelete);
+            }
+
+            void process();
+            const char *description() const;
+        };
+
+        class SystemHubEvent : public Event
+        {
+          SQCPort *sqcPort;
+          PacketPtr reqPkt;
+
+          public:
+            SystemHubEvent(PacketPtr pkt, SQCPort *_sqcPort)
+                : sqcPort(_sqcPort), reqPkt(pkt)
+            {
+                setFlags(Event::AutoDelete);
+            }
+
+            void
+            process()
+            {
+            }
+        };
+
         std::deque<std::pair<PacketPtr, Wavefront*>> retries;
 
       protected:

@@ -1046,6 +1046,28 @@ ComputeUnit::SQCPort::recvReqRetry()
     }
 }
 
+const char*
+ComputeUnit::SQCPort::MemReqEvent::description() const
+{
+    return "ComputeUnit SQC memory request event";
+}
+
+void
+ComputeUnit::SQCPort::MemReqEvent::process()
+{
+    SenderState *sender_state = safe_cast<SenderState*>(pkt->senderState);
+    [[maybe_unused]] ComputeUnit *compute_unit = sqcPort.computeUnit;
+
+    if (pkt->req->systemReq()) {
+        assert(compute_unit->shader->systemHub);
+        SystemHubEvent *resp_event = new SystemHubEvent(pkt, &sqcPort);
+        compute_unit->shader->systemHub->sendRequest(pkt, resp_event);
+    } else if (!(sqcPort.sendTimingReq(pkt))) {
+        sqcPort.retries.push_back(std::pair<PacketPtr, Wavefront*>
+                (pkt, sender_state->wavefront));
+    }
+}
+
 void
 ComputeUnit::sendRequest(GPUDynInstPtr gpuDynInst, PortID index, PacketPtr pkt)
 {

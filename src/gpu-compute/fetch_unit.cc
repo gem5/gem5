@@ -388,6 +388,29 @@ FetchUnit::FetchBufDesc::flushBuf()
             wavefront->wfDynId);
 }
 
+void
+FetchUnit::FetchBufDesc::invBuf()
+{
+    restartFromBranch = false;
+    /**
+     * free list may have some entries
+     * so we clear it here to avoid duplicates
+     */
+    freeList.clear();
+    bufferedPCs.clear();
+    reservedPCs.clear();
+    readPtr = bufStart;
+
+    for (int i = 0; i < fetchDepth; ++i) {
+        freeList.push_back(bufStart + i * cacheLineSize);
+    }
+
+    DPRINTF(GPUFetch, "WF[%d][%d]: Id%d Fetch dropped, flushing fetch "
+            "buffer\n", wavefront->simdId, wavefront->wfSlotId,
+            wavefront->wfDynId);
+
+}
+
 Addr
 FetchUnit::FetchBufDesc::nextFetchAddr()
 {
@@ -471,6 +494,13 @@ FetchUnit::FetchBufDesc::reserveBuf(Addr vaddr)
 void
 FetchUnit::FetchBufDesc::fetchDone(Addr vaddr)
 {
+    if (vaddr == 0) {
+        // S_ICACHE_INV fetch done
+        wavefront->decLGKMInstsIssued();
+        invBuf();
+        return;
+    }
+
     assert(bufferedPCs.find(vaddr) == bufferedPCs.end());
     DPRINTF(GPUFetch, "WF[%d][%d]: Id%d done fetching for addr %#x\n",
             wavefront->simdId, wavefront->wfSlotId,

@@ -104,6 +104,7 @@ class FetchUnit
         int reservedLines() const { return reservedPCs.size(); }
         bool hasFreeSpace() const { return !freeList.empty(); }
         void flushBuf();
+        void invBuf();
         Addr nextFetchAddr();
 
         /**
