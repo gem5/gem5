@@ -389,7 +389,15 @@ SDMAEngine::decodeHeader(SDMAQueue *q, uint32_t header)
       case SDMA_OP_NOP: {
         uint32_t NOP_count = (header >> 16) & 0x3FFF;
         DPRINTF(SDMAEngine, "SDMA NOP packet with count %d\n", NOP_count);
-        if (NOP_count > 0) q->incRptr(NOP_count * 4);
+        if (NOP_count > 0) {
+            for (int i = 0; i < NOP_count; ++i) {
+                if (q->rptr() == q->wptr()) {
+                    warn("NOP count is beyond wptr, ignoring remaining NOPs");
+                    break;
+                }
+                q->incRptr(4);
+            }
+        }
         decodeNext(q);
         } break;
       case SDMA_OP_COPY: {
