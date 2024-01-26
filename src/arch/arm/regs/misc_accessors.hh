@@ -50,6 +50,15 @@ namespace ArmISA
 namespace misc_regs
 {
 
+struct FarAccessor
+{
+    using type = RegVal;
+    static const MiscRegIndex el0 = NUM_MISCREGS;
+    static const MiscRegIndex el1 = MISCREG_FAR_EL1;
+    static const MiscRegIndex el2 = MISCREG_FAR_EL2;
+    static const MiscRegIndex el3 = MISCREG_FAR_EL3;
+};
+
 template <typename RegAccessor>
 MiscRegIndex
 getRegVersion(ExceptionLevel el)
