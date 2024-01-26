@@ -588,5 +588,102 @@ VlFFTrimVlMicroOp::generateDisassembly(Addr pc,
     return ss.str();
 }
 
+std::string VlSegMacroInst::generateDisassembly(Addr pc,
+        const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", " <<
+        '(' << registerName(srcRegIdx(0)) << ')' <<
+        ", " << registerName(srcRegIdx(1));
+    if (!machInst.vm)
+        ss << ", v0.t";
+    return ss.str();
+}
+
+std::string VlSegMicroInst::generateDisassembly(Addr pc,
+        const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", " <<
+        '(' << registerName(srcRegIdx(0)) << ')' <<
+        ", "<< registerName(srcRegIdx(1));
+    if (microIdx != 0 || machInst.vtype8.vma == 0 || machInst.vtype8.vta == 0)
+        ss << ", " << registerName(srcRegIdx(2));
+    if (!machInst.vm)
+        ss << ", v0.t";
+    return ss.str();
+}
+
+VlSegDeIntrlvMicroInst::VlSegDeIntrlvMicroInst(ExtMachInst extMachInst, uint32_t _micro_vl,
+                        uint32_t _dstReg, uint32_t _numSrcs,
+                        uint32_t _microIdx, uint32_t _numMicroops,
+                        uint32_t _field, uint32_t _vlen, uint32_t _sizeOfElement)
+    : VectorArithMicroInst("vlseg_deintrlv_micro", extMachInst,
+                            VectorIntegerArithOp, 0, 0),
+        vlen(_vlen)
+{
+    setRegIdxArrays(
+        reinterpret_cast<RegIdArrayPtr>(
+            &std::remove_pointer_t<decltype(this)>::srcRegIdxArr),
+        reinterpret_cast<RegIdArrayPtr>(
+            &std::remove_pointer_t<decltype(this)>::destRegIdxArr));
+
+    _numSrcRegs = 0;
+    _numDestRegs = 0;
+    numSrcs = _numSrcs;
+    numMicroops = _numMicroops;
+    field =_field;
+    sizeOfElement = _sizeOfElement;
+    microIdx = _microIdx;
+    micro_vl = _micro_vl;
+
+    setDestRegIdx(_numDestRegs++, vecRegClass[_dstReg]);
+    _numTypedDestRegs[VecRegClass]++;
+    for (uint32_t i=0; i < _numSrcs; i++) {
+        uint32_t index = VecMemInternalReg0 + i + (microIdx * _numSrcs);
+        setSrcRegIdx(_numSrcRegs++, vecRegClass[index]);
+    }
+}
+
+Fault
+VlSegDeIntrlvMicroInst::execute(ExecContext* xc, trace::InstRecord* traceData) const
+{
+    vreg_t& tmp_d0 = *(vreg_t *)xc->getWritableRegOperand(this, 0);
+    auto Vd = tmp_d0.as<uint8_t>();
+    const uint32_t elems_per_vreg =  micro_vl;
+    vreg_t tmp_s;
+    auto s = tmp_s.as<uint8_t>();
+    uint32_t elem = 0;
+    uint32_t index = field;
+    for (uint32_t i = 0; i < numSrcs; i++) {
+        xc->getRegOperand(this, i, &tmp_s);
+        s = tmp_s.as<uint8_t>();
+        while(index < (i + 1) * elems_per_vreg)
+        {
+            memcpy(Vd + (elem * sizeOfElement),
+                    s + ((index  %  elems_per_vreg) * sizeOfElement),
+                    sizeOfElement);
+            index += numSrcs;
+            elem++;
+        }
+    }
+    if (traceData)
+        traceData->setData(vecRegClass, &tmp_d0);
+    return NoFault;
+}
+
+std::string
+VlSegDeIntrlvMicroInst::generateDisassembly(Addr pc, const loader::SymbolTable *symtab)
+    const
+{
+    std::stringstream ss;
+    ss << mnemonic << ' ' << registerName(destRegIdx(0));
+    for (uint8_t i = 0; i < this->_numSrcRegs; i++) {
+        ss << ", " << registerName(srcRegIdx(i));
+    }
+    ss << ", field: " << field;
+    return ss.str();
+}
+
 } // namespace RiscvISA
 } // namespace gem5

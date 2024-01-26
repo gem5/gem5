@@ -261,6 +261,7 @@ class MinorDefaultVecFU(MinorFU):
             "VectorIndexedLoad",
             "VectorIndexedStore",
             "VectorUnitStrideFaultOnlyFirstLoad",
+            "VectorUnitStrideSegmentedLoad",
             "VectorWholeRegisterLoad",
             "VectorWholeRegisterStore",
             "VectorIntegerArith",
