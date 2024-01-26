@@ -115,28 +115,13 @@ class HSAQueueDescriptor
                      10ca0a99bbd0252f5bf6f08d1503e59f1129df4a/ROCm_Libraries/
                      rocr/src/core/runtime/amd_aql_queue.cpp#L624
              *
-             * GFX7 and GFX8 will allocate twice as much space for their HSA
-             * queues as they actually access (using mod operations to map the
-             * virtual addresses from the upper half of the queue to the same
-             * virtual addresses as the lower half).  Thus, we need to check if
-             * the ISA is GFX8 and mod the address by half of the queue size if
-             * so.
              */
             uint64_t retAddr = 0ll;
-            if ((gfxVersion == GfxVersion::gfx801) ||
-                (gfxVersion == GfxVersion::gfx803)) {
-              retAddr = basePointer + ((ix % (numElts/2)) * objSize());
-              DPRINTF(HSAPacketProcessor, "ptr() gfx8: base: 0x%x, "
-                      "index: 0x%x, numElts: 0x%x, numElts/2: 0x%x, "
-                      "objSize: 0x%x, retAddr: 0x%x\n", basePointer, ix,
-                      numElts, numElts/2, objSize(), retAddr);
-            } else {
-              retAddr = basePointer + ((ix % numElts) * objSize());
-              DPRINTF(HSAPacketProcessor, "ptr() gfx9: base: 0x%x, "
-                      "index: 0x%x, numElts: 0x%x, objSize: 0x%x, "
-                      "retAddr: 0x%x\n", basePointer, ix, numElts, objSize(),
-                      retAddr);
-            }
+            retAddr = basePointer + ((ix % numElts) * objSize());
+            DPRINTF(HSAPacketProcessor, "ptr() gfx9: base: 0x%x, "
+                    "index: 0x%x, numElts: 0x%x, objSize: 0x%x, "
+                    "retAddr: 0x%x\n", basePointer, ix, numElts, objSize(),
+                    retAddr);
             return retAddr;
         }
 };

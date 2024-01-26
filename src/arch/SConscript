@@ -68,7 +68,7 @@ if env['CONF']['BUILD_ISA']:
         error("At least one ISA need to be set")
 
 
-amdgpu_isa = ['gcn3', 'vega']
+amdgpu_isa = ['vega']
 
 if env['CONF']['BUILD_GPU']:
     env.SwitchingHeaders(

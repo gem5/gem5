@@ -38,11 +38,11 @@ assumes tested protocols supports release consistency.
 To start using the tester quickly, you can use the following example command
 line to get running immediately:
 
-build/GCN3_X86/gem5.opt configs/example/ruby_gpu_random_test.py \
+build/VEGA_X86/gem5.opt configs/example/ruby_gpu_random_test.py \
             --test-length=1000 --system-size=medium --cache-size=small
 
 An overview of the main command line options is as follows. For all options
-use `build/GCN3_X86/gem5.opt configs/example/ruby_gpu_random_test.py --help`
+use `build/VEGA_X86/gem5.opt configs/example/ruby_gpu_random_test.py --help`
 or see the configuration file.
 
  * --cache-size (small, large): Use smaller sizes for testing evict, etc.

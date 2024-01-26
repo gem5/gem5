@@ -48,7 +48,6 @@ import re
 from testlib import *
 
 isa_str_map = {
-    constants.gcn3_x86_tag: "x86",
     constants.arm_tag: "arm",
     constants.mips_tag: "mips",
     constants.riscv_tag: "riscv",

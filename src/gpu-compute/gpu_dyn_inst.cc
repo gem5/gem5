@@ -56,7 +56,7 @@ GPUDynInst::GPUDynInst(ComputeUnit *_cu, Wavefront *_wf,
     a_data = new uint8_t[computeUnit()->wfSize() * 8];
     x_data = new uint8_t[computeUnit()->wfSize() * 8];
     // scalar loads can read up to 16 Dwords of data (see publicly
-    // available GCN3 ISA manual)
+    // available Vega ISA manual)
     scalar_data = new uint8_t[16 * sizeof(uint32_t)];
     for (int i = 0; i < (16 * sizeof(uint32_t)); ++i) {
         scalar_data[i] = 0;
