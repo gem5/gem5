@@ -170,9 +170,9 @@ class ArmISA(BaseISA):
         0x0000000000010010, "AArch64 Memory Model Feature Register 2"
     )
 
-    # HAS_SDEFLT | HAS_FORCE_NS | HAS_TIDR | PMG_MAX = 64 |
+    # HAS_SDEFLT | HAS_FORCE_NS | HAS_TIDR | PMG_MAX = 128 |
     # VPMR_MAX = 7 | HAS_HCR | PARTID_MAX = 256
-    mpamidr_el1 = Param.UInt64(0x34000040001E0100, "MPAM ID Register (EL1)")
+    mpamidr_el1 = Param.UInt64(0x34000080001E0100, "MPAM ID Register (EL1)")
 
     # Any access (read/write) to an unimplemented
     # Implementation Defined registers is not causing an Undefined Instruction.

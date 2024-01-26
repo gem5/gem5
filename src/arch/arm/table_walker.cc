@@ -41,6 +41,7 @@
 
 #include "arch/arm/faults.hh"
 #include "arch/arm/mmu.hh"
+#include "arch/arm/mpam.hh"
 #include "arch/arm/pagetable.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/tlb.hh"
@@ -2114,6 +2115,8 @@ TableWalker::fetchDescriptor(Addr desc_addr,
             desc_addr, num_bytes, flags, requestorId);
         req->taskId(context_switch_task_id::DMA);
 
+        mpamTagTableWalk(req);
+
         Fault fault = testWalk(req, descriptor.domain(),
             lookup_level);
 
@@ -2385,6 +2388,12 @@ TableWalker::readDataUntimed(ThreadContext *tc, Addr vaddr, Addr desc_addr,
         arm_fault->annotate(ArmFault::OVA, vaddr);
     }
     return fault;
+}
+
+void
+TableWalker::mpamTagTableWalk(RequestPtr &req) const
+{
+    mpam::tagRequest(currState->tc, req, currState->isFetch);
 }
 
 void
