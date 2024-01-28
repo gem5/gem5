@@ -104,7 +104,7 @@ class Interrupts : public BaseInterrupts
 
     void unserialize(CheckpointIn &cp) override;
 
-    Port &getPort(const std::string &if_name, PortID idx);
+    Port &getPort(const std::string &if_name, PortID idx) override;
 
     void raiseInterruptPin(uint32_t num);
     void lowerInterruptPin(uint32_t num) {};
