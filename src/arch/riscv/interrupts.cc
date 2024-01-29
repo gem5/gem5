@@ -44,7 +44,8 @@ Interrupts::Interrupts(const Params &p) : BaseInterrupts(p),
         i < p.port_local_interrupt_pins_connection_count;
         ++i) {
             uint8_t interruptID = p.local_interrupt_ids[i];
-            assert(interruptID >= 16);
+            assert(interruptID >= 0);
+            assert(interruptID <= 47);
             std::string pinName =
                 csprintf("%s.local_interrupt_pins[%d]", p.name, i);
             IntSinkPin<Interrupts>* pin =
@@ -135,10 +136,6 @@ Interrupts::getInterrupt()
     std::bitset<NumInterruptTypes> mask = globalMask();
     if (((ISA*) tc->getIsaPtr())->rvType() == RV64) {
         const std::vector<int> interrupt_order {
-            INT_LOCAL_63, INT_LOCAL_62, INT_LOCAL_61, INT_LOCAL_60,
-            INT_LOCAL_59, INT_LOCAL_58, INT_LOCAL_57, INT_LOCAL_56,
-            INT_LOCAL_55, INT_LOCAL_54, INT_LOCAL_53, INT_LOCAL_52,
-            INT_LOCAL_51, INT_LOCAL_50, INT_LOCAL_49, INT_LOCAL_48,
             INT_LOCAL_47, INT_LOCAL_46, INT_LOCAL_45, INT_LOCAL_44,
             INT_LOCAL_43, INT_LOCAL_42, INT_LOCAL_41, INT_LOCAL_40,
             INT_LOCAL_39, INT_LOCAL_38, INT_LOCAL_37, INT_LOCAL_36,
@@ -147,6 +144,10 @@ Interrupts::getInterrupt()
             INT_LOCAL_27, INT_LOCAL_26, INT_LOCAL_25, INT_LOCAL_24,
             INT_LOCAL_23, INT_LOCAL_22, INT_LOCAL_21, INT_LOCAL_20,
             INT_LOCAL_19, INT_LOCAL_18, INT_LOCAL_17, INT_LOCAL_16,
+            INT_LOCAL_15, INT_LOCAL_14, INT_LOCAL_13, INT_LOCAL_12,
+            INT_LOCAL_11, INT_LOCAL_10, INT_LOCAL_9, INT_LOCAL_8,
+            INT_LOCAL_7, INT_LOCAL_6, INT_LOCAL_5, INT_LOCAL_4,
+            INT_LOCAL_3, INT_LOCAL_2, INT_LOCAL_1, INT_LOCAL_0,
             INT_EXT_MACHINE, INT_SOFTWARE_MACHINE, INT_TIMER_MACHINE,
             INT_EXT_SUPER, INT_SOFTWARE_SUPER, INT_TIMER_SUPER,
             INT_EXT_USER, INT_SOFTWARE_USER, INT_TIMER_USER
@@ -158,10 +159,10 @@ Interrupts::getInterrupt()
         }
     } else if (((ISA*) tc->getIsaPtr())->rvType() == RV32) {
         const std::vector<int> interrupt_order {
-            INT_LOCAL_31, INT_LOCAL_30, INT_LOCAL_29, INT_LOCAL_28,
-            INT_LOCAL_27, INT_LOCAL_26, INT_LOCAL_25, INT_LOCAL_24,
-            INT_LOCAL_23, INT_LOCAL_22, INT_LOCAL_21, INT_LOCAL_20,
-            INT_LOCAL_19, INT_LOCAL_18, INT_LOCAL_17, INT_LOCAL_16,
+            INT_LOCAL_15, INT_LOCAL_14, INT_LOCAL_13, INT_LOCAL_12,
+            INT_LOCAL_11, INT_LOCAL_10, INT_LOCAL_9, INT_LOCAL_8,
+            INT_LOCAL_7, INT_LOCAL_6, INT_LOCAL_5, INT_LOCAL_4,
+            INT_LOCAL_3, INT_LOCAL_2, INT_LOCAL_1, INT_LOCAL_0,
             INT_EXT_MACHINE, INT_SOFTWARE_MACHINE, INT_TIMER_MACHINE,
             INT_EXT_SUPER, INT_SOFTWARE_SUPER, INT_TIMER_SUPER,
             INT_EXT_USER, INT_SOFTWARE_USER, INT_TIMER_USER
@@ -208,7 +209,7 @@ Interrupts::clearAll()
 void
 Interrupts::raiseInterruptPin(uint32_t num)
 {
-    tc->getCpuPtr()->postInterrupt(tc->threadId(), num, 0);
+    tc->getCpuPtr()->postInterrupt(tc->threadId(), num + 16, 0);
 }
 
 void
