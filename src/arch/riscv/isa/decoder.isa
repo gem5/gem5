@@ -3146,12 +3146,11 @@ decode QUADRANT default Unknown::unknown() {
                         bool has_one = false;
                         for (uint32_t i = 0; i < (uint32_t)machInst.vl; i++) {
                             bool vs2_lsb = elem_mask(Vs2_vu, i);
-                            bool do_mask = elem_mask(v0, i);
-                            if(this->vm||(this->vm == 0&&do_mask)){
+                            if (this->vm || elem_mask(v0, i)){
                                 uint64_t res = 0;
                                 if (!has_one && !vs2_lsb) {
                                     res = 1;
-                                } else if(!has_one && vs2_lsb) {
+                                } else if (!has_one && vs2_lsb) {
                                     has_one = true;
                                 }
                                 Vd_ub[i/8] = ASSIGN_VD_BIT(i, res);
@@ -3162,10 +3161,9 @@ decode QUADRANT default Unknown::unknown() {
                         bool has_one = false;
                         for (uint32_t i = 0; i < (uint32_t)machInst.vl; i++) {
                             bool vs2_lsb = elem_mask(Vs2_vu, i);
-                            bool do_mask = elem_mask(v0, i);
-                            if(this->vm||(this->vm == 0&&do_mask)){
+                            if (this->vm || elem_mask(v0, i)){
                                 uint64_t res = 0;
-                                if(!has_one && vs2_lsb) {
+                                if (!has_one && vs2_lsb) {
                                     has_one = true;
                                     res = 1;
                                 }
@@ -3177,12 +3175,11 @@ decode QUADRANT default Unknown::unknown() {
                         bool has_one = false;
                         for (uint32_t i = 0; i < (uint32_t)machInst.vl; i++) {
                             bool vs2_lsb = elem_mask(Vs2_vu, i);
-                            bool do_mask = elem_mask(v0, i);
-                            if(this->vm||(this->vm == 0&&do_mask)){
+                            if (this->vm || elem_mask(v0, i)){
                                 uint64_t res = 0;
                                 if (!has_one && !vs2_lsb) {
                                     res = 1;
-                                } else if(!has_one && vs2_lsb) {
+                                } else if (!has_one && vs2_lsb) {
                                     has_one = true;
                                     res = 1;
                                 }
