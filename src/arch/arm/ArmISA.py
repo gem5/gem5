@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013, 2015-2022 ARM Limited
+# Copyright (c) 2012-2013, 2015-2022, 2024 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -52,7 +52,11 @@ class DecoderFlavor(Enum):
 
 class ArmDefaultSERelease(ArmRelease):
     extensions = [
-        "CRYPTO",
+        "FEAT_AES",
+        "FEAT_PMULL",
+        "FEAT_SHA1",
+        "FEAT_SHA256",
+        "FEAT_CRC32",
         # Armv8.1
         "FEAT_LSE",
         "FEAT_RDM",
