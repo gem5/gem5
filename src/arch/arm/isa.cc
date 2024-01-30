@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2023 Arm Limited
+ * Copyright (c) 2010-2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -106,6 +106,7 @@ ISA::ISA(const Params &p) : BaseISA(p, "arm"), system(NULL),
     // Cache system-level properties
     if (FullSystem && system) {
         highestELIs64 = system->highestELIs64();
+        highestEL = system->highestEL();
         haveLargeAsid64 = system->haveLargeAsid64();
         physAddrRange = system->physAddrRange();
         sveVL = system->sveVL();
@@ -114,6 +115,7 @@ ISA::ISA(const Params &p) : BaseISA(p, "arm"), system(NULL),
         release = system->releaseFS();
     } else {
         highestELIs64 = true; // ArmSystem::highestELIs64 does the same
+        highestEL = EL1; // ArmSystem::highestEL does the same
         haveLargeAsid64 = false;
         physAddrRange = 32;  // dummy value
         sveVL = p.sve_vl_se;
