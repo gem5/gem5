@@ -1440,6 +1440,7 @@ USTATUS_MASKS[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
     },
 };
 
+const RegVal LOCAL_MASK = mask(63,16);
 const RegVal MEI_MASK = 1ULL << 11;
 const RegVal SEI_MASK = 1ULL << 9;
 const RegVal UEI_MASK = 1ULL << 8;
@@ -1450,13 +1451,13 @@ const RegVal MSI_MASK = 1ULL << 3;
 const RegVal SSI_MASK = 1ULL << 1;
 const RegVal USI_MASK = 1ULL << 0;
 const RegVal MI_MASK[enums::Num_PrivilegeModeSet] = {
-    [enums::M] = mask(63,16) | MEI_MASK| MTI_MASK | MSI_MASK,
-    [enums::MU] = mask(63,16) | MEI_MASK| MTI_MASK | MSI_MASK,
-    [enums::MNU] = mask(63,16) | MEI_MASK | UEI_MASK | MTI_MASK | UTI_MASK |
+    [enums::M] = LOCAL_MASK | MEI_MASK| MTI_MASK | MSI_MASK,
+    [enums::MU] = LOCAL_MASK | MEI_MASK| MTI_MASK | MSI_MASK,
+    [enums::MNU] = LOCAL_MASK | MEI_MASK | UEI_MASK | MTI_MASK | UTI_MASK |
                    MSI_MASK | USI_MASK,
-    [enums::MSU] = mask(63,16) | MEI_MASK | SEI_MASK | MTI_MASK | STI_MASK |
+    [enums::MSU] = LOCAL_MASK | MEI_MASK | SEI_MASK | MTI_MASK | STI_MASK |
                    MSI_MASK | SSI_MASK,
-    [enums::MNSU] = mask (63,16) | MEI_MASK | SEI_MASK | UEI_MASK |
+    [enums::MNSU] = LOCAL_MASK | MEI_MASK | SEI_MASK | UEI_MASK |
                     MTI_MASK | STI_MASK | UTI_MASK |
                     MSI_MASK | SSI_MASK | USI_MASK,
 };
