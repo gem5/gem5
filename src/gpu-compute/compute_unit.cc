@@ -397,9 +397,9 @@ ComputeUnit::startWavefront(Wavefront *w, int waveId, LdsChunk *ldsChunk,
 }
 
 /**
- * trigger invalidate operation in the cu
+ * trigger invalidate operation in the CU
  *
- * req: request initialized in shader, carrying the invlidate flags
+ * req: request initialized in shader, carrying the invalidate flags
  */
 void
 ComputeUnit::doInvalidate(RequestPtr req, int kernId){
@@ -423,6 +423,26 @@ ComputeUnit::doInvalidate(RequestPtr req, int kernId){
 void
 ComputeUnit::doFlush(GPUDynInstPtr gpuDynInst) {
     injectGlobalMemFence(gpuDynInst, true);
+}
+
+/**
+ * trigger SQCinvalidate operation in the CU
+ *
+ * req: request initialized in shader, carrying the invalidate flags
+ */
+void
+ComputeUnit::doSQCInvalidate(RequestPtr req, int kernId){
+    GPUDynInstPtr gpuDynInst
+        = std::make_shared<GPUDynInst>(this, nullptr,
+            new KernelLaunchStaticInst(), getAndIncSeqNum());
+
+    // kern_id will be used in inv responses
+    gpuDynInst->kern_id = kernId;
+    // update contextId field
+    req->setContext(gpuDynInst->wfDynId);
+
+    gpuDynInst->staticInstruction()->setFlag(GPUStaticInst::Scalar);
+    scalarMemoryPipe.injectScalarMemFence(gpuDynInst, true, req);
 }
 
 // reseting SIMD register pools
@@ -1012,7 +1032,14 @@ ComputeUnit::DataPort::recvReqRetry()
 bool
 ComputeUnit::SQCPort::recvTimingResp(PacketPtr pkt)
 {
-    computeUnit->handleSQCReturn(pkt);
+    SenderState *sender_state = safe_cast<SenderState*>(pkt->senderState);
+    /** Process the response only if there is a wavefront associated with it.
+     * Otherwise, it is from SQC invalidate that was issued at kernel start
+     * and doesn't have a wavefront or instruction associated with it.
+     */
+    if (sender_state->wavefront != nullptr) {
+        computeUnit->handleSQCReturn(pkt);
+    }
 
     return true;
 }

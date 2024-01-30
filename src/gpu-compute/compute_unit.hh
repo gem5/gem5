@@ -412,6 +412,7 @@ class ComputeUnit : public ClockedObject
 
     void doInvalidate(RequestPtr req, int kernId);
     void doFlush(GPUDynInstPtr gpuDynInst);
+    void doSQCInvalidate(RequestPtr req, int kernId);
 
     void dispWorkgroup(HSAQueueEntry *task, int num_wfs_in_wg);
     bool hasDispResources(HSAQueueEntry *task, int &num_wfs_in_wg);
