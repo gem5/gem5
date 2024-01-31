@@ -951,6 +951,21 @@ Fault
 
 }};
 
+def template Vector1Vs1VdMaskDeclare {{
+
+template<typename ElemType>
+class %(class_name)s : public %(base_class)s {
+private:
+    RegId srcRegIdxArr[3];
+    RegId destRegIdxArr[1];
+    bool vm;
+public:
+    %(class_name)s(ExtMachInst _machInst);
+    Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
+    using %(base_class)s::generateDisassembly;
+};
+
+}};
 
 def template Vector1Vs1VdMaskConstructor {{
 

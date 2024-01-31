@@ -1,4 +1,6 @@
-# Copyright 2022 Google LLC
+#!/usr/bin/env python3
+# Copyright (c) 2023 The Regents of the University of California
+# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -23,11 +25,25 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-config TARGET_GPU_ISA
-    default "gcn3" if GCN3_GPU_ISA
+"""
+ This script  contains helper functions for the scripts in this directory.
+ This script requires external packages, please install them by running:
+    pip3 install -r requirements.txt
+"""
 
-cont_choice "TARGET_GPU_ISA"
-    config GCN3_GPU_ISA
-        depends on BUILD_GPU
-        bool "GCN3"
-endchoice
+import json
+
+from bson import json_util
+from pymongo import MongoClient
+
+
+def get_database(uri, db_name, collection_name):
+    client = MongoClient(uri)
+    db = client[db_name]
+    collection = db[collection_name]
+    return collection
+
+
+def save_to_json(resources, json_file_name):
+    with open(json_file_name, "w") as outfile:
+        json.dump(json.loads(json_util.dumps(resources)), outfile, indent=4)

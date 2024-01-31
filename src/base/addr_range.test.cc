@@ -1544,6 +1544,36 @@ TEST(AddrRangeTest, SubtractionAssignmentOfRangeListFromRangeList)
                 expected_range3, expected_range4));
 }
 
+TEST(AddrRangeTest, isNotSubsetLastByte)
+{
+    /* An issue raised in https://github.com/gem5/gem5/issues/240 where if an
+     * address range ends at the last byte of a 64 bit address space, it will
+     * be considered a subset of any other address range that starts at the
+     * first byte of the range.
+     */
+
+    AddrRange first_four_bytes = RangeSize(0x0, 4);
+    AddrRange last_four_bytes = RangeSize(0xfffffffffffffffc, 4);
+
+    EXPECT_FALSE(last_four_bytes.isSubset(first_four_bytes));
+}
+
+TEST(AddrRangeTest, isSubsetLastByte)
+{
+    /* An issue raised in https://github.com/gem5/gem5/issues/240 where if an
+     * address range ends at the last byte of a 64 bit address space, it will
+     * be considered a subset of any other address range that starts at the
+     * first byte of the range.
+     *
+     * This test checks it subset works correctly when the range is the last
+     * byte of the address space.
+     */
+    AddrRange last_four_bytes = RangeSize(0xfffffffffffffffc, 4);
+    AddrRange not_wrapped_last_bytes = RangeSize(0xfffffffffffffffc, 3);
+
+    EXPECT_TRUE(not_wrapped_last_bytes.isSubset(last_four_bytes));
+}
+
 /*
  * InterleavingRanges:
  * The exclude method does not support interleaving ranges
