@@ -2600,11 +2600,18 @@ action(Send_CompData, desc="") {
   bool is_rd_nsd := tbe.reqType == CHIRequestType:ReadNotSharedDirty;
   bool is_rd_unique := tbe.reqType == CHIRequestType:ReadUnique;
 
-  // if the config allows (or not caching the data) and line has no sharers
-  bool snd_unique_on_rs := (fwd_unique_on_readshared || tbe.dataToBeInvalid)
+  // if the request type allows SD
+  bool snd_dirty_on_rs := is_rd_shared && !is_rd_nsd;
+
+  // Send UC/UD on ReadShared or ReadNotSharedDirty if the line has no sharers
+  // and one of the followings are met
+  // 1) the config allows or
+  // 2) local cache won't have the line or
+  // 3) dirty will be passed
+  bool snd_unique_on_rs := (fwd_unique_on_readshared ||
+                            tbe.dataToBeInvalid ||
+                            snd_dirty_on_rs)
                           && tbe.dataUnique && tbe.dir_sharers.isEmpty();
-  // if the request type allows and we won't be caching the data
-  bool snd_dirty_on_rs := is_rd_shared && !is_rd_nsd && tbe.dataToBeInvalid;
 
   if (is_rd_once) {
     tbe.snd_msgType := CHIDataType:CompData_I;
