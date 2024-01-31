@@ -102,14 +102,9 @@ class HSAQueueEntry
             numVgprs = (akc->granulated_workitem_vgpr_count + 1) * 4;
         }
 
-        // SGPR allocation granularies:
-        // - GFX8: 8
-        // - GFX9: 16
-        // Source: https://llvm.org/docs/.html
-        if (gfx_version == GfxVersion::gfx801 ||
-                gfx_version == GfxVersion::gfx803) {
-            numSgprs = (akc->granulated_wavefront_sgpr_count + 1) * 8;
-        } else if (gfx_version == GfxVersion::gfx900 ||
+        // SGPR allocation granulary is 16 in GFX9
+        // Source: https://llvm.org/docs/AMDGPUUsage.html
+        if (gfx_version == GfxVersion::gfx900 ||
                 gfx_version == GfxVersion::gfx902 ||
                 gfx_version == GfxVersion::gfx908 ||
                 gfx_version == GfxVersion::gfx90a) {

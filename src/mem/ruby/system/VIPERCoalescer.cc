@@ -77,7 +77,7 @@ VIPERCoalescer::makeRequest(PacketPtr pkt)
     //    AtomicOp            : cache atomic
     //    Flush               : flush and invalidate cache
     //
-    // VIPER does not expect MemSyncReq & Release since in GCN3, compute unit
+    // VIPER does not expect MemSyncReq & Release since compute unit
     // does not specify an equivalent type of memory request.
     assert((pkt->cmd == MemCmd::MemSyncReq && pkt->req->isInvL1()) ||
             pkt->cmd == MemCmd::ReadReq ||

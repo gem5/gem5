@@ -29,12 +29,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/amdgpu/gcn3/gpu_registers.hh"
+#include "arch/amdgpu/vega/gpu_registers.hh"
 
 namespace gem5
 {
 
-namespace Gcn3ISA
+namespace VegaISA
 {
     std::string
     opSelectorToRegSym(int idx, int numRegs)
@@ -89,6 +89,18 @@ namespace Gcn3ISA
           case REG_ZERO:
             reg_sym = "0";
             break;
+          case REG_SHARED_BASE:
+            reg_sym = "src_shared_base";
+            break;
+          case REG_SHARED_LIMIT:
+            reg_sym = "src_shared_limit";
+            break;
+          case REG_PRIVATE_BASE:
+            reg_sym = "src_private_base";
+            break;
+          case REG_PRIVATE_LIMIT:
+            reg_sym = "src_private_limit";
+            break;
           case REG_POS_HALF:
             reg_sym = "0.5";
             break;
@@ -114,7 +126,7 @@ namespace Gcn3ISA
             reg_sym = "-4";
             break;
           default:
-            fatal("GCN3 ISA instruction has unknown register index %u\n", idx);
+            fatal("VEGA ISA instruction has unknown register index %u\n", idx);
             break;
         }
 
@@ -161,6 +173,15 @@ namespace Gcn3ISA
             regIdx = numScalarRegs - 4;
         } else if (idx == REG_FLAT_SCRATCH_HI) {
             regIdx = numScalarRegs - 3;
+        } else if (idx == REG_EXEC_LO || idx == REG_EXEC_HI) {
+            /**
+             * If the operand is the EXEC mask we just return the op
+             * selector value indicating it is the EXEC mask, which is
+             * not part of any RF. Higher-level calls will understand
+             * that this resolves to a special system register, not an
+             * index into an RF.
+             */
+            return idx;
         }
 
         return regIdx;
@@ -237,5 +258,5 @@ namespace Gcn3ISA
         return false;
     }
 
-} // namespace Gcn3ISA
+} // namespace VegaISA
 } // namespace gem5

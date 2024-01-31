@@ -37,6 +37,7 @@
 #include "arch/amdgpu/vega/gpu_registers.hh"
 #include "arch/generic/vec_reg.hh"
 #include "gpu-compute/scalar_register_file.hh"
+#include "gpu-compute/shader.hh"
 #include "gpu-compute/vector_register_file.hh"
 #include "gpu-compute/wavefront.hh"
 
@@ -546,6 +547,43 @@ namespace VegaISA
               case REG_SRC_LITERAL:
                 assert(NumDwords == 1);
                 srfData[0] = _gpuDynInst->srcLiteral();
+                break;
+              case REG_SHARED_BASE:
+                {
+                    ComputeUnit *cu = _gpuDynInst->computeUnit();
+                    ScalarRegU64 shared_base = cu->shader->ldsApe().base;
+                    std::memcpy((void*)srfData.data(), (void*)&shared_base,
+                            sizeof(shared_base));
+                    DPRINTF(GPUSRF, "Read SHARED_BASE = %#x\n", shared_base);
+                }
+                break;
+              case REG_SHARED_LIMIT:
+                {
+                    ComputeUnit *cu = _gpuDynInst->computeUnit();
+                    ScalarRegU64 shared_limit = cu->shader->ldsApe().limit;
+                    std::memcpy((void*)srfData.data(), (void*)&shared_limit,
+                            sizeof(shared_limit));
+                    DPRINTF(GPUSRF, "Read SHARED_LIMIT = %#x\n", shared_limit);
+                }
+                break;
+              case REG_PRIVATE_BASE:
+                {
+                    ComputeUnit *cu = _gpuDynInst->computeUnit();
+                    ScalarRegU64 priv_base = cu->shader->scratchApe().base;
+                    std::memcpy((void*)srfData.data(), (void*)&priv_base,
+                            sizeof(priv_base));
+                    DPRINTF(GPUSRF, "Read PRIVATE_BASE = %#x\n", priv_base);
+                }
+                break;
+              case REG_PRIVATE_LIMIT:
+                {
+                    ComputeUnit *cu = _gpuDynInst->computeUnit();
+                    ScalarRegU64 priv_limit = cu->shader->scratchApe().limit;
+                    std::memcpy((void*)srfData.data(), (void*)&priv_limit,
+                            sizeof(priv_limit));
+                    DPRINTF(GPUSRF, "Read PRIVATE_LIMIT = %#x\n",
+                            priv_limit);
+                }
                 break;
               case REG_POS_HALF:
                 {

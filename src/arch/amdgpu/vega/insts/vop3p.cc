@@ -31,6 +31,7 @@
 
 #include "arch/amdgpu/vega/insts/vop3p.hh"
 
+#include "arch/amdgpu/vega/insts/instructions.hh"
 #include "arch/arm/insts/fplib.hh"
 
 namespace gem5
@@ -630,6 +631,237 @@ void Inst_VOP3P__V_ACCVGPR_WRITE::execute(GPUDynInstPtr gpuDynInst)
 
     vdst.write();
 }
+
+// --- Inst_VOP3P__V_PK_FMA_F32 class methods ---
+
+Inst_VOP3P__V_PK_FMA_F32::Inst_VOP3P__V_PK_FMA_F32(InFmt_VOP3P *iFmt)
+    : Inst_VOP3P(iFmt, "v_pk_fma_f32")
+{
+    setFlag(ALU);
+} // Inst_VOP3P__V_PK_FMA_F32
+
+Inst_VOP3P__V_PK_FMA_F32::~Inst_VOP3P__V_PK_FMA_F32()
+{
+} // ~Inst_VOP3P__V_PK_FMA_F32
+
+// D.f[63:32] = S0.f[63:32] * S1.f[63:32] + S2.f[63:32] . D.f[31:0] =
+//     S0.f[31:0] * S1.f[31:0] + S2.f[31:0] .
+void
+Inst_VOP3P__V_PK_FMA_F32::execute(GPUDynInstPtr gpuDynInst)
+{
+    // This is a special case of packed instructions which operates on
+    // 64-bit inputs/outputs and not 32-bit. U64 is used here as float
+    // values cannot use bitwise operations. Consider the U64 to imply
+    // untyped 64-bits of data.
+    Wavefront *wf = gpuDynInst->wavefront();
+    ConstVecOperandU64 src0(gpuDynInst, extData.SRC0);
+    ConstVecOperandU64 src1(gpuDynInst, extData.SRC1);
+    ConstVecOperandU64 src2(gpuDynInst, extData.SRC2);
+    VecOperandU64 vdst(gpuDynInst, instData.VDST);
+
+    src0.readSrc();
+    src1.readSrc();
+    src2.readSrc();
+
+    int opsel = instData.OPSEL;
+    int opsel_hi = extData.OPSEL_HI | (instData.OPSEL_HI2 << 2);
+
+    for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+        if (wf->execMask(lane)) {
+            uint32_t s0l = (opsel & 1) ? bits(src0[lane], 63, 32)
+                                       : bits(src0[lane], 31, 0);
+            uint32_t s1l = (opsel & 2) ? bits(src1[lane], 63, 32)
+                                       : bits(src1[lane], 31, 0);
+            uint32_t s2l = (opsel & 4) ? bits(src2[lane], 63, 32)
+                                       : bits(src2[lane], 31, 0);
+
+            float dword1 = std::fma(*reinterpret_cast<float*>(&s0l),
+                                    *reinterpret_cast<float*>(&s1l),
+                                    *reinterpret_cast<float*>(&s2l));
+
+            uint32_t s0h = (opsel_hi & 1) ? bits(src0[lane], 63, 32)
+                                          : bits(src0[lane], 31, 0);
+            uint32_t s1h = (opsel_hi & 2) ? bits(src1[lane], 63, 32)
+                                          : bits(src1[lane], 31, 0);
+            uint32_t s2h = (opsel_hi & 4) ? bits(src2[lane], 63, 32)
+                                          : bits(src2[lane], 31, 0);
+
+            float dword2 = std::fma(*reinterpret_cast<float*>(&s0h),
+                                    *reinterpret_cast<float*>(&s1h),
+                                    *reinterpret_cast<float*>(&s2h));
+
+            uint32_t result1 = *reinterpret_cast<uint32_t*>(&dword1);
+            uint32_t result2 = *reinterpret_cast<uint32_t*>(&dword2);
+
+            vdst[lane] = (static_cast<uint64_t>(result2) << 32) | result1;
+        }
+    }
+
+    vdst.write();
+} // execute
+// --- Inst_VOP3P__V_PK_MUL_F32 class methods ---
+
+Inst_VOP3P__V_PK_MUL_F32::Inst_VOP3P__V_PK_MUL_F32(InFmt_VOP3P *iFmt)
+    : Inst_VOP3P(iFmt, "v_pk_mul_f32")
+{
+    setFlag(ALU);
+} // Inst_VOP3P__V_PK_MUL_F32
+
+Inst_VOP3P__V_PK_MUL_F32::~Inst_VOP3P__V_PK_MUL_F32()
+{
+} // ~Inst_VOP3P__V_PK_MUL_F32
+
+// D.f[63:32] = S0.f[63:32] * S1.f[63:32] . D.f[31:0] = S0.f[31:0] *
+//              S1.f[31:0]
+void
+Inst_VOP3P__V_PK_MUL_F32::execute(GPUDynInstPtr gpuDynInst)
+{
+    // This is a special case of packed instructions which operates on
+    // 64-bit inputs/outputs and not 32-bit. U64 is used here as float
+    // values cannot use bitwise operations. Consider the U64 to imply
+    // untyped 64-bits of data.
+    Wavefront *wf = gpuDynInst->wavefront();
+    ConstVecOperandU64 src0(gpuDynInst, extData.SRC0);
+    ConstVecOperandU64 src1(gpuDynInst, extData.SRC1);
+    VecOperandU64 vdst(gpuDynInst, instData.VDST);
+
+    src0.readSrc();
+    src1.readSrc();
+
+    int opsel = instData.OPSEL;
+    int opsel_hi = extData.OPSEL_HI;
+
+    for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+        if (wf->execMask(lane)) {
+            uint32_t lower_dword = (opsel & 1) ? bits(src0[lane], 63, 32)
+                                               : bits(src0[lane], 31, 0);
+            uint32_t upper_dword = (opsel & 2) ? bits(src1[lane], 63, 32)
+                                               : bits(src1[lane], 31, 0);
+
+            float dword1 = *reinterpret_cast<float*>(&lower_dword)
+                         * *reinterpret_cast<float*>(&upper_dword);
+
+            lower_dword = (opsel_hi & 1) ? bits(src0[lane], 63, 32)
+                                         : bits(src0[lane], 31, 0);
+            upper_dword = (opsel_hi & 2) ? bits(src1[lane], 63, 32)
+                                         : bits(src1[lane], 31, 0);
+
+            float dword2 = *reinterpret_cast<float*>(&lower_dword)
+                         * *reinterpret_cast<float*>(&upper_dword);
+
+            uint32_t result1 = *reinterpret_cast<uint32_t*>(&dword1);
+            uint32_t result2 = *reinterpret_cast<uint32_t*>(&dword2);
+
+            vdst[lane] = (static_cast<uint64_t>(result2) << 32) | result1;
+        }
+    }
+
+    vdst.write();
+} // execute
+// --- Inst_VOP3P__V_PK_ADD_F32 class methods ---
+
+Inst_VOP3P__V_PK_ADD_F32::Inst_VOP3P__V_PK_ADD_F32(InFmt_VOP3P *iFmt)
+    : Inst_VOP3P(iFmt, "v_pk_add_f32")
+{
+    setFlag(ALU);
+} // Inst_VOP3P__V_PK_ADD_F32
+
+Inst_VOP3P__V_PK_ADD_F32::~Inst_VOP3P__V_PK_ADD_F32()
+{
+} // ~Inst_VOP3P__V_PK_ADD_F32
+
+// D.f[63:32] = S0.f[63:32] + S1.f[63:32] . D.f[31:0] = S0.f[31:0] +
+//              S1.f[31:0]
+void
+Inst_VOP3P__V_PK_ADD_F32::execute(GPUDynInstPtr gpuDynInst)
+{
+    // This is a special case of packed instructions which operates on
+    // 64-bit inputs/outputs and not 32-bit. U64 is used here as float
+    // values cannot use bitwise operations. Consider the U64 to imply
+    // untyped 64-bits of data.
+    Wavefront *wf = gpuDynInst->wavefront();
+    ConstVecOperandU64 src0(gpuDynInst, extData.SRC0);
+    ConstVecOperandU64 src1(gpuDynInst, extData.SRC1);
+    VecOperandU64 vdst(gpuDynInst, instData.VDST);
+
+    src0.readSrc();
+    src1.readSrc();
+
+    int opsel = instData.OPSEL;
+    int opsel_hi = extData.OPSEL_HI;
+
+    for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+        if (wf->execMask(lane)) {
+            uint32_t lower_dword = (opsel & 1) ? bits(src0[lane], 63, 32)
+                                               : bits(src0[lane], 31, 0);
+            uint32_t upper_dword = (opsel & 2) ? bits(src1[lane], 63, 32)
+                                               : bits(src1[lane], 31, 0);
+
+            float dword1 = *reinterpret_cast<float*>(&lower_dword)
+                         + *reinterpret_cast<float*>(&upper_dword);
+
+            lower_dword = (opsel_hi & 1) ? bits(src0[lane], 63, 32)
+                                         : bits(src0[lane], 31, 0);
+            upper_dword = (opsel_hi & 2) ? bits(src1[lane], 63, 32)
+                                         : bits(src1[lane], 31, 0);
+
+            float dword2 = *reinterpret_cast<float*>(&lower_dword)
+                         + *reinterpret_cast<float*>(&upper_dword);
+
+            uint32_t result1 = *reinterpret_cast<uint32_t*>(&dword1);
+            uint32_t result2 = *reinterpret_cast<uint32_t*>(&dword2);
+
+            vdst[lane] = (static_cast<uint64_t>(result2) << 32) | result1;
+        }
+    }
+
+    vdst.write();
+} // execute
+// --- Inst_VOP3P__V_PK_MOV_B32 class methods ---
+
+Inst_VOP3P__V_PK_MOV_B32::Inst_VOP3P__V_PK_MOV_B32(InFmt_VOP3P *iFmt)
+    : Inst_VOP3P(iFmt, "v_pk_mov_b32")
+{
+    setFlag(ALU);
+} // Inst_VOP3P__V_PK_MOV_B32
+
+Inst_VOP3P__V_PK_MOV_B32::~Inst_VOP3P__V_PK_MOV_B32()
+{
+} // ~Inst_VOP3P__V_PK_MOV_B32
+
+// D.u[63:32] = S1.u[31:0]; D.u[31:0] = S0.u[31:0].
+void
+Inst_VOP3P__V_PK_MOV_B32::execute(GPUDynInstPtr gpuDynInst)
+{
+    // This is a special case of packed instructions which operates on
+    // 64-bit inputs/outputs and not 32-bit.
+    Wavefront *wf = gpuDynInst->wavefront();
+    ConstVecOperandU64 src0(gpuDynInst, extData.SRC0);
+    ConstVecOperandU64 src1(gpuDynInst, extData.SRC1);
+    VecOperandU64 vdst(gpuDynInst, instData.VDST);
+
+    src0.readSrc();
+    src1.readSrc();
+
+    // Only OPSEL[1:0] are used
+    // OPSEL[0] 0/1: Lower dest dword = lower/upper dword of src0
+
+    int opsel = instData.OPSEL;
+
+    for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+        if (wf->execMask(lane)) {
+            // OPSEL[1] 0/1: Lower dest dword = lower/upper dword of src1
+            uint64_t lower_dword = (opsel & 1) ? bits(src0[lane], 63, 32)
+                                               : bits(src0[lane], 31, 0);
+            uint64_t upper_dword = (opsel & 2) ? bits(src1[lane], 63, 32)
+                                               : bits(src1[lane], 31, 0);
+
+            vdst[lane] = upper_dword << 32 | lower_dword;
+        }
+    }
+
+    vdst.write();
+} // execute
 
 } // namespace VegaISA
 } // namespace gem5

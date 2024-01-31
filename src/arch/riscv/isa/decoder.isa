@@ -771,7 +771,8 @@ decode QUADRANT default Unknown::unknown() {
                 0x0: fence({{
                 }}, uint64_t, IsReadBarrier, IsWriteBarrier, No_OpClass);
                 0x1: fence_i({{
-                }}, uint64_t, IsNonSpeculative, IsSerializeAfter, No_OpClass);
+                }}, uint64_t, IsNonSpeculative, IsSerializeAfter,
+                    IsSquashAfter, No_OpClass);
             }
 
             0x2: decode FUNCT12 {
@@ -3146,12 +3147,11 @@ decode QUADRANT default Unknown::unknown() {
                         bool has_one = false;
                         for (uint32_t i = 0; i < (uint32_t)machInst.vl; i++) {
                             bool vs2_lsb = elem_mask(Vs2_vu, i);
-                            bool do_mask = elem_mask(v0, i);
-                            if(this->vm||(this->vm == 0&&do_mask)){
+                            if (this->vm || elem_mask(v0, i)){
                                 uint64_t res = 0;
                                 if (!has_one && !vs2_lsb) {
                                     res = 1;
-                                } else if(!has_one && vs2_lsb) {
+                                } else if (!has_one && vs2_lsb) {
                                     has_one = true;
                                 }
                                 Vd_ub[i/8] = ASSIGN_VD_BIT(i, res);
@@ -3162,10 +3162,9 @@ decode QUADRANT default Unknown::unknown() {
                         bool has_one = false;
                         for (uint32_t i = 0; i < (uint32_t)machInst.vl; i++) {
                             bool vs2_lsb = elem_mask(Vs2_vu, i);
-                            bool do_mask = elem_mask(v0, i);
-                            if(this->vm||(this->vm == 0&&do_mask)){
+                            if (this->vm || elem_mask(v0, i)){
                                 uint64_t res = 0;
-                                if(!has_one && vs2_lsb) {
+                                if (!has_one && vs2_lsb) {
                                     has_one = true;
                                     res = 1;
                                 }
@@ -3177,12 +3176,11 @@ decode QUADRANT default Unknown::unknown() {
                         bool has_one = false;
                         for (uint32_t i = 0; i < (uint32_t)machInst.vl; i++) {
                             bool vs2_lsb = elem_mask(Vs2_vu, i);
-                            bool do_mask = elem_mask(v0, i);
-                            if(this->vm||(this->vm == 0&&do_mask)){
+                            if (this->vm || elem_mask(v0, i)){
                                 uint64_t res = 0;
                                 if (!has_one && !vs2_lsb) {
                                     res = 1;
-                                } else if(!has_one && vs2_lsb) {
+                                } else if (!has_one && vs2_lsb) {
                                     has_one = true;
                                     res = 1;
                                 }
@@ -3256,64 +3254,28 @@ decode QUADRANT default Unknown::unknown() {
                 }
                 format VectorIntFormat {
                     0x20: vdivu_vv({{
-                        if (Vs1_vu[i] == 0)
-                            Vd_vu[i] = (vu)-1;
-                        else
-                            Vd_vu[i] = Vs2_vu[i] / Vs1_vu[i];
+                        Vd_vu[i] = divu<vu>(Vs2_vu[i], Vs1_vu[i]);
                     }}, OPMVV, VectorIntegerArithOp);
                     0x21: vdiv_vv({{
-                        if (Vs1_vi[i] == 0)
-                            Vd_vi[i] = -1;
-                        else if (Vs2_vi[i] == std::numeric_limits<vi>::min()
-                                && Vs1_vi[i] == -1)
-                            Vd_vi[i] = Vs2_vi[i];
-                        else
-                            Vd_vi[i] = Vs2_vi[i] / Vs1_vi[i];
+                        Vd_vi[i] = div<vi>(Vs2_vi[i], Vs1_vi[i]);
                     }}, OPMVV, VectorIntegerArithOp);
                     0x22: vremu_vv({{
-                        if (Vs1_vu[i] == 0) {
-                            Vd_vu[i] = Vs2_vu[i];
-                        } else {
-                            Vd_vu[i] = Vs2_vu[i] % Vs1_vu[i];
-                        }
+                        Vd_vu[i] = remu<vu>(Vs2_vu[i], Vs1_vu[i]);
                     }}, OPMVV, VectorIntegerArithOp);
                     0x23: vrem_vv({{
-                        if (Vs1_vi[i] == 0) {
-                            Vd_vi[i] = Vs2_vi[i];
-                        } else if (Vs2_vi[i] == std::numeric_limits<vi>::min()
-                                && Vs1_vi[i] == -1) {
-                            Vd_vi[i] = 0;
-                        } else {
-                            Vd_vi[i] = Vs2_vi[i] % Vs1_vi[i];
-                        }
+                        Vd_vi[i] = rem<vi>(Vs2_vi[i], Vs1_vi[i]);
                     }}, OPMVV, VectorIntegerArithOp);
                     0x24: vmulhu_vv({{
-                        if (sew < 64) {
-                            Vd_vu[i] = ((uint64_t)Vs2_vu[i] * Vs1_vu[i])
-                                        >> sew;
-                        } else {
-                            Vd_vu[i] = mulhu<uint64_t>(Vs2_vu[i], Vs1_vu[i]);
-                        }
+                        Vd_vu[i] = mulhu<vu>(Vs2_vu[i], Vs1_vu[i]);
                     }}, OPMVV, VectorIntegerArithOp);
                     0x25: vmul_vv({{
                         Vd_vi[i] = Vs2_vi[i] * Vs1_vi[i];
                     }}, OPMVV, VectorIntegerArithOp);
                     0x26: vmulhsu_vv({{
-                        if (sew < 64) {
-                            Vd_vi[i] = ((int64_t)Vs2_vi[i] *
-                                        (uint64_t)Vs1_vu[i])
-                                        >> sew;
-                        } else {
-                            Vd_vi[i] = mulhsu<int64_t>(Vs2_vi[i], Vs1_vu[i]);
-                        }
+                        Vd_vi[i] = mulhsu<vi>(Vs2_vi[i], Vs1_vu[i]);
                     }}, OPMVV, VectorIntegerArithOp);
                     0x27: vmulh_vv({{
-                        if (sew < 64) {
-                            Vd_vi[i] = ((int64_t)Vs2_vi[i] * Vs1_vi[i])
-                                        >> sew;
-                        } else {
-                            Vd_vi[i] = mulh<int64_t>(Vs2_vi[i], Vs1_vi[i]);
-                        }
+                        Vd_vi[i] = mulh<vi>(Vs2_vi[i], Vs1_vi[i]);
                     }}, OPMVV, VectorIntegerArithOp);
                     0x29: vmadd_vv({{
                         Vd_vi[i] = Vs3_vi[i] * Vs1_vi[i] + Vs2_vi[i];
@@ -3503,11 +3465,11 @@ decode QUADRANT default Unknown::unknown() {
                 }
                 format VectorIntVxsatFormat{
                     0x20: vsaddu_vi({{
-                        Vd_vu[i] = sat_addu<vu>(Vs2_vu[i], (vu)SIMM5,
+                        Vd_vu[i] = sat_addu<vu>(Vs2_vu[i], (vu)sext<5>(SIMM5),
                             vxsatptr);
                     }}, OPIVI, VectorIntegerArithOp);
                     0x21: vsadd_vi({{
-                        Vd_vu[i] = sat_add<vi>(Vs2_vu[i], (vu)SIMM5,
+                        Vd_vi[i] = sat_add<vi>(Vs2_vi[i], (vi)sext<5>(SIMM5),
                             vxsatptr);
                     }}, OPIVI, VectorIntegerArithOp);
                 }
@@ -4350,59 +4312,28 @@ decode QUADRANT default Unknown::unknown() {
                         Vd_vi[i] = res >> 1;
                     }}, OPMVX, VectorIntegerArithOp);
                     0x20: vdivu_vx({{
-                        if (Rs1_vu == 0)
-                            Vd_vu[i] = (vu)-1;
-                        else
-                            Vd_vu[i] = Vs2_vu[i] / Rs1_vu;
+                        Vd_vu[i] = divu<vu>(Vs2_vu[i], Rs1_vu);
                     }}, OPMVX, VectorIntegerArithOp);
                     0x21: vdiv_vx({{
-                        if (Rs1_vi == 0)
-                            Vd_vi[i] = -1;
-                        else if (Vs2_vi[i] == std::numeric_limits<vi>::min()
-                                && Rs1_vi == -1)
-                            Vd_vi[i] = Vs2_vi[i];
-                        else
-                            Vd_vi[i] = Vs2_vi[i] / Rs1_vi;
+                        Vd_vi[i] = div<vi>(Vs2_vi[i], Rs1_vi);
                     }}, OPMVX, VectorIntegerArithOp);
                     0x22: vremu_vx({{
-                        if (Rs1_vu == 0)
-                            Vd_vu[i] = Vs2_vu[i];
-                        else
-                            Vd_vu[i] = Vs2_vu[i] % Rs1_vu;
+                        Vd_vu[i] = remu<vu>(Vs2_vu[i], Rs1_vu);
                     }}, OPMVX, VectorIntegerArithOp);
                     0x23: vrem_vx({{
-                        if (Rs1_vi == 0)
-                            Vd_vi[i] = Vs2_vi[i];
-                        else if (Vs2_vi[i] == std::numeric_limits<vi>::min()
-                                && Rs1_vi == -1)
-                            Vd_vi[i] = 0;
-                        else
-                            Vd_vi[i] = Vs2_vi[i] % Rs1_vi;
+                        Vd_vi[i] = rem<vi>(Vs2_vi[i], Rs1_vi);
                     }}, OPMVX, VectorIntegerArithOp);
                     0x24: vmulhu_vx({{
-                        if (sew < 64)
-                            Vd_vu[i] = ((uint64_t)Vs2_vu[i] * Rs1_vu)
-                                        >> sew;
-                        else
-                            Vd_vu[i] = mulhu<uint64_t>(Vs2_vu[i], Rs1_vu);
+                        Vd_vu[i] = mulhu<vu>(Vs2_vu[i], Rs1_vu);
                     }}, OPMVX, VectorIntegerArithOp);
                     0x25: vmul_vx({{
                         Vd_vi[i] = Vs2_vi[i] * Rs1_vi;
                     }}, OPMVX, VectorIntegerArithOp);
                     0x26: vmulhsu_vx({{
-                        if (sew < 64)
-                            Vd_vi[i] = ((int64_t)Vs2_vi[i] *
-                                        (uint64_t)Rs1_vu)
-                                        >> sew;
-                        else
-                            Vd_vi[i] = mulhsu<int64_t>(Vs2_vi[i], Rs1_vu);
+                        Vd_vi[i] = mulhsu<vi>(Vs2_vi[i], Rs1_vu);
                     }}, OPMVX, VectorIntegerArithOp);
                     0x27: vmulh_vx({{
-                        if (sew < 64)
-                            Vd_vi[i] = ((int64_t)Vs2_vi[i] * Rs1_vi)
-                                        >> sew;
-                        else
-                            Vd_vi[i] = mulh<int64_t>(Vs2_vi[i], Rs1_vi);
+                        Vd_vi[i] = mulh<vi>(Vs2_vi[i], Rs1_vi);
                     }}, OPMVX, VectorIntegerArithOp);
                     0x29: vmadd_vx({{
                         Vd_vi[i] = Vs3_vi[i] * Rs1_vi + Vs2_vi[i];

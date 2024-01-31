@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2021 Advanced Micro Devices, Inc.
+ * Copyright (c) 2024 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,38 +29,30 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_GCN3_GPU_TYPES_HH__
-#define __ARCH_GCN3_GPU_TYPES_HH__
-
-#include <cstdint>
+#include "arch/amdgpu/vega/insts/instructions.hh"
 
 namespace gem5
 {
 
-namespace Gcn3ISA
+namespace VegaISA
 {
-    union InstFormat;
+    // --- Inst_EXP__EXP class methods ---
 
-    /**
-     * used to represnt a GPU inst in its raw format. GCN3
-     * instructions may be 32b or 64b, therefore we represent
-     * a raw inst with 64b to ensure that all of its inst data,
-     * including potential immediate values, may be represented
-     * in the worst case.
-     */
-    typedef uint64_t RawMachInst;
+    Inst_EXP__EXP::Inst_EXP__EXP(InFmt_EXP *iFmt)
+        : Inst_EXP(iFmt, "exp")
+    {
+    } // Inst_EXP__EXP
 
-    /**
-     * used to represent the encoding of a GCN3 inst. each portion
-     * of a GCN3 inst must be 1 DWORD (32b), so we use a pointer
-     * to InstFormat type (which is 32b). for the case in which we
-     * need multiple DWORDS to represnt a single inst, this pointer
-     * essentialy acts as an array of the DWORDs needed to represent
-     * the entire inst encoding.
-     */
-    typedef InstFormat *MachInst;
+    Inst_EXP__EXP::~Inst_EXP__EXP()
+    {
+    } // ~Inst_EXP__EXP
 
-} // namespace Gcn3ISA
+    // --- description from .arch file ---
+    // Export through SX.
+    void
+    Inst_EXP__EXP::execute(GPUDynInstPtr gpuDynInst)
+    {
+        panicUnimplemented();
+    } // execute
+} // namespace VegaISA
 } // namespace gem5
-
-#endif // __ARCH_GCN3_GPU_TYPES_HH__

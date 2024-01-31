@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2015-2023 Arm Limited
+ * Copyright (c) 2010-2013, 2015-2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -3181,17 +3181,12 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_ID_ISAR5)
       .reset([p,release=release] () {
         ISAR5 isar5 = p.id_isar5;
-        if (release->has(ArmExtension::CRYPTO)) {
-            isar5.crc32 = 1;
-            isar5.sha2 = 1;
-            isar5.sha1 = 1;
-            isar5.aes = 2;
-        } else {
-            isar5.crc32 = 0;
-            isar5.sha2 = 0;
-            isar5.sha1 = 0;
-            isar5.aes = 0;
-        }
+        isar5.crc32 = release->has(ArmExtension::FEAT_CRC32) ? 0x1 : 0x0;
+        isar5.sha2 = release->has(ArmExtension::FEAT_SHA256) ? 0x1 : 0x0;
+        isar5.sha1 = release->has(ArmExtension::FEAT_SHA1) ? 0x1 : 0x0;
+        isar5.aes = release->has(ArmExtension::FEAT_PMULL) ?
+            0x2 : release->has(ArmExtension::FEAT_AES) ?
+                0x1 : 0x0;
         isar5.rdm = release->has(ArmExtension::FEAT_RDM) ? 0x1 : 0x0;
         isar5.vcma = release->has(ArmExtension::FEAT_FCMA) ? 0x1 : 0x0;
         return isar5;
@@ -4451,17 +4446,12 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_ID_AA64ISAR0_EL1)
       .reset([p,release=release](){
           AA64ISAR0 isar0_el1 = p.id_aa64isar0_el1;
-          if (release->has(ArmExtension::CRYPTO)) {
-              isar0_el1.crc32 = 1;
-              isar0_el1.sha2 = 1;
-              isar0_el1.sha1 = 1;
-              isar0_el1.aes = 2;
-          } else {
-              isar0_el1.crc32 = 0;
-              isar0_el1.sha2 = 0;
-              isar0_el1.sha1 = 0;
-              isar0_el1.aes = 0;
-          }
+          isar0_el1.crc32 = release->has(ArmExtension::FEAT_CRC32) ? 0x1 : 0x0;
+          isar0_el1.sha2 = release->has(ArmExtension::FEAT_SHA256) ? 0x1 : 0x0;
+          isar0_el1.sha1 = release->has(ArmExtension::FEAT_SHA1) ? 0x1 : 0x0;
+          isar0_el1.aes = release->has(ArmExtension::FEAT_PMULL) ?
+              0x2 : release->has(ArmExtension::FEAT_AES) ?
+                  0x1 : 0x0;
           isar0_el1.dp = release->has(ArmExtension::FEAT_DOTPROD) ? 0x1 : 0x0;
           isar0_el1.atomic = release->has(ArmExtension::FEAT_LSE) ? 0x2 : 0x0;
           isar0_el1.rdm = release->has(ArmExtension::FEAT_RDM) ? 0x1 : 0x0;

@@ -68,6 +68,7 @@ class SDMAEngine : public DmaVirtDevice
         SDMAType _type;
         SDMAQueueDesc *_mqd;
         Addr _mqd_addr = 0;
+        bool _priv = true; // Only used for RLC queues. True otherwise.
       public:
         SDMAQueue() : _rptr(0), _wptr(0), _valid(false), _processing(false),
             _parent(nullptr), _ib(nullptr), _type(SDMAGfx), _mqd(nullptr) {}
@@ -87,6 +88,7 @@ class SDMAEngine : public DmaVirtDevice
         SDMAType queueType() { return _type; }
         SDMAQueueDesc* getMQD() { return _mqd; }
         Addr getMQDAddr() { return _mqd_addr; }
+        bool priv() { return _priv; }
 
         void base(Addr value) { _base = value; }
 
@@ -121,6 +123,7 @@ class SDMAEngine : public DmaVirtDevice
         void queueType(SDMAType type) { _type = type; }
         void setMQD(SDMAQueueDesc *mqd) { _mqd = mqd; }
         void setMQDAddr(Addr mqdAddr) { _mqd_addr = mqdAddr; }
+        void setPriv(bool priv) { _priv = priv; }
     };
 
     /* SDMA Engine ID */

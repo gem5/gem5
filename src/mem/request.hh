@@ -292,8 +292,8 @@ class Request : public Extensible<Request>
 
     /**
      * These bits are used to set the coherence policy for the GPU and are
-     * encoded in the GCN3 instructions. The GCN3 ISA defines two cache levels
-     * See the AMD GCN3 ISA Architecture Manual for more details.
+     * encoded in the Vega instructions. The Vega ISA defines two cache levels
+     * See the AMD Vega ISA Architecture Manual for more details.
      *
      * INV_L1: L1 cache invalidation
      * FLUSH_L2: L2 cache flush
