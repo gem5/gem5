@@ -46,11 +46,28 @@
 namespace gem5
 {
 
+StridedGen::StridedGen(SimObject& obj, RequestorID requestor_id,
+        Tick duration, Addr cacheline_size,
+        Addr start_addr, Addr end_addr, Addr offset,
+        Addr block_size, Addr superblock_size, Addr stride_size,
+        Tick min_period, Tick max_period,
+        uint8_t read_percent, Addr data_limit)
+    : StochasticGen(obj, requestor_id, duration, start_addr, end_addr,
+                    block_size, cacheline_size, min_period, max_period,
+                    read_percent, data_limit),
+    offset(offset), superblockSize(superblock_size), strideSize(stride_size),
+    nextAddr(0), dataManipulated(0)
+{
+    assert(superblock_size % block_size == 0);
+    assert(offset % superblock_size == 0);
+    assert(stride_size % superblock_size == 0);
+}
+
 void
 StridedGen::enter()
 {
     // reset the address and the data counter
-    nextAddr = startAddr + genID * blocksize;
+    nextAddr = startAddr + offset;
     dataManipulated = 0;
 }
 
@@ -74,14 +91,20 @@ StridedGen::getNextPacket()
                               isRead ? MemCmd::ReadReq : MemCmd::WriteReq);
 
     // increment the address
-    nextAddr += strideSize;
+    nextAddr += blocksize;
+
+    // if we have completed reading a block we need to jump
+    // (strideSize - blockSize) bytes to start reading the next block
+    if ((nextAddr - (startAddr + offset)) % superblockSize == 0) {
+        nextAddr += (strideSize - superblockSize);
+    }
 
     // If we have reached the end of the address space, reset the
     // address to the start of the range
     if (nextAddr > endAddr) {
         DPRINTF(TrafficGen, "Wrapping address to the start of "
                 "the range\n");
-        nextAddr = startAddr + genID * blocksize;
+        nextAddr = startAddr + offset;
     }
 
     return pkt;
