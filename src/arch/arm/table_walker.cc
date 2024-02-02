@@ -62,7 +62,7 @@ using namespace ArmISA;
 TableWalker::TableWalker(const Params &p)
     : ClockedObject(p),
       requestorId(p.sys->getRequestorId(this)),
-      port(new Port(*this, requestorId)),
+      port(new Port(*this)),
       isStage2(p.is_stage2), tlb(NULL),
       currState(NULL), pending(false),
       numSquashable(p.num_squash_per_cycle),
@@ -140,25 +140,20 @@ TableWalker::WalkerState::WalkerState() :
 {
 }
 
-TableWalker::Port::Port(TableWalker& _walker, RequestorID id)
+TableWalker::Port::Port(TableWalker& _walker)
   : QueuedRequestPort(_walker.name() + ".port", reqQueue, snoopRespQueue),
     owner{_walker},
     reqQueue(_walker, *this),
-    snoopRespQueue(_walker, *this),
-    requestorId(id)
+    snoopRespQueue(_walker, *this)
 {
 }
 
 PacketPtr
 TableWalker::Port::createPacket(
-    Addr desc_addr, int size,
-    uint8_t *data, Request::Flags flags, Tick delay,
+    const RequestPtr &req,
+    uint8_t *data, Tick delay,
     Event *event)
 {
-    RequestPtr req = std::make_shared<Request>(
-        desc_addr, size, flags, requestorId);
-    req->taskId(context_switch_task_id::DMA);
-
     PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
     pkt->dataStatic(data);
 
@@ -172,10 +167,9 @@ TableWalker::Port::createPacket(
 
 void
 TableWalker::Port::sendFunctionalReq(
-    Addr desc_addr, int size,
-    uint8_t *data, Request::Flags flags)
+    const RequestPtr &req, uint8_t *data)
 {
-    auto pkt = createPacket(desc_addr, size, data, flags, 0, nullptr);
+    auto pkt = createPacket(req, data, 0, nullptr);
 
     sendFunctional(pkt);
 
@@ -184,10 +178,10 @@ TableWalker::Port::sendFunctionalReq(
 
 void
 TableWalker::Port::sendAtomicReq(
-    Addr desc_addr, int size,
-    uint8_t *data, Request::Flags flags, Tick delay)
+    const RequestPtr &req,
+    uint8_t *data, Tick delay)
 {
-    auto pkt = createPacket(desc_addr, size, data, flags, delay, nullptr);
+    auto pkt = createPacket(req, data, delay, nullptr);
 
     Tick lat = sendAtomic(pkt);
 
@@ -196,11 +190,11 @@ TableWalker::Port::sendAtomicReq(
 
 void
 TableWalker::Port::sendTimingReq(
-    Addr desc_addr, int size,
-    uint8_t *data, Request::Flags flags, Tick delay,
+    const RequestPtr &req,
+    uint8_t *data, Tick delay,
     Event *event)
 {
-    auto pkt = createPacket(desc_addr, size, data, flags, delay, event);
+    auto pkt = createPacket(req, data, delay, event);
 
     schedTimingReq(pkt, curTick());
 }
@@ -2115,7 +2109,7 @@ TableWalker::nextWalk(ThreadContext *tc)
 }
 
 bool
-TableWalker::fetchDescriptor(Addr descAddr, uint8_t *data, int numBytes,
+TableWalker::fetchDescriptor(Addr desc_addr, uint8_t *data, int num_bytes,
     Request::Flags flags, int queueIndex, Event *event,
     void (TableWalker::*doDescriptor)())
 {
@@ -2123,9 +2117,9 @@ TableWalker::fetchDescriptor(Addr descAddr, uint8_t *data, int numBytes,
 
     DPRINTF(PageTableWalker,
             "Fetching descriptor at address: 0x%x stage2Req: %d\n",
-            descAddr, currState->stage2Req);
+            desc_addr, currState->stage2Req);
 
-    // If this translation has a stage 2 then we know descAddr is an IPA and
+    // If this translation has a stage 2 then we know desc_addr is an IPA and
     // needs to be translated before we can access the page table. Do that
     // check here.
     if (currState->stage2Req) {
@@ -2136,11 +2130,11 @@ TableWalker::fetchDescriptor(Addr descAddr, uint8_t *data, int numBytes,
                 Stage2Walk(*this, data, event, currState->vaddr,
                     currState->mode, currState->tranType);
             currState->stage2Tran = tran;
-            readDataTimed(currState->tc, descAddr, tran, numBytes, flags);
+            readDataTimed(currState->tc, desc_addr, tran, num_bytes, flags);
             fault = tran->fault;
         } else {
             fault = readDataUntimed(currState->tc,
-                currState->vaddr, descAddr, data, numBytes, flags,
+                currState->vaddr, desc_addr, data, num_bytes, flags,
                 currState->mode,
                 currState->tranType,
                 currState->functional);
@@ -2160,8 +2154,13 @@ TableWalker::fetchDescriptor(Addr descAddr, uint8_t *data, int numBytes,
             (this->*doDescriptor)();
         }
     } else {
-        if (isTiming) {
-            port->sendTimingReq(descAddr, numBytes, data, flags,
+
+        RequestPtr req = std::make_shared<Request>(
+            desc_addr, num_bytes, flags, requestorId);
+        req->taskId(context_switch_task_id::DMA);
+
+        if (currState->timing) {
+            port->sendTimingReq(req, data,
                 currState->tc->getCpuPtr()->clockPeriod(), event);
 
             if (queueIndex >= 0) {
@@ -2171,12 +2170,12 @@ TableWalker::fetchDescriptor(Addr descAddr, uint8_t *data, int numBytes,
                 stateQueues[queueIndex].push_back(currState);
             }
         } else if (!currState->functional) {
-            port->sendAtomicReq(descAddr, numBytes, data, flags,
+            port->sendAtomicReq(req, data,
                 currState->tc->getCpuPtr()->clockPeriod());
 
             (this->*doDescriptor)();
         } else {
-            port->sendFunctionalReq(descAddr, numBytes, data, flags);
+            port->sendFunctionalReq(req, data);
             (this->*doDescriptor)();
         }
     }
@@ -2458,8 +2457,7 @@ TableWalker::Stage2Walk::finish(const Fault &_fault,
     }
 
     if (_fault == NoFault && !req->getFlags().isSet(Request::NO_ACCESS)) {
-        parent.getTableWalkerPort().sendTimingReq(
-            req->getPaddr(), numBytes, data, req->getFlags(),
+        parent.getTableWalkerPort().sendTimingReq(req, data,
             tc->getCpuPtr()->clockPeriod(), event);
     } else {
         // We can't do the DMA access as there's been a problem, so tell the

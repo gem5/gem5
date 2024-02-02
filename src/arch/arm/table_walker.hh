@@ -943,14 +943,11 @@ class TableWalker : public ClockedObject
     class Port : public QueuedRequestPort
     {
       public:
-        Port(TableWalker& _walker, RequestorID id);
+        Port(TableWalker& _walker);
 
-        void sendFunctionalReq(Addr desc_addr, int size,
-            uint8_t *data, Request::Flags flag);
-        void sendAtomicReq(Addr desc_addr, int size,
-            uint8_t *data, Request::Flags flag, Tick delay);
-        void sendTimingReq(Addr desc_addr, int size,
-            uint8_t *data, Request::Flags flag, Tick delay,
+        void sendFunctionalReq(const RequestPtr &req, uint8_t *data);
+        void sendAtomicReq(const RequestPtr &req, uint8_t *data, Tick delay);
+        void sendTimingReq(const RequestPtr &req, uint8_t *data, Tick delay,
             Event *event);
 
         bool recvTimingResp(PacketPtr pkt) override;
@@ -960,8 +957,7 @@ class TableWalker : public ClockedObject
         void handleResp(TableWalkerState *state, Addr addr,
                         Addr size, Tick delay=0);
 
-        PacketPtr createPacket(Addr desc_addr, int size,
-                               uint8_t *data, Request::Flags flag,
+        PacketPtr createPacket(const RequestPtr &req, uint8_t *data,
                                Tick delay, Event *event);
 
       private:
@@ -972,9 +968,6 @@ class TableWalker : public ClockedObject
 
         /** Packet queue used to store outgoing snoop responses. */
         SnoopRespPacketQueue snoopRespQueue;
-
-        /** Cached requestorId of the table walker */
-        RequestorID requestorId;
     };
 
     /** This translation class is used to trigger the data fetch once a timing
