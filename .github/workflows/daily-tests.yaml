@@ -285,7 +285,7 @@ jobs:
             - name: Get Square test-prog from gem5-resources
               uses: wei/wget@v1
               with:
-                  args: -q https://dist.gem5.org/dist/v24-0/test-progs/square/square # Removed -N bc it wasn't available within actions, should be okay bc workspace is clean every time: https://github.com/coder/sshcode/issues/102
+                  args: -q http://dist.gem5.org/dist/v24-0/test-progs/square/square # Removed -N bc it wasn't available within actions, should be okay bc workspace is clean every time: https://github.com/coder/sshcode/issues/102
             - name: Run Square test with VEGA_X86/gem5.opt (SE mode)
               run: |
                   mkdir -p tests/testing-results
@@ -293,7 +293,7 @@ jobs:
             - name: Get allSyncPrims-1kernel from gem5-resources
               uses: wei/wget@v1
               with:
-                  args: -q https://dist.gem5.org/dist/v24-0/test-progs/heterosync/allSyncPrims-1kernel # Removed -N bc it wasn't available within actions, should be okay bc workspace is clean every time
+                  args: -q http://dist.gem5.org/dist/v24-0/test-progs/heterosync/allSyncPrims-1kernel # Removed -N bc it wasn't available within actions, should be okay bc workspace is clean every time
             - name: Run allSyncPrims-1kernel sleepMutex test with VEGA_X86/gem5.opt (SE mode)
               run: ./build/VEGA_X86/gem5.opt configs/example/apu_se.py --reg-alloc-policy=dynamic -n3 -c allSyncPrims-1kernel --options="sleepMutex 10 16
                   4"
