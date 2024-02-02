@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 //
-// Copyright (c) 2018 ARM Limited
+// Copyright (c) 2018, 2024 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -41,8 +41,7 @@ let {{
     exec_output = ""
 
     cryptoEnabledCheckCode = '''
-        auto crypto_reg = xc->tcBase()->readMiscReg(MISCREG_ID_AA64ISAR0_EL1);
-        if (!(crypto_reg & %(mask)d)) {
+        if (!HaveExt(xc->tcBase(), %(extension)s)) {
             return std::make_shared<UndefinedInstruction>(machInst, true);
         }
     '''
@@ -133,7 +132,9 @@ let {{
     sha256_su0Code = "crypto.sha256Su0(output, input);"
     sha256_su1Code = "crypto.sha256Su1(output, input, input2);"
 
-    aes_enabled = cryptoEnabledCheckCode % { "mask" : 0xF0 }
+    aes_enabled = cryptoEnabledCheckCode % {
+        "extension" : "ArmExtension::FEAT_AES"
+    }
     cryptoRegRegRegInst("aese", "AESE64", "SimdAesOp",
                         aes_enabled, aeseCode)
     cryptoRegRegRegInst("aesd", "AESD64", "SimdAesOp",
@@ -143,7 +144,9 @@ let {{
     cryptoRegRegInst("aesimc", "AESIMC64", "SimdAesMixOp",
                      aes_enabled, aesimcCode)
 
-    sha1_enabled = cryptoEnabledCheckCode % { "mask" : 0xF00 }
+    sha1_enabled = cryptoEnabledCheckCode % {
+        "extension" : "ArmExtension::FEAT_SHA1"
+    }
     cryptoRegRegRegInst("sha1c", "SHA1C64", "SimdSha1HashOp",
                         sha1_enabled, sha1_cCode)
     cryptoRegRegRegInst("sha1p", "SHA1P64", "SimdSha1HashOp",
@@ -157,7 +160,9 @@ let {{
     cryptoRegRegInst("sha1su1", "SHA1SU164", "SimdShaSigma2Op",
                      sha1_enabled, sha1_su1Code)
 
-    sha2_enabled = cryptoEnabledCheckCode % { "mask" : 0xF000 }
+    sha2_enabled = cryptoEnabledCheckCode % {
+        "extension" : "ArmExtension::FEAT_SHA256"
+    }
     cryptoRegRegRegInst("sha256h", "SHA256H64", "SimdSha256HashOp",
                         sha2_enabled, sha256_hCode)
     cryptoRegRegRegInst("sha256h2", "SHA256H264", "SimdSha256Hash2Op",
