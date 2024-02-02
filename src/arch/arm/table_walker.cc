@@ -78,7 +78,8 @@ TableWalker::TableWalker(const Params &p)
       doL3LongDescEvent([this]{ doL3LongDescriptorWrapper(); }, name()),
       LongDescEventByLevel { &doL0LongDescEvent, &doL1LongDescEvent,
                              &doL2LongDescEvent, &doL3LongDescEvent },
-      doProcessEvent([this]{ processWalkWrapper(); }, name())
+      doProcessEvent([this]{ processWalkWrapper(); }, name()),
+      test(nullptr)
 {
     sctlr = 0;
 
@@ -651,7 +652,7 @@ TableWalker::processWalk()
             currState->isSecure ? "s" : "ns");
 
     Fault f = testWalk(l1desc_addr, sizeof(uint32_t),
-        TlbEntry::DomainType::NoAccess, LookupLevel::L1, isStage2);
+        TlbEntry::DomainType::NoAccess, LookupLevel::L1);
 
     if (f) {
         return f;
@@ -817,8 +818,8 @@ TableWalker::processWalkLPAE()
     }
 
     Fault f = testWalk(desc_addr, sizeof(uint64_t),
-                       TlbEntry::DomainType::NoAccess, start_lookup_level,
-                       isStage2);
+                       TlbEntry::DomainType::NoAccess, start_lookup_level);
+
     if (f) {
         return f;
     }
@@ -1057,7 +1058,7 @@ TableWalker::processWalkAArch64()
     }
 
     Fault f = testWalk(desc_addr, sizeof(uint64_t),
-                       TlbEntry::DomainType::NoAccess, start_lookup_level, isStage2);
+                       TlbEntry::DomainType::NoAccess, start_lookup_level);
     if (f) {
         return f;
     }
@@ -1638,10 +1639,9 @@ TableWalker::doL1Descriptor()
             DPRINTF(TLB, "L1 descriptor points to page table at: %#x (%s)\n",
                     l2desc_addr, currState->isSecure ? "s" : "ns");
 
-            // Trickbox address check
             currState->fault = testWalk(l2desc_addr, sizeof(uint32_t),
                                         currState->l1Desc.domain(),
-                                        LookupLevel::L2, isStage2);
+                                        LookupLevel::L2);
 
             if (currState->fault) {
                 if (!currState->timing) {
@@ -1806,10 +1806,9 @@ TableWalker::doLongDescriptor()
                 return;
             }
 
-            // Trickbox address check
             currState->fault = testWalk(
                 next_desc_addr, sizeof(uint64_t), TlbEntry::DomainType::Client,
-                toLookupLevel(currState->longDesc.lookupLevel +1), isStage2);
+                toLookupLevel(currState->longDesc.lookupLevel +1));
 
             if (currState->fault) {
                 if (!currState->timing) {
@@ -2343,12 +2342,22 @@ TableWalker::pendingChange()
 
 Fault
 TableWalker::testWalk(Addr pa, Addr size, TlbEntry::DomainType domain,
-                      LookupLevel lookup_level, bool stage2)
+                      LookupLevel lookup_level)
 {
-    return mmu->testWalk(pa, size, currState->vaddr, currState->isSecure,
-                         currState->mode, domain, lookup_level, stage2);
+    if (!test) {
+        return NoFault;
+    } else {
+        return test->walkCheck(pa, size, currState->vaddr, currState->isSecure,
+                               currState->el != EL0,
+                               currState->mode, domain, lookup_level);
+    }
 }
 
+void
+TableWalker::setTestInterface(TlbTestInterface *ti)
+{
+    test = ti;
+}
 
 uint8_t
 TableWalker::pageSizeNtoStatBin(uint8_t N)
