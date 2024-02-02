@@ -41,7 +41,7 @@ let {{
         if (!HaveExt(xc->tcBase(), %(extension)s)) {
             return std::make_shared<UndefinedInstruction>(machInst, true);
         }
-    '''
+    ''' + simdEnabledCheckCode
 
     header_output = ""
     decoder_output = ""
