@@ -332,18 +332,15 @@ TableWalker::walk(const RequestPtr &_req, ThreadContext *_tc, uint16_t _asid,
 
     currState->startTime = curTick();
     currState->tc = _tc;
-    // ARM DDI 0487A.f (ARMv8 ARM) pg J8-5672
-    // aarch32/translation/translation/AArch32.TranslateAddress dictates
-    // even AArch32 EL0 will use AArch64 translation if EL1 is in AArch64.
+    currState->el =
+        MMU::tranTypeEL(_tc->readMiscReg(MISCREG_CPSR),
+            _tc->readMiscReg(MISCREG_SCR_EL3),
+            tranType);
+
     if (isStage2) {
-        currState->el = EL1;
         currState->regime = TranslationRegime::EL10;
         currState->aarch64 = ELIs64(_tc, EL2);
     } else {
-        currState->el =
-            MMU::tranTypeEL(_tc->readMiscReg(MISCREG_CPSR),
-                _tc->readMiscReg(MISCREG_SCR_EL3),
-                tranType);
         currState->regime =
             translationRegime(_tc, currState->el);
         currState->aarch64 =
