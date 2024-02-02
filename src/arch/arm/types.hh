@@ -276,6 +276,14 @@ namespace ArmISA
         EL3
     };
 
+    enum class TranslationRegime
+    {
+        EL10,
+        EL20,
+        EL2,
+        EL3
+    };
+
     enum OperatingMode
     {
         MODE_EL0T = 0x0,
@@ -459,6 +467,23 @@ namespace ArmISA
             return false;
           default:
             return true;
+        }
+    }
+
+    static inline const char*
+    regimeToStr(TranslationRegime regime)
+    {
+        switch (regime) {
+          case TranslationRegime::EL10:
+            return "EL10";
+          case TranslationRegime::EL20:
+            return "EL20";
+          case TranslationRegime::EL2:
+            return "EL2";
+          case TranslationRegime::EL3:
+            return "EL3";
+          default:
+            GEM5_UNREACHABLE;
         }
     }
 
