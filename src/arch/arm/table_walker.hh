@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2016, 2019, 2021-2023 Arm Limited
+ * Copyright (c) 2010-2016, 2019, 2021-2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -1185,8 +1185,13 @@ class TableWalker : public ClockedObject
 
     static uint8_t pageSizeNtoStatBin(uint8_t N);
 
+  public: /* Testing */
+    TlbTestInterface *test;
+
+    void setTestInterface(TlbTestInterface *ti);
+
     Fault testWalk(Addr pa, Addr size, TlbEntry::DomainType domain,
-                   LookupLevel lookup_level, bool stage2);
+                   LookupLevel lookup_level);
 };
 
 } // namespace ArmISA

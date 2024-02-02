@@ -1551,6 +1551,10 @@ MMU::setTestInterface(SimObject *_ti)
         TlbTestInterface *ti(dynamic_cast<TlbTestInterface *>(_ti));
         fatal_if(!ti, "%s is not a valid ARM TLB tester\n", _ti->name());
         test = ti;
+        itbWalker->setTestInterface(test);
+        dtbWalker->setTestInterface(test);
+        itbStage2Walker->setTestInterface(test);
+        dtbStage2Walker->setTestInterface(test);
     }
 }
 
@@ -1563,28 +1567,6 @@ MMU::testTranslation(const RequestPtr &req, Mode mode,
         return NoFault;
     } else {
         return test->translationCheck(req, state.isPriv, mode, domain);
-    }
-}
-
-Fault
-MMU::testWalk(Addr pa, Addr size, Addr va, bool is_secure, Mode mode,
-              TlbEntry::DomainType domain, LookupLevel lookup_level,
-              bool stage2)
-{
-    return testWalk(pa, size, va, is_secure, mode, domain, lookup_level,
-        stage2 ? s2State : s1State);
-}
-
-Fault
-MMU::testWalk(Addr pa, Addr size, Addr va, bool is_secure, Mode mode,
-              TlbEntry::DomainType domain, LookupLevel lookup_level,
-              CachedState &state)
-{
-    if (!test) {
-        return NoFault;
-    } else {
-        return test->walkCheck(pa, size, va, is_secure, state.isPriv, mode,
-                               domain, lookup_level);
     }
 }
 

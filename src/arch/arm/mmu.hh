@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2016, 2019-2023 Arm Limited
+ * Copyright (c) 2010-2013, 2016, 2019-2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -461,12 +461,6 @@ class MMU : public BaseMMU
 
     Fault testTranslation(const RequestPtr &req, Mode mode,
                           TlbEntry::DomainType domain, CachedState &state);
-    Fault testWalk(Addr pa, Addr size, Addr va, bool is_secure, Mode mode,
-                   TlbEntry::DomainType domain,
-                   LookupLevel lookup_level, bool stage2);
-    Fault testWalk(Addr pa, Addr size, Addr va, bool is_secure, Mode mode,
-                   TlbEntry::DomainType domain,
-                   LookupLevel lookup_level, CachedState &state);
 
   protected:
     bool checkWalkCache() const;
