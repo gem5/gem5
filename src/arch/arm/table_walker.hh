@@ -86,6 +86,7 @@ class TableWalker : public ClockedObject
         virtual uint8_t offsetBits() const = 0;
         virtual bool secure(bool have_security, WalkerState *currState) const = 0;
         virtual std::string dbgHeader() const = 0;
+        virtual uint8_t* getRawPtr() = 0;
         virtual uint64_t getRawData() const = 0;
         virtual uint8_t texcb() const
         {
@@ -120,6 +121,12 @@ class TableWalker : public ClockedObject
         L1Descriptor() : data(0), _dirty(false)
         {
             lookupLevel = LookupLevel::L1;
+        }
+
+        uint8_t*
+        getRawPtr() override
+        {
+            return reinterpret_cast<uint8_t*>(&data);
         }
 
         uint64_t
@@ -291,6 +298,12 @@ class TableWalker : public ClockedObject
             lookupLevel = LookupLevel::L2;
         }
 
+        uint8_t*
+        getRawPtr() override
+        {
+            return reinterpret_cast<uint8_t*>(&data);
+        }
+
         uint64_t
         getRawData() const override
         {
@@ -440,6 +453,12 @@ class TableWalker : public ClockedObject
         GrainSize grainSize;
 
         uint8_t physAddrRange;
+
+        uint8_t*
+        getRawPtr() override
+        {
+            return reinterpret_cast<uint8_t*>(&data);
+        }
 
         uint64_t
         getRawData() const override
@@ -1141,8 +1160,9 @@ class TableWalker : public ClockedObject
     void doLongDescriptorWrapper(LookupLevel curr_lookup_level);
     Event* LongDescEventByLevel[4];
 
-    bool fetchDescriptor(Addr descAddr, uint8_t *data, int numBytes,
-        Request::Flags flags, int queueIndex, Event *event,
+    void fetchDescriptor(Addr desc_addr,
+        DescriptorBase &descriptor, int num_bytes,
+        Request::Flags flags, LookupLevel lookup_lvl, Event *event,
         void (TableWalker::*doDescriptor)());
 
     Fault generateLongDescFault(ArmFault::FaultSource src);
@@ -1175,6 +1195,9 @@ class TableWalker : public ClockedObject
     void nextWalk(ThreadContext *tc);
 
     void pendingChange();
+
+    /** Timing mode: saves the currState into the stateQueues */
+    void stashCurrState(int queue_idx);
 
     static uint8_t pageSizeNtoStatBin(uint8_t N);
 
