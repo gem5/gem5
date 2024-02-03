@@ -439,7 +439,17 @@ TableWalker::walk(const RequestPtr &_req, ThreadContext *_tc, uint16_t _asid,
         ++stats.walksShortDescriptor;
     }
 
-    if (!currState->timing) {
+    if (currState->timing && (pending || pendingQueue.size())) {
+        pendingQueue.push_back(currState);
+        currState = NULL;
+        pendingChange();
+        return NoFault;
+    } else {
+        if (currState->timing) {
+            pending = true;
+            pendingChange();
+        }
+
         Fault fault = NoFault;
         if (currState->aarch64)
             fault = processWalkAArch64();
@@ -453,26 +463,19 @@ TableWalker::walk(const RequestPtr &_req, ThreadContext *_tc, uint16_t _asid,
         if (currState->functional) {
             delete currState;
             currState = savedCurrState;
+        } else if (currState->timing) {
+            if (fault) {
+                pending = false;
+                nextWalk(currState->tc);
+            }
+            currState = NULL;
+        } else if (fault) {
+            currState->tc = NULL;
+            currState->req = NULL;
         }
+
         return fault;
     }
-
-    if (pending || pendingQueue.size()) {
-        pendingQueue.push_back(currState);
-        currState = NULL;
-        pendingChange();
-    } else {
-        pending = true;
-        pendingChange();
-        if (currState->aarch64)
-            return processWalkAArch64();
-        else if (long_desc_format)
-            return processWalkLPAE();
-        else
-            return processWalk();
-    }
-
-    return NoFault;
 }
 
 void
@@ -498,12 +501,10 @@ TableWalker::processWalkWrapper()
         // We've got a valid request, lets process it
         pending = true;
         pendingQueue.pop_front();
-        // Keep currState in case one of the processWalk... calls NULLs it
 
         if (te && te->partial) {
             currState->walkEntry = *te;
         }
-        WalkerState *curr_state_copy = currState;
         Fault f;
         if (currState->aarch64)
             f = processWalkAArch64();
@@ -515,11 +516,15 @@ TableWalker::processWalkWrapper()
             f = processWalk();
 
         if (f != NoFault) {
-            curr_state_copy->transState->finish(f, curr_state_copy->req,
-                    curr_state_copy->tc, curr_state_copy->mode);
+            pending = false;
+            nextWalk(currState->tc);
 
-            delete curr_state_copy;
+            currState->transState->finish(f, currState->req,
+                    currState->tc, currState->mode);
+
+            delete currState;
         }
+        currState = NULL;
         return;
     }
 
@@ -645,20 +650,10 @@ TableWalker::processWalk()
     DPRINTF(TLB, " - Descriptor at address %#x (%s)\n", l1desc_addr,
             currState->isSecure ? "s" : "ns");
 
-    // Trickbox address check
-    Fault f;
-    f = testWalk(l1desc_addr, sizeof(uint32_t),
-                 TlbEntry::DomainType::NoAccess, LookupLevel::L1, isStage2);
+    Fault f = testWalk(l1desc_addr, sizeof(uint32_t),
+        TlbEntry::DomainType::NoAccess, LookupLevel::L1, isStage2);
+
     if (f) {
-        DPRINTF(TLB, "Trickbox check caused fault on %#x\n", currState->vaddr_tainted);
-        if (currState->timing) {
-            pending = false;
-            nextWalk(currState->tc);
-            currState = NULL;
-        } else {
-            currState->tc = NULL;
-            currState->req = NULL;
-        }
         return f;
     }
 
@@ -821,20 +816,10 @@ TableWalker::processWalkLPAE()
                 desc_addr, currState->isSecure ? "s" : "ns");
     }
 
-    // Trickbox address check
     Fault f = testWalk(desc_addr, sizeof(uint64_t),
                        TlbEntry::DomainType::NoAccess, start_lookup_level,
                        isStage2);
     if (f) {
-        DPRINTF(TLB, "Trickbox check caused fault on %#x\n", currState->vaddr_tainted);
-        if (currState->timing) {
-            pending = false;
-            nextWalk(currState->tc);
-            currState = NULL;
-        } else {
-            currState->tc = NULL;
-            currState->req = NULL;
-        }
         return f;
     }
 
@@ -1019,30 +1004,19 @@ TableWalker::processWalkAArch64()
     const bool is_atomic = currState->req->isAtomic();
 
     if (fault) {
-        Fault f;
-        if (currState->isFetch)
-            f =  std::make_shared<PrefetchAbort>(
+        if (currState->isFetch) {
+            return std::make_shared<PrefetchAbort>(
                 currState->vaddr_tainted,
                 ArmFault::TranslationLL + LookupLevel::L0, isStage2,
                 ArmFault::LpaeTran);
-        else
-            f = std::make_shared<DataAbort>(
+        } else {
+            return std::make_shared<DataAbort>(
                 currState->vaddr_tainted,
                 TlbEntry::DomainType::NoAccess,
                 is_atomic ? false : currState->isWrite,
                 ArmFault::TranslationLL + LookupLevel::L0,
                 isStage2, ArmFault::LpaeTran);
-
-        if (currState->timing) {
-            pending = false;
-            nextWalk(currState->tc);
-            currState = NULL;
-        } else {
-            currState->tc = NULL;
-            currState->req = NULL;
         }
-        return f;
-
     }
 
     if (tg == ReservedGrain) {
@@ -1066,48 +1040,25 @@ TableWalker::processWalkAArch64()
     // necessary
     if (checkAddrSizeFaultAArch64(table_addr, currState->physAddrRange)) {
         DPRINTF(TLB, "Address size fault before any lookup\n");
-        Fault f;
         if (currState->isFetch)
-            f = std::make_shared<PrefetchAbort>(
+            return std::make_shared<PrefetchAbort>(
                 currState->vaddr_tainted,
                 ArmFault::AddressSizeLL + start_lookup_level,
                 isStage2,
                 ArmFault::LpaeTran);
         else
-            f = std::make_shared<DataAbort>(
+            return std::make_shared<DataAbort>(
                 currState->vaddr_tainted,
                 TlbEntry::DomainType::NoAccess,
                 is_atomic ? false : currState->isWrite,
                 ArmFault::AddressSizeLL + start_lookup_level,
                 isStage2,
                 ArmFault::LpaeTran);
-
-
-        if (currState->timing) {
-            pending = false;
-            nextWalk(currState->tc);
-            currState = NULL;
-        } else {
-            currState->tc = NULL;
-            currState->req = NULL;
-        }
-        return f;
-
     }
 
-    // Trickbox address check
     Fault f = testWalk(desc_addr, sizeof(uint64_t),
                        TlbEntry::DomainType::NoAccess, start_lookup_level, isStage2);
     if (f) {
-        DPRINTF(TLB, "Trickbox check caused fault on %#x\n", currState->vaddr_tainted);
-        if (currState->timing) {
-            pending = false;
-            nextWalk(currState->tc);
-            currState = NULL;
-        } else {
-            currState->tc = NULL;
-            currState->req = NULL;
-        }
         return f;
     }
 
@@ -2205,7 +2156,6 @@ TableWalker::fetchDescriptor(Addr descAddr, uint8_t *data, int numBytes,
                         "queue size before adding: %d\n",
                         stateQueues[queueIndex].size());
                 stateQueues[queueIndex].push_back(currState);
-                currState = NULL;
             }
         } else {
             (this->*doDescriptor)();
@@ -2220,7 +2170,6 @@ TableWalker::fetchDescriptor(Addr descAddr, uint8_t *data, int numBytes,
                         "queue size before adding: %d\n",
                         stateQueues[queueIndex].size());
                 stateQueues[queueIndex].push_back(currState);
-                currState = NULL;
             }
         } else if (!currState->functional) {
             port->sendAtomicReq(descAddr, numBytes, data, flags,
