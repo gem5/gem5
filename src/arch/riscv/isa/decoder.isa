@@ -4019,8 +4019,10 @@ decode QUADRANT default Unknown::unknown() {
                         // The encodings corresponding to the masked versions
                         // (vm=0) of vfmv.s.f are reserved
                         0x1: VectorNonSplitFormat::vfmv_s_f({{
-                            auto fd = ftype_freg<et>(freg(Fs1_bits));
-                            Vd_vu[0] = fd.v;
+                            if (this->vl) {
+                                auto fd = ftype_freg<et>(freg(Fs1_bits));
+                                Vd_vu[0] = fd.v;
+                            }
                         }}, OPFVV, VectorMiscOp);
                     }
                 }
@@ -4296,7 +4298,9 @@ decode QUADRANT default Unknown::unknown() {
                         // The encodings corresponding to the masked versions
                         // (vm=0) of vmv.s.x are reserved.
                         0x1: VectorNonSplitFormat::vmv_s_x({{
-                            Vd_vu[0] = Rs1_vu;
+                            if (this->vl) {
+                                Vd_vu[0] = Rs1_vu;
+                            }
                         }}, OPMVX, VectorMiscOp);
                     }
                 }
