@@ -15,7 +15,7 @@ jobs:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/gcn-gpu:latest
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
               with:
                   # Scheduled workflows run on the default branch by default. We
                   # therefore need to explicitly checkout the develop branch.
@@ -35,7 +35,7 @@ jobs:
         needs: build-gcn-gpu-gem5
         timeout-minutes: 480 # 8 hours
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
               with:
                   # Scheduled workflows run on the default branch by default. We
                   # therefore need to explicitly checkout the develop branch.
@@ -67,7 +67,7 @@ jobs:
         needs: build-gcn-gpu-gem5
         timeout-minutes: 120 # 2 hours
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
               with:
                   # Scheduled workflows run on the default branch by default. We
                   # therefore need to explicitly checkout the develop branch.
@@ -98,7 +98,7 @@ jobs:
         outputs:
             build-name: ${{ steps.artifact-name.outputs.name }}
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
               with:
                   # Scheduled workflows run on the default branch by default. We
                   # therefore need to explicitly checkout the develop branch.
@@ -128,12 +128,12 @@ jobs:
         steps:
             - name: Clean runner
               run: rm -rf ./* || true rm -rf ./.??* || true rm -rf ~/.cache || true
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
               with:
                   # Scheduled workflows run on the default branch by default. We
                   # therefore need to explicitly checkout the develop branch.
                   ref: develop
-            - uses: actions/download-artifact@v3
+            - uses: actions/download-artifact@v4
               with:
                   name: ${{needs.build-gem5.outputs.build-name}}
                   path: build/ALL
@@ -162,7 +162,7 @@ jobs:
         container: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
         timeout-minutes: 4320 # 3 days
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
               with:
                   # Scheduled workflows run on the default branch by default. We
                   # therefore need to explicitly checkout the develop branch.

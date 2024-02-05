@@ -24,7 +24,7 @@ jobs:
         timeout-minutes: 2880 # 48 hours
         container: ghcr.io/gem5/${{ matrix.image }}:latest
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
               with:
         # Scheduled workflows run on the default branch by default. We
         # therefore need to explicitly checkout the develop branch.
@@ -46,7 +46,7 @@ jobs:
         timeout-minutes: 2880 # 48 hours
         container: ghcr.io/gem5/${{ matrix.image }}:latest
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
               with:
         # Scheduled workflows run on the default branch by default. We
         # therefore need to explicitly checkout the develop branch.

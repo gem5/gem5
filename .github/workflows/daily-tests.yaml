@@ -46,7 +46,7 @@ jobs:
         needs: name-artifacts
         container: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
               with:
           # Scheduled workflows run on the default branch by default. We
           # therefore need to explicitly checkout the develop branch.
@@ -75,7 +75,7 @@ jobs:
         container: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
         timeout-minutes: 60
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
               with:
           # Scheduled workflows run on the default branch by default. We
           # therefore need to explicitly checkout the develop branch.
@@ -97,7 +97,7 @@ jobs:
         steps:
             - name: Clean runner
               run: rm -rf ./* || true rm -rf ./.??* || true rm -rf ~/.cache || true
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
               with:
         # Scheduled workflows run on the default branch by default. We
         # therefore need to explicitly checkout the develop branch.
@@ -186,7 +186,7 @@ jobs:
         steps:
             - name: Clean runner
               run: rm -rf ./* || true rm -rf ./.??* || true rm -rf ~/.cache || true
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
               with:
         # Scheduled workflows run on the default branch by default. We
         # therefore need to explicitly checkout the develop branch.
@@ -224,7 +224,7 @@ jobs:
         timeout-minutes: 180
 
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
               with:
         # Scheduled workflows run on the default branch by default. We
         # therefore need to explicitly checkout the develop branch.
@@ -249,7 +249,7 @@ jobs:
         timeout-minutes: 180
 
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
               with:
         # Scheduled workflows run on the default branch by default. We
         # therefore need to explicitly checkout the develop branch.
@@ -275,7 +275,7 @@ jobs:
         timeout-minutes: 720 # 12 hours
 
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
               with:
         # Scheduled workflows run on the default branch by default. We
         # therefore need to explicitly checkout the develop branch.
