@@ -207,14 +207,6 @@ class TLB : public BaseTLB
      */
     void flush(const TLBIOp &tlbi_op);
 
-    Fault trickBoxCheck(const RequestPtr &req, BaseMMU::Mode mode,
-                        TlbEntry::DomainType domain);
-
-    Fault walkTrickBoxCheck(Addr pa, bool is_secure, Addr va, Addr sz,
-                            bool is_exec, bool is_write,
-                            TlbEntry::DomainType domain,
-                            LookupLevel lookup_level);
-
     void printTlb() const;
 
     void demapPage(Addr vaddr, uint64_t asn) override
