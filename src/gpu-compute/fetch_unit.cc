@@ -408,7 +408,6 @@ FetchUnit::FetchBufDesc::invBuf()
     DPRINTF(GPUFetch, "WF[%d][%d]: Id%d Fetch dropped, flushing fetch "
             "buffer\n", wavefront->simdId, wavefront->wfSlotId,
             wavefront->wfDynId);
-
 }
 
 Addr

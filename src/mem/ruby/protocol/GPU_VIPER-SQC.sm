@@ -324,7 +324,6 @@ machine(MachineType:SQC, "GPU SQC (L1 I Cache)")
     sequencer.invL1Callback();
   }
 
-
   action(w_writeCache, "w", desc="write data to cache") {
     peek(responseToSQC_in, ResponseMsg) {
       assert(is_valid(cache_entry));
