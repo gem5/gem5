@@ -350,6 +350,11 @@ Sequencer::insertRequest(PacketPtr pkt, RubyRequestType primary_type,
         return RequestStatus_Ready;
     }
 
+    // If command is MemSyncReq, it is used to invalidate the cache.
+    // As the cache invalidation requests are already issued in invL1(),
+    // there is no need to create a new request for the same here.
+    // Instead, return RequestStatus_Aliased, and make the sequencer skip
+    // an extra issueRequest
     if (pkt->cmd == MemCmd::MemSyncReq) {
         return RequestStatus_Aliased;
     }

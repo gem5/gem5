@@ -174,10 +174,17 @@ ScalarMemPipeline::injectScalarMemFence(GPUDynInstPtr gpuDynInst,
         req->requestorId(computeUnit.requestorId());
     }
 
+    // When the SQC invalidate instruction is executed, it calls
+    // injectScalarMemFence. The instruction does not contain an address
+    // as one of its operands. Therefore, set the physical address of the
+    // invalidation request to 0 and handle it in the sequencer
     req->setPaddr(0);
 
     PacketPtr pkt = nullptr;
 
+    // If kernelMemSync is true, then the invalidation request is from
+    // kernel launch and is an implicit invalidation.If false, then it is
+    // due to an S_ICACHE_INV instruction
     if (kernelMemSync) {
         req->setCacheCoherenceFlags(Request::INV_L1);
         req->setReqInstSeqNum(gpuDynInst->seqNum());
@@ -186,12 +193,6 @@ ScalarMemPipeline::injectScalarMemFence(GPUDynInstPtr gpuDynInst,
         pkt->pushSenderState(
                 new ComputeUnit::SQCPort::SenderState(
                     gpuDynInst->wavefront(), nullptr));
-        ComputeUnit::SQCPort::MemReqEvent *sqc_event =
-                new ComputeUnit::SQCPort::MemReqEvent
-                (computeUnit.sqcPort, pkt);
-
-        computeUnit.schedule(
-                sqc_event, curTick() + computeUnit.scalar_req_tick_latency);
     } else {
         gpuDynInst->setRequestFlags(req);
 
@@ -201,14 +202,13 @@ ScalarMemPipeline::injectScalarMemFence(GPUDynInstPtr gpuDynInst,
         pkt->pushSenderState(
                 new ComputeUnit::SQCPort::SenderState(
                     gpuDynInst->wavefront(), nullptr));
-
-        ComputeUnit::SQCPort::MemReqEvent *sqc_event =
-                new ComputeUnit::SQCPort::MemReqEvent
-                (computeUnit.sqcPort, pkt);
-
-        computeUnit.schedule(
-                sqc_event, curTick() + computeUnit.scalar_req_tick_latency);
     }
+
+    ComputeUnit::SQCPort::MemReqEvent *sqc_event =
+            new ComputeUnit::SQCPort::MemReqEvent
+            (computeUnit.sqcPort, pkt);
+    computeUnit.schedule(
+            sqc_event, curTick() + computeUnit.scalar_req_tick_latency);
 }
 
 } // namespace gem5

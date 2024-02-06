@@ -493,8 +493,13 @@ FetchUnit::FetchBufDesc::reserveBuf(Addr vaddr)
 void
 FetchUnit::FetchBufDesc::fetchDone(Addr vaddr)
 {
+    // If the return vaddr is 0, then it belongs to an SQC invalidation
+    // request. This request calls incLGKMInstsIssued() function in its
+    // execution path. Since there is no valid memory return response
+    // associated with this instruction, decLGKMInstsIssued() is not
+    // executed. Do this here to decrement the counter and invalidate
+    // all buffers
     if (vaddr == 0) {
-        // S_ICACHE_INV fetch done
         wavefront->decLGKMInstsIssued();
         invBuf();
         return;
