@@ -7,6 +7,8 @@ on:
   # Runs every day from 7AM UTC
     schedule:
         - cron: 0 7 * * *
+  # Allows us to manually start workflow for testing
+    workflow_dispatch:
 
 jobs:
     name-artifacts:
