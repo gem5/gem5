@@ -237,6 +237,8 @@ class Shader : public ClockedObject
     int n_cu;
     // Number of wavefront slots per SIMD per CU
     int n_wf;
+    //Number of cu units per sqc in the shader
+    int n_cu_per_sqc;
 
     // The size of global memory
     int globalMemSize;

@@ -33,7 +33,10 @@ from m5.objects import *
 
 def createGPU(system, args):
     shader = Shader(
-        n_wf=args.wfs_per_simd, timing=True, clk_domain=system.clk_domain
+        n_wf=args.wfs_per_simd,
+        cu_per_sqc=args.cu_per_sqc,
+        timing=True,
+        clk_domain=system.clk_domain,
     )
 
     # VIPER GPU protocol implements release consistency at GPU side. So,
