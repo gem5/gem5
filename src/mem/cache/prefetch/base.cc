@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, 2023 ARM Limited
+ * Copyright (c) 2013-2014, 2023-2024 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -65,7 +65,7 @@ Base::PrefetchInfo::PrefetchInfo(PacketPtr pkt, Addr addr, bool miss)
     paddress(pkt->req->getPaddr()), cacheMiss(miss)
 {
     unsigned int req_size = pkt->req->getSize();
-    if (!write && miss) {
+    if ((!write && miss) || !pkt->hasData()) {
         data = nullptr;
     } else {
         data = new uint8_t[req_size];
