@@ -320,7 +320,7 @@ FetchUnit::processFetchReturn(PacketPtr pkt)
         assert(!fetchBuf.at(wavefront->wfSlotId).hasFetchDataToProcess());
         wavefront->dropFetch = false;
     } else {
-        fetchBuf.at(wavefront->wfSlotId).fetchDone(pkt->req->getVaddr());
+        fetchBuf.at(wavefront->wfSlotId).fetchDone(pkt);
     }
 
     wavefront->pendingFetch = false;
@@ -370,28 +370,6 @@ void
 FetchUnit::FetchBufDesc::flushBuf()
 {
     restartFromBranch = true;
-    /**
-     * free list may have some entries
-     * so we clear it here to avoid duplicates
-     */
-    freeList.clear();
-    bufferedPCs.clear();
-    reservedPCs.clear();
-    readPtr = bufStart;
-
-    for (int i = 0; i < fetchDepth; ++i) {
-        freeList.push_back(bufStart + i * cacheLineSize);
-    }
-
-    DPRINTF(GPUFetch, "WF[%d][%d]: Id%d Fetch dropped, flushing fetch "
-            "buffer\n", wavefront->simdId, wavefront->wfSlotId,
-            wavefront->wfDynId);
-}
-
-void
-FetchUnit::FetchBufDesc::invBuf()
-{
-    restartFromBranch = false;
     /**
      * free list may have some entries
      * so we clear it here to avoid duplicates
@@ -491,19 +469,22 @@ FetchUnit::FetchBufDesc::reserveBuf(Addr vaddr)
 }
 
 void
-FetchUnit::FetchBufDesc::fetchDone(Addr vaddr)
+FetchUnit::FetchBufDesc::fetchDone(PacketPtr pkt)
 {
-    // If the return vaddr is 0, then it belongs to an SQC invalidation
-    // request. This request calls incLGKMInstsIssued() function in its
-    // execution path. Since there is no valid memory return response
-    // associated with this instruction, decLGKMInstsIssued() is not
-    // executed. Do this here to decrement the counter and invalidate
-    // all buffers
-    if (vaddr == 0) {
+    // If the return command is MemSyncResp, then it belongs to
+    // an SQC invalidation request. This request calls
+    // incLGKMInstsIssued() function in its execution path.
+    // Since there is no valid memory return response associated with
+    // this instruction, decLGKMInstsIssued() is not executed. Do this
+    // here to decrement the counter and invalidate all buffers
+    if (pkt->cmd == MemCmd::MemSyncResp) {
         wavefront->decLGKMInstsIssued();
-        invBuf();
+        flushBuf();
+        restartFromBranch = false;
         return;
     }
+
+    Addr vaddr = pkt->req->getVaddr();
 
     assert(bufferedPCs.find(vaddr) == bufferedPCs.end());
     DPRINTF(GPUFetch, "WF[%d][%d]: Id%d done fetching for addr %#x\n",

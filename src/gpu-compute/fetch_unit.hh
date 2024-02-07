@@ -104,7 +104,6 @@ class FetchUnit
         int reservedLines() const { return reservedPCs.size(); }
         bool hasFreeSpace() const { return !freeList.empty(); }
         void flushBuf();
-        void invBuf();
         Addr nextFetchAddr();
 
         /**
@@ -139,7 +138,7 @@ class FetchUnit
             return is_reserved;
         }
 
-        void fetchDone(Addr vaddr);
+        void fetchDone(PacketPtr ptr);
 
         /**
          * checks if the buffer contains valid data. this essentially

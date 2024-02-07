@@ -698,24 +698,6 @@ class ComputeUnit : public ClockedObject
             const char *description() const;
         };
 
-        class SystemHubEvent : public Event
-        {
-          SQCPort *sqcPort;
-          PacketPtr reqPkt;
-
-          public:
-            SystemHubEvent(PacketPtr pkt, SQCPort *_sqcPort)
-                : sqcPort(_sqcPort), reqPkt(pkt)
-            {
-                setFlags(Event::AutoDelete);
-            }
-
-            void
-            process()
-            {
-            }
-        };
-
         std::deque<std::pair<PacketPtr, Wavefront*>> retries;
 
       protected:

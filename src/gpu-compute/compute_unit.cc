@@ -1085,11 +1085,9 @@ ComputeUnit::SQCPort::MemReqEvent::process()
     SenderState *sender_state = safe_cast<SenderState*>(pkt->senderState);
     [[maybe_unused]] ComputeUnit *compute_unit = sqcPort.computeUnit;
 
-    if (pkt->req->systemReq()) {
-        assert(compute_unit->shader->systemHub);
-        SystemHubEvent *resp_event = new SystemHubEvent(pkt, &sqcPort);
-        compute_unit->shader->systemHub->sendRequest(pkt, resp_event);
-    } else if (!(sqcPort.sendTimingReq(pkt))) {
+    assert(!pkt->req->systemReq());
+
+    if (!(sqcPort.sendTimingReq(pkt))) {
         sqcPort.retries.push_back(std::pair<PacketPtr, Wavefront*>
                 (pkt, sender_state->wavefront));
     }
