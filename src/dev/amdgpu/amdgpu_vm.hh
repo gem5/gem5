@@ -172,6 +172,12 @@ class AMDGPUVM : public Serializable
      */
     Addr gartSize();
 
+    bool
+    inGARTRange(Addr paddr)
+    {
+        return ((paddr >= gartBase()) && (paddr <= (gartBase() + gartSize())));
+    }
+
     /**
      * Copy of GART table. Typically resides in device memory, however we use
      * a copy in gem5 to simplify the interface.
