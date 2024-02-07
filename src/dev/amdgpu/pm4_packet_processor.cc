@@ -227,9 +227,11 @@ PM4PacketProcessor::decodeHeader(PM4Queue *q, PM4Header header)
         } break;
       case IT_WRITE_DATA: {
         dmaBuffer = new PM4WriteData();
+        DPRINTF(PM4PacketProcessor, "PM4 writeData header: %x, count: %d\n",
+                header.ordinal, header.count);
         cb = new DmaVirtCallback<uint64_t>(
             [ = ] (const uint64_t &)
-                { writeData(q, (PM4WriteData *)dmaBuffer); });
+                { writeData(q, (PM4WriteData *)dmaBuffer, header); });
         dmaReadVirt(getGARTAddr(q->rptr()), sizeof(PM4WriteData), cb,
                     dmaBuffer);
         } break;
@@ -350,21 +352,46 @@ PM4PacketProcessor::decodeHeader(PM4Queue *q, PM4Header header)
 }
 
 void
-PM4PacketProcessor::writeData(PM4Queue *q, PM4WriteData *pkt)
+PM4PacketProcessor::writeData(PM4Queue *q, PM4WriteData *pkt, PM4Header header)
 {
     q->incRptr(sizeof(PM4WriteData));
 
-    Addr addr = getGARTAddr(pkt->destAddr);
-    DPRINTF(PM4PacketProcessor, "PM4 write addr: %p data: %p.\n", addr,
-            pkt->data);
-    auto cb = new DmaVirtCallback<uint32_t>(
-        [ = ](const uint32_t &) { writeDataDone(q, pkt, addr); });
-    //TODO: the specs indicate that pkt->data holds the number of dword that
-    //need to be written.
-    dmaWriteVirt(addr, sizeof(uint32_t), cb, &pkt->data);
+    DPRINTF(PM4PacketProcessor, "PM4 write addr: %p data: %p destSel: %d "
+            "addrIncr: %d resume: %d writeConfirm: %d cachePolicy: %d\n",
+            pkt->destAddr, pkt->data, pkt->destSel, pkt->addrIncr,
+            pkt->resume, pkt->writeConfirm, pkt->cachePolicy);
 
-    if (!pkt->writeConfirm)
+    if (pkt->destSel == 5) {
+        // Memory address destination
+        Addr addr = getGARTAddr(pkt->destAddr);
+
+        // This is a variable length packet. The size of the packet is in
+        // the header.count field and is set as Number Of Dwords - 1. This
+        // packet is 4 bytes minuimum meaning the count is minimum 3. To
+        // get the number of dwords of data subtract two from the count.
+        unsigned size = (header.count - 2) * sizeof(uint32_t);
+
+        DPRINTF(PM4PacketProcessor, "Writing %d bytes to %p\n", size, addr);
+        auto cb = new DmaVirtCallback<uint32_t>(
+            [ = ](const uint32_t &) { writeDataDone(q, pkt, addr); });
+        dmaWriteVirt(addr, size, cb, &pkt->data);
+
+        if (!pkt->writeConfirm) {
+            decodeNext(q);
+        }
+    } else if (pkt->destSel == 0) {
+        // Register dword address destination
+        Addr byte_addr = pkt->destAddr << 2;
+
+        gpuDevice->setRegVal(byte_addr, pkt->data);
+
+        // setRegVal is instant on the simulated device so we ignore write
+        // confirm.
+        delete pkt;
         decodeNext(q);
+    } else {
+        fatal("Unknown PM4 writeData destination %d\n", pkt->destSel);
+    }
 }
 
 void
@@ -373,8 +400,9 @@ PM4PacketProcessor::writeDataDone(PM4Queue *q, PM4WriteData *pkt, Addr addr)
     DPRINTF(PM4PacketProcessor, "PM4 write completed to %p, %p.\n", addr,
             pkt->data);
 
-    if (pkt->writeConfirm)
+    if (pkt->writeConfirm) {
         decodeNext(q);
+    }
 
     delete pkt;
 }
@@ -538,7 +566,7 @@ PM4PacketProcessor::releaseMemDone(PM4Queue *q, PM4ReleaseMem *pkt, Addr addr)
         }
         gpuDevice->getIH()->prepareInterruptCookie(pkt->intCtxId, ringId,
                                             SOC15_IH_CLIENTID_GRBM_CP, CP_EOP,
-                                            2 * getIpId());
+                                            0);
         gpuDevice->getIH()->submitInterruptCookie();
     }
 

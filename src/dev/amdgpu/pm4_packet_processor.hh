@@ -136,7 +136,7 @@ class PM4PacketProcessor : public DmaVirtDevice
     void decodeHeader(PM4Queue *q, PM4Header header);
 
     /* Methods that implement PM4 packets */
-    void writeData(PM4Queue *q, PM4WriteData *pkt);
+    void writeData(PM4Queue *q, PM4WriteData *pkt, PM4Header header);
     void writeDataDone(PM4Queue *q, PM4WriteData *pkt, Addr addr);
     void mapQueues(PM4Queue *q, PM4MapQueues *pkt);
     void unmapQueues(PM4Queue *q, PM4UnmapQueues *pkt);
