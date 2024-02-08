@@ -330,6 +330,18 @@ class SyscallFault : public RiscvFault
     void invokeSE(ThreadContext *tc, const StaticInstPtr &inst) override;
 };
 
+/**
+ * Returns true if the fault passed as a first argument was triggered
+ * by a memory access, false otherwise.
+ * If true it is storing the faulting address in the va argument
+ *
+ * @param fault generated fault
+ * @param va function will modify this passed-by-reference parameter
+ *           with the correct faulting virtual address
+ * @return true if va contains a valid value, false otherwise
+ */
+bool getFaultVAddr(Fault fault, Addr &va);
+
 } // namespace RiscvISA
 } // namespace gem5
 

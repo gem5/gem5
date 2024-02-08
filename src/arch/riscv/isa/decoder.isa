@@ -626,6 +626,14 @@ decode QUADRANT default Unknown::unknown() {
                     0x0b: VlmOp::vlm_v({{
                         Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
                     }}, inst_flags=VectorUnitStrideMaskLoadOp);
+                    0x10: VleOp::vle8ff_v({{
+                        if ((machInst.vm || elem_mask(v0, ei)) &&
+                            i < this->microVl && i < this->faultIdx) {
+                            Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
+                        } else {
+                            Vd_ub[i] = Vs2_ub[i];
+                        }
+                    }}, inst_flags=VectorUnitStrideFaultOnlyFirstLoadOp);
                 }
                 0x1: VlIndexOp::vluxei8_v({{
                     Vd_vu[vdElemIdx] = Mem_vc.as<vu>()[0];
@@ -667,6 +675,14 @@ decode QUADRANT default Unknown::unknown() {
                             }}, inst_flags=VectorWholeRegisterLoadOp);
                         }
                     }
+                    0x10: VleOp::vle16ff_v({{
+                        if ((machInst.vm || elem_mask(v0, ei)) &&
+                            i < this->microVl && i < this->faultIdx) {
+                            Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
+                        } else {
+                            Vd_uh[i] = Vs2_uh[i];
+                        }
+                    }}, inst_flags=VectorUnitStrideFaultOnlyFirstLoadOp);
                 }
                 0x1: VlIndexOp::vluxei16_v({{
                     Vd_vu[vdElemIdx] = Mem_vc.as<vu>()[0];
@@ -708,6 +724,14 @@ decode QUADRANT default Unknown::unknown() {
                             }}, inst_flags=VectorWholeRegisterLoadOp);
                         }
                     }
+                    0x10: VleOp::vle32ff_v({{
+                        if ((machInst.vm || elem_mask(v0, ei)) &&
+                            i < this->microVl && i < this->faultIdx) {
+                            Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
+                        } else {
+                            Vd_uw[i] = Vs2_uw[i];
+                        }
+                    }}, inst_flags=VectorUnitStrideFaultOnlyFirstLoadOp);
                 }
                 0x1: VlIndexOp::vluxei32_v({{
                     Vd_vu[vdElemIdx] = Mem_vc.as<vu>()[0];
@@ -749,6 +773,14 @@ decode QUADRANT default Unknown::unknown() {
                             }}, inst_flags=VectorWholeRegisterLoadOp);
                         }
                     }
+                    0x10: VleOp::vle64ff_v({{
+                        if ((machInst.vm || elem_mask(v0, ei)) &&
+                            i < this->microVl && i < this->faultIdx) {
+                            Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
+                        } else {
+                            Vd_ud[i] = Vs2_ud[i];
+                        }
+                    }}, inst_flags=VectorUnitStrideFaultOnlyFirstLoadOp);
                 }
                 0x1: VlIndexOp::vluxei64_v({{
                     Vd_vu[vdElemIdx] = Mem_vc.as<vu>()[0];

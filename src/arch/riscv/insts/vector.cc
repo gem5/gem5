@@ -501,5 +501,92 @@ VxsatMicroInst::generateDisassembly(Addr pc,
     return ss.str();
 }
 
+
+VlFFTrimVlMicroOp::VlFFTrimVlMicroOp(ExtMachInst _machInst, uint32_t _microVl,
+    uint32_t _microIdx, uint32_t _vlen, std::vector<StaticInstPtr>& _microops)
+    : VectorMicroInst("vlff_trimvl_v_micro", _machInst, VectorConfigOp,
+                      _microVl, _microIdx, _vlen),
+      microops(_microops)
+{
+    setRegIdxArrays(
+        reinterpret_cast<RegIdArrayPtr>(
+            &std::remove_pointer_t<decltype(this)>::srcRegIdxArr),
+        nullptr
+    );
+
+    // Create data dependency with load micros
+    for (uint8_t i=0; i<microIdx; i++) {
+        setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vd + i]);
+    }
+
+    this->flags[IsControl] = true;
+    this->flags[IsIndirectControl] = true;
+    this->flags[IsInteger] = true;
+    this->flags[IsUncondControl] = true;
+}
+
+uint32_t
+VlFFTrimVlMicroOp::calcVl() const
+{
+    uint32_t vl = 0;
+    for (uint8_t i=0; i<microIdx; i++) {
+        VleMicroInst& micro = static_cast<VleMicroInst&>(*microops[i]);
+        vl += micro.faultIdx;
+
+        if (micro.trimVl)
+            break;
+    }
+    return vl;
+}
+
+Fault
+VlFFTrimVlMicroOp::execute(ExecContext *xc, trace::InstRecord *traceData) const
+{
+    auto tc = xc->tcBase();
+    MISA misa = xc->readMiscReg(MISCREG_ISA);
+    STATUS status = xc->readMiscReg(MISCREG_STATUS);
+    if (!misa.rvv || status.vs == VPUStatus::OFF) {
+        return std::make_shared<IllegalInstFault>(
+                "RVV is disabled or VPU is off", machInst);
+    }
+
+    PCState pc;
+    set(pc, xc->pcState());
+
+    uint32_t new_vl = calcVl();
+
+    tc->setMiscReg(MISCREG_VSTART, 0);
+
+    RegVal final_val = new_vl;
+    if (traceData) {
+        traceData->setData(miscRegClass, final_val);
+    }
+
+    pc.vl(new_vl);
+    xc->pcState(pc);
+
+    return NoFault;
+}
+
+std::unique_ptr<PCStateBase>
+VlFFTrimVlMicroOp::branchTarget(ThreadContext *tc) const
+{
+    PCStateBase *pc_ptr = tc->pcState().clone();
+
+    uint32_t new_vl = calcVl();
+
+    pc_ptr->as<PCState>().vl(new_vl);
+    return std::unique_ptr<PCStateBase>{pc_ptr};
+}
+
+std::string
+VlFFTrimVlMicroOp::generateDisassembly(Addr pc,
+    const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << " vl";
+    return ss.str();
+}
+
 } // namespace RiscvISA
 } // namespace gem5
