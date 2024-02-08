@@ -172,11 +172,10 @@ Fault
         return fault;
 
     const size_t micro_vlmax = vlen / width_EEW(machInst.width);
-    const size_t micro_elems = vlen / width_EEW(machInst.width);
 
     size_t ei;
 
-    for (size_t i = 0; i < micro_elems; i++) {
+    for (size_t i = 0; i < micro_vlmax; i++) {
         ei = i + micro_vlmax * microIdx;
         %(memacc_code)s;
     }
@@ -244,10 +243,9 @@ Fault
     memcpy(Mem.as<uint8_t>(), pkt->getPtr<uint8_t>(), pkt->getSize());
 
     const size_t micro_vlmax = vlen / width_EEW(machInst.width);
-    const size_t micro_elems = vlen / width_EEW(machInst.width);
 
     size_t ei;
-    for (size_t i = 0; i < micro_elems; i++) {
+    for (size_t i = 0; i < micro_vlmax; i++) {
         ei = i + micro_vlmax * microIdx;
         %(memacc_code)s;
     }
