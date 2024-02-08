@@ -130,6 +130,7 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
     pm4PktProc->setGPUDevice(this);
     cp->hsaPacketProc().setGPUDevice(this);
     cp->setGPUDevice(this);
+    nbio.setGPUDevice(this);
 
     // Address aperture for device memory. We tell this to the driver and
     // could possibly be anything, but these are the values used by hardware.
@@ -163,8 +164,6 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
 
     gpuvm.setMMHUBBase(mmhubBase);
     gpuvm.setMMHUBTop(mmhubTop);
-
-    nbio.setGPUDevice(this);
 }
 
 void
@@ -364,13 +363,6 @@ AMDGPUDevice::readMMIO(PacketPtr pkt, Addr offset)
     // few more dynamic MMIOs.
     DPRINTF(AMDGPUDevice, "Read MMIO %#lx\n", offset);
     mmioReader.readFromTrace(pkt, MMIO_BAR, offset);
-
-    if (regs.find(offset) != regs.end()) {
-        uint64_t value = regs[offset];
-        DPRINTF(AMDGPUDevice, "Reading what kernel wrote before: %#x\n",
-                value);
-        pkt->setUintX(value, ByteOrder::little);
-    }
 
     switch (aperture) {
       case NBIO_BASE:
@@ -610,26 +602,39 @@ AMDGPUDevice::processPendingDoorbells(uint32_t offset)
     }
 }
 
-bool
-AMDGPUDevice::haveRegVal(uint32_t addr)
-{
-    return regs.count(addr);
-}
-
 uint32_t
-AMDGPUDevice::getRegVal(uint32_t addr)
+AMDGPUDevice::getRegVal(uint64_t addr)
 {
+    // This is somewhat of a guess based on amdgpu_device_mm_access
+    // in amdgpu_device.c in the ROCk driver. If bit 32 is 1 then
+    // assume VRAM and use full address, otherwise assume register
+    // address and only user lower 31 bits.
+    Addr fixup_addr = bits(addr, 31, 31) ? addr : addr & 0x7fffffff;
+
+    uint32_t pkt_data = 0;
+    RequestPtr request = std::make_shared<Request>(fixup_addr,
+            sizeof(uint32_t), 0 /* flags */, vramRequestorId());
+    PacketPtr pkt = Packet::createRead(request);
+    pkt->dataStatic((uint8_t *)&pkt_data);
+    readMMIO(pkt, addr);
     DPRINTF(AMDGPUDevice, "Getting register 0x%lx = %x\n",
-            addr, regs[addr]);
-    return regs[addr];
+            fixup_addr, pkt->getLE<uint32_t>());
+
+    return pkt->getLE<uint32_t>();
 }
 
 void
-AMDGPUDevice::setRegVal(uint32_t addr, uint32_t value)
+AMDGPUDevice::setRegVal(uint64_t addr, uint32_t value)
 {
     DPRINTF(AMDGPUDevice, "Setting register 0x%lx to %x\n",
             addr, value);
-    regs[addr] = value;
+
+    uint32_t pkt_data = value;
+    RequestPtr request = std::make_shared<Request>(addr,
+            sizeof(uint32_t), 0 /* flags */, vramRequestorId());
+    PacketPtr pkt = Packet::createWrite(request);
+    pkt->dataStatic((uint8_t *)&pkt_data);
+    writeMMIO(pkt, addr);
 }
 
 void
@@ -675,20 +680,16 @@ AMDGPUDevice::serialize(CheckpointOut &cp) const
     // Serialize the PciDevice base class
     PciDevice::serialize(cp);
 
-    uint64_t regs_size = regs.size();
     uint64_t doorbells_size = doorbells.size();
     uint64_t sdma_engs_size = sdmaEngs.size();
     uint64_t used_vmid_map_size = usedVMIDs.size();
 
-    SERIALIZE_SCALAR(regs_size);
     SERIALIZE_SCALAR(doorbells_size);
     SERIALIZE_SCALAR(sdma_engs_size);
     // Save the number of vmids used
     SERIALIZE_SCALAR(used_vmid_map_size);
 
     // Make a c-style array of the regs to serialize
-    uint32_t reg_addrs[regs_size];
-    uint64_t reg_values[regs_size];
     uint32_t doorbells_offset[doorbells_size];
     QueueType doorbells_queues[doorbells_size];
     uint32_t sdma_engs_offset[sdma_engs_size];
@@ -698,13 +699,6 @@ AMDGPUDevice::serialize(CheckpointOut &cp) const
     std::vector<int> used_vmid_sets;
 
     int idx = 0;
-    for (auto & it : regs) {
-        reg_addrs[idx] = it.first;
-        reg_values[idx] = it.second;
-        ++idx;
-    }
-
-    idx = 0;
     for (auto & it : doorbells) {
         doorbells_offset[idx] = it.first;
         doorbells_queues[idx] = it.second;
@@ -732,8 +726,6 @@ AMDGPUDevice::serialize(CheckpointOut &cp) const
     int* vmid_array = new int[num_queue_id];
     std::copy(used_vmid_sets.begin(), used_vmid_sets.end(), vmid_array);
 
-    SERIALIZE_ARRAY(reg_addrs, sizeof(reg_addrs)/sizeof(reg_addrs[0]));
-    SERIALIZE_ARRAY(reg_values, sizeof(reg_values)/sizeof(reg_values[0]));
     SERIALIZE_ARRAY(doorbells_offset, sizeof(doorbells_offset)/
         sizeof(doorbells_offset[0]));
     SERIALIZE_ARRAY(doorbells_queues, sizeof(doorbells_queues)/
@@ -764,29 +756,14 @@ AMDGPUDevice::unserialize(CheckpointIn &cp)
     // Unserialize the PciDevice base class
     PciDevice::unserialize(cp);
 
-    uint64_t regs_size = 0;
     uint64_t doorbells_size = 0;
     uint64_t sdma_engs_size = 0;
     uint64_t used_vmid_map_size = 0;
 
-    UNSERIALIZE_SCALAR(regs_size);
     UNSERIALIZE_SCALAR(doorbells_size);
     UNSERIALIZE_SCALAR(sdma_engs_size);
     UNSERIALIZE_SCALAR(used_vmid_map_size);
 
-
-    if (regs_size > 0) {
-        uint32_t reg_addrs[regs_size];
-        uint64_t reg_values[regs_size];
-
-        UNSERIALIZE_ARRAY(reg_addrs, sizeof(reg_addrs)/sizeof(reg_addrs[0]));
-        UNSERIALIZE_ARRAY(reg_values,
-                          sizeof(reg_values)/sizeof(reg_values[0]));
-
-        for (int idx = 0; idx < regs_size; ++idx) {
-            regs.insert(std::make_pair(reg_addrs[idx], reg_values[idx]));
-        }
-    }
 
     if (doorbells_size > 0) {
         uint32_t doorbells_offset[doorbells_size];
@@ -798,8 +775,6 @@ AMDGPUDevice::unserialize(CheckpointIn &cp)
                 sizeof(doorbells_queues[0]));
 
         for (int idx = 0; idx < doorbells_size; ++idx) {
-            regs.insert(std::make_pair(doorbells_offset[idx],
-                      doorbells_queues[idx]));
             doorbells[doorbells_offset[idx]] = doorbells_queues[idx];
         }
     }

@@ -87,8 +87,6 @@ class AMDGPUDevice : public PciDevice
     /**
      * Structures to hold registers, doorbells, and some frame memory
      */
-    using GPURegMap = std::unordered_map<uint32_t, uint64_t>;
-    GPURegMap regs;
     std::unordered_map<uint32_t, QueueType> doorbells;
     std::unordered_map<uint32_t, PacketPtr> pendingDoorbellPkts;
 
@@ -195,9 +193,8 @@ class AMDGPUDevice : public PciDevice
      * Register value getter/setter. Used by other GPU blocks to change
      * values from incoming driver/user packets.
      */
-    bool haveRegVal(uint32_t addr);
-    uint32_t getRegVal(uint32_t addr);
-    void setRegVal(uint32_t addr, uint32_t value);
+    uint32_t getRegVal(uint64_t addr);
+    void setRegVal(uint64_t addr, uint32_t value);
 
     /**
      * Methods related to translations and system/device memory.

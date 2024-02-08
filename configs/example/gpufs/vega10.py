@@ -52,7 +52,7 @@ if [ ! -f /lib/modules/`uname -r`/updates/dkms/amdgpu.ko ]; then
     echo "ERROR: Missing DKMS package for kernel `uname -r`. Exiting gem5."
     /sbin/m5 exit
 fi
-modprobe -v amdgpu ip_block_mask=0xff ppfeaturemask=0 dpm=0 audio=0
+modprobe -v amdgpu ip_block_mask=0xdf ppfeaturemask=0 dpm=0 audio=0
 echo "Running {} {}"
 echo "{}" | base64 -d > myapp
 chmod +x myapp
