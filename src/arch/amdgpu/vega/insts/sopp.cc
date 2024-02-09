@@ -669,6 +669,9 @@ namespace VegaISA
     Inst_SOPP__S_ICACHE_INV::Inst_SOPP__S_ICACHE_INV(InFmt_SOPP *iFmt)
         : Inst_SOPP(iFmt, "s_icache_inv")
     {
+        setFlag(MemBarrier);
+        setFlag(GPUStaticInst::MemSync);
+        setFlag(MemSync);
     } // Inst_SOPP__S_ICACHE_INV
 
     Inst_SOPP__S_ICACHE_INV::~Inst_SOPP__S_ICACHE_INV()
@@ -683,7 +686,26 @@ namespace VegaISA
     void
     Inst_SOPP__S_ICACHE_INV::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        if (gpuDynInst->exec_mask.none()) {
+            wf->decLGKMInstsIssued();
+            return;
+        }
+
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
+
+        gpuDynInst->resetEntireStatusVector();
+        gpuDynInst->setStatusVector(0, 1);
+        RequestPtr req = std::make_shared<Request>(0, 0, 0,
+                                   gpuDynInst->computeUnit()->
+                                   requestorId(), 0,
+                                   gpuDynInst->wfDynId);
+        gpuDynInst->setRequestFlags(req);
+        gpuDynInst->computeUnit()->scalarMemoryPipe.
+            injectScalarMemFence(gpuDynInst, false, req);
     } // execute
     // --- Inst_SOPP__S_INCPERFLEVEL class methods ---
 
