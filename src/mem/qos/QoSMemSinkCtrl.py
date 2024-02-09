@@ -1,4 +1,4 @@
-# Copyright (c) 2018-2020 ARM Limited
+# Copyright (c) 2018-2020,2024 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -36,7 +36,6 @@
 # Author: Matteo Andreozzi
 
 from m5.objects.QoSMemCtrl import *
-from m5.objects.QoSMemSinkInterface import *
 from m5.params import *
 
 
@@ -46,9 +45,7 @@ class QoSMemSinkCtrl(QoSMemCtrl):
     cxx_class = "gem5::memory::qos::MemSinkCtrl"
     port = ResponsePort("Response ports")
 
-    interface = Param.QoSMemSinkInterface(
-        QoSMemSinkInterface(), "Interface to memory"
-    )
+    interface = Param.QoSMemSinkInterface("Interface to memory")
 
     # the basic configuration of the controller architecture, note
     # that each entry corresponds to a burst for the specific DRAM
