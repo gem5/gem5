@@ -1106,7 +1106,7 @@ machine(MachineType:TCC, "TCC Cache")
     st_stallAndWaitRequest;
   }
 
-  transition(I, WrVicBlk) {TagArrayRead} {
+  transition(I, {WrVicBlk, WrVicBlkEvict}) {TagArrayRead} {
     p_profileMiss;
     wt_writeThrough;
     p_popRequestQueue;
