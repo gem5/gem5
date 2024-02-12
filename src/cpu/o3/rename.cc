@@ -286,7 +286,7 @@ Rename::setActiveThreads(std::list<ThreadID> *at_ptr)
 
 
 void
-Rename::setRenameMap(UnifiedRenameMap rm_ptr[MaxThreads])
+Rename::setRenameMap(UnifiedRenameMap::PerThreadUnifiedRenameMap& rm_ptr)
 {
     for (ThreadID tid = 0; tid < numThreads; tid++)
         renameMap[tid] = &rm_ptr[tid];
