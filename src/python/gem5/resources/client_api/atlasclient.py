@@ -26,6 +26,7 @@
 
 import itertools
 import json
+import os
 import time
 from typing import (
     Any,
@@ -125,6 +126,27 @@ class AtlasClient(AbstractClient):
         """
         data = json.dumps(data_json).encode("utf-8")
 
+        # check to see if user requests a proxy connection
+        use_proxy = os.getenv("GEM5_USE_PROXY")
+        if use_proxy:
+            # If the "use_proxy" variable is specified we setup a socks5
+            # connection.
+
+            import socket
+            import ssl
+
+            import socks
+
+            IP_ADDR, host_port = use_proxy.split(":")
+            PORT = int(host_port)
+            socks.set_default_proxy(socks.SOCKS5, IP_ADDR, PORT)
+            socket.socket = socks.socksocket
+
+            # base SSL context for https connection
+            ctx = ssl.create_default_context()
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+
         req = request.Request(
             url,
             data=data,
@@ -133,7 +155,10 @@ class AtlasClient(AbstractClient):
 
         for attempt in itertools.count(start=1):
             try:
-                response = request.urlopen(req)
+                if use_proxy:
+                    response = request.urlopen(req, context=ctx)
+                else:
+                    response = request.urlopen(req)
                 break
             except Exception as e:
                 if attempt >= max_failed_attempts:
