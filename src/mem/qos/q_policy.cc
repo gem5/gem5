@@ -70,8 +70,26 @@ QueuePolicy::create(const QoSMemCtrlParams &p)
 }
 
 QueuePolicy::PacketQueue::iterator
+FifoQueuePolicy::selectPacket(PacketQueue* queue)
+{
+    panic_if(queue->empty(),
+             "Provided packet queue is not usable by queue policy");
+    return queue->begin();
+}
+
+QueuePolicy::PacketQueue::iterator
+LifoQueuePolicy::selectPacket(PacketQueue* queue)
+{
+    panic_if(queue->empty(),
+             "Provided packet queue is not usable by queue policy");
+    return std::prev(queue->end());
+}
+
+QueuePolicy::PacketQueue::iterator
 LrgQueuePolicy::selectPacket(PacketQueue* q)
 {
+    panic_if(q->empty(),
+             "Provided packet queue is not usable by queue policy");
     QueuePolicy::PacketQueue::iterator ret = q->end();
 
     // Tracks one packet per requestor in the queue
@@ -137,8 +155,7 @@ LrgQueuePolicy::selectPacket(PacketQueue* q)
 
     DPRINTF(QOS, "QoSQPolicy::lrg no packet was serviced\n");
 
-    // Ret will be : packet to serve if any found or queue begin
-    // (end if queue is empty)
+    // Ret will be : packet to serve
     return ret;
 }
 
