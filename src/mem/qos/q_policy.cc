@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 ARM Limited
+ * Copyright (c) 2018,2024 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -91,10 +91,10 @@ LrgQueuePolicy::selectPacket(PacketQueue* q)
                      "from queue with id %d\n", requestor_id);
 
         // Check if this is a known requestor.
-        panic_if(memCtrl->hasRequestor(requestor_id),
+        panic_if(!memCtrl->hasRequestor(requestor_id),
                  "%s: Unrecognized Requestor\n", __func__);
 
-        panic_if(toServe.size() > 0,
+        panic_if(toServe.size() <= 0,
                  "%s: toServe list is empty\n", __func__);
 
         if (toServe.front() == requestor_id) {
