@@ -43,7 +43,7 @@ Interrupts::Interrupts(const Params &p) : BaseInterrupts(p),
     for (uint8_t i = 0;
         i < p.port_local_interrupt_pins_connection_count;
         ++i) {
-            uint8_t interruptID = p.local_interrupt_ids[i];
+            int interruptID = p.local_interrupt_ids[i];
             assert(interruptID >= 0);
             assert(interruptID <= 47);
             std::string pinName =
