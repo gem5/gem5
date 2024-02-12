@@ -25,6 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import json
+import ssl
 from pathlib import Path
 from typing import (
     Any,
@@ -78,6 +79,7 @@ class JSONClient(AbstractClient):
         resource_id: Optional[str] = None,
         resource_version: Optional[str] = None,
         gem5_version: Optional[str] = None,
+        proxy_context: Optional[ssl.SSLContext] = None,
     ) -> List[Dict[str, Any]]:
         filter = self.resources  # Unfiltered.
         if resource_id:

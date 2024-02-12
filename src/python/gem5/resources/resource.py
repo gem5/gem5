@@ -53,7 +53,10 @@ from ..isas import (
     get_isa_from_str,
 )
 from .client import get_resource_json_obj
-from .downloader import get_resource
+from .downloader import (
+    get_proxy_context,
+    get_resource,
+)
 from .looppoint import (
     LooppointCsvLoader,
     LooppointJsonLoader,
@@ -963,13 +966,14 @@ def obtain_resource(
                     ``resource_directory`` parameter.
     :param quiet: If ``True``, suppress output. ``False`` by default.
     """
-
+    proxy_context = get_proxy_context()
     # Obtain the resource object entry for this resource
     resource_json = get_resource_json_obj(
         resource_id,
         resource_version=resource_version,
         clients=clients,
         gem5_version=gem5_version,
+        proxy_context=proxy_context,
     )
 
     # This is is used to store the partial function which is used to download
@@ -1034,6 +1038,7 @@ def obtain_resource(
             clients=clients,
             gem5_version=gem5_version,
             quiet=quiet,
+            proxy_context=proxy_context,
         )
 
     # Obtain the type from the JSON. From this we will determine what subclass

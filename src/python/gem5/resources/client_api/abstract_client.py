@@ -24,6 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import ssl
 import urllib.parse
 from abc import (
     ABC,
@@ -58,6 +59,7 @@ class AbstractClient(ABC):
         resource_id: Optional[str] = None,
         resource_version: Optional[str] = None,
         gem5_version: Optional[str] = None,
+        proxy_context: Optional[ssl.SSLContext] = None,
     ) -> List[Dict[str, Any]]:
         """
         :param resource_id: The ID of the Resource. Optional, if not set, all
@@ -68,6 +70,8 @@ class AbstractClient(ABC):
                                  parameter will be ignored.
         :param gem5_version: The version of gem5. Optional, if not set, all
                              versions will be returned.
+        :param proxy_context: The proxy context to be used for the request.
+                              'None' if no proxy is to be used.
         :return: A list of all the Resources with the given ID.
         """
         raise NotImplementedError
@@ -111,10 +115,15 @@ class AbstractClient(ABC):
                     filtered_resources.append(resource)
         return filtered_resources
 
-    def get_resources_by_id(self, resource_id: str) -> List[Dict[str, Any]]:
+    def get_resources_by_id(
+        self, resource_id: str, proxy_context: object
+    ) -> List[Dict[str, Any]]:
         """
         :param resource_id: The ID of the Resource.
-
+        :param proxy_context: The proxy context to be used for the request.
+                              'None' if no proxy is to be used.
         :return: A list of all the Resources with the given ID.
         """
-        return self.get_resources(resource_id=resource_id)
+        return self.get_resources(
+            resource_id=resource_id, proxy_context=proxy_context
+        )

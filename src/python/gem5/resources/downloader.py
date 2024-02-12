@@ -28,6 +28,7 @@ import gzip
 import os
 import random
 import shutil
+import ssl
 import tarfile
 import time
 import urllib.parse
@@ -61,7 +62,12 @@ information about resources from resources.gem5.org.
 """
 
 
-def _download(url: str, download_to: str, max_attempts: int = 6) -> None:
+def _download(
+    url: str,
+    download_to: str,
+    max_attempts: int = 6,
+    proxy_context: object = None,
+) -> None:
     """
     Downloads a file.
 
@@ -75,6 +81,9 @@ def _download(url: str, download_to: str, max_attempts: int = 6) -> None:
     :param max_attempts: The max number of download attempts before stopping.
                          The default is 6. This translates to roughly 1 minute
                          of retrying before stopping.
+
+    :param proxy_context: The SOCKS proxy context to use for the request.
+                          'None' if no proxy is to be used.
     """
 
     # TODO: This whole setup will only work for single files we can get via
@@ -87,30 +96,13 @@ def _download(url: str, download_to: str, max_attempts: int = 6) -> None:
         # number of download attempts has been reached or if a HTTP status code
         # other than 408, 429, or 5xx is received.
         try:
-            # check to see if user requests a proxy connection
             use_proxy = os.getenv("GEM5_USE_PROXY")
             if use_proxy:
-                # If the "use_proxy" variable is specified we setup a socks5
-                # connection.
-
-                import socket
-                import ssl
-
-                import socks
-
-                IP_ADDR, host_port = use_proxy.split(":")
-                PORT = int(host_port)
-                socks.set_default_proxy(socks.SOCKS5, IP_ADDR, PORT)
-                socket.socket = socks.socksocket
-
-                # base SSL context for https connection
-                ctx = ssl.create_default_context()
-                ctx.check_hostname = False
-                ctx.verify_mode = ssl.CERT_NONE
-
                 # get the file as a bytes blob
                 request = urllib.request.Request(url)
-                with urllib.request.urlopen(request, context=ctx) as fr:
+                with urllib.request.urlopen(
+                    request, context=proxy_context
+                ) as fr:
                     with tqdm.wrapattr(
                         open(download_to, "wb"),
                         "write",
@@ -181,6 +173,26 @@ def _download(url: str, download_to: str, max_attempts: int = 6) -> None:
             )
 
 
+def get_proxy_context():
+    use_proxy = os.getenv("GEM5_USE_PROXY")
+    if use_proxy:
+        import socket
+
+        import socks
+
+        ip_addr, host_port = use_proxy.split(":")
+        port = int(host_port)
+        socks.set_default_proxy(socks.SOCKS5, ip_addr, port)
+        socket.socket = socks.socksocket
+
+        # base SSL context for https connection
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        return ctx
+    return None
+
+
 def list_resources(
     clients: Optional[List] = None, gem5_version: Optional[str] = None
 ) -> Dict[str, List[str]]:
@@ -215,6 +227,7 @@ def get_resource(
     clients: Optional[List] = None,
     gem5_version: Optional[str] = core.gem5Version,
     quiet: bool = False,
+    proxy_context: Optional[ssl.SSLContext] = None,
 ) -> None:
     """
     Obtains a gem5 resource and stored it to a specified location. If the
@@ -252,6 +265,9 @@ def get_resource(
     :param quiet: If ``True``, no output will be printed to the console (baring
                   exceptions). ``False`` by default.
 
+    :param proxy_context: The SOCKS proxy context to use for the request.
+                          'None' if no proxy is to be used.
+
     :raises Exception: An exception is thrown if a file is already present at
                        ``to_path`` but it does not have the correct md5 sum. An
                        exception will also be thrown is a directory is present
@@ -269,6 +285,7 @@ def get_resource(
             resource_version=resource_version,
             clients=clients,
             gem5_version=gem5_version,
+            proxy_context=proxy_context,
         )
 
         if os.path.exists(to_path):
@@ -353,7 +370,9 @@ def get_resource(
             # Get the URL.
             url = resource_json["url"]
 
-            _download(url=url, download_to=download_dest)
+            _download(
+                url=url, download_to=download_dest, proxy_context=proxy_context
+            )
             if not quiet:
                 print(f"Finished downloading resource '{resource_name}'.")
 

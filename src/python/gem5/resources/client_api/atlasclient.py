@@ -27,6 +27,7 @@
 import itertools
 import json
 import os
+import ssl
 import time
 from typing import (
     Any,
@@ -103,6 +104,7 @@ class AtlasClient(AbstractClient):
         data_json: Dict[str, Any],
         headers: Dict[str, str],
         purpose_of_request: Optional[str],
+        proxy_context: Optional[ssl.SSLContext] = None,
         max_failed_attempts: int = 4,
         reattempt_pause_base: int = 2,
     ) -> Dict[str, Any]:
@@ -117,6 +119,8 @@ class AtlasClient(AbstractClient):
         :param purpose_of_request: A string describing the purpose of the
         request. This is optional. It's used to give context to the user if an
         exception is raised.
+        :param proxy_context: The SOCKS proxy context to use for the request.
+        'None' if no proxy is to be used.
         :param max_failed_attempts: The maximum number of times to an attempt
         at making a request should be done before throwing an exception.
         :param reattempt_pause_base: The base of the exponential backoff -- the
@@ -125,28 +129,6 @@ class AtlasClient(AbstractClient):
         **Warning**: This function assumes a JSON response.
         """
         data = json.dumps(data_json).encode("utf-8")
-
-        # check to see if user requests a proxy connection
-        use_proxy = os.getenv("GEM5_USE_PROXY")
-        if use_proxy:
-            # If the "use_proxy" variable is specified we setup a socks5
-            # connection.
-
-            import socket
-            import ssl
-
-            import socks
-
-            IP_ADDR, host_port = use_proxy.split(":")
-            PORT = int(host_port)
-            socks.set_default_proxy(socks.SOCKS5, IP_ADDR, PORT)
-            socket.socket = socks.socksocket
-
-            # base SSL context for https connection
-            ctx = ssl.create_default_context()
-            ctx.check_hostname = False
-            ctx.verify_mode = ssl.CERT_NONE
-
         req = request.Request(
             url,
             data=data,
@@ -155,10 +137,7 @@ class AtlasClient(AbstractClient):
 
         for attempt in itertools.count(start=1):
             try:
-                if use_proxy:
-                    response = request.urlopen(req, context=ctx)
-                else:
-                    response = request.urlopen(req)
+                response = request.urlopen(req, context=proxy_context)
                 break
             except Exception as e:
                 if attempt >= max_failed_attempts:
@@ -183,6 +162,7 @@ class AtlasClient(AbstractClient):
         resource_id: Optional[str] = None,
         resource_version: Optional[str] = None,
         gem5_version: Optional[str] = None,
+        proxy_context: Optional[ssl.SSLContext] = None,
     ) -> List[Dict[str, Any]]:
         url = f"{self.url}/action/find"
         data = {
@@ -209,6 +189,7 @@ class AtlasClient(AbstractClient):
             data_json=data,
             headers=headers,
             purpose_of_request="Get Resources",
+            proxy_context=proxy_context,
         )["documents"]
 
         # I do this as a lazy post-processing step because I can't figure out
