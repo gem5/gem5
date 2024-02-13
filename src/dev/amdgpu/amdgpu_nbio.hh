@@ -110,7 +110,8 @@ class AMDGPUNbio
      * Driver initialization sequence helper variables.
      */
     uint64_t mm_index_reg = 0;
-    uint64_t pcie_index_reg = 0;
+    uint32_t pcie_index_reg = 0;
+    uint32_t pcie_index2_reg = 0;
     std::unordered_map<uint32_t, uint32_t> triggered_reads;
 
     /*
