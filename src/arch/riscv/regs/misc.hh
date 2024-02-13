@@ -246,6 +246,11 @@ enum MiscRegIndex
     MISCREG_HPMCOUNTER30H,
     MISCREG_HPMCOUNTER31H,
 
+    NUM_PHYS_MISCREGS,
+
+    // This CSR shared the same space with MISCREG_FFLAGS
+    MISCREG_FFLAGS_EXE = NUM_PHYS_MISCREGS,
+
     NUM_MISCREGS
 };
 
