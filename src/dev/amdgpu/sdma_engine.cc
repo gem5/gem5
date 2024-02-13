@@ -859,8 +859,7 @@ SDMAEngine::srbmWrite(SDMAQueue *q, sdmaSRBMWriteHeader *header,
     DPRINTF(SDMAEngine, "SRBM write to %#x with data %#x\n",
             reg_addr, pkt->data);
 
-    warn_once("SRBM write not performed, no SRBM model. This needs to be fixed"
-              " if correct system simulation is relying on SRBM registers.");
+    gpuDevice->setRegVal(reg_addr, pkt->data);
 
     delete header;
     delete pkt;
