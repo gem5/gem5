@@ -81,9 +81,9 @@ SDMAEngine::setGPUDevice(AMDGPUDevice *gpu_device)
 }
 
 int
-SDMAEngine::getIHClientId()
+SDMAEngine::getIHClientId(int _id)
 {
-    switch (id) {
+    switch (_id) {
       case 0:
         return SOC15_IH_CLIENTID_SDMA0;
       case 1:
@@ -809,8 +809,12 @@ SDMAEngine::trap(SDMAQueue *q, sdmaTrap *pkt)
 
     uint32_t ring_id = (q->queueType() == SDMAPage) ? 3 : 0;
 
+    int node_id = 0;
+    int local_id = getId();
+
     gpuDevice->getIH()->prepareInterruptCookie(pkt->intrContext, ring_id,
-                                               getIHClientId(), TRAP_ID);
+                                               getIHClientId(local_id),
+                                               TRAP_ID, 2*node_id);
     gpuDevice->getIH()->submitInterruptCookie();
 
     delete pkt;
