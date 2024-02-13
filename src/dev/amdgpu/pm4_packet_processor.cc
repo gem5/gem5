@@ -49,7 +49,7 @@ namespace gem5
 {
 
 PM4PacketProcessor::PM4PacketProcessor(const PM4PacketProcessorParams &p)
-    : DmaVirtDevice(p)
+    : DmaVirtDevice(p), _ipId(p.ip_id), _mmioRange(p.mmio_range)
 {
     memset(&kiq, 0, sizeof(QueueDesc));
     memset(&pq, 0, sizeof(QueueDesc));
@@ -144,7 +144,7 @@ PM4PacketProcessor::newQueue(QueueDesc *mqd, Addr offset,
     QueueType qt;
     qt = mqd->aql ? QueueType::ComputeAQL
                   : QueueType::Compute;
-    gpuDevice->setDoorbellType(offset, qt);
+    gpuDevice->setDoorbellType(offset, qt, getIpId());
 
     DPRINTF(PM4PacketProcessor, "New PM4 queue %d, base: %p offset: %p, me: "
             "%d, pipe %d queue: %d size: %d\n", id, q->base(), q->offset(),
@@ -521,7 +521,7 @@ PM4PacketProcessor::processSDMAMQD(PM4MapQueues *pkt, PM4Queue *q, Addr addr,
 
     // Register doorbell with GPU device
     gpuDevice->setSDMAEngine(pkt->doorbellOffset << 2, sdma_eng);
-    gpuDevice->setDoorbellType(pkt->doorbellOffset << 2, RLC);
+    gpuDevice->setDoorbellType(pkt->doorbellOffset << 2, RLC, getIpId());
 
     gpuDevice->processPendingDoorbells(pkt->doorbellOffset << 2);
 }
@@ -774,9 +774,14 @@ PM4PacketProcessor::setUconfigReg(PM4Queue *q, PM4SetUconfigReg *pkt)
 {
     q->incRptr(sizeof(PM4SetUconfigReg));
 
+    DPRINTF(PM4PacketProcessor, "SetUconfig offset %x data %x\n",
+            pkt->offset, pkt->data);
+
     // SET_UCONFIG_REG_START and pkt->offset are dword addresses
     uint32_t reg_addr = (PACKET3_SET_UCONFIG_REG_START + pkt->offset) * 4;
 
+    // Additional CPs respond to addresses 0x40000 apart.
+    reg_addr += 0x40000 * getIpId();
     gpuDevice->setRegVal(reg_addr, pkt->data);
 
     decodeNext(q);
@@ -851,7 +856,7 @@ PM4PacketProcessor::writeMMIO(PacketPtr pkt, Addr mmio_offset)
         break;
       case mmCP_HQD_PQ_DOORBELL_CONTROL:
         setHqdPqDoorbellCtrl(pkt->getLE<uint32_t>());
-        gpuDevice->setDoorbellType(getKiqDoorbellOffset(), Compute);
+        gpuDevice->setDoorbellType(getKiqDoorbellOffset(), Compute, getIpId());
         break;
       case mmCP_HQD_PQ_RPTR:
         setHqdPqPtr(pkt->getLE<uint32_t>());
@@ -913,7 +918,7 @@ PM4PacketProcessor::writeMMIO(PacketPtr pkt, Addr mmio_offset)
         break;
       case mmCP_RB_DOORBELL_CONTROL:
         setRbDoorbellCntrl(pkt->getLE<uint32_t>());
-        gpuDevice->setDoorbellType(getPqDoorbellOffset(), Gfx);
+        gpuDevice->setDoorbellType(getPqDoorbellOffset(), Gfx, getIpId());
         break;
       case mmCP_RB_DOORBELL_RANGE_LOWER:
         setRbDoorbellRangeLo(pkt->getLE<uint32_t>());

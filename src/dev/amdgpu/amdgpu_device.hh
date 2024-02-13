@@ -87,7 +87,7 @@ class AMDGPUDevice : public PciDevice
     /**
      * Structures to hold registers, doorbells, and some frame memory
      */
-    std::unordered_map<uint32_t, QueueType> doorbells;
+    std::unordered_map<uint32_t, DoorbellInfo> doorbells;
     std::unordered_map<uint32_t, PacketPtr> pendingDoorbellPkts;
 
     /**
@@ -113,8 +113,18 @@ class AMDGPUDevice : public PciDevice
     AMDGPUMemoryManager *gpuMemMgr;
     AMDGPUInterruptHandler *deviceIH;
     AMDGPUVM gpuvm;
-    PM4PacketProcessor *pm4PktProc;
     GPUCommandProcessor *cp;
+
+    struct AddrRangeHasher
+    {
+        std::size_t operator()(const AddrRange& k) const
+        {
+            return k.start();
+        }
+    };
+    std::unordered_map<int, PM4PacketProcessor *> pm4PktProcs;
+    std::unordered_map<AddrRange, PM4PacketProcessor *,
+                       AddrRangeHasher> pm4Ranges;
 
     // SDMAs mapped by doorbell offset
     std::unordered_map<uint32_t, SDMAEngine *> sdmaEngs;
@@ -185,7 +195,7 @@ class AMDGPUDevice : public PciDevice
     /**
      * Set handles to GPU blocks.
      */
-    void setDoorbellType(uint32_t offset, QueueType qt);
+    void setDoorbellType(uint32_t offset, QueueType qt, int ip_id = 0);
     void processPendingDoorbells(uint32_t offset);
     void setSDMAEngine(Addr offset, SDMAEngine *eng);
 

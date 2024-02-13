@@ -99,9 +99,23 @@ static constexpr int AMDGPU_USER_PAGE_SIZE = 4096;
 namespace gem5
 {
 
+typedef enum : int
+{
+    NBIO_MMIO_RANGE,
+    MMHUB_MMIO_RANGE,
+    GFX_MMIO_RANGE,
+    GRBM_MMIO_RANGE,
+    IH_MMIO_RANGE,
+    NUM_MMIO_RANGES
+} mmio_range_t;
+
+class AMDGPUDevice;
+
 class AMDGPUVM : public Serializable
 {
   private:
+    AMDGPUDevice *gpuDevice;
+
     typedef struct GEM5_PACKED
     {
         // Page table addresses: from (Base + Start) to (End)
@@ -160,8 +174,12 @@ class AMDGPUVM : public Serializable
      */
     std::vector<VegaISA::GpuTLB *> gpu_tlbs;
 
+    std::array<AddrRange, NUM_MMIO_RANGES> mmioRanges;
+
   public:
     AMDGPUVM();
+
+    void setGPUDevice(AMDGPUDevice *gpu_device) { gpuDevice = gpu_device; }
 
     /**
      * Return base address of GART table in framebuffer.
@@ -232,38 +250,11 @@ class AMDGPUVM : public Serializable
     Addr getSysAddrRangeLow () { return vmContext0.sysAddrL; }
     Addr getSysAddrRangeHigh () { return vmContext0.sysAddrH; }
 
-    Addr
-    getMmioAperture(Addr addr)
-    {
-        // Aperture ranges:
-        // NBIO               0x0     - 0x4280
-        // IH                 0x4280  - 0x4980
-        // SDMA0              0x4980  - 0x5180
-        // SDMA1              0x5180  - 0x5980
-        // GRBM               0x8000  - 0xD000
-        // GFX                0x28000 - 0x3F000
-        // MMHUB              0x68000 - 0x6a120
+    void setMMIOAperture(mmio_range_t mmio_aperture, AddrRange range);
+    const AddrRange& getMMIOAperture(Addr addr);
+    AddrRange getMMIORange(mmio_range_t mmio_aperture);
 
-        if (IH_BASE <= addr && addr < IH_BASE + IH_SIZE)
-            return IH_BASE;
-        else if (SDMA0_BASE <= addr && addr < SDMA0_BASE + SDMA_SIZE)
-            return SDMA0_BASE;
-        else if (SDMA1_BASE <= addr && addr < SDMA1_BASE + SDMA_SIZE)
-            return SDMA1_BASE;
-        else if (GRBM_BASE <= addr && addr < GRBM_BASE + GRBM_SIZE)
-            return GRBM_BASE;
-        else if (GFX_BASE <= addr && addr < GFX_BASE + GFX_SIZE)
-            return GFX_BASE;
-        else if (MMHUB_BASE <= addr && addr < MMHUB_BASE + MMHUB_SIZE)
-            return MMHUB_BASE;
-        else {
-            warn_once("Accessing unsupported MMIO aperture! Assuming NBIO\n");
-            return NBIO_BASE;
-        }
-
-    }
-
-    // Gettig mapped aperture base addresses
+    // Getting mapped aperture base addresses
     Addr
     getFrameAperture(Addr addr)
     {

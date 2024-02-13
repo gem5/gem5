@@ -54,8 +54,7 @@ namespace gem5
 
 AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
     : PciDevice(p), gpuMemMgr(p.memory_manager), deviceIH(p.device_ih),
-      pm4PktProc(p.pm4_pkt_proc), cp(p.cp),
-      checkpoint_before_mmios(p.checkpoint_before_mmios),
+      cp(p.cp), checkpoint_before_mmios(p.checkpoint_before_mmios),
       init_interrupt_count(0), _lastVMID(0),
       deviceMem(name() + ".deviceMem", p.memories, false, "", false)
 {
@@ -79,6 +78,16 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
         romRange = RangeSize(config.expansionROM, ROM_SIZE);
     } else {
         romRange = RangeSize(VGA_ROM_DEFAULT, ROM_SIZE);
+    }
+
+    if (p.device_name == "Vega10") {
+        gfx_version = GfxVersion::gfx900;
+    } else if (p.device_name == "MI100") {
+        gfx_version = GfxVersion::gfx908;
+    } else if (p.device_name == "MI200") {
+        gfx_version = GfxVersion::gfx90a;
+    } else {
+        panic("Unknown GPU device %s\n", p.device_name);
     }
 
     if (p.trace_file != "") {
@@ -126,8 +135,22 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
         panic("Unknown GPU device %s\n", p.device_name);
     }
 
+    // Setup PM4 packet processors and sanity check IDs
+    std::set<int> pm4_ids;
+    for (auto& pm4 : p.pm4_pkt_procs) {
+        pm4->setGPUDevice(this);
+        fatal_if(pm4_ids.count(pm4->getIpId()),
+                "Two PM4s with same IP IDs is not allowed");
+        pm4_ids.insert(pm4->getIpId());
+        pm4PktProcs.insert({pm4->getIpId(), pm4});
+
+        pm4Ranges.insert({pm4->getMMIORange(), pm4});
+    }
+
+    // There should be at least one PM4 packet processor with ID 0
+    fatal_if(!pm4PktProcs.count(0), "No default PM4 processor found");
+
     deviceIH->setGPUDevice(this);
-    pm4PktProc->setGPUDevice(this);
     cp->hsaPacketProc().setGPUDevice(this);
     cp->setGPUDevice(this);
     nbio.setGPUDevice(this);
@@ -136,6 +159,23 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
     // could possibly be anything, but these are the values used by hardware.
     uint64_t mmhubBase = 0x8000ULL << 24;
     uint64_t mmhubTop = 0x83ffULL << 24;
+    uint64_t mem_size = 0x3ff0; // 16 GB of memory
+
+    gpuvm.setMMHUBBase(mmhubBase);
+    gpuvm.setMMHUBTop(mmhubTop);
+
+    // Map other MMIO apertures based on gfx version. This must be done before
+    // any calls to get/setRegVal.
+    // NBIO               0x0     - 0x4280
+    // IH                 0x4280  - 0x4980
+    // GRBM               0x8000  - 0xC000
+    // GFX                0x28000 - 0x3F000
+    // MMHUB              0x68000 - 0x6a120
+    gpuvm.setMMIOAperture(NBIO_MMIO_RANGE, AddrRange(0x0, 0x4280));
+    gpuvm.setMMIOAperture(IH_MMIO_RANGE,   AddrRange(0x4280, 0x4980));
+    gpuvm.setMMIOAperture(GRBM_MMIO_RANGE, AddrRange(0x8000, 0xC000));
+    gpuvm.setMMIOAperture(GFX_MMIO_RANGE,  AddrRange(0x28000, 0x3F000));
+    gpuvm.setMMIOAperture(MMHUB_MMIO_RANGE,  AddrRange(0x68000, 0x6A120));
 
     // These are hardcoded register values to return what the driver expects
     setRegVal(AMDGPU_MP0_SMN_C2PMSG_33, 0x80000000);
@@ -145,25 +185,19 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
     if (p.device_name == "Vega10") {
         setRegVal(VEGA10_FB_LOCATION_BASE, mmhubBase >> 24);
         setRegVal(VEGA10_FB_LOCATION_TOP, mmhubTop >> 24);
-        gfx_version = GfxVersion::gfx900;
     } else if (p.device_name == "MI100") {
         setRegVal(MI100_FB_LOCATION_BASE, mmhubBase >> 24);
         setRegVal(MI100_FB_LOCATION_TOP, mmhubTop >> 24);
-        setRegVal(MI100_MEM_SIZE_REG, 0x3ff0); // 16GB of memory
-        gfx_version = GfxVersion::gfx908;
+        setRegVal(MI100_MEM_SIZE_REG, mem_size);
     } else if (p.device_name == "MI200") {
         // This device can have either 64GB or 128GB of device memory.
         // This limits to 16GB for simulation.
         setRegVal(MI200_FB_LOCATION_BASE, mmhubBase >> 24);
         setRegVal(MI200_FB_LOCATION_TOP, mmhubTop >> 24);
-        setRegVal(MI200_MEM_SIZE_REG, 0x3ff0);
-        gfx_version = GfxVersion::gfx90a;
+        setRegVal(MI200_MEM_SIZE_REG, mem_size);
     } else {
         panic("Unknown GPU device %s\n", p.device_name);
     }
-
-    gpuvm.setMMHUBBase(mmhubBase);
-    gpuvm.setMMHUBTop(mmhubTop);
 }
 
 void
@@ -356,29 +390,28 @@ AMDGPUDevice::readDoorbell(PacketPtr pkt, Addr offset)
 void
 AMDGPUDevice::readMMIO(PacketPtr pkt, Addr offset)
 {
-    Addr aperture = gpuvm.getMmioAperture(offset);
-    Addr aperture_offset = offset - aperture;
+    AddrRange aperture = gpuvm.getMMIOAperture(offset);
+    Addr aperture_offset = offset - aperture.start();
 
     // By default read from MMIO trace. Overwrite the packet for a select
     // few more dynamic MMIOs.
     DPRINTF(AMDGPUDevice, "Read MMIO %#lx\n", offset);
     mmioReader.readFromTrace(pkt, MMIO_BAR, offset);
 
-    switch (aperture) {
-      case NBIO_BASE:
+    if (aperture == gpuvm.getMMIORange(NBIO_MMIO_RANGE)) {
+        DPRINTF(AMDGPUDevice, "NBIO base\n");
         nbio.readMMIO(pkt, aperture_offset);
-        break;
-      case GRBM_BASE:
+    } else if (aperture == gpuvm.getMMIORange(GRBM_MMIO_RANGE)) {
+        DPRINTF(AMDGPUDevice, "GRBM base\n");
         gpuvm.readMMIO(pkt, aperture_offset >> GRBM_OFFSET_SHIFT);
-        break;
-      case GFX_BASE:
+    } else if (aperture == gpuvm.getMMIORange(GFX_MMIO_RANGE)) {
+        DPRINTF(AMDGPUDevice, "GFX base\n");
         gfx.readMMIO(pkt, aperture_offset);
-        break;
-      case MMHUB_BASE:
+    } else if (aperture == gpuvm.getMMIORange(MMHUB_MMIO_RANGE)) {
+        DPRINTF(AMDGPUDevice, "MMHUB base\n");
         gpuvm.readMMIO(pkt, aperture_offset >> MMHUB_OFFSET_SHIFT);
-        break;
-      default:
-        break;
+    } else {
+        DPRINTF(AMDGPUDevice, "Unknown MMIO aperture for read %#x\n", offset);
     }
 }
 
@@ -422,17 +455,22 @@ AMDGPUDevice::writeDoorbell(PacketPtr pkt, Addr offset)
     DPRINTF(AMDGPUDevice, "Wrote doorbell %#lx\n", offset);
 
     if (doorbells.find(offset) != doorbells.end()) {
-        QueueType q_type = doorbells[offset];
+        QueueType q_type = doorbells[offset].qtype;
+        int ip_id = doorbells[offset].ip_id;
         DPRINTF(AMDGPUDevice, "Doorbell offset %p queue: %d\n",
                               offset, q_type);
         switch (q_type) {
           case Compute:
-            pm4PktProc->process(pm4PktProc->getQueue(offset),
-                                pkt->getLE<uint64_t>());
+            assert(pm4PktProcs.count(ip_id));
+            pm4PktProcs[ip_id]->process(
+                pm4PktProcs[ip_id]->getQueue(offset),
+                pkt->getLE<uint64_t>());
           break;
           case Gfx:
-            pm4PktProc->process(pm4PktProc->getQueue(offset, true),
-                                pkt->getLE<uint64_t>());
+            assert(pm4PktProcs.count(ip_id));
+            pm4PktProcs[ip_id]->process(
+                pm4PktProcs[ip_id]->getQueue(offset, true),
+                pkt->getLE<uint64_t>());
           break;
           case SDMAGfx: {
             SDMAEngine *sdmaEng = getSDMAEngine(offset);
@@ -443,9 +481,11 @@ AMDGPUDevice::writeDoorbell(PacketPtr pkt, Addr offset)
             sdmaEng->processPage(pkt->getLE<uint64_t>());
           } break;
           case ComputeAQL: {
+            assert(pm4PktProcs.count(ip_id));
             cp->hsaPacketProc().hwScheduler()->write(offset,
                 pkt->getLE<uint64_t>() + 1);
-            pm4PktProc->updateReadIndex(offset, pkt->getLE<uint64_t>() + 1);
+            pm4PktProcs[ip_id]->updateReadIndex(offset,
+                pkt->getLE<uint64_t>() + 1);
           } break;
           case InterruptHandler:
             deviceIH->updateRptr(pkt->getLE<uint32_t>());
@@ -475,12 +515,12 @@ AMDGPUDevice::writeDoorbell(PacketPtr pkt, Addr offset)
 void
 AMDGPUDevice::writeMMIO(PacketPtr pkt, Addr offset)
 {
-    Addr aperture = gpuvm.getMmioAperture(offset);
-    Addr aperture_offset = offset - aperture;
+    AddrRange aperture = gpuvm.getMMIOAperture(offset);
+    Addr aperture_offset = offset - aperture.start();
 
     DPRINTF(AMDGPUDevice, "Wrote MMIO %#lx\n", offset);
 
-    // Check SDMA functions first, then fallback to switch statement
+    // Check SDMA functions first, then fallback to MMIO ranges.
     for (int idx = 0; idx < sdmaIds.size(); ++idx) {
         if (sdmaMmios[idx].contains(offset)) {
             Addr sdma_offset = (offset - sdmaMmios[idx].start()) >> 2;
@@ -498,26 +538,31 @@ AMDGPUDevice::writeMMIO(PacketPtr pkt, Addr offset)
         }
     }
 
-    switch (aperture) {
-      /* Write a general register to the graphics register bus manager. */
-      case GRBM_BASE:
+    // Check PM4s next, returning to avoid duplicate writes.
+    for (auto& [range, pm4_proc] : pm4Ranges) {
+        if (range.contains(offset)) {
+            // PM4 MMIOs are offset based on the MMIO range start
+            Addr ip_offset = offset - range.start();
+            pm4_proc->writeMMIO(pkt, ip_offset >> GRBM_OFFSET_SHIFT);
+
+            return;
+        }
+    }
+
+    if (aperture == gpuvm.getMMIORange(GRBM_MMIO_RANGE)) {
+        DPRINTF(AMDGPUDevice, "GRBM base\n");
         gpuvm.writeMMIO(pkt, aperture_offset >> GRBM_OFFSET_SHIFT);
-        pm4PktProc->writeMMIO(pkt, aperture_offset >> GRBM_OFFSET_SHIFT);
-        break;
-      /* Write a register to the interrupt handler. */
-      case IH_BASE:
+    } else if (aperture == gpuvm.getMMIORange(IH_MMIO_RANGE)) {
+        DPRINTF(AMDGPUDevice, "IH base\n");
         deviceIH->writeMMIO(pkt, aperture_offset >> IH_OFFSET_SHIFT);
-        break;
-      /* Write an IO space register */
-      case NBIO_BASE:
+    } else if (aperture == gpuvm.getMMIORange(NBIO_MMIO_RANGE)) {
+        DPRINTF(AMDGPUDevice, "NBIO base\n");
         nbio.writeMMIO(pkt, aperture_offset);
-        break;
-      case GFX_BASE:
+    } else if (aperture == gpuvm.getMMIORange(GFX_MMIO_RANGE)) {
+        DPRINTF(AMDGPUDevice, "GFX base\n");
         gfx.writeMMIO(pkt, aperture_offset);
-        break;
-      default:
-        DPRINTF(AMDGPUDevice, "Unknown MMIO aperture for %#x\n", offset);
-        break;
+    } else {
+        DPRINTF(AMDGPUDevice, "Unknown MMIO aperture for write %#x\n", offset);
     }
 }
 
@@ -638,10 +683,11 @@ AMDGPUDevice::setRegVal(uint64_t addr, uint32_t value)
 }
 
 void
-AMDGPUDevice::setDoorbellType(uint32_t offset, QueueType qt)
+AMDGPUDevice::setDoorbellType(uint32_t offset, QueueType qt, int ip_id)
 {
     DPRINTF(AMDGPUDevice, "Setting doorbell type for %x\n", offset);
-    doorbells[offset] = qt;
+    doorbells[offset].qtype = qt;
+    doorbells[offset].ip_id = ip_id;
 }
 
 void
@@ -692,6 +738,7 @@ AMDGPUDevice::serialize(CheckpointOut &cp) const
     // Make a c-style array of the regs to serialize
     uint32_t doorbells_offset[doorbells_size];
     QueueType doorbells_queues[doorbells_size];
+    int doorbells_ip_ids[doorbells_size];
     uint32_t sdma_engs_offset[sdma_engs_size];
     int sdma_engs[sdma_engs_size];
     int used_vmids[used_vmid_map_size];
@@ -701,7 +748,8 @@ AMDGPUDevice::serialize(CheckpointOut &cp) const
     int idx = 0;
     for (auto & it : doorbells) {
         doorbells_offset[idx] = it.first;
-        doorbells_queues[idx] = it.second;
+        doorbells_queues[idx] = it.second.qtype;
+        doorbells_ip_ids[idx] = it.second.ip_id;
         ++idx;
     }
 
@@ -730,6 +778,8 @@ AMDGPUDevice::serialize(CheckpointOut &cp) const
         sizeof(doorbells_offset[0]));
     SERIALIZE_ARRAY(doorbells_queues, sizeof(doorbells_queues)/
         sizeof(doorbells_queues[0]));
+    SERIALIZE_ARRAY(doorbells_ip_ids, sizeof(doorbells_ip_ids)/
+        sizeof(doorbells_ip_ids[0]));
     SERIALIZE_ARRAY(sdma_engs_offset, sizeof(sdma_engs_offset)/
         sizeof(sdma_engs_offset[0]));
     SERIALIZE_ARRAY(sdma_engs, sizeof(sdma_engs)/sizeof(sdma_engs[0]));
@@ -768,14 +818,18 @@ AMDGPUDevice::unserialize(CheckpointIn &cp)
     if (doorbells_size > 0) {
         uint32_t doorbells_offset[doorbells_size];
         QueueType doorbells_queues[doorbells_size];
+        int doorbells_ip_ids[doorbells_size];
 
         UNSERIALIZE_ARRAY(doorbells_offset, sizeof(doorbells_offset)/
                 sizeof(doorbells_offset[0]));
         UNSERIALIZE_ARRAY(doorbells_queues, sizeof(doorbells_queues)/
                 sizeof(doorbells_queues[0]));
+        UNSERIALIZE_ARRAY(doorbells_ip_ids, sizeof(doorbells_ip_ids)/
+                sizeof(doorbells_ip_ids[0]));
 
         for (int idx = 0; idx < doorbells_size; ++idx) {
-            doorbells[doorbells_offset[idx]] = doorbells_queues[idx];
+            doorbells[doorbells_offset[idx]].qtype = doorbells_queues[idx];
+            doorbells[doorbells_offset[idx]].ip_id = doorbells_ip_ids[idx];
         }
     }
 
