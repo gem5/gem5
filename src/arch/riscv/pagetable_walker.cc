@@ -408,10 +408,12 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
                         doTLBInsert = true;
 
                         // Update statistics for completed page walks
-                        if (level == 1)
+                        if (level == 1) {
                             walker->pagewalkerstats.num_2mb_walks++;
-                        else if (level == 0)
+                        }
+                        if (level == 0) {
                             walker->pagewalkerstats.num_4kb_walks++;
+                        }
                         DPRINTF(PageTableWalker,
                                 "#1 leaf node at level %d, with vpn %#x\n",
                                 level, entry.vaddr);
