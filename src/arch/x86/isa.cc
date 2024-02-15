@@ -152,7 +152,7 @@ RegClass matRegClass(MatRegClass, MatRegClassName, 0, debug::MatRegs);
 } // anonymous namespace
 
 ISA::ISA(const X86ISAParams &p)
-    : BaseISA(p), cpuid(new X86CPUID(p.vendor_string, p.name_string))
+    : BaseISA(p, "x86"), cpuid(new X86CPUID(p.vendor_string, p.name_string))
 {
     cpuid->addStandardFunc(FamilyModelStepping, p.FamilyModelStepping);
     cpuid->addStandardFunc(CacheParams, p.CacheParams);
@@ -491,6 +491,8 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
 void
 ISA::serialize(CheckpointOut &cp) const
 {
+    BaseISA::serialize(cp);
+
     SERIALIZE_ARRAY(regVal, misc_reg::NumRegs);
 }
 

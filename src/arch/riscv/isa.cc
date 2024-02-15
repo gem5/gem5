@@ -256,7 +256,7 @@ RegClass ccRegClass(CCRegClass, CCRegClassName, 0, debug::IntRegs);
 
 } // anonymous namespace
 
-ISA::ISA(const Params &p) : BaseISA(p),
+ISA::ISA(const Params &p) : BaseISA(p, "riscv"),
     _rvType(p.riscv_type), checkAlignment(p.check_alignment),
     enableRvv(p.enable_rvv), vlen(p.vlen), elen(p.elen),
     _privilegeModeSet(p.privilege_mode_set)
@@ -792,6 +792,8 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
 void
 ISA::serialize(CheckpointOut &cp) const
 {
+    BaseISA::serialize(cp);
+
     DPRINTF(Checkpoint, "Serializing Riscv Misc Registers\n");
     SERIALIZE_CONTAINER(miscRegFile);
 }

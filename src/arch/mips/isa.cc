@@ -110,7 +110,7 @@ constexpr RegClass ccRegClass(CCRegClass, CCRegClassName, 0, debug::IntRegs);
 
 } // anonymous namespace
 
-ISA::ISA(const Params &p) : BaseISA(p), numThreads(p.num_threads),
+ISA::ISA(const Params &p) : BaseISA(p, "mips"), numThreads(p.num_threads),
     numVpes(p.num_vpes)
 {
     _regClasses.push_back(&intRegClass);
