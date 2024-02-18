@@ -45,9 +45,6 @@
 namespace gem5
 {
 
-/** Cache Library.
- *
- */
 template <typename Entry>
 class AssociativeCache : public Named
 {
@@ -72,7 +69,8 @@ class AssociativeCache : public Named
 
   private:
 
-    void initParams(size_t _num_entries, size_t _assoc)
+    void
+    initParams(size_t _num_entries, size_t _assoc)
     {
         fatal_if(!isPowerOf2(_num_entries), "The number of entries of an "
                  "AssociativeCache<> must be a power of 2");
@@ -130,21 +128,24 @@ class AssociativeCache : public Named
     /**
      * Clear the entries in the cache.
      */
-    void clear() {
+    void
+    clear()
+    {
         for (auto &entry : entries) {
             invalidate(&entry);
         }
     }
 
-    void init(const size_t num_entries,
-              const size_t associativity_,
-              BaseReplacementPolicy *_repl_policy,
-              BaseIndexingPolicy *_indexing_policy,
-              Entry const &init_val = Entry())
+    void
+    init(const size_t num_entries,
+	 const size_t associativity_,
+	 BaseReplacementPolicy *_repl_policy,
+	 BaseIndexingPolicy *_indexing_policy,
+	 Entry const &init_val = Entry())
     {
-        associativity        = associativity_;
-        replPolicy           = _repl_policy;
-        indexingPolicy       = _indexing_policy;
+        associativity = associativity_;
+        replPolicy = _repl_policy;
+        indexingPolicy = _indexing_policy;
         entries.resize(num_entries, init_val);
 
         initParams(num_entries, associativity);
@@ -155,7 +156,8 @@ class AssociativeCache : public Named
      * @param addr Addr to get the tag for
      * @return Tag for the address
      */
-    virtual Addr getTag(const Addr addr) const
+    virtual Addr
+    getTag(const Addr addr) const
     {
         return indexingPolicy->extractTag(addr);
     }
@@ -166,7 +168,8 @@ class AssociativeCache : public Named
      * @param addr key to the entry
      * @return The entry if it exists
      */
-    virtual Entry* accessEntry(const Addr addr)
+    virtual Entry*
+    accessEntryByAddr(const Addr addr)
     {
         auto entry = findEntry(addr);
 
@@ -181,7 +184,8 @@ class AssociativeCache : public Named
      * Update the replacement information for an entry
      * @param Entry to access and upate
      */
-    virtual void accessEntry(Entry *entry)
+    virtual void
+    accessEntry(Entry *entry)
     {
         replPolicy->touch(entry->replacementData);
     }
@@ -192,9 +196,10 @@ class AssociativeCache : public Named
      * @return returns a pointer to the wanted entry or nullptr if it does not
      *  exist.
      */
-    virtual Entry* findEntry(const Addr addr) const
+    virtual Entry*
+    findEntry(const Addr addr) const
     {
-        auto tag   = getTag(addr);
+        auto tag = getTag(addr);
 
         auto candidates = indexingPolicy->getPossibleEntries(addr);
 
@@ -213,7 +218,8 @@ class AssociativeCache : public Named
      * @param addr key to select the possible victim
      * @result entry to be victimized
      */
-    virtual Entry* findVictim(const Addr addr)
+    virtual Entry*
+    findVictim(const Addr addr)
     {
         auto candidates = indexingPolicy->getPossibleEntries(addr);
 
@@ -229,7 +235,8 @@ class AssociativeCache : public Named
      *
      * @param entry Entry to be invalidated.
      */
-    virtual void invalidate(Entry *entry)
+    virtual void
+    invalidate(Entry *entry)
     {
         entry->invalidate();
         replPolicy->invalidate(entry->replacementData);
@@ -240,7 +247,8 @@ class AssociativeCache : public Named
      * @param addr key of the container
      * @param entry pointer to the container entry to be inserted
      */
-    virtual void insertEntry(Addr addr, Entry *entry)
+    virtual void
+    insertEntry(const Addr addr, Entry *entry)
     {
         entry->insert(indexingPolicy->extractTag(addr));
         replPolicy->reset(entry->replacementData);
@@ -257,12 +265,13 @@ class AssociativeCache : public Named
     {
         std::vector<ReplaceableEntry *> selected_entries =
             indexingPolicy->getPossibleEntries(addr);
-        std::vector<Entry *> entries(selected_entries.size(), nullptr);
 
-        unsigned int idx = 0;
-        for (auto &entry : selected_entries) {
-            entries[idx++] = static_cast<Entry *>(entry);
-        }
+        std::vector<Entry *> entries;
+
+        std::transform(selected_entries.begin(), selected_entries.end(),
+                       std::back_inserter(entries), [](auto &entry) {
+                           return static_cast<Entry *>(entry);
+                       });
 
         return entries;
     }

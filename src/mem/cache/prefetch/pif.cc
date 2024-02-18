@@ -177,15 +177,13 @@ PIF::notifyRetiredInst(const Addr pc)
                 // the 'iterator' table to point to the new entry
                 historyBuffer.push_back(spatialCompactor);
 
-                IndexEntry *idx_entry =
-                    index.findEntry(spatialCompactor.trigger, false);
+                IndexEntry *idx_entry = index.findEntry(spatialCompactor.trigger);
                 if (idx_entry != nullptr) {
                     index.accessEntry(idx_entry);
                 } else {
                     idx_entry = index.findVictim(spatialCompactor.trigger);
                     assert(idx_entry != nullptr);
-                    index.insertEntry(spatialCompactor.trigger, false,
-                                      idx_entry);
+                    index.insertEntry(spatialCompactor.trigger, idx_entry);
                 }
                 idx_entry->historyIt =
                     historyBuffer.getIterator(historyBuffer.tail());
@@ -221,7 +219,7 @@ PIF::calculatePrefetch(const PrefetchInfo &pfi,
 
     // Check if a valid entry in the 'index' table is found and allocate a new
     // active prediction stream
-    IndexEntry *idx_entry = index.findEntry(pc, /* unused */ false);
+    IndexEntry *idx_entry = index.findEntry(pc);
 
     if (idx_entry != nullptr) {
         index.accessEntry(idx_entry);

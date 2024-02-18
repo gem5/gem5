@@ -49,7 +49,6 @@ class AssociativeSet : public AssociativeCache<Entry>
 {
     static_assert(std::is_base_of_v<TaggedEntry, Entry>,
                   "Entry must derive from TaggedEntry");
-    typedef replacement_policy::Base BaseReplacementPolicy;
 
   public:
     /**
@@ -64,13 +63,9 @@ class AssociativeSet : public AssociativeCache<Entry>
      */
     AssociativeSet(const char *name, const size_t num_entries,
                    const size_t associativity_,
-                   BaseReplacementPolicy *repl_policy,
+                   replacement_policy::Base *repl_policy,
                    BaseIndexingPolicy *indexing_policy,
-                   Entry const &init_val = Entry())
-        : AssociativeCache<Entry>(name, num_entries, associativity_,
-                                  repl_policy, indexing_policy, init_val)
-    {
-    }
+                   Entry const &init_val = Entry());
 
     /**
      * Find an entry within the set
@@ -90,8 +85,13 @@ class AssociativeSet : public AssociativeCache<Entry>
     void insertEntry(Addr addr, bool is_secure, Entry* entry);
 
   private:
+    // The following APIs are excluded since they lack the secure bit
+    using AssociativeCache<Entry>::getTag;
+    using AssociativeCache<Entry>::accessEntryByAddr;
     using AssociativeCache<Entry>::findEntry;
     using AssociativeCache<Entry>::insertEntry;
+    using AssociativeCache<Entry>::getPossibleEntries;
+
     using AssociativeCache<Entry>::replPolicy;
     using AssociativeCache<Entry>::indexingPolicy;
 };

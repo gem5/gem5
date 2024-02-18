@@ -92,15 +92,12 @@ STeMS::checkForActiveGenerationsEnd(const CacheAccessor &cache)
             }
             if (generation_ended) {
                 // PST is indexed using the PC (secure bit is unused)
-                ActiveGenerationTableEntry *pst_entry =
-                    patternSequenceTable.findEntry(pst_addr,
-                                                   false /*unused*/);
+                ActiveGenerationTableEntry *pst_entry = patternSequenceTable.findEntry(pst_addr);
                 if (pst_entry == nullptr) {
                     // Tipically an entry will not exist
                     pst_entry = patternSequenceTable.findVictim(pst_addr);
                     assert(pst_entry != nullptr);
-                    patternSequenceTable.insertEntry(pst_addr,
-                            false /*unused*/, pst_entry);
+                    patternSequenceTable.insertEntry(pst_addr, pst_entry);
                 } else {
                     patternSequenceTable.accessEntry(pst_entry);
                 }
@@ -224,8 +221,7 @@ STeMS::reconstructSequence(
     idx = 0;
     for (auto it = rmob_it; it != rmob.end() && (idx < reconstructionEntries);
         it++) {
-        ActiveGenerationTableEntry *pst_entry =
-            patternSequenceTable.findEntry(it->pstAddress, false /* unused */);
+        ActiveGenerationTableEntry *pst_entry = patternSequenceTable.findEntry(it->pstAddress);
         if (pst_entry != nullptr) {
             patternSequenceTable.accessEntry(pst_entry);
             for (auto &seq_entry : pst_entry->sequence) {

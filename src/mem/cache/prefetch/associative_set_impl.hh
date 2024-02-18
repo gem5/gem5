@@ -36,6 +36,17 @@ namespace gem5
 {
 
 template <class Entry>
+AssociativeSet<Entry>::AssociativeSet(const char *name, const size_t num_entries,
+				      const size_t associativity_,
+				      replacement_policy::Base *repl_policy,
+				      BaseIndexingPolicy *indexing_policy,
+				      Entry const &init_val)
+  : AssociativeCache<Entry>(name, num_entries, associativity_,
+			    repl_policy, indexing_policy, init_val)
+{
+}
+
+template <class Entry>
 Entry*
 AssociativeSet<Entry>::findEntry(Addr addr, bool is_secure) const
 {
