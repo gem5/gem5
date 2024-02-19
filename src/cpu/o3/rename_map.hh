@@ -268,7 +268,7 @@ class UnifiedRenameMap
      * of registers is requested.
      */
     unsigned
-    numFreeEntries() const
+    minFreeEntries() const
     {
         auto min_free = std::numeric_limits<unsigned>::max();
         for (auto &map: renameMaps) {
