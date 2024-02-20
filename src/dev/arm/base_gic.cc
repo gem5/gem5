@@ -154,7 +154,6 @@ ArmInterruptPin::ArmInterruptPin(
       : threadContext(tc), platform(dynamic_cast<RealView*>(p.platform)),
         intNum(p.num), triggerType(p.int_type), _active(false)
 {
-    fatal_if(!platform, "Interrupt not connected to a RealView platform");
 }
 
 void
@@ -190,6 +189,7 @@ ArmSPI::ArmSPI(
     const ArmSPIParams &p)
       : ArmInterruptPin(p, nullptr)
 {
+    fatal_if(!platform, "Interrupt not connected to a RealView platform");
 }
 
 void
@@ -210,6 +210,7 @@ ArmPPI::ArmPPI(
     const ArmPPIParams &p, ThreadContext *tc)
       : ArmInterruptPin(p, tc)
 {
+    fatal_if(!platform, "Interrupt not connected to a RealView platform");
 }
 
 void
