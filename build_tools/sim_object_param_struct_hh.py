@@ -211,8 +211,7 @@ code.indent()
 if sim_object == SimObject:
     code(
         """
-SimObjectParams() {}
-virtual ~SimObjectParams() {}
+virtual ~SimObjectParams() = default;
 
 std::string name;
     """
