@@ -2114,7 +2114,7 @@ TableWalker::fetchDescriptor(Addr desc_addr,
             desc_addr, num_bytes, flags, requestorId);
         req->taskId(context_switch_task_id::DMA);
 
-        Fault fault = testWalk(desc_addr, num_bytes, descriptor.domain(),
+        Fault fault = testWalk(req, descriptor.domain(),
             lookup_level);
 
         if (fault != NoFault) {
@@ -2306,13 +2306,13 @@ TableWalker::pendingChange()
 }
 
 Fault
-TableWalker::testWalk(Addr pa, Addr size, TlbEntry::DomainType domain,
+TableWalker::testWalk(const RequestPtr &walk_req, TlbEntry::DomainType domain,
                       LookupLevel lookup_level)
 {
     if (!test) {
         return NoFault;
     } else {
-        return test->walkCheck(pa, size, currState->vaddr, currState->isSecure,
+        return test->walkCheck(walk_req, currState->vaddr, currState->isSecure,
                                currState->el != EL0,
                                currState->mode, domain, lookup_level);
     }

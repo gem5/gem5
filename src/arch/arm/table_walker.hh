@@ -1206,7 +1206,7 @@ class TableWalker : public ClockedObject
 
     void setTestInterface(TlbTestInterface *ti);
 
-    Fault testWalk(Addr pa, Addr size, TlbEntry::DomainType domain,
+    Fault testWalk(const RequestPtr &walk_req, TlbEntry::DomainType domain,
                    LookupLevel lookup_level);
 };
 
