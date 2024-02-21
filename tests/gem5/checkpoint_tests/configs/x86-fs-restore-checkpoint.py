@@ -76,7 +76,7 @@ board = X86Board(
 board.set_kernel_disk_workload(
     kernel=obtain_resource("x86-linux-kernel-5.4.49"),
     disk_image=obtain_resource("x86-ubuntu-18.04-img"),
-    checkpoint=obtain_resource("x86-fs-test-checkpoint"),
+    checkpoint=obtain_resource("x86-fs-test-checkpoint-v24-0"),
 )
 
 sim = Simulator(board=board, full_system=True)
