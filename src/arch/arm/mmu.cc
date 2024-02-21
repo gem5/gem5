@@ -848,7 +848,12 @@ MMU::translateMmuOff(ThreadContext *tc, const RequestPtr &req, Mode mode,
             state.isStage2);
     setAttr(temp_te.attributes);
 
-    return testTranslation(req, mode, TlbEntry::DomainType::NoAccess, state);
+    Fault fault = testTranslation(req, mode, TlbEntry::DomainType::NoAccess, state);
+    if (fault == NoFault) {
+        return finalizePhysical(req, tc, mode);
+    } else {
+        return fault;
+    }
 }
 
 Fault
