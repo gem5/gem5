@@ -460,7 +460,7 @@ class MMU : public BaseMMU
     void setTestInterface(SimObject *ti);
 
     Fault testTranslation(const RequestPtr &req, Mode mode,
-                          TlbEntry::DomainType domain, CachedState &state);
+                          TlbEntry::DomainType domain, CachedState &state) const;
 
   protected:
     bool checkWalkCache() const;
@@ -470,6 +470,10 @@ class MMU : public BaseMMU
     CachedState& updateMiscReg(
         ThreadContext *tc, ArmTranslationType tran_type,
         bool stage2);
+
+    Fault testAndFinalize(const RequestPtr &req,
+                          ThreadContext *tc, Mode mode,
+                          TlbEntry *te, CachedState &state) const;
 
   protected:
     ContextID miscRegContext;
