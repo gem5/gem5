@@ -57,6 +57,7 @@
 /// application on the host machine.
 
 #if defined(__linux__)
+#include <linux/kdev_t.h>
 #include <sched.h>
 #include <sys/eventfd.h>
 #include <sys/statfs.h>
@@ -675,6 +676,68 @@ copyOutStatfsBuf(TgtStatPtr tgt, HostStatPtr host)
      */
     memset(&tgt->f_spare, 0, sizeof(tgt->f_spare));
 #endif
+}
+
+template <typename OS, typename TgtStatPtr, typename HostStatPtr>
+void
+copyOutStatxBuf(TgtStatPtr tgt, HostStatPtr host, bool fakeTTY = false)
+{
+#if !defined(__linux__)
+    static_assert(false, "statx is a Linux-specific system call.");
+#endif
+
+    const auto bo = [] (auto& value) {
+        constexpr ByteOrder bo = OS::byteOrder;
+        return value = htog(value, bo);
+    };
+
+    if (fakeTTY) {
+        tgt->stx_dev_major = MAJOR(0xA);
+        tgt->stx_dev_minor = MINOR(0xA);
+    } else {
+        tgt->stx_dev_major = host->stx_dev_major;
+        tgt->stx_dev_minor = host->stx_dev_minor;
+    }
+    bo(tgt->stx_dev_major);
+    bo(tgt->stx_dev_minor);
+    bo(tgt->stx_ino = host->stx_ino);
+    tgt->stx_mode = host->stx_mode;
+    if (fakeTTY) {
+      // Claim to be character device.
+      tgt->stx_mode &= ~S_IFMT;
+      tgt->stx_mode |= S_IFCHR;
+    }
+    bo(tgt->stx_mode);
+    bo(tgt->stx_nlink = host->stx_nlink);
+    bo(tgt->stx_uid = host->stx_uid);
+    bo(tgt->stx_gid = host->stx_gid);
+    if (fakeTTY) {
+        tgt->stx_rdev_major = MAJOR(0x880d);
+        tgt->stx_rdev_minor = MINOR(0x880d);
+    } else {
+        tgt->stx_rdev_major = host->stx_rdev_major;
+        tgt->stx_rdev_minor = host->stx_rdev_minor;
+    }
+    bo(tgt->stx_rdev_major);
+    bo(tgt->stx_rdev_minor);
+    bo(tgt->stx_size = host->stx_size);
+
+#define statx_copy_time(out, in)                \
+    bo(out##X = in.tv_sec);                     \
+    bo(out##_nsec = in.tv_nsec)
+    statx_copy_time(tgt->stx_atime, host->stx_atime);
+    statx_copy_time(tgt->stx_btime, host->stx_btime);
+    statx_copy_time(tgt->stx_ctime, host->stx_ctime);
+    statx_copy_time(tgt->stx_mtime, host->stx_mtime);
+#undef statx_copy_time
+    // Force the block size to be 8KB. This helps to ensure buffered io works
+    // consistently across different hosts.
+    bo(tgt->stx_blksize = 0x2000);
+    bo(tgt->stx_blocks = host->stx_blocks);
+    bo(tgt->stx_mask = host->stx_mask);
+    bo(tgt->stx_attributes = host->stx_attributes);
+    bo(tgt->stx_attributes_mask = host->stx_attributes_mask);
+    bo(tgt->stx_mnt_id = host->stx_mnt_id);
 }
 
 /// Target ioctl() handler.  For the most part, programs call ioctl()
@@ -1454,6 +1517,47 @@ stat64Func(SyscallDesc *desc, ThreadContext *tc,
            VPtr<> pathname, VPtr<typename OS::tgt_stat64> tgt_stat)
 {
     return fstatat64Func<OS>(desc, tc, OS::TGT_AT_FDCWD, pathname, tgt_stat);
+}
+
+/// Target statx() handler.
+template <class OS>
+SyscallReturn
+statxFunc(SyscallDesc *desc, ThreadContext *tc,
+          int dirfd, VPtr<> pathname, int flags,
+          unsigned int mask, VPtr<typename OS::tgt_statx> tgt_statx)
+{
+    static_assert(sizeof(typename OS::tgt_statx) == sizeof(struct statx), "");
+    std::string path;
+
+    if (!SETranslatingPortProxy(tc).tryReadString(path, pathname))
+        return -EFAULT;
+
+    if (path.empty() && !(flags & OS::TGT_AT_EMPTY_PATH))
+        return -ENOENT;
+    flags = flags & ~OS::TGT_AT_EMPTY_PATH;
+
+    warn_if(flags != 0, "newfstatat: Flag bits %#x not supported.", flags);
+
+    // Modifying path from the directory descriptor
+    if (auto res = atSyscallPath<OS>(tc, dirfd, path); !res.successful()) {
+        return res;
+    }
+
+    auto p = tc->getProcessPtr();
+
+    // Adjust path for cwd and redirection
+    path = p->checkPathRedirect(path);
+
+    struct statx host_buf;
+    std::memset(&host_buf, 0, sizeof host_buf);
+    int result = statx(AT_FDCWD, path.c_str(), flags, mask, &host_buf);
+
+    if (result < 0)
+        return -errno;
+
+    copyOutStatxBuf<OS>(tgt_statx, &host_buf);
+
+    return 0;
 }
 
 /// Target fstat64() handler.
