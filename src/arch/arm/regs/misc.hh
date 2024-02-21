@@ -1139,6 +1139,8 @@ namespace ArmISA
         MISCREG_HFGITR_EL2,
         MISCREG_HFGRTR_EL2,
         MISCREG_HFGWTR_EL2,
+        MISCREG_HDFGRTR_EL2,
+        MISCREG_HDFGWTR_EL2,
 
         // NUM_PHYS_MISCREGS specifies the number of actual physical
         // registers, not considering the following pseudo-registers
@@ -2854,6 +2856,8 @@ namespace ArmISA
         "hfgitr_el2",
         "hfgrtr_el2",
         "hfgwtr_el2",
+        "hdfgrtr_el2",
+        "hdfgwtr_el2",
 
         "num_phys_regs",
 
