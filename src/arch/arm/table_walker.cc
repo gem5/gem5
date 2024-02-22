@@ -283,6 +283,15 @@ TableWalker::drainResume()
     }
 }
 
+bool
+TableWalker::uncacheableWalk() const
+{
+    bool disable_cacheability = isStage2 ?
+        currState->hcr.cd :
+        currState->sctlr.c == 0;
+    return disable_cacheability || currState->isUncacheable;
+}
+
 Fault
 TableWalker::walk(const RequestPtr &_req, ThreadContext *_tc, uint16_t _asid,
                   vmid_t _vmid, MMU::Mode _mode,
@@ -664,7 +673,7 @@ TableWalker::processWalk()
             currState->isSecure ? "s" : "ns");
 
     Request::Flags flag = Request::PT_WALK;
-    if (currState->sctlr.c == 0 || currState->isUncacheable) {
+    if (uncacheableWalk()) {
         flag.set(Request::UNCACHEABLE);
     }
 
@@ -819,7 +828,7 @@ TableWalker::processWalkLPAE()
                 desc_addr, currState->isSecure ? "s" : "ns");
     }
 
-    if (currState->sctlr.c == 0 || currState->isUncacheable) {
+    if (uncacheableWalk()) {
         flag.set(Request::UNCACHEABLE);
     }
 
@@ -1057,7 +1066,7 @@ TableWalker::processWalkAArch64()
     }
 
     Request::Flags flag = Request::PT_WALK;
-    if (currState->sctlr.c == 0 || currState->isUncacheable) {
+    if (uncacheableWalk()) {
         flag.set(Request::UNCACHEABLE);
     }
 

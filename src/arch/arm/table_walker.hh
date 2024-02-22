@@ -1188,6 +1188,9 @@ class TableWalker : public ClockedObject
     /// system-wide setting or by the TCR_ELx IPS/PS setting
     bool checkAddrSizeFaultAArch64(Addr addr, int pa_range);
 
+    /// Returns true if the table walk should be uncacheable
+    bool uncacheableWalk() const;
+
     Fault processWalkAArch64();
     void processWalkWrapper();
     EventFunctionWrapper doProcessEvent;
