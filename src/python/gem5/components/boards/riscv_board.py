@@ -510,7 +510,7 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
         self._connect_things()
 
     @overrides(KernelDiskWorkload)
-    def _add_disk_to_board(self, disk_image: AbstractResource):
+    def _add_disk_to_board(self, disk_image: AbstractResource, is_root: bool):
         image = CowDiskImage(
             child=RawDiskImage(read_only=True), read_only=False
         )

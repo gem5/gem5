@@ -557,7 +557,7 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
         ]
 
     @overrides(KernelDiskWorkload)
-    def _add_disk_to_board(self, disk_image: AbstractResource) -> None:
+    def _add_disk_to_board(self, disk_image: AbstractResource, is_root: bool):
         # Note: This must be called after set_workload because it looks for an
         # attribute named "disk" and connects
 

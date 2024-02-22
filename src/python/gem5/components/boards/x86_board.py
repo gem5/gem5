@@ -302,7 +302,7 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload):
         return "/dev/hda"
 
     @overrides(KernelDiskWorkload)
-    def _add_disk_to_board(self, disk_image: AbstractResource):
+    def _add_disk_to_board(self, disk_image: AbstractResource, is_root: bool):
         ide_disk = IdeDisk()
         ide_disk.driveID = "device0"
         ide_disk.image = CowDiskImage(

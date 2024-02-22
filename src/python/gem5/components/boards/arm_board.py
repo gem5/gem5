@@ -382,7 +382,7 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
         return "/dev/vda"
 
     @overrides(KernelDiskWorkload)
-    def _add_disk_to_board(self, disk_image: AbstractResource):
+    def _add_disk_to_board(self, disk_image: AbstractResource, is_root: bool):
         self._image = CowDiskImage(
             child=RawDiskImage(
                 read_only=True, image_file=disk_image.get_local_path()

@@ -110,6 +110,17 @@ class KernelDiskWorkload:
         """
         raise NotImplementedError
 
+    @abstractmethod
+    def _finalize_workload(self) -> None:
+        """
+        Finalizes the board setup dependent on the workload.
+        This function connects the IO devices to the board, generates the
+        device tree and expose the location of the dtb to the gem5's workload
+        object. This function should be called after all IO devices are set up
+        (e.g. disk images, PIO devices.)
+        """
+        raise NotImplementedError
+
     def get_disk_root_partition(
         cls, disk_image: DiskImageResource
     ) -> Optional[str]:
@@ -145,6 +156,7 @@ class KernelDiskWorkload:
         disk_image: DiskImageResource,
         bootloader: Optional[BootloaderResource] = None,
         disk_device: Optional[str] = None,
+        additional_disks: List[DiskImageResource] = [],
         readfile: Optional[str] = None,
         readfile_contents: Optional[str] = None,
         kernel_args: Optional[List[str]] = None,
@@ -223,7 +235,12 @@ class KernelDiskWorkload:
             file.write(readfile_contents)
             file.close()
 
-        self._add_disk_to_board(disk_image=disk_image)
+        self._add_disk_to_board(disk_image=disk_image, is_root=True)
+        if additional_disks != []:
+            for disk_image in additional_disks:
+                self._add_disk_to_board(disk_image=disk_image, is_root=False)
+                # Finalize the setup after all components of the workload are set.
+                self._finalize_workload()
 
         # Set whether to exit on work items.
         self.exit_on_work_items = exit_on_work_items
