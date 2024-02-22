@@ -898,7 +898,8 @@ TableWalker::processWalkAArch64()
             tg = GrainMap_tg0[currState->vtcr.tg0];
 
             ps = currState->vtcr.ps;
-            currState->isUncacheable = currState->vtcr.irgn0 == 0;
+            currState->isUncacheable = currState->vtcr.irgn0 == 0 ||
+                                       currState->vtcr.orgn0 == 0;
         } else {
             switch (bits(currState->vaddr, top_bit)) {
               case 0:
@@ -907,7 +908,8 @@ TableWalker::processWalkAArch64()
                 tsz = 64 - currState->tcr.t0sz;
                 tg = GrainMap_tg0[currState->tcr.tg0];
                 currState->hpd = currState->tcr.hpd0;
-                currState->isUncacheable = currState->tcr.irgn0 == 0;
+                currState->isUncacheable = currState->tcr.irgn0 == 0 ||
+                                           currState->tcr.orgn0 == 0;
                 vaddr_fault = checkVAddrSizeFaultAArch64(currState->vaddr,
                     top_bit, tg, tsz, true);
 
@@ -920,7 +922,8 @@ TableWalker::processWalkAArch64()
                 tsz = 64 - currState->tcr.t1sz;
                 tg = GrainMap_tg1[currState->tcr.tg1];
                 currState->hpd = currState->tcr.hpd1;
-                currState->isUncacheable = currState->tcr.irgn1 == 0;
+                currState->isUncacheable = currState->tcr.irgn1 == 0 ||
+                                           currState->tcr.orgn1 == 0;
                 vaddr_fault = checkVAddrSizeFaultAArch64(currState->vaddr,
                     top_bit, tg, tsz, false);
 
@@ -944,7 +947,8 @@ TableWalker::processWalkAArch64()
             tg = GrainMap_tg0[currState->tcr.tg0];
             currState->hpd = currState->hcr.e2h ?
                 currState->tcr.hpd0 : currState->tcr.hpd;
-            currState->isUncacheable = currState->tcr.irgn0 == 0;
+            currState->isUncacheable = currState->tcr.irgn0 == 0 ||
+                                       currState->tcr.orgn0 == 0;
             vaddr_fault = checkVAddrSizeFaultAArch64(currState->vaddr,
                 top_bit, tg, tsz, true);
 
@@ -958,7 +962,8 @@ TableWalker::processWalkAArch64()
             tsz = 64 - currState->tcr.t1sz;
             tg = GrainMap_tg1[currState->tcr.tg1];
             currState->hpd = currState->tcr.hpd1;
-            currState->isUncacheable = currState->tcr.irgn1 == 0;
+            currState->isUncacheable = currState->tcr.irgn1 == 0 ||
+                                       currState->tcr.orgn1 == 0;
             vaddr_fault = checkVAddrSizeFaultAArch64(currState->vaddr,
                 top_bit, tg, tsz, false);
 
@@ -980,7 +985,8 @@ TableWalker::processWalkAArch64()
             tsz = 64 - currState->tcr.t0sz;
             tg = GrainMap_tg0[currState->tcr.tg0];
             currState->hpd = currState->tcr.hpd;
-            currState->isUncacheable = currState->tcr.irgn0 == 0;
+            currState->isUncacheable = currState->tcr.irgn0 == 0 ||
+                                       currState->tcr.orgn0 == 0;
             vaddr_fault = checkVAddrSizeFaultAArch64(currState->vaddr,
                 top_bit, tg, tsz, true);
 
