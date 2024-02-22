@@ -62,7 +62,7 @@ board = SimpleBoard(
 )
 board.set_se_binary_workload(
     obtain_resource("x86-hello64-static"),
-    checkpoint=obtain_resource("x86-hello-test-checkpoint"),
+    checkpoint=obtain_resource("x86-hello-test-checkpoint-v24-0"),
 )
 
 sim = Simulator(board=board, full_system=False)
