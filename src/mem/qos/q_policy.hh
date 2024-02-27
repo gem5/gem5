@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 ARM Limited
+ * Copyright (c) 2018, 2024 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -93,7 +93,7 @@ class QueuePolicy
      * The implementation of this virtual method selects the packet
      * to be serviced from the packet queue passed as an argument.
      *
-     * @param queue Packet queue
+     * @param queue Non-empty packet queue to select a packet from
      * @return Iterator pointing to the packet in the queue to be
      *         serviced
      */
@@ -127,14 +127,11 @@ class LifoQueuePolicy : public QueuePolicy
     /**
      * Implements LIFO packet select policy
      *
-     * @param queue The queue in which to select a packet
+     * @param queue The non-empty queue from which to select a packet
      * @return Iterator to the selected packet
      */
     PacketQueue::iterator
-    selectPacket(PacketQueue* queue) override
-    {
-        return queue->end();
-    }
+    selectPacket(PacketQueue* queue) override;
 };
 
 /** First In First Out Queue Policy */
@@ -148,14 +145,11 @@ class FifoQueuePolicy : public QueuePolicy
     /**
      * Implements FCFS packet select policy
      *
-     * @param queue The queue in which to select a packet
+     * @param queue The non-empty queue from which to select a packet
      * @return Iterator to the selected packet
      */
     PacketQueue::iterator
-    selectPacket(PacketQueue* queue) override
-    {
-        return queue->begin();
-    }
+    selectPacket(PacketQueue* queue) override;
 };
 
 /**
@@ -176,7 +170,7 @@ class LrgQueuePolicy : public QueuePolicy
     /**
      * Implements LRG packet select policy
      *
-     * @param queue The queue in which to select a packet
+     * @param queue The non-empty queue from which to select a packet
      * @return Iterator to the selected packet
      */
     PacketQueue::iterator
