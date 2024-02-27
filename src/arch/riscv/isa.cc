@@ -240,6 +240,8 @@ namespace RiscvISA
     [MISCREG_HPMCOUNTER29H]  = "HPMCOUNTER29H",
     [MISCREG_HPMCOUNTER30H]  = "HPMCOUNTER30H",
     [MISCREG_HPMCOUNTER31H]  = "HPMCOUNTER31H",
+
+    [MISCREG_FFLAGS_EXE]    = "FFLAGS_EXE",
 }};
 
 namespace
@@ -276,7 +278,7 @@ ISA::ISA(const Params &p) : BaseISA(p),
             p.vlen, p.elen);
 
 
-    miscRegFile.resize(NUM_MISCREGS);
+    miscRegFile.resize(NUM_PHYS_MISCREGS);
     clear();
 }
 
@@ -304,7 +306,7 @@ ISA::copyRegsFrom(ThreadContext *src)
     }
 
     // Copying Misc Regs
-    for (int i = 0; i < NUM_MISCREGS; i++)
+    for (int i = 0; i < NUM_PHYS_MISCREGS; i++)
         tc->setMiscRegNoEffect(i, src->readMiscRegNoEffect(i));
 
     // Lastly copy PC/NPC
@@ -409,7 +411,7 @@ RegVal
 ISA::readMiscRegNoEffect(RegIndex idx) const
 {
     // Illegal CSR
-    panic_if(idx > NUM_MISCREGS, "Illegal CSR index %#x\n", idx);
+    panic_if(idx > NUM_PHYS_MISCREGS, "Illegal CSR index %#x\n", idx);
     DPRINTF(RiscvMisc, "Reading MiscReg %s (%d): %#x.\n",
             MiscRegNames[idx], idx, miscRegFile[idx]);
     return miscRegFile[idx];
@@ -571,6 +573,10 @@ ISA::readMiscReg(RegIndex idx)
                   (readMiscRegNoEffect(MISCREG_VXRM) << 1);
         }
         break;
+      case MISCREG_FFLAGS_EXE:
+        {
+            return readMiscRegNoEffect(MISCREG_FFLAGS) & FFLAGS_MASK;
+        }
       default:
         // Try reading HPM counters
         // As a placeholder, all HPM counters are just cycle counters
@@ -603,7 +609,7 @@ void
 ISA::setMiscRegNoEffect(RegIndex idx, RegVal val)
 {
     // Illegal CSR
-    panic_if(idx > NUM_MISCREGS, "Illegal CSR index %#x\n", idx);
+    panic_if(idx > NUM_PHYS_MISCREGS, "Illegal CSR index %#x\n", idx);
     DPRINTF(RiscvMisc, "Setting MiscReg %s (%d) to %#x.\n",
             MiscRegNames[idx], idx, val);
     miscRegFile[idx] = val;
@@ -768,6 +774,13 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
             {
                 setMiscRegNoEffect(MISCREG_VXSAT, val & 0x1);
                 setMiscRegNoEffect(MISCREG_VXRM, (val & 0x6) >> 1);
+            }
+            break;
+          case MISCREG_FFLAGS_EXE:
+            {
+                RegVal new_val = readMiscRegNoEffect(MISCREG_FFLAGS);
+                new_val |= (val & FFLAGS_MASK);
+                setMiscRegNoEffect(MISCREG_FFLAGS, new_val);
             }
             break;
           default:

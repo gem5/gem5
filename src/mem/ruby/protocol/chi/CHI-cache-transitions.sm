@@ -767,7 +767,7 @@ transition({UD_RSC,SD_RSC}, Local_Eviction, BUSY_BLKD) {ReplTBEAvailable} {
   ProcessNextState;
 }
 
-transition({UD_RSC,SD_RSC,UC_RSC,UD_RU,UC_RU,UD_RSD}, Global_Eviction, BUSY_BLKD) {ReplTBEAvailable} {
+transition({UD_RSC,SD_RSC,UC_RSC,UD_RU,UC_RU,UD_RSD,SD_RSD}, Global_Eviction, BUSY_BLKD) {ReplTBEAvailable} {
   Initiate_Replacement;
   Initiate_Replacement_WB_BackInvalidate;
   Profile_Eviction;
