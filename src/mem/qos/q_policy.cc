@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 ARM Limited
+ * Copyright (c) 2018,2024 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -70,8 +70,26 @@ QueuePolicy::create(const QoSMemCtrlParams &p)
 }
 
 QueuePolicy::PacketQueue::iterator
+FifoQueuePolicy::selectPacket(PacketQueue* queue)
+{
+    panic_if(queue->empty(),
+             "Provided packet queue is not usable by queue policy");
+    return queue->begin();
+}
+
+QueuePolicy::PacketQueue::iterator
+LifoQueuePolicy::selectPacket(PacketQueue* queue)
+{
+    panic_if(queue->empty(),
+             "Provided packet queue is not usable by queue policy");
+    return std::prev(queue->end());
+}
+
+QueuePolicy::PacketQueue::iterator
 LrgQueuePolicy::selectPacket(PacketQueue* q)
 {
+    panic_if(q->empty(),
+             "Provided packet queue is not usable by queue policy");
     QueuePolicy::PacketQueue::iterator ret = q->end();
 
     // Tracks one packet per requestor in the queue
@@ -91,10 +109,10 @@ LrgQueuePolicy::selectPacket(PacketQueue* q)
                      "from queue with id %d\n", requestor_id);
 
         // Check if this is a known requestor.
-        panic_if(memCtrl->hasRequestor(requestor_id),
+        panic_if(!memCtrl->hasRequestor(requestor_id),
                  "%s: Unrecognized Requestor\n", __func__);
 
-        panic_if(toServe.size() > 0,
+        panic_if(toServe.size() <= 0,
                  "%s: toServe list is empty\n", __func__);
 
         if (toServe.front() == requestor_id) {
@@ -137,8 +155,7 @@ LrgQueuePolicy::selectPacket(PacketQueue* q)
 
     DPRINTF(QOS, "QoSQPolicy::lrg no packet was serviced\n");
 
-    // Ret will be : packet to serve if any found or queue begin
-    // (end if queue is empty)
+    // Ret will be : packet to serve
     return ret;
 }
 
