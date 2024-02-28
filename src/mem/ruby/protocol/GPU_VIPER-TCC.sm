@@ -117,6 +117,8 @@ machine(MachineType:TCC, "TCC Cache")
     int numPending,                  desc="num pending requests";
     int numPendingDirectoryAtomics,  desc="number of pending atomics to be performed in directory";
     int atomicDoneCnt,               desc="number AtomicDones triggered";
+    bool atomicDataReturn,           desc="Got Atomic op and need return value?", default="false";
+    bool atomicDataNoReturn,         desc="Got Atomic op and don't need return value?", default="false";
     bool isGLCSet,                   desc="Bypass L1 Cache";
     bool isSLCSet,                   desc="Bypass L1 and L2 Cache";
     WriteMask atomicWriteMask,       desc="Atomic write mask";
@@ -680,6 +682,8 @@ machine(MachineType:TCC, "TCC Cache")
           tbe.atomicWriteMask.clear();
           tbe.atomicWriteMask.orMask(in_msg.writeMask);
         }
+        tbe.atomicDataReturn := in_msg.Type == CoherenceRequestType:AtomicReturn;
+        tbe.atomicDataNoReturn := in_msg.Type == CoherenceRequestType:AtomicNoReturn;
       }
     }
   }
@@ -878,12 +882,12 @@ machine(MachineType:TCC, "TCC Cache")
 
   action(pa_performAtomic, "pa", desc="Perform atomic") {
     peek(coreRequestNetwork_in, CPURequestMsg) {
-      if (in_msg.Type == CoherenceRequestType:AtomicReturn) {
+      if ((is_valid(tbe) && tbe.atomicDataReturn) || in_msg.Type == CoherenceRequestType:AtomicReturn) {
         cache_entry.DataBlk.atomicPartial(cache_entry.DataBlk, cache_entry.writeMask, false);
       } else {
         // Set the isAtomicNoReturn flag to ensure that logs are not
         // generated erroneously
-        assert(in_msg.Type == CoherenceRequestType:AtomicNoReturn);
+        assert((is_valid(tbe) && tbe.atomicDataNoReturn) || in_msg.Type == CoherenceRequestType:AtomicNoReturn);
         cache_entry.DataBlk.atomicPartial(cache_entry.DataBlk, cache_entry.writeMask, true);
       }
     }
