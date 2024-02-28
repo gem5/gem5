@@ -160,4 +160,55 @@ ScalarMemPipeline::issueRequest(GPUDynInstPtr gpuDynInst)
     issuedRequests.push(gpuDynInst);
 }
 
+void
+ScalarMemPipeline::injectScalarMemFence(GPUDynInstPtr gpuDynInst,
+                                        bool kernelMemSync,
+                                        RequestPtr req)
+{
+    assert(gpuDynInst->isScalar());
+
+    if (!req) {
+        req = std::make_shared<Request>(
+                0, 0, 0, computeUnit.requestorId(), 0, gpuDynInst->wfDynId);
+    } else {
+        req->requestorId(computeUnit.requestorId());
+    }
+
+    // When the SQC invalidate instruction is executed, it calls
+    // injectScalarMemFence. The instruction does not contain an address
+    // as one of its operands. Therefore, set the physical address of the
+    // invalidation request to 0 and handle it in the sequencer
+    req->setPaddr(0);
+
+    PacketPtr pkt = nullptr;
+
+    // If kernelMemSync is true, then the invalidation request is from
+    // kernel launch and is an implicit invalidation.If false, then it is
+    // due to an S_ICACHE_INV instruction
+    if (kernelMemSync) {
+        req->setCacheCoherenceFlags(Request::INV_L1);
+        req->setReqInstSeqNum(gpuDynInst->seqNum());
+        req->setFlags(Request::KERNEL);
+        pkt = new Packet(req, MemCmd::MemSyncReq);
+        pkt->pushSenderState(
+                new ComputeUnit::SQCPort::SenderState(
+                    gpuDynInst->wavefront(), nullptr));
+    } else {
+        gpuDynInst->setRequestFlags(req);
+
+        req->setReqInstSeqNum(gpuDynInst->seqNum());
+
+        pkt = new Packet(req, MemCmd::MemSyncReq);
+        pkt->pushSenderState(
+                new ComputeUnit::SQCPort::SenderState(
+                    gpuDynInst->wavefront(), nullptr));
+    }
+
+    ComputeUnit::SQCPort::MemReqEvent *sqc_event =
+            new ComputeUnit::SQCPort::MemReqEvent
+            (computeUnit.sqcPort, pkt);
+    computeUnit.schedule(
+            sqc_event, curTick() + computeUnit.scalar_req_tick_latency);
+}
+
 } // namespace gem5

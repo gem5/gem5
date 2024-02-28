@@ -157,6 +157,9 @@ structure (Sequencer, external = "yes") {
   void llscClearLocalMonitor();
 
   void evictionCallback(Addr);
+
+  void invL1Callback();
+
   void recordRequestType(SequencerRequestType);
   bool checkResourceAvailable(CacheResourceType, Addr);
 }

@@ -294,6 +294,7 @@ class Shader(ClockedObject):
     dispatcher = Param.GPUDispatcher("GPU workgroup dispatcher")
     system_hub = Param.AMDGPUSystemHub(NULL, "GPU System Hub (FS Mode only)")
     n_wf = Param.Int(10, "Number of wavefront slots per SIMD")
+    cu_per_sqc = Param.Int(4, "Number of CUs that share an SQC")
     impl_kern_launch_acq = Param.Bool(
         True,
         """Insert acq packet into

@@ -102,7 +102,9 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
         # Contains a CLINT, PLIC, UART, and some functions for the dtb, etc.
         self.platform = HiFive()
         # Note: This only works with single threaded cores.
-        self.platform.plic.n_contexts = self.processor.get_num_cores() * 2
+        self.platform.plic.hart_config = ",".join(
+            ["MS" for _ in range(self.processor.get_num_cores())]
+        )
         self.platform.attachPlic()
         self.platform.clint.num_threads = self.processor.get_num_cores()
 
@@ -353,12 +355,19 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
         plic_node.append(FdtPropertyWords("riscv,ndev", [plic.n_src - 1]))
 
         int_extended = list()
-        for i, core in enumerate(self.get_processor().get_cores()):
-            phandle = state.phandle(f"cpu@{i}.int_state")
-            int_extended.append(phandle)
-            int_extended.append(0xB)
-            int_extended.append(phandle)
-            int_extended.append(0x9)
+        cpu_id = 0
+        phandle = int_state.phandle(f"cpu@{cpu_id}.int_state")
+        for c in plic.hart_config:
+            if c == ",":
+                cpu_id += 1
+                assert cpu_id < self.get_processor().get_num_cores()
+                phandle = int_state.phandle(f"cpu@{cpu_id}.int_state")
+            elif c == "S":
+                int_extended.append(phandle)
+                int_extended.append(0x9)
+            elif c == "M":
+                int_extended.append(phandle)
+                int_extended.append(0xB)
 
         plic_node.append(FdtPropertyWords("interrupts-extended", int_extended))
         plic_node.append(FdtProperty("interrupt-controller"))

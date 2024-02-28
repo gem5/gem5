@@ -51,7 +51,7 @@ namespace RiscvISA
 {
 
 PMAChecker::PMAChecker(const Params &params) :
-SimObject(params),
+BasePMAChecker(params),
 uncacheable(params.uncacheable.begin(), params.uncacheable.end())
 {
 }
@@ -89,9 +89,11 @@ PMAChecker::isUncacheable(PacketPtr pkt)
 }
 
 void
-PMAChecker::takeOverFrom(PMAChecker *old)
+PMAChecker::takeOverFrom(BasePMAChecker *old)
 {
-    uncacheable = old->uncacheable;
+    PMAChecker* derived_old = dynamic_cast<PMAChecker*>(old);
+    assert(derived_old != nullptr);
+    uncacheable = derived_old->uncacheable;
 }
 
 } // namespace RiscvISA

@@ -17,6 +17,7 @@
  *
  * Copyright (c) 2016 RISC-V Foundation
  * Copyright (c) 2016 The University of Virginia
+ * Copyright (c) 2024 University of Rostock
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -244,6 +245,11 @@ enum MiscRegIndex
     MISCREG_HPMCOUNTER29H,
     MISCREG_HPMCOUNTER30H,
     MISCREG_HPMCOUNTER31H,
+
+    NUM_PHYS_MISCREGS,
+
+    // This CSR shared the same space with MISCREG_FFLAGS
+    MISCREG_FFLAGS_EXE = NUM_PHYS_MISCREGS,
 
     NUM_MISCREGS
 };
@@ -1233,6 +1239,7 @@ EndBitUnion(MISA)
  * this bit union.
  */
 BitUnion64(INTERRUPT)
+    Bitfield<63,16> local;
     Bitfield<11> mei;
     Bitfield<9> sei;
     Bitfield<8> uei;
@@ -1438,6 +1445,7 @@ USTATUS_MASKS[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
     },
 };
 
+const RegVal LOCAL_MASK = mask(63,16);
 const RegVal MEI_MASK = 1ULL << 11;
 const RegVal SEI_MASK = 1ULL << 9;
 const RegVal UEI_MASK = 1ULL << 8;
@@ -1448,13 +1456,13 @@ const RegVal MSI_MASK = 1ULL << 3;
 const RegVal SSI_MASK = 1ULL << 1;
 const RegVal USI_MASK = 1ULL << 0;
 const RegVal MI_MASK[enums::Num_PrivilegeModeSet] = {
-    [enums::M] = MEI_MASK| MTI_MASK | MSI_MASK,
-    [enums::MU] = MEI_MASK| MTI_MASK | MSI_MASK,
-    [enums::MNU] = MEI_MASK | UEI_MASK | MTI_MASK | UTI_MASK |
+    [enums::M] = LOCAL_MASK | MEI_MASK| MTI_MASK | MSI_MASK,
+    [enums::MU] = LOCAL_MASK | MEI_MASK| MTI_MASK | MSI_MASK,
+    [enums::MNU] = LOCAL_MASK | MEI_MASK | UEI_MASK | MTI_MASK | UTI_MASK |
                    MSI_MASK | USI_MASK,
-    [enums::MSU] = MEI_MASK | SEI_MASK | MTI_MASK | STI_MASK |
+    [enums::MSU] = LOCAL_MASK | MEI_MASK | SEI_MASK | MTI_MASK | STI_MASK |
                    MSI_MASK | SSI_MASK,
-    [enums::MNSU] = MEI_MASK | SEI_MASK | UEI_MASK |
+    [enums::MNSU] = LOCAL_MASK | MEI_MASK | SEI_MASK | UEI_MASK |
                     MTI_MASK | STI_MASK | UTI_MASK |
                     MSI_MASK | SSI_MASK | USI_MASK,
 };

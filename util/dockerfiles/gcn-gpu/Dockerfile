@@ -125,7 +125,6 @@ RUN mkdir -p /root/.cache/miopen/2.9.0.8252-rocm-rel-4.0-26-64506314 && \
 # Add commands from halofinder Dockerfile
 RUN apt-get update && apt-get -y install libopenmpi-dev libomp-dev
 
-ENV HCC_AMDGPU_TARGET="gfx900"
 
 ENV HIPCC_BIN=/opt/rocm/bin
 ENV MPI_INCLUDE=/usr/lib/x86_64-linux-gnu/openmpi/include

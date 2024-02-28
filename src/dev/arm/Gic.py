@@ -155,6 +155,7 @@ class ArmSigInterruptPin(ArmInterruptPin):
     cxx_class = "gem5::ArmSigInterruptPinGen"
 
     irq = IntSourcePin("Interrupt pin")
+    platform = NULL
 
 
 class GicV2(BaseGic):

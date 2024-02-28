@@ -71,35 +71,26 @@ class StridedGen : public StochasticGen
      *
      * @param obj SimObject owning this sequence generator
      * @param requestor_id RequestorID related to the memory requests
-     * @param _duration duration of this state before transitioning
+     * @param cacheline_size cache line size in the system
+     * @param duration duration of this state before transitioning
      * @param start_addr Start address
      * @param end_addr End address
-     * @param _blocksize Size used for transactions injected
-     * @param cacheline_size cache line size in the system
+     * @param offset The offset to start_addr for generating addresses.
+     * First generated address = start_addr + offset.
+     * @param block_size Size used for transactions injected
      * @param stride_size The strided size for consecutive requests
-     * @param gen_id The order of traffic generator in a list of strided \
-     * traffic generators, this param is used to offset the start address of \
-     * each generator accordingly with others.
+     * @param superblock_size Number of bytes to read before taking a stride
      * @param min_period Lower limit of random inter-transaction time
      * @param max_period Upper limit of random inter-transaction time
      * @param read_percent Percent of transactions that are reads
      * @param data_limit Upper limit on how much data to read/write
      */
-    StridedGen(SimObject &obj,
-              RequestorID requestor_id, Tick _duration,
-              Addr start_addr, Addr end_addr,
-              Addr _blocksize, Addr cacheline_size,
-              Addr stride_size, int gen_id,
-              Tick min_period, Tick max_period,
-              uint8_t read_percent, Addr data_limit)
-        : StochasticGen(obj, requestor_id, _duration, start_addr, end_addr,
-                        _blocksize, cacheline_size, min_period, max_period,
-                        read_percent, data_limit),
-          nextAddr(0),
-          dataManipulated(0),
-          strideSize(stride_size),
-          genID(gen_id)
-    { }
+    StridedGen(SimObject& obj, RequestorID requestor_id,
+            Tick duration, Addr cacheline_size,
+            Addr start_addr, Addr end_addr, Addr offset,
+            Addr block_size, Addr superblock_size, Addr stride_size,
+            Tick min_period, Tick max_period,
+            uint8_t read_percent, Addr data_limit);
 
     void enter();
 
@@ -108,6 +99,12 @@ class StridedGen : public StochasticGen
     Tick nextPacketTick(bool elastic, Tick delay) const;
 
   private:
+
+    Addr offset;
+    Addr superblockSize;
+    /* The size of the access stride */
+    Addr strideSize;
+
     /** Address of next request */
     Addr nextAddr;
 
@@ -117,17 +114,6 @@ class StridedGen : public StochasticGen
      * generating requests.
      */
     Addr dataManipulated;
-
-    /* The size by which consequent requests are separated */
-    Addr strideSize;
-
-    /**
-     * This param is used to indicate the order of a traffic
-     * generator among a set of traffic generators, then it
-     * is used to calculate the start address separately for
-     * each traffic generator in a list of generators.
-     */
-    int genID;
 };
 
 } // namespace gem5

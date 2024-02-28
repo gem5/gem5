@@ -173,7 +173,7 @@ namespace RiscvISA
         // The TLB we're supposed to load.
         TLB * tlb;
         System * sys;
-        PMAChecker * pma;
+        BasePMAChecker * pma;
         PMP * pmp;
         RequestorID requestorId;
 

@@ -41,6 +41,7 @@
 #include "base/addr_range.hh"
 #include "base/types.hh"
 #include "mem/packet.hh"
+#include "params/BasePMAChecker.hh"
 #include "params/PMAChecker.hh"
 #include "sim/sim_object.hh"
 
@@ -54,13 +55,23 @@ namespace RiscvISA
  * Based on the RISC-V ISA privileged specifications
  * V1.11, there is no implementation guidelines on the
  * Physical Memory Attributes.
- *
+ */
+
+class BasePMAChecker : public SimObject
+{
+  public:
+    BasePMAChecker(const BasePMACheckerParams &params) : SimObject(params) {};
+    virtual void check(const RequestPtr &req) = 0;
+    virtual void takeOverFrom(BasePMAChecker *old) = 0;
+};
+
+/**
  * This class provides an abstract PMAChecker for RISC-V
  * to provide PMA checking functionality. However,
  * hardware latencies are not modelled.
  */
 
-class PMAChecker : public SimObject
+class PMAChecker : public BasePMAChecker
 {
   public:
 
@@ -75,13 +86,13 @@ class PMAChecker : public SimObject
 
     AddrRangeList uncacheable;
 
-    void check(const RequestPtr &req);
+    void check(const RequestPtr &req) override;
 
     bool isUncacheable(const AddrRange &range);
     bool isUncacheable(const Addr &addr, const unsigned size);
     bool isUncacheable(PacketPtr pkt);
 
-    void takeOverFrom(PMAChecker *old);
+    void takeOverFrom(BasePMAChecker *old) override;
 };
 
 } // namespace RiscvISA

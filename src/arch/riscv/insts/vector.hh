@@ -31,6 +31,7 @@
 
 #include <string>
 
+#include "arch/riscv/faults.hh"
 #include "arch/riscv/insts/static_inst.hh"
 #include "arch/riscv/isa.hh"
 #include "arch/riscv/regs/misc.hh"
@@ -306,6 +307,10 @@ class VseMacroInst : public VectorMemMacroInst
 
 class VleMicroInst : public VectorMicroInst
 {
+  public:
+    mutable bool trimVl;
+    mutable uint32_t faultIdx;
+
   protected:
     Request::Flags memAccessFlags;
 
@@ -313,6 +318,7 @@ class VleMicroInst : public VectorMicroInst
                   uint32_t _microVl, uint32_t _microIdx, uint32_t _vlen)
         : VectorMicroInst(mnem, _machInst, __opClass, _microVl,
                             _microIdx, _vlen)
+        , trimVl(false), faultIdx(_microVl)
     {
         this->flags[IsLoad] = true;
     }
@@ -568,6 +574,24 @@ class VxsatMicroInst : public VectorArithMicroInst
         vxsat = Vxsat;
     }
     Fault execute(ExecContext *, trace::InstRecord *) const override;
+    std::string generateDisassembly(Addr, const loader::SymbolTable *)
+        const override;
+};
+
+class VlFFTrimVlMicroOp : public VectorMicroInst
+{
+  private:
+    RegId srcRegIdxArr[8];
+    RegId destRegIdxArr[0];
+    std::vector<StaticInstPtr>& microops;
+
+  public:
+    VlFFTrimVlMicroOp(ExtMachInst _machInst, uint32_t _microVl,
+        uint32_t _microIdx, uint32_t _vlen,
+        std::vector<StaticInstPtr>& _microops);
+    uint32_t calcVl() const;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
+    std::unique_ptr<PCStateBase> branchTarget(ThreadContext *) const override;
     std::string generateDisassembly(Addr, const loader::SymbolTable *)
         const override;
 };

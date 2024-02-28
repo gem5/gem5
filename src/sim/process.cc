@@ -401,7 +401,7 @@ Process::unserialize(CheckpointIn &cp)
 }
 
 bool
-Process::map(Addr vaddr, Addr paddr, int size, bool cacheable)
+Process::map(Addr vaddr, Addr paddr, int64_t size, bool cacheable)
 {
     pTable->map(vaddr, paddr, size,
                 cacheable ? EmulationPageTable::MappingFlags(0) :

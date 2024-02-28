@@ -1064,6 +1064,22 @@ namespace ArmISA
         Bitfield<0> afsr0EL1;
     EndBitUnion(HFGTR)
 
+    // HDFGRTR and HDFGWTR
+    BitUnion64(HDFGTR)
+        Bitfield<11> osdlrEL1;
+        Bitfield<10> oseccrEL1;
+        Bitfield<9> oslsrEL1;
+        Bitfield<8> oslarEL1;
+        Bitfield<7> dbgprcrEL1;
+        Bitfield<6> dbgauthstatusEL1;
+        Bitfield<5> dbgclaim;
+        Bitfield<4> mdscrEL1;
+        Bitfield<3> dbgwvrnEL1;
+        Bitfield<2> dbgwcrnEL1;
+        Bitfield<1> dbgbvrnEL1;
+        Bitfield<0> dbgbcrnEL1;
+    EndBitUnion(HDFGTR)
+
     BitUnion64(HCRX)
         Bitfield<15> sctlr2En;
         Bitfield<14> tcr2En;

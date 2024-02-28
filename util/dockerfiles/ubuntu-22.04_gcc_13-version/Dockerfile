@@ -1,14 +1,5 @@
-# Copyright (c) 2020-2021,2024 Arm Limited
-# All rights reserved.
-#
-# The license below extends only to copyright in the software and shall
-# not be construed as granting a license to any other intellectual
-# property including but not limited to intellectual property relating
-# to a hardware implementation of the functionality of the software
-# licensed hereunder.  You may use the software subject to the license
-# terms below provided that you ensure that this notice is replicated
-# unmodified and in its entirety in all distributions of the software,
-# modified or unmodified, in source code or in binary form.
+# Copyright (c) 2024 The Regents of the University of California
+# All Rights Reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -32,21 +23,31 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+FROM --platform=${BUILDPLATFORM} ubuntu:22.04
 
-from m5.objects.AbstractMemory import AbstractMemory
-from m5.objects.QoSMemSinkCtrl import QoSMemSinkCtrl
+# Valid version values:
+# 13
 
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt -y update && \
+    # software-properties-common is necessary to install
+    # to add PPA to the system
+    apt -y install software-properties-common && \
+    # Installing PPA is necessary to install gcc-13
+    # because it is not available in the default repositories
+    # for Ubuntu 22.04
+    add-apt-repository ppa:ubuntu-toolchain-r/test -y && \
+    apt -y update && \
+    apt -y install git m4 scons zlib1g zlib1g-dev libprotobuf-dev \
+    protobuf-compiler libprotoc-dev libgoogle-perftools-dev python3-dev \
+    doxygen libboost-all-dev libhdf5-serial-dev python3-pydot libpng-dev \
+    gcc-13 g++-13 make
 
-class QoSMemSinkInterface(AbstractMemory):
-    type = "QoSMemSinkInterface"
-    cxx_header = "mem/qos/mem_sink.hh"
-    cxx_class = "gem5::memory::qos::MemSinkInterface"
-
-    def controller(self):
-        """
-        Instantiate the memory controller and bind it to
-        the current interface.
-        """
-        controller = QoSMemSinkCtrl()
-        controller.interface = self
-        return controller
+RUN update-alternatives --install \
+    /usr/bin/g++ g++ /usr/bin/g++- 100
+RUN update-alternatives --install \
+    /usr/bin/gcc gcc /usr/bin/gcc-13 100
+RUN update-alternatives --install \
+    /usr/bin/c++ c++ /usr/bin/g++-13 100
+RUN update-alternatives --install \
+    /usr/bin/cc cc /usr/bin/gcc-13 100

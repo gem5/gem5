@@ -434,6 +434,7 @@ print(
 # shader is the GPU
 shader = Shader(
     n_wf=args.wfs_per_simd,
+    cu_per_sqc=args.cu_per_sqc,
     clk_domain=SrcClockDomain(
         clock=args.gpu_clock,
         voltage_domain=VoltageDomain(voltage=args.gpu_voltage),

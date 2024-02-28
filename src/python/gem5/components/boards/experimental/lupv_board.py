@@ -185,7 +185,7 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
         # point for our bbl to use upon startup, and will
         # remain unused during the simulation
         self.pic.n_src = 0
-        self.pic.n_contexts = 0
+        self.pic.hart_config = ""
         self.lupio_pic.n_src = max(pic_srcs) + 1
         self.lupio_pic.num_threads = self.processor.get_num_cores()
 
@@ -403,10 +403,19 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
         plic_node.append(FdtPropertyWords("riscv,ndev", 0))
 
         int_extended = list()
-        for i, core in enumerate(self.get_processor().get_cores()):
-            phandle = state.phandle(f"cpu@{i}.int_state")
-            int_extended.append(phandle)
-            int_extended.append(self._excep_code["INT_EXT_MACHINE"])
+        cpu_id = 0
+        phandle = int_state.phandle(f"cpu@{cpu_id}.int_state")
+        for c in plic.hart_config:
+            if c == ",":
+                cpu_id += 1
+                assert cpu_id < self.get_processor().get_num_cores()
+                phandle = int_state.phandle(f"cpu@{cpu_id}.int_state")
+            elif c == "S":
+                int_extended.append(phandle)
+                int_extended.append(self._excep_code["INT_SOFT_SUPER"])
+            elif c == "M":
+                int_extended.append(phandle)
+                int_extended.append(self._excep_code["INT_EXT_MACHINE"])
 
         plic_node.append(FdtPropertyWords("interrupts-extended", int_extended))
         plic_node.append(FdtProperty("interrupt-controller"))

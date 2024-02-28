@@ -248,5 +248,23 @@ SyscallFault::invokeSE(ThreadContext *tc, const StaticInstPtr &inst)
     tc->getSystemPtr()->workload->syscall(tc);
 }
 
+bool
+getFaultVAddr(Fault fault, Addr &va)
+{
+    auto addr_fault = dynamic_cast<AddressFault *>(fault.get());
+    if (addr_fault) {
+        va = addr_fault->trap_value();
+        return true;
+    }
+
+    auto pgt_fault = dynamic_cast<GenericPageTableFault *>(fault.get());
+    if (pgt_fault) {
+        va = pgt_fault->getFaultVAddr();
+        return true;
+    }
+
+    return false;
+}
+
 } // namespace RiscvISA
 } // namespace gem5

@@ -60,6 +60,7 @@ machine(MachineType:SQC, "GPU SQC (L1 I Cache)")
     // Mem sys initiated
     Repl,           desc="Replacing block from cache";
     Data,           desc="Received Data";
+    Evict,          desc="Evict cache line";
   }
 
   enumeration(RequestType, desc="To communicate stats from transitions to recordStats") {
@@ -67,6 +68,7 @@ machine(MachineType:SQC, "GPU SQC (L1 I Cache)")
     DataArrayWrite,   desc="Write the data array";
     TagArrayRead,     desc="Read the data array";
     TagArrayWrite,    desc="Write the data array";
+    TagArrayFlash,    desc="Flash clear the data array";
   }
 
 
@@ -242,7 +244,12 @@ machine(MachineType:SQC, "GPU SQC (L1 I Cache)")
       peek(mandatoryQueue_in, RubyRequest, block_on="LineAddress") {
         Entry cache_entry := getCacheEntry(in_msg.LineAddress);
         TBE tbe := TBEs.lookup(in_msg.LineAddress);
-        trigger(Event:Fetch, in_msg.LineAddress, cache_entry, tbe);
+        DPRINTF(RubySlicc, "%s\n", in_msg);
+        if (in_msg.Type == RubyRequestType:REPLACEMENT) {
+          trigger(Event:Evict, in_msg.LineAddress, cache_entry, tbe);
+        } else {
+          trigger(Event:Fetch, in_msg.LineAddress, cache_entry, tbe);
+        }
       }
     }
   }
@@ -313,6 +320,10 @@ machine(MachineType:SQC, "GPU SQC (L1 I Cache)")
     APPEND_TRANSITION_COMMENT(cache_entry.DataBlk);
   }
 
+  action(inv_invDone, "inv", desc="local inv done") {
+    sequencer.invL1Callback();
+  }
+
   action(w_writeCache, "w", desc="write data to cache") {
     peek(responseToSQC_in, ResponseMsg) {
       assert(is_valid(cache_entry));
@@ -348,6 +359,13 @@ machine(MachineType:SQC, "GPU SQC (L1 I Cache)")
   transition({I, IV, V}, Repl, I) {TagArrayRead, TagArrayWrite} {
     // since we're evicting something, don't bother classifying as hit/miss
     ic_invCache;
+  }
+
+  transition({I, IV, V}, Evict, I) {TagArrayRead, TagArrayWrite} {
+    // since we're evicting something, don't bother classifying as hit/miss
+    ic_invCache;
+    inv_invDone;
+    p_popMandatoryQueue;
   }
 
   // if we got a response for a load where the line is in I, then
