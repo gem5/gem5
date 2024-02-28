@@ -68,7 +68,9 @@ board = SimpleBoard(
 
 board.set_se_binary_workload(
     obtain_resource("arm-hello64-static"),
-    checkpoint=obtain_resource("arm-hello-test-checkpoint"),
+    checkpoint=obtain_resource(
+        "arm-hello-test-checkpoint", resource_version="1.0.0"
+    ),
 )
 
 sim = Simulator(board=board, full_system=False)
