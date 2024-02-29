@@ -52,7 +52,10 @@ from ..isas import (
     ISA,
     get_isa_from_str,
 )
-from .client import get_resource_json_obj
+from .client import (
+    get_multiple_resource_json_obj,
+    get_resource_json_obj,
+)
 from .downloader import get_resource
 from .looppoint import (
     LooppointCsvLoader,
@@ -865,6 +868,12 @@ class WorkloadResource(AbstractResource):
         source: Optional[str] = None,
         local_path: Optional[str] = None,
         parameters: Optional[Dict[str, Any]] = {},
+        resources: Optional[Dict[str, Dict[str, str]]] = {},
+        resource_directory: Optional[str] = None,
+        download_md5_mismatch: Optional[bool] = True,
+        clients: Optional[List] = None,
+        gem5_version: Optional[str] = None,
+        quiet: Optional[bool] = False,
         **kwargs,
     ):
         """
@@ -883,6 +892,144 @@ class WorkloadResource(AbstractResource):
         self._id = id
         self._func = function
         self._params = parameters
+
+        self.get_all_resources(
+            resources=resources,
+            to_path=local_path,
+            resource_directory=resource_directory,
+            download_md5_mismatch=download_md5_mismatch,
+            clients=clients,
+            gem5_version=gem5_version,
+            quiet=quiet,
+        )
+
+    def get_all_resources(
+        self,
+        resources: Dict[str, Dict[str, str]],
+        to_path: str,
+        resource_directory: str,
+        download_md5_mismatch: bool,
+        clients: List[str],
+        gem5_version: str,
+        quiet: bool,
+    ) -> None:
+        """
+        This function gets all the resources for the workload.
+
+        :param resources: A dictionary of resources to get. The keys are the
+                            parameter names and the values are the resource
+                            id and version.
+        :param to_path: The path to which the resource is to be downloaded. If
+                        ``None``, the resource will be downloaded to the resource
+                        directory with the file/directory name equal to the ID of
+                        the resource.
+        :param resource_directory: The location of the directory in which the
+                                   resource is to be stored. If this parameter is
+                                   not set, it will set to the environment variable
+                                   ``GEM5_RESOURCE_DIR``. If the environment is not
+                                   set it will default to ``~/.cache/gem5`` if
+                                   available, otherwise the CWD. *Note*: This
+                                   argument is ignored if the ``to_path`` parameter
+                                   is specified.
+        :param download_md5_mismatch: If the resource is present, but does not
+                                      have the correct md5 value, the resource will
+                                      be deleted and re-downloaded if this value is
+                                      ``True``. Otherwise an exception will be thrown.
+                                      ``True`` by default.
+        :param clients: A list of clients to search for the resource. If this
+                        parameter is not set, it will default search all clients.
+        :param gem5_version: The gem5 version to use to filter incompatible
+                            resource versions. By default set to the current gem5
+                            version. If `None`, this filtering is not performed.
+        :param quiet: If ``True``, suppress output. ``False`` by default.
+        """
+        # Mapping IDs to parameter names
+        id_to_param_map = {
+            resource_info["id"]: param
+            for param, resource_info in resources.items()
+        }
+
+        # Fetching resources as a list of dicts
+        resource_details_list = get_multiple_resource_json_obj(
+            list(resources.values())
+        )
+
+        # Preparing the final mapping of parameters to their complete JSON objects
+        param_to_resource_json = {}
+        for resource in resource_details_list:
+            resource_id = resource["id"]
+            if resource_id in id_to_param_map:
+                param = id_to_param_map[resource_id]
+                param_to_resource_json[param] = resource
+
+        # Creating the resource objects for each parameter
+        for param, resource in param_to_resource_json.items():
+            assert isinstance(param, str)
+            self._params[param] = self.create_resource_objects(
+                resource_json=resource,
+                to_path=to_path,
+                resource_directory=resource_directory,
+                download_md5_mismatch=download_md5_mismatch,
+                clients=clients,
+                gem5_version=gem5_version,
+                quiet=quiet,
+            )
+
+    def create_resource_objects(
+        self,
+        resource_json: Dict[str, str],
+        to_path: str,
+        resource_directory: str,
+        download_md5_mismatch: bool,
+        clients: List[str],
+        gem5_version: str,
+        quiet: bool,
+    ) -> AbstractResource:
+        """
+        This function is used to create the resource objects for each parameter
+        :param resource_json: The JSON object for the resource
+        :param to_path: The path to which the resource is to be downloaded. If
+                        ``None``, the resource will be downloaded to the resource
+                        directory with the file/directory name equal to the ID of
+                        the resource.
+        :param resource_directory: The location of the directory in which the
+                                   resource is to be stored. If this parameter is
+                                   not set, it will set to the environment variable
+                                   ``GEM5_RESOURCE_DIR``. If the environment is not
+                                   set it will default to ``~/.cache/gem5`` if
+                                   available, otherwise the CWD. *Note*: This
+                                   argument is ignored if the ``to_path`` parameter
+                                   is specified.
+        :param download_md5_mismatch: If the resource is present, but does not
+                                      have the correct md5 value, the resource will
+                                      be deleted and re-downloaded if this value is
+                                      ``True``. Otherwise an exception will be thrown.
+                                      ``True`` by default.
+        :param clients: A list of clients to search for the resource. If this
+                        parameter is not set, it will default search all clients.
+        :param gem5_version: The gem5 version to use to filter incompatible
+                            resource versions. By default set to the current gem5
+                            version. If `None`, this filtering is not performed.
+        :param quiet: If ``True``, suppress output. ``False`` by default.
+
+        :returns: The resource object
+        """
+        to_path, downloader = _get_to_path_and_downloader_partial(
+            resource_json=resource_json,
+            to_path=to_path,
+            resource_directory=resource_directory,
+            download_md5_mismatch=download_md5_mismatch,
+            clients=clients,
+            gem5_version=gem5_version,
+            quiet=quiet,
+        )
+
+        resource_class = _get_resource_json_type_map[resource_json["category"]]
+        return resource_class(
+            local_path=to_path,
+            downloader=downloader,
+            **resource_json,
+        )
 
     def get_id(self) -> str:
         """Returns the ID of the workload."""
@@ -972,6 +1119,97 @@ def obtain_resource(
         gem5_version=gem5_version,
     )
 
+    to_path, downloader = _get_to_path_and_downloader_partial(
+        resource_json=resource_json,
+        to_path=to_path,
+        resource_directory=resource_directory,
+        download_md5_mismatch=download_md5_mismatch,
+        clients=clients,
+        gem5_version=gem5_version,
+        quiet=quiet,
+    )
+
+    # Obtain the type from the JSON. From this we will determine what subclass
+    # of `AbstractResource` we are to create and return.
+    resources_category = resource_json["category"]
+
+    if resources_category == "resource":
+        # This is a stop-gap measure to ensure to work with older versions of
+        # the "resource.json" file. These should be replaced with their
+        # respective specializations ASAP and this case removed.
+        if "root_partition" in resource_json:
+            # In this case we should return a DiskImageResource.
+            root_partition = resource_json["root_partition"]
+            return DiskImageResource(
+                local_path=to_path,
+                root_partition=root_partition,
+                downloader=downloader,
+                **resource_json,
+            )
+        return CustomResource(local_path=to_path, downloader=downloader)
+
+    assert resources_category in _get_resource_json_type_map
+    resource_class = _get_resource_json_type_map[resources_category]
+
+    if resources_category == "suite":
+        workloads = resource_json["workloads"]
+        workloads_obj = {}
+        for workload in workloads:
+            workloads_obj[
+                ShadowResource(
+                    id=workload["id"],
+                    resource_version=workload["resource_version"],
+                    obtain_resource_call=partial(
+                        obtain_resource,
+                        workload["id"],
+                        resource_version=workload["resource_version"],
+                        resource_directory=resource_directory,
+                        clients=clients,
+                        gem5_version=gem5_version,
+                    ),
+                )
+            ] = set(workload["input_group"])
+        resource_json["workloads"] = workloads_obj
+
+    if resources_category == "workload":
+        # This parses the "resources" and "additional_params" fields of the
+        # workload resource into a dictionary of AbstractResource objects and
+        # strings respectively.
+        params = {}
+        if "additional_params" in resource_json:
+            for key in resource_json["additional_params"].keys():
+                assert isinstance(key, str)
+                value = resource_json["additional_params"][key]
+                params[key] = value
+        resource_json["parameters"] = params
+
+        # This are the fields that are used to obtain the
+        # constituent resources of the workload.
+        resource_json["resource_directory"] = resource_directory
+        resource_json["download_md5_mismatch"] = download_md5_mismatch
+        resource_json["clients"] = clients
+        resource_json["gem5_version"] = gem5_version
+        resource_json["quiet"] = quiet
+
+    # Once we know what AbstractResource subclass we are using, we create it.
+    # The fields in the JSON object are assumed to map like-for-like to the
+    # subclass contructor, so we can pass the resource_json map directly.
+    return resource_class(
+        local_path=to_path, downloader=downloader, **resource_json
+    )
+
+
+def _get_to_path_and_downloader_partial(
+    resource_json: Dict[str, str],
+    to_path: str,
+    resource_directory: str,
+    download_md5_mismatch: bool,
+    clients: List[str],
+    gem5_version: str,
+    quiet: bool,
+) -> Tuple[str, Optional[partial]]:
+    resource_id = resource_json["id"]
+    resource_version = resource_json["resource_version"]
     # This is is used to store the partial function which is used to download
     # the resource when the `get_local_path` function is called.
     downloader: Optional[partial] = None
@@ -1035,79 +1273,7 @@ def obtain_resource(
             gem5_version=gem5_version,
             quiet=quiet,
         )
-
-    # Obtain the type from the JSON. From this we will determine what subclass
-    # of `AbstractResource` we are to create and return.
-    resources_category = resource_json["category"]
-
-    if resources_category == "resource":
-        # This is a stop-gap measure to ensure to work with older versions of
-        # the "resource.json" file. These should be replaced with their
-        # respective specializations ASAP and this case removed.
-        if "root_partition" in resource_json:
-            # In this case we should return a DiskImageResource.
-            root_partition = resource_json["root_partition"]
-            return DiskImageResource(
-                local_path=to_path,
-                root_partition=root_partition,
-                downloader=downloader,
-                **resource_json,
-            )
-        return CustomResource(local_path=to_path, downloader=downloader)
-
-    assert resources_category in _get_resource_json_type_map
-    resource_class = _get_resource_json_type_map[resources_category]
-
-    if resources_category == "suite":
-        workloads = resource_json["workloads"]
-        workloads_obj = {}
-        for workload in workloads:
-            workloads_obj[
-                ShadowResource(
-                    id=workload["id"],
-                    resource_version=workload["resource_version"],
-                    obtain_resource_call=partial(
-                        obtain_resource,
-                        workload["id"],
-                        resource_version=workload["resource_version"],
-                        resource_directory=resource_directory,
-                        clients=clients,
-                        gem5_version=gem5_version,
-                    ),
-                )
-            ] = set(workload["input_group"])
-        resource_json["workloads"] = workloads_obj
-
-    if resources_category == "workload":
-        # This parses the "resources" and "additional_params" fields of the
-        # workload resource into a dictionary of AbstractResource objects and
-        # strings respectively.
-        params = {}
-        if "resources" in resource_json:
-            for key in resource_json["resources"].keys():
-                assert isinstance(key, str)
-                value = resource_json["resources"][key]
-
-                assert isinstance(value, dict)
-                params[key] = obtain_resource(
-                    value["id"],
-                    resource_version=value["resource_version"],
-                    resource_directory=resource_directory,
-                    clients=clients,
-                    gem5_version=gem5_version,
-                )
-        if "additional_params" in resource_json:
-            for key in resource_json["additional_params"].keys():
-                assert isinstance(key, str)
-                value = resource_json["additional_params"][key]
-                params[key] = value
-        resource_json["parameters"] = params
-    # Once we know what AbstractResource subclass we are using, we create it.
-    # The fields in the JSON object are assumed to map like-for-like to the
-    # subclass contructor, so we can pass the resource_json map directly.
-    return resource_class(
-        local_path=to_path, downloader=downloader, **resource_json
-    )
+    return to_path, downloader
 
 
 def _get_default_resource_dir() -> str:

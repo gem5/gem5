@@ -176,3 +176,23 @@ def get_resource_json_obj(
     return _get_clientwrapper().get_resource_json_obj_from_client(
         resource_info, clients, gem5_version
     )[0]
+
+
+def get_multiple_resource_json_obj(
+    resource_info: List[Dict[str, str]],
+    clients: Optional[List[str]] = None,
+    gem5_version: Optional[str] = core.gem5Version,
+) -> List[Dict]:
+    """
+    Get the resource json object from the clients wrapper.
+
+    :param resource_info: The resource info.
+    :param clients: The list of clients to query.
+    :param gem5_version: The gem5 versions to filter the resources based on
+                         compatibility. By default, it is the gem5 version of the
+                         current build. If ``None``, filtering based on compatibility
+                         is not performed.
+    """
+    return _get_clientwrapper().get_resource_json_obj_from_client(
+        resource_info, clients, gem5_version
+    )
