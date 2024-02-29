@@ -226,6 +226,7 @@ class SMMUTranslationProcess : public SMMUProcess
 
     SMMUEvent generateEvent(const TranslResult &tr);
     void sendEvent(Yield &yield, const SMMUEvent &ev);
+    void sendEventInterrupt(Yield &yield);
 
     void doReadSTE(Yield &yield, StreamTableEntry &ste, uint32_t sid);
     TranslResult doReadCD(Yield &yield, ContextDescriptor &cd,

@@ -41,6 +41,7 @@
 #include "debug/SMMUv3.hh"
 #include "debug/SMMUv3Hazard.hh"
 #include "dev/arm/amba.hh"
+#include "dev/arm/base_gic.hh"
 #include "dev/arm/smmu_v3.hh"
 #include "sim/system.hh"
 
@@ -1387,16 +1388,40 @@ SMMUTranslationProcess::sendEvent(Yield &yield, const SMMUEvent &ev)
     DPRINTF(SMMUv3, "Sending event to addr=%#08x (pos=%d): %s\n",
         event_addr, smmu.regs.eventq_prod, ev.print());
 
+    bool empty_queue = (smmu.regs.eventq_prod & sizeMask) ==
+        (smmu.regs.eventq_cons & sizeMask);
+
     // This deliberately resets the overflow field in eventq_prod!
     smmu.regs.eventq_prod = (smmu.regs.eventq_prod + 1) & sizeMask;
 
     doWrite(yield, event_addr, &ev.data, sizeof(ev.data));
 
-    if (!(smmu.regs.eventq_irq_cfg0 & E_BASE_ENABLE_MASK))
-        panic("eventq msi not enabled\n");
+    // Send an event queue interrupt when transitioning from empty to
+    // non empty queue
+    if (IRQCtrl irq_ctrl = smmu.regs.irq_ctrl;
+        irq_ctrl.eventqIrqEn && empty_queue) {
 
-    doWrite(yield, smmu.regs.eventq_irq_cfg0 & E_BASE_ADDR_MASK,
-            &smmu.regs.eventq_irq_cfg1, sizeof(smmu.regs.eventq_irq_cfg1));
+        sendEventInterrupt(yield);
+    }
+}
+
+void
+SMMUTranslationProcess::sendEventInterrupt(Yield &yield)
+{
+    Addr msi_addr = smmu.regs.eventq_irq_cfg0 & E_BASE_ADDR_MASK;
+
+    // Check if MSIs are enabled by inspecting the SMMU_IDR.MSI bit
+    // According to the SMMUv3 spec, using an address equal to 0
+    // disables the sending of the MSI
+    if (IDR0 idr0 = smmu.regs.idr0; idr0.msi && msi_addr != 0) {
+        DPRINTF(SMMUv3, "Raise Event queue MSI\n");
+        doWrite(yield, msi_addr,
+                &smmu.regs.eventq_irq_cfg1, sizeof(smmu.regs.eventq_irq_cfg1));
+    }
+    if (smmu.eventqInterrupt) {
+        DPRINTF(SMMUv3, "Raise Event queue wired interrupt\n");
+        smmu.eventqInterrupt->raise();
+    }
 }
 
 void

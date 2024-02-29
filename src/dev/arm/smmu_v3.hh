@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2018-2020 ARM Limited
+ * Copyright (c) 2013, 2018-2020, 2024 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -79,6 +79,8 @@
 namespace gem5
 {
 
+class ArmInterruptPin;
+
 class SMMUTranslationProcess;
 
 class SMMUv3 : public ClockedObject
@@ -96,6 +98,10 @@ class SMMUv3 : public ClockedObject
     SMMURequestPort    requestPort;
     SMMUTableWalkPort tableWalkPort;
     SMMUControlPort   controlPort;
+
+    // This could be nullptr if wired implementation of the
+    // event queue interrupt is not supported
+    ArmInterruptPin * const eventqInterrupt;
 
     const bool irqInterfaceEnable;
 

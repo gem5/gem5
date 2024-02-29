@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2018-2020 ARM Limited
+ * Copyright (c) 2013, 2018-2020, 2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -48,6 +48,7 @@
 #include "base/types.hh"
 #include "debug/Checkpoint.hh"
 #include "debug/SMMUv3.hh"
+#include "dev/arm/base_gic.hh"
 #include "dev/arm/smmu_v3_transl.hh"
 #include "mem/packet_access.hh"
 #include "sim/system.hh"
@@ -62,6 +63,7 @@ SMMUv3::SMMUv3(const SMMUv3Params &params) :
     requestPort(name() + ".request", *this),
     tableWalkPort(name() + ".walker", *this),
     controlPort(name() + ".control", *this, params.reg_map),
+    eventqInterrupt(params.eventq_irq ? params.eventq_irq->get() : nullptr),
     irqInterfaceEnable(params.irq_interface_enable),
     tlb(params.tlb_entries, params.tlb_assoc, params.tlb_policy, this),
     configCache(params.cfg_entries, params.cfg_assoc, params.cfg_policy, this),
