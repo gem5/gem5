@@ -725,16 +725,24 @@ class SuiteResource(AbstractResource):
 
     def __init__(
         self,
-        workloads: Dict["WorkloadResource", Set[str]] = {},
+        workloads: Dict[Tuple[str, str], Set[str]] = {},
         resource_version: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
         id: Optional[str] = None,
+        resource_directory: Optional[str] = None,
+        download_md5_mismatch: Optional[bool] = True,
+        clients: Optional[List] = None,
+        gem5_version: Optional[str] = None,
+        quiet: Optional[bool] = False,
+        local_path: Optional[str] = None,
         **kwargs,
     ) -> None:
         """
-        :param workloads: A list of ``WorkloadResource`` objects
-                          created from the ``_workloads`` parameter.
+        :param workloads: A Dict of Tuples containing the workload ID and
+                          version as the key and a set of input groups as the
+                          value. This Dict is created from the ``_workloads``
+                          parameter.
         :param local_path: The path on the host system where this resource is
                            located.
         :param description: Description describing this resource. Not a
@@ -748,6 +756,12 @@ class SuiteResource(AbstractResource):
         self._description = description
         self._source = source
         self._resource_version = resource_version
+        self._local_path = local_path
+        self._resource_directory = resource_directory
+        self._download_md5_mismatch = download_md5_mismatch
+        self._clients = clients
+        self._gem5_version = gem5_version
+        self._quiet = quiet
 
         super().__init__(
             id=id,
@@ -756,13 +770,43 @@ class SuiteResource(AbstractResource):
             resource_version=resource_version,
         )
 
+    def _get_all_workload_json(self) -> List[Dict[str, str]]:
+        """
+        This function gets all the resources for the workload.
+
+        :returns: A list of all the resources for the workload.
+        """
+
+        mongo_query = [
+            {"id": resource_info[0], "resource_version": resource_info[1]}
+            for resource_info in self._workloads.keys()
+        ]
+        return get_multiple_resource_json_obj(
+            mongo_query, self._clients, self._gem5_version
+        )
+
     def __iter__(self) -> Generator["WorkloadResource", None, None]:
         """
         Returns a generator that iterates over the workloads in the suite.
 
         :yields: A generator that iterates over the workloads in the suite.
         """
-        yield from self._workloads.keys()
+
+        # We get all the workload objects from the database
+        workload_objects = self._get_all_workload_json()
+
+        for workload in workload_objects:
+            # We create a WorkloadResource object for each workload
+            # only when it is requested.
+            yield WorkloadResource(
+                local_path=self._local_path,
+                resource_directory=self._resource_directory,
+                download_md5_mismatch=self._download_md5_mismatch,
+                clients=self._clients,
+                gem5_version=self._gem5_version,
+                quiet=self._quiet,
+                **workload,
+            )
 
     def __len__(self):
         """
@@ -1156,20 +1200,17 @@ def obtain_resource(
         workloads_obj = {}
         for workload in workloads:
             workloads_obj[
-                ShadowResource(
-                    id=workload["id"],
-                    resource_version=workload["resource_version"],
-                    obtain_resource_call=partial(
-                        obtain_resource,
-                        workload["id"],
-                        resource_version=workload["resource_version"],
-                        resource_directory=resource_directory,
-                        clients=clients,
-                        gem5_version=gem5_version,
-                    ),
-                )
+                (workload["id"], workload["resource_version"])
             ] = set(workload["input_group"])
+
+        # This are the fields that are used to obtain the
+        # constituent resources of the suite.
         resource_json["workloads"] = workloads_obj
+        resource_json["resource_directory"] = resource_directory
+        resource_json["download_md5_mismatch"] = download_md5_mismatch
+        resource_json["clients"] = clients
+        resource_json["gem5_version"] = gem5_version
+        resource_json["quiet"] = quiet
 
     if resources_category == "workload":
         # This parses the "resources" and "additional_params" fields of the
