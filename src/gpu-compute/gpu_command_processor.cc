@@ -723,7 +723,6 @@ GPUCommandProcessor::sanityCheckAKC(AMDKernelCode *akc)
     warn_if(akc->kernarg_preload_spec_length ||
             akc->kernarg_preload_spec_offset,
             "Kernarg preload not implemented\n");
-    warn_if(akc->accum_offset, "ACC offset not implemented\n");
     warn_if(akc->tg_split, "TG split not implemented\n");
 }
 

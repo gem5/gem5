@@ -122,6 +122,11 @@ class HSAQueueEntry
         }
 
         parseKernelCode(akc);
+
+        // Offset of a first AccVGPR in the unified register file.
+        // Granularity 4. Value 0-63. 0 - accum-offset = 4,
+        // 1 - accum-offset = 8, ..., 63 - accum-offset = 256.
+        _accumOffset = (akc->accum_offset + 1) * 4;
     }
 
     const GfxVersion&
@@ -394,6 +399,12 @@ class HSAQueueEntry
         assert(_outstandingWbs >= 0);
     }
 
+    unsigned
+    accumOffset() const
+    {
+        return _accumOffset;
+    }
+
   private:
     void
     parseKernelCode(AMDKernelCode *akc)
@@ -489,6 +500,8 @@ class HSAQueueEntry
 
     std::bitset<NumVectorInitFields> initialVgprState;
     std::bitset<NumScalarInitFields> initialSgprState;
+
+    unsigned _accumOffset;
 };
 
 } // namespace gem5

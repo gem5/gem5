@@ -131,6 +131,8 @@ class Wavefront : public SimObject
     uint32_t maxVgprs;
     // number of SGPRs required by WF
     uint32_t maxSgprs;
+    // first accumulation vgpr number
+    uint32_t accumOffset;
     void freeResources();
     GPUDynInstPtr nextInstr();
     void setStatus(status_e newStatus);

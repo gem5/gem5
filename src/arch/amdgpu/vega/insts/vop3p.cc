@@ -596,10 +596,10 @@ void Inst_VOP3P__V_DOT8_U32_U4::execute(GPUDynInstPtr gpuDynInst)
 
 void Inst_VOP3P__V_ACCVGPR_READ::execute(GPUDynInstPtr gpuDynInst)
 {
-    // The Acc register file is not supported in gem5 and has been removed
-    // in MI200. Therefore this instruction becomes a mov.
     Wavefront *wf = gpuDynInst->wavefront();
-    ConstVecOperandU32 src(gpuDynInst, extData.SRC0);
+    unsigned accum_offset = wf->accumOffset;
+
+    ConstVecOperandU32 src(gpuDynInst, extData.SRC0+accum_offset);
     VecOperandU32 vdst(gpuDynInst, instData.VDST);
 
     src.readSrc();
@@ -615,11 +615,11 @@ void Inst_VOP3P__V_ACCVGPR_READ::execute(GPUDynInstPtr gpuDynInst)
 
 void Inst_VOP3P__V_ACCVGPR_WRITE::execute(GPUDynInstPtr gpuDynInst)
 {
-    // The Acc register file is not supported in gem5 and has been removed
-    // in MI200. Therefore this instruction becomes a mov.
     Wavefront *wf = gpuDynInst->wavefront();
+    unsigned accum_offset = wf->accumOffset;
+
     ConstVecOperandU32 src(gpuDynInst, extData.SRC0);
-    VecOperandU32 vdst(gpuDynInst, instData.VDST);
+    VecOperandU32 vdst(gpuDynInst, instData.VDST+accum_offset);
 
     src.readSrc();
 
