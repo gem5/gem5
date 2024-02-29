@@ -112,7 +112,7 @@ X86_64Process::X86_64Process(const ProcessParams &params,
 
     Addr brk_point = roundUp(image.maxAddr(), PageBytes);
     Addr stack_base = 0x7FFFFFFFF000ULL;
-    Addr max_stack_size = 8 * 1024 * 1024;
+    Addr max_stack_size = params.maxStackSize;
     Addr next_thread_stack_base = stack_base - max_stack_size;
     Addr mmap_end = 0x7FFFF7FFF000ULL;
 
