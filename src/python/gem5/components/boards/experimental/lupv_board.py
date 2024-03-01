@@ -186,7 +186,7 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
         # remain unused during the simulation
         self.pic.n_src = 0
         self.pic.hart_config = ",".join(
-            ["MS" for _ in range(self.processor.get_num_cores())]
+            ["M" for _ in range(self.processor.get_num_cores())]
         )
         self.lupio_pic.n_src = max(pic_srcs) + 1
         self.lupio_pic.num_threads = self.processor.get_num_cores()
