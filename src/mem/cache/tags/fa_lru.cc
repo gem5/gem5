@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2023-2024 ARM Limited
  * Copyright (c) 2018 Inria
  * Copyright (c) 2013,2016-2018 ARM Limited
  * All rights reserved.
@@ -74,6 +75,8 @@ FALRU::FALRU(const Params &p)
               blkSize);
     if (!isPowerOf2(size))
         fatal("Cache Size must be power of 2 for now");
+    if (this->partitioningPolicies.size() != 0)
+        fatal("Cannot use Cache Partitioning Policies with FALRU");
 
     blks = new FALRUBlk[numBlocks];
 }
@@ -191,7 +194,8 @@ FALRU::findBlockBySetAndWay(int set, int way) const
 
 CacheBlk*
 FALRU::findVictim(Addr addr, const bool is_secure, const std::size_t size,
-                  std::vector<CacheBlk*>& evict_blks)
+                  std::vector<CacheBlk*>& evict_blks,
+                  const uint64_t partition_id)
 {
     // The victim is always stored on the tail for the FALRU
     FALRUBlk* victim = tail;

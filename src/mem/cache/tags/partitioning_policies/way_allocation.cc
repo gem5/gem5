@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2014, 2023-2024 ARM Limited
+ * Copyright (c) 2024 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -10,9 +10,6 @@
  * terms below provided that you ensure that this notice is replicated
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
- *
- * Copyright (c) 2003-2005,2014 The Regents of The University of Michigan
- * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -38,79 +35,35 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- * Definitions of a conventional tag store.
- */
+#include "mem/cache/tags/partitioning_policies/way_allocation.hh"
 
-#include "mem/cache/tags/base_set_assoc.hh"
-
-#include <string>
-
-#include "base/intmath.hh"
+#include "params/WayPolicyAllocation.hh"
 
 namespace gem5
 {
 
-BaseSetAssoc::BaseSetAssoc(const Params &p)
-    :BaseTags(p), allocAssoc(p.assoc), blks(p.size / p.block_size),
-     sequentialAccess(p.sequential_access),
-     replacementPolicy(p.replacement_policy)
+namespace partitioning_policy
 {
-    // There must be a indexing policy
-    fatal_if(!p.indexing_policy, "An indexing policy is required");
 
-    // Check parameters
-    if (blkSize < 4 || !isPowerOf2(blkSize)) {
-        fatal("Block size must be at least 4 and a power of 2");
-    }
+WayPolicyAllocation::WayPolicyAllocation
+    (const WayPolicyAllocationParams &params): SimObject(params),
+    _ways(params.ways),_partitionId(params.partition_id)
+{
+
 }
 
-void
-BaseSetAssoc::tagsInit()
+std::vector< uint64_t >
+WayPolicyAllocation::getWays() const
 {
-    // Initialize all blocks
-    for (unsigned blk_index = 0; blk_index < numBlocks; blk_index++) {
-        // Locate next cache block
-        CacheBlk* blk = &blks[blk_index];
-
-        // Link block to indexing policy
-        indexingPolicy->setEntry(blk, blk_index);
-
-        // Associate a data chunk to the block
-        blk->data = &dataBlks[blkSize*blk_index];
-
-        // Associate a replacement data entry to the block
-        blk->replacementData = replacementPolicy->instantiateEntry();
-    }
+    return this->_ways;
 }
 
-void
-BaseSetAssoc::invalidate(CacheBlk *blk)
+uint64_t
+WayPolicyAllocation::getPartitionId() const
 {
-    // Notify partitioning policies of release of ownership
-    for (auto partitioning_policy : partitioningPolicies)
-        partitioning_policy->notifyRelease(blk->getPartitionId());
-
-    BaseTags::invalidate(blk);
-
-    // Decrease the number of tags in use
-    stats.tagsInUse--;
-
-    // Invalidate replacement data
-    replacementPolicy->invalidate(blk->replacementData);
+    return this->_partitionId;
 }
 
-void
-BaseSetAssoc::moveBlock(CacheBlk *src_blk, CacheBlk *dest_blk)
-{
-    BaseTags::moveBlock(src_blk, dest_blk);
-
-    // Since the blocks were using different replacement data pointers,
-    // we must touch the replacement data of the new entry, and invalidate
-    // the one that is being moved.
-    replacementPolicy->invalidate(src_blk->replacementData);
-    replacementPolicy->reset(dest_blk->replacementData);
-}
+} // namespace partitioning_policy
 
 } // namespace gem5

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013, 2015, 2018, 2023 ARM Limited
+# Copyright (c) 2012-2013, 2015, 2018, 2023-2024 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -110,6 +110,12 @@ class BaseCache(ClockedObject):
     tags = Param.BaseTags(BaseSetAssoc(), "Tag store")
     replacement_policy = Param.BaseReplacementPolicy(
         LRURP(), "Replacement policy"
+    )
+    partitioning_policies = VectorParam.BasePartitioningPolicy(
+        [],
+        "Partitioning policies "
+        "Setting multiple policies will enforce all of them individually "
+        "in order",
     )
 
     compressor = Param.BaseCacheCompressor(NULL, "Cache compressor.")
