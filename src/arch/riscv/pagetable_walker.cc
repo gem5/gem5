@@ -391,6 +391,9 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
                     }
                     // perform step 8 only if pmp checks pass
                     if (fault == NoFault) {
+                        DPRINTF(PageTableWalker,
+                                "#0 leaf node at level %d, with vpn %#x\n",
+                                 level, entry.vaddr);
 
                         // step 8
                         entry.logBytes = PageShift + (level * LEVEL_BITS);
@@ -403,6 +406,17 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
                         if (!pte.d && mode != BaseMMU::Write)
                             entry.pte.w = 0;
                         doTLBInsert = true;
+
+                        // Update statistics for completed page walks
+                        if (level == 1) {
+                            walker->pagewalkerstats.num_2mb_walks++;
+                        }
+                        if (level == 0) {
+                            walker->pagewalkerstats.num_4kb_walks++;
+                        }
+                        DPRINTF(PageTableWalker,
+                                "#1 leaf node at level %d, with vpn %#x\n",
+                                level, entry.vaddr);
                     }
                 }
             } else {
@@ -647,6 +661,15 @@ Walker::WalkerState::pageFault(bool present)
 {
     DPRINTF(PageTableWalker, "Raising page fault.\n");
     return walker->tlb->createPagefault(entry.vaddr, mode);
+}
+
+Walker::PagewalkerStats::PagewalkerStats(statistics::Group *parent)
+  : statistics::Group(parent),
+    ADD_STAT(num_4kb_walks, statistics::units::Count::get(),
+             "Completed page walks with 4KB pages"),
+    ADD_STAT(num_2mb_walks, statistics::units::Count::get(),
+             "Completed page walks with 2MB pages")
+{
 }
 
 } // namespace RiscvISA
