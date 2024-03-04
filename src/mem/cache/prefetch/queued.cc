@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015, 2023 ARM Limited
+ * Copyright (c) 2014-2015, 2022-2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -180,7 +180,7 @@ Queued::notify(const CacheAccessProbeArg &acc, const PrefetchInfo &pfi)
     if (queueSquash) {
         auto itr = pfq.begin();
         while (itr != pfq.end()) {
-            if (itr->pfInfo.getAddr() == blk_addr &&
+            if (blockAddress(itr->pfInfo.getAddr()) == blk_addr &&
                 itr->pfInfo.isSecure() == is_secure) {
                 DPRINTF(HWPrefetch, "Removing pf candidate addr: %#x "
                         "(cl: %#x), demand request going to the same addr\n",
