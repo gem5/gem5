@@ -223,6 +223,7 @@ class SMMUTranslationProcess : public SMMUProcess
     void completeTransaction(Yield &yield, const TranslResult &tr);
     void completePrefetch(Yield &yield);
 
+    SMMUEvent generateEvent(const TranslResult &tr);
     void sendEvent(Yield &yield, const SMMUEvent &ev);
 
     void doReadSTE(Yield &yield, StreamTableEntry &ste, uint32_t sid);

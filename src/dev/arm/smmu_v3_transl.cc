@@ -1307,6 +1307,32 @@ SMMUTranslationProcess::completePrefetch(Yield &yield)
     yield(a);
 }
 
+SMMUEvent
+SMMUTranslationProcess::generateEvent(const TranslResult &tr)
+{
+    SMMUEvent event;
+    switch (tr.fault.type) {
+      case FAULT_PERMISSION:
+      case FAULT_TRANSLATION:
+        event.data.dw0.streamId = request.sid;
+        event.data.dw0.substreamId = request.ssid;
+        event.data.dw1.rnw = !request.isWrite;
+        event.data.dw2.inputAddr = request.addr;
+        event.data.dw1.s2 = tr.fault.stage2;
+        if (tr.fault.stage2) {
+            // Only support non-secure mode in the SMMU
+            event.data.dw1.nsipa = true;
+            event.data.dw3.ipa = tr.fault.ipa;
+        }
+        event.data.dw1.clss = tr.fault.clss;
+        break;
+      default:
+        panic("Unsupported fault: %d\n", tr.fault.type);
+    }
+
+    return event;
+}
+
 void
 SMMUTranslationProcess::sendEvent(Yield &yield, const SMMUEvent &ev)
 {
@@ -1318,17 +1344,15 @@ SMMUTranslationProcess::sendEvent(Yield &yield, const SMMUEvent &ev)
 
     Addr event_addr =
         (smmu.regs.eventq_base & Q_BASE_ADDR_MASK) +
-        (smmu.regs.eventq_prod & sizeMask) * sizeof(ev);
+        (smmu.regs.eventq_prod & sizeMask) * sizeof(ev.data);
 
-    DPRINTF(SMMUv3, "Sending event to addr=%#08x (pos=%d): type=%#x stag=%#x "
-        "flags=%#x sid=%#x ssid=%#x va=%#08x ipa=%#x\n",
-        event_addr, smmu.regs.eventq_prod, ev.type, ev.stag,
-        ev.flags, ev.streamId, ev.substreamId, ev.va, ev.ipa);
+    DPRINTF(SMMUv3, "Sending event to addr=%#08x (pos=%d): %s\n",
+        event_addr, smmu.regs.eventq_prod, ev.print());
 
     // This deliberately resets the overflow field in eventq_prod!
     smmu.regs.eventq_prod = (smmu.regs.eventq_prod + 1) & sizeMask;
 
-    doWrite(yield, event_addr, &ev, sizeof(ev));
+    doWrite(yield, event_addr, &ev.data, sizeof(ev.data));
 
     if (!(smmu.regs.eventq_irq_cfg0 & E_BASE_ENABLE_MASK))
         panic("eventq msi not enabled\n");

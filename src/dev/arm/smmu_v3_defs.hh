@@ -384,25 +384,41 @@ struct SMMUCommand
     }
 };
 
-enum SMMUEventTypes
-{
-    EVT_FAULT = 0x0001,
-};
-
-enum SMMUEventFlags
-{
-    EVF_WRITE = 0x0001,
-};
-
 struct SMMUEvent
 {
-    uint16_t type;
-    uint16_t stag;
-    uint32_t flags;
-    uint32_t streamId;
-    uint32_t substreamId;
-    uint64_t va;
-    uint64_t ipa;
+    struct Data {
+        BitUnion64(DWORD0)
+            Bitfield<7, 0> eventType;
+            Bitfield<11> ssv;
+            Bitfield<31, 12> substreamId;
+            Bitfield<63, 32> streamId;
+        EndBitUnion(DWORD0)
+        DWORD0 dw0;
+
+        BitUnion64(DWORD1)
+            Bitfield<16, 0> stag;
+            Bitfield<33> pnu;
+            Bitfield<34> ind;
+            Bitfield<35> rnw;
+            Bitfield<38> nsipa;
+            Bitfield<39> s2;
+            Bitfield<41, 40> clss;
+        EndBitUnion(DWORD1)
+        DWORD1 dw1;
+
+        BitUnion64(DWORD2)
+            Bitfield<63, 0> inputAddr;
+        EndBitUnion(DWORD2)
+        DWORD2 dw2;
+
+        BitUnion64(DWORD3)
+            Bitfield<51, 3> fetchAddr;
+            Bitfield<51, 12> ipa;
+        EndBitUnion(DWORD3)
+        DWORD3 dw3;
+    } data;
+
+    std::string print() const;
 };
 
 enum
