@@ -7,6 +7,8 @@ on:
   # Runs every day from 7AM UTC
     schedule:
         - cron: 0 7 * * *
+  # Allows us to manually start workflow for testing
+    workflow_dispatch:
 
 jobs:
     name-artifacts:
@@ -46,7 +48,7 @@ jobs:
         needs: name-artifacts
         container: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
               with:
           # Scheduled workflows run on the default branch by default. We
           # therefore need to explicitly checkout the develop branch.
@@ -75,7 +77,7 @@ jobs:
         container: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
         timeout-minutes: 60
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
               with:
           # Scheduled workflows run on the default branch by default. We
           # therefore need to explicitly checkout the develop branch.
@@ -97,7 +99,7 @@ jobs:
         steps:
             - name: Clean runner
               run: rm -rf ./* || true rm -rf ./.??* || true rm -rf ~/.cache || true
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
               with:
         # Scheduled workflows run on the default branch by default. We
         # therefore need to explicitly checkout the develop branch.
@@ -186,7 +188,7 @@ jobs:
         steps:
             - name: Clean runner
               run: rm -rf ./* || true rm -rf ./.??* || true rm -rf ~/.cache || true
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
               with:
         # Scheduled workflows run on the default branch by default. We
         # therefore need to explicitly checkout the develop branch.
@@ -224,7 +226,7 @@ jobs:
         timeout-minutes: 180
 
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
               with:
         # Scheduled workflows run on the default branch by default. We
         # therefore need to explicitly checkout the develop branch.
@@ -249,7 +251,7 @@ jobs:
         timeout-minutes: 180
 
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
               with:
         # Scheduled workflows run on the default branch by default. We
         # therefore need to explicitly checkout the develop branch.
@@ -275,7 +277,7 @@ jobs:
         timeout-minutes: 720 # 12 hours
 
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
               with:
         # Scheduled workflows run on the default branch by default. We
         # therefore need to explicitly checkout the develop branch.
@@ -283,17 +285,13 @@ jobs:
             - name: Compile build/VEGA_X86/gem5.opt
               run: scons build/VEGA_X86/gem5.opt -j $(nproc)
             - name: Get Square test-prog from gem5-resources
-              uses: wei/wget@v1
-              with:
-                  args: -q http://dist.gem5.org/dist/v24-0/test-progs/square/square # Removed -N bc it wasn't available within actions, should be okay bc workspace is clean every time: https://github.com/coder/sshcode/issues/102
+              run: build/VEGA_X86/gem5.opt util/obtain-resource.py square-gpu-test -p square
             - name: Run Square test with VEGA_X86/gem5.opt (SE mode)
               run: |
                   mkdir -p tests/testing-results
                   ./build/VEGA_X86/gem5.opt configs/example/apu_se.py --reg-alloc-policy=dynamic -n3 -c square
             - name: Get allSyncPrims-1kernel from gem5-resources
-              uses: wei/wget@v1
-              with:
-                  args: -q http://dist.gem5.org/dist/v24-0/test-progs/heterosync/allSyncPrims-1kernel # Removed -N bc it wasn't available within actions, should be okay bc workspace is clean every time
+              run: build/VEGA_X86/gem5.opt util/obtain-resource.py allSyncPrims-1kernel -p allSyncPrims-1kernel
             - name: Run allSyncPrims-1kernel sleepMutex test with VEGA_X86/gem5.opt (SE mode)
               run: ./build/VEGA_X86/gem5.opt configs/example/apu_se.py --reg-alloc-policy=dynamic -n3 -c allSyncPrims-1kernel --options="sleepMutex 10 16
                   4"
