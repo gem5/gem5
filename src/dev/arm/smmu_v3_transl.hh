@@ -220,6 +220,7 @@ class SMMUTranslationProcess : public SMMUProcess
 
     void issuePrefetch(Addr addr);
 
+    void abortTransaction(Yield &yield, const TranslResult &tr);
     void completeTransaction(Yield &yield, const TranslResult &tr);
     void completePrefetch(Yield &yield);
 

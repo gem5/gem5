@@ -229,13 +229,11 @@ SMMUTranslationProcess::main(Yield &yield)
         hazardIdHold(yield);
         hazardIdRelease();
 
-        if (tr.isFaulting())
-            panic("Translation Fault (addr=%#x, size=%#x, sid=%d, ssid=%d, "
-                    "isWrite=%d, isPrefetch=%d, isAtsRequest=%d)\n",
-                    request.addr, request.size, request.sid, request.ssid,
-                    request.isWrite, request.isPrefetch, request.isAtsRequest);
-
-        completeTransaction(yield, tr);
+        if (tr.isFaulting()) {
+            abortTransaction(yield, tr);
+        } else {
+            completeTransaction(yield, tr);
+        }
     }
 }
 
@@ -1230,6 +1228,46 @@ SMMUTranslationProcess::issuePrefetch(Addr addr)
     proc->beginTransaction(
             SMMUTranslRequest::prefetch(addr, request.sid, request.ssid));
     proc->scheduleWakeup(smmu.clockEdge(Cycles(1)));
+}
+
+void
+SMMUTranslationProcess::abortTransaction(Yield &yield,
+                                         const TranslResult &tr)
+{
+    DPRINTF(SMMUv3, "Translation Fault (addr=%#x, size=%#x, sid=%d, ssid=%d, "
+            "isWrite=%d, isPrefetch=%d, isAtsRequest=%d)\n",
+            request.addr, request.size, request.sid, request.ssid,
+            request.isWrite, request.isPrefetch, request.isAtsRequest);
+
+    // If eventq is not enabled, silently discard event
+    // TODO: Handle full queue (we are currently aborting
+    // in send event)
+    if (smmu.regs.cr0 & CR0_EVENTQEN_MASK) {
+        SMMUEvent event = generateEvent(tr);
+
+        sendEvent(yield, event);
+    }
+
+    ifc.xlateSlotsRemaining++;
+    smmu.scheduleDeviceRetries();
+
+    if (smmu.system.isAtomicMode()) {
+        request.pkt->makeAtomicResponse();
+    } else if (smmu.system.isTimingMode()) {
+        request.pkt->makeTimingResponse();
+    } else {
+        panic("Not in atomic or timing mode");
+    }
+
+    request.pkt->setBadAddress();
+
+    SMMUAction a;
+    // Send the bad address response to the client device
+    a.type = ACTION_SEND_RESP;
+    a.pkt = request.pkt;
+    a.ifc = &ifc;
+    a.delay = 0;
+    yield(a);
 }
 
 void
