@@ -96,6 +96,8 @@ class SMMUTranslationProcess : public SMMUProcess
         Addr       addr;
         Addr       addrMask;
         bool       writable;
+
+        bool isFaulting() const { return fault != FAULT_NONE; }
     };
 
     SMMUv3DeviceInterface &ifc;

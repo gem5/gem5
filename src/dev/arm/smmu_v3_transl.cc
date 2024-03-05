@@ -184,7 +184,7 @@ SMMUTranslationProcess::main(Yield &yield)
 
         tr = smmuTranslation(yield);
 
-        if (tr.fault == FAULT_NONE)
+        if (!tr.isFaulting())
             ifcTLBUpdate(yield, tr);
 
         hazard4kRelease();
@@ -213,7 +213,7 @@ SMMUTranslationProcess::main(Yield &yield)
 
                 tr = smmuTranslation(yield);
 
-                if (tr.fault == FAULT_NONE) {
+                if (!tr.isFaulting()) {
                     ifcTLBUpdate(yield, tr);
 
                     issuePrefetch(next4k);
@@ -222,14 +222,14 @@ SMMUTranslationProcess::main(Yield &yield)
                 hazard4kRelease();
             }
 
-            if (tr.fault == FAULT_NONE)
+            if (!tr.isFaulting())
                 microTLBUpdate(yield, tr);
         }
 
         hazardIdHold(yield);
         hazardIdRelease();
 
-        if (tr.fault != FAULT_NONE)
+        if (tr.isFaulting())
             panic("Translation Fault (addr=%#x, size=%#x, sid=%d, ssid=%d, "
                     "isWrite=%d, isPrefetch=%d, isAtsRequest=%d)\n",
                     request.addr, request.size, request.sid, request.ssid,
@@ -297,7 +297,7 @@ SMMUTranslationProcess::smmuTranslation(Yield &yield)
         // Free PTW slot
         doSemaphoreUp(smmu.ptwSem);
 
-        if (tr.fault == FAULT_NONE)
+        if (!tr.isFaulting())
             smmuTLBUpdate(yield, tr);
     }
 
@@ -414,7 +414,7 @@ void
 SMMUTranslationProcess::microTLBUpdate(Yield &yield,
                                        const TranslResult &tr)
 {
-    assert(tr.fault == FAULT_NONE);
+    assert(!tr.isFaulting());
 
     if (!ifc.microTLBEnable)
         return;
@@ -446,7 +446,7 @@ void
 SMMUTranslationProcess::ifcTLBUpdate(Yield &yield,
                                      const TranslResult &tr)
 {
-    assert(tr.fault == FAULT_NONE);
+    assert(!tr.isFaulting());
 
     if (!ifc.mainTLBEnable)
         return;
@@ -483,7 +483,7 @@ void
 SMMUTranslationProcess::smmuTLBUpdate(Yield &yield,
                                       const TranslResult &tr)
 {
-    assert(tr.fault == FAULT_NONE);
+    assert(!tr.isFaulting());
 
     if (!smmu.tlbEnable)
         return;
@@ -788,7 +788,7 @@ SMMUTranslationProcess::walkStage1And2(Yield &yield, Addr addr,
 
         if (context.stage2Enable) {
             TranslResult s2tr = translateStage2(yield, walkPtr, false);
-            if (s2tr.fault != FAULT_NONE)
+            if (s2tr.isFaulting())
                 return s2tr;
 
             walkPtr = s2tr.addr;
@@ -806,7 +806,7 @@ SMMUTranslationProcess::walkStage1And2(Yield &yield, Addr addr,
 
     if (context.stage2Enable) {
         TranslResult s2tr = translateStage2(yield, tr.addr, true);
-        if (s2tr.fault != FAULT_NONE)
+        if (s2tr.isFaulting())
             return s2tr;
 
         tr = combineTranslations(tr, s2tr);
@@ -924,7 +924,7 @@ SMMUTranslationProcess::translateStage1And2(Yield &yield, Addr addr)
         Addr table_addr = context.ttb0;
         if (context.stage2Enable) {
             TranslResult s2tr = translateStage2(yield, table_addr, false);
-            if (s2tr.fault != FAULT_NONE)
+            if (s2tr.isFaulting())
                 return s2tr;
 
             table_addr = s2tr.addr;
@@ -935,7 +935,7 @@ SMMUTranslationProcess::translateStage1And2(Yield &yield, Addr addr)
                             table_addr);
     }
 
-    if (tr.fault == FAULT_NONE)
+    if (!tr.isFaulting())
         DPRINTF(SMMUv3, "Translated vaddr %#x to paddr %#x\n", addr, tr.addr);
 
     return tr;
@@ -1009,7 +1009,7 @@ SMMUTranslationProcess::translateStage2(Yield &yield, Addr addr, bool final_tr)
                         context.httb);
     }
 
-    if (tr.fault == FAULT_NONE)
+    if (!tr.isFaulting())
         DPRINTF(SMMUv3, "  Translated %saddr %#x to paddr %#x\n",
             context.stage1Enable ? "ip" : "v", addr, tr.addr);
 
@@ -1034,10 +1034,10 @@ SMMUTranslationProcess::TranslResult
 SMMUTranslationProcess::combineTranslations(const TranslResult &s1tr,
                                             const TranslResult &s2tr) const
 {
-    if (s2tr.fault != FAULT_NONE)
+    if (s2tr.isFaulting())
         return s2tr;
 
-    assert(s1tr.fault == FAULT_NONE);
+    assert(!s1tr.isFaulting());
 
     TranslResult tr;
     tr.fault    = FAULT_NONE;
@@ -1233,7 +1233,7 @@ void
 SMMUTranslationProcess::completeTransaction(Yield &yield,
                                             const TranslResult &tr)
 {
-    assert(tr.fault == FAULT_NONE);
+    assert(!tr.isFaulting());
 
     unsigned numRequestorBeats = request.isWrite ?
         (request.size + (smmu.requestPortWidth-1))
