@@ -243,7 +243,7 @@ SMMUTranslationProcess::TranslResult
 SMMUTranslationProcess::bypass(Addr addr) const
 {
     TranslResult tr;
-    tr.fault = FAULT_NONE;
+    tr.fault = Fault(FAULT_NONE);
     tr.addr = addr;
     tr.addrMask = 0;
     tr.writable = 1;
@@ -336,8 +336,8 @@ SMMUTranslationProcess::microTLBLookup(Yield &yield, TranslResult &tr)
         "micro TLB hit vaddr=%#x amask=%#x sid=%#x ssid=%#x paddr=%#x\n",
         request.addr, e->vaMask, request.sid, request.ssid, e->pa);
 
-    tr.fault = FAULT_NONE;
-    tr.addr = e->pa + (request.addr & ~e->vaMask);;
+    tr.fault    = Fault(FAULT_NONE);
+    tr.addr     = e->pa + (request.addr & ~e->vaMask);;
     tr.addrMask = e->vaMask;
     tr.writable = e->permissions;
 
@@ -370,7 +370,7 @@ SMMUTranslationProcess::ifcTLBLookup(Yield &yield, TranslResult &tr,
             "paddr=%#x\n", request.addr, e->vaMask, request.sid,
             request.ssid, e->pa);
 
-    tr.fault = FAULT_NONE;
+    tr.fault = Fault(FAULT_NONE);
     tr.addr = e->pa + (request.addr & ~e->vaMask);;
     tr.addrMask = e->vaMask;
     tr.writable = e->permissions;
@@ -402,7 +402,7 @@ SMMUTranslationProcess::smmuTLBLookup(Yield &yield, TranslResult &tr)
             "SMMU TLB hit vaddr=%#x amask=%#x asid=%#x vmid=%#x paddr=%#x\n",
             request.addr, e->vaMask, context.asid, context.vmid, e->pa);
 
-    tr.fault = FAULT_NONE;
+    tr.fault = Fault(FAULT_NONE);
     tr.addr = e->pa + (request.addr & ~e->vaMask);;
     tr.addrMask = e->vaMask;
     tr.writable = e->permissions;
@@ -767,7 +767,7 @@ SMMUTranslationProcess::walkStage1And2(Yield &yield, Addr addr,
             DPRINTF(SMMUv3, "S1 PTE not valid - fault\n");
 
             TranslResult tr;
-            tr.fault = FAULT_TRANSLATION;
+            tr.fault = Fault(FAULT_TRANSLATION, FaultClass::IN, false);
             return tr;
         }
 
@@ -777,7 +777,7 @@ SMMUTranslationProcess::walkStage1And2(Yield &yield, Addr addr,
             DPRINTF(SMMUv3, "S1 page not writable - fault\n");
 
             TranslResult tr;
-            tr.fault = FAULT_PERMISSION;
+            tr.fault = Fault(FAULT_PERMISSION, FaultClass::IN, false);
             return tr;
         }
 
@@ -799,15 +799,17 @@ SMMUTranslationProcess::walkStage1And2(Yield &yield, Addr addr,
     }
 
     TranslResult tr;
-    tr.fault    = FAULT_NONE;
+    tr.fault    = Fault(FAULT_NONE);
     tr.addrMask = pt_ops->pageMask(pte, level);
     tr.addr     = walkPtr + (addr & ~tr.addrMask);
     tr.writable = pt_ops->isWritable(pte, level, false);
 
     if (context.stage2Enable) {
         TranslResult s2tr = translateStage2(yield, tr.addr, true);
-        if (s2tr.isFaulting())
+        if (s2tr.isFaulting()) {
+            s2tr.fault.clss = FaultClass::IN;
             return s2tr;
+        }
 
         tr = combineTranslations(tr, s2tr);
     }
@@ -852,7 +854,7 @@ SMMUTranslationProcess::walkStage2(Yield &yield, Addr addr, bool final_tr,
             DPRINTF(SMMUv3, "  S2 PTE not valid - fault\n");
 
             TranslResult tr;
-            tr.fault = FAULT_TRANSLATION;
+            tr.fault = Fault(FAULT_TRANSLATION, FaultClass::TT, true, addr);
             return tr;
         }
 
@@ -862,7 +864,7 @@ SMMUTranslationProcess::walkStage2(Yield &yield, Addr addr, bool final_tr,
             DPRINTF(SMMUv3, "  S2 PTE not writable = fault\n");
 
             TranslResult tr;
-            tr.fault = FAULT_PERMISSION;
+            tr.fault = Fault(FAULT_PERMISSION, FaultClass::TT, true, addr);
             return tr;
         }
 
@@ -877,7 +879,7 @@ SMMUTranslationProcess::walkStage2(Yield &yield, Addr addr, bool final_tr,
     }
 
     TranslResult tr;
-    tr.fault    = FAULT_NONE;
+    tr.fault    = Fault(FAULT_NONE);
     tr.addrMask = pt_ops->pageMask(pte, level);
     tr.addr     = walkPtr + (addr & ~tr.addrMask);
     tr.writable = pt_ops->isWritable(pte, level, true);
@@ -913,7 +915,7 @@ SMMUTranslationProcess::translateStage1And2(Yield &yield, Addr addr)
     TranslResult tr;
     if (walk_ep) {
         if (walk_ep->leaf) {
-            tr.fault    = FAULT_NONE;
+            tr.fault    = Fault(FAULT_NONE);
             tr.addr     = walk_ep->pa + (addr & ~walk_ep->vaMask);
             tr.addrMask = walk_ep->vaMask;
             tr.writable = walk_ep->permissions;
@@ -924,8 +926,9 @@ SMMUTranslationProcess::translateStage1And2(Yield &yield, Addr addr)
         Addr table_addr = context.ttb0;
         if (context.stage2Enable) {
             TranslResult s2tr = translateStage2(yield, table_addr, false);
-            if (s2tr.isFaulting())
+            if (s2tr.isFaulting()) {
                 return s2tr;
+            }
 
             table_addr = s2tr.addr;
         }
@@ -957,7 +960,7 @@ SMMUTranslationProcess::translateStage2(Yield &yield, Addr addr, bool final_tr)
 
     if (ipa_ep) {
         TranslResult tr;
-        tr.fault    = FAULT_NONE;
+        tr.fault    = Fault(FAULT_NONE);
         tr.addr     = ipa_ep->pa + (addr & ~ipa_ep->ipaMask);
         tr.addrMask = ipa_ep->ipaMask;
         tr.writable = ipa_ep->permissions;
@@ -995,7 +998,7 @@ SMMUTranslationProcess::translateStage2(Yield &yield, Addr addr, bool final_tr)
     TranslResult tr;
     if (walk_ep) {
         if (walk_ep->leaf) {
-            tr.fault    = FAULT_NONE;
+            tr.fault    = Fault(FAULT_NONE);
             tr.addr     = walk_ep->pa + (addr & ~walk_ep->vaMask);
             tr.addrMask = walk_ep->vaMask;
             tr.writable = walk_ep->permissions;
@@ -1040,7 +1043,7 @@ SMMUTranslationProcess::combineTranslations(const TranslResult &s1tr,
     assert(!s1tr.isFaulting());
 
     TranslResult tr;
-    tr.fault    = FAULT_NONE;
+    tr.fault    = Fault(FAULT_NONE);
     tr.addr     = s2tr.addr;
     tr.addrMask = s1tr.addrMask | s2tr.addrMask;
     tr.writable = s1tr.writable & s2tr.writable;
@@ -1429,8 +1432,10 @@ SMMUTranslationProcess::doReadCD(Yield &yield,
 
             if (context.stage2Enable) {
                 tr = translateStage2(yield, l2_addr, false);
-                if (tr.isFaulting())
+                if (tr.isFaulting()) {
+                    tr.fault.clss = FaultClass::CD;
                     return tr;
+                }
 
                 l2_addr = tr.addr;
             }
@@ -1451,8 +1456,10 @@ SMMUTranslationProcess::doReadCD(Yield &yield,
 
     if (context.stage2Enable) {
         tr = translateStage2(yield, cd_addr, false);
-        if (tr.isFaulting())
+        if (tr.isFaulting()) {
+            tr.fault.clss = FaultClass::CD;
             return tr;
+        }
 
         cd_addr = tr.addr;
     }
