@@ -100,13 +100,6 @@ class SMMUv3(ClockedObject):
     reg_map = Param.AddrRange("Address range for control registers")
     system = Param.System(Parent.any, "System this device is part of")
 
-    irq_interface_enable = Param.Bool(
-        False,
-        "This flag enables software to program SMMU_IRQ_CTRL and "
-        "SMMU_IRQ_CTRLACK as if the model implemented architectural "
-        "interrupt sources",
-    )
-
     device_interfaces = VectorParam.SMMUv3DeviceInterface(
         [], "Responder interfaces"
     )

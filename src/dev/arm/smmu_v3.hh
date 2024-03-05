@@ -103,8 +103,6 @@ class SMMUv3 : public ClockedObject
     // event queue interrupt is not supported
     ArmInterruptPin * const eventqInterrupt;
 
-    const bool irqInterfaceEnable;
-
     ARMArchTLB  tlb;
     ConfigCache configCache;
     IPACache    ipaCache;
