@@ -17,7 +17,7 @@ jobs:
         runs-on: ubuntu-22.04
         if: github.event.pull_request.draft == false
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
             - uses: actions/setup-python@v3
             - uses: pre-commit/action@v3.0.0
 
@@ -27,7 +27,7 @@ jobs:
         runs-on: ubuntu-22.04
         if: github.event.pull_request.draft == false
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
               with:
                   fetch-depth: 0
             - name: Check for Change-Id
@@ -54,7 +54,7 @@ jobs:
         needs: [pre-commit, check-for-change-id] # only runs if pre-commit and change-id passes
         timeout-minutes: 60
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
             - name: CI Unittests
               working-directory: ${{ github.workspace }}
               run: scons build/ALL/unittests.opt -j $(nproc)
@@ -68,7 +68,7 @@ jobs:
         container: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
         needs: [pre-commit, check-for-change-id]
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
 
       # Unfortunately the 'ubunutu-latest' image doesn't have jq installed.
       # We therefore need to install it as a step here.
@@ -100,7 +100,7 @@ jobs:
         needs: [pre-commit, check-for-change-id]
         timeout-minutes: 90
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
             - name: Clang Compilation
               working-directory: ${{ github.workspace }}
               run: scons build/ALL/gem5.fast -j $(nproc)
@@ -114,7 +114,7 @@ jobs:
             matrix:
                 build-target: ${{ fromJson(needs.testlib-quick-matrix.outputs.build-matrix) }}
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
             - name: Build gem5
               run: scons ${{ matrix.build-target }} -j $(nproc)
 
@@ -150,7 +150,7 @@ jobs:
               run: rm -rf ./* || true rm -rf ./.??* || true rm -rf ~/.cache || true
 
         # Checkout the repository then download the gem5.opt artifact.
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
             - uses: actions/download-artifact@v3
               with:
                   name: ci-tests-${{ github.run_number }}-testlib-quick-all-gem5-builds
