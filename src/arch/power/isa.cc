@@ -62,7 +62,7 @@ RegClass ccRegClass(CCRegClass, CCRegClassName, 0, debug::IntRegs);
 
 } // anonymous namespace
 
-ISA::ISA(const Params &p) : BaseISA(p)
+ISA::ISA(const Params &p) : BaseISA(p, "power")
 {
     _regClasses.push_back(&intRegClass);
     _regClasses.push_back(&floatRegClass);

@@ -80,7 +80,7 @@ RegClass floatRegClass(FloatRegClass, FloatRegClassName, 0, debug::FloatRegs);
 
 } // anonymous namespace
 
-ISA::ISA(const Params &p) : BaseISA(p), system(NULL),
+ISA::ISA(const Params &p) : BaseISA(p, "arm"), system(NULL),
     _decoderFlavor(p.decoderFlavor), pmu(p.pmu), impdefAsNop(p.impdef_nop)
 {
     _regClasses.push_back(&flatIntRegClass);
@@ -1541,6 +1541,8 @@ ISA::getCurSmeVecLenInBits() const
 void
 ISA::serialize(CheckpointOut &cp) const
 {
+    BaseISA::serialize(cp);
+
     DPRINTF(Checkpoint, "Serializing Arm Misc Registers\n");
     SERIALIZE_MAPPING(miscRegs, miscRegName, NUM_PHYS_MISCREGS);
 }
