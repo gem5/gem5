@@ -38,7 +38,9 @@
 #ifndef __ARCH_RISCV_PMA_CHECKER_HH__
 #define __ARCH_RISCV_PMA_CHECKER_HH__
 
+#include "arch/generic/mmu.hh"
 #include "base/addr_range.hh"
+#include "base/addr_range_map.hh"
 #include "base/types.hh"
 #include "mem/packet.hh"
 #include "params/BasePMAChecker.hh"
@@ -61,7 +63,10 @@ class BasePMAChecker : public SimObject
 {
   public:
     BasePMAChecker(const BasePMACheckerParams &params) : SimObject(params) {};
-    virtual void check(const RequestPtr &req) = 0;
+    virtual Fault check(
+        const RequestPtr &req, BaseMMU::Mode mode, Addr vaddr = 0) = 0;
+    virtual Fault checkVAddrAlignment(
+        const RequestPtr &req, BaseMMU::Mode mode) = 0;
     virtual void takeOverFrom(BasePMAChecker *old) = 0;
 };
 
@@ -84,15 +89,51 @@ class PMAChecker : public BasePMAChecker
     }
     PMAChecker(const Params &params);
 
-    AddrRangeList uncacheable;
+    /*
+     * Check if any exception for given address
+     */
+    Fault check(
+        const RequestPtr &req, BaseMMU::Mode mode, Addr vaddr = 0) override;
 
-    void check(const RequestPtr &req) override;
+    /*
+     * Check alignment for virtual address
+     */
+    Fault checkVAddrAlignment(
+        const RequestPtr &req, BaseMMU::Mode mode) override;
 
     bool isUncacheable(const AddrRange &range);
     bool isUncacheable(const Addr &addr, const unsigned size);
     bool isUncacheable(PacketPtr pkt);
 
     void takeOverFrom(BasePMAChecker *old) override;
+
+  protected:
+    /*
+     * Check alignment for physical address
+     */
+    Fault checkPAddrAlignment(
+        const RequestPtr &req, BaseMMU::Mode mode, Addr vaddr);
+
+    /*
+     * Create address-misaligned exception based on the MMU mode and
+     * virtual address
+     */
+    Fault createMisalignFault(Addr vaddr, BaseMMU::Mode mode);
+
+    inline bool addressAlign(const Addr addr, const Addr size);
+
+    /*
+     * Check if the address range support misaligned load/store
+     */
+    inline bool misalignedSupport(const AddrRange &range);
+
+    /*
+     * Check if there is any region support misaligned load/store
+     */
+    inline bool hasMisaligned();
+
+    AddrRangeList uncacheable;
+    AddrRangeMap<bool, 3> misaligned;
 };
 
 } // namespace RiscvISA

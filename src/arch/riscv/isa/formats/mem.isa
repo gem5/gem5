@@ -63,6 +63,25 @@ def template LoadStoreConstructor {{
 }};
 
 let {{
+def getAlignFlag(iop):
+    align_map = {
+      'uint8_t': 'MMU::ByteAlign',
+      'int8_t': 'MMU::ByteAlign',
+      'uint16_t': 'MMU::HalfWordAlign',
+      'int16_t': 'MMU::HalfWordAlign',
+      'uint32_t': 'MMU::WordAlign',
+      'int32_t': 'MMU::WordAlign',
+      'uint64_t': 'MMU::DoubleWordAlign',
+      'int64_t': 'MMU::DoubleWordAlign',
+    }
+    flag = ''
+    operands = iop.operands
+    if operands.bases.get('Mem'):
+        Mem = operands.bases['Mem']
+        flag = align_map.get(Mem.ctype)
+
+    return flag
+
 def LoadStoreBase(name, Name, offset_code, ea_code, memacc_code, mem_flags,
         inst_flags, base_class, postacc_code='', decode_template=BasicDecode,
         exec_template_base=''):
@@ -75,8 +94,11 @@ def LoadStoreBase(name, Name, offset_code, ea_code, memacc_code, mem_flags,
          'memacc_code': memacc_code, 'postacc_code': postacc_code },
         inst_flags)
 
+    mem_flags = [ 'Request::%s' % flag for flag in mem_flags ]
+    align_flag = getAlignFlag(iop)
+    if align_flag:
+        mem_flags.append(align_flag)
     if mem_flags:
-        mem_flags = [ 'Request::%s' % flag for flag in mem_flags ]
         s = '\n\tmemAccessFlags = ' + '|'.join(mem_flags) + ';'
         iop.constructor += s
 
@@ -106,9 +128,6 @@ def template LoadExecute {{
         %(op_rd)s;
         %(ea_code)s;
 
-        if (!alignmentOk(xc, EA, sizeof(Mem))) {
-            return std::make_shared<AddressFault>(EA, LOAD_ADDR_MISALIGNED);
-        }
         {
             Fault fault =
                 readMemAtomicLE(xc, traceData, EA, Mem, memAccessFlags);
@@ -135,9 +154,6 @@ def template LoadInitiateAcc {{
         %(op_rd)s;
         %(ea_code)s;
 
-        if (!alignmentOk(xc, EA, sizeof(Mem))) {
-            return std::make_shared<AddressFault>(EA, LOAD_ADDR_MISALIGNED);
-        }
         return initiateMemRead(xc, traceData, EA, Mem, memAccessFlags);
     }
 }};
@@ -172,9 +188,6 @@ def template StoreExecute {{
 
         %(memacc_code)s;
 
-        if (!alignmentOk(xc, EA, sizeof(Mem))) {
-            return std::make_shared<AddressFault>(EA, STORE_ADDR_MISALIGNED);
-        }
         {
             Fault fault =
                 writeMemAtomicLE(xc, traceData, Mem, EA, memAccessFlags,
@@ -203,9 +216,6 @@ def template StoreInitiateAcc {{
 
         %(memacc_code)s;
 
-        if (!alignmentOk(xc, EA, sizeof(Mem))) {
-            return std::make_shared<AddressFault>(EA, STORE_ADDR_MISALIGNED);
-        }
         {
             Fault fault = writeMemTimingLE(xc, traceData, Mem, EA,
                 memAccessFlags, nullptr);

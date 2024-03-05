@@ -37,6 +37,8 @@
 
 #include "arch/riscv/pma_checker.hh"
 
+#include "arch/riscv/faults.hh"
+#include "arch/riscv/mmu.hh"
 #include "base/addr_range.hh"
 #include "base/types.hh"
 #include "mem/packet.hh"
@@ -54,14 +56,41 @@ PMAChecker::PMAChecker(const Params &params) :
 BasePMAChecker(params),
 uncacheable(params.uncacheable.begin(), params.uncacheable.end())
 {
+    for (auto& range: params.misaligned) {
+        misaligned.insert(range, true);
+    }
 }
 
-void
-PMAChecker::check(const RequestPtr &req)
+Fault
+PMAChecker::check(const RequestPtr &req, BaseMMU::Mode mode, Addr vaddr)
 {
     if (isUncacheable(req->getPaddr(), req->getSize())) {
         req->setFlags(Request::UNCACHEABLE | Request::STRICT_ORDER);
     }
+
+    return hasMisaligned() ? checkPAddrAlignment(req, mode, vaddr) : NoFault;
+}
+
+Fault
+PMAChecker::checkVAddrAlignment(
+    const RequestPtr &req, BaseMMU::Mode mode)
+{
+    // We need to translate address before alignment check
+    // if there are some memory ranges support misaligned load/store
+    if (hasMisaligned()) {
+        return NoFault;
+    }
+
+    // Ingore alignment check for instruction fetching
+    if (mode == BaseMMU::Execute) {
+        return NoFault;
+    }
+    assert(req->hasVaddr());
+    Addr alignSize = mask(req->getArchFlags() & MMU::AlignmentMask) + 1;
+    if (addressAlign(req->getVaddr(), alignSize)) {
+        return NoFault;
+    }
+    return createMisalignFault(req->getVaddr(), mode);
 }
 
 bool
@@ -94,6 +123,63 @@ PMAChecker::takeOverFrom(BasePMAChecker *old)
     PMAChecker* derived_old = dynamic_cast<PMAChecker*>(old);
     assert(derived_old != nullptr);
     uncacheable = derived_old->uncacheable;
+    misaligned = derived_old->misaligned;
+}
+
+Fault
+PMAChecker::checkPAddrAlignment(
+    const RequestPtr &req, BaseMMU::Mode mode, Addr vaddr)
+{
+    Addr paddr = 0;
+    // Ingore alignment check for instruction fetching
+    if (mode == BaseMMU::Execute) {
+        return NoFault;
+    }
+    assert(req->hasPaddr());
+    paddr = req->getPaddr();
+    Addr alignSize = mask(req->getArchFlags() & MMU::AlignmentMask) + 1;
+    if (addressAlign(paddr, alignSize)) {
+        return NoFault;
+    }
+    if (misalignedSupport(RangeSize(paddr, req->getSize()))){
+        return NoFault;
+    }
+    return createMisalignFault(
+        (req->hasVaddr() ? req->getVaddr() : vaddr), mode);
+}
+
+Fault
+PMAChecker::createMisalignFault(Addr vaddr, BaseMMU::Mode mode)
+{
+    RiscvISA::ExceptionCode code;
+    switch (mode) {
+      case BaseMMU::Read:
+        code = ExceptionCode::LOAD_ADDR_MISALIGNED;
+        break;
+      case BaseMMU::Write:
+        code = ExceptionCode::STORE_ADDR_MISALIGNED;
+        break;
+      default:
+        panic("Execute mode request should not reach here.");
+    }
+    return std::make_shared<AddressFault>(vaddr, code);
+}
+
+bool
+PMAChecker::addressAlign(const Addr addr, const Addr size) {
+    return (addr & (size - 1)) == 0;
+}
+
+bool
+PMAChecker::misalignedSupport(const AddrRange &range)
+{
+    return misaligned.contains(range) != misaligned.end();
+}
+
+bool
+PMAChecker::hasMisaligned()
+{
+    return !misaligned.empty();
 }
 
 } // namespace RiscvISA
