@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2018-2019 ARM Limited
+ * Copyright (c) 2013, 2018-2019, 2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -174,8 +174,8 @@ class SMMUTranslationProcess : public SMMUProcess
     void sendEvent(Yield &yield, const SMMUEvent &ev);
 
     void doReadSTE(Yield &yield, StreamTableEntry &ste, uint32_t sid);
-    void doReadCD(Yield &yield, ContextDescriptor &cd,
-                  const StreamTableEntry &ste, uint32_t sid, uint32_t ssid);
+    TranslResult doReadCD(Yield &yield, ContextDescriptor &cd,
+                          const StreamTableEntry &ste, uint32_t sid, uint32_t ssid);
     void doReadConfig(Yield &yield, Addr addr, void *ptr, size_t size,
                       uint32_t sid, uint32_t ssid);
     void doReadPTE(Yield &yield, Addr va, Addr addr, void *ptr,

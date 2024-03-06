@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2018-2019, 2021 Arm Limited
+ * Copyright (c) 2013, 2018-2019, 2021, 2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -632,7 +632,7 @@ SMMUTranslationProcess::findConfig(Yield &yield,
     // Now fetch stage 1 config.
     if (context.stage1Enable) {
         ContextDescriptor cd;
-        doReadCD(yield, cd, ste, request.sid, request.ssid);
+        tr = doReadCD(yield, cd, ste, request.sid, request.ssid);
 
         tc.ttb0 = cd.dw1.ttb0 << CD_TTB_SHIFT;
         tc.ttb1 = cd.dw2.ttb1 << CD_TTB_SHIFT;
@@ -647,7 +647,7 @@ SMMUTranslationProcess::findConfig(Yield &yield,
         tc.t0sz = 0;
     }
 
-    return true;
+    return !tr.isFaulting();
 }
 
 void
@@ -1402,12 +1402,13 @@ SMMUTranslationProcess::doReadSTE(Yield &yield,
     smmu.stats.steFetches++;
 }
 
-void
+SMMUTranslationProcess::TranslResult
 SMMUTranslationProcess::doReadCD(Yield &yield,
                                  ContextDescriptor &cd,
                                  const StreamTableEntry &ste,
                                  uint32_t sid, uint32_t ssid)
 {
+    TranslResult tr;
     Addr cd_addr = 0;
 
     if (ste.dw0.s1cdmax == 0) {
@@ -1426,8 +1427,13 @@ SMMUTranslationProcess::doReadCD(Yield &yield,
             uint64_t l2_addr = (ste.dw0.s1ctxptr << ST_CD_ADDR_SHIFT) +
                 bits(ssid, 24, split) * sizeof(l2_ptr);
 
-            if (context.stage2Enable)
-                l2_addr = translateStage2(yield, l2_addr, false).addr;
+            if (context.stage2Enable) {
+                tr = translateStage2(yield, l2_addr, false);
+                if (tr.isFaulting())
+                    return tr;
+
+                l2_addr = tr.addr;
+            }
 
             DPRINTF(SMMUv3, "Read L1CD at %#x\n", l2_addr);
 
@@ -1443,8 +1449,13 @@ SMMUTranslationProcess::doReadCD(Yield &yield,
         }
     }
 
-    if (context.stage2Enable)
-        cd_addr = translateStage2(yield, cd_addr, false).addr;
+    if (context.stage2Enable) {
+        tr = translateStage2(yield, cd_addr, false);
+        if (tr.isFaulting())
+            return tr;
+
+        cd_addr = tr.addr;
+    }
 
     DPRINTF(SMMUv3, "Read CD at %#x\n", cd_addr);
 
@@ -1464,6 +1475,7 @@ SMMUTranslationProcess::doReadCD(Yield &yield,
         panic("CD @ %#x not valid\n", cd_addr);
 
     smmu.stats.cdFetches++;
+    return tr;
 }
 
 void
