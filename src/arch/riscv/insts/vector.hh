@@ -596,6 +596,65 @@ class VlFFTrimVlMicroOp : public VectorMicroInst
         const override;
 };
 
+class VlSegMacroInst : public VectorMemMacroInst
+{
+  protected:
+    VlSegMacroInst(const char* mnem, ExtMachInst _machInst,
+                   OpClass __opClass, uint32_t _vlen)
+        : VectorMemMacroInst(mnem, _machInst, __opClass, _vlen)
+    {}
+
+    std::string generateDisassembly(
+            Addr pc, const loader::SymbolTable *symtab) const override;
+};
+
+class VlSegMicroInst : public VectorMicroInst
+{
+  protected:
+    Request::Flags memAccessFlags;
+    uint8_t regIdx;
+
+    VlSegMicroInst(const char *mnem, ExtMachInst _machInst,
+                   OpClass __opClass, uint32_t _microVl,
+                   uint32_t _microIdx, uint32_t _numMicroops,
+                   uint32_t _field, uint32_t _numFields,
+                   uint32_t _vlen)
+        : VectorMicroInst(mnem, _machInst, __opClass, _microVl,
+                          _microIdx, _vlen)
+    {
+      this->flags[IsLoad] = true;
+    }
+
+    std::string generateDisassembly(
+        Addr pc, const loader::SymbolTable *symtab) const override;
+};
+
+class VlSegDeIntrlvMicroInst : public VectorArithMicroInst
+{
+  private:
+    RegId srcRegIdxArr[NumVecInternalRegs];
+    RegId destRegIdxArr[1];
+    uint32_t numSrcs;
+    uint32_t numMicroops;
+    uint32_t field;
+    uint32_t sizeOfElement;
+    uint32_t micro_vl;
+
+  public:
+    uint32_t vlen;
+
+    VlSegDeIntrlvMicroInst(ExtMachInst extMachInst, uint32_t _micro_vl,
+                            uint32_t _dstReg, uint32_t _numSrcs,
+                            uint32_t _microIdx, uint32_t _numMicroops,
+                            uint32_t _field, uint32_t _vlen,
+                            uint32_t _sizeOfElement);
+
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
+
+    std::string generateDisassembly(Addr,
+        const loader::SymbolTable *)  const override;
+};
+
 } // namespace RiscvISA
 } // namespace gem5
 
