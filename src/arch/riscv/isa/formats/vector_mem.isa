@@ -42,6 +42,19 @@ def declareVMemTemplate(class_name):
     template class {class_name}<uint64_t>;
     '''
 
+def getFaultCode():
+    return '''
+    Addr fault_addr;
+    if (fault != NoFault && getFaultVAddr(fault, fault_addr)) {
+        assert(fault_addr >= EA);
+        faultIdx = (fault_addr - EA) / (width_EEW(machInst.width) / 8);
+        if (microIdx != 0 || faultIdx != 0) {
+            fault = NoFault;
+            trimVl = true;
+        }
+    }
+    '''
+
 def VMemBase(name, Name, ea_code, memacc_code, mem_flags,
                    inst_flags, base_class, postacc_code='',
                    declare_template_base=VMemMacroDeclare,
@@ -69,6 +82,9 @@ def VMemBase(name, Name, ea_code, memacc_code, mem_flags,
         return (header_output, decoder_output, decode_block, exec_output)
 
     micro_class_name = exec_template_base + 'MicroInst'
+
+    fault_only_first = 'FaultOnlyFirst' in iop.op_class
+
     microiop = InstObjParams(name + '_micro',
         Name + 'Micro',
         exec_template_base + 'MicroInst',
@@ -77,7 +93,8 @@ def VMemBase(name, Name, ea_code, memacc_code, mem_flags,
          'postacc_code': postacc_code,
          'set_vlenb': setVlenb(),
          'set_vlen': setVlen(),
-         'declare_vmem_template': declareVMemTemplate(Name + 'Micro')},
+         'declare_vmem_template': declareVMemTemplate(Name + 'Micro'),
+         'fault_code': getFaultCode() if fault_only_first else ''},
         inst_flags)
 
     if mem_flags:
@@ -227,4 +244,17 @@ def format VsIndexOp(
                  declare_template_base=VMemTemplateMacroDeclare,
                  decode_template=VMemSplitTemplateDecodeBlock
                  )
+}};
+
+def format VlSegOp(
+    memacc_code,
+    ea_code={{
+        EA = Rs1 + mem_size * (microIdx + (field * numMicroops));
+    }},
+    mem_flags=[],
+    inst_flags=[]
+) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        VMemBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
+                 'VlSegMacroInst', exec_template_base='VlSeg')
 }};

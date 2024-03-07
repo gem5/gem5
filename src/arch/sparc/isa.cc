@@ -74,12 +74,12 @@ RegClass vecRegClass(VecRegClass, VecRegClassName, 1, debug::IntRegs);
 RegClass vecElemClass(VecElemClass, VecElemClassName, 2, debug::IntRegs);
 RegClass vecPredRegClass(VecPredRegClass, VecPredRegClassName, 1,
         debug::IntRegs);
-RegClass matRegClass(MatRegClass, MatRegClassName, 1, debug::MatRegs);
+RegClass matRegClass(MatRegClass, MatRegClassName, 0, debug::MatRegs);
 RegClass ccRegClass(CCRegClass, CCRegClassName, 0, debug::IntRegs);
 
 } // anonymous namespace
 
-ISA::ISA(const Params &p) : BaseISA(p)
+ISA::ISA(const Params &p) : BaseISA(p, "sparc")
 {
     _regClasses.push_back(&flatIntRegClass);
     _regClasses.push_back(&floatRegClass);
@@ -844,6 +844,8 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
 void
 ISA::serialize(CheckpointOut &cp) const
 {
+    BaseISA::serialize(cp);
+
     SERIALIZE_SCALAR(asi);
     SERIALIZE_SCALAR(tick);
     SERIALIZE_SCALAR(fprs);

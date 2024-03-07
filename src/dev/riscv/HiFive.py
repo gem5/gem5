@@ -221,10 +221,10 @@ class HiFive(HiFiveBase):
         self.plic.n_src = max(plic_srcs) + 1
 
     def setNumCores(self, num_cpu):
-        """Sets the PLIC and CLINT to have the right number of threads and
-        contexts. Assumes that the cores have a single hardware thread.
+        """Sets the CLINT to number of threads and the PLIC hartID/pmode for
+        each contexts. Assumes that the cores have a single hardware thread.
         """
-        self.plic.n_contexts = num_cpu * 2
+        self.plic.hart_config = ",".join(["MS" for _ in range(num_cpu)])
         self.clint.num_threads = num_cpu
 
     def generateDeviceTree(self, state):

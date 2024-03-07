@@ -132,6 +132,9 @@ class AbstractMemory : public ClockedObject
     // Are writes allowed to this memory
     const bool writeable;
 
+    // Should collect traffic statistics
+    const bool collectStats;
+
     std::list<LockedAddr> lockedAddrList;
 
     // helper function for checkLockedAddrs(): we really want to

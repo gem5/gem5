@@ -36,6 +36,7 @@
 #include "arch/amdgpu/vega/pagetable_walker.hh"
 #include "base/chunk_generator.hh"
 #include "debug/GPUCommandProc.hh"
+#include "debug/GPUInitAbi.hh"
 #include "debug/GPUKernelInfo.hh"
 #include "dev/amdgpu/amdgpu_device.hh"
 #include "gpu-compute/dispatcher.hh"
@@ -230,6 +231,8 @@ GPUCommandProcessor::dispatchKernelObject(AMDKernelCode *akc, void *raw_pkt,
 {
     _hsa_dispatch_packet_t *disp_pkt = (_hsa_dispatch_packet_t*)raw_pkt;
 
+    sanityCheckAKC(akc);
+
     DPRINTF(GPUCommandProc, "GPU machine code is %lli bytes from start of the "
         "kernel object\n", akc->kernel_code_entry_byte_offset);
 
@@ -250,7 +253,7 @@ GPUCommandProcessor::dispatchKernelObject(AMDKernelCode *akc, void *raw_pkt,
      * APUs to implement asynchronous memcopy operations from 2 pointers in
      * host memory.  I have no idea what BLIT stands for.
      * */
-    if (akc->runtime_loader_kernel_symbol) {
+    if (!disp_pkt->completion_signal) {
         kernel_name = "Some kernel";
     } else {
         kernel_name = "Blit kernel";
@@ -614,6 +617,113 @@ GPUCommandProcessor::initABI(HSAQueueEntry *task)
 
     dmaReadVirt(hostReadIdxPtr + sizeof(hostReadIdxPtr),
         sizeof(uint32_t), cb, &cb->dmaBuffer);
+}
+
+void
+GPUCommandProcessor::sanityCheckAKC(AMDKernelCode *akc)
+{
+    DPRINTF(GPUInitAbi, "group_segment_fixed_size: %d\n",
+            akc->group_segment_fixed_size);
+    DPRINTF(GPUInitAbi, "private_segment_fixed_size: %d\n",
+            akc->private_segment_fixed_size);
+    DPRINTF(GPUInitAbi, "kernarg_size: %d\n", akc->kernarg_size);
+    DPRINTF(GPUInitAbi, "kernel_code_entry_byte_offset: %d\n",
+            akc->kernel_code_entry_byte_offset);
+    DPRINTF(GPUInitAbi, "accum_offset: %d\n", akc->accum_offset);
+    DPRINTF(GPUInitAbi, "tg_split: %d\n", akc->tg_split);
+    DPRINTF(GPUInitAbi, "granulated_workitem_vgpr_count: %d\n",
+            akc->granulated_workitem_vgpr_count);
+    DPRINTF(GPUInitAbi, "granulated_wavefront_sgpr_count: %d\n",
+            akc->granulated_wavefront_sgpr_count);
+    DPRINTF(GPUInitAbi, "priority: %d\n", akc->priority);
+    DPRINTF(GPUInitAbi, "float_mode_round_32: %d\n", akc->float_mode_round_32);
+    DPRINTF(GPUInitAbi, "float_mode_round_16_64: %d\n",
+            akc->float_mode_round_16_64);
+    DPRINTF(GPUInitAbi, "float_mode_denorm_32: %d\n",
+            akc->float_mode_denorm_32);
+    DPRINTF(GPUInitAbi, "float_mode_denorm_16_64: %d\n",
+            akc->float_mode_denorm_16_64);
+    DPRINTF(GPUInitAbi, "priv: %d\n", akc->priv);
+    DPRINTF(GPUInitAbi, "enable_dx10_clamp: %d\n", akc->enable_dx10_clamp);
+    DPRINTF(GPUInitAbi, "debug_mode: %d\n", akc->debug_mode);
+    DPRINTF(GPUInitAbi, "enable_ieee_mode: %d\n", akc->enable_ieee_mode);
+    DPRINTF(GPUInitAbi, "bulky: %d\n", akc->bulky);
+    DPRINTF(GPUInitAbi, "cdbg_user: %d\n", akc->cdbg_user);
+    DPRINTF(GPUInitAbi, "fp16_ovfl: %d\n", akc->fp16_ovfl);
+    DPRINTF(GPUInitAbi, "wgp_mode: %d\n", akc->wgp_mode);
+    DPRINTF(GPUInitAbi, "mem_ordered: %d\n", akc->mem_ordered);
+    DPRINTF(GPUInitAbi, "fwd_progress: %d\n", akc->fwd_progress);
+    DPRINTF(GPUInitAbi, "enable_private_segment: %d\n",
+            akc->enable_private_segment);
+    DPRINTF(GPUInitAbi, "user_sgpr_count: %d\n", akc->user_sgpr_count);
+    DPRINTF(GPUInitAbi, "enable_trap_handler: %d\n", akc->enable_trap_handler);
+    DPRINTF(GPUInitAbi, "enable_sgpr_workgroup_id_x: %d\n",
+            akc->enable_sgpr_workgroup_id_x);
+    DPRINTF(GPUInitAbi, "enable_sgpr_workgroup_id_y: %d\n",
+            akc->enable_sgpr_workgroup_id_y);
+    DPRINTF(GPUInitAbi, "enable_sgpr_workgroup_id_z: %d\n",
+            akc->enable_sgpr_workgroup_id_z);
+    DPRINTF(GPUInitAbi, "enable_sgpr_workgroup_info: %d\n",
+            akc->enable_sgpr_workgroup_info);
+    DPRINTF(GPUInitAbi, "enable_vgpr_workitem_id: %d\n",
+            akc->enable_vgpr_workitem_id);
+    DPRINTF(GPUInitAbi, "enable_exception_address_watch: %d\n",
+            akc->enable_exception_address_watch);
+    DPRINTF(GPUInitAbi, "enable_exception_memory: %d\n",
+            akc->enable_exception_memory);
+    DPRINTF(GPUInitAbi, "granulated_lds_size: %d\n", akc->granulated_lds_size);
+    DPRINTF(GPUInitAbi, "enable_exception_ieee_754_fp_invalid_operation: %d\n",
+            akc->enable_exception_ieee_754_fp_invalid_operation);
+    DPRINTF(GPUInitAbi, "enable_exception_fp_denormal_source: %d\n",
+            akc->enable_exception_fp_denormal_source);
+    DPRINTF(GPUInitAbi, "enable_exception_ieee_754_fp_division_by_zero: %d\n",
+            akc->enable_exception_ieee_754_fp_division_by_zero);
+    DPRINTF(GPUInitAbi, "enable_exception_ieee_754_fp_overflow: %d\n",
+            akc->enable_exception_ieee_754_fp_overflow);
+    DPRINTF(GPUInitAbi, "enable_exception_ieee_754_fp_underflow: %d\n",
+            akc->enable_exception_ieee_754_fp_underflow);
+    DPRINTF(GPUInitAbi, "enable_exception_ieee_754_fp_inexact: %d\n",
+            akc->enable_exception_ieee_754_fp_inexact);
+    DPRINTF(GPUInitAbi, "enable_exception_int_divide_by_zero: %d\n",
+            akc->enable_exception_int_divide_by_zero);
+    DPRINTF(GPUInitAbi, "enable_sgpr_private_segment_buffer: %d\n",
+            akc->enable_sgpr_private_segment_buffer);
+    DPRINTF(GPUInitAbi, "enable_sgpr_dispatch_ptr: %d\n",
+            akc->enable_sgpr_dispatch_ptr);
+    DPRINTF(GPUInitAbi, "enable_sgpr_queue_ptr: %d\n",
+            akc->enable_sgpr_queue_ptr);
+    DPRINTF(GPUInitAbi, "enable_sgpr_kernarg_segment_ptr: %d\n",
+            akc->enable_sgpr_kernarg_segment_ptr);
+    DPRINTF(GPUInitAbi, "enable_sgpr_dispatch_id: %d\n",
+            akc->enable_sgpr_dispatch_id);
+    DPRINTF(GPUInitAbi, "enable_sgpr_flat_scratch_init: %d\n",
+            akc->enable_sgpr_flat_scratch_init);
+    DPRINTF(GPUInitAbi, "enable_sgpr_private_segment_size: %d\n",
+            akc->enable_sgpr_private_segment_size);
+    DPRINTF(GPUInitAbi, "enable_wavefront_size32: %d\n",
+            akc->enable_wavefront_size32);
+    DPRINTF(GPUInitAbi, "use_dynamic_stack: %d\n", akc->use_dynamic_stack);
+    DPRINTF(GPUInitAbi, "kernarg_preload_spec_length: %d\n",
+            akc->kernarg_preload_spec_length);
+    DPRINTF(GPUInitAbi, "kernarg_preload_spec_offset: %d\n",
+            akc->kernarg_preload_spec_offset);
+
+
+    // Check for features not implemented in gem5
+    fatal_if(akc->wgp_mode, "WGP mode not supported\n");
+    fatal_if(akc->mem_ordered, "Memory ordering control not supported\n");
+    fatal_if(akc->fwd_progress, "Fwd_progress mode not supported\n");
+
+
+    // Warn on features that gem5 will ignore
+    warn_if(akc->fp16_ovfl, "FP16 clamp control bit ignored\n");
+    warn_if(akc->bulky, "Bulky code object bit ignored\n");
+    // TODO: All the IEEE bits
+
+    warn_if(akc->kernarg_preload_spec_length ||
+            akc->kernarg_preload_spec_offset,
+            "Kernarg preload not implemented\n");
+    warn_if(akc->tg_split, "TG split not implemented\n");
 }
 
 System*

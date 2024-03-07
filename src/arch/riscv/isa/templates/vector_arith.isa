@@ -951,6 +951,21 @@ Fault
 
 }};
 
+def template Vector1Vs1VdMaskDeclare {{
+
+template<typename ElemType>
+class %(class_name)s : public %(base_class)s {
+private:
+    RegId srcRegIdxArr[3];
+    RegId destRegIdxArr[1];
+    bool vm;
+public:
+    %(class_name)s(ExtMachInst _machInst);
+    Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
+    using %(base_class)s::generateDisassembly;
+};
+
+}};
 
 def template Vector1Vs1VdMaskConstructor {{
 
@@ -1097,11 +1112,7 @@ template<typename ElemType>
     int32_t micro_vl = std::min(tmp_vl, micro_vlmax);
     StaticInstPtr microop;
 
-    if (micro_vl == 0) {
-        microop = new VectorNopMicroInst(_machInst);
-        this->microops.push_back(microop);
-    }
-    for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
+    for (int i = 0; i < num_microops && micro_vl >= 0; ++i) {
         microop = new %(class_name)sMicro<ElemType>(_machInst, micro_vl, i);
         microop->setDelayedCommit();
         this->microops.push_back(microop);
@@ -1226,11 +1237,7 @@ template<typename ElemType>
     int32_t micro_vl = std::min(tmp_vl, micro_vlmax);
     StaticInstPtr microop;
 
-    if (micro_vl == 0) {
-        microop = new VectorNopMicroInst(_machInst);
-        this->microops.push_back(microop);
-    }
-    for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
+    for (int i = 0; i < num_microops && micro_vl >= 0; ++i) {
         microop = new %(class_name)sMicro<ElemType>(_machInst, micro_vl, i);
         microop->setDelayedCommit();
         this->microops.push_back(microop);

@@ -491,6 +491,199 @@ namespace VegaISA
         bool hasSecondDword(InFmt_VOP3B *);
     }; // Inst_VOP3B
 
+    class Inst_VOP3P : public VEGAGPUStaticInst
+    {
+      public:
+        Inst_VOP3P(InFmt_VOP3P*, const std::string &opcode);
+        ~Inst_VOP3P();
+
+        int instSize() const override;
+        void generateDisassembly() override;
+
+        void initOperandInfo() override;
+
+      protected:
+        // first instruction DWORD
+        InFmt_VOP3P instData;
+        // second instruction DWORD
+        InFmt_VOP3P_1 extData;
+
+        template<typename T>
+        void vop3pHelper(GPUDynInstPtr gpuDynInst,
+                        T (*fOpImpl)(T, T, bool))
+        {
+            Wavefront *wf = gpuDynInst->wavefront();
+            ConstVecOperandU32 S0(gpuDynInst, extData.SRC0);
+            ConstVecOperandU32 S1(gpuDynInst, extData.SRC1);
+            VecOperandU32 D(gpuDynInst, instData.VDST);
+
+            S0.readSrc();
+            S1.readSrc();
+
+            int opLo = instData.OPSEL;
+            int opHi = instData.OPSEL_HI2 << 2 | extData.OPSEL_HI;
+            int negLo = extData.NEG;
+            int negHi = instData.NEG_HI;
+            bool clamp = instData.CLMP;
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (wf->execMask(lane)) {
+                    T upper_val = fOpImpl(word<T>(S0[lane], opHi, negHi, 0),
+                                          word<T>(S1[lane], opHi, negHi, 1),
+                                          clamp);
+                    T lower_val = fOpImpl(word<T>(S0[lane], opLo, negLo, 0),
+                                          word<T>(S1[lane], opLo, negLo, 1),
+                                          clamp);
+
+                    uint16_t upper_raw =
+                        *reinterpret_cast<uint16_t*>(&upper_val);
+                    uint16_t lower_raw =
+                        *reinterpret_cast<uint16_t*>(&lower_val);
+
+                    D[lane] = upper_raw << 16 | lower_raw;
+                }
+            }
+
+            D.write();
+        }
+
+        template<typename T>
+        void vop3pHelper(GPUDynInstPtr gpuDynInst,
+                        T (*fOpImpl)(T, T, T, bool))
+        {
+            Wavefront *wf = gpuDynInst->wavefront();
+            ConstVecOperandU32 S0(gpuDynInst, extData.SRC0);
+            ConstVecOperandU32 S1(gpuDynInst, extData.SRC1);
+            ConstVecOperandU32 S2(gpuDynInst, extData.SRC2);
+            VecOperandU32 D(gpuDynInst, instData.VDST);
+
+            S0.readSrc();
+            S1.readSrc();
+            S2.readSrc();
+
+            int opLo = instData.OPSEL;
+            int opHi = instData.OPSEL_HI2 << 2 | extData.OPSEL_HI;
+            int negLo = extData.NEG;
+            int negHi = instData.NEG_HI;
+            bool clamp = instData.CLMP;
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (wf->execMask(lane)) {
+                    T upper_val = fOpImpl(word<T>(S0[lane], opHi, negHi, 0),
+                                          word<T>(S1[lane], opHi, negHi, 1),
+                                          word<T>(S2[lane], opHi, negHi, 2),
+                                          clamp);
+                    T lower_val = fOpImpl(word<T>(S0[lane], opLo, negLo, 0),
+                                          word<T>(S1[lane], opLo, negLo, 1),
+                                          word<T>(S2[lane], opLo, negLo, 2),
+                                          clamp);
+
+                    uint16_t upper_raw =
+                        *reinterpret_cast<uint16_t*>(&upper_val);
+                    uint16_t lower_raw =
+                        *reinterpret_cast<uint16_t*>(&lower_val);
+
+                    D[lane] = upper_raw << 16 | lower_raw;
+                }
+            }
+
+            D.write();
+        }
+
+        void
+        dotHelper(GPUDynInstPtr gpuDynInst,
+                  uint32_t (*fOpImpl)(uint32_t, uint32_t, uint32_t, bool))
+        {
+            Wavefront *wf = gpuDynInst->wavefront();
+            ConstVecOperandU32 S0(gpuDynInst, extData.SRC0);
+            ConstVecOperandU32 S1(gpuDynInst, extData.SRC1);
+            ConstVecOperandU32 S2(gpuDynInst, extData.SRC2);
+            VecOperandU32 D(gpuDynInst, instData.VDST);
+
+            S0.readSrc();
+            S1.readSrc();
+            S2.readSrc();
+
+            // OPSEL[2] and OPSEL_HI2 are unused. Craft two dwords where:
+            // dword1[15:0]  is upper/lower 16b of src0 based on opsel[0]
+            // dword1[31:15] is upper/lower 16b of src0 based on opsel_hi[0]
+            // dword2[15:0]  is upper/lower 16b of src1 based on opsel[1]
+            // dword2[31:15] is upper/lower 16b of src1 based on opsel_hi[1]
+            int opLo = instData.OPSEL;
+            int opHi = extData.OPSEL_HI;
+            int negLo = extData.NEG;
+            int negHi = instData.NEG_HI;
+            bool clamp = instData.CLMP;
+
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (wf->execMask(lane)) {
+                    uint32_t dword1l =
+                        word<uint16_t>(S0[lane], opLo, negLo, 0);
+                    uint32_t dword1h =
+                        word<uint16_t>(S0[lane], opHi, negHi, 0);
+                    uint32_t dword2l =
+                        word<uint16_t>(S1[lane], opLo, negLo, 1);
+                    uint32_t dword2h =
+                        word<uint16_t>(S1[lane], opHi, negHi, 1);
+
+                    uint32_t dword1 = (dword1h << 16) | dword1l;
+                    uint32_t dword2 = (dword2h << 16) | dword2l;
+
+                    // Take in two uint32_t dwords and one src2 dword. The
+                    // function will need to call bits to break up to the
+                    // correct size and then reinterpret cast to the correct
+                    // value.
+                    D[lane] = fOpImpl(dword1, dword2, S2[lane], clamp);
+                }
+            }
+
+            D.write();
+        }
+
+      private:
+        bool hasSecondDword(InFmt_VOP3P *);
+
+        template<typename T>
+        T
+        word(uint32_t data, int opSel, int neg, int opSelBit)
+        {
+            // This method assumes two words packed into a dword
+            static_assert(sizeof(T) == 2);
+
+            bool select = bits(opSel, opSelBit, opSelBit);
+            uint16_t raw = select ? bits(data, 31, 16)
+                                  : bits(data, 15, 0);
+
+            // Apply input modifiers. This may seem odd, but the hardware
+            // just flips the MSb instead of doing unary negation.
+            bool negate = bits(neg, opSelBit, opSelBit);
+            if (negate) {
+                raw ^= 0x8000;
+            }
+
+            return *reinterpret_cast<T*>(&raw);
+        }
+    }; // Inst_VOP3P
+
+    class Inst_VOP3P_MAI : public VEGAGPUStaticInst
+    {
+      public:
+        Inst_VOP3P_MAI(InFmt_VOP3P_MAI*, const std::string &opcode);
+        ~Inst_VOP3P_MAI();
+
+        int instSize() const override;
+        void generateDisassembly() override;
+
+        void initOperandInfo() override;
+
+      protected:
+        // first instruction DWORD
+        InFmt_VOP3P_MAI instData;
+        // second instruction DWORD
+        InFmt_VOP3P_MAI_1 extData;
+
+      private:
+        bool hasSecondDword(InFmt_VOP3P_MAI *);
+    }; // Inst_VOP3P
+
     class Inst_DS : public VEGAGPUStaticInst
     {
       public:
@@ -1110,6 +1303,77 @@ namespace VegaISA
                 assert(gpuDynInst->executedAs() == enums::SC_PRIVATE);
                 gpuDynInst->computeUnit()->globalMemoryPipe
                     .issueRequest(gpuDynInst);
+            }
+        }
+
+        // Execute for atomics is identical besides the flag set in the
+        // constructor, except cmpswap. For cmpswap, the offset to the "cmp"
+        // register is needed. For all other operations this offset is zero
+        // and implies the atomic is not a cmpswap.
+        // RegT defines the type of GPU register (e.g., ConstVecOperandU32)
+        // LaneT defines the type of the register elements (e.g., VecElemU32)
+        template<typename RegT, typename LaneT, int CmpRegOffset = 0>
+        void
+        atomicExecute(GPUDynInstPtr gpuDynInst)
+        {
+            Wavefront *wf = gpuDynInst->wavefront();
+
+            if (gpuDynInst->exec_mask.none()) {
+                wf->decVMemInstsIssued();
+                if (isFlat()) {
+                    wf->decLGKMInstsIssued();
+                }
+                return;
+            }
+
+            gpuDynInst->execUnitId = wf->execUnitId;
+            gpuDynInst->latency.init(gpuDynInst->computeUnit());
+            gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
+
+            RegT data(gpuDynInst, extData.DATA);
+            RegT cmp(gpuDynInst, extData.DATA + CmpRegOffset);
+
+            data.read();
+            if constexpr (CmpRegOffset) {
+                cmp.read();
+            }
+
+            calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
+
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (gpuDynInst->exec_mask[lane]) {
+                    if constexpr (CmpRegOffset) {
+                        (reinterpret_cast<VecElemU32*>(
+                            gpuDynInst->x_data))[lane] = data[lane];
+                        (reinterpret_cast<VecElemU32*>(
+                            gpuDynInst->a_data))[lane] = cmp[lane];
+                    } else {
+                        (reinterpret_cast<LaneT*>(gpuDynInst->a_data))[lane]
+                            = data[lane];
+                    }
+                }
+            }
+
+            issueRequestHelper(gpuDynInst);
+        }
+
+        // RegT defines the type of GPU register (e.g., ConstVecOperandU32)
+        // LaneT defines the type of the register elements (e.g., VecElemU32)
+        template<typename RegT, typename LaneT>
+        void
+        atomicComplete(GPUDynInstPtr gpuDynInst)
+        {
+            if (isAtomicRet()) {
+                RegT vdst(gpuDynInst, extData.VDST);
+
+                for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                    if (gpuDynInst->exec_mask[lane]) {
+                        vdst[lane] = (reinterpret_cast<LaneT*>(
+                            gpuDynInst->d_data))[lane];
+                    }
+                }
+
+                vdst.write();
             }
         }
 

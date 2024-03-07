@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2023-2024 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2018 Inria
  * All rights reserved.
  *
@@ -102,11 +114,13 @@ class CompressedTags : public SectorTags
      * @param is_secure True if the target memory space is secure.
      * @param compressed_size Size, in bits, of new block to allocate.
      * @param evict_blks Cache blocks to be evicted.
+     * @param partition_id Partition ID for resource management.
      * @return Cache block to be replaced.
      */
     CacheBlk* findVictim(Addr addr, const bool is_secure,
                          const std::size_t compressed_size,
-                         std::vector<CacheBlk*>& evict_blks) override;
+                         std::vector<CacheBlk*>& evict_blks,
+                         const uint64_t partition_id) override;
 
     /**
      * Find if any of the sub-blocks satisfies a condition.

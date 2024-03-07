@@ -527,19 +527,20 @@ BaseTrafficGen::createNvm(Tick duration,
 }
 
 std::shared_ptr<BaseGen>
-BaseTrafficGen::createStrided(Tick duration,
-                             Addr start_addr, Addr end_addr, Addr blocksize,
-                             Addr stride_size, int gen_id,
-                             Tick min_period, Tick max_period,
-                             uint8_t read_percent, Addr data_limit)
+BaseTrafficGen::createStrided(
+        Tick duration,
+        Addr start_addr, Addr end_addr, Addr offset,
+        Addr block_size, Addr superblock_size, Addr stride_size,
+        Tick min_period, Tick max_period,
+        uint8_t read_percent, Addr data_limit)
 {
-    return std::shared_ptr<BaseGen>(new StridedGen(*this, requestorId,
-                                                  duration, start_addr,
-                                                  end_addr, blocksize,
-                                                  system->cacheLineSize(),
-                                                  stride_size, gen_id,
-                                                  min_period, max_period,
-                                                  read_percent, data_limit));
+    return std::shared_ptr<BaseGen>(new StridedGen(
+                                    *this, requestorId, duration,
+                                    system->cacheLineSize(),
+                                    start_addr, end_addr, offset,
+                                    block_size, superblock_size, stride_size,
+                                    min_period, max_period,
+                                    read_percent, data_limit));
 }
 
 std::shared_ptr<BaseGen>

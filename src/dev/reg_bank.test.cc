@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 ARM Limited
+ * Copyright (c) 2020, 2024 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -1098,6 +1098,93 @@ TEST_F(RegisterBankTest, AddRegistersWithOffsetChecks)
 
     emptyBank.addRegisters({{0x12349, reg1}, {0x1234d}, {0x1234d, reg2}});
     EXPECT_EQ(emptyBank.size(), 12);
+}
+
+/**
+ * This test is using addRegistersAt method to store
+ * overlapping registers to the empty bank. This should not
+ * be permitted and the method should panic
+ *
+ *            [  reg2  ]
+ *       [  reg1  ]    |
+ *  [  reg0  ]    |    |
+ *  |        |    |    |
+ * 0x0      0x4  0x6  0x8
+ */
+TEST_F(RegisterBankTest, AddRegistersAtOffsetDeath)
+{
+    gtestLogOutput.str("");
+
+    auto base = emptyBank.base();
+    EXPECT_ANY_THROW(
+        emptyBank.addRegistersAt<RegisterBankLE::RegisterRao>(
+            {{base + 0x0, reg0},
+             {base + 0x2, reg1},
+             {base + 0x4, reg2}}));
+
+    std::string actual = gtestLogOutput.str();
+    EXPECT_THAT(actual, HasSubstr("Overlapping register"));
+    EXPECT_THAT(actual, HasSubstr("reg1"));
+}
+
+/**
+ * This test is using addRegistersAt method to store
+ * contiguous registers to the empty bank, similarly
+ * to what we would do when relying on addRegisters.
+ * The test will check size is updated consistently
+ * with the latter method
+ *
+ *  [  reg0  ][  reg1  ][  reg2  ]
+ *  |         |         |        |
+ * 0x0       0x4       0x8      0xc
+ */
+TEST_F(RegisterBankTest, AddRegistersAtOffsetContiguous)
+{
+    auto base = emptyBank.base();
+    EXPECT_EQ(emptyBank.size(), 0);
+    emptyBank.addRegistersAt<RegisterBankLE::RegisterRao>(
+        {{base + 0x0, reg0},
+         {base + 0x4, reg1},
+         {base + 0x8, reg2}});
+    EXPECT_EQ(emptyBank.size(), 0xc);
+}
+
+/**
+ * This test is using addRegistersAt method to store
+ * non-contiguous registers to the empty bank.
+ * As the RegisterRao data type is passed as a template
+ * argument, the gaps between the registers are filled
+ * with rao registers.
+ * We check raos are correctly inserted
+ *
+ *  [reg0][rao0][reg1][rao1][reg2]
+ *  |           |           |    |
+ * 0x0         0x8         0x10 0x14
+ */
+TEST_F(RegisterBankTest, AddRegistersAtOffsetSparse)
+{
+    auto base = emptyBank.base();
+    EXPECT_EQ(emptyBank.size(), 0);
+    emptyBank.addRegistersAt<RegisterBankLE::RegisterRao>(
+        {{base + 0x0, reg0},
+         {base + 0x8, reg1},
+         {base + 0x10, reg2}});
+    EXPECT_EQ(emptyBank.size(), 0x14);
+
+    emptyBank.read(base + 0x0, buf.data(), 4);
+    EXPECT_EQ(reg0.get(), *reinterpret_cast<uint32_t*>(buf.data()));
+
+    emptyBank.read(base + 0x4, buf.data(), 4);
+    EXPECT_EQ(0xffffffff, *reinterpret_cast<uint32_t*>(buf.data()));
+
+    emptyBank.read(base + 0x8, buf.data(), 4);
+    EXPECT_EQ(reg1.get(), *reinterpret_cast<uint32_t*>(buf.data()));
+
+    emptyBank.read(base + 0xc, buf.data(), 4);
+    EXPECT_EQ(0xffffffff, *reinterpret_cast<uint32_t*>(buf.data()));
+
+    emptyBank.read(base + 0x10, buf.data(), 4);
+    EXPECT_EQ(reg2.get(), *reinterpret_cast<uint32_t*>(buf.data()));
 }
 
 TEST_F(RegisterBankTest, BadRegisterOffsetDeath)

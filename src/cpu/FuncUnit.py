@@ -112,6 +112,7 @@ class OpClass(Enum):
         "VectorWholeRegisterLoad",
         "VectorWholeRegisterStore",
         "VectorIntegerArith",
+        "VectorUnitStrideSegmentedLoad",
         "VectorFloatArith",
         "VectorFloatConvert",
         "VectorIntegerReduce",

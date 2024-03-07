@@ -61,8 +61,8 @@ SysDC64::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
 uint32_t
 SysDC64::iss() const
 {
-    const MiscRegNum64 &misc_reg = encodeAArch64SysReg(dest);
-    return _iss(misc_reg, base);
+    const auto misc_reg = encodeAArch64SysReg(dest);
+    return _iss(misc_reg.value(), base);
 }
 
 void

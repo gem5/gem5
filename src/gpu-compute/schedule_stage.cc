@@ -38,6 +38,7 @@
 #include "debug/GPUVRF.hh"
 #include "gpu-compute/compute_unit.hh"
 #include "gpu-compute/gpu_static_inst.hh"
+#include "gpu-compute/register_file_cache.hh"
 #include "gpu-compute/scalar_register_file.hh"
 #include "gpu-compute/vector_register_file.hh"
 #include "gpu-compute/wavefront.hh"
@@ -625,8 +626,6 @@ void
 ScheduleStage::arbitrateVrfToLdsBus()
 {
     // Arbitrate the VRF->GM and VRF->LDS buses for Flat memory ops
-    // Note: a Flat instruction in GFx8 reserves both VRF->Glb memory bus
-    // and a VRF->LDS bus. In GFx9, this is not the case.
 
     // iterate the GM pipelines
     for (int i = 0; i < computeUnit.numVectorGlobalMemUnits; i++) {

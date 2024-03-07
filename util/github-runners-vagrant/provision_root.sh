@@ -31,7 +31,6 @@ set -eu -o pipefail # -x: is for debugging
 
 apt-get update
 apt-get upgrade -y
-add-apt-repository --yes --update ppa:git-core/ppa
 apt-get install -y \
   software-properties-common \
   bash \

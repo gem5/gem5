@@ -1,3 +1,15 @@
+# Copyright (c) 2024 Arm Limited
+# All rights reserved
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2023 Barcelona Supercomputing Center (BSC)
 # All rights reserved.
 
@@ -35,11 +47,13 @@ def upgrader(cpt):
     3) Add RVV misc registers in the checkpoint
     """
 
-    for sec in cpt.sections():
-        import re
+    import re
 
+    for sec in cpt.sections():
         # Search for all XC sections
-        if re.search(r".*processor.*\.core.*\.xc.*", sec):
+        res = re.search(r"(.*processor.*\.core.*)\.xc.*", sec)
+        if res and cpt.get(res.groups()[0] + ".isa", "isaName") == "riscv":
+            # Only update for RISCV XCs
             # Updating RVV vector registers (dummy values)
             # Assuming VLEN = 256 bits (32 bytes)
             mr = cpt.get(sec, "regs.vector").split()
@@ -56,7 +70,10 @@ def upgrader(cpt):
             cpt.set(sec, "regs.matrix", "")
 
         # Search for all ISA sections
-        if re.search(r".*processor.*\.core.*\.isa$", sec):
+        if (
+            re.search(r".*processor.*\.core.*\.isa$", sec)
+            and cpt.get(sec, "isaName") == "riscv"
+        ):
             # Updating RVV misc registers (dummy values)
             mr = cpt.get(sec, "miscRegFile").split()
             if len(mr) == 164:

@@ -236,6 +236,7 @@ action(AllocateTBE_PfRequest, desc="Allocate TBE for prefetch request") {
       assert(in_msg.Prefetch != PrefetchBit:No);
       out_msg.is_local_pf := true;
       out_msg.is_remote_pf := false;
+      out_msg.txnId := max_outstanding_transactions;
 
       if (in_msg.Type == RubyRequestType:LD) {
         out_msg.type := CHIRequestType:Load;
@@ -923,6 +924,25 @@ action(Initiate_StoreUpgrade, desc="") {
   assert(is_valid(cache_entry));
   tbe.actions.push(Event:SendCleanUnique);
   tbe.actions.push(Event:CheckUpgrade_FromStore);
+  tbe.actions.push(Event:CheckCacheFill);
+  tbe.actions.push(Event:TagArrayWrite);
+}
+
+action(Initiate_WriteUnique_Zero, desc="") {
+  assert(is_HN);
+  tbe.dataUnique := true;
+  if (tbe.dir_sharers.count() > 0) {
+    tbe.actions.push(Event:SendSnpCleanInvalid);
+  }
+  tbe.actions.push(Event:WriteZero);
+  if (comp_wu) {
+    tbe.actions.push(Event:SendDBIDResp_WUZ);
+    tbe.actions.pushNB(Event:WriteFEPipe);
+    tbe.actions.pushNB(Event:SendComp_WU);
+  } else {
+    tbe.actions.push(Event:SendCompDBIDResp);
+    tbe.actions.pushNB(Event:WriteFEPipe);
+  }
   tbe.actions.push(Event:CheckCacheFill);
   tbe.actions.push(Event:TagArrayWrite);
 }
@@ -1955,6 +1975,11 @@ action(ExpectComp, desc="") {
   tbe.expected_req_resp.addExpectedCount(1);
 }
 
+action(WriteZero, desc="") {
+  tbe.dataBlkValid.fillMask();
+  tbe.dataBlk.clear();
+}
+
 action(Receive_ReqDataResp, desc="") {
   assert(is_valid(tbe));
   assert(tbe.expected_req_resp.hasExpected());
@@ -2575,11 +2600,18 @@ action(Send_CompData, desc="") {
   bool is_rd_nsd := tbe.reqType == CHIRequestType:ReadNotSharedDirty;
   bool is_rd_unique := tbe.reqType == CHIRequestType:ReadUnique;
 
-  // if the config allows (or not caching the data) and line has no sharers
-  bool snd_unique_on_rs := (fwd_unique_on_readshared || tbe.dataToBeInvalid)
+  // Send UC/UD on ReadShared or ReadNotSharedDirty if the line has no sharers
+  // and one of the followings are met
+  // 1) the config allows or
+  // 2) local cache won't have the line or
+  // 3) Dirty will be passed but the request doesn't allow SD
+  bool snd_unique_on_rs := (fwd_unique_on_readshared ||
+                            tbe.dataToBeInvalid ||
+                            (tbe.dataDirty && is_rd_nsd))
                           && tbe.dataUnique && tbe.dir_sharers.isEmpty();
   // if the request type allows and we won't be caching the data
-  bool snd_dirty_on_rs := is_rd_shared && !is_rd_nsd && tbe.dataToBeInvalid;
+  bool snd_dirty_on_rs := (is_rd_shared && !is_rd_nsd) &&
+                          !tbe.dir_ownerExists;
 
   if (is_rd_once) {
     tbe.snd_msgType := CHIDataType:CompData_I;
@@ -2938,11 +2970,13 @@ action(Send_RespSepData, desc="") {
 action(Send_CompI, desc="") {
   assert(is_valid(tbe));
 
-  // Used to ack Evict request
-  assert(tbe.dir_sharers.isElement(tbe.requestor));
-  assert((tbe.dir_ownerExists == false) || (tbe.dir_owner != tbe.requestor));
+  if (!isStashReqType(tbe.reqType)) {
+    // Used to ack Evict request
+    assert(tbe.dir_sharers.isElement(tbe.requestor));
+    assert((tbe.dir_ownerExists == false) || (tbe.dir_owner != tbe.requestor));
 
-  tbe.dir_sharers.remove(tbe.requestor);
+    tbe.dir_sharers.remove(tbe.requestor);
+  }
 
   enqueue(rspOutPort, CHIResponseMsg, response_latency) {
     out_msg.addr := address;

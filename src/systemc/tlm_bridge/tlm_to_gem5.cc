@@ -301,6 +301,24 @@ TlmToGem5Bridge<BITWIDTH>::destroyPacket(PacketPtr pkt)
 
 template <unsigned int BITWIDTH>
 void
+TlmToGem5Bridge<BITWIDTH>::cacheBackdoor(gem5::MemBackdoorPtr backdoor)
+{
+    if (backdoor == nullptr) return;
+
+    // We only need to register the callback at the first time.
+    if (requestedBackdoors.find(backdoor) == requestedBackdoors.end()) {
+        backdoor->addInvalidationCallback(
+            [this](const MemBackdoor &backdoor)
+            {
+                invalidateDmi(backdoor);
+            }
+        );
+        requestedBackdoors.emplace(backdoor);
+    }
+}
+
+template <unsigned int BITWIDTH>
+void
 TlmToGem5Bridge<BITWIDTH>::invalidateDmi(const gem5::MemBackdoor &backdoor)
 {
     socket->invalidate_direct_mem_ptr(
@@ -360,9 +378,29 @@ TlmToGem5Bridge<BITWIDTH>::b_transport(tlm::tlm_generic_payload &trans,
     pkt->pushSenderState(new Gem5SystemC::TlmSenderState(trans));
 
     MemBackdoorPtr backdoor = nullptr;
-    Tick ticks = bmp.sendAtomicBackdoor(pkt, backdoor);
-    if (backdoor)
+    Tick ticks = 0;
+
+    // Check if we have a backdoor meet the request. If yes, we can just hints
+    // the requestor the DMI is supported.
+    for (auto& b : requestedBackdoors) {
+        if (pkt->getAddrRange().isSubset(b->range()) &&
+            ((!pkt->isWrite() && b->readable()) ||
+             (pkt->isWrite() && b->writeable()))) {
+            backdoor = b;
+        }
+    }
+
+    if (backdoor) {
+        ticks = bmp.sendAtomic(pkt);
+    } else {
+        ticks = bmp.sendAtomicBackdoor(pkt, backdoor);
+    }
+
+    // Hints the requestor the DMI is supported.
+    if (backdoor) {
         trans.set_dmi_allowed(true);
+        cacheBackdoor(backdoor);
+    }
 
     // send an atomic request to gem5
     panic_if(pkt->needsResponse() && !pkt->isResponse(),
@@ -450,17 +488,7 @@ TlmToGem5Bridge<BITWIDTH>::get_direct_mem_ptr(tlm::tlm_generic_payload &trans,
         if (backdoor->writeable())
             access = (access_t)(access | tlm::tlm_dmi::DMI_ACCESS_WRITE);
         dmi_data.set_granted_access(access);
-
-        // We only need to register the callback at the first time.
-        if (requestedBackdoors.find(backdoor) == requestedBackdoors.end()) {
-            backdoor->addInvalidationCallback(
-                [this](const MemBackdoor &backdoor)
-                {
-                    invalidateDmi(backdoor);
-                }
-            );
-            requestedBackdoors.emplace(backdoor);
-        }
+        cacheBackdoor(backdoor);
     }
 
     trans.set_response_status(tlm::TLM_OK_RESPONSE);

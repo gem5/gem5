@@ -54,7 +54,7 @@ namespace RiscvISA {
 class MMU : public BaseMMU
 {
   public:
-    PMAChecker *pma;
+    BasePMAChecker *pma;
 
     MMU(const RiscvMMUParams &p)
       : BaseMMU(p), pma(p.pma_checker)

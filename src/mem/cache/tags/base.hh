@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2014,2016-2019 ARM Limited
+ * Copyright (c) 2012-2014, 2016-2019, 2023-2024 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -56,6 +56,7 @@
 #include "base/statistics.hh"
 #include "base/types.hh"
 #include "mem/cache/cache_blk.hh"
+#include "mem/cache/tags/partitioning_policies/base_pp.hh"
 #include "mem/packet.hh"
 #include "params/BaseTags.hh"
 #include "sim/clocked_object.hh"
@@ -87,6 +88,10 @@ class BaseTags : public ClockedObject
 
     /** Indexing policy */
     BaseIndexingPolicy *indexingPolicy;
+
+    /** Partitioning policies */
+    std::vector<partitioning_policy::BasePartitioningPolicy *>
+        partitioningPolicies;
 
     /**
      * The number of tags that need to be touched to meet the warmup
@@ -276,11 +281,13 @@ class BaseTags : public ClockedObject
      * @param is_secure True if the target memory space is secure.
      * @param size Size, in bits, of new block to allocate.
      * @param evict_blks Cache blocks to be evicted.
+     * @param partition_id Partition ID for resource management.
      * @return Cache block to be replaced.
      */
     virtual CacheBlk* findVictim(Addr addr, const bool is_secure,
                                  const std::size_t size,
-                                 std::vector<CacheBlk*>& evict_blks) = 0;
+                                 std::vector<CacheBlk*>& evict_blks,
+                                 const uint64_t partition_id=0) = 0;
 
     /**
      * Access block and update replacement data. May not succeed, in which case

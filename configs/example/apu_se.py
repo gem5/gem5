@@ -335,6 +335,12 @@ parser.add_argument(
     default="dynamic",
     help="register allocation policy (simple/dynamic)",
 )
+parser.add_argument(
+    "--register-file-cache-size",
+    type=int,
+    default=0,
+    help="number of registers in cache",
+)
 
 parser.add_argument(
     "--dgpu",
@@ -369,7 +375,7 @@ parser.add_argument(
 parser.add_argument(
     "--gfx-version",
     type=str,
-    default="gfx801",
+    default="gfx902",
     choices=GfxVersion.vals,
     help="Gfx version for gpuNote: gfx902 is not fully supported by ROCm",
 )
@@ -428,6 +434,7 @@ print(
 # shader is the GPU
 shader = Shader(
     n_wf=args.wfs_per_simd,
+    cu_per_sqc=args.cu_per_sqc,
     clk_domain=SrcClockDomain(
         clock=args.gpu_clock,
         voltage_domain=VoltageDomain(voltage=args.gpu_voltage),
@@ -493,6 +500,7 @@ for i in range(n_cu):
     vrfs = []
     vrf_pool_mgrs = []
     srfs = []
+    rfcs = []
     srf_pool_mgrs = []
     for j in range(args.simds_per_cu):
         for k in range(shader.n_wf):
@@ -537,10 +545,16 @@ for i in range(n_cu):
                 simd_id=j, wf_size=args.wf_size, num_regs=args.sreg_file_size
             )
         )
+        rfcs.append(
+            RegisterFileCache(
+                simd_id=j, cache_size=args.register_file_cache_size
+            )
+        )
 
     compute_units[-1].wavefronts = wavefronts
     compute_units[-1].vector_register_file = vrfs
     compute_units[-1].scalar_register_file = srfs
+    compute_units[-1].register_file_cache = rfcs
     compute_units[-1].register_manager = RegisterManager(
         policy=args.registerManagerPolicy,
         vrf_pool_managers=vrf_pool_mgrs,
@@ -938,19 +952,15 @@ root = Root(system=system, full_system=False)
 # knows what type of GPU hardware we are simulating
 if args.dgpu:
     assert args.gfx_version in [
-        "gfx803",
         "gfx900",
     ], "Incorrect gfx version for dGPU"
-    if args.gfx_version == "gfx803":
-        hsaTopology.createFijiTopology(args)
-    elif args.gfx_version == "gfx900":
+    if args.gfx_version == "gfx900":
         hsaTopology.createVegaTopology(args)
 else:
     assert args.gfx_version in [
-        "gfx801",
         "gfx902",
     ], "Incorrect gfx version for APU"
-    hsaTopology.createCarrizoTopology(args)
+    hsaTopology.createRavenTopology(args)
 
 m5.ticks.setGlobalFrequency("1THz")
 if args.abs_max_tick:

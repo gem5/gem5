@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2014, 2016-2020, 2022-2023 Arm Limited
+ * Copyright (c) 2009-2014, 2016-2020, 2022-2024 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -1364,6 +1364,41 @@ isHcrxEL2Enabled(ThreadContext *tc)
         !static_cast<SCR>(tc->readMiscReg(MISCREG_SCR_EL3)).hxen)
         return false;
     return EL2Enabled(tc);
+}
+
+TranslationRegime
+translationRegime(ThreadContext *tc, ExceptionLevel el)
+{
+    switch (el) {
+      case EL3:
+        return TranslationRegime::EL3;
+      case EL2:
+        return ELIsInHost(tc, EL2) ?
+            TranslationRegime::EL20 : TranslationRegime::EL2;
+      case EL1:
+        return TranslationRegime::EL10;
+      case EL0:
+        return ELIsInHost(tc, EL0) ?
+            TranslationRegime::EL20 : TranslationRegime::EL10;
+      default:
+        panic("Invalid ExceptionLevel\n");
+    }
+}
+
+ExceptionLevel
+translationEl(TranslationRegime regime)
+{
+    switch (regime) {
+      case TranslationRegime::EL10:
+        return EL1;
+      case TranslationRegime::EL20:
+      case TranslationRegime::EL2:
+        return EL2;
+      case TranslationRegime::EL3:
+        return EL3;
+      default:
+        return EL1;
+    }
 }
 
 } // namespace ArmISA

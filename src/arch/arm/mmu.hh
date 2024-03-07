@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2016, 2019-2022 Arm Limited
+ * Copyright (c) 2010-2013, 2016, 2019-2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -144,12 +144,12 @@ class MMU : public BaseMMU
             isStage2 = rhs.isStage2;
             cpsr = rhs.cpsr;
             aarch64 = rhs.aarch64;
-            aarch64EL = EL0;
+            exceptionLevel = rhs.exceptionLevel;
+            currRegime = rhs.currRegime;
             sctlr = rhs.sctlr;
             scr = rhs.scr;
             isPriv = rhs.isPriv;
             isSecure = rhs.isSecure;
-            isHyp = rhs.isHyp;
             ttbcr = rhs.ttbcr;
             asid = rhs.asid;
             vmid = rhs.vmid;
@@ -179,12 +179,12 @@ class MMU : public BaseMMU
         bool isStage2 = false;
         CPSR cpsr = 0;
         bool aarch64 = false;
-        ExceptionLevel aarch64EL = EL0;
+        ExceptionLevel exceptionLevel = EL0;
+        TranslationRegime currRegime = TranslationRegime::EL10;
         SCTLR sctlr = 0;
         SCR scr = 0;
         bool isPriv = false;
         bool isSecure = false;
-        bool isHyp = false;
         TTBCR ttbcr = 0;
         uint16_t asid = 0;
         vmid_t vmid = 0;
@@ -388,9 +388,9 @@ class MMU : public BaseMMU
      * a specific translation type. If the translation type doesn't
      * specify an EL, we use the current EL.
      */
-    static ExceptionLevel tranTypeEL(CPSR cpsr, ArmTranslationType type);
+    static ExceptionLevel tranTypeEL(CPSR cpsr, SCR scr, ArmTranslationType type);
 
-    static bool hasUnprivRegime(ExceptionLevel el, bool e2h);
+    static bool hasUnprivRegime(TranslationRegime regime);
 
   public:
     /** Lookup an entry in the TLB
@@ -398,18 +398,16 @@ class MMU : public BaseMMU
      * @param asn context id/address space id to use
      * @param vmid The virtual machine ID used for stage 2 translation
      * @param secure if the lookup is secure
-     * @param hyp if the lookup is done from hyp mode
      * @param functional if the lookup should modify state
      * @param ignore_asn if on lookup asn should be ignored
-     * @param target_el selecting the translation regime
-     * @param in_host if we are in host (EL2&0 regime)
+     * @param target_regime selecting the translation regime
      * @param mode to differentiate between read/writes/fetches.
      * @return pointer to TLB entry if it exists
      */
-    TlbEntry *lookup(Addr vpn, uint16_t asn, vmid_t vmid, bool hyp,
+    TlbEntry *lookup(Addr vpn, uint16_t asn, vmid_t vmid,
                      bool secure, bool functional,
-                     bool ignore_asn, ExceptionLevel target_el,
-                     bool in_host, bool stage2, BaseMMU::Mode mode);
+                     bool ignore_asn, TranslationRegime target_regime,
+                     bool stage2, BaseMMU::Mode mode);
 
     Fault getTE(TlbEntry **te, const RequestPtr &req,
                 ThreadContext *tc, Mode mode,
@@ -447,8 +445,6 @@ class MMU : public BaseMMU
 
     bool faultPAN(ThreadContext *tc, uint8_t ap, const RequestPtr &req,
                   Mode mode, const bool is_priv, CachedState &state);
-
-    bool hasUnprivRegime(ExceptionLevel el, CachedState &state);
 
     std::pair<bool, bool> s1PermBits64(
         TlbEntry *te, const RequestPtr &req, Mode mode,

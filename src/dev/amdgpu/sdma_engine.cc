@@ -184,6 +184,7 @@ SDMAEngine::registerRLCQueue(Addr doorbell, Addr mqdAddr, SDMAQueueDesc *mqd)
     Addr rptr_wb_addr = mqd->sdmax_rlcx_rb_rptr_addr_hi;
     rptr_wb_addr <<= 32;
     rptr_wb_addr |= mqd->sdmax_rlcx_rb_rptr_addr_lo;
+    bool priv = bits(mqd->sdmax_rlcx_rb_cntl, 23, 23);
 
     // Get first free RLC
     if (!rlc0.valid()) {
@@ -199,6 +200,7 @@ SDMAEngine::registerRLCQueue(Addr doorbell, Addr mqdAddr, SDMAQueueDesc *mqd)
         rlc0.processing(false);
         rlc0.setMQD(mqd);
         rlc0.setMQDAddr(mqdAddr);
+        rlc0.setPriv(priv);
     } else if (!rlc1.valid()) {
         DPRINTF(SDMAEngine, "Doorbell %lx mapped to RLC1\n", doorbell);
         rlcInfo[1] = doorbell;
@@ -212,6 +214,7 @@ SDMAEngine::registerRLCQueue(Addr doorbell, Addr mqdAddr, SDMAQueueDesc *mqd)
         rlc1.processing(false);
         rlc1.setMQD(mqd);
         rlc1.setMQDAddr(mqdAddr);
+        rlc1.setPriv(priv);
     } else {
         panic("No free RLCs. Check they are properly unmapped.");
     }
@@ -386,7 +389,15 @@ SDMAEngine::decodeHeader(SDMAQueue *q, uint32_t header)
       case SDMA_OP_NOP: {
         uint32_t NOP_count = (header >> 16) & 0x3FFF;
         DPRINTF(SDMAEngine, "SDMA NOP packet with count %d\n", NOP_count);
-        if (NOP_count > 0) q->incRptr(NOP_count * 4);
+        if (NOP_count > 0) {
+            for (int i = 0; i < NOP_count; ++i) {
+                if (q->rptr() == q->wptr()) {
+                    warn("NOP count is beyond wptr, ignoring remaining NOPs");
+                    break;
+                }
+                q->incRptr(4);
+            }
+        }
         decodeNext(q);
         } break;
       case SDMA_OP_COPY: {
@@ -622,8 +633,9 @@ SDMAEngine::writeReadData(SDMAQueue *q, sdmaWrite *pkt, uint32_t *dmaBuffer)
         gpuDevice->getMemMgr()->writeRequest(mmhubAddr, (uint8_t *)dmaBuffer,
                                            bufferSize, 0, cb);
     } else {
-        // TODO: getGARTAddr?
-        pkt->dest = getGARTAddr(pkt->dest);
+        if (q->priv()) {
+            pkt->dest = getGARTAddr(pkt->dest);
+        }
         auto cb = new DmaVirtCallback<uint32_t>(
             [ = ] (const uint64_t &) { writeDone(q, pkt, dmaBuffer); });
         dmaWriteVirt(pkt->dest, bufferSize, cb, (void *)dmaBuffer);
@@ -650,9 +662,11 @@ SDMAEngine::copy(SDMAQueue *q, sdmaCopy *pkt)
     q->incRptr(sizeof(sdmaCopy));
     // count represents the number of bytes - 1 to be copied
     pkt->count++;
-    DPRINTF(SDMAEngine, "Getting GART addr for %lx\n", pkt->source);
-    pkt->source = getGARTAddr(pkt->source);
-    DPRINTF(SDMAEngine, "GART addr %lx\n", pkt->source);
+    if (q->priv()) {
+        DPRINTF(SDMAEngine, "Getting GART addr for %lx\n", pkt->source);
+        pkt->source = getGARTAddr(pkt->source);
+        DPRINTF(SDMAEngine, "GART addr %lx\n", pkt->source);
+    }
 
     // Read data from the source first, then call the copyReadData method
     uint8_t *dmaBuffer = new uint8_t[pkt->count];
@@ -745,7 +759,11 @@ SDMAEngine::copyDone(SDMAQueue *q, sdmaCopy *pkt, uint8_t *dmaBuffer)
 void
 SDMAEngine::indirectBuffer(SDMAQueue *q, sdmaIndirectBuffer *pkt)
 {
-    q->ib()->base(getGARTAddr(pkt->base));
+    if (q->priv()) {
+        q->ib()->base(getGARTAddr(pkt->base));
+    } else {
+        q->ib()->base(pkt->base);
+    }
     q->ib()->rptr(0);
     q->ib()->size(pkt->size * sizeof(uint32_t) + 1);
     q->ib()->setWptr(pkt->size * sizeof(uint32_t));
@@ -761,7 +779,9 @@ void
 SDMAEngine::fence(SDMAQueue *q, sdmaFence *pkt)
 {
     q->incRptr(sizeof(sdmaFence));
-    pkt->dest = getGARTAddr(pkt->dest);
+    if (q->priv()) {
+        pkt->dest = getGARTAddr(pkt->dest);
+    }
 
     // Writing the data from the fence packet to the destination address.
     auto cb = new DmaVirtCallback<uint32_t>(

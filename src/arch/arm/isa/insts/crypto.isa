@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 //
-// Copyright (c) 2018 ARM Limited
+// Copyright (c) 2018, 2024 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -38,11 +38,10 @@
 let {{
 
     cryptoEnabledCheckCode = '''
-        auto crypto_reg = xc->tcBase()->readMiscReg(MISCREG_ID_ISAR5);
-        if (!(crypto_reg & %(mask)d)) {
+        if (!HaveExt(xc->tcBase(), %(extension)s)) {
             return std::make_shared<UndefinedInstruction>(machInst, true);
         }
-    '''
+    ''' + simdEnabledCheckCode
 
     header_output = ""
     decoder_output = ""
@@ -150,7 +149,9 @@ let {{
     sha256_su0Code = "crypto.sha256Su0(output, input);"
     sha256_su1Code = "crypto.sha256Su1(output, input, input2);"
 
-    aes_enabled = cryptoEnabledCheckCode % { "mask" : 0xF0 }
+    aes_enabled = cryptoEnabledCheckCode % {
+        "extension" : "ArmExtension::FEAT_AES"
+    }
     cryptoRegRegRegInst("aese", "AESE", "SimdAesOp",
                         aes_enabled, aeseCode)
     cryptoRegRegRegInst("aesd", "AESD", "SimdAesOp",
@@ -160,7 +161,9 @@ let {{
     cryptoRegRegInst("aesimc", "AESIMC", "SimdAesMixOp",
                      aes_enabled, aesimcCode)
 
-    sha1_enabled = cryptoEnabledCheckCode % { "mask" : 0xF00 }
+    sha1_enabled = cryptoEnabledCheckCode % {
+        "extension" : "ArmExtension::FEAT_SHA1"
+    }
     cryptoRegRegRegInst("sha1c", "SHA1C", "SimdSha1HashOp",
                         sha1_enabled, sha1_cCode)
     cryptoRegRegRegInst("sha1p", "SHA1P", "SimdSha1HashOp",
@@ -174,7 +177,9 @@ let {{
     cryptoRegRegInst("sha1su1", "SHA1SU1", "SimdShaSigma2Op",
                      sha1_enabled, sha1_su1Code)
 
-    sha2_enabled = cryptoEnabledCheckCode % { "mask" : 0xF000 }
+    sha2_enabled = cryptoEnabledCheckCode % {
+        "extension" : "ArmExtension::FEAT_SHA256"
+    }
     cryptoRegRegRegInst("sha256h", "SHA256H", "SimdSha256HashOp",
                         sha2_enabled, sha256_hCode)
     cryptoRegRegRegInst("sha256h2", "SHA256H2", "SimdSha256Hash2Op",

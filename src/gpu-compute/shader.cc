@@ -64,6 +64,7 @@ Shader::Shader(const Params &p) : ClockedObject(p),
     impl_kern_end_rel(p.impl_kern_end_rel),
     coissue_return(1),
     trace_vgpr_all(1), n_cu((p.CUs).size()), n_wf(p.n_wf),
+    n_cu_per_sqc(p.cu_per_sqc),
     globalMemSize(p.globalmem),
     nextSchedCu(0), sa_n(0), gpuCmdProc(*p.gpu_cmd_proc),
     _dispatcher(*p.dispatcher), systemHub(p.system_hub),
@@ -220,6 +221,13 @@ Shader::prepareInvalidate(HSAQueueEntry *task) {
         _dispatcher.updateInvCounter(kernId, +1);
         // all necessary INV flags are all set now, call cu to execute
         cuList[i_cu]->doInvalidate(req, task->dispatchId());
+
+
+        // A set of CUs share a single SQC cache. Send a single invalidate
+        // request to each SQC
+        if ((i_cu % n_cu_per_sqc) == 0) {
+            cuList[i_cu]->doSQCInvalidate(req, task->dispatchId());
+        }
 
         // I don't like this. This is intrusive coding.
         cuList[i_cu]->resetRegisterPool();
