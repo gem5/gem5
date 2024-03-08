@@ -725,17 +725,11 @@ class SuiteResource(AbstractResource):
 
     def __init__(
         self,
-        workloads: Dict[Tuple[str, str], Set[str]] = {},
+        workloads: Dict["WorkloadResource", Set[str]] = {},
         resource_version: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
         id: Optional[str] = None,
-        resource_directory: Optional[str] = None,
-        download_md5_mismatch: Optional[bool] = True,
-        clients: Optional[List] = None,
-        gem5_version: Optional[str] = None,
-        quiet: Optional[bool] = False,
-        local_path: Optional[str] = None,
         **kwargs,
     ) -> None:
         """
@@ -756,12 +750,6 @@ class SuiteResource(AbstractResource):
         self._description = description
         self._source = source
         self._resource_version = resource_version
-        self._local_path = local_path
-        self._resource_directory = resource_directory
-        self._download_md5_mismatch = download_md5_mismatch
-        self._clients = clients
-        self._gem5_version = gem5_version
-        self._quiet = quiet
 
         super().__init__(
             id=id,
@@ -770,43 +758,13 @@ class SuiteResource(AbstractResource):
             resource_version=resource_version,
         )
 
-    def _get_all_workload_json(self) -> List[Dict[str, str]]:
-        """
-        This function gets all the resources for the workload.
-
-        :returns: A list of all the resources for the workload.
-        """
-
-        mongo_query = [
-            {"id": resource_info[0], "resource_version": resource_info[1]}
-            for resource_info in self._workloads.keys()
-        ]
-        return get_multiple_resource_json_obj(
-            mongo_query, self._clients, self._gem5_version
-        )
-
     def __iter__(self) -> Generator["WorkloadResource", None, None]:
         """
         Returns a generator that iterates over the workloads in the suite.
 
         :yields: A generator that iterates over the workloads in the suite.
         """
-
-        # We get all the workload objects from the database
-        workload_objects = self._get_all_workload_json()
-
-        for workload in workload_objects:
-            # We create a WorkloadResource object for each workload
-            # only when it is requested.
-            yield WorkloadResource(
-                local_path=self._local_path,
-                resource_directory=self._resource_directory,
-                download_md5_mismatch=self._download_md5_mismatch,
-                clients=self._clients,
-                gem5_version=self._gem5_version,
-                quiet=self._quiet,
-                **workload,
-            )
+        yield from self._workloads.keys()
 
     def __len__(self):
         """
@@ -912,12 +870,6 @@ class WorkloadResource(AbstractResource):
         source: Optional[str] = None,
         local_path: Optional[str] = None,
         parameters: Optional[Dict[str, Any]] = {},
-        resources: Optional[Dict[str, Dict[str, str]]] = {},
-        resource_directory: Optional[str] = None,
-        download_md5_mismatch: Optional[bool] = True,
-        clients: Optional[List] = None,
-        gem5_version: Optional[str] = None,
-        quiet: Optional[bool] = False,
         **kwargs,
     ):
         """
@@ -936,144 +888,6 @@ class WorkloadResource(AbstractResource):
         self._id = id
         self._func = function
         self._params = parameters
-
-        self.get_all_resources(
-            resources=resources,
-            to_path=local_path,
-            resource_directory=resource_directory,
-            download_md5_mismatch=download_md5_mismatch,
-            clients=clients,
-            gem5_version=gem5_version,
-            quiet=quiet,
-        )
-
-    def get_all_resources(
-        self,
-        resources: Dict[str, Dict[str, str]],
-        to_path: str,
-        resource_directory: str,
-        download_md5_mismatch: bool,
-        clients: List[str],
-        gem5_version: str,
-        quiet: bool,
-    ) -> None:
-        """
-        This function gets all the resources for the workload.
-
-        :param resources: A dictionary of resources to get. The keys are the
-                            parameter names and the values are the resource
-                            id and version.
-        :param to_path: The path to which the resource is to be downloaded. If
-                        ``None``, the resource will be downloaded to the resource
-                        directory with the file/directory name equal to the ID of
-                        the resource.
-        :param resource_directory: The location of the directory in which the
-                                   resource is to be stored. If this parameter is
-                                   not set, it will set to the environment variable
-                                   ``GEM5_RESOURCE_DIR``. If the environment is not
-                                   set it will default to ``~/.cache/gem5`` if
-                                   available, otherwise the CWD. *Note*: This
-                                   argument is ignored if the ``to_path`` parameter
-                                   is specified.
-        :param download_md5_mismatch: If the resource is present, but does not
-                                      have the correct md5 value, the resource will
-                                      be deleted and re-downloaded if this value is
-                                      ``True``. Otherwise an exception will be thrown.
-                                      ``True`` by default.
-        :param clients: A list of clients to search for the resource. If this
-                        parameter is not set, it will default search all clients.
-        :param gem5_version: The gem5 version to use to filter incompatible
-                            resource versions. By default set to the current gem5
-                            version. If `None`, this filtering is not performed.
-        :param quiet: If ``True``, suppress output. ``False`` by default.
-        """
-        # Mapping IDs to parameter names
-        id_to_param_map = {
-            resource_info["id"]: param
-            for param, resource_info in resources.items()
-        }
-
-        # Fetching resources as a list of dicts
-        resource_details_list = get_multiple_resource_json_obj(
-            list(resources.values())
-        )
-
-        # Preparing the final mapping of parameters to their complete JSON objects
-        param_to_resource_json = {}
-        for resource in resource_details_list:
-            resource_id = resource["id"]
-            if resource_id in id_to_param_map:
-                param = id_to_param_map[resource_id]
-                param_to_resource_json[param] = resource
-
-        # Creating the resource objects for each parameter
-        for param, resource in param_to_resource_json.items():
-            assert isinstance(param, str)
-            self._params[param] = self.create_resource_objects(
-                resource_json=resource,
-                to_path=to_path,
-                resource_directory=resource_directory,
-                download_md5_mismatch=download_md5_mismatch,
-                clients=clients,
-                gem5_version=gem5_version,
-                quiet=quiet,
-            )
-
-    def create_resource_objects(
-        self,
-        resource_json: Dict[str, str],
-        to_path: str,
-        resource_directory: str,
-        download_md5_mismatch: bool,
-        clients: List[str],
-        gem5_version: str,
-        quiet: bool,
-    ) -> AbstractResource:
-        """
-        This function is used to create the resource objects for each parameter
-        :param resource_json: The JSON object for the resource
-        :param to_path: The path to which the resource is to be downloaded. If
-                        ``None``, the resource will be downloaded to the resource
-                        directory with the file/directory name equal to the ID of
-                        the resource.
-        :param resource_directory: The location of the directory in which the
-                                   resource is to be stored. If this parameter is
-                                   not set, it will set to the environment variable
-                                   ``GEM5_RESOURCE_DIR``. If the environment is not
-                                   set it will default to ``~/.cache/gem5`` if
-                                   available, otherwise the CWD. *Note*: This
-                                   argument is ignored if the ``to_path`` parameter
-                                   is specified.
-        :param download_md5_mismatch: If the resource is present, but does not
-                                      have the correct md5 value, the resource will
-                                      be deleted and re-downloaded if this value is
-                                      ``True``. Otherwise an exception will be thrown.
-                                      ``True`` by default.
-        :param clients: A list of clients to search for the resource. If this
-                        parameter is not set, it will default search all clients.
-        :param gem5_version: The gem5 version to use to filter incompatible
-                            resource versions. By default set to the current gem5
-                            version. If `None`, this filtering is not performed.
-        :param quiet: If ``True``, suppress output. ``False`` by default.
-
-        :returns: The resource object
-        """
-        to_path, downloader = _get_to_path_and_downloader_partial(
-            resource_json=resource_json,
-            to_path=to_path,
-            resource_directory=resource_directory,
-            download_md5_mismatch=download_md5_mismatch,
-            clients=clients,
-            gem5_version=gem5_version,
-            quiet=quiet,
-        )
-
-        resource_class = _get_resource_json_type_map[resource_json["category"]]
-        return resource_class(
-            local_path=to_path,
-            downloader=downloader,
-            **resource_json,
-        )
 
     def get_id(self) -> str:
         """Returns the ID of the workload."""
@@ -1196,48 +1010,266 @@ def obtain_resource(
     resource_class = _get_resource_json_type_map[resources_category]
 
     if resources_category == "suite":
-        workloads = resource_json["workloads"]
-        workloads_obj = {}
-        for workload in workloads:
-            workloads_obj[
-                (workload["id"], workload["resource_version"])
-            ] = set(workload["input_group"])
-
-        # This are the fields that are used to obtain the
-        # constituent resources of the suite.
+        workloads_obj = _get_workload_input_group_dict(
+            resource_json,
+            clients,
+            gem5_version,
+            to_path,
+            resource_directory,
+            download_md5_mismatch,
+            quiet,
+        )
         resource_json["workloads"] = workloads_obj
-        resource_json["resource_directory"] = resource_directory
-        resource_json["download_md5_mismatch"] = download_md5_mismatch
-        resource_json["clients"] = clients
-        resource_json["gem5_version"] = gem5_version
-        resource_json["quiet"] = quiet
 
     if resources_category == "workload":
         # This parses the "resources" and "additional_params" fields of the
         # workload resource into a dictionary of AbstractResource objects and
         # strings respectively.
         params = {}
-        if "additional_params" in resource_json:
-            for key in resource_json["additional_params"].keys():
-                assert isinstance(key, str)
-                value = resource_json["additional_params"][key]
-                params[key] = value
-        resource_json["parameters"] = params
-
-        # This are the fields that are used to obtain the
-        # constituent resources of the workload.
-        resource_json["resource_directory"] = resource_directory
-        resource_json["download_md5_mismatch"] = download_md5_mismatch
-        resource_json["clients"] = clients
-        resource_json["gem5_version"] = gem5_version
-        resource_json["quiet"] = quiet
-
+        _set_all_dependant_resources_and_params(
+            resource_json["resources"],
+            to_path,
+            resource_directory,
+            download_md5_mismatch,
+            clients,
+            gem5_version,
+            quiet,
+            params,
+            resource_json["additional_params"],
+        )
     # Once we know what AbstractResource subclass we are using, we create it.
     # The fields in the JSON object are assumed to map like-for-like to the
     # subclass contructor, so we can pass the resource_json map directly.
     return resource_class(
         local_path=to_path, downloader=downloader, **resource_json
     )
+
+
+def _set_all_dependant_resources_and_params(
+    resources: Dict[str, Dict[str, str]],
+    to_path: str,
+    resource_directory: str,
+    download_md5_mismatch: bool,
+    clients: List[str],
+    gem5_version: str,
+    quiet: bool,
+    params: Dict[str, Any],
+    additional_params: Dict[str, Any],
+) -> None:
+    """
+    This function gets all the resources for the workload and sets them as
+    parameters in the workload parameters dictionary.
+
+    This function also sets the additional parameters in the
+    workload parameters.
+
+    :param resources: A dictionary of resources to get. The keys are the
+                      parameter names and the values are the resource
+                      id and version.
+    :param to_path: The path to which the resource is to be downloaded. If
+                    ``None``, the resource will be downloaded to the resource
+                    directory with the file/directory name equal to the ID of
+                    the resource.
+    :param resource_directory: The location of the directory in which the
+                                resource is to be stored. If this parameter is
+                                not set, it will set to the environment variable
+                                ``GEM5_RESOURCE_DIR``. If the environment is not
+                                set it will default to ``~/.cache/gem5`` if
+                                available, otherwise the CWD. *Note*: This
+                                argument is ignored if the ``to_path`` parameter
+                                is specified.
+    :param download_md5_mismatch: If the resource is present, but does not
+                                  have the correct md5 value, the resource will
+                                  be deleted and re-downloaded if this value is
+                                  `True``. Otherwise an exception will be thrown.
+    :param clients: A list of clients to search for the resource. If this
+                    parameter is not set, it will default search all clients.
+    :param gem5_version: The gem5 version to use to filter incompatible
+                        resource versions. By default set to the current gem5
+                        version. If `None`, this filtering is not performed.
+    :param quiet: If ``True``, suppress output.
+    """
+
+    # Mapping IDs to parameter names
+    id_to_param_map = {
+        resource_info["id"]: param
+        for param, resource_info in resources.items()
+    }
+
+    # Fetching resources as a list of dicts
+    resource_details_list = get_multiple_resource_json_obj(
+        list(resources.values())
+    )
+
+    # Preparing the final mapping of parameters to their complete JSON objects
+    param_to_resource_json = {}
+    for resource in resource_details_list:
+        resource_id = resource["id"]
+        if resource_id in id_to_param_map:
+            param = id_to_param_map[resource_id]
+            param_to_resource_json[param] = resource
+
+    # Creating the resource objects for each parameter
+    for param, resource in param_to_resource_json.items():
+        assert isinstance(param, str)
+        params[param] = _create_resource_objects(
+            resource_json=resource,
+            to_path=to_path,
+            resource_directory=resource_directory,
+            download_md5_mismatch=download_md5_mismatch,
+            clients=clients,
+            gem5_version=gem5_version,
+            quiet=quiet,
+        )
+
+    # Adding the additional parameters to the workload parameters
+    if additional_params:
+        for key in additional_params.keys():
+            assert isinstance(key, str)
+            value = additional_params[key]
+            params[key] = value
+
+
+def _create_resource_objects(
+    resource_json: Dict[str, str],
+    to_path: str,
+    resource_directory: str,
+    download_md5_mismatch: bool,
+    clients: List[str],
+    gem5_version: str,
+    quiet: bool,
+) -> AbstractResource:
+    """
+    This function is used to create the resource objects for each parameter
+    for workload resources.
+
+    :param resource_json: The JSON object for the resource
+    :param to_path: The path to which the resource is to be downloaded. If
+                    ``None``, the resource will be downloaded to the resource
+                    directory with the file/directory name equal to the ID of
+                    the resource.
+    :param resource_directory: The location of the directory in which the
+                                resource is to be stored. If this parameter is
+                                not set, it will set to the environment variable
+                                ``GEM5_RESOURCE_DIR``. If the environment is not
+                                set it will default to ``~/.cache/gem5`` if
+                                available, otherwise the CWD. *Note*: This
+                                argument is ignored if the ``to_path`` parameter
+                                is specified.
+    :param download_md5_mismatch: If the resource is present, but does not
+                                    have the correct md5 value, the resource will
+                                    be deleted and re-downloaded if this value is
+                                    ``True``. Otherwise an exception will be thrown.
+    :param clients: A list of clients to search for the resource. If this
+                    parameter is not set, it will default search all clients.
+    :param gem5_version: The gem5 version to use to filter incompatible
+                        resource versions. By default set to the current gem5
+                        version. If `None`, this filtering is not performed.
+    :param quiet: If ``True``, suppress output.
+
+    :returns: The resource object
+    """
+    to_path, downloader = _get_to_path_and_downloader_partial(
+        resource_json=resource_json,
+        to_path=to_path,
+        resource_directory=resource_directory,
+        download_md5_mismatch=download_md5_mismatch,
+        clients=clients,
+        gem5_version=gem5_version,
+        quiet=quiet,
+    )
+
+    resource_class = _get_resource_json_type_map[resource_json["category"]]
+    return resource_class(
+        local_path=to_path,
+        downloader=downloader,
+        **resource_json,
+    )
+
+
+def _get_workload_input_group_dict(
+    suite: Dict[str, Any],
+    clients: List[str],
+    gem5_version: str,
+    local_path: str,
+    resource_directory: str,
+    download_md5_mismatch: bool,
+    quiet: bool,
+) -> Dict["WorkloadResource", Set[str]]:
+    """
+    This function is used to create the workload resource objects for each
+    workload in the suite.
+
+    :param suite: The suite JSON object
+    :param clients: A list of clients to search for the resource. If this
+                    parameter is not set, it will default search all clients.
+    :param gem5_version: The gem5 version to use to filter incompatible
+                        resource versions. By default set to the current gem5
+                        version. If `None`, this filtering is not performed.
+    :param local_path: The path to which the resource is to be downloaded. If
+                    ``None``, the resource will be downloaded to the resource
+                    directory with the file/directory name equal to the ID of
+                    the resource.
+    :param resource_directory: The location of the directory in which
+                                the resource is to be stored. If this parameter
+                                is not set, it will set to the environment
+                                variable ``GEM5_RESOURCE_DIR``. If the
+                                environment is not set it will default to
+                                ``~/.cache/gem5`` if available, otherwise the CWD.
+                                *Note*: This argument is ignored if the
+                                ``to_path`` parameter is specified.
+    :param download_md5_mismatch: If the resource is present, but does not
+                                have the correct md5 value, the resource will
+                                be deleted and re-downloaded if this value is
+                                ``True``. Otherwise an exception will be thrown.
+    :param quiet: If ``True``, suppress output.
+    :returns: Dictionary mapping the workload resource objects to their input
+              groups
+    """
+
+    # Mapping input groups to workload IDs
+    id_input_group_dict = {}
+    for workload in suite["workloads"]:
+        id_input_group_dict[workload["id"]] = workload["input_group"]
+
+    # Fetching the workload resources as a list of dicts
+    mongo_query = [
+        {
+            "id": resource_info["id"],
+            "resource_version": resource_info["resource_version"],
+        }
+        for resource_info in suite["workloads"]
+    ]
+    workload_json = get_multiple_resource_json_obj(
+        mongo_query, clients, gem5_version
+    )
+
+    # Creating the workload resource objects for each workload
+    # and setting the input group for each workload
+    workload_input_group_dict = {}
+    for workload in workload_json:
+        params = {}
+        _set_all_dependant_resources_and_params(
+            workload["resources"],
+            local_path,
+            resource_directory,
+            download_md5_mismatch,
+            clients,
+            gem5_version,
+            quiet,
+            params,
+            workload["additional_params"],
+        )
+        workload["parameters"] = params
+        workload_input_group_dict[
+            WorkloadResource(
+                local_path=local_path,
+                downloader=None,
+                **workload,
+            )
+        ] = id_input_group_dict[workload["id"]]
+
+    return workload_input_group_dict
 
 
 def _get_to_path_and_downloader_partial(
