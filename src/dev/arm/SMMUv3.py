@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2018-2020 ARM Limited
+# Copyright (c) 2013, 2018-2020, 2024 Arm Limited
 # All rights reserved
 #
 # The license below extends only to copyright in the software and shall
@@ -100,13 +100,6 @@ class SMMUv3(ClockedObject):
     reg_map = Param.AddrRange("Address range for control registers")
     system = Param.System(Parent.any, "System this device is part of")
 
-    irq_interface_enable = Param.Bool(
-        False,
-        "This flag enables software to program SMMU_IRQ_CTRL and "
-        "SMMU_IRQ_CTRLACK as if the model implemented architectural "
-        "interrupt sources",
-    )
-
     device_interfaces = VectorParam.SMMUv3DeviceInterface(
         [], "Responder interfaces"
     )
@@ -200,6 +193,13 @@ class SMMUv3(ClockedObject):
     # [7:0] (0 = SMMUv3.0) (1 = SMMUv3.1)
     smmu_aidr = Param.UInt32(0, "SMMU_AIDR register")
 
+    eventq_irq = Param.ArmSPI(
+        NULL,
+        "Event Queue Interrupt. If set to NULL it means a wired "
+        "implementation of the interrupt is not supported. "
+        "In that case MSIs should be used",
+    )
+
     def generateDeviceTree(self, state):
         reg_addr = self.reg_map.start
         reg_size = self.reg_map.size()
@@ -210,6 +210,22 @@ class SMMUv3(ClockedObject):
                 "reg", state.addrCells(reg_addr) + state.sizeCells(reg_size)
             )
         )
+
+        gic = self._parent.unproxy(self).gic
+
+        wired_interrupts = []
+        if self.eventq_irq != NULL:
+            wired_interrupts += self.eventq_irq.generateFdtProperty(gic)
+
+        if wired_interrupts:
+            node.append(FdtPropertyWords("interrupts", wired_interrupts))
+            node.append(
+                FdtPropertyWords(
+                    "interrupt-names",
+                    ["eventq"],
+                )
+            )
+
         node.append(FdtPropertyWords("#iommu-cells", [1]))
 
         node.appendPhandle(self)

@@ -87,6 +87,7 @@ Source('kmi.cc', tags='arm isa')
 Source('smmu_v3.cc', tags='arm isa');
 Source('smmu_v3_caches.cc', tags='arm isa');
 Source('smmu_v3_cmdexec.cc', tags='arm isa');
+Source('smmu_v3_defs.cc', tags='arm isa');
 Source('smmu_v3_events.cc', tags='arm isa');
 Source('smmu_v3_ports.cc', tags='arm isa');
 Source('smmu_v3_proc.cc', tags='arm isa');
