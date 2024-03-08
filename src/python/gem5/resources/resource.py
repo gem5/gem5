@@ -815,46 +815,6 @@ class SuiteResource(AbstractResource):
         }
 
 
-class ShadowResource(AbstractResource):
-    """A special resource class which delays the `obtain_resource` call. It is,
-    in a sense, half constructed. Only when a function or attribute is called
-    which is is neither `get_id` or `get_resource_version` does this class
-    fully construct itself by calling the `obtain_resource_call` partial
-    function.
-
-    **Note:** This class is a hack. The ideal solution to this would be to
-    enable the bundled obtaining of resources in the gem5 Standard Library.
-    Use of the class is discouraged and should not be depended on. Issue
-    https://github.com/gem5/gem5/issues/644 is tracking the implementation of
-    an alternative.
-    """
-
-    def __init__(
-        self,
-        id: str,
-        resource_version: str,
-        obtain_resource_call: partial,
-    ):
-        super().__init__(
-            id=id,
-            resource_version=resource_version,
-        )
-        self._workload: Optional[AbstractResource] = None
-        self._obtain_resource_call = obtain_resource_call
-
-    def __getattr__(self, attr):
-        """if getting the id or resource version, we keep the object in the
-        "shdow state" where the `obtain_resource` function has not been called.
-        When more information is needed by calling another attribute, we call
-        the `obtain_resource` function and store the result in the `_workload`.
-        """
-        if attr in {"get_id", "get_resource_version"}:
-            return getattr(super(), attr)
-        if not self._workload:
-            self._workload = self._obtain_resource_call()
-        return getattr(self._workload, attr)
-
-
 class WorkloadResource(AbstractResource):
     """A workload resource. This resource is used to specify a workload to run
     on a board. It contains the function to call and the parameters to pass to
