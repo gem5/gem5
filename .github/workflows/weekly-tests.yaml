@@ -85,10 +85,8 @@ jobs:
                   export TERM=xterm-256color
                   scons build/x86/out/m5
             - name: Download tests
-              working-directory: ${{ github.workspace }}/hip
-              run: build/VEGA_X86/gem5.opt util/obtain-resource.py hacc-force-tree -p ForceTreeTest
+              run: build/VEGA_X86/gem5.opt util/obtain-resource.py hacc-force-tree -p hip/ForceTreeTest
             - name: Run HACC tests
-              working-directory: ${{ github.workspace }}
               run: |
                   build/VEGA_X86/gem5.opt configs/example/apu_se.py -n3 --reg-alloc-policy=dynamic --benchmark-root=hip -c ForceTreeTest --options="0.5 0.1 64 0.1 1 N 12 rcb"
 
@@ -133,7 +131,7 @@ jobs:
                   # Scheduled workflows run on the default branch by default. We
                   # therefore need to explicitly checkout the develop branch.
                   ref: develop
-            - uses: actions/download-artifact@v4
+            - uses: actions/download-artifact@v3
               with:
                   name: ${{needs.build-gem5.outputs.build-name}}
                   path: build/ALL
