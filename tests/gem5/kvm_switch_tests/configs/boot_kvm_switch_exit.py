@@ -166,10 +166,14 @@ kernal_args = motherboard.get_default_kernel_args() + [args.kernel_args]
 # Set the Full System workload.
 motherboard.set_kernel_disk_workload(
     kernel=obtain_resource(
-        "x86-linux-kernel-5.4.49", resource_directory=args.resource_directory
+        "x86-linux-kernel-5.4.49",
+        resource_directory=args.resource_directory,
+        resource_version="1.0.0",
     ),
     disk_image=obtain_resource(
-        "x86-ubuntu-18.04-img", resource_directory=args.resource_directory
+        "x86-ubuntu-18.04-img",
+        resource_directory=args.resource_directory,
+        resource_version="1.0.0",
     ),
     # The first exit signals to switch processors.
     readfile_contents="m5 exit\nm5 exit\n",

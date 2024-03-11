@@ -61,7 +61,10 @@ board = SimpleBoard(
     cache_hierarchy=cache_hierarchy,
 )
 board.set_se_binary_workload(
-    obtain_resource("x86-hello64-static"),
+    obtain_resource(
+        "x86-hello64-static",
+        resource_version="1.0.0",
+    ),
     checkpoint=obtain_resource(
         "x86-hello-test-checkpoint-v24-0", resource_version="2.0.0"
     ),
