@@ -158,7 +158,7 @@ class Request : public Extensible<Request>
         MEM_SWAP                    = 0x00400000,
         MEM_SWAP_COND               = 0x00800000,
         /** This request is a read which will be followed by a write. */
-        READ_MODIFY_WRITE           = 0x00020000,
+        READ_MODIFY_WRITE           = 0x0020000000000000,
 
         /** The request is a prefetch. */
         PREFETCH                    = 0x01000000,
