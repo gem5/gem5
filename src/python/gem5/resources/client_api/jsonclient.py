@@ -79,7 +79,6 @@ class JSONClient(AbstractClient):
         resource_id: Optional[str] = None,
         resource_version: Optional[str] = None,
         gem5_version: Optional[str] = None,
-        proxy_context: Optional[ssl.SSLContext] = None,
     ) -> List[Dict[str, Any]]:
         filter = self.resources  # Unfiltered.
         if resource_id:

@@ -105,7 +105,6 @@ class ClientWrapper:
         self,
         resource_id: str,
         clients: Optional[List[str]] = None,
-        proxy_context: Optional[ssl.SSLContext] = None,
     ) -> List[Dict]:
         """
         This function returns all the resources with the given id from all the
@@ -114,8 +113,6 @@ class ClientWrapper:
         :param resource_id: The id of the resource to search for.
         :param clients: A list of clients to search through. If ``None``, all
                         clients are searched.
-        :param proxy_context: The SOCKS proxy context to use for the request.
-                              'None' if no proxy is to be used.
         :return: A list of resources as Python dictionaries.
         """
         resources = []
@@ -126,9 +123,7 @@ class ClientWrapper:
                 raise Exception(f"Client: {client} does not exist")
             try:
                 resources.extend(
-                    self.clients[client].get_resources_by_id(
-                        resource_id, proxy_context
-                    )
+                    self.clients[client].get_resources_by_id(resource_id)
                 )
             except Exception as e:
                 print(
@@ -152,7 +147,6 @@ class ClientWrapper:
         resource_version: Optional[str] = None,
         clients: Optional[List[str]] = None,
         gem5_version: Optional[str] = core.gem5Version,
-        proxy_context: Optional[ssl.SSLContext] = None,
     ) -> Dict:
         """
         This function returns the resource object from the client with the
@@ -165,15 +159,11 @@ class ClientWrapper:
         :param gem5_version: The gem5 version to check compatibility with. If
                              ``None``, no compatibility check is performed. By
                              default, is the current version of gem5.
-        :param proxy_context: The SOCKS proxy context to use for the request.
-                              'None' if no proxy is to be used.
         :return: The resource object as a Python dictionary if found.
                  If not found, exception is thrown.
         """
         # getting all the resources with the given id from the dictionary
-        resources = self.get_all_resources_by_id(
-            resource_id, clients, proxy_context
-        )
+        resources = self.get_all_resources_by_id(resource_id, clients)
         # if no resource with the given id is found, return None
         if len(resources) == 0:
             raise Exception(f"Resource with ID '{resource_id}' not found.")

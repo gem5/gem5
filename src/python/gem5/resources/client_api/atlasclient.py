@@ -45,6 +45,7 @@ from urllib import (
 
 from m5.util import warn
 
+from ..downloader import get_proxy_context
 from .abstract_client import AbstractClient
 
 
@@ -104,7 +105,6 @@ class AtlasClient(AbstractClient):
         data_json: Dict[str, Any],
         headers: Dict[str, str],
         purpose_of_request: Optional[str],
-        proxy_context: Optional[ssl.SSLContext] = None,
         max_failed_attempts: int = 4,
         reattempt_pause_base: int = 2,
     ) -> Dict[str, Any]:
@@ -119,8 +119,6 @@ class AtlasClient(AbstractClient):
         :param purpose_of_request: A string describing the purpose of the
         request. This is optional. It's used to give context to the user if an
         exception is raised.
-        :param proxy_context: The SOCKS proxy context to use for the request.
-        'None' if no proxy is to be used.
         :param max_failed_attempts: The maximum number of times to an attempt
         at making a request should be done before throwing an exception.
         :param reattempt_pause_base: The base of the exponential backoff -- the
@@ -128,6 +126,7 @@ class AtlasClient(AbstractClient):
 
         **Warning**: This function assumes a JSON response.
         """
+        proxy_context = get_proxy_context()
         data = json.dumps(data_json).encode("utf-8")
         req = request.Request(
             url,

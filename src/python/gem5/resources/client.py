@@ -152,7 +152,6 @@ def get_resource_json_obj(
     resource_version: Optional[str] = None,
     clients: Optional[List[str]] = None,
     gem5_version: Optional[str] = core.gem5Version,
-    proxy_context: Optional[ssl.SSLContext] = None,
 ) -> Dict:
     """
     Get the resource json object from the clients wrapper.
@@ -164,10 +163,8 @@ def get_resource_json_obj(
                          compatibility. By default, it is the gem5 version of the
                          current build. If ``None``, filtering based on compatibility
                          is not performed.
-    :param proxy_context: The SOCKS proxy context to use for the request.
-                          'None' if no proxy is to be used.
     """
 
     return _get_clientwrapper().get_resource_json_obj_from_client(
-        resource_id, resource_version, clients, gem5_version, proxy_context
+        resource_id, resource_version, clients, gem5_version
     )
