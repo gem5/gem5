@@ -347,6 +347,10 @@ class Simulator:
         self._last_exit_event = None
         self._exit_event_count = 0
 
+        self._original_max_ticks = 0
+        self._remaining_max_tick = 0
+        self._next_max_tick = -1
+
         if checkpoint_path:
             warn(
                 "Setting the checkpoint path via the Simulator constructor is "
@@ -386,6 +390,20 @@ class Simulator:
         """
         for core in self._board.get_processor().get_cores():
             core._set_inst_stop_any_thread(inst, self._instantiated)
+
+    def schedule_next_max_ticks(self, ticks: int) -> None:
+        """
+        Schedule an ``MAX_TICK`` after running the simulation for certain
+        number of ticks from curTick.
+
+        :param tikcs: Number of ticks to simulate.
+        """
+        if self._next_max_tick != -1:
+            raise RuntimeError(
+                f"Already have a next_max_tick scheduled "
+                f"for {self._next_max_tick} ticks."
+            )
+        self._next_max_tick = ticks
 
     def get_stats(self) -> Dict:
         """
@@ -517,9 +535,11 @@ class Simulator:
             self._board._pre_instantiate()
 
             root = Root(
-                full_system=self._full_system
-                if self._full_system is not None
-                else self._board.is_fullsystem(),
+                full_system=(
+                    self._full_system
+                    if self._full_system is not None
+                    else self._board.is_fullsystem()
+                ),
                 board=self._board,
             )
 
@@ -568,11 +588,10 @@ class Simulator:
         This function will start or continue the simulator run and handle exit
         events accordingly.
 
-        :param max_ticks: The maximum number of ticks to execute per simulation
-                          run. If this ``max_ticks`` value is met, a ``MAX_TICK``
+        :param max_ticks: The maximum number of ticks to simulate overall.
+                          If this ``max_ticks`` value is met, a ``MAX_TICK``
                           exit event is received, if another simulation exit
-                          event is met the tick count is reset. This is the
-                          **maximum number of ticks per simulation run**.
+                          event is met the tick count is reset.
         """
 
         # Check to ensure no banned module has been imported.
@@ -583,13 +602,34 @@ class Simulator:
                     "Please do not use this in your simulations. "
                     f"Reason: {self._banned_modules[banned_module]}"
                 )
-
+        self._original_max_ticks = max_ticks
+        self._remaining_max_tick = max_ticks
         # We instantiate the board if it has not already been instantiated.
         self._instantiate()
 
         # This while loop will continue until an a generator yields True.
         while True:
+            if self._next_max_tick != -1:
+                max_ticks = self._next_max_tick
+                self._next_max_tick = -1
+            else:
+                max_ticks = self._remaining_max_tick
+
+            if max_ticks == 0:
+                break
+            if max_ticks > self._remaining_max_tick:
+                warn(
+                    "To run the simulation for the next determined max_ticks "
+                    "simulation will exceed the original max_ticks "
+                    f"{self._original_max_ticks} set by the call ro run()."
+                    "Adjusting next determined max_ticks to "
+                    f"{self._remaining_max_tick} to account for this."
+                )
+                max_ticks = self._remaining_max_ticks
+            in_tick = m5.curTick()
             self._last_exit_event = m5.simulate(max_ticks)
+            out_tick = m5.curTick()
+            self._remaining_max_tick -= out_tick - in_tick
 
             # Translate the exit event cause to the exit event enum.
             exit_enum = ExitEvent.translate_exit_status(
