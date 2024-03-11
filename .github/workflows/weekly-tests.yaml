@@ -133,7 +133,7 @@ jobs:
                   # Scheduled workflows run on the default branch by default. We
                   # therefore need to explicitly checkout the develop branch.
                   ref: develop
-            - uses: actions/download-artifact@v4
+            - uses: actions/download-artifact@v3
               with:
                   name: ${{needs.build-gem5.outputs.build-name}}
                   path: build/ALL
