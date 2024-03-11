@@ -85,10 +85,8 @@ jobs:
                   export TERM=xterm-256color
                   scons build/x86/out/m5
             - name: Download tests
-              working-directory: ${{ github.workspace }}/hip
-              run: build/VEGA_X86/gem5.opt util/obtain-resource.py hacc-force-tree -p ForceTreeTest
+              run: build/VEGA_X86/gem5.opt util/obtain-resource.py hacc-force-tree -p hip/ForceTreeTest
             - name: Run HACC tests
-              working-directory: ${{ github.workspace }}
               run: |
                   build/VEGA_X86/gem5.opt configs/example/apu_se.py -n3 --reg-alloc-policy=dynamic --benchmark-root=hip -c ForceTreeTest --options="0.5 0.1 64 0.1 1 N 12 rcb"
 
