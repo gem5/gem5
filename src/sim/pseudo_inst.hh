@@ -64,18 +64,29 @@ decodeAddrOffset(Addr offset, uint8_t &func)
     func = bits(offset, 15, 8);
 }
 
+struct GuestAddr
+{
+  uint64_t addr;
+};
+
+inline std::ostream&
+operator<<(std::ostream& os, const GuestAddr addr)
+{
+  return os << addr.addr;
+}
+
 void arm(ThreadContext *tc);
 void quiesce(ThreadContext *tc);
 void quiesceSkip(ThreadContext *tc);
 void quiesceNs(ThreadContext *tc, uint64_t ns);
 void quiesceCycles(ThreadContext *tc, uint64_t cycles);
 uint64_t quiesceTime(ThreadContext *tc);
-uint64_t readfile(ThreadContext *tc, Addr vaddr, uint64_t len,
+uint64_t readfile(ThreadContext *tc, GuestAddr vaddr, uint64_t len,
     uint64_t offset);
-uint64_t writefile(ThreadContext *tc, Addr vaddr, uint64_t len,
-    uint64_t offset, Addr filenameAddr);
+uint64_t writefile(ThreadContext *tc, GuestAddr vaddr, uint64_t len,
+    uint64_t offset, GuestAddr filenameAddr);
 void loadsymbol(ThreadContext *xc);
-void addsymbol(ThreadContext *tc, Addr addr, Addr symbolAddr);
+void addsymbol(ThreadContext *tc, GuestAddr addr, GuestAddr symbolAddr);
 uint64_t initParam(ThreadContext *xc, uint64_t key_str1, uint64_t key_str2);
 uint64_t rpns(ThreadContext *tc);
 void wakeCPU(ThreadContext *tc, uint64_t cpuid);
@@ -94,6 +105,7 @@ void workend(ThreadContext *tc, uint64_t workid, uint64_t threadid);
 void m5Syscall(ThreadContext *tc);
 void togglesync(ThreadContext *tc);
 void triggerWorkloadEvent(ThreadContext *tc);
+
 
 /**
  * Execute a decoded M5 pseudo instruction

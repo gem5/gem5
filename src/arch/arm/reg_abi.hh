@@ -31,6 +31,7 @@
 #include <vector>
 
 #include "base/logging.hh"
+#include "sim/pseudo_inst.hh"
 #include "sim/syscall_abi.hh"
 
 namespace gem5
@@ -54,11 +55,13 @@ struct RegABI64 : public GenericSyscallABI64
 namespace guest_abi
 {
 
+using namespace pseudo_inst;
+
 template <typename ABI, typename Arg>
 struct Argument<ABI, Arg,
     typename std::enable_if_t<
         std::is_base_of_v<ArmISA::RegABI32, ABI> &&
-        std::is_integral_v<Arg> &&
+        (std::is_integral_v<Arg> || std::is_same<Arg,GuestAddr>::value) &&
         ABI::template IsWideV<Arg>>>
 {
     static Arg
@@ -71,7 +74,8 @@ struct Argument<ABI, Arg,
                 "Ran out of syscall argument registers.");
         auto low = ABI::ArgumentRegs[state++];
         auto high = ABI::ArgumentRegs[state++];
-        return (Arg)ABI::mergeRegs(tc, low, high);
+        auto merge = ABI::mergeRegs(tc, low, high);
+        return *reinterpret_cast<Arg*>(&merge);
     }
 };
 

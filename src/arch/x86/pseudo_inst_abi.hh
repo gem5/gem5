@@ -37,6 +37,7 @@
 
 #include "arch/x86/regs/int.hh"
 #include "sim/guest_abi.hh"
+#include "sim/pseudo_inst.hh"
 
 namespace gem5
 {
@@ -48,6 +49,8 @@ struct X86PseudoInstABI
 
 namespace guest_abi
 {
+
+using namespace pseudo_inst;
 
 template <typename T>
 struct Result<X86PseudoInstABI, T>
@@ -81,6 +84,29 @@ struct Argument<X86PseudoInstABI, uint64_t>
         };
 
         return tc->getReg(int_reg_map[state++]);
+    }
+};
+
+template <>
+struct Argument<X86PseudoInstABI, GuestAddr>
+{
+    static GuestAddr
+    get(ThreadContext *tc, X86PseudoInstABI::State &state)
+    {
+        // The first 6 integer arguments are passed in registers, the rest
+        // are passed on the stack.
+
+        panic_if(state >= 6, "Too many psuedo inst arguments.");
+
+        using namespace X86ISA;
+
+        constexpr RegId int_reg_map[] = {
+            int_reg::Rdi, int_reg::Rsi, int_reg::Rdx,
+            int_reg::Rcx, int_reg::R8, int_reg::R9
+        };
+
+        auto arg = tc->getReg(int_reg_map[state++]);
+        return *reinterpret_cast<GuestAddr*>(&arg);
     }
 };
 
