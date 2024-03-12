@@ -111,12 +111,6 @@ class BaseCache(ClockedObject):
     replacement_policy = Param.BaseReplacementPolicy(
         LRURP(), "Replacement policy"
     )
-    partitioning_policies = VectorParam.BasePartitioningPolicy(
-        [],
-        "Partitioning policies "
-        "Setting multiple policies will enforce all of them individually "
-        "in order",
-    )
     partitioning_manager = Param.PartitionManager(
         NULL, "Cache partitioning manager"
     )

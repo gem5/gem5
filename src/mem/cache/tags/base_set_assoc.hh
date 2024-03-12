@@ -177,8 +177,9 @@ class BaseSetAssoc : public BaseTags
             indexingPolicy->getPossibleEntries(addr);
 
         // Filter entries based on PartitionID
-        for (auto partitioning_policy : partitioningPolicies)
-            partitioning_policy->filterByPartition(entries, partition_id);
+        if (partitionManager) {
+            partitionManager->filterByPartition(entries, partition_id);
+        }
 
         // Choose replacement victim from replacement candidates
         CacheBlk* victim = entries.empty() ? nullptr :
@@ -204,13 +205,9 @@ class BaseSetAssoc : public BaseTags
         // Increment tag counter
         stats.tagsInUse++;
 
-        // Notify partitioning policies of acquisition of ownership
-        for (auto & partitioning_policy : partitioningPolicies) {
-            // get partitionId from Packet
-            assert(partitionManager);
-            const auto partitionId =
-                partitionManager->readPacketPartitionID(pkt);
-            partitioning_policy->notifyAcquire(partitionId);
+        if (partitionManager) {
+            auto partition_id = partitionManager->readPacketPartitionID(pkt);
+            partitionManager->notifyAcquire(partition_id);
         }
 
         // Update replacement policy

@@ -63,7 +63,6 @@ BaseTags::BaseTags(const Params &p)
     : ClockedObject(p), blkSize(p.block_size), blkMask(blkSize - 1),
       size(p.size), lookupLatency(p.tag_latency),
       system(p.system), indexingPolicy(p.indexing_policy),
-      partitioningPolicies(p.partitioning_policies),
       partitionManager(p.partitioning_manager),
       warmupBound((p.warmup_percentage/100.0) * (p.size / p.block_size)),
       warmedUp(false), numBlocks(p.size / p.block_size),

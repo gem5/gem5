@@ -46,6 +46,13 @@ class PartitionManager(SimObject):
     cxx_header = "mem/cache/tags/partitioning_policies/partition_manager.hh"
     cxx_class = "gem5::partitioning_policy::PartitionManager"
 
+    partitioning_policies = VectorParam.BasePartitioningPolicy(
+        [],
+        "Partitioning policies "
+        "Setting multiple policies will enforce all of them individually "
+        "in order",
+    )
+
 
 class BasePartitioningPolicy(SimObject):
     type = "BasePartitioningPolicy"

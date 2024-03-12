@@ -45,16 +45,18 @@
 namespace gem5
 {
 
+class ReplaceableEntry;
+
 namespace partitioning_policy
 {
+
+class BasePartitioningPolicy;
 
 class PartitionManager : public SimObject
 {
   public:
     PARAMS(PartitionManager);
-    PartitionManager(const Params &p)
-      : SimObject(p)
-    {}
+    PartitionManager(const Params &p);
 
     /**
     * PartitionManager interface to retrieve PartitionID from a packet;
@@ -68,6 +70,22 @@ class PartitionManager : public SimObject
     {
         return 0;
     };
+
+    /**
+    * Notify of acquisition of ownership of a cache line
+    * @param partition_id PartitionID of the upstream memory request
+    */
+    void notifyAcquire(uint64_t partition_id);
+
+    void notifyRelease(uint64_t partition_id);
+
+    void filterByPartition(std::vector<ReplaceableEntry *> &entries,
+        const uint64_t partition_id) const;
+
+  protected:
+    /** Partitioning policies */
+    std::vector<partitioning_policy::BasePartitioningPolicy *>
+        partitioningPolicies;
 };
 
 } // namespace partitioning_policy
