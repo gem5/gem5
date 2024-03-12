@@ -49,6 +49,7 @@ from ..utils.progress_bar import (
     progress_hook,
     tqdm,
 )
+from ..utils.socks_ssl_context import get_proxy_context
 from .client import get_resource_json_obj
 from .client import list_resources as client_list_resources
 from .md5_utils import (

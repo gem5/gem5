@@ -1034,7 +1034,6 @@ def obtain_resource(
             clients=clients,
             gem5_version=gem5_version,
             quiet=quiet,
-            proxy_context=proxy_context,
         )
 
     # Obtain the type from the JSON. From this we will determine what subclass

@@ -45,7 +45,7 @@ from urllib import (
 
 from m5.util import warn
 
-from ..downloader import get_proxy_context
+from ...utils.socks_ssl_context import get_proxy_context
 from .abstract_client import AbstractClient
 
 
@@ -188,7 +188,6 @@ class AtlasClient(AbstractClient):
             data_json=data,
             headers=headers,
             purpose_of_request="Get Resources",
-            proxy_context=proxy_context,
         )["documents"]
 
         # I do this as a lazy post-processing step because I can't figure out
