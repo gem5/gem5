@@ -117,6 +117,9 @@ class BaseCache(ClockedObject):
         "Setting multiple policies will enforce all of them individually "
         "in order",
     )
+    partitioning_manager = Param.PartitionManager(
+        NULL, "Cache partitioning manager"
+    )
 
     compressor = Param.BaseCacheCompressor(NULL, "Cache compressor.")
     replace_expansions = Param.Bool(

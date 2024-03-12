@@ -79,6 +79,10 @@ class BaseTags(ClockedObject):
         Parent.partitioning_policies, "Partitioning policies"
     )
 
+    partitioning_manager = Param.PartitionManager(
+        Parent.partitioning_manager, "Cache partitioning manager"
+    )
+
     # Set the indexing entry size as the block size
     entry_size = Param.Int(
         Parent.cache_line_size, "Indexing entry size in bytes"

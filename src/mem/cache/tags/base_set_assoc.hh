@@ -59,7 +59,7 @@
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
 #include "mem/cache/tags/base.hh"
 #include "mem/cache/tags/indexing_policies/base.hh"
-#include "mem/cache/tags/partitioning_policies/partition_fields_extension.hh"
+#include "mem/cache/tags/partitioning_policies/partition_manager.hh"
 #include "mem/packet.hh"
 #include "params/BaseSetAssoc.hh"
 
@@ -207,8 +207,9 @@ class BaseSetAssoc : public BaseTags
         // Notify partitioning policies of acquisition of ownership
         for (auto & partitioning_policy : partitioningPolicies) {
             // get partitionId from Packet
+            assert(partitionManager);
             const auto partitionId =
-                partitioning_policy::readPacketPartitionID(pkt);
+                partitionManager->readPacketPartitionID(pkt);
             partitioning_policy->notifyAcquire(partitionId);
         }
 

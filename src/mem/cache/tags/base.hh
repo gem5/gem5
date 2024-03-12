@@ -93,6 +93,9 @@ class BaseTags : public ClockedObject
     std::vector<partitioning_policy::BasePartitioningPolicy *>
         partitioningPolicies;
 
+    /** Partitioning manager */
+    partitioning_policy::PartitionManager *partitionManager;
+
     /**
      * The number of tags that need to be touched to meet the warmup
      * percentage.
