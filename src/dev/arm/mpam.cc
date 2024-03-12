@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 ARM Limited
+ * Copyright (c) 2024 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -35,55 +35,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "partition_fields_extension.hh"
+#include "arch/arm/mpam.hh"
+#include "dev/arm/mpam.hh"
 
-namespace gem5
+namespace gem5::mpam
 {
-
-namespace partitioning_policy
-{
-
-std::unique_ptr<ExtensionBase>
-PartitionFieldExtention::clone() const
-{
-    return std::make_unique<PartitionFieldExtention>(*this);
-}
 
 uint64_t
-PartitionFieldExtention::getPartitionID() const
-{
-    return this->_partitionID;
-}
-
-uint64_t
-PartitionFieldExtention::getPartitionMonitoringID() const
-{
-    return this->_partitionMonitoringID;
-}
-
-void
-PartitionFieldExtention::setPartitionID(uint64_t id)
-{
-    this->_partitionID = id;
-}
-
-void
-PartitionFieldExtention::setPartitionMonitoringID(uint64_t id)
-{
-    this->_partitionMonitoringID = id;
-}
-
-uint64_t
-readPacketPartitionID (PacketPtr pkt)
+MSC::readPacketPartitionID(PacketPtr pkt) const
 {
     // get partition_id from PartitionFieldExtention
-    std::shared_ptr<PartitionFieldExtention> ext =
-        pkt->req->getExtension<PartitionFieldExtention>();
-
+    auto ext = pkt->req->getExtension<ArmISA::mpam::PartitionFieldExtention>();
     // use default value if extension is not set
-    return (ext != nullptr) ? ext->getPartitionID() : DEFAULT_PARTITION_ID;
+    return (ext != nullptr) ? ext->getPartitionID() :
+        ArmISA::mpam::DEFAULT_PARTITION_ID;
 }
 
-} // namespace partitioning_policy
-
-} // namespace gem5
+} // namespace gem5::mpam

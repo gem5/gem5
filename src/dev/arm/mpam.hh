@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 ARM Limited
+ * Copyright (c) 2024 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -35,67 +35,33 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __MEM_CACHE_TAGS_PARTITIONING_POLICIES_BASE_HH__
-#define __MEM_CACHE_TAGS_PARTITIONING_POLICIES_BASE_HH__
+#ifndef __DEV_ARM_MPAM_HH__
+#define __DEV_ARM_MPAM_HH__
 
-#include <vector>
+#include "mem/cache/tags/partitioning_policies/partition_manager.hh"
 
-#include "params/BasePartitioningPolicy.hh"
-#include "sim/sim_object.hh"
-
-namespace gem5
-{
-
-class ReplaceableEntry;
-
-namespace partitioning_policy
+namespace gem5::mpam
 {
 
 /**
- * A Partitioning Policy is a cache partitioning mechanism that limits the
- * cache block allocations in a cache based on a PartitionID identifier. This
- * identifier may be set to any upstream memory request by attaching the
- * PartitionID to it. The way the partition ID is attached/extracted
- * from the request depends on the partitioning manager.
- *
- * See the use of the PartitionFieldExtention in Arm as an example.
- *
- * When partitioning policies are in place, the allocatable cache blocks for
- * this memory request will be filtered based on its PartitionID.
- *
+ * This class implements a simple MPAM Memory System Component (MSC)
+ * partitioning controller. For further info refer to:
+ * https://developer.arm.com/documentation/ddi0598/latest/
  */
-class BasePartitioningPolicy : public SimObject
+class MSC : public partitioning_policy::PartitionManager
 {
   public:
-    BasePartitioningPolicy(const BasePartitioningPolicyParams &params);
+    using partitioning_policy::PartitionManager::PartitionManager;
 
     /**
-    * Filters the allocatable cache blocks for a memory request based on its
-    * PartitionID and policy allocation
-    * @param entries candidate cache blocks for this request; filtered in place
-    * @param partition_id PartitionID of the upstream memory request
+    * Helper function to retrieve PartitionID from a packet; Returns packet
+    * PartitionID if available or DEFAULT_PARTITION_ID if extention is not set
+    * @param pkt pointer to packet (PacketPtr)
+    * @return packet PartitionID.
     */
-    virtual void
-    filterByPartition(std::vector<ReplaceableEntry *> &entries,
-                      const uint64_t partition_id) const = 0;
-
-    /**
-    * Notify of acquisition of ownership of a cache line
-    * @param partition_id PartitionID of the upstream memory request
-    */
-    virtual void
-    notifyAcquire(const uint64_t partition_id) = 0;
-
-    /**
-    * Notify of release of ownership of a cache line
-    * @param partition_id PartitionID of the upstream memory request
-    */
-    virtual void
-    notifyRelease(const uint64_t partition_id) = 0;
+    uint64_t readPacketPartitionID(PacketPtr pkt) const override;
 };
 
-} // namespace partitioning_policy
+} // namespace gem5::mpam
 
-} // namespace gem5
-
-#endif // __MEM_CACHE_TAGS_PARTITIONING_POLICIES_BASE_HH__
+#endif // __DEV_ARM_MPAM_HH__
