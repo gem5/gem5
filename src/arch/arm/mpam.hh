@@ -35,67 +35,55 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __MEM_CACHE_TAGS_PARTITIONING_POLICIES_BASE_HH__
-#define __MEM_CACHE_TAGS_PARTITIONING_POLICIES_BASE_HH__
+#ifndef __ARCH_ARM_MPAM_HH__
+#define __ARCH_ARM_MPAM_HH__
 
-#include <vector>
+#include "base/extensible.hh"
+#include "mem/packet.hh"
+#include "mem/request.hh"
 
-#include "params/BasePartitioningPolicy.hh"
-#include "sim/sim_object.hh"
-
-namespace gem5
+namespace gem5::ArmISA::mpam
 {
 
-class ReplaceableEntry;
+const uint64_t DEFAULT_PARTITION_ID = 0;
+const uint64_t DEFAULT_PARTITION_MONITORING_ID = 0;
 
-namespace partitioning_policy
-{
-
-/**
- * A Partitioning Policy is a cache partitioning mechanism that limits the
- * cache block allocations in a cache based on a PartitionID identifier. This
- * identifier may be set to any upstream memory request by attaching the
- * PartitionID to it. The way the partition ID is attached/extracted
- * from the request depends on the partitioning manager.
- *
- * See the use of the PartitionFieldExtention in Arm as an example.
- *
- * When partitioning policies are in place, the allocatable cache blocks for
- * this memory request will be filtered based on its PartitionID.
- *
- */
-class BasePartitioningPolicy : public SimObject
+class PartitionFieldExtention : public Extension<Request,
+                                                 PartitionFieldExtention>
 {
   public:
-    BasePartitioningPolicy(const BasePartitioningPolicyParams &params);
+    std::unique_ptr<ExtensionBase> clone() const override;
+    PartitionFieldExtention() = default;
 
     /**
-    * Filters the allocatable cache blocks for a memory request based on its
-    * PartitionID and policy allocation
-    * @param entries candidate cache blocks for this request; filtered in place
-    * @param partition_id PartitionID of the upstream memory request
+    * _partitionID getter
+    * @return extension Partition ID
     */
-    virtual void
-    filterByPartition(std::vector<ReplaceableEntry *> &entries,
-                      const uint64_t partition_id) const = 0;
+    uint64_t getPartitionID() const;
 
     /**
-    * Notify of acquisition of ownership of a cache line
-    * @param partition_id PartitionID of the upstream memory request
+    * _partitionMonitoringID getter
+    * @return extension Partition Monitoring ID
     */
-    virtual void
-    notifyAcquire(const uint64_t partition_id) = 0;
+    uint64_t getPartitionMonitoringID() const;
 
     /**
-    * Notify of release of ownership of a cache line
-    * @param partition_id PartitionID of the upstream memory request
+    * _partitionID setter
+    * @param id Partition ID to set for the extension
     */
-    virtual void
-    notifyRelease(const uint64_t partition_id) = 0;
+    void setPartitionID(uint64_t id);
+
+    /**
+    * _partitionMonitoringID setter
+    * @param id Partition Monitoring ID to set for the extension
+    */
+    void setPartitionMonitoringID(uint64_t id);
+
+  private:
+    uint64_t _partitionID = DEFAULT_PARTITION_ID;
+    uint64_t _partitionMonitoringID = DEFAULT_PARTITION_MONITORING_ID;
 };
 
-} // namespace partitioning_policy
+} // namespace gem5::ArmISA::mpam
 
-} // namespace gem5
-
-#endif // __MEM_CACHE_TAGS_PARTITIONING_POLICIES_BASE_HH__
+#endif // __ARCH_ARM_MPAM_HH__
