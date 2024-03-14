@@ -104,12 +104,12 @@ args = parser.parse_args()
 requires(isa_required=ISA.RISCV)
 
 if args.mem_system == "classic":
-    from gem5.components.cachehierarchies.classic.private_l1_private_l2_cache_hierarchy import (
-        PrivateL1PrivateL2CacheHierarchy,
+    from gem5.components.cachehierarchies.classic.private_l1_private_l2_walk_cache_hierarchy import (
+        PrivateL1PrivateL2WalkCacheHierarchy,
     )
 
     # Setup the cache hierarchy.
-    cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
+    cache_hierarchy = PrivateL1PrivateL2WalkCacheHierarchy(
         l1d_size="32KiB", l1i_size="32KiB", l2_size="512KiB"
     )
 elif args.mem_system == "mesi_two_level":
