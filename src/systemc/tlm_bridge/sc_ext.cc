@@ -401,4 +401,22 @@ ControlExtension::setAXI4CacheAttributesFromFlag(uint32_t axi4_flag)
     setWriteAllocate((axi4_flag >> 3) & 1);
 }
 
+bool
+ControlExtension::hasDomain() const
+{
+    return domain.has_value();
+}
+
+std::optional<uint32_t>
+ControlExtension::getDomain() const
+{
+    return domain;
+}
+
+void
+ControlExtension::setDomain(std::optional<uint32_t> d)
+{
+    domain = std::move(d);
+}
+
 }  // namespace Gem5SystemC

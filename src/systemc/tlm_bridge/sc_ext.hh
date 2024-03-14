@@ -140,6 +140,11 @@ class ControlExtension : public tlm::tlm_extension<ControlExtension>
 
     void setAXI4CacheAttributesFromFlag(uint32_t axi4_flag);
 
+    /* AXI4 Domain */
+    bool hasDomain() const;
+    std::optional<uint32_t> getDomain() const;
+    void setDomain(std::optional<uint32_t> d);
+
   private:
     /* Secure and privileged access */
     bool privileged;
@@ -158,6 +163,9 @@ class ControlExtension : public tlm::tlm_extension<ControlExtension>
     std::optional<bool> modifiable;
     std::optional<bool> read_allocate;
     std::optional<bool> write_allocate;
+
+    /* AXI4 Domain */
+    std::optional<uint32_t> domain;
 };
 
 } // namespace Gem5SystemC
