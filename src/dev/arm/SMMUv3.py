@@ -220,7 +220,7 @@ class SMMUv3(ClockedObject):
         if wired_interrupts:
             node.append(FdtPropertyWords("interrupts", wired_interrupts))
             node.append(
-                FdtPropertyWords(
+                FdtPropertyStrings(
                     "interrupt-names",
                     ["eventq"],
                 )
