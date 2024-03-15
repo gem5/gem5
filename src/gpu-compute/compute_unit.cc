@@ -1701,16 +1701,20 @@ ComputeUnit::DataPort::processMemReqEvent(PacketPtr pkt)
     } else if (!(sendTimingReq(pkt))) {
         retries.push_back(std::make_pair(pkt, gpuDynInst));
 
-        DPRINTF(GPUPort,
-                "CU%d: WF[%d][%d]: index %d, addr %#x data req failed!\n",
-                compute_unit->cu_id, gpuDynInst->simdId, gpuDynInst->wfSlotId,
-                id, pkt->req->getPaddr());
+        if (gpuDynInst) {
+            DPRINTF(GPUPort,
+                    "CU%d: WF[%d][%d]: index %d, addr %#x data req failed!\n",
+                    compute_unit->cu_id, gpuDynInst->simdId,
+                    gpuDynInst->wfSlotId, id, pkt->req->getPaddr());
+        }
     } else {
-        DPRINTF(GPUPort,
-                "CU%d: WF[%d][%d]: gpuDynInst: %d, index %d, addr %#x data "
-                "req sent!\n", compute_unit->cu_id, gpuDynInst->simdId,
-                gpuDynInst->wfSlotId, gpuDynInst->seqNum(), id,
-                pkt->req->getPaddr());
+        if (gpuDynInst) {
+            DPRINTF(GPUPort,
+                    "CU%d: WF[%d][%d]: gpuDynInst: %d, index %d, addr %#x data"
+                    " req sent!\n", compute_unit->cu_id, gpuDynInst->simdId,
+                    gpuDynInst->wfSlotId, gpuDynInst->seqNum(), id,
+                    pkt->req->getPaddr());
+        }
     }
 }
 

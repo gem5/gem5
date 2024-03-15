@@ -669,14 +669,14 @@ GPUCoalescer::getRequestType(PacketPtr pkt)
 RequestStatus
 GPUCoalescer::makeRequest(PacketPtr pkt)
 {
-    // all packets must have valid instruction sequence numbers
-    assert(pkt->req->hasInstSeqNum());
-
     if (pkt->cmd == MemCmd::MemSyncReq) {
         // issue mem_sync requests immediately to the cache system without
         // going through uncoalescedTable like normal LD/ST/Atomic requests
         issueMemSyncRequest(pkt);
     } else {
+        // all packets must have valid instruction sequence numbers
+        assert(pkt->req->hasInstSeqNum());
+
         // otherwise, this must be either read or write command
         assert(pkt->isRead() || pkt->isWrite() || pkt->isFlush());
 
