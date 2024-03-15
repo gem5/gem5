@@ -474,6 +474,8 @@ class ComputeUnit : public ClockedObject
 
     void handleSQCReturn(PacketPtr pkt);
 
+    void sendInvL2(Addr paddr);
+
   protected:
     RequestorID _requestorId;
 
@@ -527,6 +529,7 @@ class ComputeUnit : public ClockedObject
 
         struct SenderState : public Packet::SenderState
         {
+            ComputeUnit *computeUnit = nullptr;
             GPUDynInstPtr _gpuDynInst;
             PortID port_index;
             Packet::SenderState *saved;
@@ -534,6 +537,12 @@ class ComputeUnit : public ClockedObject
             SenderState(GPUDynInstPtr gpuDynInst, PortID _port_index,
                         Packet::SenderState *sender_state=nullptr)
                 : _gpuDynInst(gpuDynInst),
+                  port_index(_port_index),
+                  saved(sender_state) { }
+
+            SenderState(ComputeUnit *cu, PortID _port_index,
+                        Packet::SenderState *sender_state=nullptr)
+                : computeUnit(cu),
                   port_index(_port_index),
                   saved(sender_state) { }
         };

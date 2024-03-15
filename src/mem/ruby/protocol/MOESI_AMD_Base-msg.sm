@@ -46,6 +46,7 @@ enumeration(CoherenceRequestType, desc="Coherence Request Types") {
   WriteThroughFifo, desc="WriteThrough with no data";
   WriteThroughDummy, desc="WriteThrough with no data for atomic operation";
   WriteFlush,   desc="Release Flush";
+  InvCache,     desc="Invalidate Cache";
 
   WrCancel,     desc="want to cancel WB to Memory"; // should this be here?
 
@@ -95,6 +96,7 @@ enumeration(CoherenceResponseType, desc="Coherence Response Types") {
   StaleNotif,      desc="Notification of Stale WBAck, No data to writeback";
   CPUCancelWB,     desc="want to cancel WB to Memory";
   MemData,         desc="Data from Memory";
+  InvL2Resp,       desc="Invalidate L2 response";
 
   // for regions
   PrivateAck,      desc="Ack that r-buf received private notify";

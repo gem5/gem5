@@ -41,6 +41,7 @@
 #include "debug/GPUKernelInfo.hh"
 #include "dev/amdgpu/amdgpu_device.hh"
 #include "gpu-compute/dispatcher.hh"
+#include "gpu-compute/shader.hh"
 #include "mem/abstract_mem.hh"
 #include "mem/packet_access.hh"
 #include "mem/se_translating_port_proxy.hh"
@@ -125,6 +126,21 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
     // necessarily a cache line boundary.
     unsigned akc_alignment_granularity = 64;
     assert(!(disp_pkt->kernel_object & (akc_alignment_granularity - 1)));
+
+    /**
+     * Make sure there is not a race condition with invalidates in the L2
+     * cache. The full system driver may write directly to memory using
+     * large BAR while the L2 cache is allowed to keep data in the valid
+     * state between kernel launches. This is a rare event but is required
+     * for correctness.
+     */
+    if (shader()->getNumOutstandingInvL2s() > 0) {
+        DPRINTF(GPUCommandProc,
+                "Deferring kernel launch due to outstanding L2 invalidates\n");
+        shader()->addDeferredDispatch(raw_pkt, queue_id, host_pkt_addr);
+
+        return;
+    }
 
     /**
      * Need to use a raw pointer for DmaVirtDevice API. This is deleted

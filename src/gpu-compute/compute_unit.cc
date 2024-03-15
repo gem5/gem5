@@ -864,6 +864,25 @@ ComputeUnit::DataPort::handleResponse(PacketPtr pkt)
         //  - kernel end
         //  - non-kernel mem sync
 
+        // Non-kernel mem sync not from an instruction
+        if (!gpuDynInst) {
+            // If there is no dynamic instruction, a CU must be present.
+            ComputeUnit *cu = sender_state->computeUnit;
+            assert(cu != nullptr);
+
+            if (pkt->req->isInvL2()) {
+                cu->shader->decNumOutstandingInvL2s();
+                assert(cu->shader->getNumOutstandingInvL2s() >= 0);
+            } else {
+                panic("Unknown MemSyncResp not from an instruction");
+            }
+
+            // Cleanup and return, no other response events needed.
+            delete pkt->senderState;
+            delete pkt;
+            return true;
+        }
+
         // Kernel Launch
         // wavefront was nullptr when launching kernel, so it is meaningless
         // here (simdId=-1, wfSlotId=-1)
@@ -1401,6 +1420,23 @@ ComputeUnit::injectGlobalMemFence(GPUDynInstPtr gpuDynInst,
 
         schedule(mem_req_event, curTick() + req_tick_latency);
     }
+}
+
+void
+ComputeUnit::sendInvL2(Addr paddr)
+{
+    auto req = std::make_shared<Request>(paddr, 64, 0, vramRequestorId());
+    req->setCacheCoherenceFlags(Request::GL2_CACHE_INV);
+
+    auto pkt = new Packet(req, MemCmd::MemSyncReq);
+    pkt->pushSenderState(
+       new ComputeUnit::DataPort::SenderState(this, 0, nullptr));
+
+    EventFunctionWrapper *mem_req_event = memPort[0].createMemReqEvent(pkt);
+
+    schedule(mem_req_event, curTick() + req_tick_latency);
+
+    shader->incNumOutstandingInvL2s();
 }
 
 void

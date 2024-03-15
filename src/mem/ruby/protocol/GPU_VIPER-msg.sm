@@ -62,6 +62,7 @@ structure (VIPERCoalescer, external = "yes") {
                      Cycles, Cycles, Cycles, bool);
   void atomicCallback(Addr, MachineType, DataBlock);
   void invTCPCallback(Addr);
+  void invTCCCallback(Addr);
   void writeCompleteCallback(Addr, uint64_t);
   void evictionCallback(Addr);
 }
