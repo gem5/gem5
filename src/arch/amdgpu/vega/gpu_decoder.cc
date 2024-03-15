@@ -4217,8 +4217,7 @@ namespace VegaISA
     GPUStaticInst*
     Decoder::decode_OP_VOP2__V_XNOR_B32(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_VOP2__V_XNOR_B32(&iFmt->iFmt_VOP2);
     }
 
     GPUStaticInst*
