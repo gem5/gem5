@@ -543,7 +543,11 @@ Shader::notifyCuSleep() {
 
         if (kernelExitRequested) {
             kernelExitRequested = false;
-            exitSimLoop("GPU Kernel Completed");
+            if (blitKernel) {
+                exitSimLoop("GPU Blit Kernel Completed");
+            } else {
+                exitSimLoop("GPU Kernel Completed");
+            }
         }
     }
 }
