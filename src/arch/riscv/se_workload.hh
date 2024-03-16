@@ -1,6 +1,5 @@
 /*
  * Copyright 2020 Google Inc.
- * Copyright (c) 2024 University of Rostock
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -62,32 +61,13 @@ class SEWorkload : public gem5::SEWorkload
     loader::Arch getArch() const override { return loader::Riscv64; }
 
     using SyscallABI64 = RegABI64;
-
-    struct SyscallABI32 : public GenericSyscallABI32
-    {
-        static const std::vector<RegId> ArgumentRegs;
-    };
-
+    using SyscallABI32 = RegABI32;
 };
 
 } // namespace RiscvISA
 
 namespace guest_abi
 {
-
-template<typename ABI, typename Arg>
-struct Argument<ABI, Arg,
-    std::enable_if_t<
-        std::is_base_of_v<ABI, RiscvISA::SEWorkload::SyscallABI32> &&
-        std::is_integral_v<Arg> &&
-        ABI::template IsWideV<Arg>>>
-{
-    static Arg
-    get(ThreadContext *tc, typename ABI::State &state)
-    {
-        return (Arg) bits(tc->getReg(ABI::ArgumentRegs[state++]), 31, 0);
-    }
-};
 
 template <>
 struct Result<RiscvISA::SEWorkload::SyscallABI64, SyscallReturn>
