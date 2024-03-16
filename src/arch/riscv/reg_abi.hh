@@ -77,22 +77,20 @@ struct Argument<ABI, Arg,
     }
 };
 
-// This method will be used for Riscv 32 pointers.
-template <typename ABI, typename Arg>
-struct Argument<ABI, Arg,
-    typename std::enable_if_t<
-        std::is_base_of_v<RiscvISA::RegABI32, ABI> &&
-        std::is_same<Arg,GuestAddr>::value &&
-        ABI::template IsWideV<Arg>>>
+// This method will be used for RV32 pointers.
+template <>
+struct Argument<RiscvISA::RegABI32, GuestAddr>
 {
-    static Arg
+    using ABI = RiscvISA::RegABI32;
+
+    static GuestAddr
     get(ThreadContext *tc, typename ABI::State &state)
     {
         panic_if(state >= ABI::ArgumentRegs.size(),
                 "Ran out of syscall argument registers.");
 
         auto arg = bits(tc->getReg(ABI::ArgumentRegs[state++]), 31, 0);
-        return *reinterpret_cast<Arg*>(&arg);
+        return *reinterpret_cast<GuestAddr*>(&arg);
     }
 };
 
