@@ -66,13 +66,13 @@ decodeAddrOffset(Addr offset, uint8_t &func)
 
 struct GuestAddr
 {
-  uint64_t addr;
+    uint64_t addr;
 };
 
 inline std::ostream&
 operator<<(std::ostream& os, const GuestAddr addr)
 {
-  return os << addr.addr;
+    return os << addr.addr;
 }
 
 void arm(ThreadContext *tc);
