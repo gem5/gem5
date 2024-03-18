@@ -43,21 +43,24 @@ from gem5.resources.resource import obtain_resource
 from gem5.simulate.simulator import Simulator
 from gem5.utils.requires import requires
 
-requires(isa_required=ISA.RISCV)
 
-# instantiate the riscv matched board with default parameters
-board = RISCVMatchedBoard()
+def run_hello(id: str):
+    print(f"Running hello world with id: {id}")
+    requires(isa_required=ISA.RISCV)
 
-# set the hello world riscv binary as the board workload
-board.set_se_binary_workload(obtain_resource("riscv-hello"))
+    # instantiate the riscv matched board with default parameters
+    board = RISCVMatchedBoard()
 
-# run the simulation with the RISCV Matched board
-simulator = Simulator(board=board, full_system=False)
-simulator.run()
+    # set the hello world riscv binary as the board workload
+    board.set_se_binary_workload(obtain_resource(id))
 
-print(
-    "Exiting @ tick {} because {}.".format(
-        simulator.get_current_tick(),
-        simulator.get_last_exit_event_cause(),
+    # run the simulation with the RISCV Matched board
+    simulator = Simulator(board=board, full_system=False)
+    simulator.run()
+
+    print(
+        "Exiting @ tick {} because {}.".format(
+            simulator.get_current_tick(),
+            simulator.get_last_exit_event_cause(),
+        )
     )
-)
