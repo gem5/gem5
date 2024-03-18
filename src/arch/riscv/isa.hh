@@ -74,7 +74,6 @@ class ISA : public BaseISA
   protected:
     RiscvType _rvType;
     std::vector<RegVal> miscRegFile;
-    bool checkAlignment;
     bool enableRvv;
 
     bool hpmCounterEnabled(int counter) const;
@@ -131,8 +130,6 @@ class ISA : public BaseISA
     {
         return CSRMasks[_rvType][_privilegeModeSet];
     }
-
-    bool alignmentCheckEnabled() const { return checkAlignment; }
 
     bool inUserMode() const override;
     void copyRegsFrom(ThreadContext *src) override;

@@ -331,11 +331,14 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
     // step 2:
     // Performing PMA/PMP checks on physical address of PTE
 
-    walker->pma->check(read->req);
     // Effective privilege mode for pmp checks for page table
     // walks is S mode according to specs
     fault = walker->pmp->pmpCheck(read->req, BaseMMU::Read,
                     RiscvISA::PrivilegeMode::PRV_S, tc, entry.vaddr);
+
+    if (fault == NoFault) {
+        fault = walker->pma->check(read->req, BaseMMU::Read, entry.vaddr);
+    }
 
     if (fault == NoFault) {
         // step 3:
@@ -383,10 +386,13 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
                         // this read will eventually become write
                         // if doWrite is True
 
-                        walker->pma->check(read->req);
-
                         fault = walker->pmp->pmpCheck(read->req,
                                             BaseMMU::Write, pmode, tc, entry.vaddr);
+
+                        if (fault == NoFault) {
+                            fault = walker->pma->check(read->req,
+                                                BaseMMU::Write, entry.vaddr);
+                        }
 
                     }
                     // perform step 8 only if pmp checks pass
@@ -567,12 +573,15 @@ Walker::WalkerState::recvPacket(PacketPtr pkt)
             vaddr = Addr(sext<VADDR_BITS>(vaddr));
             Addr paddr = walker->tlb->translateWithTLB(vaddr, satp.asid, mode);
             req->setPaddr(paddr);
-            walker->pma->check(req);
 
             // do pmp check if any checking condition is met.
             // timingFault will be NoFault if pmp checks are
             // passed, otherwise an address fault will be returned.
             timingFault = walker->pmp->pmpCheck(req, mode, pmode, tc);
+
+            if (timingFault == NoFault) {
+                timingFault = walker->pma->check(req, mode);
+            }
 
             // Let the CPU continue.
             translation->finish(timingFault, req, tc, mode);
