@@ -24,15 +24,19 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import itertools
 import os
 import signal
+from functools import partial
 from time import sleep
 from typing import (
+    Any,
     Callable,
     List,
     Tuple,
 )
 
+from gem5.resources.resource import AbstractResource
 from gem5.utils.multiprocessing import Process
 
 from .simulator import Simulator
@@ -45,12 +49,9 @@ class MultiSim:
     simulations that can be run in parallel is limited to the value of the num_cpus parameter
     """
 
-    def __init__(
-        self, sim_callables: List[Tuple[Callable[[], Simulator], str]]
-    ):
+    def __init__(self, sim_callables: List[Callable[[], Simulator]]):
         """
-        :param sim_callables: A list of tuples of callables that return a Simulator object
-                              and the name of the output directory
+        :param sim_callables: A list of callables that return a Simulator object
         """
         self.sim_callables = sim_callables
 
@@ -61,19 +62,22 @@ class MultiSim:
         """
         processes = []
 
-        for sim_callable, output_name in self.sim_callables:
+        for sim_callable in self.sim_callables:
             if len(processes) > num_cpus:
                 for process in processes:
                     if not process.is_alive():
                         processes.remove(process)
                     os.kill(process.pid, signal.SIGTERM)
                 sleep(1)
+            process_name = (
+                f"{sim_callable.func.__name__}_{sim_callable.args[0].get_id()}"
+            )
             process = Process(
                 target=run_simulator,
                 args=(sim_callable,),
-                name=output_name,
+                name=process_name,
             )
-            print(f"Starting process {output_name}")
+            print(f"Starting process {process_name}")
 
             process.start()
             processes.append(process)
@@ -85,6 +89,17 @@ class MultiSim:
             sleep(1)
 
         print("All simulations have finished")
+
+
+def get_cross_product_sim_callables(
+    configs: List[Any], resources: List[AbstractResource]
+):
+    sim_callables = []
+
+    for config, resource in itertools.product(configs, resources):
+        sim_callables.append(partial(config, resource))
+
+    return sim_callables
 
 
 def run_simulator(

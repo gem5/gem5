@@ -42,3 +42,18 @@ def run_riscvmathed_workload(resource) -> Simulator:
     # run the simulation with the RISCV Matched board
     simulator = Simulator(board=board, full_system=False)
     return simulator
+
+
+def run_riscvmatched_worklaod_diff_clocks(resource) -> Simulator:
+    requires(isa_required=ISA.RISCV)
+
+    # instantiate the riscv matched board with default parameters
+    board = RISCVMatchedBoard(
+        clk_freq="2.2GHz",
+    )
+
+    board.set_workload(resource)
+
+    # run the simulation with the RISCV Matched board
+    simulator = Simulator(board=board, full_system=False)
+    return simulator

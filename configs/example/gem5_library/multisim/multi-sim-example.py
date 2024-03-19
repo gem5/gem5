@@ -26,11 +26,17 @@
 
 from functools import partial
 
-from example_callable import run_riscvmathed_workload
+from example_callable import (
+    run_riscvmatched_worklaod_diff_clocks,
+    run_riscvmathed_workload,
+)
 
 from gem5.isas import ISA
 from gem5.resources.resource import obtain_resource
-from gem5.simulate.multi_sim import MultiSim
+from gem5.simulate.multi_sim import (
+    MultiSim,
+    get_cross_product_sim_callables,
+)
 
 # getting the resources we want to run
 workload_1 = obtain_resource("riscv-gapbs-tc-run")
@@ -39,13 +45,22 @@ workload_2 = obtain_resource("riscv-npb-is-size-s-run")
 # creating a list of partial functions to run
 # The sim_factory list is a list of tuples. Each tuple contains a partial function and the name of the output directory.
 sim_factory = []
-sim_factory.append(
-    (partial(run_riscvmathed_workload, workload_1), workload_1.get_id())
+
+# This is another way to create the list of partial functions to run
+# If you dont want to run a cross product of all the workloads and configurations
+# sim_factory.append(
+#     partial(run_riscvmathed_workload, workload_1)
+# )
+# sim_factory.append(
+#     partial(run_riscvmathed_workload, workload_2)
+# )
+
+sim_factory = get_cross_product_sim_callables(
+    [run_riscvmathed_workload, run_riscvmatched_worklaod_diff_clocks],
+    [workload_1, workload_2],
 )
-sim_factory.append(
-    (partial(run_riscvmathed_workload, workload_2), workload_2.get_id())
-)
+
 multi_sim = MultiSim(sim_factory)
 
-# running the simulations with 2 threads
-multi_sim.run_all(2)
+# running the simulations with 4 threads
+multi_sim.run_all(4)
