@@ -24,55 +24,59 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import importlib.util
 import os
 import signal
 from time import sleep
-from typing import List
+from typing import (
+    Callable,
+    List,
+    Tuple,
+)
 
 from gem5.utils.multiprocessing import Process
 
 from .simulator import Simulator
 
-"""
-config = [{
-    "File": "path/to/file",
-    "function": "function_name",
-    "config_args": ["arg1", "arg2"],
-}]
-"""
-
 
 class MultiSim:
-    def __init__(self, configs: dict):
-        self.configs = configs
+    """
+    This class is used to run multiple simulations in parallel. It takes a list of
+    callables that return a Simulator object and runs them in parallel. The number of
+    simulations that can be run in parallel is limited to the value of the num_cpus parameter
+    """
+
+    def __init__(
+        self, sim_callables: List[Tuple[Callable[[], Simulator], str]]
+    ):
+        """
+        :param sim_callables: A list of tuples of callables that return a Simulator object
+                              and the name of the output directory
+        """
+        self.sim_callables = sim_callables
 
     def run_all(self, num_cpus: int):
+        """
+        Run all the simulations in parallel
+        :param num_cpus: The number of simulations to run in parallel at a time
+        """
         processes = []
-        i = 1
-        for config in self.configs:
-            config_file_path = config["file"]
-            config_args = config["config_args"]
-            config_function = config["function"]
-            print(f"Running simulation: {config_file_path}")
-            print(f"Running with args: {config_args}")
-            print(f"Running with function: {config_function}")
+
+        for sim_callable, output_name in self.sim_callables:
             if len(processes) > num_cpus:
                 for process in processes:
                     if not process.is_alive():
                         processes.remove(process)
                     os.kill(process.pid, signal.SIGTERM)
                 sleep(1)
-                process = Process(
-                    target=run_simulator,
-                    args=(config_file_path, config_function, config_args),
-                    name=f"sim-{i}",
-                )
-                print(process.pid)
-                print(f"Starting process {i}")
-                i += 1
-                process.start()
-                processes.append(process)
+            process = Process(
+                target=run_simulator,
+                args=(sim_callable,),
+                name=output_name,
+            )
+            print(f"Starting process {output_name}")
+
+            process.start()
+            processes.append(process)
 
         while processes:
             for process in processes:
@@ -84,15 +88,11 @@ class MultiSim:
 
 
 def run_simulator(
-    config_file_path: str, function: str, config_args: List[str]
+    sim_callable: Callable[[], Simulator],
 ):
-    sleep(10000)
-    print(f"Running simulation: {config_file_path}")
-    print(f"args: {config_args}")
-    print(f"function: {function}")
-    spec = importlib.util.spec_from_file_location("config", config_file_path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-
-    target_function = getattr(module, function)
-    target_function(*config_args)
+    """
+    Run the simulation
+    :param sim_callable: A callable that returns a Simulator object
+    """
+    sim = sim_callable()
+    sim.run()
