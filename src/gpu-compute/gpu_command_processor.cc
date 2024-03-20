@@ -118,7 +118,10 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
                                        Addr host_pkt_addr)
 {
     _hsa_dispatch_packet_t *disp_pkt = (_hsa_dispatch_packet_t*)raw_pkt;
-    assert(!(disp_pkt->kernel_object & (system()->cacheLineSize() - 1)));
+    // The kernel object should be aligned to a 64B boundary, but not
+    // necessarily a cache line boundary.
+    unsigned akc_alignment_granularity = 64;
+    assert(!(disp_pkt->kernel_object & (akc_alignment_granularity - 1)));
 
     /**
      * Need to use a raw pointer for DmaVirtDevice API. This is deleted
@@ -201,7 +204,7 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
             // Read from GPU memory manager one cache line at a time to prevent
             // rare cases where the AKC spans two memory pages.
             ChunkGenerator gen(disp_pkt->kernel_object, sizeof(AMDKernelCode),
-                               system()->cacheLineSize());
+                               akc_alignment_granularity);
             for (; !gen.done(); gen.next()) {
                 Addr chunk_addr = gen.addr();
                 int vmid = 1;
@@ -212,10 +215,13 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
 
                 Request::Flags flags = Request::PHYSICAL;
                 RequestPtr request = std::make_shared<Request>(chunk_addr,
-                    system()->cacheLineSize(), flags,
+                    akc_alignment_granularity, flags,
                     walker->getDevRequestor());
                 Packet *readPkt = new Packet(request, MemCmd::ReadReq);
                 readPkt->dataStatic((uint8_t *)akc + gen.complete());
+                // If the request spans two device memories, the device memory
+                // returned will be null.
+                assert(system()->getDeviceMemory(readPkt) != nullptr);
                 system()->getDeviceMemory(readPkt)->access(readPkt);
                 delete readPkt;
             }
