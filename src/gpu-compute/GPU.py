@@ -360,6 +360,10 @@ class GPUCommandProcessor(DmaVirtDevice):
     walker = Param.VegaPagetableWalker(
         VegaPagetableWalker(), "Page table walker"
     )
+    target_non_blit_kernel_id = Param.Int(
+        0,
+        "Skip kernels until reaching this kernel (counting only non-blit kernels)",
+    )
 
 
 class StorageClassType(Enum):

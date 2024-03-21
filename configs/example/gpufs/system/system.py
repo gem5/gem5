@@ -115,11 +115,19 @@ def makeGpuFSSystem(args):
         numHWQueues=args.num_hw_queues,
         walker=hsapp_pt_walker,
     )
-    dispatcher_exit_events = True if args.exit_at_gpu_kernel > -1 else False
+    dispatcher_exit_events = False
+    if args.exit_at_gpu_task > -1:
+        dispatcher_exit_events = True
+    if args.exit_after_gpu_kernel > -1:
+        dispatcher_exit_events = True
     dispatcher = GPUDispatcher(kernel_exit_events=dispatcher_exit_events)
     cp_pt_walker = VegaPagetableWalker()
+    target_kernel = args.skip_until_gpu_kernel
     gpu_cmd_proc = GPUCommandProcessor(
-        hsapp=gpu_hsapp, dispatcher=dispatcher, walker=cp_pt_walker
+        hsapp=gpu_hsapp,
+        dispatcher=dispatcher,
+        walker=cp_pt_walker,
+        target_non_blit_kernel_id=target_kernel,
     )
     shader.dispatcher = dispatcher
     shader.gpu_cmd_proc = gpu_cmd_proc
