@@ -26,8 +26,6 @@
 
 import itertools
 import json
-import os
-import ssl
 import time
 from typing import (
     Any,
@@ -126,8 +124,8 @@ class AtlasClient(AbstractClient):
 
         **Warning**: This function assumes a JSON response.
         """
-        proxy_context = get_proxy_context()
         data = json.dumps(data_json).encode("utf-8")
+
         req = request.Request(
             url,
             data=data,
@@ -136,7 +134,7 @@ class AtlasClient(AbstractClient):
 
         for attempt in itertools.count(start=1):
             try:
-                response = request.urlopen(req, context=proxy_context)
+                response = request.urlopen(req, context=get_proxy_context())
                 break
             except Exception as e:
                 if attempt >= max_failed_attempts:
@@ -161,7 +159,6 @@ class AtlasClient(AbstractClient):
         resource_id: Optional[str] = None,
         resource_version: Optional[str] = None,
         gem5_version: Optional[str] = None,
-        proxy_context: Optional[ssl.SSLContext] = None,
     ) -> List[Dict[str, Any]]:
         url = f"{self.url}/action/find"
         data = {

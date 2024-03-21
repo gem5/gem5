@@ -28,7 +28,6 @@ import gzip
 import os
 import random
 import shutil
-import ssl
 import tarfile
 import time
 import urllib.parse
@@ -63,11 +62,7 @@ information about resources from resources.gem5.org.
 """
 
 
-def _download(
-    url: str,
-    download_to: str,
-    max_attempts: int = 6,
-) -> None:
+def _download(url: str, download_to: str, max_attempts: int = 6) -> None:
     """
     Downloads a file.
 
@@ -85,7 +80,6 @@ def _download(
 
     # TODO: This whole setup will only work for single files we can get via
     # wget. We also need to support git clones going forward.
-    proxy_context = get_proxy_context()
     attempt = 0
     while True:
         # The loop will be broken on a successful download, via a `return`, or
@@ -98,7 +92,7 @@ def _download(
                 # get the file as a bytes blob
                 request = urllib.request.Request(url)
                 with urllib.request.urlopen(
-                    request, context=proxy_context
+                    request, context=get_proxy_context()
                 ) as fr:
                     with tqdm.wrapattr(
                         open(download_to, "wb"),
@@ -168,29 +162,6 @@ def _download(
                 "installed. It can be installed with "
                 "`pip install PySocks`."
             )
-
-
-_gem5_ssl_context = None
-
-
-def get_proxy_context() -> Optional[ssl.SSLContext]:
-    global _gem5_ssl_context
-    use_proxy = os.getenv("GEM5_USE_PROXY")
-    if use_proxy and not _gem5_ssl_context:
-        import socket
-
-        import socks
-
-        ip_addr, host_port = use_proxy.split(":")
-        port = int(host_port)
-        socks.set_default_proxy(socks.SOCKS5, ip_addr, port)
-        socket.socket = socks.socksocket
-
-        # base SSL context for https connection
-        _gem5_ssl_context = ssl.create_default_context()
-        _gem5_ssl_context.check_hostname = False
-        _gem5_ssl_context.verify_mode = ssl.CERT_NONE
-    return _gem5_ssl_context
 
 
 def list_resources(

@@ -26,7 +26,6 @@
 
 import json
 import os
-import ssl
 from pathlib import Path
 from typing import (
     Dict,

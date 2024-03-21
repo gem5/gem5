@@ -314,7 +314,6 @@ PySource('gem5.utils.multiprocessing',
 PySource('gem5.utils.multiprocessing',
     'gem5/utils/multiprocessing/popen_spawn_gem5.py')
 
-
 PySource('', 'importer.py')
 PySource('m5', 'm5/__init__.py')
 PySource('m5', 'm5/SimObject.py')
