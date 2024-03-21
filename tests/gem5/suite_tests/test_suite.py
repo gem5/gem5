@@ -97,6 +97,7 @@ test_suite(
     isa="riscv",
     to_tick=10000000000,
     is_fs=False,
+    version="1.0.0",
 )
 
 test_suite(
@@ -104,6 +105,7 @@ test_suite(
     isa="x86",
     to_tick=10000000000,
     is_fs=True,
+    version="1.0.0",
 )
 
 test_suite(
@@ -111,4 +113,5 @@ test_suite(
     isa="x86",
     to_tick=10000000000,
     is_fs=True,
+    version="1.0.0",
 )

@@ -163,7 +163,9 @@ board = RiscvBoard(
 
 # Set the workload.
 workload = obtain_resource(
-    "riscv-ubuntu-20.04-boot", resource_directory=args.resource_directory
+    "riscv-ubuntu-20.04-boot",
+    resource_directory=args.resource_directory,
+    resource_version="3.0.0",
 )
 board.set_workload(workload)
 

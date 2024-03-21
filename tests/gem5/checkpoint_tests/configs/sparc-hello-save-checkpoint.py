@@ -69,7 +69,12 @@ board = SimpleBoard(
     memory=memory,
     cache_hierarchy=cache_hierarchy,
 )
-board.set_se_binary_workload(obtain_resource("sparc-hello"))
+board.set_se_binary_workload(
+    obtain_resource(
+        "sparc-hello",
+        resource_version="1.0.0",
+    )
+)
 
 sim = Simulator(board=board, full_system=False)
 max_ticks = 10**6

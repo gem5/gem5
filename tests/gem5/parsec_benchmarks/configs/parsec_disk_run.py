@@ -204,10 +204,14 @@ command = (
 
 board.set_kernel_disk_workload(
     kernel=obtain_resource(
-        "x86-linux-kernel-5.4.49", resource_directory=args.resource_directory
+        "x86-linux-kernel-5.4.49",
+        resource_directory=args.resource_directory,
+        resource_version="1.0.0",
     ),
     disk_image=obtain_resource(
-        "x86-parsec", resource_directory=args.resource_directory
+        "x86-parsec",
+        resource_directory=args.resource_directory,
+        resource_version="1.0.0",
     ),
     readfile_contents=command,
 )
