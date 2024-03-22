@@ -120,6 +120,15 @@ class SEBinaryWorkload:
         if env_list is not None:
             process.env = env_list
 
+        if any(
+            core.is_kvm_core() for core in self.get_processor().get_cores()
+        ):
+            # Running KVM in SE mode requires special flags to be set for the
+            # process.
+            self.m5ops_base = max(0xFFFF0000, self.get_memory().get_size())
+            process.kvmInSE = True
+            process.useArchPT = True
+
         if isinstance(self.get_processor(), SwitchableProcessor):
             # This is a hack to get switchable processors working correctly in
             # SE mode. The "get_cores" API for processors only gets the current
