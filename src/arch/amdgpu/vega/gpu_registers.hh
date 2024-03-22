@@ -129,7 +129,7 @@ namespace VegaISA
         REG_LDS_DIRECT = 254,
         REG_SRC_LITERAL = 255,
         REG_VGPR_MIN = 256,
-        REG_VGPR_MAX = 511
+        REG_VGPR_MAX = 767
     };
 
     constexpr size_t MaxOperandDwords(16);
