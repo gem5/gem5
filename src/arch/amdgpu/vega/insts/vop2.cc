@@ -2167,6 +2167,40 @@ namespace VegaISA
     Inst_VOP2__V_FMAC_F32::execute(GPUDynInstPtr gpuDynInst)
     {
         Wavefront *wf = gpuDynInst->wavefront();
+        ConstVecOperandF32 src0(gpuDynInst, instData.SRC0);
+        ConstVecOperandF32 src1(gpuDynInst, instData.VSRC1);
+        VecOperandF32 vdst(gpuDynInst, instData.VDST);
+
+        src0.readSrc();
+        src1.read();
+        vdst.read();
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                vdst[lane] = std::fma(src0[lane], src1[lane], vdst[lane]);
+            }
+        }
+
+        vdst.write();
+    } // execute
+    // --- Inst_VOP2__V_XNOR_B32 class methods ---
+
+    Inst_VOP2__V_XNOR_B32::Inst_VOP2__V_XNOR_B32(InFmt_VOP2 *iFmt)
+        : Inst_VOP2(iFmt, "v_xnor_b32")
+    {
+        setFlag(ALU);
+    } // Inst_VOP2__V_XNOR_B32
+
+    Inst_VOP2__V_XNOR_B32::~Inst_VOP2__V_XNOR_B32()
+    {
+    } // ~Inst_VOP2__V_XNOR_B32
+
+    // --- description from .arch file ---
+    // D.u = S1.u - S0.u;
+    void
+    Inst_VOP2__V_XNOR_B32::execute(GPUDynInstPtr gpuDynInst)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
         ConstVecOperandU32 src0(gpuDynInst, instData.SRC0);
         ConstVecOperandU32 src1(gpuDynInst, instData.VSRC1);
         VecOperandU32 vdst(gpuDynInst, instData.VDST);
@@ -2177,7 +2211,7 @@ namespace VegaISA
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
-                vdst[lane] = std::fma(src0[lane], src1[lane], vdst[lane]);
+                vdst[lane] = ~(src0[lane] ^ src1[lane]);
             }
         }
 

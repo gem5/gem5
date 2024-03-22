@@ -1238,12 +1238,12 @@ namespace VegaISA
         &Decoder::decode_OPU_VOP3__V_CVT_PK_I16_I32,
         &Decoder::decode_OPU_VOP3__V_PKNORM_I16_F16,
         &Decoder::decode_OPU_VOP3__V_PKNORM_U16_F16,
+        &Decoder::decode_invalid,
         &Decoder::decode_OPU_VOP3__V_ADD_I32,
         &Decoder::decode_OPU_VOP3__V_SUB_I32,
         &Decoder::decode_OPU_VOP3__V_ADD_I16,
         &Decoder::decode_OPU_VOP3__V_SUB_I16,
         &Decoder::decode_OPU_VOP3__V_PACK_B32_F16,
-        &Decoder::decode_invalid,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
@@ -4217,8 +4217,7 @@ namespace VegaISA
     GPUStaticInst*
     Decoder::decode_OP_VOP2__V_XNOR_B32(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_VOP2__V_XNOR_B32(&iFmt->iFmt_VOP2);
     }
 
     GPUStaticInst*
