@@ -135,6 +135,8 @@ static const OpClass VectorMiscOp = enums::VectorMisc;
 static const OpClass VectorIntegerExtensionOp = enums::VectorIntegerExtension;
 static const OpClass VectorUnitStrideSegmentedLoadOp = enums::VectorUnitStrideSegmentedLoad;
 static const OpClass VectorConfigOp = enums::VectorConfig;
+static const OpClass VectorUnitStrideSegmentedStoreOp
+             = enums::VectorUnitStrideSegmentedStore;
 static const OpClass Num_OpClasses = enums::Num_OpClass;
 
 } // namespace gem5
