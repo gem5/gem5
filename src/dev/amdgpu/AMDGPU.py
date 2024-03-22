@@ -95,7 +95,7 @@ class AMDGPUDevice(PciDevice):
     # The config script should not create a new cp here but rather assign the
     # same cp that is assigned to the Shader SimObject.
     cp = Param.GPUCommandProcessor(NULL, "Command Processor")
-    pm4_pkt_proc = Param.PM4PacketProcessor("PM4 Packet Processor")
+    pm4_pkt_procs = VectorParam.PM4PacketProcessor("PM4 Packet Processor")
     memory_manager = Param.AMDGPUMemoryManager("GPU Memory Manager")
     memories = VectorParam.AbstractMemory([], "All memories in the device")
     device_ih = Param.AMDGPUInterruptHandler("GPU Interrupt handler")
@@ -117,6 +117,10 @@ class PM4PacketProcessor(DmaVirtDevice):
     type = "PM4PacketProcessor"
     cxx_header = "dev/amdgpu/pm4_packet_processor.hh"
     cxx_class = "gem5::PM4PacketProcessor"
+
+    # Default to 0 as the common case is one PM4 packet processor
+    ip_id = Param.Int(0, "Instance ID of this PM4 processor")
+    mmio_range = Param.AddrRange("Range of MMIO addresses")
 
 
 class AMDGPUMemoryManager(ClockedObject):

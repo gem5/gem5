@@ -81,9 +81,9 @@ SDMAEngine::setGPUDevice(AMDGPUDevice *gpu_device)
 }
 
 int
-SDMAEngine::getIHClientId()
+SDMAEngine::getIHClientId(int _id)
 {
-    switch (id) {
+    switch (_id) {
       case 0:
         return SOC15_IH_CLIENTID_SDMA0;
       case 1:
@@ -627,10 +627,14 @@ SDMAEngine::writeReadData(SDMAQueue *q, sdmaWrite *pkt, uint32_t *dmaBuffer)
 
     // lastly we write read data to the destination address
     if (gpuDevice->getVM().inMMHUB(pkt->dest)) {
-        Addr mmhubAddr = pkt->dest - gpuDevice->getVM().getMMHUBBase();
+        Addr mmhub_addr = pkt->dest - gpuDevice->getVM().getMMHUBBase();
+
+        fatal_if(gpuDevice->getVM().inGARTRange(mmhub_addr),
+                "SDMA write to GART not implemented");
+
         auto cb = new EventFunctionWrapper(
             [ = ]{ writeDone(q, pkt, dmaBuffer); }, name());
-        gpuDevice->getMemMgr()->writeRequest(mmhubAddr, (uint8_t *)dmaBuffer,
+        gpuDevice->getMemMgr()->writeRequest(mmhub_addr, (uint8_t *)dmaBuffer,
                                            bufferSize, 0, cb);
     } else {
         if (q->priv()) {
@@ -663,9 +667,11 @@ SDMAEngine::copy(SDMAQueue *q, sdmaCopy *pkt)
     // count represents the number of bytes - 1 to be copied
     pkt->count++;
     if (q->priv()) {
-        DPRINTF(SDMAEngine, "Getting GART addr for %lx\n", pkt->source);
-        pkt->source = getGARTAddr(pkt->source);
-        DPRINTF(SDMAEngine, "GART addr %lx\n", pkt->source);
+        if (!gpuDevice->getVM().inMMHUB(pkt->source)) {
+            DPRINTF(SDMAEngine, "Getting GART addr for %lx\n", pkt->source);
+            pkt->source = getGARTAddr(pkt->source);
+            DPRINTF(SDMAEngine, "GART addr %lx\n", pkt->source);
+        }
     }
 
     // Read data from the source first, then call the copyReadData method
@@ -742,6 +748,19 @@ SDMAEngine::copyReadData(SDMAQueue *q, sdmaCopy *pkt, uint8_t *dmaBuffer)
             [ = ] (const uint64_t &) { copyDone(q, pkt, dmaBuffer); });
         dmaWriteVirt(pkt->dest, pkt->count, cb, (void *)dmaBuffer);
     }
+
+    // For destinations in the GART table, gem5 uses a mapping tables instead
+    // of functionally going to device memory, so we need to update that copy.
+    if (gpuDevice->getVM().inGARTRange(device_addr)) {
+        // GART entries are always 8 bytes.
+        assert((pkt->count % 8) == 0);
+        for (int i = 0; i < pkt->count/8; ++i) {
+            Addr gart_addr = device_addr + i*8 - gpuDevice->getVM().gartBase();
+            DPRINTF(SDMAEngine, "Shadow copying to GART table %lx -> %lx\n",
+                    gart_addr, dmaBuffer64[i]);
+            gpuDevice->getVM().gartTable[gart_addr] = dmaBuffer64[i];
+        }
+    }
 }
 
 /* Completion of a copy packet. */
@@ -809,8 +828,12 @@ SDMAEngine::trap(SDMAQueue *q, sdmaTrap *pkt)
 
     uint32_t ring_id = (q->queueType() == SDMAPage) ? 3 : 0;
 
+    int node_id = 0;
+    int local_id = getId();
+
     gpuDevice->getIH()->prepareInterruptCookie(pkt->intrContext, ring_id,
-                                               getIHClientId(), TRAP_ID);
+                                               getIHClientId(local_id),
+                                               TRAP_ID, 2*node_id);
     gpuDevice->getIH()->submitInterruptCookie();
 
     delete pkt;
@@ -836,8 +859,7 @@ SDMAEngine::srbmWrite(SDMAQueue *q, sdmaSRBMWriteHeader *header,
     DPRINTF(SDMAEngine, "SRBM write to %#x with data %#x\n",
             reg_addr, pkt->data);
 
-    warn_once("SRBM write not performed, no SRBM model. This needs to be fixed"
-              " if correct system simulation is relying on SRBM registers.");
+    gpuDevice->setRegVal(reg_addr, pkt->data);
 
     delete header;
     delete pkt;
@@ -967,10 +989,14 @@ SDMAEngine::ptePde(SDMAQueue *q, sdmaPtePde *pkt)
 
     // Writing generated data to the destination address.
     if (gpuDevice->getVM().inMMHUB(pkt->dest)) {
-        Addr mmhubAddr = pkt->dest - gpuDevice->getVM().getMMHUBBase();
+        Addr mmhub_addr = pkt->dest - gpuDevice->getVM().getMMHUBBase();
+
+        fatal_if(gpuDevice->getVM().inGARTRange(mmhub_addr),
+                "SDMA write to GART not implemented");
+
         auto cb = new EventFunctionWrapper(
             [ = ]{ ptePdeDone(q, pkt, dmaBuffer); }, name());
-        gpuDevice->getMemMgr()->writeRequest(mmhubAddr, (uint8_t *)dmaBuffer,
+        gpuDevice->getMemMgr()->writeRequest(mmhub_addr, (uint8_t *)dmaBuffer,
                                              sizeof(uint64_t) * pkt->count, 0,
                                              cb);
     } else {

@@ -75,7 +75,8 @@ void
 AMDGPUInterruptHandler::prepareInterruptCookie(ContextID cntxt_id,
                                                 uint32_t ring_id,
                                                 uint32_t client_id,
-                                                uint32_t source_id)
+                                                uint32_t source_id,
+                                                unsigned node_id)
 {
     assert(client_id == SOC15_IH_CLIENTID_RLC ||
            client_id == SOC15_IH_CLIENTID_SDMA0 ||
@@ -112,6 +113,7 @@ AMDGPUInterruptHandler::prepareInterruptCookie(ContextID cntxt_id,
     cookie->clientId = client_id;
     cookie->sourceId = source_id;
     cookie->ringId = ring_id;
+    cookie->nodeId = node_id;
     cookie->source_data_dw1 = cntxt_id;
     interruptQueue.push(cookie);
 }

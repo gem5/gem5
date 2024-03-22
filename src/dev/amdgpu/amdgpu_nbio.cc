@@ -53,22 +53,44 @@ AMDGPUNbio::setGPUDevice(AMDGPUDevice *gpu_device)
 void
 AMDGPUNbio::readMMIO(PacketPtr pkt, Addr offset)
 {
+    // For Vega10 we rely on the golden values in an MMIO trace. Return
+    // immediately as to not clobber those values.
+    if (gpuDevice->getGfxVersion() == GfxVersion::gfx900) {
+        if (offset == AMDGPU_PCIE_DATA || offset == AMDGPU_PCIE_DATA2) {
+            return;
+        }
+    }
+
     switch (offset) {
-      // This is a PCIe status register. At some point during driver init
-      // the driver checks that interrupts are enabled. This is only
-      // checked once, so if the MMIO trace does not exactly line up with
-      // what the driver is doing in gem5, this may still have the first
-      // bit zero causing driver to fail. Therefore, we always set this
-      // bit to one as there is no harm to do so.
-      case AMDGPU_PCIE_DATA_REG:
+      // PCIE_DATA, PCIE_DATA2, PCIE_INDEX, and PCIE_INDEX2 handle "indirect
+      // "register reads/writes from the driver. This provides a way to read
+      // any register by providing a 32-bit address to one of the two INDEX
+      // registers and then reading the corresponding DATA register. See:
+      // https://github.com/ROCm/ROCK-Kernel-Driver/blob/roc-6.0.x/drivers/
+      //     gpu/drm/amd/amdgpu/amdgpu_device.c#L459
+      case AMDGPU_PCIE_DATA:
         {
-          uint32_t value = pkt->getLE<uint32_t>() | 0x1;
-          DPRINTF(AMDGPUDevice, "Marking interrupts enabled: %#lx\n", value);
+          uint32_t value = gpuDevice->getRegVal(pcie_index_reg);
+          DPRINTF(AMDGPUDevice, "Read PCIe index %lx data %x\n",
+                  pcie_index_reg, value);
           pkt->setLE<uint32_t>(value);
         }
         break;
+      case AMDGPU_PCIE_DATA2:
+        {
+          uint32_t value = gpuDevice->getRegVal(pcie_index2_reg);
+          DPRINTF(AMDGPUDevice, "Read PCIe index2 %lx data2 %x\n",
+                  pcie_index2_reg, value);
+          pkt->setLE<uint32_t>(value);
+        }
+        break;
+      case AMDGPU_PCIE_INDEX:
+        pkt->setLE<uint32_t>(pcie_index_reg);
+        break;
+      case AMDGPU_PCIE_INDEX2:
+        pkt->setLE<uint32_t>(pcie_index2_reg);
+        break;
       case AMDGPU_MM_DATA:
-        //pkt->setLE<uint32_t>(regs[mm_index_reg]);
         pkt->setLE<uint32_t>(gpuDevice->getRegVal(mm_index_reg));
         break;
       case VEGA10_INV_ENG17_ACK1:
@@ -89,17 +111,17 @@ AMDGPUNbio::readMMIO(PacketPtr pkt, Addr offset)
       case AMDGPU_MP0_SMN_C2PMSG_35:
         pkt->setLE<uint32_t>(0x80000000);
         break;
+      case AMDGPU_MP1_SMN_C2PMSG_90:
+        pkt->setLE<uint32_t>(0x1);
+        break;
       default:
         if (triggered_reads.count(offset)) {
             DPRINTF(AMDGPUDevice, "Found triggered read for %#x\n", offset);
             pkt->setLE<uint32_t>(triggered_reads[offset]);
-        } else if (gpuDevice->haveRegVal(offset)) {
-            uint32_t reg_val = gpuDevice->getRegVal(offset);
-
-            DPRINTF(AMDGPUDevice, "Reading value of %#lx from regs: %#lx\n",
-                    offset, reg_val);
-
-            pkt->setLE<uint32_t>(reg_val);
+        } else if (regs.count(offset)) {
+            DPRINTF(AMDGPUDevice, "Returning value of unknown MMIO offset "
+                    "%x: %x\n", offset, regs[offset]);
+            pkt->setLE<uint32_t>(regs[offset]);
         } else {
             DPRINTF(AMDGPUDevice, "NBIO Unknown MMIO %#x (%#x)\n", offset,
                     pkt->getAddr());
@@ -123,6 +145,24 @@ AMDGPUNbio::writeMMIO(PacketPtr pkt, Addr offset)
         DPRINTF(AMDGPUDevice, "MM write to reg %#lx data %#lx\n",
                 mm_index_reg, pkt->getLE<uint32_t>());
         gpuDevice->setRegVal(AMDGPU_MM_DATA, pkt->getLE<uint32_t>());
+    // PCIE_DATA, PCIE_DATA2, PCIE_INDEX, and PCIE_INDEX2 handle "indirect
+    // "register reads/writes from the driver. This provides a way to read
+    // any register by providing a 32-bit address to one of the two INDEX
+    // registers and then reading the corresponding DATA register. See:
+    // https://github.com/ROCm/ROCK-Kernel-Driver/blob/roc-6.0.x/drivers/
+    //     gpu/drm/amd/amdgpu/amdgpu_device.c#L459
+    } else if (offset == AMDGPU_PCIE_INDEX) {
+        assert(pkt->getSize() == 4);
+        pcie_index_reg = pkt->getLE<uint32_t>();
+    } else if (offset == AMDGPU_PCIE_DATA) {
+        assert(pkt->getSize() == 4);
+        gpuDevice->setRegVal(pcie_index_reg, pkt->getLE<uint32_t>());
+    } else if (offset == AMDGPU_PCIE_INDEX2) {
+        assert(pkt->getSize() == 4);
+        pcie_index2_reg = pkt->getLE<uint32_t>();
+    } else if (offset == AMDGPU_PCIE_DATA2) {
+        assert(pkt->getSize() == 4);
+        gpuDevice->setRegVal(pcie_index2_reg, pkt->getLE<uint32_t>());
     } else if (offset == AMDGPU_MP0_SMN_C2PMSG_35) {
         // See psp_v3_1_bootloader_load_sos in amdgpu driver code.
         if (pkt->getLE<uint32_t>() == 0x10000) {
@@ -144,6 +184,14 @@ AMDGPUNbio::writeMMIO(PacketPtr pkt, Addr offset)
     } else if (offset == AMDGPU_MP0_SMN_C2PMSG_71) {
         // PSP ring size
         psp_ring_size = pkt->getLE<uint32_t>();
+    } else {
+        // Fallback to a map of register values. This was previously in the
+        // AMDGPUDevice, however that short-circuited some reads from other
+        // IP blocks. Since this is an end point IP block it is safer to use
+        // here.
+        regs[offset] = pkt->getLE<uint32_t>();
+        DPRINTF(AMDGPUDevice, "Writing value of unknown MMIO offset "
+                "%x: %x\n", offset, regs[offset]);
     }
 }
 

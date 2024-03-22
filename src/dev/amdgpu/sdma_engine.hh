@@ -172,7 +172,7 @@ class SDMAEngine : public DmaVirtDevice
     /**
      * Returns the client id for the Interrupt Handler.
      */
-    int getIHClientId();
+    int getIHClientId(int _id);
 
     /**
      * Methods for translation.
