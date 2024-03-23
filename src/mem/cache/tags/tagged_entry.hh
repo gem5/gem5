@@ -88,7 +88,8 @@ class TaggedEntry : public CacheEntry
     }
 
     /** Invalidate the block. Its contents are no longer valid. */
-    void invalidate() override
+    void
+    invalidate() override
     {
         CacheEntry::invalidate();
         clearSecure();
@@ -101,14 +102,14 @@ class TaggedEntry : public CacheEntry
             isSecure(), isValid(), ReplaceableEntry::print());
     }
 
-    using CacheEntry::matchTag;
-    bool matchTag(const Addr tag) const override {
+    bool
+    matchTag(const Addr tag) const override {
         panic("Need is_secure arg");
         return false;
     }
 
-    using CacheEntry::insert;
-    void insert(const Addr tag) override {
+    void
+    insert(const Addr tag) override {
         panic("Need is_secure arg");
         return;
     }
@@ -125,6 +126,10 @@ class TaggedEntry : public CacheEntry
 
     /** Clear secure bit. Should be only used by the invalidation function. */
     void clearSecure() { _secure = false; }
+
+    /** Do not use API without is_secure flag. */
+    using CacheEntry::matchTag;
+    using CacheEntry::insert;
 };
 
 } // namespace gem5

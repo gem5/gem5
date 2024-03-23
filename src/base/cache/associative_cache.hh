@@ -284,7 +284,8 @@ class AssociativeCache : public Named
      * Returns an iterator to the first entry of the dictionary
      * @result iterator to the first element
      */
-    iterator begin()
+    iterator
+    begin()
     {
         return entries.begin();
     }
@@ -294,7 +295,8 @@ class AssociativeCache : public Named
      * (placeholder element, should not be accessed)
      * @result iterator to the end element
      */
-    iterator end()
+    iterator
+    end()
     {
         return entries.end();
     }
@@ -303,7 +305,8 @@ class AssociativeCache : public Named
      * Returns an iterator to the first entry of the dictionary
      * @result iterator to the first element
      */
-    const_iterator begin() const
+    const_iterator
+    begin() const
     {
         return entries.begin();
     }
@@ -313,7 +316,8 @@ class AssociativeCache : public Named
      * (placeholder element, should not be accessed)
      * @result iterator to the end element
      */
-    const_iterator end() const
+    const_iterator
+    end() const
     {
         return entries.end();
     }

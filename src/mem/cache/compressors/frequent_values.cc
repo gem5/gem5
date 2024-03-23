@@ -51,7 +51,8 @@ FrequentValues::FrequentValues(const Params &p)
     codeGenerationTicks(p.code_generation_ticks),
     checkSaturation(p.check_saturation), numVFTEntries(p.vft_entries),
     numSamples(p.num_samples), takenSamples(0), phase(SAMPLING),
-    VFT("VFT", p.vft_entries, p.vft_assoc, p.vft_replacement_policy,
+    VFT((name() + ".VFT").c_str(),
+        p.vft_entries, p.vft_assoc, p.vft_replacement_policy,
         p.vft_indexing_policy, VFTEntry(counterBits)),
     codeGenerationEvent([this]{ phase = COMPRESSING; }, name())
 {
