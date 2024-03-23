@@ -102,6 +102,7 @@ class OpClass(Enum):
         "InstPrefetch",
         "VectorUnitStrideLoad",
         "VectorUnitStrideStore",
+        "VectorUnitStrideSegmentedStore",
         "VectorUnitStrideMaskLoad",
         "VectorUnitStrideMaskStore",
         "VectorStridedLoad",
