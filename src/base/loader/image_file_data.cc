@@ -67,7 +67,7 @@ doGzipLoad(int fd)
     size_t tmp_len = strlen(P_tmpdir);
     char *tmpnam = (char*) malloc(tmp_len + 20);
     strcpy(tmpnam, P_tmpdir);
-    strcpy(tmpnam+tmp_len, "/gem5-gz-obj-XXXXXX"); // 19 chars
+    strcat(tmpnam, "/gem5-gz-obj-XXXXXX"); // concat 19 chars
     fd = mkstemp(tmpnam); // repurposing fd variable for output
     if (fd < 0) {
         free(tmpnam);
