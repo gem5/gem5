@@ -85,9 +85,9 @@ class Scalar(Statistic):
         self.datatype = datatype
 
 
-class BaseScalarVector(Statistic):
+class Vector(Statistic):
     """
-    An abstract base class for classes containing a vector of Scalar values.
+    An Python statistics which representing a vector of Scalar values.
     """
 
     value: List[Union[int, float]]
@@ -127,7 +127,7 @@ class BaseScalarVector(Statistic):
         return sum(self.value)
 
 
-class Distribution(BaseScalarVector):
+class Distribution(Vector):
     """
     A statistic type that stores information relating to distributions. Each
     distribution has a number of bins (>=1)
@@ -182,7 +182,7 @@ class Distribution(BaseScalarVector):
         assert self.num_bins >= 1
 
 
-class Accumulator(BaseScalarVector):
+class Accumulator(Vector):
     """
     A statistical type representing an accumulator.
     """
