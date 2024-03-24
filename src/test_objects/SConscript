@@ -31,5 +31,6 @@ if env['CONF']['USE_TEST_OBJECTS']:
         'StatTester',
         'ScalarStatTester',
         'VectorStatTester',
+        'Vector2dStatTester',
     ])
     Source('stat_tester.cc')

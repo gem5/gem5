@@ -32,6 +32,7 @@
 #include "base/statistics.hh"
 #include "params/ScalarStatTester.hh"
 #include "params/StatTester.hh"
+#include "params/Vector2dStatTester.hh"
 #include "params/VectorStatTester.hh"
 #include "sim/sim_object.hh"
 
@@ -135,6 +136,28 @@ class VectorStatTester : public StatTester
             statistics::Vector vector;
         } stats;
 };
+
+class Vector2dStatTester : public StatTester
+{
+    private:
+        Vector2dStatTesterParams params;
+
+    public:
+        Vector2dStatTester(const Vector2dStatTesterParams &p) :
+            StatTester(p), params(p), stats(this, p) {}
+
+    protected:
+        void setStats() override;
+        struct Vector2dStatTesterStats : public statistics::Group
+        {
+            Vector2dStatTesterStats(
+                statistics::Group *parent,
+                const Vector2dStatTesterParams &params
+            );
+            statistics::Vector2d vector2d;
+        } stats;
+};
+
 
 } // namespace gem5
 

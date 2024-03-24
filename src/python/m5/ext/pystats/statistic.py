@@ -142,6 +142,64 @@ class Vector(Statistic):
         return sum(float(self.value[key]) for key in self.values)
 
 
+class Vector2d(Statistic):
+    """
+    A 2D vector of scalar values.
+    """
+
+    value: Dict[Union[str, int, float], Vector]
+
+    def __init__(
+        self,
+        value: Dict[Union[str, int, float], Vector],
+        type: Optional[str] = None,
+        description: Optional[str] = None,
+    ):
+        assert (
+            len({vector.size() for vector in value.values()}) == 1
+        ), "All the Vectors in the 2d Vector are not of equal length."
+
+        super().__init__(
+            value=value,
+            type=type,
+            description=description,
+        )
+
+    def x_size(self) -> int:
+        """Returns the number of elements in the x dimension."""
+        assert self.value is not None
+        return len(self.value)
+
+    def y_size(self) -> int:
+        """Returns the number of elements in the y dimension."""
+        assert self.value is not None
+        return len(self.value[0])
+
+    def size(self) -> int:
+        """Returns the total number of elements."""
+        return self.x_size() * self.y_size()
+
+    def total(self) -> int:
+        """The total (sum) of all the entries in the 2d vector/"""
+        assert self.value is not None
+        total = 0
+        for vector in self.value.values():
+            for scalar in vector.values():
+                total += scalar.value
+        return total
+
+    def __getitem__(self, index: Union[str, int, float]) -> Vector:
+        assert self.value is not None
+        # In the case of string, we cast strings to integers of floats if they
+        # are numeric. This avoids users having to cast strings to integers.
+        if isinstance(index, str):
+            if index.isindex():
+                index = int(index)
+            elif index.isnumeric():
+                index = float(index)
+        return self.value[index]
+
+
 class Distribution(Vector):
     """
     A statistic type that stores information relating to distributions. Each

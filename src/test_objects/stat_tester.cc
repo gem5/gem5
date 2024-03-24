@@ -84,4 +84,53 @@ VectorStatTester::VectorStatTesterStats::VectorStatTesterStats(
     }
 }
 
+void
+Vector2dStatTester::setStats()
+{
+    for (int i = 0; i < params.x_size; i++)
+    {
+        for (int j = 0; j < params.y_size; j++)
+        {
+            stats.vector2d[i][j] = (params.values[j + i * params.y_size]);
+        }
+    }
+}
+
+Vector2dStatTester::Vector2dStatTesterStats::Vector2dStatTesterStats(
+    statistics::Group *parent,
+    const Vector2dStatTesterParams &params
+) : statistics::Group(parent),
+    vector2d(this,
+        params.name.c_str(),
+        statistics::units::Count::get(),
+        params.description.c_str()
+    )
+{
+    vector2d.init(params.x_size, params.y_size);
+
+    assert(params.x_size * params.y_size == params.values.size());
+
+    for (int i = 0; i < params.x_size; i++)
+    {
+        if (params.subnames.size() > i) {
+            vector2d.subname(i, params.subnames[i]);
+        } else {
+            vector2d.subname(i, std::to_string(i));
+        }
+        if (params.subdescs.size() > i) {
+            vector2d.subdesc(i, params.subdescs[i]);
+        }
+    }
+    for (int j = 0; j < params.y_size; j++)
+    {
+        if (params.ysubnames.size() > j) {
+            vector2d.ysubname(j, params.ysubnames[j]);
+        } else {
+            vector2d.ysubname(j, std::to_string(j));
+        }
+
+    }
+
+}
+
 } // namespace gem5

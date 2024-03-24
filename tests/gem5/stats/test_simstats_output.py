@@ -182,3 +182,33 @@ gem5_verify_config(
     valid_isas=(constants.all_compiled_tag,),
     length=constants.quick_tag,
 )
+
+gem5_verify_config(
+    name="pystat_vector2d_test",
+    fixtures=(),
+    verifiers=[],
+    config=joinpath(
+        config.base_dir,
+        "tests",
+        "gem5",
+        "stats",
+        "configs",
+        "pystat_vector2d_check.py",
+    ),
+    config_args=[
+        "2.4,4.3,3.7,-1.4,-2,4,0,0",
+        2,
+        "--name",
+        "vector2d_stat",
+        "--description",
+        "A 2d vector statistic with",
+        "--subnames",
+        "decimals,integers",
+        "--subdescs",
+        "A random collection of decimals,A random collection of integers",
+        "--ysubnames",
+        "first,second,third,fourth",
+    ],
+    valid_isas=(constants.all_compiled_tag,),
+    length=constants.quick_tag,
+)

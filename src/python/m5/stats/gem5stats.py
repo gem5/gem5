@@ -138,6 +138,8 @@ def __get_statistic(statistic: _m5.stats.Info) -> Optional[Statistic]:
         pass
     elif isinstance(statistic, _m5.stats.VectorInfo):
         return __get_vector(statistic)
+    elif isinstance(statistic, _m5.stats.Vector2dInfo):
+        return __get_vector2d(statistic)
 
     return None
 
@@ -193,7 +195,6 @@ def __get_distribution(statistic: _m5.stats.DistInfo) -> Distribution:
 def __get_vector(statistic: _m5.stats.VectorInfo) -> Vector:
     vec: Dict[Union[str, int, float], Scalar] = {}
 
-
     for index in range(statistic.size):
         # All the values in a Vector are Scalar values
         value = statistic.value[index]
@@ -229,6 +230,42 @@ def __get_vector(statistic: _m5.stats.VectorInfo) -> Vector:
         type="Vector",
         description=statistic.desc,
     )
+
+
+def __get_vector2d(statistic: _m5.stats.Vector2dInfo) -> Vector2d:
+    # All the values in a 2D Vector are Scalar values
+    description = statistic.desc
+    x_size = statistic.x_size
+    y_size = statistic.y_size
+
+    vector_rep: Dict[Union[str, int, float], Vector] = {}
+    for x_index in range(x_size):
+        x_index_string = x_index
+        if x_index in statistic.subnames:
+            x_index_string = str(statistic.subnames[x_index])
+
+        x_desc = description
+        if x_index in statistic.subdescs:
+            x_desc = str(statistic.subdescs[x_index])
+        x_vec: Dict[str, Scalar] = {}
+        for y_index in range(y_size):
+            y_index_val = y_index
+            if y_index in statistic.ysubnames:
+                y_index_val = str(statistic.subnames[y_index])
+
+            x_vec[y_index_val] = Scalar(
+                value=statistic.value[x_index * y_size + y_index],
+                unit=statistic.unit,
+                datatype=StorageType["f64"],
+            )
+
+        vector_rep[x_index_string] = Vector(
+            x_vec,
+            type="Vector",
+            description=x_desc,
+        )
+
+    return Vector2d(value=vector_rep, type="Vector2d", description=description)
 
 
 def _prepare_stats(group: _m5.stats.Group):
