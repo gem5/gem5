@@ -1,5 +1,5 @@
-# Copyright (c) 2022 The Regents of The University of California
-# All rights reserved.
+# Copyright (c) 2024 The Regents of the University of California
+# All Rights Reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -24,11 +24,46 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from .context import (
-    Process,
-    gem5Context,
+"""
+This module is the entry point for the multi-simulation (MultiSim) framework.
+It provides a CLI using argparse to obtain the path to the simulation
+configuration script and the number of processes to run in parallel.
+"""
+from gem5.utils.multisim.multisim import (
+    module_run,
+    run,
 )
 
-Pool = gem5Context().Pool
 
-__all__ = ["Process", "Pool"]
+def main():
+    import argparse
+    from pathlib import Path
+
+    global module_run
+    module_run = True
+
+    parser = argparse.ArgumentParser(
+        description="Pass the config script specifying the simulations to run "
+        "using multisim."
+    )
+    parser.add_argument(
+        "config",
+        type=str,
+        help="The path to the config script specifying the simulations to run using multisim.",
+    )
+    parser.add_argument(
+        "-p",
+        "--processes",
+        type=int,
+        required=False,
+        help="The maximum number of gem5 processes to be run in parallel."
+        "If not set the number of processes will be equal to the number "
+        "of available threads in the system.",
+    )
+
+    args = parser.parse_args()
+    run(module_path=Path(args.config), processes=args.processes)
+
+
+if __name__ == "__m5_main__":
+    main()

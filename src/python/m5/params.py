@@ -882,9 +882,6 @@ class PcCountPair(ParamValue):
     def __eq__(self, other):
         return self.pc == other.get_pc() and self.count == other.get_count()
 
-    def __hash__(self):
-        return hash((int(self.pc), int(self.count)))
-
     @classmethod
     def cxx_predecls(cls, code):
         code('#include "cpu/probes/pc_count_pair.hh"')

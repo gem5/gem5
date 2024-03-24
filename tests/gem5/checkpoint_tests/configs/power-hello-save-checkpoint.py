@@ -73,9 +73,9 @@ board.set_se_binary_workload(
     obtain_resource("power-hello", resource_version="1.0.0")
 )
 
-sim = Simulator(board=board, full_system=False)
-max_ticks = 10**6
-sim.run(max_ticks=max_ticks)
+sim = Simulator(board=board, full_system=False, max_ticks=10**6)
+
+sim.run()
 print(
     "Exiting @ tick {} because {}.".format(
         sim.get_current_tick(), sim.get_last_exit_event_cause()

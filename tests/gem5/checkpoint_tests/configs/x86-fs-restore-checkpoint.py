@@ -85,10 +85,10 @@ board.set_kernel_disk_workload(
     ),
 )
 
-sim = Simulator(board=board, full_system=True)
+sim = Simulator(board=board, full_system=True, max_ticks=10**10)
 print("Beginning simulation!")
 
-sim.run(max_ticks=10**10)
+sim.run()
 
 print(
     "Exiting @ tick {} because {}.".format(

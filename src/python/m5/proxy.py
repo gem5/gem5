@@ -167,6 +167,9 @@ class BaseProxy:
     def set_param_desc(self, pdesc):
         self._pdesc = pdesc
 
+    def __hash__(self) -> int:
+        return simobject_hash(str(self))
+
 
 class AttrProxy(BaseProxy):
     def __init__(self, search_self, search_up, attr):

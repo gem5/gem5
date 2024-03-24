@@ -36,6 +36,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from typing import Optional
+
 from m5.objects import (
     BadAddr,
     BaseCPU,
@@ -65,8 +67,7 @@ class PrivateL1PrivateL2CacheHierarchy(
     and a private L2 cache.
     """
 
-    @staticmethod
-    def _get_default_membus() -> SystemXBar:
+    def _get_default_membus(self) -> SystemXBar:
         """
         A method used to obtain the default memory bus of 64 bit in width for
         the PrivateL1PrivateL2 CacheHierarchy.
@@ -85,7 +86,7 @@ class PrivateL1PrivateL2CacheHierarchy(
         l1d_size: str,
         l1i_size: str,
         l2_size: str,
-        membus: BaseXBar = _get_default_membus.__func__(),
+        membus: Optional[BaseXBar] = None,
     ) -> None:
         """
         :param l1d_size: The size of the L1 Data Cache (e.g., "32kB").
@@ -95,7 +96,8 @@ class PrivateL1PrivateL2CacheHierarchy(
         :param l2_size: The size of the L2 Cache (e.g., "256kB").
 
         :param membus: The memory bus. This parameter is optional parameter and
-                       will default to a 64 bit width SystemXBar is not specified.
+                       will default to a 64 bit width SystemXBar is not
+                       specified.
         """
 
         AbstractClassicCacheHierarchy.__init__(self=self)
@@ -109,7 +111,7 @@ class PrivateL1PrivateL2CacheHierarchy(
             l2_assoc=4,
         )
 
-        self.membus = membus
+        self.membus = membus if membus else self._get_default_membus()
 
     @overrides(AbstractClassicCacheHierarchy)
     def get_mem_side_port(self) -> Port:

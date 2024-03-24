@@ -308,14 +308,9 @@ PySource('gem5.utils', 'gem5/utils/progress_bar.py')
 PySource('gem5.utils', 'gem5/utils/requires.py')
 PySource('gem5.utils',
          'gem5/utils/socks_ssl_context.py')
-PySource('gem5.utils.multiprocessing',
-    'gem5/utils/multiprocessing/__init__.py')
-PySource('gem5.utils.multiprocessing',
-    'gem5/utils/multiprocessing/_command_line.py')
-PySource('gem5.utils.multiprocessing',
-    'gem5/utils/multiprocessing/context.py')
-PySource('gem5.utils.multiprocessing',
-    'gem5/utils/multiprocessing/popen_spawn_gem5.py')
+PySource('gem5.utils.multisim', 'gem5/utils/multisim/__init__.py')
+PySource('gem5.utils.multisim', 'gem5/utils/multisim/multisim.py')
+PySource('gem5.utils.multisim', 'gem5/utils/multisim/__main__.py')
 
 PySource('', 'importer.py')
 PySource('m5', 'm5/__init__.py')
