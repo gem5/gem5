@@ -43,6 +43,7 @@ from abc import (
 from typing import Callable
 
 from m5.objects import SubSystem
+from m5.util.fdthelper import *
 
 from ..boards.abstract_board import AbstractBoard
 
@@ -82,6 +83,21 @@ class CacheNode:
         new_node = CacheNode(name, cache, self, self.hierarchy)
         self.prev_levels.append(new_node)
         return new_node
+
+    def generate_dtb_entry(self, state, level):
+        node = FdtNode(f"{self.name}")
+        node.append(FdtPropertyStrings("compatible", ["cache"]))
+        node.append(FdtPropertyWords("cache-level", int(level)))
+        node.append(FdtPropertyWords("cache-size", int(self.cache.size)))
+        if self.next_level:
+            node.append(
+                FdtPropertyWords(
+                    "next-level-cache", state.phandle(self.next_level.cache)
+                )
+            )
+
+        node.appendPhandle(self.cache)
+        return node
 
 
 class AbstractCacheHierarchy(SubSystem):
@@ -153,3 +169,19 @@ class AbstractCacheHierarchy(SubSystem):
         visit(node, level)
 
         return level + 1
+
+    def generateDeviceTree(self, state):
+        dt_entries = []
+
+        def add_dt_entry(node, level):
+            # Do not generate a DTB entry for the root node
+            # as it does not point to a real cache (node.cache = None)
+            # and for the L1I and L1D caches as their data should be
+            # part of the CPU node as described by:
+            # https://devicetree-specification.readthedocs.io/en/stable/devicenodes.html
+            if node.cache is not None and level != 1:
+                dt_entries.append(node.generate_dtb_entry(state, level))
+
+        self.traverse(self._root, add_dt_entry)
+
+        yield from dt_entries
