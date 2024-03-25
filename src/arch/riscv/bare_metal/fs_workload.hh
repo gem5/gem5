@@ -45,9 +45,9 @@ class BareMetal : public Workload
     // checker for bare metal application
     bool _isBareMetal;
     // entry point for simulation
-    Addr _resetVect;
     loader::ObjectFile *bootloader;
     loader::SymbolTable bootloaderSymtab;
+    Addr _resetVect;
 
   public:
     PARAMS(RiscvBareMetal);
