@@ -841,7 +841,8 @@ action(Initiate_AtomicNoReturn_I, desc="") {
     tbe.actions.push(Event:WriteBEPipe);
     tbe.actions.push(Event:TagArrayWrite);
     tbe.atomic_to_be_done := true;
-  } else if (policy_type == 1) { // UNIQUE NEAR
+  } else if ((policy_type == 1) || // UNIQUE NEAR
+             (policy_type == 2)) { // PRESENT NEAR
     tbe.actions.push(Event:SendAtomicNoReturn);
     tbe.actions.push(Event:SendANRData);
     tbe.dataToBeInvalid := true;
@@ -853,7 +854,8 @@ action(Initiate_AtomicNoReturn_I, desc="") {
 }
 
 action(Initiate_AtomicReturn_SD, desc="") {
-  if (policy_type == 0){ // ALL NEAR
+  if ((policy_type == 0) || // ALL NEAR
+      (policy_type == 2)) { // PRESENT NEAR
     tbe.actions.push(Event:SendReadUnique);
     tbe.actions.push(Event:WriteFEPipe);
     tbe.actions.push(Event:CheckCacheFill);
@@ -872,7 +874,8 @@ action(Initiate_AtomicReturn_SD, desc="") {
 }
 
 action(Initiate_AtomicNoReturn_SD, desc="") {
-  if (policy_type == 0){ // ALL NEAR
+  if ((policy_type == 0) || // ALL NEAR
+      (policy_type == 2)) { // PRESENT NEAR
     tbe.actions.push(Event:SendReadUnique);
     tbe.actions.push(Event:WriteFEPipe);
     tbe.actions.push(Event:CheckCacheFill);
@@ -891,7 +894,8 @@ action(Initiate_AtomicNoReturn_SD, desc="") {
 }
 
 action(Initiate_AtomicReturn_SC, desc="") {
-  if (policy_type == 0){ // ALL NEAR
+  if ((policy_type == 0) || // ALL NEAR
+      (policy_type == 2)) { // PRESENT NEAR
     tbe.actions.push(Event:SendReadUnique);
     tbe.actions.push(Event:WriteFEPipe);
     tbe.actions.push(Event:CheckCacheFill);
@@ -910,7 +914,8 @@ action(Initiate_AtomicReturn_SC, desc="") {
 }
 
 action(Initiate_AtomicNoReturn_SC, desc="") {
-  if (policy_type == 0){ // ALL NEAR
+  if ((policy_type == 0) || // ALL NEAR
+      (policy_type == 2)) { // PRESENT NEAR
     tbe.actions.push(Event:SendReadUnique);
     tbe.actions.push(Event:WriteFEPipe);
     tbe.actions.push(Event:CheckCacheFill);
