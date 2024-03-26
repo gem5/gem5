@@ -41,31 +41,31 @@ namespace gem5::ArmISA::mpam
 {
 
 std::unique_ptr<ExtensionBase>
-PartitionFieldExtention::clone() const
+PartitionFieldExtension::clone() const
 {
-    return std::make_unique<PartitionFieldExtention>(*this);
+    return std::make_unique<PartitionFieldExtension>(*this);
 }
 
 uint64_t
-PartitionFieldExtention::getPartitionID() const
+PartitionFieldExtension::getPartitionID() const
 {
     return this->_partitionID;
 }
 
 uint64_t
-PartitionFieldExtention::getPartitionMonitoringID() const
+PartitionFieldExtension::getPartitionMonitoringID() const
 {
     return this->_partitionMonitoringID;
 }
 
 void
-PartitionFieldExtention::setPartitionID(uint64_t id)
+PartitionFieldExtension::setPartitionID(uint64_t id)
 {
     this->_partitionID = id;
 }
 
 void
-PartitionFieldExtention::setPartitionMonitoringID(uint64_t id)
+PartitionFieldExtension::setPartitionMonitoringID(uint64_t id)
 {
     this->_partitionMonitoringID = id;
 }
