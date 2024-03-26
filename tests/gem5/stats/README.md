@@ -1,7 +1,11 @@
 # Stats
 
-This test runs an SE simulation with the hdf5 stats and checks that the simulation succeeds and the stats file exists.
-To run these tests by themselves, you can run the following command in the tests directory:
+These test ensure the stats are output correctly.
+
+1. "test_hdf5" - Test hdf5 output. Runs a simulation and ensures the hdf5
+   output exists.
+2. "test_simstats_output" - Tests the SimStat python module is parsing and
+   outputting the stats correctly.
 
 ```bash
 ./main.py run gem5/stats --length=[length]
