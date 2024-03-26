@@ -27,8 +27,8 @@
 from abc import ABC
 from typing import (
     Any,
+    Dict,
     Iterable,
-    List,
     Optional,
     Union,
 )
@@ -90,41 +90,56 @@ class Vector(Statistic):
     An Python statistics which representing a vector of Scalar values.
     """
 
-    value: List[Union[int, float]]
-
     def __init__(
         self,
-        value: Iterable[Union[int, float]],
+        value: Dict[Union[str, int, float], Scalar],
         type: Optional[str] = None,
         description: Optional[str] = None,
     ):
         super().__init__(
-            value=list(value),
+            value=value,
             type=type,
             description=description,
         )
+
+    def __getitem__(self, index: Union[int, str, float]) -> Scalar:
+        assert self.value != None
+        # In the case of string, we cast strings to integers of floats if they
+        # are numeric. This avoids users having to cast strings to integers.
+        if isinstance(index, str):
+            if index.isindex():
+                index = int(index)
+            elif index.isnumeric():
+                index = float(index)
+        return self.value[index]
+
+    def size(self) -> int:
+        """
+        Returns the size of the vector.
+
+        :returns: The size of the vector.
+        """
+        assert self.value != None
+        return len(self.value)
 
     def mean(self) -> float:
         """
         Returns the mean of the value vector.
 
-        :returns: The mean value across all bins.
+        :returns: The mean value across all values in the vector.
         """
         assert self.value != None
-        assert isinstance(self.value, List)
 
-        from statistics import mean as statistics_mean
-
-        return statistics_mean(self.value)
+        return self.count() / self.size()
 
     def count(self) -> float:
         """
-        Returns the count across all the bins.
+        Returns the count (sum) of all values in the vector.
 
-        :returns: The sum of all bin values.
+        :returns: The sum of all vector values.
         """
         assert self.value != None
-        return sum(self.value)
+        return sum(float(self.value[key]) for key in self.values)
 
 
 class Distribution(Vector):

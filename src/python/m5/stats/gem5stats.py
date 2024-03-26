@@ -183,29 +183,44 @@ def __get_distribution(statistic: _m5.stats.DistInfo) -> Distribution:
 
 
 def __get_vector(statistic: _m5.stats.VectorInfo) -> Vector:
-    to_add = dict()
+    vec: Dict[Union[str, int, float], Scalar] = {}
+
 
     for index in range(statistic.size):
         # All the values in a Vector are Scalar values
         value = statistic.value[index]
-        unit = statistic.unit
-        description = statistic.subdescs[index]
-        # ScalarInfo uses the C++ `double`.
-        datatype = StorageType["f64"]
+        assert isinstance(value, float) or isinstance(value, int)
 
         # Sometimes elements within a vector are defined by their name. Other
         # times they have no name. When a name is not available, we name the
         # stat the index value.
-        if str(statistic.subnames[index]):
-            index_string = str(statistic.subnames[index])
+        if len(statistic.subnames) > index and statistic.subnames[index]:
+            index_subname = str(statistic.subnames[index])
+            if index_subname.isdigit():
+                index_subname = int(index_subname)
+            elif index_subname.isnumeric():
+                index_subname = float(index_subname)
         else:
-            index_string = str(index)
+            index_subname = index
 
-        to_add[index_string] = Scalar(
-            value=value, unit=unit, description=description, datatype=datatype
+        index_subdesc = None
+        if len(statistic.subdescs) > index and statistic.subdescs[index]:
+            index_subdesc = str(statistic.subdescs[index])
+        else:
+            index_subdesc = statistic.desc
+
+        vec[index_subname] = Scalar(
+            value=value,
+            unit=statistic.unit,
+            description=index_subdesc,
+            datatype=StorageType["f64"],
         )
 
-    return Vector(scalar_map=to_add)
+    return Vector(
+        vec,
+        type="Vector",
+        description=statistic.desc,
+    )
 
 
 def _prepare_stats(group: _m5.stats.Group):

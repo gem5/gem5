@@ -51,4 +51,37 @@ ScalarStatTester::ScalarStatTesterStats::ScalarStatTesterStats(
 {
 }
 
+void
+VectorStatTester::setStats()
+{
+    for (int i = 0; i < params.values.size(); i++)
+    {
+        stats.vector[i] = (params.values[i]);
+    }
+}
+
+VectorStatTester::VectorStatTesterStats::VectorStatTesterStats(
+    statistics::Group *parent,
+    const VectorStatTesterParams &params
+) : statistics::Group(parent),
+    vector(this,
+        params.name.c_str(),
+        statistics::units::Count::get(),
+        params.description.c_str()
+    )
+{
+    vector.init(params.values.size());
+    for (int i = 0; i < params.values.size(); i++)
+    {
+        if (params.subnames.size() > i) {
+            vector.subname(i, params.subnames[i]);
+        } else {
+            vector.subname(i, std::to_string(i));
+        }
+        if (params.subdescs.size() > i) {
+            vector.subdesc(i, params.subdescs[i]);
+        }
+    }
+}
+
 } // namespace gem5
