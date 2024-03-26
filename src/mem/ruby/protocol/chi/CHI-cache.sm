@@ -135,7 +135,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
   // All Near executes all Atomics at L1 (variable set to 0; default)
   // Unique Near executes Atomics at HNF for states I, SC, SD (set to 1)
   // Present Near execites all Atomics at L1 except when state is I (set to 2)
-  int policy_type := 1;
+  int policy_type := 0;
 
 
   // Use separate Comp/DBIDResp responses for WriteUnique
@@ -487,7 +487,6 @@ machine(MachineType:Cache, "Cache coherency protocol") :
 
     // Send an atomic request downstream.
     SendAtomicReturn,          out_trans="yes", desc="Send atomic request with return";
-    SendAtomicReturn_NoWait,   out_trans="yes", desc="Send atomic request with return, but no DBID";
     SendAtomicNoReturn,        out_trans="yes", desc="Send atomic request without return";
     SendARData,                desc="Send atomic return request data";
     SendANRData,               desc="Send atomic no return request data";
