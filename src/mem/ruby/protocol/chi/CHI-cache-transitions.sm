@@ -942,15 +942,6 @@ transition(BUSY_BLKD, SendWriteUnique, BUSY_INTR) {DestinationAvailable} {
 transition(BUSY_BLKD, SendAtomicReturn, BUSY_INTR) {DestinationAvailable} {
   Pop_TriggerQueue;
   Send_AtomicReturn;
-  CheckARComp;
-  Profile_OutgoingStart;
-  ProcessNextState_ClearPending;
-}
-
-transition(BUSY_BLKD, SendAtomicReturn_NoWait, BUSY_INTR) {
-  Pop_TriggerQueue;
-  Send_AtomicReturn_NoWait;
-  CheckARComp;
   Profile_OutgoingStart;
   ProcessNextState_ClearPending;
 }
@@ -1016,6 +1007,7 @@ transition(BUSY_BLKD, SendWUDataCB) {
 transition({BUSY_BLKD,BUSY_INTR}, SendARData) {
   Pop_TriggerQueue;
   Send_ARData;
+  CheckARComp;
   ProcessNextState_ClearPending;
 }
 
@@ -1492,7 +1484,6 @@ transition({BUSY_INTR,BUSY_BLKD}, DBIDResp, BUSY_BLKD) {
   Receive_ReqResp;
   Receive_ReqResp_CopyDBID;
   Receive_ReqResp_WUNeedComp;
-  Receive_ReqResp_AR;
   Pop_RespInQueue;
   ProcessNextState;
 }
